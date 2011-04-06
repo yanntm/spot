@@ -1,8 +1,5 @@
-## Copyright (C) 2008, 2009, 2010, 2011 Laboratoire de Recherche et
-## Développement de l'Epita (LRDE).
-## Copyright (C) 2005 Laboratoire d'Informatique de Paris 6 (LIP6),
-## département Systèmes Répartis Coopératifs (SRC), Université Pierre
-## et Marie Curie.
+## Copyright (C) 2011 Laboratoire de Recherche et
+## DÃ©veloppement de l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
 ##
@@ -21,5 +18,13 @@
 ## Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 ## 02111-1307, USA.
 
-SUBDIRS = emptchk gspn-ssp ltl2tgba scc-stats split-product ltlcounter	\
-          ltlclasses wdba beem
+
+models_file = models_data.tar.gz
+models_url = http://anna.fi.muni.cz/models/$(models_file)
+# Download the model using either wget or curl.
+$(models_file):
+	wget $(models_url) -O $@ || curl $(models_url) -o $@
+
+data/stamp: $(models_file)
+	GZIP=$(GZIP_ENV) gzip -dc $(models_file) | $(am__untar)
+	touch data/stamp

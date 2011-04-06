@@ -45,3 +45,5 @@ cachegrind.*
 ltdl
 config.h
 src/src/misc/_config.h
+*.dve2C
+*.dve.cpp

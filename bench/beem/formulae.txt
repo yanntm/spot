@@ -1,0 +1,19 @@
+anderson.2  true  G((P_0.p1|P_0.p2|P_0.p3) -> F(P_0.CS))
+anderson.2  false G(!P_0.CS -> F(P_0.CS))
+anderson.2  true  GF(P_0.CS|P_1.CS|P_2.CS)
+
+anderson.3  false G((P_0.p1|P_0.p2|P_0.p3) -> F(P_0.CS))
+anderson.3  false G(!P_0.CS -> F(P_0.CS))
+anderson.3  false GF(P_0.CS|P_1.CS|P_2.CS)
+
+anderson.4  true  G((P_0.p1|P_0.p2|P_0.p3) -> F(P_0.CS))
+anderson.4  false G(!P_0.CS -> F(P_0.CS))
+anderson.4  true  GF(P_0.CS|P_1.CS|P_2.CS|P_3.CS)
+
+anderson.5  false G((P_0.p1|P_0.p2|P_0.p3) -> F(P_0.CS))
+anderson.5  false G(!P_0.CS -> F(P_0.CS))
+anderson.5  false GF(P_0.CS|P_1.CS|P_2.CS|P_3.CS)
+
+anderson.6  true  G((P_0.p1|P_0.p2|P_0.p3) -> F(P_0.CS))
+anderson.6  false G(!P_0.CS -> F(P_0.CS))
+anderson.6  true  GF(P_0.CS|P_1.CS|P_2.CS|P_3.CS|P_4.CS|P_5.CS)
