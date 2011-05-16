@@ -63,6 +63,8 @@
 #include "tgbaalgos/scc.hh"
 #include "tgbaalgos/emptiness_stats.hh"
 
+#include "tgbaalgos/propagation.hh"
+
 std::string
 ltl_defs()
 {
@@ -185,6 +187,10 @@ syntax(char* prog)
 
 	    << "Automaton degeneralization (after translation):"
 	    << std::endl
+	    << "  -PR   propagate the acceptance conditions before "
+	    << "degeneralizing" << std::endl
+	    << "  -OP   find the degeneralized automaton with the minimal"
+	    << " number of states " << std::endl
             << "  -lS   move generalized acceptance conditions to states "
 	    << "(SGBA)" << std::endl
 	    << "  -D    degeneralize the automaton as a TBA" << std::endl
@@ -337,6 +343,8 @@ main(int argc, char** argv)
   spot::timer_map tm;
   bool use_timer = false;
   bool assume_sba = false;
+  bool propagate = false;
+  bool degen_opti = false;
 
   for (;;)
     {
@@ -378,6 +386,14 @@ main(int argc, char** argv)
       else if (!strcmp(argv[formula_index], "-d"))
 	{
 	  debug_opt = true;
+	}
+      else if (!strcmp(argv[formula_index], "-PR"))
+	{
+	  propagate = true;
+	}
+      else if (!strcmp(argv[formula_index], "-OP"))
+	{
+	  degen_opti = true;
 	}
       else if (!strcmp(argv[formula_index], "-D"))
 	{
@@ -905,10 +921,16 @@ main(int argc, char** argv)
 	      tm.stop("reducing A_f w/ symbolic SCC pruning");
 	    }
 	}
+      const spot::tgba* propagating = 0;
+      if (propagate)
+      {
+	spot::Propagation p (a);
+	propagating = a = p.propagate ();
+      }
 
+      const spot::tgba* aut_scc = 0;
       // Remove dead SCCs and useless acceptance conditions before
       // degeneralization.
-      const spot::tgba* aut_scc = 0;
       if (reduc_aut & spot::Reduce_Scc)
 	{
 	  tm.start("reducing A_f w/ SCC");
@@ -928,7 +950,7 @@ main(int argc, char** argv)
 
       if (degeneralize_opt == DegenTBA)
 	{
-	  a = degeneralized = new spot::tgba_tba_proxy(a);
+	  a = degeneralized = new spot::tgba_tba_proxy(a, degen_opti);
 	}
       else if (degeneralize_opt == DegenSBA)
 	{
@@ -1067,7 +1089,7 @@ main(int argc, char** argv)
           if (degeneralize_opt == DegenTBA)
 	    {
 	      a = product = product_degeneralized =
-		new spot::tgba_tba_proxy(product);
+		new spot::tgba_tba_proxy(product, degen_opti);
 	    }
           else if (degeneralize_opt == DegenSBA)
 	    {
@@ -1360,6 +1382,7 @@ main(int argc, char** argv)
       delete state_labeled;
       delete to_free;
       delete echeck_inst;
+      delete propagating;
     }
   else
     {

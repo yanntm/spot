@@ -26,6 +26,7 @@
 #include "bddprint.hh"
 #include "ltlast/constant.hh"
 #include "misc/hashfunc.hh"
+#include "misc/combinator.hh"
 
 namespace spot
 {
@@ -275,7 +276,68 @@ namespace spot
 
   } // anonymous
 
-  tgba_tba_proxy::tgba_tba_proxy(const tgba* a)
+  tgba_tba_proxy::tgba_tba_proxy(const tgba* a, bool optimize)
+    : a_(a)
+  {
+    // We will use one acceptance condition for this automata.
+    // Let's call it Acc[True].
+    int v = get_dict()
+      ->register_acceptance_variable(ltl::constant::true_instance(), this);
+    the_acceptance_cond_ = bdd_ithvar(v);
+
+    bdd all = a_->all_acceptance_conditions();
+    if (a->number_of_acceptance_conditions() == 0)
+    {
+	acc_cycle_.push_front(bddtrue);
+    }
+    else if (optimize)
+    {
+      Combinator c (all);
+
+      std::list<bdd>* lbdd = c ();
+      size_t max = 0;
+      while (lbdd != 0)
+      {
+	tgba_tba_proxy* tmp = new tgba_tba_proxy (a, lbdd);
+	if (max == 0)
+	{
+	  max = Combinator::tgba_size (tmp);
+	  acc_cycle_ = *lbdd;
+	}
+	else
+	{
+	  size_t ttmp = Combinator::tgba_size (tmp, max);
+	  if (ttmp < max)
+	  {
+	    max = ttmp;
+	    acc_cycle_ = *lbdd;
+	  }
+	}
+	delete tmp;
+	delete lbdd;
+	lbdd = c ();
+      }
+    }
+    else
+    {
+      // Build a cycle of expected acceptance conditions.
+      //
+      // The order is arbitrary, but it turns out that using
+      // push_back instead of push_front often gives better results
+      // because acceptance conditions and the beginning if the
+      // cycle are more often used in the automaton.  (This
+      // surprising fact is probably related to order in which we
+      // declare the BDD variables during the translation.)
+      while (all != bddfalse)
+      {
+	bdd next = bdd_satone(all);
+	all -= next;
+	acc_cycle_.push_back(next);
+      }
+    }
+  }
+
+  tgba_tba_proxy::tgba_tba_proxy(const tgba* a, std::list<bdd>* acc_list)
     : a_(a)
   {
     // We will use one acceptance condition for this automata.
@@ -289,23 +351,7 @@ namespace spot
 	acc_cycle_.push_front(bddtrue);
       }
     else
-      {
-	// Build a cycle of expected acceptance conditions.
-	//
-	// The order is arbitrary, but it turns out that using
-	// push_back instead of push_front often gives better results
-	// because acceptance conditions and the beginning if the
-	// cycle are more often used in the automaton.  (This
-	// surprising fact is probably related to order in which we
-	// declare the BDD variables during the translation.)
-	bdd all = a_->all_acceptance_conditions();
-	while (all != bddfalse)
-	  {
-	    bdd next = bdd_satone(all);
-	    all -= next;
-	    acc_cycle_.push_back(next);
-	  }
-      }
+      acc_cycle_ = *acc_list;
   }
 
   tgba_tba_proxy::~tgba_tba_proxy()
@@ -485,5 +531,4 @@ namespace spot
     assert(s);
     return bddtrue == s->acceptance_cond();
   }
-
 }

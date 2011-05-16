@@ -290,7 +290,7 @@ Algorithm
 {
    Name = "Spot (Couvreur -- FM), pre + post reduction, degeneralized on states"
    Path = "${LBTT_TRANSLATE}"
-   Parameters = "--spot '../ltl2tgba -F -f -DS -R3 -r7 -t'"
+   Parameters = "--spot '../ltl2tgba -F -f -DS -PR -R3 -r7 -t'"
    Enabled = yes
 }
 

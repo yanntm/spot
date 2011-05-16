@@ -53,7 +53,8 @@ namespace spot
   class tgba_tba_proxy : public tgba
   {
   public:
-    tgba_tba_proxy(const tgba* a);
+    tgba_tba_proxy(const tgba* a, bool optimize = false);
+    tgba_tba_proxy(const tgba* a, std::list<bdd>* acc_list);
 
     virtual ~tgba_tba_proxy();
 
