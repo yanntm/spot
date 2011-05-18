@@ -120,7 +120,6 @@ namespace spot
       bdd strip_;
       bool all_;
     };
-
   } // anonymous
 
 

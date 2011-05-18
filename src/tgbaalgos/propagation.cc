@@ -59,31 +59,38 @@ namespace spot
 
     //optimization : filling the map while descending
     for (i->first (); !i->done (); i->next ())
-      {
-	bdd cmp = (*acc_)[hash];
-	(*acc_)[hash] &= i->current_acceptance_conditions ();
-	again_ |= cmp != (*acc_)[hash];
-      }
+    {
+      bdd cmp = (*acc_)[hash];
+      (*acc_)[hash] &= i->current_acceptance_conditions ();
+      again_ |= cmp != (*acc_)[hash];
+    }
 
     delete i;
     i = a_->succ_iter (s);
+    bdd inter = bddtrue;
     for (i->first (); !i->done (); i->next ())
-      {
-	state* to = i->current_state ();
-	size_t tohash = to->hash ();
+    {
+      state* to = i->current_state ();
+      size_t tohash = to->hash ();
 
-	//going through the graph
-	if (seen->find (tohash) == seen->end ())
-	  dfs (to, seen);
+      //going through the graph
+      if (seen->find (tohash) == seen->end ())
+	dfs (to, seen);
 
-	//merging with next state
-	bdd cmp = (*acc_)[hash];
-	(*acc_)[hash] |= (*acc_)[tohash];
-	again_ |= cmp != (*acc_)[hash];
-
-	to->destroy ();
-      }
+      if ((*acc_)[tohash] != bddtrue)
+	inter &= (*acc_)[tohash];
+      else
+	inter = bddfalse;
+      to->destroy ();
+    }
     delete i;
+
+    if (inter != bddtrue)
+    {
+      bdd cmp = (*acc_)[hash];
+      (*acc_)[hash] |= inter;
+      again_ |= cmp != (*acc_)[hash];
+    }
   }
 
 
@@ -96,12 +103,16 @@ namespace spot
     spot::state* s = a_->get_init_state ();
     state_set* ss = new state_set ();
 
+    int cpt = 0;
     while (again_)
-      {
-	dfs (s, ss);
-	ss->clear ();
-	again_ = false;
-      }
+    {
+      if (cpt > 1)
+	std::cerr << "Propagation more than one round" << std::endl;
+      dfs (s, ss);
+      ss->clear ();
+      again_ = false;
+      cpt++;
+    }
 
     ss->clear ();
     propagate_run (res, s, ss);
@@ -138,7 +149,11 @@ namespace spot
 	  a->create_transition (tostr ((*rec_)[hash]),
 				tostr ((*rec_)[tohash]));
 
-	a->add_acceptance_conditions (t, (*acc_)[tohash]);
+	bdd newacc = i->current_acceptance_conditions ();
+	if ((*acc_)[tohash] != bddtrue)
+	  newacc |= (*acc_)[tohash];
+
+	a->add_acceptance_conditions (t, newacc);
 	a->add_conditions (t, i->current_condition ());
 
 	if (seen->find (tohash) == seen->end ())

@@ -1,0 +1,11 @@
+digraph G {
+  0 [label="", style=invis, height=0]
+  0 -> 1
+  1 [label="1"]
+  1 -> 2 [label="q\n{Acc[b], Acc[a]}"]
+  2 [label="2"]
+  2 -> 3 [label="w\n{Acc[b], Acc[a]}"]
+  3 [label="3"]
+  3 -> 4 [label="e\n{Acc[b]}"]
+  4 [label="4"]
+}
