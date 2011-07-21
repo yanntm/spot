@@ -27,6 +27,8 @@
 #include "ltlast/constant.hh"
 #include "misc/hashfunc.hh"
 #include "misc/combinator.hh"
+#include "misc/bddlt.hh"
+
 
 namespace spot
 {
@@ -292,17 +294,27 @@ namespace spot
     }
     else if (optimize)
     {
-      Combinator c (all);
+      std::list<bdd>* tab = new std::list<bdd> ();
+      bdd_less_than lt;
 
-      std::list<bdd>* lbdd = c ();
-      size_t max = 0;
-      while (lbdd != 0)
+      //initialization of arrays
+      while (all != bddfalse)
       {
-	tgba_tba_proxy* tmp = new tgba_tba_proxy (a, lbdd);
+	bdd tmp = bdd_satone (all);
+	tab->push_back (tmp);
+	all -= tmp;
+      }
+
+      tab->sort (lt);
+
+      size_t max = 0;
+      do
+      {
+	tgba_tba_proxy* tmp = new tgba_tba_proxy (a, tab);
 	if (max == 0)
 	{
 	  max = Combinator::tgba_size (tmp);
-	  acc_cycle_ = *lbdd;
+	  acc_cycle_ = *tab;
 	}
 	else
 	{
@@ -310,13 +322,12 @@ namespace spot
 	  if (ttmp < max)
 	  {
 	    max = ttmp;
-	    acc_cycle_ = *lbdd;
+	    acc_cycle_ = *tab;
 	  }
 	}
 	delete tmp;
-	delete lbdd;
-	lbdd = c ();
       }
+      while (next_permutation (tab->begin (), tab->end (), lt));
     }
     else
     {

@@ -1,3 +1,14 @@
+2011-07-21  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	* src/tgba/tgbatba.cc: Modify the constructor of tgba_tba_proxy
+	to use STL's permutation algorithm.
+
+	* src/tgba/tgbatba.hh: Modify the header to fit the new
+	implementation of tgba_tba_proxy (with STL's permutation).
+
+	* src/tgbaalgos/propagation.cc: Modify a cpt++ into ++cpt to
+	fit the coding style.
+
 2011-05-05  Alexandre Duret-Lutz  <adl@lrde.epita.fr>
 
 	* src/misc/intvcmp2.cc: Cosmetics to please sanity checks.

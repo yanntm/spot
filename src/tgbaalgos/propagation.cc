@@ -111,7 +111,7 @@ namespace spot
       dfs (s, ss);
       ss->clear ();
       again_ = false;
-      cpt++;
+      ++cpt;
     }
 
     ss->clear ();

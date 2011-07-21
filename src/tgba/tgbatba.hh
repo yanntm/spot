@@ -31,7 +31,6 @@
 
 namespace spot
 {
-
   /// \brief Degeneralize a spot::tgba on the fly, producing a TBA.
   /// \ingroup tgba_on_the_fly_algorithms
   ///
