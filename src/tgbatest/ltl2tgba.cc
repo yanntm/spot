@@ -921,12 +921,6 @@ main(int argc, char** argv)
 	      tm.stop("reducing A_f w/ symbolic SCC pruning");
 	    }
 	}
-      const spot::tgba* propagating = 0;
-      if (propagate)
-      {
-	spot::Propagation p (a);
-	propagating = a = p.propagate ();
-      }
 
       const spot::tgba* aut_scc = 0;
       // Remove dead SCCs and useless acceptance conditions before
@@ -937,6 +931,15 @@ main(int argc, char** argv)
 	  a = aut_scc = spot::scc_filter(a, scc_filter_all);
 	  tm.stop("reducing A_f w/ SCC");
 	}
+
+      const spot::tgba* propagating = 0;
+      if (propagate)
+      {
+	tm.start("propagate acc. conds.");
+	spot::Propagation p(a);
+	propagating = a = p.propagate();
+	tm.stop("propagate acc. conds.");
+      }
 
       const spot::tgba_tba_proxy* degeneralized = 0;
       const spot::tgba_sgba_proxy* state_labeled = 0;

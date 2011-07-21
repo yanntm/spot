@@ -1,4 +1,4 @@
-// Copyright (C) 2009, 2011 Laboratoire de Recherche et Developpement
+// Copyright (C) 2011 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -36,24 +36,24 @@ namespace spot
     class Tree
     {
     public:
-      Tree (bdd val);
-      ~Tree ();
+      Tree(bdd val);
+      ~Tree();
 
-      void add_child (Tree* c);
-      void check_done ();
+      void add_child(Tree* c);
+      void check_done();
 
-      size_t hash ()
+      size_t hash()
       {
-	return (int)this;
+	return reinterpret_cast<char*>(this) - static_cast<char*>(0);
       }
 
-      bool done_get ();
-      bdd val_get ();
-      std::list<Tree*>* child_get ();
+      bool done_get();
+      bdd val_get();
+      std::list<Tree*>* child_get();
 
       typedef std::list<Tree*>::iterator iterator;
-      iterator begin ();
-      iterator end ();
+      iterator begin();
+      iterator end();
 
     protected:
       std::list<Tree*> child_;
@@ -62,18 +62,18 @@ namespace spot
     };
 
   public:
-    Combinator (bdd acc_all);
-    ~Combinator ();
+    Combinator(bdd acc_all);
+    ~Combinator();
 
-    std::list<bdd>* operator() ();
+    std::list<bdd>* operator()();
 
-    static size_t tgba_size (const tgba* a, size_t max = 0);
+    static size_t tgba_size(const tgba* a, size_t max = 0);
 
   protected:
     Tree* t_;
 
-    Tree* build (std::list<bdd> l);
-    void op_rec (Tree* t, std::list<bdd>* l);
+    Tree* build(std::list<bdd> l);
+    void op_rec(Tree* t, std::list<bdd>* l);
   };
 }
 
