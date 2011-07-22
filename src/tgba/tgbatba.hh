@@ -122,7 +122,7 @@ namespace spot
   class tgba_sba_proxy : public tgba_tba_proxy
   {
   public:
-    tgba_sba_proxy(const tgba* a);
+    tgba_sba_proxy(const tgba* a, bool optimize = false);
 
     /// \brief Whether the state is accepting.
     ///

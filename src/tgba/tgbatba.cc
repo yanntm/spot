@@ -28,7 +28,7 @@
 #include "misc/hashfunc.hh"
 #include "misc/combinator.hh"
 #include "misc/bddlt.hh"
-
+#include "tgbaalgos/reachiter.hh"
 
 namespace spot
 {
@@ -278,6 +278,46 @@ namespace spot
 
   } // anonymous
 
+  size_t
+  tgba_size (const tgba* a, size_t max = 0)
+  {
+    std::set<size_t> seen;
+    std::queue<state*> tovisit;
+    state* init = a->get_init_state ();
+    size_t hash = init->hash ();
+
+    tovisit.push (init);
+    seen.insert (hash);
+    size_t count = 0;
+
+    while (!tovisit.empty () && (max == 0 || count < max))
+    {
+      ++count;
+      state* cur = tovisit.front ();
+
+      tovisit.pop ();
+      tgba_succ_iterator* i = a->succ_iter (cur);
+
+      for (i->first (); !i->done (); i->next ())
+      {
+	state* dst = i->current_state ();
+	hash = dst->hash ();
+
+	if (seen.find (hash) == seen.end ())
+	{
+	  tovisit.push (dst);
+	  seen.insert (hash);
+	}
+	else
+	  dst->destroy ();
+      }
+      delete i;
+      cur->destroy ();
+    }
+
+    return count;
+  }
+
   tgba_tba_proxy::tgba_tba_proxy(const tgba* a, bool optimize)
     : a_(a)
   {
@@ -297,7 +337,6 @@ namespace spot
       std::list<bdd>* tab = new std::list<bdd> ();
       bdd_less_than lt;
 
-      //initialization of arrays
       while (all != bddfalse)
       {
 	bdd tmp = bdd_satone (all);
@@ -313,21 +352,21 @@ namespace spot
 	tgba_tba_proxy* tmp = new tgba_tba_proxy (a, tab);
 	if (max == 0)
 	{
-	  max = Combinator::tgba_size (tmp);
+	  max = tgba_size (tmp);
 	  acc_cycle_ = *tab;
 	}
 	else
 	{
-	  size_t ttmp = Combinator::tgba_size (tmp, max);
-	  if (ttmp < max)
+	  size_t size = tgba_size (a, max);
+	  if (size < max)
 	  {
-	    max = ttmp;
+	    max = size;
 	    acc_cycle_ = *tab;
 	  }
 	}
 	delete tmp;
       }
-      while (next_permutation (tab->begin (), tab->end (), lt));
+      while (std::next_permutation (tab->begin (), tab->end (), lt));
     }
     else
     {
@@ -483,8 +522,8 @@ namespace spot
   ////////////////////////////////////////////////////////////////////////
   // tgba_sba_proxy
 
-  tgba_sba_proxy::tgba_sba_proxy(const tgba* a)
-    : tgba_tba_proxy(a)
+  tgba_sba_proxy::tgba_sba_proxy(const tgba* a, bool optimize)
+    : tgba_tba_proxy(a, optimize)
   {
     if (a->number_of_acceptance_conditions() > 0)
       {

@@ -1,3 +1,17 @@
+2011-07-22  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	* src/tgba/tgbatba.cc: Moved the tgba_size function from combinator
+	to this file.
+
+	* src/tgba/tgbatba.cc: Adapting tgba_sba_proxy to use the optimization
+
+	* src/tgbatest/ltl2tgba.cc: Modifying the call to tgba_sba_proxy to
+	use the optimization if present.
+
+	* src/misc/combinator.cc: Useless file removed
+
+	* src/misc/combinator.hh: Useless file removed
+
 2011-07-21  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	* src/tgba/tgbatba.cc: Modify the constructor of tgba_tba_proxy

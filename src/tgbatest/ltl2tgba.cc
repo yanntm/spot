@@ -957,7 +957,7 @@ main(int argc, char** argv)
 	}
       else if (degeneralize_opt == DegenSBA)
 	{
-	  a = degeneralized = new spot::tgba_sba_proxy(a);
+	  a = degeneralized = new spot::tgba_sba_proxy(a, degen_opti);
 	  assume_sba = true;
 	}
       else if (labeling_opt == StateLabeled)
