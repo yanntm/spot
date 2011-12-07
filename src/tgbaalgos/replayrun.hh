@@ -43,7 +43,7 @@ namespace spot
   ///              debugging informations will be output on failure
   /// \return true iff the run could be completed
   bool replay_tgba_run(std::ostream& os, const tgba* a, const tgba_run* run,
-		       bool debug = false);
+		       bool debug = false, bool hascycle = true);
 }
 
 #endif // SPOT_TGBAALGOS_REPLAYRUN_HH

@@ -39,6 +39,7 @@
 #include "emptiness_stats.hh"
 #include "tau03.hh"
 #include "ndfs_result.hxx"
+#include "ltlast/constant.hh"
 
 namespace spot
 {
@@ -53,10 +54,11 @@ namespace spot
     {
     public:
       /// \brief Initialize the search algorithm on the automaton \a a
-      tau03_search(const tgba *a, size_t size, option_map o)
+      tau03_search(const tgba *a, size_t size, option_map o, bool is_dyn = false)
         : emptiness_check(a, o),
           h(size),
-          all_cond(a->all_acceptance_conditions())
+          all_cond(a->all_acceptance_conditions()),
+	  is_dynamic(is_dyn)
       {
         assert(a->number_of_acceptance_conditions() > 0);
       }
@@ -89,10 +91,23 @@ namespace spot
         assert(st_red.empty());
         const state* s0 = a_->get_init_state();
         inc_states();
+
+	if (is_dynamic)
+	  {
+	    const ltl::formula * formula =  es_->formula_from_state(s0);
+	    stats_commut (formula);
+	    stats_formula (formula);
+	  }
+	else
+	  {
+	    inc_ndfs();
+	    commut_algo(NDFS);
+	  }
+
         h.add_new_state(s0, BLUE);
         push(st_blue, s0, bddfalse, bddfalse);
         if (dfs_blue())
-          return new ndfs_result<tau03_search<heap>, heap>(*this);
+          return new ndfs_result<tau03_search<heap>, heap>(*this, is_dynamic);
         return 0;
       }
 
@@ -149,11 +164,46 @@ namespace spot
       /// The unique acceptance condition of the automaton \a a.
       bdd all_cond;
 
+      bool is_dynamic;
+
+      void
+      stats_formula (const ltl::formula *formula)
+      {
+	if (formula->is_syntactic_guarantee())
+	  inc_reachability();
+	else if (formula->is_syntactic_persistence())
+	  inc_dfs ();
+	else
+	  inc_ndfs ();
+      }
+
+      void
+      stats_commut (const ltl::formula *formula)
+      {
+	if (formula->is_syntactic_guarantee())
+	  commut_algo(REACHABILITY);
+	else if (formula->is_syntactic_persistence())
+	  commut_algo(DFS);
+	else
+	  commut_algo(NDFS);
+      }
+
+      /// Override previous declaration in emptiness.h 
+      /// This is used to detect dynamic application of the algorithm
+      virtual bool
+      is_dynamic_emptiness ()
+      {
+	return is_dynamic;
+      }
+
       bool dfs_blue()
       {
+	if (is_dynamic)
+	  assert (es_ != 0);
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
+	    const ltl::formula * formula = 0;
             trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
@@ -166,10 +216,50 @@ namespace spot
                 f.it->next();
                 inc_transitions();
                 typename heap::color_ref c_prime = h.get_color_ref(s_prime);
+
+		if (is_dynamic)
+		  {
+		    formula =  es_->formula_from_state(f.s);
+		    assert(formula);
+		    stats_commut (formula);
+
+		    if (formula->is_syntactic_guarantee() &&
+			ltl::constant::true_instance() == formula)
+		      {
+			trace << "  It's a reachability we can report" << std::endl;
+			push(st_blue, s_prime, label, acc);
+			return true;
+		      }
+
+// 		    if (!c_prime.is_white() &&
+// 			h.has_been_visited(s_prime) && 
+// 			formula->is_syntactic_persistence() //&& 
+// 			//c_prime.get_color() == BLUE && 
+// 			//acc == all_cond
+// 			)
+// 		      {
+// 			trace << "  It's a single dfs we can report" << std::endl;
+// 			push(st_red, f.s, label, acc);
+// 			is_dynamic = false;
+// 			return true;
+// 		      }
+		  }
+		else
+		  commut_algo (NDFS);
+
                 if (c_prime.is_white())
                   {
                     trace << "  It is white, go down" << std::endl;
                     inc_states();
+
+		    if (is_dynamic)
+		      {
+			formula =  es_->formula_from_state(s_prime);
+			stats_formula (formula);
+		      }
+		    else
+		      inc_ndfs();
+
                     h.add_new_state(s_prime, BLUE);
                     push(st_blue, s_prime, label, acc);
                   }
@@ -215,6 +305,7 @@ namespace spot
                   {
                     trace << "DFS_BLUE propagation is successful, report a"
                           << " cycle" << std::endl;
+		    is_dynamic = false;
                     return true;
                   }
                 else
@@ -378,6 +469,11 @@ namespace spot
   emptiness_check* explicit_tau03_search(const tgba *a, option_map o)
   {
     return new tau03_search<explicit_tau03_search_heap>(a, 0, o);
+  }
+
+  emptiness_check* explicit_tau03_dyn_search(const tgba *a, option_map o)
+  {
+    return new tau03_search<explicit_tau03_search_heap>(a, 0, o, true);
   }
 
 }

@@ -77,8 +77,8 @@ namespace spot
   }
 
   couvreur99_check_result::couvreur99_check_result
-  (const couvreur99_check_status* ecs, option_map o)
-    : emptiness_check_result(ecs->aut, o), ecs_(ecs)
+  (const couvreur99_check_status* ecs, option_map o, bool dyn)
+    : emptiness_check_result(ecs->aut, o), ecs_(ecs), is_dynamic(dyn)
   {
   }
 
@@ -104,7 +104,8 @@ namespace spot
     assert(!ecs_->root.empty());
 
     // Compute an accepting cycle.
-    accepting_cycle();
+    if (!is_dynamic)		// FIXME
+      accepting_cycle();
 
     // Compute the prefix: it's the shortest path from the initial
     // state of the automata to any state of the cycle.
@@ -124,6 +125,10 @@ namespace spot
     // cycle_entry_point is that state.
     const state* cycle_entry_point;
     state_set::const_iterator ps = ss.find(prefix_start);
+
+    if (is_dynamic)
+      return run_;		// FIXME
+
     if (ps != ss.end())
       {
 	// The initial state is on the cycle.

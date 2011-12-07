@@ -98,6 +98,10 @@ namespace spot
   emptiness_check* explicit_tau03_opt_search(const tgba *a,
 					     option_map o = option_map());
 
+  emptiness_check* explicit_tau03_opt_dyn_search(const tgba *a,
+						 option_map o = option_map());
+
+
   /// @}
 }
 

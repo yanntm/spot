@@ -36,6 +36,7 @@
 #include "emptiness_stats.hh"
 #include "se05.hh"
 #include "ndfs_result.hxx"
+#include "ltlast/constant.hh"
 
 namespace spot
 {
@@ -53,10 +54,12 @@ namespace spot
       ///
       /// \pre The automaton \a a must have at most one acceptance
       /// condition (i.e. it is a TBA).
-      se05_search(const tgba *a, size_t size, option_map o = option_map())
+      se05_search(const tgba *a, size_t size, option_map o = option_map(),
+		  bool dyn = false)
         : emptiness_check(a, o),
           h(size),
-          all_cond(a->all_acceptance_conditions())
+          all_cond(a->all_acceptance_conditions()),
+	  is_dynamic(dyn)
       {
         assert(a->number_of_acceptance_conditions() <= 1);
       }
@@ -78,6 +81,30 @@ namespace spot
           }
       }
 
+      virtual bool
+      is_dynamic_emptiness ()
+      {
+	return is_dynamic;
+      }
+
+      void
+      stats_formula (const ltl::formula *formula)
+      {
+	if (formula->is_syntactic_guarantee())
+	  inc_reachability();
+	else
+	  inc_ndfs ();
+      }
+
+      void
+      stats_commut (const ltl::formula *formula)
+      {
+	if (formula->is_syntactic_guarantee())
+	  commut_algo(REACHABILITY);
+	else
+	  commut_algo(NDFS);
+      }
+
       /// \brief Perform a Magic Search.
       ///
       /// \return non null pointer iff the algorithm has found a
@@ -93,20 +120,33 @@ namespace spot
             assert(st_blue.empty());
             const state* s0 = a_->get_init_state();
             inc_states();
+
+	    if (is_dynamic)
+	      {
+		const ltl::formula * formula =  es_->formula_from_state(s0);
+		stats_commut (formula);
+		stats_formula (formula);
+	      }
+	    else
+	      {
+		inc_ndfs();
+		commut_algo(NDFS);
+	      }
+
             h.add_new_state(s0, CYAN);
             push(st_blue, s0, bddfalse, bddfalse);
             if (dfs_blue())
-              return new se05_result(*this, options());
+              return new se05_result(*this, options(), is_dynamic);
           }
         else
           {
             h.pop_notify(st_red.front().s);
             pop(st_red);
             if (!st_red.empty() && dfs_red())
-              return new se05_result(*this, options());
+              return new se05_result(*this, options(), is_dynamic);
             else
               if (dfs_blue())
-                return new se05_result(*this, options());
+                return new se05_result(*this, options(), is_dynamic);
           }
         return 0;
       }
@@ -116,12 +156,12 @@ namespace spot
         os << states() << " distinct nodes visited" << std::endl;
         os << transitions() << " transitions explored" << std::endl;
         os << max_depth() << " nodes for the maximal stack depth" << std::endl;
-        if (!st_red.empty())
-          {
-            assert(!st_blue.empty());
-            os << st_blue.size() + st_red.size() - 1
-               << " nodes for the counter example" << std::endl;
-          }
+	if (!st_blue.empty() && !st_red.empty())
+	  os << st_blue.size() + st_red.size() - 1
+	     << " nodes for the counter example" << std::endl;
+	else if (!st_blue.empty())
+	  os << st_blue.size() - 1
+	     << " nodes for the counter example" << std::endl;
         return os;
       }
 
@@ -175,8 +215,14 @@ namespace spot
       /// The unique acceptance condition of the automaton \a a.
       bdd all_cond;
 
+      /// True if the algorithm used the property temporal hierarchy
+      bool is_dynamic;
+
       bool dfs_blue()
       {
+	if (is_dynamic)
+	  assert (es_ != 0);
+
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
@@ -192,10 +238,36 @@ namespace spot
                 f.it->next();
                 inc_transitions();
                 typename heap::color_ref c = h.get_color_ref(s_prime);
+		const ltl::formula * formula = 0;
+
+		if (is_dynamic)
+		  {
+		    formula =  es_->formula_from_state(f.s);
+		    stats_commut (formula);
+		    if (formula->is_syntactic_guarantee() &&
+			ltl::constant::true_instance() == formula)
+		      {
+			trace << "  It's a reachability we can report" << std::endl;
+			push(st_blue, s_prime, label, acc);
+			return true;
+		      }
+		  }
+		else
+		  commut_algo(NDFS);
+
                 if (c.is_white())
                   {
                     trace << "  It is white, go down" << std::endl;
                     inc_states();
+
+		    if (is_dynamic)
+		      {
+			formula =  es_->formula_from_state(s_prime);
+			stats_formula (formula);
+		      }
+		    else
+		      inc_ndfs();
+
                     h.add_new_state(s_prime, CYAN);
                     push(st_blue, s_prime, label, acc);
                   }
@@ -206,6 +278,7 @@ namespace spot
                           << "is reached, report cycle" << std::endl;
                     c.set_color(RED);
                     push(st_red, s_prime, label, acc);
+		    is_dynamic = false;
                     return true;
                   }
                 else if (acc == all_cond && c.get_color() != RED)
@@ -219,7 +292,10 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, s_prime, label, acc);
                     if (dfs_red())
-                      return true;
+                      {
+			is_dynamic = false;
+			return true;
+		      }
                   }
                 else
                   {
@@ -237,7 +313,7 @@ namespace spot
                 typename heap::color_ref c = h.get_color_ref(f_dest.s);
                 assert(!c.is_white());
                 if (!st_blue.empty() &&
-                          f_dest.acc == all_cond && c.get_color() != RED)
+		    f_dest.acc == all_cond && c.get_color() != RED)
                   {
                     // the test 'c.get_color() != RED' is added to limit
                     // the number of runs reported by successive
@@ -250,7 +326,10 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
                     if (dfs_red())
-                      return true;
+		      {
+			is_dynamic = false;
+			return true;
+		      }
                   }
                 else
                   {
@@ -336,7 +415,7 @@ namespace spot
         virtual tgba_run* accepting_run()
         {
           assert(!ms_.st_blue.empty());
-          assert(!ms_.st_red.empty());
+          //assert(!ms_.st_red.empty());
 
           tgba_run* run = new tgba_run;
 
@@ -344,6 +423,8 @@ namespace spot
           tgba_run::steps* l;
 
           const state* target = ms_.st_red.front().s;
+	  if (ms_.st_red.empty())
+	    target  = 0;
 
           l = &run->prefix;
 
@@ -352,15 +433,22 @@ namespace spot
           j = i; ++j;
           for (; i != end; ++i, ++j)
             {
-              if (l == &run->prefix && i->s->compare(target) == 0)
+              if (!(target == 0) &&
+		  l == &run->prefix && i->s->compare(target) == 0)
                 l = &run->cycle;
               tgba_run::step s = { i->s->clone(), j->label, j->acc };
               l->push_back(s);
             }
 
+	  if (ms_.st_red.empty())
+	    {
+	      // We are in a reachability and so we don't have cycle
+	      return run;
+	    }
+
           if (l == &run->prefix && i->s->compare(target) == 0)
             l = &run->cycle;
-          assert(l == &run->cycle);
+	  assert(l == &run->cycle);
 
           j = ms_.st_red.rbegin();
           tgba_run::step s = { i->s->clone(), j->label, j->acc };
@@ -373,7 +461,6 @@ namespace spot
               tgba_run::step s = { i->s->clone(), j->label, j->acc };
               l->push_back(s);
             }
-
           return run;
         }
 
@@ -390,13 +477,13 @@ namespace spot
       class se05_result: public emptiness_check_result
       {
       public:
-        se05_result(se05_search& m, option_map o = option_map())
-          : emptiness_check_result(m.automaton(), o), ms(m)
+        se05_result(se05_search& m, option_map o = option_map(), bool dyn = false)
+          : emptiness_check_result(m.automaton(), o), ms(m), is_dynamic(dyn)
         {
           if (options()[FROM_STACK])
             computer = new result_from_stack(ms);
           else
-            computer = new ndfs_result<se05_search<heap>, heap>(ms);
+            computer = new ndfs_result<se05_search<heap>, heap>(ms, is_dynamic);
         }
 
         virtual void options_updated(const option_map& old)
@@ -404,7 +491,7 @@ namespace spot
           if (old[FROM_STACK] && !options()[FROM_STACK])
             {
               delete computer;
-              computer = new ndfs_result<se05_search<heap>, heap>(ms);
+              computer = new ndfs_result<se05_search<heap>, heap>(ms, is_dynamic);
             }
           else if (!old[FROM_STACK] && options()[FROM_STACK])
             {
@@ -431,6 +518,7 @@ namespace spot
       private:
         emptiness_check_result* computer;
         se05_search& ms;
+	bool is_dynamic;
       };
     };
 
@@ -673,15 +761,18 @@ namespace spot
 
   } // anonymous
 
-  emptiness_check* explicit_se05_search(const tgba *a, option_map o)
+  emptiness_check* explicit_se05_search(const tgba *a,
+					option_map o,
+					bool dyn)
   {
-    return new se05_search<explicit_se05_search_heap>(a, 0, o);
+    return new se05_search<explicit_se05_search_heap>(a, 0, o, dyn);
   }
 
   emptiness_check* bit_state_hashing_se05_search(const tgba *a, size_t size,
-                                                option_map o)
+						 option_map o,
+						 bool dyn)
   {
-    return new se05_search<bsh_se05_search_heap>(a, size, o);
+    return new se05_search<bsh_se05_search_heap>(a, size, o, dyn);
   }
 
   emptiness_check*
@@ -693,4 +784,13 @@ namespace spot
     return explicit_se05_search(a, o);
   }
 
+
+  emptiness_check*
+  se05_dyn(const tgba *a, option_map o)
+  {
+    size_t size = o.get("bsh");
+    if (size)
+      return bit_state_hashing_se05_search(a, size, o, true);
+    return explicit_se05_search(a, o, true);
+  }
 }

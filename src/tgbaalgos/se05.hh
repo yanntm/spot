@@ -100,7 +100,9 @@ namespace spot
   /// \sa spot::explicit_magic_search
   ///
   emptiness_check* explicit_se05_search(const tgba *a,
-                                        option_map o = option_map());
+                                        option_map o = option_map(),
+					bool dyn = false);
+
   /// \brief Returns an emptiness checker on the spot::tgba automaton \a a.
   ///
   /// \pre The automaton \a a must have at most one acceptance condition (i.e.
@@ -129,7 +131,8 @@ namespace spot
   /// \sa spot::explicit_se05_search
   ///
   emptiness_check* bit_state_hashing_se05_search(const tgba *a, size_t size,
-						 option_map o = option_map());
+						 option_map o = option_map(),
+						 bool dyn = false);
 
 
   /// \brief Wrapper for the two se05 implementations.
@@ -139,6 +142,9 @@ namespace spot
   /// in the \c option_map.  If \c "bsh" is set and non null, its value
   /// is used as the size of the hash map.
   emptiness_check* se05(const tgba *a, option_map o);
+
+
+  emptiness_check* se05_dyn(const tgba *a, option_map o);
 
   /// @}
 }

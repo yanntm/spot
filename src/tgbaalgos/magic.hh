@@ -95,7 +95,8 @@ namespace spot
   /// \bug The name is misleading.  Magic-search is the algorithm
   /// from \c godefroid.93.pstv, not \c courcoubetis.92.fmsd.
   emptiness_check* explicit_magic_search(const tgba *a,
-                                         option_map o = option_map());
+                                         option_map o = option_map(),
+					 bool dyn = false);
 
   /// \brief Returns an emptiness checker on the spot::tgba automaton \a a.
   ///
@@ -125,7 +126,8 @@ namespace spot
   /// \sa spot::explicit_magic_search
   ///
   emptiness_check* bit_state_hashing_magic_search(const tgba *a, size_t size,
-                                                  option_map o = option_map());
+                                                  option_map o = option_map(),
+						  bool dyn = false);
 
   /// \brief Wrapper for the two magic_search implementations.
   ///
@@ -134,6 +136,9 @@ namespace spot
   /// in the \c option_map.  If \c "bsh" is set and non null, its value
   /// is used as the size of the hash map.
   emptiness_check* magic_search(const tgba *a, option_map o = option_map());
+
+
+  emptiness_check* magic_dyn_search(const tgba *a, option_map o = option_map());
 
   /// @}
 }

@@ -37,6 +37,7 @@
 #include "emptiness_stats.hh"
 #include "gv04.hh"
 #include "bfssteps.hh"
+#include "ltlast/constant.hh"
 
 namespace spot
 {
@@ -69,9 +70,11 @@ namespace spot
       int top;			// Top of SCC stack.
       int dftop;		// Top of DFS stack.
       bool violation;		// Whether an accepting run was found.
+      bool is_dynamic;		// Wether we perform the dynamic emptiness
 
-      gv04(const tgba *a, option_map o)
-	: emptiness_check(a, o), accepting(a->all_acceptance_conditions())
+      gv04(const tgba *a, option_map o, bool dyn = false)
+	: emptiness_check(a, o), accepting(a->all_acceptance_conditions()),
+	  is_dynamic(dyn)
       {
 	assert(a->number_of_acceptance_conditions() <= 1);
       }
@@ -90,12 +93,49 @@ namespace spot
 	  }
       }
 
+      void
+      stats_formula (const ltl::formula *formula)
+      {
+	if (formula->is_syntactic_guarantee())
+	  inc_reachability();
+// 	else if (formula->is_syntactic_persistence())
+// 	  inc_dfs ();
+	else
+	  inc_ndfs ();
+      }
+
+      void
+      stats_commut (const ltl::formula *formula)
+      {
+	if (formula->is_syntactic_guarantee())
+	  commut_algo(REACHABILITY);
+// 	else if (formula->is_syntactic_persistence())
+// 	  commut_algo(DFS);
+	else
+	  commut_algo(NDFS);
+      }
+
+
       virtual emptiness_check_result*
       check()
       {
 	top = dftop = -1;
 	violation = false;
-	push(a_->get_init_state(), false);
+	const state *s0 = a_->get_init_state();
+	push(s0, false);
+
+	if (is_dynamic)
+	  {
+	    const ltl::formula * formula =  es_->formula_from_state(s0);
+	    stats_commut (formula);
+	    stats_formula (formula);
+	  }
+	else
+	  {
+	    inc_ndfs();
+	    commut_algo(NDFS);
+	  }
+
 
 	while (!violation && dftop >= 0)
 	  {
@@ -131,10 +171,31 @@ namespace spot
 		      << (acc ? " (with accepting link)" : "");
 
 		hash_type::const_iterator i = h.find(s_prime);
+		const ltl::formula *formula = 0;
+		if (is_dynamic)
+		  {
+		    assert(es_);
+		    formula =  es_->formula_from_state(s_prime);
+		    assert(formula);
+		    stats_commut (formula);
+		    if (formula->is_syntactic_guarantee() &&
+			ltl::constant::true_instance() == formula)
+		      {
+			trace << "  It's a reachability we can report" << std::endl;
+			//push(s_prime, acc);
+			return new result(*this);
+		      }
+		  }
+		else
+		  commut_algo(NDFS);
 
 		if (i == h.end())
 		  {
 		    trace << " is a new state." << std::endl;
+		    if (is_dynamic)
+			stats_formula (formula);
+		    else
+		      inc_ndfs();
 		    push(s_prime, acc);
 		  }
 		else
@@ -286,6 +347,8 @@ namespace spot
 	  return s;
 	}
 
+
+
 	virtual tgba_run*
 	accepting_run()
 	{
@@ -383,6 +446,12 @@ namespace spot
 	    }
 	  };
 
+	  if (data.is_dynamic)
+	    {
+	      // FIXME !!! Only for REACHABILITY / TERMINAL AUTOMATA
+	      return res;
+	    }
+
 	  const state* bfs_start = data.stack[scc_root].s;
 	  const state* bfs_end = bfs_start;
 	  if (data.accepting != bddfalse)
@@ -403,7 +472,13 @@ namespace spot
 	}
       };
 
-
+      /// Override previous declaration in emptiness.h 
+      /// This is used to detect dynamic application of the algorithm
+      virtual bool
+      is_dynamic_emptiness ()
+      {
+	return is_dynamic;
+      }
     };
 
   } // anonymous
@@ -412,5 +487,11 @@ namespace spot
   explicit_gv04_check(const tgba* a, option_map o)
   {
     return new gv04(a, o);
+  }
+
+  emptiness_check*
+  explicit_gv04_dyn_check(const tgba* a, option_map o)
+  {
+    return new gv04(a, o, true);
   }
 }

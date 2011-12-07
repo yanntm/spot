@@ -93,9 +93,12 @@ namespace spot
     // Conditionally inherit from acss_statistics or ars_statistics.
     public stats_interface<ndfs_result<ndfs_search, heap>, heap::Has_Size>
   {
+  protected :
+    bool is_dynamic;		///< True if it's a dynamic emptiness i-e
+                                ///  no cycle in counterexample  
   public:
-    ndfs_result(const ndfs_search& ms)
-      : emptiness_check_result(ms.automaton()), ms_(ms),
+    ndfs_result(const ndfs_search& ms, bool isdyn = false)
+      : emptiness_check_result(ms.automaton()), is_dynamic(isdyn), ms_(ms),
         h_(ms_.get_heap())
     {
     }
@@ -185,18 +188,23 @@ namespace spot
 
       if (a_->all_acceptance_conditions() != covered_acc)
         {
-          bool b = dfs(start, acc_trans, covered_acc);
-          assert(b);
-          (void) b;
+	  if (h_.has_been_visited(start))
+	    {
+	      bool b = dfs(start, acc_trans, covered_acc);
+	      assert(b);
+	      (void) b;
+	    }
         }
 
       start->destroy();
 
-      assert(!acc_trans.empty());
+      if (!is_dynamic)
+	assert(!acc_trans.empty());
 
       tgba_run* run = new tgba_run;
       // construct run->cycle from acc_trans.
-      construct_cycle(run, acc_trans);
+      if (!acc_trans.empty())
+	construct_cycle(run, acc_trans);
       // construct run->prefix (a minimal path from the initial state to any
       // state of run->cycle) and adjust the cycle to the state reached by the
       // prefix.
@@ -641,9 +649,30 @@ namespace spot
         {
           // This initial state is outside the cycle.  Compute the prefix.
           min_path<false> s(this, a_, target, h_);
-          cycle_entry_point = s.search(prefix_start, run->prefix);
-          assert(cycle_entry_point);
-          cycle_entry_point = cycle_entry_point->clone();
+	  //          cycle_entry_point = s.search(prefix_start, run->prefix);
+          if (!is_dynamic && !run->prefix.empty())
+	    {
+	      cycle_entry_point = s.search(prefix_start, run->prefix);
+	      assert(cycle_entry_point);
+	    }
+
+	  if (!cycle_entry_point)
+	    {
+	      prefix_start->destroy();
+	      const stack_type& stb = ms_.get_st_blue();
+	      typename stack_type::const_reverse_iterator i, j, end;
+	      i = stb.rbegin();
+	      end = stb.rend(); --end;
+	      j = i; ++j;
+	      for (; i != end; ++i, ++j)
+		{
+		  tgba_run::step st = { i->s->clone(), j->label, j->acc };
+		  run->prefix.push_back(st);
+		}
+	      return;
+	    }
+	  else
+	    cycle_entry_point = cycle_entry_point->clone();
         }
 
       // Locate cycle_entry_point on the cycle.

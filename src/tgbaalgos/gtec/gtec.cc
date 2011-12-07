@@ -31,6 +31,7 @@
 #include "gtec.hh"
 #include "ce.hh"
 #include "misc/memusage.hh"
+#include "ltlast/constant.hh"
 
 namespace spot
 {
@@ -41,9 +42,11 @@ namespace spot
 
   couvreur99_check::couvreur99_check(const tgba* a,
 				     option_map o,
-				     const numbered_state_heap_factory* nshf)
+				     const numbered_state_heap_factory* nshf,
+				     bool dyn)
     : emptiness_check(a, o),
-      removed_components(0)
+      removed_components(0),
+      is_dynamic (dyn)
   {
     poprem_ = o.get("poprem", 1);
     ecs_ = new couvreur99_check_status(a, nshf);
@@ -143,6 +146,24 @@ namespace spot
       }
   }
 
+  void
+  couvreur99_check::stats_formula (const ltl::formula *formula)
+  {
+    if (formula->is_syntactic_guarantee())
+      inc_reachability();
+    else
+      inc_ndfs ();
+  }
+
+  void
+  couvreur99_check::stats_commut (const ltl::formula *formula)
+  {
+    if (formula->is_syntactic_guarantee())
+      commut_algo(REACHABILITY);
+    else
+      commut_algo(NDFS);
+  }
+
   emptiness_check_result*
   couvreur99_check::check()
   {
@@ -162,6 +183,9 @@ namespace spot
     //   it is also used as a key in H.
     std::stack<pair_state_iter> todo;
 
+    if (is_dynamic)
+      assert(es_);
+
     // Setup depth-first search from the initial state.
     {
       state* init = ecs_->aut->get_init_state();
@@ -172,6 +196,18 @@ namespace spot
       iter->first();
       todo.push(pair_state_iter(init, iter));
       inc_depth();
+
+      if (is_dynamic)
+	{
+	  const ltl::formula * formula =  es_->formula_from_state(init);
+	  stats_commut (formula);
+	  stats_formula (formula);
+	}
+      else
+	{
+	  inc_ndfs();
+	  commut_algo(NDFS);
+	}
     }
 
     while (!todo.empty())
@@ -233,6 +269,7 @@ namespace spot
 	numbered_state_heap::state_index_p spi = ecs_->h->find(dest);
 	if (!spi.first)
 	  {
+
 	    // Yes.  Number it, stack it, and register its successors
 	    // for later processing.
 	    ecs_->h->insert(dest, ++num);
@@ -242,6 +279,27 @@ namespace spot
 	    iter->first();
 	    todo.push(pair_state_iter(dest, iter));
 	    inc_depth();
+
+	    if (is_dynamic)
+	      {
+		assert(es_);
+		const ltl::formula *formula =  es_->formula_from_state(dest);
+		assert(formula);
+		stats_commut (formula);
+		stats_formula (formula);
+		if (formula->is_syntactic_guarantee() &&
+		    ltl::constant::true_instance() == formula)
+		  {
+		    set_states(ecs_->states());
+		    trace << "  It's a reachability we can report" << std::endl;
+		    return new couvreur99_check_result(ecs_, options(), true);
+		  }
+	      }
+	    else
+	      {
+		commut_algo(NDFS);
+		inc_ndfs ();
+	      }
 	    continue;
 	  }
 
@@ -338,8 +396,8 @@ namespace spot
   couvreur99_check_shy::couvreur99_check_shy(const tgba* a,
 					     option_map o,
 					     const numbered_state_heap_factory*
-					     nshf)
-    : couvreur99_check(a, o, nshf), num(1)
+					     nshf, bool dyn)
+    : couvreur99_check(a, o, nshf, dyn), num(1)
   {
     group_ = o.get("group", 1);
     group2_ = o.get("group2", 0);
@@ -407,8 +465,25 @@ namespace spot
   emptiness_check_result*
   couvreur99_check_shy::check()
   {
+    if (is_dynamic)
+      assert(es_);
+
     // Position in the loop seeking known successors.
     pos = todo.back().q.begin();
+
+
+    if (is_dynamic)
+      {
+	const ltl::formula * formula =  es_->formula_from_state(todo.back().s);
+	stats_commut (formula);
+	stats_formula (formula);
+      }
+    else
+      {
+	inc_ndfs();
+	commut_algo(NDFS);
+      }
+
 
     for (;;)
       {
@@ -512,6 +587,27 @@ namespace spot
 	    todo.push_back(todo_item(succ.s, num, this));
 	    pos = todo.back().q.begin();
 	    inc_depth();
+
+	    if (is_dynamic)
+	      {
+		assert(es_);
+		const ltl::formula *formula =  es_->formula_from_state(succ.s);
+		assert(formula);
+		stats_commut (formula);
+		stats_formula (formula);
+		if (formula->is_syntactic_guarantee() &&
+		    ltl::constant::true_instance() == formula)
+		  {
+		    set_states(ecs_->states());
+		    trace << "  It's a reachability we can report" << std::endl;
+		    return new couvreur99_check_result(ecs_, options(), true);
+		  }
+	      }
+	    else
+	      {
+		commut_algo(NDFS);
+		inc_ndfs ();
+	      }
 	    continue;
 	  }
 
@@ -626,6 +722,17 @@ namespace spot
     if (o.get("shy"))
       return new couvreur99_check_shy(a, o, nshf);
     return  new couvreur99_check(a, o, nshf);
+  }
+
+
+  emptiness_check*
+  couvreur99_dyn(const tgba* a,
+		 option_map o,
+		 const numbered_state_heap_factory* nshf)
+  {
+    if (o.get("shy"))
+      return new couvreur99_check_shy(a, o, nshf, true);
+    return  new couvreur99_check(a, o, nshf, true);
   }
 
 }

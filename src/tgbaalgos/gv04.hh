@@ -53,6 +53,10 @@ namespace spot
   /// \endverbatim
   emptiness_check* explicit_gv04_check(const tgba* a,
 				       option_map o = option_map());
+
+
+  emptiness_check* explicit_gv04_dyn_check(const tgba* a,
+				       option_map o = option_map());
 }
 
 #endif // SPOT_TGBAALGOS_GV04_HH

@@ -33,7 +33,7 @@ namespace spot
   {
   public:
     couvreur99_check_result(const couvreur99_check_status* ecs,
-			    option_map o = option_map());
+			    option_map o = option_map(), bool dyn = false);
 
     virtual tgba_run* accepting_run();
 
@@ -49,6 +49,7 @@ namespace spot
   private:
     const couvreur99_check_status* ecs_;
     tgba_run* run_;
+    bool is_dynamic;
   };
 }
 

@@ -141,6 +141,12 @@ namespace spot
 	     const numbered_state_heap_factory* nshf
 	     = numbered_state_heap_hash_map_factory::instance());
 
+  emptiness_check*
+  couvreur99_dyn(const tgba* a,
+		 option_map options = option_map(),
+		 const numbered_state_heap_factory* nshf
+		 = numbered_state_heap_hash_map_factory::instance());
+
 
   /// \brief An implementation of the Couvreur99 emptiness-check algorithm.
   ///
@@ -151,7 +157,8 @@ namespace spot
     couvreur99_check(const tgba* a,
 		     option_map o = option_map(),
 		     const numbered_state_heap_factory* nshf
-		     = numbered_state_heap_hash_map_factory::instance());
+		     = numbered_state_heap_hash_map_factory::instance(),
+		     bool dyn = false);
     virtual ~couvreur99_check();
 
     /// Check whether the automaton's language is empty.
@@ -169,6 +176,14 @@ namespace spot
     /// the couvreur99 object is deleted.
     const couvreur99_check_status* result() const;
 
+    /// Override previous declaration in emptiness.h 
+    /// This is used to detect dynamic application of the algorithm
+    virtual bool
+    is_dynamic_emptiness ()
+    {
+      return is_dynamic;
+    }
+
   protected:
     couvreur99_check_status* ecs_;
     /// \brief Remove a strongly component from the hash.
@@ -178,12 +193,26 @@ namespace spot
     /// component that contains this state.
     void remove_component(const state* start_delete);
 
+    /// \brief perform stat about algorithms commutations
+    ///
+    /// This function register the number of algorgirthm 
+    /// switch : these switch are linked to the formula 
+    /// stroed in the state
+    void  stats_commut (const ltl::formula *formula);
+
+    /// \brief perform stats about the type of formula in states 
+    /// 
+    /// This function look the formula which is linked to a state
+    /// and register types of states
+    void  stats_formula (const ltl::formula *formula);
+
     /// Whether to store the state to be removed.
     bool poprem_;
     /// Number of dead SCC removed by the algorithm.
     unsigned removed_components;
     unsigned get_removed_components() const;
     unsigned get_vmsize() const;
+    bool     is_dynamic;
   };
 
   /// \brief A version of spot::couvreur99_check that tries to visit
@@ -196,10 +225,19 @@ namespace spot
     couvreur99_check_shy(const tgba* a,
 			 option_map o = option_map(),
 			 const numbered_state_heap_factory* nshf
-			 = numbered_state_heap_hash_map_factory::instance());
+			 = numbered_state_heap_hash_map_factory::instance(),
+			 bool dyn = false);
     virtual ~couvreur99_check_shy();
 
     virtual emptiness_check_result* check();
+
+    /// Override previous declaration in emptiness.h 
+    /// This is used to detect dynamic application of the algorithm
+    virtual bool
+    is_dynamic_emptiness ()
+    {
+      return is_dynamic;
+    }
 
   protected:
     struct successor {

@@ -43,7 +43,7 @@ namespace spot
 
   bool
   replay_tgba_run(std::ostream& os, const tgba* a, const tgba_run* run,
-		  bool debug)
+		  bool debug, bool cycle_undefined)
   {
     const state* s = a->get_init_state();
     int serial = 1;
@@ -71,7 +71,11 @@ namespace spot
 	  os << "Prefix:" << std::endl;
       }
 
+    if (l->begin() == l->end())
+      return true;
+
     tgba_run::steps::const_iterator i = l->begin();
+
 
     if (s->compare(i->s))
       {
@@ -84,6 +88,7 @@ namespace spot
 	return false;
       }
 
+    bool c_ = false;
     for (; i != l->end(); ++serial)
       {
 	if (debug)
@@ -116,6 +121,12 @@ namespace spot
 	// expected outgoing transition
 	bdd label = i->label;
 	bdd acc = i->acc;
+
+	if (cycle_undefined && l == &run->prefix)
+	  {
+	    s->destroy();
+	    return true;
+	  }
 
 	// compute the next expected state
 	const state* next;
@@ -231,8 +242,14 @@ namespace spot
 		     << std::endl;
 	      }
 	  }
+	c_ = true;
       }
+
     s->destroy();
+
+    if (cycle_undefined)
+      return true;
+
     if (all_acc != expected_all_acc)
       {
 	if (debug)

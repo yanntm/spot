@@ -50,6 +50,7 @@
 #include "tau03opt.hh"
 #include "weight.hh"
 #include "ndfs_result.hxx"
+#include "ltlast/constant.hh"
 
 namespace spot
 {
@@ -64,7 +65,8 @@ namespace spot
     {
     public:
       /// \brief Initialize the search algorithm on the automaton \a a
-      tau03_opt_search(const tgba *a, size_t size, option_map o)
+      tau03_opt_search(const tgba *a, size_t size, option_map o,
+		       bool dyn = false)
         : emptiness_check(a, o),
           current_weight(a->neg_acceptance_conditions()),
           h(size),
@@ -72,7 +74,8 @@ namespace spot
 	  use_condition_stack(o.get("condstack")),
 	  use_ordering(use_condition_stack && o.get("ordering")),
 	  use_weights(o.get("weights", 1)),
-	  use_red_weights(use_weights && o.get("redweights", 1))
+	  use_red_weights(use_weights && o.get("redweights", 1)),
+	  is_dynamic(dyn)
       {
 	if (use_ordering)
 	  {
@@ -114,10 +117,23 @@ namespace spot
         assert(st_red.empty());
         const state* s0 = a_->get_init_state();
         inc_states();
+
+	if (is_dynamic)
+	  {
+	    const ltl::formula * formula =  es_->formula_from_state(s0);
+	    stats_commut (formula);
+	    stats_formula (formula);
+	  }
+	else
+	  {
+	    inc_ndfs();
+	    commut_algo(NDFS);
+	  }
+
         h.add_new_state(s0, CYAN, current_weight);
         push(st_blue, s0, bddfalse, bddfalse);
         if (dfs_blue())
-          return new ndfs_result<tau03_opt_search<heap>, heap>(*this);
+          return new ndfs_result<tau03_opt_search<heap>, heap>(*this, is_dynamic);
         return 0;
       }
 
@@ -197,8 +213,36 @@ namespace spot
       /// Whether to use weights in the red dfs.
       bool use_red_weights;
 
+      bool is_dynamic;
+
       /// Ordering of the acceptance conditions.
       std::vector<bdd> cond;
+
+      void
+      stats_formula (const ltl::formula *formula)
+      {
+	if (formula->is_syntactic_guarantee())
+	  inc_reachability();
+	else
+	  inc_ndfs ();
+      }
+
+      void
+      stats_commut (const ltl::formula *formula)
+      {
+	if (formula->is_syntactic_guarantee())
+	  commut_algo(REACHABILITY);
+	else
+	  commut_algo(NDFS);
+      }
+
+      /// Override previous declaration in emptiness.h 
+      /// This is used to detect dynamic application of the algorithm
+      virtual bool
+      is_dynamic_emptiness ()
+      {
+	return is_dynamic;
+      }
 
       bool dfs_blue()
       {
@@ -217,12 +261,41 @@ namespace spot
                 f.it->next();
                 inc_transitions();
                 typename heap::color_ref c_prime = h.get_color_ref(s_prime);
+		const ltl::formula *formula = 0;
+		if (is_dynamic)
+		  {
+		    assert(es_);
+		    formula =  es_->formula_from_state(f.s);
+		    assert(formula);
+		    stats_commut (formula);
+		    if (formula->is_syntactic_guarantee() &&
+			ltl::constant::true_instance() == formula)
+		      {
+			trace << "  It's a reachability we can report" << std::endl;
+			push(st_blue, s_prime, label, acc);
+			return true;
+		      }
+		  }
+		else
+		  commut_algo(NDFS);
+
+
+
                 if (c_prime.is_white())
                   {
                     trace << "  It is white, go down" << std::endl;
 		    if (use_weights)
 		      current_weight += acc;
                     inc_states();
+
+		    if (is_dynamic)
+		      {
+			formula =  es_->formula_from_state(s_prime);
+			stats_formula (formula);
+		      }
+		    else
+		      inc_ndfs();
+
                     h.add_new_state(s_prime, CYAN, current_weight);
                     push(st_blue, s_prime, label, acc);
                   }
@@ -240,6 +313,7 @@ namespace spot
                               << "is reached, report cycle" << std::endl;
                         c_prime.cumulate_acc(all_acc);
                         push(st_red, s_prime, label, acc);
+			is_dynamic = false;
                         return true;
                       }
                     else
@@ -293,7 +367,10 @@ namespace spot
                         c_prime.cumulate_acc(acp);
                         push(st_red, f_dest.s, f_dest.label, f_dest.acc);
                         if (dfs_red(acu))
+			  {
+			    is_dynamic = false;
                             return true;
+			  }
                       }
                     else
                       {
@@ -566,7 +643,6 @@ namespace spot
       // associate to each cyan state its weight and its acceptance set
       hcyan_type hc;
     };
-
   } // anonymous
 
   emptiness_check* explicit_tau03_opt_search(const tgba *a, option_map o)
@@ -574,4 +650,8 @@ namespace spot
     return new tau03_opt_search<explicit_tau03_opt_search_heap>(a, 0, o);
   }
 
+  emptiness_check* explicit_tau03_opt_dyn_search(const tgba *a, option_map o)
+  {
+    return new tau03_opt_search<explicit_tau03_opt_search_heap>(a, 0, o, true);
+  }
 }

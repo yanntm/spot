@@ -121,8 +121,12 @@ namespace spot
   class ec_statistics: public unsigned_statistics
   {
   public :
+    enum algo_type  { NDFS, DFS, REACHABILITY };
+
     ec_statistics()
-    : states_(0), transitions_(0), depth_(0), max_depth_(0)
+      : states_(0), transitions_(0), depth_(0), max_depth_(0),
+	perform_ndfs_(0), perform_dfs_(0), perform_reachability_(0),
+	algo_commut_(0), algo_cache_(NDFS)
     {
       stats["states"] =
 	static_cast<unsigned_statistics::unsigned_fun>(&ec_statistics::states);
@@ -132,6 +136,18 @@ namespace spot
       stats["max. depth"] =
 	static_cast<unsigned_statistics::unsigned_fun>
 	  (&ec_statistics::max_depth);
+      stats["algo. ndfs"] =
+	static_cast<unsigned_statistics::unsigned_fun>
+	  (&ec_statistics::ndfs);
+      stats["algo. dfs"] =
+	static_cast<unsigned_statistics::unsigned_fun>
+	  (&ec_statistics::dfs);
+      stats["algo. reachability"] =
+	static_cast<unsigned_statistics::unsigned_fun>
+	  (&ec_statistics::reachability);
+      stats["algo. commut"] =
+	static_cast<unsigned_statistics::unsigned_fun>
+	  (&ec_statistics::algo_commut);
     }
 
     void
@@ -191,11 +207,68 @@ namespace spot
       return depth_;
     }
 
+    // This part focus on dynamism during the emptiness 
+    void
+    inc_ndfs()
+    {
+      ++perform_ndfs_;
+    }
+
+    unsigned
+    ndfs() const
+    {
+      return perform_ndfs_;
+    }
+
+    void
+    inc_dfs()
+    {
+      ++perform_dfs_;
+    }
+
+    unsigned
+    dfs() const
+    {
+      return perform_dfs_;
+    }
+
+    void
+    inc_reachability ()
+    {
+      ++perform_reachability_;
+    }
+
+    unsigned
+    reachability() const
+    {
+      return perform_reachability_;
+    }
+
+    void
+    commut_algo (algo_type t)
+    {
+      if (t == algo_cache_)
+	return;
+      ++algo_commut_;
+      algo_cache_ = t;
+    }
+
+    unsigned
+    algo_commut() const
+    {
+      return algo_commut_;
+    }
+
   private :
-    unsigned states_;		/// number of disctint visited states
-    unsigned transitions_;	/// number of visited transitions
-    unsigned depth_;		/// maximal depth of the stack(s)
-    unsigned max_depth_;	/// maximal depth of the stack(s)
+    unsigned states_;		    /// number of disctint visited states
+    unsigned transitions_;	    /// number of visited transitions
+    unsigned depth_;		    /// maximal depth of the stack(s)
+    unsigned max_depth_;	    /// maximal depth of the stack(s)
+    unsigned perform_ndfs_;	    /// number of ndfs that are performed 
+    unsigned perform_dfs_;	    /// number of dfs that ared performed 
+    unsigned perform_reachability_; /// number of reachability that are performed 
+    unsigned algo_commut_;	    /// number of commutations between states
+    algo_type algo_cache_;	    /// a cache for algo
   };
 
   /// \brief Accepting Run Search statistics.
