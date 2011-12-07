@@ -187,6 +187,13 @@ namespace spot
       return spot::couvreur99(a, o);
     }
 
+    spot::emptiness_check*
+    couvreur99_cons_dyn(const spot::tgba* a, spot::option_map o)
+    {
+      return spot::couvreur99_dyn(a, o);
+    }
+
+
     struct ec_algo
     {
       const char* name;
@@ -198,12 +205,18 @@ namespace spot
 
     ec_algo ec_algos[] =
       {
-	{ "Cou99",     couvreur99_cons,                     0, -1U },
-	{ "CVWY90",    spot::magic_search,                  0,   1 },
-	{ "GV04",      spot::explicit_gv04_check,           0,   1 },
-	{ "SE05",      spot::se05,                          0,   1 },
-	{ "Tau03",     spot::explicit_tau03_search,         1, -1U },
-	{ "Tau03_opt", spot::explicit_tau03_opt_search,     0, -1U },
+	{ "Cou99",         couvreur99_cons,                     0, -1U },
+	{ "Cou99_dyn",     spot::couvreur99_cons_dyn,           0, -1U },
+	{ "CVWY90",        spot::magic_search,                  0,   1 },
+	{ "CVWY90_dyn",    spot::magic_dyn_search,              0,   1 },
+	{ "GV04",          spot::explicit_gv04_check,           0,   1 },
+	{ "GV04_dyn",      spot::explicit_gv04_dyn_check,       0,   1 },
+	{ "SE05",          spot::se05,                          0,   1 },
+	{ "SE05_dyn",      spot::se05_dyn,                      0,   1 },
+	{ "Tau03",         spot::explicit_tau03_search,         1, -1U },
+	{ "Tau03_dyn",     spot::explicit_tau03_dyn_search,     1, -1U },
+	{ "Tau03_opt",     spot::explicit_tau03_opt_search,     0, -1U },
+	{ "Tau03_opt_dyn", spot::explicit_tau03_opt_dyn_search, 0, -1U },
       };
   }
 
@@ -229,6 +242,16 @@ namespace spot
   emptiness_check_instantiator::instantiate(const tgba* a) const
   {
     return static_cast<ec_algo*>(info_)->construct(a, o_);
+  }
+
+  emptiness_check*
+  emptiness_check_instantiator::instantiate(const tgba* a,
+					    emptiness_specifier *s) const
+  {
+    emptiness_check* es =  static_cast<ec_algo*>(info_)->construct(a, o_);
+    assert(es);
+    es->set_specifier (s);
+    return es;
   }
 
   emptiness_check_instantiator*

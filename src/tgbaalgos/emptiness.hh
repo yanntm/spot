@@ -26,6 +26,7 @@
 #include <list>
 #include <iosfwd>
 #include <bdd.h>
+#include "emptiness_specifier.hh"
 #include "misc/optionmap.hh"
 #include "tgba/state.hh"
 #include "emptiness_stats.hh"
@@ -132,10 +133,11 @@ namespace spot
   class emptiness_check
   {
   public:
-    emptiness_check(const tgba* a, option_map o = option_map())
-      : a_(a), o_(o)
-    {
-    }
+    emptiness_check(const tgba* a, option_map o = option_map(),
+		    const emptiness_specifier * e = 0 , bool dyn = false)
+      : a_(a), o_(o), es_(e), is_dynamic(dyn)
+    {  }
+
     virtual ~emptiness_check();
 
     /// The automaton that this emptiness-check inspects.
@@ -150,6 +152,30 @@ namespace spot
     options() const
     {
       return o_;
+    }
+
+    /// Return the specifier parametrizing how the emptiness check is realized.
+    const emptiness_specifier&
+    specifier() const
+    {
+      return *es_;
+    }
+
+    /// Allows to modify dynamically the specifier for the emptiness 
+    void
+    set_specifier(const emptiness_specifier *e)
+    {
+      delete es_;
+      es_ = e;
+    }
+
+    /// Return true if the algorithm use temporal properties to reduce 
+    /// the size of the computation w.r.t do not compute the entire cycle 
+    /// for terminal automata
+    virtual bool
+    is_dynamic_emptiness ()
+    {
+      return false;
     }
 
     /// Modify the algorithm options.
@@ -186,8 +212,9 @@ namespace spot
   protected:
     const tgba* a_;		///< The automaton.
     option_map o_;		///< The options
+    const emptiness_specifier *es_;	///< The specifier
+    bool is_dynamic;
   };
-
 
   // Dynamically create emptiness checks.  Given their name and options.
   class emptiness_check_instantiator
@@ -207,6 +234,9 @@ namespace spot
 
     /// Actually instantiate the emptiness check, for \a a.
     emptiness_check* instantiate(const tgba* a) const;
+
+    /// Actually instantiate the emptiness check, for \a a.
+    emptiness_check* instantiate(const tgba* a, emptiness_specifier *e) const;
 
     /// Accessor to the options.
     /// @{
