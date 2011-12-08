@@ -637,7 +637,7 @@ namespace spot
       // the cycle so it begins on this position.  Otherwise we will shift
       // the cycle so it begins on the state that follows the prefix.
       // cycle_entry_point is that state.
-      const state* cycle_entry_point;
+      const state* cycle_entry_point = 0;
       typename m_source_trans::const_iterator ps = target.find(prefix_start);
       if (ps != target.end())
         {

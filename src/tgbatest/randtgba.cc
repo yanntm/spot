@@ -114,8 +114,8 @@ cons_emptiness_check(int num, const spot::tgba* a,
     {
       return 0;
     }
-  if (echk && n_acc < inst->min_acceptance_conditions()
-      || n_acc > inst->max_acceptance_conditions())
+  if (echk && (n_acc < inst->min_acceptance_conditions()
+	       || n_acc > inst->max_acceptance_conditions()))
     {
       spot::formula_emptiness_specifier *fes  =
 	new spot::formula_emptiness_specifier (degen?degen:product, formula);
