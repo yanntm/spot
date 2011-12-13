@@ -174,6 +174,17 @@ namespace spot
     return false;
   }
 
+  bool
+  rebuild::compare_acc (sort_trans first, sort_trans second)
+  {
+    // FIX-ME We should consider algorithms working with multiple
+    // acceptance conditions
+    bdd all_cond = first.src->all_acceptance_conditions();
+    if (first.acc == all_cond && second.acc != all_cond)
+      return true;
+    return false;
+  }
+
   void
   rebuild::strategy_dispatcher (std::list<sort_trans> *l)
   {
@@ -181,15 +192,16 @@ namespace spot
     switch (is)
       {
       case DEFAULT :
-	return;		// Should be optim at the begining
+	return;		// Should be optimized at the begining
       case ACC :
-	break;
+	l->sort(rebuild::compare_acc);
+	return;
       case SHY :
 	l->sort(rebuild::compare_shy);
-	break;
+	return;
       case HIERARCHY :
 	l->sort(rebuild::compare_hierarchy);
-	break;
+	return;
       }
   }
 }

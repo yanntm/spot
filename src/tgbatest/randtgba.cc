@@ -163,7 +163,8 @@ syntax(char* prog)
 	    << "  -fs     Stats considering the formula"
 	    << std::endl
 	    << "LTL Formula Generation Options:" << std::endl
-	    << "  -af     arrange formula "      << std::endl
+	    << "  -af s    arrange formula, s = ACC|SHY|HIERARCHY "      
+	    << std::endl
 	    << "  -dp     dump priorities, do not generate any formula"
 	    << std::endl
 	    << "  -f N    size of the formula [15]" << std::endl
@@ -587,6 +588,8 @@ main(int argc, char** argv)
   bool opt_paper = false;
   bool opt_dp = false;
   bool opt_af = false;
+  spot::rebuild::iterator_strategy opt_af_strat = 
+    spot::rebuild::DEFAULT;
   int opt_f = 15;
   int opt_F = 0;
   char* opt_p = 0;
@@ -823,6 +826,14 @@ main(int argc, char** argv)
       else if (!strcmp(argv[argn], "-af"))
 	{
 	  opt_af = true;
+	  ++argn;
+
+	  if (!strcmp(argv[argn], "ACC"))
+	      opt_af_strat = spot::rebuild::ACC;
+	  else if (!strcmp(argv[argn], "SHY"))
+	    opt_af_strat = spot::rebuild::SHY;
+	  else if (!strcmp(argv[argn], "HIERARCHY"))
+	    opt_af_strat = spot::rebuild::HIERARCHY;
 	}
       else if (!strcmp(argv[argn], "-f"))
 	{
@@ -963,7 +974,7 @@ main(int argc, char** argv)
       if (opt_af)
 	{
 	  dotty_reachable(std::cout, formula);
-	  spot::rebuild worker (formula);
+	  spot::rebuild worker (formula, opt_af_strat);
 	  spot::tgba *new_tgba =
 	    worker.reorder_transitions();
 	  dotty_reachable(std::cout, new_tgba);

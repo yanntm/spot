@@ -99,6 +99,11 @@ namespace spot
     static bool
     compare_shy (sort_trans i1, sort_trans i2);
 
+    /// This function compare states giving preference to states having
+    /// acceptance conditions 
+    static bool
+    compare_acc (sort_trans i1, sort_trans i2);
+
     /// This method is used to perform the chosen strategy 
     /// It acts like a switch between all of these previously defined 
     /// methods 

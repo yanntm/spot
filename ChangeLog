@@ -1,6 +1,15 @@
 
 2011-12-13  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/rebuild.cc (compare_acc):
+	implementation for a new stategy
+
+	* src/tgbatest/randtgba.cc (main): 
+	add parameter for option af
+
+	* src/tgbaalgos/rebuild.hh (spot): 
+	add method compare_acc
+
 	* src/tgbaalgos/rebuild.cc (spot): 
 	Sanity clean
 	(spot): Dispatch method for sorting
