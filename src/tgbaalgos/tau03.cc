@@ -226,7 +226,8 @@ namespace spot
 		    if (formula->is_syntactic_guarantee() &&
 			ltl::constant::true_instance() == formula)
 		      {
-			trace << "  It's a reachability we can report" << std::endl;
+			trace << "  It's a reachability we can report"
+			      << std::endl;
 			push(st_blue, s_prime, label, acc);
 			return true;
 		      }
@@ -238,7 +239,8 @@ namespace spot
 // 			//acc == all_cond
 // 			)
 // 		      {
-// 			trace << "  It's a single dfs we can report" << std::endl;
+// 			trace << "  It's a single dfs we can report" 
+//                            << std::endl;
 // 			push(st_red, f.s, label, acc);
 // 			is_dynamic = false;
 // 			return true;
@@ -288,7 +290,8 @@ namespace spot
                          << a_->format_state(s_prime) << std::endl;
                     bdd label = i->current_condition();
                     bdd acc = i->current_acceptance_conditions();
-                    typename heap::color_ref c_prime = h.get_color_ref(s_prime);
+                    typename heap::color_ref c_prime =
+		      h.get_color_ref(s_prime);
                     assert(!c_prime.is_white());
                     bdd acu = acc | c.get_acc();
                     if ((c_prime.get_acc() & acu) != acu)

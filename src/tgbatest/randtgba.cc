@@ -102,6 +102,9 @@ cons_emptiness_check(int num, const spot::tgba* a,
 		     const spot::tgba *product, const spot::tgba *formula,
 		     float opt_a)
 {
+  if (!formula)
+    return 0;
+
   spot::emptiness_check_instantiator* inst = ec_algos[num].inst;
   if (n_acc < inst->min_acceptance_conditions()
       || n_acc > inst->max_acceptance_conditions())
@@ -179,8 +182,8 @@ syntax(char* prog)
 	    << std::endl
 	    << "Emptiness-Check Options:" << std::endl
 	    << "  -A FILE use all algorithms listed in FILE" << std::endl
-	    << "  -D      degeneralize TGBA for emptiness-check algorithms that"
-	    << " would" << std::endl
+	    << "  -D      degeneralize TGBA for emptiness-check algorithms"
+	    << " that would" << std::endl
 	    << "            otherwise be skipped (implies -e)" << std::endl
 	    << "  -e N    compare result of all "
 	    << "emptiness checks on N randomly generated graphs" << std::endl
@@ -966,7 +969,7 @@ main(int argc, char** argv)
 	  dotty_reachable(std::cout, new_tgba);
 	  spot::bdd_dict *fdict = formula->get_dict();
 	  fdict-> unregister_all_my_variables(formula);
-	  formula = new_tgba;	  
+	  formula = new_tgba;
 	  assert (formula);
 	}
 
@@ -1007,7 +1010,7 @@ main(int argc, char** argv)
 
 	      if (formula)
 		a = product = new spot::tgba_product(a, formula);
-	      assert(formula);
+	      //assert(formula);
 	      int real_n_acc = a->number_of_acceptance_conditions();
 
 	      if (opt_dot)
@@ -1038,7 +1041,8 @@ main(int argc, char** argv)
 		    {
 		      spot::emptiness_check* ec;
 		      spot::emptiness_check_result* res;
-		      ec = cons_emptiness_check(i, a, degen, real_n_acc, product,
+		      ec = cons_emptiness_check(i, a, degen, real_n_acc,
+						product,
 						formula, opt_a);
 		      if (!ec)
 			continue;
@@ -1314,7 +1318,8 @@ main(int argc, char** argv)
 		    << std::endl;
 	  glob_ec_ratio_stats.display(std::cout, false);
 	  if (ec_ratio_stats.size() > 1)
-	    for (ec_ratio_stats_type::const_iterator i = ec_ratio_stats.begin();
+	    for (ec_ratio_stats_type::const_iterator
+		   i = ec_ratio_stats.begin();
 		 i != ec_ratio_stats.end(); ++i)
 	      {
 		std::cout << "tests with " << i->first
@@ -1358,12 +1363,14 @@ main(int argc, char** argv)
       std::cout << "Number of empty emptiness \t: "
 		<< empty_emptiness
 		<< "\t("
-		<< (empty_emptiness*100)/(float)(n_empty_emptiness+empty_emptiness)
+		<< (empty_emptiness*100)/
+	(float)(n_empty_emptiness+empty_emptiness)
 		<< "\%)"<< std::endl;
       std::cout << "Number of non empty emptiness \t: "
 		<< n_empty_emptiness
 		<< "\t("
-		<< (n_empty_emptiness*100)/(float)(n_empty_emptiness+empty_emptiness)
+		<< (n_empty_emptiness*100)/
+	(float)(n_empty_emptiness+empty_emptiness)
 		<< "\%)"<< std::endl;
 
       for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
@@ -1454,7 +1461,8 @@ main(int argc, char** argv)
 	      i = stats["algo. ndfs"].find(algo);
 	      if (i != stats["algo. ndfs"].end())
 		{
-		  std::cout << std::setw(8) << (i->second.tot/visited_states)*100;
+		  std::cout << std::setw(8)
+			    << (i->second.tot/visited_states)*100;
 		}
 	      else
 		std::cout << "";
@@ -1462,7 +1470,8 @@ main(int argc, char** argv)
 	      i = stats["algo. dfs"].find(algo);
 	      if (i != stats["algo. dfs"].end())
 		{
-		  std::cout << std::setw(8) << (i->second.tot/visited_states)*100;
+		  std::cout << std::setw(8)
+			    << (i->second.tot/visited_states)*100;
 		}
 	      else
 		std::cout << "";
@@ -1470,7 +1479,8 @@ main(int argc, char** argv)
 	      i = stats["algo. reachability"].find(algo);
 	      if (i != stats["algo. reachability"].end())
 		{
-		  std::cout << std::setw(8) << (i->second.tot/visited_states)*100;
+		  std::cout << std::setw(8)
+			    << (i->second.tot/visited_states)*100;
 		}
 	      else
 		std::cout << "";
@@ -1478,7 +1488,8 @@ main(int argc, char** argv)
 	      i = stats["algo. commut"].find(algo);
 	      if (i != stats["algo. commut"].end())
 		{
-		  std::cout << std::setw(8) << (i->second.tot/visited_states)*100;
+		  std::cout << std::setw(8)
+			    << (i->second.tot/visited_states)*100;
 		}
 	      else
 		std::cout << "";

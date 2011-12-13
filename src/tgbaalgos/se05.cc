@@ -247,7 +247,8 @@ namespace spot
 		    if (formula->is_syntactic_guarantee() &&
 			ltl::constant::true_instance() == formula)
 		      {
-			trace << "  It's a reachability we can report" << std::endl;
+			trace << "  It's a reachability we can report"
+			      << std::endl;
 			push(st_blue, s_prime, label, acc);
 			return true;
 		      }
@@ -272,7 +273,8 @@ namespace spot
                     push(st_blue, s_prime, label, acc);
                   }
                 else if (c.get_color() == CYAN && (acc == all_cond ||
-                             (f.s->compare(s_prime) != 0 && f.acc == all_cond)))
+                             (f.s->compare(s_prime) != 0 &&
+			      f.acc == all_cond)))
                   {
                     trace << "  It is cyan and acceptance condition "
                           << "is reached, report cycle" << std::endl;
@@ -363,8 +365,9 @@ namespace spot
                 typename heap::color_ref c = h.get_color_ref(s_prime);
                 if (c.is_white())
                   {
-                    // For an explicit search, we can pose assert(!c.is_white())
-                    // because to reach a white state, the red dfs must
+                    // For an explicit search, we can pose assert
+                    // (!c.is_white()) because to reach a white state,
+		    // the red dfs must
                     // have crossed a cyan one (a state in the blue stack)
                     // implying the report of a cycle.
                     // However, with a bit-state hashing search and due to
@@ -477,13 +480,15 @@ namespace spot
       class se05_result: public emptiness_check_result
       {
       public:
-        se05_result(se05_search& m, option_map o = option_map(), bool dyn = false)
+        se05_result(se05_search& m, option_map o = option_map(),
+		    bool dyn = false)
           : emptiness_check_result(m.automaton(), o), ms(m), is_dynamic(dyn)
         {
           if (options()[FROM_STACK])
             computer = new result_from_stack(ms);
           else
-            computer = new ndfs_result<se05_search<heap>, heap>(ms, is_dynamic);
+            computer =
+	      new ndfs_result<se05_search<heap>, heap>(ms, is_dynamic);
         }
 
         virtual void options_updated(const option_map& old)
@@ -491,7 +496,8 @@ namespace spot
           if (old[FROM_STACK] && !options()[FROM_STACK])
             {
               delete computer;
-              computer = new ndfs_result<se05_search<heap>, heap>(ms, is_dynamic);
+              computer =
+		new ndfs_result<se05_search<heap>, heap>(ms, is_dynamic);
             }
           else if (!old[FROM_STACK] && options()[FROM_STACK])
             {

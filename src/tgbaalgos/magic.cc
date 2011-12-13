@@ -257,7 +257,8 @@ namespace spot
 		    if (formula->is_syntactic_guarantee() &&
 			ltl::constant::true_instance() == formula)
 		      {
-			trace << "  It's a reachability we can report" << std::endl;
+			trace << "  It's a reachability we can report"
+			      << std::endl;
 			push(st_blue, s_prime, label, acc);
 			return true;
 		      }
@@ -269,7 +270,8 @@ namespace spot
 			acc == all_cond
 			)
 		      {
-			trace << "  It's a single dfs we can report" << std::endl;
+			trace << "  It's a single dfs we can report"
+			      << std::endl;
 			target = f.s;
 			push(st_red, f.s, label, acc);
 			is_dynamic = false;
@@ -385,7 +387,8 @@ namespace spot
                   {
                     // If the red dfs find a white here, it must have crossed
                     // the blue stack and the target must be reached soon.
-                    // Notice that this property holds only for explicit search.
+                    // Notice that this property holds only for explicit 
+		    // search.
                     // Collisions in bit-state hashing search can also lead
                     // to the visit of white state. Anyway, it is not necessary
                     // to visit white states either if a cycle can be missed
@@ -500,7 +503,8 @@ namespace spot
           if (options()[FROM_STACK])
             computer = new result_from_stack(ms);
           else
-            computer = new ndfs_result<magic_search_<heap>, heap>(ms, is_dynamic);
+            computer =
+	      new ndfs_result<magic_search_<heap>, heap>(ms, is_dynamic);
         }
 
         virtual void options_updated(const option_map& old)
@@ -508,7 +512,8 @@ namespace spot
           if (old[FROM_STACK] && !options()[FROM_STACK])
             {
               delete computer;
-              computer = new ndfs_result<magic_search_<heap>, heap>(ms, is_dynamic);
+              computer =
+		new ndfs_result<magic_search_<heap>, heap>(ms, is_dynamic);
             }
           else if (!old[FROM_STACK] && options()[FROM_STACK])
             {

@@ -1,6 +1,17 @@
 
 2011-12-13  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/rebuild.cc (spot): 
+	Sanity clean
+	(spot): Dispatch method for sorting
+	(spot): Add 2 comparison methods 
+
+	* src/tgbaalgos/rebuild.hh (spot): 
+	Sanity clean + add iterator_strategy (not used for now)
+
+	* src/tgbatest/randtgba.cc (cons_emptiness_check): 
+	Fix bad assert moved in a conditionnal way into cons_emptiness_check
+
 	* src/tgbaalgos/Makefile.am (libtgbaalgos_la_SOURCES): 
 	add rebuild.cc source to the project 
 	(tgbaalgos_HEADERS): 

@@ -36,32 +36,48 @@ namespace spot
   /// Allows to perform some changes on the tgba which
   /// This classe is used to try a speedup when performing 
   /// emptiness 
-  class rebuild 
+  class rebuild
   {
-  protected:
-    tgba* src;		                ///< The original tgba
+  public:
 
-    std::set <spot::state *> visited;	///< The visited staes
+    /// This iterator is used to specify which stategy to apply 
+    /// for reordering all transitions 
+    enum iterator_strategy
+      {
+	DEFAULT, 		///< No changes
+	ACC,			///< Accepting transitions are visited first
+	SHY,			///< Transitions leading to a known state first
+	HIERARCHY,		///< Order in term of terminal, weak, general
+      };
+
+  protected:
+    // Internal structure which is used to store all transition to 
+    // perform later the ordering considering the stategy
+    struct sort_trans
+    {
+      const tgba *           src;     ///< The source automaton 
+      spot::state_explicit * sdst;    ///< The From state of the transition
+      spot::state_explicit * succdst; ///< The To state of the transition
+      bdd                    cond;    ///< Condition over original transition
+      bdd                    acc;     ///< Acceptance over original transition
+      std::set <spot::state *> *visited;
+    };
+
+    tgba* src;		                ///< The original tgba
+    std::set <spot::state *> *visited;	///< The visited staes
+    iterator_strategy        is;	///< The current strategy
 
     /// The states to visit : first match original TGBA , second the 
     /// newly constructed
-    std::stack<std::pair <spot::state *, spot::state *> > todo;	
+    std::stack<std::pair <spot::state *, spot::state *> > todo;
 
-    struct sort_trans 
-    {
-      const tgba *           src; 
-      spot::state_explicit * sdst;
-      spot::state_explicit * succdst;
-      bdd                    cond;
-      bdd                    acc;
-    };
-    
-    
   public:
-    rebuild (tgba* original) : src(original)
+
+    rebuild (tgba* original, iterator_strategy i_s = DEFAULT) :
+      src(original), is (i_s)
     { }
-    
-    virtual 
+
+    virtual
     ~rebuild ()
     {
       assert (todo.empty());
@@ -71,20 +87,23 @@ namespace spot
     tgba* reorder_transitions ();
 
   private :
-    /// This function compare two iterator in the sens of the relation 
-    /// of temporal logic property. It means that a iterator whose current 
-    /// state is a guarantee property is consider lesser than one which 
-    /// has a persitence current state.
-    static int
-    compare_iter (sort_trans i1, sort_trans i2);
+    /// This function compare  in the sens of the relation of temporal 
+    /// logic property. It means that we want to visit first states leading
+    /// into Terminal sub-automaton, then Weak and at least General
+    static bool
+    compare_hierarchy (sort_trans i1, sort_trans i2);
 
-    /// This function process a state to construct the 
-    /// identical tgba but where transitions has been 
-    /// reordered 
-    void 
-    process_state (spot::tgba_explicit_formula *f,
-		   spot::tgba_explicit_formula *tres);
+    /// This function compare states giving preference to states that have 
+    /// been already visited (chances to find a DFS). It means that 
+    /// we first visit states already visited then the others
+    static bool
+    compare_shy (sort_trans i1, sort_trans i2);
 
+    /// This method is used to perform the chosen strategy 
+    /// It acts like a switch between all of these previously defined 
+    /// methods 
+    void
+    strategy_dispatcher (std::list<sort_trans> *l);
 
   };
 }

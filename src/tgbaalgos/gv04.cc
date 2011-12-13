@@ -181,7 +181,8 @@ namespace spot
 		    if (formula->is_syntactic_guarantee() &&
 			ltl::constant::true_instance() == formula)
 		      {
-			trace << "  It's a reachability we can report" << std::endl;
+			trace << "  It's a reachability we can report"
+			      << std::endl;
 			//push(s_prime, acc);
 			return new result(*this);
 		      }
@@ -360,7 +361,8 @@ namespace spot
 	    {
 	      trace << "state " << i << " ("
 		    << data.a_->format_state(data.stack[i].s)
-		    << ") has lowlink = " << data.stack[i].lowlink << std::endl;
+		    << ") has lowlink = " << data.stack[i].lowlink
+		    << std::endl;
 	    }
 #endif
 

@@ -1496,10 +1496,13 @@ main(int argc, char** argv)
       if (echeck_inst)
 	{
 	  spot::formula_emptiness_specifier *es  = 0;
-	  if (a == formula)
-	    es = new spot::formula_emptiness_specifier (a);
-	  else
-	    es = new spot::formula_emptiness_specifier (a, formula);
+	  if (is_dynamic_emptiness)
+	    {
+	      if (a == formula)
+		es = new spot::formula_emptiness_specifier (a);
+	      else
+		es = new spot::formula_emptiness_specifier (a, formula);
+	    }
 
 	  spot::emptiness_check* ec  =  echeck_inst->instantiate(a, es);
 	  bool search_many = echeck_inst->options().get("repeated");
@@ -1606,7 +1609,8 @@ main(int argc, char** argv)
 			  if (accepting_run_replay)
 			    {
 			      tm.start("replaying acc. run");
-			      if (!spot::replay_tgba_run(std::cout, a,
+			      if (is_dynamic_emptiness &&
+				  !spot::replay_tgba_run(std::cout, a,
 							 run, true,
 							 is_dynamic_emptiness))
 				exit_code = 1;

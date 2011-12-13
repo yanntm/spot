@@ -265,8 +265,8 @@ namespace spot
     unsigned depth_;		    /// maximal depth of the stack(s)
     unsigned max_depth_;	    /// maximal depth of the stack(s)
     unsigned perform_ndfs_;	    /// number of ndfs that are performed 
-    unsigned perform_dfs_;	    /// number of dfs that ared performed 
-    unsigned perform_reachability_; /// number of reachability that are performed 
+    unsigned perform_dfs_;	    /// number of dfs that are performed 
+    unsigned perform_reachability_; /// number of reachability performed 
     unsigned algo_commut_;	    /// number of commutations between states
     algo_type algo_cache_;	    /// a cache for algo
   };

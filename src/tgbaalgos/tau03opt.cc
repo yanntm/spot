@@ -133,7 +133,8 @@ namespace spot
         h.add_new_state(s0, CYAN, current_weight);
         push(st_blue, s0, bddfalse, bddfalse);
         if (dfs_blue())
-          return new ndfs_result<tau03_opt_search<heap>, heap>(*this, is_dynamic);
+          return new ndfs_result<tau03_opt_search<heap>, heap>
+	    (*this, is_dynamic);
         return 0;
       }
 
@@ -271,7 +272,8 @@ namespace spot
 		    if (formula->is_syntactic_guarantee() &&
 			ltl::constant::true_instance() == formula)
 		      {
-			trace << "  It's a reachability we can report" << std::endl;
+			trace << "  It's a reachability we can report"
+			      << std::endl;
 			push(st_blue, s_prime, label, acc);
 			return true;
 		      }
