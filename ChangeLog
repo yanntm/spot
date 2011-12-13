@@ -1,0 +1,24 @@
+
+2011-12-13  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/Makefile.am (libtgbaalgos_la_SOURCES): 
+	add rebuild.cc source to the project 
+	(tgbaalgos_HEADERS): 
+	add the corresponding header 
+
+	* src/tgbatest/randtgba.cc (main): 
+	add option -af to perform changes on the formula
+
+	* src/tgbaalgos/rebuild.hh (spot): 
+	New class to perform changes on the automaton of the formula
+
+	* src/tgbaalgos/rebuild.cc (spot): 
+	Basic rewritting of a tgba formula
+
+2011-12-08  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbatest/randtgba.cc (syntax): 
+	add -pgt option for specify minimal size of the product 
+
+	* src/sanity/80columns.test: Add lines numbering 
+

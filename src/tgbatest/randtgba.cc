@@ -53,8 +53,10 @@
 
 #include "tgbaalgos/emptiness.hh"
 #include "tgbaalgos/emptiness_stats.hh"
+#include "tgbaalgos/rebuild.hh"
 #include "tgbaalgos/reducerun.hh"
 #include "tgbaalgos/replayrun.hh"
+
 
 struct ec_algo
 {
@@ -158,6 +160,7 @@ syntax(char* prog)
 	    << "  -fs     Stats considering the formula"
 	    << std::endl
 	    << "LTL Formula Generation Options:" << std::endl
+	    << "  -af     arrange formula "      << std::endl
 	    << "  -dp     dump priorities, do not generate any formula"
 	    << std::endl
 	    << "  -f N    size of the formula [15]" << std::endl
@@ -188,6 +191,8 @@ syntax(char* prog)
 	    << "  -R N    repeat each emptiness-check and accepting run "
 	    << "computation N times" << std::endl
 	    << "  -r      compute and replay accepting runs (implies -e)"
+	    << std::endl
+	    << "  -pgt N r compute at least r [0..1] products greater than N"
 	    << std::endl
 	    << "  ar:MODE select the mode MODE for accepting runs computation "
             << "(implies -r)" << std::endl
@@ -578,6 +583,7 @@ main(int argc, char** argv)
 {
   bool opt_paper = false;
   bool opt_dp = false;
+  bool opt_af = false;
   int opt_f = 15;
   int opt_F = 0;
   char* opt_p = 0;
@@ -598,6 +604,8 @@ main(int argc, char** argv)
   bool opt_Z = false;
 
   int opt_R = 0;
+  int opt_pgt = 0;
+  int opt_pgt_r = 0.01;
 
   bool opt_dot = false;
   int opt_ec = 0;
@@ -627,6 +635,9 @@ main(int argc, char** argv)
   int terminal_count = 0;
   int weak_count = 0;
   int general_count = 0;
+
+  int empty_emptiness = 0, n_empty_emptiness = 0;
+  bool empty_echk = false;
 
   if (argc <= 1)
     syntax(argv[0]);
@@ -764,6 +775,13 @@ main(int argc, char** argv)
 	    syntax(argv[0]);
 	  opt_R = to_int_pos(argv[++argn], "-R");
 	}
+      else if (!strcmp(argv[argn], "-pgt"))
+	{
+	  if (argc < argn + 2)
+	    syntax(argv[0]);
+	  opt_pgt = to_int_pos(argv[++argn], "-pgt");
+	  opt_pgt_r = to_float_nonneg(argv[++argn], "-pgt");
+	}
       else if (!strcmp(argv[argn], "-s"))
 	{
 	  if (argc < argn + 2)
@@ -798,6 +816,10 @@ main(int argc, char** argv)
       else if (!strcmp(argv[argn], "-dp"))
 	{
 	  opt_dp = true;
+	}
+      else if (!strcmp(argv[argn], "-af"))
+	{
+	  opt_af = true;
 	}
       else if (!strcmp(argv[argn], "-f"))
 	{
@@ -935,6 +957,19 @@ main(int argc, char** argv)
             }
         }
 
+      if (opt_af)
+	{
+	  dotty_reachable(std::cout, formula);
+	  spot::rebuild worker (formula);
+	  spot::tgba *new_tgba =
+	    worker.reorder_transitions();
+	  dotty_reachable(std::cout, new_tgba);
+	  spot::bdd_dict *fdict = formula->get_dict();
+	  fdict-> unregister_all_my_variables(formula);
+	  formula = new_tgba;	  
+	  assert (formula);
+	}
+
       if (formula_stats)
 	{
 	  spot::formula_emptiness_specifier *fes  =
@@ -958,6 +993,7 @@ main(int argc, char** argv)
 
       if (!opt_S)
 	{
+	  int opt_ec_init = opt_ec;
 	  do
 	    {
 	      if (opt_ec && !opt_paper)
@@ -1038,6 +1074,15 @@ main(int argc, char** argv)
 			  // To trigger a division by 0 if used erroneously.
 			  prod_stats.states = 0;
 			  prod_stats.transitions = 0;
+			}
+
+		      if (i == 0 &&
+			  opt_pgt > (int) prod_stats.states &&
+			  n_ec < (opt_ec_init*opt_pgt_r))
+			{
+			  ++opt_ec;
+			  --n_ec;
+			  break;
 			}
 
 		      if (opt_z && ecs)
@@ -1197,6 +1242,13 @@ main(int argc, char** argv)
 				<< std::endl;
 		      failed_seeds.insert(opt_ec_seed);
 		    }
+		  else if (opt_paper)
+		    {
+		      if (n_empty != 0)
+			empty_echk = true;
+		      else
+			empty_echk = false;
+		    }
 
 		  delete degen;
 		}
@@ -1211,6 +1263,15 @@ main(int argc, char** argv)
 		}
 	    }
 	  while (opt_ec);
+
+	  if (opt_paper)
+	    {
+	      if (empty_echk)
+		++empty_emptiness;
+	      else
+		++n_empty_emptiness;
+	    }
+
 	}
       else
 	{
@@ -1292,6 +1353,19 @@ main(int argc, char** argv)
       ec_ratio_stat_type::stats_alg_map& stats = glob_ec_ratio_stats.stats;
       typedef ec_ratio_stat_type::alg_1stat_map::const_iterator ec_iter;
 
+
+      // Ratio of counterexamples that has been found 
+      std::cout << "Number of empty emptiness \t: "
+		<< empty_emptiness
+		<< "\t("
+		<< (empty_emptiness*100)/(float)(n_empty_emptiness+empty_emptiness)
+		<< "\%)"<< std::endl;
+      std::cout << "Number of non empty emptiness \t: "
+		<< n_empty_emptiness
+		<< "\t("
+		<< (n_empty_emptiness*100)/(float)(n_empty_emptiness+empty_emptiness)
+		<< "\%)"<< std::endl;
+
       for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
 	{
 	  const std::string algo = ec_algos[ai].name;
@@ -1330,6 +1404,20 @@ main(int argc, char** argv)
 	  if (n >= 0)
 	    std::cout << " " << std::setw(8) << n;
 	  std::cout << std::endl;
+	}
+
+      if (!tm_ec.empty())
+	{
+	  std::cout << std::endl
+		    << "emptiness checks cumulated timings:" << std::endl;
+	  tm_ec.print(std::cout);
+	}
+
+      if (!tm_ar.empty())
+	{
+	  std::cout << std::endl
+		    << "accepting runs cumulated timings:" << std::endl;
+	  tm_ar.print(std::cout);
 	}
 
       if (formula_stats)

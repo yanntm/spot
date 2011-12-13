@@ -54,6 +54,7 @@ tgbaalgos_HEADERS = \
   projrun.hh \
   randomgraph.hh \
   reachiter.hh \
+  rebuild.hh \
   reducerun.hh \
   replayrun.hh \
   rundotdec.hh \
@@ -98,6 +99,7 @@ libtgbaalgos_la_SOURCES = \
   projrun.cc \
   randomgraph.cc \
   reachiter.cc \
+  rebuild.cc \
   reducerun.cc \
   replayrun.cc \
   rundotdec.cc \
