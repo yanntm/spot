@@ -834,6 +834,10 @@ main(int argc, char** argv)
 	    opt_af_strat = spot::rebuild::SHY;
 	  else if (!strcmp(argv[argn], "HIERARCHY"))
 	    opt_af_strat = spot::rebuild::HIERARCHY;
+	  else if (!strcmp(argv[argn], "PESSIMISTIC"))
+	    opt_af_strat = spot::rebuild::PESSIMISTIC;
+	  else if (!strcmp(argv[argn], "H_PESSIMISTIC"))
+	    opt_af_strat = spot::rebuild::H_PESSIMISTIC;
 	}
       else if (!strcmp(argv[argn], "-f"))
 	{

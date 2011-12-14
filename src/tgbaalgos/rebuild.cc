@@ -185,6 +185,18 @@ namespace spot
     return false;
   }
 
+  bool
+  rebuild::compare_pessimistic (sort_trans i1, sort_trans i2)
+  {
+    return !compare_acc (i1, i2);
+  }
+
+  bool
+  rebuild::compare_h_pessimistic (sort_trans i1, sort_trans i2)
+  {
+    return !compare_hierarchy (i1, i2);
+  }
+
   void
   rebuild::strategy_dispatcher (std::list<sort_trans> *l)
   {
@@ -201,6 +213,12 @@ namespace spot
 	return;
       case HIERARCHY :
 	l->sort(rebuild::compare_hierarchy);
+	return;
+      case PESSIMISTIC :
+	l->sort(rebuild::compare_pessimistic);
+	return;
+      case H_PESSIMISTIC :
+	l->sort(rebuild::compare_h_pessimistic);
 	return;
       }
   }

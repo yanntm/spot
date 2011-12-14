@@ -48,6 +48,8 @@ namespace spot
 	ACC,			///< Accepting transitions are visited first
 	SHY,			///< Transitions leading to a known state first
 	HIERARCHY,		///< Order in term of terminal, weak, general
+	PESSIMISTIC,		///< Order beeing pessimistic
+	H_PESSIMISTIC,		///< Order in the contrario of HIERARCHY
       };
 
   protected:
@@ -87,22 +89,33 @@ namespace spot
     tgba* reorder_transitions ();
 
   private :
-    /// This function compare  in the sens of the relation of temporal 
+    /// This function compares in the sens of the relation of temporal 
     /// logic property. It means that we want to visit first states leading
     /// into Terminal sub-automaton, then Weak and at least General
     static bool
     compare_hierarchy (sort_trans i1, sort_trans i2);
 
-    /// This function compare states giving preference to states that have 
+    /// This function compares states giving preference to states that have 
     /// been already visited (chances to find a DFS). It means that 
     /// we first visit states already visited then the others
     static bool
     compare_shy (sort_trans i1, sort_trans i2);
 
-    /// This function compare states giving preference to states having
+    /// This function compares states giving preference to states having
     /// acceptance conditions 
     static bool
     compare_acc (sort_trans i1, sort_trans i2);
+
+    /// This function compares states giving preference to states having 
+    /// no acceptance transition (its the dual of the compare_acc function
+    static bool
+    compare_pessimistic (sort_trans i1, sort_trans i2);
+
+    /// This function compoares states giving preference to states in the 
+    /// reverse order to the hierarchy of temporal properties (it's the dual of
+    /// the function compare hierarchy
+    static bool
+    compare_h_pessimistic (sort_trans i1, sort_trans i2);
 
     /// This method is used to perform the chosen strategy 
     /// It acts like a switch between all of these previously defined 
@@ -113,4 +126,3 @@ namespace spot
   };
 }
 #endif // SPOT_TGBAALGO_REBUILD_HH
-
