@@ -1,5 +1,7 @@
 2011-12-27  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/randtgba.cc (main): add options apf af
+
 	* src/tgbaalgos/scc.cc (spot): Fix weak determination over SCC
 	* src/tgbaalgos/scc.hh (spot): Add properties to SCC
 
