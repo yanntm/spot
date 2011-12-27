@@ -1,3 +1,8 @@
+2011-12-27  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/scc.cc (spot): Fix weak determination over SCC
+	* src/tgbaalgos/scc.hh (spot): Add properties to SCC
+
 2011-12-14  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbatest/randtgba.cc: Add H_STRATEGY and PESSIMISTIC

@@ -136,6 +136,109 @@ namespace spot
     return res;
   }
 
+//   bool
+//   scc_map::is_weak_rec(unsigned state)
+//   {
+//     assert(scc_map_.size() > state);
+//     bool res = scc_map_[state].is_weak;
+
+//     if (!res)
+//       return false;
+
+//     const succ_type& s = succ(state);
+//     succ_type::const_iterator it;
+//     for (it = s.begin(); it != s.end(); ++it)
+//       if (!(res = weak(it->first)))
+// 	return false;
+//     return true;
+//   }
+
+  bool
+  scc_map::is_weak()
+  {
+    //    return is_weak_rec(initial());
+    unsigned size = scc_count();
+    while (--size)
+      {
+	if (!(weak(size)))
+	    return false;
+      }
+    return true;
+  }
+
+  void
+  scc_map::update_weak(unsigned state)
+  {
+    const tgba * a = get_aut();
+    scc cc =  scc_map_[state];
+    if (cc.is_weak)
+      return;			// No need to continue
+
+    std::list<const spot::state*> states = cc.states;
+
+
+    // Check if the SCC is weak : all accepting or none 
+    int size = states.size();
+    while (size)
+      {
+	std::cout << "NEw SCC " << cc.index
+		  << " " << state<< "\n";
+
+	bool weak  = true; // Presuppose every SCC is weak
+
+	// Walk all states include in the SCC
+	std::list<const spot::state*>::iterator iter =
+	  states.begin();
+	for (; iter != states.end(); ++iter)
+	  {
+	    // For all of these state we look all succ that 
+	    // belong to this SCC and check if the transition 
+	    // is acc 
+	    tgba_succ_iterator *sit = a->succ_iter (*iter);
+	    assert(sit);
+	    bool is_false_weak = true;
+	    int first = 1;
+ 	    for (sit->first(); !sit->done(); sit->next())
+ 	      {
+		// Is it a weak non accepting ?
+		if (first)
+		  {
+		    is_false_weak = sit->current_acceptance_conditions() == bddfalse;
+		    first = 0;
+		  }
+
+		// Fully acceptance or not at all
+		if (scc_of_state(*iter) == scc_of_state(sit->current_state())
+		    &&
+		    ((is_false_weak && sit->current_acceptance_conditions()
+		      != bddfalse)
+		      ||
+		     (!is_false_weak &&
+		      sit->current_acceptance_conditions() == bddfalse)))
+		  {
+		    weak = false;
+		    break;
+		  }
+	      }
+	  }
+
+	if (weak)
+	  {
+	    scc_map_[state].is_weak = true;
+	  }
+	--size;
+      }
+
+
+
+    // Reccursive call over all successors
+    const succ_type& s = succ(state);
+    succ_type::const_iterator sccit;
+    for (sccit = s.begin(); sccit != s.end(); ++sccit)
+	update_weak(sccit->first);
+  }
+
+
   void
   scc_map::build_map()
   {
@@ -310,6 +413,7 @@ namespace spot
 
     // recursively update supp_rec
     (void) update_supp_rec(initial());
+    (void) update_weak(initial());
   }
 
   unsigned scc_map::scc_of_state(const state* s) const
@@ -348,6 +452,12 @@ namespace spot
   unsigned scc_map::self_loops() const
   {
     return self_loops_;
+  }
+
+  bool
+  scc_map::weak(unsigned n) const
+  {
+    return scc_map_[n].is_weak;
   }
 
   const std::list<const state*>& scc_map::states_of(unsigned n) const
@@ -516,6 +626,9 @@ namespace spot
 	    ostr << "]\\n useful=[";
 	    escape_str(ostr, bdd_format_accset(m.get_aut()->get_dict(),
 					       m.useful_acc_of(state))) << "]";
+	    ostr << "\\n Weak=["
+		 << (m.weak(state) ? "true" : "false") << "]"
+		 << "\\n";
 	  }
 
 	out << "  " << state << " [shape=box,"

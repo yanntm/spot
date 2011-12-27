@@ -176,16 +176,32 @@ namespace spot
     /// \brief Return the number of self loops in the automaton.
     unsigned self_loops() const;
 
+    /// \brief Return whether an SCC is weak i-e if all transitions
+    /// inside this this SCC is wether fully accepting or not
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool weak(unsigned n) const;
+
+    /// \brief Return whether the automaton is weak or not 
+    /// considering the map of SCC which has been computed
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool is_weak ();
+
   protected:
     bdd update_supp_rec(unsigned state);
+    void update_weak(unsigned state);
     int relabel_component();
+    //bool is_weak_rec (unsigned state);
+
 
     struct scc
     {
     public:
       scc(int index) : index(index), acc(bddfalse),
 		       supp(bddtrue), supp_rec(bddfalse),
-		       trivial(true), useful_acc(bddfalse) {};
+		       trivial(true), useful_acc(bddfalse),
+		       is_weak(false) {};
       /// Index of the SCC.
       int index;
       /// The union of all acceptance conditions of transitions which
@@ -214,6 +230,9 @@ namespace spot
       /// then useful_acc will contain
       ///      Acc[a]&Acc[b]&!Acc[c] | !Acc[a]&Acc[b]&Acc[c]
       bdd useful_acc;
+      /// Allows to know if a SCC is weak ie fully accepting or not
+      /// at all
+      bool is_weak;
     };
 
     const tgba* aut_;		// Automata to decompose.
