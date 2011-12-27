@@ -26,7 +26,7 @@
 #include "tgba/tgbaexplicit.hh"
 #include "ltlast/formula.hh"
 
-#define REBUILD_TRACE
+//#define REBUILD_TRACE
 #ifdef REBUILD_TRACE
 #define trace std::cerr
 #else
@@ -35,9 +35,14 @@
 
 namespace spot
 {
+
+  static bdd all_cond;
+
   tgba*
   rebuild::reorder_transitions ()
   {
+    all_cond = src->all_acceptance_conditions();
+
     // Get the dictionnary 
     spot::bdd_dict *dict = src->get_dict();
 
@@ -85,7 +90,7 @@ namespace spot
 
 	    if (visited->find (succdst) == visited->end())
 	      {
-		std::cout << "New State  to visit\n";
+		trace << "New State  to visit\n";
 		todo.push (std::pair <spot::state *, spot::state *>
 			   (succ, succdst));
 	      }
@@ -166,9 +171,9 @@ namespace spot
   bool
   rebuild::compare_shy (sort_trans first, sort_trans second)
   {
-    if (first.visited->find (first.succdst) ==
+    if (first.visited->find (first.succdst) !=
 	first.visited->end() &&
-	second.visited->find (second.succdst) !=
+	second.visited->find (second.succdst) ==
 	second.visited->end())
       return true;
     return false;
@@ -177,10 +182,9 @@ namespace spot
   bool
   rebuild::compare_acc (sort_trans first, sort_trans second)
   {
-    // FIX-ME We should consider algorithms working with multiple
-    // acceptance conditions
-    bdd all_cond = first.src->all_acceptance_conditions();
     if (first.acc == all_cond && second.acc != all_cond)
+      return true;
+    if (first.acc != bddfalse &&  second.acc == bddfalse)
       return true;
     return false;
   }

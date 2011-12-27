@@ -52,6 +52,35 @@ namespace spot
 	H_PESSIMISTIC,		///< Order in the contrario of HIERARCHY
       };
 
+    /// Return the number of strategies that are currently supported
+    /// for rebuilding the formula
+    static int number_of_strategies()
+    {
+      return 6;
+    }
+
+    static std::string
+    to_string (int i)
+    {
+      switch (i)
+      {
+      case DEFAULT:
+	return "/DEF";
+      case ACC:
+	return "/ACC";
+      case SHY:
+	return "/SHY";
+      case HIERARCHY:
+	return "/HIE";
+      case PESSIMISTIC:
+	return "/PES";
+      case H_PESSIMISTIC:
+	return "/H_P";
+      }
+      assert(false);
+      return "";
+    }
+
   protected:
     // Internal structure which is used to store all transition to 
     // perform later the ordering considering the stategy
