@@ -181,8 +181,6 @@ namespace spot
     int size = states.size();
     while (size)
       {
-	std::cout << "NEw SCC " << cc.index
-		  << " " << state<< "\n";
 
 	bool weak  = true; // Presuppose every SCC is weak
 
