@@ -59,6 +59,22 @@ namespace spot
       return 6;
     }
 
+    static iterator_strategy
+    string_to_strategy (const char* st)
+    {
+      if (!strcmp(st, "ACC"))
+	return ACC;
+      else if (!strcmp(st, "SHY"))
+	return SHY;
+      else if (!strcmp(st, "HIERARCHY"))
+	return HIERARCHY;
+      else if (!strcmp(st, "PESSIMISTIC"))
+	return PESSIMISTIC;
+      else if (!strcmp(st, "H_PESSIMISTIC"))
+	return H_PESSIMISTIC;
+      return DEFAULT;
+    }
+
     static std::string
     to_string (int i)
     {

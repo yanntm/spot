@@ -1,5 +1,8 @@
 2011-12-29  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/rebuild.hh (spot): Add string_to_strategy 
+	method
+
 	* src/misc/timer.cc (spot): Enlarge size for name (1st column)
 
 	* bench/emptchk/pml-eeaean.sh (STRATEGIES): add strategies -af

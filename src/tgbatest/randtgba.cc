@@ -837,17 +837,8 @@ main(int argc, char** argv)
 	{
 	  opt_af = true;
 	  ++argn;
-
-	  if (!strcmp(argv[argn], "ACC"))
-	      opt_af_strat = spot::rebuild::ACC;
-	  else if (!strcmp(argv[argn], "SHY"))
-	    opt_af_strat = spot::rebuild::SHY;
-	  else if (!strcmp(argv[argn], "HIERARCHY"))
-	    opt_af_strat = spot::rebuild::HIERARCHY;
-	  else if (!strcmp(argv[argn], "PESSIMISTIC"))
-	    opt_af_strat = spot::rebuild::PESSIMISTIC;
-	  else if (!strcmp(argv[argn], "H_PESSIMISTIC"))
-	    opt_af_strat = spot::rebuild::H_PESSIMISTIC;
+	  opt_af_strat =
+	    spot::rebuild::string_to_strategy (argv[argn]);
 	}
       else if (!strcmp(argv[argn], "-f"))
 	{
@@ -1044,10 +1035,9 @@ main(int argc, char** argv)
 	      spot::tgba *ftmp = formula;
 	      if (!opt_apf)
 		assert (opt_apf_num == 1);
-	      
+
 // 	      std::cout << "######################################\n";
 // 	      dotty_reachable(std::cout, formula);
-
 	      for (ii = 0; ii < opt_apf_num; ++ii)
 		{
 
@@ -1072,9 +1062,9 @@ main(int argc, char** argv)
 			worker.reorder_transitions();
 		      tm_af.stop(spot::rebuild::to_string (ii));
 
-// 		      std::cout << "---> " << 
-// 			spot::rebuild::to_string (ii) << std::endl;
-// 		      dotty_reachable(std::cout, new_tgba);
+		      // 		      std::cout << "---> " << 
+		      // 			spot::rebuild::to_string (ii) << std::endl;
+		      // 		      dotty_reachable(std::cout, new_tgba);
 
 		      formula = new_tgba;
 		      assert (formula);
