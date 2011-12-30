@@ -1114,10 +1114,10 @@ main(int argc, char** argv)
 	{
 	  spot::rebuild worker (formula,
 				(spot::rebuild::iterator_strategy)opt_af_strat);
-	  tm_af.start(spot::rebuild::to_string (opt_af_strat));
+	  tm_af.start(spot::rebuild::strat_to_string (opt_af_strat));
 	  new_tgba =
 	    worker.reorder_transitions();
-	  tm_af.stop(spot::rebuild::to_string (opt_af_strat));
+	  tm_af.stop(spot::rebuild::strat_to_string (opt_af_strat));
 
  	  spot::bdd_dict *fdict = new_tgba->get_dict();
 	  fdict-> unregister_all_my_variables(new_tgba);
@@ -1561,7 +1561,7 @@ main(int argc, char** argv)
                             << echeck_algo << ", ";
 		  if (opt_af)
 		    std::cout<< std::right << std::setw(10)
-			     << spot::rebuild::to_string (opt_af_strat)
+			     << spot::rebuild::strat_to_string (opt_af_strat)
 			     << ", ";
 
                   spot::tgba_statistics a_size =

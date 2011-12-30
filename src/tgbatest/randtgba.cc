@@ -45,13 +45,12 @@
 #include "tgbaparse/public.hh"
 #include "misc/random.hh"
 #include "misc/optionmap.hh"
+#include "misc/timer.hh"
 #include "tgba/tgbatba.hh"
 #include "tgba/tgbaproduct.hh"
-#include "misc/timer.hh"
-
 #include "tgbaalgos/ltl2tgba_fm.hh"
-
 #include "tgbaalgos/emptiness.hh"
+#include "tgbaalgos/emptiness_specifier.hh"
 #include "tgbaalgos/emptiness_stats.hh"
 #include "tgbaalgos/rebuild.hh"
 #include "tgbaalgos/reducerun.hh"
@@ -981,10 +980,10 @@ main(int argc, char** argv)
 	{
 	  //dotty_reachable(std::cout, formula);
 	  spot::rebuild worker (formula, opt_af_strat);
-	  tm_af.start(spot::rebuild::to_string (opt_af_strat));
+	  tm_af.start(spot::rebuild::strat_to_string (opt_af_strat));
 	  spot::tgba *new_tgba =
 	    worker.reorder_transitions();
-	  tm_af.stop(spot::rebuild::to_string (opt_af_strat));
+	  tm_af.stop(spot::rebuild::strat_to_string (opt_af_strat));
 
 	  //dotty_reachable(std::cout, new_tgba);
 	  spot::bdd_dict *fdict = formula->get_dict();
@@ -1057,10 +1056,10 @@ main(int argc, char** argv)
 		      //dotty_reachable(std::cout, formula);
 		      spot::rebuild worker
 			(formula, (spot::rebuild::iterator_strategy)ii);
-		      tm_af.start(spot::rebuild::to_string (ii));
+		      tm_af.start(spot::rebuild::strat_to_string (ii));
 		      spot::tgba *new_tgba =
 			worker.reorder_transitions();
-		      tm_af.stop(spot::rebuild::to_string (ii));
+		      tm_af.stop(spot::rebuild::strat_to_string (ii));
 
 		      // 		      std::cout << "---> " << 
 		      // 			spot::rebuild::to_string (ii) << std::endl;
@@ -1115,7 +1114,8 @@ main(int argc, char** argv)
 
 			  if (opt_apf)
 			    {
-			      std::string ssii = spot::rebuild::to_string (ii);
+			      std::string ssii =
+				spot::rebuild::strat_to_string (ii);
 			      algo += ssii;
 			    }
 
@@ -1461,7 +1461,8 @@ main(int argc, char** argv)
 
 	      if (opt_apf)
 		{
-		  std::string ssii = spot::rebuild::to_string (ii);
+		  std::string ssii =
+		    spot::rebuild::strat_to_string (ii);
 		  algo += ssii;
 		}
 
@@ -1544,7 +1545,8 @@ main(int argc, char** argv)
 
 		  if (opt_apf)
 		    {
-		      std::string ssii = spot::rebuild::to_string (ii);
+		      std::string ssii =
+			spot::rebuild::strat_to_string (ii);
 		      algo += ssii;
 		    }
 
@@ -1615,7 +1617,8 @@ main(int argc, char** argv)
 
 	      if (opt_apf)
 		{
-		  std::string ssii = spot::rebuild::to_string (ii);
+		  std::string ssii =
+		    spot::rebuild::strat_to_string (ii);
 		  algo += ssii;
 		}
 

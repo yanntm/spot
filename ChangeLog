@@ -1,3 +1,13 @@
+2011-12-30  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbatest/randtgba.cc: add include + report changes 
+
+	* src/tgbatest/ltl2tgba.cc (main): add include + report changes
+
+	* bench/emptchk/ltl-random.sh (opts): Fix size 
+
+	* src/tgbaalgos/rebuild.hh (strat_to_string): rename method
+
 2011-12-29  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/rebuild.hh (spot): Add string_to_strategy 

@@ -26,9 +26,10 @@
 
 #include <stack>
 #include <set>
-
+#include <string.h>
 #include "tgba/tgba.hh"
 #include "tgba/tgbaexplicit.hh"
+
 
 namespace spot
 {
@@ -76,7 +77,7 @@ namespace spot
     }
 
     static std::string
-    to_string (int i)
+    strat_to_string (int i)
     {
       switch (i)
       {
