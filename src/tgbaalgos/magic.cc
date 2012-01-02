@@ -55,13 +55,17 @@ namespace spot
       /// \pre The automaton \a a must have at most one acceptance
       /// condition (i.e. it is a TBA).
       magic_search_(const tgba *a, size_t size, option_map o = option_map(),
-		    bool dyn = false)
+		    bool dyn = false, bool stat = false)
         : emptiness_check(a, o),
           h(size),
           all_cond(a->all_acceptance_conditions()),
-	  is_dynamic(dyn)
+	  is_dynamic(dyn),
+	  is_static (stat)
       {
         assert(a->number_of_acceptance_conditions() <= 1);
+	assert( (is_static && ! is_dynamic) ||
+		(! is_static && is_dynamic) ||
+		(! is_static && ! is_dynamic));
       }
 
       virtual ~magic_search_()
@@ -119,6 +123,23 @@ namespace spot
             assert(st_blue.empty());
             const state* s0 = a_->get_init_state();
             inc_states();
+
+	    if (is_static)
+	      {
+		// FIXME !!
+		const ltl::formula * formula =  es_->formula_from_state(s0);
+		if (! formula->is_syntactic_guarantee())
+		  is_static = false;
+		else 
+		  {
+		    h.add_new_state(s0, BLUE);
+		    push(st_blue, s0, bddfalse, bddfalse);
+		    if (static_guarantee ())
+		      return new magic_search_result(*this, options(), is_dynamic);
+		    else return 0;
+		  }
+		
+	      }
 
 	    if (is_dynamic)
 	      {
@@ -220,23 +241,32 @@ namespace spot
       /// True if the algorithm used the property temporal hierarchy
       bool is_dynamic;
 
+      /// True if the algorigtm used property temporal hierarchy in a 
+      /// static way 
+      bool is_static;
+
       /// Override previous declaration in emptiness.h 
       /// This is used to detect dynamic application of the algorithm
+      /// Nota Bene : static emptiness are considered as dynamic emptiness
+      /// in the sense that they could leads to prefix computation only
       virtual bool
       is_dynamic_emptiness ()
       {
-	return is_dynamic;
+	return is_dynamic || is_static;
       }
 
-      bool dfs_blue()
+      /// THis function perform the search on a a tgba which is the 
+      /// result of a Kripke structure and a a formula : this formula 
+      /// is necessary a guarantee formula
+      bool
+      static_guarantee () 
       {
-	if (is_dynamic)
-	  assert (es_ != 0);
-
+	assert (is_static);
+	assert (es_ != 0);
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-            trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+	    std::cout << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
@@ -250,18 +280,137 @@ namespace spot
                 typename heap::color_ref c = h.get_color_ref(s_prime);
 		const ltl::formula * formula = 0;
 
+		formula =  es_->formula_from_state(f.s);
+		if ((ltl::constant::true_instance() == formula) || 
+		    (h.has_been_visited(s_prime) && acc == all_cond ))
+		  {
+		    push(st_blue, s_prime, label, acc);
+		    is_dynamic = true;
+		    return true;
+		  }
+		else if (c.is_white())
+		  {
+		    h.add_new_state(s_prime, BLUE);
+		    push(st_blue, s_prime, label, acc);
+		    continue;
+		  }
+		else
+		  {
+		    h.pop_notify(s_prime);
+		  }
+		continue;
+	      }
+            else
+            // Backtrack the edge
+            //        (predecessor of f.s in st_blue, <f.label, f.acc>, f.s)
+              {
+                trace << "  All the successors have been visited" << std::endl;
+                stack_item f_dest(f);
+		pop(st_blue);
+	      }
+	  }
+	return false;
+      }
+
+
+      bool dfs_blue()
+      {
+	if (is_dynamic)
+	  assert (es_ != 0);
+
+        while (!st_blue.empty())
+          {
+            stack_item& f = st_blue.front();
+	    std::cout << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+            if (!f.it->done())
+              {
+                const state *s_prime = f.it->current_state();
+                trace << "  Visit the successor: "
+                      << a_->format_state(s_prime) << std::endl;
+                bdd label = f.it->current_condition();
+                bdd acc = f.it->current_acceptance_conditions();
+                // Go down the edge (f.s, <label, acc>, s_prime)
+                f.it->next();
+                inc_transitions();
+                typename heap::color_ref c = h.get_color_ref(s_prime);
+		const ltl::formula * formula = 0;
+
+		if (is_static)
+		  {
+		    std::cout << "-----!!!!!-->\n";
+		    formula =  es_->formula_from_state(f.s);
+		    if (h.has_been_visited(s_prime) && acc == all_cond )
+		      {
+			push(st_blue, s_prime, label, acc);
+			is_dynamic = true;
+			return true;
+		      }
+		    else if (c.is_white())
+		      {
+			h.add_new_state(s_prime, BLUE);
+			push(st_blue, s_prime, label, acc);
+			continue;
+		      }
+		    else
+		      {
+			h.pop_notify(s_prime);
+		      }
+		    continue;
+		  }
+
+
+
 		if (is_dynamic)
 		  {
 		    formula =  es_->formula_from_state(f.s);
 		    stats_commut (formula);
-		    if (formula->is_syntactic_guarantee() &&
-			ltl::constant::true_instance() == formula)
+
+		    if (formula->is_syntactic_guarantee())
 		      {
-			trace << "  It's a reachability we can report"
-			      << std::endl;
-			push(st_blue, s_prime, label, acc);
-			return true;
+			// This optimisation consider that kripke have states
+			// that have at least one successor
+			// 
+			// FIXME : should be parametrized because it can leads 
+			// to false posistives
+			if (ltl::constant::true_instance() == formula)
+			  {
+			    trace << "  It's a reachability we can report"
+				  << std::endl;
+			    push(st_blue, s_prime, label, acc);
+			    return true;
+			  }
+			
+			// This track guarantee without any conditions over 
+			// The Kripke structure (TGBA)
+			// Indeed if we reach a known state and we are inside 
+			// a guarantee state wich is moreover accepting this 
+			// means that we are into the terminal SCC 
+			if (formula->is_syntactic_guarantee()
+			    && h.has_been_visited(s_prime) && acc != bddfalse)
+			  {
+			    push(st_blue, s_prime, label, acc);
+			    return true;
+			  }
 		      }
+
+		    // This track persistence without any condition over the 
+		    // Kripke structure (TGBA)
+		    // Indeed if we reach a known state wich is persistence and
+		    // the arrow is acceptinng the entire SCC is accepting :
+		    // This means we can return 
+		    // 
+		    // FIXME : check for multiple acceptance conditions 
+// 		    if (formula->is_syntactic_persistence()
+// 			&& h.has_been_visited(s_prime) && acc != bddfalse)
+// 		      {
+// 			std::cout << "'TOOTOTOO\n"
+// 				  << "|->: " << a_->format_state(f.s)
+// 				  << std::endl;
+// 			// push(st_blue, s_prime, label, acc);
+// 			// return true;
+// 		      }
+
+
 
 // 		    if (!c.is_white() &&
 // 			//h.has_been_visited(s_prime) && 
@@ -280,7 +429,6 @@ namespace spot
 		  }
 		else
 		  commut_algo(NDFS);
-
 
                 if (c.is_white())
                   {
@@ -329,7 +477,10 @@ namespace spot
               {
                 trace << "  All the successors have been visited" << std::endl;
                 stack_item f_dest(f);
-                pop(st_blue);
+		pop(st_blue);
+		if (is_static)
+		  continue;
+
                 typename heap::color_ref c = h.get_color_ref(f_dest.s);
                 assert(!c.is_white());
                 if (!st_blue.empty() &&
@@ -350,7 +501,7 @@ namespace spot
 		      {
 			is_dynamic = false;
 			return true;
-		      }
+		      }      
                   }
                 else
                   {
@@ -703,15 +854,17 @@ namespace spot
 
   } // anonymous
 
-  emptiness_check* explicit_magic_search(const tgba *a, option_map o, bool dyn)
+  emptiness_check* explicit_magic_search(const tgba *a, option_map o, bool dyn, 
+					 bool stat)
   {
-    return new magic_search_<explicit_magic_search_heap>(a, 0, o, dyn);
+    return new magic_search_<explicit_magic_search_heap>(a, 0, o, dyn, stat);
   }
 
   emptiness_check* bit_state_hashing_magic_search(const tgba *a, size_t size,
-                                                  option_map o, bool dyn)
+                                                  option_map o, bool dyn,
+						  bool stat)
   {
-    return new magic_search_<bsh_magic_search_heap>(a, size, o, dyn);
+    return new magic_search_<bsh_magic_search_heap>(a, size, o, dyn, stat);
   }
 
   emptiness_check*
@@ -723,13 +876,22 @@ namespace spot
     return explicit_magic_search(a, o);
   }
 
+
+  emptiness_check*
+  magic_stat_search(const tgba *a, option_map o)
+  {
+    size_t size = o.get("bsh");
+    if (size)
+      return bit_state_hashing_magic_search(a, size, o, false, true);
+    return explicit_magic_search(a, o, false, true);
+  }
+
   emptiness_check*
   magic_dyn_search(const tgba *a, option_map o)
   {
     size_t size = o.get("bsh");
     if (size)
-      return bit_state_hashing_magic_search(a, size, o, true);
-    return explicit_magic_search(a, o, true);
+      return bit_state_hashing_magic_search(a, size, o, true, false);
+    return explicit_magic_search(a, o, true, false);
   }
-
 }

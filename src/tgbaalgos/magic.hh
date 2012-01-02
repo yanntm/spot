@@ -96,7 +96,8 @@ namespace spot
   /// from \c godefroid.93.pstv, not \c courcoubetis.92.fmsd.
   emptiness_check* explicit_magic_search(const tgba *a,
                                          option_map o = option_map(),
-					 bool dyn = false);
+					 bool dyn = false,
+					 bool stat = false);
 
   /// \brief Returns an emptiness checker on the spot::tgba automaton \a a.
   ///
@@ -127,7 +128,8 @@ namespace spot
   ///
   emptiness_check* bit_state_hashing_magic_search(const tgba *a, size_t size,
                                                   option_map o = option_map(),
-						  bool dyn = false);
+						  bool dyn = false,
+						  bool stat = false);
 
   /// \brief Wrapper for the two magic_search implementations.
   ///
@@ -138,7 +140,16 @@ namespace spot
   emptiness_check* magic_search(const tgba *a, option_map o = option_map());
 
 
+  /// Wrapper for the two magic search implementation taking in account 
+  /// the dynamism inside properties 
   emptiness_check* magic_dyn_search(const tgba *a, option_map o = option_map());
+
+
+  /// Wrapper for the two magiec search implementation taking in account 
+  /// the dynamism inside the initial state (means that no algorithm reduction 
+  /// due to the rpogress in the automaton can be performed) 
+  emptiness_check* magic_stat_search(const tgba *a, option_map o = option_map());
+
 
   /// @}
 }
