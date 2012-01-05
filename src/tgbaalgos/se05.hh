@@ -57,7 +57,7 @@ namespace spot
   ///       call dfs_blue(t);
   ///     else if t.color == cyan and
   ///             (the edge (s,t) is accepting or
-  ///              (it exists a predecessor p of s in st_blue and s != t and
+  ///              (the predecessor p of s in st_blue and s != t and
   ///              the arc between p and s is accepting)) then
   ///       report cycle;
   ///     end if;

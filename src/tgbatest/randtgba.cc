@@ -1052,18 +1052,14 @@ main(int argc, char** argv)
 		      a = atmp;
 		      formula = ftmp;
 
-		      // And now we can rebuild the new automaton of the formula
-		      //dotty_reachable(std::cout, formula);
+		      // And now we can rebuild the new automaton of the
+		      // formula
 		      spot::rebuild worker
 			(formula, (spot::rebuild::iterator_strategy)ii);
 		      tm_af.start(spot::rebuild::strat_to_string (ii));
 		      spot::tgba *new_tgba =
 			worker.reorder_transitions();
 		      tm_af.stop(spot::rebuild::strat_to_string (ii));
-
-		      // 		      std::cout << "---> " << 
-		      // 			spot::rebuild::to_string (ii) << std::endl;
-		      // 		      dotty_reachable(std::cout, new_tgba);
 
 		      formula = new_tgba;
 		      assert (formula);
@@ -1132,11 +1128,14 @@ main(int argc, char** argv)
 				break;
 			      delete res;
 			      delete ec;
-			      ec = cons_emptiness_check(i, a, degen, real_n_acc,
-							product, formula, opt_a);
+			      ec = cons_emptiness_check(i, a, degen,
+							real_n_acc,
+							product, formula,
+							opt_a);
 			    }
 			  tm_ec.stop(algo);
-			  const spot::unsigned_statistics* ecs = ec->statistics();
+			  const spot::unsigned_statistics* ecs =
+			    ec->statistics();
 			  if (opt_z && res)
 			    {
 			      // Notice that ratios are computed w.r.t. the
@@ -1145,7 +1144,7 @@ main(int argc, char** argv)
 			    }
 			  else
 			    {
-			      // To trigger a division by 0 if used erroneously.
+			      // To trigger a division by 0 if used erroneously
 			      prod_stats.states = 0;
 			      prod_stats.transitions = 0;
 			    }
@@ -1172,8 +1171,8 @@ main(int argc, char** argv)
 			  if (stop_on_first_difference && ecs)
 			    if (!ostats_ec.seteq(*ecs))
 			      {
-				std::cout << "DIFFERING STATS for emptiness check,"
-					  << " halting... ";
+				std::cout << "DIFFERING STATS for emptiness"
+					  << "  check, halting... ";
 				opt_ec = n_alg = opt_F = 0;
 			      }
 
@@ -1225,13 +1224,12 @@ main(int argc, char** argv)
 				    {
 				      tm_ar.stop(algo);
 				      std::ostringstream s;
-				      if (!spot::replay_tgba_run(s,
-								 res->automaton(),
-								 run))
+				      if (!spot::replay_tgba_run
+					  (s, res->automaton(), run))
 					{
 					  if (!opt_paper)
-					    std::cout << ", but could not replay "
-						      << "it (ERROR!)";
+					    std::cout << ", but could not"
+						      << " replay it (ERROR!)";
 					  failed_seeds.insert(opt_ec_seed);
 					}
 				      else
@@ -1249,16 +1247,16 @@ main(int argc, char** argv)
 				      if (opt_reduce)
 					{
 					  spot::tgba_run* redrun =
-					    spot::reduce_run(res->automaton(), run);
-					  if (!spot::replay_tgba_run(s,
-								     res
-								     ->automaton(),
-								     redrun))
+					    spot::reduce_run(res->automaton(),
+							     run);
+					  if (!spot::replay_tgba_run
+					      (s, res->automaton(), redrun))
 					    {
 					      if (!opt_paper)
 						std::cout
 						  << ", but could not replay "
-						  << "its minimization (ERROR!)";
+						  << " its"
+						  << " minimization (ERROR!)";
 					      failed_seeds.insert(opt_ec_seed);
 					    }
 					  else
@@ -1270,8 +1268,8 @@ main(int argc, char** argv)
 					    }
 					  if (opt_z && !opt_paper)
 					    {
-					      std::cout << " ["
-							<< redrun->prefix.size()
+					      std::cout << " [" <<
+						redrun->prefix.size()
 							<< "+"
 							<< redrun->cycle.size()
 							<< "]";
@@ -1309,7 +1307,8 @@ main(int argc, char** argv)
 		      //}
 		      assert(n_empty + n_non_empty + n_maybe_empty == n_ec);
 
-		      if ((n_empty == 0 && (n_non_empty + n_maybe_empty) != n_ec)
+		      if ((n_empty == 0 && (n_non_empty + n_maybe_empty)
+			   != n_ec)
 			  || (n_empty != 0 && n_non_empty != 0))
 			{
 			  std::cout << "ERROR: not all algorithms agree"

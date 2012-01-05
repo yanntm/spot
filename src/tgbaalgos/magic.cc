@@ -135,7 +135,9 @@ namespace spot
 		    h.add_new_state(s0, BLUE);
 		    push(st_blue, s0, bddfalse, bddfalse);
 		    if (static_guarantee ())
-		      return new magic_search_result(*this, options(), is_dynamic);
+		      return new magic_search_result(*this,
+						     options(),
+						     is_dynamic);
 		    else
 		      return 0;
 		  }
@@ -266,7 +268,7 @@ namespace spot
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    std::cout << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();

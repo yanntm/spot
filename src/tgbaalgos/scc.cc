@@ -102,7 +102,8 @@ namespace spot
     assert(!root_.front().states.empty());
     std::list<const state*>::iterator i;
     int n = scc_map_.size();
-    for (i = root_.front().states.begin(); i != root_.front().states.end(); ++i)
+    for (i = root_.front().states.begin();
+	 i != root_.front().states.end(); ++i)
       {
 	hash_type::iterator spi = h_.find(*i);
 	assert(spi != h_.end());
@@ -181,7 +182,8 @@ namespace spot
 		// Is it a weak non accepting ?
 		if (first)
 		  {
-		    is_false_weak = sit->current_acceptance_conditions() == bddfalse;
+		    is_false_weak =
+		      sit->current_acceptance_conditions() == bddfalse;
 		    first = 0;
 		  }
 
@@ -623,7 +625,8 @@ namespace spot
 
 	    out << "  " << state << " -> " << dest
 		<< " [label=\"";
-	    escape_str(out, bdd_format_formula(m.get_aut()->get_dict(), label));
+	    escape_str(out, bdd_format_formula(m.get_aut()->get_dict(),
+					       label));
 	    out << "\"]" << std::endl;
 
 	    if (seen[dest])
