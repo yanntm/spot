@@ -1,5 +1,7 @@
 2012-01-05  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/scc.cc (update_weak): Fix leak
+
 	* src/tgbaalgos/emptiness.cc (spot): add the new emptiness CVWY90_stat
 
 2012-01-02  Etienne Renault  <renault@lrde.epita.fr>

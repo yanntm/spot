@@ -186,28 +186,28 @@ namespace spot
 		  }
 
 		// Fully acceptance or not at all
-		if (scc_of_state(*iter) == scc_of_state(sit->current_state())
-		    &&
+		const spot::state *stt =  sit->current_state();
+		if (scc_of_state(*iter) == scc_of_state(stt) &&
 		    ((is_false_weak && sit->current_acceptance_conditions()
 		      != bddfalse)
 		      ||
 		     (!is_false_weak &&
 		      sit->current_acceptance_conditions() == bddfalse)))
 		  {
+		    stt->destroy();
 		    weak = false;
 		    break;
 		  }
+		stt->destroy();
 	      }
- 	    delete sit;
+  	    delete sit;
 	  }
 	if (weak)
 	  {
 	    scc_map_[state].is_weak = true;
 	  }
-	--size;
+ 	--size;
       }
-
-
 
     // Reccursive call over all successors
     const succ_type& s = succ(state);
