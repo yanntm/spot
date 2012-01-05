@@ -148,7 +148,8 @@ namespace spot
   /// Wrapper for the two magiec search implementation taking in account 
   /// the dynamism inside the initial state (means that no algorithm reduction 
   /// due to the rpogress in the automaton can be performed) 
-  emptiness_check* magic_stat_search(const tgba *a, option_map o = option_map());
+  emptiness_check* magic_stat_search(const tgba *a,
+				     option_map o = option_map());
 
 
   /// @}

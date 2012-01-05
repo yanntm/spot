@@ -209,6 +209,7 @@ namespace spot
 	{ "Cou99_dyn",     spot::couvreur99_cons_dyn,           0, -1U },
 	{ "CVWY90",        spot::magic_search,                  0,   1 },
 	{ "CVWY90_dyn",    spot::magic_dyn_search,              0,   1 },
+	{ "CVWY90_stat",   spot::magic_stat_search,             0,   1 },
 	{ "GV04",          spot::explicit_gv04_check,           0,   1 },
 	{ "GV04_dyn",      spot::explicit_gv04_dyn_check,       0,   1 },
 	{ "SE05",          spot::se05,                          0,   1 },

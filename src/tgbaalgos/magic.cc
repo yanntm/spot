@@ -63,9 +63,9 @@ namespace spot
 	  is_static (stat)
       {
         assert(a->number_of_acceptance_conditions() <= 1);
-	assert( (is_static && ! is_dynamic) ||
-		(! is_static && is_dynamic) ||
-		(! is_static && ! is_dynamic));
+	assert((is_static && !is_dynamic) ||
+	       (!is_static && is_dynamic) ||
+	       (!is_static && !is_dynamic));
       }
 
       virtual ~magic_search_()
@@ -91,8 +91,8 @@ namespace spot
       {
 	if (formula->is_syntactic_guarantee())
 	  inc_reachability();
-	else if (formula->is_syntactic_persistence())
-	  inc_dfs ();
+// 	else if (formula->is_syntactic_persistence())
+// 	  inc_dfs ();
 	else
 	  inc_ndfs ();
       }
@@ -102,8 +102,8 @@ namespace spot
       {
 	if (formula->is_syntactic_guarantee())
 	  commut_algo (REACHABILITY);
-	else if (formula->is_syntactic_persistence())
-	  commut_algo (DFS);
+// 	else if (formula->is_syntactic_persistence())
+// 	  commut_algo (DFS);
 	else
 	  commut_algo(NDFS);
       }
@@ -126,19 +126,19 @@ namespace spot
 
 	    if (is_static)
 	      {
-		// FIXME !!
+		// FIXME : Trap only guarantee properties 
 		const ltl::formula * formula =  es_->formula_from_state(s0);
-		if (! formula->is_syntactic_guarantee())
+		if (!formula->is_syntactic_guarantee())
 		  is_static = false;
-		else 
+		else
 		  {
 		    h.add_new_state(s0, BLUE);
 		    push(st_blue, s0, bddfalse, bddfalse);
 		    if (static_guarantee ())
 		      return new magic_search_result(*this, options(), is_dynamic);
-		    else return 0;
+		    else
+		      return 0;
 		  }
-		
 	      }
 
 	    if (is_dynamic)
@@ -259,7 +259,7 @@ namespace spot
       /// result of a Kripke structure and a a formula : this formula 
       /// is necessary a guarantee formula
       bool
-      static_guarantee () 
+      static_guarantee ()
       {
 	assert (is_static);
 	assert (es_ != 0);
@@ -281,8 +281,9 @@ namespace spot
 		const ltl::formula * formula = 0;
 
 		formula =  es_->formula_from_state(f.s);
-		if ((ltl::constant::true_instance() == formula) || 
-		    (h.has_been_visited(s_prime) && acc == all_cond ))
+		if ((ltl::constant::true_instance() == formula))
+		  //||
+		  //(h.has_been_visited(s_prime) && acc == all_cond))
 		  {
 		    push(st_blue, s_prime, label, acc);
 		    is_dynamic = true;
@@ -321,7 +322,7 @@ namespace spot
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    std::cout << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
@@ -337,9 +338,8 @@ namespace spot
 
 		if (is_static)
 		  {
-		    std::cout << "-----!!!!!-->\n";
 		    formula =  es_->formula_from_state(f.s);
-		    if (h.has_been_visited(s_prime) && acc == all_cond )
+		    if (h.has_been_visited(s_prime) && acc == all_cond)
 		      {
 			push(st_blue, s_prime, label, acc);
 			is_dynamic = true;
@@ -379,18 +379,18 @@ namespace spot
 			    push(st_blue, s_prime, label, acc);
 			    return true;
 			  }
-			
+
 			// This track guarantee without any conditions over 
 			// The Kripke structure (TGBA)
 			// Indeed if we reach a known state and we are inside 
 			// a guarantee state wich is moreover accepting this 
 			// means that we are into the terminal SCC 
-			if (formula->is_syntactic_guarantee()
-			    && h.has_been_visited(s_prime) && acc != bddfalse)
-			  {
-			    push(st_blue, s_prime, label, acc);
-			    return true;
-			  }
+// 			if (formula->is_syntactic_guarantee()
+// 			    && h.has_been_visited(s_prime) && acc != bddfalse)
+// 			  {
+// 			    push(st_blue, s_prime, label, acc);
+// 			    return true;
+// 			  }
 		      }
 
 		    // This track persistence without any condition over the 
@@ -403,7 +403,6 @@ namespace spot
 // 		    if (formula->is_syntactic_persistence()
 // 			&& h.has_been_visited(s_prime) && acc != bddfalse)
 // 		      {
-// 			std::cout << "'TOOTOTOO\n"
 // 				  << "|->: " << a_->format_state(f.s)
 // 				  << std::endl;
 // 			// push(st_blue, s_prime, label, acc);
@@ -501,7 +500,7 @@ namespace spot
 		      {
 			is_dynamic = false;
 			return true;
-		      }      
+		      }
                   }
                 else
                   {
@@ -854,7 +853,7 @@ namespace spot
 
   } // anonymous
 
-  emptiness_check* explicit_magic_search(const tgba *a, option_map o, bool dyn, 
+  emptiness_check* explicit_magic_search(const tgba *a, option_map o, bool dyn,
 					 bool stat)
   {
     return new magic_search_<explicit_magic_search_heap>(a, 0, o, dyn, stat);

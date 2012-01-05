@@ -1,3 +1,7 @@
+2012-01-05  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/emptiness.cc (spot): add the new emptiness CVWY90_stat
+
 2012-01-02  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/magic.hh (magic_stat_search):
