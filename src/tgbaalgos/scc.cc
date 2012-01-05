@@ -136,27 +136,9 @@ namespace spot
     return res;
   }
 
-//   bool
-//   scc_map::is_weak_rec(unsigned state)
-//   {
-//     assert(scc_map_.size() > state);
-//     bool res = scc_map_[state].is_weak;
-
-//     if (!res)
-//       return false;
-
-//     const succ_type& s = succ(state);
-//     succ_type::const_iterator it;
-//     for (it = s.begin(); it != s.end(); ++it)
-//       if (!(res = weak(it->first)))
-// 	return false;
-//     return true;
-//   }
-
   bool
   scc_map::is_weak()
   {
-    //    return is_weak_rec(initial());
     unsigned size = scc_count();
     while (--size)
       {
@@ -176,12 +158,10 @@ namespace spot
 
     std::list<const spot::state*> states = cc.states;
 
-
     // Check if the SCC is weak : all accepting or none 
     int size = states.size();
     while (size)
       {
-
 	bool weak  = true; // Presuppose every SCC is weak
 
 	// Walk all states include in the SCC
@@ -218,8 +198,8 @@ namespace spot
 		    break;
 		  }
 	      }
+ 	    delete sit;
 	  }
-
 	if (weak)
 	  {
 	    scc_map_[state].is_weak = true;

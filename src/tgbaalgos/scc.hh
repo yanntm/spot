@@ -192,8 +192,6 @@ namespace spot
     bdd update_supp_rec(unsigned state);
     void update_weak(unsigned state);
     int relabel_component();
-    //bool is_weak_rec (unsigned state);
-
 
     struct scc
     {
