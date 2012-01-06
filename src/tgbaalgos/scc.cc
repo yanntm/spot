@@ -34,6 +34,8 @@ namespace spot
     out << "total SCCs: " << scc_total << std::endl;
     out << "accepting SCCs: " << acc_scc << std::endl;
     out << "dead SCCs: " << dead_scc << std::endl;
+    out << "weak SCCs: " << weak_scc << std::endl;
+    out << "weak accepting SCCs: " << weak_acc_scc << std::endl;
     out << "accepting paths: " << acc_paths << std::endl;
     out << "dead paths: " << dead_paths << std::endl;
     return out;
@@ -154,7 +156,7 @@ namespace spot
   {
     const tgba * a = get_aut();
     scc cc =  scc_map_[state];
-    if (cc.is_weak)
+    if (cc.is_weak_acc)
       return;			// No need to continue
 
     std::list<const spot::state*> states = cc.states;
@@ -166,6 +168,7 @@ namespace spot
 	bool weak  = true; // Presuppose every SCC is weak
 
 	// Walk all states include in the SCC
+	bool least_self_loop = false;
 	std::list<const spot::state*>::iterator iter =
 	  states.begin();
 	for (; iter != states.end(); ++iter)
@@ -179,16 +182,24 @@ namespace spot
 	    int first = 1;
  	    for (sit->first(); !sit->done(); sit->next())
  	      {
+
+		// Get the current state
+		const spot::state *stt =  sit->current_state();
+
+		// Avoid to consider single sates as scc
+		if (scc_of_state(*iter) == scc_of_state(stt))
+		  least_self_loop = true;
+
 		// Is it a weak non accepting ?
-		if (first)
+		if (first && (scc_of_state(*iter) == scc_of_state(stt)))
 		  {
 		    is_false_weak =
 		      sit->current_acceptance_conditions() == bddfalse;
 		    first = 0;
 		  }
 
+
 		// Fully acceptance or not at all
-		const spot::state *stt =  sit->current_state();
 		if (scc_of_state(*iter) == scc_of_state(stt) &&
 		    ((is_false_weak && sit->current_acceptance_conditions()
 		      != bddfalse)
@@ -204,9 +215,13 @@ namespace spot
 	      }
   	    delete sit;
 	  }
-	if (weak)
+	if (weak) // <- THis track all weak SCC
+	  //if (weak && accepting(state)) // <- This track only weak acc.
 	  {
-	    scc_map_[state].is_weak = true;
+	    scc_map_[state].is_weak =  least_self_loop;
+
+	    if (accepting(state))
+	      scc_map_[state].is_weak_acc =  least_self_loop;
 	  }
  	--size;
       }
@@ -440,6 +455,12 @@ namespace spot
     return scc_map_[n].is_weak;
   }
 
+  bool
+  scc_map::weak_accepting(unsigned n) const
+  {
+    return scc_map_[n].is_weak_acc;
+  }
+
   const std::list<const state*>& scc_map::states_of(unsigned n) const
   {
     assert(scc_map_.size() > n);
@@ -537,12 +558,18 @@ namespace spot
     res.dead_scc = d.dead_scc;
     res.acc_paths = d.acc_paths[init];
     res.dead_paths = d.dead_paths[init];
+    res.weak_scc = 0;
+    res.weak_acc_scc = 0;
 
     res.useless_scc_map.reserve(res.scc_total);
     res.useful_acc = bddfalse;
     for (unsigned n = 0; n < res.scc_total; ++n)
       {
 	res.useless_scc_map[n] = !d.acc_paths[n];
+	if (m.weak(n))
+	  ++res.weak_scc;
+	if (m.weak_accepting(n))
+	  ++res.weak_acc_scc;
 	if (m.accepting(n))
 	  res.useful_acc |= m.useful_acc_of(n);
       }

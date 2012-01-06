@@ -42,6 +42,10 @@ namespace spot
     /// An SCC is dead if no accepting SCC is reachable from it.
     /// Note that an SCC can be neither dead nor accepting.
     unsigned dead_scc;
+    /// The number of weak scc into the automata 
+    unsigned weak_scc;
+    /// The number of weak accepting scc into the automata 
+    unsigned weak_acc_scc;
 
     /// Number of maximal accepting paths.
     ///
@@ -182,6 +186,12 @@ namespace spot
     /// \pre This should only be called once build_map() has run.
     bool weak(unsigned n) const;
 
+    /// \brief Return whether an SCC is weak acc i-e if all 
+    /// transitions inside this this SCC is wether fully accepting
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool weak_accepting(unsigned n) const;
+
     /// \brief Return whether the automaton is weak or not 
     /// considering the map of SCC which has been computed
     ///
@@ -199,7 +209,8 @@ namespace spot
       scc(int index) : index(index), acc(bddfalse),
 		       supp(bddtrue), supp_rec(bddfalse),
 		       trivial(true), useful_acc(bddfalse),
-		       is_weak(false) {};
+		       is_weak(false), is_weak_acc(false)
+      {};
       /// Index of the SCC.
       int index;
       /// The union of all acceptance conditions of transitions which
@@ -229,8 +240,10 @@ namespace spot
       ///      Acc[a]&Acc[b]&!Acc[c] | !Acc[a]&Acc[b]&Acc[c]
       bdd useful_acc;
       /// Allows to know if a SCC is weak ie fully accepting or not
-      /// at all
+      /// at all 
       bool is_weak;
+      /// Here consider only weak accepting SCC
+      bool is_weak_acc;
     };
 
     const tgba* aut_;		// Automata to decompose.

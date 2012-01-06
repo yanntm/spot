@@ -1,3 +1,17 @@
+2012-01-06  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/scc.cc (spot): implementation of weak accepting
+	transitions and modification of the dump
+
+	* src/tgbaalgos/scc.hh (spot): add detection of weak accepting scc
+
+	* src/tgbatest/scc.test (weak):  add weak information in test +
+	add one more test
+
+	* src/tgbatest/randtgba.cc (main): sanity
+
+	* src/tgbaalgos/scc.cc (spot): sanity
+
 2012-01-05  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/scc.cc (update_weak): Fix leak
