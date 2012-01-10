@@ -25,6 +25,7 @@
 #include "emptiness_specifier.hh"
 #include "tgba/tgbaexplicit.hh"
 #include "ltlast/formula.hh"
+#include "ltlast/constant.hh"
 
 //#define REBUILD_TRACE
 #ifdef REBUILD_TRACE
@@ -55,91 +56,132 @@ namespace spot
     dict->register_all_variables_of(f, t);
 
     // Create the new initial state for the new TGBA
-    spot::state *s = f->get_init_state();
-    t->set_init_state(f->get_label(s));
+    spot::state_explicit *i_src = (spot::state_explicit *)f->get_init_state();
 
-    spot::state *sdst = t->get_init_state();
-    todo.push(std::pair <spot::state *, spot::state *> (s, sdst));
+    // This presuppose that all first state is consider as init 
+    // should be documented
+    spot::state_explicit *i_dst =
+		t->add_state(f->get_label(i_src)->clone());
+      //(spot::state_explicit *) t->get_init_state();
+    todo.push(std::make_pair (i_src, i_dst));
 
-    trace << "# init  : " << t->format_state(sdst) << std::endl;
-
+    trace << "# init  : " << t->format_state(i_dst) << std::endl;
+    
+    // States that have been or will be visited
     visited = new std::set< spot::state *>();
+    visited->insert(i_dst->clone());
 
-    spot:: state_explicit::transition* trans;
-    do
+    // No more in use
+    i_src->destroy();
+    i_dst->destroy();
+
+    std::pair <spot::state_explicit *, spot::state_explicit *> apair;
+     while (!todo.empty())	// We have always an initial state 
       {
 	// Get the pair to work on
-	std::pair <spot::state *, spot::state *> apair = todo.top();
+	apair = todo.top();
 	todo.pop();
 
 	// Init all vars 
-	s = apair.first;
-	sdst = apair.second;
-	visited->insert(sdst);
+	spot::state_explicit *s_src, *s_dst;
+	s_src = apair.first;
+	s_dst = apair.second;
 
-	std::list< rebuild::sort_trans > *alist =
-	  new std::list< rebuild::sort_trans >();
+	// DEBUG
+	trace << "WORK  src : " << s_src << std::endl;
+	trace << "WORK  dst : " << s_dst << std::endl;
+		
+	// List of transitions that should be create
+ 	std::list< rebuild::sort_trans > *alist =
+ 	  new std::list< rebuild::sort_trans >();
 
-	// Iterator over the successor of the src
+ 	// Iterator over the successor of the src
 	spot::tgba_explicit_succ_iterator *si =
-	  (tgba_explicit_succ_iterator*) f->succ_iter (s);
-	for (si->first(); !si->done(); si->next())
+	  (tgba_explicit_succ_iterator*) f->succ_iter (s_src);
+	for (si->first(); !si->done() ; si->next())
 	  {
-	    spot::state * succ = si->current_state();
-	    spot::state * succdst =  t->add_state(f->get_label(succ));
+	    // Get successor of the src and dst 
+ 	    spot::state_explicit * succ_src = si->current_state();
+ 	    spot::state_explicit * succ_dst ;
+	    
+	    if (! t->has_state(f->get_label(succ_src)))
+	      succ_dst = 
+		t->add_state(f->get_label(succ_src)->clone());
+	    else 
+	      succ_dst = 
+		t->add_state(f->get_label(succ_src));
 
-	    if (visited->find (succdst) == visited->end())
+	    // It's a new state we have to visit it
+	    if (visited->find (succ_dst) == visited->end())
 	      {
-		trace << "New State  to visit\n";
-		todo.push (std::pair <spot::state *, spot::state *>
-			   (succ, succdst));
+		// Mark as visited 
+ 		visited->insert(succ_dst->clone());
+
+		trace << "ALLOC succ_src : " << succ_src << std::endl;
+		trace << "ALLOC succ_dst : " << succ_dst << std::endl;
+		todo.push (std::make_pair(succ_src, succ_dst));
 	      }
+
 
 	    bdd cond (si->current_condition());
  	    bdd  acc (si->current_acceptance_conditions());
 
  	    // Get the info store them to rebuild an ordering set later
 	    sort_trans st = {t,
-			     (spot::state_explicit*) sdst,
-			     (spot::state_explicit*)succdst,
+			     (spot::state_explicit*) s_dst->clone(),
+			     (spot::state_explicit*)succ_dst->clone(),
 			     cond, acc, visited};
 	    alist->push_back(st);
 
- 	    succ->destroy();
+
+	    // Destroy theses states that are now unused
+	    succ_src->destroy();
+	    succ_dst->destroy();
 	  }
 	delete si;
 
 	// Reorder all transitions 
-	strategy_dispatcher (alist);
-	//alist->sort(rebuild::compare_iter);
-	//alist->reverse();
+ 	strategy_dispatcher (alist);
 
 	// Now we just create all transitions (that are push back 
 	// in the set of transitions in tgba
-	std::list<rebuild::sort_trans>::iterator it;
-	for (it = alist->begin(); it != alist->end();)
+ 	std::list<rebuild::sort_trans>::iterator it;
+ 	for (it = alist->begin(); it != alist->end();)
 	  {
+	    spot:: state_explicit::transition* trans = 0;
 	    sort_trans st = *it;
 	    trans = t->create_transition(st.sdst,
 					 st.succdst);
 	    t->add_conditions(trans, st.cond);
 	    t->add_acceptance_conditions (trans, st.acc);
-	    st.succdst->destroy();
-
 	    ++it;
 	    alist->pop_front();
+
+	    st.sdst->destroy();
 
 	    // DEBUG
 	    trace << "# in  : " << t->format_state(st.sdst) << std::endl;
 	    trace << "# out : " << t->format_state(st.succdst) << std::endl;
-	  }
-	assert(alist->empty());
 
-	s->destroy();
-	sdst->destroy();
-      } while (!todo.empty());	// We have always an initial state 
+	  }
+  	assert(alist->empty());
+
+	// CLEAN
+	s_src->destroy();
+	s_dst->destroy();
+	trace << "DESTROY : " << s_src << std::endl;
+	trace << "DESTROY : " << s_dst << std::endl;
+
+	delete alist;
+     }
+
+    // Cleaning visited 
+    std::set<spot::state *>::iterator it;
+    for ( it=visited->begin() ; it != visited->end(); ++it )
+      (*it)->destroy();
     delete visited;
-    return t;
+
+    return t; 
   }
 
   bool

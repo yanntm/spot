@@ -31,6 +31,7 @@
 #include <stack>
 #include <vector>
 #include "ltlparse/public.hh"
+#include "ltlast/allnodes.hh"
 #include "ltlvisit/apcollect.hh"
 #include "ltlvisit/randomltl.hh"
 #include "ltlvisit/tostring.hh"
@@ -101,38 +102,49 @@ cons_emptiness_check(int num, const spot::tgba* a,
 		     const spot::tgba *product, const spot::tgba *formula,
 		     float opt_a)
 {
-  if (!formula)
-    return 0;
-
   spot::emptiness_check_instantiator* inst = ec_algos[num].inst;
   if (n_acc < inst->min_acceptance_conditions()
       || n_acc > inst->max_acceptance_conditions())
     a = degen;
-
-  spot::emptiness_check *echk = 0;
   if (a)
-    echk = inst->instantiate(a);
+    return inst->instantiate(a);
 
-  // Dynamic emptiness doesn't support
-  if (echk && opt_a != 0.0 && (echk->is_dynamic_emptiness ()))
-    {
-      return 0;
-    }
-  if (echk && (n_acc < inst->min_acceptance_conditions()
-	       || n_acc > inst->max_acceptance_conditions()))
-    {
-      spot::formula_emptiness_specifier *fes  =
-	new spot::formula_emptiness_specifier (degen?degen:product, formula);
-      echk->set_specifier (fes);
-    }
-  else if (echk)
-    {
-      spot::formula_emptiness_specifier *fes  =
-	new spot::formula_emptiness_specifier (product, formula);
-      echk->set_specifier (fes);
-    }
+  assert(formula || opt_a+1 || product);
+  return 0;
 
-  return echk;
+
+//   if (!formula)
+//     return 0;
+
+//   spot::emptiness_check_instantiator* inst = ec_algos[num].inst;
+//   if (n_acc < inst->min_acceptance_conditions()
+//       || n_acc > inst->max_acceptance_conditions())
+//     a = degen;
+
+//   spot::emptiness_check *echk = 0;
+//   if (a)
+//     echk = inst->instantiate(a);
+
+//   // Dynamic emptiness doesn't support
+//   if (echk && opt_a != 0.0 && (echk->is_dynamic_emptiness ()))
+//     {
+//       return 0;
+//     }
+//   if (echk && (n_acc < inst->min_acceptance_conditions()
+// 	       || n_acc > inst->max_acceptance_conditions()))
+//     {
+//       spot::formula_emptiness_specifier *fes  =
+// 	new spot::formula_emptiness_specifier (degen?degen:product, formula);
+//       echk->set_specifier (fes);
+//     }
+//   else if (echk)
+//     {
+//       spot::formula_emptiness_specifier *fes  =
+// 	new spot::formula_emptiness_specifier (product, formula);
+//       echk->set_specifier (fes);
+//     }
+
+//   return echk;
 }
 
 void
@@ -641,7 +653,7 @@ main(int argc, char** argv)
   spot::bdd_dict* dict = new spot::bdd_dict();
 
   spot::ltl::ltl_simplifier_options simpopt(true, true, true, true, true);
-  spot::ltl::ltl_simplifier simp(simpopt);
+  spot::ltl::ltl_simplifier *simp = new spot::ltl::ltl_simplifier (simpopt);
   int terminal_count = 0;
   int weak_count = 0;
   int general_count = 0;
@@ -787,6 +799,7 @@ main(int argc, char** argv)
 	}
       else if (!strcmp(argv[argn], "-pgt"))
 	{
+	  assert(false);
 	  if (argc < argn + 2)
 	    syntax(argv[0]);
 	  opt_pgt = to_int_pos(argv[++argn], "-pgt");
@@ -813,6 +826,7 @@ main(int argc, char** argv)
 	}
       else if (!strcmp(argv[argn], "-fs"))
 	{
+	  assert(false);
 	  formula_stats = true;
 	}
       else if (!strcmp(argv[argn], "-z"))
@@ -829,6 +843,7 @@ main(int argc, char** argv)
 	}
       else if (!strcmp(argv[argn], "-apf"))
 	{
+	  assert(false);
 	  opt_apf = true;
 	  opt_apf_num = spot::rebuild::number_of_strategies();
 	}
@@ -873,6 +888,7 @@ main(int argc, char** argv)
 		     (env.require(argv[argn])));
 	}
     }
+
 
   spot::ltl::random_ltl rl(ap);
   const char* tok = rl.parse_options(opt_p);
@@ -935,8 +951,9 @@ main(int argc, char** argv)
     {
       if (opt_F)
         {
-          const spot::ltl::formula* f =
-	    generate_formula(rl, simp, opt_f, opt_ec_seed, opt_l, opt_u);
+          spot::ltl::formula* f = generate_formula(rl, *simp,
+						   opt_f, opt_ec_seed,
+						   opt_l, opt_u);
           if (!f)
             exit(1);
           formula = spot::ltl_to_tgba_fm(f, dict, true);
@@ -978,18 +995,24 @@ main(int argc, char** argv)
 
       if (opt_af)
 	{
-	  //dotty_reachable(std::cout, formula);
+	  dotty_reachable(std::cout, formula);
 	  spot::rebuild worker (formula, opt_af_strat);
 	  tm_af.start(spot::rebuild::strat_to_string (opt_af_strat));
 	  spot::tgba *new_tgba =
 	    worker.reorder_transitions();
 	  tm_af.stop(spot::rebuild::strat_to_string (opt_af_strat));
 
-	  //dotty_reachable(std::cout, new_tgba);
-	  spot::bdd_dict *fdict = formula->get_dict();
-	  fdict-> unregister_all_my_variables(formula);
+// 	  dotty_reachable(std::cout, new_tgba);
+// 	  delete  new_tgba;
+
+	  delete formula; 
 	  formula = new_tgba;
-	  assert (formula);
+
+	  //	  dotty_reachable(std::cout, new_tgba);
+// 	  spot::bdd_dict *fdict = formula->get_dict();
+// 	  fdict-> unregister_all_my_variables(formula);
+// 	  formula = new_tgba;
+// 	  assert (formula);
 	}
 
       if (formula_stats)
@@ -1029,45 +1052,45 @@ main(int argc, char** argv)
 
 	      // This external loop is used to perform all changes
 	      // on the automata of the formula
-	      int ii = 0;
-	      spot::tgba *atmp = a;
-	      spot::tgba *ftmp = formula;
-	      if (!opt_apf)
-		assert (opt_apf_num == 1);
+// 	      int ii = 0;
+// 	      spot::tgba *atmp = a;
+// 	      spot::tgba *ftmp = formula;
+// 	      if (!opt_apf)
+// 		assert (opt_apf_num == 1);
 
-// 	      std::cout << "######################################\n";
-// 	      dotty_reachable(std::cout, formula);
-	      for (ii = 0; ii < opt_apf_num; ++ii)
-		{
+// // 	      std::cout << "######################################\n";
+// // 	      dotty_reachable(std::cout, formula);
+// 	      for (ii = 0; ii < opt_apf_num; ++ii)
+// 		{
 
 		  // We must perform variations on all formulas
 		  if (opt_apf)
 		    {
-		      if (formula != ftmp)
-			{
-			  spot::bdd_dict *fdict = formula->get_dict();
-			  fdict-> unregister_all_my_variables(formula);
-			}
-		      // Reset original values 
-		      a = atmp;
-		      formula = ftmp;
+// 		      if (formula != ftmp)
+// 			{
+// 			  spot::bdd_dict *fdict = formula->get_dict();
+// 			  fdict-> unregister_all_my_variables(formula);
+// 			}
+// 		      // Reset original values 
+// 		      a = atmp;
+// 		      formula = ftmp;
 
-		      // And now we can rebuild the new automaton of the
-		      // formula
-		      spot::rebuild worker
-			(formula, (spot::rebuild::iterator_strategy)ii);
-		      tm_af.start(spot::rebuild::strat_to_string (ii));
-		      spot::tgba *new_tgba =
-			worker.reorder_transitions();
-		      tm_af.stop(spot::rebuild::strat_to_string (ii));
+// 		      // And now we can rebuild the new automaton of the
+// 		      // formula
+// 		      spot::rebuild worker
+// 			(formula, (spot::rebuild::iterator_strategy)ii);
+// 		      tm_af.start(spot::rebuild::strat_to_string (ii));
+// 		      spot::tgba *new_tgba =
+// 			worker.reorder_transitions();
+// 		      tm_af.stop(spot::rebuild::strat_to_string (ii));
 
-		      formula = new_tgba;
-		      assert (formula);
+// 		      formula = new_tgba;
+// 		      assert (formula);
 		    }
 
 		  if (formula)
-		    a = product = new spot::tgba_product(a, formula);
-		  //assert(formula);
+		    a = product = new spot::tgba_product(formula, a);
+
 		  int real_n_acc = a->number_of_acceptance_conditions();
 
 		  if (opt_dot)
@@ -1110,9 +1133,9 @@ main(int argc, char** argv)
 
 			  if (opt_apf)
 			    {
-			      std::string ssii =
-				spot::rebuild::strat_to_string (ii);
-			      algo += ssii;
+// 			      std::string ssii =
+// 				spot::rebuild::strat_to_string (ii);
+// 			      algo += ssii;
 			    }
 
 			  if (!opt_paper)
@@ -1325,14 +1348,14 @@ main(int argc, char** argv)
 
 		      delete degen;
 		    }
-		}
+		  //		}
 
 	      // Remove unused bdd
-	      if (opt_apf && formula != ftmp)
-		{
-		  spot::bdd_dict *fdict = ftmp->get_dict();
-		  fdict-> unregister_all_my_variables(ftmp);
-		}
+// 	      if (opt_apf && formula != ftmp)
+// 		{
+// 		  spot::bdd_dict *fdict = ftmp->get_dict();
+// 		  fdict-> unregister_all_my_variables(ftmp);
+// 		}
 
 	      delete product;
 	      delete r;
@@ -1450,9 +1473,9 @@ main(int argc, char** argv)
 	(float)(n_empty_emptiness+empty_emptiness)
 		<< "\%)"<< std::endl;
 
-      int ii = 0;
-      for (ii = 0; ii< opt_apf_num; ++ii)
-	{
+//       int ii = 0;
+//       for (ii = 0; ii< opt_apf_num; ++ii)
+// 	{
 
 	  for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
 	    {
@@ -1460,9 +1483,9 @@ main(int argc, char** argv)
 
 	      if (opt_apf)
 		{
-		  std::string ssii =
-		    spot::rebuild::strat_to_string (ii);
-		  algo += ssii;
+// 		  std::string ssii =
+// 		    spot::rebuild::strat_to_string (ii);
+// 		  algo += ssii;
 		}
 
 	      int n = -1;
@@ -1501,7 +1524,7 @@ main(int argc, char** argv)
 		std::cout << " " << std::setw(8) << n;
 	      std::cout << std::endl;
 	    }
-	}
+	  //	}
 
       if (!tm_ec.empty())
 	{
@@ -1534,9 +1557,9 @@ main(int argc, char** argv)
 		    << "(Original-NDFS | Optim-DFS | Optim-REACH | COMMUT)"
 		    << std::endl;
 
-	  int ii = 0;
-	  for (ii = 0; ii< opt_apf_num; ++ii)
-	    {
+// 	  int ii = 0;
+// 	  for (ii = 0; ii< opt_apf_num; ++ii)
+// 	    {
 
 	      for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
 		{
@@ -1544,9 +1567,9 @@ main(int argc, char** argv)
 
 		  if (opt_apf)
 		    {
-		      std::string ssii =
-			spot::rebuild::strat_to_string (ii);
-		      algo += ssii;
+// 		      std::string ssii =
+// 			spot::rebuild::strat_to_string (ii);
+// 		      algo += ssii;
 		    }
 
 		  std::cout << std::setw(28)  << algo << " " << std::setw(8);
@@ -1599,7 +1622,7 @@ main(int argc, char** argv)
 
 		  std::cout << std::endl;
 		}
-	    }
+	      //	    }
 	}
 
       std::cout << std::endl << "Accepting run ratios" << std::endl;
@@ -1607,8 +1630,8 @@ main(int argc, char** argv)
       ec_ratio_stat_type::stats_alg_map& stats2 = arc_ratio_stats.stats;
 
 
-      for (ii = 0; ii< opt_apf_num; ++ii)
-	{
+//       for (ii = 0; ii< opt_apf_num; ++ii)
+// 	{
 
 	  for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
 	    {
@@ -1616,9 +1639,9 @@ main(int argc, char** argv)
 
 	      if (opt_apf)
 		{
-		  std::string ssii =
-		    spot::rebuild::strat_to_string (ii);
-		  algo += ssii;
+// 		  std::string ssii =
+// 		    spot::rebuild::strat_to_string (ii);
+// 		  algo += ssii;
 		}
 
 	      std::cout << std::setw(28)  << algo << " " << std::setw(8);
@@ -1637,7 +1660,7 @@ main(int argc, char** argv)
 		std::cout << "";
 	      std::cout << std::endl;
 	    }
-	}
+	  //	}
       if (!tm_ec.empty())
 	{
 	  std::cout << std::endl
@@ -1675,6 +1698,18 @@ main(int argc, char** argv)
 
   delete ap;
   delete apf;
+  delete simp;
+  spot::ltl::atomic_prop::dump_instances(std::cerr);
+  spot::ltl::unop::dump_instances(std::cerr);
+  spot::ltl::binop::dump_instances(std::cerr);
+  spot::ltl::multop::dump_instances(std::cerr);
+  spot::ltl::automatop::dump_instances(std::cerr);
+  assert(spot::ltl::atomic_prop::instance_count() == 0);
+  assert(spot::ltl::unop::instance_count() == 0);
+  assert(spot::ltl::binop::instance_count() == 0);
+  assert(spot::ltl::multop::instance_count() == 0);
+  assert(spot::ltl::automatop::instance_count() == 0);
+
   delete dict;
   return exit_code;
 }
