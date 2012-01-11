@@ -1717,7 +1717,7 @@ main(int argc, char** argv)
 	  while (search_many);
 	  delete ec;
 	  // if (es)
-	  delete es;
+	  //delete es;
 	}
 
       delete to_free2;

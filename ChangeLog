@@ -1,5 +1,8 @@
 2012-01-11  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/ltl2tgba.cc (main): emptiness specifier is delete
+	by the emptiness algorithm
+
 	* src/tgbatest/randtgba.cc (cons_emptiness_check): now dynamism is
 	re-supported   
 
