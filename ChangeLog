@@ -1,6 +1,10 @@
 2012-01-11  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/randtgba.cc (main): opt_apf is re-available, fix
+	the leak, option apf and af are now exclusives
+
 	* src/tgbaalgos/rebuild.cc: add comments
+	(compare_hierarchy): Fix leaks for formula emptiness specifier 
 
 	* src/tgbatest/randtgba.cc (main): normalize opf_fs + clean opt_af
 

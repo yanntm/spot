@@ -194,6 +194,7 @@ namespace spot
       new spot::formula_emptiness_specifier (i1.src);
     const spot::ltl::formula * cf1 =
       fes->formula_from_state(i1.succdst);
+    bool _res = false; 
 
     const spot::ltl::formula * cf2 =
       fes->formula_from_state(i2.succdst);
@@ -201,12 +202,12 @@ namespace spot
     // First guarantee
     if (cf1->is_syntactic_guarantee() &&
 	!cf2->is_syntactic_guarantee())
-      return true;
+      _res = true;
 
     // First persistence
     if (cf1->is_syntactic_persistence() &&
 	!cf2->is_syntactic_persistence())
-      return true;
+      _res = true;
 
      delete fes;
      return false;
@@ -248,7 +249,6 @@ namespace spot
   void
   rebuild::strategy_dispatcher (std::list<sort_trans> *l)
   {
-    //    assert(!l->empty());	// Why call this if empty?
     switch (is)
       {
       case DEFAULT :

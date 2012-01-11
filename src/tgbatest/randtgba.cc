@@ -842,7 +842,6 @@ main(int argc, char** argv)
 	}
       else if (!strcmp(argv[argn], "-apf"))
 	{
-	  assert(false);
 	  opt_apf = true;
 	  opt_apf_num = spot::rebuild::number_of_strategies();
 	}
@@ -994,6 +993,7 @@ main(int argc, char** argv)
 
       if (opt_af)
 	{
+	  assert(!opt_apf);
 	  // Declare a worker that will computes changes over the 
 	  // formula 
 	  spot::rebuild worker (formula, opt_af_strat);
@@ -1042,42 +1042,53 @@ main(int argc, char** argv)
 						     opt_n_acc, opt_a, opt_t,
 						     &env);
 
+	      // Some minor consistency checks
+	      if (!opt_apf)
+		assert (opt_apf_num == 1);
+	      if (opt_apf)
+		assert (!opt_af);
+
 	      // This external loop is used to perform all changes
 	      // on the automata of the formula
-// 	      int ii = 0;
-// 	      spot::tgba *atmp = a;
-// 	      spot::tgba *ftmp = formula;
-// 	      if (!opt_apf)
-// 		assert (opt_apf_num == 1);
+ 	      int ii = 0;
+	      spot::tgba *atmp = a;
+	      spot::tgba *ftmp = formula;
 
-// // 	      std::cout << "######################################\n";
-// // 	      dotty_reachable(std::cout, formula);
-// 	      for (ii = 0; ii < opt_apf_num; ++ii)
-// 		{
+
+	      // For debug should be removed
+	      // std::cout << "######################################\n";
+	      // dotty_reachable(std::cout, formula);
+	      for (ii = 0; ii < opt_apf_num; ++ii)
+		{
 
 		  // We must perform variations on all formulas
 		  if (opt_apf)
 		    {
-// 		      if (formula != ftmp)
-// 			{
-// 			  spot::bdd_dict *fdict = formula->get_dict();
-// 			  fdict-> unregister_all_my_variables(formula);
-// 			}
-// 		      // Reset original values 
-// 		      a = atmp;
-// 		      formula = ftmp;
+ 		      // Reset original values 
+		      if (formula != ftmp)
+			{
+			  delete formula;
+			  formula = ftmp;
+			}
+		      if (a != atmp)
+			{
+			  delete a;
+			  a = atmp;
+			}
 
-// 		      // And now we can rebuild the new automaton of the
-// 		      // formula
-// 		      spot::rebuild worker
-// 			(formula, (spot::rebuild::iterator_strategy)ii);
-// 		      tm_af.start(spot::rebuild::strat_to_string (ii));
-// 		      spot::tgba *new_tgba =
-// 			worker.reorder_transitions();
-// 		      tm_af.stop(spot::rebuild::strat_to_string (ii));
-
-// 		      formula = new_tgba;
-// 		      assert (formula);
+		      // And now we can rebuild the new automaton of the
+		      // formula
+		      spot::rebuild worker
+			(formula, (spot::rebuild::iterator_strategy)ii);
+		      tm_af.start(spot::rebuild::strat_to_string (ii));
+		      spot::tgba *new_tgba =
+			worker.reorder_transitions();
+		      tm_af.stop(spot::rebuild::strat_to_string (ii));
+		      
+		      // Replace the formula automaton by the newly considered
+		      // delete formula; 
+		      formula = new_tgba;
+		      assert (formula);
 		    }
 
 		  if (formula)
@@ -1125,9 +1136,9 @@ main(int argc, char** argv)
 
 			  if (opt_apf)
 			    {
-// 			      std::string ssii =
-// 				spot::rebuild::strat_to_string (ii);
-// 			      algo += ssii;
+			      std::string ssii =
+				spot::rebuild::strat_to_string (ii);
+			      algo += ssii;
 			    }
 
 			  if (!opt_paper)
@@ -1340,14 +1351,15 @@ main(int argc, char** argv)
 
 		      delete degen;
 		    }
-		  //		}
+		}
 
-	      // Remove unused bdd
-// 	      if (opt_apf && formula != ftmp)
-// 		{
-// 		  spot::bdd_dict *fdict = ftmp->get_dict();
-// 		  fdict-> unregister_all_my_variables(ftmp);
-// 		}
+	      // Here we have perform some change over automaton of the
+	      // formula : we have to destroy this instance 
+	      if (formula != ftmp)
+		{
+		  delete formula;
+		  formula = ftmp;
+		}
 
 	      delete product;
 	      delete r;
@@ -1465,9 +1477,9 @@ main(int argc, char** argv)
 	(float)(n_empty_emptiness+empty_emptiness)
 		<< "\%)"<< std::endl;
 
-//       int ii = 0;
-//       for (ii = 0; ii< opt_apf_num; ++ii)
-// 	{
+      int ii = 0;
+      for (ii = 0; ii< opt_apf_num; ++ii)
+	{
 
 	  for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
 	    {
@@ -1475,9 +1487,9 @@ main(int argc, char** argv)
 
 	      if (opt_apf)
 		{
-// 		  std::string ssii =
-// 		    spot::rebuild::strat_to_string (ii);
-// 		  algo += ssii;
+		  std::string ssii =
+		    spot::rebuild::strat_to_string (ii);
+		  algo += ssii;
 		}
 
 	      int n = -1;
@@ -1516,7 +1528,7 @@ main(int argc, char** argv)
 		std::cout << " " << std::setw(8) << n;
 	      std::cout << std::endl;
 	    }
-	  //	}
+	}
 
       if (!tm_ec.empty())
 	{
@@ -1549,9 +1561,9 @@ main(int argc, char** argv)
 		    << "(Original-NDFS | Optim-DFS | Optim-REACH | COMMUT)"
 		    << std::endl;
 
-// 	  int ii = 0;
-// 	  for (ii = 0; ii< opt_apf_num; ++ii)
-// 	    {
+	  int ii = 0;
+	  for (ii = 0; ii< opt_apf_num; ++ii)
+ 	    {
 
 	      for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
 		{
@@ -1559,9 +1571,9 @@ main(int argc, char** argv)
 
 		  if (opt_apf)
 		    {
-// 		      std::string ssii =
-// 			spot::rebuild::strat_to_string (ii);
-// 		      algo += ssii;
+		      std::string ssii =
+			spot::rebuild::strat_to_string (ii);
+		      algo += ssii;
 		    }
 
 		  std::cout << std::setw(28)  << algo << " " << std::setw(8);
@@ -1614,7 +1626,7 @@ main(int argc, char** argv)
 
 		  std::cout << std::endl;
 		}
-	      //	    }
+	    }
 	}
 
       std::cout << std::endl << "Accepting run ratios" << std::endl;
@@ -1622,8 +1634,8 @@ main(int argc, char** argv)
       ec_ratio_stat_type::stats_alg_map& stats2 = arc_ratio_stats.stats;
 
 
-//       for (ii = 0; ii< opt_apf_num; ++ii)
-// 	{
+      for (ii = 0; ii< opt_apf_num; ++ii)
+	{
 
 	  for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
 	    {
@@ -1631,9 +1643,9 @@ main(int argc, char** argv)
 
 	      if (opt_apf)
 		{
-// 		  std::string ssii =
-// 		    spot::rebuild::strat_to_string (ii);
-// 		  algo += ssii;
+		  std::string ssii =
+		    spot::rebuild::strat_to_string (ii);
+		  algo += ssii;
 		}
 
 	      std::cout << std::setw(28)  << algo << " " << std::setw(8);
@@ -1652,7 +1664,7 @@ main(int argc, char** argv)
 		std::cout << "";
 	      std::cout << std::endl;
 	    }
-	  //	}
+	}
       if (!tm_ec.empty())
 	{
 	  std::cout << std::endl
