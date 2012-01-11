@@ -42,6 +42,7 @@ namespace spot
   tgba*
   rebuild::reorder_transitions ()
   {
+    // Get all conditions 
     all_cond = src->all_acceptance_conditions();
 
     // Get the dictionnary 
@@ -53,6 +54,7 @@ namespace spot
     spot::tgba_explicit_formula *t =
       new spot::tgba_explicit_formula (dict);
 
+    // Register all variables for the new tgba
     dict->register_all_variables_of(f, t);
 
     // Create the new initial state for the new TGBA

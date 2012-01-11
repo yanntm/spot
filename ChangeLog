@@ -1,3 +1,9 @@
+2012-01-11  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/rebuild.cc: add comments
+
+	* src/tgbatest/randtgba.cc (main): normalize opf_fs + clean opt_af
+
 2012-01-10  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/rebuild.hh (spot): Refinement explicit state

@@ -641,7 +641,7 @@ main(int argc, char** argv)
 
   bool stop_on_first_difference = false;
 
-  bool formula_stats = false;
+  bool opt_fs = false;
 
   spot::tgba* formula = 0;
   spot::tgba* product = 0;
@@ -826,8 +826,7 @@ main(int argc, char** argv)
 	}
       else if (!strcmp(argv[argn], "-fs"))
 	{
-	  assert(false);
-	  formula_stats = true;
+	  opt_fs = true;
 	}
       else if (!strcmp(argv[argn], "-z"))
 	{
@@ -995,27 +994,20 @@ main(int argc, char** argv)
 
       if (opt_af)
 	{
-	  dotty_reachable(std::cout, formula);
+	  // Declare a worker that will computes changes over the 
+	  // formula 
 	  spot::rebuild worker (formula, opt_af_strat);
 	  tm_af.start(spot::rebuild::strat_to_string (opt_af_strat));
 	  spot::tgba *new_tgba =
 	    worker.reorder_transitions();
 	  tm_af.stop(spot::rebuild::strat_to_string (opt_af_strat));
 
-// 	  dotty_reachable(std::cout, new_tgba);
-// 	  delete  new_tgba;
-
+	  // Replace the formula automaton by the newly considered
 	  delete formula; 
 	  formula = new_tgba;
-
-	  //	  dotty_reachable(std::cout, new_tgba);
-// 	  spot::bdd_dict *fdict = formula->get_dict();
-// 	  fdict-> unregister_all_my_variables(formula);
-// 	  formula = new_tgba;
-// 	  assert (formula);
 	}
 
-      if (formula_stats)
+      if (opt_fs)
 	{
 	  spot::formula_emptiness_specifier *fes  =
 	    new spot::formula_emptiness_specifier (formula);
@@ -1540,7 +1532,7 @@ main(int argc, char** argv)
 	  tm_ar.print(std::cout);
 	}
 
-      if (formula_stats)
+      if (opt_fs)
 	{
 	  float cpt =  terminal_count + weak_count + general_count;
 	  std::cout<< std::endl  << "Static Stats for initial States : "
