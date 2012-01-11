@@ -120,7 +120,8 @@ namespace spot
 
     /// The states to visit : first match original TGBA , second the 
     /// newly constructed
-    std::stack<std::pair <spot::state_explicit *, spot::state_explicit *> > todo;
+    std::stack
+    <std::pair <spot::state_explicit *, spot::state_explicit *> > todo;
 
   public:
 

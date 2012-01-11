@@ -102,15 +102,59 @@ cons_emptiness_check(int num, const spot::tgba* a,
 		     const spot::tgba *product, const spot::tgba *formula,
 		     float opt_a)
 {
+  // ORIGINAL
+//   spot::emptiness_check_instantiator* inst = ec_algos[num].inst;
+//   if (n_acc < inst->min_acceptance_conditions()
+//       || n_acc > inst->max_acceptance_conditions())
+//     a = degen;
+//   if (a)
+//     return inst->instantiate(a);
+
+//   assert(formula || opt_a+1 || product);
+//   return 0;
+
+
+
+  if (!formula)
+    return 0;
+
+
   spot::emptiness_check_instantiator* inst = ec_algos[num].inst;
   if (n_acc < inst->min_acceptance_conditions()
       || n_acc > inst->max_acceptance_conditions())
     a = degen;
-  if (a)
-    return inst->instantiate(a);
 
-  assert(formula || opt_a+1 || product);
+
+
+
+  spot::emptiness_check *echk = 0;
+  if (a)
+    echk = inst->instantiate(a);
+
+  // Dynamic emptiness doesn't support
+  if (echk && opt_a != 0.0 && (echk->is_dynamic_emptiness ()))
+    {
+      return 0;
+    }
+  if (echk && (n_acc < inst->min_acceptance_conditions()
+	       || n_acc > inst->max_acceptance_conditions()))
+    {
+      spot::formula_emptiness_specifier *fes  =
+	new spot::formula_emptiness_specifier (degen?degen:product, formula);
+      echk->set_specifier (fes);
+    }
+  else if (echk)
+    {
+      spot::formula_emptiness_specifier *fes  =
+	new spot::formula_emptiness_specifier (product, formula);
+      echk->set_specifier (fes);
+    }
+
+  return echk;
+
   return 0;
+
+
 
 
 //   if (!formula)
@@ -1003,7 +1047,7 @@ main(int argc, char** argv)
 	  tm_af.stop(spot::rebuild::strat_to_string (opt_af_strat));
 
 	  // Replace the formula automaton by the newly considered
-	  delete formula; 
+	  delete formula;
 	  formula = new_tgba;
 	}
 
@@ -1084,7 +1128,7 @@ main(int argc, char** argv)
 		      spot::tgba *new_tgba =
 			worker.reorder_transitions();
 		      tm_af.stop(spot::rebuild::strat_to_string (ii));
-		      
+
 		      // Replace the formula automaton by the newly considered
 		      // delete formula; 
 		      formula = new_tgba;

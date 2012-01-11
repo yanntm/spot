@@ -141,6 +141,7 @@ namespace spot
 
   emptiness_check::~emptiness_check()
   {
+    delete es_;
   }
 
   const unsigned_statistics*

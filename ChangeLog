@@ -1,5 +1,20 @@
 2012-01-11  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/randtgba.cc (cons_emptiness_check): now dynamism is
+	re-supported   
+
+	* src/tgbaalgos/emptiness.cc (spot): Delete emptiness specifier
+	that leads to a leak
+
+	* src/tgbatest/ltl2tgba.test (check_arrangement): take in account
+	formula arrangement into tests
+
+	* src/tgbatest/ltl2tgba.cc (main): Rebuild new formula opt_af fix
+	it in the usage 
+
+	* src/tgbaalgos/rebuild.hh (string_to_strategy): Fix silent bug :
+	default was choosen when the strategy was not known 
+
 	* src/tgbatest/ltl2tgba.cc (main): Fix changes for rebuild over
 	ltl2tgba
 

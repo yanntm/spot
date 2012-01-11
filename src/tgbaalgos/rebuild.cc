@@ -68,7 +68,7 @@ namespace spot
     todo.push(std::make_pair (i_src, i_dst));
 
     trace << "# init  : " << t->format_state(i_dst) << std::endl;
-    
+
     // States that have been or will be visited
     visited = new std::set< spot::state *>();
     visited->insert(i_dst->clone());
@@ -92,7 +92,7 @@ namespace spot
 	// DEBUG
 	trace << "WORK  src : " << s_src << std::endl;
 	trace << "WORK  dst : " << s_dst << std::endl;
-		
+
 	// List of transitions that should be create
  	std::list< rebuild::sort_trans > *alist =
  	  new std::list< rebuild::sort_trans >();
@@ -100,17 +100,17 @@ namespace spot
  	// Iterator over the successor of the src
 	spot::tgba_explicit_succ_iterator *si =
 	  (tgba_explicit_succ_iterator*) f->succ_iter (s_src);
-	for (si->first(); !si->done() ; si->next())
+	for (si->first(); !si->done(); si->next())
 	  {
 	    // Get successor of the src and dst 
  	    spot::state_explicit * succ_src = si->current_state();
- 	    spot::state_explicit * succ_dst ;
-	    
-	    if (! t->has_state(f->get_label(succ_src)))
-	      succ_dst = 
+ 	    spot::state_explicit * succ_dst;
+
+	    if (!t->has_state(f->get_label(succ_src)))
+	      succ_dst =
 		t->add_state(f->get_label(succ_src)->clone());
-	    else 
-	      succ_dst = 
+	    else
+	      succ_dst =
 		t->add_state(f->get_label(succ_src));
 
 	    // It's a new state we have to visit it
@@ -179,11 +179,11 @@ namespace spot
 
     // Cleaning visited 
     std::set<spot::state *>::iterator it;
-    for ( it=visited->begin() ; it != visited->end(); ++it )
+    for (it=visited->begin(); it != visited->end(); ++it)
       (*it)->destroy();
     delete visited;
 
-    return t; 
+    return t;
   }
 
   bool
@@ -194,7 +194,7 @@ namespace spot
       new spot::formula_emptiness_specifier (i1.src);
     const spot::ltl::formula * cf1 =
       fes->formula_from_state(i1.succdst);
-    bool _res = false; 
+    bool _res = false;
 
     const spot::ltl::formula * cf2 =
       fes->formula_from_state(i2.succdst);
