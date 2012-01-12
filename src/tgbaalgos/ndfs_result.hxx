@@ -191,7 +191,8 @@ namespace spot
 	  if (h_.has_been_visited(start))
 	    {
 	      bool b = dfs(start, acc_trans, covered_acc);
-	      assert(b);
+	      if (!is_dynamic)
+		assert(b);
 	      (void) b;
 	    }
         }

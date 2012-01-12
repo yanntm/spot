@@ -22,6 +22,7 @@
 #ifndef SPOT_TGBAALGOS_EMPTINESS_SPECIFIER_HH
 # define SPOT_TGBAALGOS_EMPTINESS_SPECIFIER_HH
 
+#include "tgbaalgos/scc.hh"
 #include "tgba/state.hh"
 #include "tgba/tgba.hh"
 #include "tgba/tgbaexplicit.hh"
@@ -45,6 +46,12 @@ namespace spot
     /// Return NULL if the state doesn't handle formula 
     virtual const ltl::formula *
     formula_from_state (const state *) const = 0;
+
+    virtual bool
+    is_part_of_weak_acc (const state *) const = 0;
+
+    virtual bool
+    same_weak_acc (const state *, const state *) const = 0;
   };
 
   /// This class represent a default specifier
@@ -52,11 +59,26 @@ namespace spot
   {
   public :
 
+    // Return the formula associated to a specific state
     virtual const ltl::formula *
     formula_from_state (const state *) const
     {
       return 0;
     }
+
+    // Return true if the state belong to a weak accepting SCC
+    virtual bool
+    is_part_of_weak_acc (const state *) const
+    {
+      return false;
+    }
+
+    virtual bool
+    same_weak_acc (const state *, const state *) const
+    {
+      return false;
+    }
+
   };
 
   /// This class represent a specifier which extract algorithm information 
@@ -95,6 +117,15 @@ namespace spot
 
     const ltl::formula *
     formula_from_state (const state *) const;
+
+    // Return true if the projection over the formula automata is 
+    // in a weak accepting SCC
+    bool
+    is_part_of_weak_acc (const state *) const;
+
+    bool
+    same_weak_acc (const state *, const state *) const;
+
   };
 }
 

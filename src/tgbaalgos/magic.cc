@@ -91,8 +91,8 @@ namespace spot
       {
 	if (formula->is_syntactic_guarantee())
 	  inc_reachability();
-// 	else if (formula->is_syntactic_persistence())
-// 	  inc_dfs ();
+	else if (formula->is_syntactic_persistence())
+	  inc_dfs ();
 	else
 	  inc_ndfs ();
       }
@@ -102,8 +102,8 @@ namespace spot
       {
 	if (formula->is_syntactic_guarantee())
 	  commut_algo (REACHABILITY);
-// 	else if (formula->is_syntactic_persistence())
-// 	  commut_algo (DFS);
+	else if (formula->is_syntactic_persistence())
+	  commut_algo (DFS);
 	else
 	  commut_algo(NDFS);
       }
@@ -128,10 +128,10 @@ namespace spot
 	      {
 		// FIXME : Trap only guarantee properties 
 		const ltl::formula * formula =  es_->formula_from_state(s0);
-		if (!formula->is_syntactic_guarantee())
-		  is_static = false;
-		else
+		if (formula->is_syntactic_guarantee())
 		  {
+		    inc_reachability();
+		    commut_algo(REACHABILITY);
 		    h.add_new_state(s0, BLUE);
 		    push(st_blue, s0, bddfalse, bddfalse);
 		    if (static_guarantee ())
@@ -141,6 +141,21 @@ namespace spot
 		    else
 		      return 0;
 		  }
+		else if  (formula->is_syntactic_persistence())
+		  {
+		    inc_dfs();
+		    commut_algo(DFS);
+		    h.add_new_state(s0, BLUE);
+		    push(st_blue, s0, bddfalse, bddfalse);
+		    if (static_persistence ())
+		      return new magic_search_result(*this,
+						     options(),
+						     is_dynamic);
+		    else
+		      return 0;		    
+		  }
+		else
+		  is_static = false;
 	      }
 
 	    if (is_dynamic)
@@ -280,18 +295,18 @@ namespace spot
                 f.it->next();
                 inc_transitions();
                 typename heap::color_ref c = h.get_color_ref(s_prime);
-		const ltl::formula * formula = 0;
+ 		const ltl::formula * formula = 0;
 
-		formula =  es_->formula_from_state(f.s);
-		if ((ltl::constant::true_instance() == formula))
-		  //||
-		  //(h.has_been_visited(s_prime) && acc == all_cond))
+ 		formula =  es_->formula_from_state(f.s);
+ 		if ((ltl::constant::true_instance() == formula))
 		  {
+		    h.add_new_state(s_prime, BLUE);
 		    push(st_blue, s_prime, label, acc);
 		    is_dynamic = true;
 		    return true;
 		  }
-		else if (c.is_white())
+		else 
+		  if (c.is_white())
 		  {
 		    h.add_new_state(s_prime, BLUE);
 		    push(st_blue, s_prime, label, acc);
@@ -313,6 +328,82 @@ namespace spot
 	      }
 	  }
 	return false;
+      }
+
+
+      bool
+      static_persistence ()
+      {
+	assert (is_static);
+	assert (es_ != 0);
+        while (!st_blue.empty())
+          {
+            stack_item& f = st_blue.front();
+	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+            if (!f.it->done())
+              {
+                const state *s_prime = f.it->current_state();
+		trace << "  Visit the successor: "
+                      << a_->format_state(s_prime) << std::endl;
+                bdd label = f.it->current_condition();
+                bdd acc = f.it->current_acceptance_conditions();
+                // Go down the edge (f.s, <label, acc>, s_prime)
+                f.it->next();
+                inc_transitions();
+                typename heap::color_ref c = h.get_color_ref(s_prime);
+		const ltl::formula * formula = 0;
+
+		formula =  es_->formula_from_state(f.s);
+
+		bool has_been_visited = false; 
+		if (es_->same_weak_acc (f.s, s_prime)&& acc == all_cond)
+		  {
+		    stack_type::const_reverse_iterator i;
+		    i = st_blue.rbegin();
+
+		    trace << "This 2 states are in the same SCC : " 
+			  << a_->format_state(f.s) << "     "
+			  << a_->format_state(s_prime) << std::endl;
+		    while (i != st_blue.rend())
+		      {
+			if (i->s->compare(s_prime) == 0)
+			  {
+			    has_been_visited = true;
+			    break;
+			  }
+			++i;
+		      }
+		    if (has_been_visited)
+		      {
+			is_dynamic = true;
+			return true;
+		      }
+
+		  }
+
+
+		if (c.is_white())
+		  {
+		    h.add_new_state(s_prime, BLUE);
+		    push(st_blue, s_prime, label, acc);
+		    continue;
+		  }
+		else
+		  {
+		    h.pop_notify(s_prime);
+		  }
+		continue;
+	      }
+            else
+            // Backtrack the edge
+            //        (predecessor of f.s in st_blue, <f.label, f.acc>, f.s)
+              {
+                trace << "  All the successors have been visited" << std::endl;
+                stack_item f_dest(f);
+		pop(st_blue);
+	      }
+	  }
+        return false;
       }
 
 

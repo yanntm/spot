@@ -78,7 +78,9 @@ namespace spot
   }
 
   formula_emptiness_specifier::~formula_emptiness_specifier()
-  { }
+  {
+    //delete sm;
+  }
 
   const ltl::formula*
   formula_emptiness_specifier::formula_from_state (const state *s) const
@@ -135,5 +137,63 @@ namespace spot
 	    << std::endl;
 
     return f;
+  }
+
+  bool
+  formula_emptiness_specifier::is_part_of_weak_acc (const state *s) const
+  {
+    bool res = false;
+    scc_map* sm = new scc_map(f_);
+    sm->build_map();
+    
+    if (!both_formula)
+      {
+	state * sproj = sys_->project_state(s, f_);
+	assert(sproj);
+
+	const state_explicit* fstate =
+	  dynamic_cast<const state_explicit*> (sproj);
+
+	unsigned id_scc = sm->scc_of_state(fstate);
+	res = sm->weak(id_scc);
+
+	sproj->destroy();
+      }
+    else
+      assert (false);
+
+    delete sm;
+    return res;
+  }
+
+  bool
+  formula_emptiness_specifier::same_weak_acc (const state *s1, 
+					      const state *s2) const
+  {
+    bool res = false;
+    scc_map* sm = new scc_map(f_);
+    sm->build_map();
+    
+    if (!both_formula)
+      {
+	state * sproj1 = sys_->project_state(s1, f_);
+	assert(sproj1);
+	const state_explicit* fstate1 =
+	  dynamic_cast<const state_explicit*> (sproj1);
+	unsigned id_scc1 = sm->scc_of_state(fstate1);
+
+	state * sproj2 = sys_->project_state(s2, f_);
+	assert(sproj2);
+	const state_explicit* fstate2 =
+	  dynamic_cast<const state_explicit*> (sproj2);
+	unsigned id_scc2 = sm->scc_of_state(fstate2);
+	
+
+	sproj1->destroy();
+	sproj2->destroy();
+	res = (sm->weak(id_scc1)) && (id_scc1 == id_scc2);
+      }
+    delete sm;
+    return res;
   }
 }

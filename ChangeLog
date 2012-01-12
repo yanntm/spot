@@ -1,3 +1,16 @@
+2012-01-12  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/magic.cc (spot): Implementation of the static
+	approach for magic (both guarantee and perisistence)
+
+	* src/tgbaalgos/emptiness_specifier.hh (is_part_of_weak_acc):
+	detection of the belonging to a SCC accepting 
+
+	* src/tgbaalgos/emptiness_specifier.cc (same_weak_acc): detection
+	of the same SCC of the formula 
+
+	* src/tgbaalgos/ndfs_result.hxx (spot): assertion fail when dynamism
+
 2012-01-11  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbatest/ltl2tgba.cc (main): emptiness specifier is delete
