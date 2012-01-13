@@ -456,11 +456,13 @@ main(int argc, char** argv)
 	  if (!*echeck_algo)
 	    echeck_algo = "Cou99";
 
+	  // FIXME : not modular
 	  if (strcmp("SE05_dyn", echeck_algo) == 0 ||
 	      strcmp("SE05_dyn_opt", echeck_algo) == 0 ||
 	      strncmp("Cou99_dyn", echeck_algo, 9) == 0 ||
 	      strcmp("GV04_dyn", echeck_algo) == 0 ||
 	      strcmp("CVWY90_dyn", echeck_algo) == 0 ||
+	      strcmp("CVWY90_stat", echeck_algo) == 0 ||
 	      strcmp("Tau03_opt_dyn", echeck_algo) == 0 ||
 	      strcmp("Tau03_dyn", echeck_algo) == 0)
 	    is_dynamic_emptiness = true;
@@ -488,6 +490,7 @@ main(int argc, char** argv)
 	      strncmp("Cou99_dyn", echeck_algo, 9) == 0 ||
 	      strcmp("GV04_dyn", echeck_algo) == 0 ||
 	      strcmp("CVWY90_dyn", echeck_algo) == 0 ||
+	      strcmp("CVWY90_stat", echeck_algo) == 0 ||
 	      strcmp("Tau03_opt_dyn", echeck_algo) == 0 ||
 	      strcmp("Tau03_dyn", echeck_algo) == 0)
 	    is_dynamic_emptiness = true;

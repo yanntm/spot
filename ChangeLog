@@ -1,3 +1,14 @@
+2012-01-13  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/magic.cc (spot): static and dynamic strategies for
+	the algorithm
+
+	* src/tgbatest/emptchk.test: Add tests for static and dynamic
+	strategies of the magic algorithm
+
+	* src/tgbatest/ltl2tgba.cc (main): Magic algorithm is available
+	into ltl2tgba for static and dynamic strategies
+
 2012-01-12  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/magic.cc (spot): Implementation of the static

@@ -124,9 +124,11 @@ namespace spot
             const state* s0 = a_->get_init_state();
             inc_states();
 
+	    // It's the static case : that means that the algorithm 
+	    // is chosen regarding only the first state of the automata
 	    if (is_static)
 	      {
-		// FIXME : Trap only guarantee properties 
+		// Trap only guarantee properties 
 		const ltl::formula * formula =  es_->formula_from_state(s0);
 		if (formula->is_syntactic_guarantee())
 		  {
@@ -141,6 +143,7 @@ namespace spot
 		    else
 		      return 0;
 		  }
+		// Trap only persistence properties 
 		else if  (formula->is_syntactic_persistence())
 		  {
 		    inc_dfs();
@@ -154,10 +157,12 @@ namespace spot
 		    else
 		      return 0;		    
 		  }
+		// We are in the general case apply default algo.
 		else
 		  is_static = false;
 	      }
 
+	    // If it's dynamic update the good stats.
 	    if (is_dynamic)
 	      {
 		const ltl::formula * formula =  es_->formula_from_state(s0);
@@ -275,15 +280,18 @@ namespace spot
       /// THis function perform the search on a a tgba which is the 
       /// result of a Kripke structure and a a formula : this formula 
       /// is necessary a guarantee formula
+      ///
+      /// Assume that the Kripke structure is such that every state 
+      /// has at least one outgoing edge
       bool
       static_guarantee ()
       {
-	assert (is_static);
+	assert (is_static || is_dynamic);
 	assert (es_ != 0);
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+	    trace << "Guarantee treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
@@ -296,11 +304,20 @@ namespace spot
                 inc_transitions();
                 typename heap::color_ref c = h.get_color_ref(s_prime);
  		const ltl::formula * formula = 0;
-
  		formula =  es_->formula_from_state(f.s);
+
+		// For the sake of dynamism
+		if (is_dynamic && !formula->is_syntactic_guarantee())
+		  {
+		    s_prime->destroy();
+		    return false;
+		  }
+
+		// Condition working over kripke having at least one successor
  		if ((ltl::constant::true_instance() == formula))
 		  {
-		    h.add_new_state(s_prime, BLUE);
+		    if (c.is_white ())
+		      h.add_new_state(s_prime, BLUE);
 		    push(st_blue, s_prime, label, acc);
 		    is_dynamic = true;
 		    return true;
@@ -319,27 +336,30 @@ namespace spot
 		continue;
 	      }
             else
-            // Backtrack the edge
-            //        (predecessor of f.s in st_blue, <f.label, f.acc>, f.s)
               {
-                trace << "  All the successors have been visited" << std::endl;
-                stack_item f_dest(f);
 		pop(st_blue);
 	      }
 	  }
 	return false;
       }
 
-
+      /// THis function perform the search on a a tgba which is the 
+      /// result of a Kripke structure and a a formula : this formula 
+      /// may be a guarantee formula or a persistence formula and is 
+      /// represented by a weak or a terminal automata
+      /// 
+      /// If no assumption is done about the Kripke this algorithm is the
+      /// one we should use over guarantee formula
       bool
       static_persistence ()
       {
-	assert (is_static);
+	assert (is_static || is_dynamic);
 	assert (es_ != 0);
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+	    trace << "PERSISTENCE treats: " 
+		  << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
@@ -348,16 +368,53 @@ namespace spot
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
-                f.it->next();
-                inc_transitions();
-                typename heap::color_ref c = h.get_color_ref(s_prime);
 		const ltl::formula * formula = 0;
-
 		formula =  es_->formula_from_state(f.s);
 
+		// Trap all states that represents guarantee formulas
+		// for dynamism 
+		// 
+		// In the case of static algorithms this is not performed
+		bool inc_me = true;
+		if (is_dynamic && formula->is_syntactic_guarantee())
+		  {
+		    if (static_guarantee ())
+		      {
+			s_prime->destroy();
+			return true;
+		      }
+		    else 
+		      {
+			if (st_blue.empty())
+			  {
+			    s_prime->destroy();
+			    return false;
+			  }
+			inc_me = false;
+		      }
+		  }
+
+		if (inc_me)
+		  {
+		    f.it->next();
+		    inc_transitions();
+		  }
+
+		// For the sake of dynamism
+		if (is_dynamic && !formula->is_syntactic_persistence())
+		  {
+		    s_prime->destroy();
+		    return false;
+		  }
+
+		// We reach the most important part of the algorithm 
+		// for persistence : we check if the current state and 
+		// its successors are in the same SCC in the formula automaton
 		bool has_been_visited = false; 
 		if (es_->same_weak_acc (f.s, s_prime)&& acc == all_cond)
 		  {
+		    // If Yes we check wether this state is already in the
+		    // blue stack
 		    stack_type::const_reverse_iterator i;
 		    i = st_blue.rbegin();
 
@@ -375,13 +432,13 @@ namespace spot
 		      }
 		    if (has_been_visited)
 		      {
+			s_prime->destroy();
 			is_dynamic = true;
 			return true;
 		      }
-
 		  }
 
-
+                typename heap::color_ref c = h.get_color_ref(s_prime);
 		if (c.is_white())
 		  {
 		    h.add_new_state(s_prime, BLUE);
@@ -395,11 +452,7 @@ namespace spot
 		continue;
 	      }
             else
-            // Backtrack the edge
-            //        (predecessor of f.s in st_blue, <f.label, f.acc>, f.s)
               {
-                trace << "  All the successors have been visited" << std::endl;
-                stack_item f_dest(f);
 		pop(st_blue);
 	      }
 	  }
@@ -424,104 +477,69 @@ namespace spot
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
-                f.it->next();
-                inc_transitions();
-                typename heap::color_ref c = h.get_color_ref(s_prime);
 		const ltl::formula * formula = 0;
+		bool inc_me = true; 
 
-		if (is_static)
-		  {
-		    formula =  es_->formula_from_state(f.s);
-		    if (h.has_been_visited(s_prime) && acc == all_cond)
-		      {
-			push(st_blue, s_prime, label, acc);
-			is_dynamic = true;
-			return true;
-		      }
-		    else if (c.is_white())
-		      {
-			h.add_new_state(s_prime, BLUE);
-			push(st_blue, s_prime, label, acc);
-			continue;
-		      }
-		    else
-		      {
-			h.pop_notify(s_prime);
-		      }
-		    continue;
-		  }
-
-
-
+		// There it's the inclusion of dynamism : this use 
+		// the same function that static one
 		if (is_dynamic)
 		  {
 		    formula =  es_->formula_from_state(f.s);
 		    stats_commut (formula);
 
+		    // Trap all states that represents guarantee formulas
 		    if (formula->is_syntactic_guarantee())
 		      {
-			// This optimisation consider that kripke have states
-			// that have at least one successor
-			// 
-			// FIXME : should be parametrized because it can leads 
-			// to false posistives
-			if (ltl::constant::true_instance() == formula)
+			if (static_guarantee ())
 			  {
-			    trace << "  It's a reachability we can report"
-				  << std::endl;
-			    push(st_blue, s_prime, label, acc);
+			    s_prime->destroy();
 			    return true;
 			  }
-
-			// This track guarantee without any conditions over 
-			// The Kripke structure (TGBA)
-			// Indeed if we reach a known state and we are inside 
-			// a guarantee state wich is moreover accepting this 
-			// means that we are into the terminal SCC 
-// 			if (formula->is_syntactic_guarantee()
-// 			    && h.has_been_visited(s_prime) && acc != bddfalse)
-// 			  {
-// 			    push(st_blue, s_prime, label, acc);
-// 			    return true;
-// 			  }
+			else 
+			  {
+			    if (st_blue.empty())
+			      {
+				s_prime->destroy();
+				return false;
+			      }
+			    inc_me = false;
+			  }
 		      }
 
-		    // This track persistence without any condition over the 
-		    // Kripke structure (TGBA)
-		    // Indeed if we reach a known state wich is persistence and
-		    // the arrow is acceptinng the entire SCC is accepting :
-		    // This means we can return 
-		    // 
-		    // FIXME : check for multiple acceptance conditions 
-// 		    if (formula->is_syntactic_persistence()
-// 			&& h.has_been_visited(s_prime) && acc != bddfalse)
-// 		      {
-// 				  << "|->: " << a_->format_state(f.s)
-// 				  << std::endl;
-// 			// push(st_blue, s_prime, label, acc);
-// 			// return true;
-// 		      }
-
-
-
-// 		    if (!c.is_white() &&
-// 			//h.has_been_visited(s_prime) && 
-// 			formula->is_syntactic_persistence() &&
-// 			c.get_color() == BLUE &&
-// 			acc == all_cond
-// 			)
-// 		      {
-// 			trace << "  It's a single dfs we can report"
-// 			      << std::endl;
-// 			target = f.s;
-// 			push(st_red, f.s, label, acc);
-// 			is_dynamic = false;
-// 			return true;
-// 		      }
+		    // Trap all states that represents persistence formula
+		    // Persistence formula becoming guarantee formula are 
+		    // trapped by the static_persistence algorithm in case 
+		    // of dynamism
+		    if (formula->is_syntactic_persistence())
+		      {
+			if (static_persistence ())
+			  {
+			    s_prime->destroy();
+			    return true;
+			  }
+			else 
+			  {
+			    if (st_blue.empty())
+			      {
+				s_prime->destroy();
+				return false;
+			      }
+			    inc_me = false;
+			  }
+		      }
 		  }
 		else
 		  commut_algo(NDFS);
 
+		if (inc_me)
+		  {
+		    f.it->next();
+		    inc_transitions();
+		  }
+
+		// There it s the classic algorithm for magic with some
+		// adds to have statistics about dynamism 
+                typename heap::color_ref c = h.get_color_ref(s_prime);
                 if (c.is_white())
                   {
                     trace << "  It is white, go down" << std::endl;
@@ -547,15 +565,17 @@ namespace spot
                         // functionnality, the test can be ommited.
                         trace << "  It is blue and the arc is "
                               << "accepting, start a red dfs" << std::endl;
-                        target = f.s;
-                        c.set_color(RED);
-                        push(st_red, s_prime, label, acc);
-                        if (dfs_red())
+
+			target = f.s;
+			c.set_color(RED);
+			push(st_red, s_prime, label, acc);
+
+			if (dfs_red())
 			  {
 			    is_dynamic = false;
 			    return true;
 			  }
-                      }
+		      }
                     else
                       {
                         trace << "  It is blue or red, pop it" << std::endl;
@@ -589,11 +609,18 @@ namespace spot
                     target = st_blue.front().s;
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
-                    if (dfs_red())
+
+		    if (is_dynamic && 
+			! es_->same_weak_acc (target, f_dest.s))
 		      {
-			is_dynamic = false;
-			return true;
+			trace << "DFS RED avoid by dynamism\n";
+			pop(st_red);
 		      }
+		    else if (dfs_red())
+			{
+			  is_dynamic = false;
+			  return true;
+			}
                   }
                 else
                   {
