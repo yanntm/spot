@@ -145,7 +145,7 @@ namespace spot
     bool res = false;
     scc_map* sm = new scc_map(f_);
     sm->build_map();
-    
+
     if (!both_formula)
       {
 	state * sproj = sys_->project_state(s, f_);
@@ -167,13 +167,13 @@ namespace spot
   }
 
   bool
-  formula_emptiness_specifier::same_weak_acc (const state *s1, 
+  formula_emptiness_specifier::same_weak_acc (const state *s1,
 					      const state *s2) const
   {
     bool res = false;
     scc_map* sm = new scc_map(f_);
     sm->build_map();
-    
+
     if (!both_formula)
       {
 	state * sproj1 = sys_->project_state(s1, f_);
@@ -187,7 +187,6 @@ namespace spot
 	const state_explicit* fstate2 =
 	  dynamic_cast<const state_explicit*> (sproj2);
 	unsigned id_scc2 = sm->scc_of_state(fstate2);
-	
 
 	sproj1->destroy();
 	sproj2->destroy();

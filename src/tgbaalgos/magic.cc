@@ -155,7 +155,7 @@ namespace spot
 						     options(),
 						     is_dynamic);
 		    else
-		      return 0;		    
+		      return 0;
 		  }
 		// We are in the general case apply default algo.
 		else
@@ -322,7 +322,7 @@ namespace spot
 		    is_dynamic = true;
 		    return true;
 		  }
-		else 
+		else
 		  if (c.is_white())
 		  {
 		    h.add_new_state(s_prime, BLUE);
@@ -358,7 +358,7 @@ namespace spot
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    trace << "PERSISTENCE treats: " 
+	    trace << "PERSISTENCE treats: "
 		  << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
@@ -383,7 +383,7 @@ namespace spot
 			s_prime->destroy();
 			return true;
 		      }
-		    else 
+		    else
 		      {
 			if (st_blue.empty())
 			  {
@@ -410,7 +410,7 @@ namespace spot
 		// We reach the most important part of the algorithm 
 		// for persistence : we check if the current state and 
 		// its successors are in the same SCC in the formula automaton
-		bool has_been_visited = false; 
+		bool has_been_visited = false;
 		if (es_->same_weak_acc (f.s, s_prime)&& acc == all_cond)
 		  {
 		    // If Yes we check wether this state is already in the
@@ -418,7 +418,7 @@ namespace spot
 		    stack_type::const_reverse_iterator i;
 		    i = st_blue.rbegin();
 
-		    trace << "This 2 states are in the same SCC : " 
+		    trace << "This 2 states are in the same SCC : "
 			  << a_->format_state(f.s) << "     "
 			  << a_->format_state(s_prime) << std::endl;
 		    while (i != st_blue.rend())
@@ -478,7 +478,7 @@ namespace spot
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
 		const ltl::formula * formula = 0;
-		bool inc_me = true; 
+		bool inc_me = true;
 
 		// There it's the inclusion of dynamism : this use 
 		// the same function that static one
@@ -495,7 +495,7 @@ namespace spot
 			    s_prime->destroy();
 			    return true;
 			  }
-			else 
+			else
 			  {
 			    if (st_blue.empty())
 			      {
@@ -517,7 +517,7 @@ namespace spot
 			    s_prime->destroy();
 			    return true;
 			  }
-			else 
+			else
 			  {
 			    if (st_blue.empty())
 			      {
@@ -610,8 +610,8 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
 
-		    if (is_dynamic && 
-			! es_->same_weak_acc (target, f_dest.s))
+		    if (is_dynamic &&
+			!es_->same_weak_acc (target, f_dest.s))
 		      {
 			trace << "DFS RED avoid by dynamism\n";
 			pop(st_red);
