@@ -610,13 +610,14 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
 
-		    if (is_dynamic &&
-			!es_->same_weak_acc (target, f_dest.s))
-		      {
-			trace << "DFS RED avoid by dynamism\n";
-			pop(st_red);
-		      }
-		    else if (dfs_red())
+// 		    if (is_dynamic &&
+// 			!es_->same_weak_acc (target, f_dest.s))
+// 		      {
+// 			trace << "DFS RED avoid by dynamism\n";
+// 			pop(st_red);
+// 		      }
+// 		    else 
+		      if (dfs_red())
 			{
 			  is_dynamic = false;
 			  return true;
