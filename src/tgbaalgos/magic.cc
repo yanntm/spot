@@ -317,7 +317,11 @@ namespace spot
  		if ((ltl::constant::true_instance() == formula))
 		  {
 		    if (c.is_white ())
-		      h.add_new_state(s_prime, BLUE);
+		      {
+			inc_states();
+			inc_reachability();
+			h.add_new_state(s_prime, BLUE);
+		      }
 		    push(st_blue, s_prime, label, acc);
 		    is_dynamic = true;
 		    return true;
@@ -325,6 +329,8 @@ namespace spot
 		else
 		  if (c.is_white())
 		  {
+		    inc_states();
+		    inc_reachability();
 		    h.add_new_state(s_prime, BLUE);
 		    push(st_blue, s_prime, label, acc);
 		    continue;
@@ -441,6 +447,8 @@ namespace spot
                 typename heap::color_ref c = h.get_color_ref(s_prime);
 		if (c.is_white())
 		  {
+		    inc_states();
+		    inc_dfs();
 		    h.add_new_state(s_prime, BLUE);
 		    push(st_blue, s_prime, label, acc);
 		    continue;
@@ -510,7 +518,7 @@ namespace spot
 		    // Persistence formula becoming guarantee formula are 
 		    // trapped by the static_persistence algorithm in case 
 		    // of dynamism
-		    if (formula->is_syntactic_persistence())
+		    else if (formula->is_syntactic_persistence())
 		      {
 			if (static_persistence ())
 			  {
