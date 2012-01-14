@@ -101,7 +101,8 @@ namespace spot
   ///
   emptiness_check* explicit_se05_search(const tgba *a,
                                         option_map o = option_map(),
-					bool dyn = false);
+					bool dyn = false,
+					bool stat = false);
 
   /// \brief Returns an emptiness checker on the spot::tgba automaton \a a.
   ///
@@ -132,7 +133,8 @@ namespace spot
   ///
   emptiness_check* bit_state_hashing_se05_search(const tgba *a, size_t size,
 						 option_map o = option_map(),
-						 bool dyn = false);
+						 bool dyn = false,
+						 bool stat = false);
 
 
   /// \brief Wrapper for the two se05 implementations.
@@ -144,7 +146,13 @@ namespace spot
   emptiness_check* se05(const tgba *a, option_map o);
 
 
+  // Perform the SEO5 algororithm taking in account the dynamism into 
+  // sub-formula
   emptiness_check* se05_dyn(const tgba *a, option_map o);
+
+  // Perform the SE05 algorithm considering the formula inside the first 
+  // state (initial)
+  emptiness_check* se05_stat(const tgba *a, option_map o);
 
   /// @}
 }

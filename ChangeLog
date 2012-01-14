@@ -1,7 +1,25 @@
+2012-01-14  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbatest/emptchk.test: add SE05_stat
+
+	* src/tgbatest/ltl2tgba.cc (main): add SE05_stat support
+
+	* src/tgbaalgos/se05.cc (spot): add implementation of static for
+	weak and terminal automata
+
+	* src/tgbaalgos/se05.hh (spot): add prototypes for static
+	algorithms 
+
+	* src/tgbaalgos/emptiness.cc (spot): Add SE05_stat
+
+	* src/tgbaalgos/magic.cc (spot): Dynamic algorithm avoid DFS red
+	for weak and terminal automata
+
 2012-01-13  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/magic.cc (spot): static and dynamic strategies for
 	the algorithm
+	(spot): Fix bug in dynamic algorithm
 
 	* src/tgbatest/emptchk.test: Add tests for static and dynamic
 	strategies of the magic algorithm

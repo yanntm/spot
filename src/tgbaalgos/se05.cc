@@ -55,13 +55,17 @@ namespace spot
       /// \pre The automaton \a a must have at most one acceptance
       /// condition (i.e. it is a TBA).
       se05_search(const tgba *a, size_t size, option_map o = option_map(),
-		  bool dyn = false)
+		  bool dyn = false, bool stat = false)
         : emptiness_check(a, o),
           h(size),
           all_cond(a->all_acceptance_conditions()),
-	  is_dynamic(dyn)
+	  is_dynamic(dyn),
+	  is_static(stat)
       {
         assert(a->number_of_acceptance_conditions() <= 1);
+	assert((is_static && !is_dynamic) ||
+	       (!is_static && is_dynamic) ||
+	       (!is_static && !is_dynamic));
       }
 
       virtual ~se05_search()
@@ -81,17 +85,14 @@ namespace spot
           }
       }
 
-      virtual bool
-      is_dynamic_emptiness ()
-      {
-	return is_dynamic;
-      }
 
       void
       stats_formula (const ltl::formula *formula)
       {
 	if (formula->is_syntactic_guarantee())
 	  inc_reachability();
+	else if (formula->is_syntactic_persistence())
+	  inc_dfs ();
 	else
 	  inc_ndfs ();
       }
@@ -100,7 +101,9 @@ namespace spot
       stats_commut (const ltl::formula *formula)
       {
 	if (formula->is_syntactic_guarantee())
-	  commut_algo(REACHABILITY);
+	  commut_algo (REACHABILITY);
+	else if (formula->is_syntactic_persistence())
+	  commut_algo (DFS);
 	else
 	  commut_algo(NDFS);
       }
@@ -120,6 +123,44 @@ namespace spot
             assert(st_blue.empty());
             const state* s0 = a_->get_init_state();
             inc_states();
+
+	    // It's the static case : that means that the algorithm 
+	    // is chosen regarding only the first state of the automata
+	    if (is_static)
+	      {
+		// Trap only guarantee properties 
+		const ltl::formula * formula =  es_->formula_from_state(s0);
+		if (formula->is_syntactic_guarantee())
+		  {
+		    inc_reachability();
+		    commut_algo(REACHABILITY);
+		    h.add_new_state(s0, BLUE);
+		    push(st_blue, s0, bddfalse, bddfalse);
+		    if (static_guarantee ())
+		      return new se05_result(*this,
+					     options(),
+					     is_dynamic);
+		    else
+		      return 0;
+		  }
+		// Trap only persistence properties 
+		else if  (formula->is_syntactic_persistence())
+		  {
+		    inc_dfs();
+		    commut_algo(DFS);
+		    h.add_new_state(s0, BLUE);
+		    push(st_blue, s0, bddfalse, bddfalse);
+		    if (static_persistence ())
+		      return new se05_result(*this,
+					     options(),
+					     is_dynamic);
+		    else
+		      return 0;
+		  }
+		// We are in the general case apply default algo.
+		else
+		  is_static = false;
+	      }
 
 	    if (is_dynamic)
 	      {
@@ -218,15 +259,24 @@ namespace spot
       /// True if the algorithm used the property temporal hierarchy
       bool is_dynamic;
 
-      bool dfs_blue()
-      {
-	if (is_dynamic)
-	  assert (es_ != 0);
+      /// True if the algorithm used the property temporal hierarchy
+      bool is_static;
 
+      /// THis function perform the search on a a tgba which is the 
+      /// result of a Kripke structure and a a formula : this formula 
+      /// is necessary a guarantee formula
+      ///
+      /// Assume that the Kripke structure is such that every state 
+      /// has at least one outgoing edge
+      bool
+      static_guarantee ()
+      {
+	assert (is_static || is_dynamic);
+	assert (es_ != 0);
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-            trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+	    trace << "Guarantee treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
@@ -238,24 +288,256 @@ namespace spot
                 f.it->next();
                 inc_transitions();
                 typename heap::color_ref c = h.get_color_ref(s_prime);
-		const ltl::formula * formula = 0;
+ 		const ltl::formula * formula = 0;
+ 		formula =  es_->formula_from_state(f.s);
 
+		// For the sake of dynamism
+		if (is_dynamic && !formula->is_syntactic_guarantee())
+		  {
+		    s_prime->destroy();
+		    return false;
+		  }
+
+		// Condition working over kripke having at least one successor
+ 		if ((ltl::constant::true_instance() == formula))
+		  {
+		    if (c.is_white ())
+		      h.add_new_state(s_prime, CYAN);
+		    push(st_blue, s_prime, label, acc);
+		    is_dynamic = true;
+		    return true;
+		  }
+		else
+		  if (c.is_white())
+		  {
+		    h.add_new_state(s_prime, CYAN);
+		    push(st_blue, s_prime, label, acc);
+		    continue;
+		  }
+		else
+		  {
+		    h.pop_notify(s_prime);
+		  }
+		continue;
+	      }
+            else
+              {
+                typename heap::color_ref c = h.get_color_ref(f.s);
+                assert(!c.is_white());
+		c.set_color(BLUE);
+		pop(st_blue);
+	      }
+	  }
+	return false;
+      }
+
+      /// THis function perform the search on a a tgba which is the 
+      /// result of a Kripke structure and a a formula : this formula 
+      /// may be a guarantee formula or a persistence formula and is 
+      /// represented by a weak or a terminal automata
+      /// 
+      /// If no assumption is done about the Kripke this algorithm is the
+      /// one we should use over guarantee formula
+      bool
+      static_persistence ()
+      {
+	assert (is_static || is_dynamic);
+	assert (es_ != 0);
+        while (!st_blue.empty())
+          {
+            stack_item& f = st_blue.front();
+	    trace << "PERSISTENCE treats: "
+		  << a_->format_state(f.s) << std::endl;
+            if (!f.it->done())
+              {
+                const state *s_prime = f.it->current_state();
+		trace << "  Visit the successor: "
+                      << a_->format_state(s_prime) << std::endl;
+                bdd label = f.it->current_condition();
+                bdd acc = f.it->current_acceptance_conditions();
+                // Go down the edge (f.s, <label, acc>, s_prime)
+		const ltl::formula * formula = 0;
+		formula =  es_->formula_from_state(f.s);
+
+		// Trap all states that represents guarantee formulas
+		// for dynamism 
+		// 
+		// In the case of static algorithms this is not performed
+		bool inc_me = true;
+		if (is_dynamic && formula->is_syntactic_guarantee())
+		  {
+		    if (static_guarantee ())
+		      {
+			s_prime->destroy();
+			return true;
+		      }
+		    else
+		      {
+			if (st_blue.empty())
+			  {
+			    s_prime->destroy();
+			    return false;
+			  }
+			inc_me = false;
+		      }
+		  }
+
+		if (inc_me)
+		  {
+		    f.it->next();
+		    inc_transitions();
+		  }
+
+		// For the sake of dynamism
+		if (is_dynamic && !formula->is_syntactic_persistence())
+		  {
+		    s_prime->destroy();
+		    return false;
+		  }
+
+		// We reach the most important part of the algorithm 
+		// for persistence : we check if the current state and 
+		// its successors are in the same SCC in the formula automaton
+		bool has_been_visited = false;
+		if (es_->same_weak_acc (f.s, s_prime)&& acc == all_cond)
+		  {
+		    // If Yes we check wether this state is already in the
+		    // blue stack
+		    stack_type::const_reverse_iterator i;
+		    i = st_blue.rbegin();
+
+		    trace << "This 2 states are in the same SCC : "
+			  << a_->format_state(f.s) << "     "
+			  << a_->format_state(s_prime) << std::endl;
+
+		    typename heap::color_ref c = h.get_color_ref(s_prime);
+		    if (!c.is_white() && c.get_color() == CYAN)
+		      {
+			has_been_visited = true;
+		      }
+
+		    if (has_been_visited)
+		      {
+			//s_prime->destroy();
+			is_dynamic = true;
+			return true;
+		      }
+		  }
+
+                typename heap::color_ref c = h.get_color_ref(s_prime);
+		if (c.is_white())
+		  {
+		    h.add_new_state(s_prime, CYAN);
+		    push(st_blue, s_prime, label, acc);
+		    continue;
+		  }
+		else
+		  {
+		    h.pop_notify(s_prime);
+		  }
+		continue;
+	      }
+            else
+              {
+                typename heap::color_ref c = h.get_color_ref(f.s);
+                assert(!c.is_white());
+		c.set_color(BLUE);
+		pop(st_blue);
+	      }
+	  }
+        return false;
+      }
+
+
+      /// Override previous declaration in emptiness.h 
+      /// This is used to detect dynamic application of the algorithm
+      /// Nota Bene : static emptiness are considered as dynamic emptiness
+      /// in the sense that they could leads to prefix computation only
+      virtual bool
+      is_dynamic_emptiness ()
+      {
+	return is_dynamic || is_static;
+      }
+
+      bool dfs_blue()
+      {
+	if (is_dynamic)
+	  assert (es_ != 0);
+
+        while (!st_blue.empty())
+          {
+            stack_item& f = st_blue.front();
+	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+            if (!f.it->done())
+              {
+                const state *s_prime = f.it->current_state();
+                trace << "  Visit the successor: "
+                      << a_->format_state(s_prime) << std::endl;
+                bdd label = f.it->current_condition();
+                bdd acc = f.it->current_acceptance_conditions();
+                // Go down the edge (f.s, <label, acc>, s_prime)
+		const ltl::formula * formula = 0;
+		bool inc_me = true;
+
+		// There it's the inclusion of dynamism : this use 
+		// the same function that static one
 		if (is_dynamic)
 		  {
 		    formula =  es_->formula_from_state(f.s);
 		    stats_commut (formula);
-		    if (formula->is_syntactic_guarantee() &&
-			ltl::constant::true_instance() == formula)
+
+		    // Trap all states that represents guarantee formulas
+		    if (formula->is_syntactic_guarantee())
 		      {
-			trace << "  It's a reachability we can report"
-			      << std::endl;
-			push(st_blue, s_prime, label, acc);
-			return true;
+			if (static_guarantee ())
+			  {
+			    s_prime->destroy();
+			    return true;
+			  }
+			else
+			  {
+			    if (st_blue.empty())
+			      {
+				s_prime->destroy();
+				return false;
+			      }
+			    inc_me = false;
+			  }
+		      }
+
+		    // Trap all states that represents persistence formula
+		    // Persistence formula becoming guarantee formula are 
+		    // trapped by the static_persistence algorithm in case 
+		    // of dynamism
+		    if (formula->is_syntactic_persistence())
+		      {
+			if (static_persistence ())
+			  {
+			    s_prime->destroy();
+			    return true;
+			  }
+			else
+			  {
+			    if (st_blue.empty())
+			      {
+				s_prime->destroy();
+				return false;
+			      }
+			    inc_me = false;
+			  }
 		      }
 		  }
 		else
 		  commut_algo(NDFS);
 
+		if (inc_me)
+		  {
+		    f.it->next();
+		    inc_transitions();
+		  }
+
+
+                typename heap::color_ref c = h.get_color_ref(s_prime);
                 if (c.is_white())
                   {
                     trace << "  It is white, go down" << std::endl;
@@ -293,11 +575,20 @@ namespace spot
                           << "accepting, start a red dfs" << std::endl;
                     c.set_color(RED);
                     push(st_red, s_prime, label, acc);
-                    if (dfs_red())
-                      {
-			is_dynamic = false;
-			return true;
+
+		    if (is_dynamic &&
+			formula->is_syntactic_persistence() &&
+			!es_->same_weak_acc (f.s, s_prime))
+		      {
+			trace << "DFS RED avoid by dynamism\n";
+			pop(st_red);
 		      }
+		    else
+		      if (dfs_red())
+			{
+			  is_dynamic = false;
+			  return true;
+			}
                   }
                 else
                   {
@@ -327,11 +618,23 @@ namespace spot
                           << "red dfs" << std::endl;
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
-                    if (dfs_red())
+
+		    const ltl::formula * formula = 0;
+		    if (is_dynamic)
+		      formula =  es_->formula_from_state(f_dest.s);
+		    if (is_dynamic &&
+			formula->is_syntactic_persistence() &&
+			!es_->same_weak_acc (st_blue.front().s, f_dest.s))
 		      {
-			is_dynamic = false;
-			return true;
+			trace << "DFS RED avoid by dynamism\n";
+			pop(st_red);
 		      }
+		    else
+		      if (dfs_red())
+			{
+			  is_dynamic = false;
+			  return true;
+			}
                   }
                 else
                   {
@@ -769,16 +1072,18 @@ namespace spot
 
   emptiness_check* explicit_se05_search(const tgba *a,
 					option_map o,
-					bool dyn)
+					bool dyn,
+					bool stat)
   {
-    return new se05_search<explicit_se05_search_heap>(a, 0, o, dyn);
+    return new se05_search<explicit_se05_search_heap>(a, 0, o, dyn, stat);
   }
 
   emptiness_check* bit_state_hashing_se05_search(const tgba *a, size_t size,
 						 option_map o,
-						 bool dyn)
+						 bool dyn,
+						 bool stat)
   {
-    return new se05_search<bsh_se05_search_heap>(a, size, o, dyn);
+    return new se05_search<bsh_se05_search_heap>(a, size, o, dyn, stat);
   }
 
   emptiness_check*
@@ -796,7 +1101,17 @@ namespace spot
   {
     size_t size = o.get("bsh");
     if (size)
-      return bit_state_hashing_se05_search(a, size, o, true);
-    return explicit_se05_search(a, o, true);
+      return bit_state_hashing_se05_search(a, size, o, true, false);
+    return explicit_se05_search(a, o, true, false);
   }
+
+  emptiness_check*
+  se05_stat(const tgba *a, option_map o)
+  {
+    size_t size = o.get("bsh");
+    if (size)
+      return bit_state_hashing_se05_search(a, size, o, false, true);
+    return explicit_se05_search(a, o, false, true);
+  }
+
 }

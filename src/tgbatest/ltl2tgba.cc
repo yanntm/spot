@@ -458,6 +458,7 @@ main(int argc, char** argv)
 
 	  // FIXME : not modular
 	  if (strcmp("SE05_dyn", echeck_algo) == 0 ||
+	      strcmp("SE05_stat", echeck_algo) == 0 ||
 	      strcmp("SE05_dyn_opt", echeck_algo) == 0 ||
 	      strncmp("Cou99_dyn", echeck_algo, 9) == 0 ||
 	      strcmp("GV04_dyn", echeck_algo) == 0 ||
@@ -486,6 +487,7 @@ main(int argc, char** argv)
 	    echeck_algo = "Cou99";
 
 	  if (strcmp("SE05_dyn", echeck_algo) == 0 ||
+	      strcmp("SE05_stat", echeck_algo) == 0 ||
 	      strcmp("SE05_dyn_opt", echeck_algo) == 0 ||
 	      strncmp("Cou99_dyn", echeck_algo, 9) == 0 ||
 	      strcmp("GV04_dyn", echeck_algo) == 0 ||

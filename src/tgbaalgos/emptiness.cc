@@ -214,6 +214,7 @@ namespace spot
 	{ "GV04",          spot::explicit_gv04_check,           0,   1 },
 	{ "GV04_dyn",      spot::explicit_gv04_dyn_check,       0,   1 },
 	{ "SE05",          spot::se05,                          0,   1 },
+	{ "SE05_stat",     spot::se05_stat,                     0,   1 },
 	{ "SE05_dyn",      spot::se05_dyn,                      0,   1 },
 	{ "Tau03",         spot::explicit_tau03_search,         1, -1U },
 	{ "Tau03_dyn",     spot::explicit_tau03_dyn_search,     1, -1U },

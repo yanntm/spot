@@ -570,11 +570,19 @@ namespace spot
 			c.set_color(RED);
 			push(st_red, s_prime, label, acc);
 
-			if (dfs_red())
+			if (is_dynamic &&
+			    formula->is_syntactic_persistence() &&
+			    !es_->same_weak_acc (target, s_prime))
 			  {
-			    is_dynamic = false;
-			    return true;
+			    trace << "DFS RED avoid by dynamism\n";
+			    pop(st_red);
 			  }
+			else
+			  if (dfs_red())
+			    {
+			      is_dynamic = false;
+			      return true;
+			    }
 		      }
                     else
                       {
@@ -610,13 +618,17 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
 
-// 		    if (is_dynamic &&
-// 			!es_->same_weak_acc (target, f_dest.s))
-// 		      {
-// 			trace << "DFS RED avoid by dynamism\n";
-// 			pop(st_red);
-// 		      }
-// 		    else 
+		    const ltl::formula * formula = 0;
+		    if (is_dynamic)
+		      formula =  es_->formula_from_state(f_dest.s);
+		    if (is_dynamic &&
+			formula->is_syntactic_persistence() &&
+			!es_->same_weak_acc (target, f_dest.s))
+		      {
+			trace << "DFS RED avoid by dynamism\n";
+			pop(st_red);
+		      }
+		    else
 		      if (dfs_red())
 			{
 			  is_dynamic = false;
