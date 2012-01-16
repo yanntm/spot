@@ -217,6 +217,7 @@ namespace spot
 	{ "SE05_stat",     spot::se05_stat,                     0,   1 },
 	{ "SE05_dyn",      spot::se05_dyn,                      0,   1 },
 	{ "Tau03",         spot::explicit_tau03_search,         1, -1U },
+	{ "Tau03_stat",    spot::explicit_tau03_stat_search,    1, -1U },
 	{ "Tau03_dyn",     spot::explicit_tau03_dyn_search,     1, -1U },
 	{ "Tau03_opt",     spot::explicit_tau03_opt_search,     0, -1U },
 	{ "Tau03_opt_dyn", spot::explicit_tau03_opt_dyn_search, 0, -1U },

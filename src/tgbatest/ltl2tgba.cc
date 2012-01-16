@@ -465,7 +465,8 @@ main(int argc, char** argv)
 	      strcmp("CVWY90_dyn", echeck_algo) == 0 ||
 	      strcmp("CVWY90_stat", echeck_algo) == 0 ||
 	      strcmp("Tau03_opt_dyn", echeck_algo) == 0 ||
-	      strcmp("Tau03_dyn", echeck_algo) == 0)
+	      strcmp("Tau03_dyn", echeck_algo) == 0 ||
+	      strcmp("Tau03_stat", echeck_algo) == 0)
 	    is_dynamic_emptiness = true;
 
 	  const char* err;
@@ -494,7 +495,8 @@ main(int argc, char** argv)
 	      strcmp("CVWY90_dyn", echeck_algo) == 0 ||
 	      strcmp("CVWY90_stat", echeck_algo) == 0 ||
 	      strcmp("Tau03_opt_dyn", echeck_algo) == 0 ||
-	      strcmp("Tau03_dyn", echeck_algo) == 0)
+	      strcmp("Tau03_dyn", echeck_algo) == 0 ||
+	      strcmp("Tau03_stat", echeck_algo) == 0)
 	    is_dynamic_emptiness = true;
 
 	  const char* err;
