@@ -206,21 +206,22 @@ namespace spot
 
     ec_algo ec_algos[] =
       {
-	{ "Cou99",         couvreur99_cons,                     0, -1U },
-	{ "Cou99_dyn",     spot::couvreur99_cons_dyn,           0, -1U },
-	{ "CVWY90",        spot::magic_search,                  0,   1 },
-	{ "CVWY90_dyn",    spot::magic_dyn_search,              0,   1 },
-	{ "CVWY90_stat",   spot::magic_stat_search,             0,   1 },
-	{ "GV04",          spot::explicit_gv04_check,           0,   1 },
-	{ "GV04_dyn",      spot::explicit_gv04_dyn_check,       0,   1 },
-	{ "SE05",          spot::se05,                          0,   1 },
-	{ "SE05_stat",     spot::se05_stat,                     0,   1 },
-	{ "SE05_dyn",      spot::se05_dyn,                      0,   1 },
-	{ "Tau03",         spot::explicit_tau03_search,         1, -1U },
-	{ "Tau03_stat",    spot::explicit_tau03_stat_search,    1, -1U },
-	{ "Tau03_dyn",     spot::explicit_tau03_dyn_search,     1, -1U },
-	{ "Tau03_opt",     spot::explicit_tau03_opt_search,     0, -1U },
-	{ "Tau03_opt_dyn", spot::explicit_tau03_opt_dyn_search, 0, -1U },
+	{ "Cou99",          couvreur99_cons,                      0, -1U },
+	{ "Cou99_dyn",      spot::couvreur99_cons_dyn,            0, -1U },
+	{ "CVWY90",         spot::magic_search,                   0,   1 },
+	{ "CVWY90_dyn",     spot::magic_dyn_search,               0,   1 },
+	{ "CVWY90_stat",    spot::magic_stat_search,              0,   1 },
+	{ "GV04",           spot::explicit_gv04_check,            0,   1 },
+	{ "GV04_dyn",       spot::explicit_gv04_dyn_check,        0,   1 },
+	{ "SE05",           spot::se05,                           0,   1 },
+	{ "SE05_stat",      spot::se05_stat,                      0,   1 },
+	{ "SE05_dyn",       spot::se05_dyn,                       0,   1 },
+	{ "Tau03",          spot::explicit_tau03_search,          1, -1U },
+	{ "Tau03_stat",     spot::explicit_tau03_stat_search,     1, -1U },
+	{ "Tau03_dyn",      spot::explicit_tau03_dyn_search,      1, -1U },
+	{ "Tau03_opt",      spot::explicit_tau03_opt_search,      0, -1U },
+	{ "Tau03_opt_stat", spot::explicit_tau03_opt_stat_search, 0, -1U },
+	{ "Tau03_opt_dyn",  spot::explicit_tau03_opt_dyn_search,  0, -1U },
       };
   }
 

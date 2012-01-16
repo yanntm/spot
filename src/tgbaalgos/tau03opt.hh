@@ -98,9 +98,15 @@ namespace spot
   emptiness_check* explicit_tau03_opt_search(const tgba *a,
 					     option_map o = option_map());
 
+  // Provides a dynamic emptiness using temporal property for each new 
+  // visited states 
   emptiness_check* explicit_tau03_opt_dyn_search(const tgba *a,
 						 option_map o = option_map());
 
+  // Provides a static emptiness using temporal property based on the 
+  // initial state of the automaton 
+  emptiness_check* explicit_tau03_opt_stat_search(const tgba *a,
+						  option_map o = option_map());
 
   /// @}
 }

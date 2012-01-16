@@ -1,5 +1,15 @@
 2012-01-16  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/ltl2tgba.cc (main): add statique tau03_opt
+
+	* src/tgbaalgos/emptiness.cc (spot): add the identifier for static
+	Tau03opt 
+
+	* src/tgbaalgos/tau03opt.hh (spot): add prototype for static emptiness
+
+	* src/tgbaalgos/tau03opt.cc (spot): add static and dynamic version
+	for the emptiness algorithm
+
 	* src/tgbaalgos/tau03.cc (spot): add the dynamic version for weak
 	and terminal automata
 
