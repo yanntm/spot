@@ -457,42 +457,69 @@ namespace spot
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
-                f.it->next();
-                inc_transitions();
-                typename heap::color_ref c_prime = h.get_color_ref(s_prime);
 
+
+		bool inc_me = true;
+
+		// There it's the inclusion of dynamism : this use 
+		// the same function that static one
 		if (is_dynamic)
 		  {
 		    formula =  es_->formula_from_state(f.s);
-		    assert(formula);
 		    stats_commut (formula);
 
-		    if (formula->is_syntactic_guarantee() &&
-			ltl::constant::true_instance() == formula)
+		    // Trap all states that represents guarantee formulas
+		    if (formula->is_syntactic_guarantee())
 		      {
-			trace << "  It's a reachability we can report"
-			      << std::endl;
-			push(st_blue, s_prime, label, acc);
-			return true;
+			if (static_guarantee ())
+			  {
+			    s_prime->destroy();
+			    return true;
+			  }
+			else
+			  {
+			    if (st_blue.empty())
+			      {
+				s_prime->destroy();
+				return false;
+			      }
+			    inc_me = false;
+			  }
 		      }
 
-// 		    if (!c_prime.is_white() &&
-// 			h.has_been_visited(s_prime) && 
-// 			formula->is_syntactic_persistence() //&& 
-// 			//c_prime.get_color() == BLUE && 
-// 			//acc == all_cond
-// 			)
-// 		      {
-// 			trace << "  It's a single dfs we can report" 
-//                            << std::endl;
-// 			push(st_red, f.s, label, acc);
-// 			is_dynamic = false;
-// 			return true;
-// 		      }
+		    // Trap all states that represents persistence formula
+		    // Persistence formula becoming guarantee formula are 
+		    // trapped by the static_persistence algorithm in case 
+		    // of dynamism
+		    else if (formula->is_syntactic_persistence())
+		      {
+			if (static_persistence ())
+			  {
+			    s_prime->destroy();
+			    return true;
+			  }
+			else
+			  {
+			    if (st_blue.empty())
+			      {
+				s_prime->destroy();
+				return false;
+			      }
+			    inc_me = false;
+			  }
+		      }
 		  }
 		else
-		  commut_algo (NDFS);
+		  commut_algo(NDFS);
 
+		if (inc_me)
+		  {
+		    f.it->next();
+		    inc_transitions();
+		  }
+
+		// Here it's the previous algorithm 
+                typename heap::color_ref c_prime = h.get_color_ref(s_prime);
                 if (c_prime.is_white())
                   {
                     trace << "  It is white, go down" << std::endl;
@@ -527,7 +554,7 @@ namespace spot
                 tgba_succ_iterator* i = a_->succ_iter(f.s);
                 for (i->first(); !i->done(); i->next())
                   {
-                   inc_transitions();
+                    inc_transitions();
                    const state *s_prime = i->current_state();
                    trace << "DFS_BLUE rescanning the arc from "
                          << a_->format_state(f.s) << "  to "
@@ -536,6 +563,14 @@ namespace spot
                     bdd acc = i->current_acceptance_conditions();
                     typename heap::color_ref c_prime =
 		      h.get_color_ref(s_prime);
+
+		    // In this case we have already visit this sub system we 
+		    // don't need to go further
+		    if (is_dynamic && c_prime.is_white())
+		      {
+			break;
+		      }
+
                     assert(!c_prime.is_white());
                     bdd acu = acc | c.get_acc();
                     if ((c_prime.get_acc() & acu) != acu)

@@ -1,3 +1,19 @@
+2012-01-16  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/tau03.cc (spot): add the dynamic version for weak
+	and terminal automata
+
+	* src/tgbatest/ltl2tgba.cc (syntax): add Tau03_stat option
+
+	* src/tgbaalgos/emptiness.cc (spot): add the static algorithm 
+	to the list of algorithm for emptiness check
+
+	* src/tgbaalgos/tau03.hh (spot): Add the prototype for the static
+	version of the algorithm
+
+	* src/tgbaalgos/tau03.cc (spot): Add static version for the
+	algorithm 
+
 2012-01-14  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/se05.cc (spot):  fix bug in computing statistics
