@@ -252,7 +252,8 @@ namespace spot
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    trace << "Guarantee treats: " << a_->format_state(f.s) << std::endl;
+	    trace << "Guarantee treats: " << a_->format_state(f.s)
+		  << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
