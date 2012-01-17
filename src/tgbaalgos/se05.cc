@@ -286,8 +286,6 @@ namespace spot
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
-                f.it->next();
-                inc_transitions();
                 typename heap::color_ref c = h.get_color_ref(s_prime);
  		const ltl::formula * formula = 0;
  		formula =  es_->formula_from_state(f.s);
@@ -298,6 +296,8 @@ namespace spot
 		    s_prime->destroy();
 		    return false;
 		  }
+                f.it->next();
+                inc_transitions();
 
 		// Condition working over kripke having at least one successor
  		if ((ltl::constant::true_instance() == formula))
@@ -386,13 +386,8 @@ namespace spot
 			    return false;
 			  }
 			inc_me = false;
+			continue;
 		      }
-		  }
-
-		if (inc_me)
-		  {
-		    f.it->next();
-		    inc_transitions();
 		  }
 
 		// For the sake of dynamism
@@ -400,6 +395,12 @@ namespace spot
 		  {
 		    s_prime->destroy();
 		    return false;
+		  }
+
+		if (inc_me)
+		  {
+		    f.it->next();
+		    inc_transitions();
 		  }
 
 		// We reach the most important part of the algorithm 
@@ -511,6 +512,7 @@ namespace spot
 				return false;
 			      }
 			    inc_me = false;
+			    continue;
 			  }
 		      }
 
@@ -533,6 +535,7 @@ namespace spot
 				return false;
 			      }
 			    inc_me = false;
+			    continue;
 			  }
 		      }
 		  }
@@ -544,7 +547,6 @@ namespace spot
 		    f.it->next();
 		    inc_transitions();
 		  }
-
 
                 typename heap::color_ref c = h.get_color_ref(s_prime);
                 if (c.is_white())

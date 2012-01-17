@@ -179,34 +179,6 @@ namespace spot
 	  return new ndfs_result<tau03_opt_search<heap>, heap>
 	    (*this, is_dynamic);
 	return 0;
-
-
-
-
-//         if (!st_blue.empty())
-//             return 0;
-//         assert(st_red.empty());
-//         const state* s0 = a_->get_init_state();
-//         inc_states();
-
-// 	if (is_dynamic)
-// 	  {
-// 	    const ltl::formula * formula =  es_->formula_from_state(s0);
-// 	    stats_commut (formula);
-// 	    stats_formula (formula);
-// 	  }
-// 	else
-// 	  {
-// 	    inc_ndfs();
-// 	    commut_algo(NDFS);
-// 	  }
-
-//         h.add_new_state(s0, CYAN, current_weight);
-//         push(st_blue, s0, bddfalse, bddfalse);
-//         if (dfs_blue())
-//           return new ndfs_result<tau03_opt_search<heap>, heap>
-// 	    (*this, is_dynamic);
-//         return 0;
       }
 
       virtual std::ostream& print_stats(std::ostream &os) const
@@ -326,38 +298,37 @@ namespace spot
       bool
       static_guarantee ()
       {
-	assert (is_static || is_dynamic);
-	assert (es_ != 0);
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    trace << "Guarantee treats: " << a_->format_state(f.s)
-		  << std::endl;
+	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
-                trace << "  Visit the successor: "
-                      << a_->format_state(s_prime) << std::endl;
+		trace  << "  Visit the successor: "
+		       << a_->format_state(s_prime) << std::endl;
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
-                f.it->next();
-                inc_transitions();
-                typename heap::color_ref c = h.get_color_ref(s_prime);
+		// Here it's the previous algorithm 
+                typename heap::color_ref c_prime = h.get_color_ref(s_prime);
+
  		const ltl::formula * formula = 0;
  		formula =  es_->formula_from_state(f.s);
 
 		// For the sake of dynamism
-		if (is_dynamic && !formula->is_syntactic_guarantee())
+		if (is_dynamic && !formula->is_syntactic_persistence())
 		  {
 		    s_prime->destroy();
 		    return false;
 		  }
 
-		// Condition working over kripke having at least one successor
- 		if ((ltl::constant::true_instance() == formula))
+		f.it->next();
+		inc_transitions();
+ 	
+		if ((ltl::constant::true_instance() == formula))
 		  {
-		    if (c.is_white ())
+		    if (c_prime.is_white ())
 		      {
 			inc_states();
 			inc_reachability();
@@ -368,29 +339,109 @@ namespace spot
 		    return true;
 		  }
 		else
-		  if (c.is_white())
-		  {
-		    inc_states();
-		    inc_reachability();
-		    h.add_new_state(s_prime, CYAN,  current_weight);
-		    push(st_blue, s_prime, label, acc);
-		    continue;
-		  }
+                if (c_prime.is_white())
+                  {
+                    trace << "  It is white, go down" << std::endl;
+		    if (use_weights)
+		      current_weight += acc;
+                    inc_states();
+                    h.add_new_state(s_prime, CYAN, current_weight);
+                    push(st_blue, s_prime, label, acc);
+                  }
 		else
-		  {
+                  {
+		    trace << " no propagation is needed, pop it."
+			  << std::endl;
 		    h.pop_notify(s_prime);
 		  }
-		continue;
-	      }
+              }
             else
+            // Backtrack the edge
+            //        (predecessor of f.s in st_blue, <f.label, f.acc>, f.s)
               {
                 typename heap::color_ref c = h.get_color_ref(f.s);
                 assert(!c.is_white());
 		c.set_color(BLUE);
 		pop(st_blue);
-	      }
-	  }
-	return false;
+
+              }
+          }
+        return false;
+      
+
+
+
+
+
+
+
+
+// 	assert (is_static || is_dynamic);
+// 	assert (es_ != 0);
+//         while (!st_blue.empty())
+//           {
+//             stack_item& f = st_blue.front();
+// 	    std::cout << "Guarantee treats: " << a_->format_state(f.s)
+// 		  << std::endl;
+//             if (!f.it->done())
+//               {
+//                 const state *s_prime = f.it->current_state();
+//                 trace << "  Visit the successor: "
+//                       << a_->format_state(s_prime) << std::endl;
+//                 bdd label = f.it->current_condition();
+//                 bdd acc = f.it->current_acceptance_conditions();
+//                 // Go down the edge (f.s, <label, acc>, s_prime)
+//                 typename heap::color_ref c = h.get_color_ref(s_prime);
+//  		const ltl::formula * formula = 0;
+//  		formula =  es_->formula_from_state(f.s);
+
+// 		// For the sake of dynamism
+// 		if (is_dynamic && !formula->is_syntactic_guarantee())
+// 		  {
+// 		    s_prime->destroy();
+// 		    return false;
+// 		  }
+
+//                 f.it->next();
+//                 inc_transitions();
+
+// 		// Condition working over kripke having at least one successor
+//  		if ((ltl::constant::true_instance() == formula))
+// 		  {
+// 		    if (c.is_white ())
+// 		      {
+// 			inc_states();
+// 			inc_reachability();
+// 			h.add_new_state(s_prime, CYAN,  current_weight);
+// 		      }
+// 		    push(st_blue, s_prime, label, acc);
+// 		    is_dynamic = true;
+// 		    return true;
+// 		  }
+// 		else
+// 		  if (c.is_white())
+// 		  {
+// 		    inc_states();
+// 		    inc_reachability();
+// 		    h.add_new_state(s_prime, CYAN,  current_weight);
+// 		    push(st_blue, s_prime, label, acc);
+// 		    continue;
+// 		  }
+// 		else
+// 		  {
+// 		    h.pop_notify(s_prime);
+// 		  }
+// 		continue;
+// 	      }
+//             else
+//               {
+//                 typename heap::color_ref c = h.get_color_ref(f.s);
+//                 assert(!c.is_white());
+// 		c.set_color(BLUE);
+// 		pop(st_blue);
+// 	      }
+// 	  }
+// 	return false;
       }
 
       /// THis function perform the search on a a tgba which is the 
@@ -403,29 +454,28 @@ namespace spot
       bool
       static_persistence ()
       {
-	assert (is_static || is_dynamic);
-	assert (es_ != 0);
+
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    trace << "PERSISTENCE treats: "
-		  << a_->format_state(f.s) << std::endl;
+	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
-		trace << "  Visit the successor: "
-                      << a_->format_state(s_prime) << std::endl;
+		trace  << "  Visit the successor: "
+                       << a_->format_state(s_prime) << std::endl;
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
-		const ltl::formula * formula = 0;
-		formula =  es_->formula_from_state(f.s);
+
+		const ltl::formula *formula = 0;
+ 		formula =  es_->formula_from_state(f.s);
+
 
 		// Trap all states that represents guarantee formulas
 		// for dynamism 
 		// 
 		// In the case of static algorithms this is not performed
-		bool inc_me = true;
 		if (is_dynamic && formula->is_syntactic_guarantee())
 		  {
 		    if (static_guarantee ())
@@ -440,14 +490,8 @@ namespace spot
 			    s_prime->destroy();
 			    return false;
 			  }
-			inc_me = false;
+			continue;
 		      }
-		  }
-
-		if (inc_me)
-		  {
-		    f.it->next();
-		    inc_transitions();
 		  }
 
 		// For the sake of dynamism
@@ -457,59 +501,172 @@ namespace spot
 		    return false;
 		  }
 
-		// We reach the most important part of the algorithm 
-		// for persistence : we check if the current state and 
-		// its successors are in the same SCC in the formula automaton
-		bool has_been_visited = false;
-		if (es_->same_weak_acc (f.s, s_prime)&& acc == all_acc)
-		  {
-		    // If Yes we check wether this state is already in the
-		    // blue stack
-		    stack_type::const_reverse_iterator i;
-		    i = st_blue.rbegin();
+		f.it->next();
+		inc_transitions();
 
-		    trace << "This 2 states are in the same SCC : "
-			  << a_->format_state(f.s) << "     "
-			  << a_->format_state(s_prime) << std::endl;
+		// Here it's the previous algorithm 
+                typename heap::color_ref c_prime = h.get_color_ref(s_prime);
 
-		    typename heap::color_ref c = h.get_color_ref(s_prime);
-		    if (!c.is_white() && c.get_color() == CYAN)
-		      {
-			has_been_visited = true;
+                if (c_prime.is_white())
+                  {
+                    trace << "  It is white, go down" << std::endl;
+		    if (use_weights)
+		      current_weight += acc;
+                    inc_states();
+                    h.add_new_state(s_prime, CYAN, current_weight);
+                    push(st_blue, s_prime, label, acc);
+                  }
+                else
+                  {
+                    typename heap::color_ref c = h.get_color_ref(f.s);
+                    assert(!c.is_white());
+                    if (c_prime.get_color() == CYAN
+			&& all_acc == ((current_weight - c_prime.get_weight())
+				       | c.get_acc()
+				       | acc
+				       | c_prime.get_acc()))
+                      {
+                        trace << "  It is cyan and acceptance condition "
+                              << "is reached, report cycle" << std::endl;
+                        c_prime.cumulate_acc(all_acc);
+                        push(st_red, s_prime, label, acc);
+                        return true;
+                      }
+		      else
+                      {
+
+			trace << " no propagation is needed, pop it."
+			      << std::endl;
+			h.pop_notify(s_prime);
 		      }
-
-		    if (has_been_visited)
-		      {
-			//s_prime->destroy();
-			is_dynamic = true;
-			return true;
-		      }
 		  }
-
-                typename heap::color_ref c = h.get_color_ref(s_prime);
-		if (c.is_white())
-		  {
-		    inc_states();
-		    inc_dfs();
-		    h.add_new_state(s_prime, CYAN, current_weight);
-		    push(st_blue, s_prime, label, acc);
-		    continue;
-		  }
-		else
-		  {
-		    h.pop_notify(s_prime);
-		  }
-		continue;
-	      }
+              }
             else
+            // Backtrack the edge
+            //        (predecessor of f.s in st_blue, <f.label, f.acc>, f.s)
               {
-                typename heap::color_ref c = h.get_color_ref(f.s);
-                assert(!c.is_white());
-		c.set_color(BLUE);
-		pop(st_blue);
+		trace << "  All the successors have been visited" << std::endl;
+                stack_item f_dest(f);
+                pop(st_blue);
+		if (use_weights)
+		  current_weight -= f_dest.acc;
+                typename heap::color_ref c_prime = h.get_color_ref(f_dest.s);
+                assert(!c_prime.is_white());
+                c_prime.set_color(BLUE);   
+		h.pop_notify(f_dest.s);
 	      }
 	  }
         return false;
+
+// 	assert (is_static || is_dynamic);
+// 	assert (es_ != 0);
+//         while (!st_blue.empty())
+//           {
+//             stack_item& f = st_blue.front();
+// 	    std::cout << "PERSISTENCE treats: "
+// 		  << a_->format_state(f.s) << std::endl;
+//             if (!f.it->done())
+//               {
+//                 const state *s_prime = f.it->current_state();
+// 		std::cout << "  Visit the successor: "
+//                       << a_->format_state(s_prime) << std::endl;
+//                 bdd label = f.it->current_condition();
+//                 bdd acc = f.it->current_acceptance_conditions();
+//                 // Go down the edge (f.s, <label, acc>, s_prime)
+// 		const ltl::formula * formula = 0;
+// 		formula =  es_->formula_from_state(f.s);
+
+// 		// Trap all states that represents guarantee formulas
+// 		// for dynamism 
+// 		// 
+// 		// In the case of static algorithms this is not performed
+// 		bool inc_me = true;
+// 		if (is_dynamic && formula->is_syntactic_guarantee())
+// 		  {
+// 		    if (static_guarantee ())
+// 		      {
+// 			s_prime->destroy();
+// 			return true;
+// 		      }
+// 		    else
+// 		      {
+// 			if (st_blue.empty())
+// 			  {
+// 			    s_prime->destroy();
+// 			    return false;
+// 			  }
+// 			inc_me = false;
+// 			continue;
+// 		      }
+// 		  }
+
+// 		// For the sake of dynamism
+// 		if (is_dynamic && !formula->is_syntactic_persistence())
+// 		  {
+// 		    s_prime->destroy();
+// 		    return false;
+// 		  }
+
+// 		if (inc_me)
+// 		  {
+// 		    f.it->next();
+// 		    inc_transitions();
+// 		  }
+
+
+// 		// We reach the most important part of the algorithm 
+// 		// for persistence : we check if the current state and 
+// 		// its successors are in the same SCC in the formula automaton
+// 		bool has_been_visited = false;
+// 		if (es_->same_weak_acc (f.s, s_prime) && acc == all_acc)
+// 		  {
+// 		    // If Yes we check wether this state is already in the
+// 		    // blue stack
+// 		    stack_type::const_reverse_iterator i;
+// 		    i = st_blue.rbegin();
+
+// 		    trace << "This 2 states are in the same SCC : "
+// 			  << a_->format_state(f.s) << "     "
+// 			  << a_->format_state(s_prime) << std::endl;
+
+// 		    typename heap::color_ref c = h.get_color_ref(s_prime);
+// 		    if (!c.is_white() && c.get_color() == CYAN)
+// 		      {
+// 			has_been_visited = true;
+// 		      }
+
+// 		    if (has_been_visited)
+// 		      {
+// 			//s_prime->destroy();
+// 			is_dynamic = true;
+// 			return true;
+// 		      }
+// 		  }
+
+//                 typename heap::color_ref c = h.get_color_ref(s_prime);
+// 		if (c.is_white())
+// 		  {
+// 		    inc_states();
+// 		    inc_dfs();
+// 		    h.add_new_state(s_prime, CYAN, current_weight);
+// 		    push(st_blue, s_prime, label, acc);
+// 		    continue;
+// 		  }
+// 		else
+// 		  {
+// 		    h.pop_notify(s_prime);
+// 		  }
+// 		continue;
+// 	      }
+//             else
+//               {
+//                 typename heap::color_ref c = h.get_color_ref(f.s);
+//                 assert(!c.is_white());
+// 		c.set_color(BLUE);
+// 		pop(st_blue);
+// 	      }
+// 	  }
+//         return false;
       }
 
 
@@ -528,11 +685,11 @@ namespace spot
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-            trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
-                trace << "  Visit the successor: "
+		trace << "  Visit the successor: "
                       << a_->format_state(s_prime) << std::endl;
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
@@ -546,6 +703,8 @@ namespace spot
 		// the same function that static one
 		if (is_dynamic)
 		  {
+
+
 		    formula =  es_->formula_from_state(f.s);
 		    stats_commut (formula);
 
@@ -564,8 +723,8 @@ namespace spot
 				//s_prime->destroy();
 				return false;
 			      }
+			    inc_me = false;
 			    continue;
-			    //inc_me = false;
 			  }
 		      }
 
@@ -587,8 +746,8 @@ namespace spot
 				//s_prime->destroy();
 				return false;
 			      }
+			    inc_me = false;
 			    continue;
-			    //inc_me = false;
 			  }
 		      }
 		  }
@@ -603,7 +762,6 @@ namespace spot
 
 		// Here it's the previous algorithm 
                 typename heap::color_ref c_prime = h.get_color_ref(s_prime);
-
 
                 if (c_prime.is_white())
                   {
@@ -637,10 +795,10 @@ namespace spot
                               << "is reached, report cycle" << std::endl;
                         c_prime.cumulate_acc(all_acc);
                         push(st_red, s_prime, label, acc);
-			is_dynamic = false;
+			//is_dynamic = false;
                         return true;
                       }
-                    else
+		      else
                       {
                         trace << "  It is cyan or blue and";
                         bdd acu = acc | c.get_acc();
@@ -667,7 +825,7 @@ namespace spot
             // Backtrack the edge
             //        (predecessor of f.s in st_blue, <f.label, f.acc>, f.s)
               {
-                trace << "  All the successors have been visited" << std::endl;
+		trace << "  All the successors have been visited" << std::endl;
                 stack_item f_dest(f);
                 pop(st_blue);
 		if (use_weights)
@@ -675,6 +833,7 @@ namespace spot
                 typename heap::color_ref c_prime = h.get_color_ref(f_dest.s);
                 assert(!c_prime.is_white());
                 c_prime.set_color(BLUE);
+
                 if (!st_blue.empty())
                   {
                     typename heap::color_ref c =
@@ -682,17 +841,19 @@ namespace spot
                     assert(!c.is_white());
                     bdd acu = f_dest.acc | c.get_acc();
                     bdd acp = (use_ordering ? project_acc(acu) : acu);
+
                     if ((c_prime.get_acc() & acp) != acp)
                       {
-                        trace << "  The arc from "
+			trace << "  The arc from "
                               << a_->format_state(st_blue.front().s)
                               << " to the current state implies to "
                               << " start a red dfs" << std::endl;
                         c_prime.cumulate_acc(acp);
                         push(st_red, f_dest.s, f_dest.label, f_dest.acc);
+
                         if (dfs_red(acu))
 			  {
-			    is_dynamic = false;
+			    //is_dynamic = false;			    
                             return true;
 			  }
                       }
