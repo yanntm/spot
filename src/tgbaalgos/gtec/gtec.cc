@@ -292,6 +292,12 @@ namespace spot
 		  {
 		    set_states(ecs_->states());
 		    trace << "  It's a reachability we can report" << std::endl;
+		    while (!todo.empty())
+		      {
+			delete todo.top().second;
+			todo.pop();
+			dec_depth();
+		      }
 		    return new couvreur99_check_result(ecs_, options(), true);
 		  }
 	      }

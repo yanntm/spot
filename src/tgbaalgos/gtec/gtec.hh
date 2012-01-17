@@ -141,6 +141,8 @@ namespace spot
 	     const numbered_state_heap_factory* nshf
 	     = numbered_state_heap_hash_map_factory::instance());
 
+
+  // Perform the emptiness considering the formula for each states
   emptiness_check*
   couvreur99_dyn(const tgba* a,
 		 option_map options = option_map(),
