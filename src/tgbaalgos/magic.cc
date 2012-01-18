@@ -345,6 +345,7 @@ namespace spot
 	      }
             else
               {
+
 		pop(st_blue);
 	      }
 	  }
@@ -464,7 +465,53 @@ namespace spot
 	      }
             else
               {
+                trace << "  All the successors have been visited" << std::endl;
+                stack_item f_dest(f);
 		pop(st_blue);
+		if (is_static)
+		  continue;
+
+                typename heap::color_ref c = h.get_color_ref(f_dest.s);
+                assert(!c.is_white());
+                if (!st_blue.empty() &&
+                           f_dest.acc == all_cond && c.get_color() != RED)
+                  {
+                    // the test 'c.get_color() != RED' is added to limit
+                    // the number of runs reported by successive
+                    // calls to the check method. Without this
+                    // functionnality, the test can be ommited.
+                    trace << "  It is blue and the arc from "
+                          << a_->format_state(st_blue.front().s)
+                          << " to it is accepting, start a red dfs"
+                          << std::endl;
+                    target = st_blue.front().s;
+                    c.set_color(RED);
+                    push(st_red, f_dest.s, f_dest.label, f_dest.acc);
+
+		    const ltl::formula * formula = 0;
+		    if (is_dynamic)
+		      formula =  es_->formula_from_state(f_dest.s);
+		    if (is_dynamic &&
+			formula->is_syntactic_persistence() &&
+			!es_->same_weak_acc (target, f_dest.s))
+		      {
+			trace << "DFS RED avoid by dynamism\n";
+			pop(st_red);
+		      }
+		    else
+		      if (dfs_red())
+			{
+			  is_dynamic = false;
+			  return true;
+			}
+                  }
+                else
+                  {
+                    trace << "  Pop it" << std::endl;
+                    h.pop_notify(f_dest.s);
+                  }
+
+		//		pop(st_blue);
 	      }
 	  }
         return false;

@@ -134,7 +134,7 @@ namespace spot
 		  {
 		    inc_reachability();
 		    commut_algo(REACHABILITY);
-		    h.add_new_state(s0, BLUE);
+		    h.add_new_state(s0, CYAN);
 		    push(st_blue, s0, bddfalse, bddfalse);
 		    if (static_guarantee ())
 		      return new se05_result(*this,
@@ -148,7 +148,7 @@ namespace spot
 		  {
 		    inc_dfs();
 		    commut_algo(DFS);
-		    h.add_new_state(s0, BLUE);
+		    h.add_new_state(s0, CYAN);
 		    push(st_blue, s0, bddfalse, bddfalse);
 		    if (static_persistence ())
 		      return new se05_result(*this,
@@ -271,6 +271,7 @@ namespace spot
       bool
       static_guarantee ()
       {
+	std::cout << "GUARANTEE\n";
 	assert (is_static || is_dynamic);
 	assert (es_ != 0);
         while (!st_blue.empty())
@@ -296,6 +297,7 @@ namespace spot
 		    s_prime->destroy();
 		    return false;
 		  }
+
                 f.it->next();
                 inc_transitions();
 
@@ -306,7 +308,7 @@ namespace spot
 		      {
 			inc_states();
 			inc_reachability();
-			h.add_new_state(s_prime, CYAN);
+			h.add_new_state(s_prime, BLUE);
 		      }
 		    push(st_blue, s_prime, label, acc);
 		    is_dynamic = true;
@@ -317,12 +319,14 @@ namespace spot
 		  {
 		    inc_states();
 		    inc_reachability();
-		    h.add_new_state(s_prime, CYAN);
+		    h.add_new_state(s_prime, BLUE);
 		    push(st_blue, s_prime, label, acc);
 		    continue;
 		  }
 		else
 		  {
+// 		    typename heap::color_ref c = h.get_color_ref(f.s);
+// 		    c.set_color(BLUE);
 		    h.pop_notify(s_prime);
 		  }
 		continue;
@@ -348,6 +352,7 @@ namespace spot
       bool
       static_persistence ()
       {
+	std::cout << "PERSISTENCE\n";
 	assert (is_static || is_dynamic);
 	assert (es_ != 0);
         while (!st_blue.empty())
@@ -443,16 +448,61 @@ namespace spot
 		  }
 		else
 		  {
+		    //typename heap::color_ref c = h.get_color_ref(f.s);
+		    //c.set_color(BLUE);
 		    h.pop_notify(s_prime);
 		  }
 		continue;
 	      }
             else
               {
-                typename heap::color_ref c = h.get_color_ref(f.s);
+
+                trace << "  All the successors have been visited" << std::endl;
+                stack_item f_dest(f);
+                pop(st_blue);
+                typename heap::color_ref c = h.get_color_ref(f_dest.s);
                 assert(!c.is_white());
-		c.set_color(BLUE);
-		pop(st_blue);
+                if (!st_blue.empty() &&
+		    f_dest.acc == all_cond && c.get_color() != RED)
+                  {
+                    // the test 'c.get_color() != RED' is added to limit
+                    // the number of runs reported by successive
+                    // calls to the check method. Without this
+                    // functionnality, the test can be ommited.
+                    trace << "  The arc from "
+                          << a_->format_state(st_blue.front().s)
+                          << " to the current state is accepting, start a "
+                          << "red dfs" << std::endl;
+                    c.set_color(RED);
+                    push(st_red, f_dest.s, f_dest.label, f_dest.acc);
+
+		    const ltl::formula * formula = 0;
+		    if (is_dynamic)
+		      formula =  es_->formula_from_state(st_blue.front().s);
+		    if (is_dynamic &&
+			formula->is_syntactic_persistence() &&
+			!es_->same_weak_acc (st_blue.front().s, f_dest.s))
+		      {
+			trace << "DFS RED avoid by dynamism\n";
+			pop(st_red);
+		      }
+		    else
+		      if (dfs_red())
+			{
+			  is_dynamic = false;
+			  return true;
+			}
+                  }
+                else
+                  {
+                    trace << "  Pop it" << std::endl;
+                    c.set_color(BLUE);
+                    h.pop_notify(f_dest.s);
+                  }
+//                 typename heap::color_ref c = h.get_color_ref(f.s);
+//                 assert(!c.is_white());
+// 		c.set_color(BLUE);
+// 		pop(st_blue);
 	      }
 	  }
         return false;
@@ -632,7 +682,7 @@ namespace spot
 
 		    const ltl::formula * formula = 0;
 		    if (is_dynamic)
-		      formula =  es_->formula_from_state(f_dest.s);
+		      formula =  es_->formula_from_state(st_blue.front().s);
 		    if (is_dynamic &&
 			formula->is_syntactic_persistence() &&
 			!es_->same_weak_acc (st_blue.front().s, f_dest.s))

@@ -1,3 +1,14 @@
+2012-01-18  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/tau03opt.cc (spot): Fix bug occuring with the use
+	of weight
+
+	* src/tgbaalgos/tau03.cc (spot): Fix a bug related to the
+	backtrack from a terminal automata in dynamic algorithm
+
+	* src/tgbaalgos/se05.cc (spot): Fix a bug related to CYAN add into
+	the blue stack
+
 2012-01-17  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/se05.cc (spot): Fix bug in dynamic algorithm and
