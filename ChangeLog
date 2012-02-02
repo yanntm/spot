@@ -1,3 +1,10 @@
+2012-02-02  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	* src/tgbaalgos/propagation.cc, src/tgbaalgos/propagation.hh:
+	add new file for propagation algorithms
+	* src/tgbaalgos/Makefile.am: add propgation files entry
+	* src/tgbatest/ltl2tgba.cc: add -pr option for propagation
+
 2012-01-24  Alexandre Duret-Lutz  <adl@lrde.epita.fr>
 
 	Fix a segfault reported by Etienne Renault using dve2check.
