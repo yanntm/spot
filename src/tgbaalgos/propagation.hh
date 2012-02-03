@@ -35,6 +35,7 @@ namespace spot
   /// \param a the automata to reduce.
   /// \return the propagated automata
   const tgba* propagate_acceptance_conditions (const tgba* a);
+  void propagate_acceptance_conditions_inplace (tgba* a);
 }
 
 #endif /// SPOT_TGBAALGOS_PROPAGATION_HH

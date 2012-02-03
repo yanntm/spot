@@ -1,3 +1,18 @@
+2012-02-03  Pierre Parutto  <parutto@.lrde.epita.fr>
+
+	Add in place propagation.
+
+	* src/tgbaalgos/propagation.hh: new function
+	propagate_acceptance_conditions_inplace.
+	* src/tgbaalgos/propagation.cc (propagate_acceptance_conditions):
+	added in place propagation of acceptance conditions.
+	* src/tgba/tgbaexplicit.hh (tgba_explicit::get_transition):
+	new method.
+	* src/tgba/tgbaexplicit.cc (tgba_explicit::get_transition):
+	Allows one to get a non-const tgba_explicit::transition from a const
+	tgba_explicit_succ_iterator.
+	* src/tgbatest/ltl2tgba.cc: add -pri option for in place propagation.
+
 2012-02-02  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	* src/tgbaalgos/propagation.cc, src/tgbaalgos/propagation.hh:

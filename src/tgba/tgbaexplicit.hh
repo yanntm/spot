@@ -103,6 +103,9 @@ namespace spot
     transition*
     create_transition(state* source, const state* dest);
 
+    transition*
+    get_transition (const tgba_explicit_succ_iterator* si);
+
     void add_condition(transition* t, const ltl::formula* f);
     /// This assumes that all variables in \a f are known from dict.
     void add_conditions(transition* t, bdd f);
@@ -172,6 +175,8 @@ namespace spot
     virtual bdd current_acceptance_conditions() const;
 
   private:
+    friend class tgba_explicit;
+
     const state_explicit::transitions_t* s_;
     state_explicit::transitions_t::const_iterator i_;
     bdd all_acceptance_conditions_;

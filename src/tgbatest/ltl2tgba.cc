@@ -214,6 +214,7 @@ syntax(char* prog)
 	    << "  -RD   display the parity game (dot format)" << std::endl
             << "  -Rm   attempt to minimize the automata" << std::endl
 	    << "  -pr	propagate acceptance conditions" << std::endl
+	    << "  -pri  propagate acceptance conditions inplace" << std::endl
 	    << std::endl
 
             << "Automaton conversion:" << std::endl
@@ -329,6 +330,7 @@ main(int argc, char** argv)
   bool opt_reduce = false;
   bool opt_minimize = false;
   bool opt_propagate = false;
+  bool opt_propagate_inplace = false;
   bool opt_monitor = false;
   bool containment = false;
   bool show_fc = false;
@@ -669,6 +671,10 @@ main(int argc, char** argv)
 	{
 	  opt_propagate = true;
 	}
+      else if (!strcmp(argv[formula_index], "-pri"))
+      {
+	opt_propagate_inplace = true;
+      }
       else if (!strcmp(argv[formula_index], "-M"))
         {
           opt_monitor = true;
@@ -987,6 +993,13 @@ main(int argc, char** argv)
 	  propagated = 0;
 	else
 	  a = propagated;
+      }
+
+      if (opt_propagate_inplace)
+      {
+	tm.start("propagation of acceptance conditions inplace");
+	propagate_acceptance_conditions_inplace (const_cast<spot::tgba*> (a));
+	tm.stop("propagation of acceptance conditions inplace");
       }
 
       unsigned int n_acc = a->number_of_acceptance_conditions();

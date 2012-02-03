@@ -133,6 +133,13 @@ namespace spot
       source->successors.insert(source->successors.end(), t);
     return &*i;
   }
+
+  tgba_explicit::transition*
+  tgba_explicit::get_transition (const tgba_explicit_succ_iterator* si)
+  {
+    return const_cast<transition*> (&(*(si->i_)));
+  }
+
   void
   tgba_explicit::add_condition(transition* t, const ltl::formula* f)
   {

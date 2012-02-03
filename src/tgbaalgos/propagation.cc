@@ -87,7 +87,8 @@ namespace spot
       tgba_explicit::transition* t =
 	newa_->create_transition (rec_[in_s], rec_[out_s]);
 
-      newa_->add_acceptance_conditions (t, acc_[out_s]);
+      bdd newacc = si->current_acceptance_conditions () | acc_[out_s];
+      newa_->add_acceptance_conditions (t, newacc);
       newa_->add_conditions (t, si->current_condition ());
     }
     
@@ -113,12 +114,64 @@ namespace spot
     while (propagation_dfs (a, init_state, seen, acc)) ;
     init_state->destroy ();
 
-    std::cout << "ACC size = " << acc.begin ()->second << std::endl;
-
     //rewrite automata
     rewrite_automata rw (a, acc);
     rw.run ();
 
     return rw.get_new_automata ();
+  }
+
+  class rewrite_inplace: public tgba_reachable_iterator_depth_first
+  {
+  public:
+    rewrite_inplace (tgba* a,
+		     state_map& acc):
+      tgba_reachable_iterator_depth_first (a),
+      acc_ (acc),
+      ea_ (down_cast<tgba_explicit*> (a))
+    {
+      assert (ea_);
+    }
+
+    // void
+    // process_state (const state* s, int n, tgba_succ_iterator* si)
+    // {
+    //   (void) si;
+
+    // }
+
+    void
+    process_link (const state* in_s, int in,
+		  const state* out_s, int out,
+		  const tgba_succ_iterator* si)
+    {
+      (void) in_s;
+      (void) in;
+      (void) out;
+
+      const tgba_explicit_succ_iterator* tmpit =
+	down_cast<const tgba_explicit_succ_iterator*> (si);
+
+      tgba_explicit::transition* t = ea_->get_transition (tmpit);
+      t->acceptance_conditions |= acc_[out_s];
+    }
+
+  protected:
+    state_map& acc_;
+    tgba_explicit* ea_;
+  };
+  
+  void
+  propagate_acceptance_conditions_inplace (tgba* a)
+  {
+    state_set seen;
+    state_map acc;
+    state* init_state = a->get_init_state ();
+
+    while (propagation_dfs (a, init_state, seen, acc)) ;
+    init_state->destroy ();
+
+    rewrite_inplace ri (a, acc);
+    ri.run ();
   }
 }
