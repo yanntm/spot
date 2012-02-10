@@ -1,3 +1,22 @@
+2012-02-10  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	Modified style, generic automaton rewriting in propagation
+
+	* src/tgba/tgbaexplicit.hh, src/tgba/tgbaexplicit.cc:
+	Modified style.
+	* src/tgbaalgos/propagation.hh, src/tgbaalgos/propagation.cc:
+	implemented generic rewriting for tgba_explicit automaton.
+	* src/tgbatest/ltl2tgba.cc: modified style.
+
+2012-02-03  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	* src/tgbatest/ltl2tgba.cc: cast a tgba into a tgba_explicit for
+	in place propagation.
+	* src/tgba/tgbaexplicit.hh: new clone_transition method in tgbaexplicit.
+	* src/tgba/tgbaexplicit.cc: clone_transition implementation.
+	* src/tgbaalgos/propagation.hh: modified in place function's prototype.
+	* src/tgbaalgos/propagation.cc: modified in place function.
+
 2012-02-03  Pierre Parutto  <parutto@.lrde.epita.fr>
 
 	Add in place propagation.

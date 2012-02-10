@@ -24,18 +24,27 @@
 #ifndef SPOT_TGBAALGOS_PROPAGATION_HH
 # define SPOT_TGBAALGOS_PROPAGATION_HH
 
-#include "tgba/tgba.hh"
+#include "tgba/tgbaexplicit.hh"
 
 namespace spot
 {
   /// \brief propagate acceptance conditions through the automata.
+  ///
   /// If all output arcs of a state possess the same acceptance condition
   /// then it can be put on all input arcs.
   ///
-  /// \param a the automata to reduce.
+  /// \param a the automata to propagate.
   /// \return the propagated automata
-  const tgba* propagate_acceptance_conditions (const tgba* a);
-  void propagate_acceptance_conditions_inplace (tgba* a);
+  const tgba* propagate_acceptance_conditions(const tgba* a);
+
+  /// \brief propagate acceptance conditions through the automata.
+  ///
+  /// If all output arcs of a state possess the same acceptance condition
+  /// then it can be put on all input arcs.
+  /// This function directly modify the given automata.
+  ///
+  /// \param a the automata to propagate.
+  void propagate_acceptance_conditions_inplace(tgba_explicit* a);
 }
 
 #endif /// SPOT_TGBAALGOS_PROPAGATION_HH

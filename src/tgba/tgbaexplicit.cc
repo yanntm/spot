@@ -92,7 +92,7 @@ namespace spot
     assert(o);
     // Do not simply return "o - this", it might not fit in an int.
     if (o < this)
-      return -1;
+     return -1;
     if (o > this)
       return 1;
     return 0;
@@ -135,9 +135,9 @@ namespace spot
   }
 
   tgba_explicit::transition*
-  tgba_explicit::get_transition (const tgba_explicit_succ_iterator* si)
+  tgba_explicit::get_transition(const tgba_explicit_succ_iterator* si)
   {
-    return const_cast<transition*> (&(*(si->i_)));
+    return const_cast<transition*>(&(*(si->i_)));
   }
 
   void
@@ -318,6 +318,29 @@ namespace spot
     return i->second;
   }
 
+  tgba_explicit::transition*
+  tgba_explicit_string::clone_transition(const tgba_explicit* from_automata,
+					 const state_explicit* from,
+					 const tgba_explicit_succ_iterator* si)
+  {
+    const tgba_explicit_string* string_automata =
+      down_cast<const tgba_explicit_string*>(from_automata);
+    assert(string_automata);
+
+    state* to = si->current_state();
+
+    tgba_explicit::transition* t =
+      this->create_transition(std::string(string_automata->get_label(from)),
+			       std::string(string_automata->get_label(to)));
+
+    this->add_conditions(t, si->current_condition());
+    this->add_acceptance_conditions(t, si->current_acceptance_conditions());
+
+    to->destroy();
+
+    return t;
+  }
+
   tgba_explicit_formula::~tgba_explicit_formula()
   {
     ns_map::iterator i = name_state_map_.begin();
@@ -346,6 +369,36 @@ namespace spot
     return ltl::to_string(i->second);
   }
 
+  tgba_explicit::transition*
+  tgba_explicit_formula::clone_transition(const tgba_explicit* from_automata,
+					  const state_explicit* from,
+					  const tgba_explicit_succ_iterator* si)
+  {
+    const tgba_explicit_formula* form_automata =
+      down_cast<const tgba_explicit_formula*>(from_automata);
+    assert(form_automata);
+
+    state_explicit* to = si->current_state();
+
+    const ltl::formula* from_form = form_automata->get_label(from);
+    const ltl::formula* to_form = form_automata->get_label(to);
+
+    if (!this->has_state(from_form))
+      from_form->clone();
+    if ((from_form != to_form) && !this->has_state(to_form))
+      to_form->clone();
+
+    tgba_explicit::transition* t =
+      this->create_transition(from_form, to_form);
+
+    this->add_conditions(t, si->current_condition());
+    this->add_acceptance_conditions(t, si->current_acceptance_conditions());
+
+    to->destroy();
+
+    return t;
+  }
+
   tgba_explicit_number::~tgba_explicit_number()
   {
     ns_map::iterator i = name_state_map_.begin();
@@ -372,4 +425,28 @@ namespace spot
     ss << i->second;
     return ss.str();
   }
+
+  tgba_explicit::transition*
+  tgba_explicit_number::clone_transition(const tgba_explicit* from_automata,
+					 const state_explicit* from,
+					 const tgba_explicit_succ_iterator* si)
+  {
+    const tgba_explicit_number* num_automata =
+      down_cast<const tgba_explicit_number*>(from_automata);
+    assert(num_automata);
+
+    state_explicit* to = si->current_state();
+
+    tgba_explicit::transition* t =
+      this->create_transition(num_automata->get_label(from),
+			       num_automata->get_label(to));
+
+    this->add_conditions(t, si->current_condition());
+    this->add_acceptance_conditions(t, si->current_acceptance_conditions());
+
+    to->destroy();
+
+    return t;
+  }
+
 }

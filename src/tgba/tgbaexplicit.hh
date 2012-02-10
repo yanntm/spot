@@ -103,8 +103,13 @@ namespace spot
     transition*
     create_transition(state* source, const state* dest);
 
+    virtual transition*
+    clone_transition(const tgba_explicit* from_automata,
+		     const state_explicit* from,
+		     const tgba_explicit_succ_iterator* si) = 0;
+
     transition*
-    get_transition (const tgba_explicit_succ_iterator* si);
+    get_transition(const tgba_explicit_succ_iterator* si);
 
     void add_condition(transition* t, const ltl::formula* f);
     /// This assumes that all variables in \a f are known from dict.
@@ -245,7 +250,6 @@ namespace spot
       return s;
     }
 
-
     transition*
     create_transition(state* source, const state* dest)
     {
@@ -355,6 +359,11 @@ namespace spot
     virtual state* add_default_init();
     virtual std::string format_state(const spot::state* s) const;
 
+    virtual transition*
+    clone_transition(const tgba_explicit* from_automata,
+		     const state_explicit* from,
+		     const tgba_explicit_succ_iterator* si);
+
     /// Create an alias for a state.  Any reference to \a alias_name
     /// will act as a reference to \a real_name.
     virtual
@@ -381,6 +390,11 @@ namespace spot
     virtual ~tgba_explicit_formula();
     virtual state* add_default_init();
     virtual std::string format_state(const spot::state* s) const;
+
+    virtual transition*
+    clone_transition(const tgba_explicit* from_automata,
+		     const state_explicit* from,
+		     const tgba_explicit_succ_iterator* si);
   };
 #else
   class tgba_explicit_formula: public tgba
@@ -399,6 +413,11 @@ namespace spot
     virtual ~tgba_explicit_number();
     virtual state* add_default_init();
     virtual std::string format_state(const spot::state* s) const;
+
+    virtual transition*
+    clone_transition(const tgba_explicit* from_automata,
+		     const state_explicit* from,
+		     const tgba_explicit_succ_iterator* si);
   };
 #else
   class tgba_explicit_number: public tgba

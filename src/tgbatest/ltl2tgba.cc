@@ -977,30 +977,33 @@ main(int argc, char** argv)
 
       const spot::tgba* propagated = 0;
       if (opt_propagate)
-      {
-	tm.start("propagation of acceptance conditions");
-	propagated = propagate_acceptance_conditions (a);
-	tm.stop("propagation of acceptance conditions");
-
-	if (propagated == 0)
 	{
-	  std::cerr << "Error could not propagate acceptance condition "
-		    << "for the given automaton"
-		    << std::endl;
-	  exit (2);
+	  tm.start("propagation of acceptance conditions");
+	  propagated = propagate_acceptance_conditions(a);
+	  tm.stop("propagation of acceptance conditions");
+
+	  if (propagated == 0)
+	    {
+	      std::cerr << "Error could not propagate acceptance condition "
+			<< "for the given automaton"
+			<< std::endl;
+	      exit(2);
+	    }
+	  else if (propagated == a)
+	    propagated = 0;
+	  else
+	    a = propagated;
 	}
-	else if (propagated == a)
-	  propagated = 0;
-	else
-	  a = propagated;
-      }
 
       if (opt_propagate_inplace)
-      {
-	tm.start("propagation of acceptance conditions inplace");
-	propagate_acceptance_conditions_inplace (const_cast<spot::tgba*> (a));
-	tm.stop("propagation of acceptance conditions inplace");
-      }
+	{
+	  tm.start("propagation of acceptance conditions inplace");
+	  const spot::tgba_explicit* cae =
+	    dynamic_cast<const spot::tgba_explicit*>(a);
+	  spot::tgba_explicit* ae = const_cast<spot::tgba_explicit*>(cae);
+	  propagate_acceptance_conditions_inplace(ae);
+	  tm.stop("propagation of acceptance conditions inplace");
+	}
 
       unsigned int n_acc = a->number_of_acceptance_conditions();
       if (echeck_inst
