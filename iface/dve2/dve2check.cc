@@ -102,8 +102,8 @@ main(int argc, char **argv)
 		  const char *strat;
 		  strat = opt + 2;
 		  opt_af = true;
-		  opt_af_strat = 
-		    spot::rebuild::string_to_strategy(strat); 
+		  opt_af_strat =
+		    spot::rebuild::string_to_strategy(strat);
 		  // std::cout << "strat" <<  strat << std::endl;
 		  break;
 		default:
@@ -202,7 +202,7 @@ main(int argc, char **argv)
   if (output == EmptinessCheck)
     {
       const char* err;
-      std::cout << "===> Algorithm : " 
+      std::cout << "===> Algorithm : "
 		<< echeck_algo << "\n";
       echeck_inst =
 	spot::emptiness_check_instantiator::construct(echeck_algo, &err);
@@ -283,7 +283,7 @@ main(int argc, char **argv)
     {
       // Declare a worker that will computes changes over the 
       // formula 
-      std::cout << "===> Reordering : " 
+      std::cout << "===> Reordering : "
 		<< spot::rebuild::strat_to_string ((int)opt_af_strat)
 		<< "\n";
       spot::rebuild worker (prop, opt_af_strat);
@@ -325,7 +325,7 @@ main(int argc, char **argv)
     spot::formula_emptiness_specifier *fes =
       new spot::formula_emptiness_specifier (product, prop);
     ec->set_specifier (fes);
-    
+
     bool search_many = echeck_inst->options().get("repeated");
     assert(ec);
     do
