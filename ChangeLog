@@ -1,3 +1,12 @@
+2012-03-06  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	Started work on the New implementation of tgba_explicit.
+
+	* src/tgba/tgbaexplicit2.hh: new skeletton for tgba_explicit
+	* src/tgba/tgbaexplicit2.cc: test function for debugging
+	* src/tgba/Makefile.am: add tgba_explicit2.hh as a header and
+	tgba_explicit2.cc as a source file.
+
 2012-02-10  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Modified style, generic automaton rewriting in propagation
