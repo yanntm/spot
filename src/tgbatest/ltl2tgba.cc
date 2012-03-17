@@ -1,8 +1,9 @@
-// Copyright (C) 2007, 2008, 2009, 2010, 2011 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// -*- coding: utf-8 -*-
+// Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Laboratoire de
+// Recherche et DÃ©veloppement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006, 2007 Laboratoire d'Informatique de
-// Paris 6 (LIP6), département Systèmes Répartis
-// Coopératifs (SRC), Université Pierre et Marie Curie.
+// Paris 6 (LIP6), dÃ©partement SystÃ¨mes RÃ©partis
+// CoopÃ©ratifs (SRC), UniversitÃ© Pierre et Marie Curie.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -56,6 +57,7 @@
 #include "tgbaalgos/safety.hh"
 #include "tgbaalgos/eltl2tgba_lacim.hh"
 #include "tgbaalgos/gtec/gtec.hh"
+#include "tgbaalgos/bddsimul.hh"
 #include "eltlparse/public.hh"
 #include "misc/timer.hh"
 #include "tgbaalgos/stats.hh"
@@ -212,6 +214,7 @@ syntax(char* prog)
 	    << "  -Rd   display the simulation relation" << std::endl
 	    << "  -RD   display the parity game (dot format)" << std::endl
             << "  -Rm   attempt to minimize the automata" << std::endl
+	    << "  -RS   BDD-based simulation reduction" << std::endl
 	    << std::endl
 
             << "Automaton conversion:" << std::endl
@@ -339,6 +342,7 @@ main(int argc, char** argv)
   spot::timer_map tm;
   bool use_timer = false;
   bool assume_sba = false;
+  bool opt_simul = false;
 
   for (;;)
     {
@@ -662,6 +666,10 @@ main(int argc, char** argv)
         {
           opt_minimize = true;
         }
+      else if (!strcmp(argv[formula_index], "-RS"))
+        {
+          opt_simul = true;
+        }
       else if (!strcmp(argv[formula_index], "-M"))
         {
           opt_monitor = true;
@@ -929,6 +937,14 @@ main(int argc, char** argv)
 	  tm.start("reducing A_f w/ SCC");
 	  a = aut_scc = spot::scc_filter(a, scc_filter_all);
 	  tm.stop("reducing A_f w/ SCC");
+	}
+
+      const spot::tgba* simulaut = 0;
+      if (opt_simul)
+	{
+	  tm.start("simulation");
+	  a = simulaut = spot::bdd_simulation(a);
+	  tm.stop("simulation");
 	}
 
       const spot::tgba_tba_proxy* degeneralized = 0;
@@ -1375,6 +1391,7 @@ main(int argc, char** argv)
       delete aut_red;
       delete minimized;
       delete degeneralized;
+      delete simulaut;
       delete aut_scc;
       delete state_labeled;
       delete to_free;
