@@ -1,3 +1,12 @@
+2012-03-20  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	Continue work on the new implementation of tgba_explicit
+
+	* src/tgba/tgbaexplicit2.hh (spot): add missing functions
+	* src/tgba/tgbaexplicit2.cc (spot): add static variable initialization
+	* src/tgbatest/explicit2.cc: add test implementation
+	* src/tgbatest/Makefile.am: add explicit2 to makefile
+
 2012-03-06  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Started work on the New implementation of tgba_explicit.
