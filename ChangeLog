@@ -1,5 +1,13 @@
 2012-03-21  Pierre Parutto  <parutto@node3.lrde.epita.fr>
 
+	Implement remaining functions, debug maps
+
+	* src/tgba/tgbaexplicit2.hh (spot): implement new functions
+	* src/tgbatest/explicit2.cc : add tests for state comparison
+	and printing
+
+2012-03-21  Pierre Parutto  <parutto@node3.lrde.epita.fr>
+
 	Refactor code and implement number and formula automata
 
 	* src/tgbatest/explicit2.cc: add test for number and formula automata
