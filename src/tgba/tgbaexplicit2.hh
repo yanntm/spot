@@ -21,18 +21,20 @@
 #ifndef SPOT_TGBA_TGBAEXPLICIT2_HH
 # define SPOT_TGBA_TGBAEXPLICIT2_HH
 
+#include <sstream>
 #include <list>
 
-#include "misc/hash.hh"
-#include "ltlast/formula.hh"
 #include "tgba.hh"
+#include "misc/hash.hh"
 #include "misc/bddop.hh"
+#include "ltlast/formula.hh"
+#include "ltlvisit/tostring.hh"
 
 namespace spot
 {
   ///misc
   template<typename T>
-  struct destroy_pointer
+  struct destroy_key
   {
     void destroy(T t)
     {
@@ -40,10 +42,10 @@ namespace spot
     }
   };
 
-  template<typename T>
-  struct destroy_pointer<T*>
+  template<>
+  struct destroy_key<const ltl::formula*>
   {
-    void destroy(T* t)
+    void destroy(const ltl::formula* t)
     {
       t->destroy();
     }
@@ -99,16 +101,18 @@ namespace spot
       return label_;
     }
 
-    //keep it here or move it down to the sub classes?
     virtual int compare(const state* other) const
     {
       const state_explicit<Label, label_hash>* s =
 	down_cast<const state_explicit<Label, label_hash>*>(other);
+      assert (s);
 
-      if (!s)
-	return 0;
-
-      return this < s;
+      // Do not simply return "o - this", it might not fit in an int.
+      if (s < this)
+	return -1;
+      if (s > this)
+	return 1;
+      return 0;
     }
 
   protected:
@@ -137,6 +141,12 @@ namespace spot
     }
 
     static const int default_val;
+    static std::string to_string(int l)
+    {
+      std::stringstream ss;
+      ss << l;
+      return ss.str();
+    }
 
     virtual size_t hash() const
     {
@@ -172,6 +182,10 @@ namespace spot
     }
 
     static const std::string default_val;
+    static std::string to_string(const std::string& l)
+    {
+      return l;
+    }
 
     virtual size_t hash() const
     {
@@ -206,6 +220,10 @@ namespace spot
     }
 
     static const ltl::formula* default_val;
+    static std::string to_string(const ltl::formula* l)
+    {
+      return ltl::to_string(l);
+    }
 
     virtual size_t hash() const
     {
@@ -287,8 +305,10 @@ namespace spot
   class explicit_graph: public Type
   {
   protected:
-    typedef Sgi::hash_map<typename State::Label_t, State> ls_map;
-    typedef Sgi::hash_map<State*, typename State::Label_t> sl_map;
+    typedef Sgi::hash_map<typename State::Label_t, State,
+			  typename State::label_hash_t> ls_map;
+    typedef Sgi::hash_map<const State*, typename State::Label_t,
+			  ptr_hash<State> > sl_map;
     typedef typename State::transition transition;
 
   public:
@@ -458,7 +478,7 @@ namespace spot
 	typename State::Label_t s = i->first;
 	i->second.destroy();
 	++i;
-	destroy_pointer<typename State::Label_t> dest;
+	destroy_key<typename State::Label_t> dest;
 	dest.destroy(s);
       }
     }
@@ -486,10 +506,22 @@ namespace spot
     }
 
     //no need?
-    virtual std::string format_state(const state* state) const
+    virtual std::string format_state(const spot::state* state) const
     {
-      (void) state;
-      return "coucou";
+      const State* se = down_cast<const State*>(state);
+      assert(se);
+      typename sl_map::const_iterator i = sl_.find(se);
+      assert(i != sl_.end());
+      return State::to_string(i->second);
+    }
+
+    /// old implementation in tgba_explicit_string
+    /// Create an alias for a state.  Any reference to \a alias_name
+    /// will act as a reference to \a real_name.
+    void add_state_alias(const typename State::Label_t& alias,
+			 const typename State::Label_t& real)
+    {
+      ls_[alias] = *(add_state(real));
     }
 
   protected:

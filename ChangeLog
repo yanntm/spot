@@ -1,5 +1,11 @@
 2012-03-21  Pierre Parutto  <parutto@node3.lrde.epita.fr>
 
+	Make sure modifications are not lost
+
+	* src/tgba/tgbaexplicit2.hh (spot): weird thing with git
+
+2012-03-21  Pierre Parutto  <parutto@node3.lrde.epita.fr>
+
 	Implement remaining functions, debug maps
 
 	* src/tgba/tgbaexplicit2.hh (spot): implement new functions
