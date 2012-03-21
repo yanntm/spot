@@ -19,30 +19,12 @@
 // 02111-1307, USA.
 
 #include "tgbaexplicit2.hh"
+#include "ltlast/constant.hh"
 
 namespace spot
 {
-  const std::string state_explicit_string::default_val ("empty");
-  //just a random function to test the implementation
-  void test ()
-  {
-    bdd_dict* d = 0;
-    tgba_explicit<state_explicit_string> tgba(d);
-    state_explicit_string* s1 = tgba.add_state ("toto");
-    state_explicit_string* s2 = tgba.add_state ("tata");
-    state_explicit_string::transition* t =
-      tgba.create_transition (s1, s2);
-
-    tgba_explicit_succ_iterator<state_explicit_string>* it = tgba.succ_iter (tgba.get_init_state ());
-    for (it->first (); !it->done();it->next ())
-    {
-      state_explicit_string* se = it->current_state ();
-      std::cout << (se)->label () << std::endl;
-    }
-
-    (void) tgba;
-    (void) s1;
-    (void) s2;
-    (void) t;
-  }
+  const std::string state_explicit_string::default_val("empty");
+  const int state_explicit_number::default_val(0);
+  const ltl::formula*
+	state_explicit_formula::default_val(ltl::constant::true_instance());
 }

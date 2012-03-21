@@ -1,3 +1,11 @@
+2012-03-21  Pierre Parutto  <parutto@node3.lrde.epita.fr>
+
+	Refactor code and implement number and formula automata
+
+	* src/tgbatest/explicit2.cc: add test for number and formula automata
+	* src/tgba/tgbaexplicit2.hh (spot): add number and formula states
+	* src/tgba/tgbaexplicit2.cc (spot): add missing static variables initializations
+
 2012-03-20  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Continue work on the new implementation of tgba_explicit
