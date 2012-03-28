@@ -24,7 +24,7 @@
 #include "ltlenv/defaultenv.hh"
 #include "ltlast/allnodes.hh"
 
-#include "tgba/tgbaexplicit2.hh"
+#include "tgba/tgbaexplicit.hh"
 
 using namespace spot;
 

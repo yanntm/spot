@@ -49,6 +49,12 @@ namespace spot
 	delete[] s_;
       }
 
+      virtual void
+      destroy() const
+      {
+	delete this;
+      }
+
       state const*
       nth(int n) const
       {

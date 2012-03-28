@@ -213,8 +213,7 @@ syntax(char* prog)
 	    << "  -Rd   display the simulation relation" << std::endl
 	    << "  -RD   display the parity game (dot format)" << std::endl
             << "  -Rm   attempt to minimize the automata" << std::endl
-	    << "  -pr	propagate acceptance conditions" << std::endl
-	    << "  -pri  propagate acceptance conditions inplace" << std::endl
+
 	    << std::endl
 
             << "Automaton conversion:" << std::endl
@@ -329,8 +328,6 @@ main(int argc, char** argv)
   bool graph_run_tgba_opt = false;
   bool opt_reduce = false;
   bool opt_minimize = false;
-  bool opt_propagate = false;
-  bool opt_propagate_inplace = false;
   bool opt_monitor = false;
   bool containment = false;
   bool show_fc = false;
@@ -667,14 +664,6 @@ main(int argc, char** argv)
         {
           opt_minimize = true;
         }
-      else if (!strcmp(argv[formula_index], "-pr"))
-	{
-	  opt_propagate = true;
-	}
-      else if (!strcmp(argv[formula_index], "-pri"))
-      {
-	opt_propagate_inplace = true;
-      }
       else if (!strcmp(argv[formula_index], "-M"))
         {
           opt_monitor = true;
@@ -975,36 +964,6 @@ main(int argc, char** argv)
 	    }
 	}
 
-      const spot::tgba* propagated = 0;
-      if (opt_propagate)
-	{
-	  tm.start("propagation of acceptance conditions");
-	  propagated = propagate_acceptance_conditions(a);
-	  tm.stop("propagation of acceptance conditions");
-
-	  if (propagated == 0)
-	    {
-	      std::cerr << "Error could not propagate acceptance condition "
-			<< "for the given automaton"
-			<< std::endl;
-	      exit(2);
-	    }
-	  else if (propagated == a)
-	    propagated = 0;
-	  else
-	    a = propagated;
-	}
-
-      if (opt_propagate_inplace)
-	{
-	  tm.start("propagation of acceptance conditions inplace");
-	  const spot::tgba_explicit* cae =
-	    dynamic_cast<const spot::tgba_explicit*>(a);
-	  spot::tgba_explicit* ae = const_cast<spot::tgba_explicit*>(cae);
-	  propagate_acceptance_conditions_inplace(ae);
-	  tm.stop("propagation of acceptance conditions inplace");
-	}
-
       unsigned int n_acc = a->number_of_acceptance_conditions();
       if (echeck_inst
 	  && degeneralize_opt == NoDegen
@@ -1101,7 +1060,7 @@ main(int argc, char** argv)
 	    }
 	}
 
-      const spot::tgba_explicit* expl = 0;
+      const spot::tgba_explicit_string* expl = 0;
       switch (dupexp)
 	{
 	case NoneDup:
@@ -1417,7 +1376,6 @@ main(int argc, char** argv)
       delete expl;
       delete aut_red;
       delete minimized;
-      delete propagated;
       delete degeneralized;
       delete aut_scc;
       delete state_labeled;

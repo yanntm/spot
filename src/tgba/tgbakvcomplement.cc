@@ -110,6 +110,12 @@ namespace spot
       state_kv_complement(state_rank_map state_map, state_set state_filter);
       virtual ~state_kv_complement() {}
 
+      virtual void
+      destroy() const
+      {
+	delete this;
+      }
+
       virtual int compare(const state* other) const;
       virtual size_t hash() const;
       virtual state_kv_complement* clone() const;

@@ -96,6 +96,11 @@ namespace spot
     virtual size_t hash() const;
     virtual state_set* clone() const;
 
+    virtual void destroy() const
+    {
+      delete this;
+    }
+
     virtual ~state_set()
     {
       if (delete_me_)

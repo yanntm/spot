@@ -42,6 +42,12 @@ namespace spot
       }
 
       virtual
+      void destroy() const
+      {
+	delete this;
+      }
+
+      virtual
       ~state_wdba_comp_proxy()
       {
 	if (s_)

@@ -906,6 +906,12 @@ namespace spot
       {
       }
 
+      virtual void
+      destroy() const
+      {
+	delete this;
+      }
+
       std::string to_string() const;
       const state* get_state() const;
     private:

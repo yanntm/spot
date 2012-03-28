@@ -44,6 +44,12 @@ namespace spot
       return state_;
     }
 
+    virtual void
+    destroy() const
+    {
+      delete this;
+    }
+
     virtual int compare(const state* other) const;
     virtual size_t hash() const;
     virtual state_bdd* clone() const;

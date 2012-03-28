@@ -51,6 +51,12 @@ namespace spot
 	s_->destroy();
       }
 
+      virtual
+      void destroy() const
+      {
+	delete this;
+      }
+
       state*
       real_state() const
       {

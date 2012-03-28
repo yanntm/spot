@@ -86,7 +86,7 @@ namespace spot
     /// management (e.g. no memory allocation for explicit automata).
     virtual void destroy() const
     {
-      delete this;
+      //delete this;
     }
 
   protected:

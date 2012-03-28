@@ -1,10 +1,76 @@
-2012-03-21  Pierre Parutto  <parutto@node3.lrde.epita.fr>
+2012-03-28  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	Move tgbaexplicit2 to tgbaexplicit, made necessary changes.
+
+	* src/evtgba/explicit.hh (spot): add destroy method
+	* src/evtgba/product.cc (spot): add destroy method
+	* src/ltlvisit/contain.cc (spot): change tgba_explicit in
+	tgba_explicit_formula
+	* src/neverparse/neverclaimparse.yy (spot): change state_explicit in
+	state_explicit_string
+	* src/tgba/Makefile.am : remove tgbaexplicit2.cc and tgbaexplicit2.hh
+	* src/tgba/state.hh (spot): remove "delete this" in the destroy method
+	* src/tgba/statebdd.hh (spot): add destroy method
+	* src/tgba/taatgba.hh (spot): add destroy method
+	* src/tgba/tgbaexplicit2.cc (spot): remove file
+	* src/tgba/tgbaexplicit2.hh (spot): remove file
+	* src/tgba/tgbaexplicit.cc (spot): replace by tgbaexplicit2.cc,
+	correct some bugs
+	* src/tgba/tgbaexplicit.hh (spot): replace by tgbaexplicit2.hh,
+	correct some bugs
+	* src/tgba/tgbakvcomplement.cc (spot): add destroy method
+	* src/tgba/tgbareduc.cc (spot): replace *_explicit by *_explicit_string
+	* src/tgba/tgbareduc.hh (spot): replace *_explicit by *_explicit_string
+	* src/tgba/tgbasafracomplement.cc (spot): add destroy method
+	* src/tgba/tgbasgba.cc (spot): add destroy method
+	* src/tgba/wdbacomp.cc (spot): add destroy method
+	* src/tgbaalgos/Makefile.am: remove propagation.cc/hh
+	* src/tgbaalgos/cutscc.cc (spot): change state_explicit by
+	state_explicit_string
+	* src/tgbaalgos/dupexp.cc (spot): change tgba_explicit by
+	tgba_explicit_string
+	* src/tgbaalgos/dupexp.hh (spot): change tgba_explicit by
+	tgba_explicit_string
+	* src/tgbaalgos/emptiness.cc (spot): change state_explicit by
+	state_explicit_string
+	* src/tgbaalgos/ltl2tgba_fm.cc (spot): change *_explicit by
+	*_explicit_formula
+	* src/tgbaalgos/ltl2tgba_fm.hh (spot): change tgba_explicit by
+	tgba_explicit_formula
+	* src/tgbaalgos/minimize.cc (spot): change typedef
+	* src/tgbaalgos/powerset.cc (spot): change tgba_explicit by
+	state_explicit_number
+	* src/tgbaalgos/propagation.hh (spot): change tgba_explicit type
+	* src/tgbaalgos/randomgraph.cc (spot): change *_explicit by
+	*_explicit_string
+	* src/tgbaalgos/sccfilter.cc (spot): change tgba_explicit by
+	tgba_explicit_string
+	* src/tgbaparse/tgbaparse.yy (spot): change tgba_explicit by
+	state_explicit_string
+	* src/tgbatest/complementation.cc (spot): change tgba_explicit by
+	tgba_explicit_string
+	* src/tgbatest/explicit.cc (spot): change tgba_explicit by
+	tgba_explicit_string
+	* src/tgbatest/explicit2.cc (spot): add new test file
+	* src/tgbatest/explprod.cc (spot):change tgba_explicit by
+	tgba_explicit_string
+	* src/tgbatest/ltl2tgba.cc (spot): remove options linked to propagation
+	change tgba_explicit types
+	* src/tgbatest/mixprod.cc (spot): change tgba_explicit by
+	tgba_explicit_string
+	* src/tgbatest/powerset.cc (spot): change tgba_explicit's types
+	* src/tgbatest/tgbaread.cc (spot): change tgba_explicit by
+	tgba_explicit_string
+	* src/tgbatest/tripprod.cc (spot): change tgba_explicit by
+	tgba_explicit_string
+
+2012-03-21  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Make sure modifications are not lost
 
 	* src/tgba/tgbaexplicit2.hh (spot): weird thing with git
 
-2012-03-21  Pierre Parutto  <parutto@node3.lrde.epita.fr>
+2012-03-21  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Implement remaining functions, debug maps
 
@@ -12,7 +78,7 @@
 	* src/tgbatest/explicit2.cc : add tests for state comparison
 	and printing
 
-2012-03-21  Pierre Parutto  <parutto@node3.lrde.epita.fr>
+2012-03-21  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Refactor code and implement number and formula automata
 

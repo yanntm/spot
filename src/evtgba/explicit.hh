@@ -102,6 +102,12 @@ namespace spot
     {
     }
 
+    virtual void
+    destroy() const
+    {
+      delete this;
+    }
+
     const evtgba_explicit::state* get_state() const;
   private:
     const evtgba_explicit::state* state_;

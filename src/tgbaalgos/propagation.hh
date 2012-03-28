@@ -44,7 +44,7 @@ namespace spot
   /// This function directly modify the given automata.
   ///
   /// \param a the automata to propagate.
-  void propagate_acceptance_conditions_inplace(tgba_explicit* a);
+  void propagate_acceptance_conditions_inplace(tgba* a);
 }
 
 #endif /// SPOT_TGBAALGOS_PROPAGATION_HH
