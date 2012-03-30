@@ -79,6 +79,10 @@ namespace spot
     {
     }
 
+    void destroy() const
+    {
+    }
+
     typedef Label Label_t;
     typedef label_hash label_hash_t;
 

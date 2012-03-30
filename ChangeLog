@@ -2,28 +2,19 @@
 
 	Move tgbaexplicit2 to tgbaexplicit, made necessary changes.
 
-	* src/evtgba/explicit.hh (spot): add destroy method
-	* src/evtgba/product.cc (spot): add destroy method
 	* src/ltlvisit/contain.cc (spot): change tgba_explicit in
 	tgba_explicit_formula
 	* src/neverparse/neverclaimparse.yy (spot): change state_explicit in
 	state_explicit_string
 	* src/tgba/Makefile.am : remove tgbaexplicit2.cc and tgbaexplicit2.hh
-	* src/tgba/state.hh (spot): remove "delete this" in the destroy method
-	* src/tgba/statebdd.hh (spot): add destroy method
-	* src/tgba/taatgba.hh (spot): add destroy method
 	* src/tgba/tgbaexplicit2.cc (spot): remove file
 	* src/tgba/tgbaexplicit2.hh (spot): remove file
 	* src/tgba/tgbaexplicit.cc (spot): replace by tgbaexplicit2.cc,
 	correct some bugs
 	* src/tgba/tgbaexplicit.hh (spot): replace by tgbaexplicit2.hh,
 	correct some bugs
-	* src/tgba/tgbakvcomplement.cc (spot): add destroy method
 	* src/tgba/tgbareduc.cc (spot): replace *_explicit by *_explicit_string
 	* src/tgba/tgbareduc.hh (spot): replace *_explicit by *_explicit_string
-	* src/tgba/tgbasafracomplement.cc (spot): add destroy method
-	* src/tgba/tgbasgba.cc (spot): add destroy method
-	* src/tgba/wdbacomp.cc (spot): add destroy method
 	* src/tgbaalgos/Makefile.am: remove propagation.cc/hh
 	* src/tgbaalgos/cutscc.cc (spot): change state_explicit by
 	state_explicit_string
