@@ -1,6 +1,5 @@
-
-// Copyright (C) 2009, 2010, 2011  Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2009, 2010, 2011, 2012 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006  Laboratoire d'Informatique
 // de Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
 // Université Pierre et Marie Curie.
@@ -179,6 +178,16 @@ using namespace spot;
 %include "tgba/tgbaexplicit.hh"
 %include "tgba/tgbaproduct.hh"
 %include "tgba/tgbatba.hh"
+
+%template(explicit_graph__string_tgba)
+  spot::explicit_graph<state_explicit_string, tgba>;
+%template(explicit_graph__number_tgba)
+  spot::explicit_graph<state_explicit_number, tgba>;
+%template(explicit_graph__formula_tgba)
+  spot::explicit_graph<state_explicit_formula, tgba>;
+%template(tgba_explicit__string) spot::tgba_explicit<state_explicit_string>;
+%template(tgba_explicit__number) spot::tgba_explicit<state_explicit_number>;
+%template(tgba_explicit__formula) spot::tgba_explicit<state_explicit_formula>;
 
 %include "tgbaalgos/dottydec.hh"
 %include "tgbaalgos/dotty.hh"
