@@ -40,7 +40,6 @@ namespace spot
   class emptiness_specifier
   {
   public :
-
     /// Return the formula associated to the state which is provided as
     /// parameter.
     /// Return NULL if the state doesn't handle formula 
@@ -98,6 +97,7 @@ namespace spot
     const tgba* f_;		// The formula automaton
     const tgba* s_;		// The system automaton
     bool  both_formula;  	// Boolean for 2 formula automaton
+    scc_map * sm ;//= new scc_map(f_);
   public :
 
     /// Create a specifier for a system composed of a unique formula 
@@ -118,13 +118,23 @@ namespace spot
     const ltl::formula *
     formula_from_state (const state *) const;
 
-    // Return true if the projection over the formula automata is 
-    // in a weak accepting SCC
+    /// Return true if the projection over the formula automata is 
+    /// in a weak accepting SCC
     bool
     is_part_of_weak_acc (const state *) const;
 
+    /// Return true if two states belong to the same weak accepting 
+    ///  SCC
     bool
     same_weak_acc (const state *, const state *) const;
+
+    /// Collect all nodes that are self loop terminal accepting 
+    /// into the automaton
+    /// self loop terminal non accepting have probably been removed 
+    /// and all terminal acceptin SCC can be represent as a single 
+    /// accepting state labelled by 1 and with a self loop
+    std::list<const state *>*
+    collect_self_loop_acc_terminal_nodes();
 
   };
 }

@@ -23,6 +23,7 @@
 
 #include "tgbaalgos/emptiness_specifier.hh"
 #include "tgba/tgbatba.hh"
+#include "ltlast/constant.hh"
 
 //#define SPECTRACE
 #include <iostream>
@@ -42,6 +43,8 @@ namespace spot
       dynamic_cast<const tgba_explicit_formula*> (a);
     assert(bf);
     both_formula = false;
+    sm = new scc_map(f_);
+    sm->build_map();
   }
 
   formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a,
@@ -52,6 +55,8 @@ namespace spot
       dynamic_cast<const tgba_explicit_formula*> (f);
     assert(bf);
     both_formula = false;
+    sm = new scc_map(f_);
+    sm->build_map();
   }
 
   /// Create the specifier taking the automaton of the system and 
@@ -75,11 +80,13 @@ namespace spot
 	f_ = s_;
 	s_ = tmp;
       }
+    sm = new scc_map(f_);
+    sm->build_map();
   }
 
   formula_emptiness_specifier::~formula_emptiness_specifier()
   {
-    //delete sm;
+    delete sm;
   }
 
   const ltl::formula*
@@ -93,8 +100,9 @@ namespace spot
 
 	const state_explicit* fstate =
 	  dynamic_cast<const state_explicit*> (sproj);
+	assert(fstate);
 	f  = dynamic_cast<const ltl::formula*>
-	  (dynamic_cast<const tgba_explicit_formula*> (f_)->get_label(fstate));
+	  (dynamic_cast<const tgba_explicit_formula*> (f_)->get_label(sproj));
 	sproj->destroy();
       }
     else
@@ -143,8 +151,8 @@ namespace spot
   formula_emptiness_specifier::is_part_of_weak_acc (const state *s) const
   {
     bool res = false;
-    scc_map* sm = new scc_map(f_);
-    sm->build_map();
+    //scc_map* sm = new scc_map(f_);
+    //sm->build_map();
 
     if (!both_formula)
       {
@@ -155,14 +163,14 @@ namespace spot
 	  dynamic_cast<const state_explicit*> (sproj);
 
 	unsigned id_scc = sm->scc_of_state(fstate);
-	res = sm->weak(id_scc);
+	res = sm->weak_accepting(id_scc);
 
 	sproj->destroy();
       }
     else
       assert (false);
 
-    delete sm;
+    //delete sm;
     return res;
   }
 
@@ -171,8 +179,8 @@ namespace spot
 					      const state *s2) const
   {
     bool res = false;
-    scc_map* sm = new scc_map(f_);
-    sm->build_map();
+//     scc_map* sm = new scc_map(f_);
+//     sm->build_map();
 
     if (!both_formula)
       {
@@ -181,7 +189,6 @@ namespace spot
 	const state_explicit* fstate1 =
 	  dynamic_cast<const state_explicit*> (sproj1);
 	unsigned id_scc1 = sm->scc_of_state(fstate1);
-
 	state * sproj2 = sys_->project_state(s2, f_);
 	assert(sproj2);
 	const state_explicit* fstate2 =
@@ -190,9 +197,99 @@ namespace spot
 
 	sproj1->destroy();
 	sproj2->destroy();
-	res = (sm->weak(id_scc1)) && (id_scc1 == id_scc2);
+	res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
       }
-    delete sm;
+    //    delete sm;
     return res;
   }
+
+  std::list<const state *>*
+  formula_emptiness_specifier::collect_self_loop_acc_terminal_nodes()
+  {
+    //
+    std::list<const state*> *result = 
+      new std::list<const state*> ();
+
+    // Visited states
+    std::set <spot::state *>*
+      visited_tmp = new std::set< spot::state *>();
+    
+    // todo 
+    std::stack
+      <spot::state_explicit*> todo_tmp;
+
+    // Initial state of the automaton
+    spot::state_explicit *i_src =
+      (spot::state_explicit *) f_->get_init_state();
+    visited_tmp->insert(i_src->clone());
+    todo_tmp.push (i_src->clone());
+
+      // Perform work for the initial state 
+      {
+	const ltl::formula* f = 0;
+	f = formula_from_state(i_src->clone());
+	if (f == ltl::constant::true_instance())
+	  {
+	    // std::cout << f_->format_state(i_src);
+	    result->push_back(i_src->clone());
+	  }
+      }
+
+      while (!todo_tmp.empty())	// We have always an initial state 
+	{
+	  // Init all vars 
+	  spot::state_explicit *s_src;
+	  s_src = todo_tmp.top();
+	  todo_tmp.pop();
+
+	  // Iterator over the successor of the src
+	  spot::tgba_explicit_succ_iterator *si =
+	    (tgba_explicit_succ_iterator*) f_->succ_iter (s_src);
+	  for (si->first(); !si->done(); si->next())
+	    {
+	      // Get successor of the src
+	      spot::state_explicit * succ_src = si->current_state();
+
+	      // It's a new state we have to visit it
+	      if (visited_tmp->find (succ_src) == visited_tmp->end())
+		{
+		  // Mark as visited 
+		  visited_tmp->insert(succ_src);
+
+		  todo_tmp.push (succ_src);
+
+		  {
+		    const ltl::formula* f = 0;
+		    f = formula_from_state(succ_src);
+		    if (f == ltl::constant::true_instance())
+		      {
+			//std::cout << f_->format_state(succ_src);
+			result->push_back(succ_src->clone());
+		      }
+		  }
+		}
+
+	      // Destroy theses states that are now unused
+	      succ_src->destroy();
+	    }
+	  delete si;
+
+	  // CLEAN
+	  s_src->destroy();
+	}
+
+      // No more in use
+      i_src->destroy();
+
+      std::set<spot::state *>::iterator it;
+      for (it=visited_tmp->begin(); it != visited_tmp->end(); ++it)
+	(*it)->destroy();
+      delete visited_tmp;
+
+
+
+
+      return result;
+//     return new std::list<const state *>();
+  } 
 }
