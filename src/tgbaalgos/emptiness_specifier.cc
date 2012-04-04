@@ -193,6 +193,12 @@ namespace spot
 	assert(sproj2);
 	const state_explicit* fstate2 =
 	  dynamic_cast<const state_explicit*> (sproj2);
+	assert (fstate2);
+// 	// FIXME for SLAP-FST
+// 	if (!fstate2)
+// 	  return false;
+
+
 	unsigned id_scc2 = sm->scc_of_state(fstate2);
 
 	sproj1->destroy();
@@ -291,5 +297,31 @@ namespace spot
 
       return result;
 //     return new std::list<const state *>();
-  } 
+  }
+
+  bool
+  formula_emptiness_specifier::is_guarantee (const state * s) const
+  {
+    assert(s);
+    const ltl::formula * formula = 
+      formula_from_state(s);
+    return formula->is_syntactic_guarantee();
+  }
+  
+  bool
+  formula_emptiness_specifier::is_persistence (const state *s) const
+  {
+    assert(s);
+    const ltl::formula * formula = 
+      formula_from_state(s);
+    return formula->is_syntactic_persistence();
+  }
+  
+  bool
+  formula_emptiness_specifier::is_general (const state *s) const
+  {
+    assert(s);
+    return !is_guarantee(s) &&  !is_persistence(s);
+  }
+ 
 }

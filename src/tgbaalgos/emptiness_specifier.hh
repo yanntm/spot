@@ -51,6 +51,22 @@ namespace spot
 
     virtual bool
     same_weak_acc (const state *, const state *) const = 0;
+
+    /// \return true if the state can be considered as a guarantee 
+    /// state (i.e. leads to terminal state for all path that can be 
+    /// general non accepting or terminal non accepting)
+    virtual bool
+    is_guarantee (const state *) const = 0;
+
+    /// \return true if the state can be considered as a persitence 
+    /// state (i.e. belongs to a weak accepting or not SCC and all 
+    /// paths leads to weak SCC) 
+    virtual bool
+    is_persistence (const state *) const = 0;
+
+    /// \return true for all other cases
+    virtual bool
+    is_general (const state *) const = 0;
   };
 
   /// This class represent a default specifier
@@ -74,6 +90,24 @@ namespace spot
 
     virtual bool
     same_weak_acc (const state *, const state *) const
+    {
+      return false;
+    }
+
+    virtual bool
+    is_guarantee (const state *) const
+    {
+      return false;
+    }
+
+    virtual bool
+    is_persistence (const state *) const 
+    {
+      return false;
+    }
+
+    virtual bool
+    is_general(const state *) const 
     {
       return false;
     }
@@ -136,6 +170,14 @@ namespace spot
     std::list<const state *>*
     collect_self_loop_acc_terminal_nodes();
 
+    bool
+    is_guarantee (const state *) const;
+
+    bool
+    is_persistence (const state *) const;
+
+    bool
+    is_general (const state *) const;
   };
 }
 
