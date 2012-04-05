@@ -1,3 +1,11 @@
+2012-04-05  Pierre Parutto  <parutto@node3.lrde.epita.fr>
+
+	Implement sba_explicit class, add tests
+
+	* src/tgba/tgbaexplicit.hh (spot): Add sba_explicit implementation
+	* src/tgbatest/explicit2.cc: Add test to check the good instantiation
+	of sba_explicit_*
+
 2012-03-28  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Move tgbaexplicit2 to tgbaexplicit, made necessary changes.
