@@ -1,3 +1,12 @@
+2012-04-05  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/emptiness_specifier.cc (spot): Add implementation
+	for terminal accepting SCC
+
+	* src/tgbaalgos/emptiness_specifier.hh (spot): Add terminal
+	accepting SCC detection
+	
+
 2012-01-18  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/tau03opt.cc (spot): Fix bug occuring with the use

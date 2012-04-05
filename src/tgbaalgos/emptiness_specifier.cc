@@ -324,4 +324,14 @@ namespace spot
     return !is_guarantee(s) &&  !is_persistence(s);
   }
  
+  bool
+  formula_emptiness_specifier::is_terminal_accepting_scc
+  (const state *s) const
+  {
+    assert(s);
+    const ltl::formula * formula = 
+      formula_from_state(s);
+    return ltl::constant::true_instance() == formula;
+  }
+
 }

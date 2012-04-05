@@ -67,6 +67,12 @@ namespace spot
     /// \return true for all other cases
     virtual bool
     is_general (const state *) const = 0;
+
+    /// \return true if the state belongs to a terminal accepting 
+    /// Scc. Here terminal is used in the meaning of terminal automaton
+    /// (i.e all paths are fully accepting and the SCC is complete) 
+    virtual bool
+    is_terminal_accepting_scc (const state *) const = 0;
   };
 
   /// This class represent a default specifier
@@ -112,6 +118,11 @@ namespace spot
       return false;
     }
 
+    virtual bool
+    is_terminal_accepting_scc (const state *) const
+    {
+      return false;
+    }
   };
 
   /// This class represent a specifier which extract algorithm information 
@@ -178,6 +189,9 @@ namespace spot
 
     bool
     is_general (const state *) const;
+
+    bool
+    is_terminal_accepting_scc (const state *) const;
   };
 }
 
