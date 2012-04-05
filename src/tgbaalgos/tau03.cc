@@ -39,7 +39,6 @@
 #include "emptiness_stats.hh"
 #include "tau03.hh"
 #include "ndfs_result.hxx"
-#include "ltlast/constant.hh"
 
 namespace spot
 {
@@ -106,8 +105,7 @@ namespace spot
 	if (is_static)
 	  {
 	    // Trap only guarantee properties 
-	    const ltl::formula * formula =  es_->formula_from_state(s0);
-	    if (formula->is_syntactic_guarantee())
+	    if (es_->is_guarantee(s0))
 	      {
 		inc_reachability();
 		commut_algo(REACHABILITY);
@@ -121,7 +119,7 @@ namespace spot
 		  return 0;
 	      }
 	    // Trap only persistence properties 
-	    else if  (formula->is_syntactic_persistence())
+	    else if  (es_->is_persistence(s0))
 	      {
 		inc_dfs();
 		commut_algo(DFS);
@@ -141,9 +139,8 @@ namespace spot
 
 	if (is_dynamic)
 	  {
-	    const ltl::formula * formula =  es_->formula_from_state(s0);
-	    stats_commut (formula);
-	    stats_formula (formula);
+	    stats_commut (s0);
+	    stats_formula (s0);
 	  }
 	else
 	  {
@@ -218,26 +215,27 @@ namespace spot
       bool is_static;
 
       void
-      stats_formula (const ltl::formula *formula)
+      stats_formula (const spot::state *s)
       {
-	if (formula->is_syntactic_guarantee())
+	if (es_->is_guarantee(s))
 	  inc_reachability();
-	else if (formula->is_syntactic_persistence())
-	  inc_dfs ();
+	else if (es_->is_persistence(s))
+	  inc_dfs();
 	else
-	  inc_ndfs ();
+	  inc_ndfs();
       }
 
       void
-      stats_commut (const ltl::formula *formula)
+      stats_commut (const spot::state *s)
       {
-	if (formula->is_syntactic_guarantee())
-	  commut_algo(REACHABILITY);
-	else if (formula->is_syntactic_persistence())
-	  commut_algo(DFS);
+	if (es_->is_guarantee(s))
+	  commut_algo (REACHABILITY);
+	else if (es_->is_persistence(s))
+	  commut_algo (DFS);
 	else
 	  commut_algo(NDFS);
       }
+
       /// THis function perform the search on a a tgba which is the 
       /// result of a Kripke structure and a a formula : this formula 
       /// is necessary a guarantee formula
@@ -262,11 +260,8 @@ namespace spot
 		// Here it's the previous algorithm 
                 typename heap::color_ref c_prime = h.get_color_ref(s_prime);
 
- 		const ltl::formula * formula = 0;
- 		formula =  es_->formula_from_state(f.s);
-
 		// For the sake of dynamism
-		if (is_dynamic && !formula->is_syntactic_guarantee())
+		if (is_dynamic && !es_->is_guarantee(f.s))
 		  {
 		    s_prime->destroy();
 		    return false;
@@ -275,7 +270,7 @@ namespace spot
 		f.it->next();
 		inc_transitions();
 
-		if ((ltl::constant::true_instance() == formula))
+		if (es_->is_terminal_accepting_scc (f.s))
 		  {
 		    if (c_prime.is_white ())
 		      {
@@ -292,6 +287,7 @@ namespace spot
                   {
                     trace << "  It is white, go down" << std::endl;
                     inc_states();
+		    inc_reachability();
                     h.add_new_state(s_prime, BLUE);
                     push(st_blue, s_prime, label, acc);
                   }
@@ -341,15 +337,13 @@ namespace spot
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
-		const ltl::formula * formula = 0;
-		formula =  es_->formula_from_state(f.s);
 
 		// Trap all states that represents guarantee formulas
 		// for dynamism 
 		// 
 		// In the case of static algorithms this is not performed
 		bool inc_me = true;
-		if (is_dynamic && formula->is_syntactic_guarantee())
+		if (is_dynamic && es_->is_guarantee(f.s))
 		  {
 		    if (static_guarantee ())
 		      {
@@ -369,7 +363,7 @@ namespace spot
 		  }
 
 		// For the sake of dynamism
-		if (is_dynamic && !formula->is_syntactic_persistence())
+		if (is_dynamic && !es_->is_persistence(f.s))
 		  {
 		    trace << "Backtrack from persistence\n";
 		    s_prime->destroy();
@@ -505,7 +499,6 @@ namespace spot
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    const ltl::formula * formula = 0;
             trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
@@ -523,11 +516,10 @@ namespace spot
 		// the same function that static one
 		if (is_dynamic)
 		  {
-		    formula =  es_->formula_from_state(f.s);
-		    stats_commut (formula);
+		    stats_commut (f.s);
 
 		    // Trap all states that represents guarantee formulas
-		    if (formula->is_syntactic_guarantee())
+		    if (es_->is_guarantee(f.s))
 		      {
 			if (static_guarantee ())
 			  {
@@ -550,7 +542,7 @@ namespace spot
 		    // Persistence formula becoming guarantee formula are 
 		    // trapped by the static_persistence algorithm in case 
 		    // of dynamism
-		    else if (formula->is_syntactic_persistence())
+		    else if (es_->is_persistence(f.s))
 		      {
 			if (static_persistence ())
 			  {
@@ -587,8 +579,7 @@ namespace spot
 
 		    if (is_dynamic)
 		      {
-			formula =  es_->formula_from_state(s_prime);
-			stats_formula (formula);
+			stats_formula (s_prime);
 		      }
 		    else
 		      inc_ndfs();

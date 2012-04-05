@@ -1,5 +1,15 @@
 2012-04-05  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/tau03opt.cc (spot): same changes than those in
+	magic and fix bug in counting hierarchy_stats
+
+	* src/tgbaalgos/tau03.cc: same changes than those in magic 
+
+	* src/tgbaalgos/se05.cc (spot): same changes than those in magic
+
+	* src/tgbaalgos/magic.cc (spot): perform the dynamism through
+	emptiness_specifier and remove useless computation
+
 	* src/tgbaalgos/emptiness_specifier.cc (spot): Add implementation
 	for terminal accepting SCC
 
