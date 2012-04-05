@@ -1,4 +1,10 @@
-2012-04-05  Pierre Parutto  <parutto@node3.lrde.epita.fr>
+2012-04-05  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	Modify is_accepting sba's method to run in constant time.
+
+	* src/tgba/tgbaexplicit.hh (spot): modify is_accepting method
+
+2012-04-05  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Implement sba_explicit class, add tests
 
