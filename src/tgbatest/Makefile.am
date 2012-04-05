@@ -68,6 +68,7 @@ tripprod_SOURCES = tripprod.cc
 # Keep this sorted by STRENGTH.  Test basic things first,
 # because such failures will be easier to diagnose and fix.
 TESTS = \
+  hanalysis.sh \
   intvcomp.test \
   simdet.test \
   eltl2tgba.test \
