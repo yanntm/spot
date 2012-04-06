@@ -1,3 +1,10 @@
+2012-04-06  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	Correct a bug in tgba_explicit_succ_iterator class
+
+	* src/tgba/tgbaexplicit.hh (current_acceptance_conditiosn):
+	remove a suspect and in return statement
+
 2012-04-05  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Modify is_accepting sba's method to run in constant time.
