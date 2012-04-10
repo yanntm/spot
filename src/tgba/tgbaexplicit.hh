@@ -120,6 +120,12 @@ namespace spot
       return 0;
     }
 
+    virtual size_t hash() const
+    {
+      return
+	reinterpret_cast<const char*>(this) - static_cast<const char*>(0);
+    }
+
     virtual state_explicit<Label, label_hash>*
     clone() const
     {
@@ -157,14 +163,7 @@ namespace spot
       ss << l;
       return ss.str();
     }
-
-    virtual size_t hash() const
-    {
-      identity_hash<int> s;
-      return s(label_);
-    }
   };
-
 
   /// States labeled by a string
   /// \ingroup tgba_representation
@@ -190,12 +189,6 @@ namespace spot
     static std::string to_string(const std::string& l)
     {
       return l;
-    }
-
-    virtual size_t hash() const
-    {
-      string_hash s;
-      return s(label_);
     }
   };
 
@@ -223,12 +216,6 @@ namespace spot
     static std::string to_string(const ltl::formula* l)
     {
       return ltl::to_string(l);
-    }
-
-    virtual size_t hash() const
-    {
-      ltl::formula_ptr_hash s;
-      return s(label_);
     }
   };
 
