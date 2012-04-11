@@ -49,7 +49,6 @@
 #include "tgbaalgos/dupexp.hh"
 #include "tgbaalgos/minimize.hh"
 #include "tgbaalgos/neverclaim.hh"
-#include "tgbaalgos/propagation.hh"
 #include "tgbaalgos/reductgba_sim.hh"
 #include "tgbaalgos/replayrun.hh"
 #include "tgbaalgos/rundotdec.hh"

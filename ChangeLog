@@ -1,3 +1,9 @@
+2012-04-11  Pierre Parutto  <parutto@lrde.epita.fr>
+
+	Remove a misplaced include
+
+	* src/tgbatest/ltl2tgba.cc: Remove a propagation.hh include
+
 2012-04-10  Pierre Parutto  <parutto@lrde.epita.fr>
 
 	Modify hash function in state_explicit to fit the old definition
