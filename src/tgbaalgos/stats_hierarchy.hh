@@ -40,20 +40,25 @@ namespace spot
     class stats_bfs: public spot::tgba_reachable_iterator_breadth_first
     {
     public:
-      int safety;	///< Number of safety states
-      int guarantee;	///< Number of gurantee states
-      int obligation;	///< Number of obligation states
-      int persistence;	///< Number of persistence states
-      int recurrence;	///< Number of reccurence states 
-      int reactivity;	///< Number of reactivity states 
-      int sum;		///< Sum is equal to all previous
-      int tgw;		///< Transition from general to weak
-      int tgg;		///< Transition from general to general
-      int tgt;		///< Transition from general to terminal
-      int twt;		///< Transition from weak to terminal
-      int tww;		///< Transition from weak to weak
-      int ttt;		///< Transition from terminal to terminal
+      int safety;	///< Number of safety states (syntactically)
+      int guarantee;	///< Number of gurantee states (syntactically)
+      int obligation;	///< Number of obligation states (syntactically)
+      int persistence;	///< Number of persistence states (syntactically)
+      int recurrence;	///< Number of reccurence states (syntactically)
+      int reactivity;	///< Number of reactivity states (syntactically)
+      int sum;		///< Sum is equal to all previous (syntactically)
+      int tgw;		///< Transition from general to weak (syntactically)
+      int tgg;		///< Transition from general to general (syntactically)
+      int tgt;		///< Transition from general to terminal (syntactically)
+      int twt;		///< Transition from weak to terminal (syntactically)
+      int tww;		///< Transition from weak to weak (syntactically)
+      int ttt;		///< Transition from terminal to terminal (syntactically)
       int tsum;		///< The sum of all transition explored 
+
+      int scc_terminal;		/// Number of terminal states (processed by scc analysis)
+      int scc_weak;		/// Number of weak states (processed by scc analysis)
+      int scc_strong;		/// Number of stong states (processed by scc analysis)
+
       formula_emptiness_specifier fes; ///< An acccess to formula informations
 
       stats_bfs(const spot::tgba* a)
@@ -74,6 +79,11 @@ namespace spot
 	tgg           = 0;
 	ttt           = 0;
 	tww           = 0;
+
+	scc_terminal = 0;
+	scc_weak = 0;
+	scc_strong = 0;
+
       }
 
       /// Called by run() to process a state.
@@ -97,6 +107,13 @@ namespace spot
 	  ++recurrence;
 	else
 	  ++reactivity;
+
+	if (fes.is_guarantee(s))
+	  ++scc_terminal;
+	else if (fes.is_persistence(s))
+	  ++ scc_weak;
+	else
+	  ++ scc_strong;
       }
 
       /// Called by run() to process a transition.
@@ -171,6 +188,11 @@ namespace spot
     int tww;		///< Transition from weak to weak
     int ttt;		///< Transition from terminal to terminal
     int tsum;		///< The sum of all transition explored 
+
+    int scc_terminal;	/// Number of terminal states (processed by scc analysis)
+    int scc_weak;	/// Number of weak states (processed by scc analysis)
+    int scc_strong;	/// Number of stong states (processed by scc analysis)
+
     stats_bfs processor; 	///<  Use traditional bfs walk
 
     /// The constructor with a tgba formula
@@ -192,6 +214,9 @@ namespace spot
       tgg           = 0;
       ttt           = 0;
       tww           = 0;
+      scc_terminal  = 0;
+      scc_weak      = 0;
+      scc_strong    = 0;
     }
 
     void stats_automaton ()
@@ -215,6 +240,10 @@ namespace spot
       ttt           = processor.ttt;
       tww           = processor.tww;
 
+      scc_terminal  = processor.scc_terminal;
+      scc_weak      = processor.scc_weak;
+      scc_strong    = processor.scc_strong;
+
       // FIXME : direct access to processor variables 
       assert (safety + guarantee + obligation + persistence + recurrence
 	      + reactivity == sum);
@@ -227,12 +256,20 @@ namespace spot
     is_commuting_automaton()
     {
       stats_automaton ();
-      return (guarantee && (safety + obligation + persistence))
-	||
-      (guarantee && (recurrence + reactivity))
-	||
-      ((recurrence + reactivity) &&
-       (safety + obligation + persistence));
+      return 
+      (scc_terminal && scc_weak)
+      ||
+      (scc_weak && scc_strong)
+      ||
+      (scc_terminal && scc_strong);
+
+
+// (guarantee && (safety + obligation + persistence))
+// 	||
+//       (guarantee && (recurrence + reactivity))
+// 	||
+//       ((recurrence + reactivity) &&
+//        (safety + obligation + persistence));
     }
 
     // This function retrun true if the automaton is commuting
@@ -241,12 +278,17 @@ namespace spot
     is_commuting_general_automaton()
     {
       stats_automaton ();
-      if (is_commuting_automaton () && 
-	  (reactivity || recurrence ))
+      if (is_commuting_automaton () && scc_strong)
 	{
 	  return true;
 	}
       return false;
+//       if (is_commuting_automaton () && 
+// 	  (reactivity || recurrence ))
+// 	{
+// 	  return true;
+// 	}
+//       return false;
     }
 
     // This function retrun true if the automaton is commuting
@@ -256,23 +298,34 @@ namespace spot
     {
       stats_automaton ();
       if (is_commuting_automaton () && 
-	  (persistence || obligation || safety)
-	  && !reactivity && !recurrence)
+	  scc_weak && !scc_strong)
 	return true;
       return false;
+//       if (is_commuting_automaton () && 
+// 	  (persistence || obligation || safety)
+// 	  && !reactivity && !recurrence)
+// 	return true;
+//       return false;
     }
   };
 
   std::ostream&
   operator<<(std::ostream& os, const stats_hierarchy& s)
   {
-    int commut =
+    int scommut =
       (s.guarantee && (s.safety + s.obligation + s.persistence))
       ||
       (s.guarantee && (s.recurrence + s.reactivity))
       ||
       ((s.recurrence + s.reactivity) &&
 	(s.safety + s.obligation + s.persistence));
+
+    int commut =
+      (s.scc_terminal && s.scc_weak)
+      ||
+      (s.scc_weak && s.scc_strong)
+      ||
+      (s.scc_terminal && s.scc_strong);
     
     os << "init:" ; 
     if (s.recurrence + s.reactivity)
@@ -282,10 +335,14 @@ namespace spot
     else
       os << "T,";
 
-    os << "Terminal:"   << s.guarantee    << ","
-       << "Weak:"       << s.safety + s.obligation + s.persistence  << ","
-       << "General:"    << s.recurrence + s.reactivity  << ","
+    os << "Terminal:"   << s.scc_terminal    << ","
+       << "Weak:"       << s.scc_weak  << ","
+       << "General:"    << s.scc_strong  << ","
        << "commut:"     << commut << ","
+       << "STerminal:"  << s.guarantee    << ","
+       << "SWeak:"      << s.safety + s.obligation + s.persistence  << ","
+       << "SGeneral:"   << s.recurrence + s.reactivity  << ","
+       << "Scommut:"    << scommut << ","
        << "states:"     << s.sum << ","
        << "trans:"      << s.tsum << ","
        << "tgg:"        << s.tgg  << ","
