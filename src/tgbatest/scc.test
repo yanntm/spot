@@ -28,8 +28,9 @@ states: 5
 total SCCs: 5
 accepting SCCs: 2
 dead SCCs: 0
-weak SCCs: 3
+weak SCCs: 5
 weak accepting SCCs: 2
+terminal SCCs: 2
 accepting paths: 3
 dead paths: 0
 EOF
@@ -42,8 +43,24 @@ states: 6
 total SCCs: 5
 accepting SCCs: 1
 dead SCCs: 0
-weak SCCs: 3
+weak SCCs: 1
 weak accepting SCCs: 1
+terminal SCCs: 1
+accepting paths: 4
+dead paths: 0
+EOF
+diff stdout expected
+
+run 0 ../ltl2tgba -f -k -R3 '(a U c) U b & (b U c)' >stdout
+cat >expected <<EOF
+transitions: 15
+states: 6
+total SCCs: 5
+accepting SCCs: 1
+dead SCCs: 0
+weak SCCs: 5
+weak accepting SCCs: 1
+terminal SCCs: 5
 accepting paths: 4
 dead paths: 0
 EOF
@@ -56,8 +73,9 @@ states: 4
 total SCCs: 4
 accepting SCCs: 1
 dead SCCs: 1
-weak SCCs: 3
+weak SCCs: 4
 weak accepting SCCs: 1
+terminal SCCs: 4
 accepting paths: 2
 dead paths: 1
 EOF
@@ -70,8 +88,9 @@ states: 3
 total SCCs: 3
 accepting SCCs: 1
 dead SCCs: 0
-weak SCCs: 2
+weak SCCs: 3
 weak accepting SCCs: 1
+terminal SCCs: 3
 accepting paths: 2
 dead paths: 0
 EOF
@@ -86,7 +105,23 @@ accepting SCCs: 0
 dead SCCs: 1
 weak SCCs: 0
 weak accepting SCCs: 0
+terminal SCCs: 0
 accepting paths: 0
 dead paths: 1
+EOF
+diff stdout expected
+
+run 0 ../ltl2tgba -f -R3 -k 'FG(c M a)' >stdout
+cat >expected <<EOF
+transitions: 5
+states: 2
+total SCCs: 2
+accepting SCCs: 1
+dead SCCs: 0
+weak SCCs: 0
+weak accepting SCCs: 0
+terminal SCCs: 0
+accepting paths: 1
+dead paths: 0
 EOF
 diff stdout expected

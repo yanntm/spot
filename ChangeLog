@@ -1,3 +1,20 @@
+2012-04-13  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbatest/scc.test (states): Add some formula to check, and
+	add the addon features in print
+
+	* src/tgbaalgos/scc.cc (spot): Detect Terminal SCC (in the meaning
+	of guarantee), fix weak for a sub automaton (and not only for
+	scc), modify output
+
+	* src/tgbaalgos/scc.hh (spot): add terminal informations for a SCC
+
+	* src/tgbaalgos/emptiness_specifier.cc (spot): Use the scc map to
+	compute weak, terminal and strong 
+
+	* src/tgbaalgos/emptiness_specifier.hh (spot): add the scc map to
+	avoid extra computations
+
 2012-04-05  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/tau03opt.cc (spot): same changes than those in

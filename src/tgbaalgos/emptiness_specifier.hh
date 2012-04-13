@@ -46,6 +46,10 @@ namespace spot
     virtual const ltl::formula *
     formula_from_state (const state *) const = 0;
 
+    virtual
+    ~emptiness_specifier() 
+    { }
+
     virtual bool
     is_part_of_weak_acc (const state *) const = 0;
 
@@ -79,6 +83,10 @@ namespace spot
   class emptiness_specifier_default : public  emptiness_specifier
   {
   public :
+    virtual ~emptiness_specifier_default()
+    {
+    }
+
 
     // Return the formula associated to a specific state
     virtual const ltl::formula *
@@ -138,11 +146,12 @@ namespace spot
   /// favorite_emptiness_type 
   class  formula_emptiness_specifier : public  emptiness_specifier
   {
+  protected:
     const tgba* sys_;		// The synchronized product automaton
     const tgba* f_;		// The formula automaton
     const tgba* s_;		// The system automaton
     bool  both_formula;  	// Boolean for 2 formula automaton
-    scc_map * sm ;//= new scc_map(f_);
+    scc_map * sm;		// The map of scc 
   public :
 
     /// Create a specifier for a system composed of a unique formula 
@@ -158,7 +167,10 @@ namespace spot
     formula_emptiness_specifier (const tgba * a, const tgba * f, const tgba *s);
 
     virtual
-    ~formula_emptiness_specifier();
+    ~formula_emptiness_specifier()
+    {
+      delete sm;
+    }
 
     const ltl::formula *
     formula_from_state (const state *) const;

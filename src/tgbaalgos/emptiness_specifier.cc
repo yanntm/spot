@@ -84,11 +84,6 @@ namespace spot
     sm->build_map();
   }
 
-  formula_emptiness_specifier::~formula_emptiness_specifier()
-  {
-    delete sm;
-  }
-
   const ltl::formula*
   formula_emptiness_specifier::formula_from_state (const state *s) const
   {
@@ -151,8 +146,6 @@ namespace spot
   formula_emptiness_specifier::is_part_of_weak_acc (const state *s) const
   {
     bool res = false;
-    //scc_map* sm = new scc_map(f_);
-    //sm->build_map();
 
     if (!both_formula)
       {
@@ -170,7 +163,6 @@ namespace spot
     else
       assert (false);
 
-    //delete sm;
     return res;
   }
 
@@ -179,8 +171,6 @@ namespace spot
 					      const state *s2) const
   {
     bool res = false;
-//     scc_map* sm = new scc_map(f_);
-//     sm->build_map();
 
     if (!both_formula)
       {
@@ -194,18 +184,13 @@ namespace spot
 	const state_explicit* fstate2 =
 	  dynamic_cast<const state_explicit*> (sproj2);
 	assert (fstate2);
-// 	// FIXME for SLAP-FST
-// 	if (!fstate2)
-// 	  return false;
-
-
 	unsigned id_scc2 = sm->scc_of_state(fstate2);
 
 	sproj1->destroy();
 	sproj2->destroy();
 	res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
       }
-    //    delete sm;
+
     return res;
   }
 
@@ -303,18 +288,71 @@ namespace spot
   formula_emptiness_specifier::is_guarantee (const state * s) const
   {
     assert(s);
-    const ltl::formula * formula = 
-      formula_from_state(s);
-    return formula->is_syntactic_guarantee();
+//     const ltl::formula * formula = 
+//       formula_from_state(s);
+//     return formula->is_syntactic_guarantee(); // ONLY TERMINAL, W- ou S- are reachable 
+
+
+    bool res = false;
+    if (!both_formula)
+      {
+	//std::cout << sys_->format_state(s) << std::endl;
+	state * sproj = sys_->project_state(s, f_);
+	assert(sproj);
+ 	unsigned id_scc = sm->scc_of_state(sproj);
+	res = sm->terminal(id_scc);
+
+	sproj->destroy();
+      }
+    else
+      assert (false);
+
+    assert(s);
+//     const ltl::formula * formula = 
+//       formula_from_state(s);
+
+//     if (formula->is_syntactic_guarantee() != res)
+//       sptrace << "~>" << sys_->format_state(s) << std::endl;
+
+    return res; // AND ALL REACHABLE ARE WEAK 
+
+
+
   }
   
   bool
   formula_emptiness_specifier::is_persistence (const state *s) const
   {
+    bool res = false;
+    if (!both_formula)
+      {
+	//std::cout << sys_->format_state(s) << std::endl;
+	state * sproj = sys_->project_state(s, f_);
+	assert(sproj);
+
+// 	const state_explicit* fstate =
+// 	  dynamic_cast<const state_explicit*> (sproj);
+// 	unsigned id_scc = sm->scc_of_state(fstate);
+
+ 	unsigned id_scc = sm->scc_of_state(sproj);
+	res = sm->weak(id_scc);
+
+	sproj->destroy();
+      }
+    else
+      assert (false);
+
     assert(s);
-    const ltl::formula * formula = 
-      formula_from_state(s);
-    return formula->is_syntactic_persistence();
+//     const ltl::formula * formula = 
+//       formula_from_state(s);
+// //    return formula->is_syntactic_persistence();
+// //        assert(res);
+// //       assert(!res || formula->is_syntactic_persistence() == res);
+
+//     if (formula->is_syntactic_persistence() != res)
+//       sptrace << "~>" << sys_->format_state(s) << std::endl;
+
+    return res; // AND ALL REACHABLE ARE WEAK 
   }
   
   bool
@@ -328,10 +366,29 @@ namespace spot
   formula_emptiness_specifier::is_terminal_accepting_scc
   (const state *s) const
   {
-    assert(s);
-    const ltl::formula * formula = 
-      formula_from_state(s);
-    return ltl::constant::true_instance() == formula;
+    bool res = false;
+    if (!both_formula)
+      {
+	state * sproj = sys_->project_state(s, f_);
+	assert(sproj);
+
+	const state_explicit* fstate =
+	  dynamic_cast<const state_explicit*> (sproj);
+
+	unsigned id_scc = sm->scc_of_state(fstate);
+	res = sm->terminal_accepting(id_scc);
+
+	sproj->destroy();
+      }
+    else
+      assert (false);
+
+//     assert(s);
+//     const ltl::formula * formula = 
+//       formula_from_state(s);
+//     //    return ltl::constant::true_instance() == formula;
+//     assert( (ltl::constant::true_instance() == formula) == res);
+    return res;
   }
 
 }

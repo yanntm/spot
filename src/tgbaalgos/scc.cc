@@ -36,6 +36,7 @@ namespace spot
     out << "dead SCCs: " << dead_scc << std::endl;
     out << "weak SCCs: " << weak_scc << std::endl;
     out << "weak accepting SCCs: " << weak_acc_scc << std::endl;
+    out << "terminal SCCs: " << terminal_scc << std::endl;
     out << "accepting paths: " << acc_paths << std::endl;
     out << "dead paths: " << dead_paths << std::endl;
     return out;
@@ -156,8 +157,15 @@ namespace spot
   {
     const tgba * a = get_aut();
     scc cc =  scc_map_[state];
+    if (terminal_accepting (state))
+      {
+	scc_map_[state].is_terminal = true;
+      }
+
     if (cc.is_weak_acc)
       return;			// No need to continue
+
+    bdd all = a->all_acceptance_conditions();
 
     std::list<const spot::state*> states = cc.states;
 
@@ -167,7 +175,7 @@ namespace spot
       {
 	bool weak  = true; // Presuppose every SCC is weak
 
-	// Walk all states include in the SCC
+	// Walk all states included in the SCC
 	bool least_self_loop = false;
 	std::list<const spot::state*>::iterator iter =
 	  states.begin();
@@ -187,7 +195,7 @@ namespace spot
 		const spot::state *stt =  sit->current_state();
 
 		// Avoid to consider single sates as scc
-		if (scc_of_state(*iter) == scc_of_state(stt))
+		//		if (scc_of_state(*iter) == scc_of_state(stt))
 		  least_self_loop = true;
 
 		// Is it a weak non accepting ?
@@ -205,7 +213,8 @@ namespace spot
 		      != bddfalse)
 		      ||
 		     (!is_false_weak &&
-		      sit->current_acceptance_conditions() == bddfalse)))
+		      sit->current_acceptance_conditions()  != all)))
+		      //== bddfalse)))
 		  {
 		    stt->destroy();
 		    weak = false;
@@ -229,10 +238,31 @@ namespace spot
     // Reccursive call over all successors
     const succ_type& s = succ(state);
     succ_type::const_iterator sccit;
+    bool term = true;
     for (sccit = s.begin(); sccit != s.end(); ++sccit)
+      {
 	update_weak(sccit->first);
-  }
 
+	// One successor is not weak the SCC is so not weak
+	if (!scc_map_[sccit->first].is_weak)
+	  scc_map_[state].is_weak = 
+	    scc_map_[state].is_weak_acc = false;
+
+	// A successor 
+	if (scc_map_[sccit->first].is_terminal &&
+	    scc_map_[state].is_weak && 
+	    ! scc_map_[state].is_weak_acc && term)
+	  term = true;
+	else
+	  term = false;
+      }
+
+    // Update terminal
+    if (term &&
+	scc_map_[state].is_weak && 
+	! scc_map_[state].is_weak_acc)
+      scc_map_[state].is_terminal = true;    
+  }
 
   void
   scc_map::build_map()
@@ -461,6 +491,46 @@ namespace spot
     return scc_map_[n].is_weak_acc;
   }
 
+  bool
+  scc_map::terminal(unsigned n) const
+  {
+    return scc_map_[n].is_terminal;
+  }
+
+  bool
+  scc_map::terminal_accepting(unsigned n) const
+  {
+    const std::list<const state*>& st = states_of(n);
+
+    // Here it s the assumption that all terminal SCC 
+    // have been reduced to a single state that accept 
+    // all words 
+    if (st.size() != 1)
+      {
+	return false;
+      }
+
+    const state* s = *st.begin();
+    tgba_succ_iterator* it = aut_->succ_iter(s);
+    it->first();
+    if (it->done())
+      {
+	// No successors
+	delete it;
+	return false;
+      }
+    assert(!it->done());
+    state* dest = it->current_state();
+    bdd cond = it->current_condition();
+    it->next();
+    bool result = (!dest->compare(s)) && it->done() && (cond == bddtrue);
+    dest->destroy();
+    delete it;
+
+    return result;
+  }
+
+
   const std::list<const state*>& scc_map::states_of(unsigned n) const
   {
     assert(scc_map_.size() > n);
@@ -560,6 +630,7 @@ namespace spot
     res.dead_paths = d.dead_paths[init];
     res.weak_scc = 0;
     res.weak_acc_scc = 0;
+    res.terminal_scc = 0;
 
     res.useless_scc_map.reserve(res.scc_total);
     res.useful_acc = bddfalse;
@@ -570,6 +641,8 @@ namespace spot
 	  ++res.weak_scc;
 	if (m.weak_accepting(n))
 	  ++res.weak_acc_scc;
+	if (m.terminal(n))
+	  ++res.terminal_scc;
 	if (m.accepting(n))
 	  res.useful_acc |= m.useful_acc_of(n);
       }
@@ -634,7 +707,10 @@ namespace spot
 	    escape_str(ostr, bdd_format_accset(m.get_aut()->get_dict(),
 					       m.useful_acc_of(state))) << "]";
 	    ostr << "\\n Weak=["
-		 << (m.weak(state) ? "true" : "false") << "]"
+		 << (m.weak(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n Terminal=["
+		 << (m.terminal(state) ? "true" : "false") << "]"
 		 << "\\n";
 	  }
 

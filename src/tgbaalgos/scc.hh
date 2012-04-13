@@ -46,6 +46,8 @@ namespace spot
     unsigned weak_scc;
     /// The number of weak accepting scc into the automata 
     unsigned weak_acc_scc;
+    /// The number of terminal scc 
+    unsigned terminal_scc;
 
     /// Number of maximal accepting paths.
     ///
@@ -192,6 +194,16 @@ namespace spot
     /// \pre This should only be called once build_map() has run.
     bool weak_accepting(unsigned n) const;
 
+    /// \brief Return true if the sub automaton starting from 
+    /// this SCC can be considered as a weak automaton
+    bool terminal(unsigned n) const;
+
+    /// \brief Return whether an SCC is terminal acc i-e if
+    /// this scc is complete and accepting
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool terminal_accepting(unsigned n) const;
+
     /// \brief Return whether the automaton is weak or not 
     /// considering the map of SCC which has been computed
     ///
@@ -209,7 +221,8 @@ namespace spot
       scc(int index) : index(index), acc(bddfalse),
 		       supp(bddtrue), supp_rec(bddfalse),
 		       trivial(true), useful_acc(bddfalse),
-		       is_weak(false), is_weak_acc(false)
+		       is_weak(false), is_weak_acc(false),
+		       is_terminal(false)
       {};
       /// Index of the SCC.
       int index;
@@ -240,10 +253,16 @@ namespace spot
       ///      Acc[a]&Acc[b]&!Acc[c] | !Acc[a]&Acc[b]&Acc[c]
       bdd useful_acc;
       /// Allows to know if a SCC is weak ie fully accepting or not
-      /// at all 
+      /// at all : a scc is considered weak only if all reachable scc
+      /// are weak
       bool is_weak;
       /// Here consider only weak accepting SCC
       bool is_weak_acc;
+      /// Allows to know if a SCC is terminal in the sens of 
+      /// guarantee properties : this mean that all paths leads
+      /// to a terminal accepting state and no accepting edge must
+      /// be see before 
+      bool is_terminal;
     };
 
     const tgba* aut_;		// Automata to decompose.
