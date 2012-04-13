@@ -1693,13 +1693,22 @@ main(int argc, char** argv)
 
 		  spot::formula_emptiness_specifier *fes  =
 		    new spot::formula_emptiness_specifier (formula);
-		  const spot::ltl::formula * cf =
-		    fes->formula_from_state(formula->get_init_state());
-		  if (cf->is_syntactic_guarantee())
+// 		  const spot::ltl::formula * cf =
+// 		    fes->formula_from_state(formula->get_init_state());
+// 		  if (fes->is_syntactic_guarantee())
+// 		    std::cout << std::right << std::setw(11) << ", TERMINAL";
+// 		  else if (cf->is_syntactic_safety() ||
+// 			   cf->is_syntactic_obligation() ||
+// 			   cf->is_syntactic_persistence())
+// 		    std::cout << std::right << std::setw(11) << ", WEAK    ";
+// 		  else
+// 		    std::cout << std::right << std::setw(11) << ", GENERAL ";
+// 		  delete fes;
+
+
+		  if (fes->is_guarantee(formula->get_init_state()))
 		    std::cout << std::right << std::setw(11) << ", TERMINAL";
-		  else if (cf->is_syntactic_safety() ||
-			   cf->is_syntactic_obligation() ||
-			   cf->is_syntactic_persistence())
+		  else if (fes->is_persistence(formula->get_init_state()))
 		    std::cout << std::right << std::setw(11) << ", WEAK    ";
 		  else
 		    std::cout << std::right << std::setw(11) << ", GENERAL ";

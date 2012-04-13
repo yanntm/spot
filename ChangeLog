@@ -1,5 +1,8 @@
 2012-04-13  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/ltl2tgba.cc (main): Use abstraction to compute
+	classes of hierarchy
+
 	* src/tgbaalgos/magic.cc (static_persistence): Bug add DFS red
 	when needed 
 
