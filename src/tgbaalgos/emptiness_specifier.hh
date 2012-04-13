@@ -47,7 +47,7 @@ namespace spot
     formula_from_state (const state *) const = 0;
 
     virtual
-    ~emptiness_specifier() 
+    ~emptiness_specifier()
     { }
 
     virtual bool
@@ -115,13 +115,13 @@ namespace spot
     }
 
     virtual bool
-    is_persistence (const state *) const 
+    is_persistence (const state *) const
     {
       return false;
     }
 
     virtual bool
-    is_general(const state *) const 
+    is_general(const state *) const
     {
       return false;
     }

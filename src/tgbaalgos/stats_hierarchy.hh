@@ -40,24 +40,24 @@ namespace spot
     class stats_bfs: public spot::tgba_reachable_iterator_breadth_first
     {
     public:
-      int safety;	///< Number of safety states (syntactically)
-      int guarantee;	///< Number of gurantee states (syntactically)
-      int obligation;	///< Number of obligation states (syntactically)
-      int persistence;	///< Number of persistence states (syntactically)
-      int recurrence;	///< Number of reccurence states (syntactically)
-      int reactivity;	///< Number of reactivity states (syntactically)
-      int sum;		///< Sum is equal to all previous (syntactically)
-      int tgw;		///< Transition from general to weak (syntactically)
-      int tgg;		///< Transition from general to general (syntactically)
-      int tgt;		///< Transition from general to terminal (syntactically)
-      int twt;		///< Transition from weak to terminal (syntactically)
-      int tww;		///< Transition from weak to weak (syntactically)
-      int ttt;		///< Transition from terminal to terminal (syntactically)
+      int safety;	///< Number of safety states (syntax)
+      int guarantee;	///< Number of gurantee states (syntax)
+      int obligation;	///< Number of obligation states (syntax)
+      int persistence;	///< Number of persistence states (syntax)
+      int recurrence;	///< Number of reccurence states (syntax)
+      int reactivity;	///< Number of reactivity states (syntax)
+      int sum;		///< Sum is equal to all previous (syntax)
+      int tgw;		///< Transition from general to weak (syntax)
+      int tgg;		///< Transition from general to general (syntax)
+      int tgt;		///< Transition from general to terminal (syntax)
+      int twt;		///< Transition from weak to terminal (syntax)
+      int tww;		///< Transition from weak to weak (syntax)
+      int ttt;		///< Transition from terminal to terminal (syntax)
       int tsum;		///< The sum of all transition explored 
 
-      int scc_terminal;		/// Number of terminal states (processed by scc analysis)
-      int scc_weak;		/// Number of weak states (processed by scc analysis)
-      int scc_strong;		/// Number of stong states (processed by scc analysis)
+      int scc_terminal;		/// Number of terminal states 
+      int scc_weak;		/// Number of weak states 
+      int scc_strong;		/// Number of stong states
 
       formula_emptiness_specifier fes; ///< An acccess to formula informations
 
@@ -89,7 +89,7 @@ namespace spot
       /// Called by run() to process a state.
       ///
       /// \param s The current state.
-      void process_state(const spot::state* s, int ,spot:: tgba_succ_iterator* )
+      void process_state(const spot::state* s, int, spot:: tgba_succ_iterator*)
       {
 	const ltl::formula* f = 0;
 	f = fes.formula_from_state(s);
@@ -126,40 +126,40 @@ namespace spot
       /// instance is destroyed.
       void process_link(const spot::state* s_src, int,
 			const spot::state* succ_src, int ,
-			const spot::tgba_succ_iterator*) 
+			const spot::tgba_succ_iterator*)
       {
 	const ltl::formula* fsrc = 0;
 	const ltl::formula* fdst = 0;
 	fsrc = fes.formula_from_state(s_src);
 	fdst = fes.formula_from_state(succ_src);
-	tsum ++;
-	
+	++tsum;
+
 	if ((fsrc->is_syntactic_guarantee ()  ||
 	     ltl::constant::true_instance() == fsrc) &&
 	    (fdst->is_syntactic_guarantee ()  ||
 	     ltl::constant::true_instance() == fdst))
 		  ++ttt;
 	else if ((fsrc->is_syntactic_safety() ||
-		  fsrc->is_syntactic_obligation() || 
+		  fsrc->is_syntactic_obligation() ||
 		  fsrc->is_syntactic_persistence()) &&
 		 (fdst->is_syntactic_guarantee()   ||
 		  ltl::constant::true_instance() == fdst))
 	  ++twt;
 	else if ((fsrc->is_syntactic_safety () ||
-		  fsrc->is_syntactic_obligation () || 
+		  fsrc->is_syntactic_obligation () ||
 		  fsrc->is_syntactic_persistence ()) &&
 		 (fdst->is_syntactic_safety ()||
-		  fdst->is_syntactic_obligation () || 
+		  fdst->is_syntactic_obligation () ||
 		  fdst->is_syntactic_persistence ()))
 	  ++tww;
 	else if (fdst->is_syntactic_guarantee ()  ||
 		 ltl::constant::true_instance() == fdst)
 	  ++tgt;
 	else if  (fdst->is_syntactic_safety ()||
-		  fdst->is_syntactic_obligation () || 
+		  fdst->is_syntactic_obligation () ||
 		  fdst->is_syntactic_persistence ())
 	  ++tgw;
-	else 
+	else
 	  ++tgg;
       }
     };
@@ -222,7 +222,7 @@ namespace spot
     void stats_automaton ()
     {
       if (sum)
-	return ; 		// Avoid multiple computation
+	return; 		// Avoid multiple computation
 
       processor.run();
       safety        = processor.safety;
@@ -256,12 +256,12 @@ namespace spot
     is_commuting_automaton()
     {
       stats_automaton ();
-      return 
-      (scc_terminal && scc_weak)
-      ||
-      (scc_weak && scc_strong)
-      ||
-      (scc_terminal && scc_strong);
+      return
+	(scc_terminal && scc_weak)
+	||
+	(scc_weak && scc_strong)
+	||
+	(scc_terminal && scc_strong);
 
 
 // (guarantee && (safety + obligation + persistence))
@@ -297,7 +297,7 @@ namespace spot
     is_commuting_weak_automaton()
     {
       stats_automaton ();
-      if (is_commuting_automaton () && 
+      if (is_commuting_automaton () &&
 	  scc_weak && !scc_strong)
 	return true;
       return false;
@@ -326,11 +326,11 @@ namespace spot
       (s.scc_weak && s.scc_strong)
       ||
       (s.scc_terminal && s.scc_strong);
-    
-    os << "init:" ; 
+
+    os << "init:";
     if (s.recurrence + s.reactivity)
       os << "G,";
-    else if ( s.safety + s.obligation + s.persistence)
+    else if (s.safety + s.obligation + s.persistence)
       os << "W,";
     else
       os << "T,";

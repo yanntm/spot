@@ -1,3 +1,9 @@
+2012-04-17  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/emptiness_specifier.cc (spot): 80 columns
+
+	* src/tgbaalgos/stats_hierarchy.hh (spot): 80 columns
+
 2012-04-13  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbatest/ltl2tgba.cc (main): Use abstraction to compute

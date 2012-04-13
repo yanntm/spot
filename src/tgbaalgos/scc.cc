@@ -245,13 +245,13 @@ namespace spot
 
 	// One successor is not weak the SCC is so not weak
 	if (!scc_map_[sccit->first].is_weak)
-	  scc_map_[state].is_weak = 
+	  scc_map_[state].is_weak =
 	    scc_map_[state].is_weak_acc = false;
 
 	// A successor 
 	if (scc_map_[sccit->first].is_terminal &&
-	    scc_map_[state].is_weak && 
-	    ! scc_map_[state].is_weak_acc && term)
+	    scc_map_[state].is_weak &&
+	    !scc_map_[state].is_weak_acc && term)
 	  term = true;
 	else
 	  term = false;
@@ -259,9 +259,9 @@ namespace spot
 
     // Update terminal
     if (term &&
-	scc_map_[state].is_weak && 
-	! scc_map_[state].is_weak_acc)
-      scc_map_[state].is_terminal = true;    
+	scc_map_[state].is_weak &&
+	!scc_map_[state].is_weak_acc)
+      scc_map_[state].is_terminal = true;
   }
 
   void

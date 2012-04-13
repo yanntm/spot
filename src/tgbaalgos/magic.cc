@@ -483,14 +483,14 @@ namespace spot
                     target = st_blue.front().s;
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
-		    
+
 		    if (dfs_red())
 		      {
 			is_dynamic = false;
 			return true;
 		      }
 		  }
-		else 
+		else
 		  c.set_color(RED);
                   }
                 else

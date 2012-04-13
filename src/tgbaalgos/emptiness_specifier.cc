@@ -110,7 +110,8 @@ namespace spot
 	const state_explicit* fstate1 =
 	  dynamic_cast<const state_explicit*> (sproj1);
 	const ltl::formula* f1  = dynamic_cast<const ltl::formula*>
-	  (dynamic_cast<const tgba_explicit_formula*> (f_)->get_label(fstate1));
+	  (dynamic_cast<const tgba_explicit_formula*>
+	   (f_)->get_label(fstate1));
 	sproj1->destroy();
 
 	// Compute second formula 
@@ -119,7 +120,8 @@ namespace spot
 	const state_explicit* fstate2 =
 	  dynamic_cast<const state_explicit*> (sproj2);
 	const ltl::formula* f2  = dynamic_cast<const ltl::formula*>
-	  (dynamic_cast<const tgba_explicit_formula*> (s_)->get_label(fstate2));
+	  (dynamic_cast<const tgba_explicit_formula*>
+	   (s_)->get_label(fstate2));
 	sproj1->destroy();
 
 	// Construct the resulting formula
@@ -198,13 +200,13 @@ namespace spot
   formula_emptiness_specifier::collect_self_loop_acc_terminal_nodes()
   {
     //
-    std::list<const state*> *result = 
+    std::list<const state*> *result =
       new std::list<const state*> ();
 
     // Visited states
     std::set <spot::state *>*
       visited_tmp = new std::set< spot::state *>();
-    
+
     // todo 
     std::stack
       <spot::state_explicit*> todo_tmp;
@@ -290,7 +292,8 @@ namespace spot
     assert(s);
 //     const ltl::formula * formula = 
 //       formula_from_state(s);
-//     return formula->is_syntactic_guarantee(); // ONLY TERMINAL, W- ou S- are reachable 
+//     return formula->is_syntactic_guarantee(); 
+// ONLY TERMINAL, W- ou S- are reachable 
 
 
     bool res = false;
@@ -319,7 +322,7 @@ namespace spot
 
 
   }
-  
+
   bool
   formula_emptiness_specifier::is_persistence (const state *s) const
   {
@@ -354,14 +357,14 @@ namespace spot
 
     return res; // AND ALL REACHABLE ARE WEAK 
   }
-  
+
   bool
   formula_emptiness_specifier::is_general (const state *s) const
   {
     assert(s);
     return !is_guarantee(s) &&  !is_persistence(s);
   }
- 
+
   bool
   formula_emptiness_specifier::is_terminal_accepting_scc
   (const state *s) const
