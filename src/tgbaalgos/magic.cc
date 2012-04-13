@@ -23,7 +23,7 @@
 
 #include <iostream>
 #ifdef TRACE
-#define trace std::cerr
+#define trace std::cout
 #else
 #define trace while (0) std::cerr
 #endif
@@ -478,7 +478,20 @@ namespace spot
                           << " to it is accepting, start a red dfs"
                           << std::endl;
 
+		if ((is_dynamic && !es_->is_persistence(st_blue.front().s)))
+		  {
+                    target = st_blue.front().s;
                     c.set_color(RED);
+                    push(st_red, f_dest.s, f_dest.label, f_dest.acc);
+		    
+		    if (dfs_red())
+		      {
+			is_dynamic = false;
+			return true;
+		      }
+		  }
+		else 
+		  c.set_color(RED);
                   }
                 else
                   {

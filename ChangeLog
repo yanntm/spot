@@ -1,5 +1,8 @@
 2012-04-13  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/magic.cc (static_persistence): Bug add DFS red
+	when needed 
+
 	* src/tgbaalgos/stats_hierarchy.hh (spot): Provide a support to
 	detect classes by computing scc this allows to make detect 
 	syntactically pathological formulas 
