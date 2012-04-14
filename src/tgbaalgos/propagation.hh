@@ -1,8 +1,5 @@
-// Copyright (C) 2011 Laboratoire de Recherche et Developpement de
+// Copyright (C) 2012 Laboratoire de Recherche et Developpement de
 // l'Epita (LRDE).
-// Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
-// département Systèmes Répartis Coopératifs (SRC), Université Pierre
-// et Marie Curie.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -25,6 +22,8 @@
 # define SPOT_TGBAALGOS_PROPAGATION_HH
 
 #include "tgba/tgbaexplicit.hh"
+#include "misc/hash.hh"
+#include "reachiter.hh"
 
 namespace spot
 {
@@ -44,7 +43,9 @@ namespace spot
   /// This function directly modify the given automata.
   ///
   /// \param a the automata to propagate.
-  void propagate_acceptance_conditions_inplace(tgba* a);
+  template <typename State>
+  void
+  propagate_acceptance_conditions_inplace(tgba_explicit<State>* a);
 }
 
 #endif /// SPOT_TGBAALGOS_PROPAGATION_HH
