@@ -97,6 +97,14 @@ Algorithm
 
 Algorithm
 {
+   Name = "Spot (Couvreur -- FM), propagation"
+   Path = "${LBTT_TRANSLATE}"
+   Parameters = "--spot '../ltl2tgba -pr -F -f -t'"
+   Enabled = yes
+}
+
+Algorithm
+{
    Name = "Spot (Couvreur -- FM), basic reduction of formula"
    Path = "${LBTT_TRANSLATE}"
    Parameters = "--spot '../ltl2tgba -r1 -F -f -t'"
@@ -302,6 +310,14 @@ Algorithm
    Name = "Spot (Tauriainen -- TAA)"
    Path = "${LBTT_TRANSLATE}"
    Parameters = "--spot '../ltl2tgba -F -taa -t'"
+   Enabled = yes
+}
+
+Algorithm
+{
+   Name = "Spot (Tauriainen -- TAA), propagation"
+   Path = "${LBTT_TRANSLATE}"
+   Parameters = "--spot '../ltl2tgba -pr -F -taa -t'"
    Enabled = yes
 }
 

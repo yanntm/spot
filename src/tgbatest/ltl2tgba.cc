@@ -49,6 +49,7 @@
 #include "tgbaalgos/dupexp.hh"
 #include "tgbaalgos/minimize.hh"
 #include "tgbaalgos/neverclaim.hh"
+#include "tgbaalgos/propagation.hh"
 #include "tgbaalgos/replayrun.hh"
 #include "tgbaalgos/rundotdec.hh"
 #include "tgbaalgos/sccfilter.hh"
@@ -199,6 +200,7 @@ syntax(char* prog)
 	    << "  -RDS  minimize the automaton with direct simulation"
 	    << std::endl
             << "  -Rm   attempt to WDBA-minimize the automata" << std::endl
+	    << "  -pr	propagate acceptance conditions" << std::endl
 	    << std::endl
 
             << "Automaton conversion:" << std::endl
@@ -317,6 +319,7 @@ main(int argc, char** argv)
   bool opt_reduce = false;
   bool opt_minimize = false;
   bool opt_monitor = false;
+  bool opt_propagate = false;
   bool containment = false;
   bool show_fc = false;
   bool spin_comments = false;
@@ -643,6 +646,10 @@ main(int argc, char** argv)
         {
           opt_monitor = true;
         }
+      else if (!strcmp(argv[formula_index], "-pr"))
+	{
+	  opt_propagate = true;
+	}
       else if (!strcmp(argv[formula_index], "-s"))
 	{
 	  dupexp = DFS;
@@ -1004,6 +1011,41 @@ main(int argc, char** argv)
 	  assume_sba = false;
 	}
 
+      const spot::tgba* propagated = 0;
+      if (opt_propagate)
+      {
+      	  tm.start("propagation of acceptance conditions");
+
+	  //if a is an explicit automaton then do inplace propagation
+	  spot::tgba* aa = const_cast<spot::tgba*>(a);
+	  if (spot::tgba_explicit_string* e =
+	      dynamic_cast<spot::tgba_explicit_string*>(aa))
+	    propagate_acceptance_conditions_inplace(e);
+	  else if (spot::tgba_explicit_number* e =
+		   dynamic_cast<spot::tgba_explicit_number*>(aa))
+	    propagate_acceptance_conditions_inplace(e);
+	  else if (spot::tgba_explicit_formula* e =
+		   dynamic_cast<spot::tgba_explicit_formula*>(aa))
+	    propagate_acceptance_conditions_inplace(e);
+	  else
+	  {
+	    propagated = propagate_acceptance_conditions(a);
+
+	    if (propagated == 0)
+	      {
+		std::cerr << "Error could not propagate acceptance condition "
+			  << "for the given automaton"
+			  << std::endl;
+		exit(2);
+	      }
+	    else if (propagated == a)
+	      propagated = 0;
+	    else
+	      a = propagated;
+	  }
+	  tm.stop("propagation of acceptance conditions");
+      }
+
       if (!assume_sba && !opt_monitor)
 	{
 	  if (degeneralize_opt == DegenTBA)
@@ -1351,6 +1393,7 @@ main(int argc, char** argv)
       delete system;
       delete expl;
       delete minimized;
+      delete propagated;
       delete degeneralized;
       delete aut_scc;
       delete to_free;
