@@ -239,14 +239,27 @@ namespace spot
     const succ_type& s = succ(state);
     succ_type::const_iterator sccit;
     bool term = true;
+    bool w_hard = true;
+    bool s_hard = true;
     for (sccit = s.begin(); sccit != s.end(); ++sccit)
       {
 	update_weak(sccit->first);
 
 	// One successor is not weak the SCC is so not weak
 	if (!scc_map_[sccit->first].is_weak)
-	  scc_map_[state].is_weak =
-	    scc_map_[state].is_weak_acc = false;
+	  {
+	    scc_map_[state].is_weak =
+	      scc_map_[state].is_weak_acc = false;
+	    w_hard = false;
+	  }
+
+	if (scc_map_[sccit->first].is_terminal || 
+	    (!scc_map_[sccit->first].is_weak_hard &&
+	     scc_map_[sccit->first].is_weak))
+	  w_hard = false;
+
+	if (scc_map_[sccit->first].is_weak)
+	  s_hard = false;
 
 	// A successor 
 	if (scc_map_[sccit->first].is_terminal &&
@@ -262,6 +275,20 @@ namespace spot
 	scc_map_[state].is_weak &&
 	!scc_map_[state].is_weak_acc)
       scc_map_[state].is_terminal = true;
+
+    if (scc_map_[state].is_terminal)
+      {
+	scc_map_[state].is_weak_hard = false;
+	scc_map_[state].is_strong_hard = false;
+      }
+    else if (scc_map_[state].is_weak)
+      {
+	scc_map_[state].is_weak_hard = w_hard;
+      }
+    else 
+      {
+	scc_map_[state].is_strong_hard = s_hard;
+      }
   }
 
   void
@@ -486,6 +513,24 @@ namespace spot
   }
 
   bool
+  scc_map::weak_hard(unsigned n) const
+  {
+    return scc_map_[n].is_weak_hard;
+  }
+
+  bool
+  scc_map::strong(unsigned n) const
+  {
+    return !scc_map_[n].is_weak;
+  }
+
+  bool
+  scc_map::strong_hard(unsigned n) const
+  {
+    return scc_map_[n].is_strong_hard;
+  }
+
+  bool
   scc_map::weak_accepting(unsigned n) const
   {
     return scc_map_[n].is_weak_acc;
@@ -706,8 +751,17 @@ namespace spot
 	    ostr << "]\\n useful=[";
 	    escape_str(ostr, bdd_format_accset(m.get_aut()->get_dict(),
 					       m.useful_acc_of(state))) << "]";
+	    ostr << "\\n Strong=["
+		 << (m.strong(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n StrongHard=["
+		 << (m.strong_hard(state) ? "true" : "false") << "]";
+
 	    ostr << "\\n Weak=["
 		 << (m.weak(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n WeakHard=["
+		 << (m.weak_hard(state) ? "true" : "false") << "]";
 
 	    ostr << "\\n Terminal=["
 		 << (m.terminal(state) ? "true" : "false") << "]"

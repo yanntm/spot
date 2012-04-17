@@ -1,5 +1,11 @@
 2012-04-17  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/scc.cc (spot): Implementation for weak and strong
+	(hard or not) detection 
+
+	* src/tgbaalgos/scc.hh (spot): Add accessors for weak/ strong ahrd
+	SCC recognition
+
 	* src/tgbaalgos/emptiness_specifier.cc (spot): 80 columns
 
 	* src/tgbaalgos/stats_hierarchy.hh (spot): 80 columns

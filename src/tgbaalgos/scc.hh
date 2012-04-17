@@ -188,6 +188,23 @@ namespace spot
     /// \pre This should only be called once build_map() has run.
     bool weak(unsigned n) const;
 
+    /// \brief Return whether an SCC is weak hard i-e if 
+    /// no terminal scc can be reached 
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool weak_hard(unsigned n) const;
+
+    /// \brief Return whether an SCC is weak i.e. it's not weak
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool strong(unsigned n) const;
+
+    /// \brief Return whether an SCC is weak hard i-e if 
+    /// no weak SCC or terminal SCC can be reached
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool strong_hard(unsigned n) const;
+
     /// \brief Return whether an SCC is weak acc i-e if all 
     /// transitions inside this this SCC is wether fully accepting
     ///
@@ -222,6 +239,8 @@ namespace spot
 		       supp(bddtrue), supp_rec(bddfalse),
 		       trivial(true), useful_acc(bddfalse),
 		       is_weak(false), is_weak_acc(false),
+		       is_weak_hard(false), 
+		       is_strong_hard(false),
 		       is_terminal(false)
       {};
       /// Index of the SCC.
@@ -258,6 +277,12 @@ namespace spot
       bool is_weak;
       /// Here consider only weak accepting SCC
       bool is_weak_acc;
+      /// Allow to know if this scc is is weak hard i.e. if no 
+      /// terminal scc can be reached from this scc
+      bool is_weak_hard;
+      /// Allow to know if this scc is is strong hard i.e. if no 
+      /// weak scc can be reached from this scc
+      bool is_strong_hard;
       /// Allows to know if a SCC is terminal in the sens of 
       /// guarantee properties : this mean that all paths leads
       /// to a terminal accepting state and no accepting edge must
