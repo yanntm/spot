@@ -50,6 +50,7 @@
 #include "tgbaalgos/minimize.hh"
 #include "tgbaalgos/neverclaim.hh"
 #include "tgbaalgos/reductgba_sim.hh"
+#include "tgbaalgos/propagation.hh"
 #include "tgbaalgos/replayrun.hh"
 #include "tgbaalgos/rundotdec.hh"
 #include "tgbaalgos/sccfilter.hh"
@@ -986,10 +987,10 @@ main(int argc, char** argv)
 
 	  //if a is an explicit automaton then do inplace propagation
 	  spot::tgba* aa = const_cast<spot::tgba*>(a);
-	  if (spot::tgba_explicit_string* e = 
+	  if (spot::tgba_explicit_string* e =
 	      dynamic_cast<spot::tgba_explicit_string*>(aa))
 	    propagate_acceptance_conditions_inplace(e);
-	  else if (spot::tgba_explicit_number* e = 
+	  else if (spot::tgba_explicit_number* e =
 		   dynamic_cast<spot::tgba_explicit_number*>(aa))
 	    propagate_acceptance_conditions_inplace(e);
 	  else if (spot::tgba_explicit_formula* e =

@@ -30,7 +30,13 @@ namespace spot
 			  state_ptr_hash, state_ptr_equal> state_map;
     typedef Sgi::hash_map<const state*, unsigned int,
 			  state_ptr_hash, state_ptr_equal> exp_map;
-    
+
+
+    //Principle: state_set contains a map state -> BDD
+    //On the descendent part, the common acceptance condition(s) going
+    //out of the state  is computed and acc is updated.
+    //One the ascendant part,
+
     // return true if a change has been made to the acc map during the run
     // false otherwise
     bool
@@ -38,36 +44,53 @@ namespace spot
 		    state_set& seen, state_map& acc)
     {
       bool changed = false;
+      bdd agregacc = bddtrue;
 
       seen.insert(s);
 
       if (acc.find(s) == acc.end())
-	acc.insert(std::make_pair(s, bddtrue));
+	acc.insert(std::make_pair(s, bddfalse));
 
       tgba_succ_iterator* i = a->succ_iter(s);
+
       for (i->first(); !i->done(); i->next())
+	  agregacc &= i->current_acceptance_conditions();
+
+      if (agregacc != bddtrue)
 	{
 	  bdd cmp = acc[s];
-	  acc[s] &= i->current_acceptance_conditions();
+	  acc[s] |= agregacc;
 	  changed |= cmp != acc[s];
 	}
 
       delete i;
 
       i = a->succ_iter(s);
+      agregacc = bddtrue;
       for (i->first(); !i->done(); i->next())
 	{
+	  bool inmap = false;
 	  state* to = i->current_state();
 
 	  if (seen.find(to) == seen.end())
+	  {
 	    changed |= propagation_dfs(a, to, seen, acc);
+	    inmap = true;
+	  }
 
-	  bdd cmp = acc[s];
-	  acc[s] |= acc[to];
-	  changed |= cmp != acc[s];
+	  agregacc &= acc[to];
 
-	  to->destroy();
+	  if (!inmap)
+	    to->destroy();
 	}
+
+      if (agregacc != bddtrue)
+	{
+	  bdd cmp = acc[s];
+	  acc[s] |= agregacc;
+	  changed |= cmp != acc[s];
+	}
+
       delete i;
 
       return changed;
@@ -173,12 +196,19 @@ namespace spot
       {
       }
 
-    init_state->destroy();
-
     //rewrite automata
     rewrite_automata rw(a, acc);
     rw.run();
-    return rw.get_new_automata();
+    const tgba* res = rw.get_new_automata();
+
+    for (state_set::const_iterator it = seen.begin(); it != seen.end();)
+      {
+	const state* s = *it;
+	++it;
+	s->destroy();
+      }
+
+    return res;
   }
 
   template <typename State>
@@ -193,8 +223,6 @@ namespace spot
     while (propagation_dfs(a, init_state, seen, acc))
       {
       }
-
-    init_state->destroy();
 
     rewrite_inplace<State> ri(a, acc);
     ri.run();
