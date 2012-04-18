@@ -82,6 +82,7 @@ TESTS = \
   tgbaread.test \
   neverclaimread.test \
   readsave.test \
+  propagation.test \
   ltl2tgba.test \
   ltl2neverclaim.test \
   ltlprod.test \
