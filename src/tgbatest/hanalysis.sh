@@ -5,7 +5,8 @@
 # leading from and to other class of the hierarchy
 
 # LTL2TGBA=./ltl2tgba
-LTL2TGBA=`echo "$0" | /usr/bin/sed 's%/[^/]*$%%'`
+#LTL2TGBA=`echo "$0" | /usr/bin/sed 's%/[^/]*$%%'`
+LTL2TGBA=`dirname "$0"`
 LTL2TGBA="$LTL2TGBA/ltl2tgba"
 
 # Options for LTL2TGBA 
@@ -24,7 +25,7 @@ if [ "$#" -eq "0" ]; then
 fi;
 
 #  Read from a file
-if [ "$1" == "-f" ];then 
+if [ "$1" = "-f" ];then 
     while read line ; do 
 	if [ "$(echo $line | grep "#")" != "" ]; then 
 	    continue;
