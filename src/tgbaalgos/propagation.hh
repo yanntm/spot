@@ -21,31 +21,33 @@
 #ifndef SPOT_TGBAALGOS_PROPAGATION_HH
 # define SPOT_TGBAALGOS_PROPAGATION_HH
 
-#include "tgba/tgbaexplicit.hh"
-#include "misc/hash.hh"
-#include "reachiter.hh"
-
 namespace spot
 {
-  /// \brief propagate acceptance conditions through the automata.
-  ///
-  /// If all output arcs of a state possess the same acceptance condition
-  /// then it can be put on all input arcs.
-  ///
-  /// \param a the automata to propagate.
-  /// \return the propagated automata
-  const tgba* propagate_acceptance_conditions(const tgba* a);
+  class tgba;
 
-  /// \brief propagate acceptance conditions through the automata.
+  /// \brief Propagate acceptance conditions through the automaton.
   ///
   /// If all output arcs of a state possess the same acceptance condition
   /// then it can be put on all input arcs.
-  /// This function directly modify the given automata.
   ///
-  /// \param a the automata to propagate.
-  template <typename State>
-  void
-  propagate_acceptance_conditions_inplace(tgba_explicit<State>* a);
+  /// \param a the automaton on which to propagate acceptance conditions.
+  /// \return a new automaton
+  tgba* propagate_acceptance_conditions(const tgba* a);
+
+  /// \brief Propagate acceptance conditions through the automaton, in place.
+  ///
+  /// If all output arcs of a state possess the same acceptance condition
+  /// then it can be put on all input arcs.
+  ///
+  /// This function directly modify the given automaton if it is an explicit
+  /// automaton.  Otherwise, it creates a new automaton but does not
+  /// destroy the old one.  You can tell if a new automaton has been created
+  /// by checking whether the returned value is equal to \a a.
+  ///
+  /// \param a the automaton on which to propagate acceptance conditions.
+  /// \return a new automaton, or the input automaton modified in place.
+  tgba* propagate_acceptance_conditions_inplace(tgba* a);
+
 }
 
 #endif /// SPOT_TGBAALGOS_PROPAGATION_HH

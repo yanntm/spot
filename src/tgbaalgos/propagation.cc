@@ -19,6 +19,10 @@
 // 02111-1307, USA.
 
 #include "propagation.hh"
+#include "tgba/tgbaexplicit.hh"
+#include "misc/hash.hh"
+#include "reachiter.hh"
+#include "dupexp.hh"
 
 namespace spot
 {
@@ -28,44 +32,37 @@ namespace spot
 			  state_ptr_hash, state_ptr_equal> state_set;
     typedef Sgi::hash_map<const state*, bdd,
 			  state_ptr_hash, state_ptr_equal> state_map;
-    typedef Sgi::hash_map<const state*, unsigned int,
-			  state_ptr_hash, state_ptr_equal> exp_map;
 
+    // Principle: acc contains a map state -> BDD
+    // On the descendent part, the common acceptance condition(s) going
+    // out of the state  is computed and acc is updated.
+    // One the ascendant part,
 
-    //Principle: state_set contains a map state -> BDD
-    //On the descendent part, the common acceptance condition(s) going
-    //out of the state  is computed and acc is updated.
-    //One the ascendant part,
-
-    // return true if a change has been made to the acc map during the run
-    // false otherwise
+    // return true iff a change has been made to acc
     bool
     propagation_dfs(const tgba* a, const state* s,
 		    state_set& seen, state_map& acc)
     {
-      bool changed = false;
-      bdd agregacc = bddtrue;
-
       seen.insert(s);
 
-      if (acc.find(s) == acc.end())
-	acc.insert(std::make_pair(s, bddfalse));
+      state_map::iterator it = acc.find(s);
+      if (it == acc.end())
+	it = acc.insert(std::make_pair(s, bddfalse)).first;
 
+      // Gather acceptance conditions common to all successors.
+      bdd agregacc = bddtrue;
       tgba_succ_iterator* i = a->succ_iter(s);
-
       for (i->first(); !i->done(); i->next())
-	  agregacc &= i->current_acceptance_conditions();
+	agregacc &= i->current_acceptance_conditions();
 
+      bool changed = false;
       if (agregacc != bddtrue)
 	{
-	  bdd cmp = acc[s];
-	  acc[s] |= agregacc;
-	  changed |= cmp != acc[s];
+	  bdd old = it->second;
+	  it->second |= agregacc;
+	  changed = old != it->second;
 	}
 
-      delete i;
-
-      i = a->succ_iter(s);
       agregacc = bddtrue;
       for (i->first(); !i->done(); i->next())
 	{
@@ -73,81 +70,27 @@ namespace spot
 	  state* to = i->current_state();
 
 	  if (seen.find(to) == seen.end())
-	  {
-	    changed |= propagation_dfs(a, to, seen, acc);
-	    inmap = true;
-	  }
+	    {
+	      changed |= propagation_dfs(a, to, seen, acc);
+	      inmap = true;
+	    }
 
 	  agregacc &= acc[to];
 
 	  if (!inmap)
 	    to->destroy();
 	}
+      delete i;
 
       if (agregacc != bddtrue)
 	{
-	  bdd cmp = acc[s];
-	  acc[s] |= agregacc;
-	  changed |= cmp != acc[s];
+	  bdd old = it->second;
+	  it->second |= agregacc;
+	  changed |= old != it->second;
 	}
-
-      delete i;
 
       return changed;
     }
-
-    // Produces a tgba_explicit<state_explicit_number*>
-    class rewrite_automata: public tgba_reachable_iterator_depth_first
-    {
-    public:
-      rewrite_automata(const tgba* a,
-		       state_map& acc)
-	: tgba_reachable_iterator_depth_first(a),
-	  acc_(acc),
-	  rec_(),
-	  newa_(new tgba_explicit<state_explicit_number>(a->get_dict())),
-	  basea_(a)
-	{
-	}
-
-      void
-      process_state(const state* s, int n, tgba_succ_iterator* si)
-	{
-	  (void) si;
-
-	  if (rec_.find(s) == rec_.end())
-	    rec_.insert(std::make_pair(s, n));
-	}
-
-      void
-      process_link(const state* in_s, int in,
-		   const state* out_s, int out,
-		   const tgba_succ_iterator* si)
-	{
-	  (void) in_s;
-	  (void) out_s;
-
-	  tgba_explicit_number::transition* t =
-	    newa_->create_transition(in, out);
-
-	  bdd newacc = si->current_acceptance_conditions() | acc_[out_s];
-
-	  newa_->add_acceptance_conditions(t, newacc);
-	  newa_->add_conditions(t, si->current_condition());
-	}
-
-      tgba_explicit<state_explicit_number>*
-      get_new_automata() const
-	{
-	  return newa_;
-	}
-
-    protected:
-      state_map& acc_;
-      exp_map rec_;
-      tgba_explicit_number* newa_;
-      const tgba* basea_;
-    };
 
     template <typename State>
     class rewrite_inplace: public tgba_reachable_iterator_depth_first
@@ -158,26 +101,22 @@ namespace spot
 	: tgba_reachable_iterator_depth_first(a),
 	  acc_(acc),
 	  ea_(a)
-	{
-	}
+      {
+      }
 
       void
-      process_link(const state* in_s, int in,
-		   const state* out_s, int out,
+      process_link(const state*, int,
+		   const state* out_s, int,
 		   const tgba_succ_iterator* si)
-	{
-	  (void) in_s;
-	  (void) in;
-	  (void) out;
+      {
+	const tgba_explicit_succ_iterator<State>* tmpit =
+	  down_cast<const tgba_explicit_succ_iterator<State>*>(si);
 
-	  const tgba_explicit_succ_iterator<State>* tmpit =
-	    down_cast<const tgba_explicit_succ_iterator<State>*>(si);
+	typename tgba_explicit<State>::transition* t =
+	  ea_->get_transition(tmpit);
 
-	  typename tgba_explicit<State>::transition* t =
-	    ea_->get_transition(tmpit);
-
-	  t->acceptance_conditions |= acc_[out_s];
-	}
+	t->acceptance_conditions |= acc_[out_s];
+      }
 
     protected:
       state_map& acc_;
@@ -185,35 +124,10 @@ namespace spot
     };
   }
 
-  const tgba*
-  propagate_acceptance_conditions(const tgba* a)
-  {
-    state_set seen;
-    state_map acc;
-    state* init_state = a->get_init_state();
-
-    while (propagation_dfs(a, init_state, seen, acc))
-      {
-      }
-
-    //rewrite automata
-    rewrite_automata rw(a, acc);
-    rw.run();
-    const tgba* res = rw.get_new_automata();
-
-    for (state_set::const_iterator it = seen.begin(); it != seen.end();)
-      {
-	const state* s = *it;
-	++it;
-	s->destroy();
-      }
-
-    return res;
-  }
 
   template <typename State>
   void
-  propagate_acceptance_conditions_inplace(tgba_explicit<State>* a)
+  do_propagate_acceptance_conditions_inplace(tgba_explicit<State>* a)
   {
     state_set seen;
     state_map acc;
@@ -228,12 +142,29 @@ namespace spot
     ri.run();
   }
 
-  template void propagate_acceptance_conditions_inplace<state_explicit_string>(
-    tgba_explicit<state_explicit_string>* a);
+  tgba*
+  propagate_acceptance_conditions(const tgba* a)
+  {
+    tgba_explicit_number* res = tgba_dupexp_dfs(a);
+    do_propagate_acceptance_conditions_inplace(res);
+    return res;
+  }
 
-  template void propagate_acceptance_conditions_inplace<state_explicit_number>(
-    tgba_explicit<state_explicit_number>* a);
+  tgba*
+  propagate_acceptance_conditions_inplace(tgba* a)
+  {
+    if (spot::tgba_explicit_string* e =
+	dynamic_cast<spot::tgba_explicit_string*>(a))
+      do_propagate_acceptance_conditions_inplace(e);
+    else if (spot::tgba_explicit_number* e =
+	     dynamic_cast<spot::tgba_explicit_number*>(a))
+      do_propagate_acceptance_conditions_inplace(e);
+    else if (spot::tgba_explicit_formula* e =
+	     dynamic_cast<spot::tgba_explicit_formula*>(a))
+      do_propagate_acceptance_conditions_inplace(e);
+    else
+      return propagate_acceptance_conditions(a);
+    return a;
+  }
 
-  template void propagate_acceptance_conditions_inplace<state_explicit_formula>(
-    tgba_explicit<state_explicit_formula>* a);
 }

@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Laboratoire de
+// Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006, 2007 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis
 // Coopératifs (SRC), Université Pierre et Marie Curie.
@@ -947,6 +947,17 @@ main(int argc, char** argv)
 	    }
 	}
 
+      const spot::tgba* propagated = 0;
+      if (opt_propagate)
+	{
+	  tm.start("propagation of acceptance conditions");
+	  spot::tgba* aa = const_cast<spot::tgba*>(a);
+	  a = propagate_acceptance_conditions_inplace(aa);
+	  if (aa != a)
+	    propagated = a;	// Save output for later delete.
+	  tm.stop("propagation of acceptance conditions");
+	}
+
       // Remove dead SCCs and useless acceptance conditions before
       // degeneralization.
       const spot::tgba* aut_scc = 0;
@@ -1010,41 +1021,6 @@ main(int argc, char** argv)
 	  degeneralize_opt = DegenTBA;
 	  assume_sba = false;
 	}
-
-      const spot::tgba* propagated = 0;
-      if (opt_propagate)
-      {
-      	  tm.start("propagation of acceptance conditions");
-
-	  //if a is an explicit automaton then do inplace propagation
-	  spot::tgba* aa = const_cast<spot::tgba*>(a);
-	  if (spot::tgba_explicit_string* e =
-	      dynamic_cast<spot::tgba_explicit_string*>(aa))
-	    propagate_acceptance_conditions_inplace(e);
-	  else if (spot::tgba_explicit_number* e =
-		   dynamic_cast<spot::tgba_explicit_number*>(aa))
-	    propagate_acceptance_conditions_inplace(e);
-	  else if (spot::tgba_explicit_formula* e =
-		   dynamic_cast<spot::tgba_explicit_formula*>(aa))
-	    propagate_acceptance_conditions_inplace(e);
-	  else
-	  {
-	    propagated = propagate_acceptance_conditions(a);
-
-	    if (propagated == 0)
-	      {
-		std::cerr << "Error could not propagate acceptance condition "
-			  << "for the given automaton"
-			  << std::endl;
-		exit(2);
-	      }
-	    else if (propagated == a)
-	      propagated = 0;
-	    else
-	      a = propagated;
-	  }
-	  tm.stop("propagation of acceptance conditions");
-      }
 
       if (!assume_sba && !opt_monitor)
 	{
