@@ -52,7 +52,8 @@ namespace spot
       bdd agregacc = bddtrue;
       tgba_succ_iterator* i = a->succ_iter(s);
       for (i->first(); !i->done(); i->next())
-	agregacc &= i->current_acceptance_conditions();
+	if (i->current_state() != s) // Ignore self-loops.
+	  agregacc &= i->current_acceptance_conditions();
 
       bool changed = false;
       if (agregacc != bddtrue)
@@ -66,6 +67,9 @@ namespace spot
       for (i->first(); !i->done(); i->next())
 	{
 	  state* to = i->current_state();
+
+	  if (to == s)		// Ignore self-loops.
+	    continue;
 
 	  bdd acc = i->current_acceptance_conditions() | out->second;
 	  state_map::iterator into = accin.find(to);
@@ -110,8 +114,23 @@ namespace spot
 	const tgba_explicit_succ_iterator<State>* it =
 	  down_cast<const tgba_explicit_succ_iterator<State>*>(si);
 
-	ea_->get_transition(it)->acceptance_conditions |=
-	  accout_.find(out_s)->second | accin_.find(in_s)->second;
+	bdd& acc = ea_->get_transition(it)->acceptance_conditions;
+	bdd toadd = accout_.find(out_s)->second | accin_.find(in_s)->second;
+
+	if (in_s == out_s)
+	  {
+	    // If we have a non-accepting self-loop.  As an extra
+	    // simplification, remove any acceptance condition that is
+	    // common to all outgoing transitions of this state, and
+	    // all those that are common to all ingoing transitions.
+	    bdd allacc = ea_->all_acceptance_conditions();
+	    if (acc != allacc)
+	      acc &= allacc - toadd;
+	  }
+	else			// Regular transitions.
+	  {
+	    acc |= toadd;
+	  }
       }
 
     protected:
