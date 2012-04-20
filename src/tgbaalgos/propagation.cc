@@ -28,26 +28,25 @@ namespace spot
 {
   namespace
   {
-    typedef Sgi::hash_set<const state*,
-			  state_ptr_hash, state_ptr_equal> state_set;
     typedef Sgi::hash_map<const state*, bdd,
 			  state_ptr_hash, state_ptr_equal> state_map;
 
-    // Principle: acc contains a map state -> BDD
-    // On the descendent part, the common acceptance condition(s) going
-    // out of the state  is computed and acc is updated.
-    // One the ascendant part,
+    // Recursively traverse the automaton, updating two maps: accin,
+    // and accout.  Accout[s] contain the acceptance conditions common
+    // to all outgoing arcs of s, it is always safe to use this value.
+    // Accin[s] is used to compute the acceptance conditions common to
+    // all ingoing arcs of s: it may contain intermediate results and
+    // should not be used before the end of the recursion.
 
-    // return true iff a change has been made to acc
+    // return true iff a change has been made to accout.
     bool
     propagation_dfs(const tgba* a, const state* s,
-		    state_set& seen, state_map& acc)
+		    state_map& accout, state_map& accin)
     {
-      seen.insert(s);
+      state_map::iterator out =
+	accout.insert(std::make_pair(s, bddfalse)).first;
 
-      state_map::iterator it = acc.find(s);
-      if (it == acc.end())
-	it = acc.insert(std::make_pair(s, bddfalse)).first;
+      assert(accin.find(s) != accin.end());
 
       // Gather acceptance conditions common to all successors.
       bdd agregacc = bddtrue;
@@ -58,35 +57,36 @@ namespace spot
       bool changed = false;
       if (agregacc != bddtrue)
 	{
-	  bdd old = it->second;
-	  it->second |= agregacc;
-	  changed = old != it->second;
+	  bdd old = out->second;
+	  out->second |= agregacc;
+	  changed = old != out->second;
 	}
 
       agregacc = bddtrue;
       for (i->first(); !i->done(); i->next())
 	{
-	  bool inmap = false;
 	  state* to = i->current_state();
 
-	  if (seen.find(to) == seen.end())
+	  bdd acc = i->current_acceptance_conditions() | out->second;
+	  state_map::iterator into = accin.find(to);
+	  if (into == accin.end())
 	    {
-	      changed |= propagation_dfs(a, to, seen, acc);
-	      inmap = true;
+	      accin[to] = acc;
+	      changed |= propagation_dfs(a, to, accout, accin);
 	    }
-
-	  agregacc &= acc[to];
-
-	  if (!inmap)
-	    to->destroy();
+	  else
+	    {
+	      into->second &= acc;
+	    }
+	  agregacc &= accout[to];
 	}
       delete i;
 
       if (agregacc != bddtrue)
 	{
-	  bdd old = it->second;
-	  it->second |= agregacc;
-	  changed |= old != it->second;
+	  bdd old = out->second;
+	  out->second |= agregacc;
+	  changed |= old != out->second;
 	}
 
       return changed;
@@ -97,49 +97,71 @@ namespace spot
     {
     public:
       rewrite_inplace(tgba_explicit<State>* a,
-		      state_map& acc)
+		      const state_map& accout, const state_map& accin)
 	: tgba_reachable_iterator_depth_first(a),
-	  acc_(acc),
-	  ea_(a)
+	  accout_(accout), accin_(accin), ea_(a)
       {
       }
 
       void
-      process_link(const state*, int,
-		   const state* out_s, int,
+      process_link(const state* in_s, int, const state* out_s, int,
 		   const tgba_succ_iterator* si)
       {
-	const tgba_explicit_succ_iterator<State>* tmpit =
+	const tgba_explicit_succ_iterator<State>* it =
 	  down_cast<const tgba_explicit_succ_iterator<State>*>(si);
 
-	typename tgba_explicit<State>::transition* t =
-	  ea_->get_transition(tmpit);
-
-	t->acceptance_conditions |= acc_[out_s];
+	ea_->get_transition(it)->acceptance_conditions |=
+	  accout_.find(out_s)->second | accin_.find(in_s)->second;
       }
 
     protected:
-      state_map& acc_;
+      const state_map& accout_;
+      const state_map& accin_;
       tgba_explicit<State>* ea_;
     };
-  }
 
+    template <typename State>
+    void
+    do_propagate_acceptance_conditions_inplace(tgba_explicit<State>* a)
+    {
+      state_map accout;
+      state_map accin;
+      state* init_state = a->get_init_state();
+      bool changed;
+      do
+	{
+	  accin.clear();
+	  accin[init_state] = bddtrue;
+	  changed = propagation_dfs(a, init_state, accout, accin);
 
-  template <typename State>
-  void
-  do_propagate_acceptance_conditions_inplace(tgba_explicit<State>* a)
-  {
-    state_set seen;
-    state_map acc;
+	  // Now that the values in accin are correctly computed,
+	  // propagate these accout so we act is of these acceptance
+	  // conditions where on the outgoing transition on the next
+	  // iteration.
+	  for (state_map::iterator in = accin.begin(); in != accin.end(); ++in)
+	    {
+	      bdd acc = in->second;
+	      if (acc != bddtrue && acc != bddfalse)
+		{
+		  state_map::iterator out = accout.find(in->first);
+		  assert(out != accout.end());
+		  bdd old = out->second;
+		  out->second |= acc;
+		  changed |= old != out->second;
+		}
+	    }
+	}
+      while (changed);
 
-    state* init_state = a->get_init_state();
+      // If no transition go to init_state, mark that it has no
+      // incoming acceptance condition.
+      state_map::iterator it = accin.find(init_state);
+      if (it->second == bddtrue)
+	it->second = bddfalse;
 
-    while (propagation_dfs(a, init_state, seen, acc))
-      {
-      }
-
-    rewrite_inplace<State> ri(a, acc);
-    ri.run();
+      rewrite_inplace<State> ri(a, accout, accin);
+      ri.run();
+    }
   }
 
   tgba*

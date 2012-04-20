@@ -28,7 +28,7 @@ namespace spot
   /// \brief Propagate acceptance conditions through the automaton.
   ///
   /// If all output arcs of a state possess the same acceptance condition
-  /// then it can be put on all input arcs.
+  /// then it can be put on all input arcs, and vice-versa.
   ///
   /// \param a the automaton on which to propagate acceptance conditions.
   /// \return a new automaton
@@ -37,7 +37,7 @@ namespace spot
   /// \brief Propagate acceptance conditions through the automaton, in place.
   ///
   /// If all output arcs of a state possess the same acceptance condition
-  /// then it can be put on all input arcs.
+  /// then it can be put on all input arcs, and vice-versa.
   ///
   /// This function directly modify the given automaton if it is an explicit
   /// automaton.  Otherwise, it creates a new automaton but does not
