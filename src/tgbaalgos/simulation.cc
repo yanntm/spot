@@ -28,6 +28,8 @@
 #include "misc/minato.hh"
 #include "tgba/bddprint.hh"
 #include "tgbaalgos/reachiter.hh"
+#include "tgbaalgos/scc.hh"
+#include "tgbaalgos/dupexp.hh"
 
 // The way we developed this algorithm is the following: We take an
 // automaton, and reverse all these acceptance conditions.  We reverse
@@ -105,69 +107,50 @@ namespace spot
       public tgba_reachable_iterator_depth_first
     {
     public:
-      acc_compl_automaton(const tgba* a)
+      acc_compl_automaton(const tgba* a, bdd init)
       : tgba_reachable_iterator_depth_first(a),
 	size(0),
-	out_(new tgba_explicit_number(a->get_dict())),
-	ea_(a),
-	ac_(ea_->all_acceptance_conditions(),
-	    ea_->neg_acceptance_conditions()),
-	current_max(0)
+	ea(down_cast<tgba_explicit_number*>(const_cast<tgba*>(a))),
+	init_(init),
+	ac_(ea->all_acceptance_conditions(),
+	    ea->neg_acceptance_conditions())
       {
-        init_ = ea_->get_init_state();
-        out_->set_init_state(get_state(init_));
       }
 
-      inline unsigned
-      get_state(const state* s)
-      {
-	map_state_unsigned::const_iterator i = state2int.find(s);
-        if (i == state2int.end())
-	  {
-	    i = state2int.insert(std::make_pair(s, ++current_max)).first;
-	    previous_class_[out_->add_state(current_max)] = bddfalse;
-	  }
-        return i->second;
-      }
-
-      void process_link(const state* in_s,
-                        int,
-                        const state* out_s,
-                        int,
+      void process_link(const state*, int,
+                        const state*, int,
                         const tgba_succ_iterator* si)
       {
-        int src = get_state(in_s);
-        int dst = get_state(out_s);
-
         bdd acc = ac_.complement(si->current_acceptance_conditions());
 
-        tgba_explicit_number::transition* t
-          = out_->create_transition(src, dst);
-        out_->add_acceptance_conditions(t, acc);
-        out_->add_conditions(t, si->current_condition());
+        const tgba_explicit_succ_iterator<state_explicit_number>* tmpit =
+          down_cast<const tgba_explicit_succ_iterator
+                                    <state_explicit_number>*>(si);
+
+        typename tgba_explicit_number::transition* t =
+          ea->get_transition(tmpit);
+
+        t->acceptance_conditions = acc;
       }
 
-      void process_state(const state*, int, tgba_succ_iterator*)
+      void process_state(const state* s, int, tgba_succ_iterator*)
       {
         ++size;
+        previous_class_[s] = init_;
       }
 
       ~acc_compl_automaton()
       {
-        init_->destroy();
       }
 
     public:
       size_t size;
-      tgba_explicit_number* out_;
       map_state_bdd previous_class_;
+      tgba_explicit_number* ea;
+      bdd init_;
 
     private:
-      const tgba* ea_;
       acc_compl ac_;
-      map_state_unsigned state2int;
-      unsigned current_max;
-      state* init_;
     };
 
 
@@ -179,31 +162,35 @@ namespace spot
       direct_simulation(const tgba* t)
       : a_(0),
 	po_size_(0),
-	all_class_var_(bddtrue)
+	all_class_var_(bddtrue),
+	scc_map_(0)
       {
-	acc_compl_automaton
-	  acc_compl(t);
+	a_ = tgba_dupexp_dfs(t);
+	scc_map_ = new scc_map(a_);
+	scc_map_->build_map();
+
+	// Now, we have to get the bdd which will represent the
+	// class. We register one bdd by state, because in the worst
+	// case, |Class| == |State|.
+	unsigned set_num = a_->get_dict()
+	  ->register_anonymous_variables(1, a_);
+	bdd init = bdd_ithvar(set_num);
+
+	acc_compl_automaton acc_compl(a_, init);
 
 	// We'll start our work by replacing all the acceptance
 	// conditions by their complement.
 	acc_compl.run();
 
-	a_ = acc_compl.out_;
+	a_ = acc_compl.ea;
 
 	// We use the previous run to know the size of the
 	// automaton, and to class all the reachable states in the
 	// map previous_class_.
 	size_a_ = acc_compl.size;
 
-	// Now, we have to get the bdd which will represent the
-	// class. We register one bdd by state, because in the worst
-	// case, |Class| == |State|.
-	unsigned set_num = a_->get_dict()
-	  ->register_anonymous_variables(size_a_, a_);
-	bdd init = bdd_ithvar(set_num);
-
-	// Because we have already take the first element which is init.
-	++set_num;
+	set_num = a_->get_dict()
+	  ->register_anonymous_variables(size_a_ - 1, a_);
 
 	used_var_.push_back(init);
 	all_class_var_ = init;
@@ -232,12 +219,12 @@ namespace spot
 	relation_[init] = init;
       }
 
-
       // Reverse all the acceptance condition at the destruction of
       // this object, because it occurs after the return of the
       // function simulation.
       ~direct_simulation()
       {
+	delete scc_map_;
 	delete a_;
       }
 
@@ -295,6 +282,29 @@ namespace spot
       }
 
       // Take a state and compute its signature.
+      // Consider only the transition with destination class c.
+      bdd compute_sig_filtered(const state* src, bdd c)
+      {
+	tgba_succ_iterator* sit = a_->succ_iter(src);
+	bdd res = bddfalse;
+
+	for (sit->first(); !sit->done(); sit->next())
+	  {
+	    if (previous_class_[sit->current_state()] != c)
+	      continue;
+	    res |= (sit->current_acceptance_conditions()
+		    & sit->current_condition());
+	  }
+
+	bdd sup
+	  = bdd_exist(res, bdd_support(a_->all_acceptance_conditions()));
+
+
+	delete sit;
+	return sup >> res;
+      }
+
+      // Take a state and compute its signature.
       bdd compute_sig(const state* src)
       {
 	tgba_succ_iterator* sit = a_->succ_iter(src);
@@ -303,16 +313,50 @@ namespace spot
 	for (sit->first(); !sit->done(); sit->next())
           {
             const state* dst = sit->current_state();
-            bdd acc = sit->current_acceptance_conditions();
+	    bdd cl = previous_class_[dst];
+            bdd acc;
+
+	    if (scc_map_->scc_of_state(src) == scc_map_->scc_of_state(dst))
+	      acc = sit->current_acceptance_conditions();
+	    else
+	      acc = compute_sig_filtered(dst, cl);
 
             // to_add is a conjunction of the acceptance condition,
             // the label of the transition and the class of the
             // destination and all the class it implies.
-            bdd to_add = acc & sit->current_condition()
-              & relation_[previous_class_[dst]];
+            bdd to_add = acc & sit->current_condition() & relation_[cl];
 
             res |= to_add;
-            dst->destroy();
+          }
+
+          delete sit;
+          return res;
+        }
+
+        // Take a state and compute its signature.
+        bdd compute_sig_final(const state* src)
+        {
+          tgba_succ_iterator* sit = a_->succ_iter(src);
+          bdd res = bddfalse;
+
+          for (sit->first(); !sit->done(); sit->next())
+          {
+            const state* dst = sit->current_state();
+	    bdd cl = previous_class_[dst];
+            bdd acc;
+
+	    if (scc_map_->scc_of_state(src) == scc_map_->scc_of_state(dst))
+	      acc = sit->current_acceptance_conditions();
+	    else
+              // FIXME: Next line is false. `bddtrue' is false too.
+	      acc = bdd_support(a_->all_acceptance_conditions());
+
+            // to_add is a conjunction of the acceptance condition,
+            // the label of the transition and the class of the
+            // destination and all the class it implies.
+            bdd to_add = acc & sit->current_condition() & relation_[cl];
+
+            res |= to_add;
           }
 
 	delete sit;
@@ -475,7 +519,7 @@ namespace spot
 	     ++it)
           {
             // Get the signature.
-            bdd sig = compute_sig(*(it->second.begin()));
+            bdd sig = compute_sig_final(*(it->second.begin()));
 
             // Get all the variable in the signature.
             bdd sup_sig = bdd_support(sig);
@@ -630,6 +674,9 @@ namespace spot
 
       // All the class variable:
       bdd all_class_var_;
+
+      // The SCC for the source automaton;
+      scc_map* scc_map_;
     };
   } // End namespace anonymous.
 
