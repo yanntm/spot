@@ -1,5 +1,9 @@
 2012-05-07  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/emptiness_specifier.cc
+	(formula_emptiness_specifier): remove invalid assertion when tgba
+	is not explicit  
+
 	* src/tgbatest/randtgba.cc (main): Add automatic scc filtering 
 
 	* src/ltltest/randltl.cc (main): add option for generate commuting

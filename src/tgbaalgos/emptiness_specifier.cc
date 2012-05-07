@@ -39,9 +39,6 @@ namespace spot
   formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a)
     : sys_(a) , f_(a), s_(a)
   {
-    const tgba_explicit_formula* bf =
-      dynamic_cast<const tgba_explicit_formula*> (a);
-    assert(bf);
     both_formula = false;
     sm = new scc_map(f_);
     sm->build_map();
@@ -51,9 +48,6 @@ namespace spot
 							    const tgba * f)
     : sys_(a) , f_(f), s_(a)
   {
-    const tgba_explicit_formula* bf =
-      dynamic_cast<const tgba_explicit_formula*> (f);
-    assert(bf);
     both_formula = false;
     sm = new scc_map(f_);
     sm->build_map();
@@ -66,6 +60,7 @@ namespace spot
 							    const tgba *s)
     : sys_(a) , f_(f), s_(s)
   {
+    // FIXME!!
     assert(f && a && s);
     const tgba_explicit_formula* bs =
       dynamic_cast<const tgba_explicit_formula*> (s_);
