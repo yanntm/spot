@@ -1,5 +1,7 @@
 2012-05-07  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/randtgba.cc (main): Add automatic scc filtering 
+
 	* src/ltltest/randltl.cc (main): add option for generate commuting
 	formula
 
