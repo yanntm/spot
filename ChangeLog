@@ -1,5 +1,11 @@
 2012-05-08  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/tgba_analysis.cc (main): perform analysis of the
+	formula automaton (hierarchy and SCC).
+
+	* src/tgbatest/Makefile.am (noinst_PROGRAMS): add tgba_analysis
+	file 
+
 	* src/tgbaalgos/weak_scc.cc: allows to compute weak accepting SCC
 
 	* src/tgbaalgos/weak_scc.hh (spot): compute a SCC to determine if 

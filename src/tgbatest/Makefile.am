@@ -25,7 +25,7 @@ LDADD = ../libspot.la
 
 # These are the most used test programs, and they are also useful
 # to run manually outside the test suite.  Always build them.
-noinst_PROGRAMS = ltl2tgba randtgba
+noinst_PROGRAMS = ltl2tgba randtgba tgba_analysis
 
 check_SCRIPTS = defs
 # Keep this sorted alphabetically.
@@ -61,6 +61,10 @@ ltlprod_SOURCES  = ltlprod.cc
 mixprod_SOURCES  = mixprod.cc
 powerset_SOURCES = powerset.cc
 randtgba_SOURCES = randtgba.cc
+reductgba_SOURCES = reductgba.cc
+reduccmp_SOURCES = reductgba.cc
+reduccmp_CXXFLAGS = -DREDUCCMP
+tgba_analysis_SOURCES = tgba_analysis.cc
 taatgba_SOURCES = taatgba.cc
 tgbaread_SOURCES = tgbaread.cc
 tripprod_SOURCES = tripprod.cc
