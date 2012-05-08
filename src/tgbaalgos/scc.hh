@@ -28,6 +28,9 @@
 #include "misc/hash.hh"
 #include "misc/bddlt.hh"
 
+
+#include "tgbaalgos/weak_scc.hh"
+
 namespace spot
 {
 
@@ -226,6 +229,11 @@ namespace spot
     ///
     /// \pre This should only be called once build_map() has run.
     bool is_weak ();
+
+
+    void check_weak(unsigned);
+    bool cycle_wo_acc (unsigned state, bdd acc);
+
 
   protected:
     bdd update_supp_rec(unsigned state);

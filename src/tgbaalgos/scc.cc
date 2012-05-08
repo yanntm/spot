@@ -152,6 +152,29 @@ namespace spot
     return true;
   }
 
+  void 
+  scc_map::check_weak(unsigned)
+  {
+    unsigned size = scc_count();
+    while (size--)
+      {
+	cycle_wo_acc (size, bddfalse);
+      }
+  }
+
+  bool
+  scc_map::cycle_wo_acc (unsigned , bdd )
+  {
+//     weak_scc *ws =  weak_scc_computer(get_aut(), *this);
+//     bool b  = ws->check_weak_accepting(one_state_of (s));
+// //     std::cout << "The Scc  " << s 
+// // 	      << ( b ?" is Weak accepting" : " is non Weak accepting ")
+// // 	      << std::endl;
+//     delete ws;
+//    return b;
+    return false;
+  }
+
   void
   scc_map::update_weak(unsigned state)
   {
@@ -238,9 +261,10 @@ namespace spot
     // Reccursive call over all successors
     const succ_type& s = succ(state);
     succ_type::const_iterator sccit;
-    bool term = true;
+    // bool term = true;
     bool w_hard = true;
     bool s_hard = true;
+    bool all_term = true;
     for (sccit = s.begin(); sccit != s.end(); ++sccit)
       {
 	update_weak(sccit->first);
@@ -261,20 +285,30 @@ namespace spot
 	if (scc_map_[sccit->first].is_weak)
 	  s_hard = false;
 
-	// A successor 
-	if (scc_map_[sccit->first].is_terminal &&
-	    scc_map_[state].is_weak &&
-	    !scc_map_[state].is_weak_acc && term)
-	  term = true;
-	else
-	  term = false;
+	if (!scc_map_[sccit->first].is_terminal)
+	  all_term = false;
+
+// 	// A successor 
+// 	if (scc_map_[sccit->first].is_terminal &&
+// 	    scc_map_[state].is_weak &&
+// 	    !scc_map_[state].is_weak_acc && term)
+// 	  term = true;
+// 	else 
+// 	  term = false;
       }
 
+
+
     // Update terminal
-    if (term &&
-	scc_map_[state].is_weak &&
+//     if (term &&
+// 	scc_map_[state].is_weak &&
+// 	!scc_map_[state].is_weak_acc)
+//      scc_map_[state].is_terminal = true;
+
+
+    if (scc_map_[state].is_weak &&
 	!scc_map_[state].is_weak_acc)
-      scc_map_[state].is_terminal = true;
+     scc_map_[state].is_terminal = all_term;
 
     if (scc_map_[state].is_terminal)
       {
@@ -466,6 +500,7 @@ namespace spot
     // recursively update supp_rec
     (void) update_supp_rec(initial());
     (void) update_weak(initial());
+    (void) check_weak(initial());
   }
 
   unsigned scc_map::scc_of_state(const state* s) const
