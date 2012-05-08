@@ -1,5 +1,7 @@
 2012-05-08  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/randtgba.cc: Random filter SCC 
+
 	* src/tgbatest/hanalysis.sh: Do not longer use ltl2tgba 
 
 	* src/tgbaalgos/stats_hierarchy.hh (stat_bfs): allowing to compute

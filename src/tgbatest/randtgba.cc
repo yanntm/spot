@@ -57,6 +57,7 @@
 #include "tgbaalgos/reducerun.hh"
 #include "tgbaalgos/replayrun.hh"
 
+#include "tgbaalgos/sccfilter.hh"
 
 struct ec_algo
 {
@@ -1100,8 +1101,6 @@ main(int argc, char** argv)
 
 
 	      // For debug should be removed
-	      // std::cout << "######################################\n";
-	      // dotty_reachable(std::cout, formula);
 	      for (ii = 0; ii < opt_apf_num; ++ii)
 		{
 
@@ -1134,6 +1133,9 @@ main(int argc, char** argv)
 		      formula = new_tgba;
 		      assert (formula);
 		    }
+
+		  // FIXME : option -R3 should be better
+		  formula  = spot::scc_filter(formula, false);
 
 		  if (formula)
 		    a = product = new spot::tgba_product(formula, a);
