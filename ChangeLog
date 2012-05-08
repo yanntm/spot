@@ -1,3 +1,13 @@
+2012-05-08  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/weak_scc.cc: allows to compute weak accepting SCC
+
+	* src/tgbaalgos/weak_scc.hh (spot): compute a SCC to determine if 
+	it's a weak accepting SCC 
+
+	* src/tgbaalgos/Makefile.am (libtgbaalgos_la_SOURCES): 
+	Adding the file weak_scc 
+
 2012-05-07  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/emptiness_specifier.cc
