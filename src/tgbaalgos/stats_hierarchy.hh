@@ -59,10 +59,12 @@ namespace spot
       int scc_weak;		/// Number of weak states 
       int scc_strong;		/// Number of stong states
 
+      bool form_state;
       formula_emptiness_specifier fes; ///< An acccess to formula informations
 
-      stats_bfs(const spot::tgba* a)
+      stats_bfs(const spot::tgba* a, bool formula_state = true)
 	: tgba_reachable_iterator_breadth_first(a),
+	  form_state(formula_state),
 	  fes(a)
       {
 	safety        = 0;
@@ -83,7 +85,6 @@ namespace spot
 	scc_terminal = 0;
 	scc_weak = 0;
 	scc_strong = 0;
-
       }
 
       /// Called by run() to process a state.
@@ -91,22 +92,25 @@ namespace spot
       /// \param s The current state.
       void process_state(const spot::state* s, int, spot:: tgba_succ_iterator*)
       {
-	const ltl::formula* f = 0;
-	f = fes.formula_from_state(s);
-	++sum;
-	if (f->is_syntactic_guarantee ()  ||
-	    (ltl::constant::true_instance() == f))
-	  ++guarantee;
-	else if (f->is_syntactic_safety ())
-	  ++safety;
-	else if (f->is_syntactic_obligation ())
-	  ++obligation;
-	else if (f->is_syntactic_persistence ())
-	  ++persistence;
-	else if (f->is_syntactic_recurrence ())
-	  ++recurrence;
-	else
-	  ++reactivity;
+	if (form_state)
+	  {
+	    const ltl::formula* f = 0;
+	    f = fes.formula_from_state(s);
+	    ++sum;
+	    if (f->is_syntactic_guarantee ()  ||
+		(ltl::constant::true_instance() == f))
+	      ++guarantee;
+	    else if (f->is_syntactic_safety ())
+	      ++safety;
+	    else if (f->is_syntactic_obligation ())
+	      ++obligation;
+	    else if (f->is_syntactic_persistence ())
+	      ++persistence;
+	    else if (f->is_syntactic_recurrence ())
+	      ++recurrence;
+	    else
+	      ++reactivity;
+	  }
 
 	if (fes.is_guarantee(s))
 	  ++scc_terminal;
@@ -128,39 +132,42 @@ namespace spot
 			const spot::state* succ_src, int ,
 			const spot::tgba_succ_iterator*)
       {
-	const ltl::formula* fsrc = 0;
-	const ltl::formula* fdst = 0;
-	fsrc = fes.formula_from_state(s_src);
-	fdst = fes.formula_from_state(succ_src);
-	++tsum;
-
-	if ((fsrc->is_syntactic_guarantee ()  ||
-	     ltl::constant::true_instance() == fsrc) &&
-	    (fdst->is_syntactic_guarantee ()  ||
-	     ltl::constant::true_instance() == fdst))
-		  ++ttt;
-	else if ((fsrc->is_syntactic_safety() ||
-		  fsrc->is_syntactic_obligation() ||
-		  fsrc->is_syntactic_persistence()) &&
-		 (fdst->is_syntactic_guarantee()   ||
-		  ltl::constant::true_instance() == fdst))
-	  ++twt;
-	else if ((fsrc->is_syntactic_safety () ||
-		  fsrc->is_syntactic_obligation () ||
-		  fsrc->is_syntactic_persistence ()) &&
-		 (fdst->is_syntactic_safety ()||
-		  fdst->is_syntactic_obligation () ||
-		  fdst->is_syntactic_persistence ()))
-	  ++tww;
-	else if (fdst->is_syntactic_guarantee ()  ||
-		 ltl::constant::true_instance() == fdst)
-	  ++tgt;
-	else if  (fdst->is_syntactic_safety ()||
-		  fdst->is_syntactic_obligation () ||
-		  fdst->is_syntactic_persistence ())
-	  ++tgw;
-	else
-	  ++tgg;
+	if (form_state)
+	  {
+	    const ltl::formula* fsrc = 0;
+	    const ltl::formula* fdst = 0;
+	    fsrc = fes.formula_from_state(s_src);
+	    fdst = fes.formula_from_state(succ_src);
+	    ++tsum;
+	    
+	    if ((fsrc->is_syntactic_guarantee ()  ||
+		 ltl::constant::true_instance() == fsrc) &&
+		(fdst->is_syntactic_guarantee ()  ||
+		 ltl::constant::true_instance() == fdst))
+	      ++ttt;
+	    else if ((fsrc->is_syntactic_safety() ||
+		      fsrc->is_syntactic_obligation() ||
+		      fsrc->is_syntactic_persistence()) &&
+		     (fdst->is_syntactic_guarantee()   ||
+		      ltl::constant::true_instance() == fdst))
+	      ++twt;
+	    else if ((fsrc->is_syntactic_safety () ||
+		      fsrc->is_syntactic_obligation () ||
+		      fsrc->is_syntactic_persistence ()) &&
+		     (fdst->is_syntactic_safety ()||
+		      fdst->is_syntactic_obligation () ||
+		      fdst->is_syntactic_persistence ()))
+	      ++tww;
+	    else if (fdst->is_syntactic_guarantee ()  ||
+		     ltl::constant::true_instance() == fdst)
+	      ++tgt;
+	    else if  (fdst->is_syntactic_safety ()||
+		      fdst->is_syntactic_obligation () ||
+		      fdst->is_syntactic_persistence ())
+	      ++tgw;
+	    else
+	      ++tgg;
+	  }
       }
     };
 
@@ -194,11 +201,13 @@ namespace spot
     int scc_strong;	/// Number of stong states (by scc analysis)
 
     stats_bfs processor; 	///<  Use traditional bfs walk
+    bool fs;
 
     /// The constructor with a tgba formula
-    stats_hierarchy (const tgba* original) :
+    stats_hierarchy (const tgba* original, bool formula_state = true) :
       src(original),
-      processor(original)
+      processor(original, formula_state),
+      fs(formula_state)
     {
       safety        = 0;
       guarantee     = 0;
@@ -221,7 +230,7 @@ namespace spot
 
     void stats_automaton ()
     {
-      if (sum)
+      if (fs && sum)
 	return; 		// Avoid multiple computation
 
       processor.run();
@@ -257,11 +266,11 @@ namespace spot
     {
       stats_automaton ();
       return
-	(scc_terminal && scc_weak)
-	||
-	(scc_weak && scc_strong)
-	||
-	(scc_terminal && scc_strong);
+      (scc_terminal && scc_weak)
+      ||
+      (scc_weak && scc_strong)
+      ||
+      (scc_terminal && scc_strong);
 
 
 // (guarantee && (safety + obligation + persistence))
@@ -299,7 +308,9 @@ namespace spot
       stats_automaton ();
       if (is_commuting_automaton () &&
 	  scc_weak && !scc_strong)
-	return true;
+	{
+	  return true;
+	}
       return false;
 //       if (is_commuting_automaton () && 
 // 	  (persistence || obligation || safety)

@@ -1,5 +1,8 @@
 2012-05-08  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbaalgos/stats_hierarchy.hh (stat_bfs): allowing to compute
+	every tgba and not only explicits one  
+
 	* src/tgbatest/tgba_analysis.cc (main): perform analysis of the
 	formula automaton (hierarchy and SCC).
 
