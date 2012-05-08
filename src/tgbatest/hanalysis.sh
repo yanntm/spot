@@ -7,11 +7,12 @@
 # LTL2TGBA=./ltl2tgba
 #LTL2TGBA=`echo "$0" | /usr/bin/sed 's%/[^/]*$%%'`
 LTL2TGBA=`dirname "$0"`
-LTL2TGBA="$LTL2TGBA/ltl2tgba"
+#LTL2TGBA="$LTL2TGBA/ltl2tgba"
+LTL2TGBA="$LTL2TGBA/tgba_analysis"
 
 # Options for LTL2TGBA 
-LTL2OPTION="-R3 -Rm -r3 -r1 -ha"
-#LTL2OPTION="-R3  -r3 -r1 -r2 -ha"
+LTL2OPTION="-r3 -r1 -dha"
+#LTL2OPTION="-R3 -Rm -r3 -r1 -ha"
 
 # Check usage 
 if [ "$#" -gt "2" ]; then 
