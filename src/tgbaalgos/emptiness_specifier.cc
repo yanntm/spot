@@ -233,7 +233,8 @@ namespace spot
 
 	  // Iterator over the successor of the src
 	  spot::tgba_explicit_succ_iterator<spot::state_explicit_formula> *si =
-	    (tgba_explicit_succ_iterator<spot::state_explicit_formula>*) f_->succ_iter (s_src);
+	    (tgba_explicit_succ_iterator<spot::state_explicit_formula>*)
+	    f_->succ_iter (s_src);
 	  for (si->first(); !si->done(); si->next())
 	    {
 	      // Get successor of the src

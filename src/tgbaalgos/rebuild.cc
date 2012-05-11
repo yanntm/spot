@@ -78,7 +78,8 @@ namespace spot
     i_src->destroy();
     i_dst->destroy();
 
-    std::pair <spot::state_explicit_formula *, spot::state_explicit_formula *> apair;
+    std::pair <spot::state_explicit_formula *,
+      spot::state_explicit_formula *> apair;
      while (!todo.empty())	// We have always an initial state 
       {
 	// Get the pair to work on
@@ -100,7 +101,8 @@ namespace spot
 
  	// Iterator over the successor of the src
 	spot::tgba_explicit_succ_iterator<spot::state_explicit_formula> *si =
-	  (tgba_explicit_succ_iterator<spot::state_explicit_formula>*) f->succ_iter (s_src);
+	  (tgba_explicit_succ_iterator<spot::state_explicit_formula>*)
+	  f->succ_iter (s_src);
 	for (si->first(); !si->done(); si->next())
 	  {
 	    // Get successor of the src and dst 

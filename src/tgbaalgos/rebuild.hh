@@ -107,8 +107,8 @@ namespace spot
     struct sort_trans
     {
       const tgba *           src;     ///< The source automaton 
-      spot::state_explicit_formula * sdst;    ///< The From state of the transition
-      spot::state_explicit_formula * succdst; ///< The To state of the transition
+      spot::state_explicit_formula * sdst;    ///< The From state of the trans
+      spot::state_explicit_formula * succdst; ///< The To state of the trans
       bdd                    cond;    ///< Condition over original transition
       bdd                    acc;     ///< Acceptance over original transition
       std::set <spot::state *> *visited;
@@ -121,7 +121,8 @@ namespace spot
     /// The states to visit : first match original TGBA , second the 
     /// newly constructed
     std::stack
-    <std::pair <spot::state_explicit_formula *, spot::state_explicit_formula *> > todo;
+    <std::pair <spot::state_explicit_formula *,
+		spot::state_explicit_formula *> > todo;
 
   public:
 

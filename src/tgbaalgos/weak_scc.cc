@@ -105,7 +105,8 @@ namespace spot
 	while (!next.empty())
 	  {
 	    stack_item &item = next.front();
-	    const state *s = item.s;//item.it->current_state();//start;//next.pop();
+	    const state *s = item.s;
+	    //item.it->current_state();//start;//next.pop();
 	    typename heap::color_ref c = h.get_color_ref(s);
 	    pop(next);
 	    if (c.is_white())
