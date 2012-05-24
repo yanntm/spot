@@ -117,6 +117,7 @@ AC_CONFIG_FILES([
   bench/split-product/Makefile
   bench/wdba/Makefile
   bench/wdba/defs
+  bench/beem/Makefile
   doc/Doxyfile
   doc/Makefile
   doc/tl/Makefile
