@@ -1,65 +1,32 @@
-#!/bin/sh
-
-# Copyright (C) 2011 Laboratoire de Recherche et Développement de
-# l'EPITA (LRDE)
+#! /bin/sh 
 #
-# This file is part of Spot, a model checking library.
-#
-# Spot is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# Spot is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-# License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Spot; see the file COPYING.  If not, write to the Free
-# Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
+# This script is used to fetch and uncompress 
+# all beem examples and the run test over all 
+# these examples 
 
-. ./defs
+# The source adress to check out examples 
+DVE_EXAMPLES=http://anna.fi.muni.cz/models/models_data.tar.gz
 
-# Make sure we have a correct version of divine installed.
-# See iface/dve2/README if you do not.
-divine compile > output 2>&1
-if grep -q -i ltsmin output; then
-  :
-else
-  echo "divine not installed, or no ltsmin interface"
-  exit 77
-fi
+# The current directory 
+SRCDIR=`dirname "$0"`
+DATA="$SRCDIR/data"
+dc="$SRCDIR/../../iface/dve2/dve2check"
 
-dc="$srcdir/../../iface/dve2/dve2check"
+# Download examples i the 
+if  ! [ -d "$DATA" ]; then 
+    wget $DVE_EXAMPLES 
+    tar -xzvf *.tar.gz
+fi;
 
-echo '# model, formula, outcome, XXX'
-while read model expected formula; do
-  # Skip comments and blank lines.
-  case "$model" in
-    '#'*|'') continue;;
-  esac
 
-  if $expected
-      opt=-e
-  $dc data/${model%%.*}/$model.dve
-done < ${srcdir}/formula.txt
+# Now launch all examples 
+while read model formula; do 
+    path=$(find . -name $model.dve)
+    while read line ; do 
+	echo "### $dc -e$line -Z $path $formula" 
+	$dc -e$line $path "$formula"
+    done < algorithms;
+done <formulae.txt
 
-for F in 1 2 3 4 5; do
-  echo "# Benching ltl2tgba_fm for family F=$F"
-  echo "# e.g. `$gen $F 3`"
-  echo "# the following values are also saved to file 'results$F.fm'"
-  echo "# time1 = translation time"
-  echo "# time2 = exploration time"
-  echo "# n, states, transitions, user time1, system time1, wall time1, user time1, system time2, wall time2"
-  for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    $LTL2TGBA -T -r1 -DS -ks -f "`"$gen" $F $n`" >out 2>&1
-    states=`sed -n 's/^states: \([0-9]*\)$/\1/p' out`
-    transitions=`sed -n 's/^transitions: \([0-9]*\)$/\1/p' out`
-    time=`sed -n 's/ *translating formula *| *\([0-9]*\) .*| *\([0-9]*\) .*| *\([0-9]*\) .*|.*/\1,\2,\3/p' out`
-    time2=`sed -n 's/ *producing output *| *\([0-9]*\) .*| *\([0-9]*\) .*| *\([0-9]*\) .*|.*/\1,\2,\3/p' out`
-    echo $n,$states,$transitions,$time,$time2
-  done | tee results$F.fm
-done
-echo "# now run 'gnuplot plot.gnu'"
+# Clean mess 
+rm -Rf *.cpp *.dve2C
