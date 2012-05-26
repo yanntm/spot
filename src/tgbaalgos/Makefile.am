@@ -32,6 +32,7 @@ tgbaalgosdir = $(pkgincludedir)/tgbaalgos
 tgbaalgos_HEADERS = \
   bfssteps.hh \
   cutscc.hh \
+  degeneralize.hh \
   dotty.hh \
   dottydec.hh \
   dupexp.hh \
@@ -69,6 +70,7 @@ noinst_LTLIBRARIES = libtgbaalgos.la
 libtgbaalgos_la_SOURCES = \
   bfssteps.cc \
   cutscc.cc \
+  degeneralize.cc \
   dotty.cc \
   dottydec.cc \
   dupexp.cc \
