@@ -99,6 +99,8 @@ namespace spot
     // Get the list of state for each class.
     typedef std::map<bdd, std::list<const state*>,
                      bdd_less_than> map_bdd_lstate;
+    // One state for each class
+    typedef std::map<bdd, const state*, bdd_less_than> map_bdd_state;
 
 
     // This class takes an automaton and creates a copy with all
@@ -321,9 +323,6 @@ namespace spot
 	if (mark && !sccacc)
 	  res &= non_acc_scc_var_;
 
-	std::cerr << a_->format_state(src) << "\n";
-	std::cerr << bdd_format_set(a_->get_dict(), res) << "\n";
-
 	delete sit;
 	return res;
       }
@@ -406,8 +405,6 @@ namespace spot
 	// |  od
 	// od
 
-	std::cerr << "B===" << std::endl;
-
 	for (map_bdd_bdd::const_iterator it1 = now_to_next.begin();
 	     it1 != now_to_next.end();
 	     ++it1)
@@ -432,16 +429,12 @@ namespace spot
 		bool na2 = (it2sig != it2signa);
 		it2signa = bdd_exist(it2signa, all_proms_);
 
-		std::cerr << na1 << " " << na2 << std::endl;
-		std::cerr << bdd_format_set(a_->get_dict(), it1signa) << " vs " << bdd_format_set(a_->get_dict(), it2signa) << std::endl;
-
 		if (na1 || na2)
 		  {
 		    if (bdd_implies(it1signa, it2signa))
 		      {
 			accu &= it2->second;
 			++po_size_;
-			std::cerr << "implication" << std::endl;
 		      }
 		  }
 		else
@@ -450,20 +443,16 @@ namespace spot
 		      {
 			accu &= it2->second;
 			++po_size_;
-			std::cerr << "implication" << std::endl;
 		      }
 		  }
 	      }
             relation_[it1->second] = accu;
           }
-
-	std::cerr << "E===" << std::endl;
       }
 
       // Build the minimal resulting automaton.
       tgba* build_result()
       {
-	print_partition();
 	// Now we need to create a state per partition. But the
 	// problem is that we don't know exactly the class. We know
 	// that it is a combination of the acceptance condition
@@ -492,30 +481,45 @@ namespace spot
 	// Non atomic propositions variables (= acc and class)
 	bdd nonapvars = all_proms_ & bdd_support(all_class_var_);
 
-	// Create one state per partition.
+	// Some states in non-accepting SCC have been discovered as
+	// equivalent to states in accepting SCC.  This happens for
+	// instance when translating XFGa (without LTL
+	// simplifications).  In this case, we should make sure we do
+	// not try to translate the non-accepting states.
+	map_bdd_state ms;
 	for (map_bdd_lstate::iterator it = bdd_lstate_.begin();
 	     it != bdd_lstate_.end(); ++it)
           {
-            res->add_state(++current_max);
-            bdd part = previous_class_[*it->second.begin()];
+	    const state* s = *it->second.begin();
+            bdd cl = relation_[previous_class_[s]];
+	    map_bdd_state::iterator i = ms.find(cl);
+	    if (i == ms.end())
+	      ms[cl] = s;
+	    else if (scc_map_->accepting(scc_map_->scc_of_state(s)))
+	      // Overwrite a state in the same class only with one
+	      // from an accepting sCC.
+	      i->second = s;
+	  }
 
-            // The difference between the two next lines is:
+	// Create one state per partition.
+	for (map_bdd_state::iterator it = ms.begin(); it != ms.end(); ++it)
+          {
+            res->add_state(++current_max);
+            bdd cl = previous_class_[it->second];
+
+            // The difference between the next two lines is:
             // the first says "if you see A", the second "if you
             // see A and all the class implied by it".
-            bdd2state[part] = current_max;
-            bdd2state[relation_[part]] = current_max;
-
-	    std::cerr << current_max << " " << part << " " << relation_[part] << std::endl;
+            bdd2state[cl] = current_max;
+            bdd2state[relation_[cl]] = current_max;
           }
 
 	// For each partition, we will create
 	// all the transitions between the states.
-	for (map_bdd_lstate::iterator it = bdd_lstate_.begin();
-	     it != bdd_lstate_.end();
-	     ++it)
+	for (map_bdd_state::iterator it = ms.begin(); it != ms.end(); ++it)
           {
             // Get the signature.
-            bdd sig = compute_sig(*(it->second.begin()), false);
+            bdd sig = compute_sig(it->second, false);
 
             // Get all the variable in the signature.
             bdd sup_sig = bdd_support(sig);
@@ -571,7 +575,7 @@ namespace spot
 		    // know the source, we must take a random state in
 		    // the list which is in the class we currently
 		    // work on.
-		    int src = bdd2state[previous_class_[*it->second.begin()]];
+		    int src = bdd2state[previous_class_[it->second]];
 		    int dst = bdd2state[dest];
 
 		    // src or dst == 0 means "dest" or "prev..." isn't
@@ -589,8 +593,8 @@ namespace spot
 	      }
           }
 
-	res->set_init_state(bdd2state[previous_class_
-				      [a_->get_init_state()]]);
+	bdd cl = relation_[previous_class_[a_->get_init_state()]];
+	res->set_init_state(bdd2state[cl]);
 	res->merge_transitions();
 	return res;
       }
