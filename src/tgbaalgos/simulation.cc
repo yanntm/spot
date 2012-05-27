@@ -169,11 +169,17 @@ namespace spot
 	scc_map_ = new scc_map(a_);
 	scc_map_->build_map();
 
+	bdd_dict* dict = a_->get_dict();
+
+	// This special BDD variable is used to mark states that
+	// are on a non-accepting SCC.
+	non_acc_scc_var_ =
+	  bdd_ithvar(dict->register_anonymous_variables(1, a_));
+
 	// Now, we have to get the bdd which will represent the
 	// class. We register one bdd by state, because in the worst
 	// case, |Class| == |State|.
-	unsigned set_num = a_->get_dict()
-	  ->register_anonymous_variables(1, a_);
+	unsigned set_num = dict->register_anonymous_variables(1, a_);
 	bdd init = bdd_ithvar(set_num);
 
 	acc_compl_automaton acc_compl(a_, init);
@@ -184,13 +190,14 @@ namespace spot
 
 	a_ = acc_compl.ea;
 
+	all_proms_ = bdd_support(a_->all_acceptance_conditions());
+
 	// We use the previous run to know the size of the
 	// automaton, and to class all the reachable states in the
 	// map previous_class_.
 	size_a_ = acc_compl.size;
 
-	set_num = a_->get_dict()
-	  ->register_anonymous_variables(size_a_ - 1, a_);
+	set_num = dict->register_anonymous_variables(size_a_ - 1, a_);
 
 	used_var_.push_back(init);
 	all_class_var_ = init;
@@ -281,34 +288,19 @@ namespace spot
 	return build_result();
       }
 
-      // Take a state and compute its signature.
-      // Consider only the transition with destination class c.
-      bdd compute_sig_filtered(const state* src, bdd c)
+      // Compute the signature of a state.
+      //
+      // The signature of a state is a Boolean function that
+      // sums a signature of its outgoing transitions.
+      // The signature of a transition is a product
+      // between the label, promises, and destination state.
+      bdd compute_sig(const state* src, bool mark = true)
       {
 	tgba_succ_iterator* sit = a_->succ_iter(src);
 	bdd res = bddfalse;
 
-	for (sit->first(); !sit->done(); sit->next())
-	  {
-	    if (previous_class_[sit->current_state()] != c)
-	      continue;
-	    res |= (sit->current_acceptance_conditions()
-		    & sit->current_condition());
-	  }
-
-	bdd sup
-	  = bdd_exist(res, bdd_support(a_->all_acceptance_conditions()));
-
-
-	delete sit;
-	return sup >> res;
-      }
-
-      // Take a state and compute its signature.
-      bdd compute_sig(const state* src)
-      {
-	tgba_succ_iterator* sit = a_->succ_iter(src);
-	bdd res = bddfalse;
+	unsigned scc = scc_map_->scc_of_state(src);
+	bool sccacc = scc_map_->accepting(scc);
 
 	for (sit->first(); !sit->done(); sit->next())
           {
@@ -316,48 +308,21 @@ namespace spot
 	    bdd cl = previous_class_[dst];
             bdd acc;
 
-	    if (scc_map_->scc_of_state(src) == scc_map_->scc_of_state(dst))
+	    if (sccacc && scc == scc_map_->scc_of_state(dst))
 	      acc = sit->current_acceptance_conditions();
 	    else
-	      acc = compute_sig_filtered(dst, cl);
+	      acc = all_proms_;
 
-            // to_add is a conjunction of the acceptance condition,
-            // the label of the transition and the class of the
-            // destination and all the class it implies.
             bdd to_add = acc & sit->current_condition() & relation_[cl];
 
             res |= to_add;
           }
+	// Mark states that are non-accepting.
+	if (mark && !sccacc)
+	  res &= non_acc_scc_var_;
 
-          delete sit;
-          return res;
-        }
-
-        // Take a state and compute its signature.
-        bdd compute_sig_final(const state* src)
-        {
-          tgba_succ_iterator* sit = a_->succ_iter(src);
-          bdd res = bddfalse;
-
-          for (sit->first(); !sit->done(); sit->next())
-          {
-            const state* dst = sit->current_state();
-	    bdd cl = previous_class_[dst];
-            bdd acc;
-
-	    if (scc_map_->scc_of_state(src) == scc_map_->scc_of_state(dst))
-	      acc = sit->current_acceptance_conditions();
-	    else
-              // FIXME: Next line is false. `bddtrue' is false too.
-	      acc = bdd_support(a_->all_acceptance_conditions());
-
-            // to_add is a conjunction of the acceptance condition,
-            // the label of the transition and the class of the
-            // destination and all the class it implies.
-            bdd to_add = acc & sit->current_condition() & relation_[cl];
-
-            res |= to_add;
-          }
+	std::cerr << a_->format_state(src) << "\n";
+	std::cerr << bdd_format_set(a_->get_dict(), res) << "\n";
 
 	delete sit;
 	return res;
@@ -441,11 +406,18 @@ namespace spot
 	// |  od
 	// od
 
+	std::cerr << "B===" << std::endl;
+
 	for (map_bdd_bdd::const_iterator it1 = now_to_next.begin();
 	     it1 != now_to_next.end();
 	     ++it1)
           {
             bdd accu = it1->second;
+
+	    bdd it1sig = it1->first;
+	    bdd it1signa = bdd_exist(it1sig, non_acc_scc_var_);
+	    bool na1 = (it1sig != it1signa);
+	    it1signa = bdd_exist(it1signa, all_proms_);
 
             for (map_bdd_bdd::const_iterator it2 = now_to_next.begin();
                  it2 != now_to_next.end();
@@ -455,19 +427,43 @@ namespace spot
 		if (it1 == it2)
 		  continue;
 
-		if (bdd_implies(it1->first, it2->first))
+		bdd it2sig = it2->first;
+		bdd it2signa = bdd_exist(it2sig, non_acc_scc_var_);
+		bool na2 = (it2sig != it2signa);
+		it2signa = bdd_exist(it2signa, all_proms_);
+
+		std::cerr << na1 << " " << na2 << std::endl;
+		std::cerr << bdd_format_set(a_->get_dict(), it1signa) << " vs " << bdd_format_set(a_->get_dict(), it2signa) << std::endl;
+
+		if (na1 || na2)
 		  {
-		    accu &= it2->second;
-		    ++po_size_;
+		    if (bdd_implies(it1signa, it2signa))
+		      {
+			accu &= it2->second;
+			++po_size_;
+			std::cerr << "implication" << std::endl;
+		      }
+		  }
+		else
+		  {
+		    if (bdd_implies(it1sig, it2sig))
+		      {
+			accu &= it2->second;
+			++po_size_;
+			std::cerr << "implication" << std::endl;
+		      }
 		  }
 	      }
             relation_[it1->second] = accu;
           }
+
+	std::cerr << "E===" << std::endl;
       }
 
       // Build the minimal resulting automaton.
       tgba* build_result()
       {
+	print_partition();
 	// Now we need to create a state per partition. But the
 	// problem is that we don't know exactly the class. We know
 	// that it is a combination of the acceptance condition
@@ -491,12 +487,10 @@ namespace spot
 	typedef tgba_explicit_number::transition trs;
 	tgba_explicit_number* res
 	  = new tgba_explicit_number(a_->get_dict());
-	res->set_acceptance_conditions
-	  (all_acceptance_conditions);
+	res->set_acceptance_conditions(all_acceptance_conditions);
 
-	bdd sup_all_acc = bdd_support(all_acceptance_conditions);
 	// Non atomic propositions variables (= acc and class)
-	bdd nonapvars = sup_all_acc & bdd_support(all_class_var_);
+	bdd nonapvars = all_proms_ & bdd_support(all_class_var_);
 
 	// Create one state per partition.
 	for (map_bdd_lstate::iterator it = bdd_lstate_.begin();
@@ -510,6 +504,8 @@ namespace spot
             // see A and all the class implied by it".
             bdd2state[part] = current_max;
             bdd2state[relation_[part]] = current_max;
+
+	    std::cerr << current_max << " " << part << " " << relation_[part] << std::endl;
           }
 
 	// For each partition, we will create
@@ -519,7 +515,7 @@ namespace spot
 	     ++it)
           {
             // Get the signature.
-            bdd sig = compute_sig_final(*(it->second.begin()));
+            bdd sig = compute_sig(*(it->second.begin()), false);
 
             // Get all the variable in the signature.
             bdd sup_sig = bdd_support(sig);
@@ -541,7 +537,7 @@ namespace spot
 		all_atomic_prop -= one;
 
 
-		// For each possible valuation, iterator over all possible
+		// For each possible valuation, iterate over all possible
 		// destination classes.   We use minato_isop here, because
 		// if the same valuation of atomic properties can go
 		// to two different classes C1 and C2, iterating on
@@ -560,7 +556,7 @@ namespace spot
 					     all_class_var_);
 
 		    // Keep only ones who are acceptance condition.
-		    bdd acc = bdd_existcomp(cond_acc_dest, sup_all_acc);
+		    bdd acc = bdd_existcomp(cond_acc_dest, all_proms_);
 
 		    // Keep the other !
 		    bdd cond = bdd_existcomp(cond_acc_dest,
@@ -654,7 +650,7 @@ namespace spot
       // The class at the current iteration.
       map_state_bdd current_class_;
 
-      // The list of state for each class at the current_iteration.
+      // The list of states for each class at the current_iteration.
       // Computed in `update_sig'.
       map_bdd_lstate bdd_lstate_;
 
@@ -677,6 +673,12 @@ namespace spot
 
       // The SCC for the source automaton;
       scc_map* scc_map_;
+
+      // Special BDD variable to mark states on non-accepting SCC.
+      bdd non_acc_scc_var_;
+
+      // The conjunction of all promises
+      bdd all_proms_;
     };
   } // End namespace anonymous.
 
