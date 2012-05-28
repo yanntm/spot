@@ -37,6 +37,7 @@
 #include "tgbaalgos/ltl2taa.hh"
 #include "tgba/bddprint.hh"
 #include "tgbaalgos/save.hh"
+#include "tgbaalgos/degeneralize.hh"
 #include "tgbaalgos/dotty.hh"
 #include "tgbaalgos/lbtt.hh"
 #include "tgba/tgbatba.hh"
@@ -1008,7 +1009,8 @@ main(int argc, char** argv)
 	{
 	  if (degeneralize_opt == DegenTBA)
 	    {
-	      degeneralized = a = new spot::tgba_tba_proxy(a);
+//	      degeneralized = a = new spot::tgba_tba_proxy(a);
+	      degeneralized = a = degeneralize_tba (a);
 	    }
 	  else if (degeneralize_opt == DegenSBA)
 	    {

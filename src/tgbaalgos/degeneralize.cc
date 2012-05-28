@@ -28,10 +28,8 @@ namespace spot
 {
   namespace
   {
-//    typedef std::pair<bdd, bdd> bdd_pair;
     typedef std::list<bdd> bdd_list;
     typedef std::pair<state*, state_explicit_number*> state_pair;
-//    typedef std::list<state_pair> pair_list;
     typedef Sgi::hash_map<state*, state_explicit_number*,
 			  state_ptr_hash,
 			  state_ptr_equal> state_map;
@@ -49,88 +47,6 @@ namespace spot
       state_pair sp;
       bdd_list::const_iterator acc;
     };
-
-  //   class degen_dfs
-  //   {
-  //   public:
-  //     degen_dfs (const tgba* a,
-  // 		 tgba_explicit_number* out,
-  // 		 const bdd_list& acc_cycle,
-  // 		 std::map<bdd, pair_list>& todo)
-  // 	: a_ (a),
-  // 	  out_ (out),
-  // 	  acc_cycle_ (acc_cycle),
-  // 	  todo_ (todo),
-  // 	  statecpt_ (1) //0 (init state) already created
-  //     {
-  //     }
-
-  //     void operator() (const bdd_pair& curstates,
-  // 		       bdd_list::iterator curacc,
-  // 		       std::set<state*>& visited)
-  //     {
-  // 	visisted.insert (curstate.first);
-
-  // 	tgba_succ_iterator* it = a_->succ_iter (curstates.first);
-
-  // 	for (it->first (); !it->done (); it->next ())
-  // 	{
-  // 	  bdd trans_acc = it->current_acceptance_conditions ();
-  // 	  bdd_list::iterator tmp_acc = curacc;
-  // 	  bdd final_acc;
-
-  // 	  bool something = false;
-  // 	  while (trans_acc & *tmp_acc != bdd_false)
-  // 	  {
-  // 	    something = true;
-
-  // 	    final_acc = *tmp_acc;
-  // 	    trans_acc -= final_acc;
-  // 	    ++tmp_acc;
-
-  // 	    //ensure looping
-  // 	    if (tmp_acc == acc_cycle_.end ())
-  // 	      tmp_acc = acc_cycle.begin ();
-  // 	  }
-
-  // 	  state_explicit_number* newstate = 0;
-
-  // 	  pair_list::iterator f = todo_[final_acc].find (curstates.first);
-  // 	  if (f == todo_list.end ())
-  // 	  {
-  // 	    newstate = out->add_state (statecpt_);
-  // 	    ++statecpt_;
-  // 	    todo[final_acc].insert (std::make_pair (curstate, newstate));
-  // 	  }
-  // 	  else
-  // 	    newstate = f->second;
-
-  // 	  //TODO handle SBA or TBA?
-  // 	  //TBA done for the moment
-
-  // 	  //Add conditions on transition
-  // 	  state_explicit_number::transition t =
-  // 	    out->create_transition (curstates.second, newstate);
-  // 	  t->condition = it->current_condition ();
-	  
-  // 	  //then handle accepting stuff
-  // 	  if (something && final_acc == bddtrue)
-  // 	    t->acceptance_conditions = bddtrue;
-  // 	  else
-  // 	    t->acceptance_conditions = bddfalse;
-
-  // 	  if (!something)
-  // 	    this->operator() (newstate, curacc, visited);
-  // 	}
-  //     }
-    
-  //   protected:
-  //     const tgba* a_;
-  //     tgba_explicit_number* out_;
-  //     const bdd_list& acc_cycle_;
-  //     std::map<bdd, pair_list>& todo_;
-  //     int statecpt_;
-  //   };
     
     class treat_state
     {
@@ -151,6 +67,8 @@ namespace spot
 		       bdd_list::const_iterator curacc,
 		       std::list<todo_elt>& todo)
       {
+	done_[*curacc].insert (curstates);
+
 	tgba_succ_iterator* it = a_->succ_iter (curstates.first);
 
 	for (it->first (); !it->done (); it->next ())
@@ -159,7 +77,7 @@ namespace spot
 
 	  bdd trans_acc = it->current_acceptance_conditions ();
 	  bdd_list::const_iterator tmp_acc = curacc;
-	  bdd final_acc;
+	  bdd final_acc = bddtrue;
 
 	  bool something = false;
 	  while ((*tmp_acc & trans_acc) != bddfalse)
@@ -216,27 +134,28 @@ namespace spot
     bdd_list build_acclist (bdd allacc)
     {
       bdd_list res;
-      
+      std::cout << "allacc = " << allacc << std::endl;
+
       for (; allacc != bddfalse; allacc = bdd_high (allacc))
-      res.push_back (bdd_ithvar (bdd_var (allacc)));
+      {
+	std::cout << "toto" << std::endl;
+	res.push_back (bdd_ithvar (bdd_var (allacc)));
+      }
       
       return res;
     }
   }
 
-  //NOTE: there may be a problem if we loop back in already visited
-  //states maybe store a map like std::map<bdd, std::pair<state*, int> >
-  //where int is the state number in out
-  //And outside a list of todo (may not be in the good order)
-  //NEW ALGORITHM should fix this case
-
   tgba_explicit_number* degeneralize_tba(tgba* a)
   {
+    std::cout << "coucou" << std::endl;
+
     tgba_explicit_number* out = new tgba_explicit_number(a->get_dict());
 
     state* init_state = a->get_init_state();
 
     bdd_list acc_list = build_acclist (a->all_acceptance_conditions ());
+    acc_list.push_back (bddtrue);
 
     //set of visited states for the current level
     bdd_states_map done;
@@ -261,39 +180,7 @@ namespace spot
     return out;
   }
 
-  //old version
-  // tgba_explicit_number* degeneralize_tba(tgba* a)
-  // {
-  //   tgba_explicit_number* out = new tgba_explicit_number(a->get_dict());
-
-  //   state* init_state = a->get_init_state();
-
-  //   bdd_list acc_list = build_acclist (a->all_acceptance_conditions ());
-
-  //   //set of visited states for the current level
-  //   std::set<state*> visited;
-  //   std::map<bdd, pair_list> todo;
-
-  //   degen_dfs dfs (a, out, acc_list, todo);
-
-  //   for (bdd_list::iterator cur_acc = acc_list.begin ();
-  // 	 cur_acc != acc_list.end (); ++cur_acc)
-  //   {
-  //     pair_list::iterator jt = todo[*it];
-
-  //     for (; jt != todo[*cur_acc].end (); ++jt)
-  //     {
-  // 	if (visited.find (jt->first) == visited.end ())
-  // 	  dfs (*jt, cur_acc, visited);
-  //     }
-
-  //     visited.clear ();
-  //   }
-
-  //   return out;
-  // }
-
-
+  //TODO
   sba_explicit_number* degeneralize_sba(tgba* a)
   {
     sba_explicit_number* out = new sba_explicit_number(a->get_dict());
