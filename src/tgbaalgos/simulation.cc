@@ -310,17 +310,17 @@ namespace spot
 	    bdd cl = previous_class_[dst];
             bdd acc;
 
-	    if (sccacc && scc == scc_map_->scc_of_state(dst))
+	    //if (sccacc)// && scc == scc_map_->scc_of_state(dst))
 	      acc = sit->current_acceptance_conditions();
-	    else
-	      acc = all_proms_;
+	      //else
+	      //acc = all_proms_;
 
             bdd to_add = acc & sit->current_condition() & relation_[cl];
 
             res |= to_add;
           }
-	// Mark states that are non-accepting.
-	if (mark && !sccacc)
+	// Mark trivial SCCs that are non-accepting.
+	if (mark && !sccacc && scc_map_->trivial(scc))
 	  res &= non_acc_scc_var_;
 
 	delete sit;
@@ -497,7 +497,7 @@ namespace spot
 	      ms[cl] = s;
 	    else if (scc_map_->accepting(scc_map_->scc_of_state(s)))
 	      // Overwrite a state in the same class only with one
-	      // from an accepting sCC.
+	      // from an accepting SCC.
 	      i->second = s;
 	  }
 
@@ -505,19 +505,24 @@ namespace spot
 	for (map_bdd_state::iterator it = ms.begin(); it != ms.end(); ++it)
           {
             res->add_state(++current_max);
-            bdd cl = previous_class_[it->second];
+            //bdd cl = previous_class_[it->second];
 
             // The difference between the next two lines is:
             // the first says "if you see A", the second "if you
             // see A and all the class implied by it".
-            bdd2state[cl] = current_max;
-            bdd2state[relation_[cl]] = current_max;
+            //bdd2state[cl] = current_max;
+	    bdd2state[it->first] = current_max;
+            //assert(relation_[cl] == it->first);
+	    //	    std::cerr << it->first << " -> " << it->second << std::endl;
           }
 
 	// For each partition, we will create
 	// all the transitions between the states.
 	for (map_bdd_state::iterator it = ms.begin(); it != ms.end(); ++it)
           {
+	    int src = bdd2state[it->first];
+	    assert(src != 0);
+
             // Get the signature.
             bdd sig = compute_sig(it->second, false);
 
@@ -575,12 +580,12 @@ namespace spot
 		    // know the source, we must take a random state in
 		    // the list which is in the class we currently
 		    // work on.
-		    int src = bdd2state[previous_class_[it->second]];
 		    int dst = bdd2state[dest];
+		    //	    std::cerr << "src = " << previous_class_[it->second]
+		    //	      << " dest = " << dest << std::endl;
 
 		    // src or dst == 0 means "dest" or "prev..." isn't
 		    // in the map.  so it is a bug.
-		    assert(src != 0);
 		    assert(dst != 0);
 
 		    // Create the transition, add the condition and the
