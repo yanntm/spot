@@ -173,9 +173,9 @@ namespace spot
 
 	bdd_dict* dict = a_->get_dict();
 
-	// This special BDD variable is used to mark states that
-	// are on a non-accepting SCC.
-	non_acc_scc_var_ =
+	// This special BDD variable is used to mark transition that
+	// are on a cycle.
+	on_cycle_ =
 	  bdd_ithvar(dict->register_anonymous_variables(1, a_));
 
 	// Now, we have to get the bdd which will represent the
@@ -310,20 +310,32 @@ namespace spot
 	    bdd cl = previous_class_[dst];
             bdd acc;
 
-	    //if (sccacc)// && scc == scc_map_->scc_of_state(dst))
-	      acc = sit->current_acceptance_conditions();
-	      //else
-	      //acc = all_proms_;
+	    if (mark)
+	      {
+		if (scc != scc_map_->scc_of_state(dst))
+		  acc = !on_cycle_;
+		else if (sccacc)
+		  acc = on_cycle_ & sit->current_acceptance_conditions();
+		else
+		  acc = on_cycle_ & all_proms_;
+	      }
+	    else
+	      {
+		if (scc != scc_map_->scc_of_state(dst))
+		  acc = bddtrue;
+		else if (sccacc)
+		  acc = sit->current_acceptance_conditions();
+		else
+		  acc = all_proms_;
+	      }
 
             bdd to_add = acc & sit->current_condition() & relation_[cl];
-
+	    //std::cerr << "toadd " << to_add << std::endl;
             res |= to_add;
           }
-	// Mark trivial SCCs that are non-accepting.
-	if (mark && !sccacc && scc_map_->trivial(scc))
-	  res &= non_acc_scc_var_;
 
 	delete sit;
+	//std::cerr << "sig(" << src << ")=" << res << std::endl;
 	return res;
       }
 
@@ -411,10 +423,12 @@ namespace spot
           {
             bdd accu = it1->second;
 
-	    bdd it1sig = it1->first;
-	    bdd it1signa = bdd_exist(it1sig, non_acc_scc_var_);
-	    bool na1 = (it1sig != it1signa);
-	    it1signa = bdd_exist(it1signa, all_proms_);
+	    bdd f1 = bdd_restrict(it1->first, on_cycle_);
+	    bdd g1 = bdd_restrict(it1->first, !on_cycle_);
+
+	    //std::cerr << "\nit1 " << it1->first << std::endl;
+	    //std::cerr << "f1 " << f1 << std::endl;
+	    //std::cerr << "g1 " << g1 << std::endl;
 
             for (map_bdd_bdd::const_iterator it2 = now_to_next.begin();
                  it2 != now_to_next.end();
@@ -424,30 +438,46 @@ namespace spot
 		if (it1 == it2)
 		  continue;
 
-		bdd it2sig = it2->first;
-		bdd it2signa = bdd_exist(it2sig, non_acc_scc_var_);
-		bool na2 = (it2sig != it2signa);
-		it2signa = bdd_exist(it2signa, all_proms_);
+		bdd f2g2 = bdd_exist(it2->first, on_cycle_);
+		bdd f2g2n = bdd_exist(f2g2, all_proms_);
 
-		if (na1 || na2)
+		//std::cerr << "it2 " << it2->first << std::endl;
+		//std::cerr << "f2g2  " << f2g2 << std::endl;
+		//std::cerr << "f2g2n " << f2g2n << std::endl;
+
+		// We used to have
+		//   sig(s1) = (f1 | g1)
+		//   sig(s2) = (f2 | g2)
+		// and we say that s2 simulates s1 if sig(s1)=>sig(s2).
+		// This amount to testing whether (f1|g1)=>(f2|g2),
+		// which is equivalent to testing both
+		//    f1=>(f2|g2)  and g1=>(f2|g2)
+		// separately.
+		//
+		// Now we have a slightly improved version of this rule.
+		// g1 and g2 are not on cycle, so they can make as many
+		// promises as we wish, if that helps.  Adding promises
+		// to g2 will not help, but adding promises to g1 can.
+		//
+		// So we test whether
+		//    f1=>(f2|g2)
+		//    g1=>noprom(f2|g2)
+		// Where noprom(f2|g2) removes all promises from f2|g2.
+		// (g1 do not have promises, and neither do g2).
+		//
+		// We detect that "a => b" by testing "a&b = a".
+		if (bdd_implies(f1, f2g2) && bdd_implies(g1, f2g2n))
 		  {
-		    if (bdd_implies(it1signa, it2signa))
-		      {
-			accu &= it2->second;
-			++po_size_;
-		      }
-		  }
-		else
-		  {
-		    if (bdd_implies(it1sig, it2sig))
-		      {
-			accu &= it2->second;
-			++po_size_;
-		      }
+		    accu &= it2->second;
+		    ++po_size_;
+		    //std::cerr << "implication!" << std::endl;
 		  }
 	      }
             relation_[it1->second] = accu;
           }
+	//for (map_bdd_bdd::const_iterator i = relation_.begin();
+	//   i != relation_.end(); ++i)
+	//std::cerr << "rel[" << i->first << "]" << i->second << std::endl;
       }
 
       // Build the minimal resulting automaton.
@@ -492,12 +522,19 @@ namespace spot
           {
 	    const state* s = *it->second.begin();
             bdd cl = relation_[previous_class_[s]];
+
+	    //std::cerr << s << " " << cl << std::endl;
+
 	    map_bdd_state::iterator i = ms.find(cl);
 	    if (i == ms.end())
 	      ms[cl] = s;
-	    else if (scc_map_->accepting(scc_map_->scc_of_state(s)))
+	    else if (scc_map_->scc_of_state(s) < scc_map_->scc_of_state(i->second))
 	      // Overwrite a state in the same class only with one
-	      // from an accepting SCC.
+	      // from a latter SCC.  This deals with the case of the
+	      // translation of XGFa where the XGFa state is a
+	      // transient state equivalent to GFa, Similarly with
+	      // XFGa, where the state XFGa is equivalent to the sate
+	      // FGa (which is still not accepting).
 	      i->second = s;
 	  }
 
@@ -505,15 +542,7 @@ namespace spot
 	for (map_bdd_state::iterator it = ms.begin(); it != ms.end(); ++it)
           {
             res->add_state(++current_max);
-            //bdd cl = previous_class_[it->second];
-
-            // The difference between the next two lines is:
-            // the first says "if you see A", the second "if you
-            // see A and all the class implied by it".
-            //bdd2state[cl] = current_max;
 	    bdd2state[it->first] = current_max;
-            //assert(relation_[cl] == it->first);
-	    //	    std::cerr << it->first << " -> " << it->second << std::endl;
           }
 
 	// For each partition, we will create
@@ -525,6 +554,8 @@ namespace spot
 
             // Get the signature.
             bdd sig = compute_sig(it->second, false);
+
+	    //std::cerr << it->second << " " <<  sig << std::endl;
 
             // Get all the variable in the signature.
             bdd sup_sig = bdd_support(sig);
@@ -680,13 +711,13 @@ namespace spot
       // All the class variable:
       bdd all_class_var_;
 
-      // The SCC for the source automaton;
+      // The SCC for the source automaton.
       scc_map* scc_map_;
 
-      // Special BDD variable to mark states on non-accepting SCC.
-      bdd non_acc_scc_var_;
+      // Special BDD variable to mark transitions that are on a cycle.
+      bdd on_cycle_;
 
-      // The conjunction of all promises
+      // The conjunction of all promises.
       bdd all_proms_;
     };
   } // End namespace anonymous.
