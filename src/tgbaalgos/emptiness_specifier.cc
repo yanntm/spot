@@ -372,10 +372,10 @@ namespace spot
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
 
-	const state_explicit_formula* fstate =
-	  dynamic_cast<const state_explicit_formula*> (sproj);
+	// const state_explicit_formula* fstate =
+	//   dynamic_cast<const state_explicit_formula*> (sproj);
 
-	unsigned id_scc = sm->scc_of_state(fstate);
+	unsigned id_scc = sm->scc_of_state(sproj);//(fstate);
 	res = sm->terminal_accepting(id_scc);
 
 	sproj->destroy();

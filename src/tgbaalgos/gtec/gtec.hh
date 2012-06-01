@@ -200,13 +200,13 @@ namespace spot
     /// This function register the number of algorgirthm 
     /// switch : these switch are linked to the formula 
     /// stroed in the state
-    void  stats_commut (const ltl::formula *formula);
+    void  stats_commut (const state*);//(const ltl::formula *formula);
 
     /// \brief perform stats about the type of formula in states 
     /// 
     /// This function look the formula which is linked to a state
     /// and register types of states
-    void  stats_formula (const ltl::formula *formula);
+    void  stats_formula (const state*);//(const ltl::formula *formula);
 
     /// Whether to store the state to be removed.
     bool poprem_;

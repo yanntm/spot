@@ -124,6 +124,7 @@ namespace spot
 		else
 		  out_->add_acceptance_conditions
 		    (t, si->current_acceptance_conditions());
+	      break;
 	    }
 
 	    // It's the terminal case, all the automaton (except
