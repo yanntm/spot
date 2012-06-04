@@ -146,7 +146,6 @@ namespace spot
       }
   }
 
-
   void
   couvreur99_check::stats_formula (const spot::state *s)
   {
@@ -165,30 +164,11 @@ namespace spot
       commut_algo(NDFS);
   }
 
-
-  // void
-  // couvreur99_check::stats_formula (const ltl::formula *formula)
-  // {
-  //   if (formula->is_syntactic_guarantee())
-  //     inc_reachability();
-  //   else
-  //     inc_ndfs ();
-  // }
-
-  // void
-  // couvreur99_check::stats_commut (const ltl::formula *formula)
-  // {
-  //   if (formula->is_syntactic_guarantee())
-  //     commut_algo(REACHABILITY);
-  //   else
-  //     commut_algo(NDFS);
-  // }
-
   emptiness_check_result*
   couvreur99_check::check()
   {
     // We use five main data in this algorithm:
-    // * couvreur99_check::root, a stack of strongly connected components (SCC),
+    // * couvreur99_check::root, a stack of strongly connected components (SCC)
     // * couvreur99_check::h, a hash of all visited nodes, with their order,
     //   (it is called "Hash" in Couvreur's paper)
     // * arc, a stack of acceptance conditions between each of these SCC,
@@ -304,17 +284,14 @@ namespace spot
 	    if (is_dynamic)
 	      {
 		assert(es_);
-		// const ltl::formula *formula =  es_->formula_from_state(dest);
-		// assert(formula);
 		assert(dest);
 		stats_commut (dest);
 		stats_formula (dest);
-		// if (formula->is_syntactic_guarantee() &&
-		//     ltl::constant::true_instance() == formula)
 		if (es_->is_terminal_accepting_scc (dest))
 		  {
 		    set_states(ecs_->states());
-		    trace << "  It's a reachability we can report" << std::endl;
+		    trace << "  It's a reachability we can report"
+			  << std::endl;
 		    while (!todo.empty())
 		      {
 			delete todo.top().second;
@@ -503,7 +480,6 @@ namespace spot
 
     if (is_dynamic)
       {
-	//const ltl::formula * formula =  es_->formula_from_state(todo.back().s);
 	assert(todo.back().s);
  	stats_commut (todo.back().s);
 	stats_formula (todo.back().s);
@@ -621,17 +597,14 @@ namespace spot
 	    if (is_dynamic)
 	      {
 		assert(es_);
-		// const ltl::formula *formula =  es_->formula_from_state(succ.s);
-		// assert(formula);
 		assert(succ.s);
 		stats_commut (succ.s);
 		stats_formula (succ.s);
 		if (es_->is_terminal_accepting_scc (succ.s))
-		// if (formula->is_syntactic_guarantee() &&
-		//     ltl::constant::true_instance() == formula)
 		  {
 		    set_states(ecs_->states());
-		    trace << "  It's a reachability we can report" << std::endl;
+		    trace << "  It's a reachability we can report"
+			  << std::endl;
 		    return new couvreur99_check_result(ecs_, options(), true);
 		  }
 	      }
