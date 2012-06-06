@@ -172,6 +172,7 @@ namespace spot
       delete sm;
     }
 
+    /// TODO: Do not use will be deprecated...
     const ltl::formula *
     formula_from_state (const state *) const;
 
@@ -193,15 +194,23 @@ namespace spot
     std::list<const state *>*
     collect_self_loop_acc_terminal_nodes();
 
+    /// Check wether the state is a guarantee state i-e it belongs to 
+    /// a sub-automaton which is terminal
     bool
     is_guarantee (const state *) const;
 
+    /// Check wether the state is a persistence state i-e it belongs to 
+    /// a sub-automaton which is weak
     bool
     is_persistence (const state *) const;
 
+    /// Check if the state is a general state i-e it belongs to 
+    /// a sub-automaton which is strong
     bool
     is_general (const state *) const;
 
+    /// Return true if the state is in an accepting terminal 
+    /// SCC (i-e, a self lopp that accept all words)
     bool
     is_terminal_accepting_scc (const state *) const;
   };

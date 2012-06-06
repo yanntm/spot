@@ -65,6 +65,7 @@
 #include "tgbaalgos/scc.hh"
 #include "kripkeparse/public.hh"
 #include "tgbaalgos/scc_decompose.hh"
+#include "tgbaalgos/simulation.hh"
 
 
 void
@@ -101,6 +102,21 @@ syntax(char* prog)
 	    << "  -dta  display the terminal part of formula automaton"
 	    << std::endl
 	    << "  -dha  display stats extracted from hierarchical analysis"
+	    << std::endl
+
+	    << "Automaton reduction:" << std::endl
+	    << "  -m  minimise the automaton"
+	    << std::endl
+
+            << "Reduction effects:" << std::endl
+    	    << "  -csma  compare the strong part of the automaton "
+	    << "   and its minimized version"
+	    << std::endl
+    	    << "  -cwma  compare the weak part of the automaton "
+	    << "   and its minimized version"
+	    << std::endl
+    	    << "  -ctma  compare the weak part of the automaton "
+	    << "   and its minimized version"
 	    << std::endl;
 
   exit(2);
@@ -133,6 +149,14 @@ int main(int argc, char **argv)
   bool opt_dta = false;
   bool opt_ha  = false;
 
+  // automaton reduction 
+  bool opt_m = false;
+
+  //
+  bool opt_ctma = false;
+  bool opt_cwma = false;
+  bool opt_csma = false;
+
   // Should whether the formula be reduced 
   bool simpltl = false;
 
@@ -163,9 +187,25 @@ int main(int argc, char **argv)
 	{
 	  opt_dta = true;
 	}
+      else if (!strcmp(argv[formula_index], "-ctma"))
+	{
+	  opt_ctma = true;
+	}
+      else if (!strcmp(argv[formula_index], "-cwma"))
+	{
+	  opt_cwma = true;
+	}
+      else if (!strcmp(argv[formula_index], "-csma"))
+	{
+	  opt_csma = true;
+	}
       else if (!strcmp(argv[formula_index], "-dha"))
 	{
 	  opt_ha = true;
+	}
+      else if (!strcmp(argv[formula_index], "-m"))
+	{
+	  opt_m = true;
 	}
       else if (!strcmp(argv[formula_index], "-r1"))
 	{
@@ -247,17 +287,18 @@ int main(int argc, char **argv)
 	    f->destroy();
 	    tm.stop("reducing formula");
 	    f = t;
-	    // std::cout << spot::ltl::to_string(f) << std::endl;
+	    //std::cout << spot::ltl::to_string(f) << std::endl;
 	  }
 	delete simp;
       }
+
+      std::cout << spot::ltl::to_string(f) << std::endl;
 
       // 
       // Building the TGBA of the formula
       // 
       a = spot::ltl_to_tgba_fm(f, dict);
       assert (a);
-
 
       // 
       // Remove unused SCC
@@ -282,6 +323,16 @@ int main(int argc, char **argv)
 	{
 	  spot::scc_decompose sd (a);
 	  spot::tgba* strong = sd.strong_automaton();
+
+	  // Should we determinize?
+	  spot::tgba* minimized = 0;
+	  if (opt_m)
+	    {
+	      minimized = spot::simulation(strong);
+	      if (minimized)
+		strong = minimized;
+	    }
+
 	  if (strong)
 	    spot::dotty_reachable(std::cout, strong);
 	  else
@@ -292,21 +343,50 @@ int main(int argc, char **argv)
 	{
 	  spot::scc_decompose sd (a);
 	  spot::tgba* weak = sd.weak_automaton();
+
+	  // Should we determinize?
+	  spot::tgba* minimized = 0;
+	  if (opt_m)
+	    {
+	      minimized = minimize_obligation(weak);
+	      if (minimized)
+		weak = minimized;
+	      else
+		{
+		  minimized = spot::simulation(weak);
+		  if (minimized)
+		    weak = minimized;
+		}
+	    }
+
 	  if (weak)
 	    spot::dotty_reachable(std::cout, weak);
 	  else
 	    std::cerr << "No weak automaton associated"
 		      << std::endl;
+	  delete minimized;
 	}
       if (opt_dta)
 	{
 	  spot::scc_decompose sd (a);
 	  spot::tgba* term = sd.terminal_automaton();
+
+	  // Should we determinize?
+	  spot::tgba* minimized = 0;
+	  if (opt_m)
+	    {
+	      minimized = minimize_obligation(term);
+	      if (minimized)
+		term = minimized;
+	    }
+
+
 	  if (term)
 	    spot::dotty_reachable(std::cout, term);
 	  else
 	    std::cerr << "No terminal automaton associated"
 		      << std::endl;
+	  delete minimized;
 	}
       if (opt_ha)
 	{
@@ -314,7 +394,149 @@ int main(int argc, char **argv)
 	  sh.stats_automaton();
 	  std::cout << sh << std::endl;
 	}
+      if (opt_ctma)
+	{
+	  spot::scc_decompose sd (a);
+	  spot::tgba* term = sd.terminal_automaton();
+	  if (!term)
+	    std::cerr << "No terminal automaton associated"
+		      << std::endl;
+	  else
+	    {
+	      // Stats for term
+	      spot::tgba_statistics a_size =
+	  	spot::stats_reachable(term);
 
+	      // Stat for minimised 
+	      spot::tgba* minimized = 0;
+	      minimized = minimize_obligation(term);
+	      spot::tgba_statistics m_size =
+	       	spot::stats_reachable(minimized);
+
+	      if ((a_size.transitions != m_size.transitions) ||
+		  (a_size.states != m_size.states) ||
+		  (minimized->number_of_acceptance_conditions() !=
+		   term->number_of_acceptance_conditions()))
+		{
+
+		  std::cout << "Terminal:Original("
+			    << a_size.states << ", "
+			    << a_size.transitions << ", "
+			    << term->number_of_acceptance_conditions()
+			    <<")#";
+		  std::cout << "Minimized("
+			    << m_size.states << ", "
+			    << m_size.transitions << ", "
+			    << minimized->number_of_acceptance_conditions()
+			    <<")" << std::endl;
+		}
+	      else
+		{
+		  std::cout << "Terminal:No difference" << std::endl;
+		}
+
+	      if (minimized != term)
+	  	delete minimized;
+	    }
+	}
+      if (opt_cwma)
+	{
+	  spot::scc_decompose sd (a);
+	  spot::tgba* weak = sd.weak_automaton();
+	  if (!weak)
+	    std::cerr << "No terminal automaton associated"
+		      << std::endl;
+	  else
+	    {
+	      // Stats for term
+	      spot::tgba_statistics a_size =
+	  	spot::stats_reachable(weak);
+
+	      // Stat for minimised 
+	      spot::tgba* minimized = 0;
+	      minimized = minimize_obligation(weak);
+	      if (minimized)
+		weak = minimized;
+	      else
+		{
+		  minimized = spot::simulation(weak);
+		  if (minimized)
+		    weak = minimized;
+		}
+	      spot::tgba_statistics m_size =
+	       	spot::stats_reachable(minimized);
+
+	      if ((a_size.transitions != m_size.transitions) ||
+		  (a_size.states != m_size.states) ||
+		  (minimized->number_of_acceptance_conditions() !=
+		   weak->number_of_acceptance_conditions()))
+		{
+
+		  std::cout << "Weak:Original("
+			    << a_size.states << ", "
+			    << a_size.transitions << ", "
+			    << weak->number_of_acceptance_conditions()
+			    <<")#";
+		  std::cout << "Minimized("
+			    << m_size.states << ", "
+			    << m_size.transitions << ", "
+			    << minimized->number_of_acceptance_conditions()
+			    <<")" << std::endl;
+		}
+	      else
+		{
+		  std::cout << "Weak:No difference" << std::endl;
+		}
+
+	      if (minimized != weak)
+	  	delete minimized;
+	    }
+	}
+      if (opt_csma)
+	{
+	  spot::scc_decompose sd (a);
+	  spot::tgba* strong = sd.strong_automaton();
+	  if (!strong)
+	    std::cerr << "No terminal automaton associated"
+		      << std::endl;
+	  else
+	    {
+	      // Stats for term
+	      spot::tgba_statistics a_size =
+	  	spot::stats_reachable(strong);
+
+	      // Stat for minimised 
+	      spot::tgba* minimized = 0;
+	      minimized =  spot::simulation(strong);
+	      spot::tgba_statistics m_size =
+	       	spot::stats_reachable(minimized);
+
+	      if ((a_size.transitions != m_size.transitions) ||
+		  (a_size.states != m_size.states) ||
+		  (minimized->number_of_acceptance_conditions() !=
+		   strong->number_of_acceptance_conditions()))
+		{
+
+		  std::cout << "Strong:Original("
+			    << a_size.states << ", "
+			    << a_size.transitions << ", "
+			    << strong->number_of_acceptance_conditions()
+			    <<")#";
+		  std::cout << "Minimized("
+			    << m_size.states << ", "
+			    << m_size.transitions << ", "
+			    << minimized->number_of_acceptance_conditions()
+			    <<")" << std::endl;
+		}
+	      else
+		{
+		  std::cout << "Strong:No difference" << std::endl;
+		}
+
+	      if (minimized != strong)
+	  	delete minimized;
+	    }
+	}
     }
 
   // Clean up
