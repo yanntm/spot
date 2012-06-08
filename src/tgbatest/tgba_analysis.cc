@@ -91,6 +91,11 @@ syntax(char* prog)
 	    << "  -rd   display the reduced formula" << std::endl
 	    << std::endl
 
+            << "Miscalenous :" << std::endl
+	    << std::endl
+	    << "  -df   display formula"
+	    << std::endl
+
             << "Automaton conversion:" << std::endl
 	    << std::endl
 	    << "  -dfa  display formula automaton"
@@ -131,7 +136,6 @@ int main(int argc, char **argv)
   spot::ltl::ltl_simplifier_options redopt(false, false, false, false, false);
 
   // The reduction for the automaton 
-  //int reduc_aut = spot::Reduce_None;
   bool scc_filter_all = true;
 
   //  The dictionnary
@@ -148,11 +152,12 @@ int main(int argc, char **argv)
   bool opt_dwa = false;
   bool opt_dta = false;
   bool opt_ha  = false;
+  bool opt_df  = false;
 
   // automaton reduction 
   bool opt_m = false;
 
-  //
+  // Comparison of reductions 
   bool opt_ctma = false;
   bool opt_cwma = false;
   bool opt_csma = false;
@@ -174,6 +179,10 @@ int main(int argc, char **argv)
       if (!strcmp(argv[formula_index], "-dfa"))
 	{
 	  opt_dfa = true;
+	}
+      else if (!strcmp(argv[formula_index], "-df"))
+	{
+	  opt_df = true;
 	}
       else if (!strcmp(argv[formula_index], "-dsa"))
 	{
@@ -292,7 +301,9 @@ int main(int argc, char **argv)
 	delete simp;
       }
 
-      std::cout << spot::ltl::to_string(f) << std::endl;
+      if (opt_df)
+	std::cout << "===>   "
+		  << spot::ltl::to_string(f) << std::endl;
 
       // 
       // Building the TGBA of the formula
@@ -338,6 +349,7 @@ int main(int argc, char **argv)
 	  else
 	    std::cerr << "No strong automaton associated"
 		      << std::endl;
+	  delete minimized;
 	}
       if (opt_dwa)
 	{
@@ -488,7 +500,7 @@ int main(int argc, char **argv)
 		  std::cout << "Weak:No difference" << std::endl;
 		}
 
-	      if (minimized != weak)
+	      if (minimized)
 	  	delete minimized;
 	    }
 	}
@@ -533,7 +545,7 @@ int main(int argc, char **argv)
 		  std::cout << "Strong:No difference" << std::endl;
 		}
 
-	      if (minimized != strong)
+	      if (minimized)
 	  	delete minimized;
 	    }
 	}

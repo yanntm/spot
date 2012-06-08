@@ -23,6 +23,8 @@
 #include "tgba/tgbaexplicit.hh"
 #include "tgbaalgos/dotty.hh"
 #include "ltlast/constant.hh"
+#include "tgbaalgos/minimize.hh"
+#include "tgbaalgos/simulation.hh"
 
 namespace spot
 {
@@ -185,8 +187,19 @@ namespace spot
   scc_decompose::terminal_automaton ()
   {
     if (!terminal_)
-      decompose_terminal();
-
+      {
+	decompose_terminal();
+	spot::tgba* minimized = 0;
+	if (minimize)
+	  {
+	    minimized = minimize_obligation(terminal_);
+	    if (minimized)
+	      {
+		delete terminal_;
+		terminal_ = minimized;
+	      }
+	  }
+      }
     // Check at least 1 condition Acc[True]
     // Which means that there is a reachable 
     // accepting edge at least (i.e. the automaton
@@ -200,7 +213,28 @@ namespace spot
   scc_decompose::weak_automaton ()
   {
     if (!weak_)
-      decompose_weak();
+      {
+	decompose_weak();
+	spot::tgba* minimized = 0;
+	if (minimize)
+	  {
+	    minimized = minimize_obligation(weak_);
+	    if (minimized)
+	      {
+		delete weak_;
+		weak_ = minimized;
+	      }
+	    else
+	      {
+		minimized = spot::simulation(weak_);
+		if (minimized)
+		  {
+		    delete weak_;
+		    weak_ = minimized;
+		  }
+	      }
+	    }
+      }
 
     // Check at least 1 condition Acc[True]
     // Which means that there is a reachable 
@@ -215,7 +249,20 @@ namespace spot
   scc_decompose::strong_automaton ()
   {
     if (!strong_)
-      decompose_strong();
+      {
+	decompose_strong();
+	spot::tgba* minimized = 0;
+	if (minimize)
+	  {
+	    minimized = spot::simulation(strong_);
+	    if (minimized)
+	      {
+		delete strong_;
+		strong_ = minimized;
+	      }
+	  }
+      }
+
     return strong_;
   }
 

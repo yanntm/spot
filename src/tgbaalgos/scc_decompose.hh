@@ -27,21 +27,24 @@
 
 namespace spot
 {
+  /// This class provides the minimal wrapper to 
+  /// decompose an automaton using strategies 
   class scc_decompose
   {
   protected:
     bool is_strong;
     bool is_weak;
     bool is_terminal;
-    scc_map *sm;
-    const tgba* src_;
-    tgba* terminal_;
-    tgba* weak_;
-    tgba* strong_;
+    scc_map *sm;		// The map used to decompose
+    const tgba* src_;		// The orginal automaton
+    tgba* terminal_;		// The terminal extracted 
+    tgba* weak_;		// The weak extracted 
+    tgba* strong_;		// The strong extracted 
+    bool minimize;		// Should we minimize
 
   public :
-    scc_decompose(const tgba *a):
-      src_(a)
+    scc_decompose(const tgba *a, bool minimize = false):
+      src_(a), minimize (minimize)
     {
       terminal_ = weak_ = strong_ = 0;
       sm = new scc_map(src_);
@@ -93,8 +96,11 @@ namespace spot
     decompose();
 
   protected:
+    // Decompose into strong automaton
     void decompose_strong();
+    // Decompose into weak automaton
     void decompose_weak();
+    // Decompose into terminal
     void decompose_terminal();
   };
 }
