@@ -332,73 +332,36 @@ int main(int argc, char **argv)
 	}
       if (opt_dsa)
 	{
-	  spot::scc_decompose sd (a);
+	  spot::scc_decompose sd (a, opt_m);
 	  spot::tgba* strong = sd.strong_automaton();
-
-	  // Should we determinize?
-	  spot::tgba* minimized = 0;
-	  if (opt_m)
-	    {
-	      minimized = spot::simulation(strong);
-	      if (minimized)
-		strong = minimized;
-	    }
 
 	  if (strong)
 	    spot::dotty_reachable(std::cout, strong);
 	  else
 	    std::cerr << "No strong automaton associated"
 		      << std::endl;
-	  delete minimized;
 	}
       if (opt_dwa)
 	{
-	  spot::scc_decompose sd (a);
+	  spot::scc_decompose sd (a, opt_m);
 	  spot::tgba* weak = sd.weak_automaton();
-
-	  // Should we determinize?
-	  spot::tgba* minimized = 0;
-	  if (opt_m)
-	    {
-	      minimized = minimize_obligation(weak);
-	      if (minimized)
-		weak = minimized;
-	      else
-		{
-		  minimized = spot::simulation(weak);
-		  if (minimized)
-		    weak = minimized;
-		}
-	    }
 
 	  if (weak)
 	    spot::dotty_reachable(std::cout, weak);
 	  else
 	    std::cerr << "No weak automaton associated"
 		      << std::endl;
-	  delete minimized;
 	}
       if (opt_dta)
 	{
-	  spot::scc_decompose sd (a);
+	  spot::scc_decompose sd (a, opt_m);
 	  spot::tgba* term = sd.terminal_automaton();
-
-	  // Should we determinize?
-	  spot::tgba* minimized = 0;
-	  if (opt_m)
-	    {
-	      minimized = minimize_obligation(term);
-	      if (minimized)
-		term = minimized;
-	    }
-
 
 	  if (term)
 	    spot::dotty_reachable(std::cout, term);
 	  else
 	    std::cerr << "No terminal automaton associated"
 		      << std::endl;
-	  delete minimized;
 	}
       if (opt_ha)
 	{
@@ -420,8 +383,8 @@ int main(int argc, char **argv)
 	  	spot::stats_reachable(term);
 
 	      // Stat for minimised 
-	      spot::tgba* minimized = 0;
-	      minimized = minimize_obligation(term);
+	      spot::scc_decompose sd1 (a, true);
+	      spot::tgba* minimized = sd1.terminal_automaton();
 	      spot::tgba_statistics m_size =
 	       	spot::stats_reachable(minimized);
 
@@ -446,9 +409,6 @@ int main(int argc, char **argv)
 		{
 		  std::cout << "Terminal:No difference" << std::endl;
 		}
-
-	      if (minimized != term)
-	  	delete minimized;
 	    }
 	}
       if (opt_cwma)
@@ -465,16 +425,8 @@ int main(int argc, char **argv)
 	  	spot::stats_reachable(weak);
 
 	      // Stat for minimised 
-	      spot::tgba* minimized = 0;
-	      minimized = minimize_obligation(weak);
-	      if (minimized)
-		weak = minimized;
-	      else
-		{
-		  minimized = spot::simulation(weak);
-		  if (minimized)
-		    weak = minimized;
-		}
+	      spot::scc_decompose sd1 (a, true);
+	      spot::tgba* minimized = sd1.weak_automaton();
 	      spot::tgba_statistics m_size =
 	       	spot::stats_reachable(minimized);
 
@@ -499,9 +451,6 @@ int main(int argc, char **argv)
 		{
 		  std::cout << "Weak:No difference" << std::endl;
 		}
-
-	      if (minimized)
-	  	delete minimized;
 	    }
 	}
       if (opt_csma)
@@ -518,8 +467,8 @@ int main(int argc, char **argv)
 	  	spot::stats_reachable(strong);
 
 	      // Stat for minimised 
-	      spot::tgba* minimized = 0;
-	      minimized =  spot::simulation(strong);
+	      spot::scc_decompose sd1 (a, true);
+	      spot::tgba* minimized = sd1.strong_automaton();
 	      spot::tgba_statistics m_size =
 	       	spot::stats_reachable(minimized);
 
@@ -544,9 +493,6 @@ int main(int argc, char **argv)
 		{
 		  std::cout << "Strong:No difference" << std::endl;
 		}
-
-	      if (minimized)
-	  	delete minimized;
 	    }
 	}
     }
