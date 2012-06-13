@@ -106,7 +106,11 @@ namespace spot
     // perform later the ordering considering the stategy
     struct sort_trans
     {
-      const tgba *           src;     ///< The source automaton 
+
+      const tgba * org;	///< The input automaton 
+      spot::state_explicit_formula * state_src; ///< the input src state From
+
+      const tgba *           src;     ///< The source automaton (new auto) 
       spot::state_explicit_formula * sdst;    ///< The From state of the trans
       spot::state_explicit_formula * succdst; ///< The To state of the trans
       bdd                    cond;    ///< Condition over original transition

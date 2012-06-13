@@ -463,6 +463,19 @@ namespace spot
                           << a_->format_state(st_blue.front().s)
                           << " to the current state is accepting, start a "
                           << "red dfs" << std::endl;
+
+		if ((is_dynamic && !es_->is_persistence(st_blue.front().s)))
+		  {
+                    c.set_color(RED);
+                    push(st_red, f_dest.s, f_dest.label, f_dest.acc);
+
+		    if (dfs_red())
+		      {
+			is_dynamic = false;
+			return true;
+		      }
+		  }
+		else
                     c.set_color(RED);
                   }
                 else

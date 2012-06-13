@@ -1125,7 +1125,7 @@ main(int argc, char** argv)
 			(formula, (spot::rebuild::iterator_strategy)ii);
 		      tm_af.start(spot::rebuild::strat_to_string (ii));
 		      spot::tgba *new_tgba =
-			worker.reorder_transitions();
+		      	worker.reorder_transitions();
 		      tm_af.stop(spot::rebuild::strat_to_string (ii));
 
 		      // Replace the formula automaton by the newly considered
@@ -1141,12 +1141,14 @@ main(int argc, char** argv)
 		      aut_scc = spot::scc_filter(formula, false);
 		      if (aut_scc && aut_scc != formula)
 			{
+			  if (opt_apf)
+			    delete formula;
 			  formula = aut_scc;
 			}
 		    }
 
 		  if (formula)
-		    a = product = new spot::tgba_product(formula, a);
+		      a = product = new spot::tgba_product(formula, a);
 
 		  int real_n_acc = a->number_of_acceptance_conditions();
 

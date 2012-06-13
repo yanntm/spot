@@ -132,7 +132,8 @@ namespace spot
  	    bdd  acc (si->current_acceptance_conditions());
 
  	    // Get the info store them to rebuild an ordering set later
-	    sort_trans st = {t,
+	    sort_trans st = {src, succ_src,
+			     t,
 			     (spot::state_explicit_formula*) s_dst->clone(),
 			     (spot::state_explicit_formula*)succ_dst->clone(),
 			     cond, acc, visited};
@@ -194,22 +195,16 @@ namespace spot
   {
     assert(i1.src == i2.src);
     spot::formula_emptiness_specifier *fes  =
-      new spot::formula_emptiness_specifier (i1.src);
-    const spot::ltl::formula * cf1 =
-      fes->formula_from_state(i1.succdst);
+      new spot::formula_emptiness_specifier (i1.org);
+
     bool _res = false;
-
-    const spot::ltl::formula * cf2 =
-      fes->formula_from_state(i2.succdst);
-
-    // First guarantee
-    if (cf1->is_syntactic_guarantee() &&
-	!cf2->is_syntactic_guarantee())
+    if (fes->is_guarantee (i1.state_src) &&
+	!fes->is_guarantee (i2.state_src))
       _res = true;
 
-    // First persistence
-    if (cf1->is_syntactic_persistence() &&
-	!cf2->is_syntactic_persistence())
+    if (fes->is_persistence (i1.state_src) &&
+    	!fes->is_persistence (i2.state_src) &&
+    	!fes->is_guarantee (i2.state_src))
       _res = true;
 
      delete fes;
