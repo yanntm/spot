@@ -1,0 +1,2571 @@
+F(P1wM1 | (P2wP1 U ((F!P2wP1 & !P2wM2) | (P2wM2 & GP2wP1) | !P1s)))
+(P2 R (P1d & M3)) & (((!P1wM1 | !P2) & F!P12wM3) | (P1wM1 & P2 & GP12wM3))
+((P12M3 | GP3) & XG!P2M2) | (F!P3 & !P12M3 & XFP2M2)
+(!P1wM1 & G(P2wP1 & !P3)) | (P1wM1 & F(P3 | !P2wP1))
+((!P2wP1 | !P1wM1) & (!M2 U (!P2 U !P2wM2))) | (P1wM1 & P2wP1 & (M2 R (P2 R P2wM2)))
+(((!P2wM2 & FP2s) | (P2wM2 & G!P2s)) & X!M1) | (XM1 & ((!P2wM2 & G!P2s) | (P2wM2 & FP2s)))
+(F!P1s & (P2wM2 R !M3)) | ((!P2wM2 U M3) & GP1s)
+P3 R (P12 W (!P2wM2 & !P2s & !P1M1))
+F(P1s W ((XP1d & (M1 R P3M2)) W P1wM1))
+((P2d | (GP1M1 U P2)) & FP3M2) M P1wM1
+(!M2 & (M3 W P1wM1)) | (M2 & (!M3 M !P1wM1)) | (!P2d M (P12M3 | !P2))
+((P2 W ((!P3 & !P3s) | (P3 & P3s))) & (P2 | X(P2 M GP1wM1))) | (!P2 & (!P2 M ((P3s & !P3) | (P3 & !P3s))) & X(!P2 W F!P1wM1))
+P1s & P2 & X((P1s & P2) W P1M1)
+X(((G!M1 & (!P1 M !P2wP1)) | (FM1 & (P1 W P2wP1))) M P12wM3)
+(((((!P2s & !P1) | (P1 & P2s)) & ((P2wM2 & !P1s) | (P1s & !P2wM2))) | (((P2s & !P1) | (P1 & !P2s)) & ((!P2wM2 & !P1s) | (P1s & P2wM2)))) R P1) M P2M2
+FP1wM1 | (!M1 & XG!P2d)
+"M3" | "M2" | XP2 | (!P3 R !P2s)
+(!M3 & !P1M1 & !P12 & (!P3M2 U (P12 & F!P1d))) | (P12 & (P1M1 | M3 | (P3M2 R (GP1d | !P12))))
+(!P3s & XGM3 & ((M1 & !P12 & !P3s) | (P3s & (P12 | !M1)))) | (XF!M3 & (P3s | (!P3s & (P12 | !M1))))
+G!P2s | (P2M2 U ((!P3M2 & ((!M2 | !P12) M !P3s)) | (P3M2 & ((P12 & M2) W P3s))))
+(P2M2 & (!P12wM3 W !P1)) | G(!P1wM1 | G!P1d)
+!P1d | (M1 W ((!M3 | !P1M1) & (P1M1 | M3)))
+X(((!P2s & FP1wM1) | (P2s & G!P1wM1)) & ((!P12wM3 & !P3) M !P2wP1))
+((!P2wM2 & !P12) | (P12 & P2wM2)) W XX!M2
+(P2wM2 & ((P3 & !P1wP2) | (P1wP2 & !P3)) & (P3M2 W ((XP2M2 & !P2M2) | (P2M2 & X!P2M2)))) | ((!P3M2 M ((!P2M2 & X!P2M2) | (P2M2 & XP2M2))) & (!P2wM2 | (!P3 & !P1wP2) | (P1wP2 & P3)))
+(!P2s | !P1M1 | X(!P2s | !P1M1)) W !P2M2
+(FP2M2 & XF!P3s) | (G!P2M2 & XGP3s)
+(((!P1s & !P1d) | (P1d & P1s)) & X(G!P2s | (!M2 U X!P12wM3))) | (X(FP2s & (M2 R XP12wM3)) & ((P1s & !P1d) | (P1d & !P1s)))
+(P3 W M1) | F{{{P12 | P12wM3}}[*2]:P2s}
+!P1wM1 | (X(!P3 | !P1wP2) W (P1 R P12M3))
+P2d U (P2M2 & X(P12 & (M3 W P1s)))
+F((P1wM1 | P2wP1 | !P2wM2) W X!P2d)
+((P2wM2 W ((P2wM2 & !P1d) | (P1d & !P2wM2))) M GP2M2) U XP3M2
+!P3M2 | X(!P3M2 | X({P3M2[*2][*1..2]}[]-> G(!P2wP1 | !P12)))
+(!P1 & ((P12s & P3s) W GM3)) | (P1 & ((!P12s | !P3s) M F!M3))
+(F!P3 & (P3 W P12s) & (P1 M P2)) | ((!P1 W !P2) & (GP3 | (!P3 M !P12s)))
+FG(P1d & P3M2) | (F!P1M1 U !P2d)
+P12s & (!M1 W X!P12) & X(P12s U !P2M2)
+!P12s | X({P12s[*1..2]}[]-> ((GP12wM3 M P2M2) W P1wM1))
+((P12s W (P12M3 W P2s)) W (P2 M M2)) U P2s
+P3 & F((P3M2 & ((P2wP1 & (!P3 R !P1)) | (!P2wP1 & (P3 U P1)))) | (!P3M2 & ((P2wP1 & (P3 U P1)) | (!P2wP1 & (!P3 R !P1)))))
+((!P3 & XX!M3) | (P3 & XXM3)) W XP1M1
+(((P1 & !P12) | (P12 & !P1)) & ((!P3M2 W !P1) R !P3M2)) | (((P3M2 M P1) U P3M2) & ((!P1 & !P12) | (P1 & P12)))
+X(({P2wM2[*0..3]}[]-> XGP2M2) & (!P1 | XGP2M2))
+F(G!P12 | (!M1 & (P12wM3 | !P2d)) | (M1 & P2d & !P12wM3))
+F(FP2 | XG(M1 & (!P3M2 W !P3s)))
+X((P2M2 & GP3M2 & XF(P1wP2 & XP1wP2)) | (F!P3M2 & (!P2M2 | XG(!P1wP2 | X!P1wP2))))
+((!P1wM1 & !M3) | (P1wM1 & M3)) U (P1 W P12)
+((P12s | P2s) W P2wM2) W F(P1wM1 | M1)
+P2s & !P2d & X((P2s & !P2d) W !P2s)
+XFM1 & ((P2s | !M1 | GM1) R P2M2)
+(!M1 | ((P2d W P3) & (!P1wM1 W G!P12M3)) | ((P1wM1 M FP12M3) & (!P2d M !P3))) M P3s
+(!P1M1 & G!M1) | (P1M1 & FM1) | (P2wM2 & !P2 & X!P1wP2) | (XP1wP2 & (P2 | !P2wM2))
+P1s W ((G!P3s & ((P12wM3 & FP12) | (!P12wM3 & G!P12))) | (FP3s & ((P12wM3 & G!P12) | (!P12wM3 & FP12))))
+(X!P3 & G!M1) | (XP3 & FM1) | ((P12wM3 R P1) W !M3)
+!P1 W ((!P1d & !P1) | (P1 & P1d))
+FGP3M2 U ((!P2 & F!P1wM1) | (P2 & GP1wM1))
+(!P12 | XG((!P1 & !P12s) | (P1 & P12s))) R P1wP2
+((X!P2M2 & !P1wP2) | (P1wP2 & XP2M2)) M ((!P3M2 & XF!P2wM2) | (P3M2 & XGP2wM2))
+XP12 | (XX!P1s W (G!P2s & F!P1wP2))
+(F!P3M2 & (M1 | F(!P12 | (!M1 M !P3)))) | (!M1 & G(P12 & P3M2 & (M1 W P3)))
+(P1wP2 & (P1M1 R X!P3)) | (!P1wP2 & (!P1M1 U XP3))
+X((P2M2 R P2d) | (!P2M2 & (M2 R XP12s)) | (P2M2 & (!M2 U X!P12s)))
+P3M2 | XP12wM3 | (!P1 & ((!P3 & F!M1) | (P3 & GM1))) | (P1 & ((!P3 & GM1) | (P3 & F!M1)))
+!P1wP2 | (((!P2wP1 & !P2M2) | (P2M2 & P2wP1)) W P2s)
+(F!M3 & ((P1M1 U !P2) M P3M2)) | (GM3 & ((!P1M1 R P2) W !P3M2))
+(!P1M1 & XF!P12wM3) | (P1M1 & XGP12wM3)
+XP2wM2 M (((P1M1 & P12s) | (!P1M1 & !P12s)) W P2M2)
+((!P2s & !P12s & FP2) | (P12s & (P2s | G!P2))) M P12
+F(M1 & XP1wM1 & ((GP12 U P2d) R P3))
+(P12s & P2d) W ((P1 & !P2wP1 & FM1) | (G!M1 & (P2wP1 | !P1)))
+"M3" R ((!P2wP1 & ((P2 & !M1) | (M1 & !P2))) | (P2wP1 & ((!P2 & !M1) | (M1 & P2))))
+(!P2wP1 & F!P2d) | (P2wP1 & GP2d)
+(P12 & ((P3M2 & ((P12wM3 | !M1) M !P3s)) | (!P3M2 & ((M1 & !P12wM3) W P3s)))) | (!P12 & ((P3M2 & ((M1 & !P12wM3) W P3s)) | (!P3M2 & ((P12wM3 | !M1) M !P3s))))
+(G!M2 & F(!P1wM1 & !P1d) & (!P12s W P1M1)) | (FM2 & (G(P1wM1 | P1d) | (P12s M !P1M1)))
+(FP2wP1 & ((F!P3M2 & !P2M2) | (P2M2 & GP3M2))) R XP1d
+F((((P2M2 & !P1M1) | (P1M1 & !P2M2)) R (P1 | !P3s)) W (P12 & P2s))
+P2wP1 M (P12s & !M3 & ((P2s & GP1d) | (!P2s & F!P1d)))
+F((X!P1 & (GP1s | X!M2)) | (F!P1s & X(P1 & M2)))
+((P1wM1 & !P2) | (P2 & !P1wM1)) W (P12s & (P1s | X(P1s R !M1)))
+(P1 R P2s) M (P2wM2 R (P3M2 & X{P3M2[*0..1];!M1}))
+{{{P12s:[*]} | P12s}[*]}[]-> X((!P2wP1 & !P12wM3) | (P12wM3 & P2wP1))
+XGP12M3 | (!P1wM1 M X!P12s)
+(GP1 M GP1wP2) | (!P3 & !P2s)
+XX(M3 & P2wM2 & !M1) W (!P12s U !P12)
+"M1" & X("M1" W (!P12M3 W F!P3s))
+(X(M1 U P12s) & ((!M1 & FP1s) | (M1 & G!P1s))) | (X(!M1 R !P12s) & ((!M1 & G!P1s) | (M1 & FP1s)))
+P2M2 W (GP1 | XXF(P1wP2 & XP1wP2))
+F(P12wM3 & ((F!P2s & XP2) | (GP2s & X!P2))) R P2s
+(P2 & P2wM2 & !P1d & GP1s & X({P2[*1..2]}<>-> !M3)) | ((P1d | !P2wM2 | F!P1s) & (!P2 | X({P2[*1..2]}[]-> M3)))
+FP1s | ((P1d & P12M3) W (P3s W GP12wM3))
+P1wM1 | (((!P12wM3 & !M3) | (P12wM3 & M3)) W (!P1wM1 & X(!P1wM1 W !P12s)))
+FM2 U (M2 | (!P1s W !P12wM3))
+P3s & (FP1wM1 | (!M3 & (!P12s U !P3M2)) | (M3 & (P12s R P3M2)))
+P1s | (P1wP2 U P2wP1) | F((!M3 & (!P3M2 M !P2s)) | (M3 & (P3M2 W P2s)))
+P12s U (((P1wM1 W !P2M2) & (G!P1wM1 U !P12M3)) | ((FP1wM1 R P12M3) & (!P1wM1 M P2M2)))
+((P2wP1 M XP1M1) & ((!P2 & ((P3s & !M2) | (M2 & !P3s))) | (P2 & ((!M2 & !P3s) | (M2 & P3s))))) | ((!P2wP1 W X!P1M1) & ((!P2 & ((!M2 & !P3s) | (M2 & P3s))) | (P2 & ((P3s & !M2) | (M2 & !P3s)))))
+!M3 | (((!P12 & X!P2s) | (P12 & XP2s)) R X(P2wM2 W M3))
+P2s & (P1 U P1M1) & (P12s | (!P3s & G!P12M3))
+F((GP12 & ((P3M2 & !P2d) | (P2d & !P3M2))) | (F!P12 & ((!P3M2 & !P2d) | (P2d & P3M2))))
+X(((!P12M3 & X!P1) | (P12M3 & XP1)) W P2wM2) W (P3M2 & X(P3M2 U M2))
+((!P3s & GP12) | (P3s & F!P12)) M ((M1 & FP3M2) | (!M1 & G!P3M2))
+!P1wM1 | G!P12 | (P2d & (!M1 | !P1)) | (P1 & M1 & !P2d)
+X((P1wP2 | !P2d) M ((!P12 W !P2s) R !P1s))
+P3 & (!M1 R (!P12wM3 | X({P12wM3[*1..2]}[]-> !P2wP1)))
+(F!P2M2 & XF!P12wM3) | (GP2M2 & XGP12wM3)
+F((P2s & !P12) | X((P2s & !P12) R {P2wP1[*0..2]:P1s}))
+!P1M1 | (P2d W ((M1 & !P1M1) | (P1M1 & !M1)))
+(F!P3s & (!P3 | !P2d)) | (P2d & P3 & GP3s)
+(!P3M2 & (((P2s | !P2wP1) & X((G!P2M2 & !M2) | (M2 & FP2M2))) | (P2wP1 & !P2s & X((FP2M2 & !M2) | (M2 & G!P2M2))))) | (P3M2 & ((P2wP1 & !P2s & X((G!P2M2 & !M2) | (M2 & FP2M2))) | ((P2s | !P2wP1) & X((FP2M2 & !M2) | (M2 & G!P2M2)))))
+F(!P1s | XP2) & (((P1 & F!P3) | (GP3 & !P1)) U P12s)
+P3M2 M ((!P3 & !P1 & G(P2d | P2wP1)) | (P3 & (P1 | F(!P2wP1 & !P2d))))
+(P1 & P3s) | (FP1 U G!P1wM1)
+((P1wM1 & (M2 | (P2d & P3s))) | (!P1wM1 & !M2 & (!P2d | !P3s))) R P2s
+P1M1 | ((G!M1 | F!P2M2) M P12)
+!M1 | F!P2s | (!P1s W !P2wP1)
+(F!P1wM1 U P12) & ((!P1d & G!P3M2) | (P1d & FP3M2))
+(P12M3 R P3s) & (P12wM3 | GP3 | !P12)
+X(((P2wM2 & P2wP1) | (!P2wP1 & !P2wM2)) W P1d)
+(P12M3 & !P3s) R ((!P2 & (P3M2 | P3s)) | (P2 & !P3M2 & !P3s))
+(((P1wP2 U P12s) W P12s) & XF(P2wP1 & !P2M2)) | (((!P1wP2 R !P12s) M !P12s) & XG(P2M2 | !P2wP1))
+!M2 | (P3M2 W P2d) | (P2wP1 & !M1)
+{P2M2[*] && P3[*]}[]-> P1s | !P2wM2
+!P2wM2 | !P2s | GP2wM2 | (P2M2 & !P12s)
+P2wM2 | G(!M2 | GM1 | X(P12M3 W P1wM1))
+P3 | G(!P1d & !P1wP2 & X((!P2wP1 & X!P12s) | (P2wP1 & XP12s)))
+(P1d U (M1 W XP2s)) U (((!M3 & !P12) | (P12 & M3)) W P1wM1)
+P2wP1 U ((P2 U GP1wM1) W (P12 U (P1s & P12M3)))
+(GP3M2 & !P2s) | (P2s & F!P3M2)
+F(!P1s | (GP3s & (!P3s R (!P12M3 & !P1))))
+((P1s | !P2wM2) & G!M3) | (P2wM2 & !P1s & FM3)
+(!P2M2 & (((!P2wM2 & X!P3M2) | (P2wM2 & XP3M2)) M P2s)) | (P2M2 & (((!P2wM2 & XP3M2) | (P2wM2 & X!P3M2)) W !P2s))
+(P12wM3 | !M3) M ((!P2 & G!P12M3) | (P2 & FP12M3))
+(XP12wM3 | GP12) M (P12wM3 & (!P12s R !P2))
+((!P1M1 & (!M2 | (!P3M2 & X(!P3M2 W !P3s)))) | (P1M1 & M2 & (P3M2 | X(P3M2 M P3s)))) U P12
+(G!P3s & (!M2 | (!M3 & GP12) | (M3 & F!P12))) | (M2 & FP3s & ((!M3 & F!P12) | (M3 & GP12)))
+(P1 & P2s & (P1wP2 | X(P1wP2 M P12s))) | (!P1wP2 & (!P2s | !P1) & X(!P1wP2 W !P12s))
+F(GP1wP2 | (P2s & !P2 & !M2))
+GP2wM2 | (!P3 & !P1M1 & !P12s)
+P2s | (X!P2wM2 & F(!M2 W F!P2M2))
+P12M3 & P2M2 & ((!P12s & (!P1d M !P2)) | (P12s & (P1d W P2)))
+"M2" R (("M2" & !P2) | (P2 & !"M2"))
+((P12s & !P12M3) | (P12M3 & !P12s)) & X(((P12s & !P12M3) | (P12M3 & !P12s)) W !P12M3)
+FP3M2 | (GP12s & (!M2 M !P1M1))
+(FP2wP1 R P2M2) U ((P1s R P2M2) M (P3s U P1))
+(G!P1d & ((P1d & (!P3s M !P12M3)) | (!P1d & (P3s W P12M3)))) | (FP1d & ((P1d & (P3s W P12M3)) | (!P1d & (!P3s M !P12M3))))
+F!P2M2 & (P2 U (P1s W FP2M2))
+P3M2 & ((!P12wM3 & GP1wP2) | (P12wM3 & F!P1wP2))
+(!M2 & !P12 & G(P3 & !P1s)) | (P12 & (M2 | F(P1s | !P3)))
+((M1 | P2s) & (((P2s & ((P2 & !P1d) | (P1d & !P2))) | (!P2s & ((!P2 & !P1d) | (P1d & P2)))) R !P12)) | (!P2s & !M1 & (((P2s & ((!P2 & !P1d) | (P1d & P2))) | (!P2s & ((P2 & !P1d) | (P1d & !P2)))) U P12))
+FP2 U (GP12 | (!P2d & !P1) | (P1 & P2d))
+(P3s R P2d) W ((F!P1wP2 & ((P12s & FP12M3) | (!P12s & G!P12M3))) | (GP1wP2 & ((P12s & G!P12M3) | (!P12s & FP12M3))))
+(!P3s & ((!P12wM3 & (P12s | P2s) & (!P1 W G!P1d)) | ((P1 M FP1d) & (P12wM3 | (!P2s & !P12s))))) | (P3s & ((!P12wM3 & (P12s | P2s) & (P1 M FP1d)) | ((!P1 W G!P1d) & (P12wM3 | (!P2s & !P12s)))))
+F((!M2 & FP1M1) | (M2 & G!P1M1))
+!M2 & ((XP2M2 M G!P3) U P2)
+P12M3 | (FGM3 & F((P3M2 & !P12) | (P12 & !P3M2)))
+G((P12 & P12s) | (P2wM2 R (P1M1 & P2))) U P12
+XF(!P2wM2 | !P3 | GP3s)
+((F!P1wM1 & F!M3) | G(P1wM1 & M3)) U ((P2wM2 & P3) | X((P2wM2 & P3) R P2))
+XF(P3s & (!P2M2 | F(!P1wM1 R !P1)))
+X((M1 & P1s & FP2d) | (G!P2d & (!P1s | !M1)))
+P12wM3 M (P1s W (M1 & M2 & P3M2 & !P2wM2))
+((P2wM2 W !P1d) & (!P2d M (P2wM2 & P2wP1))) | ((!P2wM2 M P1d) & (P2d W (!P2wP1 | !P2wM2)))
+!P12wM3 | (P1wP2 W M3) | (FP3 & (P1s | !P12s))
+(P2M2 M P1) M (FP2 & (P3M2 W P1M1))
+(((!P1wM1 & XP1d) | (P1wM1 & X!P1d)) W ((M2 R P12wM3) W P2)) U P1wM1
+X(P3s | (FP1 & (P3 U XP1wM1)) | (G!P1 & (!P3 R X!P1wM1)))
+(P12 U P2M2) | (F!M3 & (!P3M2 W !M1)) | (GM3 & (P3M2 M M1))
+(!P12 R (P2 | XP3M2)) U (M1 & P12s)
+!P1d | F(!P2wP1 | G!P1d)
+(P1M1 & P12wM3) | (X!M1 & ((!P12s & GP2) | (P12s & F!P2))) | (XM1 & ((!P12s & F!P2) | (P12s & GP2)))
+(P2d & GP1wP2) W (!P2wP1 | X(!P2wP1 R P2wM2))
+XP1s & ((XXP1d & (X!P2 | F!P12)) | (GP12 & X(P2 & X!P1d)))
+XP1s | (!P2s & (G!P2wP1 U ((!P1wM1 & !P12wM3) | (P1wM1 & P12wM3)))) | (P2s & (FP2wP1 R ((P12wM3 & !P1wM1) | (P1wM1 & !P12wM3))))
+FP2d & ((P1wM1 R P1wP2) | (M1 & GM2))
+F((!P12M3 & (!M1 | (P2wM2 & !P3s & GM2) | (P3s & (!P2wM2 | F!M2)))) | (M1 & P12M3 & ((!P3s & (!P2wM2 | F!M2)) | (P2wM2 & P3s & GM2))))
+(!P12s & (!{{P1wM1;!P1wP2}:P2d} M !P1s)) | (P12s & ({{P1wM1;!P1wP2}:P2d} W P1s))
+((!P3M2 & G(!P3M2 | !P1wM1)) | (P3M2 & F(P1wM1 & P3M2))) U (P3s & FP12)
+!P2wP1 & F((!P1wM1 & G(!P1s | !P12wM3)) | (P1wM1 & F(P1s & P12wM3)))
+XM3 & ((P2M2 W M2) R (M1 | !P2d))
+GP2 | (P12 R ((P3 & !P1) | (P1 & !P3)))
+XP12M3 & ((P3s M (M3 U P1d)) U (P2s R P2))
+GP1s | (P3s & X(!P1wM1 | (P2M2 W XP1s)))
+F(!M3 W !P2s) R X!P3
+F(((P2wP1 | !P1wM1) & (P1d | F!P12s)) | (P1wM1 & !P2wP1 & !P1d & GP12s))
+(M3 & !P12 & (!P1s W G!P1d)) | ((P12 | !M3) & (P1s M FP1d))
+(((P1wM1 & P12) | F!P2M2 | (!P1wM1 & !P12)) & (P1M1 | !P2s)) | (P2s & !P1M1 & GP2M2 & ((P12 & !P1wM1) | (P1wM1 & !P12)))
+GP3s | (!P12wM3 & !P1d) | (P1d & P12wM3)
+GM3 U (FP1 | (P1M1 & ((!P2wM2 & !P12wM3) | (P12wM3 & P2wM2))))
+((!P3 U !P1M1) & (F!P1s R !P2M2)) | ((GP1s U P2M2) & (P3 R P1M1))
+(GP12s & (!P3 | (M1 & !P1M1) | (P1M1 & !M1))) | (P3 & F!P12s & ((!M1 & !P1M1) | (P1M1 & M1)))
+XP3s & ((P1d R XP2wP1) M !P1wP2)
+P2M2 | FP12M3 | XP12 | G((P1M1 & !P12M3) | (P12M3 & !P1M1))
+((!P3M2 & !M1 & F((P2wP1 & !P1M1) | (P1M1 & !P2wP1))) | (P3M2 & (M1 | G((!P2wP1 & !P1M1) | (P1M1 & P2wP1))))) U (P12M3 | P12s)
+P1wM1 U ((!P1wM1 & ((P1 | FP2d) U P2M2)) | (P1wM1 & ((!P1 & G!P2d) R !P2M2)))
+((!M2 & GP1M1) | (M2 & F!P1M1)) R (P12wM3 & !P2wM2)
+GP2 | (F!P3s & (!P1wP2 | F!P1M1)) | (P1wP2 & G(P1M1 & P3s))
+{{!P12M3}[*2..3][*]}[]-> GM2 R (P1 W P1M1)
+(P1wP2 & (P3M2 W (M1 & P2M2)) & (!P3 M !P2s)) | ((P3 W P2s) & (!P1wP2 | (!P3M2 M (!P2M2 | !M1))))
+(XX!P2d & ((F!P1d & G(P12M3 & !M1)) | (GP1d & F(M1 | !P12M3)))) | (XXP2d & ((F!P1d & F(M1 | !P12M3)) | G(P1d & P12M3 & !M1)))
+G(P2M2 | XM1) | (P2wM2 & !P12)
+(P2wM2 W P3) W ((P2wM2 M P1M1) | FP2s)
+(!P1M1 & XFP3M2) | (P1M1 & XG!P3M2)
+F!P2 | ((!P1wP2 R (!P3s W !P12M3)) W X!P12wM3)
+((!P3M2 U !M3) & ((P2wP1 & F!P2s) M !P3s)) | ((P3M2 R M3) & ((!P2wP1 | GP2s) W P3s))
+X(P1wP2 R P12wM3) & (M3 | FGM3)
+((!P2wM2 & (!P12wM3 | FM3)) | (P12wM3 & P2wM2 & G!M3)) M ((!P1s & !P12M3) | (P1s & P12M3))
+(!P1s & (!M1 R !P12)) M F!M2
+XF(XP1M1 | ((P1wM1 & !P1) W !P12s))
+((FP2M2 & X(P1M1 & P1d)) R P1) U P3
+(!P2M2 & (XP1wM1 | (M3 W P1wM1)) & F!P3s) | ((P2M2 | GP3s) & X!P1wM1 & (!M3 M !P1wM1))
+(!P1wP2 & !P12wM3 & GP12M3) | (P12wM3 & (P1wP2 | F!P12M3))
+(P1d & !P12s & (FP2d | (!P1wP2 & !P1d) | (P1d & P1wP2))) | (G!P2d & ((P1wP2 & !P1d) | (P1d & !P1wP2)) & (P12s | !P1d))
+((P1M1 & P2wM2) U XP2s) & (P12wM3 | X(P12wM3 R P3))
+P12wM3 & !P2d & (!P1d | X(!P1d | (M1 U GP1s)))
+(P2d | !P3s) & X((P2d | !P3s) W (P1 & !P3s))
+GM2 | (P2d & !P1M1) | (P1M1 & !P2d)
+(P12wM3 U GP12) | (FP1d R !M1)
+!P12s | !P1s | (P1M1 M (F!P12s R !P3M2))
+(M2 & !P2 & FP2wP1) | (P2 & (!M2 | G!P2wP1))
+XX((FP1 R P1wM1) | FG!P12)
+!P12wM3 & ((P2M2 & !M3) R ((!P3M2 & XP1wM1) | (P3M2 & X!P1wM1)))
+(P1wP2 & M3 & P3M2) U ((!P3M2 & ((!P3s & FP2s) | (P3s & G!P2s))) | (P3M2 & ((!P3s & G!P2s) | (P3s & FP2s))))
+(!P12wM3 & (X!P2wP1 M G!P3) & (!M2 | X(!M2 M !P1wP2))) | (P12wM3 & ((XP2wP1 W FP3) | (M2 & X(M2 W P1wP2))))
+!P12M3 | G!P1 | (P3M2 W P1wP2)
+(XP2M2 M (!P12s R P3s)) & ((!P2 & XP12) | (P2 & X!P12))
+F(P1wP2 | (!P1M1 & GP3) | (P1M1 & F!P3))
+P3M2 | ({P1d[*1..3]}[]-> ((P1d & X!P2M2 & F!P1wP2) | (XP2M2 & (!P1d | GP1wP2))))
+{{P1wM1 | !P1M1 | !P12wM3}[*2..3][*]}[]-> P2
+(G(GP12s & XXP1M1) & (!M1 U !P12wM3)) | ((M1 R P12wM3) & F(F!P12s | XX!P1M1))
+P12 | !P2s | !P1M1 | X(P12 M G!P12wM3)
+P2M2 | GP3M2 | (F!P12 & ((!P2d & !P2M2) | (P2M2 & P2d))) | (GP12 & ((P2M2 & !P2d) | (P2d & !P2M2)))
+(XX!P12 & (((P1 & !P3M2) | (P3M2 & !P1)) R P3s)) | (XXP12 & (((!P3M2 & !P1) | (P1 & P3M2)) U !P3s))
+((!P12M3 R !P1s) & ((M3 & P2s & X(M3 U XP1s)) | (!P2s & (!M3 | X(!M3 R X!P1s))))) | ((P12M3 U P1s) & ((P2s & (!M3 | X(!M3 R X!P1s))) | (M3 & !P2s & X(M3 U XP1s))))
+((P2d & !P1M1) | (P1M1 & !P2d)) M ((P1M1 & GP1wP2) W XP2d)
+(P3 & (GP1 U P1d)) M ((P1wM1 | !P2M2) M P1wP2)
+P12wM3 U ((!P3 & G!P2) | (P3 & FP2))
+F(((!P1wP2 R !P1) & (P12 | P3 | !P1wM1)) | (P1wM1 & !P3 & !P12 & (P1wP2 U P1)))
+XP2s | ((P1 | P2) & (!P12s R (M3 & !P3))) | (!P2 & !P1 & (P12s U (P3 | !M3)))
+P2M2 M X((P2d W P3M2) | F(P1M1 | !P1))
+(M1 & X(M1 W ((P1d & !P2wP1) | (P2wP1 & !P1d)))) U (P2wM2 | !P3s)
+((!P1M1 & XP12s) | (P1M1 & X!P12s)) W !P2s
+(P12 & F(P2d | XP3M2)) | (!P12 & G(!P2d & X!P3M2))
+(!P3s & F!P2wP1) | (P3s & GP2wP1)
+((!P1 & X!P3s) | (P1 & XP3s)) R !P1M1
+F(XP1s | (G!P12wM3 M ((!P1d & (!P3s | !P12wM3)) | (P1d & P12wM3 & P3s))))
+(!P1 & XP1d & F!P12s & ((!P12s & FP3) | (P12s & G!P3))) | ((P1 | X!P1d) & (GP12s | (!P12s & G!P3) | (P12s & FP3)))
+(XG!M1 & (!P2 W !P1wM1)) | (XFM1 & (P2 M P1wM1))
+X((G!P1M1 & (!M2 | (P2s M P1s))) | (M2 & FP1M1 & (!P2s W !P1s)))
+P12 | (XP2wP1 W (!P3s R !P2s))
+F((!P2 & FM2) | (P2 & G!M2) | (P2wM2 & !P2d & !P3M2))
+(XF!P12M3 & ((!P2M2 & (!P1d U (!P2d & !P1s))) | (P2M2 & (P1d R (P1s | P2d))))) | (XGP12M3 & ((!P2M2 & (P1d R (P1s | P2d))) | (P2M2 & (!P1d U (!P2d & !P1s)))))
+{M2[*0..1]}[]-> !P12s | G(P1d | P2wP1)
+X(P3s | (P1 R (P2d | !M2 | G!M1)))
+(P1 U (P12 | G!P12wM3)) R (P1M1 R ((P3s & !P3) | (P3 & !P3s)))
+(F!P12 & (P1s | !P2wM2)) | (P2wM2 & !P1s & GP12)
+(P12wM3 | P2s | !P12M3) & (P2s | !P12M3 | (P12wM3 W !P1))
+((P2 | !M1) & (F!P2s U (P2s & !P3 & !P2M2))) | (M1 & !P2 & (GP2s R (P2M2 | P3 | !P2s)))
+X(!P1wM1 | !M2 | X((!P1wM1 | !M2) R (P2M2 | X(P2M2 M !P1wM1))))
+(P1d & P12 & (!P2s W !P2wM2)) | (!P12 & (!P1d | (P2s M P2wM2)))
+(!M2 & FP2) | (M2 & G!P2)
+(P12s & !M3) | (M3 & !P12s) | F((X!P12s & (!M3 R !P1wM1)) | (XP12s & (M3 U P1wM1)))
+((P1wM1 & M2) | (!P1wM1 & !M2)) M X((!M2 | XGP3M2) U P2d)
+(P2M2 | !P1wM1 | (P2d & P2wP1)) W P2wM2
+(((P2s R M2) | (P3 & !P2s)) & (!P2wP1 | X(!P2wP1 R !P1))) | (P2wP1 & (!P2s U !M2) & (P2s | !P3) & X(P2wP1 U P1))
+F(P3M2 W P2wP1) | (!P2s & FP2)
+(P1 R P1s) & X(!M2 | FP12M3)
+F(P2s & ((G!P12 & (!P1 M P12wM3)) | (FP12 & (P1 W !P12wM3))))
+P2M2 | M2 | GP1d | (!P3s & !M3)
+(P2s & !P1 & ((!P2M2 & (P12 | (M2 R M1))) | (P2M2 & !P12 & (!M2 U !M1)))) | ((P1 | !P2s) & ((!P2M2 & !P12 & (!M2 U !M1)) | (P2M2 & (P12 | (M2 R M1)))))
+((P2s & !P2wP1) | (P2wP1 & !P2s)) W ((P1wM1 & (P12M3 | P2M2)) M P3)
+((P1s | (M1 & !P1)) U P1s) R !M2
+((!P12wM3 U P1s) & (P12wM3 W XFP2s)) | ((P12wM3 R !P1s) & (!P12wM3 M XG!P2s))
+(!P1wP2 & G!M1 & (!P12M3 | G!P1d)) | (P12M3 & FP1d & (P1wP2 | FM1))
+!P1M1 | X(P2wP1 | !P2s | X(P2wP1 R P3))
+X((!P1d & (P12wM3 W P12)) | (P1d & (!P12wM3 M !P12)))
+((P2 & !P2wM2 & ((!P3M2 & !P12s) | (P12s & P3M2))) | ((P2wM2 | !P2) & ((P3M2 & !P12s) | (P12s & !P3M2)))) U (!P12 R P1d)
+!P3s R (P2d R (((!P2 & !P1d) | (P1d & P2)) W !M1))
+P1 | (FP2s & (!P12 U !P1M1)) | (G!P2s & (P12 R P1M1))
+(P1wM1 | P3M2) & X((P1wM1 | P3M2) W !P1wP2)
+(!P1 & (!P3s W (P2M2 & P2d))) | (P1 & (P3s M (!P2d | !P2M2)))
+(M3 & P2M2) W (!P12s & F({P2[*0..3]}<>-> P2wM2))
+XXM1 & F((XP2 & FP1wM1) R P2M2)
+P1M1 W X(P12 | (P2d & F!P2d))
+F(FP1 & ((!P3s & (((P2M2 & P3) | (!P3 & !P2M2)) M !M3)) | (P3s & (((P3 & !P2M2) | (P2M2 & !P3)) W M3))))
+X(M1 & !M3) & (FP3 | G!P1wP2)
+!P12wM3 & (P12wM3 | (FP2s R XP12))
+G!P12wM3 | F(!M2 | XP1wM1 | FP12)
+(!P3s & XP1 & ((P2wP1 & F!P2wP1 & XP12s) | (GP2wP1 & (!P2wP1 | X!P12s)))) | ((P3s | X!P1) & ((F!P2wP1 & (!P2wP1 | X!P12s)) | (GP2wP1 & XP12s)))
+(!P2s & (P1 U P1d)) | (P2s & (!P1 R !P1d)) | (!P3s W FP2wM2)
+!M3 R ((P1wP2 | (!P2wP1 R !P1wM1)) W (P1wM1 & P2d))
+(F!P2s & (!P3 | G(!P3M2 | !P2wP1))) | (P3 & GP2s & F(P2wP1 & P3M2))
+!P3M2 | GP2wM2 | (!P2d & !P2wP1) | (P2d & P2wP1)
+P1M1 | (((!M2 & GP2wP1) | (M2 & F!P2wP1)) U (P3M2 M GP1wP2))
+FG({P2d[*] & !P2M2}[]-> !P12s) U P1wM1
+(F!P1wP2 & (P2d | ((!P3s | !P2d) U !P12wM3))) | (!P2d & GP1wP2 & ((P2d & P3s) R P12wM3))
+(((P12s & !P1wM1) | (P1wM1 & !P12s)) & (M3 R P12s)) | (((!P1wM1 & !P12s) | (P1wM1 & P12s)) & (!M3 U !P12s))
+!P12M3 | (P2d & ((P12M3 | !P1wM1 | XM2) W P2s))
+(F!M2 & X((!P2d | !P1) U !P1s)) | (GM2 & X((P1 & P2d) R P1s))
+P2wP1 W ((((!P2s | !P12s) & (P12s | P2s)) | ((P2wP1 | !P3M2) & (P3M2 | !P2wP1))) & (((P2s | !P12s) & (P12s | !P2s)) | ((!P3M2 | !P2wP1) & (P2wP1 | P3M2))))
+P2wM2 | G(!P1d | (!P1M1 W !P1s))
+X(!P2wP1 & F(G!P1d | XFP1s))
+X!P12wM3 U (P3M2 & (!P3s | GP1wP2))
+G!P2s | ((P12M3 | (!M1 & !P12M3)) R (P12M3 | !P2M2))
+{{{!P12}[*] & {[*0] | !P1s}};P1d}
+P2wP1 | (!P3M2 M ((!P2 & (P2wP1 M XP3s)) | (P2 & (!P2wP1 W X!P3s))))
+(((!M1 & (P1s | P2wP1 | !P1M1)) | (P1M1 & M1 & !P2wP1 & !P1s)) & (!P2s M !P12)) | ((P2s W P12) & ((P1M1 & !M1 & !P2wP1 & !P1s) | (M1 & (P1s | P2wP1 | !P1M1))))
+(P12s W P2wP1) & ((!P3 & FP1wP2 & X!P2M2) | (XP2M2 & (P3 | G!P1wP2)))
+(!P2wM2 | ((M3 & ((!P3 & !P2s) | (P2s & P3))) W GP1wM1)) M P1
+(!M3 & XP12M3) W (!P2M2 & ((!M1 & !P12wM3) | (M1 & P12wM3)))
+(P2wM2 & (P3 | P3s) & !P12 & X((P3 | P3s) U !M1)) | ((P12 | !P2wM2) & ((!P3 & !P3s) | X((!P3 & !P3s) R M1)))
+(!P1 & G(P2wP1 & !P12M3)) | (F!P2wP1 & (P1 | FP12M3))
+XP1s & ((P2wP1 W !P1wP2) R ((!P1wP2 & XP12s) | (P1wP2 & X!P12s)))
+(P12s & !M2) | (M2 & !P12s) | (GP1 M FGP2wM2)
+(P3s & G!P2wP1 & XG!P1) | (XFP1 & (!P3s | FP2wP1))
+((P1wM1 W GP12) & (!M3 R (P1wM1 & P12M3))) | ((!P1wM1 M F!P12) & (M3 U (!P1wM1 | !P12M3)))
+(M3 W FP1M1) & F(P1wP2 & (!P3M2 U !M2))
+((P1s & GP1wM1) | XP1d) M (P3 U P1)
+(P12wM3 & (!P2d R !M3)) | (!P12wM3 & (P2d U M3))
+((!P3s W F!P12wM3) & ((!P2d & X(P12 M P1d)) | (P2d & X(!P12 W !P1d)))) | ((P3s M GP12wM3) & ((!P2d & X(!P12 W !P1d)) | (P2d & X(P12 M P1d))))
+(P1M1 R P3M2) | X(P2d | (P3M2 & !P1d))
+(!P2M2 & FP3s) | (P2M2 & G!P3s)
+(FP12M3 R !M3) | (!P3s & ((P2M2 & !P2d) | (P2d & !P2M2))) | (P3s & ((!P2d & !P2M2) | (P2M2 & P2d)))
+"M3" & P2 & F((P2M2 | !P1wP2) W (P3M2 W P1s))
+X(((M1 U M3) & (!P2M2 R (F!M2 R !P2s))) | ((P2M2 U (GM2 U P2s)) & (!M1 R !M3)))
+((P2 & P2M2) W XP2wP1) U (P12M3 | (P2 & !P1d) | (P1d & !P2))
+(F!P1M1 & (X!P3M2 | !P2s | !P1s)) | (P1s & P2s & XP3M2 & GP1M1)
+X!P2d & (!P12s W ((P3s & !P2s & !P1d) | (P1d & (P2s | !P3s))))
+P2 | (F!P2s & (!P2d R !M2)) | (GP2s & (P2d U M2))
+({[*1..2]}[]-> X((!M1 & X!P1wP2) | (M1 & XP1wP2))) W M1
+P12wM3 | (GP1 & !P12M3) | (P12M3 & F!P1)
+(M2 W X((!P1 & XP2wM2) | (P1 & X!P2wM2))) W X(M3 | P2wM2)
+!P1wP2 | ((P2wP1 M M2) & (!P3s U !P2d)) | ((P3s R P2d) & (!P2wP1 W !M2))
+(P12 R P2s) | ((P12s & XG!P1wM1) U P1d)
+!M2 | !M3 | X(!P1wP2 | (!P2d W !P3M2))
+P12M3 M (!P1M1 | !P12M3 | G!P3s | X!P2wP1)
+(!P12M3 & X(FP3 R P2)) | (P12M3 & X(G!P3 U !P2))
+((GP1wM1 & (P1M1 | !P2d)) | (P2d & F!P1wM1 & !P1M1)) M P1wP2
+P12wM3 M ((P2wP1 & GP12) | (!P2wP1 & F!P12))
+((!P1wP2 R !P1) & (((P3 U P1wM1) & (M3 R !P3s)) | ((!M3 U P3s) & (!P3 R !P1wM1)))) | ((P1wP2 U P1) & (((M3 R !P3s) & (!P3 R !P1wM1)) | ((!M3 U P3s) & (P3 U P1wM1))))
+((P2M2 & !P1) | (P1 & !P2M2)) & (((!P1d R !P2s) & (!P12M3 W !P2M2)) | ((P12M3 M P2M2) & (P1d U P2s)))
+(!P12M3 | (P2wP1 & ((P12M3 & !P12wM3) | (P12wM3 & !P12M3)) & X((P2wP1 & ((P12M3 & !P12wM3) | (P12wM3 & !P12M3))) W !P12wM3))) R P12
+XX(!P1d | (GP12wM3 M F!P2wP1))
+((!P3s & (P3M2 | FP12)) | (P3s & !P3M2 & G!P12)) U (P3 M P2wM2)
+F(GP2 | (M3 & ((P12M3 & !P1M1) | (P1M1 & !P12M3))) | (!M3 & ((P1M1 & P12M3) | (!P1M1 & !P12M3))))
+((P1wP2 W XP2wP1) U P2s) M (P1d & P2wM2)
+(P2wM2 & !P2s & X(P2wM2 W (!P2 U XP1wM1))) | (P2s & (!P2wM2 | X(!P2wM2 M (P2 R X!P1wM1))))
+!P12 | G(P1d & ((P1d & !P1) | (P1 & !P1d)))
+(G!M3 | GP3s | (!P1 & !P12wM3)) U XP2s
+((P1wM1 M M3) & (P1d | (!P1 & !P1d))) | ((P1 | P1d) & !P1d & (!P1wM1 W !M3))
+(X!P12 & (!P1M1 R !P12s)) | (XP12 & (P1M1 U P12s))
+X({{[*0] | {!P1d}[*]} & !P12}[]-> P2s)
+F((!P1M1 & !P1s) | (P1M1 & P1s)) R !P1wM1
+!P2M2 & F((!P2wP1 & X!P12wM3 & G!P3) | (P2wP1 & (XP12wM3 | FP3)))
+P12 & (((P12M3 | P3M2) & (((!P3M2 & !M2) | (M2 & P3M2)) R !M1)) | (!P3M2 & !P12M3 & (((P3M2 & !M2) | (M2 & !P3M2)) U M1)))
+!P2wM2 | (P2d & X(P2d & ((!P1M1 & FP12wM3) | (P1M1 & G!P12wM3))))
+!P1d M XF((!P1M1 & G!P1wM1) | (P1M1 & FP1wM1))
+((M3 & XM3) U (P2s W !P1d)) U (P2wM2 W P1s)
+(((!P1M1 & !P12wM3) | (P1M1 & P12wM3)) R P2wP1) U (!P2M2 | F((P2wM2 & !P1wP2) | (P1wP2 & !P2wM2)))
+!P12s | !P1d | ((M3 W !P1M1) M P2)
+F((X(!P1wM1 W !P3) & ((M1 & F!M2) | (!M1 & GM2))) | (X(P1wM1 M P3) & ((!M1 & F!M2) | (M1 & GM2))))
+!P2wM2 | (((!M3 & (P3M2 M GP1d)) | (M3 & (!P3M2 W F!P1d))) & (!P2M2 W !M3)) | ((P2M2 M M3) & ((!M3 & (!P3M2 W F!P1d)) | (M3 & (P3M2 M GP1d))))
+(P1s & P3 & (G((P2M2 & !P12wM3) | (P12wM3 & !P2M2)) U P1wP2)) | (!P1s & (!P3 | (F((!P2M2 & !P12wM3) | (P12wM3 & P2M2)) R !P1wP2)))
+F(!P2wM2 & (((!P2s & G!P3s) | (P2s & FP3s)) U !P2M2))
+(M3 & F!P3M2 & X(P2wP1 & F!P1wM1)) | ((!M3 | GP3M2 | X!P2wP1) & XGP1wM1)
+FP2M2 | ((!P1M1 W (P3s W !P12s)) M !P3s)
+FP1M1 U (P12wM3 | !P2 | X(P12wM3 R P2))
+((P1 U (P2M2 W P1wM1)) U (P3 | !M1)) U !P12s
+(F((!P2 & !P2wM2) | (P2 & P2wM2)) & (F!P2d | (!P1d & G!M1) | (P1d & FM1))) | (((!P1d & FM1) | (P1d & G!M1)) & G(P2d & ((P2 & !P2wM2) | (P2wM2 & !P2))))
+(!P2wM2 & (!P1M1 | (!P2wP1 M P2))) | (P1M1 & P2wM2 & (P2wP1 W !P2))
+(!P1s & G!P2wM2) | (P1s & FP2wM2)
+"M2" W (P12 M ((P1 & GP1s) U M2))
+XF(((M3 & P2wM2) | (!P2wM2 & !M3)) W (P1wM1 | !P2M2))
+(!M1 & (P2wP1 | (P3s & G(P1s & !P1wP2)))) | (M1 & !P2wP1 & (!P3s | F(P1wP2 | !P1s)))
+((((!P12 & XX!P12s) | (P12 & XXP12s)) M P2wM2) & ((!P2 & !P1) | (P1 & P2))) | ((((!P12 & XXP12s) | (P12 & XX!P12s)) W !P2wM2) & ((P1 & !P2) | (P2 & !P1)))
+{{{!P1wM1 && !P2wM2} | {P1wM1 && P2wM2}}[*1..6]}<>-> (GP2 | (!P12s U !P2))
+XX(G((P12 & P2M2) | (!P2M2 & !P12)) | (FP3 & F!P3))
+(!P3s & F(!P2s & F!P3)) | (P3s & G(P2s | GP3))
+F(X(P3M2 & GP2wM2) | (!M2 & !P1M1) | (P1M1 & M2))
+(P1M1 R !P3) | (GP1 & (!P1s M P1)) | (P1s U !P1)
+(!P2wP1 W (P1wP2 M !M1)) R (P2d & XP2d)
+(P1s & G(P12 & G(!P1M1 | !P1s))) | (!P1s & F(!P12 | F(P1M1 & P1s)))
+F((((!P3s & FP2M2) | (P3s & G!P2M2)) & G(P12s | P3s)) | (((!P3s & G!P2M2) | (P3s & FP2M2)) & F(!P3s & !P12s)))
+((!P1s & ((P12wM3 & !P1d) | (P1d & !P12wM3))) | (P1s & ((P1d & P12wM3) | (!P1d & !P12wM3)))) U ((!P1s & ((!P12wM3 & G!P12s) | (P12wM3 & FP12s))) | (P1s & ((!P12wM3 & FP12s) | (P12wM3 & G!P12s))))
+"M1" & X(P1 | (FM2 R X!P2))
+(GP12wM3 U P1wM1) | ((!M1 U !P1wP2) & (!P2wM2 U !M2))
+"M1" | ((P3M2 | (!P2s & !P12wM3)) W (P1s & X(P1s U P1wP2)))
+(P1M1 & F!P2wP1 & X(P2wP1 M GP2)) | ((!P1M1 | GP2wP1) & X(!P2wP1 W F!P2))
+FP2 | G((P1 & !P1M1) | (P1M1 & !P1))
+X((M1 & ((!P1d | G!M3) R X!M3)) | (!M1 & ((P1d & FM3) U XM3)))
+(P1 | !P3M2) & (P2M2 | G!P2wM2)
+(!P2M2 & (FP2s | XF((!P2M2 & !P2s) | (P2M2 & P2s)))) | (P2M2 & G!P2s & XG((P2M2 & !P2s) | (P2s & !P2M2)))
+(!P3s & !P1wM1 & (P12s U (!P1wP2 | X!P12wM3))) | (P1wM1 & (P3s | (!P12s R (P1wP2 & XP12wM3))))
+!P12s | X({M2[*] & !P12s}[]-> P1M1)
+((X!P1wP2 & (!P1wM1 M !P2s)) | (XP1wP2 & (P1wM1 W P2s))) U (XP12wM3 | F!P3s)
+((!P1wP2 & !P2s & ((!P12wM3 & ((P1M1 & P2s) | (!P2s & !P1M1))) | (P12wM3 & ((P2s & !P1M1) | (P1M1 & !P2s))))) | ((P1wP2 | P2s) & ((!P12wM3 & ((P2s & !P1M1) | (P1M1 & !P2s))) | (P12wM3 & ((P1M1 & P2s) | (!P2s & !P1M1)))))) R M3
+(!P2wM2 & (M1 | !P1s) & (!P1 M !P1d)) | ((P1 W P1d) & (P2wM2 | (P1s & !M1)))
+((!M3 R !P1d) & X(G!P3 & F!P12)) | ((M3 U P1d) & X(FP3 | GP12))
+F(P1wM1 & ((!P2 & FP1M1) | (P2 & G!P1M1)))
+(!P2wP1 | (!M1 R (GP1M1 R P12M3))) M P2
+(Pback4 M (P1 R Pout2)) | XX!Pout4
+(F!Pout2 & ({{!Pback4 && {{!Pout4 && !Pout3} | {Pout4 && Pout3}}}[*0..1]}[]-> !Pout4)) | (GPout2 & ({{!Pback4 && {{!Pout4 && !Pout3} | {Pout4 && Pout3}}}[*0..1]}<>-> Pout4))
+(!Pout4 & G!P1) | (Pout4 & FP1)
+(!Pback1 & G!Pout2) | (Pback1 & FPout2)
+F(!Pout2 | (!Pback1 & G!P4))
+(Pback4 & XPback4) W (Pout1 & X({Pout1[*1..2]}<>-> XPout3))
+(Pout3 & ((Pback3 & !P2) W !P3) & (!Pback2 R !P1)) | (((P2 | !Pback3) M P3) & (!Pout3 | (Pback2 U P1)))
+((!Pm4 U !Pout1) & FPback2) | ((Pm4 R Pout1) & G!Pback2)
+Pm4 | (!Pout2 & ((((Pback1 & !Pm3) | (Pm3 & !Pback1)) & (!Pm3 U !Pm2)) | ((Pm3 R Pm2) & ((!Pm3 & !Pback1) | (Pm3 & Pback1))))) | (Pout2 & (((!Pm3 U !Pm2) & ((!Pm3 & !Pback1) | (Pm3 & Pback1))) | ((Pm3 R Pm2) & ((Pback1 & !Pm3) | (Pm3 & !Pback1)))))
+(G!Pm3 & XP3) | (X!P3 & FPm3)
+XGP1 | (!Pm2 & (P2 | (!P2 & !Pback2)))
+P1 | G(Pm2 | !Pout3 | X(!Pout3 R !Pback4))
+(Pout2 & G!Pm4 & X({Pout2[*1..2]}<>-> G!Pout4)) | (FPm4 & (!Pout2 | X({Pout2[*1..2]}[]-> FPout4)))
+Pm4 | G(Pback3 | !Pback4 | !Pm1)
+(((Pm2 & P1) M X((P1 & !Pout3) | (Pout3 & !P1))) & (!Pm1 | !Pout3)) | (Pout3 & Pm1 & ((!P1 | !Pm2) W X((!P1 & !Pout3) | (Pout3 & P1))))
+X({{!Pback4 | !Pback1}[*1..2]}[]-> (P4 R Pm2)) | (Pback4 & Pback1)
+((!Pback2 M !P4) & ((!P1 | !Pback2) U !P2)) | (((Pback2 & P1) R P2) & (Pback2 W P4))
+X(!Pout1 | X(!Pout1 M (Pout2 & G!Pm3)))
+!Pm1 | ((Pback4 W !P4) & (Pm1 | X(Pm1 M Pout1)))
+(!Pm3 & (P3 W XPout1)) | (Pm3 & (!P3 M X!Pout1))
+XF!P4 U (Pback4 R (!Pout4 | XPm2))
+X((GPback3 U !Pback4) U (P2 M P4))
+(Pback4 & Pout3 & !P3 & (X!Pback3 | F!P1)) | (XPback3 & GP1 & (P3 | !Pback4 | !Pout3))
+(F!Pm1 & (!Pm1 | (!P2 & ((P3 & P2) | (!P2 & !P3))))) | (GPm1 & (P2 | (P3 & !P2)))
+(Pback3 & !Pback2 & F(P3 & Pback3) & ((Pback1 & !Pback2) | (Pback2 & !Pback1))) | (((!Pback1 & !Pback2) | (Pback2 & Pback1) | G(!Pback3 | !P3)) & (Pback2 | !Pback3))
+(FP4 R XP3) | ((P1 | !Pm2) R Pout3)
+(!Pback1 & (Pm3 U Pout2)) | (Pback1 & (!Pm3 R !Pout2))
+(!Pout2 W X!P4) | X((!Pback2 & (Pm3 M Pout2)) | (Pback2 & (!Pm3 W !Pout2)))
+FPout3 R X(Pback4 & (Pm3 | X(Pm3 R Pback1)))
+(!Pout1 & ((!Pback4 & (Pm2 | !Pm4)) | (Pm4 & Pback4 & !Pm2))) | (Pout1 & (GPout1 | (Pm4 & !Pback4 & !Pm2) | (Pback4 & (Pm2 | !Pm4))))
+F((Pm4 & Pm3 & G!Pout3) | (FPout3 & (!Pm3 | !Pm4)))
+(GP3 & (!Pback1 | G!Pm3)) | (Pback1 & FPm3 & F!P3)
+P3 | (!Pout2 W (!Pback4 & !Pout1))
+(X!Pback3 & (Pm1 U P2)) | (XPback3 & (!Pm1 R !P2))
+(G!Pm3 U X!Pout2) & ((!Pout2 & !Pout1) | (Pout2 & Pout1))
+XX(P2 | (!Pback3 & !Pm3) | (Pm3 & Pback3) | X(((!Pback3 & !Pm3) | (Pm3 & Pback3)) R !Pback4))
+(!P4 | GPback2 | !Pback2) W !Pout1
+F((XP2 & (Pm2 U Pout3)) | (Pm2 & G!P2))
+(P4 | X(P4 R Pm2)) R (!Pm3 R Pout4)
+(X{Pm2:Pback1[*2][*]} W GPback1) U P3
+F((!Pout1 M !Pm3) & ((!Pm4 & (Pm1 | FPback3)) | (Pm4 & !Pm1 & G!Pback3)))
+(!Pout4 & ((Pback2 & F!Pout3) | (GPout3 & !Pback2))) | (Pout4 & ((F!Pout3 & !Pback2) | (Pback2 & GPout3)))
+(!Pback3 | (!Pm1 U GPback4)) & (Pm4 | X(!Pm1 U GPback4))
+(P3 & FPback3) | (!P3 & G!Pback3)
+(Pm1 | Pback1) W (G!Pm1 | (Pback1 & !Pout3))
+(((!P1 & X!Pback2) | X!Pm3) & F(P2 & !P1)) | ((P1 | XPback2) & XPm3 & G(P1 | !P2))
+Pm3 U (!Pback3 | !Pback1 | G!Pout3)
+(!Pback4 & XFP1) | (Pback4 & XG!P1)
+!P1 | ((((P1 & !Pout4) | (Pout4 & !P1)) W P4) M Pback2)
+F(Pout1 & (XP4 W F(Pback3 R !P3)))
+{{{P4:Pout4[*]} | P4}:Pm3[*]}
+P4 W ((Pback2 W Pout4) & (P4 | !P2))
+((P4 & X(P4 U G!Pback1)) W !Pout4) M Pm2
+F((F!P2 & (P3 | !Pback3)) | (Pback3 & !P3 & GP2)) U (Pm2 | Pback2)
+(F(Pback4 | Pout3) & (!P4 R (!Pout4 | !Pout1))) | ((P4 U (Pout4 & Pout1)) & G(!Pback4 & !Pout3))
+(!Pout1 & ((P4 & Pm1) W !Pm3)) | (Pout1 & ((!Pm1 | !P4) M Pm3))
+X(P2 M ((!Pout2 & ((Pback2 & GPm1 & F!Pm4) | (GPm4 & (!Pback2 | F!Pm1)))) | (Pout2 & ((F!Pm4 & (!Pback2 | F!Pm1)) | (Pback2 & G(Pm4 & Pm1))))))
+!Pm3 | (((!Pback3 M !Pm4) R !P4) M !Pm2)
+(X!P3 & (!Pm2 W ((!Pout4 & !Pm2) R !Pm3))) | (XP3 & (Pm2 M ((Pout4 | Pm2) U Pm3)))
+((!P1 | (Pm2 U P4)) & (!Pout4 | !P1)) | (Pout4 & P1 & (!Pm2 R !P4))
+(P3 & ((P2 & ((P3 & Pback3) | (!Pback3 & !P3))) | (!P2 & ((Pback3 & !P3) | (P3 & !Pback3))))) R P2
+(Pback4 | !Pback1) W (Pback3 & F!Pback3)
+(P2 & !Pm1) W (Pm4 & Pm1 & Pout1)
+(!P2 & (Pout3 W Pm2)) | (P2 & (!Pout3 M !Pm2))
+Pout2 & (P4 W !P3) & X(Pm4 | !P4)
+((Pm3 & Pout2) | (!Pout2 & !Pm3)) W F(!Pm3 & X(Pm2 & !Pm3))
+(Pback4 | P1) R (Pm1 | GPback4 | XPm1)
+!Pback1 | X(!Pback1 | X({Pback1[*2][*1..2]}[]-> G(!P1 | !Pm3)))
+!P3 | GP3 | (!Pout1 & (Pout3 U Pback4))
+((Pm1 W P2) & (P4 M Pm2) & F!Pback1) | ((!P4 W !Pm2) & (GPback1 | (!Pm1 M !P2)))
+XXPback2 U (!Pm1 | !Pback4 | X((!Pm1 | !Pback4) R Pm2))
+((!Pout4 R !Pback3) & F!Pm1) | (GPm1 & (Pout4 U Pback3))
+!P2 | X({P2[*1..2]}[]-> ((GPm3 M Pback2) W P4))
+((P2 W (Pout3 W Pm1)) W (P2 M Pback2)) U Pm1
+(FP1 & XF!Pback2) | (XGPback2 & G!P1)
+((!Pback1 & XX!Pout3) | (Pback1 & XXPout3)) W XPm4
+(((P4 & !Pm3) | (Pm3 & !P4)) & ((!Pback1 W !P4) R !Pback1)) | (((Pback1 M P4) U Pback1) & ((!P4 & !Pm3) | (P4 & Pm3)))
+(P3 & (((!Pout3 M !P4) & (F!Pback2 | (P4 & Pout2))) | (GPback2 & (Pout3 W P4) & (!P4 | !Pout2)))) | (!P3 & (((Pout3 W P4) & (F!Pback2 | (P4 & Pout2))) | (GPback2 & (!Pout3 M !P4))))
+F((!Pback4 & (Pback3 | !Pout2)) | (Pback4 & Pout2 & !Pback3) | G!Pm3)
+F(FPm2 | XG(Pback4 & (!Pback1 W !Pout1)))
+X((Pback2 & GPback1 & XF(P3 & XP3)) | (F!Pback1 & (!Pback2 | XG(!P3 | X!P3))))
+((!P4 & !Pout3) | (P4 & Pout3)) U (P4 W Pm3)
+(P3 & XP3) R (Pback2 W (!Pm4 | (Pm4 & XPm4)))
+Pm1 & !P1 & X((Pm1 & !P1) W !Pm1)
+XFPback4 & ((Pm1 | GPback4 | !Pback4) R Pback2)
+Pout2 & X(Pback3 & (Pout4 | XGPout1))
+X!Pback4 & ((!P2 & G!Pout3) | (P2 & FPout3))
+Pout4 W ((G!Pout1 & (Pm3 | G!Pm3)) | (!Pm3 & FPm3 & FPout1))
+(((!Pout3 & X((Pback1 & !Pm1) | (Pm1 & !Pback1))) | (Pout3 & X((!Pm1 & !Pback1) | (Pm1 & Pback1)))) & F!P2) | (((!Pout3 & X((!Pm1 & !Pback1) | (Pm1 & Pback1))) | (Pout3 & X((Pback1 & !Pm1) | (Pm1 & !Pback1)))) & GP2)
+!Pback4 W ((Pback1 & !P4) | (P4 & !Pback1))
+P4 | X((!P4 R Pback4) W (Pback4 U Pout4))
+XF(Pback2 | GPm4 | (!Pback3 & (!Pout3 | !Pm4)) | (Pm4 & Pback3 & Pout3))
+((P3 & XPback2) | (!P3 & X!Pback2)) M ((!Pout1 & XF!Pback2) | (Pout1 & XGPback2))
+XPm3 | (XX!P3 W (F!P3 & G!Pm1))
+(Pout3 W !Pm2) | (Pback4 & (P2 M Pm3)) | (!Pback4 & (!P2 W !Pm3))
+(!Pm3 & FPout3) | (Pm3 & G!Pout3) | G(P1 & !Pout3)
+(!P4 R Pout1) & ((Pm1 | G!Pm2) R Pout1)
+Pout1 | XPback3 | (!P4 & ((!Pm1 & F!Pback4) | (Pm1 & GPback4))) | (P4 & ((!Pm1 & GPback4) | (Pm1 & F!Pback4)))
+!P3 | (((!Pback2 & !P1) | (Pback2 & P1)) W Pm1)
+(!Pout1 & GPout3) | (Pout1 & F!Pout3)
+(!Pm4 & XF!Pback3) | (Pm4 & XGPback3)
+Pout3 & (!Pback4 | (Pm3 R XP2)) & X(Pout3 W P4)
+((!Pm1 & !P2 & FPm2) | (P2 & (Pm1 | G!Pm2))) M Pm3
+F(Pback4 & XPm4 & ((GPm3 U Pout2) R Pback1))
+(P2 & Pout2) W ((P4 & !P1 & FPback4) | (G!Pback4 & (P1 | !P4)))
+Pout3 R ((!P1 & ((Pm2 & !Pback4) | (Pback4 & !Pm2))) | (P1 & ((!Pback4 & !Pm2) | (Pback4 & Pm2))))
+(!P1 & F!Pout2) | (P1 & GPout2)
+(Pout3 & F(!Pback4 | (Pout3 U Pm4)) & (!Pback4 W !Pm3)) | ((Pback4 M Pm3) & (!Pout3 | G(Pback4 & (!Pout3 R !Pm4))))
+(G!Pout2 & F(!Pm4 & !Pout4) & (!P2 W Pback4)) | (FPout2 & (G(Pm4 | Pout4) | (P2 M !Pback4)))
+(FP1 & ((Pback2 & GPout1) | (!Pback2 & F!Pout1))) R XPout4
+(XPout4 & ((F!Pback4 & X!Pback2) | (GPback4 & XPback2))) | (X!Pout4 & ((F!Pback4 & XPback2) | (GPback4 & X!Pback2)))
+P1 M (P2 & !Pout3 & ((Pm1 & GPout4) | (!Pm1 & F!Pout4)))
+F((X!P4 & (GP3 | X!Pout2)) | (F!P3 & X(P4 & Pout2)))
+((Pm2 & !Pm4) | (Pm4 & !Pm2)) W (P2 & (P3 | X(P3 R !Pback4)))
+(P4 R Pm1) M (Pback2 R (Pback1 & X{Pback1[*0..1];!Pback4}))
+{{{P2:[*]} | P2}[*]}[]-> X((!Pback3 & !P1) | (Pback3 & P1))
+XGPback3 | (!Pm4 M X!P2)
+(!Pm1 & !Pback1) | (GP4 M GP3)
+F(!Pm3 | X(!Pm3 R (Pout3 & Pout1)))
+Pback4 & X(Pback4 W (!Pout3 W F!Pout1))
+(X(Pback4 U P2) & ((!Pback4 & FPout4) | (Pback4 & G!Pout4))) | (X(!Pback4 R !P2) & ((!Pback4 & G!Pout4) | (Pback4 & FPout4)))
+(!P4 & G!Pm3) | (P4 & FPm3) | XX(Pm1 U Pm3)
+F(Pm3 & ((F!Pm1 & XP2) | (GPm1 & X!P2))) R Pm1
+!Pm1 & (!Pback2 R (!P3 | !Pout4))
+FP3 | ((Pout4 & Pout3) W (Pout1 W GPback3))
+P4 | (((!Pback3 & !Pout3) | (Pback3 & Pout3)) W (!P4 & X(!P4 W !P2)))
+FPout2 U (Pout2 | (!P3 W !Pm3))
+Pout1 & (FPm4 | (!Pout3 & (!P2 U !Pout1)) | (Pout3 & (P2 R Pout1)))
+Pout4 | (P3 U P1) | F((!Pout3 & (!Pback1 M !Pm1)) | (Pout3 & (Pback1 W Pm1)))
+P2 U (((Pm4 W !Pback2) & (G!Pm4 U !Pback3)) | ((FPm4 R Pback3) & (!Pm4 M Pback2)))
+(X!Pout3 & !P2 & F!Pm1 & (P3 M !Pback3)) | (P2 & (XPout3 | GPm1 | (!P3 W Pback3)))
+F((X!Pm4 & G!Pback4) | (FPback4 & XPm4)) R ((!Pback4 & X!Pback3) | (Pback4 & XPback3))
+(((!Pm3 & (P1 | !Pback3)) | (Pm3 & Pback3 & !P1)) & (!Pout4 R X(!Pback1 | !Pm4))) | ((Pout4 U X(Pm4 & Pback1)) & ((Pback3 & !P1 & !Pm3) | (Pm3 & (P1 | !Pback3))))
+F((GPm3 & ((Pout1 & !P1) | (P1 & !Pout1))) | (F!Pm3 & ((P1 & Pout1) | (!P1 & !Pout1))))
+X(Pout2 & X(Pout2 W (((!Pout3 & !P2) | (Pout3 & P2)) W Pback2)))
+((!Pout1 & GPm3) | (Pout1 & F!Pm3)) M ((Pback4 & FPout1) | (!Pback4 & G!Pout1))
+F((F!Pm2 & (Pback2 R P3)) | (GPm2 & (!Pback2 U !P3)))
+X((P3 | !Pout2) M ((!Pm3 W !Pm1) R !Pout4))
+Pback1 & (!Pback4 R (!Pback3 | X({Pback3[*1..2]}[]-> !P1)))
+(XP4 & GPback3) | (!Pout1 M !Pback3)
+F((Pm1 & !Pm3) | X((Pm1 & !Pm3) R {P1[*0..2]:Pout4}))
+!Pback4 | (Pout2 W ((Pback4 & !Pm4) | (Pm4 & !Pback4)))
+(F!Pout1 & (!Pm1 | !Pout2)) | (Pout2 & Pm1 & GPout1)
+F(!P1 | !Pm2) R (Pout1 | !Pm4)
+F(XPm2 | !Pout4) & (((P4 & F!Pback1) | (!P4 & GPback1)) U P2)
+Pback1 M ((!P4 & !Pback1 & G(Pout2 | P1)) | (Pback1 & (P4 | F(!P1 & !Pout2))))
+(!Pout4 & XG!Pout2) | (Pout4 & XFPout2)
+((P4 & (Pback2 | (P1 & Pout1))) | (!Pback2 & !P4 & (!P1 | !Pout1))) R Pm1
+(F!P3 & FPback2) | G(P3 & !Pback2)
+!Pback4 | F!Pm1 | (!Pout4 W !P1)
+((Pback4 & FPout1) | (!Pback4 & G!Pout1)) & (F!P4 U Pm3)
+(Pback3 R Pout1) & (Pback3 | !Pm3 | GPback1)
+X(((Pm2 & P1) | (!P1 & !Pm2)) W Pback4)
+(Pback3 & !Pout1) R ((Pout1 & !P2) | (P2 & !Pout1))
+(((P3 U P2) W P2) & XF(P1 & !Pback2)) | (((!P3 R !P2) M !P2) & XG(Pback2 | !P1))
+(Pm2 & GPback4 & (!P4 W !Pout2) & X({Pm2[*1..2]}<>-> !P1)) | ((P4 M Pout2) & (F!Pback4 | !Pm2 | X({Pm2[*1..2]}[]-> P1)))
+{Pback1[*] && Pback2[*]}[]-> P3 | !Pm2
+!Pm1 | !Pm2 | GPm2 | (Pback2 & !P2)
+Pm2 | G(GPback4 | !Pout2 | X(Pback3 W P4))
+Pback1 | G(!P3 & !Pout4 & X((!P1 & X!P2) | (P1 & XP2)))
+(P1 U GPm1) U (((!Pout3 & !Pm3) | (Pm3 & Pout3)) W Pm4)
+(Pm1 R ((!Pback2 & !Pm1) | (Pback2 & Pm1))) W (Pm1 & (Pm4 U P3))
+(!Pm1 & GPout1) | (Pm1 & F!Pout1)
+F(!P3 | (Pout1 & (!P3 R !Pm4)))
+(((!Pback4 & (!Pout4 W F!Pout3)) | (Pback4 & (Pout4 M GPout3))) W Pout4) U ((Pout3 & !Pback4) | (Pback4 & !Pout3))
+Pout2 | (X!Pback1 & (!P4 M (!P4 W F!Pm3))) | (XPback1 & (P4 W (P4 M GPm3)))
+(Pm3 | !Pout3) M ((!Pm2 & G!Pback3) | (Pm2 & FPback3))
+(XPback3 | GPm3) M (Pm3 & (!P2 R !Pm2))
+Pm1 & ((Pout4 | (!Pout3 M !P2)) R Pout1)
+(G!Pout1 & (!Pout2 | (!Pout3 & GPm3) | (Pout3 & F!Pm3))) | (Pout2 & FPout1 & ((!Pout3 & F!Pm3) | (Pout3 & GPm3)))
+(P4 & Pm1 & (P3 | X(P3 M P2))) | (!P3 & (!P4 | !Pm1) & X(!P3 W !P2))
+F(GPm3 | (Pm1 & !Pback2 & !Pm2))
+GPm2 | (!Pback1 & !Pm4 & !P2)
+Pm1 | (X!Pm2 & F(!Pout2 W F!Pback2))
+Pback3 & Pback2 & ((!P2 & (!Pout4 M !Pm2)) | (P2 & (Pout4 W Pm2)))
+(!Pback3 & F(P1 & !Pout4)) | (Pback3 & G(Pout4 | !P1))
+{{{P3 && !Pm4}}[*]:{P4 && Pm1}}
+!Pback2 | !Pout3 | (Pout4 W (P2 | XPback3))
+((Pback4 W Pback1) M Pout2) | F((Pback3 & !Pback4) | (Pback4 & !Pback3))
+(G!Pout4 & ((Pout4 & (!Pout1 M !Pout3)) | (!Pout4 & (Pout1 W Pout3)))) | (FPout4 & ((Pout4 & (Pout1 W Pout3)) | (!Pout4 & (!Pout1 M !Pout3))))
+F!Pback2 & (Pm2 U (Pout4 W FPback2))
+((!Pback1 & G!P3) | (Pback1 & FP3)) W ((!P2 & FP2) W P3)
+(!Pm3 & !Pout2 & G(Pback1 & !Pout4)) | (Pm3 & (Pout2 | F(Pout4 | !Pback1)))
+(Pback1 & !Pout1) | (Pout1 & !Pback1) | G((Pback3 & (!P3 | XPback2)) | (P3 & !Pback3 & X!Pback2))
+FPm2 U (GPm3 | (!P4 & !P1) | (P4 & P1))
+GP1 | (F!P3 & ((!P2 & G!Pout3) | (P2 & FPout3))) | (GP3 & ((P2 & G!Pout3) | (!P2 & FPout3)))
+(!Pout1 & ((!Pback3 & (P2 | Pm1) & (!P4 W G!Pout4)) | ((P4 M FPout4) & (Pback3 | (!Pm1 & !P2))))) | (Pout1 & ((!Pback3 & (P2 | Pm1) & (P4 M FPout4)) | ((!P4 W G!Pout4) & (Pback3 | (!Pm1 & !P2)))))
+F(F(!Pout4 W FPout2) R XPm4)
+!Pout2 & ((XPback2 M G!Pback1) U Pm2)
+Pback3 | (FGPout3 & F((Pout1 & !Pm3) | (Pm3 & !Pout1)))
+G((Pm3 & P2) | (Pback2 R (Pm4 & Pm2))) U Pm3
+(P4 | (P3 & !Pm1) | (Pm1 & !P3)) W Pout3
+((F!P4 & F!Pout3) | G(P4 & Pout3)) U ((Pm2 & Pback1) | X((Pm2 & Pback1) R P2))
+XF(Pout1 & (!Pback2 | F(!Pm4 R !P4)))
+X((Pback4 & Pout4 & GP1) | (F!P1 & (!Pback4 | !Pout4)))
+((Pm2 W (Pback1 U P2)) M XXPm1) M Pout2
+((Pm2 W !Pout4) & (!Pout2 M (Pm2 & P1))) | ((!Pm2 M Pout4) & (Pout2 W (!P1 | !Pm2)))
+!Pm3 | (Pm3 W Pout3) | (FPm1 & (Pout4 | !P2))
+(Pback2 M P4) M (FPm2 & (Pback1 W Pm4))
+(((!Pm4 & XPback4) | (Pm4 & X!Pback4)) W ((Pout2 R Pback3) W P2)) U Pm4
+(P1 W (Pout2 R (Pback2 & !P3))) U Pout1
+(Pout2 & Pout1 & X(!Pback1 & ((Pout2 & Pout1) W XX!Pout1))) | (XPback1 & (!Pout2 | !Pout1 | X((!Pout2 | !Pout1) M XXPout1)))
+Pback1 & ((((!P2 & F!Pback2) | (P2 & GPback2)) & (Pout1 W F!P4)) | ((!Pout1 M GP4) & ((!P2 & GPback2) | (P2 & F!Pback2))))
+((!Pm3 | X!Pout1) & (!P1 | GP3)) | (Pm3 & P1 & XPout1 & F!P3)
+(X!Pout1 & (!Pout1 M G(!P1 | !Pback3))) | (XPout1 & (Pout1 W F(Pback3 & P1)))
+P1 M ((P2 & P1) | (FPback4 R Pback1))
+(Pback2 & !Pback4 & !Pout1) W (Pback3 & Pout2)
+F(!P4 | X(!P4 | X(P4 M GPback3)))
+({Pout3[*1..2]}[]-> (Pback3 | (Pm3 W Pback4))) & ((Pback3 | (Pm3 W Pback4)) W P1)
+(Pout1 U Pout4) M ((!P1 & X(!Pout4 & (!P3 W !Pout1))) | (P1 & X(Pout4 | (P3 M Pout1))))
+(FPback2 & (!Pm1 M !Pback4)) | (G!Pback2 & (Pm1 W Pback4))
+(!Pm3 | !P3) M (Pout1 W !Pback3)
+FPout3 | (Pout1 & FG((!Pm3 & !Pback4) | (Pback4 & Pm3)))
+F((Pm3 U GPout4) W ((!P3 & (Pm1 W P4)) | (P3 & (!Pm1 M !P4))))
+Pback2 | X(Pback2 M !Pout1) | GPback1
+!Pout2 & (Pout4 | GPout1 | (!Pback4 & X!P2) | (Pback4 & XP2))
+FPback3 | XG(Pout1 | !Pout4 | !Pback1)
+(Pback3 & F((P3 W !Pm3) W Pout3)) M P3
+(P1 & XPback2 & (!Pout1 W XG!Pback3)) | ((!P1 | X!Pback2) & (Pout1 M XFPback3))
+GP3 U ((!Pm1 & XPback1) | (Pm1 & X!Pback1))
+!Pm4 | !Pback1 | (FP3 & (!Pout4 U !Pout2)) | (G!P3 & (Pout4 R Pout2))
+(Pm4 & !Pback3) | X((Pm4 & !Pback3) R Pm3)
+(Pback3 & !P2 & ((((!Pback3 & !Pback1) | (Pback3 & Pback1)) & (Pout4 | X(Pout4 R Pback2))) | (!Pout4 & ((Pback1 & !Pback3) | (Pback3 & !Pback1)) & X(!Pout4 U !Pback2)))) | ((P2 | !Pback3) & ((!Pout4 & ((!Pback3 & !Pback1) | (Pback3 & Pback1)) & X(!Pout4 U !Pback2)) | (((Pback1 & !Pback3) | (Pback3 & !Pback1)) & (Pout4 | X(Pout4 R Pback2)))))
+(P1 & Pm1) | G(!Pout2 | !Pm4)
+(!Pm1 & !Pback1 & F!Pback3 & ((!Pout1 & F!Pm3) | (Pout1 & GPm3))) | ((Pm1 | Pback1 | GPback3) & ((!Pout1 & GPm3) | (Pout1 & F!Pm3)))
+X(X!Pout3 | (Pback4 W !Pback2) | F!Pout2)
+!Pm4 | X(!Pm4 M (P1 W (Pm2 U Pm4)))
+(!Pout3 & GPback1) | (Pout3 & F!Pback1)
+(Pback3 & Pout1) R (FPout4 R (!Pback4 | X(!Pback4 | GPback1)))
+F(!Pm4 | X({Pm4[*1..2]}[]-> (GP1 | (Pm4 & Pback1)))) R Pout3
+X(FPout2 R (Pm4 | ({[*1..2]}[]-> P3)))
+F!Pout4 & ((!Pback4 & XGPout4) | (Pback4 & XF!Pout4))
+(Pback3 U Pm4) | (Pout4 & Pm1 & X((Pout4 & Pm1) U GPm2))
+((P1 | (!Pm4 W ((!P1 & XPout1) | (P1 & X!Pout1)))) & (!P3 | !Pm1)) | (P3 & Pm1 & !P1 & (Pm4 M ((!P1 & X!Pout1) | (P1 & XPout1))))
+(!P4 & !Pback1 & (!Pm1 U !Pout3)) | ((Pback1 | (Pm1 R Pout3)) & (P4 | GPback1))
+(P4 | GPback4) & (!Pback3 | !P4 | !P2)
+XF(FP4 | ((!Pm4 | !P4) & (!Pback1 W !P2)))
+(((!P1 W !Pout2) W !Pback4) & X(P4 & Pm4)) | (((P1 M Pout2) M Pback4) & X(!Pm4 | !P4))
+GPout4 | !Pout3 | (F(P2 & X(P2 W P1)) U Pback1)
+(X!P3 & (Pback3 | !Pout3) & G(Pout2 & XPout2)) | (XP3 & ((Pout3 & !Pback3) | F(!Pout2 | X!Pout2)))
+!Pback3 & F((!P2 & GPout2) | (P2 & F!Pout2))
+X!P3 M ((Pout2 U XPm3) R Pm2)
+!Pm2 U X(XPback1 | (Pback2 W (Pback3 W Pback4)))
+(X!Pm4 & (Pout3 | FPback3) & G(Pback3 | !Pback1)) | (XPm4 & (F(Pback1 & !Pback3) | (!Pout3 & G!Pback3)))
+(!P1 & ((Pback2 & !Pout1 & !P2 & FP3) | (P2 & (Pout1 | !Pback2 | G!P3)))) | (P1 & ((!P2 & (Pout1 | !Pback2 | G!P3)) | (P2 & Pback2 & !Pout1 & FP3)))
+F((!P2 & ((!Pm2 & ((!Pm4 & (!P2 M Pm3)) | (Pm4 & (P2 W !Pm3)))) | (Pm2 & ((!Pm4 & (P2 W !Pm3)) | (Pm4 & (!P2 M Pm3)))))) | (P2 & ((!Pm2 & ((!Pm4 & (P2 W !Pm3)) | (Pm4 & (!P2 M Pm3)))) | (Pm2 & ((!Pm4 & (!P2 M Pm3)) | (Pm4 & (P2 W !Pm3)))))))
+F((!Pout4 & GPback1) | (Pout4 & F!Pback1))
+XF(((Pout4 U Pout1) & (!P4 | F!Pout4)) | (P4 & GPout4 & (!Pout4 R !Pout1)))
+((Pm2 & Pback2 & Pout2 & !Pback4) | ((Pback4 | !Pm2) & (!Pback2 | !Pout2))) & X(((Pm2 & Pback2 & Pout2 & !Pback4) | ((Pback4 | !Pm2) & (!Pback2 | !Pout2))) W !Pm2)
+FP4 | (!Pm4 R (!P2 | (!P4 M !Pout2)))
+X(Pout4 W (Pback4 & ((!P2 & (!Pout2 | !Pm2)) | (P2 & Pm2 & Pout2))))
+X!Pm1 | (!Pm2 U (!Pback3 R !Pm3))
+F((P1 W Pback4) W {P1[*]:P4})
+P1 U X((Pback4 & !Pm2) | (Pm2 & !Pback4) | (Pm1 W XP3))
+(G!P1 & (((Pback1 & !Pm4) | (Pm4 & !Pback1)) M Pout3)) | (FP1 & (((Pm4 & Pback1) | (!Pm4 & !Pback1)) W !Pout3))
+Pout2 | P1 | XP1 | F(P2 W GPout2)
+((P4 W (P3 M Pback3)) & ((G!Pm2 & ((P2 & !Pout3) | (Pout3 & !P2))) | (FPm2 & ((Pout3 & P2) | (!P2 & !Pout3))))) | ((!P4 M (!P3 W !Pback3)) & ((G!Pm2 & ((Pout3 & P2) | (!P2 & !Pout3))) | (FPm2 & ((P2 & !Pout3) | (Pout3 & !P2)))))
+(!Pout1 & GPback1) | (Pout1 & F!Pback1)
+X((X!Pback2 & ({Pback1[*0..2]}[]-> F!P3)) | (XPback2 & ({Pback1[*0..2]}<>-> GP3)))
+F(Pback2 W ((!Pm3 | !Pm4) & (Pm4 | Pm3)))
+XP1 | F(G!Pback2 & (Pback1 M Pm3))
+F((Pout3 & P2) R Pout3) & (P4 R ((Pback1 & !Pm3) | (Pm3 & !Pback1)))
+((!P1 & F!Pm1) | (P1 & GPm1)) R (P4 | (P3 W GPout1))
+(X((!Pm2 & F!P1) | (Pm2 & GP1)) & (!Pm4 | !Pout4)) | (Pm4 & Pout4 & X((!Pm2 & GP1) | (Pm2 & F!P1)))
+XPout3 | G((Pm2 & Pback1 & !Pback3) | (Pback3 & (!Pback1 | !Pm2)))
+(!P4 & ((Pm3 & !Pout3) U (!Pm3 | !P3))) | (P4 & ((Pout3 | !Pm3) R (P3 & Pm3)))
+(X(P4 & !Pm3) & G(!Pm1 | !Pout4)) | (F(Pout4 & Pm1) & X(Pm3 | !P4))
+F(!P3 & (Pback3 | !Pout1)) R (P3 W Pback4)
+F((!Pback4 & !Pout3 & X(Pm4 M F!P4)) | ((Pback4 | Pout3) & X(!Pm4 W GP4)))
+FP4 | (XGPback1 R (XP2 & GPm1))
+Pout2 & !Pm2 & X(!Pm3 & ((!Pback3 & F!Pback2) | (Pback3 & GPback2)))
+X((G!Pm3 & (((!Pback4 R !Pm2) & ((!Pback3 & !P2) | (Pback3 & P2))) | ((Pback4 U Pm2) & ((Pback3 & !P2) | (P2 & !Pback3))))) | (FPm3 & (((Pback4 U Pm2) & ((!Pback3 & !P2) | (Pback3 & P2))) | ((!Pback4 R !Pm2) & ((Pback3 & !P2) | (P2 & !Pback3))))))
+(P2 | !Pback4 | XP4) M (P4 | GPout3)
+X!Pback1 | ((!Pm1 & G!Pm2) W !P1)
+{Pback3:{!Pback4}[*2]} W ((F!Pback2 & XPm4) | (GPback2 & X!Pm4))
+Pout3 & Pback2 & ((P3 & P1 & G!Pout2) | (FPout2 & (!P3 | !P1)))
+Pout2 W (((!Pm1 & !P4 & GPout3) | (Pm1 & (P4 | F!Pout3))) M Pback4)
+!P4 | (XPm1 & ((!Pout1 & GPm3) | (Pout1 & F!Pm3)))
+(!P4 | F!Pout4) & (P4 | !Pback1 | G!P1)
+((Pback4 W P2) & ((!Pm1 | !P4) U !Pback1)) | (((P4 & Pm1) R Pback1) & (!Pback4 M !P2))
+(P3 & GPm3) U (Pm2 W (Pm2 M Pout4))
+GPback1 | X(!P1 | (Pback2 & !Pout3) | (Pout3 & !Pback2))
+(Pout3 W ((!P4 & FP1) | (P4 & G!P1))) U (P4 & (P1 | !Pm2))
+(((!Pback4 & !P1 & !P2) | (P2 & (Pback4 | P1))) & ((!Pout1 & XG!Pback3) | (Pout1 & XFPback3))) | (((!P2 & (Pback4 | P1)) | (P2 & !Pback4 & !P1)) & ((!Pout1 & XFPback3) | (Pout1 & XG!Pback3)))
+F(P4 | (P1 U (!P3 | (!Pback2 & F!P1) | (Pback2 & GP1))))
+(Pm2 R (Pout4 & Pout3)) & ((F!Pback3 & (!P4 | !Pm2)) | (P4 & Pm2 & GPback3))
+(XG!Pback2 & (Pback3 | GPback1)) | (!Pback3 & F!Pback1 & XFPback2)
+(!P4 & G(P1 & !Pback1)) | (P4 & F(Pback1 | !P1))
+((!Pm1 | !P4) & (!Pout2 U (!P2 U !Pback2))) | (P4 & Pm1 & (Pout2 R (P2 R Pback2)))
+(X!Pback4 & ((!Pm2 & FPm1) | (Pm2 & G!Pm1))) | (XPback4 & ((!Pm2 & G!Pm1) | (Pm2 & FPm1)))
+(!Pout1 & (Pback2 R !Pout3)) | (Pout1 & (!Pback2 U Pout3))
+(G!P3 & XXG(X!Pm1 & (Pm3 | !Pm4))) | (FP3 & XXF(XPm1 | (Pm4 & !Pm3)))
+X((Pm4 M !Pout4) M F(P3 W (P4 R P2)))
+(FPout1 & (Pout2 | (GPm4 U P2))) M P4
+(!Pout2 & (Pout3 W Pm4)) | (Pout2 & (!Pout3 M !Pm4)) | (!P1 M (Pout3 | !P2))
+((Pm2 W ((!Pout1 & !Pback1) | (Pback1 & Pout1))) & (P2 | X(P2 M GP4))) | (!P2 & (!Pm2 M ((Pout1 & !Pback1) | (Pback1 & !Pout1))) & X(!P2 W F!P4))
+P3 & P2 & X((P3 & P2) W Pm4)
+X(((G!Pback4 & (!P4 M !P1)) | (FPback4 & (P4 W P1))) M Pback3)
+(((((P4 & Pm1) | (!Pm1 & !P4)) & ((Pm2 & !P3) | (P3 & !Pm2))) | (((Pm1 & !P4) | (P4 & !Pm1)) & ((!P3 & !Pm2) | (P3 & Pm2)))) R P4) M Pback2
+FPm4 | (!Pback4 & XG!Pout2)
+Pout3 | Pout2 | XPm2 | (!Pback1 R !Pm1)
+Pout1 & (F(Pout2 & !P2) R !Pm4)
+(!Pout1 & XGPout3 & ((Pback4 & !Pm3 & !Pout1) | (Pout1 & (Pm3 | !Pback4)))) | (XF!Pout3 & (Pout1 | (!Pout1 & (Pm3 | !Pback4))))
+G!Pm1 | (Pback2 U (Pout1 | ((!Pm3 | !Pout2) M !Pout1)))
+(P1 & G(GPm4 | (Pout4 & Pm3) | (!Pm3 & !Pout4))) | (!P1 & F(F!Pm4 & ((Pm3 & !Pout4) | (Pout4 & !Pm3))))
+!Pout4 | (Pback4 W ((!Pm4 | !Pout3) & (Pm4 | Pout3)))
+X(((!Pm1 & FPm4) | (Pm1 & G!Pm4)) & ((!Pback3 & !Pback1) M !P1))
+((!Pm3 & !Pm2) | (Pm3 & Pm2)) W XX!Pout2
+(XP1 & F((Pm2 U P2) | (!Pout2 & !Pout4))) | (X!P1 & G((Pout4 | Pout2) & (!Pm2 R !P2)))
+(!P4 & !Pout3 & X(!Pout3 W F!P3)) | (P4 & (Pout3 | X(Pout3 M GP3)))
+(FPback2 & XF!Pout1) | (G!Pback2 & XGPout1)
+(((!P3 & !Pout4) | (Pout4 & P3)) & X(G!Pm1 | (!Pout2 U X!Pback3))) | (X(FPm1 & (Pout2 R XPback3)) & ((P3 & !Pout4) | (Pout4 & !P3)))
+(Pback1 W Pback4) | F{{{Pm3 | Pback3}}[*2]:Pm1}
+!P4 | (X(!P3 | !Pback1) W (P4 R Pback3))
+P1 U (Pback2 & X(Pm3 & (Pout3 W Pout4)))
+X((!Pback1 | G!Pback4 | XPback4) W Pout3)
+(Pback4 | P1) R (Pm1 | XPm1 | GPback4)
+!Pback1 | X(!Pback1 | X({Pback1[*2][*1..2]}[]-> G(!Pm3 | !P1)))
+!P3 | GP3 | (!Pout1 & (Pout3 U Pback4))
+(F!Pback1 & (Pm1 W P2) & (P4 M Pm2)) | ((!P4 W !Pm2) & (GPback1 | (!Pm1 M !P2)))
+XXPback2 U (!Pback4 | !Pm1 | X((!Pback4 | !Pm1) R Pm2))
+(F!Pm1 & (!Pout4 R !Pback3)) | (GPm1 & (Pout4 U Pback3))
+!P2 | X({P2[*1..2]}[]-> ((GPm3 M Pback2) W P4))
+((P2 W (Pout3 W Pm1)) W (P2 M Pback2)) U Pm1
+(G!P1 & XGPback2) | (FP1 & XF!Pback2)
+((!Pback1 & XX!Pout3) | (Pback1 & XXPout3)) W XPm4
+(((P4 & !Pm3) | (Pm3 & !P4)) & ((!Pback1 W !P4) R !Pback1)) | (((Pback1 M P4) U Pback1) & ((!Pm3 & !P4) | (P4 & Pm3)))
+(P3 & (((!Pout3 M !P4) & ((P4 & Pout2) | F!Pback2)) | ((!Pout2 | !P4) & GPback2 & (Pout3 W P4)))) | (!P3 & (((Pout3 W P4) & ((P4 & Pout2) | F!Pback2)) | (GPback2 & (!Pout3 M !P4))))
+F(G!Pm3 | (!Pback4 & (Pback3 | !Pout2)) | (Pback4 & Pout2 & !Pback3))
+F(FPm2 | XG(Pback4 & (!Pback1 W !Pout1)))
+X((Pback2 & GPback1 & XF(P3 & XP3)) | (F!Pback1 & (!Pback2 | XG(!P3 | X!P3))))
+((!P4 & !Pout3) | (P4 & Pout3)) U (P4 W Pm3)
+(P3 & XP3) R (Pback2 W (!Pm4 | (Pm4 & XPm4)))
+Pm1 & !P1 & X((Pm1 & !P1) W !Pm1)
+XFPback4 & ((Pm1 | !Pback4 | GPback4) R Pback2)
+Pout2 & X(Pback3 & (Pout4 | XGPout1))
+X!Pback4 & ((!P2 & G!Pout3) | (P2 & FPout3))
+Pout4 W ((G!Pout1 & (Pm3 | G!Pm3)) | (!Pm3 & FPm3 & FPout1))
+(F!P2 & ((!Pout3 & X((Pback1 & !Pm1) | (Pm1 & !Pback1))) | (Pout3 & X((!Pm1 & !Pback1) | (Pm1 & Pback1))))) | (GP2 & ((!Pout3 & X((!Pm1 & !Pback1) | (Pm1 & Pback1))) | (Pout3 & X((Pback1 & !Pm1) | (Pm1 & !Pback1)))))
+!Pback4 W ((P4 & !Pback1) | (Pback1 & !P4))
+P4 | X((!P4 R Pback4) W (Pback4 U Pout4))
+XF(Pback2 | GPm4 | (!Pback3 & (!Pm4 | !Pout3)) | (Pm4 & Pback3 & Pout3))
+((P3 & XPback2) | (!P3 & X!Pback2)) M ((!Pout1 & XF!Pback2) | (Pout1 & XGPback2))
+XPm3 | (XX!P3 W (F!P3 & G!Pm1))
+Pback3 | F((!Pout4 & F!P2 & ((!P1 & !Pback4) | (Pback4 & P1))) | ((Pout4 | GP2) & ((P1 & !Pback4) | (Pback4 & !P1))))
+(P2 M Pout3) | (!Pout4 & !Pout1) | (Pout4 & Pout1) | X(!P4 R !P3)
+X((((!Pback2 & F!P4) | (Pback2 & GP4)) & (((!Pout1 & XPm2) | (Pout1 & X!Pm2)) W !Pout1)) | (((!Pback2 & GP4) | (Pback2 & F!P4)) & (((!Pout1 & X!Pm2) | (Pout1 & XPm2)) M Pout1)))
+(P4 & !Pback4 & ((P1 & !P4) M (!Pback3 | !Pout3))) | ((Pback4 | !P4) & ((P4 | !P1) W (Pback3 & Pout3)))
+Pback3 W ((!Pout4 & !P2) | (Pout4 & P2))
+X(!P1 | !Pback1 | (!Pback3 U G!Pout4))
+(!Pout3 & F!Pback3) | (Pout3 & GPback3) | (Pm1 & !Pout1)
+(XPout4 & (!P3 M F!Pout4)) | (X!Pout4 & (P3 W GPout4))
+(Pm2 & Pout1 & !Pm1 & X(Pm2 U Pm1)) | (Pm1 & (!Pm2 | !Pout1 | X(!Pm2 R !Pm1)))
+Pback2 R (!P2 | X(GPback2 U (Pm1 W Pback4)))
+(!Pout4 W ((!Pout2 & (Pback1 W (Pm2 | !P2))) | (Pout2 & (!Pback1 M (P2 & !Pm2))))) U Pout4
+F((XPout1 & ((!Pm2 & GPout4) | (Pm2 & F!Pout4))) | (X!Pout1 & ((!Pm2 & F!Pout4) | (Pm2 & GPout4))))
+P3 | !Pback1 | (P2 & GPback2) | (!P2 & F!Pback2)
+(Pback4 & GP2) | XX((Pout4 R P4) U Pback4)
+(!P4 & GP3) | (P4 & F!P3)
+((!P4 & ((!Pm4 & F(Pout1 & XPback3)) | (Pm4 & G(!Pout1 | X!Pback3)))) | (P4 & ((!Pm4 & G(!Pout1 | X!Pback3)) | (Pm4 & F(Pout1 & XPback3))))) U Pback3
+!P1 | (((!Pback4 & G(Pout1 | !Pout3)) | (Pback4 & F(Pout3 & !Pout1))) R Pback3)
+(((Pback1 & GPm1) | (!Pback1 & F!Pm1)) W Pm1) W FPm2
+!P3 | F(Pout1 | (!Pback1 & ((!Pout2 & F!Pback4) | (Pout2 & GPback4))) | (Pback1 & ((!Pout2 & GPback4) | (Pout2 & F!Pback4))))
+(Pback4 M (P1 R Pout2)) | XX!Pout4
+(F!Pout2 & ({{!Pback4 && {{!Pout4 && !Pout3} | {Pout4 && Pout3}}}[*0..1]}[]-> !Pout4)) | (GPout2 & ({{!Pback4 && {{!Pout4 && !Pout3} | {Pout4 && Pout3}}}[*0..1]}<>-> Pout4))
+(!Pout4 & G!P1) | (Pout4 & FP1)
+(!Pback1 & G!Pout2) | (Pback1 & FPout2)
+F(!Pout2 | (!Pback1 & G!P4))
+(Pback4 & XPback4) W (Pout1 & X({Pout1[*1..2]}<>-> XPout3))
+(Pout3 & ((Pback3 & !P2) W !P3) & (!Pback2 R !P1)) | (((P2 | !Pback3) M P3) & (!Pout3 | (Pback2 U P1)))
+((!Pm4 U !Pout1) & FPback2) | ((Pm4 R Pout1) & G!Pback2)
+Pm4 | (!Pout2 & ((((Pback1 & !Pm3) | (Pm3 & !Pback1)) & (!Pm3 U !Pm2)) | ((Pm3 R Pm2) & ((!Pback1 & !Pm3) | (Pm3 & Pback1))))) | (Pout2 & (((!Pm3 U !Pm2) & ((!Pback1 & !Pm3) | (Pm3 & Pback1))) | ((Pm3 R Pm2) & ((Pback1 & !Pm3) | (Pm3 & !Pback1)))))
+(G!Pm3 & XP3) | (X!P3 & FPm3)
+XGP1 | (!Pm2 & (P2 | (!P2 & !Pback2)))
+P1 | G(Pm2 | !Pout3 | X(!Pout3 R !Pback4))
+(Pout2 & G!Pm4 & X({Pout2[*1..2]}<>-> G!Pout4)) | (FPm4 & (!Pout2 | X({Pout2[*1..2]}[]-> FPout4)))
+Pm4 | G(Pback3 | !Pback4 | !Pm1)
+(((Pm2 & P1) M X((P1 & !Pout3) | (Pout3 & !P1))) & (!Pm1 | !Pout3)) | (Pout3 & Pm1 & ((!P1 | !Pm2) W X((!P1 & !Pout3) | (Pout3 & P1))))
+(Pback4 & Pback1) | X({{!Pback4 | !Pback1}[*1..2]}[]-> (P4 R Pm2))
+((!Pback2 M !P4) & ((!P1 | !Pback2) U !P2)) | (((Pback2 & P1) R P2) & (Pback2 W P4))
+X(!Pout1 | X(!Pout1 M (Pout2 & G!Pm3)))
+!Pm1 | ((Pback4 W !P4) & (Pm1 | X(Pm1 M Pout1)))
+(!Pm3 & (P3 W XPout1)) | (Pm3 & (!P3 M X!Pout1))
+XF!P4 U (Pback4 R (!Pout4 | XPm2))
+X((GPback3 U !Pback4) U (P2 M P4))
+(Pback4 & Pout3 & !P3 & (X!Pback3 | F!P1)) | (XPback3 & GP1 & (P3 | !Pback4 | !Pout3))
+(F!Pm1 & (!Pm1 | (!P2 & ((!P2 & !P3) | (P3 & P2))))) | (GPm1 & (P2 | (P3 & !P2)))
+(Pback3 & !Pback2 & F(P3 & Pback3) & ((Pback1 & !Pback2) | (Pback2 & !Pback1))) | (((!Pback2 & !Pback1) | (Pback2 & Pback1) | G(!Pback3 | !P3)) & (Pback2 | !Pback3))
+(FP4 R XP3) | ((P1 | !Pm2) R Pout3)
+(!Pback1 & (Pm3 U Pout2)) | (Pback1 & (!Pm3 R !Pout2))
+(!Pout2 W X!P4) | X((!Pback2 & (Pm3 M Pout2)) | (Pback2 & (!Pm3 W !Pout2)))
+FPout3 R X(Pback4 & (Pm3 | X(Pm3 R Pback1)))
+(!Pout1 & ((!Pback4 & (Pm2 | !Pm4)) | (Pm4 & Pback4 & !Pm2))) | (Pout1 & (GPout1 | (Pm4 & !Pback4 & !Pm2) | (Pback4 & (Pm2 | !Pm4))))
+F((Pm4 & Pm3 & G!Pout3) | (FPout3 & (!Pm4 | !Pm3)))
+(GP3 & (!Pback1 | G!Pm3)) | (Pback1 & F!P3 & FPm3)
+P3 | (!Pout2 W (!Pback4 & !Pout1))
+(X!Pback3 & (Pm1 U P2)) | (XPback3 & (!Pm1 R !P2))
+(G!Pm3 U X!Pout2) & ((!Pout1 & !Pout2) | (Pout2 & Pout1))
+XX(P2 | (!Pback3 & !Pm3) | (Pm3 & Pback3) | X(((!Pback3 & !Pm3) | (Pm3 & Pback3)) R !Pback4))
+(GPback2 | !Pback2 | !P4) W !Pout1
+(HasRight2 & IsEating4) | X((HasRight2 & IsEating4) M (GWaitLeft4 | GFIsEating2))
+"Fork4" & ((!IsEating1 U !WaitLeft1) W ((WaitLeft2 & !IsEating3) | (IsEating3 & !WaitLeft2)))
+"WaitRight4" | (HasLeft4 U IsEating1) | GF!HasLeft0
+FHasRight1 R ((G!WaitLeft4 & (!"Fork4" | !HasRight4 | (!WaitLeft4 & !WaitLeft3))) | (HasRight4 & "Fork4" & FWaitLeft4 & (WaitLeft3 | WaitLeft4)))
+("Fork4" M HasRight2) & (G(F!HasLeft3 & F!HasRight0) | FG(HasRight0 & HasLeft3))
+X(((((IsEating0 | WaitLeft1) M (IsEating3 | (WaitRight3 U HasRight1))) W WaitLeft2) & X!Idle1) | (XIdle1 & (((!WaitLeft1 & !IsEating0) W (!IsEating3 & (!WaitRight3 R !HasRight1))) M !WaitLeft2)))
+(!HasLeft1 & G((((WaitLeft2 & ((Idle4 & FWaitRight0) | (!Idle4 & G!WaitRight0))) | (!WaitLeft2 & ((Idle4 & G!WaitRight0) | (!Idle4 & FWaitRight0)))) & ((Idle4 & !WaitRight3) | (WaitRight3 & !Idle4))) | (((WaitLeft2 & ((Idle4 & G!WaitRight0) | (!Idle4 & FWaitRight0))) | (!WaitLeft2 & ((Idle4 & FWaitRight0) | (!Idle4 & G!WaitRight0)))) & ((!Idle4 & !WaitRight3) | (WaitRight3 & Idle4))))) | (HasLeft1 & F((((Idle4 & !WaitRight3) | (WaitRight3 & !Idle4)) & ((WaitLeft2 & ((Idle4 & G!WaitRight0) | (!Idle4 & FWaitRight0))) | (!WaitLeft2 & ((Idle4 & FWaitRight0) | (!Idle4 & G!WaitRight0))))) | (((WaitLeft2 & ((Idle4 & FWaitRight0) | (!Idle4 & G!WaitRight0))) | (!WaitLeft2 & ((Idle4 & G!WaitRight0) | (!Idle4 & FWaitRight0)))) & ((!Idle4 & !WaitRight3) | (WaitRight3 & Idle4)))))
+G((F!"Fork1" & ((!WaitRight3 | G!WaitLeft3) U (IsEating3 & !WaitLeft2))) | (G"Fork1" & ((WaitRight3 & FWaitLeft3) R (WaitLeft2 | !IsEating3))))
+F("Fork0" & HasLeft4) | G(!HasRight2 | F(HasLeft4 | GHasRight3))
+(XHasRight4 & ((((X!WaitLeft2 & !HasRight3) | (HasRight3 & XWaitLeft2)) & GF!"Fork1") | (FG"Fork1" & ((XWaitLeft2 & !HasRight3) | (HasRight3 & X!WaitLeft2))))) | (X!HasRight4 & ((GF!"Fork1" & ((XWaitLeft2 & !HasRight3) | (HasRight3 & X!WaitLeft2))) | (FG"Fork1" & ((X!WaitLeft2 & !HasRight3) | (HasRight3 & XWaitLeft2)))))
+"WaitRight3" | !HasLeft1 | GFWaitLeft3 | (Idle4 R WaitRight4)
+(!HasRight1 R WaitLeft1) W XG(X!WaitRight2 | (!Idle1 & F!IsEating0) | (Idle1 & GIsEating0))
+F!WaitRight1 | (((HasRight3 U WaitLeft4) W Idle3) & ((!WaitLeft3 & !HasLeft2) | (HasLeft2 & WaitLeft3)))
+(!HasRight3 & ((IsEating4 & (G!HasLeft0 R ((GIdle1 & X!WaitRight4) | (XWaitRight4 & F!Idle1)))) | (!IsEating4 & (FHasLeft0 U ((X!WaitRight4 & F!Idle1) | (XWaitRight4 & GIdle1)))))) | (HasRight3 & ((IsEating4 & (FHasLeft0 U ((X!WaitRight4 & F!Idle1) | (XWaitRight4 & GIdle1)))) | (!IsEating4 & (G!HasLeft0 R ((GIdle1 & X!WaitRight4) | (XWaitRight4 & F!Idle1))))))
+(HasRight1 | F!WaitRight3 | (X!WaitRight2 & G!HasRight2) | (XWaitRight2 & FHasRight2) | X!"Fork1") W IsEating2
+(F(!WaitLeft4 & !HasLeft4) & F((!IsEating1 R HasLeft1) | FHasRight3)) | G((WaitLeft4 | HasLeft4) & (IsEating1 U !HasLeft1) & G!HasRight3)
+(WaitLeft2 & (((G!HasRight1 & FIdle4) | (FHasRight1 & G!Idle4)) M (GIsEating0 | (WaitLeft4 & !WaitLeft0)))) | (!WaitLeft2 & (((FHasRight1 & FIdle4) | G(!Idle4 & !HasRight1)) W (F!IsEating0 & (WaitLeft0 | !WaitLeft4))))
+((HasLeft3 | F!HasRight3) & (G!HasRight1 M !WaitLeft2)) | (!HasLeft3 & GHasRight3 & (FHasRight1 W WaitLeft2))
+(((!WaitRight1 & (!HasRight3 M !HasLeft3)) | (WaitRight1 & (HasRight3 W HasLeft3))) W !HasRight0) & (((!WaitRight1 & (!HasRight3 M !HasLeft3)) | (WaitRight1 & (HasRight3 W HasLeft3))) W ((!Idle0 | !IsEating0) & (Idle0 | IsEating0)))
+(Idle0 U !HasLeft3) W X(FHasRight3 & ("Fork0" M (HasRight3 W G"Fork1")))
+!Idle4 | ((!WaitRight0 & !HasRight1) R XF!HasLeft1)
+XG(HasRight2 | X(HasRight2 M HasRight0)) | ((!WaitRight0 W !"Fork3") M HasLeft3)
+((((Idle4 & !HasRight3) | (HasRight3 & !Idle4)) & GF!HasLeft2) | (FGHasLeft2 & ((!Idle4 & !HasRight3) | (HasRight3 & Idle4)))) U (!Idle3 | (HasRight2 W IsEating0))
+{{!IsEating0;{HasLeft4[*] && HasRight4[*]}}[*0..3]}[]-> "Fork2" U !IsEating2
+"WaitLeft3" | (G(!WaitRight3 U !Idle3) M (HasLeft4 & (HasLeft1 | !WaitRight4)))
+G((G!"Fork0" & (!HasRight2 W !WaitLeft1)) | (F"Fork0" & (HasRight2 M WaitLeft1)))
+(G(Idle0 | IsEating1) U IsEating4) R ((!WaitLeft3 & ((!"Fork4" W !HasLeft0) M IsEating1)) | (WaitLeft3 & (("Fork4" M HasLeft0) W !IsEating1)))
+G((((!IsEating2 & G!"Fork2") | (IsEating2 & F"Fork2")) U (!WaitRight0 W !WaitRight2)) | XG"Fork4")
+X((X!IsEating4 & (!HasRight1 M F!HasLeft0)) | (XIsEating4 & (HasRight1 W GHasLeft0))) W ((HasLeft3 & "Fork4") W !"Fork2")
+F((!HasLeft3 & ((G"Fork2" M !Idle4) | F!WaitRight0)) | (HasLeft3 & GWaitRight0 & (F!"Fork2" W Idle4)))
+(((!HasLeft1 & !Idle3) | (HasLeft1 & Idle3)) & G(!WaitLeft0 | F!Idle3)) | (F(WaitLeft0 & GIdle3) & ((Idle3 & !HasLeft1) | (HasLeft1 & !Idle3)))
+(!WaitRight2 & X((WaitLeft4 R HasRight3) & F((HasRight2 & G!"Fork0") | (!HasRight2 & F"Fork0")))) | (WaitRight2 & X((!WaitLeft4 U !HasRight3) | G((HasRight2 & F"Fork0") | (!HasRight2 & G!"Fork0"))))
+F((G!HasRight1 & (!IsEating2 U !Idle1)) W WaitRight2)
+G(((HasRight1 & G"Fork0") | (!HasRight1 & F!"Fork0")) & FG(!WaitRight2 | (HasRight1 W HasRight0)))
+(G((IsEating1 & !HasLeft2 & XHasRight0) U !WaitRight0) & ((!HasRight0 & GHasLeft4) | (HasRight0 & F!HasLeft4))) | (F((HasLeft2 | !IsEating1 | X!HasRight0) R WaitRight0) & ((!HasRight0 & F!HasLeft4) | (HasRight0 & GHasLeft4)))
+IsEating3 | !WaitRight3 | G(G((!WaitRight2 | !"Fork1") U Idle4) M XIsEating0)
+{{HasLeft3 | !HasLeft4}[*1..2]}[]-> G((!HasLeft2 & FWaitLeft2) | (HasLeft2 & G!WaitLeft2))
+XF(!WaitLeft2 R XX(Idle4 & !"Fork1" & F!WaitRight0))
+((((!WaitRight4 & !WaitRight3) | (WaitRight3 & WaitRight4)) W HasLeft2) M ((!HasLeft4 & !"Fork1") | ("Fork1" & HasLeft4))) W GHasRight3
+XHasLeft4 & ((WaitRight1 | !"Fork1") R FIdle3)
+((HasRight2 & !HasRight0) | (HasRight0 & !HasRight2)) R F(!HasLeft4 & !Idle3)
+((!WaitRight3 W !"Fork4") & G(HasLeft0 & FIdle1)) | ((WaitRight3 M "Fork4") & F(!HasLeft0 | G!Idle1))
+((!HasRight4 & (!WaitLeft1 R (!Idle1 | !WaitRight4))) | (HasRight4 & (WaitLeft1 U (Idle1 & WaitRight4)))) W GWaitLeft3
+{{{{WaitLeft2 | !HasRight1}}[*0..1] & !WaitRight4}[*1..3]}[]-> G(!HasRight4 | X(!HasRight4 M !HasLeft4))
+!IsEating3 & (((WaitRight3 | !"Fork1") R FWaitLeft3) W FWaitRight3)
+F((F!IsEating1 W FHasRight3) R (((!Idle3 & X!HasRight4) | (Idle3 & XHasRight4)) R XHasLeft1))
+X((!HasLeft2 & G!IsEating1) | (HasLeft2 & FIsEating1)) R F((!WaitRight1 & (!"Fork1" W !HasLeft3)) | (WaitRight1 & ("Fork1" M HasLeft3)))
+(X!WaitLeft1 & ((XWaitLeft3 & ((!WaitLeft1 U HasRight3) W XIsEating2)) U Idle0)) | (XWaitLeft1 & ((X!WaitLeft3 | ((WaitLeft1 R !HasRight3) M X!IsEating2)) R !Idle0))
+!"Fork0" | F(HasRight0 | (!WaitRight0 R ((!WaitRight0 & (WaitLeft0 R HasLeft3)) | (WaitRight0 & (!WaitLeft0 U !HasLeft3)))))
+IsEating1 M (FIsEating2 R ({Idle0[*1..2]}[]-> FIsEating1))
+((F!"Fork4" R !WaitLeft4) & ((!WaitRight4 & G!HasRight4) | (WaitRight4 & FHasRight4)) & (G!Idle1 M Idle0)) | (((G"Fork4" U WaitLeft4) | (!WaitRight4 & FHasRight4) | (WaitRight4 & G!HasRight4)) & (FIdle1 W !Idle0))
+(F((Idle0 & !WaitLeft2) | (WaitLeft2 & !Idle0)) & F(("Fork3" R IsEating4) R !WaitRight0)) | G(((!Idle0 & !WaitLeft2) | (Idle0 & WaitLeft2)) & ((!"Fork3" U !IsEating4) U WaitRight0))
+((!HasLeft0 & F(!Idle2 W !WaitRight4)) | (HasLeft0 & G(Idle2 M WaitRight4))) U (X"Fork4" | F("Fork2" | !HasLeft1))
+(XHasRight1 & !"Fork0" & (!WaitLeft4 U G!WaitLeft0) & (!WaitLeft1 U ((!HasRight1 & !"Fork0") | ("Fork0" & HasRight1)))) | ("Fork0" & (X!HasRight1 | (WaitLeft4 R FWaitLeft0) | (WaitLeft1 R ((HasRight1 & !"Fork0") | ("Fork0" & !HasRight1)))))
+X(!WaitLeft3 & ((!"Fork3" & (X!IsEating1 M (HasRight3 W FGIdle1))) | ("Fork3" & (XIsEating1 W (!HasRight3 M GF!Idle1)))))
+G((((!WaitLeft4 & !IsEating0) | (IsEating0 & WaitLeft4)) & (!Idle0 | (F!Idle0 U (Idle2 & !HasRight0)))) | (Idle0 & (GIdle0 R (HasRight0 | !Idle2)) & ((IsEating0 & !WaitLeft4) | (WaitLeft4 & !IsEating0))))
+((FIdle3 & XIsEating3) M (("Fork0" U WaitRight1) | XWaitRight2)) W HasLeft1
+((FIdle1 & G(!IsEating3 M !"Fork4")) | (F(IsEating3 W "Fork4") & G!Idle1)) R ((!HasLeft0 W XHasRight2) | !WaitRight0)
+(!Idle2 U ((HasRight2 & !Idle2) | (Idle2 & !HasRight2))) R (GFWaitRight3 U (FIdle0 R Idle4))
+HasRight2 | !IsEating4 | (!WaitLeft2 & FGIdle2) | (WaitLeft2 & GF!Idle2)
+(GIdle3 & (((!WaitLeft2 | XF!HasRight3) R X!WaitRight0) M X!HasRight2)) | (F!Idle3 & (((WaitLeft2 & XGHasRight3) U XWaitRight0) W XHasRight2))
+F((((G(Idle1 | !WaitLeft3) & ((!Idle2 & GIsEating2) | (Idle2 & F!IsEating2))) | (F(WaitLeft3 & !Idle1) & ((!Idle2 & F!IsEating2) | (Idle2 & GIsEating2)))) & G(!HasRight2 M !WaitLeft0)) | (F(HasRight2 W WaitLeft0) & ((((!Idle2 & GIsEating2) | (Idle2 & F!IsEating2)) & F(WaitLeft3 & !Idle1)) | (G(Idle1 | !WaitLeft3) & ((!Idle2 & F!IsEating2) | (Idle2 & GIsEating2))))))
+"WaitRight0" U (((!"WaitRight3" | !"WaitRight1") & (!"HasRight1" | GF!"WaitLeft2")) | ("WaitRight1" & "HasRight1" & "WaitRight3" & FG"WaitLeft2"))
+G(("Fork1" U Idle3) | (G!IsEating2 M FG!WaitLeft4))
+(WaitRight2 | G"Fork1") & ((!HasRight4 & !Idle3 & GF!WaitRight4) | (Idle3 & (HasRight4 | FGWaitRight4)))
+(!WaitLeft0 & ((((!WaitLeft1 & ((!Idle0 & XHasLeft0) | (Idle0 & X!HasLeft0))) | (WaitLeft1 & ((!Idle0 & X!HasLeft0) | (Idle0 & XHasLeft0)))) M (!WaitLeft1 M !WaitRight0)) W !IsEating1)) | (WaitLeft0 & ((((!WaitLeft1 & ((!Idle0 & X!HasLeft0) | (Idle0 & XHasLeft0))) | (WaitLeft1 & ((!Idle0 & XHasLeft0) | (Idle0 & X!HasLeft0)))) W (WaitLeft1 W WaitRight0)) M IsEating1))
+X(G((F!HasLeft2 & X!Idle2) | (XIdle2 & GHasLeft2)) M (HasLeft1 | G!HasLeft4))
+XF((FG!"Fork0" & F(!WaitLeft2 & ((!IsEating2 & X!"Fork1") | (IsEating2 & X"Fork1")))) | G(F"Fork0" & (WaitLeft2 | (!IsEating2 & X"Fork1") | (IsEating2 & X!"Fork1"))))
+(WaitRight4 & XHasLeft0) R ((HasLeft1 & FHasLeft3 & !HasLeft4) | (HasLeft4 & (G!HasLeft3 | !HasLeft1)))
+F(((!WaitRight2 & (!"Fork3" U (HasRight3 & !Idle3))) | (WaitRight2 & ("Fork3" R (Idle3 | !HasRight3)))) W FG"Fork3")
+((((HasLeft3 & F!WaitLeft0) | (!HasLeft3 & GWaitLeft0)) W Idle3) W GHasRight3) U (WaitRight1 | !HasLeft3)
+X((!IsEating0 & F(GF"Fork4" | (HasRight2 M (IsEating4 | !"Fork0")))) | (IsEating0 & G((!HasRight2 W ("Fork0" & !IsEating4)) & FG!"Fork4")))
+((FWaitRight1 & X(WaitRight3 R Idle0)) | (G!WaitRight1 & X(!WaitRight3 U !Idle0))) W WaitRight4
+F((!WaitRight4 & !HasRight2) | (HasRight2 & WaitRight4)) W (!WaitLeft2 | !WaitLeft4)
+(((HasRight2 U WaitLeft0) W WaitLeft2) & !"Fork2") | F!IsEating2
+(HasLeft3 & G((WaitRight4 & FIdle1) | (!WaitRight4 & G!Idle1)) & (G!HasRight1 M FG!WaitLeft4)) | ((!HasLeft3 | (FHasRight1 W GFWaitLeft4)) & F((WaitRight4 & G!Idle1) | (!WaitRight4 & FIdle1)))
+(WaitRight1 & (WaitRight2 U "Fork4")) | (GF!IsEating2 U ((!"Fork4" & !Idle4) | (Idle4 & "Fork4")))
+F((!HasRight0 & ((!IsEating2 R (!HasRight2 | X!WaitRight3)) M ((!IsEating3 & !IsEating1) | (IsEating1 & IsEating3)))) | (HasRight0 & ((IsEating2 U (HasRight2 & XWaitRight3)) W ((IsEating3 & !IsEating1) | (IsEating1 & !IsEating3)))))
+(!IsEating1 | (!"Fork0" U ((!WaitLeft1 & (!IsEating1 | !IsEating0)) | (IsEating0 & WaitLeft1 & IsEating1)))) & ((!"Fork0" U ((!WaitLeft1 & (!IsEating1 | !IsEating0)) | (IsEating0 & WaitLeft1 & IsEating1))) W !WaitLeft1)
+X(((G!HasRight0 & (!WaitRight2 | G!"Fork4")) | (WaitRight2 & FHasRight0 & F"Fork4")) W IsEating1)
+(Idle4 & (F(!IsEating0 & GIdle1) | X(!WaitRight1 | !Idle1))) | (!Idle4 & G(IsEating0 | F!Idle1) & X(Idle1 & WaitRight1))
+(XX!"Fork1" & ((Idle2 & XIsEating0) U (!"Fork0" | X(!"Fork0" R HasRight1)))) | (XX"Fork1" & ((!Idle2 | X!IsEating0) R ("Fork0" & X("Fork0" U !HasRight1))))
+({Idle0[*0..3]}[]-> GWaitRight3) U X(Idle3 | GF(!Idle4 R !IsEating2))
+X(!"Fork2" | (GHasRight0 R (!IsEating2 | ((IsEating2 U Idle0) U IsEating3))))
+X(Idle1 & X(Idle1 & (HasRight0 W WaitLeft0))) R ((!"Fork0" & (HasRight2 W Idle0)) | ("Fork0" & (!HasRight2 M !Idle0)))
+HasLeft2 U (((!IsEating2 & X"Fork3") | (!WaitLeft0 & (!HasRight3 M !WaitLeft1)) | (WaitLeft0 & (HasRight3 W WaitLeft1))) W "Fork4")
+X(HasRight1 | (!HasLeft1 U G((((!IsEating3 & G!"Fork3") | (IsEating3 & F"Fork3")) & F!IsEating0) | (GIsEating0 & ((!IsEating3 & F"Fork3") | (IsEating3 & G!"Fork3"))))))
+{{{!HasLeft3 && !WaitRight2} | {WaitRight2 && HasLeft3}}[*1..2]}<>-> (FHasLeft3 W (IsEating3 U (WaitLeft3 M GWaitLeft4)))
+((!HasRight3 & !HasLeft2) | (HasLeft2 & HasRight3)) M ((!"Fork2" R (!WaitRight3 M !WaitLeft3)) | (WaitLeft0 & HasRight3))
+X(((F!HasRight3 & ((WaitLeft4 & !WaitRight0) | (WaitRight0 & !WaitLeft4))) | (GHasRight3 & ((!WaitLeft4 & !WaitRight0) | (WaitRight0 & WaitLeft4)))) R (HasRight4 | X(HasRight4 M GHasLeft3)))
+("Fork1" & HasLeft2 & GF(IsEating2 & F"Fork0") & (!HasLeft0 M WaitLeft1)) | (FG(!IsEating2 | G!"Fork0") & (!HasLeft2 | !"Fork1" | (HasLeft0 W !WaitLeft1)))
+((IsEating0 & X!WaitLeft4) U !Idle0) R ((!HasLeft3 & (FIdle1 | !HasRight1)) | (HasRight1 & HasLeft3 & G!Idle1))
+(!Idle0 & X(!HasLeft4 & !HasRight0 & (!WaitRight2 | FG(HasLeft0 & !HasRight4)))) | (Idle0 & X(HasRight0 | HasLeft4 | (WaitRight2 & GF(HasRight4 | !HasLeft0))))
+X(((X!IsEating1 & (!HasLeft2 R !"Fork4")) | ((HasLeft2 U "Fork4") & XIsEating1)) & (F!"Fork1" R XF!Idle4))
+"WaitRight2" U (("WaitLeft0" & IsEating1 & !"Fork4" & XXG(!"Fork2" | X(!"Fork2" M !"WaitLeft1"))) | ("Fork4" & (!IsEating1 | !"WaitLeft0" | XXF("Fork2" & X("Fork2" W "WaitLeft1")))))
+(!HasLeft2 | FG((!"Fork3" & XFIdle1) | ("Fork3" & XG!Idle1))) U X(HasRight0 | HasRight3)
+(((!HasRight1 R F!HasLeft1) U !HasRight4) & (!IsEating1 | (!IsEating4 & !HasRight0 & XWaitRight2))) | (IsEating1 & ((HasRight1 U GHasLeft1) R HasRight4) & (HasRight0 | IsEating4 | X!WaitRight2))
+(HasLeft1 & GWaitRight0) R ((IsEating3 & GFWaitLeft2) U (WaitLeft4 | !IsEating0))
+X((!HasLeft3 & G((!HasRight4 R (IsEating1 & !Idle2)) U !IsEating4)) | (HasLeft3 & F((HasRight4 U (Idle2 | !IsEating1)) R IsEating4)))
+(!WaitRight1 & GFIdle0) | (WaitRight1 & FG!Idle0)
+{{IsEating2[*];!WaitRight2}[*]}[]-> X(FWaitLeft2 R !Idle1)
+(XX(HasLeft2 M IsEating1) M (!HasRight2 | FGWaitLeft2)) W IsEating0
+(!"Fork2" & !HasRight4) R X(FIsEating0 W "Fork1")
+((WaitLeft0 W IsEating0) & (G!HasLeft1 M (HasRight2 & HasLeft4))) | ((!WaitLeft0 M !IsEating0) & (FHasLeft1 W (!HasRight2 | !HasLeft4)))
+"WaitRight2" | "Fork4" | X(GIdle1 R (IsEating0 & X(IsEating0 U HasLeft3)))
+((!IsEating2 R !"Fork4") & X(!Idle2 & XXF(!HasRight4 | G!HasLeft0))) | ((IsEating2 U "Fork4") & X(Idle2 | XXG(HasRight4 & FHasLeft0)))
+(FG!WaitLeft4 & ((((WaitRight3 W Idle1) | (Idle2 U WaitRight4)) M WaitLeft3) R IsEating1)) | (GFWaitLeft4 & ((((!WaitRight3 M !Idle1) & (!Idle2 R !WaitRight4)) W !WaitLeft3) U !IsEating1))
+!Idle3 & ((("Fork4" R Idle1) U ({{WaitLeft1 && HasRight3}[*0..2]}[]-> HasLeft0)) W HasRight0)
+X(XIdle3 R F((WaitLeft3 & F!Idle0 & X!WaitRight2) | (XWaitRight2 & (!WaitLeft3 | GIdle0))))
+((IsEating1 | WaitRight2) U HasRight0) W (IsEating0 | (!HasRight2 & X!"Fork3"))
+G((WaitRight3 & !WaitRight0 & GFWaitLeft3) | (FG!WaitLeft3 & (WaitRight0 | !WaitRight3)))
+((G!IsEating3 & (("Fork4" & FWaitLeft1) U (HasRight3 | !Idle0))) | (FIsEating3 & ((!"Fork4" | G!WaitLeft1) R (Idle0 & !HasRight3)))) R FHasLeft4
+((!IsEating1 W !Idle4) & ((!"Fork0" U X!Idle0) U (!WaitLeft0 W (F!"Fork4" W !Idle4)))) | ((("Fork0" R XIdle0) R (WaitLeft0 M (G"Fork4" M Idle4))) & (IsEating1 M Idle4))
+FHasRight4 | X(F!HasLeft1 & ((!IsEating0 & FGHasRight1) | (IsEating0 & GF!HasRight1)))
+GWaitRight4 R (!HasRight4 | (!WaitLeft0 & (GWaitRight3 | (GIsEating1 U IsEating3))) | (WaitLeft0 & F!WaitRight3 & (F!IsEating1 R !IsEating3)))
+"WaitRight1" | "WaitRight2" | X((FGHasLeft4 & F("WaitRight3" & F!"WaitRight3")) | G(F!HasLeft4 & (!"WaitRight3" | G"WaitRight3")))
+(("Fork4" | !HasLeft4) & X("Fork4" | !HasLeft4)) M (WaitRight4 R (((!Idle1 & !"Fork1") | (Idle1 & "Fork1")) U HasRight4))
+!WaitLeft4 & XIsEating0 & (HasLeft2 W (FIdle4 R F(WaitRight0 | HasRight4)))
+((!"Fork3" & F!Idle0 & (F!Idle3 W !WaitLeft2)) | ("Fork3" & (GIdle0 | (GIdle3 M WaitLeft2)))) W (Idle2 | GIdle0)
+(F!IsEating3 & (((!WaitLeft0 & (!WaitRight3 U "Fork3")) | (WaitLeft0 & (WaitRight3 R !"Fork3"))) W Idle3)) | (GIsEating3 & (((!WaitLeft0 & (WaitRight3 R !"Fork3")) | (WaitLeft0 & (!WaitRight3 U "Fork3"))) M !Idle3))
+F"Fork3" & (GFIdle1 | ({HasRight1[*0..2]}[]-> !HasRight2))
+(!WaitRight3 W G(G!IsEating1 | (!HasRight3 U X!"Fork1"))) | ("Fork4" & X("Fork4" W Idle1))
+("Fork3" & !HasRight0 & (XWaitRight1 R FHasRight0) & (!IsEating1 | !Idle4)) | ((X!WaitRight1 U G!HasRight0) & (HasRight0 | !"Fork3" | (IsEating1 & Idle4)))
+F(!HasLeft1 | X(HasRight3 M G(IsEating1 | (WaitLeft4 U Idle0))))
+((!IsEating2 & (WaitRight0 | "Fork3")) | (IsEating2 & !"Fork3" & !WaitRight0)) M (F(WaitRight2 R XIdle1) W (IsEating3 | !Idle1))
+X((!WaitRight2 & XGWaitRight3) | (WaitRight2 & XF!WaitRight3)) W G!Idle4
+((GWaitRight4 R ((!HasRight3 & (!WaitRight4 M !Idle3)) | (HasRight3 & (WaitRight4 W Idle3)))) & (!HasLeft4 M !"Fork2")) | ((F!WaitRight4 U ((!HasRight3 & (WaitRight4 W Idle3)) | (HasRight3 & (!WaitRight4 M !Idle3)))) & (HasLeft4 W "Fork2"))
+(!HasRight1 & X((!Idle4 & GF(WaitRight4 & FHasLeft4)) | (Idle4 & FG(!WaitRight4 | G!HasLeft4)))) | (HasRight1 & X((!Idle4 & FG(!WaitRight4 | G!HasLeft4)) | (Idle4 & GF(WaitRight4 & FHasLeft4))))
+FIdle2 R ((Idle4 | ("Fork0" M WaitRight1)) & (!"Fork1" R WaitRight4))
+F!WaitRight1 W X(!WaitRight4 & XWaitRight2)
+IsEating4 & F(!WaitLeft2 R ((WaitRight2 & (!Idle3 U !IsEating2)) | (!WaitRight2 & (Idle3 R IsEating2))))
+((F!WaitLeft2 W (!WaitLeft3 U !Idle3)) & ({Idle1[*1..3]}<>-> !WaitLeft2)) | (({Idle1[*1..3]}[]-> WaitLeft2) & (GWaitLeft2 M (WaitLeft3 R Idle3)))
+((X!"Fork4" & G!IsEating2) | (X"Fork4" & FIsEating2)) W ((!HasLeft4 & !"Fork0") | ("Fork0" & HasLeft4))
+"WaitRight1" R F((X!WaitLeft1 & F!WaitRight0) | (XWaitLeft1 & GWaitRight0))
+G((!WaitLeft3 & (F!HasRight3 W ((WaitRight3 & !HasLeft2) | (HasLeft2 & !WaitRight3))) & ((!HasLeft3 & GHasLeft4) | (HasLeft3 & F!HasLeft4))) | ((GHasRight3 M ((HasLeft2 & WaitRight3) | (!WaitRight3 & !HasLeft2))) & (WaitLeft3 | (!HasLeft3 & F!HasLeft4) | (HasLeft3 & GHasLeft4))))
+XWaitLeft3 R ("Fork2" & G((!HasRight0 & G!WaitRight1) | (HasRight0 & FWaitRight1)))
+((!HasLeft0 R !WaitLeft0) M F!HasLeft0) R ((G!"Fork4" & (!WaitRight0 U !IsEating1)) | (F"Fork4" & (WaitRight0 R IsEating1)))
+IsEating4 & X(F(IsEating3 & !WaitRight2) W !HasRight4)
+((!WaitRight1 & G(!HasRight1 & X(!HasRight1 U ("Fork4" W IsEating3)))) | (WaitRight1 & F(HasRight1 | X(HasRight1 R (!"Fork4" M !IsEating3))))) M WaitRight3
+(HasRight0 | !"Fork2") & (!HasRight2 | G(HasRight3 M WaitLeft1) | (HasRight2 & !WaitLeft0))
+(((((!HasLeft3 & !HasRight2) | (HasRight2 & HasLeft3)) & G!WaitLeft4) | (FWaitLeft4 & ((HasLeft3 & !HasRight2) | (HasRight2 & !HasLeft3)))) R FIdle1) U (WaitLeft3 | !"Fork4")
+F("Fork3" | X("Fork3" R ((!Idle1 & !IsEating1) | (Idle1 & IsEating1) | (F!"Fork3" U !HasLeft3) | !WaitRight0)))
+X(((Idle0 W IsEating4) R ((HasRight4 | !IsEating4) M WaitRight1)) W ((!IsEating3 & X!HasLeft1) | (IsEating3 & XHasLeft1)))
+FWaitRight1 R F(HasRight2 | !"Fork2" | !HasRight3)
+((F"Fork3" & G!HasLeft4) | (FHasLeft4 & G!"Fork3")) R ((!"Fork3" & FHasLeft1) | ("Fork3" & G!HasLeft1))
+((FWaitRight1 & FHasRight0) | G(!HasRight0 & !WaitRight1)) W XFIsEating1
+XWaitLeft0 R ((("Fork0" W XGHasLeft2) & ((IsEating2 & !HasLeft0 & X!HasRight3) | (XHasRight3 & (HasLeft0 | !IsEating2)))) | ((!"Fork0" M XF!HasLeft2) & ((IsEating2 & !HasLeft0 & XHasRight3) | (X!HasRight3 & (HasLeft0 | !IsEating2)))))
+(G!Idle1 & XF(HasLeft0 R HasRight1)) | (FIdle1 & XG(!HasLeft0 U !HasRight1))
+!Idle1 | (FWaitRight1 W (Idle4 & IsEating4 & X(WaitLeft0 M !"Fork0")))
+X((!HasRight2 | X(!HasRight2 R (!HasLeft3 | !IsEating2 | FWaitRight4))) W !"Fork2")
+(!HasRight0 & !WaitRight1) | X((!HasRight0 & !WaitRight1) R ((!WaitRight1 & (HasLeft3 W HasLeft4)) | (WaitRight1 & (!HasLeft3 M !HasLeft4))))
+F((!HasLeft0 & ((!WaitLeft2 & (WaitRight2 | (((!Idle0 & G!HasRight0) | (Idle0 & FHasRight0)) W GWaitLeft0))) | (WaitLeft2 & !WaitRight2 & (((!Idle0 & FHasRight0) | (Idle0 & G!HasRight0)) M F!WaitLeft0)))) | (HasLeft0 & ((!WaitRight2 & !WaitLeft2 & (((!Idle0 & FHasRight0) | (Idle0 & G!HasRight0)) M F!WaitLeft0)) | (WaitLeft2 & (WaitRight2 | (((!Idle0 & G!HasRight0) | (Idle0 & FHasRight0)) W GWaitLeft0))))))
+X(!WaitRight2 | (FGWaitLeft0 R FHasLeft3))
+G((FIsEating1 U GHasRight4) | (F!HasLeft0 W !"Fork4"))
+GHasRight1 | ((GF!"Fork0" | (!Idle3 & !IsEating2)) & XFIsEating3)
+(FIdle0 R IsEating4) W ((!HasLeft1 & (HasLeft3 U (HasLeft0 | GHasLeft1))) | (HasLeft1 & (!HasLeft3 R (!HasLeft0 & F!HasLeft1))))
+IsEating1 R ((Idle1 | !HasRight1) & (Idle0 M !WaitLeft2))
+G(XWaitRight1 | G((!Idle3 & (G"Fork0" | (WaitRight2 R HasRight3))) | (Idle3 & F!"Fork0" & (!WaitRight2 U !HasRight3))))
+X(((X!Idle1 & ((!IsEating0 & FIdle4) | (IsEating0 & G!Idle4))) | (XIdle1 & ((!IsEating0 & G!Idle4) | (IsEating0 & FIdle4)))) W !"Fork3")
+GWaitLeft2 | (!WaitRight4 & ((!HasRight1 & F!HasLeft2) W !IsEating0)) | (WaitRight4 & ((HasRight1 | GHasLeft2) M IsEating0))
+((!HasRight1 | X({HasRight1[*1..2]}[]-> !"Fork3")) M IsEating2) W IsEating0
+G!"Fork2" R (((!"Fork0" U HasRight4) & ((HasLeft3 & X!HasRight2) R !HasLeft0)) | (("Fork0" R !HasRight4) & ((!HasLeft3 | XHasRight2) U HasLeft0)))
+(WaitLeft1 & HasLeft1 & FG!HasRight1) | ((!WaitLeft1 | !HasLeft1) & GFHasRight1)
+((Idle1 | (IsEating3 & WaitLeft4)) & ((G!HasRight3 | (!HasRight2 & !"Fork2")) M !"Fork1")) | (!Idle1 & ((FHasRight3 & (HasRight2 | "Fork2")) W "Fork1") & (!WaitLeft4 | !IsEating3))
+XF(IsEating4 | X(HasLeft4 | GFIdle2))
+F(!IsEating3 R Idle1) R ((HasRight1 & (WaitRight0 W (HasRight4 M WaitRight1))) M WaitRight4)
+FG(((WaitRight0 | !Idle1) & G!WaitLeft2) | (Idle1 & !WaitRight0 & FWaitLeft2))
+F((XHasLeft0 R (Idle2 W "Fork3")) R "Fork2") R ((IsEating1 R "Fork3") M "Fork3")
+F(XIdle1 | G(WaitRight0 | (!HasRight1 & G!HasRight3) | (HasRight1 & FHasRight3)))
+(IsEating0 | WaitLeft3 | !HasLeft2) R (((!Idle1 & (!WaitLeft2 R !"Fork1")) | (Idle1 & (WaitLeft2 U "Fork1"))) U HasLeft4)
+"WaitLeft0" | (("Fork2" M Idle3) & ((GWaitLeft0 & !IsEating4) | (IsEating4 & F!"WaitLeft0"))) | ((!"Fork2" W !Idle3) & ((!IsEating4 & F!"WaitLeft0") | (IsEating4 & G"WaitLeft0"))) | G(!Idle3 | !IsEating0)
+XF(!WaitRight1 | !IsEating2) U ((GHasLeft1 & (!WaitRight3 | !WaitRight1 | !"Fork2")) | (WaitRight1 & "Fork2" & WaitRight3 & F!HasLeft1))
+!IsEating3 | (!HasLeft0 W (WaitRight3 | !IsEating1))
+(F(WaitLeft3 & IsEating4) & F(!Idle3 | (Idle3 & WaitRight4 & !WaitLeft4))) | G(Idle3 & (WaitLeft4 | !Idle3 | !WaitRight4) & (!WaitLeft3 | !IsEating4))
+F(("Fork0" & WaitRight1) | (WaitRight4 U ((F!HasLeft1 & (HasRight0 W WaitLeft0)) | (GHasLeft1 & (!HasRight0 M !WaitLeft0)))))
+GWaitRight0 | (!WaitLeft3 & ((IsEating2 & !"Fork1") | ("Fork1" & !IsEating2))) | (WaitLeft3 & ((!"Fork1" & !IsEating2) | ("Fork1" & IsEating2)))
+(F!HasRight2 & !IsEating2) | (IsEating2 & GHasRight2) | X(((!WaitLeft1 & G!WaitRight1) | (WaitLeft1 & FWaitRight1)) M !Idle0)
+(WaitLeft2 & (HasRight3 | GWaitLeft1 | GWaitRight4) & X(WaitLeft2 W F"Fork3")) U IsEating2
+Idle4 U (WaitRight4 & ((XIdle0 | GHasRight1) M ((!WaitLeft4 & !IsEating4) | (WaitLeft4 & IsEating4))))
+IsEating1 R ((!"Fork4" & !IsEating4) | ("Fork4" & IsEating4) | (!HasRight3 W X!HasRight4))
+F((!HasLeft2 & XFIsEating2) | (HasLeft2 & XG!IsEating2))
+(WaitRight1 M F!"Fork4") R ({"Fork1"[*0..2]}<>-> !Idle0)
+(GHasRight4 M GHasRight2) U (F!HasRight3 | G!Idle3)
+((!HasLeft1 & GWaitRight1 & ("Fork4" W IsEating1)) | (HasLeft1 & (F!WaitRight1 | (!"Fork4" M !IsEating1)))) R (!Idle1 | GIdle2)
+(HasRight4 W WaitLeft4) M (WaitRight1 | G((!IsEating4 & XWaitRight4) | (IsEating4 & X!WaitRight4)))
+(WaitRight4 W ((!IsEating3 & ((!WaitLeft3 & !HasRight2) | (HasRight2 & WaitLeft3))) | (IsEating3 & ((WaitLeft3 & !HasRight2) | (HasRight2 & !WaitLeft3))))) | (HasLeft0 & (!HasRight1 | G"Fork0"))
+(!IsEating4 | (HasRight4 & !"Fork0") | ("Fork0" & !HasRight4)) W (IsEating1 | !HasLeft0 | FHasLeft3)
+!WaitLeft0 R (IsEating1 | !Idle1 | !HasRight2 | !HasRight4 | !"Fork0")
+G(WaitRight4 & (!HasRight3 R !HasRight1)) | XF!HasLeft0
+"Fork3" & (Idle4 U ((IsEating3 & (HasLeft4 | !HasLeft3)) R !HasLeft0))
+("Fork2" | !"Fork0" | X("Fork2" R IsEating3)) & (("Fork2" | X("Fork2" R IsEating3)) W !WaitLeft3)
+((HasLeft0 | Idle4) R !HasRight0) & ((!WaitLeft4 & ((!WaitRight3 & !WaitRight0) | (WaitRight0 & WaitRight3))) | (WaitLeft4 & ((WaitRight0 & !WaitRight3) | (WaitRight3 & !WaitRight0))))
+Idle1 W ((Idle2 & !"Fork3" & !IsEating1 & F(!"Fork1" | X!IsEating1)) | (!Idle2 & (IsEating1 | "Fork3" | G("Fork1" & XIsEating1))))
+F((F!HasLeft1 & FHasRight3 & (HasRight1 W GIdle3) & (!WaitRight3 | !HasLeft4)) | ((!HasRight1 M F!Idle3) & (GHasLeft1 | (WaitRight3 & HasLeft4) | G!HasRight3)))
+(WaitLeft0 R Idle1) W ((!IsEating0 & G!IsEating4 & ("Fork2" | !HasRight2)) | (HasRight2 & !"Fork2" & (IsEating0 | FIsEating4)))
+X(!WaitRight4 | (IsEating3 & (WaitRight0 | !HasRight0)) | XGHasRight1)
+(HasRight1 & "Fork4" & !HasRight2 & G(HasRight4 & !IsEating3)) | ((HasRight2 | !"Fork4" | !HasRight1) & F(IsEating3 | !HasRight4))
+{{"Fork4"[*] & !WaitRight1}[*]}[]-> X(GHasLeft1 & ((WaitRight2 & !HasRight2) | (HasRight2 & !WaitRight2)))
+(F!WaitRight1 & (IsEating2 | (FHasRight4 U HasRight0)) & (Idle2 R (Idle4 W HasLeft0))) | (GWaitRight1 & ((!IsEating2 & (G!HasRight4 R !HasRight0)) | (!Idle2 U (!Idle4 M !HasLeft0))))
+"WaitRight2" & (G!WaitLeft4 | (WaitLeft4 & X(WaitLeft4 U (FIdle0 & XIsEating1))))
+"WaitLeft2" | FIsEating2 | (WaitLeft0 & !WaitLeft3 & !IsEating0) | (WaitLeft3 & (IsEating0 | !WaitLeft0)) | X("WaitLeft2" R HasLeft0)
+(HasLeft3 & GHasRight4) | (!HasLeft3 & F!HasRight4) | X(!HasLeft1 | GHasLeft3)
+(!IsEating1 & G!HasLeft2 & X!WaitLeft2) | (XWaitLeft2 & (X(IsEating0 | (!IsEating1 R !IsEating0)) M (IsEating1 | FHasLeft2)))
+X((WaitLeft4 & WaitRight4 & !WaitRight3) | XG(!WaitRight3 | X("Fork1" | !WaitRight3)))
+((!WaitRight3 M !WaitLeft4) & ((WaitLeft3 & !HasRight1 & XG!"Fork1") | (HasRight1 & (!WaitLeft3 | XF"Fork1")))) | ((WaitRight3 W WaitLeft4) & ((!HasRight1 & (!WaitLeft3 | XF"Fork1")) | (HasRight1 & WaitLeft3 & XG!"Fork1")))
+(Idle4 | G!WaitRight4) & ((!HasLeft0 & (X!IsEating1 | (!HasLeft0 & !HasRight3) | (HasLeft0 & HasRight3))) | (HasLeft0 & XIsEating1 & ((HasRight3 & !HasLeft0) | (HasLeft0 & !HasRight3))))
+"WaitLeft2" & (("WaitLeft2" & ((!WaitRight3 & !Idle0) | (Idle0 & WaitRight3)) & XGHasRight0) | ((!"WaitLeft2" | (WaitRight3 & !Idle0) | (Idle0 & !WaitRight3)) & XF!HasRight0))
+"WaitLeft0" & X({"WaitLeft0"[*1..2]}<>-> ((Idle3 R ({"Fork2"[*1..3]}<>-> HasLeft4)) R XWaitRight2))
+(WaitRight0 & HasRight1 & ((X!WaitRight0 & (!HasLeft2 | G(!WaitRight4 | !WaitRight2))) | (HasLeft2 & F(WaitRight2 & WaitRight4) & XWaitRight0))) | ((!WaitRight0 | !HasRight1) & ((HasLeft2 & X!WaitRight0 & F(WaitRight2 & WaitRight4)) | ((!HasLeft2 | G(!WaitRight4 | !WaitRight2)) & XWaitRight0)))
+X(!WaitLeft1 | (!HasLeft3 & G!IsEating1) | (HasLeft3 & FIsEating1))
+(!Idle3 & (WaitRight2 M GIsEating3)) | (Idle3 & (!WaitRight2 W F!IsEating3))
+X((WaitRight1 & WaitLeft3 & Idle4 & (!Idle4 | (X!"Fork4" & (!HasRight1 M !IsEating4)) | ((HasRight1 W IsEating4) & X"Fork4"))) | (Idle4 & (!Idle4 | !WaitLeft3 | !WaitRight1) & ((X"Fork4" & (!HasRight1 M !IsEating4)) | ((HasRight1 W IsEating4) & X!"Fork4"))))
+(!HasRight1 & FHasRight2) R ((WaitRight0 & HasRight3 & !"Fork3") | ("Fork3" & (!WaitRight0 | !HasRight3)))
+X(HasRight0 & ((WaitLeft2 & G!WaitLeft3) | XX!WaitRight2))
+G((WaitLeft3 & HasRight3 & XHasLeft3) | ("Fork0" & !WaitRight0) | (WaitRight0 & !"Fork0")) U (WaitRight2 U HasRight3)
+(!IsEating3 & !IsEating0 & !"Fork0" & X(!IsEating0 W F!HasRight4)) | (("Fork0" | IsEating3) & (IsEating0 | X(IsEating0 M GHasRight4)))
+F(("Fork4" & !HasLeft1 & F"Fork3" & (G!HasRight2 U !IsEating4)) | (G!"Fork3" & (HasLeft1 | !"Fork4" | (FHasRight2 R IsEating4))))
+({HasRight3[*1..2]}<>-> (HasLeft2 R "Fork0")) | (HasLeft0 & HasLeft1 & (HasLeft2 R "Fork0")) | (HasLeft0 & HasLeft1 & ((HasLeft2 R "Fork0") M (HasRight1 | "Fork1")))
+!Idle1 | (F!WaitLeft0 & F(F!HasLeft1 | (IsEating3 & !Idle3))) | G(WaitLeft0 & GHasLeft1 & (Idle3 | !IsEating3))
+"WaitRight2" & FIdle4 & (HasRight2 R (G!HasRight1 | (WaitLeft1 R IsEating4)))
+GWaitRight2 U (IsEating3 | (HasRight4 & !Idle0) | (Idle0 & !HasRight4))
+X((WaitLeft1 | (WaitRight4 & X(WaitRight4 & !WaitLeft0 & GHasLeft4)) | (XWaitLeft0 & (!WaitRight4 | X(!WaitRight4 | F!HasLeft4)))) M HasRight0)
+((HasRight3 & !HasLeft0) | (HasLeft0 & !HasRight3)) & ((X!HasLeft1 & ((!Idle2 & ((G!WaitRight1 & ((!Idle0 & !HasRight1) | (Idle0 & HasRight1))) | (FWaitRight1 & ((Idle0 & !HasRight1) | (HasRight1 & !Idle0))))) | (Idle2 & ((G!WaitRight1 & ((Idle0 & !HasRight1) | (HasRight1 & !Idle0))) | (FWaitRight1 & ((!Idle0 & !HasRight1) | (Idle0 & HasRight1))))))) | (XHasLeft1 & ((!Idle2 & ((G!WaitRight1 & ((Idle0 & !HasRight1) | (HasRight1 & !Idle0))) | (FWaitRight1 & ((!Idle0 & !HasRight1) | (Idle0 & HasRight1))))) | (Idle2 & ((G!WaitRight1 & ((!Idle0 & !HasRight1) | (Idle0 & HasRight1))) | (FWaitRight1 & ((Idle0 & !HasRight1) | (HasRight1 & !Idle0))))))))
+((WaitRight2 | !WaitRight0) & ((!HasLeft2 & ((!HasRight1 & (("Fork0" & !WaitLeft1) | (WaitLeft1 & !"Fork0"))) | (HasRight1 & ((!WaitLeft1 & !"Fork0") | ("Fork0" & WaitLeft1))))) | (HasLeft2 & ((!HasRight1 & ((!WaitLeft1 & !"Fork0") | ("Fork0" & WaitLeft1))) | (HasRight1 & (("Fork0" & !WaitLeft1) | (WaitLeft1 & !"Fork0"))))))) W FHasRight3
+HasRight2 | (WaitLeft2 & G!HasLeft3) | (G!"Fork2" & ("Fork4" | !WaitRight4)) | (WaitRight4 & !"Fork4" & F"Fork2")
+X!IsEating1 | ("Fork0" M (GHasRight0 M ("Fork1" & IsEating4)))
+(!HasLeft0 & ((!HasRight0 & F!HasRight1 & X(!HasRight0 U !HasLeft0)) | (GHasRight1 & (HasRight0 | X(HasRight0 R HasLeft0))))) | (HasLeft0 & ((F!HasRight1 & (HasRight0 | X(HasRight0 R HasLeft0))) | (!HasRight0 & GHasRight1 & X(!HasRight0 U !HasLeft0))))
+F((!HasLeft1 & F!WaitLeft2) | (HasLeft1 & GWaitLeft2)) & (!IsEating3 R !WaitRight3)
+((HasRight0 U HasLeft4) & (!WaitRight3 | !HasRight3 | X({WaitRight3[*1..2]}[]-> X(IsEating1 & !IsEating4)))) | (WaitRight3 & HasRight3 & (!HasRight0 R !HasLeft4) & X({WaitRight3[*1..2]}<>-> X(IsEating4 | !IsEating1)))
+(HasRight1 W Idle2) W ((WaitLeft1 & !Idle3 & FWaitLeft3) | (Idle3 & (!WaitLeft1 | G!WaitLeft3)))
+(G(IsEating3 | IsEating4) M (!"Fork4" & !HasRight4)) W (HasLeft3 U (WaitRight0 M WaitLeft4))
+F((IsEating3 | (!HasLeft0 & !HasRight2)) R (WaitRight2 | G!WaitLeft0))
+{WaitRight1[*]:{{{!WaitRight3 && !IsEating2} | {IsEating2 && WaitRight3}}}[*]}
+"WaitRight1" & X("WaitRight1" W ("Fork2" | (!IsEating4 & G!WaitLeft4)))
+(!WaitLeft3 & F!WaitLeft0) | (WaitLeft3 & GWaitLeft0)
+(X(WaitLeft0 & WaitLeft4) & (!Idle3 | X({Idle3[*1..2]}[]-> F!IsEating1))) | (Idle3 & X((!WaitLeft4 | !WaitLeft0) & ({Idle3[*1..2]}<>-> GIsEating1)))
+((!Idle2 & !Idle1) | (Idle1 & Idle2)) & ((!HasLeft3 & X(Idle3 | GWaitLeft4)) | (HasLeft3 & X(!Idle3 & F!WaitLeft4)))
+(HasLeft3 R HasRight4) | G(GIsEating3 | (XIsEating1 W ((!WaitRight2 & X!IsEating0) | (WaitRight2 & XIsEating0))))
+!Idle0 | (X(HasRight1 W HasLeft3) & F(WaitRight0 & WaitRight2))
+("Fork3" & FHasRight2) R (((IsEating3 & !WaitLeft0) | (WaitLeft0 & !IsEating3)) W !HasRight1)
+(WaitRight1 & (G!HasLeft2 | (!WaitLeft4 R !HasLeft4))) | (!WaitRight1 & FHasLeft2 & (WaitLeft4 U HasLeft4))
+(F!WaitRight3 & !WaitLeft0) | (WaitLeft0 & GWaitRight3)
+(("Fork2" & ((WaitLeft2 & !Idle2) | (Idle2 & !WaitLeft2))) | (!"Fork2" & ((!Idle2 & !WaitLeft2) | (Idle2 & WaitLeft2)))) & X((("Fork2" & ((WaitLeft2 & !Idle2) | (Idle2 & !WaitLeft2))) | (!"Fork2" & ((!Idle2 & !WaitLeft2) | (Idle2 & WaitLeft2)))) U (!WaitRight1 | G!IsEating4))
+((("Fork0" | WaitLeft1) R X!WaitLeft4) & XF(!IsEating3 & X(!IsEating3 U !WaitLeft1))) | (((!WaitLeft1 & !"Fork0") U XWaitLeft4) & XG(IsEating3 | X(IsEating3 R WaitLeft1)))
+G!IsEating4 | X(!WaitLeft0 M !WaitLeft4)
+IsEating4 & (Idle3 M !WaitLeft4) & (((!Idle2 | GHasLeft1) & ((!WaitLeft3 & !IsEating3) | (WaitLeft3 & IsEating3))) | (Idle2 & F!HasLeft1 & ((IsEating3 & !WaitLeft3) | (WaitLeft3 & !IsEating3))))
+!HasRight2 W X((WaitLeft0 & FWaitRight3 & G!Idle4) | (!WaitLeft0 & (G!WaitRight3 | FIdle4)))
+(HasRight1 R HasRight0) | ((!Idle1 M (FIdle3 R WaitRight0)) M WaitLeft2)
+"WaitRight1" | !HasRight4 | G((!HasRight0 & !Idle1) | (HasRight0 & Idle1)) | X("Fork1" | X!"WaitLeft1")
+F(Idle2 & XF(HasRight3 | !IsEating0 | G((!WaitLeft2 & !Idle1) | (Idle1 & WaitLeft2))))
+!HasLeft0 | XFHasLeft2 | (F!WaitRight4 & (HasRight1 | (HasRight0 W WaitLeft0))) | (!HasRight1 & (!HasRight0 M !WaitLeft0) & GWaitRight4)
+((!WaitLeft2 & X!WaitRight2) | (WaitLeft2 & XWaitRight2)) U {WaitLeft2[*]:{"Fork1" && IsEating1}}
+(((!HasLeft0 & (!WaitLeft3 | (IsEating0 R WaitLeft0))) | (HasLeft0 & WaitLeft3 & (!IsEating0 U !WaitLeft0))) & F!WaitLeft3) | (GWaitLeft3 & ((WaitLeft3 & !HasLeft0 & (!IsEating0 U !WaitLeft0)) | (HasLeft0 & (!WaitLeft3 | (IsEating0 R WaitLeft0)))))
+Idle3 & (((!WaitRight1 W !"Fork0") & ((!"Fork3" & X(XHasRight1 & (!"Fork3" U !IsEating3))) | (XX!HasRight1 & ("Fork3" | X("Fork3" R IsEating3))))) | ((WaitRight1 M "Fork0") & ((!"Fork3" & X(X!HasRight1 & (!"Fork3" U !IsEating3))) | (XXHasRight1 & ("Fork3" | X("Fork3" R IsEating3))))))
+(!WaitRight2 | (WaitRight4 & !HasRight2) | (HasRight2 & !WaitRight4) | (!HasLeft1 & !HasLeft3) | (HasLeft1 & HasLeft3)) W F(HasLeft0 & HasRight0)
+(HasRight4 & X{HasLeft3:HasLeft4[*]}) R (GIdle4 | (!WaitLeft4 & !IsEating2) | (IsEating2 & WaitLeft4))
+(((WaitLeft3 & !WaitRight0) | (WaitRight0 & !WaitLeft3)) R HasRight2) M ((IsEating2 & ((!Idle3 & !HasRight3) | (Idle3 & HasRight3))) | (IsEating2 & (((!Idle3 & !HasRight3) | (Idle3 & HasRight3)) M HasRight3)))
+XXF((!"Fork3" & !HasRight2 & !WaitLeft0 & (!WaitRight1 U (!WaitLeft0 U !HasLeft3))) | ("Fork3" & (WaitLeft0 | HasRight2 | (WaitRight1 R (WaitLeft0 R HasLeft3)))))
+(IsEating2 U (WaitRight2 M "Fork0")) | (((!HasLeft3 & !"Fork0") | ("Fork0" & HasLeft3)) R (WaitLeft1 & WaitLeft3))
+(!HasRight0 & (!HasLeft4 U !WaitRight4) & XF!WaitLeft2) | ((HasLeft4 R WaitRight4) & (HasRight0 | XGWaitLeft2))
+(G(Idle0 & !HasLeft0) & ((G!HasLeft1 R !Idle3) R (!"Fork1" R WaitLeft2))) | (((FHasLeft1 U Idle3) U ("Fork1" U !WaitLeft2)) & F(HasLeft0 | !Idle0))
+X((WaitRight2 W !IsEating1) M ((WaitRight1 & (!HasRight4 M !HasRight0)) | XGIsEating2))
+(G!HasRight3 & ((!HasRight0 & !"Fork1") | (HasRight0 & "Fork1"))) | (FHasRight3 & (("Fork1" & !HasRight0) | (HasRight0 & !"Fork1")))
+"WaitLeft2" M (GIdle4 | (X"WaitLeft1" & !HasLeft4))
+(X"Fork0" | (F!WaitRight2 R !Idle2)) M ((F!WaitRight1 & (Idle4 R WaitLeft2)) | (GWaitRight1 & (!Idle4 U !WaitLeft2)))
+XX(!"Fork1" W ((!HasLeft2 & X!IsEating0) | (HasLeft2 & XIsEating0)))
+((!WaitRight2 & XG!Idle0) | (WaitRight2 & XFIdle0)) R Idle3
+({HasLeft4[*1..2]}[]-> X(!WaitLeft2 | X"Fork2")) W ((WaitLeft3 M "Fork3") & ((HasRight1 & !Idle1) | (Idle1 & !HasRight1)))
+((!HasLeft1 | (IsEating1 R IsEating2)) & (!"Fork2" R !HasRight1)) | (HasLeft1 & ("Fork2" U HasRight1) & (!IsEating1 U !IsEating2))
+("Fork4" & (IsEating4 | !WaitLeft4 | !IsEating3)) R ((!WaitRight3 & !Idle0) | (Idle0 & WaitRight3))
+(HasRight3 & !IsEating0 & (!Idle0 U !Idle3)) | (IsEating0 & (!HasRight3 | (Idle0 R Idle3)))
+(!HasLeft1 & F!"Fork4" & (({{WaitLeft0;Idle4}[*]}<>-> IsEating4) | (IsEating4 & !HasRight1))) | ((HasRight1 | !IsEating4) & ({{WaitLeft0;Idle4}[*]}[]-> !IsEating4) & (HasLeft1 | G"Fork4"))
+(IsEating1 & (!WaitLeft1 | ("Fork4" & !HasRight0) | (HasRight0 & !"Fork4")) & F((IsEating1 & !WaitRight1 & !HasLeft4) | (WaitRight1 & (HasLeft4 | !IsEating1)))) | (WaitLeft1 & ((!HasRight0 & !"Fork4") | (HasRight0 & "Fork4")) & (!IsEating1 | G((!WaitRight1 & (HasLeft4 | !IsEating1)) | (WaitRight1 & IsEating1 & !HasLeft4))))
+X(((!WaitLeft3 | !"Fork1") W !Idle1) R WaitLeft1)
+!Idle0 | F((!HasRight1 & GHasRight3 & (!IsEating3 | !WaitRight2)) | (HasRight1 & (F!HasRight3 | (WaitRight2 & IsEating3))))
+(F((F!IsEating3 & FWaitRight2) | G(IsEating3 & !WaitRight2)) U (WaitRight1 W HasLeft4)) R X("Fork2" | !"Fork4")
+"WaitRight1" & (HasLeft1 W WaitLeft4) & (IsEating4 | !WaitRight0 | !Idle1)
+("Fork4" & (X(HasLeft2 U HasRight0) | (!HasLeft0 W (IsEating1 & "Fork2")))) | (!"Fork4" & X(!HasLeft2 R !HasRight0) & (HasLeft0 M (!"Fork2" | !IsEating1)))
+(!"Fork3" & (G!HasRight3 | (FIdle4 & (WaitLeft1 | !Idle3 | !IsEating2)))) | ("Fork3" & FHasRight3 & (G!Idle4 | (IsEating2 & Idle3 & !WaitLeft1)))
+HasLeft3 | X(!Idle4 W (!Idle3 | F!Idle1))
+{{{WaitLeft0[+];IsEating2}}[*]:{Idle0 | !WaitLeft3 | !HasLeft3}}
+((WaitRight1 | FWaitLeft3) R (IsEating3 R !HasLeft0)) R (!HasLeft1 W X!HasLeft3)
+((!IsEating1 | ((HasRight0 & HasRight3) U !IsEating3)) & (!Idle3 | !IsEating4)) | (IsEating1 & Idle3 & IsEating4 & ((!HasRight0 | !HasRight3) R IsEating3))
+!WaitLeft0 | X(WaitRight3 & (HasLeft2 R HasRight4)) | (!Idle3 U ("Fork1" & F!HasLeft2))
+((!Idle0 & !IsEating0) | (Idle0 & IsEating0)) M (G!WaitLeft0 | (!HasRight2 & !HasLeft1) | (HasLeft1 & HasRight2))
+(WaitRight0 W XHasRight1) | XG((!HasLeft3 & !HasLeft4) | (HasLeft3 & HasLeft4))
+F((G!IsEating2 | (F!WaitRight2 & ((!Idle2 & FWaitLeft3) | (Idle2 & G!WaitLeft3))) | (GWaitRight2 & ((!Idle2 & G!WaitLeft3) | (Idle2 & FWaitLeft3)))) R WaitRight1)
+!Idle2 | (X!WaitLeft2 & F!"Fork2") | (XWaitLeft2 & G"Fork2")
+((HasLeft2 | !IsEating4) U !IsEating4) | FG!HasLeft3
+F!IsEating2 | ((Idle0 | WaitLeft3 | X((Idle0 | WaitLeft3) R WaitRight3)) U HasRight2)
+F(HasRight4 & X(HasRight4 W ("Fork4" & X("Fork4" W WaitRight3)))) U !IsEating0
+IsEating2 | !Idle1 | ((!WaitLeft2 | GIsEating1) & ((!HasLeft4 & ("Fork0" | Idle3)) | (HasLeft4 & !Idle3 & !"Fork0"))) | (WaitLeft2 & F!IsEating1 & ((!Idle3 & !"Fork0" & !HasLeft4) | (HasLeft4 & ("Fork0" | Idle3))))
+(WaitLeft4 & ((WaitRight2 M Idle1) R "Fork4")) | (!IsEating0 M X!IsEating2)
+(WaitLeft4 & G(!WaitRight0 | X(!WaitRight0 R !HasRight4)) & (!"Fork3" W !WaitLeft0)) | (("Fork3" M WaitLeft0) & (!WaitLeft4 | F(WaitRight0 & X(WaitRight0 U HasRight4))))
+F!Idle1 | X(Idle3 & X(Idle3 W HasLeft3))
+(WaitLeft3 & (Idle3 | IsEating3) & X((Idle3 | IsEating3) W WaitRight0)) | (!WaitLeft3 & ((!Idle3 & !IsEating3) | X((!Idle3 & !IsEating3) M !WaitRight0)))
+X((X!HasRight1 & F!IsEating2) | (XHasRight1 & GIsEating2))
+F(!WaitRight0 & !"Fork4" & ((FIdle1 & F(HasLeft3 | (HasRight2 M IsEating4))) | G(!Idle1 & !HasLeft3 & (!HasRight2 W !IsEating4))))
+(WaitLeft3 & !WaitLeft2) | (WaitLeft2 & !WaitLeft3) | (!IsEating3 & G!"Fork3") | (IsEating3 & F"Fork3") | (XIsEating2 & (HasLeft0 | !WaitLeft1))
+(Idle3 M WaitLeft4) | (!Idle4 & XG!IsEating0)
+(X((!HasLeft2 & ((WaitRight0 & Idle3) | (!Idle3 & !WaitRight0))) | (HasLeft2 & ((Idle3 & !WaitRight0) | (WaitRight0 & !Idle3)))) & (WaitRight1 U WaitLeft1)) | ((!WaitRight1 R !WaitLeft1) & X((!HasLeft2 & ((Idle3 & !WaitRight0) | (WaitRight0 & !Idle3))) | (HasLeft2 & ((WaitRight0 & Idle3) | (!Idle3 & !WaitRight0)))))
+(WaitRight2 & !Idle3) | (Idle3 & (("Fork3" & !WaitRight3) | (WaitRight3 & !"Fork3")) & X(Idle3 W X"Fork1"))
+XF((!WaitRight3 & (!IsEating2 | XG(WaitRight0 | HasRight3))) | (IsEating2 & WaitRight3 & XF(!WaitRight0 & !HasRight3)))
+{{IsEating1 && HasLeft2}[*1..2]}[]-> X(!HasLeft3 | (IsEating3 U XGIsEating0))
+(!IsEating3 R !IsEating0) U ((FIdle1 & (!WaitRight2 M !"Fork4")) | (G!Idle1 & (WaitRight2 W "Fork4")))
+(!WaitRight3 & (G!IsEating1 | X((F!WaitLeft2 & (IsEating0 U HasLeft2)) | (GWaitLeft2 & (!IsEating0 R !HasLeft2))))) | (WaitRight3 & FIsEating1 & X((F!WaitLeft2 & (!IsEating0 R !HasLeft2)) | (GWaitLeft2 & (IsEating0 U HasLeft2))))
+((HasRight2 & X(HasLeft2 & XWaitLeft3)) R WaitLeft4) M (Idle0 | (!IsEating3 & !HasLeft4) | (IsEating3 & HasLeft4))
+X(HasLeft1 & (!Idle0 | !Idle2 | G!IsEating1))
+F!Idle2 | ((IsEating2 | !IsEating0) W F!WaitLeft3)
+(!WaitLeft2 & X("Fork1" W (HasRight2 & !WaitLeft4))) | (WaitLeft2 & X(!"Fork1" M (WaitLeft4 | !HasRight2)))
+XX(!WaitRight1 | !WaitRight4) & ((F!WaitRight0 & (GWaitLeft0 U Idle3)) | (GWaitRight0 & (F!WaitLeft0 R !Idle3)))
+X((WaitLeft4 & !HasRight3 & F!HasRight2) | (GHasRight2 & (HasRight3 | !WaitLeft4)))
+(X!Idle3 & (F"Fork4" | (WaitRight1 & HasRight1))) | (XIdle3 & G!"Fork4" & (!WaitRight1 | !HasRight1))
+"Fork2" & (IsEating2 | GWaitRight2) & ((WaitRight2 & (Idle2 | !IsEating3)) | (IsEating3 & !Idle2 & !WaitRight2))
+F(HasLeft0 & X(((WaitLeft3 U HasRight3) & ((WaitLeft0 & !HasRight2) | (HasRight2 & !WaitLeft0))) W !HasRight3))
+(!WaitRight4 & ((WaitRight0 & ((WaitLeft1 & !HasLeft0) | (HasLeft0 & !WaitLeft1))) U HasLeft1)) | (WaitRight4 & ((!WaitRight0 | (!HasLeft0 & !WaitLeft1) | (HasLeft0 & WaitLeft1)) R !HasLeft1))
+X(HasLeft3 | (!WaitLeft1 & !"Fork1") | X((HasLeft3 | (!WaitLeft1 & !"Fork1")) R IsEating2))
+((G!HasLeft2 & (X(!"Fork3" M !Idle4) M G(!"Fork3" | !WaitRight2))) | (FHasLeft2 & (X("Fork3" W Idle4) W F(WaitRight2 & "Fork3")))) R WaitLeft3
+FIsEating2 | (HasRight0 & (((!HasRight2 | X!WaitRight0) & XFWaitLeft4) | (HasRight2 & X(WaitRight0 & G!WaitLeft4))))
+Idle1 | (X("Fork4" | !WaitRight1) & ((HasLeft3 & GWaitLeft0) R !WaitRight3))
+F(HasLeft0 W !"Fork0") & (HasRight3 | (((WaitRight2 & !"Fork1") | ("Fork1" & !WaitRight2)) U !IsEating0))
+((HasLeft3 | !"Fork2") M !"Fork1") | (FHasRight4 U G(HasRight0 | IsEating2))
+(F!Idle4 & F!Idle3) | G(Idle3 & Idle4)
+{{{Idle3[*1..2] && {WaitRight3:WaitRight2[*2]}}}[*] & !IsEating4}[]-> GIdle1
+(!WaitLeft1 & !"Fork1" & (X!WaitLeft4 U ((!WaitLeft4 & ((!WaitLeft4 & !IsEating1) | (IsEating1 & WaitLeft4))) U !Idle3))) | ((WaitLeft1 | "Fork1") & (XWaitLeft4 R ((WaitLeft4 | (IsEating1 & !WaitLeft4)) R Idle3)))
+(IsEating2 & ((Idle0 & !HasRight1) | (HasRight1 & !Idle0)) & (!"Fork1" U !HasRight4)) | (("Fork1" R HasRight4) & ((!Idle0 & !HasRight1) | !IsEating2 | (Idle0 & HasRight1)))
+(!"Fork1" & ((G!WaitLeft2 & (!"Fork3" | !WaitRight2)) | (WaitRight2 & "Fork3" & FWaitLeft2))) | ("Fork1" & ((WaitRight2 & "Fork3" & G!WaitLeft2) | (FWaitLeft2 & (!"Fork3" | !WaitRight2))))
+XX((X!IsEating1 & (IsEating1 U WaitLeft3)) | (XIsEating1 & (!IsEating1 R !WaitLeft3)))
+(XWaitRight1 & G!"Fork3" & (((!WaitLeft0 & !WaitRight2) | (WaitLeft0 & WaitRight2)) R !WaitRight2)) | ((((WaitRight2 & !WaitLeft0) | (WaitLeft0 & !WaitRight2)) U WaitRight2) & (X!WaitRight1 | F"Fork3"))
+{{HasLeft0 && "Fork0"}[*1..2]}<>-> (((HasRight0 | IsEating1) & ((HasLeft3 & G!Idle1) | (FIdle1 & !HasLeft3))) | (!HasRight0 & !IsEating1 & ((G!Idle1 & !HasLeft3) | (HasLeft3 & FIdle1))))
+F!HasRight2 | (WaitLeft3 & X(!IsEating2 & (!Idle2 W F!WaitLeft4)))
+!HasLeft2 | XX!"Fork0" | (GIsEating1 U HasRight2)
+F(FWaitRight1 R HasLeft3) & ((WaitRight2 U (!"Fork4" & X!"Fork1")) U IsEating2)
+(WaitLeft2 & !HasRight1 & G(!WaitLeft1 | !WaitRight2)) | ((HasRight1 | !WaitLeft2) & F(WaitLeft1 & WaitRight2))
+(F!WaitLeft3 & XX!HasRight4) | (GWaitLeft3 & XXHasRight4)
+(Idle3 W Idle1) U (WaitLeft2 & X((Idle2 & XGIsEating1) | (!Idle2 & XF!IsEating1)))
+HasRight2 | (!Idle0 R HasLeft4) | (Idle4 & (!HasLeft2 U !IsEating0)) | (!Idle4 & (HasLeft2 R IsEating0))
+{WaitLeft1[*0..2]}<>-> (WaitRight3 | !HasRight4 | (!IsEating1 & G!Idle4) | (IsEating1 & FIdle4))
+HasLeft4 & ((WaitLeft2 & (!Idle4 W !"Fork2")) | (!WaitLeft2 & (Idle4 M "Fork2")))
+(((!Idle0 | XWaitLeft4) U "Fork3") R (!IsEating0 | !HasLeft3)) M WaitLeft4
+(F!IsEating3 & ((!HasLeft2 & F!HasRight0) | (HasLeft2 & GHasRight0))) | (GIsEating3 & ((!HasLeft2 & GHasRight0) | (HasLeft2 & F!HasRight0)))
+X((!"Fork2" & (WaitRight0 W HasRight0)) | ("Fork2" & (!WaitRight0 M !HasRight0)))
+((!HasRight2 | X(!HasRight2 R (WaitLeft0 | !WaitRight0))) U WaitLeft1) R ((!"Fork4" & !WaitRight4) | (WaitRight4 & "Fork4"))
+(!"Fork1" & GHasRight1) | ("Fork1" & F!HasRight1) | G(!WaitRight4 & ((!WaitLeft3 & !WaitLeft1 & X!WaitRight0) | (WaitLeft1 & (WaitLeft3 | XWaitRight0))))
+HasLeft3 | ("Fork2" & !Idle3) | F(HasRight2 | GHasLeft2)
+Idle3 & !WaitRight0 & ((HasRight4 & (Idle0 M ((HasRight3 & !"Fork3") | ("Fork3" & !HasRight3)))) | (!HasRight4 & (!Idle0 W ((!"Fork3" & !HasRight3) | (HasRight3 & "Fork3")))))
+!Idle0 R ((!WaitRight3 & !WaitLeft4) | (WaitRight3 & WaitLeft4))
+(("Fork0" U Idle0) U XHasRight4) | (F!HasLeft4 & ((!IsEating4 & (WaitRight1 | !IsEating2)) | (IsEating2 & IsEating4 & !WaitRight1))) | (GHasLeft4 & ((IsEating2 & !WaitRight1 & !IsEating4) | (IsEating4 & (WaitRight1 | !IsEating2))))
+HasRight2 & X(HasRight2 W (!"Fork3" & (IsEating2 W XIdle0)))
+((G!WaitLeft2 & ((!WaitLeft4 & X!WaitLeft3) | (WaitLeft4 & XWaitLeft3))) | (FWaitLeft2 & ((!WaitLeft4 & XWaitLeft3) | (WaitLeft4 & X!WaitLeft3)))) M ({WaitLeft0[*1..3]}[]-> Idle3)
+X(!WaitRight2 | (GIdle2 & ((!HasLeft0 & X!WaitRight3) | (HasLeft0 & XWaitRight3))) | (F!Idle2 & ((!HasLeft0 & XWaitRight3) | (HasLeft0 & X!WaitRight3))))
+X(((!WaitRight3 M HasRight4) & ((!HasRight1 & ((Idle3 & WaitRight3) | (!WaitRight3 & !Idle3))) | (HasRight1 & ((WaitRight3 & !Idle3) | (Idle3 & !WaitRight3))))) | ((WaitRight3 W !HasRight4) & ((!HasRight1 & ((WaitRight3 & !Idle3) | (Idle3 & !WaitRight3))) | (HasRight1 & ((Idle3 & WaitRight3) | (!WaitRight3 & !Idle3))))))
+"WaitRight4" | G!HasRight4 | XG!IsEating0
+(((!"Fork1" & FHasRight4) | ("Fork1" & G!HasRight4)) & G("Fork1" & IsEating2 & X(IsEating2 & !"Fork0"))) | (((!"Fork1" & G!HasRight4) | ("Fork1" & FHasRight4)) & F(!"Fork1" | !IsEating2 | X("Fork0" | !IsEating2)))
+(!HasRight0 & (F((!IsEating4 & (HasLeft2 W Idle3)) | (IsEating4 & (!HasLeft2 M !Idle3))) R IsEating4)) | (WaitRight0 & !HasRight4)
+((!WaitLeft1 U (!Idle1 M !HasLeft0)) & G({HasRight2[*0..1]}<>-> GHasLeft2)) | ((WaitLeft1 R (Idle1 W HasLeft0)) & F({HasRight2[*0..1]}[]-> F!HasLeft2))
+(HasRight3 & ({{!WaitRight1 && !WaitLeft0}[*1..3]}<>-> !WaitLeft0) & XF!WaitLeft3) | (({{!WaitRight1 && !WaitLeft0}[*1..3]}[]-> WaitLeft0) & (!HasRight3 | XGWaitLeft3))
+X((WaitLeft4 & G!HasLeft1 & X!IsEating2) | (XIsEating2 & (!WaitLeft4 | FHasLeft1)))
+((!Idle3 & ((HasRight2 & G"Fork2" & (!WaitRight4 W !WaitLeft0)) | ((WaitRight4 M WaitLeft0) & (!HasRight2 | F!"Fork2")))) | (Idle3 & (((!WaitRight4 W !WaitLeft0) & (!HasRight2 | F!"Fork2")) | (HasRight2 & G"Fork2" & (WaitRight4 M WaitLeft0))))) U !WaitLeft2
+F((Idle2 W !IsEating2) & X((!WaitLeft4 & GIdle4) | (WaitLeft4 & F!Idle4)))
+(!Idle4 & !HasRight0) | G(Idle2 | HasRight3)
+F((((HasRight4 & !WaitRight2) | (WaitRight2 & !HasRight4)) & F(!HasRight3 & !HasLeft4) & ({{!IsEating0}[*1..2]}[]-> ((HasRight4 & !WaitRight2) | (WaitRight2 & !HasRight4)))) | (G(HasRight3 | HasLeft4) & ((!HasRight4 & !WaitRight2) | (WaitRight2 & HasRight4) | ({{!IsEating0}[*1..2]}<>-> ((!HasRight4 & !WaitRight2) | (WaitRight2 & HasRight4))))))
+(IsEating0 R (IsEating3 & WaitRight4)) & (WaitLeft0 | IsEating1 | !IsEating3 | !Idle2)
+IsEating2 & X(IsEating2 W F(HasRight2 & HasRight3 & !WaitLeft4))
+(IsEating2 & FHasLeft4 & ((!"Fork1" & (((!"Fork3" & GIsEating3) | ("Fork3" & F!IsEating3)) U ((HasRight2 & !HasLeft2) | (HasLeft2 & !HasRight2)))) | ("Fork1" & (((!"Fork3" & F!IsEating3) | ("Fork3" & GIsEating3)) R ((!HasLeft2 & !HasRight2) | (HasLeft2 & HasRight2)))))) | ((!IsEating2 | G!HasLeft4) & ((!"Fork1" & (((!"Fork3" & F!IsEating3) | ("Fork3" & GIsEating3)) R ((!HasLeft2 & !HasRight2) | (HasLeft2 & HasRight2)))) | ("Fork1" & (((!"Fork3" & GIsEating3) | ("Fork3" & F!IsEating3)) U ((HasRight2 & !HasLeft2) | (HasLeft2 & !HasRight2))))))
+(!IsEating4 R (HasLeft1 W "Fork4")) | ((!IsEating1 & (!Idle3 R !IsEating4)) W !Idle1)
+A2 U ((((!C1 M F!B2) M !E3) & (A0 W !E2)) | (((C1 W GB2) W E3) & (!A0 M E2)))
+C2 | ((G!A2 | !"G4") U ((D1 | A2) W C4))
+(((!"F1" W !C2) & (GE1 | !E1)) | (E1 & ("F1" M C2) & F!E1)) R H3
+(!"F1" | (!D1 & (!E1 M !E3)) | (D1 & (E1 W E3))) R ((D4 & ("G3" | !"G4")) | ("G4" & !D4 & !"G3"))
+(D0 & (A1 | ((C3 M XXA2) U ("G4" & FB1)))) | (!D0 & !A1 & ((!C3 W XX!A2) R (!"G4" | G!B1)))
+(("G0" U (!B2 | !H0)) & (!D1 R !H3)) | ((D1 U H3) & (!"G0" R (H0 & B2)))
+!"G1" R ((D4 & !"G4" & ((E1 & !C3) | (C3 & !E1))) | (((!E1 & !C3) | (E1 & C3)) & ("G4" | !D4)))
+((B4 | !D1 | !E1) & (!"G4" | FG"G1")) U B0
+(A4 | (!B1 & (H2 | "F4"))) & ((A4 W (E2 | !"F0")) | (!B1 & (H2 | "F4")))
+(!C4 & G(H4 | (D0 & !D3))) | (C4 & F(!H4 & (D3 | !D0)))
+(GB1 U !B0) M (A2 & !"G2" & XC4)
+B0 | (G(E2 | "G3") & (A4 | (F"G3" R C4)))
+(!C1 & (!D1 | X(!D1 R !A2))) | (C1 & D1 & X(D1 U A2))
+((("F4" & (G!"F2" U !B1)) | (!"F4" & (F"F2" R B1))) & G((!E2 | !D0) & X((!E2 | !D0) W !"F2"))) | ((("F4" & (F"F2" R B1)) | (!"F4" & (G!"F2" U !B1))) & F((D0 & E2) | X((D0 & E2) M "F2")))
+(({{"F1";A1}[*]}[]-> ((E2 & !A0) | (A0 & !E2))) & G(E2 & !C2)) | (F(C2 | !E2) & ({{"F1";A1}[*]}<>-> ((!A0 & !E2) | (A0 & E2))))
+F((A3 & !E4 & X((C2 | A3) & X((C2 | A3) W D2))) | ((E4 | !A3) & X((!C2 & !A3) | X((!C2 & !A3) M !D2))))
+((E4 | X(E4 M B0)) & XG!"F4") | (!E4 & X((!E4 W !B0) & F"F4"))
+F{{{{E3 && "G3"}:{{{"F4" && !E1} | {E1 && !"F4"}}}[*2][*]} | {E3 && "G3"}}[*2..3]}
+X((((A0 & !A4) | (A4 & !A0)) W X"G1") R XC1)
+({{C0;"G0"}[*]}[]-> (D0 & XD0)) R (C4 & !B1)
+((GH0 & (X!E2 | (!H3 U "F0"))) | (XE2 & (H3 R !"F0") & F!H0)) R E2
+(!E3 & F!"G2") | (E3 & G"G2") | FG(A4 & !H4)
+(!H0 & ((C0 & XB0) | G(!C1 | (A4 W E2)))) | (H0 & (!C0 | X!B0) & F(C1 & (!A4 M !E2)))
+(((FA0 & X!H1) | (G!A0 & XH1)) & ({A3[*0..1]}[]-> (!B2 W (!"G3" W !A4)))) | (({A3[*0..1]}<>-> (B2 M ("G3" M A4))) & ((FA0 & XH1) | (G!A0 & X!H1)))
+(D4 & ((E2 | !H2 | !B0) U D1)) | (!D4 & ((B0 & H2 & !E2) R !D1))
+D2 & F((!H4 & (!B1 M ("G0" & !C2))) | (H4 & (B1 W (C2 | !"G0"))))
+G"G0" | F("G0" R ((A1 & "F4" & X!C1) | (XC1 & (!A1 | !"F4"))))
+(C0 & H3 & (!"F1" R F!C0) & ((E0 & !"F1") | (E0 & ({E1[*0..3]}<>-> !"F1")))) | (("F1" U GC0) & (!H3 | !C0 | (("F1" | !E0) & (!E0 | ({E1[*0..3]}[]-> "F1")))))
+B4 | ("F4" & !H4 & G!D3) | (!H0 & (!B3 | !B1)) | (H0 & B1 & B3)
+(!D2 & G!H4) | (D2 & FH4)
+(!B2 | !"F3" | X(H4 & (H1 | "F3") & (!"F3" | !H1))) R B2
+A1 W (((!D2 | (!B4 & !"F4") | (B4 & "F4")) & ((!E0 & XXF"F4") | (E0 & XXG!"F4"))) | (D2 & (("F4" & !B4) | (B4 & !"F4")) & ((!E0 & XXG!"F4") | (E0 & XXF"F4"))))
+H2 & ((C1 & !"F0") | ("F0" & !C1)) & (!D4 | (G!D3 & (!A0 | !C2)) | (A0 & C2 & FD3))
+X!E0 M ((!C4 & ((!H3 & !E0) | (E0 & H3)) & ((H3 | !A2) W "F2")) | (C4 & ((H3 & !E0) | (E0 & !H3) | ((A2 & !H3) M !"F2"))))
+("G2" | GB4) U ((!H0 | X({H0[*1..2]}[]-> X(A0 | !B1))) & (A0 | !B2 | !D3))
+F((H1 R B0) W ((C4 & !A3) | (A3 & !C4)))
+(!"G2" & (!H1 | X!E4 | (!D4 & X(!D4 W !E4)))) | (H1 & "G2" & XE4 & (D4 | X(D4 M E4)))
+X(GE0 | (D0 & (!"G0" W X(E2 & G!B2))) | (!D0 & ("G0" M X(!E2 | FB2))))
+A0 & "G4" & (H2 | (C0 W E3) | (!C2 & !"G1") | ("G1" & C2))
+{{{E4[*];!C2;E3[*]} | "F4"}[*]}[]-> E2 W "F0"
+((H0 | !A4) W (G"F2" R (("G0" & !C2) | (C2 & !"G0")))) U ("G0" R "G3")
+((!A0 R !H0) & (!A1 | !"F4" | (D1 & !A0))) | (A1 & "F4" & (A0 U H0) & (A0 | !D1))
+{{[*0] | C1[*]};{H1 | !A3}}[]-> "G4"
+XD4 M (GE0 | (!D1 & (A2 W (G!"F0" R !B1))) | (D1 & (!A2 M (F"F0" U B1))))
+!"G4" | (!"G1" & F!B3) | ("G1" & GB3) | X(!"G4" M F!A3)
+!A1 | ((H0 | F!D3) R F(!D4 W !H0))
+(G!"G1" & !"F4" & (D3 | !H1)) | (H1 & !D3 & ("F4" | F"G1"))
+D3 | ((!E0 U XD2) & G(!"G1" | XG!A4)) | ((E0 R X!D2) & F("G1" & XFA4))
+(!D4 & (!H0 | G!E0)) | (H0 & D4 & FE0)
+F((C2 & (C4 U "G1")) | ((!B4 | !H1) W C1))
+(C2 & (!A2 | !"G2")) | (A2 & "G2" & !C2) | (!C0 & X(!C0 W H0))
+((E2 | ("F0" & D4)) R "F3") | ("G4" & !E0)
+((B0 W !A1) | X(!D3 W (("F2" & !E1) W !B4))) U H0
+D0 & (((!"F3" M !B4) & ((!E3 & X!E3) | (E3 & XE3))) | (("F3" W B4) & ((!E3 & XE3) | (E3 & X!E3))))
+F((XG((!B4 & ((!B2 & !B4) | (B2 & B4))) | (B4 & ((B4 & !B2) | (B2 & !B4)))) & ((A2 & !B1) | (B1 & !A2))) | (XF((!B4 & ((B4 & !B2) | (B2 & !B4))) | (B4 & ((!B2 & !B4) | (B2 & B4)))) & ((!A2 & !B1) | (B1 & A2))))
+(E3 & GA4) | (C4 U (X"F1" R ((C1 & "G1") W H0)))
+(G"G0" M ("F1" & B3)) | (B4 & (GB2 U D2))
+(C1 | (A2 & !"F0") | ("F0" & !A2) | (!"G3" R !H4)) U ((!B4 & ((E4 & !C0) | (C0 & !E4))) | (B4 & ((C0 & E4) | (!E4 & !C0))))
+F((!D0 & ("G2" | X("G2" R C1))) | (D0 & !"G2" & X(!"G2" U !C1)))
+B0 W ((A3 & !D4) | (D4 & !A3))
+(((G!A2 & !B0) | (B0 & FA2)) & (("F4" & !E0) | (E0 & !"F4"))) | (((FA2 & !B0) | (B0 & G!A2)) & ((!"F4" & !E0) | (E0 & "F4")))
+E4 & X(E4 U (E1 & ((D2 M H3) M ((!E3 & F!D4) | (E3 & GD4)))))
+!E1 | (((!"G0" & (!E1 W ((!A3 & !A1) | (A1 & A3)))) | ("G0" & (E1 M ((A3 & !A1) | (A1 & !A3))))) M GE1)
+(F((!E0 & GD2) | (E0 & F!D2)) R A2) | X(!C0 | FD0)
+D2 & ((!E3 & (C4 M B3)) | (E3 & (!C4 W !B3)))
+("G0" U H2) M (B0 & (!D0 | (A0 R "G2") | (!A0 & !"F2") | (A0 & "F2")))
+!B1 | !"F4" | XG!C0
+(!B2 & ((F!"F0" & (D0 | "G4")) | (!"G4" & !D0 & G"F0"))) | (B2 & ((!"G4" & !D0 & F!"F0") | (G"F0" & (D0 | "G4"))))
+"F1" | (F((H3 & !A1) | (A1 & !H3)) & ((("G4" | !B2) & XF!C1) | (B2 & !"G4" & XGC1))) | (G((!H3 & !A1) | (A1 & H3)) & ((("G4" | !B2) & XGC1) | (B2 & !"G4" & XF!C1)))
+((!H1 & (X!"G3" U (((C2 & !A0) U D3) M !B1))) | (H1 & (X"G3" R (((A0 | !C2) R !D3) W B1)))) R D3
+X(B1 W B2) & (E3 | (!C1 & ((D3 & !B4) | (B4 & !D3))) | (C1 & ((!D3 & !B4) | (D3 & B4))))
+("G2" R (A1 & A3)) | (E0 & H2 & !E2)
+G!"G1" U ((!C4 & (!H4 R !E3)) | (C4 & (H4 U E3)))
+X(!H4 | FC3 | G((!D0 & X"F4") | (D0 & X!"F4")))
+(F"G2" R (C1 & A2)) | ((!A1 | X!C4) U !E1)
+"G3" W F(E4 | (H2 M (C4 | !B2)) | X(E4 M G!"G2"))
+X(!B0 | ((E2 | A3) & X((E2 | A3) U G"G0")))
+F(H3 & !"G3") R (!A2 & !"F4")
+((!A2 | !"G4") & G((E4 & !A2) | (A2 & !E4))) | (A2 & "G4" & F((!A2 & !E4) | (A2 & E4)))
+!E0 | (((B2 R E1) & ("G2" | (H0 M A4))) M D1)
+(F!E2 & ((!A0 & !"F0") R ((D0 & !"G2") | ("G2" & !D0)))) | (GE2 & ((A0 | "F0") U ((!D0 & !"G2") | (D0 & "G2"))))
+X(!D4 | X(FGB0 | (!D4 R ((!D1 & !D2) | (D1 & D2)))))
+C2 | (F!H2 & !C0) | (C0 & GH2) | X!A1
+(A3 | ("F3" & !D3) | (D3 & !"F3")) W (E0 | B4)
+XB1 R (GD1 | (!C3 & (("F0" & !C3) | (C3 & !"F0"))))
+!"F0" | (F!A2 & (!H4 W !"G0")) | (GA2 & (H4 M "G0"))
+D3 & (((A1 W (X"G3" & ((D3 & !B1) | (B1 & !D3)))) R XD2) W E3)
+F((((!B1 & F"F1") | (B1 & G!"F1")) R C4) & ("G0" R ((!A0 & !"F2") | (A0 & "F2"))))
+X((B4 & XB2 & (((!C1 & !D0) | (D0 & C1)) R (!H3 | !H0 | !C0))) | ((!B4 | X!B2) & (((C1 & !D0) | (D0 & !C1)) U (C0 & H0 & H3))))
+(!C0 & F"F2") | (C0 & G!"F2")
+G!C1 | ((F"G3" & ((H4 & !D2) | (D2 & !H4))) U (!C4 & !B4))
+G((E3 & E4) | (!E3 & !E4)) | ((!D4 | GB4) R A3)
+B4 W (X!C4 U (XE0 & (A4 | F!E1)))
+!A0 | !E2 | !A1 | (C0 R H3)
+XF((E1 W H4) & (!A1 W !D1))
+((!A1 & XC4) | (A1 & X!C4)) M (((!"F3" M B2) & X(!B2 & !D0)) | (X(D0 | B2) & ("F3" W !B2)))
+((!D0 & (!"G4" M XG!A4)) | (D0 & ("G4" W XFA4))) U E4
+((!"G2" U !D2) & G((!"F2" & X"G2") | ("F2" & X!"G2"))) | (("G2" R D2) & F((!"F2" & X!"G2") | ("F2" & X"G2")))
+((!C0 & ((!A2 & !H0) | (H0 & A2))) | (C0 & ((A2 & !H0) | (H0 & !A2)))) W (!A0 | !"F1")
+(FC4 & X(D3 M (C0 & !A0))) | (G!C4 & X(!D3 W (A0 | !C0)))
+(A3 & !"G0" & !"F4" & F!"G4") | (G"G4" & ("G0" | "F4" | !A3))
+(((!A0 & ((!E1 & !B0) | (B0 & E1))) | (A0 & ((B0 & !E1) | (E1 & !B0)))) W "F2") & (!E2 | !B1 | (!A0 & ((!E1 & !B0) | (B0 & E1))) | (A0 & ((B0 & !E1) | (E1 & !B0))))
+(!D2 & FB4) | (D2 & G!B4)
+!C1 | X(!C1 M F((E4 & XG(!D3 | !"G0")) | (!E4 & XF("G0" & D3))))
+(!D4 & (A2 | G!B4)) | (D4 & !A2 & FB4)
+B1 | "G4" | (((X!B0 & FB2) | (XB0 & G!B2)) R (A1 | !H2))
+A2 & X(A2 U ((!B1 & (E0 R H3)) | (B1 & (!E0 U !H3))))
+((!D0 & ((!E0 & (!A0 U !H2)) | (E0 & (A0 R H2)))) | (D0 & ((!E0 & (A0 R H2)) | (E0 & (!A0 U !H2))))) M (H2 | E4 | !"G4")
+F(((!"F4" R H4) & (((E3 W "F3") & (!"F1" U !H2)) | (("F1" R H2) & (!E3 M !"F3")))) | (("F4" U !H4) & (((!"F1" U !H2) & (!E3 M !"F3")) | (("F1" R H2) & (E3 W "F3")))))
+!"G1" & (("F0" & !"G1" & G!H3 & X("G3" & !"F0")) | (FH3 & ("G1" | !"F0" | X("F0" | !"G3"))))
+!H0 | ((A1 M (H2 W (A2 M "F2"))) M C0)
+XF((!A3 & F!E2) | (A3 & GE2))
+A2 W (B3 & !C1 & (B1 | !C0))
+"G3" | (!"G2" & (!A1 M "F1") & ((!B2 & X!"G2") | (B2 & X"G2"))) | ("G2" & ((A1 W !"F1") | (!B2 & X"G2") | (B2 & X!"G2")))
+((GC1 & X!A1) | (F!C1 & XA1)) & F("G0" & XF(C0 & D0))
+((!A1 U !H4) R !A4) M ((B3 & !E2) | (E2 & !B3))
+(G((!C1 & !E2) | (C1 & E2)) M (A4 R X("G3" R "G2"))) W (E2 W "F0")
+(GE1 & (!"G1" | !"F2")) | ("G1" & "F2" & F!E1)
+(C3 W C2) | (G!"G1" & FA0)
+X((!B1 & XF("G4" & !E0)) | (B1 & XG(E0 | !"G4")))
+(C0 & F!E1 & X"F2") | (GE1 & (!C0 | X!"F2"))
+F(B1 W ((X!H0 | (B0 R A0)) W ((D2 & !H0) | (H0 & !D2))))
+X(GB1 | ("G3" & D4) | (!E2 & !A1))
+(FD0 & (F!B0 | (F!"G2" & !B1))) | ((B1 | G"G2") & G(B0 & !D0))
+(!B2 & XFD2) | (B2 & XG!D2) | (("F0" | C4) & ((!D2 & ("G2" | E3)) | (D2 & !E3 & !"G2")))
+X(XB1 | (F!"F4" & (!"F4" | (B3 W !"G1"))) | (G"F4" & (!B3 M "G1")))
+((!"F2" U (!A0 & FA3)) & X(D3 & ((!"F1" & !H2) | ("F1" & H2)))) | (("F2" R (A0 | G!A3)) & X(!D3 | (H2 & !"F1") | ("F1" & !H2)))
+((C0 | H2) M (GB0 R A3)) U X(!D3 W !D1)
+X(!A0 W X"F3") & (!D2 | GH2 | (B2 R B3))
+!E4 W ((E0 R C4) | (!C0 R !C4))
+F(((!D1 & ((H1 & !"G1") | ("G1" & !H1))) | (D1 & ((!"G1" & !H1) | ("G1" & H1)))) R ((H4 W B0) W (H4 | X(H4 R B3))))
+(G(!B0 & (B4 | X!"G3")) | (FB0 & F(!B4 & X"G3"))) M X(A4 R !E0)
+!E4 | (!"F1" & !D2) | ("F1" & D2) | (G!A1 & (X!E2 M G!B2)) | (FA1 & (XE2 W FB2))
+(XH3 & FC2 & FD0) | (G!D0 & (X!H3 | G!C2))
+B3 W ((!B4 | X"G4") M ((A3 | !D0) W (B4 M A0)))
+(A2 & B4 & !"G2") W (!"G1" | !H2)
+FH1 & ((!"G0" & F!A2) | ("G0" & GA2))
+(!"G2" & !A1 & (("F3" & F!"G2") | (!"F3" & G"G2"))) | ((A1 | "G2") & (("F3" & G"G2") | (!"F3" & F!"G2")))
+{[*] & {{[*0] | C2} && B2}}[]-> !"G2"
+X((!B1 & X(!B1 W XG!H4)) U E3)
+("G3" | !E1) W (((E1 | !"F3") & X(B3 & !A2 & X!A3)) | (XA2 & (X(!B3 | XA3) | ("F3" & !E1))))
+X(!A4 M XF(FB2 R (E4 W E2)))
+(!"G2" | XC1) W (A3 | GB3)
+"G1" R ((A1 & !A3 & !B0 & (B0 | D3)) | ((B0 | A3) & (!A1 | (!D3 & !B0))))
+(F!"F4" R C3) & F(!E2 | X({H1[*1..3]}[]-> X(D0 | !D4)))
+{{A3[*]:A4}[*]}<>-> (("F4" & F!"F3") | (!"F4" & G"F3"))
+!"G4" & (((FB1 & !E0) | (E0 & G!B1)) R XX!H1)
+"G1" | (((!D2 U !A3) R !C4) R !C3)
+(FA4 | (B3 W E0)) U (E0 W B4)
+(((B4 & !A3) | (A3 & !B4)) & G(!"F0" & (!B1 W !"G4"))) | (((!A3 & !B4) | (A3 & B4)) & F("F0" | (B1 M "G4")))
+(H3 & F((!C3 & (!C1 W B3)) | (C3 & (C1 M !B3)))) U H4
+(GA4 & ((G!A2 & FA3) | (FA2 & G!A3))) | (F!A4 & ((FA2 & FA3) | G(!A2 & !A3)))
+((!A2 | !"F0" | G!"G2") & F(!A4 | !B0)) | ("F0" & A2 & F"G2" & G(B0 & A4))
+XF(GA0 | ("G4" R H4) | (B2 R (C0 & "F0")))
+XF"F0" | (A0 W (C2 | !E1))
+"F2" | B4 | !H2 | (!A0 & G!D0 & F!C4) | (FD0 & (A0 | GC4))
+B1 | D3 | (!C0 & (B2 | FB3)) | (C0 & !B2 & G!B3)
+(C0 & (!E2 | G!"G4")) M E1
+((FH2 U XE2) & (H2 | (!H0 W !"F0"))) | (!H2 & (H0 M "F0") & (G!H2 R X!E2))
+F(H4 & !H1) U (((C2 R A0) & (!"G3" W X!H4)) | (("G3" M XH4) & (!C2 U !A0)))
+!B4 | (((!H2 U !D2) R (!H0 W !H4)) M B4)
+!C4 & X(!C4 W (X("G0" W C4) M F(D1 & D2)))
+{{{!"G0";H0}}[*];{E4[*0..2]:D3[*2..3]}}[]-> A2 R H4
+F(("F3" W XA1) | (XGH2 & ((!E2 & XG"F4") | (E2 & XF!"F4"))) | (XF!H2 & ((!E2 & XF!"F4") | (E2 & XG"F4"))))
+(F!A4 & (!"G3" | (("F2" | E4) & (!"G0" R !A0)) | (!E4 & !"F2" & ("G0" U A0)))) | ("G3" & GA4 & ((!E4 & !"F2" & (!"G0" R !A0)) | (("G0" U A0) & ("F2" | E4))))
+F("F3" & XC3) & ("F1" W XFE3)
+(!D1 & FE1) | (D1 & G!E1)
+X((GE0 & (!"G3" U (!C4 U !C2))) | (F!E0 & ("G3" R (C4 R C2))))
+(G!H4 & X!A3 & ((G!H0 & (A3 R "F3")) | (FH0 & (!A3 U !"F3")))) | ((FH4 | XA3) & ((G!H0 & (!A3 U !"F3")) | (FH0 & (A3 R "F3"))))
+FD0 & (!C3 | (!E3 W !B3))
+(!D2 & XGD4 & F(A0 | "G2")) | (D2 & (G(!A0 & !"G2") | XF!D4))
+E4 | (A1 & H2) | F(E4 W !B4)
+XXC3 & ((!C4 & (C3 | G!H1)) | (C4 & !C3 & FH1))
+((B4 | !H2) U (!"F3" | G"F3")) U (H3 | D4 | G"G2")
+X(((!"G4" | F!D2) & (G!"F2" | XF!C0)) | ("G4" & F"F2" & GD2 & XGC0))
+FGH4 | (E3 & X(E3 U (!E1 R C0)))
+(D1 & F!C4) | (!D1 & GC4)
+(("F2" & (G!D1 | F((!H1 & XC0) | (H1 & X!C0)))) | (!"F2" & FD1 & G((!H1 & X!C0) | (H1 & XC0)))) U !C1
+("F0" | !"G3") W ("F0" & C1 & ((!C4 & !D4) | (C4 & D4)))
+((!B3 U !E2) & (!H0 M G!H4)) | ((H0 W FH4) & (B3 R E2))
+H2 & (!"G0" | (GA4 M (C1 & F!C4)))
+(F((G!H2 U "F4") R !E2) U H4) U (D3 R C4)
+(C1 & (A2 | H4)) W X(((!A2 & XC0) | (A2 & X!C0)) R H2)
+X!H0 | FE1 | G(H3 | !E2)
+(B1 & !C1 & ((!B1 & F!D4) | (B1 & GD4))) U ((B1 & !"F0") | ("F0" & !B1))
+X((D4 | X!A2) W X(!"F2" | (A2 R "F3")))
+(GE2 & ((!B2 & !H0) M !A4)) | (C3 & !E2) | (E2 & !C3)
+("F3" & X!E0 & (!C0 W F!D0)) | ((C0 M GD0) & (!"F3" | XE0))
+B2 W (!"G0" & ((!"G0" & !"G3" & ((!C4 & !C2) | (C2 & C4))) | ("G3" & ("G0" | (C4 & !C2) | (C2 & !C4)))))
+(A0 & X(H1 & (C3 U "G1"))) U ((!E0 & (!B1 | GC3)) | (E0 & B1 & F!C3))
+C1 | A2 | "G4" | ((H2 | X(H2 R "G2")) W !B0)
+"F4" | (X"F2" & (!"G4" M XGA4))
+X((H3 | GC0 | (!H3 & !"F1")) U (F"G2" R !"G2"))
+GH1 | (!D0 & X(!D0 W ((!A0 & !"G3") | (A0 & "G3"))))
+B2 W ((!H2 & F"F3") | (H2 & G!"F3"))
+"G1" W ((!A0 U A4) | (E3 & !H1) | (H1 & !E3) | (G!H0 U !"F3"))
+("G1" & B4 & !D0 & !A1 & F(!E0 & XE0)) | (G(E0 | X!E0) & (D0 | A1 | !"G1" | !B4))
+XF!B3 | ((!C3 W !A1) & ((!"F1" & (C2 | !"G4")) | ("F1" & "G4" & !C2))) | ((C3 M A1) & (("G4" & !C2 & !"F1") | ("F1" & (C2 | !"G4"))))
+(E2 | GC4) R (E2 | D4 | !"G2" | (B0 R B1))
+C0 & "G2" & (H2 W B2) & F(C4 & F((B1 & !"F0") | ("F0" & !B1)))
+F "P12" R F "P12M3" R F "P1d"
+F "P2s" R F "P1wM1" R F "P12"
+F "P12" R F "M2" R F "P12s"
+F "P2s" R F "P12" R F "P2M2"
+F "P12" R F "P3s" R F "P2wP1"
+F "P12M3" R F "M1" R F "P3s"
+F "P3M2" R F "P2wP1" R F "P1M1"
+F "P12M3" R F "P12M3" R F "P1s"
+F "P3M2" R F "P1wM1" R F "P12M3"
+F "P12M3" R F "M2" R F "P2"
+F "P3M2" R F "P3" R F "P2d"
+F "P12M3" R F "P2" R F "P3"
+F "M3" R F "P1d" R F "P1"
+F "P3s" R F "P2s" R F "P1d"
+F "M3" R F "M3" R F "P12"
+F "P3s" R F "P2M2" R F "M3"
+F "M3" R F "P1wP2" R F "P2M2"
+F "P3s" R F "P3M2" R F "P2wP1"
+F "M3" R F "P2" R F "P3M2"
+F "P12s" R F "P1d" R F "P1M1"
+F "P12M3" W F "P2d" W F "P3s"
+F "P3M2" W F "P12wM3" W F "P1M1"
+F "P12M3" W F "P2" W F "P1wP2"
+F "M3" W F "P1d" W F "P12M3"
+F "P3s" W F "P3" W F "P2"
+F "M3" W F "P12s" W F "P1wP2"
+F "P3s" W F "M1" W F "P12M3"
+F "M3" W F "P12" W F "P2wM2"
+F "P3s" W F "P3s" W F "P2d"
+F "M3" W F "P2wM2" W F "P3"
+F "P12s" W F "P1s" W F "P1wM1"
+F "P1" W F "P3" W F "P1d"
+F "P2" W F "P1wM1" W F "P12"
+F "P1wM1" W F "M2" W F "P12s"
+F "P2" W F "P12" W F "P2M2"
+F "P1wM1" W F "P3s" W F "P2s"
+F "P2" W F "P2wM2" W F "P3s"
+F "P2wM2" W F "P2wP1" W F "P1M1"
+F "P1M1" W F "P12M3" W F "P1wP2"
+F "P2wM2" W F "P1wM1" W F "P12M3"
+F "M3" -> F "P2M2" -> F "P1wP2"
+F "P12s" -> F "P1wP2" -> F "P12M3"
+F "P1" -> F "P3M2" -> F "P2wM2"
+F "P3M2" -> F "M3" -> F "M3"
+F "P3s" -> F "P1M1" -> F "P2wM2"
+F "M3" -> F "P2d" -> F "P2wP1"
+F "P3s" -> F "P3M2" -> F "P3M2"
+F "M3" -> F "P2" -> F "P1wM1"
+F "P3s" -> F "P1d" -> F "P1s"
+F "M3" -> F "P3" -> F "P12wM3"
+F "P3s" -> F "P12s" -> F "P2"
+F "P1" -> F "M2" -> F "P1s"
+F "P12s" -> F "P12" -> F "P12wM3"
+F "P1" -> F "P3s" -> F "P2"
+F "P2" -> F "P2wM2" -> F "M2"
+F "P1wM1" -> F "P1s" -> F "P2s"
+F "P2" -> F "P12M3" -> F "P1"
+F "P1wM1" -> F "P1wM1" -> F "M1"
+F "P2" -> F "M2" -> F "P12"
+F "P2wM2" -> F "P12" -> F "M3"
+F "M3" R (FG "P3" | "P12")
+F "P3s" R (FG "P2" | "M3")
+F "P1" R (FG "P1d" | "P2M2")
+F "P12s" R (FG "P12wM3" | "P2wP1")
+F "P1" R (FG "P1" | "P3s")
+F "P2" R (FG "P2M2" | "P1M1")
+F "P1wM1" R (FG "P1wP2" | "P1s")
+F "P2" R (FG "P3M2" | "P12M3")
+F "P1wM1" R (FG "P1M1" | "P2")
+F "P1M1" R (FG "P2d" | "M2")
+F "P2wM2" R (FG "P12wM3" | "P3")
+F "P1M1" R (FG "P1" | "P1")
+F "P2wM2" R (FG "P2M2" | "M1")
+F "P1M1" R (FG "P2s" | "P12")
+F "P2wM2" R (FG "M3" | "M3")
+F "P1M1" R (FG "P1M1" | "P2M2")
+F "P2wM2" R (FG "P2d" | "P2wP1")
+F "P2M2" R (FG "P12wM3" | "M3")
+F "M1" R (FG "P2" | "P2M2")
+F "P2M2" R (FG "P1d" | "P2wP1")
+F "P1M1" W (FG "P2wP1" | "P2M2")
+F "P2wM2" W (FG "P12M3" | "P2s")
+F "P1M1" W (FG "P1wM1" | "P3s")
+F "P2wM2" W (FG "M2" | "P1M1")
+F "P1M1" W (FG "P12" | "P1wP2")
+F "P2wM2" W (FG "P12s" | "P12M3")
+F "P1M1" W (FG "M1" | "P2")
+F "M1" W (FG "P2wP1" | "P2d")
+F "P2M2" W (FG "P12M3" | "P3")
+F "M1" W (FG "P1wM1" | "P1wM1")
+F "P2M2" W (FG "P1s" | "P1d")
+F "M1" W (FG "P3" | "P12")
+F "M2" W (FG "P12s" | "P12s")
+F "P1d" W (FG "M1" | "P2M2")
+F "P1s" W (FG "P12" | "P2wP1")
+F "P2d" W (FG "P3s" | "P3s")
+F "P1s" W (FG "P2wM2" | "P1M1")
+F "P2d" W (FG "P1s" | "P1s")
+F "P1s" W (FG "P3" | "P12M3")
+F "P2d" W (FG "P1wM1" | "P2")
+F "P2" R F "P1wM1" R F "M1" R F "P2d"
+F "P2wM2" R F "M2" R F "P1wP2" R F "P1wM1"
+F "P1M1" R F "P12" R F "P1" R F "P3M2"
+F "P2wM2" R F "P3s" R F "M1" R F "P1d"
+F "P1M1" R F "M1" R F "P12" R F "P1wM1"
+F "P2wM2" R F "P2wP1" R F "M3" R F "P3M2"
+F "P1M1" R F "P12M3" R F "P2wM2" R F "P1s"
+F "P2wM2" R F "P1wM1" R F "P2wP1" R F "P1M1"
+F "P1M1" R F "M2" R F "P3M2" R F "P12M3"
+F "P2" R F "P1s" R F "P2wP1" R F "M1"
+F "P1wM1" R F "P3" R F "P3s" R F "M3"
+F "P2" R F "P1wM1" R F "P1M1" R F "P12"
+F "P2wM2" R F "P2d" R F "P1s" R F "P1d"
+F "P1M1" R F "P12wM3" R F "P12M3" R F "P12s"
+F "P2wM2" R F "P1" R F "P2" R F "P12wM3"
+F "P1M1" R F "P2M2" R F "M2" R F "M2"
+F "P2wM2" R F "P2s" R F "P3" R F "P2"
+F "P1M1" R F "M3" R F "P1" R F "P12wM3"
+F "P2wM2" R F "P1M1" R F "P1d" R F "M2"
+F "P2M2" R F "P2d" R F "P12" R F "P2"
+F "P2" W F "P1wP2" W F "P1d" W F "P2d"
+F "P1wM1" W F "P3M2" W F "P12" W F "P2wM2"
+F "P2" W F "P2" W F "P12s" W F "P3M2"
+F "P2wM2" W F "P2d" W F "P2M2" W F "P2wP1"
+F "P1M1" W F "P12M3" W F "P2wP1" W F "P2M2"
+F "P2wM2" W F "P1wM1" W F "P3s" W F "P3s"
+F "P1M1" W F "M2" W F "P1M1" W F "P2s"
+F "P2wM2" W F "P12" W F "P1wP2" W F "M1"
+F "P1M1" W F "P12s" W F "P3s" W F "P1"
+F "P2wM2" W F "M1" W F "P1M1" W F "P3"
+F "P2M2" W F "P2wP1" W F "P1wP2" W F "P1d"
+F "M1" W F "P12M3" W F "P12M3" W F "P1"
+F "P2M2" W F "P1wM1" W F "P2" W F "P12"
+F "M1" W F "P1s" W F "P2d" W F "P1d"
+F "P2M2" W F "P3" W F "P3" W F "P1wM1"
+F "P1d" W F "P12s" W F "P1wM1" W F "P12wM3"
+F "M2" W F "M1" W F "P1d" W F "P1s"
+F "P2d" W F "P2wP1" W F "P12" W F "P2"
+F "P1s" W F "P3s" W F "P12s" W F "P12M3"
+F "P2d" W F "P2wM2" W F "P2M2" W F "P1wP2"
+F "P12s" -> F "P2" -> F "P1s" -> F "P1wP2"
+F "P1wM1" -> F "P1d" -> F "P12wM3" -> F "M1"
+F "P2" -> F "P12wM3" -> F "P2" -> F "M3"
+F "P1wM1" -> F "P1" -> F "M2" -> F "P12"
+F "P1M1" -> F "P2M2" -> F "P2s" -> F "P2M2"
+F "P2wM2" -> F "P1wP2" -> F "P1" -> F "P12s"
+F "P1M1" -> F "P3M2" -> F "M1" -> F "P2s"
+F "P2wM2" -> F "P1M1" -> F "P1wP2" -> F "M2"
+F "P1M1" -> F "P2d" -> F "M3" -> F "P2"
+F "P2wM2" -> F "P12M3" -> F "P2wM2" -> F "P3"
+F "P1M1" -> F "P1wM1" -> F "P2wP1" -> F "P2d"
+F "P2wM2" -> F "M2" -> F "P3M2" -> F "P1wM1"
+F "P2M2" -> F "P3" -> F "P1wM1" -> F "P3M2"
+F "M1" -> F "P12s" -> F "P1s" -> F "P2wP1"
+F "P2M2" -> F "M1" -> F "P3M2" -> F "P1M1"
+F "M1" -> F "P2wP1" -> F "P1wM1" -> F "P3s"
+F "P2M2" -> F "P12M3" -> F "P1s" -> F "P1wP2"
+F "P1d" -> F "P2wM2" -> F "P12wM3" -> F "M1"
+F "M2" -> F "P1s" -> F "P2" -> F "P3s"
+F "P2d" -> F "P3" -> F "M2" -> F "P1wP2"
+F "P2wM2" R F "P12M3" R (FG "P2" | "P1")
+F "P1M1" R F "P1wM1" R (FG "M2" | "P12")
+F "M1" R F "P2d" R (FG "P3" | "P1d")
+F "P2M2" R F "P12wM3" R (FG "P1" | "P12s")
+F "M1" R F "P2" R (FG "P1d" | "P12wM3")
+F "P2M2" R F "P1d" R (FG "P12" | "P1s")
+F "M1" R F "P2s" R (FG "M3" | "P2")
+F "P2M2" R F "M3" R (FG "P2M2" | "P12M3")
+F "P1d" R F "P1M1" R (FG "P2wP1" | "P2d")
+F "P1s" R F "P1wP2" R (FG "P3M2" | "P2wM2")
+F "P2d" R F "P3M2" R (FG "P1M1" | "M3")
+F "P1s" R F "P2" R (FG "P1s" | "P2d")
+F "P2d" R F "P1d" R (FG "P12M3" | "P2wM2")
+F "P1s" R F "P2s" R (FG "P2" | "P3M2")
+F "P2d" R F "P1" R (FG "M2" | "P2wP1")
+F "P1s" R F "P2M2" R (FG "P3" | "P2M2")
+F "P2M2" R F "P1s" R (FG "P2d" | "P2s")
+F "M1" R F "P3" R (FG "P3" | "M2")
+F "P2M2" R F "P12s" R (FG "P1" | "P1")
+F "P1d" R F "M1" R (FG "P1d" | "P3")
+F "P2wM2" W F "M2" W (FG "P2wM2" | "P1")
+F "P1M1" W F "P12" W (FG "P2d" | "P3")
+F "P2wM2" W F "P3s" W (FG "P3M2" | "P2d")
+F "P1M1" W F "M1" W (FG "P1wM1" | "P1wM1")
+F "M1" W F "P2wP1" W (FG "P1d" | "P3M2")
+F "P2M2" W F "P12M3" W (FG "P12wM3" | "P1s")
+F "M1" W F "P1wM1" W (FG "P12s" | "P1M1")
+F "P2M2" W F "P2d" W (FG "M2" | "P12M3")
+F "M1" W F "P3M2" W (FG "P2s" | "P1wP2")
+F "P2M2" W F "P2" W (FG "P3s" | "M1")
+F "P1d" W F "P1d" W (FG "M1" | "M3")
+F "P1s" W F "P2s" W (FG "P1wP2" | "P12")
+F "P2d" W F "M3" W (FG "P12M3" | "P2M2")
+F "P1s" W F "P2M2" W (FG "P2wM2" | "P12s")
+F "P2d" W F "P1wP2" W (FG "P2d" | "P12wM3")
+F "P1s" W F "P3M2" W (FG "P3M2" | "M2")
+F "P2d" W F "P2" W (FG "P1wM1" | "P2")
+F "P1s" W F "P1d" W (FG "P1d" | "P3")
+F "P1wP2" W F "P12wM3" W (FG "P12wM3" | "P2d")
+F "P2wP1" W F "P1" W (FG "P12s" | "P2")
+F "P2" R F "P12" R F "P3"
+F "P1wM1" R F "P12s" R F "P1"
+F "P2" R F "M1" R F "P1d"
+F "P1M1" R F "P2wP1" R F "P12"
+F "M1" R F "P12M3" R F "P12s"
+F "P2M2" R F "P1wM1" R F "P2M2"
+F "M1" R F "P1s" R F "P2wP1"
+F "P2M2" R F "P3" R F "P3s"
+F "M1" R F "P12s" R F "P1M1"
+F "P2M2" R F "M1" R F "P1s"
+F "M1" R F "P2wP1" R F "P12M3"
+F "P1d" R F "P3s" R F "P2"
+F "M2" R F "P2wM2" R F "M2"
+F "P1d" R F "P1s" R F "P3"
+F "M2" R F "P3" R F "P1"
+F "P1d" R F "P1wM1" R F "P2d"
+F "M2" R F "M2" R F "P3"
+F "M1" R F "P2d" R F "P2d"
+F "P2M2" R F "P3M2" R F "P3"
+F "M1" R F "P2" R F "P1wM1"
+F "P2" W F "M1" W F "P3M2"
+F "P1wM1" W F "P2wP1" W F "P1wM1"
+F "P2" W F "P12M3" W F "P1s"
+F "P1wM1" W F "P1wM1" W F "P12wM3"
+F "P2" W F "M2" W F "P12s"
+F "P2M2" W F "P3" W F "M2"
+F "M1" W F "P12s" W F "P2s"
+F "P2M2" W F "M1" W F "P1"
+F "M1" W F "P2wP1" W F "M1"
+F "P2M2" W F "P12M3" W F "P1wP2"
+F "M1" W F "P2wM2" W F "M3"
+F "P2M2" W F "P1s" W F "P2wM2"
+F "M1" W F "P3" W F "P2d"
+F "P1d" W F "P12s" W F "P3M2"
+F "M2" W F "M1" W F "P1wM1"
+F "P1d" W F "P12" W F "P1s"
+F "M2" W F "P3s" W F "P12wM3"
+F "P1d" W F "P2wM2" W F "P12s"
+F "M2" W F "P1s" W F "M2"
+F "P1d" W F "P3" W F "P2s"
+F "P2M2" -> F "M3" -> F "P1s"
+F "M1" -> F "P1M1" -> F "P12wM3"
+F "P2M2" -> F "P1wP2" -> F "P2"
+F "M2" -> F "P3M2" -> F "M2"
+F "P1d" -> F "P2" -> F "P3"
+F "M2" -> F "P1d" -> F "P1"
+F "P1d" -> F "P2s" -> F "M1"
+F "M2" -> F "P1" -> F "P12"
+F "P1d" -> F "P2M2" -> F "M3"
+F "M2" -> F "P1wP2" -> F "P2wM2"
+F "P2d" -> F "P3M2" -> F "P2wP1"
+F "P1wP2" -> F "P2" -> F "P3M2"
+F "P2wP1" -> F "P2d" -> F "P1M1"
+F "P1wP2" -> F "P12wM3" -> F "P1s"
+F "P2wP1" -> F "P1" -> F "P12wM3"
+F "P1wP2" -> F "P2M2" -> F "P2"
+F "P2wP1" -> F "P2s" -> F "M2"
+F "P1wP2" -> F "M3" -> F "P2s"
+F "M2" -> F "P12s" -> F "P2d"
+F "P1d" -> F "M2" -> F "P3"
+F "P2M2" R (FG "P2d" | "P2d")
+F "M1" R (FG "P3M2" | "P3")
+F "P2M2" R (FG "P2" | "P1wM1")
+F "P1wM1" R (FG "P1M1" | "P3M2")
+F "P2" R (FG "P2wP1" | "P1wM1")
+F "P1wM1" R (FG "P12M3" | "P1s")
+F "P2" R (FG "P1wM1" | "P3M2")
+F "P1wM1" R (FG "M2" | "P1wM1")
+F "M1" R (FG "P3" | "P1s")
+F "P2M2" R (FG "P12s" | "P12wM3")
+F "M1" R (FG "M1" | "P12s")
+F "P2M2" R (FG "P2wP1" | "M2")
+F "M1" R (FG "P12M3" | "P2s")
+F "P2M2" R (FG "P2wM2" | "P1")
+F "M1" R (FG "P1s" | "M1")
+F "P1d" R (FG "P3" | "P1wP2")
+F "M2" R (FG "P12s" | "M3")
+F "P1d" R (FG "M1" | "P2wM2")
+F "M2" R (FG "P12" | "P2d")
+F "P1d" R (FG "P3s" | "P3M2")
+F "P2M2" W (FG "P2" | "P2wP1")
+F "M1" W (FG "P1d" | "P3M2")
+F "P2" W (FG "P1d" | "P2wP1")
+F "P12M3" W (FG "P2wP1" | "P2M2")
+F "P3M2" W (FG "P12M3" | "P2s")
+F "M3" W (FG "P2wM2" | "P3s")
+F "P12s" W (FG "P1s" | "M1")
+F "P1" W (FG "P3" | "P1wP2")
+F "P12s" W (FG "P12s" | "P12M3")
+F "P1" W (FG "M1" | "P2wM2")
+F "P12s" W (FG "P12" | "P2d")
+F "P1" W (FG "P3s" | "P3")
+F "P12s" W (FG "P2wM2" | "P2wM2")
+F "P2" W (FG "P1s" | "P2d")
+F "P1wM1" W (FG "P3" | "P3M2")
+F "P2" W (FG "P1wM1" | "P1wM1")
+F "P1wM1" W (FG "M2" | "P1d")
+F "P2" W (FG "P12" | "P12wM3")
+F "P1wM1" W (FG "P3s" | "P12s")
+F "P2" W (FG "P2wM2" | "P2M2")
+F "P3M2" R F "M1" R F "P1s" R F "P2d"
+F "P12M3" R F "P2wP1" R F "P12M3" R F "P1wM1"
+F "P3M2" R F "P12M3" R F "P2" R F "P3M2"
+F "P12M3" R F "P1wM1" R F "M2" R F "P1s"
+F "P3M2" R F "P1s" R F "P3" R F "P1M1"
+F "P12M3" R F "P3" R F "P1" R F "P3s"
+F "P3M2" R F "P12s" R F "P1d" R F "P1wP2"
+F "P1" R F "M1" R F "P12" R F "M1"
+F "P12s" R F "P2wP1" R F "M3" R F "M3"
+F "P1" R F "P3s" R F "P2M2" R F "P12"
+F "P12s" R F "P2wM2" R F "P2wP1" R F "P2M2"
+F "P1" R F "P1s" R F "P3M2" R F "P12s"
+F "P12s" R F "P3" R F "P1M1" R F "P12wM3"
+F "P1" R F "P12s" R F "P1s" R F "M2"
+F "P12s" R F "M2" R F "P12wM3" R F "P2"
+F "P2" R F "P12" R F "P2" R F "P3"
+F "P1wM1" R F "P3s" R F "M2" R F "P2d"
+F "P2" R F "P2wM2" R F "P3" R F "P2wM2"
+F "P1wM1" R F "P1s" R F "P2" R F "P3M2"
+F "P2" R F "P12M3" R F "M2" R F "P2wP1"
+F "P1" W F "M3" W F "P2" W F "P3M2"
+F "P12s" W F "P2M2" W F "P2d" W F "P2wP1"
+F "P1" W F "P1wP2" W F "P3" W F "P1M1"
+F "P12s" W F "P3M2" W F "P1wM1" W F "P3s"
+F "P1" W F "P2" W F "P1d" W F "P2s"
+F "P1wM1" W F "P1d" W F "P12" W F "M1"
+F "P2" W F "P12wM3" W F "P12s" W F "P1"
+F "P1wM1" W F "P1" W F "P2M2" W F "P12"
+F "P2" W F "P2M2" W F "P2wP1" W F "P1d"
+F "P1wM1" W F "P1wP2" W F "P3s" W F "P1wM1"
+F "P2" W F "P3M2" W F "P1M1" W F "P12wM3"
+F "P1wM1" W F "P1M1" W F "P1wP2" W F "P1s"
+F "P2" W F "P2d" W F "P12M3" W F "P2"
+F "P2wM2" W F "P12wM3" W F "P2" W F "P12M3"
+F "M1" W F "P1" W F "P2d" W F "P1wP2"
+F "P2M2" W F "P2M2" W F "P3" W F "P2wM2"
+F "M1" W F "P2s" W F "P1" W F "M3"
+F "P2M2" W F "M3" W F "P1d" W F "P2wP1"
+F "M1" W F "P1M1" W F "P12" W F "P2M2"
+F "P2M2" W F "P2wP1" W F "M3" W F "M3"
+F "P1wM1" -> F "P12" -> F "P12wM3" -> F "P2M2"
+F "P2" -> F "P3s" -> F "P12s" -> F "P12s"
+F "P1wM1" -> F "P2wM2" -> F "P2M2" -> F "P2s"
+F "P1M1" -> F "P2wP1" -> F "P2s" -> F "M2"
+F "P2wM2" -> F "P12M3" -> F "P12s" -> F "P1"
+F "M1" -> F "P1wM1" -> F "P2M2" -> F "P3"
+F "P2M2" -> F "M2" -> F "P2s" -> F "P2d"
+F "M1" -> F "P12" -> F "P3s" -> F "P1wM1"
+F "P2M2" -> F "P12s" -> F "M1" -> F "P3M2"
+F "P1wM1" -> F "P2" -> F "P1" -> F "P1wM1"
+F "P2" -> F "P2d" -> F "M1" -> F "P3M2"
+F "P1wM1" -> F "P12wM3" -> F "P1wP2" -> F "P1s"
+F "P2" -> F "P1" -> F "M3" -> F "P1M1"
+F "P1wM1" -> F "P2M2" -> F "P2wM2" -> F "P3s"
+F "P1M1" -> F "P1wP2" -> F "P2wP1" -> F "P1wP2"
+F "P2wM2" -> F "M3" -> F "P3M2" -> F "M1"
+F "M1" -> F "P1M1" -> F "P1wM1" -> F "M3"
+F "P2M2" -> F "P2d" -> F "P1s" -> F "P12"
+F "M1" -> F "P12wM3" -> F "P12wM3" -> F "P1d"
+F "P2M2" -> F "P1" -> F "P12s" -> F "P12s"
+F "P1wM1" R F "P2wM2" R (FG "P12M3" | "P1d")
+F "P2" R F "P1s" R (FG "P2" | "P12s")
+F "P1wM1" R F "P12M3" R (FG "M2" | "P12wM3")
+F "P2" R F "P1wM1" R (FG "P3" | "M2")
+F "P1wM1" R F "M2" R (FG "P1" | "P2")
+F "P1M1" R F "P12" R (FG "M1" | "P12M3")
+F "P2wM2" R F "P3s" R (FG "P12" | "P2d")
+F "M1" R F "M1" R (FG "M3" | "P2wM2")
+F "P2M2" R F "P2wP1" R (FG "P2wM2" | "P3M2")
+F "M1" R F "P12M3" R (FG "P2wP1" | "P2wP1")
+F "P2M2" R F "P1wM1" R (FG "M3" | "P2M2")
+F "M1" R F "M2" R (FG "P2M2" | "P3s")
+F "P1d" R F "P3" R (FG "P2wP1" | "P2s")
+F "M2" R F "P12s" R (FG "P3M2" | "M1")
+F "P1d" R F "M1" R (FG "P1M1" | "P1")
+F "M2" R F "P2wP1" R (FG "P1s" | "P3")
+F "P1d" R F "P12M3" R (FG "P12wM3" | "P1d")
+F "M2" R F "P2M2" R (FG "P2" | "P1wM1")
+F "P1d" R F "P1wP2" R (FG "M2" | "P12wM3")
+F "P1s" R F "P3M2" R (FG "P3" | "P1s")
+F "M1" W F "M3" W (FG "P2d" | "P12wM3")
+F "P2M2" W F "P1M1" W (FG "P3" | "P1s")
+F "M1" W F "P2d" W (FG "P1" | "P1M1")
+F "P1d" W F "P12wM3" W (FG "P1d" | "P12M3")
+F "M2" W F "P2" W (FG "P12" | "P1wP2")
+F "P1d" W F "P1d" W (FG "P12s" | "P2wM2")
+F "M2" W F "P2s" W (FG "P2M2" | "M3")
+F "P1d" W F "M3" W (FG "P2wP1" | "P12")
+F "M2" W F "P1M1" W (FG "P3s" | "P2M2")
+F "P1d" W F "P12" W (FG "P1M1" | "P12s")
+F "P1s" W F "P3s" W (FG "P1s" | "P2s")
+F "P2d" W F "P2wM2" W (FG "P12M3" | "M2")
+F "P1s" W F "P1s" W (FG "P2" | "P2")
+F "P2wP1" W F "P3" W (FG "P2d" | "P3")
+F "P1wP2" W F "P1wM1" W (FG "P3" | "M2")
+F "P2wP1" W F "M2" W (FG "P1" | "P1")
+F "P1wP2" W F "P12" W (FG "P2d" | "P3")
+F "P12" W F "P3s" W (FG "P3" | "P2d")
+F "P2s" W F "M1" W (FG "P1" | "P1wM1")
+F "P12" W F "P2wP1" W (FG "P1d" | "P3M2")
+F "Pout3" R F "Pm1" R F "P2"
+F "Pback3" R F "Pout3" R F "Pback4"
+F "Pm3" R F "Pm4" R F "Pout2"
+F "P3" R F "Pout2" R F "P3"
+F "Pout4" R F "Pm3" R F "Pback1"
+F "Pback4" R F "Pout1" R F "Pout3"
+F "Pm4" R F "Pm2" R F "P4"
+F "P4" R F "Pout4" R F "Pback2"
+F "Pout1" R F "Pm1" R F "Pout4"
+F "Pback1" R F "Pout3" R F "Pm1"
+F "Pm1" R F "Pm4" R F "Pback3"
+F "P1" R F "Pout2" R F "Pout1"
+F "Pout2" R F "Pm3" R F "Pm2"
+F "Pout2" R F "Pout1" R F "Pback4"
+F "Pback2" R F "Pm2" R F "Pout2"
+F "Pm2" R F "Pout4" R F "Pm3"
+F "P2" R F "Pm1" R F "Pback1"
+F "Pout3" R F "Pout3" R F "Pout3"
+F "Pback3" R F "Pm4" R F "Pm4"
+F "Pm3" R F "Pout2" R F "Pback2"
+F "Pback2" W F "P2" W F "Pm4"
+F "Pm2" W F "Pback4" W F "Pout2"
+F "P2" W F "P1" W F "P3"
+F "Pout3" W F "Pback3" W F "Pm1"
+F "Pout3" W F "P4" W F "Pout3"
+F "Pback3" W F "Pback2" W F "P4"
+F "Pm3" W F "P3" W F "Pback2"
+F "P3" W F "Pback1" W F "Pout4"
+F "Pout4" W F "P2" W F "P1"
+F "Pback4" W F "Pback4" W F "Pback3"
+F "Pm4" W F "P1" W F "Pout1"
+F "P4" W F "Pback3" W F "P2"
+F "Pout1" W F "P4" W F "Pback4"
+F "Pback1" W F "Pback2" W F "Pout2"
+F "Pm1" W F "P3" W F "Pm3"
+F "P1" W F "Pback1" W F "Pback1"
+F "Pout2" W F "P2" W F "Pout3"
+F "Pback2" W F "Pback4" W F "Pm4"
+F "Pm2" W F "P1" W F "Pback2"
+F "P2" W F "Pback3" W F "Pout4"
+F "Pback1" -> F "Pout4" -> F "Pout2"
+F "Pm1" -> F "Pm1" -> F "P3"
+F "P1" -> F "Pout3" -> F "Pm1"
+F "Pout2" -> F "Pm4" -> F "Pout3"
+F "Pback2" -> F "Pout2" -> F "P4"
+F "Pm2" -> F "Pm3" -> F "Pm2"
+F "P2" -> F "Pout1" -> F "Pout4"
+F "Pout3" -> F "Pm2" -> F "P1"
+F "Pback3" -> F "Pout4" -> F "Pm3"
+F "Pm3" -> F "Pm1" -> F "Pout1"
+F "P3" -> F "Pout3" -> F "P2"
+F "P3" -> F "Pm4" -> F "Pback4"
+F "Pout4" -> F "Pout2" -> F "Pout2"
+F "P2" -> F "P2" -> F "Pback4"
+F "Pout3" -> F "Pback4" -> F "Pout2"
+F "Pback3" -> F "P1" -> F "Pm3"
+F "Pm3" -> F "Pback3" -> F "Pback1"
+F "P3" -> F "P4" -> F "P2"
+F "Pout4" -> F "Pback2" -> F "Pm4"
+F "Pback4" -> F "P3" -> F "Pback2"
+F "P2" R (FG "Pm4" | "Pm4")
+F "Pout3" R (FG "Pout2" | "Pout2")
+F "Pback3" R (FG "Pm3" | "P3")
+F "Pm3" R (FG "Pout1" | "Pback1")
+F "P3" R (FG "Pm2" | "Pout3")
+F "Pout4" R (FG "Pout4" | "P4")
+F "Pback4" R (FG "Pm1" | "Pback2")
+F "Pm4" R (FG "Pout3" | "Pout4")
+F "P4" R (FG "Pm4" | "P1")
+F "Pout1" R (FG "Pout2" | "Pback3")
+F "Pback1" R (FG "Pm3" | "Pout1")
+F "Pm1" R (FG "Pout1" | "P2")
+F "P1" R (FG "Pm2" | "Pback4")
+F "P1" R (FG "Pout4" | "Pout2")
+F "Pout2" R (FG "Pm1" | "Pm3")
+F "Pback2" R (FG "Pout3" | "Pback1")
+F "Pm2" R (FG "Pm4" | "Pout3")
+F "P2" R (FG "Pout2" | "Pm4")
+F "Pout3" R (FG "Pm3" | "Pback2")
+F "Pback3" R (FG "Pout1" | "Pout4")
+F "Pout2" W (FG "P1" | "Pout2")
+F "Pback2" W (FG "Pback3" | "P3")
+F "Pm2" W (FG "P4" | "Pm1")
+F "P2" W (FG "Pback2" | "Pout3")
+F "P2" W (FG "P3" | "P4")
+F "Pout3" W (FG "Pback1" | "Pm2")
+F "Pback3" W (FG "P2" | "Pout4")
+F "Pm3" W (FG "Pback4" | "P1")
+F "P3" W (FG "P1" | "Pback3")
+F "Pout4" W (FG "Pback3" | "Pout1")
+F "Pback4" W (FG "P4" | "P2")
+F "Pm4" W (FG "Pback2" | "Pback4")
+F "P4" W (FG "P3" | "Pout2")
+F "Pout1" W (FG "Pback1" | "P3")
+F "Pback1" W (FG "Pm2" | "Pback1")
+F "Pm1" W (FG "Pout4" | "Pout3")
+F "P1" W (FG "Pm1" | "Pm4")
+F "Pout2" W (FG "Pout3" | "Pback2")
+F "Pback2" W (FG "Pm4" | "Pout4")
+F "Pback2" W (FG "Pout2" | "Pm1")
+F "Pm3" R F "Pback2" R F "Pm4" R F "Pm1"
+F "P3" R F "P3" R F "Pout2" R F "Pback1"
+F "Pout4" R F "Pback1" R F "P3" R F "Pout1"
+F "Pback4" R F "P2" R F "Pback1" R F "P4"
+F "Pm4" R F "Pback4" R F "Pout3" R F "Pm4"
+F "Pm4" R F "P1" R F "P4" R F "Pback4"
+F "P4" R F "Pback3" R F "Pback2" R F "Pout4"
+F "Pout1" R F "P4" R F "Pout4" R F "P3"
+F "Pback1" R F "Pback2" R F "P1" R F "Pm3"
+F "Pm1" R F "P3" R F "Pback3" R F "Pback3"
+F "P1" R F "Pback1" R F "Pout1" R F "Pout3"
+F "Pout2" R F "P2" R F "Pm2" R F "P2"
+F "Pback2" R F "Pback4" R F "Pback4" R F "Pm2"
+F "Pm2" R F "P1" R F "Pout2" R F "Pback2"
+F "P2" R F "Pback3" R F "Pm3" R F "Pout2"
+F "Pout3" R F "P4" R F "Pback1" R F "P1"
+F "Pback3" R F "Pback2" R F "Pout3" R F "Pm1"
+F "Pm3" R F "P3" R F "Pm4" R F "Pback1"
+F "Pout2" R F "Pm4" R F "P2" R F "Pm3"
+F "Pback2" R F "Pout2" R F "Pm4" R F "Pback3"
+F "Pout1" W F "P2" W F "P2" W F "Pm1"
+F "Pback1" W F "Pback4" W F "Pback4" W F "Pback1"
+F "Pm1" W F "P1" W F "Pout2" W F "Pout1"
+F "P1" W F "Pback3" W F "P3" W F "P4"
+F "Pout2" W F "P4" W F "Pback1" W F "Pm4"
+F "Pback2" W F "Pback2" W F "Pout3" W F "Pback4"
+F "Pm2" W F "P3" W F "Pm4" W F "Pout4"
+F "Pm2" W F "Pback1" W F "Pback2" W F "P3"
+F "P2" W F "P2" W F "Pout4" W F "Pm3"
+F "Pout3" W F "Pback4" W F "Pm1" W F "Pback3"
+F "Pback3" W F "P1" W F "Pback3" W F "Pout3"
+F "Pm3" W F "Pback3" W F "Pout1" W F "P2"
+F "P3" W F "P4" W F "Pm2" W F "Pm2"
+F "Pout4" W F "Pback2" W F "Pback4" W F "Pback2"
+F "Pback4" W F "P3" W F "P1" W F "Pout2"
+F "Pm4" W F "Pback1" W F "Pm3" W F "P1"
+F "P4" W F "P2" W F "Pback1" W F "Pm1"
+F "Pout1" W F "Pback4" W F "P2" W F "Pback1"
+F "Pback1" W F "P1" W F "Pm4" W F "Pout1"
+F "Pm1" W F "Pback3" W F "Pback2" W F "P4"
+F "Pout4" -> F "Pout4" -> F "Pback4" -> F "Pout3"
+F "Pback4" -> F "Pm1" -> F "Pout2" -> F "P2"
+F "Pm4" -> F "Pout3" -> F "P3" -> F "Pm2"
+F "P4" -> F "Pm4" -> F "Pback1" -> F "Pback2"
+F "Pout1" -> F "Pout2" -> F "Pout3" -> F "Pout2"
+F "Pback1" -> F "Pm3" -> F "P4" -> F "P1"
+F "Pm1" -> F "Pout1" -> F "Pback2" -> F "Pm1"
+F "P1" -> F "Pm2" -> F "Pout4" -> F "Pback1"
+F "Pout2" -> F "Pout4" -> F "Pm1" -> F "Pout1"
+F "Pback2" -> F "Pm1" -> F "Pback3" -> F "P4"
+F "Pm2" -> F "Pout3" -> F "Pout1" -> F "Pm4"
+F "P2" -> F "Pm4" -> F "Pm2" -> F "Pback4"
+F "Pout3" -> F "Pout2" -> F "Pback4" -> F "Pout4"
+F "Pback3" -> F "Pm3" -> F "Pout2" -> F "P3"
+F "Pback3" -> F "Pout1" -> F "Pm3" -> F "Pm3"
+F "Pm3" -> F "Pm2" -> F "Pback1" -> F "Pback3"
+F "P3" -> F "P3" -> F "Pout3" -> F "Pout3"
+F "Pout4" -> F "Pback1" -> F "Pm4" -> F "P2"
+F "Pback4" -> F "P2" -> F "Pback2" -> F "Pm2"
+F "Pm4" -> F "Pback4" -> F "P3" -> F "Pback2"
+F "Pback3" R F "Pback1" R (FG "Pout2" | "Pm4")
+F "Pm3" R F "P2" R (FG "P3" | "Pback4")
+F "P3" R F "Pback4" R (FG "Pm1" | "Pout4")
+F "Pout4" R F "P1" R (FG "Pout3" | "P3")
+F "Pback4" R F "Pback3" R (FG "P4" | "Pm3")
+F "Pback4" R F "P4" R (FG "Pback2" | "Pback3")
+F "Pm4" R F "Pback2" R (FG "Pout4" | "Pout3")
+F "P4" R F "P3" R (FG "P1" | "P2")
+F "Pout1" R F "Pback1" R (FG "Pback3" | "Pm2")
+F "Pback1" R F "Pm2" R (FG "Pout1" | "Pback2")
+F "Pm1" R F "Pout4" R (FG "P2" | "Pout2")
+F "P1" R F "Pm1" R (FG "Pback4" | "P1")
+F "Pout2" R F "Pout3" R (FG "Pout2" | "Pm1")
+F "Pback2" R F "Pm4" R (FG "Pm3" | "Pback1")
+F "Pm2" R F "Pout2" R (FG "Pback1" | "Pback1")
+F "P2" R F "Pm3" R (FG "Pout3" | "Pout1")
+F "Pout3" R F "Pout1" R (FG "Pm4" | "P4")
+F "Pback3" R F "Pm2" R (FG "Pback2" | "Pm4")
+F "Pm3" R F "Pout4" R (FG "Pout4" | "Pback4")
+F "P3" R F "Pm1" R (FG "Pm1" | "Pout4")
+F "Pback2" W F "Pm2" W (FG "P3" | "Pout2")
+F "Pm2" W F "P3" W (FG "Pm1" | "P1")
+F "P2" W F "Pback1" W (FG "Pout3" | "Pm1")
+F "Pout3" W F "P2" W (FG "P4" | "Pback1")
+F "P1" W F "P3" W (FG "Pout3" | "Pm3")
+F "Pout2" W F "Pback1" W (FG "P4" | "Pback3")
+F "Pback2" W F "P2" W (FG "Pback2" | "Pout3")
+F "Pback2" W F "Pback4" W (FG "Pout4" | "P2")
+F "Pm2" W F "P1" W (FG "Pm1" | "Pm2")
+F "P2" W F "Pback3" W (FG "Pback3" | "Pback2")
+F "Pout3" W F "P4" W (FG "Pout1" | "Pout2")
+F "Pback3" W F "Pback2" W (FG "Pm2" | "P1")
+F "Pm3" W F "P3" W (FG "Pback4" | "Pm1")
+F "P3" W F "Pback1" W (FG "Pout2" | "Pback1")
+F "Pout4" W F "Pm2" W (FG "Pm3" | "Pout1")
+F "Pback4" W F "Pout4" W (FG "Pback1" | "P4")
+F "Pm4" W F "Pm1" W (FG "P2" | "Pm4")
+F "P4" W F "Pout3" W (FG "Pm4" | "Pback4")
+F "Pout1" W F "Pm4" W (FG "Pback2" | "Pout4")
+F "Pback1" W F "Pout2" W (FG "P3" | "P3")
+F "P3" R F "P1" R F "P1"
+F "Pout4" R F "Pback3" R F "Pback3"
+F "Pback4" R F "P4" R F "Pout1"
+F "Pm4" R F "Pback2" R F "Pm2"
+F "P4" R F "P3" R F "Pback4"
+F "Pout1" R F "Pback1" R F "Pout2"
+F "Pback1" R F "P2" R F "Pm3"
+F "Pm1" R F "Pback4" R F "Pback1"
+F "P1" R F "P1" R F "Pout3"
+F "Pout2" R F "Pback3" R F "Pm4"
+F "Pback2" R F "P4" R F "Pback2"
+F "Pm2" R F "Pback2" R F "P3"
+F "P2" R F "P3" R F "Pm1"
+F "P2" R F "Pback1" R F "Pback3"
+F "Pout3" R F "P2" R F "P4"
+F "Pback3" R F "Pout4" R F "Pm2"
+F "Pm3" R F "Pm1" R F "Pback4"
+F "P3" R F "Pout3" R F "P1"
+F "Pout4" R F "Pm4" R F "Pm3"
+F "Pback4" R F "Pout2" R F "Pout1"
+F "Pout3" W F "Pout3" W F "Pback3"
+F "Pback3" W F "Pm4" W F "Pout1"
+F "Pm3" W F "Pout2" W F "P2"
+F "P3" W F "Pm3" W F "Pback4"
+F "P3" W F "Pout1" W F "Pout2"
+F "Pout4" W F "Pm2" W F "P3"
+F "Pback4" W F "Pout4" W F "Pback1"
+F "Pm4" W F "Pm1" W F "Pout3"
+F "P4" W F "P2" W F "Pm4"
+F "Pout1" W F "Pback4" W F "Pback2"
+F "Pback1" W F "P1" W F "Pout4"
+F "Pm1" W F "Pback3" W F "Pm1"
+F "P1" W F "P4" W F "Pback3"
+F "Pout2" W F "Pback2" W F "Pout1"
+F "Pback2" W F "P3" W F "Pm2"
+F "Pm2" W F "Pback1" W F "Pback4"
+F "P2" W F "P2" W F "P1"
+F "Pout3" W F "Pback4" W F "Pm3"
+F "Pback3" W F "P1" W F "Pback1"
+F "Pm3" W F "Pback3" W F "P2"
+F "Pout2" -> F "Pout4" -> F "Pout1"
+F "Pback2" -> F "Pm1" -> F "P2"
+F "Pm2" -> F "Pout3" -> F "Pback4"
+F "P2" -> F "Pm4" -> F "Pout2"
+F "Pout3" -> F "Pout2" -> F "P3"
+F "Pback3" -> F "Pm3" -> F "Pback1"
+F "Pm3" -> F "Pout1" -> F "Pout3"
+F "P3" -> F "Pm2" -> F "P4"
+F "Pout4" -> F "Pout4" -> F "Pback2"
+F "Pback4" -> F "Pm1" -> F "Pout4"
+F "Pm4" -> F "Pout3" -> F "Pm1"
+F "Pm4" -> F "Pm4" -> F "Pback3"
+F "P4" -> F "Pout2" -> F "Pout1"
+F "Pout1" -> F "Pm3" -> F "Pm2"
+F "Pback1" -> F "Pout1" -> F "Pback4"
+F "Pm1" -> F "Pm2" -> F "Pout2"
+F "P1" -> F "Pout4" -> F "Pm3"
+F "Pout2" -> F "Pm1" -> F "Pback1"
+F "Pback2" -> F "Pout3" -> F "Pout3"
+F "Pm2" -> F "Pm4" -> F "Pm4"
+F "Pback1" R (FG "Pback1" | "P2")
+F "Pback1" R (FG "P2" | "Pm4")
+F "Pm1" R (FG "Pback4" | "Pout2")
+F "Pback4" R (FG "Pback1" | "Pback4")
+F "Pm4" R (FG "P2" | "Pout2")
+F "P4" R (FG "Pout4" | "Pm3")
+F "Pout1" R (FG "Pm1" | "Pback1")
+F "Pback1" R (FG "Pout3" | "Pout3")
+F "Pm1" R (FG "Pm4" | "Pm4")
+F "P1" R (FG "Pout2" | "Pback2")
+F "Pout2" R (FG "Pm3" | "Pout4")
+F "Pback2" R (FG "Pout1" | "Pm1")
+F "Pback2" R (FG "Pm2" | "Pback3")
+F "Pm2" R (FG "Pout4" | "P4")
+F "P2" R (FG "Pm1" | "Pm2")
+F "Pout3" R (FG "Pout3" | "Pback4")
+F "Pback3" R (FG "Pm4" | "P1")
+F "Pm3" R (FG "Pout2" | "Pm3")
+F "P3" R (FG "Pm3" | "Pback1")
+F "Pout4" R (FG "Pout1" | "P2")
+F "P2" W (FG "P1" | "Pout1")
+F "Pout3" W (FG "Pback3" | "P2")
+F "Pback3" W (FG "P4" | "Pback4")
+F "Pback3" W (FG "Pback2" | "Pout2")
+F "Pm3" W (FG "P3" | "P3")
+F "P3" W (FG "Pback1" | "Pback1")
+F "Pout4" W (FG "P2" | "Pout3")
+F "Pback4" W (FG "Pback4" | "P4")
+F "Pm4" W (FG "P1" | "Pback2")
+F "P4" W (FG "Pback3" | "Pout4")
+F "Pout1" W (FG "P4" | "Pm1")
+F "Pback1" W (FG "Pback2" | "Pback3")
+F "Pm1" W (FG "P3" | "Pout1")
+F "P1" W (FG "Pback1" | "Pm2")
+F "Pout2" W (FG "P2" | "Pback4")
+F "Pback2" W (FG "Pback4" | "Pout2")
+F "Pm2" W (FG "P1" | "Pm3")
+F "P2" W (FG "Pback3" | "Pback1")
+F "Pout3" W (FG "P4" | "P2")
+F "Pout3" W (FG "Pback2" | "Pm4")
+F "Pback4" R F "Pm2" R F "Pback3" R F "Pm4"
+F "Pm4" R F "Pout4" R F "Pout1" R F "Pback4"
+F "P4" R F "Pm1" R F "Pm2" R F "Pout4"
+F "Pout1" R F "P2" R F "Pback4" R F "P3"
+F "Pback1" R F "Pback4" R F "Pout2" R F "Pm3"
+F "Pback1" R F "P1" R F "Pm3" R F "Pback3"
+F "Pm1" R F "Pback3" R F "Pback1" R F "Pout3"
+F "P1" R F "P4" R F "Pout3" R F "P2"
+F "Pout2" R F "Pback2" R F "Pm4" R F "Pm2"
+F "Pback2" R F "P3" R F "Pback2" R F "Pback2"
+F "Pm2" R F "Pback1" R F "Pout4" R F "Pout2"
+F "P2" R F "P2" R F "Pm1" R F "P1"
+F "Pout3" R F "Pback4" R F "Pback3" R F "Pm1"
+F "Pback3" R F "P1" R F "P4" R F "Pback1"
+F "Pm3" R F "Pback3" R F "Pm2" R F "Pout1"
+F "P3" R F "P4" R F "Pback4" R F "P4"
+F "Pout4" R F "Pback2" R F "P1" R F "Pm4"
+F "Pback4" R F "P3" R F "Pm3" R F "Pback4"
+F "Pm4" R F "Pback1" R F "Pback1" R F "Pback4"
+F "P4" R F "P2" R F "P2" R F "Pout4"
+F "Pback3" W F "Pm3" W F "Pout1" W F "Pout2"
+F "Pm3" W F "Pout1" W F "P2" W F "P1"
+F "P3" W F "Pm2" W F "Pback4" W F "Pm1"
+F "Pout4" W F "Pout4" W F "Pout2" W F "Pback1"
+F "Pback4" W F "Pm1" W F "P3" W F "Pout1"
+F "Pm4" W F "Pout3" W F "Pback1" W F "P4"
+F "P4" W F "Pm4" W F "Pout3" W F "Pm4"
+F "Pback3" W F "Pm1" W F "Pback1" W F "P2"
+F "Pm3" W F "P2" W F "P2" W F "Pm2"
+F "P3" W F "Pback4" W F "Pm4" W F "Pback2"
+F "Pout4" W F "P1" W F "Pback2" W F "Pout2"
+F "P2" W F "P2" W F "Pm4" W F "Pback4"
+F "Pout3" W F "Pback4" W F "Pout2" W F "Pout4"
+F "Pback3" W F "P1" W F "P3" W F "P3"
+F "Pm3" W F "Pback3" W F "Pback1" W F "Pm3"
+F "P3" W F "P4" W F "Pout3" W F "Pback3"
+F "Pout4" W F "Pback2" W F "P4" W F "Pout3"
+F "Pback4" W F "P3" W F "Pback2" W F "P2"
+F "Pback4" W F "Pback1" W F "Pout4" W F "Pm2"
+F "Pm4" W F "P2" W F "P1" W F "Pback2"
+F "Pback3" -> F "Pm3" -> F "P3" -> F "Pback4"
+F "Pm3" -> F "Pout1" -> F "Pm1" -> F "Pout4"
+F "P3" -> F "Pm2" -> F "Pback3" -> F "P3"
+F "Pout4" -> F "Pout4" -> F "P4" -> F "Pm3"
+F "Pback4" -> F "Pm1" -> F "Pm2" -> F "Pback3"
+F "Pm4" -> F "Pout3" -> F "Pback4" -> F "Pback3"
+F "P4" -> F "Pm4" -> F "P1" -> F "Pout3"
+F "Pout1" -> F "Pout2" -> F "Pm3" -> F "P2"
+F "Pback1" -> F "Pm3" -> F "Pout1" -> F "Pm2"
+F "Pback1" -> F "Pout1" -> F "P2" -> F "Pback2"
+F "Pm1" -> F "Pm2" -> F "Pm4" -> F "Pout2"
+F "P1" -> F "Pout4" -> F "Pout2" -> F "P1"
+F "Pout2" -> F "Pm1" -> F "P3" -> F "Pm1"
+F "Pback2" -> F "P2" -> F "Pm1" -> F "Pback1"
+F "Pm2" -> F "Pback4" -> F "Pout3" -> F "Pout1"
+F "P2" -> F "P1" -> F "P4" -> F "P4"
+F "Pout3" -> F "Pback3" -> F "Pback2" -> F "Pm4"
+F "Pback3" -> F "P4" -> F "Pout4" -> F "Pback4"
+F "Pm3" -> F "Pback2" -> F "P1" -> F "Pout4"
+F "P3" -> F "P3" -> F "Pback3" -> F "P3"
+F "Pback2" R F "P4" R (FG "Pm1" | "Pout2")
+F "Pm2" R F "Pback2" R (FG "Pback3" | "P1")
+F "P2" R F "P3" R (FG "Pout1" | "Pm1")
+F "Pout3" R F "Pback1" R (FG "Pm2" | "Pback1")
+F "Pback3" R F "P2" R (FG "Pback4" | "Pout1")
+F "Pm3" R F "Pout4" R (FG "P1" | "P4")
+F "P3" R F "Pm1" R (FG "Pm3" | "Pm4")
+F "Pout4" R F "Pout3" R (FG "Pback1" | "Pback4")
+F "Pback4" R F "Pm4" R (FG "P2" | "Pout4")
+F "Pm4" R F "Pout2" R (FG "Pm4" | "P3")
+F "P4" R F "Pm3" R (FG "Pback2" | "Pm3")
+F "Pout1" R F "Pout1" R (FG "P3" | "Pback3")
+F "Pback1" R F "Pm2" R (FG "Pm1" | "Pout3")
+F "Pm1" R F "Pout4" R (FG "Pout3" | "P2")
+F "P1" R F "Pm1" R (FG "P4" | "Pm2")
+F "Pout2" R F "Pout3" R (FG "Pm2" | "Pback2")
+F "Pout2" R F "Pm4" R (FG "Pout4" | "Pout2")
+F "Pback2" R F "Pout2" R (FG "P1" | "P1")
+F "Pm2" R F "Pm3" R (FG "Pm3" | "Pm1")
+F "P2" R F "Pout1" R (FG "Pout1" | "Pback1")
+F "Pm1" W F "P1" W (FG "Pback3" | "Pm3")
+F "P1" W F "Pback3" W (FG "Pout1" | "Pback3")
+F "Pout2" W F "P4" W (FG "Pm2" | "Pout3")
+F "Pback2" W F "Pback2" W (FG "Pback4" | "P2")
+F "Pm2" W F "P3" W (FG "Pout2" | "Pm2")
+F "P2" W F "Pback1" W (FG "Pm3" | "Pback2")
+F "P2" W F "P2" W (FG "Pback1" | "Pout2")
+F "Pout3" W F "Pback4" W (FG "Pout3" | "P1")
+F "Pback3" W F "P1" W (FG "Pm4" | "Pm1")
+F "Pm3" W F "Pback3" W (FG "Pback2" | "Pback1")
+F "P3" W F "P4" W (FG "P3" | "Pout1")
+F "Pout4" W F "Pback2" W (FG "Pm1" | "P4")
+F "Pback4" W F "P3" W (FG "Pback3" | "Pm4")
+F "Pm4" W F "Pback1" W (FG "P4" | "Pback4")
+F "Pback3" W F "Pout2" W (FG "Pout3" | "Pm2")
+F "Pm3" W F "Pm3" W (FG "P4" | "Pback2")
+F "P3" W F "Pout1" W (FG "Pback2" | "Pout2")
+F "P3" W F "Pm2" W (FG "Pout4" | "P1")
+F "Pout4" W F "Pout4" W (FG "P1" | "Pm1")
+F "Pback4" W F "Pm1" W (FG "Pback3" | "Pback1")
+F "Idle3" R F "HasRight4" R F "Fork4"
+F "Idle2" R F "WaitLeft2" R F "WaitRight4"
+F "IsEating4" R F "IsEating0" R F "Idle4"
+F "IsEating3" R F "HasRight4" R F "HasRight3"
+F "IsEating2" R F "HasLeft3" R F "HasLeft3"
+F "IsEating1" R F "Idle2" R F "IsEating2"
+F "IsEating0" R F "HasRight4" R F "HasRight2"
+F "IsEating4" R F "HasLeft3" R F "WaitLeft2"
+F "IsEating3" R F "WaitLeft2" R F "Fork1"
+F "IsEating2" R F "IsEating0" R F "WaitRight1"
+F "Fork0" R F "WaitRight3" R F "Idle1"
+F "Fork4" R F "WaitLeft2" R F "HasRight0"
+F "Fork3" R F "IsEating0" R F "HasLeft0"
+F "Fork2" R F "HasRight4" R F "IsEating4"
+F "Fork1" R F "HasLeft3" R F "HasRight4"
+F "Fork0" R F "IsEating0" R F "Idle3"
+F "IsEating4" R F "HasRight4" R F "HasRight2"
+F "Fork2" R F "HasLeft3" R F "HasLeft2"
+F "Fork1" R F "Idle2" R F "IsEating1"
+F "Fork0" R F "Fork0" R F "WaitRight1"
+F "Idle4" W F "HasLeft0" W F "WaitLeft4"
+F "Idle3" W F "Idle4" W F "Fork3"
+F "Idle2" W F "HasRight1" W F "HasLeft3"
+F "Idle1" W F "HasLeft0" W F "Idle3"
+F "Idle0" W F "Idle4" W F "HasRight2"
+F "Idle4" W F "Fork2" W F "WaitLeft2"
+F "Idle3" W F "WaitRight1" W F "IsEating1"
+F "WaitLeft2" W F "Idle4" W F "WaitRight1"
+F "Idle0" W F "Fork2" W F "WaitLeft1"
+F "Idle4" W F "WaitRight1" W F "Fork0"
+F "Idle3" W F "WaitLeft0" W F "HasLeft0"
+F "Idle2" W F "IsEating3" W F "Idle0"
+F "Idle1" W F "WaitRight1" W F "HasRight4"
+F "Idle0" W F "WaitLeft0" W F "WaitLeft4"
+F "Idle4" W F "IsEating3" W F "IsEating3"
+F "IsEating1" W F "HasRight2" W F "WaitRight3"
+F "IsEating0" W F "HasLeft1" W F "Idle3"
+F "IsEating4" W F "IsEating3" W F "Fork2"
+F "IsEating3" W F "HasRight2" W F "HasLeft2"
+F "IsEating2" W F "HasLeft1" W F "Idle2"
+F "HasLeft1" -> F "IsEating0" -> F "HasRight4"
+F "HasLeft0" -> F "HasRight4" -> F "Idle3"
+F "HasLeft4" -> F "HasLeft3" -> F "HasRight2"
+F "HasLeft3" -> F "Idle2" -> F "HasLeft2"
+F "HasLeft2" -> F "HasRight4" -> F "IsEating1"
+F "HasLeft1" -> F "HasLeft3" -> F "HasRight1"
+F "WaitLeft4" -> F "Idle2" -> F "WaitLeft1"
+F "WaitLeft3" -> F "Fork0" -> F "Fork0"
+F "WaitLeft2" -> F "WaitRight4" -> F "WaitRight0"
+F "WaitLeft1" -> F "Idle2" -> F "Idle0"
+F "WaitLeft0" -> F "Fork0" -> F "HasRight4"
+F "WaitLeft4" -> F "WaitRight4" -> F "HasLeft4"
+F "WaitLeft3" -> F "WaitLeft3" -> F "IsEating3"
+F "Idle1" -> F "IsEating1" -> F "HasRight3"
+F "WaitLeft0" -> F "WaitRight4" -> F "WaitLeft3"
+F "WaitLeft4" -> F "WaitLeft3" -> F "Fork2"
+F "WaitLeft3" -> F "IsEating1" -> F "WaitRight2"
+F "WaitLeft2" -> F "HasRight0" -> F "Idle2"
+F "WaitLeft1" -> F "HasLeft4" -> F "HasRight1"
+F "WaitLeft0" -> F "IsEating1" -> F "HasLeft1"
+F "WaitRight3" R (FG "HasRight2" | "IsEating3")
+F "IsEating1" R (FG "WaitLeft2" | "WaitRight1")
+F "IsEating0" R (FG "IsEating0" | "Idle1")
+F "IsEating4" R (FG "WaitRight3" | "Fork0")
+F "IsEating3" R (FG "WaitLeft2" | "HasLeft0")
+F "IsEating2" R (FG "IsEating0" | "IsEating4")
+F "IsEating1" R (FG "HasRight4" | "HasRight4")
+F "Fork4" R (FG "HasLeft3" | "Idle3")
+F "Fork3" R (FG "IsEating0" | "Fork2")
+F "Fork2" R (FG "HasRight4" | "HasLeft2")
+F "Fork1" R (FG "HasLeft3" | "IsEating1")
+F "Fork0" R (FG "Idle2" | "HasRight1")
+F "Fork4" R (FG "Fork0" | "WaitLeft1")
+F "Fork3" R (FG "HasLeft3" | "Fork0")
+F "HasRight1" R (FG "Idle2" | "WaitRight0")
+F "HasRight0" R (FG "Fork0" | "Idle0")
+F "Fork4" R (FG "WaitRight4" | "Fork4")
+F "Fork3" R (FG "WaitLeft3" | "HasLeft4")
+F "Fork2" R (FG "Fork0" | "IsEating3")
+F "Fork1" R (FG "WaitRight4" | "HasRight3")
+F "Idle0" W (FG "Idle4" | "WaitLeft1")
+F "Idle4" W (FG "Fork2" | "Fork0")
+F "Idle3" W (FG "WaitRight1" | "WaitRight0")
+F "Idle2" W (FG "WaitLeft0" | "Idle0")
+F "Idle1" W (FG "IsEating3" | "HasRight4")
+F "IsEating3" W (FG "WaitRight1" | "HasLeft4")
+F "IsEating2" W (FG "WaitLeft0" | "IsEating3")
+F "Idle2" W (FG "IsEating3" | "WaitRight3")
+F "Idle1" W (FG "HasRight2" | "WaitLeft3")
+F "Idle0" W (FG "HasLeft1" | "Fork2")
+F "Idle4" W (FG "IsEating3" | "HasLeft2")
+F "Idle3" W (FG "HasRight2" | "Idle2")
+F "IsEating0" W (FG "HasLeft1" | "HasRight1")
+F "IsEating4" W (FG "Idle0" | "WaitLeft0")
+F "IsEating3" W (FG "Fork3" | "Fork4")
+F "IsEating2" W (FG "HasLeft1" | "HasLeft4")
+F "IsEating1" W (FG "Idle0" | "Idle4")
+F "IsEating0" W (FG "Fork3" | "HasRight3")
+F "IsEating4" W (FG "WaitRight2" | "WaitLeft3")
+F "Fork2" W (FG "WaitLeft1" | "IsEating2")
+F "HasRight1" R F "WaitRight3" R F "HasLeft3" R F "HasRight1"
+F "HasRight0" R F "HasLeft0" R F "Idle3" R F "Idle2"
+F "HasRight4" R F "Idle4" R F "HasRight2" R F "HasRight4"
+F "HasRight3" R F "Fork2" R F "HasLeft2" R F "WaitLeft2"
+F "HasRight2" R F "HasLeft0" R F "IsEating1" R F "IsEating0"
+F "HasRight1" R F "Idle4" R F "HasRight1" R F "WaitRight3"
+F "WaitRight4" R F "Fork2" R F "WaitLeft1" R F "WaitLeft2"
+F "WaitRight3" R F "WaitRight1" R F "Fork0" R F "Fork4"
+F "HasRight2" R F "WaitLeft0" R F "WaitRight0" R F "WaitLeft2"
+F "HasRight1" R F "Fork2" R F "Idle0" R F "IsEating0"
+F "HasRight0" R F "WaitRight1" R F "HasRight4" R F "WaitRight3"
+F "HasRight4" R F "WaitLeft0" R F "HasLeft4" R F "WaitLeft2"
+F "HasRight3" R F "IsEating3" R F "IsEating3" R F "Fork4"
+F "HasRight2" R F "HasRight2" R F "HasRight3" R F "HasLeft2"
+F "WaitRight0" R F "WaitLeft0" R F "WaitLeft3" R F "Idle1"
+F "WaitRight4" R F "IsEating3" R F "Fork2" R F "HasRight3"
+F "WaitRight3" R F "HasRight2" R F "WaitRight2" R F "HasLeft2"
+F "WaitRight2" R F "HasLeft1" R F "Idle2" R F "IsEating4"
+F "WaitRight1" R F "Idle0" R F "HasRight1" R F "WaitRight2"
+F "WaitRight0" R F "HasRight2" R F "WaitLeft0" R F "WaitLeft1"
+F "IsEating3" W F "HasLeft3" W F "Fork2" W F "WaitRight1"
+F "IsEating2" W F "IsEating0" W F "HasLeft2" W F "Idle0"
+F "IsEating1" W F "HasRight4" W F "Idle2" W F "HasRight2"
+F "IsEating0" W F "HasLeft3" W F "HasRight1" W F "HasLeft1"
+F "Fork3" W F "Idle2" W F "WaitLeft1" W F "IsEating3"
+F "Fork2" W F "Fork0" W F "IsEating0" W F "WaitRight1"
+F "Fork1" W F "HasLeft3" W F "WaitRight0" W F "WaitLeft0"
+F "Fork0" W F "Idle2" W F "Idle0" W F "Fork2"
+F "Idle4" W F "Fork2" W F "Fork2" W F "WaitLeft4"
+F "Idle3" W F "HasLeft0" W F "HasLeft2" W F "Fork1"
+F "WaitLeft2" W F "Idle4" W F "IsEating1" W F "WaitRight0"
+F "WaitLeft1" W F "Fork2" W F "HasRight1" W F "Idle3"
+F "WaitLeft0" W F "WaitRight1" W F "WaitLeft1" W F "HasRight0"
+F "WaitLeft4" W F "Idle4" W F "Fork0" W F "HasLeft4"
+F "WaitLeft3" W F "Fork2" W F "WaitRight0" W F "IsEating1"
+F "Idle1" W F "WaitRight1" W F "Idle0" W F "WaitRight0"
+F "Idle0" W F "WaitLeft0" W F "Fork4" W F "Idle3"
+F "Idle4" W F "IsEating3" W F "HasLeft4" W F "HasRight0"
+F "Idle3" W F "WaitRight1" W F "IsEating3" W F "HasLeft4"
+F "Idle2" W F "WaitLeft0" W F "HasRight3" W F "IsEating1"
+F "HasLeft0" -> F "IsEating0" -> F "WaitLeft1" -> F "HasLeft3"
+F "WaitRight4" -> F "WaitRight3" -> F "Fork0" -> F "IsEating0"
+F "WaitRight3" -> F "WaitLeft2" -> F "HasLeft0" -> F "HasRight4"
+F "WaitRight2" -> F "IsEating0" -> F "Idle0" -> F "WaitLeft2"
+F "WaitRight1" -> F "HasRight4" -> F "WaitRight3" -> F "Fork4"
+F "WaitRight0" -> F "WaitLeft2" -> F "WaitLeft3" -> F "WaitRight3"
+F "HasLeft3" -> F "IsEating0" -> F "Fork2" -> F "Idle1"
+F "HasLeft2" -> F "HasRight4" -> F "HasLeft2" -> F "Fork4"
+F "HasLeft1" -> F "HasLeft3" -> F "Idle2" -> F "HasLeft2"
+F "HasLeft0" -> F "Idle2" -> F "HasRight1" -> F "Fork4"
+F "HasLeft4" -> F "HasRight4" -> F "WaitLeft1" -> F "WaitRight3"
+F "HasLeft3" -> F "HasLeft3" -> F "IsEating0" -> F "Idle1"
+F "HasLeft2" -> F "Idle2" -> F "WaitRight0" -> F "Fork4"
+F "WaitLeft0" -> F "Fork0" -> F "WaitLeft0" -> F "HasLeft2"
+F "WaitLeft4" -> F "WaitRight4" -> F "Fork4" -> F "IsEating4"
+F "WaitLeft3" -> F "Idle2" -> F "HasLeft4" -> F "HasRight3"
+F "WaitLeft2" -> F "Fork0" -> F "Idle4" -> F "WaitLeft1"
+F "HasLeft1" -> F "WaitRight4" -> F "HasRight3" -> F "IsEating4"
+F "HasLeft0" -> F "WaitLeft3" -> F "WaitLeft3" -> F "WaitRight2"
+F "HasLeft4" -> F "IsEating1" -> F "IsEating2" -> F "Idle0"
+F "HasRight2" R F "WaitRight1" R (FG "WaitRight0" | "WaitRight1")
+F "HasRight1" R F "WaitLeft0" R (FG "Idle0" | "Idle4")
+F "HasRight0" R F "Fork2" R (FG "Fork4" | "HasRight2")
+F "HasRight4" R F "WaitRight1" R (FG "HasLeft4" | "WaitLeft0")
+F "WaitRight2" R F "WaitLeft0" R (FG "IsEating3" | "IsEating3")
+F "WaitRight1" R F "IsEating3" R (FG "HasRight3" | "WaitRight1")
+F "WaitRight0" R F "HasRight2" R (FG "WaitLeft3" | "Idle4")
+F "WaitRight4" R F "WaitLeft0" R (FG "IsEating2" | "Fork2")
+F "HasRight3" R F "IsEating3" R (FG "WaitRight2" | "HasLeft0")
+F "HasRight2" R F "HasRight2" R (FG "Idle2" | "Idle4")
+F "HasRight1" R F "HasLeft1" R (FG "HasRight0" | "HasRight1")
+F "WaitRight4" R F "Idle0" R (FG "WaitLeft0" | "WaitLeft4")
+F "WaitRight3" R F "HasRight2" R (FG "Fork4" | "IsEating2")
+F "WaitRight2" R F "HasLeft1" R (FG "WaitRight4" | "WaitRight0")
+F "WaitRight1" R F "Idle0" R (FG "Idle4" | "WaitLeft4")
+F "WaitRight0" R F "Fork3" R (FG "HasRight3" | "Fork1")
+F "WaitRight4" R F "WaitRight2" R (FG "HasLeft3" | "HasLeft4")
+F "WaitRight3" R F "WaitLeft0" R (FG "IsEating2" | "Idle3")
+F "HasLeft1" R F "IsEating3" R (FG "HasRight2" | "HasRight0")
+F "HasLeft0" R F "HasRight2" R (FG "WaitLeft2" | "HasLeft4")
+F "IsEating4" W F "Idle2" W (FG "Fork4" | "WaitRight4")
+F "IsEating3" W F "Fork0" W (FG "HasLeft4" | "WaitLeft3")
+F "Fork1" W F "WaitRight4" W (FG "Idle4" | "Fork0")
+F "Fork0" W F "WaitLeft3" W (FG "HasRight3" | "HasLeft3")
+F "Fork4" W F "Fork0" W (FG "HasLeft3" | "Idle2")
+F "Fork3" W F "WaitRight4" W (FG "IsEating2" | "HasRight4")
+F "Fork2" W F "WaitLeft3" W (FG "WaitRight2" | "HasLeft3")
+F "Fork1" W F "IsEating1" W (FG "WaitLeft2" | "IsEating0")
+F "Fork0" W F "HasRight0" W (FG "Fork1" | "WaitRight3")
+F "HasRight3" W F "WaitLeft3" W (FG "HasLeft1" | "WaitLeft2")
+F "HasRight2" W F "Idle2" W (FG "Idle1" | "Fork4")
+F "HasRight1" W F "Fork0" W (FG "HasRight0" | "WaitRight3")
+F "HasRight0" W F "WaitRight4" W (FG "HasLeft0" | "Idle1")
+F "HasRight4" W F "WaitLeft3" W (FG "IsEating4" | "HasRight3")
+F "Idle3" W F "HasRight2" W (FG "WaitRight2" | "IsEating4")
+F "Idle2" W F "HasLeft1" W (FG "Idle2" | "WaitRight2")
+F "Idle1" W F "IsEating3" W (FG "HasRight0" | "WaitLeft1")
+F "Idle0" W F "HasRight2" W (FG "WaitLeft0" | "Fork3")
+F "Idle4" W F "HasLeft1" W (FG "Fork4" | "WaitRight2")
+F "IsEating1" W F "Idle0" W (FG "WaitRight4" | "Idle0")
+F "F1" R F "C0" R F "C3"
+F "D4" R F "A2" R F "E0"
+F "E1" R F "G2" R F "C2"
+F "C4" R F "C0" R F "A4"
+F "H1" R F "A3" R F "B1"
+F "G4" R F "D1" R F "D3"
+F "F2" R F "G4" R F "G0"
+F "D4" R F "C3" R F "H2"
+F "B2" R F "A0" R F "C0"
+F "B0" R F "D3" R F "A2"
+F "A3" R F "G1" R F "B4"
+F "E1" R F "E0" R F "F1"
+F "B1" R F "A3" R F "H0"
+F "A4" R F "D1" R F "E3"
+F "E2" R F "G4" R F "A0"
+F "C0" R F "C2" R F "B2"
+F "H2" R F "A0" R F "F4"
+F "G4" R F "F3" R F "G1"
+F "F2" R F "H1" R F "H3"
+F "D0" R F "E0" R F "E1"
+F "E3" W F "F4" W F "C4"
+F "E0" W F "H2" W F "E1"
+F "C3" W F "E0" W F "B3"
+F "H0" W F "B3" W F "D0"
+F "G3" W F "F1" W F "F2"
+F "F1" W F "H4" W F "H4"
+F "D4" W F "E3" W F "C2"
+F "B2" W F "B0" W F "E3"
+F "A4" W F "F3" W F "B0"
+F "E2" W F "C2" W F "D2"
+F "C0" W F "A0" W F "G4"
+F "H2" W F "D3" W F "H1"
+F "G0" W F "G0" W F "C4"
+F "F3" W F "C4" W F "A1"
+F "D1" W F "A2" W F "B3"
+F "B3" W F "D0" W F "D0"
+F "A1" W F "G3" W F "G2"
+F "A4" W F "C1" W F "H4"
+F "E2" W F "A4" W F "E2"
+F "C0" W F "D2" W F "A4"
+F "F1" -> F "C2" -> F "E2"
+F "D4" -> F "A0" -> F "A4"
+F "B2" -> F "F3" -> F "D1"
+F "A0" -> F "H1" -> F "F3"
+F "E3" -> F "E4" -> F "G0"
+F "C1" -> F "B2" -> F "C3"
+F "H2" -> F "F0" -> F "E0"
+F "G0" -> F "H3" -> F "B2"
+F "G3" -> F "E2" -> F "D4"
+F "F1" -> F "B4" -> F "F1"
+F "D4" -> F "F2" -> F "H3"
+F "B2" -> F "H0" -> F "C1"
+F "A0" -> F "E4" -> F "E3"
+F "E2" -> F "B1" -> F "B4"
+F "C0" -> F "F4" -> F "D1"
+F "H2" -> F "H2" -> F "G3"
+F "G0" -> F "E1" -> F "H0"
+F "F3" -> F "B4" -> F "C3"
+F "D1" -> F "F1" -> F "A0"
+F "B4" -> F "H4" -> F "B2"
+F "E1" R (FG "D0" | "A0")
+F "C4" R (FG "G2" | "D2")
+F "H1" R (FG "C1" | "F4")
+F "G4" R (FG "A4" | "G1")
+F "F1" R (FG "D2" | "C4")
+F "A4" R (FG "C2" | "H1")
+F "E2" R (FG "A0" | "C4")
+F "C4" R (FG "F3" | "A1")
+F "H1" R (FG "H0" | "B3")
+F "G4" R (FG "E4" | "D0")
+F "G2" R (FG "B2" | "G2")
+F "F0" R (FG "F0" | "H4")
+F "D3" R (FG "H3" | "C2")
+F "B1" R (FG "E1" | "A4")
+F "A4" R (FG "B4" | "B1")
+F "E1" R (FG "F2" | "D3")
+F "C4" R (FG "H0" | "G0")
+F "H1" R (FG "E4" | "H2")
+F "G4" R (FG "B1" | "E0")
+F "F2" R (FG "F4" | "A1")
+F "A4" W (FG "A4" | "E4")
+F "A2" W (FG "D2" | "A1")
+F "E0" W (FG "G0" | "D3")
+F "C3" W (FG "C4" | "F0")
+F "H0" W (FG "A2" | "H2")
+F "G2" W (FG "D4" | "C0")
+F "F0" W (FG "G2" | "E2")
+F "D3" W (FG "C1" | "B4")
+F "B1" W (FG "A4" | "D1")
+F "A4" W (FG "D2" | "F3")
+F "E2" W (FG "G4" | "H0")
+F "C0" W (FG "C3" | "C3")
+F "H2" W (FG "A1" | "A0")
+F "G4" W (FG "D4" | "B2")
+F "F2" W (FG "G1" | "D4")
+F "D0" W (FG "C0" | "G1")
+F "B3" W (FG "A3" | "H3")
+F "B1" W (FG "D1" | "C1")
+F "A4" W (FG "G4" | "A3")
+F "E2" W (FG "C2" | "B0")
+F "C1" R F "B1" R F "D4" R F "D3"
+F "H3" R F "F4" R F "F1" R F "F2"
+F "G1" R F "H1" R F "H3" R F "G1"
+F "F4" R F "E0" R F "C1" R F "H1"
+F "F2" R F "B3" R F "A3" R F "C1"
+F "D0" R F "F1" R F "B0" R F "E1"
+F "B3" R F "H4" R F "D2" R F "A0"
+F "A0" R F "E2" R F "G4" R F "B4"
+F "E3" R F "B0" R F "H1" R F "D4"
+F "C1" R F "F3" R F "C4" R F "F3"
+F "H3" R F "H1" R F "A1" R F "G3"
+F "G1" R F "E0" R F "B3" R F "H2"
+F "F4" R F "B2" R F "D0" R F "C2"
+F "D2" R F "F0" R F "G2" R F "E2"
+F "B4" R F "H3" R F "H4" R F "E1"
+F "A2" R F "E2" R F "E2" R F "A1"
+F "E0" R F "B0" R F "A4" R F "B0"
+F "C3" R F "F2" R F "B1" R F "D4"
+F "H0" R F "H0" R F "F3" R F "F4"
+F "H3" R F "E4" R F "G0" R F "G3"
+F "A0" W F "C1" W F "B4" W F "D3"
+F "E2" W F "A4" W F "D1" W F "F2"
+F "C0" W F "D1" W F "G3" W F "G2"
+F "H2" W F "H4" W F "H0" W F "H1"
+F "G0" W F "E3" W F "C3" W F "C2"
+F "G3" W F "B1" W F "A4" W F "E1"
+F "F1" W F "F3" W F "B1" W F "A0"
+F "D4" W F "H1" W F "F3" W F "B0"
+F "B2" W F "E0" W F "G0" W F "D4"
+F "A4" W F "B3" W F "H2" W F "F4"
+F "E2" W F "F1" W F "E0" W F "G3"
+F "C0" W F "H3" W F "A2" W F "H2"
+F "H2" W F "E2" W F "B4" W F "C3"
+F "G0" W F "B0" W F "F1" W F "E2"
+F "F3" W F "F3" W F "G3" W F "A2"
+F "D1" W F "H1" W F "H0" W F "B1"
+F "B3" W F "E4" W F "E3" W F "D0"
+F "A1" W F "B2" W F "A0" W F "F0"
+F "E4" W F "F0" W F "D2" W F "G4"
+F "C2" W F "H3" W F "F4" W F "H4"
+F "G3" -> F "D3" -> F "D2" -> F "G3"
+F "F1" -> F "G1" -> F "F4" -> F "H3"
+F "D4" -> F "C0" -> F "H1" -> F "C3"
+F "B2" -> F "A2" -> F "C4" -> F "E2"
+F "A0" -> F "D0" -> F "A1" -> F "A2"
+F "E3" -> F "G3" -> F "B3" -> F "B1"
+F "C1" -> F "C2" -> F "D0" -> F "D1"
+F "H2" -> F "A0" -> F "G2" -> F "F0"
+F "G0" -> F "D2" -> F "H4" -> F "G4"
+F "F3" -> F "G0" -> F "C2" -> F "H4"
+F "D1" -> F "C4" -> F "A4" -> F "C4"
+F "B4" -> F "A2" -> F "B0" -> F "E4"
+F "B2" -> F "D0" -> F "F2" -> F "A3"
+F "A0" -> F "G2" -> F "G4" -> F "B2"
+F "E2" -> F "C1" -> F "H1" -> F "D2"
+F "C0" -> F "A4" -> F "E4" -> F "D1"
+F "H2" -> F "D2" -> F "A1" -> F "F1"
+F "G0" -> F "G0" -> F "B3" -> F "G0"
+F "F3" -> F "C3" -> F "F0" -> F "H4"
+F "D1" -> F "A1" -> F "G2" -> F "C0"
+F "E3" R F "H0" R (FG "F0" | "C4")
+F "C1" R F "E4" R (FG "H2" | "E4")
+F "H3" R F "B2" R (FG "C0" | "A3")
+F "H1" R F "F0" R (FG "E2" | "B3")
+F "G4" R F "H3" R (FG "B4" | "D2")
+F "F1" R F "E1" R (FG "D1" | "F1")
+F "D4" R F "B4" R (FG "F3" | "G1")
+F "B2" R F "F2" R (FG "H0" | "H0")
+F "A0" R F "H0" R (FG "C3" | "C1")
+F "E3" R F "E4" R (FG "A0" | "C0")
+F "C1" R F "B1" R (FG "B2" | "E4")
+F "H3" R F "F4" R (FG "D4" | "A4")
+F "G0" R F "H2" R (FG "G1" | "B3")
+F "F3" R F "E1" R (FG "H3" | "D3")
+F "D1" R F "B4" R (FG "C1" | "F2")
+F "B4" R F "F1" R (FG "A3" | "G1")
+F "A2" R F "H4" R (FG "B0" | "H1")
+F "E0" R F "E3" R (FG "F1" | "C1")
+F "C3" R F "B1" R (FG "G3" | "E1")
+F "C0" R F "F4" R (FG "H0" | "A0")
+F "F2" W F "A4" W (FG "G3" | "A0")
+F "D0" W F "D2" W (FG "C1" | "B4")
+F "B2" W F "G4" W (FG "E3" | "B3")
+F "A0" W F "C3" W (FG "B0" | "D3")
+F "E3" W F "A1" W (FG "D2" | "F2")
+F "H0" W F "H0" W (FG "B0" | "F2")
+F "G2" W F "E4" W (FG "D2" | "G1")
+F "F0" W F "B2" W (FG "G4" | "H1")
+F "D3" W F "F0" W (FG "H1" | "C1")
+F "B1" W F "H2" W (FG "C4" | "E0")
+F "A4" W F "E1" W (FG "A1" | "A0")
+F "E2" W F "B4" W (FG "B3" | "B4")
+F "C0" W F "F2" W (FG "F0" | "D4")
+F "H1" W F "H0" W (FG "G2" | "F3")
+F "G4" W F "E3" W (FG "H4" | "G2")
+F "F2" W F "B1" W (FG "E2" | "H2")
+F "D0" W F "F4" W (FG "A4" | "H1")
+F "B3" W F "H2" W (FG "B1" | "C2")
+F "A1" W F "E1" W (FG "F3" | "E1")
+F "E4" W F "B3" W (FG "G0" | "A0")
+G (("P3s" & P1wP2) | (!P1wP2 & !P3s))
+G ((P3s | P1wP2) | (!P1wP2 | !P3s))
+G (("P3s" & P1wP2) | (!P1wP2 & !P3s))
+G ((P3s | P1wP2) | (!P1wP2 | !P3s))
+!F !"P3s"
