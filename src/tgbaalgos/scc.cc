@@ -265,8 +265,10 @@ namespace spot
     bool w_hard = true;
     bool s_hard = true;
     bool all_term = true;
+    bool over = false;
     for (sccit = s.begin(); sccit != s.end(); ++sccit)
       {
+	over = true;
 	update_weak(sccit->first);
 
 	// One successor is not weak the SCC is so not weak
@@ -307,7 +309,7 @@ namespace spot
 
 
     if (scc_map_[state].is_weak &&
-	!scc_map_[state].is_weak_acc)
+	!scc_map_[state].is_weak_acc && over)
      scc_map_[state].is_terminal = all_term;
 
     if (scc_map_[state].is_terminal)

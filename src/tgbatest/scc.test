@@ -75,7 +75,7 @@ accepting SCCs: 1
 dead SCCs: 1
 weak SCCs: 4
 weak accepting SCCs: 1
-terminal SCCs: 4
+terminal SCCs: 2
 accepting paths: 2
 dead paths: 1
 EOF
