@@ -23,7 +23,7 @@
 . ./defs
 set -e
 
-opts="-1 -D -e 5 -n 2 -t 0.5 -r -fs -z -i $FORMULAE"
+opts="-1 -D -e 5 -n 2 -t 0.5 -r -fs -z -i $CFORMULAE"
 
 echo "WITHOUT ADDITIONAL ACCEPTANCE CONDITIONS"
 
