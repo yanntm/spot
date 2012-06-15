@@ -322,11 +322,11 @@ namespace spot
 	    else
 	      {
 		if (scc != scc_map_->scc_of_state(dst))
-		  acc = bddtrue;
+		  acc = !on_cycle_ & all_proms_;
 		else if (sccacc)
-		  acc = sit->current_acceptance_conditions();
+		  acc = on_cycle_ & sit->current_acceptance_conditions();
 		else
-		  acc = all_proms_;
+		  acc = on_cycle_ & all_proms_;
 	      }
 
             bdd to_add = acc & sit->current_condition() & relation_[cl];
@@ -509,7 +509,7 @@ namespace spot
 	res->set_acceptance_conditions(all_acceptance_conditions);
 
 	// Non atomic propositions variables (= acc and class)
-	bdd nonapvars = all_proms_ & bdd_support(all_class_var_);
+	bdd nonapvars = all_proms_ & bdd_support(all_class_var_) & on_cycle_;
 
 	// Some states in non-accepting SCC have been discovered as
 	// equivalent to states in accepting SCC.  This happens for
@@ -523,7 +523,7 @@ namespace spot
 	    const state* s = *it->second.begin();
             bdd cl = relation_[previous_class_[s]];
 
-	    //std::cerr << s << " " << cl << std::endl;
+	    //std::cerr << "! " << s << " " << cl << std::endl;
 
 	    map_bdd_state::iterator i = ms.find(cl);
 	    if (i == ms.end())
