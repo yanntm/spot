@@ -145,16 +145,23 @@ namespace spot
     bool res = false;
 
     if (!both_formula)
+      // {
+      // 	state * sproj = sys_->project_state(s, f_);
+      // 	assert(sproj);
+
+      // 	const state_explicit_formula* fstate =
+      // 	  dynamic_cast<const state_explicit_formula*> (sproj);
+
+      // 	unsigned id_scc = sm->scc_of_state(fstate);
+      // 	res = sm->weak_accepting(id_scc);
+
+      // 	sproj->destroy();
+      // }
       {
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
-
-	const state_explicit_formula* fstate =
-	  dynamic_cast<const state_explicit_formula*> (sproj);
-
-	unsigned id_scc = sm->scc_of_state(fstate);
+	unsigned id_scc = sm->scc_of_state(sproj);
 	res = sm->weak_accepting(id_scc);
-
 	sproj->destroy();
       }
     else
@@ -169,24 +176,39 @@ namespace spot
   {
     bool res = false;
 
+    // if (!both_formula)
+    //   {
+    // 	state * sproj1 = sys_->project_state(s1, f_);
+    // 	assert(sproj1);
+    // 	const state_explicit_formula* fstate1 =
+    // 	  dynamic_cast<const state_explicit_formula*> (sproj1);
+    // 	unsigned id_scc1 = sm->scc_of_state(fstate1);
+    // 	state * sproj2 = sys_->project_state(s2, f_);
+    // 	assert(sproj2);
+    // 	const state_explicit_formula* fstate2 =
+    // 	  dynamic_cast<const state_explicit_formula*> (sproj2);
+    // 	assert (fstate2);
+    // 	unsigned id_scc2 = sm->scc_of_state(fstate2);
+
+    // 	sproj1->destroy();
+    // 	sproj2->destroy();
+    // 	res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
+    //   }
+
     if (!both_formula)
       {
 	state * sproj1 = sys_->project_state(s1, f_);
 	assert(sproj1);
-	const state_explicit_formula* fstate1 =
-	  dynamic_cast<const state_explicit_formula*> (sproj1);
-	unsigned id_scc1 = sm->scc_of_state(fstate1);
+	unsigned id_scc1 = sm->scc_of_state(sproj1);
 	state * sproj2 = sys_->project_state(s2, f_);
 	assert(sproj2);
-	const state_explicit_formula* fstate2 =
-	  dynamic_cast<const state_explicit_formula*> (sproj2);
-	assert (fstate2);
-	unsigned id_scc2 = sm->scc_of_state(fstate2);
+	unsigned id_scc2 = sm->scc_of_state(sproj2);
 
 	sproj1->destroy();
 	sproj2->destroy();
 	res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
       }
+
 
     return res;
   }
