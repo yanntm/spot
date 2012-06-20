@@ -130,7 +130,7 @@ namespace spot
 		if (es_->is_guarantee(s0))
 		  {
 		    inc_reachability();
-		    commut_algo(REACHABILITY);
+		    //commut_algo(REACHABILITY);
 		    h.add_new_state(s0, CYAN);
 		    push(st_blue, s0, bddfalse, bddfalse);
 		    if (static_guarantee ())
@@ -144,7 +144,7 @@ namespace spot
 		else if  (es_->is_persistence(s0))
 		  {
 		    inc_dfs();
-		    commut_algo(DFS);
+		    //commut_algo(DFS);
 		    h.add_new_state(s0, CYAN);
 		    push(st_blue, s0, bddfalse, bddfalse);
 		    if (static_persistence ())
@@ -327,6 +327,10 @@ namespace spot
 	      }
             else
               {
+		// This method do not own this state
+		if ((is_dynamic && !es_->is_guarantee(f.s)))
+		  return false;
+
                 typename heap::color_ref c = h.get_color_ref(f.s);
                 assert(!c.is_white());
 		c.set_color(BLUE);
@@ -367,6 +371,12 @@ namespace spot
 		// 
 		// In the case of static algorithms this is not performed
 		bool inc_me = true;
+		// Fast optimisation to avoid one state on stack
+		if (is_dynamic && es_->is_terminal_accepting_scc (s_prime))
+		  {
+		    s_prime->destroy();
+		    return true;
+		  }
 		if (is_dynamic && es_->is_guarantee(f.s))
 		  {
 		    if (static_guarantee ())
@@ -439,8 +449,6 @@ namespace spot
 		  }
 		else
 		  {
-		    //typename heap::color_ref c = h.get_color_ref(f.s);
-		    //c.set_color(BLUE);
 		    h.pop_notify(s_prime);
 		  }
 		continue;
@@ -448,46 +456,15 @@ namespace spot
             else
               {
                 trace << "  All the successors have been visited" << std::endl;
+		// Unpop further it not the responsibility of this method
+		if ((is_dynamic && !es_->is_persistence(st_blue.front().s)))
+		  return false;
+
                 stack_item f_dest(f);
                 pop(st_blue);
                 typename heap::color_ref c = h.get_color_ref(f_dest.s);
-                assert(!c.is_white());
-                if (!st_blue.empty() &&
-		    f_dest.acc == all_cond && c.get_color() != RED)
-                  {
-                    // the test 'c.get_color() != RED' is added to limit
-                    // the number of runs reported by successive
-                    // calls to the check method. Without this
-                    // functionnality, the test can be ommited.
-                    trace << "  The arc from "
-                          << a_->format_state(st_blue.front().s)
-                          << " to the current state is accepting, start a "
-                          << "red dfs" << std::endl;
-
-		if ((is_dynamic && !es_->is_persistence(st_blue.front().s)))
-		  {
-                    c.set_color(RED);
-                    push(st_red, f_dest.s, f_dest.label, f_dest.acc);
-
-		    if (dfs_red())
-		      {
-			is_dynamic = false;
-			return true;
-		      }
-		  }
-		else
-                    c.set_color(RED);
-                  }
-                else
-                  {
-                    trace << "  Pop it" << std::endl;
-                    c.set_color(BLUE);
-                    h.pop_notify(f_dest.s);
-                  }
-//                 typename heap::color_ref c = h.get_color_ref(f.s);
-//                 assert(!c.is_white());
-// 		c.set_color(BLUE);
-// 		pop(st_blue);
+		c.set_color(BLUE);
+		h.pop_notify(f_dest.s);
 	      }
 	  }
         return false;
@@ -528,6 +505,13 @@ namespace spot
 		if (is_dynamic)
 		  {
 		    stats_commut (f.s);
+
+		    // Fast optimisation 
+		    if (is_dynamic && es_->is_terminal_accepting_scc (s_prime))
+		      {
+			s_prime->destroy();
+			return true;
+		      }
 
 		    // Trap all states that represents guarantee formulas
 		    if (es_->is_guarantee(f.s))
