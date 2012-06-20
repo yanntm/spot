@@ -248,7 +248,7 @@ namespace spot
         while (!st_blue.empty())
           {
             stack_item& f = st_blue.front();
-	    trace << "DFS_BLUE treats: " << a_->format_state(f.s) << std::endl;
+	    trace << "static guarantee treats: " << a_->format_state(f.s) << std::endl;
             if (!f.it->done())
               {
                 const state *s_prime = f.it->current_state();
@@ -263,7 +263,7 @@ namespace spot
 		// For the sake of dynamism
 		if (is_dynamic && !es_->is_guarantee(f.s))
 		  {
-		    s_prime->destroy();
+		    //s_prime->destroy();
 		    return false;
 		  }
 
@@ -508,7 +508,6 @@ namespace spot
                 bdd label = f.it->current_condition();
                 bdd acc = f.it->current_acceptance_conditions();
                 // Go down the edge (f.s, <label, acc>, s_prime)
-
 
 		bool inc_me = true;
 
