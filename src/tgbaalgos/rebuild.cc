@@ -208,7 +208,7 @@ namespace spot
       _res = true;
 
      delete fes;
-     return false;
+     return _res;
   }
 
   bool
