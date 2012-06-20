@@ -302,6 +302,10 @@ namespace spot
             // Backtrack the edge
             //        (predecessor of f.s in st_blue, <f.label, f.acc>, f.s)
               {
+		// It is not the owner 
+		if ((is_dynamic && !es_->is_guarantee(f.s)))
+		  return false;
+
                 typename heap::color_ref c = h.get_color_ref(f.s);
                 assert(!c.is_white());
 		//c.set_color(BLUE);
@@ -343,6 +347,12 @@ namespace spot
 		// 
 		// In the case of static algorithms this is not performed
 		bool inc_me = true;
+		// Fast optimisation to avoid one state on stack
+		if (is_dynamic && es_->is_terminal_accepting_scc (s_prime))
+		  {
+		    s_prime->destroy();
+		    return true;
+		  }
 		if (is_dynamic && es_->is_guarantee(f.s))
 		  {
 		    if (static_guarantee ())
@@ -468,6 +478,10 @@ namespace spot
                   }
                 else
                   {
+		    // Unpop further it not the responsibility of this method
+		    if ((is_dynamic && !es_->is_persistence(f.s)))
+		      return false;
+
                     trace << "DFS_BLUE propagation is unsuccessful, pop it"
                           << std::endl;
                     h.pop_notify(f.s);
@@ -516,6 +530,14 @@ namespace spot
 		if (is_dynamic)
 		  {
 		    stats_commut (f.s);
+
+		    // Fast optimisation 
+		    if (is_dynamic && es_->is_terminal_accepting_scc (s_prime))
+		      {
+			s_prime->destroy();
+			return true;
+		      }
+
 
 		    // Trap all states that represents guarantee formulas
 		    if (es_->is_guarantee(f.s))
