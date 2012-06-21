@@ -416,11 +416,11 @@ int main(int argc, char **argv)
 	  spot::scc_decompose sd (a);
 	  spot::tgba* weak = sd.weak_automaton();
 	  if (!weak)
-	    std::cerr << "No terminal automaton associated"
+	    std::cerr << "No weak automaton associated"
 		      << std::endl;
 	  else
 	    {
-	      // Stats for term
+	      // Stats for weak
 	      spot::tgba_statistics a_size =
 	  	spot::stats_reachable(weak);
 

@@ -284,7 +284,8 @@ namespace spot
 	     scc_map_[sccit->first].is_weak))
 	  w_hard = false;
 
-	if (scc_map_[sccit->first].is_weak)
+	if (scc_map_[sccit->first].is_weak ||
+	    !scc_map_[sccit->first].is_strong_hard )
 	  s_hard = false;
 
 	if (!scc_map_[sccit->first].is_terminal)
