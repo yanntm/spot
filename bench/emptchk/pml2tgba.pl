@@ -37,6 +37,8 @@
 #   - allow partial order or not
 
 use strict;
+use File::Basename;
+use File::Copy;
 
 my @prop_list;
 my %props;
@@ -111,25 +113,43 @@ while (1)
 my $model = shift @ARGV;
 
 # Create the automaton
-open NEVER, ">never.$$";
+open NEVER, "> never.$$";
 print NEVER create_2n_automaton (@ARGV);
 close NEVER;
 
-system "spin -a -N never.$$ \"$model\"";
+# Old (unfunctionnal ?) code
+# system "spin -a -N never.$$ \"$model\"";
+# unlink "never.$$";
+
+
+# Fix SPIN sub directories problem 
+# (spin needs to be executed in .)
+# Suppose that there is a copy in current directory
+system "spin -a -N never.$$ $model";
 unlink "never.$$";
 system "gcc -DCHECK$reduce -O -o pan pan.c 2>/dev/null";
+
 
 # Match Büchi states to propositions
 my $buechitrans = 'BUG';
 open PAN, "./pan -d|";
 while (<PAN>)
 {
-  last if /^proctype :never/;
+#  Support for 5.2.5 version of SPIN
+#  last if /^proctype :never/;
+
+  # Support for 6.1.0 version of SPIN
+  last if /^claim never_0/;
 }
 while (<PAN>)
 {
   next
-    unless (/\s+state\s+\d+\s+-\(tr\s+(\d+)\s*\)->.* line \d+ =>/o);
+#  Support for 5.2.5 version of SPIN
+#    unless (/\s+state\s+\d+\s+-\(tr\s+(\d+)\s*\)->.* line \d+ =>/o);
+
+    # Support for 6.1.0 version of SPIN
+    unless (/\s+state\s+\d+\s+-\(tr\s+(\d+)\s*\)->.*:\d+ =>/o);
+
   # We are assuming that transition are output by -d in the same order
   # as we specified them in the neverclaim.
   my $prop = shift @prop_list;

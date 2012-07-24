@@ -41,10 +41,11 @@ do
     echo "###  formula: $formula"
     cat "$ALGORITHMS" |
     while read algo; do
-	cat "$STRATEGIES" |
-	while read strat; do
-	    "$LTL2TGBA" -0 -af "$strat" -e"$algo" $opts -Pmodels/$model "$formula"
-	done
+	# cat "$STRATEGIES" |
+	# while read strat; do
+	    # "$LTL2TGBA" -0 -af "$strat" -e"$algo" $opts -Pmodels/$model "$formula"
+	    "$LTL2TGBA" -0  -e"$algo" $opts -Pmodels/$model "$formula"
+	# done
     done
   done
 done

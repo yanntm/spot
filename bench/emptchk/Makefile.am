@@ -54,54 +54,78 @@ nodist_noinst_DATA = \
 
 models/cl3serv1.tgba: $(srcdir)/models/cl3serv1.pml
 	$(mkdir_p) models
-	$(PML2TGBA) $(srcdir)/models/cl3serv1.pml w1 s1 >$@
+	cp $(srcdir)/models/cl3serv1.pml cl3serv1.pml
+	$(PML2TGBA) cl3serv1.pml w1 s1 >$@
+	rm cl3serv1.pml
 
 models/cl3serv1R.tgba: $(srcdir)/models/cl3serv1.pml
 	$(mkdir_p) models
-	$(PML2TGBA) -r $(srcdir)/models/cl3serv1.pml w1 s1 >$@
+	cp $(srcdir)/models/cl3serv1.pml cl3serv1.pml
+	$(PML2TGBA) -r $(srcdir)/cl3serv1.pml w1 s1 >$@
+	rm cl3serv1.pml
 
 models/cl3serv1fair.tgba: $(srcdir)/models/cl3serv1.pml
 	$(mkdir_p) models
-	$(PML2TGBA) -w $(srcdir)/models/cl3serv1.pml w1 s1 >$@
+	cp $(srcdir)/models/cl3serv1.pml cl3serv1.pml
+	$(PML2TGBA) -w $(srcdir)/cl3serv1.pml w1 s1 >$@
+	rm cl3serv1.pml
 
 models/cl3serv1Rfair.tgba: $(srcdir)/models/cl3serv1.pml
 	$(mkdir_p) models
-	$(PML2TGBA) -w -r $(srcdir)/models/cl3serv1.pml w1 s1 >$@
+	cp $(srcdir)/models/cl3serv1.pml cl3serv1.pml
+	$(PML2TGBA) -w -r $(srcdir)/cl3serv1.pml w1 s1 >$@
+	rm cl3serv1.pml
 
 models/cl3serv3.tgba: $(srcdir)/models/cl3serv3.pml
 	$(mkdir_p) models
-	$(PML2TGBA) $(srcdir)/models/cl3serv3.pml w1 s1 >$@
+	cp $(srcdir)/models/cl3serv3.pml cl3serv3.pml
+	$(PML2TGBA) $(srcdir)/cl3serv3.pml w1 s1 >$@
+	rm cl3serv3.pml
 
 models/cl3serv3R.tgba: $(srcdir)/models/cl3serv3.pml
 	$(mkdir_p) models
-	$(PML2TGBA) -r $(srcdir)/models/cl3serv3.pml w1 s1 >$@
+	cp $(srcdir)/models/cl3serv3.pml cl3serv3.pml
+	$(PML2TGBA) -r $(srcdir)/cl3serv3.pml w1 s1 >$@
+	rm cl3serv3.pml
 
 models/cl3serv3fair.tgba: $(srcdir)/models/cl3serv3.pml
 	$(mkdir_p) models
-	$(PML2TGBA) -w $(srcdir)/models/cl3serv3.pml w1 s1 >$@
+	cp $(srcdir)/models/cl3serv3.pml cl3serv3.pml
+	$(PML2TGBA) -w $(srcdir)/cl3serv3.pml w1 s1 >$@
+	rm cl3serv3.pml
 
 models/cl3serv3Rfair.tgba: $(srcdir)/models/cl3serv3.pml
 	$(mkdir_p) models
-	$(PML2TGBA) -w -r $(srcdir)/models/cl3serv3.pml w1 s1 >$@
+	cp $(srcdir)/models/cl3serv3.pml cl3serv3.pml
+	$(PML2TGBA) -w -r $(srcdir)/cl3serv3.pml w1 s1 >$@
+	rm cl3serv3.pml
 
 models/eeaean1.tgba: $(srcdir)/models/eeaean1.pml
 	$(mkdir_p) models
-	$(PML2TGBA) $(srcdir)/models/eeaean1.pml \
+	cp $(srcdir)/models/eeaean1.pml eeaean1.pml
+	$(PML2TGBA) $(srcdir)/eeaean1.pml \
           noLeader zeroLeads oneLeads twoLeads threeLeads >$@
+	rm eeaean1.pml
 
 models/eeaean1R.tgba: $(srcdir)/models/eeaean1.pml
 	$(mkdir_p) models
-	$(PML2TGBA) -r $(srcdir)/models/eeaean1.pml \
+	cp $(srcdir)/models/eeaean1.pml eeaean1.pml
+	$(PML2TGBA) -r $(srcdir)/eeaean1.pml \
           noLeader zeroLeads oneLeads twoLeads threeLeads >$@
+	rm  eeaean1.pml
 
 models/eeaean2.tgba: $(srcdir)/models/eeaean2.pml
 	$(mkdir_p) models
-	$(PML2TGBA) $(srcdir)/models/eeaean2.pml \
+	cp $(srcdir)/models/eeaean2.pml eeaean2.pml
+	$(PML2TGBA) $(srcdir)/eeaean2.pml \
           noLeader zeroLeads oneLeads twoLeads threeLeads >$@
+	rm eeaean2.pml
 
 models/eeaean2R.tgba: $(srcdir)/models/eeaean2.pml
 	$(mkdir_p) models
-	$(PML2TGBA) -r $(srcdir)/models/eeaean2.pml \
+	cp $(srcdir)/models/eeaean2.pml eeaean2.pml
+	$(PML2TGBA) -r $(srcdir)/eeaean2.pml \
           noLeader zeroLeads oneLeads twoLeads threeLeads >$@
+	rm eeaean2.pml
 
 CLEANFILES = $(nodist_noinst_DATA)
