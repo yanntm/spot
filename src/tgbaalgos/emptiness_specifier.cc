@@ -357,7 +357,7 @@ namespace spot
 // 	unsigned id_scc = sm->scc_of_state(fstate);
 
  	unsigned id_scc = sm->scc_of_state(sproj);
-	res = sm->weak(id_scc);
+	res = sm->weak_subautomaton(id_scc);
 
 	sproj->destroy();
       }

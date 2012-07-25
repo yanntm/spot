@@ -46,14 +46,19 @@ namespace spot
     /// Note that an SCC can be neither dead nor accepting.
     unsigned dead_scc;
     /// The number of weak scc into the automata 
-    unsigned weak_scc;
+
     /// The number of weak accepting scc into the automata 
     unsigned weak_acc_scc;
 
-    /// Count the number of SCC that can be considered as a subautomaton.
+    /// Count the number of SCC that can be considered as a 
+    /// terminal subautomaton.
     int terminal_subaut;
     /// The number of terminal accepting SCC 
     int terminal_accepting;
+
+    /// Count the number of SCC that can be considered as a 
+    /// weak subautomaton.
+    unsigned weak_subaut;
 
     /// Count the number of non accepting SCC 
     int nonacc_scc;
@@ -195,7 +200,7 @@ namespace spot
     /// inside this this SCC is wether fully accepting or not
     ///
     /// \pre This should only be called once build_map() has run.
-    bool weak(unsigned n) const;
+    bool weak_subautomaton(unsigned n) const;
 
     /// \brief Return whether an SCC is weak hard i-e if 
     /// no terminal scc can be reached 
@@ -258,10 +263,11 @@ namespace spot
       scc(int index) : index(index), acc(bddfalse),
 		       supp(bddtrue), supp_rec(bddfalse),
 		       trivial(true), useful_acc(bddfalse),
-		       is_weak(false), is_weak_acc(false),
+		       is_weak_acc(false),
 		       is_weak_hard(false),
 		       is_strong_hard(false),
-		       is_terminal_subautomaton(false)
+		       is_terminal_subautomaton(false),
+		       is_weak_subautomaton(false)
       {};
       /// Index of the SCC.
       int index;
@@ -291,10 +297,7 @@ namespace spot
       /// then useful_acc will contain
       ///      Acc[a]&Acc[b]&!Acc[c] | !Acc[a]&Acc[b]&Acc[c]
       bdd useful_acc;
-      /// Allows to know if a SCC is weak ie fully accepting or not
-      /// at all : a scc is considered weak only if all reachable scc
-      /// are weak
-      bool is_weak;
+
       /// Here consider only weak accepting SCC
       bool is_weak_acc;
       /// Allow to know if this scc is is weak hard i.e. if no 
@@ -309,6 +312,14 @@ namespace spot
       /// considered as a terminal automaton (reachable states 
       /// are terminal SCC and weak non accepting SCC)
       bool is_terminal_subautomaton;
+
+
+      /// Allows to know if a SCC is weak ie fully accepting or not
+      /// at all : a scc is considered weak only if all reachable scc
+      /// are weak
+      bool is_weak_subautomaton;
+
+
     };
 
     const tgba* aut_;		// Automata to decompose.

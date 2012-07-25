@@ -29,7 +29,7 @@ total SCCs: 5
 accepting SCCs: 2
 non accepting SCC: 3
 dead SCCs: 0
-weak SCCs: 5
+weak SubAut.: 5
 weak accepting SCCs: 2
 terminal accepting SCCs: 1
 terminal SubAut.: 2
@@ -46,7 +46,7 @@ total SCCs: 5
 accepting SCCs: 1
 non accepting SCC: 4
 dead SCCs: 0
-weak SCCs: 1
+weak SubAut.: 1
 weak accepting SCCs: 1
 terminal accepting SCCs: 1
 terminal SubAut.: 1
@@ -63,7 +63,7 @@ total SCCs: 5
 accepting SCCs: 1
 non accepting SCC: 4
 dead SCCs: 0
-weak SCCs: 5
+weak SubAut.: 5
 weak accepting SCCs: 1
 terminal accepting SCCs: 1
 terminal SubAut.: 5
@@ -80,7 +80,7 @@ total SCCs: 4
 accepting SCCs: 1
 non accepting SCC: 3
 dead SCCs: 1
-weak SCCs: 4
+weak SubAut.: 4
 weak accepting SCCs: 1
 terminal accepting SCCs: 1
 terminal SubAut.: 2
@@ -97,7 +97,7 @@ total SCCs: 3
 accepting SCCs: 1
 non accepting SCC: 2
 dead SCCs: 0
-weak SCCs: 3
+weak SubAut.: 3
 weak accepting SCCs: 1
 terminal accepting SCCs: 1
 terminal SubAut.: 3
@@ -114,7 +114,7 @@ total SCCs: 1
 accepting SCCs: 0
 non accepting SCC: 1
 dead SCCs: 1
-weak SCCs: 0
+weak SubAut.: 0
 weak accepting SCCs: 0
 terminal accepting SCCs: 0
 terminal SubAut.: 0
@@ -131,7 +131,7 @@ total SCCs: 2
 accepting SCCs: 1
 non accepting SCC: 1
 dead SCCs: 0
-weak SCCs: 0
+weak SubAut.: 0
 weak accepting SCCs: 0
 terminal accepting SCCs: 0
 terminal SubAut.: 0

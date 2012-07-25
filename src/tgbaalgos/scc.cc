@@ -35,7 +35,7 @@ namespace spot
     out << "accepting SCCs: " << acc_scc << std::endl;
     out << "non accepting SCC: " << nonacc_scc << std::endl;
     out << "dead SCCs: " << dead_scc << std::endl;
-    out << "weak SCCs: " << weak_scc << std::endl;
+    out << "weak SubAut.: " << weak_subaut << std::endl;
     out << "weak accepting SCCs: " << weak_acc_scc << std::endl;
     out << "terminal accepting SCCs: " << terminal_accepting << std::endl;
     out << "terminal SubAut.: " << terminal_subaut << std::endl;
@@ -148,7 +148,7 @@ namespace spot
     unsigned size = scc_count();
     while (--size)
       {
-	if (!(weak(size)))
+	if (!(weak_subautomaton(size)))
 	    return false;
       }
     return true;
@@ -259,7 +259,7 @@ namespace spot
 	if (weak) // <- THis track all weak SCC
 	  //if (weak && accepting(state)) // <- This track only weak acc.
 	  {
-	    scc_map_[state].is_weak =  least_self_loop;
+	    scc_map_[state].is_weak_subautomaton =  least_self_loop;
 
 	    if (accepting(state))
 	      scc_map_[state].is_weak_acc =  least_self_loop;
@@ -281,19 +281,19 @@ namespace spot
 	update_weak(sccit->first);
 
 	// One successor is not weak the SCC is so not weak
-	if (!scc_map_[sccit->first].is_weak)
+	if (!scc_map_[sccit->first].is_weak_subautomaton)
 	  {
-	    scc_map_[state].is_weak =
+	    scc_map_[state].is_weak_subautomaton =
 	      scc_map_[state].is_weak_acc = false;
 	    w_hard = false;
 	  }
 
 	if (scc_map_[sccit->first].is_terminal_subautomaton ||
 	    (!scc_map_[sccit->first].is_weak_hard &&
-	     scc_map_[sccit->first].is_weak))
+	     scc_map_[sccit->first].is_weak_subautomaton))
 	  w_hard = false;
 
-	if (scc_map_[sccit->first].is_weak ||
+	if (scc_map_[sccit->first].is_weak_subautomaton ||
 	    !scc_map_[sccit->first].is_strong_hard)
 	  s_hard = false;
 
@@ -318,7 +318,7 @@ namespace spot
 //      scc_map_[state].is_terminal = true;
 
 
-    if (scc_map_[state].is_weak &&
+    if (scc_map_[state].is_weak_subautomaton &&
 	!scc_map_[state].is_weak_acc && over)
      scc_map_[state].is_terminal_subautomaton = all_term;
 
@@ -327,7 +327,7 @@ namespace spot
 	scc_map_[state].is_weak_hard = false;
 	scc_map_[state].is_strong_hard = false;
       }
-    else if (scc_map_[state].is_weak)
+    else if (scc_map_[state].is_weak_subautomaton)
       {
 	scc_map_[state].is_weak_hard = w_hard;
       }
@@ -554,9 +554,9 @@ namespace spot
   }
 
   bool
-  scc_map::weak(unsigned n) const
+  scc_map::weak_subautomaton(unsigned n) const
   {
-    return scc_map_[n].is_weak;
+    return scc_map_[n].is_weak_subautomaton;
   }
 
   bool
@@ -568,7 +568,7 @@ namespace spot
   bool
   scc_map::strong(unsigned n) const
   {
-    return !scc_map_[n].is_weak;
+    return !scc_map_[n].is_weak_subautomaton;
   }
 
   bool
@@ -720,7 +720,7 @@ namespace spot
     res.dead_scc = d.dead_scc;
     res.acc_paths = d.acc_paths[init];
     res.dead_paths = d.dead_paths[init];
-    res.weak_scc = 0;
+    res.weak_subaut = 0;
     res.weak_acc_scc = 0;
     res.terminal_subaut = 0;
     res.terminal_accepting = 0;
@@ -731,8 +731,8 @@ namespace spot
     for (unsigned n = 0; n < res.scc_total; ++n)
       {
 	res.useless_scc_map[n] = !d.acc_paths[n];
-	if (m.weak(n))
-	  ++res.weak_scc;
+	if (m.weak_subautomaton(n))
+	  ++res.weak_subaut;
 	if (m.weak_accepting(n))
 	  ++res.weak_acc_scc;
 	if (m.terminal_subautomaton(n))
@@ -810,9 +810,6 @@ namespace spot
 	    ostr << "\\n StrongHard=["
 		 << (m.strong_hard(state) ? "true" : "false") << "]";
 
-	    ostr << "\\n Weak=["
-		 << (m.weak(state) ? "true" : "false") << "]";
-
 	    ostr << "\\n WeakHard=["
 		 << (m.weak_hard(state) ? "true" : "false") << "]";
 
@@ -826,7 +823,10 @@ namespace spot
 		 << (m.terminal_subautomaton(state) ? "true" : "false") << "]";
 
 	    ostr << "\\n NonAcc=["
-		 << (m.non_accepting(state) ? "true" : "false") << "]"
+		 << (m.non_accepting(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n Weak SubAut.=["
+		 << (m.weak_subautomaton(state) ? "true" : "false") << "]"
 		 << "\\n";
 	  }
 
