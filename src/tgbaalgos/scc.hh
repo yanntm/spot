@@ -55,6 +55,9 @@ namespace spot
     /// The number of terminal accepting SCC 
     int terminal_accepting;
 
+    /// Count the number of non accepting SCC 
+    int nonacc_scc;
+
     /// Number of maximal accepting paths.
     ///
     /// A path is maximal and accepting if it ends in an accepting
@@ -232,6 +235,12 @@ namespace spot
     ///
     /// \pre This should only be called once build_map() has run.
     bool is_weak ();
+
+    /// \breif Return wether the SCC is unaccepting i-e there 
+    /// is no run that is accepting 
+    ///
+    ///  \pre This should only be called once build_map() has run.
+    bool non_accepting (unsigned n) const;
 
 
     void check_weak(unsigned);

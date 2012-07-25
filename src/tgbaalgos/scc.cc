@@ -33,6 +33,7 @@ namespace spot
   {
     out << "total SCCs: " << scc_total << std::endl;
     out << "accepting SCCs: " << acc_scc << std::endl;
+    out << "non accepting SCC: " << nonacc_scc << std::endl;
     out << "dead SCCs: " << dead_scc << std::endl;
     out << "weak SCCs: " << weak_scc << std::endl;
     out << "weak accepting SCCs: " << weak_acc_scc << std::endl;
@@ -152,6 +153,13 @@ namespace spot
       }
     return true;
   }
+
+  bool
+  scc_map::non_accepting(unsigned n) const
+  {
+    return !accepting(n);
+  }
+
 
   void
   scc_map::check_weak(unsigned)
@@ -716,6 +724,7 @@ namespace spot
     res.weak_acc_scc = 0;
     res.terminal_subaut = 0;
     res.terminal_accepting = 0;
+    res.nonacc_scc = 0;
 
     res.useless_scc_map.reserve(res.scc_total);
     res.useful_acc = bddfalse;
@@ -730,6 +739,8 @@ namespace spot
 	  ++res.terminal_subaut;
 	if (m.terminal_accepting(n))
 	  ++res.terminal_accepting;
+	if (m.non_accepting(n))
+	  ++res.nonacc_scc;
 	if (m.accepting(n))
 	  res.useful_acc |= m.useful_acc_of(n);
       }
@@ -812,7 +823,10 @@ namespace spot
 		 << (m.terminal_accepting(state) ? "true" : "false") << "]";
 
 	    ostr << "\\n TerminalSubAut.=["
-		 << (m.terminal_subautomaton(state) ? "true" : "false") << "]"
+		 << (m.terminal_subautomaton(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n NonAcc=["
+		 << (m.non_accepting(state) ? "true" : "false") << "]"
 		 << "\\n";
 	  }
 

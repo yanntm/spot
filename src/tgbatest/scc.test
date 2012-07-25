@@ -27,6 +27,7 @@ transitions: 8
 states: 5
 total SCCs: 5
 accepting SCCs: 2
+non accepting SCC: 3
 dead SCCs: 0
 weak SCCs: 5
 weak accepting SCCs: 2
@@ -43,6 +44,7 @@ transitions: 15
 states: 6
 total SCCs: 5
 accepting SCCs: 1
+non accepting SCC: 4
 dead SCCs: 0
 weak SCCs: 1
 weak accepting SCCs: 1
@@ -59,6 +61,7 @@ transitions: 15
 states: 6
 total SCCs: 5
 accepting SCCs: 1
+non accepting SCC: 4
 dead SCCs: 0
 weak SCCs: 5
 weak accepting SCCs: 1
@@ -75,6 +78,7 @@ transitions: 7
 states: 4
 total SCCs: 4
 accepting SCCs: 1
+non accepting SCC: 3
 dead SCCs: 1
 weak SCCs: 4
 weak accepting SCCs: 1
@@ -91,6 +95,7 @@ transitions: 5
 states: 3
 total SCCs: 3
 accepting SCCs: 1
+non accepting SCC: 2
 dead SCCs: 0
 weak SCCs: 3
 weak accepting SCCs: 1
@@ -107,6 +112,7 @@ transitions: 0
 states: 1
 total SCCs: 1
 accepting SCCs: 0
+non accepting SCC: 1
 dead SCCs: 1
 weak SCCs: 0
 weak accepting SCCs: 0
@@ -123,6 +129,7 @@ transitions: 5
 states: 2
 total SCCs: 2
 accepting SCCs: 1
+non accepting SCC: 1
 dead SCCs: 0
 weak SCCs: 0
 weak accepting SCCs: 0
