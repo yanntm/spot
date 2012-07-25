@@ -208,7 +208,7 @@ namespace spot
 	bool weak  = true; // Presuppose every SCC is weak
 
 	// Walk all states included in the SCC
-	bool least_self_loop = false;
+	//	bool least_self_loop = false;
 	std::list<const spot::state*>::iterator iter =
 	  states.begin();
 	for (; iter != states.end(); ++iter)
@@ -218,51 +218,62 @@ namespace spot
 	    // is acc 
 	    tgba_succ_iterator *sit = a->succ_iter (*iter);
 	    assert(sit);
-	    bool is_false_weak = true;
-	    int first = 1;
+	    // bool is_false_weak = true;
+	    //	    int first = 1;
  	    for (sit->first(); !sit->done(); sit->next())
  	      {
 
 		// Get the current state
 		const spot::state *stt =  sit->current_state();
 
-		// Avoid to consider single sates as scc
-		//		if (scc_of_state(*iter) == scc_of_state(stt))
-		  least_self_loop = true;
+		// Not same SCC
+		if (scc_of_state(*iter) != scc_of_state(stt))
+		  continue;
 
-		// Is it a weak non accepting ?
-		if (first && (scc_of_state(*iter) == scc_of_state(stt)))
-		  {
-		    is_false_weak =
-		      sit->current_acceptance_conditions() == bddfalse;
-		    first = 0;
-		  }
-
-
-		// Fully acceptance or not at all
-		if (scc_of_state(*iter) == scc_of_state(stt) &&
-		    ((is_false_weak && sit->current_acceptance_conditions()
-		      != bddfalse)
-		      ||
-		     (!is_false_weak &&
-		      sit->current_acceptance_conditions()  != all)))
-		      //== bddfalse)))
+		if (sit->current_acceptance_conditions() != all &&
+		    accepting(scc_of_state(stt)))
 		  {
 		    stt->destroy();
 		    weak = false;
 		    break;
 		  }
+
+		// // Avoid to consider single sates as scc
+		// //		if (scc_of_state(*iter) == scc_of_state(stt))
+		//   least_self_loop = true;
+
+		// // Is it a weak non accepting ?
+		// if (first && (scc_of_state(*iter) == scc_of_state(stt)))
+		//   {
+		//     is_false_weak =
+		//       sit->current_acceptance_conditions() == bddfalse;
+		//     first = 0;
+		//   }
+
+
+		// // Fully acceptance or not at all
+		// if (scc_of_state(*iter) == scc_of_state(stt) &&
+		//     ((is_false_weak && sit->current_acceptance_conditions()
+		//       != bddfalse)
+		//       ||
+		//      (!is_false_weak &&
+		//       sit->current_acceptance_conditions()  != all)))
+		//       //== bddfalse)))
+		//   {
+		//     stt->destroy();
+		//     weak = false;
+		//     break;
+		//   }
 		stt->destroy();
 	      }
   	    delete sit;
 	  }
-	if (weak) // <- THis track all weak SCC
-	  //if (weak && accepting(state)) // <- This track only weak acc.
+	if (weak)
 	  {
-	    scc_map_[state].is_weak_subautomaton =  least_self_loop;
+	    scc_map_[state].is_weak_subautomaton = true; //least_self_loop;
 
 	    if (accepting(state))
-	      scc_map_[state].is_weak_acc =  least_self_loop;
+	      scc_map_[state].is_weak_acc =  true;//least_self_loop;
 	  }
  	--size;
       }
@@ -274,17 +285,19 @@ namespace spot
     bool w_hard = true;
     bool s_hard = true;
     bool all_term = true;
-    bool over = false;
+    bool all_weak = true;
+    bool over = true;//false;
     for (sccit = s.begin(); sccit != s.end(); ++sccit)
       {
 	over = true;
 	update_weak(sccit->first);
 
-	// One successor is not weak the SCC is so not weak
+	// One successor is not weak the subautomaton is so not weak
 	if (!scc_map_[sccit->first].is_weak_subautomaton)
 	  {
 	    scc_map_[state].is_weak_subautomaton =
-	      scc_map_[state].is_weak_acc = false;
+	      // scc_map_[state].is_weak_acc =
+	      false;
 	    w_hard = false;
 	  }
 
@@ -299,6 +312,9 @@ namespace spot
 
 	if (!scc_map_[sccit->first].is_terminal_subautomaton)
 	  all_term = false;
+
+	if (!scc_map_[sccit->first].is_weak_subautomaton)
+	  all_weak = false;
 
 // 	// A successor 
 // 	if (scc_map_[sccit->first].is_terminal &&
@@ -810,12 +826,6 @@ namespace spot
 	    ostr << "\\n StrongHard=["
 		 << (m.strong_hard(state) ? "true" : "false") << "]";
 
-	    ostr << "\\n WeakHard=["
-		 << (m.weak_hard(state) ? "true" : "false") << "]";
-
-	    ostr << "\\n WeakAcc=["
-		 << (m.weak_accepting(state) ? "true" : "false") << "]";
-
 	    ostr << "\\n TerminalAcc=["
 		 << (m.terminal_accepting(state) ? "true" : "false") << "]";
 
@@ -826,7 +836,13 @@ namespace spot
 		 << (m.non_accepting(state) ? "true" : "false") << "]";
 
 	    ostr << "\\n Weak SubAut.=["
-		 << (m.weak_subautomaton(state) ? "true" : "false") << "]"
+		 << (m.weak_subautomaton(state) ? "true" : "false") << "]";
+
+	    // ostr << "\\n WeakHard=["
+	    // 	 << (m.weak_hard(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n WeakAcc=["
+		 << (m.weak_accepting(state) ? "true" : "false") << "]"
 		 << "\\n";
 	  }
 

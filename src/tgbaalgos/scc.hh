@@ -60,6 +60,8 @@ namespace spot
     /// weak subautomaton.
     unsigned weak_subaut;
 
+
+
     /// Count the number of non accepting SCC 
     int nonacc_scc;
 
