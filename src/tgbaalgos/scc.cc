@@ -805,6 +805,12 @@ namespace spot
 	    ostr << "\\n WeakHard=["
 		 << (m.weak_hard(state) ? "true" : "false") << "]";
 
+	    ostr << "\\n WeakAcc=["
+		 << (m.weak_accepting(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n TerminalAcc=["
+		 << (m.terminal_accepting(state) ? "true" : "false") << "]";
+
 	    ostr << "\\n TerminalSubAut.=["
 		 << (m.terminal_subautomaton(state) ? "true" : "false") << "]"
 		 << "\\n";
