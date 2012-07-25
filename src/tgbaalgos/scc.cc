@@ -182,7 +182,7 @@ namespace spot
     scc cc =  scc_map_[state];
     if (terminal_accepting (state))
       {
-	scc_map_[state].is_terminal = true;
+	scc_map_[state].is_terminal_subautomaton = true;
       }
 
     if (cc.is_weak_acc)
@@ -279,16 +279,16 @@ namespace spot
 	    w_hard = false;
 	  }
 
-	if (scc_map_[sccit->first].is_terminal ||
+	if (scc_map_[sccit->first].is_terminal_subautomaton ||
 	    (!scc_map_[sccit->first].is_weak_hard &&
 	     scc_map_[sccit->first].is_weak))
 	  w_hard = false;
 
 	if (scc_map_[sccit->first].is_weak ||
-	    !scc_map_[sccit->first].is_strong_hard )
+	    !scc_map_[sccit->first].is_strong_hard)
 	  s_hard = false;
 
-	if (!scc_map_[sccit->first].is_terminal)
+	if (!scc_map_[sccit->first].is_terminal_subautomaton)
 	  all_term = false;
 
 // 	// A successor 
@@ -311,9 +311,9 @@ namespace spot
 
     if (scc_map_[state].is_weak &&
 	!scc_map_[state].is_weak_acc && over)
-     scc_map_[state].is_terminal = all_term;
+     scc_map_[state].is_terminal_subautomaton = all_term;
 
-    if (scc_map_[state].is_terminal)
+    if (scc_map_[state].is_terminal_subautomaton)
       {
 	scc_map_[state].is_weak_hard = false;
 	scc_map_[state].is_strong_hard = false;
@@ -503,7 +503,7 @@ namespace spot
     // recursively update supp_rec
     (void) update_supp_rec(initial());
     (void) update_weak(initial());
-    (void) check_weak(initial());
+    //(void) check_weak(initial());
   }
 
   unsigned scc_map::scc_of_state(const state* s) const
@@ -575,9 +575,9 @@ namespace spot
   }
 
   bool
-  scc_map::terminal(unsigned n) const
+  scc_map::terminal_subautomaton(unsigned n) const
   {
-    return scc_map_[n].is_terminal;
+    return scc_map_[n].is_terminal_subautomaton;
   }
 
   bool
@@ -724,7 +724,7 @@ namespace spot
 	  ++res.weak_scc;
 	if (m.weak_accepting(n))
 	  ++res.weak_acc_scc;
-	if (m.terminal(n))
+	if (m.terminal_subautomaton(n))
 	  ++res.terminal_scc;
 	if (m.accepting(n))
 	  res.useful_acc |= m.useful_acc_of(n);
@@ -802,7 +802,7 @@ namespace spot
 		 << (m.weak_hard(state) ? "true" : "false") << "]";
 
 	    ostr << "\\n Terminal=["
-		 << (m.terminal(state) ? "true" : "false") << "]"
+		 << (m.terminal_subautomaton(state) ? "true" : "false") << "]"
 		 << "\\n";
 	  }
 

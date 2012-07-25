@@ -19,6 +19,7 @@
 // 02111-1307, USA.
 
 #include "scc_decompose.hh"
+#include "tgba/tgbaunion.hh"
 #include "tgbaalgos/reachiter.hh"
 #include "tgba/tgbaexplicit.hh"
 #include "tgbaalgos/dotty.hh"
@@ -86,7 +87,7 @@ namespace spot
 	if (dc_ == STRONG)
 	  return sm_.strong(sm_.scc_of_state(s));
 	if (dc_ == WEAK)
-	  return !sm_.terminal(sm_.scc_of_state(s)) &&
+	  return !sm_.terminal_subautomaton(sm_.scc_of_state(s)) &&
 	    !sm_.strong_hard(sm_.scc_of_state(s));
 	return !sm_.strong_hard(sm_.scc_of_state(s)) &&
 	  !sm_.weak_hard(sm_.scc_of_state(s));
@@ -135,7 +136,7 @@ namespace spot
 	    // All ohter acceptance conditions are removed from 
 	    // strong and weak SCC
 	  default:
-	    if (!sm_.terminal(sm_.scc_of_state(in_s)))
+	    if (!sm_.terminal_subautomaton(sm_.scc_of_state(in_s)))
 	      out_->add_acceptance_conditions (t, bddfalse);
 	    else
 	      if (si->current_acceptance_conditions() == all)
@@ -269,7 +270,19 @@ namespace spot
   void
   scc_decompose::decompose()
   {
-
     return;
   }
+
+  tgba*
+  scc_decompose::recompose()
+  {
+    // NOT Yet Supported
+    // terminal_automaton();
+    // strong_automaton();
+    // std::cout << "I recompose" << std::endl;
+    // tgba* aa = new tgba_union (strong_,0);
+    // spot::dotty_reachable(std::cout, aa);
+    return 0;
+  }
+
 }

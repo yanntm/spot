@@ -216,7 +216,7 @@ namespace spot
 
     /// \brief Return true if the sub automaton starting from 
     /// this SCC can be considered as a weak automaton
-    bool terminal(unsigned n) const;
+    bool terminal_subautomaton(unsigned n) const;
 
     /// \brief Return whether an SCC is terminal acc i-e if
     /// this scc is complete and accepting
@@ -249,7 +249,7 @@ namespace spot
 		       is_weak(false), is_weak_acc(false),
 		       is_weak_hard(false),
 		       is_strong_hard(false),
-		       is_terminal(false)
+		       is_terminal_subautomaton(false)
       {};
       /// Index of the SCC.
       int index;
@@ -295,7 +295,9 @@ namespace spot
       /// guarantee properties : this mean that all paths leads
       /// to a terminal accepting state and no accepting edge must
       /// be see before 
-      bool is_terminal;
+
+
+      bool is_terminal_subautomaton;
     };
 
     const tgba* aut_;		// Automata to decompose.

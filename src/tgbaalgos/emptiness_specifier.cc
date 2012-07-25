@@ -322,7 +322,7 @@ namespace spot
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
  	unsigned id_scc = sm->scc_of_state(sproj);
-	res = sm->terminal(id_scc);
+	res = sm->terminal_subautomaton(id_scc);
 
 	sproj->destroy();
       }

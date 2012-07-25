@@ -112,6 +112,8 @@ syntax(char* prog)
 	    << "Automaton reduction:" << std::endl
 	    << "  -m  minimise the automaton"
 	    << std::endl
+	    << "  -dmr  decompose minimise and recompose the automaton"
+	    << std::endl
 
             << "Reduction effects:" << std::endl
     	    << "  -csma  compare the strong part of the automaton "
@@ -155,7 +157,8 @@ int main(int argc, char **argv)
   bool opt_df  = false;
 
   // automaton reduction 
-  bool opt_m = false;
+  bool opt_m   = false;
+  bool opt_dmr = false;
 
   // Comparison of reductions 
   bool opt_ctma = false;
@@ -215,6 +218,10 @@ int main(int argc, char **argv)
       else if (!strcmp(argv[formula_index], "-m"))
 	{
 	  opt_m = true;
+	}
+       else if (!strcmp(argv[formula_index], "-dmr"))
+	{
+	  opt_dmr = true;
 	}
       else if (!strcmp(argv[formula_index], "-r1"))
 	{
@@ -323,6 +330,34 @@ int main(int argc, char **argv)
 	tm.stop("reducing A_f w/ SCC");
       }
 
+
+      //
+      // Minimized 
+      // 
+      {
+	spot::tgba* minimized = 0;
+	if (opt_m)
+	  {
+	    minimized = minimize_obligation(a);
+	    if (minimized)
+	      {
+		delete a;
+		a = minimized;
+	      }
+	    else{
+	      minimized = spot::simulation(a);
+	      if (minimized)
+		{
+		  delete a;
+		  a = minimized;
+		}
+	    }
+	  }
+      }
+
+
+
+
       // 
       // Display options 
       // 
@@ -365,7 +400,7 @@ int main(int argc, char **argv)
 	}
       if (opt_ha)
 	{
-	  spot::stats_hierarchy sh (a);
+	  spot::stats_hierarchy sh (a, false);
 	  sh.stats_automaton();
 	  std::cout << sh << std::endl;
 	}
@@ -494,6 +529,11 @@ int main(int argc, char **argv)
 		  std::cout << "Strong:No difference" << std::endl;
 		}
 	    }
+	}
+      if (opt_dmr)
+	{
+	  spot::scc_decompose sd (a, true);
+	  sd.recompose();
 	}
     }
 

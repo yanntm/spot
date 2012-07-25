@@ -95,6 +95,11 @@ namespace spot
     void
     decompose();
 
+
+    tgba*
+    recompose();
+
+
   protected:
     // Decompose into strong automaton
     void decompose_strong();
