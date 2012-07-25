@@ -49,8 +49,11 @@ namespace spot
     unsigned weak_scc;
     /// The number of weak accepting scc into the automata 
     unsigned weak_acc_scc;
-    /// The number of terminal scc 
-    unsigned terminal_scc;
+
+    /// Count the number of SCC that can be considered as a subautomaton.
+    int terminal_subaut;
+    /// The number of terminal accepting SCC 
+    int terminal_accepting;
 
     /// Number of maximal accepting paths.
     ///
@@ -291,12 +294,11 @@ namespace spot
       /// Allow to know if this scc is is strong hard i.e. if no 
       /// weak scc can be reached from this scc
       bool is_strong_hard;
-      /// Allows to know if a SCC is terminal in the sens of 
-      /// guarantee properties : this mean that all paths leads
-      /// to a terminal accepting state and no accepting edge must
-      /// be see before 
 
 
+      /// Allow to know if the set of reachable state can be 
+      /// considered as a terminal automaton (reachable states 
+      /// are terminal SCC and weak non accepting SCC)
       bool is_terminal_subautomaton;
     };
 

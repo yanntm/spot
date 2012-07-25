@@ -36,7 +36,8 @@ namespace spot
     out << "dead SCCs: " << dead_scc << std::endl;
     out << "weak SCCs: " << weak_scc << std::endl;
     out << "weak accepting SCCs: " << weak_acc_scc << std::endl;
-    out << "terminal SCCs: " << terminal_scc << std::endl;
+    out << "terminal accepting SCCs: " << terminal_accepting << std::endl;
+    out << "terminal SubAut.: " << terminal_subaut << std::endl;
     out << "accepting paths: " << acc_paths << std::endl;
     out << "dead paths: " << dead_paths << std::endl;
     return out;
@@ -713,7 +714,8 @@ namespace spot
     res.dead_paths = d.dead_paths[init];
     res.weak_scc = 0;
     res.weak_acc_scc = 0;
-    res.terminal_scc = 0;
+    res.terminal_subaut = 0;
+    res.terminal_accepting = 0;
 
     res.useless_scc_map.reserve(res.scc_total);
     res.useful_acc = bddfalse;
@@ -725,7 +727,9 @@ namespace spot
 	if (m.weak_accepting(n))
 	  ++res.weak_acc_scc;
 	if (m.terminal_subautomaton(n))
-	  ++res.terminal_scc;
+	  ++res.terminal_subaut;
+	if (m.terminal_accepting(n))
+	  ++res.terminal_accepting;
 	if (m.accepting(n))
 	  res.useful_acc |= m.useful_acc_of(n);
       }
@@ -801,7 +805,7 @@ namespace spot
 	    ostr << "\\n WeakHard=["
 		 << (m.weak_hard(state) ? "true" : "false") << "]";
 
-	    ostr << "\\n Terminal=["
+	    ostr << "\\n TerminalSubAut.=["
 		 << (m.terminal_subautomaton(state) ? "true" : "false") << "]"
 		 << "\\n";
 	  }
