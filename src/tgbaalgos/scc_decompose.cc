@@ -30,10 +30,30 @@
 namespace spot
 {
 
-
   namespace
   {
+
     // Tool function used to facilitate the creation of the automaton
+    // for being Generic
+    static
+    state_explicit_number::transition*
+    create_transition(const tgba*, tgba_explicit_number* out_aut,
+		      const state*, int in, const state*, int out)
+    {
+      return out_aut->create_transition(in, out);
+    }
+
+    static
+    state_explicit_string::transition*
+    create_transition(const tgba* aut, tgba_explicit_string* out_aut,
+		      const state* in_s, int, const state* out_s, int)
+    {
+      const tgba_explicit_string* a =
+	static_cast<const tgba_explicit_string*>(aut);
+      return out_aut->create_transition(a->get_label(in_s),
+					a->get_label(out_s));
+    }
+
     static
     tgba_explicit_formula::transition*
     create_transition(const tgba* aut, tgba_explicit_formula* out_aut,
@@ -60,6 +80,8 @@ namespace spot
     class decomp_iter: public tgba_reachable_iterator_depth_first
     {
     public:
+      typedef T output_t;
+
       decomp_iter(const tgba* a,
 		  const scc_map& sm,
 		  decomptype dc)
@@ -85,7 +107,8 @@ namespace spot
       want_state(const state* s) const
       {
 	if (dc_ == STRONG)
-	  return sm_.strong(sm_.scc_of_state(s));
+	  return !sm_.weak_subautomaton(sm_.scc_of_state(s));
+//sm_.strong_subautomaton(sm_.scc_of_state(s));
 	if (dc_ == WEAK)
 	  return !sm_.terminal_subautomaton(sm_.scc_of_state(s)) &&
 	    !sm_.strong_hard(sm_.scc_of_state(s));
@@ -98,7 +121,7 @@ namespace spot
 		   const state* out_s, int out,
 		   const tgba_succ_iterator* si)
       {
-	tgba_explicit_formula::transition* t =
+	typename output_t::state::transition* t =
 	  create_transition(this->aut_, out_, in_s, in, out_s, out);
 	out_->add_conditions(t, si->current_condition());
 
@@ -120,6 +143,9 @@ namespace spot
 	      if (sm_.strong(sm_.scc_of_state(in_s)) ||
 		  sm_.strong(sm_.scc_of_state(out_s)))
 		out_->add_acceptance_conditions (t, bddfalse);
+	      // if (sm_.strong_subautomaton(sm_.scc_of_state(in_s)) ||
+	      // 	  sm_.strong_subautomaton(sm_.scc_of_state(out_s)))
+	      // 	out_->add_acceptance_conditions (t, bddfalse);
 	      else
 		if (si->current_acceptance_conditions() == all)
 		  out_->add_acceptance_conditions
@@ -160,28 +186,79 @@ namespace spot
   void
   scc_decompose::decompose_strong ()
   {
-    decomp_iter<tgba_explicit_formula>
-      di  (src_, *sm, STRONG);
-    di.run();
-    strong_ = di.result();
+    if (dynamic_cast<const tgba_explicit_formula*>(src_))
+      {
+	decomp_iter<tgba_explicit_formula>
+	  di  (src_, *sm, STRONG);
+	di.run();
+	strong_ = di.result();
+      }
+    if (dynamic_cast<const tgba_explicit_number*>(src_))
+      {
+	decomp_iter<tgba_explicit_number>
+	  di  (src_, *sm, STRONG);
+	di.run();
+	strong_ = di.result();
+      }
+    if (dynamic_cast<const tgba_explicit_string*>(src_))
+      {
+	decomp_iter<tgba_explicit_string>
+	  di  (src_, *sm, STRONG);
+	di.run();
+	strong_ = di.result();
+      }
   }
 
   void
   scc_decompose::decompose_weak ()
   {
-    decomp_iter<tgba_explicit_formula>
-      di  (src_, *sm, WEAK);
-    di.run();
-    weak_ = di.result();
+    if (dynamic_cast<const tgba_explicit_formula*>(src_))
+      {
+	decomp_iter<tgba_explicit_formula>
+	  di  (src_, *sm, WEAK);
+	di.run();
+	weak_ = di.result();
+      }
+    if (dynamic_cast<const tgba_explicit_number*>(src_))
+      {
+	decomp_iter<tgba_explicit_number>
+	  di  (src_, *sm, WEAK);
+	di.run();
+	weak_ = di.result();
+      }
+    if (dynamic_cast<const tgba_explicit_string*>(src_))
+      {
+	decomp_iter<tgba_explicit_string>
+	  di  (src_, *sm, WEAK);
+	di.run();
+	weak_ = di.result();
+      }
   }
 
   void
   scc_decompose::decompose_terminal ()
   {
-    decomp_iter<tgba_explicit_formula>
-      di  (src_, *sm, TERMINAL);
-    di.run();
-    terminal_ = di.result();
+    if (dynamic_cast<const tgba_explicit_formula*>(src_))
+      {
+	decomp_iter<tgba_explicit_formula>
+	  di  (src_, *sm, TERMINAL);
+	di.run();
+	terminal_ = di.result();
+      }
+    if (dynamic_cast<const tgba_explicit_number*>(src_))
+      {
+	decomp_iter<tgba_explicit_number>
+	  di  (src_, *sm, TERMINAL);
+	di.run();
+	terminal_ = di.result();
+      }
+    if (dynamic_cast<const tgba_explicit_string*>(src_))
+      {
+	decomp_iter<tgba_explicit_string>
+	  di  (src_, *sm, TERMINAL);
+	di.run();
+	terminal_ = di.result();
+      }
   }
 
   tgba*

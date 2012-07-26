@@ -333,29 +333,27 @@ int main(int argc, char **argv)
 
       //
       // Minimized 
-      // 
+      //
       {
-	spot::tgba* minimized = 0;
-	if (opt_m)
-	  {
-	    minimized = minimize_obligation(a);
-	    if (minimized)
-	      {
-		delete a;
-		a = minimized;
-	      }
-	    else{
-	      minimized = spot::simulation(a);
-	      if (minimized)
-		{
-		  delete a;
-		  a = minimized;
-		}
-	    }
-	  }
+      	spot::tgba* minimized = 0;
+      	if (opt_m)
+      	  {
+      	    minimized = minimize_obligation(a);
+      	    if (minimized)
+      	      {
+      		delete a;
+      		a = minimized;
+      	      }
+      	    else{
+      	      minimized = spot::simulation(a);
+      	      if (minimized)
+      	    	{
+      	    	  delete a;
+      	    	  a = minimized;
+      	    	}
+      	    }
+      	  }
       }
-
-
 
 
       // 

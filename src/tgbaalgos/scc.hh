@@ -60,8 +60,6 @@ namespace spot
     /// weak subautomaton.
     unsigned weak_subaut;
 
-
-
     /// Count the number of non accepting SCC 
     int nonacc_scc;
 
@@ -198,28 +196,13 @@ namespace spot
     /// \brief Return the number of self loops in the automaton.
     unsigned self_loops() const;
 
-    /// \brief Return whether an SCC is weak i-e if all transitions
-    /// inside this this SCC is wether fully accepting or not
+    /// \brief Return whether the subautomaton starting from 
+    /// this SCC can be considered as Weak (for all SCC s , s 
+    /// is wether accepting for all paths, wether non accepting 
+    /// for all paths)
     ///
     /// \pre This should only be called once build_map() has run.
     bool weak_subautomaton(unsigned n) const;
-
-    /// \brief Return whether an SCC is weak hard i-e if 
-    /// no terminal scc can be reached 
-    ///
-    /// \pre This should only be called once build_map() has run.
-    bool weak_hard(unsigned n) const;
-
-    /// \brief Return whether an SCC is weak i.e. it's not weak
-    ///
-    /// \pre This should only be called once build_map() has run.
-    bool strong(unsigned n) const;
-
-    /// \brief Return whether an SCC is weak hard i-e if 
-    /// no weak SCC or terminal SCC can be reached
-    ///
-    /// \pre This should only be called once build_map() has run.
-    bool strong_hard(unsigned n) const;
 
     /// \brief Return whether an SCC is weak acc i-e if all 
     /// transitions inside this this SCC is wether fully accepting
@@ -227,8 +210,29 @@ namespace spot
     /// \pre This should only be called once build_map() has run.
     bool weak_accepting(unsigned n) const;
 
+    /// \brief Return whether an SCC is weak hard i-e if 
+    /// no terminal scc can be reached from this SCC
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool weak_hard(unsigned n) const;
+
+    /// \brief Return whether a SCC is strong (existence of 
+    /// non accepting run inside this SCC)
+    ///  
+    /// \pre This should only be called once build_map() has run.
+    bool strong(unsigned n) const;
+
+    /// \brief Return whether an SCC is weak hard i-e if 
+    /// no weak SCC or terminal SCC or non acc. can be reached
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool strong_hard(unsigned n) const;
+
     /// \brief Return true if the sub automaton starting from 
     /// this SCC can be considered as a weak automaton
+    /// e.g. only non accepting and terminal SCC can be reached
+    ///
+    /// \pre This should only be called once build_map() has run.
     bool terminal_subautomaton(unsigned n) const;
 
     /// \brief Return whether an SCC is terminal acc i-e if
@@ -237,22 +241,11 @@ namespace spot
     /// \pre This should only be called once build_map() has run.
     bool terminal_accepting(unsigned n) const;
 
-    /// \brief Return whether the automaton is weak or not 
-    /// considering the map of SCC which has been computed
-    ///
-    /// \pre This should only be called once build_map() has run.
-    bool is_weak ();
-
     /// \breif Return wether the SCC is unaccepting i-e there 
     /// is no run that is accepting 
     ///
     ///  \pre This should only be called once build_map() has run.
     bool non_accepting (unsigned n) const;
-
-
-    void check_weak(unsigned);
-    bool cycle_wo_acc (unsigned state, bdd acc);
-
 
   protected:
     bdd update_supp_rec(unsigned state);
@@ -309,19 +302,15 @@ namespace spot
       /// weak scc can be reached from this scc
       bool is_strong_hard;
 
-
       /// Allow to know if the set of reachable state can be 
       /// considered as a terminal automaton (reachable states 
       /// are terminal SCC and weak non accepting SCC)
       bool is_terminal_subautomaton;
 
-
       /// Allows to know if a SCC is weak ie fully accepting or not
       /// at all : a scc is considered weak only if all reachable scc
       /// are weak
       bool is_weak_subautomaton;
-
-
     };
 
     const tgba* aut_;		// Automata to decompose.
