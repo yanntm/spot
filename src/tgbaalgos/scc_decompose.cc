@@ -267,6 +267,14 @@ namespace spot
     if (!terminal_)
       {
 	decompose_terminal();
+
+	// Check at least 1 condition Acc[True]
+	// Which means that there is a reachable 
+	// accepting edge at least (i.e. the automaton
+	// contains terminal states)
+	if (terminal_->number_of_acceptance_conditions() == 0)
+	  return 0;
+
 	spot::tgba* minimized = 0;
 	if (minimize)
 	  {
@@ -278,12 +286,7 @@ namespace spot
 	      }
 	  }
       }
-    // Check at least 1 condition Acc[True]
-    // Which means that there is a reachable 
-    // accepting edge at least (i.e. the automaton
-    // contains terminal states)
-    if (terminal_->number_of_acceptance_conditions() == 0)
-      return 0;
+
     return terminal_;
   }
 
@@ -293,6 +296,14 @@ namespace spot
     if (!weak_)
       {
 	decompose_weak();
+
+	// Check at least 1 condition Acc[True]
+	// Which means that there is a reachable 
+	// accepting edge at least (i.e. the automaton
+	// contains a weak accepting SCC)
+	if (weak_->number_of_acceptance_conditions() == 0)
+	  return 0;
+
 	spot::tgba* minimized = 0;
 	if (minimize)
 	  {
@@ -311,15 +322,9 @@ namespace spot
 		    weak_ = minimized;
 		  }
 	      }
-	    }
+	  }
       }
 
-    // Check at least 1 condition Acc[True]
-    // Which means that there is a reachable 
-    // accepting edge at least (i.e. the automaton
-    // contains a weak accepting SCC)
-    if (weak_->number_of_acceptance_conditions() == 0)
-      return 0;
     return weak_;
   }
 

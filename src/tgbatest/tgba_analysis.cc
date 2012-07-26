@@ -355,7 +355,6 @@ int main(int argc, char **argv)
       	  }
       }
 
-
       // 
       // Display options 
       // 
@@ -537,9 +536,10 @@ int main(int argc, char **argv)
 
   // Clean up
   f->destroy();
-  if (!a)
-    delete dict;
+  //  if (!a)
   delete a;
+  delete dict;
+
 
   // Check effective clean up
   spot::ltl::atomic_prop::dump_instances(std::cerr);
