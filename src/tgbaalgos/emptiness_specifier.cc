@@ -79,84 +79,12 @@ namespace spot
     sm->build_map();
   }
 
-  const ltl::formula*
-  formula_emptiness_specifier::formula_from_state (const state *s) const
-  {
-    const ltl::formula* f = 0;
-    if (!both_formula)
-      {
-	state * sproj = sys_->project_state(s, f_);
-	assert(sproj);
-
-	const state_explicit_formula* fstate =
-	  dynamic_cast<const state_explicit_formula*> (sproj);
-	assert(fstate);
-	f  = dynamic_cast<const ltl::formula*>
-	  (dynamic_cast<const tgba_explicit_formula*> (f_)->get_label(sproj));
-	sproj->destroy();
-      }
-    else
-      // Both are formula we construct the result by a LOGICAL AND between 
-      // the both formula that are given
-      {
-	// Compute first formula 
-	state * sproj1 = sys_->project_state(s, f_);
-	assert(sproj1);
-	const state_explicit_formula* fstate1 =
-	  dynamic_cast<const state_explicit_formula*> (sproj1);
-	const ltl::formula* f1  = dynamic_cast<const ltl::formula*>
-	  (dynamic_cast<const tgba_explicit_formula*>
-	   (f_)->get_label(fstate1));
-	sproj1->destroy();
-
-	// Compute second formula 
-	state * sproj2 = sys_->project_state(s, s_);
-	assert(sproj1);
-	const state_explicit_formula* fstate2 =
-	  dynamic_cast<const state_explicit_formula*> (sproj2);
-	const ltl::formula* f2  = dynamic_cast<const ltl::formula*>
-	  (dynamic_cast<const tgba_explicit_formula*>
-	   (s_)->get_label(fstate2));
-	sproj1->destroy();
-
-	// Construct the resulting formula
-	f = dynamic_cast <const ltl::formula*>
-	  (ltl::multop::instance(ltl::multop::And,
-				 const_cast <ltl::formula*>(f1),
-				 const_cast <ltl::formula*>(f2)));
-      }
-    sptrace << "\t > recurrence  ?" << f->is_syntactic_recurrence()
-	    << std::endl
-	    << "\t > persistence ?" << f->is_syntactic_persistence()
-	    << std::endl
-	    << "\t > obligation  ?" << f->is_syntactic_obligation()
-	    << std::endl
-	    << "\t > safety      ?" << f->is_syntactic_safety()
-	    << std::endl
-	    << "\t > guarantee   ?" << f->is_syntactic_guarantee()
-	    << std::endl;
-
-    return f;
-  }
-
   bool
   formula_emptiness_specifier::is_part_of_weak_acc (const state *s) const
   {
     bool res = false;
 
     if (!both_formula)
-      // {
-      // 	state * sproj = sys_->project_state(s, f_);
-      // 	assert(sproj);
-
-      // 	const state_explicit_formula* fstate =
-      // 	  dynamic_cast<const state_explicit_formula*> (sproj);
-
-      // 	unsigned id_scc = sm->scc_of_state(fstate);
-      // 	res = sm->weak_accepting(id_scc);
-
-      // 	sproj->destroy();
-      // }
       {
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
@@ -176,25 +104,6 @@ namespace spot
   {
     bool res = false;
 
-    // if (!both_formula)
-    //   {
-    // 	state * sproj1 = sys_->project_state(s1, f_);
-    // 	assert(sproj1);
-    // 	const state_explicit_formula* fstate1 =
-    // 	  dynamic_cast<const state_explicit_formula*> (sproj1);
-    // 	unsigned id_scc1 = sm->scc_of_state(fstate1);
-    // 	state * sproj2 = sys_->project_state(s2, f_);
-    // 	assert(sproj2);
-    // 	const state_explicit_formula* fstate2 =
-    // 	  dynamic_cast<const state_explicit_formula*> (sproj2);
-    // 	assert (fstate2);
-    // 	unsigned id_scc2 = sm->scc_of_state(fstate2);
-
-    // 	sproj1->destroy();
-    // 	sproj2->destroy();
-    // 	res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
-    //   }
-
     if (!both_formula)
       {
 	state * sproj1 = sys_->project_state(s1, f_);
@@ -203,122 +112,20 @@ namespace spot
 	state * sproj2 = sys_->project_state(s2, f_);
 	assert(sproj2);
 	unsigned id_scc2 = sm->scc_of_state(sproj2);
-
 	sproj1->destroy();
 	sproj2->destroy();
 	res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
       }
-
-
     return res;
-  }
-
-  std::list<const state *>*
-  formula_emptiness_specifier::collect_self_loop_acc_terminal_nodes()
-  {
-    //
-    std::list<const state*> *result =
-      new std::list<const state*> ();
-
-    // Visited states
-    std::set <spot::state *>*
-      visited_tmp = new std::set< spot::state *>();
-
-    // todo 
-    std::stack
-      <spot::state_explicit_formula*> todo_tmp;
-
-    // Initial state of the automaton
-    spot::state_explicit_formula *i_src =
-      (spot::state_explicit_formula *) f_->get_init_state();
-    visited_tmp->insert(i_src->clone());
-    //    todo_tmp.push (i_src->clone());
-    todo_tmp.push (i_src);
-
-      // Perform work for the initial state 
-      {
-	const ltl::formula* f = 0;
-	f = formula_from_state(i_src->clone());
-	if (f == ltl::constant::true_instance())
-	  {
-	    // std::cout << f_->format_state(i_src);
-	    result->push_back(i_src->clone());
-	  }
-      }
-
-      while (!todo_tmp.empty())	// We have always an initial state 
-	{
-	  // Init all vars 
-	  spot::state_explicit_formula *s_src;
-	  s_src = todo_tmp.top();
-	  todo_tmp.pop();
-
-	  // Iterator over the successor of the src
-	  spot::tgba_explicit_succ_iterator<spot::state_explicit_formula> *si =
-	    (tgba_explicit_succ_iterator<spot::state_explicit_formula>*)
-	    f_->succ_iter (s_src);
-	  for (si->first(); !si->done(); si->next())
-	    {
-	      // Get successor of the src
-	      spot::state_explicit_formula * succ_src = si->current_state();
-
-	      // It's a new state we have to visit it
-	      if (visited_tmp->find (succ_src) == visited_tmp->end())
-		{
-		  // Mark as visited 
-		  visited_tmp->insert(succ_src);
-
-		  todo_tmp.push (succ_src);
-
-		  {
-		    const ltl::formula* f = 0;
-		    f = formula_from_state(succ_src);
-		    if (f == ltl::constant::true_instance())
-		      {
-			//std::cout << f_->format_state(succ_src);
-			result->push_back(succ_src->clone());
-		      }
-		  }
-		}
-
-	      // Destroy theses states that are now unused
-	      succ_src->destroy();
-	    }
-	  delete si;
-
-	  // CLEAN
-	  s_src->destroy();
-	}
-
-      // No more in use
-      i_src->destroy();
-
-      std::set<spot::state *>::iterator it;
-      for (it=visited_tmp->begin(); it != visited_tmp->end(); ++it)
-	(*it)->destroy();
-      delete visited_tmp;
-
-
-
-
-      return result;
-//     return new std::list<const state *>();
   }
 
   bool
   formula_emptiness_specifier::is_guarantee (const state * s) const
   {
     assert(s);
-//     const ltl::formula * formula = 
-//       formula_from_state(s);
-//     return formula->is_syntactic_guarantee(); 
-// ONLY TERMINAL, W- ou S- are reachable 
-
-
     bool res = false;
     if (!both_formula)
       {
-	//std::cout << sys_->format_state(s) << std::endl;
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
  	unsigned id_scc = sm->scc_of_state(sproj);
@@ -328,18 +135,7 @@ namespace spot
       }
     else
       assert (false);
-
-    assert(s);
-//     const ltl::formula * formula = 
-//       formula_from_state(s);
-
-//     if (formula->is_syntactic_guarantee() != res)
-//       sptrace << "~>" << sys_->format_state(s) << std::endl;
-
-    return res; // AND ALL REACHABLE ARE WEAK 
-
-
-
+    return res;
   }
 
   bool
@@ -348,33 +144,15 @@ namespace spot
     bool res = false;
     if (!both_formula)
       {
-	//std::cout << sys_->format_state(s) << std::endl;
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
-
-// 	const state_explicit* fstate =
-// 	  dynamic_cast<const state_explicit*> (sproj);
-// 	unsigned id_scc = sm->scc_of_state(fstate);
-
  	unsigned id_scc = sm->scc_of_state(sproj);
 	res = sm->weak_subautomaton(id_scc);
-
 	sproj->destroy();
       }
     else
       assert (false);
-
-    assert(s);
-//     const ltl::formula * formula = 
-//       formula_from_state(s);
-// //    return formula->is_syntactic_persistence();
-// //        assert(res);
-// //       assert(!res || formula->is_syntactic_persistence() == res);
-
-//     if (formula->is_syntactic_persistence() != res)
-//       sptrace << "~>" << sys_->format_state(s) << std::endl;
-
-    return res; // AND ALL REACHABLE ARE WEAK 
+    return res;
   }
 
   bool
@@ -393,24 +171,13 @@ namespace spot
       {
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
-
-	// const state_explicit_formula* fstate =
-	//   dynamic_cast<const state_explicit_formula*> (sproj);
-
-	unsigned id_scc = sm->scc_of_state(sproj);//(fstate);
+	unsigned id_scc = sm->scc_of_state(sproj);
 	res = sm->terminal_accepting(id_scc);
 
 	sproj->destroy();
       }
     else
       assert (false);
-
-//     assert(s);
-//     const ltl::formula * formula = 
-//       formula_from_state(s);
-//     //    return ltl::constant::true_instance() == formula;
-//     assert( (ltl::constant::true_instance() == formula) == res);
     return res;
   }
-
 }

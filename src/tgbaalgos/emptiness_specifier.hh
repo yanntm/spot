@@ -40,19 +40,17 @@ namespace spot
   class emptiness_specifier
   {
   public :
-    /// Return the formula associated to the state which is provided as
-    /// parameter.
-    /// Return NULL if the state doesn't handle formula 
-    virtual const ltl::formula *
-    formula_from_state (const state *) const = 0;
-
     virtual
     ~emptiness_specifier()
     { }
 
+    /// \return true if the state belong to a weak accepting 
+    /// SCC 
     virtual bool
     is_part_of_weak_acc (const state *) const = 0;
 
+    /// \return true if this two states belong to the 
+    /// same weak accepting SCC
     virtual bool
     same_weak_acc (const state *, const state *) const = 0;
 
@@ -85,14 +83,6 @@ namespace spot
   public :
     virtual ~emptiness_specifier_default()
     {
-    }
-
-
-    // Return the formula associated to a specific state
-    virtual const ltl::formula *
-    formula_from_state (const state *) const
-    {
-      return 0;
     }
 
     // Return true if the state belong to a weak accepting SCC
@@ -173,8 +163,8 @@ namespace spot
     }
 
     /// TODO: Do not use will be deprecated...
-    const ltl::formula *
-    formula_from_state (const state *) const;
+    // const ltl::formula *
+    // formula_from_state (const state *) const;
 
     /// Return true if the projection over the formula automata is 
     /// in a weak accepting SCC
@@ -185,14 +175,6 @@ namespace spot
     ///  SCC
     bool
     same_weak_acc (const state *, const state *) const;
-
-    /// Collect all nodes that are self loop terminal accepting 
-    /// into the automaton
-    /// self loop terminal non accepting have probably been removed 
-    /// and all terminal acceptin SCC can be represent as a single 
-    /// accepting state labelled by 1 and with a self loop
-    std::list<const state *>*
-    collect_self_loop_acc_terminal_nodes();
 
     /// Check wether the state is a guarantee state i-e it belongs to 
     /// a sub-automaton which is terminal
