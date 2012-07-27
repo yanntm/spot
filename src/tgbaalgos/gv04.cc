@@ -94,26 +94,48 @@ namespace spot
       }
 
       void
-      stats_formula (const ltl::formula *formula)
+      stats_formula (const spot::state *s)
       {
-	if (formula->is_syntactic_guarantee())
+	if (es_->is_guarantee(s))
 	  inc_reachability();
-// 	else if (formula->is_syntactic_persistence())
-// 	  inc_dfs ();
+	else if (es_->is_persistence(s))
+	  inc_dfs();
 	else
-	  inc_ndfs ();
+	  inc_ndfs();
       }
 
       void
-      stats_commut (const ltl::formula *formula)
+      stats_commut (const spot::state *s)
       {
-	if (formula->is_syntactic_guarantee())
-	  commut_algo(REACHABILITY);
-// 	else if (formula->is_syntactic_persistence())
-// 	  commut_algo(DFS);
+	if (es_->is_guarantee(s))
+	  commut_algo (REACHABILITY);
+	else if (es_->is_persistence(s))
+	  commut_algo (DFS);
 	else
 	  commut_algo(NDFS);
       }
+
+//       void
+//       stats_formula (const ltl::formula *formula)
+//       {
+// 	if (formula->is_syntactic_guarantee())
+// 	  inc_reachability();
+// // 	else if (formula->is_syntactic_persistence())
+// // 	  inc_dfs ();
+// 	else
+// 	  inc_ndfs ();
+//       }
+
+//       void
+//       stats_commut (const ltl::formula *formula)
+//       {
+// 	if (formula->is_syntactic_guarantee())
+// 	  commut_algo(REACHABILITY);
+// // 	else if (formula->is_syntactic_persistence())
+// // 	  commut_algo(DFS);
+// 	else
+// 	  commut_algo(NDFS);
+//       }
 
 
       virtual emptiness_check_result*
@@ -126,9 +148,13 @@ namespace spot
 
 	if (is_dynamic)
 	  {
-	    const ltl::formula * formula =  es_->formula_from_state(s0);
-	    stats_commut (formula);
-	    stats_formula (formula);
+		assert (es_);
+		stats_commut (s0);
+		stats_formula (s0);
+
+	    // const ltl::formula * formula =  es_->formula_from_state(s0);
+	    // stats_commut (formula);
+	    // stats_formula (formula);
 	  }
 	else
 	  {
@@ -171,15 +197,17 @@ namespace spot
 		      << (acc ? " (with accepting link)" : "");
 
 		hash_type::const_iterator i = h.find(s_prime);
-		const ltl::formula *formula = 0;
+		//const ltl::formula *formula = 0;
 		if (is_dynamic)
 		  {
-		    assert(es_);
-		    formula =  es_->formula_from_state(s_prime);
-		    assert(formula);
-		    stats_commut (formula);
-		    if (formula->is_syntactic_guarantee() &&
-			ltl::constant::true_instance() == formula)
+		    // assert(es_);
+		    // formula =  es_->formula_from_state(s_prime);
+		    //assert(formula);
+		    //stats_commut (formula);
+		    stats_commut (s_prime);
+		    // if (formula->is_syntactic_guarantee() &&
+		    // 	ltl::constant::true_instance() == formula)
+		    if (es_->is_terminal_accepting_scc (s_prime))
 		      {
 			trace << "  It's a reachability we can report"
 			      << std::endl;
@@ -194,7 +222,9 @@ namespace spot
 		  {
 		    trace << " is a new state." << std::endl;
 		    if (is_dynamic)
-			stats_formula (formula);
+			stats_formula (s_prime);
+		    // if (is_dynamic)
+		    // 	stats_formula (formula);
 		    else
 		      inc_ndfs();
 		    push(s_prime, acc);
