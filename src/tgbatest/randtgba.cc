@@ -1056,13 +1056,9 @@ main(int argc, char** argv)
 	{
 	  spot::formula_emptiness_specifier *fes  =
 	    new spot::formula_emptiness_specifier (formula);
-	  const spot::ltl::formula * cf =
-	    fes->formula_from_state(formula->get_init_state());
-	  if (cf->is_syntactic_guarantee())
+	  if (fes->is_guarantee(formula->get_init_state()))
 	    ++terminal_count;
-	  else if (cf->is_syntactic_safety() ||
-		   cf->is_syntactic_obligation() ||
-		   cf->is_syntactic_persistence())
+	  else if (fes->is_persistence(formula->get_init_state()))
 	    ++weak_count;
 	  else
 	    ++general_count;
