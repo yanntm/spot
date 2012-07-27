@@ -251,7 +251,7 @@ namespace spot
     if (scc_map_[state].is_weak_subautomaton &&
 	!scc_map_[state].is_weak_acc)
       scc_map_[state].is_terminal_subautomaton = all_term;
-    
+
     if (scc_map_[state].is_terminal_subautomaton)
       {
 	scc_map_[state].is_weak_hard = false;
@@ -263,7 +263,7 @@ namespace spot
       }
     else
       {
-	scc_map_[state].is_strong_hard = s_hard && !scc_map_[state].is_weak_acc ;
+	scc_map_[state].is_strong_hard = s_hard && !scc_map_[state].is_weak_acc;
       }
   }
 
