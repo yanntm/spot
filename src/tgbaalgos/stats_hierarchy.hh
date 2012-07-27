@@ -78,7 +78,7 @@ namespace spot
       /// \param s The current state.
       void process_state(const spot::state* s, int, spot:: tgba_succ_iterator*)
       {
-	sum++;
+	++sum;
 	if (fes.is_guarantee(s))
 	  ++scc_terminal;
 	else if (fes.is_persistence(s))
@@ -101,7 +101,7 @@ namespace spot
 			, int ,
 			const spot::tgba_succ_iterator*)
       {
-	tsum++;
+	++tsum;
 	if (fes.is_guarantee(s_src) && fes.is_guarantee(succ_src))
 	  ++ttt;
 	else if (fes.is_persistence(s_src) && fes.is_guarantee(succ_src))
