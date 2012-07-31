@@ -114,8 +114,6 @@ cons_emptiness_check(int num, const spot::tgba* a,
 //   assert(formula || opt_a+1 || product);
 //   return 0;
 
-
-
   if (!formula)
     return 0;
 
@@ -124,9 +122,6 @@ cons_emptiness_check(int num, const spot::tgba* a,
   if (n_acc < inst->min_acceptance_conditions()
       || n_acc > inst->max_acceptance_conditions())
     a = degen;
-
-
-
 
   spot::emptiness_check *echk = 0;
   if (a)
@@ -141,7 +136,7 @@ cons_emptiness_check(int num, const spot::tgba* a,
 	       || n_acc > inst->max_acceptance_conditions()))
     {
       spot::formula_emptiness_specifier *fes  =
-	new spot::formula_emptiness_specifier (degen?degen:product, formula);
+	new spot::formula_emptiness_specifier (product, formula);
       echk->set_specifier (fes);
     }
   else if (echk)
@@ -154,42 +149,6 @@ cons_emptiness_check(int num, const spot::tgba* a,
   return echk;
 
   return 0;
-
-
-
-
-//   if (!formula)
-//     return 0;
-
-//   spot::emptiness_check_instantiator* inst = ec_algos[num].inst;
-//   if (n_acc < inst->min_acceptance_conditions()
-//       || n_acc > inst->max_acceptance_conditions())
-//     a = degen;
-
-//   spot::emptiness_check *echk = 0;
-//   if (a)
-//     echk = inst->instantiate(a);
-
-//   // Dynamic emptiness doesn't support
-//   if (echk && opt_a != 0.0 && (echk->is_dynamic_emptiness ()))
-//     {
-//       return 0;
-//     }
-//   if (echk && (n_acc < inst->min_acceptance_conditions()
-// 	       || n_acc > inst->max_acceptance_conditions()))
-//     {
-//       spot::formula_emptiness_specifier *fes  =
-// 	new spot::formula_emptiness_specifier (degen?degen:product, formula);
-//       echk->set_specifier (fes);
-//     }
-//   else if (echk)
-//     {
-//       spot::formula_emptiness_specifier *fes  =
-// 	new spot::formula_emptiness_specifier (product, formula);
-//       echk->set_specifier (fes);
-//     }
-
-//   return echk;
 }
 
 void
