@@ -139,8 +139,6 @@ namespace spot
   protected:
     const tgba* sys_;		// The synchronized product automaton
     const tgba* f_;		// The formula automaton
-    const tgba* s_;		// The system automaton
-    bool  both_formula;  	// Boolean for 2 formula automaton
     scc_map * sm;		// The map of scc 
   public :
 
@@ -152,19 +150,11 @@ namespace spot
     /// and where this formula is wrapped into a proxy
     formula_emptiness_specifier (const tgba * a, const tgba * f);
 
-    /// Create the specifier taking the automaton of the system and 
-    /// the automaton of the formula 
-    formula_emptiness_specifier (const tgba * a, const tgba * f, const tgba *s);
-
     virtual
     ~formula_emptiness_specifier()
     {
       delete sm;
     }
-
-    /// TODO: Do not use will be deprecated...
-    // const ltl::formula *
-    // formula_from_state (const state *) const;
 
     /// Return true if the projection over the formula automata is 
     /// in a weak accepting SCC

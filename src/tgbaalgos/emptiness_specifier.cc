@@ -37,44 +37,16 @@ namespace spot
 {
 
   formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a)
-    : sys_(a) , f_(a), s_(a)
+    : sys_(a) , f_(a)
   {
-    both_formula = false;
     sm = new scc_map(f_);
     sm->build_map();
   }
 
   formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a,
 							    const tgba * f)
-    : sys_(a) , f_(f), s_(a)
+    : sys_(a) , f_(f)
   {
-    both_formula = false;
-    sm = new scc_map(f_);
-    sm->build_map();
-  }
-
-  /// Create the specifier taking the automaton of the system and 
-  /// the automaton of the formula 
-  formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a,
-							    const tgba * f,
-							    const tgba *s)
-    : sys_(a) , f_(f), s_(s)
-  {
-    // FIXME!!
-    assert(f && a && s);
-    const tgba_explicit_formula* bs =
-      dynamic_cast<const tgba_explicit_formula*> (s_);
-    const tgba_explicit_formula* bf =
-      dynamic_cast<const tgba_explicit_formula*> (f_);
-    assert(bf || bs);
-    both_formula = (bf && bs);
-
-    if (bf == 0 && !both_formula)
-      {
-	const tgba* tmp = f_;
-	f_ = s_;
-	s_ = tmp;
-      }
     sm = new scc_map(f_);
     sm->build_map();
   }
@@ -84,16 +56,11 @@ namespace spot
   {
     bool res = false;
 
-    if (!both_formula)
-      {
-	state * sproj = sys_->project_state(s, f_);
-	assert(sproj);
-	unsigned id_scc = sm->scc_of_state(sproj);
-	res = sm->weak_accepting(id_scc);
-	sproj->destroy();
-      }
-    else
-      assert (false);
+    state * sproj = sys_->project_state(s, f_);
+    assert(sproj);
+    unsigned id_scc = sm->scc_of_state(sproj);
+    res = sm->weak_accepting(id_scc);
+    sproj->destroy();
 
     return res;
   }
@@ -104,18 +71,16 @@ namespace spot
   {
     bool res = false;
 
-    if (!both_formula)
-      {
-	state * sproj1 = sys_->project_state(s1, f_);
-	assert(sproj1);
-	unsigned id_scc1 = sm->scc_of_state(sproj1);
-	state * sproj2 = sys_->project_state(s2, f_);
-	assert(sproj2);
-	unsigned id_scc2 = sm->scc_of_state(sproj2);
-	sproj1->destroy();
-	sproj2->destroy();
-	res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
-      }
+    state * sproj1 = sys_->project_state(s1, f_);
+    assert(sproj1);
+    unsigned id_scc1 = sm->scc_of_state(sproj1);
+    state * sproj2 = sys_->project_state(s2, f_);
+    assert(sproj2);
+    unsigned id_scc2 = sm->scc_of_state(sproj2);
+    sproj1->destroy();
+    sproj2->destroy();
+    res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
+
     return res;
   }
 
@@ -124,17 +89,13 @@ namespace spot
   {
     assert(s);
     bool res = false;
-    if (!both_formula)
-      {
-	state * sproj = sys_->project_state(s, f_);
-	assert(sproj);
- 	unsigned id_scc = sm->scc_of_state(sproj);
-	res = sm->terminal_subautomaton(id_scc);
+    
+    state * sproj = sys_->project_state(s, f_);
+    assert(sproj);
+    unsigned id_scc = sm->scc_of_state(sproj);
+    res = sm->terminal_subautomaton(id_scc);    
+    sproj->destroy();
 
-	sproj->destroy();
-      }
-    else
-      assert (false);
     return res;
   }
 
@@ -142,16 +103,13 @@ namespace spot
   formula_emptiness_specifier::is_persistence (const state *s) const
   {
     bool res = false;
-    if (!both_formula)
-      {
-	state * sproj = sys_->project_state(s, f_);
-	assert(sproj);
- 	unsigned id_scc = sm->scc_of_state(sproj);
-	res = sm->weak_subautomaton(id_scc);
-	sproj->destroy();
-      }
-    else
-      assert (false);
+
+    state * sproj = sys_->project_state(s, f_);
+    assert(sproj);
+    unsigned id_scc = sm->scc_of_state(sproj);
+    res = sm->weak_subautomaton(id_scc);
+    sproj->destroy();
+
     return res;
   }
 
@@ -167,17 +125,13 @@ namespace spot
   (const state *s) const
   {
     bool res = false;
-    if (!both_formula)
-      {
-	state * sproj = sys_->project_state(s, f_);
-	assert(sproj);
-	unsigned id_scc = sm->scc_of_state(sproj);
-	res = sm->terminal_accepting(id_scc);
 
-	sproj->destroy();
-      }
-    else
-      assert (false);
+    state * sproj = sys_->project_state(s, f_);
+    assert(sproj);
+    unsigned id_scc = sm->scc_of_state(sproj);
+    res = sm->terminal_accepting(id_scc);
+    sproj->destroy();
+
     return res;
   }
 }
