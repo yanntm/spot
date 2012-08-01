@@ -197,7 +197,7 @@ while (<PAN>) {
 }
 close PAN;
 
-unlink "pan", "pan.exe", "pan.c", "pan.h", "pan.b", "pan.t", "pan.m";
+unlink "pan", "pan.exe", "pan.c", "pan.h", "pan.b", "pan.t", "pan.m", "pan.p";
 
 
 print "acc = @{[sort keys %allaccs]};\n" if $weak;
