@@ -190,7 +190,10 @@ namespace spot
 
 		// Not same SCC
 		if (scc_of_state(*iter) != scc_of_state(stt))
-		  continue;
+		  {
+		    stt->destroy();
+		    continue;
+		  }
 
 		if (sit->current_acceptance_conditions() != all &&
 		    accepting(scc_of_state(stt)))
