@@ -75,89 +75,92 @@ digraph G {
 EOF
 diff stdout expected
 
-run 0 ../tgba_analysis -r1 -m -dta '(Ga -> G b) W c' >stdout
+run 0 ../tgba_analysis -r1 -dta '(Ga -> G b) W c' >stdout
 cat >expected <<EOF
 digraph G {
   0 [label="", style=invis, height=0]
   0 -> 1
-  1 [label="1"]
+  1 [label="(Gb | F!a) W c"]
   1 -> 2 [label="c\n"]
-  1 -> 3 [label="a & !c\n"]
   1 -> 1 [label="!a & !c\n"]
-  2 [label="3"]
+  1 -> 3 [label="!c\n"]
+  2 [label="1"]
   2 -> 2 [label="1\n{Acc[1]}"]
-  3 [label="2"]
-  3 -> 4 [label="a & c\n"]
+  3 [label="F!a & ((Gb | F!a) W c)"]
   3 -> 2 [label="c & !a\n"]
-  3 -> 3 [label="a & !c\n"]
+  3 -> 4 [label="a & c\n"]
   3 -> 1 [label="!a & !c\n"]
-  4 [label="0"]
-  4 -> 4 [label="a\n"]
+  3 -> 3 [label="a | !c\n"]
+  4 [label="F!a"]
   4 -> 2 [label="!a\n"]
+  4 -> 4 [label="a\n"]
 }
 EOF
 diff stdout expected
 
-run 0 ../tgba_analysis -r1 -m -dwa '(Ga -> G b) W c' >stdout
+run 0 ../tgba_analysis -r1 -dwa '(Ga -> G b) W c' >stdout
 cat >expected <<EOF
 digraph G {
   0 [label="", style=invis, height=0]
   0 -> 1
-  1 [label="3"]
-  1 -> 2 [label="b & !c\n"]
-  1 -> 3 [label="a & !c\n"]
+  1 [label="(Gb | F!a) W c"]
   1 -> 1 [label="!a & !c\n"]
-  2 [label="1"]
+  1 -> 2 [label="b & !c\n"]
+  1 -> 3 [label="!c\n"]
+  2 [label="Gb & ((Gb | F!a) W c)"]
   2 -> 2 [label="b\n{Acc[1]}"]
-  3 [label="2"]
+  2 -> 4 [label="b & c\n"]
+  3 [label="F!a & ((Gb | F!a) W c)"]
   3 -> 1 [label="!a & !c\n"]
-  3 -> 3 [label="a\n"]
+  3 -> 3 [label="a | !c\n"]
+  4 [label="Gb"]
+  4 -> 4 [label="b\n{Acc[1]}"]
 }
 EOF
 diff stdout expected
 
-run 0 ../tgba_analysis -r1 -m -dsa '(Ga -> G b) W c' >stdout
+run 0 ../tgba_analysis -r1 -dsa '(Ga -> G b) W c' >stdout
 cat >expected <<EOF
 digraph G {
   0 [label="", style=invis, height=0]
   0 -> 1
-  1 [label="2"]
-  1 -> 2 [label="a & !c\n"]
+  1 [label="(Gb | F!a) W c"]
   1 -> 1 [label="!a & !c\n{Acc[!a]}"]
-  2 [label="1"]
+  1 -> 2 [label="!c\n"]
+  2 [label="F!a & ((Gb | F!a) W c)"]
   2 -> 1 [label="!a & !c\n{Acc[!a]}"]
-  2 -> 2 [label="a\n"]
+  2 -> 2 [label="a | !c\n"]
 }
 EOF
 diff stdout expected
 
-run 0 ../tgba_analysis -m -dta '(GFa R b)' 2>/dev/null >stdout
+run 0 ../tgba_analysis -dta '(GFa R b)' 2>/dev/null >stdout
 cat >expected <<EOF
 EOF
 diff stdout expected
 
-run 0 ../tgba_analysis -m -dwa '(GFa R b)' >stdout
+run 0 ../tgba_analysis -dwa '(GFa R b)' >stdout
 cat >expected <<EOF
 digraph G {
   0 [label="", style=invis, height=0]
   0 -> 1
-  1 [label="1"]
-  1 -> 1 [label="b\n"]
+  1 [label="GFa R b"]
+  1 -> 1 [label="b\n{Acc[1]}"]
 }
 EOF
 diff stdout expected
 
-run 0 ../tgba_analysis -m -dsa '(GFa R b)' >stdout
+run 0 ../tgba_analysis -dsa '(GFa R b)' >stdout
 cat >expected <<EOF
 digraph G {
   0 [label="", style=invis, height=0]
   0 -> 1
-  1 [label="1"]
+  1 [label="GFa R b"]
   1 -> 2 [label="b\n"]
   1 -> 1 [label="b\n{Acc[a]}"]
-  2 [label="2"]
+  2 [label="GFa"]
   2 -> 2 [label="a\n{Acc[a]}"]
-  2 -> 2 [label="!a\n"]
+  2 -> 2 [label="1\n"]
 }
 EOF
 diff stdout expected
