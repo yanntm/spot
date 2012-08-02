@@ -30,15 +30,27 @@
 void
 syntax(char *prog)
 {
-  std::cerr << prog << " formula1" << std::endl;
+  std::cerr << prog << " [-spin-syntax] formula1" << std::endl;
+  std::cerr << "\t-spin-syntax acts like a converter" << std::endl;
   exit(2);
 }
 
 int
 main(int argc, char **argv)
 {
-  if (argc != 2)
+  bool opt_spin = false;
+
+  if (argc > 3 || argc < 2)
     syntax(argv[0]);
+
+  if( argc == 3)
+    {
+      if (!strcmp(argv[1], "-spin-syntax"))
+	opt_spin = true;
+      else
+	syntax(argv[0]);
+      ++argv;			// Nasty trick 
+    }
 
   spot::ltl::parse_error_list p1;
   const spot::ltl::formula* f1 = spot::ltl::parse(argv[1], p1);
@@ -50,7 +62,10 @@ main(int argc, char **argv)
   // again.
 
   std::string f1s = spot::ltl::to_string(f1);
-  std::cout << f1s << std::endl;
+  if (!opt_spin)
+    {
+      std::cout << f1s << std::endl;
+    }
 
   const spot::ltl::formula* f2 = spot::ltl::parse(f1s, p1);
 
@@ -65,7 +80,11 @@ main(int argc, char **argv)
   // It should also map to the same string.
 
   std::string f2s = spot::ltl::to_string(f2);
-  std::cout << f2s << std::endl;
+
+  if (opt_spin)
+    to_spin_string (f2, std::cout, true);
+  else 
+    std::cout << f2s << std::endl;
 
   if (f2s != f1s)
     return 1;
