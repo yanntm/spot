@@ -26,6 +26,7 @@
 #include "ltlparse/public.hh"
 #include "ltlvisit/tostring.hh"
 #include "ltlast/allnodes.hh"
+#include <string.h>
 
 void
 syntax(char *prog)
