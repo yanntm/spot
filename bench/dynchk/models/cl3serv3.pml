@@ -1,5 +1,9 @@
 #define w1 client[0]@wait
 #define s1 client[0]@served
+#define w2 client[1]@wait
+#define s2 client[1]@served
+#define w3 client[2]@wait
+#define s3 client[2]@served
 
 #define C 3
 #define S 3

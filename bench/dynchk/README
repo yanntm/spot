@@ -31,7 +31,8 @@ the measures for dynamic algorithms
 
 * dynchk.cc
 
-    The tool used to perform benchs 
+    The tool used to perform benchs. 
+    It can be used to run a simple bench using ./dynchk model file|formula
 
 * generator.sh
 
