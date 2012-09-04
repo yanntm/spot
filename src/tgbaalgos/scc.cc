@@ -222,7 +222,7 @@ namespace spot
     bool w_hard = true;
     bool s_hard = true;
     bool all_term = true;
-    bool all_weak = true;
+    //bool all_weak = true;
     for (sccit = s.begin(); sccit != s.end(); ++sccit)
       {
 	update_weak(sccit->first);
@@ -247,8 +247,8 @@ namespace spot
 	if (!scc_map_[sccit->first].is_terminal_subautomaton)
 	  all_term = false;
 
-	if (!scc_map_[sccit->first].is_weak_subautomaton)
-	  all_weak = false;
+	// if (!scc_map_[sccit->first].is_weak_subautomaton)
+	//   all_weak = false;
       }
 
     if (scc_map_[state].is_weak_subautomaton &&
