@@ -88,7 +88,6 @@ namespace spot
 	return false;
       }
 
-    bool c_ = false;
     for (; i != l->end(); ++serial)
       {
 	if (debug)
@@ -242,7 +241,6 @@ namespace spot
 		     << std::endl;
 	      }
 	  }
-	c_ = true;
       }
 
     s->destroy();
