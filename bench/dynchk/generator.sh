@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 # This script parse a model to extract the atomic propositions
 # and then generate the associated formula (syntactic)
 
