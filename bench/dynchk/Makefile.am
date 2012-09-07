@@ -107,4 +107,4 @@ models/eeaean2R.tgba: $(srcdir)/models/eeaean2.pml
 	rm eeaean2.pml
 
 
-CLEANFILES = $(nodist_noinst_DATA)
+CLEANFILES = $(nodist_noinst_DATA)   *.dve2C  *.dve.cpp
