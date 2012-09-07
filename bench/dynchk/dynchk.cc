@@ -67,7 +67,7 @@
 #include "kripkeparse/public.hh"
 #include "tgbaalgos/scc_decompose.hh"
 #include "tgbaalgos/simulation.hh"
-
+#include "../iface/dve2/dve2.hh"
 
 void
 syntax(char* prog)
@@ -137,6 +137,10 @@ int main(int argc, char **argv)
   // The index of the formula
   int formula_index = 0;
 
+  // Variables for loading DVE models 
+  bool load_dve_model = false;
+  std::string dve_model_name;
+
   for (;;)
     {
       //  Syntax check
@@ -194,7 +198,6 @@ int main(int argc, char **argv)
       else if (!strncmp(argv[formula_index], "-P", 2))
 	{
 	  tm.start("reading -P's argument");
-
 	  spot::tgba_parse_error_list pel;
 	  spot::tgba_explicit_string* s;
 	  s = spot::tgba_parse(argv[formula_index] + 2,
@@ -206,7 +209,14 @@ int main(int argc, char **argv)
 	  tm.stop("reading -P's argument");
 	  system = s;
 	}
-
+      else if (!strncmp(argv[formula_index], "-B", 2))
+	{
+	  // When using DVE model can't be preload as in case
+	  // of spin..
+	  // Set a flag that indicate it should be load 
+	  load_dve_model = true;
+	  dve_model_name = argv[formula_index] + 2;
+	}
       else
 	{
 	  if (argc == (formula_index + 1))
@@ -215,13 +225,14 @@ int main(int argc, char **argv)
 	}
     }
 
-  // We always need a system
-  if(!system)
+  // We always need a system when it is a promela system
+  if(!system && !load_dve_model)
     syntax(argv[0]);
 
   // and this system must not have acceptance conditions
-  // for dynamic algorithms
-  assert(system->number_of_acceptance_conditions() == 0);
+  // for dynamic algorithms and Promela models
+  if (system)
+    assert(system->number_of_acceptance_conditions() == 0);
 
 
   // To work with files
@@ -332,6 +343,24 @@ int main(int argc, char **argv)
 	      }
 	  }
 	}
+
+
+      /// The system has not yet be build  we have to create it 
+      /// For dve models.
+      ///
+      /// If other formalism  are supported and computed "on-the-fly"
+      /// just follow the same scheme for integrate them into this test_suite
+      {
+	if (load_dve_model)
+	  {
+	    spot::ltl::atomic_prop_set ap;
+	    atomic_prop_collect(f, &ap);
+	    system = spot::load_dve2(dve_model_name,
+				     dict, &ap, 
+				     spot::ltl::constant::true_instance(),
+				     2 /* 0 or 1 or 2 */ , true);
+	  }
+      }
 
       ///
       /// Build the composed system
@@ -513,17 +542,18 @@ int main(int argc, char **argv)
 	  }
       }
 
-
-
-
       // Clean up
       f->destroy();
-      //  if (!a)
       delete product;
       delete a;
+
+      if (load_dve_model)
+	delete system;
+      
     }
 
-  delete system;
+  if (!(load_dve_model))
+    delete system;
   delete dict;
 
   // Check effective clean up

@@ -24,7 +24,7 @@ PML2TGBA = $(PERL) $(srcdir)/pml2tgba.pl
 
 AM_CPPFLAGS = -I$(srcdir)/../../src $(BUDDY_CPPFLAGS)
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
-LDADD = ../../src/libspot.la
+LDADD = ../../src/libspot.la ../../iface/dve2/libspotdve2.la
 
 dist_noinst_SCRIPTS = \
   pml2tgba.pl
