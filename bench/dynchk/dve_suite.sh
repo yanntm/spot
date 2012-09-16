@@ -31,8 +31,6 @@ echo
 if [ "$OUTPUT" = "LATEX" ]; then
 
     # Fetch BA and TGBA algorithms used 
-    # under the hypothesis that algorithms used with Kripke 
-    # and Partial Order Kripke are the sames 
     BA_ALGO=$(grep -v "#"  $resfile | grep ",BA," | sed s/,BA.*//g | sed s/,.*//g | awk '!x[$0]++')
     TGBA_ALGO=$(grep -v "#"  $resfile | grep ",TGBA," | sed s/,BA.*//g | sed s/,.*//g | awk '!x[$0]++')
 
