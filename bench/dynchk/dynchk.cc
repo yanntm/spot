@@ -434,8 +434,8 @@ int main(int argc, char **argv)
 			<< "Product states,"
 			<< "Product trans,"
 			<< "Product depth,"
-			<< "System states," 
-			<< "System trans,"
+			// << "System states," 
+			// << "System trans,"
 			<< "Formula"
 			<< std::endl;
 	      std::cout << algo << ","
@@ -445,8 +445,8 @@ int main(int argc, char **argv)
 			<< ecs->states() << ","
 			<< ecs->transitions() << ","
 			<< ecs->max_depth() << ","
-			<< a_size.states << ","
-			<< a_size.transitions << ","
+			// << a_size.states << ","
+			// << a_size.transitions << ","
 			<< "\"" << input << "\""
 			<< std::endl;
 	    }
@@ -519,8 +519,8 @@ int main(int argc, char **argv)
 			<< "Product states,"
 			<< "Product trans,"
 			<< "Product depth,"
-			<< "System states," 
-			<< "System trans,"
+			// << "System states," 
+			// << "System trans,"
 			<< "Formula"
 			<< std::endl;
 	      std::cout << algo << ","
@@ -530,8 +530,8 @@ int main(int argc, char **argv)
 			<< ecs->states() << ","
 			<< ecs->transitions() << ","
 			<< ecs->max_depth() << ","
-			<< a_size.states << ","
-			<< a_size.transitions << ","
+			// << a_size.states << ","
+			// << a_size.transitions << ","
 			<< "\"" << input << "\""
 			<< std::endl;
 	    }
