@@ -383,8 +383,8 @@ int main(int argc, char **argv)
 	  {
 	    "SE05_dyn",
 	    "SE05",
-	    "CVWY90_dyn",
-	    "CVWY90",
+	    // "CVWY90_dyn",
+	    // "CVWY90",
 	    "Cou99_dyn",
 	    "Cou99",
 	    0
@@ -422,8 +422,8 @@ int main(int argc, char **argv)
 	    // Now output results
 	    //
 	    {
-	      spot::tgba_statistics a_size =
-		spot::stats_reachable(ec->automaton());
+	      // spot::tgba_statistics a_size =
+	      // 	spot::stats_reachable(ec->automaton());
 	      const spot::ec_statistics* ecs =
 		dynamic_cast<const spot::ec_statistics*>(ec);
   
@@ -507,8 +507,8 @@ int main(int argc, char **argv)
 	    // Now output results
 	    //
 	    {
-	      spot::tgba_statistics a_size =
-		spot::stats_reachable(ec->automaton());
+	      // spot::tgba_statistics a_size =
+	      // 	spot::stats_reachable(ec->automaton());
 	      const spot::ec_statistics* ecs =
 		dynamic_cast<const spot::ec_statistics*>(ec);
   

@@ -19,7 +19,7 @@
 //   - IOP.insert_noop
 //   - IOP.set_stand_by
 //   - IOP.check_interrupts
-//   - IOP.heck_noop
+//   - IOP.check_noop
 //   - IOP.w_stand_by
 //   - IOP.wake_up
 //   - IOP.stand_by
