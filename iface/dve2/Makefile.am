@@ -35,6 +35,7 @@ libspotdve2_la_SOURCES = dve2.cc
 noinst_PROGRAMS = dve2check
 
 dve2check_SOURCES = dve2check.cc
+
 dve2check_LDADD = libspotdve2.la
 
 check_SCRIPTS = defs

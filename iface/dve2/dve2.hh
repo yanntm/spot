@@ -57,12 +57,14 @@ namespace spot
   // \a dead an atomic proposition or constant to use for looping on
   //         dead states
   // \a verbose whether to output verbose messages
+  // \a por whether to apply partial order reduction
   kripke* load_dve2(const std::string& file,
 		    bdd_dict* dict,
 		    const ltl::atomic_prop_set* to_observe,
 		    const ltl::formula* dead = ltl::constant::true_instance(),
 		    int compress = 0,
-		    bool verbose = true);
+		    bool verbose = true,
+    		    bool por = false);
 }
 
 #endif // SPOT_IFACE_DVE2_DVE2_HH

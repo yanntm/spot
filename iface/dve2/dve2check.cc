@@ -63,6 +63,8 @@ syntax(char* prog)
             << std::endl
 	    << "  -gp    output the product state-space in dot format"
 	    << std::endl
+	    << "  -po    apply partial order reduction"
+	    << std::endl
             << "  -T     time the different phases of the execution"
 	    << std::endl
             << "  -W     enable WDBA minimization"
@@ -88,6 +90,7 @@ main(int argc, char **argv)
   bool accepting_run = false;
   bool expect_counter_example = false;
   bool wdba = false;
+  bool por = false;
   char *dead = 0;
   int compress_states = 0;
 
@@ -134,6 +137,16 @@ main(int argc, char **argv)
                 case 'K':
                   output = Kripke;
                   break;
+		default:
+		  goto error;
+		}
+	      break;
+	    case 'p':
+	      switch (opt[1])
+		{
+		case 'o':
+		  por = true;
+		  break;
 		default:
 		  goto error;
 		}
@@ -230,11 +243,11 @@ main(int argc, char **argv)
 
   atomic_prop_collect(f, &ap);
 
-
   if (output != DotFormula)
     {
       tm.start("loading dve2");
-      model = spot::load_dve2(argv[1], dict, &ap, deadf, compress_states, true);
+      model = spot::load_dve2(argv[1], dict, &ap, deadf,
+			      compress_states, true, por);
       tm.stop("loading dve2");
 
       if (!model)

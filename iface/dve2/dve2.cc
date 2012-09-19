@@ -72,6 +72,7 @@ namespace spot
       int (*get_state_variable_type_value_count)(int type);
       const char* (*get_state_variable_type_value)(int type, int value);
       int (*get_transition_count)();
+      const int* (*get_transition_read_dependencies)(int t);
     };
 
     ////////////////////////////////////////////////////////////////////////
@@ -80,7 +81,7 @@ namespace spot
     struct dve2_state: public state
     {
       dve2_state(int s, fixed_size_pool* p)
-	: pool(p), size(s), count(1)
+	: pool(p), hash_value(0), size(s), count(1)
       {
       }
 
@@ -213,6 +214,8 @@ namespace spot
       void* pool;
       int* compressed;
       void (*compress)(const int*, size_t, int*, size_t&);
+      transition_info_t* trans_info;
+
 
       ~callback_context()
       {
@@ -222,7 +225,7 @@ namespace spot
       }
     };
 
-    void transition_callback(void* arg, transition_info_t*, int *dst)
+    void transition_callback(void* arg, transition_info_t* i, int *dst)
     {
       callback_context* ctx = static_cast<callback_context*>(arg);
       fixed_size_pool* p = static_cast<fixed_size_pool*>(ctx->pool);
@@ -231,6 +234,8 @@ namespace spot
       memcpy(out->vars, dst, ctx->state_size * sizeof(int));
       out->compute_hash();
       ctx->transitions.push_back(out);
+
+      ctx->trans_info = i;
     }
 
     void transition_callback_compress(void* arg, transition_info_t*, int *dst)
@@ -295,6 +300,109 @@ namespace spot
       const callback_context* cc_;
       callback_context::transitions_t::const_iterator it_;
     };
+
+    ////////////////////////////////////////////////////////////////////////
+    // POR iterator
+
+    struct trans
+    {
+      trans(int i, int* d):
+	id(i),
+	dst(d)
+      {
+      }
+
+      int id;
+      int* dst;
+    };
+
+    struct por_callback
+    {
+      por_callback(unsigned ss):
+	tr(),
+	state_size(ss)
+      {
+      }
+
+      void clear()
+      {
+	for (std::list<trans>::iterator it = tr.begin();
+	     it != tr.end();)
+	{
+	  int* st = it->dst;
+	  ++it;
+	  delete[] st;
+	}
+
+	tr.clear();
+      }
+
+      std::list<trans> tr;
+      unsigned state_size;
+    };
+
+    void fill_trans_callback(void* arg, transition_info_t* info, int* dst)
+    {
+      assert(arg);
+
+      por_callback* pc = static_cast<por_callback*>(arg);
+
+      int* tmp = new int[4 * sizeof(int)];
+      memcpy(tmp, dst, 4 * sizeof(int));
+
+      pc->tr.push_back(trans (info->group, tmp));
+    }
+
+    unsigned my_hash(const int* in, unsigned size)
+    {
+      unsigned res = 0;
+      for (unsigned i = 0; i < size; ++i)
+	res = wang32_hash(res ^ in[i]);
+
+      return res;
+    }
+
+    class one_state_iterator: public kripke_succ_iterator
+    {
+    protected:
+
+    public:
+      one_state_iterator(const dve2_state* state, bdd cond):
+	kripke_succ_iterator(cond),
+	state_(state),
+	done_(false)
+      {
+      }
+
+      virtual
+      void first()
+      {
+	//nothing to do here ;)
+      }
+
+      virtual
+      void next()
+      {
+	done_ = true;
+      }
+
+      virtual
+      bool done() const
+      {
+	return done_;
+      }
+
+      virtual
+      state* current_state() const
+      {
+	return state_->clone();
+      }
+
+    protected:
+      const dve2_state* state_;
+      bool done_;
+    };
+
 
     ////////////////////////////////////////////////////////////////////////
     // PREDICATE EVALUATION
@@ -596,12 +704,145 @@ namespace spot
     ////////////////////////////////////////////////////////////////////////
     // KRIPKE
 
+    struct mycmp
+    {
+      bool operator() (const int* l, const int* r) const
+	{
+	  for (int i = 0; i < 4; ++i)
+	    if (l[i] && !r[i])
+	      return true;
+
+	  return false;
+	}
+    };
+
     class dve2_kripke: public kripke
     {
+    protected:
+      bool internal(const trans& t, int p) const
+      {
+	const int* dep = d_->get_transition_read_dependencies(t.id);
+
+	for (int i = 0; i < d_->get_state_variable_count(); ++i)
+	{
+	  if (dep[i] && i != processes_.at(p))
+	    return false;
+	}
+
+	return true;
+      }
+
+      bool only_one_enabled(const int* s, int p,
+			    const std::list<trans>& tr, trans& t,
+			    const std::set<unsigned>& visited) const
+      {
+	int cpt = 0;
+
+	for (std::list<trans>::const_iterator it = tr.begin();
+	     it != tr.end(); ++it)
+	{
+	  if (visited.find(my_hash(it->dst, state_size_)) == visited.end() &&
+	      s[processes_[p]] != it->dst[processes_[p]])
+	  {
+	    ++cpt;
+	    t = *it;
+	  }
+
+	  if (cpt > 1)
+	    return false;
+	}
+
+	return cpt == 1;
+      }
+
+      bool invisible(const int* start, const int* to) const
+      {
+	assert (to);
+	for (int i = 0; i < state_size_; ++i)
+	{
+	  //labels modified by the transition
+	  if (start[i] != to[i])
+	  {
+	    for (prop_set::const_iterator it = ps_->begin();
+		 it != ps_->end(); ++it)
+	    {
+	      if (it->var_num == i)
+		return false;
+	    }
+	  }
+	}
+
+	return true;
+      }
+
+      bool deterministic(const int* s, unsigned p, const std::list<trans>& tr,
+			 trans& res, const std::set<unsigned>& visited) const
+      {
+	if (only_one_enabled (s, p, tr, res, visited))
+	  {
+	    if (invisible (s, res.dst) && internal (res, p))
+	      return true;
+	  }
+
+	return false;
+      }
+
+      const dve2_state*
+      phase1(const int* in) const
+      {
+	const int* s = in;
+	std::set<unsigned> visited;
+	visited.insert(my_hash(in, state_size_));
+
+	por_callback pc(state_size_);
+
+	std::list<trans> tr;
+	d_->get_successors (0, const_cast<int*> (s),
+			    fill_trans_callback, &pc);
+
+	trans t(-1, 0);
+	for (unsigned p = 0; p < processes_.size(); ++p)
+	{
+	  while (deterministic(s, p, pc.tr, t, visited))
+	  {
+	    if (s != in)
+	      delete[] s;
+
+	    s = new int[state_size_ * sizeof(int)];
+	    memcpy(const_cast<int*>(s),
+		   t.dst, state_size_ * sizeof(int));
+
+	    pc.clear();
+
+	    if (visited.find(my_hash(s, state_size_)) != visited.end())
+	      break;
+	    else
+	    {
+	      visited.insert(my_hash(s, state_size_));
+	      d_->get_successors(0, const_cast<int*>(s),
+				 fill_trans_callback, &pc);
+	    }
+	  }
+
+
+	  if (!pc.tr.empty())
+	    pc.clear();
+	}
+
+	if (s == in)
+	  return 0;
+
+	fixed_size_pool* p = const_cast<fixed_size_pool*>(&statepool_);
+	dve2_state* res = new(p->allocate()) dve2_state(state_size_, 0);
+	memcpy(res->vars, s, state_size_ * sizeof(int));
+
+	return res;
+      }
+
     public:
 
       dve2_kripke(const dve2_interface* d, bdd_dict* dict, const prop_set* ps,
-		  const ltl::formula* dead, int compress)
+		  const ltl::formula* dead, int compress, bool por)
 	: d_(d),
 	  state_size_(d_->get_state_variable_count()),
 	  dict_(dict), ps_(ps),
@@ -615,12 +856,16 @@ namespace spot
 	  compressed_(compress ? new int[state_size_ * 2] : 0),
 	  statepool_(compress ? sizeof(dve2_compressed_state) :
 		     (sizeof(dve2_state) + state_size_ * sizeof(int))),
-	  state_condition_last_state_(0), state_condition_last_cc_(0)
+	  state_condition_last_state_(0), state_condition_last_cc_(0),
+	  por_(por),
+	  even_(true),
+	  cur_process_(0)
       {
 	vname_ = new const char*[state_size_];
 	format_filter_ = new bool[state_size_];
 	for (int i = 0; i < state_size_; ++i)
 	  {
+
 	    vname_[i] = d_->get_state_variable_name(i);
 	    // We don't want to print variables that can take a single
 	    // value (e.g. process with a single state) to shorten the
@@ -659,6 +904,17 @@ namespace spot
 	    dead_prop = bdd_ithvar(var);
 	    alive_prop = bdd_nithvar(var);
 	  }
+
+
+	//Find the different processes for the partial order reduction
+	for (int i = 0; i < d->get_state_variable_type_count (); ++i)
+	{
+	  std::string tmp (d->get_state_variable_type_name (i));
+
+	  //ugly, find a better way to find the number of processes.
+	  if (tmp != "byte" && tmp != "integer")
+	    processes_.push_back (i);
+	}
       }
 
       ~dve2_kripke()
@@ -834,14 +1090,23 @@ namespace spot
 	return vars;
       }
 
-
       virtual
-      dve2_succ_iterator*
+      kripke_succ_iterator*
       succ_iter(const state* local_state,
 		const state*, const tgba*) const
       {
 	// This may also compute successors in state_condition_last_cc
 	bdd scond = compute_state_condition(local_state);
+
+	if (por_ && even_)
+	{
+	  even_ = !even_;
+	  const dve2_state* s = phase1(get_vars(local_state));
+
+	  if (s)
+	    return new one_state_iterator(s, scond);
+	}
+	even_ = !even_;
 
 	callback_context* cc;
 	if (state_condition_last_cc_)
@@ -926,6 +1191,10 @@ namespace spot
       mutable const state* state_condition_last_state_;
       mutable bdd state_condition_last_cond_;
       mutable callback_context* state_condition_last_cc_;
+      bool por_;
+      mutable bool even_;
+      unsigned cur_process_;
+      std::vector<int> processes_;
     };
 
   }
@@ -986,7 +1255,8 @@ namespace spot
 	    const ltl::atomic_prop_set* to_observe,
 	    const ltl::formula* dead,
 	    int compress,
-	    bool verbose)
+	    bool verbose,
+    	    bool por)
   {
     std::string file;
     if (file_arg.find_first_of("/\\") != std::string::npos)
@@ -1054,6 +1324,8 @@ namespace spot
       lt_dlsym(h, "get_state_variable_type_value");
     d->get_transition_count = (int (*)())
       lt_dlsym(h, "get_transition_count");
+    d->get_transition_read_dependencies = (const int* (*) (int))
+      lt_dlsym(h, "get_transition_read_dependencies");
 
     if (!(d->get_initial_state
 	  && d->have_property
@@ -1065,7 +1337,8 @@ namespace spot
 	  && d->get_state_variable_type_name
 	  && d->get_state_variable_type_value_count
 	  && d->get_state_variable_type_value
-	  && d->get_transition_count))
+	  && d->get_transition_count
+	  && d->get_transition_read_dependencies))
       {
 	if (verbose)
 	  std::cerr << "Failed to resolve some symbol while loading `"
@@ -1096,6 +1369,6 @@ namespace spot
 	return 0;
       }
 
-    return new dve2_kripke(d, dict, ps, dead, compress);
+    return new dve2_kripke(d, dict, ps, dead, compress, por);
   }
 }
