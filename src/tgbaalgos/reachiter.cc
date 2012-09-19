@@ -56,11 +56,12 @@ namespace spot
       add_state(i);
     seen[i] = ++n;
     const state* t;
+
     while ((t = next_state()))
       {
 	assert(seen.find(t) != seen.end());
 	int tn = seen[t];
-	tgba_succ_iterator* si = aut_->succ_iter(t);
+	tgba_succ_iterator* si = aut_->succ_iter(t, 0, 0);
 	process_state(t, tn, si);
 	for (si->first(); !si->done(); si->next())
 	  {

@@ -19,6 +19,7 @@
 // 02111-1307, USA.
 
 #include "dve2.hh"
+
 #include "tgbaalgos/dotty.hh"
 #include "ltlenv/defaultenv.hh"
 #include "ltlast/allnodes.hh"
@@ -28,12 +29,15 @@
 #include "tgbaalgos/minimize.hh"
 #include "tgbaalgos/emptiness.hh"
 #include "tgbaalgos/reducerun.hh"
+#include "tgbaalgos/stats.hh"
 #include "tgba/tgbaproduct.hh"
 #include "misc/timer.hh"
 #include "misc/memusage.hh"
 #include <cstring>
 #include "kripke/kripkeexplicit.hh"
 #include "kripke/kripkeprint.hh"
+
+#include "dve2checkpor.hh"
 
 static void
 syntax(char* prog)
@@ -59,17 +63,29 @@ syntax(char* prog)
 	    << std::endl
 	    << "  -gm    output the model state-space in dot format"
 	    << std::endl
-            << "  -gK    output the model state-space in Kripke format"
-            << std::endl
+	    << "  -gK    output the model state-space in Kripke format"
+	    << std::endl
+	    << "  -gr	 output statistics about the product automaton"
+	    << std::endl
+	    << "  -gs	 output statistics about the state space"
+	    << std::endl
 	    << "  -gp    output the product state-space in dot format"
 	    << std::endl
-            << "  -T     time the different phases of the execution"
+	    << "  -tp    partial order using two phase algorithm"
 	    << std::endl
-            << "  -W     enable WDBA minimization"
+	    << "  -tpd   partial order using dynamic two phase algorithm"
 	    << std::endl
-            << "  -z     compress states to handle larger models"
+	    << "  -am	 apply partial order using ample set"
 	    << std::endl
-            << "  -Z     compress states (faster) "
+	    << "  -T     time the different phases of the execution"
+	    << std::endl
+	    << "  -v	 verify the reduced state space"
+	    << std::endl
+	    << "  -W     enable WDBA minimization"
+	    << std::endl
+	    << "  -z     compress states to handle larger models"
+	    << std::endl
+	    << "  -Z     compress states (faster) "
 	    << "assuming all values in [0 .. 2^28-1]"
 	    << std::endl;
 
@@ -83,13 +99,16 @@ main(int argc, char **argv)
 
   bool use_timer = false;
 
-  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke }
+  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke, Stats,
+	 ProdStats }
   output = EmptinessCheck;
   bool accepting_run = false;
   bool expect_counter_example = false;
   bool wdba = false;
+  spot::por::type po = spot::por::NONE;
   char *dead = 0;
   int compress_states = 0;
+  bool verify = false;
 
   const char* echeck_algo = "Cou99";
 
@@ -102,6 +121,17 @@ main(int argc, char **argv)
 	{
 	  switch (*++opt)
 	    {
+	    case 'a':
+	      switch (opt[1])
+	      {
+	      case 't':
+		po = spot::por::TWOPD;
+		break;
+	      default:
+		goto error;
+		break;
+	      }
+	      break;
 	    case 'C':
 	      accepting_run = true;
 	      break;
@@ -128,6 +158,12 @@ main(int argc, char **argv)
 		case 'p':
 		  output = DotProduct;
 		  break;
+		case 'r':
+		  output = ProdStats;
+		  break;
+		case 's':
+		  output = Stats;
+		  break;
 		case 'f':
 		  output = DotFormula;
 		  break;
@@ -138,8 +174,29 @@ main(int argc, char **argv)
 		  goto error;
 		}
 	      break;
+	    case 't':
+	      switch (opt[1])
+		{
+		case 'p':
+		  switch (opt[2])
+		  {
+		  case 'd':
+		    po = spot::por::TWOPD;
+		    break;
+		  default:
+		    po = spot::por::TWOP;
+		    break;
+		  }
+		  break;
+		default:
+		  goto error;
+		}
+	      break;
 	    case 'T':
 	      use_timer = true;
+	      break;
+	    case 'v':
+	      verify = true;
 	      break;
 	    case 'W':
 	      wdba = true;
@@ -230,11 +287,22 @@ main(int argc, char **argv)
 
   atomic_prop_collect(f, &ap);
 
-
   if (output != DotFormula)
     {
       tm.start("loading dve2");
-      model = spot::load_dve2(argv[1], dict, &ap, deadf, compress_states, true);
+
+      if (po != spot::por::NONE && !f->is_X_free())
+      {
+	std::cerr << "ERROR: cannot apply partial order reduction to a formula"
+		  << " containing the next(X) operator." << std::endl;
+	exit(1);
+      }
+
+
+
+      model = spot::load_dve2(argv[1], dict, &ap, deadf,
+			      compress_states, true, po);
+
       tm.stop("loading dve2");
 
       if (!model)
@@ -252,10 +320,17 @@ main(int argc, char **argv)
 	}
       if (output == Kripke)
       {
-        tm.start("kripke output");
+	tm.start("kripke output");
 	spot::kripke_save_reachable_renumbered(std::cout, model);
-        tm.stop("kripke output");
-        goto safe_exit;
+	tm.stop("kripke output");
+	goto safe_exit;
+      }
+      if (output == Stats)
+      {
+	tm.start("stat output");
+	stats_reachable(model).dump (std::cout);
+	tm.stop("stat output");
+	goto safe_exit;
       }
     }
 
@@ -305,7 +380,37 @@ main(int argc, char **argv)
       tm.stop("dotty output");
       goto safe_exit;
     }
+  else if (output == ProdStats)
+  {
+    tm.start("dotty output");
+    stats_reachable(product).dump (std::cout);
+    tm.stop("dotty output");
+    goto safe_exit;
+  }
+  else if (verify)
+  {
+    tm.start("verify state space");
+    spot::kripke* full_model =
+      spot::load_dve2(argv[1], dict, &ap, deadf,
+		      compress_states, true, spot::por::NONE);
+    spot::tgba* full_prop = spot::ltl_to_tgba_fm(f, dict);
+    spot::tgba* full_product = new spot::tgba_product(full_model,
+						      full_prop);
 
+    spot::dve2_checkpor* cs = new spot::dve2_checkpor(product, full_product);
+    cs->run ();
+
+    if (!cs->ok)
+      exit_code = 1;
+    tm.stop("verify state space");
+
+    delete cs;
+    delete full_product;
+    delete full_prop;
+    delete full_model;
+
+    goto safe_exit;
+  }
 
   assert(echeck_inst);
 

@@ -24,23 +24,38 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 dve2dir = $(pkgincludedir)/iface/dve2
 
-dve2_HEADERS = dve2.hh
+dve2_HEADERS = dve2.hh \
+dve2callback.hh \
+dve2checkpor.hh \
+dve2kripke.hh \
+dve2state.hh \
+dve2succiter.hh \
+dve2twophase.hh
 
 lib_LTLIBRARIES = libspotdve2.la
 libspotdve2_la_LIBADD = \
   $(top_builddir)/src/libspot.la \
   $(top_builddir)/ltdl/libltdlc.la
-libspotdve2_la_SOURCES = dve2.cc
+
+libspotdve2_la_SOURCES = dve2.cc \
+dve2callback.cc \
+dve2checkpor.cc \
+dve2kripke.cc \
+dve2state.cc \
+dve2succiter.cc \
+dve2twophase.cc
 
 noinst_PROGRAMS = dve2check
 
 dve2check_SOURCES = dve2check.cc
+
 dve2check_LDADD = libspotdve2.la
 
 check_SCRIPTS = defs
 
-TESTS = dve2check.test finite.test kripke.test
-EXTRA_DIST = $(TESTS) beem-peterson.4.dve finite.dve
+TESTS = twophase.test dve2check.test finite.test kripke.test
+EXTRA_DIST = $(TESTS) beem-peterson.4.dve finite.dve \
+leader-election.dve leader-election.form  leader-election-tp.ref
 
 distclean-local:
 	rm -rf $(TESTS:.test=.dir)

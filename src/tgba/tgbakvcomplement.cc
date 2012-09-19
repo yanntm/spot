@@ -628,8 +628,8 @@ namespace spot
 
   tgba_succ_iterator*
   tgba_kv_complement::succ_iter(const state* local_state,
-                             const state*,
-                             const tgba*) const
+				const state*,
+				const tgba*) const
   {
     const state_kv_complement* state =
       down_cast<const state_kv_complement*>(local_state);

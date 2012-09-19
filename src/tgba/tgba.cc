@@ -65,6 +65,7 @@ namespace spot
 	  last_support_variables_input_->destroy();
 	last_support_variables_input_ = state->clone();
       }
+
     return last_support_variables_output_;
   }
 

@@ -44,8 +44,8 @@ namespace spot
   couvreur99_check::couvreur99_check(const tgba* a,
 				     option_map o,
 				     const numbered_state_heap_factory* nshf)
-    : emptiness_check(a, o),
-      removed_components(0)
+  : emptiness_check(a, o),
+  removed_components(0)
   {
     poprem_ = o.get("poprem", 1);
     ecs_ = new couvreur99_check_status(a, nshf);
@@ -111,7 +111,7 @@ namespace spot
     assert(spi.first == from);
     assert(*spi.second != -1);
     *spi.second = -1;
-    tgba_succ_iterator* i = ecs_->aut->succ_iter(from);
+    tgba_succ_iterator* i = ecs_->aut->succ_iter(from, 0, 0);
 
     for (;;)
       {
@@ -134,7 +134,7 @@ namespace spot
 	    if (*spi.second != -1)
 	      {
 		*spi.second = -1;
-		to_remove.push(ecs_->aut->succ_iter(spi.first));
+		to_remove.push(ecs_->aut->succ_iter(spi.first, 0, 0));
 	      }
 	  }
 	delete i;
@@ -170,7 +170,7 @@ namespace spot
       ecs_->h->insert(init, 1);
       ecs_->root.push(1);
       arc.push(bddfalse);
-      tgba_succ_iterator* iter = ecs_->aut->succ_iter(init);
+      tgba_succ_iterator* iter = ecs_->aut->succ_iter(init, 0, 0);
       iter->first();
       todo.push(pair_state_iter(init, iter));
       inc_depth();
@@ -240,7 +240,7 @@ namespace spot
 	    ecs_->h->insert(dest, ++num);
 	    ecs_->root.push(num);
 	    arc.push(acc);
-	    tgba_succ_iterator* iter = ecs_->aut->succ_iter(dest);
+	    tgba_succ_iterator* iter = ecs_->aut->succ_iter(dest, 0, 0);
 	    iter->first();
 	    todo.push(pair_state_iter(dest, iter));
 	    inc_depth();

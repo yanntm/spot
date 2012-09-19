@@ -105,6 +105,9 @@ namespace spot
     /// \a global_state is not adopted by \c succ_iter.
     /// \param global_automaton In a product, the global
     /// product automaton.  Otherwise, 0.
+    /// \param po is an optional structure that can be filled by the
+    /// emptiness check in order to apply partial order reduction.
+    /// Otherwise, 0.
     virtual tgba_succ_iterator*
     succ_iter(const state* local_state,
 	      const state* global_state = 0,
