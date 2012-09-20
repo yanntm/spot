@@ -77,10 +77,12 @@ syntax(char* prog)
   if (slash && (strncmp(slash + 1, "lt-", 3) == 0))
     prog = slash + 4;
 
-  std::cerr << "Usage: "<< prog << "[OPTIONS...] -Pfile [formula|file]"
+  std::cerr << "Usage: "<< prog << "[OPTIONS...] [-P|-B]file [formula|file]"
 	    << std::endl
 	    << "  -Pfile  multiply the formula automaton with the TGBA read"
 	    << " from `file'\n"
+	    << "  -Bfile read a dve file"
+	    << std::endl
 	    << "  -r1   reduce formula using basic rewriting" << std::endl
 	    << "  -r2   reduce formula using class of eventuality and "
 	    << "universality" << std::endl
@@ -94,12 +96,67 @@ syntax(char* prog)
 	    << std::endl
 
 	    << "Automaton reduction:" << std::endl
+	    << "  -dT  decompose the automaton into terminal"
+	    << std::endl
+
+	    << "Automaton reduction:" << std::endl
 	    << "  -m  minimise the automaton"
 	    << std::endl;
   exit(2);
 }
 
+///
+///
+///
+void print_results (const char* algo, std::string result, 
+		    std::string type, int ticks,
+		    int pstates, int ptrans,
+		    int pdepth, std::string input)
+{
+  std::cout << "# Algo,"
+	    << "Result,"
+	    << "Type,"
+	    << "Ticks,"
+	    << "Product states,"
+	    << "Product trans,"
+	    << "Product depth,"
+	    << "Formula"
+	    << std::endl;
 
+  std::cout << algo    << ","
+	    << result  << ","
+	    << type    << ","
+	    << ticks   << "," 
+	    << pstates << ","
+	    << ptrans  << ","
+	    << pdepth  << ","
+	    << "\"" << input << "\""
+	    << std::endl;
+};
+
+
+// Algos that will be used using a single B.A.
+const char *dyn_degen [] =
+  {
+    "SE05_dyn",
+    "SE05",
+    // "CVWY90_dyn",
+    // "CVWY90",
+    "Cou99_dyn",
+    "Cou99",
+    0
+  };
+
+// Algos that will be used using a TGBA
+const char *dyn_gen [] =
+  {
+    "Cou99_dyn",
+    "Cou99",
+    0
+  };
+
+/// This program perform emptiness over BA and TGBA 
+/// using previous algorithms
 int main(int argc, char **argv)
 {
   //  The environement for LTL
@@ -133,6 +190,12 @@ int main(int argc, char **argv)
 
   // Should whether the formula be reduced 
   bool simpltl = false;
+
+  // Option for the decomposition
+  bool opt_dT = false;
+  bool opt_dW = false;
+  bool opt_dS = false;
+  spot::scc_decompose *sd = 0;
 
   // The index of the formula
   int formula_index = 0;
@@ -194,6 +257,24 @@ int main(int argc, char **argv)
 	  redopt.synt_impl = true;
 	  redopt.containment_checks = true;
 	  redopt.containment_checks_stronger = true;
+	}
+      else if (!strcmp(argv[formula_index], "-dT"))
+	{
+	  assert (!opt_dW);
+	  assert (!opt_dS);
+	  opt_dT = true;
+	}
+      else if (!strcmp(argv[formula_index], "-dW"))
+	{
+	  assert (!opt_dT);
+	  assert (!opt_dS);
+	  opt_dW = true;
+	}
+      else if (!strcmp(argv[formula_index], "-dS"))
+	{
+	  assert (!opt_dW);
+	  assert (!opt_dT);
+	  opt_dS = true;
 	}
       else if (!strncmp(argv[formula_index], "-P", 2))
 	{
@@ -344,6 +425,108 @@ int main(int argc, char **argv)
 	  }
 	}
 
+      /// Perform the terminal decomposition 
+      /// 
+      const spot::tgba* term = a;
+      const spot::tgba* weak = a;
+      const spot::tgba* strong = a;
+      if (opt_dT)
+	{
+	  sd = new spot::scc_decompose (a, true);
+      	  const spot::tgba* term_a = sd->terminal_automaton();
+      	  if (term_a)
+      	    {
+      	      a = term_a;
+      	    }
+	  else
+	    {
+	      // Output in standard way then exit
+	      // suppose that degeneralisation doesn't introduce 
+	      // weak SCC
+	      int i = 0;
+	      while (*(dyn_degen+i))
+	  	{
+	  	  const char* algo = dyn_degen[i];
+	  	  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
+	  	  ++i;
+	  	}
+	      i= 0;
+	      while (*(dyn_gen+i))
+	      	{
+	      	  const char* algo = dyn_gen[i];
+	      	  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
+	      	  ++i;
+	      	}
+	      goto finalize;
+	    }
+      	  assert (a);
+	}
+
+      if (opt_dW)
+	{
+	  sd = new spot::scc_decompose (a, true);
+      	  const spot::tgba* weak_a = sd->weak_automaton();
+      	  if (weak_a)
+      	    {
+      	      a = weak_a;
+      	    }
+	  else
+	    {
+	      // Output in standard way then exit
+	      // suppose that degeneralisation doesn't introduce 
+	      // weak SCC
+	      int i = 0;
+	      while (*(dyn_degen+i))
+		{
+		  const char* algo = dyn_degen[i];
+		  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
+		  ++i;
+		}
+	      i= 0;
+	      while (*(dyn_gen+i))
+		{
+		  const char* algo = dyn_gen[i];
+		  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
+		  ++i;
+		}
+	      goto finalize;
+	    }
+      	  assert (a);
+	}
+
+      if (opt_dS)
+	{
+	  sd = new spot::scc_decompose (a, true);
+      	  const spot::tgba* strong_a = sd->strong_automaton();
+      	  if (strong_a)
+      	    {
+      	      a = strong_a;
+      	    }
+	  else
+	    {
+	      // Output in standard way then exit
+	      // suppose that degeneralisation doesn't introduce 
+	      // weak SCC
+	      int i = 0;
+	      while (*(dyn_degen+i))
+	  	{
+	  	  const char* algo = dyn_degen[i];
+	  	  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
+	  	  ++i;
+	  	}
+	      i= 0;
+	      while (*(dyn_gen+i))
+	      	{
+	      	  const char* algo = dyn_gen[i];
+	      	  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
+	      	  ++i;
+	      	}
+	      goto finalize;
+	    }
+      	  assert (a);
+	}
+
+
 
       /// The system has not yet be build  we have to create it 
       /// For dve models.
@@ -377,18 +560,6 @@ int main(int argc, char **argv)
 
 	// Perform the product
 	product = new spot::tgba_product(system, degen);
-
-	// Algos that will be used using a single B.A.
-	const char *dyn_degen [] =
-	  {
-	    "SE05_dyn",
-	    "SE05",
-	    // "CVWY90_dyn",
-	    // "CVWY90",
-	    "Cou99_dyn",
-	    "Cou99",
-	    0
-	  };
 
 	// Walk all emptiness checks
 	int i = 0;
@@ -467,14 +638,6 @@ int main(int argc, char **argv)
 	// Perform the product
 	product = new spot::tgba_product(system, a);
 
-	// Algos that will be used using a TGBA
-	const char *dyn_gen [] =
-	  {
-	    "Cou99_dyn",
-	    "Cou99",
-	    0
-	  };
-
 	// Walk all emptiness checks
 	int i = 0;
 	while (*(dyn_gen+i))
@@ -542,9 +705,21 @@ int main(int argc, char **argv)
 	  }
       }
 
+      // refix decomposition
+      if (opt_dT)
+	a = term;
+      if (opt_dW)
+	a = weak;
+      if (opt_dS)
+	a = strong;
+
+    finalize:
       // Clean up
       f->destroy();
       delete product;
+      delete sd;
+
+      // Delete formula automaton
       delete a;
 
       if (load_dve_model)
