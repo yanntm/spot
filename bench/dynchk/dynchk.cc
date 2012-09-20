@@ -142,8 +142,8 @@ const char *dyn_degen [] =
     "SE05",
     // "CVWY90_dyn",
     // "CVWY90",
-    "Cou99_dyn",
-    "Cou99",
+    // "Cou99_dyn",
+    // "Cou99",
     0
   };
 
@@ -716,15 +716,14 @@ int main(int argc, char **argv)
     finalize:
       // Clean up
       f->destroy();
-      delete product;
       delete sd;
 
       // Delete formula automaton
       delete a;
-
-      if (load_dve_model)
-	delete system;
-      
+      delete system;
+      system = 0;
+      delete product;
+      product = 0;
     }
 
   if (!(load_dve_model))

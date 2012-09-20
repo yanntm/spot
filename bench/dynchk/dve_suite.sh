@@ -4,6 +4,11 @@
 # emptiness checks defined in dynchk.
 # The output is a LaTeX one which analyses the whole 
 # set of results.
+
+# WARNING ALL FILES SHOULD AT LEAST CONTAINS ONE VIOLATED 
+# PROPERTY AND ONE NOT VIOLATED !!!
+# FIXME!!!!!!!!!!!!!!
+
 . ./defs
 
 FILE=/tmp/mytest
