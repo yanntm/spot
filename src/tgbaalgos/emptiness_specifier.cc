@@ -57,11 +57,11 @@ namespace spot
   {
     bool res = false;
 
-    state * sproj = sys_->project_state(s, f_);
+    state * sproj =  (static_cast<const spot::state_product*> (s))->right();
     assert(sproj);
     unsigned id_scc = sm->scc_of_state(sproj);
     res = sm->weak_accepting(id_scc);
-    sproj->destroy();
+    //sproj->destroy();
 
     return res;
   }
