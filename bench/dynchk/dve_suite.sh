@@ -19,10 +19,18 @@ for file in $(ls models/*dve_suite); do
   echo processing $file
   MODEL=$(basename $file .dve_suite)
 
-  # Processing for the dve file 
-  ./dynchk -r7 -Bmodels/"$MODEL" $file > "$resfile""-$MODEL"
-  cat "$resfile""-$MODEL" >> "$resfile"
-
+  # Processing for the dve file
+  if [ "$1" = "--decompose-all" ]; then 
+      ./dynchk -dS -r7 -Bmodels/"$MODEL" $file > "$resfile""-$MODEL"-DS
+      ./dynchk -dW -r7 -Bmodels/"$MODEL" $file > "$resfile""-$MODEL"-DW
+      ./dynchk -dT -r7 -Bmodels/"$MODEL" $file > "$resfile""-$MODEL"-DT
+      sh mergedecomp.sh "$resfile""-$MODEL"-DS "$resfile""-$MODEL"-DW \
+	  "$resfile""-$MODEL"-DT > "$resfile""-$MODEL"
+      cat "$resfile""-$MODEL" >> "$resfile"
+  else
+      ./dynchk -r7 -Bmodels/"$MODEL" $file > "$resfile""-$MODEL"
+      cat "$resfile""-$MODEL" >> "$resfile"
+  fi;
 done;
 echo 
 echo
