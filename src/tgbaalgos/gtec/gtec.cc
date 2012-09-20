@@ -149,7 +149,8 @@ namespace spot
   void
   couvreur99_check::stats_formula (const spot::state *s)
   {
-    if (es_->is_guarantee(s))
+    strength str = es_->typeof_subautomaton(s);
+    if (str == TerminalSubaut)
       inc_reachability();
     else
       inc_ndfs();
@@ -158,7 +159,8 @@ namespace spot
   void
   couvreur99_check::stats_commut (const spot::state *s)
   {
-    if (es_->is_guarantee(s))
+    strength str = es_->typeof_subautomaton(s);
+    if (str == TerminalSubaut)
       commut_algo (REACHABILITY);
     else
       commut_algo(NDFS);

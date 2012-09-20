@@ -79,9 +79,10 @@ namespace spot
       void process_state(const spot::state* s, int, spot:: tgba_succ_iterator*)
       {
 	++sum;
-	if (fes.is_guarantee(s))
+	strength str = fes.typeof_subautomaton(s);
+	if (str == TerminalSubaut)
 	  ++scc_terminal;
-	else if (fes.is_persistence(s))
+	else if (str == WeakSubaut)
 	  ++ scc_weak;
 	else
 	  ++ scc_strong;
@@ -102,15 +103,17 @@ namespace spot
 			const spot::tgba_succ_iterator*)
       {
 	++tsum;
-	if (fes.is_guarantee(s_src) && fes.is_guarantee(succ_src))
+	strength strs_src = fes.typeof_subautomaton(s_src);
+	strength strsucc_src = fes.typeof_subautomaton(succ_src);
+	if ((strs_src == TerminalSubaut) && (strsucc_src == TerminalSubaut))
 	  ++ttt;
-	else if (fes.is_persistence(s_src) && fes.is_guarantee(succ_src))
+	else if ((strs_src == WeakSubaut) && (strsucc_src == TerminalSubaut))
 	  ++twt;
-	else if (fes.is_persistence(s_src) && fes.is_persistence(succ_src))
+	else if ((strs_src == WeakSubaut) && (strsucc_src == WeakSubaut))
 	  ++tww;
-	else if (fes.is_guarantee(succ_src))
+	else if ((strsucc_src == TerminalSubaut))
 	      ++tgt;
-	else if (fes.is_persistence(succ_src))
+	else if ((strsucc_src == WeakSubaut))
 	  ++tgw;
 	else
 	  ++tgg;

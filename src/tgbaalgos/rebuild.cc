@@ -197,14 +197,16 @@ namespace spot
     spot::formula_emptiness_specifier *fes  =
       new spot::formula_emptiness_specifier (i1.org);
 
+    strength stri1 = fes->typeof_subautomaton(i1.state_src);
+    strength stri2 = fes->typeof_subautomaton(i2.state_src);
+
     bool _res = false;
-    if (fes->is_guarantee (i1.state_src) &&
-	!fes->is_guarantee (i2.state_src))
+    if ((stri1 == TerminalSubaut) && (stri2 != TerminalSubaut))
       _res = true;
 
-    if (fes->is_persistence (i1.state_src) &&
-    	!fes->is_persistence (i2.state_src) &&
-    	!fes->is_guarantee (i2.state_src))
+    if ((stri1 == WeakSubaut) &&
+	(stri2 != WeakSubaut)&&
+	(stri2 != TerminalSubaut))
       _res = true;
 
      delete fes;

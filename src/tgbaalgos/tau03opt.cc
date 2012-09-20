@@ -128,8 +128,9 @@ namespace spot
 	// is chosen regarding only the first state of the automata
 	if (is_static)
 	  {
+	    strength str = es_->typeof_subautomaton(s0);
 	    // Trap only guarantee properties 
-	    if (es_->is_guarantee(s0))
+	    if (str == TerminalSubaut)
 	      {
 		inc_reachability();
 		commut_algo(REACHABILITY);
@@ -142,7 +143,7 @@ namespace spot
 		  return 0;
 	      }
 	    // Trap only persistence properties 
-	    else if  (es_->is_persistence(s0))
+	    else if  (str == WeakSubaut)
 	      {
 		inc_dfs();
 		commut_algo(DFS);
@@ -267,9 +268,10 @@ namespace spot
       void
       stats_formula (const spot::state *s)
       {
-	if (es_->is_guarantee(s))
+	strength str = es_->typeof_subautomaton(s);
+	if (str == TerminalSubaut)
 	  inc_reachability();
-	else if (es_->is_persistence(s))
+	else if (str == WeakSubaut)
 	  inc_dfs();
 	else
 	  inc_ndfs();
@@ -278,9 +280,10 @@ namespace spot
       void
       stats_commut (const spot::state *s)
       {
-	if (es_->is_guarantee(s))
+	strength str = es_->typeof_subautomaton(s);
+	if (str == TerminalSubaut)
 	  commut_algo (REACHABILITY);
-	else if (es_->is_persistence(s))
+	else if (str == WeakSubaut)
 	  commut_algo (DFS);
 	else
 	  commut_algo(NDFS);
@@ -309,9 +312,9 @@ namespace spot
                 // Go down the edge (f.s, <label, acc>, s_prime)
 		// Here it's the previous algorithm 
                 typename heap::color_ref c_prime = h.get_color_ref(s_prime);
-
+		strength str = es_->typeof_subautomaton(f.s);
 		// For the sake of dynamism
-		if (is_dynamic && !es_->is_guarantee(f.s))
+		if (is_dynamic && !(str == TerminalSubaut))
 		  {
 		    s_prime->destroy();
 		    return false;
@@ -396,7 +399,8 @@ inc_reachability();
 		// for dynamism 
 		// 
 		// In the case of static algorithms this is not performed
-		if (is_dynamic && es_->is_guarantee(f.s))
+		strength str = es_->typeof_subautomaton(f.s);
+		if (is_dynamic && (str == TerminalSubaut))
 		  {
 		    if (static_guarantee ())
 		      {
@@ -414,8 +418,9 @@ inc_reachability();
 		      }
 		  }
 
+		str = es_->typeof_subautomaton(f.s);
 		// For the sake of dynamism
-		if (is_dynamic && !es_->is_persistence(f.s))
+		if (is_dynamic && !(str == WeakSubaut))
 		  {
 		    s_prime->destroy();
 		    return false;
@@ -558,7 +563,8 @@ inc_reachability();
 		    stats_commut (f.s);
 
 		    // Trap all states that represents guarantee formulas
-		    if (es_->is_guarantee(f.s))
+		    strength str = es_->typeof_subautomaton(f.s);
+		    if (str == TerminalSubaut)
 		      {
 			if (static_guarantee ())
 			  {
@@ -582,22 +588,25 @@ inc_reachability();
 		    // trapped by the static_persistence algorithm in case 
 		    // of dynamism
 		    else
-		      if (es_->is_persistence(f.s))
 		      {
-			if (static_persistence ())
+			str = es_->typeof_subautomaton(f.s);
+			if (str == WeakSubaut)
 			  {
-			    s_prime->destroy();
-			    return true;
-			  }
-			else
-			  {
-			    if (st_blue.empty())
+			    if (static_persistence ())
 			      {
-				//s_prime->destroy();
-				return false;
+				s_prime->destroy();
+				return true;
 			      }
-			    inc_me = false;
-			    continue;
+			    else
+			      {
+				if (st_blue.empty())
+				  {
+				    //s_prime->destroy();
+				    return false;
+				  }
+				inc_me = false;
+				continue;
+			      }
 			  }
 		      }
 		  }
@@ -647,8 +656,9 @@ inc_reachability();
 			//is_dynamic = false;
                         return true;
                       }
+		    strength str = es_->typeof_subautomaton(f.s);
                     if (is_dynamic && c_prime.get_color() == CYAN
-			&& !es_->is_persistence(f.s)
+			&& !(str == WeakSubaut)
 			&& all_acc == ((current_weight - c_prime.get_weight())
 				       | c.get_acc()
 				       | acc

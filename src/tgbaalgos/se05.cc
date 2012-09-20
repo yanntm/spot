@@ -87,9 +87,10 @@ namespace spot
       void
       stats_formula (const spot::state *s)
       {
-	if (es_->is_guarantee(s))
+	strength str = es_->typeof_subautomaton(s);
+	if (str == TerminalSubaut)
 	  inc_reachability();
-	else if (es_->is_persistence(s))
+	else if (str == WeakSubaut)
 	  inc_dfs();
 	else
 	  inc_ndfs();
@@ -98,9 +99,10 @@ namespace spot
       void
       stats_commut (const spot::state *s)
       {
-	if (es_->is_guarantee(s))
+	strength str = es_->typeof_subautomaton(s);
+	if (str == TerminalSubaut)
 	  commut_algo (REACHABILITY);
-	else if (es_->is_persistence(s))
+	else if (str == WeakSubaut)
 	  commut_algo (DFS);
 	else
 	  commut_algo(NDFS);
@@ -126,8 +128,9 @@ namespace spot
 	    // is chosen regarding only the first state of the automata
 	    if (is_static)
 	      {
+		strength str = es_->typeof_subautomaton(s0);
 		// Trap only guarantee properties 
-		if (es_->is_guarantee(s0))
+		if (str == TerminalSubaut)
 		  {
 		    inc_reachability();
 		    //commut_algo(REACHABILITY);
@@ -141,7 +144,7 @@ namespace spot
 		      return 0;
 		  }
 		// Trap only persistence properties 
-		else if  (es_->is_persistence(s0))
+		else if  (str == WeakSubaut)
 		  {
 		    inc_dfs();
 		    //commut_algo(DFS);
@@ -285,8 +288,9 @@ namespace spot
                 // Go down the edge (f.s, <label, acc>, s_prime)
                 typename heap::color_ref c = h.get_color_ref(s_prime);
 
+		strength str = es_->typeof_subautomaton(f.s);
 		// For the sake of dynamism
-		if (is_dynamic && !es_->is_guarantee(f.s))
+		  if (is_dynamic && !(str == TerminalSubaut))
 		  {
 		    s_prime->destroy();
 		    return false;
@@ -327,8 +331,9 @@ namespace spot
 	      }
             else
               {
+		strength str = es_->typeof_subautomaton(f.s);
 		// This method do not own this state
-		if ((is_dynamic && !es_->is_guarantee(f.s)))
+		if (is_dynamic && !(str == TerminalSubaut))
 		  return false;
 
                 typename heap::color_ref c = h.get_color_ref(f.s);
@@ -377,7 +382,8 @@ namespace spot
 		    s_prime->destroy();
 		    return true;
 		  }
-		if (is_dynamic && es_->is_guarantee(f.s))
+		strength str = es_->typeof_subautomaton(f.s);
+		if (is_dynamic && (str == TerminalSubaut))
 		  {
 		    if (static_guarantee ())
 		      {
@@ -396,8 +402,9 @@ namespace spot
 		      }
 		  }
 
+		str = es_->typeof_subautomaton(f.s);
 		// For the sake of dynamism
-		if (is_dynamic && !es_->is_persistence(f.s))
+		if (is_dynamic && !(str == WeakSubaut))
 		  {
 		    s_prime->destroy();
 		    return false;
@@ -455,9 +462,10 @@ namespace spot
 	      }
             else
               {
+		strength str = es_->typeof_subautomaton(st_blue.front().s);
                 trace << "  All the successors have been visited" << std::endl;
 		// Unpop further it not the responsibility of this method
-		if ((is_dynamic && !es_->is_persistence(st_blue.front().s)))
+		if ((is_dynamic && !(str == WeakSubaut)))
 		  return false;
 
                 stack_item f_dest(f);
@@ -512,9 +520,9 @@ namespace spot
 			s_prime->destroy();
 			return true;
 		      }
-
+		    strength str = es_->typeof_subautomaton (f.s);
 		    // Trap all states that represents guarantee formulas
-		    if (es_->is_guarantee(f.s))
+		    if (str == TerminalSubaut)
 		      {
 			if (static_guarantee ())
 			  {
@@ -537,7 +545,7 @@ namespace spot
 		    // Persistence formula becoming guarantee formula are 
 		    // trapped by the static_persistence algorithm in case 
 		    // of dynamism
-		    else if (es_->is_persistence(f.s))
+		    else if (str == WeakSubaut)
 		      {
 			if (static_persistence ())
 			  {
@@ -603,8 +611,9 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, s_prime, label, acc);
 
+		    strength str = es_->typeof_subautomaton(f.s);
 		    if (is_dynamic &&
-			es_->is_persistence(f.s) &&
+			(str == WeakSubaut) &&
 			!es_->same_weak_acc (f.s, s_prime))
 		      {
 			trace << "DFS RED avoid by dynamism\n";
@@ -646,8 +655,9 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
 
+		    strength str = es_->typeof_subautomaton(st_blue.front().s);
 		    if (is_dynamic &&
-			es_->is_persistence(st_blue.front().s) &&
+			(str == WeakSubaut) &&
 			!es_->same_weak_acc (st_blue.front().s, f_dest.s))
 		      {
 			trace << "DFS RED avoid by dynamism\n";

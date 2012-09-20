@@ -96,9 +96,10 @@ namespace spot
       void
       stats_formula (const spot::state *s)
       {
-	if (es_->is_guarantee(s))
+	strength str = es_->typeof_subautomaton (s);
+	if (str == TerminalSubaut)
 	  inc_reachability();
-	else if (es_->is_persistence(s))
+	else if (str == WeakSubaut)
 	  inc_dfs();
 	else
 	  inc_ndfs();
@@ -107,9 +108,10 @@ namespace spot
       void
       stats_commut (const spot::state *s)
       {
-	if (es_->is_guarantee(s))
+	strength str = es_->typeof_subautomaton (s);
+	if (str == TerminalSubaut)
 	  commut_algo (REACHABILITY);
-	else if (es_->is_persistence(s))
+	else if (str == WeakSubaut)
 	  commut_algo (DFS);
 	else
 	  commut_algo(NDFS);

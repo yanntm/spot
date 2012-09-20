@@ -1015,9 +1015,10 @@ main(int argc, char** argv)
 	{
 	  spot::formula_emptiness_specifier *fes  =
 	    new spot::formula_emptiness_specifier (formula);
-	  if (fes->is_guarantee(formula->get_init_state()))
+	  spot::strength str = fes->typeof_subautomaton(formula->get_init_state());
+	  if (str == spot::TerminalSubaut)
 	    ++terminal_count;
-	  else if (fes->is_persistence(formula->get_init_state()))
+	  else if (str == spot::WeakSubaut)
 	    ++weak_count;
 	  else
 	    ++general_count;

@@ -24,6 +24,7 @@
 #include "tgbaalgos/emptiness_specifier.hh"
 #include "tgba/tgbatba.hh"
 #include "ltlast/constant.hh"
+#include "tgba/tgbaproduct.hh"
 
 //#define SPECTRACE
 #include <iostream>
@@ -71,53 +72,70 @@ namespace spot
   {
     bool res = false;
 
-    state * sproj1 = sys_->project_state(s1, f_);
+    //state * sproj1 = sys_->project_state(s1, f_);
+    state * sproj1 = (static_cast<const spot::state_product*> (s1))->right(); 
     assert(sproj1);
     unsigned id_scc1 = sm->scc_of_state(sproj1);
-    state * sproj2 = sys_->project_state(s2, f_);
+    //state * sproj2 = sys_->project_state(s2, f_);
+    state * sproj2 = (static_cast<const spot::state_product*> (s2))->right();
     assert(sproj2);
     unsigned id_scc2 = sm->scc_of_state(sproj2);
-    sproj1->destroy();
-    sproj2->destroy();
+    // sproj1->destroy();
+    // sproj2->destroy();
     res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
 
     return res;
   }
 
-  bool
-  formula_emptiness_specifier::is_guarantee (const state * s) const
-  {
-    assert(s);
-    bool res = false;
+  // bool
+  // formula_emptiness_specifier::is_guarantee (const state * s) const
+  // {
+  //   assert(s);
+  //   bool res = false;
 
-    state * sproj = sys_->project_state(s, f_);
-    assert(sproj);
+  //   state * sproj = sys_->project_state(s, f_);
+  //   assert(sproj);
+  //   unsigned id_scc = sm->scc_of_state(sproj);
+  //   res = sm->terminal_subautomaton(id_scc);
+  //   sproj->destroy();
+
+  //   return res;
+  // }
+
+  // bool
+  // formula_emptiness_specifier::is_persistence (const state *s) const
+  // {
+  //   bool res = false;
+
+  //   state * sproj = sys_->project_state(s, f_);
+  //   assert(sproj);
+  //   unsigned id_scc = sm->scc_of_state(sproj);
+  //   res = sm->weak_subautomaton(id_scc);
+  //   sproj->destroy();
+
+  //   return res;
+  // }
+
+  // bool
+  // formula_emptiness_specifier::is_general (const state *s) const
+  // {
+  //   assert(s);
+  //   strength str = typeof_subautomaton(s);
+  //   return !is_guarantee(s) &&  !is_persistence(s);
+  // }
+
+  strength 
+  formula_emptiness_specifier::typeof_subautomaton
+  (const state *s) const
+  {
+    state * sproj = (static_cast<const spot::state_product*> (s))->right();
     unsigned id_scc = sm->scc_of_state(sproj);
-    res = sm->terminal_subautomaton(id_scc);
-    sproj->destroy();
 
-    return res;
-  }
-
-  bool
-  formula_emptiness_specifier::is_persistence (const state *s) const
-  {
-    bool res = false;
-
-    state * sproj = sys_->project_state(s, f_);
-    assert(sproj);
-    unsigned id_scc = sm->scc_of_state(sproj);
-    res = sm->weak_subautomaton(id_scc);
-    sproj->destroy();
-
-    return res;
-  }
-
-  bool
-  formula_emptiness_specifier::is_general (const state *s) const
-  {
-    assert(s);
-    return !is_guarantee(s) &&  !is_persistence(s);
+    if (sm->terminal_subautomaton(id_scc))
+      return TerminalSubaut;    
+    else if (sm->weak_subautomaton(id_scc))
+      return WeakSubaut;
+    return StrongSubaut;
   }
 
   bool
@@ -126,11 +144,12 @@ namespace spot
   {
     bool res = false;
 
-    state * sproj = sys_->project_state(s, f_);
+    //    state * sproj = sys_->project_state(s, f_);
+    state * sproj = (static_cast<const spot::state_product*> (s))->right();
     assert(sproj);
     unsigned id_scc = sm->scc_of_state(sproj);
     res = sm->terminal_accepting(id_scc);
-    sproj->destroy();
+    //sproj->destroy();
 
     return res;
   }
