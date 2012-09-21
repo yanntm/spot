@@ -298,7 +298,7 @@ namespace spot
 
                 f.it->next();
                 inc_transitions();
-
+		str = es_->typeof_subautomaton(f.s);
 		// Condition working over kripke having at least one successor
  		if (es_->is_terminal_accepting_scc (f.s))
 		  {
