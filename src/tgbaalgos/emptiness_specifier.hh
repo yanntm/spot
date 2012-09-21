@@ -34,9 +34,6 @@
 namespace spot
 {
 
-    enum strength { TerminalSubaut, WeakSubaut, StrongSubaut};
-
-
   /// This class provides a specifier for emptiness check algorithm
   /// Indeed some algorithms (especially dynamic ones) needs more 
   /// informations to perform efficient check. This information can 
@@ -48,97 +45,31 @@ namespace spot
     ~emptiness_specifier()
     { }
 
-    /// \return true if the state belong to a weak accepting 
-    /// SCC 
-    virtual bool
-    is_part_of_weak_acc (const state *) const = 0;
-
-    /// \return true if this two states belong to the 
-    /// same weak accepting SCC
-    virtual bool
-    same_weak_acc (const state *, const state *) const = 0;
-
-    // /// \return true if the state can be considered as a guarantee 
-    // /// state (i.e. leads to terminal state for all path that can be 
-    // /// general non accepting or terminal non accepting)
-    // virtual bool
-    // is_guarantee (const state *) const = 0;
-
-    // /// \return true if the state can be considered as a persitence 
-    // /// state (i.e. belongs to a weak accepting or not SCC and all 
-    // /// paths leads to weak SCC) 
-    // virtual bool
-    // is_persistence (const state *) const = 0;
-
-    // /// \return true for all other cases
-    // virtual bool
-    // is_general (const state *) const = 0;
-
-    /// \return true if the state belongs to a terminal accepting 
-    /// Scc. Here terminal is used in the meaning of terminal automaton
-    /// (i.e all paths are fully accepting and the SCC is complete) 
-    virtual bool
-    is_terminal_accepting_scc (const state *) const = 0;
-
-    /// Return the strneght of the sub automaton
-    virtual strength
-    typeof_subautomaton(const state *) const = 0;
-
-  };
-
-  /// This class represent a default specifier
-  class emptiness_specifier_default : public  emptiness_specifier
-  {
-  public :
-    virtual ~emptiness_specifier_default()
-    {
-    }
-
     // Return true if the state belong to a weak accepting SCC
     virtual bool
-    is_part_of_weak_acc (const state *) const
+    is_part_of_weak_acc (const state *)
     {
       return false;
     }
 
     virtual bool
-    same_weak_acc (const state *, const state *) const
+    same_weak_acc (const state *, const state *)
     {
       return false;
     }
 
-    // virtual bool
-    // is_guarantee (const state *) const
-    // {
-    //   return false;
-    // }
-
-    // virtual bool
-    // is_persistence (const state *) const
-    // {
-    //   return false;
-    // }
-
-    // virtual bool
-    // is_general(const state *) const
-    // {
-    //   return false;
-    // }
-
     virtual bool
-    is_terminal_accepting_scc (const state *) const
+    is_terminal_accepting_scc (const state *)
     {
       return false;
     }
 
     /// Return the strneght of the sub automaton
     virtual strength
-    typeof_subautomaton(const state *) const
+    typeof_subautomaton(const state *)
     {
       return StrongSubaut;
     }
-
-
   };
 
   /// This class represent a specifier which extract algorithm information 
@@ -158,6 +89,12 @@ namespace spot
     const tgba* sys_;		// The synchronized product automaton
     const tgba* f_;		// The formula automaton
     scc_map * sm;		// The map of scc 
+    const state *state_cache_;
+    const state *right_cache_;
+    strength strength_cache_;
+    bool termacc_cache_;
+    unsigned id_cache_;
+    bool weak_accepting_cache_;
   public :
 
     /// Create a specifier for a system composed of a unique formula 
@@ -177,38 +114,24 @@ namespace spot
     /// Return true if the projection over the formula automata is 
     /// in a weak accepting SCC
     bool
-    is_part_of_weak_acc (const state *) const;
+    is_part_of_weak_acc (const state *);
 
     /// Return true if two states belong to the same weak accepting 
     ///  SCC
     bool
-    same_weak_acc (const state *, const state *) const;
-
-    // /// Check wether the state is a guarantee state i-e it belongs to 
-    // /// a sub-automaton which is terminal
-    // bool
-    // is_guarantee (const state *) const;
-
-    // /// Check wether the state is a persistence state i-e it belongs to 
-    // /// a sub-automaton which is weak
-    // bool
-    // is_persistence (const state *) const;
-
-    // /// Check if the state is a general state i-e it belongs to 
-    // /// a sub-automaton which is strong
-    // bool
-    // is_general (const state *) const;
+    same_weak_acc (const state *, const state *);
 
     /// Return true if the state is in an accepting terminal 
     /// SCC (i-e, a self lopp that accept all words)
     bool
-    is_terminal_accepting_scc (const state *) const;
+    is_terminal_accepting_scc (const state *);
 
     /// Return the strneght of the sub automaton
     strength
-    typeof_subautomaton(const state *) const;
+    typeof_subautomaton(const state *);
 
-
+  private :
+    inline void update_cache(const state *);
   };
 }
 

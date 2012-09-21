@@ -34,6 +34,9 @@
 namespace spot
 {
 
+  enum strength { TerminalSubaut, WeakSubaut, StrongSubaut};
+
+
   struct scc_stats
   {
     /// Total number of SCCs.
@@ -196,6 +199,9 @@ namespace spot
     /// \brief Return the number of self loops in the automaton.
     unsigned self_loops() const;
 
+
+    strength typeof_subautomaton (unsigned n) const;
+
     /// \brief Return whether the subautomaton starting from 
     /// this SCC can be considered as Weak (for all SCC s , s 
     /// is wether accepting for all paths, wether non accepting 
@@ -250,6 +256,7 @@ namespace spot
   protected:
     bdd update_supp_rec(unsigned state);
     void update_weak(unsigned state);
+    bool internal_terminal_accepting(unsigned n);
     int relabel_component();
 
     struct scc
@@ -261,6 +268,7 @@ namespace spot
 		       is_weak_acc(false),
 		       is_weak_hard(false),
 		       is_strong_hard(false),
+		       is_terminal_accepting(false),
 		       is_terminal_subautomaton(false),
 		       is_weak_subautomaton(false)
       {};
@@ -301,6 +309,8 @@ namespace spot
       /// Allow to know if this scc is is strong hard i.e. if no 
       /// weak scc can be reached from this scc
       bool is_strong_hard;
+
+      bool is_terminal_accepting;
 
       /// Allow to know if the set of reachable state can be 
       /// considered as a terminal automaton (reachable states 

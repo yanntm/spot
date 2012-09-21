@@ -134,7 +134,7 @@ namespace spot
   {
   public:
     emptiness_check(const tgba* a, option_map o = option_map(),
-		    const emptiness_specifier * e = 0 , bool dyn = false)
+		    emptiness_specifier * e = 0 , bool dyn = false)
       : a_(a), o_(o), es_(e), is_dynamic(dyn)
     {  }
 
@@ -163,7 +163,7 @@ namespace spot
 
     /// Allows to modify dynamically the specifier for the emptiness 
     void
-    set_specifier(const emptiness_specifier *e)
+    set_specifier(emptiness_specifier *e)
     {
       delete es_;
       es_ = e;
@@ -212,7 +212,7 @@ namespace spot
   protected:
     const tgba* a_;		///< The automaton.
     option_map o_;		///< The options
-    const emptiness_specifier *es_;	///< The specifier
+    emptiness_specifier *es_;	///< The specifier
     bool is_dynamic;
   };
 

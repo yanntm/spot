@@ -153,8 +153,9 @@ namespace spot
   {
     const tgba * a = get_aut();
     scc cc =  scc_map_[state];
-    if (terminal_accepting (state))
+    if (internal_terminal_accepting (state))
       {
+	scc_map_[state].is_terminal_accepting = true;
 	scc_map_[state].is_terminal_subautomaton = true;
       }
 
@@ -486,6 +487,15 @@ namespace spot
     return self_loops_;
   }
 
+  strength scc_map::typeof_subautomaton (unsigned n) const
+  {
+    if (scc_map_[n].is_terminal_subautomaton)
+      return TerminalSubaut;
+    else if (scc_map_[n].is_weak_subautomaton)
+      return WeakSubaut;
+    return StrongSubaut;
+  }
+
   bool
   scc_map::weak_subautomaton(unsigned n) const
   {
@@ -524,8 +534,15 @@ namespace spot
     return scc_map_[n].is_terminal_subautomaton;
   }
 
+
   bool
   scc_map::terminal_accepting(unsigned n) const
+  {
+    return scc_map_[n].is_terminal_accepting;
+  }
+
+  bool
+  scc_map::internal_terminal_accepting(unsigned n)
   {
     const std::list<const state*>& st = states_of(n);
 

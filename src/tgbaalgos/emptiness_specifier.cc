@@ -38,7 +38,9 @@ namespace spot
 {
 
   formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a)
-    : sys_(a) , f_(a)
+    : sys_(a) , f_(a), state_cache_(0), right_cache_(0),
+      strength_cache_(StrongSubaut), termacc_cache_(false),
+      id_cache_(0), weak_accepting_cache_(false)
   {
     sm = new scc_map(f_);
     sm->build_map();
@@ -46,45 +48,37 @@ namespace spot
 
   formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a,
 							    const tgba * f)
-    : sys_(a) , f_(f)
+    : sys_(a) , f_(f),state_cache_(0), right_cache_(0),
+      strength_cache_(StrongSubaut), termacc_cache_(false),
+      id_cache_(0), weak_accepting_cache_(false)
   {
     sm = new scc_map(f_);
     sm->build_map();
   }
 
   bool
-  formula_emptiness_specifier::is_part_of_weak_acc (const state *s) const
+  formula_emptiness_specifier::is_part_of_weak_acc (const state *s)
   {
-    bool res = false;
-
-    state * sproj =  (static_cast<const spot::state_product*> (s))->right();
-    assert(sproj);
-    unsigned id_scc = sm->scc_of_state(sproj);
-    res = sm->weak_accepting(id_scc);
-    //sproj->destroy();
-
-    return res;
+    if (state_cache_ == s)
+      return weak_accepting_cache_;
+    update_cache(s);
+    return weak_accepting_cache_;
   }
 
   bool
   formula_emptiness_specifier::same_weak_acc (const state *s1,
-					      const state *s2) const
+					      const state *s2)
   {
-    bool res = false;
+    unsigned id_scc1;
+    if (state_cache_ == s1)
+      id_scc1 = id_cache_;
+    else{
+      state * sproj1 = (static_cast<const spot::state_product*> (s1))->right(); 
+      id_scc1 = sm->scc_of_state(sproj1);
+    }
 
-    //state * sproj1 = sys_->project_state(s1, f_);
-    state * sproj1 = (static_cast<const spot::state_product*> (s1))->right(); 
-    assert(sproj1);
-    unsigned id_scc1 = sm->scc_of_state(sproj1);
-    //state * sproj2 = sys_->project_state(s2, f_);
-    state * sproj2 = (static_cast<const spot::state_product*> (s2))->right();
-    assert(sproj2);
-    unsigned id_scc2 = sm->scc_of_state(sproj2);
-    // sproj1->destroy();
-    // sproj2->destroy();
-    res = (sm->weak_accepting(id_scc1)) && (id_scc1 == id_scc2);
-
-    return res;
+    update_cache(s2);
+    return (sm->weak_accepting(id_scc1)) && (id_scc1 == id_cache_);
   }
 
   // bool
@@ -126,31 +120,41 @@ namespace spot
 
   strength 
   formula_emptiness_specifier::typeof_subautomaton
-  (const state *s) const
+  (const state *s)
   {
-    state * sproj = (static_cast<const spot::state_product*> (s))->right();
-    unsigned id_scc = sm->scc_of_state(sproj);
+    // Is in the cache ?
+    if (state_cache_ == s)
+      return strength_cache_;
 
-    if (sm->terminal_subautomaton(id_scc))
-      return TerminalSubaut;    
-    else if (sm->weak_subautomaton(id_scc))
-      return WeakSubaut;
-    return StrongSubaut;
+    update_cache(s);
+    return strength_cache_;
   }
 
   bool
   formula_emptiness_specifier::is_terminal_accepting_scc
-  (const state *s) const
+  (const state *s)
   {
-    bool res = false;
+    if (state_cache_ == s)
+      return termacc_cache_;
 
-    //    state * sproj = sys_->project_state(s, f_);
-    state * sproj = (static_cast<const spot::state_product*> (s))->right();
-    assert(sproj);
-    unsigned id_scc = sm->scc_of_state(sproj);
-    res = sm->terminal_accepting(id_scc);
-    //sproj->destroy();
+    update_cache(s);
+    return termacc_cache_;
+  }
 
-    return res;
+
+  inline void formula_emptiness_specifier::update_cache(const state *s)
+  {
+    if (state_cache_ == s) 
+      return;
+  //   state * sproj = sys_->project_state(s, f_);
+  //   assert(sproj);
+  //   unsigned id_scc = sm->scc_of_state(sproj);
+
+    right_cache_ = (static_cast<const spot::state_product*> (s))->right();
+    id_cache_ = sm->scc_of_state(right_cache_);
+    strength_cache_ = sm->typeof_subautomaton(id_cache_);
+    termacc_cache_ = sm->terminal_accepting(id_cache_);
+    weak_accepting_cache_ = sm->weak_accepting(id_cache_);
+    state_cache_ = s;
   }
 }
