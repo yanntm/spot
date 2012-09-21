@@ -341,7 +341,9 @@ namespace spot
 	      }
             else
               {
-		strength str = es_->typeof_subautomaton(st_blue.front().s);
+		strength str = StrongSubaut;
+		if (is_dynamic)
+		  str = es_->typeof_subautomaton(st_blue.front().s);
 		if (is_dynamic && !(str == TerminalSubaut))
 		  return false;
 		pop(st_blue);
@@ -603,7 +605,9 @@ namespace spot
 			c.set_color(RED);
 			push(st_red, s_prime, label, acc);
 
-			strength str = es_->typeof_subautomaton(s_prime);
+			strength str = StrongSubaut;
+			if (is_dynamic)
+			  str = es_->typeof_subautomaton(s_prime);
 			if (is_dynamic &&
 			    (str == WeakSubaut) &&
 			    !es_->same_weak_acc (target, s_prime))
@@ -652,7 +656,10 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
 
-		    strength str = es_->typeof_subautomaton(f_dest.s);
+		    
+		    strength str = StrongSubaut;
+		    if (is_dynamic)
+		      str = es_->typeof_subautomaton(f_dest.s);
 		    if (is_dynamic &&
 			(str == WeakSubaut) &&
 			!es_->same_weak_acc (target, f_dest.s))

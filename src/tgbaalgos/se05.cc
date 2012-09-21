@@ -382,7 +382,9 @@ namespace spot
 		    s_prime->destroy();
 		    return true;
 		  }
+		std::cout << "LALALAL\n";
 		strength str = es_->typeof_subautomaton(f.s);
+		std::cout << "LALALAL222 \n";
 		if (is_dynamic && (str == TerminalSubaut))
 		  {
 		    if (static_guarantee ())
@@ -611,7 +613,9 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, s_prime, label, acc);
 
-		    strength str = es_->typeof_subautomaton(f.s);
+		    strength str = StrongSubaut;
+		    if (is_dynamic)
+		      es_->typeof_subautomaton(f.s);
 		    if (is_dynamic &&
 			(str == WeakSubaut) &&
 			!es_->same_weak_acc (f.s, s_prime))
@@ -655,10 +659,13 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
 
-		    strength str = es_->typeof_subautomaton(st_blue.front().s);
+		    const spot::state *s_tmp = st_blue.front().s;
+		    strength str = StrongSubaut;
+		    if (is_dynamic)
+		      es_->typeof_subautomaton(s_tmp);
 		    if (is_dynamic &&
 			(str == WeakSubaut) &&
-			!es_->same_weak_acc (st_blue.front().s, f_dest.s))
+			!es_->same_weak_acc (s_tmp, f_dest.s))
 		      {
 			trace << "DFS RED avoid by dynamism\n";
 			pop(st_red);
@@ -666,9 +673,11 @@ namespace spot
 		    else
 		      if (dfs_red())
 			{
+			  s_tmp->destroy();
 			  is_dynamic = false;
 			  return true;
 			}
+		    s_tmp->destroy();
                   }
                 else
                   {
