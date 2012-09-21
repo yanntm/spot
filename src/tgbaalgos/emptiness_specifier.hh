@@ -108,7 +108,7 @@ namespace spot
     virtual
     ~formula_emptiness_specifier()
     {
-      state_cache_->destroy();
+      //state_cache_->destroy();
       delete sm;
     }
 

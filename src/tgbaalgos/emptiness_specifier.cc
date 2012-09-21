@@ -146,9 +146,9 @@ namespace spot
   {
     if (state_cache_ == s) 
       return;
-  //   state * sproj = sys_->project_state(s, f_);
-  //   assert(sproj);
-  //   unsigned id_scc = sm->scc_of_state(sproj);
+
+    // right_cache_ =  sys_->project_state(s, f_);
+    // unsigned id_scc = sm->scc_of_state(sproj);
 
     right_cache_ = (static_cast<const spot::state_product*> (s))->right();
     id_cache_ = sm->scc_of_state(right_cache_);

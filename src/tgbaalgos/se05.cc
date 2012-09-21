@@ -382,9 +382,7 @@ namespace spot
 		    s_prime->destroy();
 		    return true;
 		  }
-		std::cout << "LALALAL\n";
 		strength str = es_->typeof_subautomaton(f.s);
-		std::cout << "LALALAL222 \n";
 		if (is_dynamic && (str == TerminalSubaut))
 		  {
 		    if (static_guarantee ())
@@ -673,11 +671,11 @@ namespace spot
 		    else
 		      if (dfs_red())
 			{
-			  s_tmp->destroy();
+			  //s_tmp->destroy();
 			  is_dynamic = false;
 			  return true;
 			}
-		    s_tmp->destroy();
+		    //s_tmp->destroy();
                   }
                 else
                   {
