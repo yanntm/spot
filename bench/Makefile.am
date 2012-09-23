@@ -19,5 +19,5 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = emptchk ltl2tgba scc-stats split-product ltlcounter	\
+SUBDIRS = emptchk dynchk ltl2tgba scc-stats split-product ltlcounter	\
           ltlclasses wdba

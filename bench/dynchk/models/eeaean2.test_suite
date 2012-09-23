@@ -1,0 +1,2 @@
+◇(twoLeads∧threeLeads∧○¬oneLeads) W ¬zeroLeads
+zeroLeads R (○¬twoLeads U (¬oneLeads W ¬noLeader))

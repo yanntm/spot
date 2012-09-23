@@ -1,0 +1,2 @@
+zeroLeads U ((¬noLeader∧○◇(threeLeads R zeroLeads))∨(noLeader∧○□(¬threeLeads U ¬zeroLeads)))
+(□¬threeLeads∧(□noLeader U ((¬noLeader∧◇¬twoLeads)∨(noLeader∧□twoLeads))))∨(◇threeLeads∧(◇¬noLeader R ((¬noLeader∧□twoLeads)∨(noLeader∧◇¬twoLeads))))
