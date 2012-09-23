@@ -265,6 +265,11 @@ syntax(char* prog)
 	    << "  Tau03_opt(OPTIONS)" << std::endl
 	    << std::endl
 
+	    << "Formula arrangement :" << std::endl
+	    << "  -af s    arrange formula, s = ACC|SHY|HIERARCHY|PESSIMISTIC|"
+	    << "H_PESSIMISTIC|DEFAULT"
+
+
 	    << "If no emptiness check is run, the automaton will be output "
 	    << "in dot format" << std::endl << "by default.  This can be "
 	    << "changed with the following options." << std::endl
@@ -382,11 +387,8 @@ main(int argc, char** argv)
   spot::tgba* temp_rev_sim = 0;
   spot::tgba* temp_iterated_sim = 0;
 
-=======
   spot::rebuild::iterator_strategy opt_af_strat = spot::rebuild::DEFAULT;
   bool opt_af = false;
->>>>>>> 795148f... Benchs setup
-
   for (;;)
     {
       if (argc < formula_index + 2)
@@ -1109,9 +1111,11 @@ main(int argc, char** argv)
 
 
       formula = a;
-      spot::tgba *new_tgba;
+      spot::tgba *new_tgba = 0;
       if (opt_af)
 	{
+
+	  std::cout << "############\n";
 	  spot::rebuild worker (formula,
 				(spot::rebuild::iterator_strategy)opt_af_strat);
 	  tm_af.start(spot::rebuild::strat_to_string (opt_af_strat));
@@ -1119,9 +1123,8 @@ main(int argc, char** argv)
 	    worker.reorder_transitions();
 	  tm_af.stop(spot::rebuild::strat_to_string (opt_af_strat));
 
- 	  spot::bdd_dict *fdict = new_tgba->get_dict();
-	  fdict-> unregister_all_my_variables(new_tgba);
-	  formula = a = new_tgba;
+	  //delete formula;
+ 	  formula = a = new_tgba;
 	  assert (formula);
 	}
 
@@ -1545,6 +1548,23 @@ main(int argc, char** argv)
 		es = new spot::formula_emptiness_specifier (a, formula);
 	    }
 
+	  //formula = a;
+	  //      spot::tgba *new_tgba;
+//       if (opt_af)
+// 	{
+// // 	  std::cout << "LLLLLLLLLLLLLLLLLLLLA\n";
+// // 	  spot::rebuild worker (formula,
+// // 				(spot::rebuild::iterator_strategy)opt_af_strat);
+// // 	  tm_af.start(spot::rebuild::strat_to_string (opt_af_strat));
+// // 	  new_tgba =
+// // 	    worker.reorder_transitions();
+// // 	  tm_af.stop(spot::rebuild::strat_to_string (opt_af_strat));
+
+// // 	  //delete formula;
+// // 	  formula = a = new_tgba;
+// // 	  assert (formula);
+// 	}
+
 	  spot::emptiness_check* ec  =  echeck_inst->instantiate(a, es);
 	  bool search_many = echeck_inst->options().get("repeated");
 	  assert(ec);
@@ -1718,6 +1738,9 @@ main(int argc, char** argv)
       delete temp_dir_sim;
       delete temp_rev_sim;
       delete temp_iterated_sim;
+
+      delete new_tgba;
+      //delete formula;
     }
   else
     {

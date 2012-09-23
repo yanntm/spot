@@ -26,6 +26,16 @@
 
 set -e
 
+check_arrangement ()
+{
+  run 0 ../ltl2tgba -af DEFAULT -f "$1"
+  run 0 ../ltl2tgba -af HIERARCHY -f "$1"
+  run 0 ../ltl2tgba -af PESSIMISTIC -f "$1"
+  run 0 ../ltl2tgba -af ACC -f "$1"
+  run 0 ../ltl2tgba -af SHY -f "$1"
+  run 0 ../ltl2tgba -af H_PESSIMISTIC -f "$1"
+}
+
 check_psl ()
 {
   # We don't check the output, but just running these might be enough to
@@ -44,6 +54,7 @@ check_ltl ()
   # Make cross products with LaCIM
   run 0 ../ltl2tgba -l -R3b -b "$1" > out.tgba
   run 0 ../ltl2tgba -l -R3b -Pout.tgba -E "!($1)"
+ check_arrangement "$@"
 }
 
 check_ltl a

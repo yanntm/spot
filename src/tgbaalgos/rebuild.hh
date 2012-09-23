@@ -73,6 +73,9 @@ namespace spot
 	return PESSIMISTIC;
       else if (!strcmp(st, "H_PESSIMISTIC"))
 	return H_PESSIMISTIC;
+      else if (!strcmp(st, "DEFAULT"))
+	return DEFAULT;
+      assert(false);
       return DEFAULT;
     }
 

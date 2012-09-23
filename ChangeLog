@@ -1,5 +1,8 @@
 2012-01-11  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/ltl2tgba.cc (main): Fix changes for rebuild over
+	ltl2tgba
+
 	* src/tgbatest/randtgba.cc (main): opt_apf is re-available, fix
 	the leak, option apf and af are now exclusives
 
