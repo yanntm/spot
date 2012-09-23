@@ -1135,7 +1135,15 @@ main(int argc, char** argv)
 		    }
 
 		  // FIXME : option -R3 should be better
-		  formula  = spot::scc_filter(formula, false);
+		  if (formula)
+		    {
+		      spot::tgba *aut_scc = 0;
+		      aut_scc = spot::scc_filter(formula, false);
+		      if (aut_scc && aut_scc != formula)
+			{
+			  formula = aut_scc;
+			}
+		    }
 
 		  if (formula)
 		    a = product = new spot::tgba_product(formula, a);

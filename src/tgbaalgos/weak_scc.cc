@@ -83,7 +83,7 @@ namespace spot
 	    next.clear();
 
 	    // Grab one of the conditions
-	    bdd cond = bdd_satone(all); 
+	    bdd cond = bdd_satone(all);
 	    trace << "Processing condition : "
 		      << bdd_format_accset(a_->get_dict(), cond)
 		      << std::endl;
@@ -101,7 +101,8 @@ namespace spot
       cycle_wo_acc (const state *start, bdd current)
       {
 	push (next, start);
-	while (next.size())
+	//while (next.size())
+	while (!next.empty())
 	  {
 	    stack_item &item = next.front();
 	    const state *s = item.s;//item.it->current_state();//start;//next.pop();
@@ -125,16 +126,15 @@ namespace spot
 	push (to_process, s);
 
 	while (!to_process.empty())
-          { 
+          {
             stack_item& f = to_process.front();
 	    typename heap::color_ref c = h.get_color_ref(s);
 	    unsigned actual_scc = sm_.scc_of_state (s);
-	
+
 	    if (c.is_white())
 	      {
 		c.set_color(CYAN);
 	      }
-	    
 
             if (!f.it->done())
               {
@@ -143,33 +143,32 @@ namespace spot
 
  		f.it->next();
 		unsigned scc = sm_.scc_of_state (s_prime);
-		
+
 		trace << "Working on edge ("
 			  << a_-> format_state(f.s)
 			  << " , "
 			  << a_-> format_state(s_prime)
 			  << " )" << std::endl;
 
-		if ( scc != actual_scc)
+		if (scc != actual_scc)
  		  {
-		    trace << "     Skiping" 
+		    trace << "     Skiping"
 			      << std::endl;
 		    continue;
 		  }
 
 		// The successor doesn't belong to the same scc 
 		// or the acceptance condition is not the good one 
- 		if( (((current & acc) == current)))
+ 		if ((current & acc) == current)
  		  {
-		    trace << "     Skiping" 
+		    trace << "     Skiping"
 			      << std::endl;
 		    push (next , s);
 		    continue;
 		  }
-		else 
-		  {                    
+		else
+		  {
 		    typename heap::color_ref cc = h.get_color_ref(s_prime);
-		    
 		    if (cc.is_white())
 		      {
 			h.add_new_state(s_prime, CYAN);
@@ -181,7 +180,7 @@ namespace spot
 		      }
 		  }
 	      }
-	    else 
+	    else
 	      {
 		c.set_color(BLUE);
 		h.pop_notify(f.s);
@@ -194,7 +193,7 @@ namespace spot
 
       // 
       // 
-      const spot::tgba* automaton() const 
+      const spot::tgba* automaton() const
       {
 	return a_;
       }

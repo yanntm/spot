@@ -230,7 +230,6 @@ int main(int argc, char **argv)
   f = spot::ltl::parse(input, pel, env, false);
   tm.stop("parsing formula");
 
-  
   if (f)
     {
       //

@@ -139,7 +139,7 @@ namespace spot
 	    fsrc = fes.formula_from_state(s_src);
 	    fdst = fes.formula_from_state(succ_src);
 	    ++tsum;
-	    
+
 	    if ((fsrc->is_syntactic_guarantee ()  ||
 		 ltl::constant::true_instance() == fsrc) &&
 		(fdst->is_syntactic_guarantee ()  ||

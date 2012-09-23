@@ -152,7 +152,7 @@ namespace spot
     return true;
   }
 
-  void 
+  void
   scc_map::check_weak(unsigned)
   {
     unsigned size = scc_count();
@@ -163,7 +163,7 @@ namespace spot
   }
 
   bool
-  scc_map::cycle_wo_acc (unsigned , bdd )
+  scc_map::cycle_wo_acc (unsigned , bdd)
   {
 //     weak_scc *ws =  weak_scc_computer(get_aut(), *this);
 //     bool b  = ws->check_weak_accepting(one_state_of (s));

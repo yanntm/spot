@@ -41,10 +41,10 @@ namespace spot
     check_weak_accepting(const state *)
     {
       return false;
-    };  
+    };
   };
 
-  weak_scc* weak_scc_computer(const tgba *a, scc_map sc );
+  weak_scc* weak_scc_computer(const tgba *a, scc_map sc);
 }
 
 #endif // SPOT_TGBAALGOS_WEAK_SCC_HH
