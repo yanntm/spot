@@ -73,7 +73,6 @@ main(int argc, char **argv)
   bool accepting_run = false;
   bool expect_counter_example = false;
   bool deterministic = false;
-  bool wdba = false;
   bool opt_af = false;
 
   char *dead = 0;

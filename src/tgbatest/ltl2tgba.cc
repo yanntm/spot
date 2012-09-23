@@ -402,8 +402,6 @@ main(int argc, char** argv)
   spot::rebuild::iterator_strategy opt_af_strat = spot::rebuild::DEFAULT;
   bool opt_af = false;
 
-  spot::rebuild::iterator_strategy opt_af_strat = spot::rebuild::DEFAULT;
-  bool opt_af = false;
   bool opt_hanalysis = false;
 
   for (;;)
