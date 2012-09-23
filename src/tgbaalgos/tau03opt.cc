@@ -656,7 +656,9 @@ inc_reachability();
 			//is_dynamic = false;
                         return true;
                       }
-		    strength str = es_->typeof_subautomaton(f.s);
+		    strength str = StrongSubaut;
+		    if (is_dynamic) 
+		      es_->typeof_subautomaton(f.s);
                     if (is_dynamic && c_prime.get_color() == CYAN
 			&& !(str == WeakSubaut)
 			&& all_acc == ((current_weight - c_prime.get_weight())

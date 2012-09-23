@@ -147,10 +147,11 @@ namespace spot
     if (state_cache_ == s) 
       return;
 
-    // right_cache_ =  sys_->project_state(s, f_);
-    // unsigned id_scc = sm->scc_of_state(sproj);
-
-    right_cache_ = (static_cast<const spot::state_product*> (s))->right();
+    // This is the correct way to do what we want 
+    right_cache_ =  sys_->project_state(s, f_);
+    
+    // This is an optimisation
+    //right_cache_ = (static_cast<const spot::state_product*> (s))->right();
     id_cache_ = sm->scc_of_state(right_cache_);
     strength_cache_ = sm->typeof_subautomaton(id_cache_);
     termacc_cache_ = sm->terminal_accepting(id_cache_);
