@@ -40,13 +40,7 @@ namespace spot
     class stats_bfs: public spot::tgba_reachable_iterator_breadth_first
     {
     public:
-      int safety;	///< Number of safety states (syntax)
-      int guarantee;	///< Number of gurantee states (syntax)
-      int obligation;	///< Number of obligation states (syntax)
-      int persistence;	///< Number of persistence states (syntax)
-      int recurrence;	///< Number of reccurence states (syntax)
-      int reactivity;	///< Number of reactivity states (syntax)
-      int sum;		///< Sum is equal to all previous (syntax)
+      int sum;		///< Sum is equal to all states
       int tgw;		///< Transition from general to weak (syntax)
       int tgg;		///< Transition from general to general (syntax)
       int tgt;		///< Transition from general to terminal (syntax)
@@ -59,20 +53,12 @@ namespace spot
       int scc_weak;		/// Number of weak states 
       int scc_strong;		/// Number of stong states
 
-      bool form_state;
       formula_emptiness_specifier fes; ///< An acccess to formula informations
 
-      stats_bfs(const spot::tgba* a, bool formula_state = true)
+      stats_bfs(const spot::tgba* a)
 	: tgba_reachable_iterator_breadth_first(a),
-	  form_state(formula_state),
 	  fes(a)
       {
-	safety        = 0;
-	guarantee     = 0;
-	obligation    = 0;
-	persistence   = 0;
-	recurrence    = 0;
-	reactivity    = 0;
 	sum           = 0;
 	tgw           = 0;
 	tgt           = 0;
@@ -92,26 +78,7 @@ namespace spot
       /// \param s The current state.
       void process_state(const spot::state* s, int, spot:: tgba_succ_iterator*)
       {
-	if (form_state)
-	  {
-	    const ltl::formula* f = 0;
-	    f = fes.formula_from_state(s);
-	    ++sum;
-	    if (f->is_syntactic_guarantee ()  ||
-		(ltl::constant::true_instance() == f))
-	      ++guarantee;
-	    else if (f->is_syntactic_safety ())
-	      ++safety;
-	    else if (f->is_syntactic_obligation ())
-	      ++obligation;
-	    else if (f->is_syntactic_persistence ())
-	      ++persistence;
-	    else if (f->is_syntactic_recurrence ())
-	      ++recurrence;
-	    else
-	      ++reactivity;
-	  }
-
+	sum++;
 	if (fes.is_guarantee(s))
 	  ++scc_terminal;
 	else if (fes.is_persistence(s))
@@ -128,46 +95,25 @@ namespace spot
       /// The in_s and out_s states are owned by the
       /// spot::tgba_reachable_iterator instance and destroyed when the
       /// instance is destroyed.
-      void process_link(const spot::state* s_src, int,
-			const spot::state* succ_src, int ,
+      void process_link(const spot::state*  s_src
+			, int,
+			const spot::state*  succ_src
+			, int ,
 			const spot::tgba_succ_iterator*)
       {
-	if (form_state)
-	  {
-	    const ltl::formula* fsrc = 0;
-	    const ltl::formula* fdst = 0;
-	    fsrc = fes.formula_from_state(s_src);
-	    fdst = fes.formula_from_state(succ_src);
-	    ++tsum;
-
-	    if ((fsrc->is_syntactic_guarantee ()  ||
-		 ltl::constant::true_instance() == fsrc) &&
-		(fdst->is_syntactic_guarantee ()  ||
-		 ltl::constant::true_instance() == fdst))
-	      ++ttt;
-	    else if ((fsrc->is_syntactic_safety() ||
-		      fsrc->is_syntactic_obligation() ||
-		      fsrc->is_syntactic_persistence()) &&
-		     (fdst->is_syntactic_guarantee()   ||
-		      ltl::constant::true_instance() == fdst))
-	      ++twt;
-	    else if ((fsrc->is_syntactic_safety () ||
-		      fsrc->is_syntactic_obligation () ||
-		      fsrc->is_syntactic_persistence ()) &&
-		     (fdst->is_syntactic_safety ()||
-		      fdst->is_syntactic_obligation () ||
-		      fdst->is_syntactic_persistence ()))
-	      ++tww;
-	    else if (fdst->is_syntactic_guarantee ()  ||
-		     ltl::constant::true_instance() == fdst)
+	tsum++;
+	if (fes.is_guarantee(s_src) && fes.is_guarantee(succ_src))
+	  ++ttt;
+	else if (fes.is_persistence(s_src) && fes.is_guarantee(succ_src))
+	  ++twt;
+	else if (fes.is_persistence(s_src) && fes.is_persistence(succ_src))
+	  ++tww;
+	else if (fes.is_guarantee(succ_src))
 	      ++tgt;
-	    else if  (fdst->is_syntactic_safety ()||
-		      fdst->is_syntactic_obligation () ||
-		      fdst->is_syntactic_persistence ())
-	      ++tgw;
-	    else
-	      ++tgg;
-	  }
+	else if (fes.is_persistence(succ_src))
+	  ++tgw;
+	else
+	  ++tgg;
       }
     };
 
@@ -181,13 +127,7 @@ namespace spot
     const tgba* src;    ///< The original tgba
 
   public:
-    int safety;		///< Number of safety states
-    int guarantee;	///< Number of gurantee states
-    int obligation;	///< Number of obligation states
-    int persistence;	///< Number of persistence states
-    int recurrence;	///< Number of reccurence states 
-    int reactivity;	///< Number of reactivity states 
-    int sum;		///< Sum is equal to all previous
+    int sum;		///< Sum is equal to all states
     int tgw;		///< Transition from general to weak
     int tgg;		///< Transition from general to general
     int tgt;		///< Transition from general to terminal
@@ -201,20 +141,12 @@ namespace spot
     int scc_strong;	/// Number of stong states (by scc analysis)
 
     stats_bfs processor; 	///<  Use traditional bfs walk
-    bool fs;
 
     /// The constructor with a tgba formula
-    stats_hierarchy (const tgba* original, bool formula_state = true) :
+    stats_hierarchy (const tgba* original) :
       src(original),
-      processor(original, formula_state),
-      fs(formula_state)
+      processor(original)
     {
-      safety        = 0;
-      guarantee     = 0;
-      obligation    = 0;
-      persistence   = 0;
-      recurrence    = 0;
-      reactivity    = 0;
       sum           = 0;
       tgw           = 0;
       tgt           = 0;
@@ -235,16 +167,10 @@ namespace spot
 
     void stats_automaton ()
     {
-      if (fs && sum)
+      if (sum)
 	return; 		// Avoid multiple computation
 
       processor.run();
-      safety        = processor.safety;
-      guarantee     = processor.guarantee;
-      obligation    = processor.obligation;
-      persistence   = processor.persistence;
-      recurrence    = processor.recurrence;
-      reactivity    = processor.reactivity;
       sum           = processor.sum;
       tgw           = processor.tgw;
       tgt           = processor.tgt;
@@ -259,8 +185,6 @@ namespace spot
       scc_strong    = processor.scc_strong;
 
       // FIXME : direct access to processor variables 
-      assert (safety + guarantee + obligation + persistence + recurrence
-	      + reactivity == sum);
       assert (tgg + tgw + tgt + tww + twt + ttt == tsum);
     }
 
@@ -276,14 +200,6 @@ namespace spot
       (scc_weak && scc_strong)
       ||
       (scc_terminal && scc_strong);
-
-
-// (guarantee && (safety + obligation + persistence))
-// 	||
-//       (guarantee && (recurrence + reactivity))
-// 	||
-//       ((recurrence + reactivity) &&
-//        (safety + obligation + persistence));
     }
 
     // This function retrun true if the automaton is commuting
@@ -297,12 +213,6 @@ namespace spot
 	  return true;
 	}
       return false;
-//       if (is_commuting_automaton () && 
-// 	  (reactivity || recurrence ))
-// 	{
-// 	  return true;
-// 	}
-//       return false;
     }
 
     // This function retrun true if the automaton is commuting
@@ -317,25 +227,12 @@ namespace spot
 	  return true;
 	}
       return false;
-//       if (is_commuting_automaton () && 
-// 	  (persistence || obligation || safety)
-// 	  && !reactivity && !recurrence)
-// 	return true;
-//       return false;
     }
   };
 
   std::ostream&
   operator<<(std::ostream& os, const stats_hierarchy& s)
   {
-    int scommut =
-      (s.guarantee && (s.safety + s.obligation + s.persistence))
-      ||
-      (s.guarantee && (s.recurrence + s.reactivity))
-      ||
-      ((s.recurrence + s.reactivity) &&
-	(s.safety + s.obligation + s.persistence));
-
     int commut =
       (s.scc_terminal && s.scc_weak)
       ||
@@ -344,9 +241,9 @@ namespace spot
       (s.scc_terminal && s.scc_strong);
 
     os << "init:";
-    if (s.recurrence + s.reactivity)
+    if (s.scc_strong)
       os << "G,";
-    else if (s.safety + s.obligation + s.persistence)
+    else if (s.scc_weak)
       os << "W,";
     else
       os << "T,";
@@ -355,10 +252,6 @@ namespace spot
        << "Weak:"       << s.scc_weak  << ","
        << "General:"    << s.scc_strong  << ","
        << "commut:"     << commut << ","
-       << "STerminal:"  << s.guarantee    << ","
-       << "SWeak:"      << s.safety + s.obligation + s.persistence  << ","
-       << "SGeneral:"   << s.recurrence + s.reactivity  << ","
-       << "Scommut:"    << scommut << ","
        << "states:"     << s.sum << ","
        << "trans:"      << s.tsum << ","
        << "tgg:"        << s.tgg  << ","
@@ -371,139 +264,5 @@ namespace spot
 
       return os;
     }
-
-//       // Here create an emptiness specifier to get the type
-//       // of the formula
-//       formula_emptiness_specifier fes (src);
-
-//       // Visited states
-//       std::set <spot::state *>*
-// 	visited_tmp = new std::set< spot::state *>();
-
-//       // todo 
-//       std::stack
-// 	<spot::state_explicit*> todo_tmp;
-
-//       // Initial state of the automaton
-//       spot::state_explicit *i_src =
-// 	(spot::state_explicit *)src->get_init_state();
-//       visited_tmp->insert(i_src->clone());
-//       todo_tmp.push (i_src->clone());
-
-//       {
-// 	const ltl::formula* f = 0;
-// 	f = fes.formula_from_state(i_src->clone());
-// 	++sum;
-// 	if (f->is_syntactic_guarantee ())
-// 	  ++guarantee;
-// 	else if (f->is_syntactic_safety ())
-// 	  ++safety;
-// 	else if (f->is_syntactic_obligation ())
-// 	  ++obligation;
-// 	else if (f->is_syntactic_persistence ())
-// 	  ++persistence;
-// 	else if (f->is_syntactic_recurrence ())
-// 	  ++recurrence;
-// 	else
-// 	  ++reactivity;
-//       }
-
-//       while (!todo_tmp.empty())	// We have always an initial state 
-// 	{
-// 	  // Init all vars 
-// 	  spot::state_explicit *s_src;
-// 	  s_src = todo_tmp.top();
-// 	  todo_tmp.pop();
-
-// 	  // Iterator over the successor of the src
-// 	  spot::tgba_explicit_succ_iterator *si =
-// 	    (tgba_explicit_succ_iterator*) src->succ_iter (s_src);
-// 	  for (si->first(); !si->done(); si->next())
-// 	    {
-// 	      // Get successor of the src
-// 	      spot::state_explicit * succ_src = si->current_state();
-
-// 	      // It's a new state we have to visit it
-// 	      if (visited_tmp->find (succ_src) == visited_tmp->end())
-// 		{
-// 		  // Mark as visited 
-// 		  visited_tmp->insert(succ_src);
-
-// 		  todo_tmp.push (succ_src);
-
-// 		  {
-// 		    const ltl::formula* f = 0;
-// 		    f = fes.formula_from_state(succ_src->clone());
-// 		    ++sum;
-// 		    if (f->is_syntactic_guarantee ()  ||
-// 			(ltl::constant::true_instance() == f))
-// 		      ++guarantee;
-// 		    else if (f->is_syntactic_safety ())
-// 		      ++safety;
-// 		    else if (f->is_syntactic_obligation ())
-// 		      ++obligation;
-// 		    else if (f->is_syntactic_persistence ())
-// 		      ++persistence;
-// 		    else if (f->is_syntactic_recurrence ())
-// 		      ++recurrence;
-// 		    else
-// 		      ++reactivity;
-// 		  }
-// 		}
-
-// 	      // Here provide some stats about transition comutatation
-// 	      {
-// 		const ltl::formula* fsrc = 0;
-// 		const ltl::formula* fdst = 0;
-// 		fsrc = fes.formula_from_state(s_src->clone());
-// 		fdst = fes.formula_from_state(succ_src->clone());
-// 		tsum ++;
-
-//  		if ((fsrc->is_syntactic_guarantee ()  ||
-// 		     ltl::constant::true_instance() == fsrc) &&
-// 		    (fdst->is_syntactic_guarantee ()  ||
-// 		     ltl::constant::true_instance() == fdst))
-// 		  ++ttt;
-// 		else if ((fsrc->is_syntactic_safety() ||
-// 			  fsrc->is_syntactic_obligation() || 
-// 			  fsrc->is_syntactic_persistence()) &&
-// 			 (fdst->is_syntactic_guarantee()   ||
-// 			  ltl::constant::true_instance() == fdst))
-// 		  ++twt;
-// 		else if ((fsrc->is_syntactic_safety () ||
-// 			  fsrc->is_syntactic_obligation () || 
-// 			  fsrc->is_syntactic_persistence ()) &&
-// 			 (fdst->is_syntactic_safety ()||
-// 			  fdst->is_syntactic_obligation () || 
-// 			  fdst->is_syntactic_persistence ()))
-// 		  ++tww;
-// 		else if (fdst->is_syntactic_guarantee ()  ||
-// 			 ltl::constant::true_instance() == fdst)
-// 		  ++tgt;
-// 		else if  (fdst->is_syntactic_safety ()||
-// 			  fdst->is_syntactic_obligation () || 
-// 			  fdst->is_syntactic_persistence ())
-// 		  ++tgw;
-// 		else 
-// 		  ++tgg;
-// 	      }
-
-
-// 	      // Destroy theses states that are now unused
-// 	      succ_src->destroy();
-// 	    }
-// 	  delete si;
-
-// 	  // CLEAN
-// 	  s_src->destroy();
-// 	}
-
-//       // No more in use
-//       i_src->destroy();
-
-//       std::set<spot::state *>::iterator it;
-//       for (it=visited_tmp->begin(); it != visited_tmp->end(); ++it)
-// 	(*it)->destroy();
-//       delete visited_tmp;
 }
 #endif // SPOT_TGBAALGO_STATS_HIERARCHY

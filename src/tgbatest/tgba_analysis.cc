@@ -397,7 +397,7 @@ int main(int argc, char **argv)
 	}
       if (opt_ha)
 	{
-	  spot::stats_hierarchy sh (a, false);
+	  spot::stats_hierarchy sh (a);
 	  sh.stats_automaton();
 	  std::cout << sh << std::endl;
 	}
