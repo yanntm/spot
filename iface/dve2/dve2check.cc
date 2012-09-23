@@ -31,6 +31,7 @@
 #include <cstring>
 #include "kripke/kripkeexplicit.hh"
 #include "kripke/kripkeprint.hh"
+#include "tgbaalgos/rebuild.hh"
 
 static void
 syntax(char* prog)
@@ -72,8 +73,13 @@ main(int argc, char **argv)
   bool accepting_run = false;
   bool expect_counter_example = false;
   bool deterministic = false;
+  bool wdba = false;
+  bool opt_af = false;
+
   char *dead = 0;
   int compress_states = 0;
+  spot::rebuild::iterator_strategy opt_af_strat =
+    spot::rebuild::DEFAULT;
 
   const char* echeck_algo = "Cou99";
 
@@ -88,6 +94,21 @@ main(int argc, char **argv)
 	    {
 	    case 'C':
 	      accepting_run = true;
+	      break;
+	    case 'a':
+	      switch (opt[1])
+		{
+		case 'f':
+		  const char *strat;
+		  strat = opt + 2;
+		  opt_af = true;
+		  opt_af_strat = 
+		    spot::rebuild::string_to_strategy(strat); 
+		  // std::cout << "strat" <<  strat << std::endl;
+		  break;
+		default:
+		  goto error;
+		}
 	      break;
 	    case 'd':
 	      dead = opt + 1;
@@ -181,6 +202,8 @@ main(int argc, char **argv)
   if (output == EmptinessCheck)
     {
       const char* err;
+      std::cout << "===> Algorithm : " 
+		<< echeck_algo << "\n";
       echeck_inst =
 	spot::emptiness_check_instantiator::construct(echeck_algo, &err);
       if (!echeck_inst)
@@ -255,6 +278,26 @@ main(int argc, char **argv)
   prop = post.run(prop, f);
   tm.stop("postprocessing A_f");
 
+
+  if (opt_af)
+    {
+      // Declare a worker that will computes changes over the 
+      // formula 
+      std::cout << "===> Reordering : " 
+		<< spot::rebuild::strat_to_string ((int)opt_af_strat)
+		<< "\n";
+      spot::rebuild worker (prop, opt_af_strat);
+      tm.start("Reordering formula");
+      spot::tgba *new_tgba =
+	worker.reorder_transitions();
+      tm.stop("Reordering formula");
+
+      // Replace the formula automaton by the newly considered
+      delete prop;
+      prop = new_tgba;
+    }
+
+
   if (output == DotFormula)
     {
       tm.start("dotty output");
@@ -277,6 +320,12 @@ main(int argc, char **argv)
 
   {
     spot::emptiness_check* ec = echeck_inst->instantiate(product);
+
+    // For dynamic algorithms 
+    spot::formula_emptiness_specifier *fes =
+      new spot::formula_emptiness_specifier (product, prop);
+    ec->set_specifier (fes);
+    
     bool search_many = echeck_inst->options().get("repeated");
     assert(ec);
     do
