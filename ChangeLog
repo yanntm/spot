@@ -1,3 +1,8 @@
+2012-05-07  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/ltltest/randltl.cc (main): add option for generate commuting
+	formula
+
 2012-04-17  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbatest/ltl2tgba.cc (main): add options -KS -KT -KW  
