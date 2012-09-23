@@ -62,6 +62,7 @@ tgbaalgos_HEADERS = \
   save.hh \
   scc.hh \
   sccfilter.hh \
+  scc_decompose.hh \
   se05.hh \
   simulation.hh \
   stats.hh \
@@ -108,6 +109,7 @@ libtgbaalgos_la_SOURCES = \
   save.cc \
   scc.cc \
   sccfilter.cc \
+  scc_decompose.cc \
   se05.cc \
   simulation.cc \
   stats.cc \

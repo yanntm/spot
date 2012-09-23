@@ -239,7 +239,7 @@ namespace spot
 		       supp(bddtrue), supp_rec(bddfalse),
 		       trivial(true), useful_acc(bddfalse),
 		       is_weak(false), is_weak_acc(false),
-		       is_weak_hard(false), 
+		       is_weak_hard(false),
 		       is_strong_hard(false),
 		       is_terminal(false)
       {};

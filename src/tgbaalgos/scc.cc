@@ -253,7 +253,7 @@ namespace spot
 	    w_hard = false;
 	  }
 
-	if (scc_map_[sccit->first].is_terminal || 
+	if (scc_map_[sccit->first].is_terminal ||
 	    (!scc_map_[sccit->first].is_weak_hard &&
 	     scc_map_[sccit->first].is_weak))
 	  w_hard = false;
@@ -285,7 +285,7 @@ namespace spot
       {
 	scc_map_[state].is_weak_hard = w_hard;
       }
-    else 
+    else
       {
 	scc_map_[state].is_strong_hard = s_hard;
       }

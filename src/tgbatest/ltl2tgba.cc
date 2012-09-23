@@ -69,6 +69,7 @@
 #include "tgbaalgos/isweakscc.hh"
 #include "kripkeparse/public.hh"
 #include "tgbaalgos/simulation.hh"
+#include "tgbaalgos/scc_decompose.hh"
 
 #include "taalgos/tgba2ta.hh"
 #include "taalgos/dotty.hh"
@@ -291,8 +292,17 @@ syntax(char* prog)
 	    << "  -K    dump the graph of SCCs in dot format" << std::endl
 	    << "  -KV   verbosely dump the graph of SCCs in dot format"
 	    << std::endl
+
 	    << "  -KC   list cycles in automaton" << std::endl
 	    << "  -KW   list weak SCCs" << std::endl
+
+	    << "  -KSgraph   dump the graph extracted from stong SCC"
+	    << std::endl
+	    << "  -KWgraph   dump the graph extracted from weak SCC"
+	    << std::endl
+	    << "  -KTgraph   dump the graph extracted from terminal SCC"
+	    << std::endl
+
 	    << "  -N    output the never clain for Spin (implies -DS)"
 	    << std::endl
 	    << "  -NN   output the never clain for Spin, with commented states"
@@ -590,6 +600,18 @@ main(int argc, char** argv)
       else if (!strcmp(argv[formula_index], "-KW"))
 	{
 	  output = 16;
+	}
+      else if (!strcmp(argv[formula_index], "-KSgraph"))
+	{
+	  output = 17;
+	}
+      else if (!strcmp(argv[formula_index], "-KWgraph"))
+	{
+	  output = 18;
+	}
+      else if (!strcmp(argv[formula_index], "-KTgraph"))
+	{
+	  output = 19;
 	}
       else if (!strcmp(argv[formula_index], "-l"))
 	{
@@ -1616,7 +1638,39 @@ main(int argc, char** argv)
 		  }
 		break;
 	      }
-
+	    case 17:
+	      {
+		spot::scc_decompose sd (a);
+		spot::tgba* term = sd.terminal_automaton();
+		if (term)
+		  spot::dotty_reachable(std::cout, term);
+		else
+		  std::cerr << "No terminal automaton associated"
+			    << std::endl;
+		break;
+	      }
+	    case 18:
+	      {
+		spot::scc_decompose sd (a);
+		spot::tgba* weak = sd.weak_automaton();
+		if (weak)
+		  spot::dotty_reachable(std::cout, weak);
+		else
+		  std::cerr << "No weak automaton associated"
+			    << std::endl;
+		break;
+	      }
+	    case 19:
+	      {
+		spot::scc_decompose sd (a);
+		spot::tgba* strong = sd.strong_automaton();
+		if (strong)
+		  spot::dotty_reachable(std::cout, strong);
+		else
+		  std::cerr << "No strong automaton associated"
+			    << std::endl;
+		break;
+	      }
 	    default:
 	      assert(!"unknown output option");
 	    }

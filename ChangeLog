@@ -1,5 +1,10 @@
 2012-04-17  Etienne Renault  <renault@lrde.epita.fr>
 
+	* src/tgbatest/ltl2tgba.cc (main): add options -KS -KT -KW  
+
+	* src/tgbaalgos/Makefile.am (libtgbaalgos_la_SOURCES): add new
+	files 
+
 	* src/tgbaalgos/scc.cc (spot): Implementation for weak and strong
 	(hard or not) detection 
 

@@ -189,9 +189,9 @@ namespace spot
     int ttt;		///< Transition from terminal to terminal
     int tsum;		///< The sum of all transition explored 
 
-    int scc_terminal;	/// Number of terminal states (processed by scc analysis)
-    int scc_weak;	/// Number of weak states (processed by scc analysis)
-    int scc_strong;	/// Number of stong states (processed by scc analysis)
+    int scc_terminal;	/// Number of terminal states (by scc analysis)
+    int scc_weak;	/// Number of weak states (by scc analysis)
+    int scc_strong;	/// Number of stong states (by scc analysis)
 
     stats_bfs processor; 	///<  Use traditional bfs walk
 
