@@ -32,7 +32,7 @@ namespace spot
   {
     // Tool function used to facilitate the creation of the automaton
     static
-    tgba_explicit::transition*
+    tgba_explicit_formula::transition*
     create_transition(const tgba* aut, tgba_explicit_formula* out_aut,
 		      const state* in_s, int, const state* out_s, int)
     {
@@ -65,11 +65,11 @@ namespace spot
 	  sm_(sm),
 	  dc_(dc)
       {
-	int v = automata_->get_dict()
+	int v = aut_->get_dict()
 	  ->register_acceptance_variable
-	  (ltl::constant::true_instance(), automata_);
+	  (ltl::constant::true_instance(), aut_);
 	the_acc = bdd_ithvar(v);
-	all = automata_->all_acceptance_conditions();
+	all = aut_->all_acceptance_conditions();
       }
 
       T*
@@ -95,8 +95,8 @@ namespace spot
 		   const state* out_s, int out,
 		   const tgba_succ_iterator* si)
       {
-	tgba_explicit::transition* t =
-	  create_transition(this->automata_, out_, in_s, in, out_s, out);
+	tgba_explicit_formula::transition* t =
+	  create_transition(this->aut_, out_, in_s, in, out_s, out);
 	out_->add_conditions(t, si->current_condition());
 
 	switch (dc_)

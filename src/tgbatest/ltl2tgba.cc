@@ -1170,7 +1170,7 @@ main(int argc, char** argv)
 	  assert (formula);
 	}
 
-      const spot::tgba* minimized = 0;
+      spot::tgba* minimized = 0;
       if (opt_minimize)
 	{
 	  tm.start("obligation minimization");
@@ -1276,64 +1276,64 @@ main(int argc, char** argv)
 				// pointless.
 	}
 
-      spot::tgba_reduc* aut_red = 0;
-      if (reduc_aut != spot::Reduce_None)
-	{
-	  if (reduc_aut & ~spot::Reduce_Scc)
-	    {
-	      tm.start("reducing A_f w/ sim.");
-	      a = aut_red = new spot::tgba_reduc(a);
+//       spot::tgba_reduc* aut_red = 0;
+//       if (reduc_aut != spot::Reduce_None)
+// 	{
+// 	  if (reduc_aut & ~spot::Reduce_Scc)
+// 	    {
+// 	      tm.start("reducing A_f w/ sim.");
+// 	      a = aut_red = new spot::tgba_reduc(a);
 
-	      if (reduc_aut & (spot::Reduce_quotient_Dir_Sim |
-			       spot::Reduce_transition_Dir_Sim |
-			       spot::Reduce_quotient_Del_Sim |
-			       spot::Reduce_transition_Del_Sim))
-		{
-		  spot::direct_simulation_relation* rel_dir = 0;
-		  spot::delayed_simulation_relation* rel_del = 0;
+// 	      if (reduc_aut & (spot::Reduce_quotient_Dir_Sim |
+// 			       spot::Reduce_transition_Dir_Sim |
+// 			       spot::Reduce_quotient_Del_Sim |
+// 			       spot::Reduce_transition_Del_Sim))
+// 		{
+// 		  spot::direct_simulation_relation* rel_dir = 0;
+// 		  spot::delayed_simulation_relation* rel_del = 0;
 
-		  if (reduc_aut & (spot::Reduce_quotient_Dir_Sim |
-				   spot::Reduce_transition_Dir_Sim))
-		    {
-		      rel_dir =
-			spot::get_direct_relation_simulation
-			  (a, std::cout, display_parity_game);
-		      assert(rel_dir);
-		    }
-		  if (reduc_aut & (spot::Reduce_quotient_Del_Sim |
-					spot::Reduce_transition_Del_Sim))
-		    {
-		      rel_del =
-			spot::get_delayed_relation_simulation
-			  (a, std::cout, display_parity_game);
-		      assert(rel_del);
-		    }
+// 		  if (reduc_aut & (spot::Reduce_quotient_Dir_Sim |
+// 				   spot::Reduce_transition_Dir_Sim))
+// 		    {
+// 		      rel_dir =
+// 			spot::get_direct_relation_simulation
+// 			  (a, std::cout, display_parity_game);
+// 		      assert(rel_dir);
+// 		    }
+// 		  if (reduc_aut & (spot::Reduce_quotient_Del_Sim |
+// 					spot::Reduce_transition_Del_Sim))
+// 		    {
+// 		      rel_del =
+// 			spot::get_delayed_relation_simulation
+// 			  (a, std::cout, display_parity_game);
+// 		      assert(rel_del);
+// 		    }
 
-		  if (display_rel_sim)
-		    {
-		      if (rel_dir)
-			aut_red->display_rel_sim(rel_dir, std::cout);
-		      if (rel_del)
-			aut_red->display_rel_sim(rel_del, std::cout);
-		    }
+// 		  if (display_rel_sim)
+// 		    {
+// 		      if (rel_dir)
+// 			aut_red->display_rel_sim(rel_dir, std::cout);
+// 		      if (rel_del)
+// 			aut_red->display_rel_sim(rel_del, std::cout);
+// 		    }
 
-		  if (reduc_aut & spot::Reduce_quotient_Dir_Sim)
-		    aut_red->quotient_state(rel_dir);
-		  if (reduc_aut & spot::Reduce_transition_Dir_Sim)
-		    aut_red->delete_transitions(rel_dir);
-		  if (reduc_aut & spot::Reduce_quotient_Del_Sim)
-		    aut_red->quotient_state(rel_del);
-		  if (reduc_aut & spot::Reduce_transition_Del_Sim)
-		    aut_red->delete_transitions(rel_del);
+// 		  if (reduc_aut & spot::Reduce_quotient_Dir_Sim)
+// 		    aut_red->quotient_state(rel_dir);
+// 		  if (reduc_aut & spot::Reduce_transition_Dir_Sim)
+// 		    aut_red->delete_transitions(rel_dir);
+// 		  if (reduc_aut & spot::Reduce_quotient_Del_Sim)
+// 		    aut_red->quotient_state(rel_del);
+// 		  if (reduc_aut & spot::Reduce_transition_Del_Sim)
+// 		    aut_red->delete_transitions(rel_del);
 
-		  if (rel_dir)
-		    spot::free_relation_simulation(rel_dir);
-		  if (rel_del)
-		    spot::free_relation_simulation(rel_del);
-		}
-	      tm.stop("reducing A_f w/ sim.");
-	    }
-	}
+// 		  if (rel_dir)
+// 		    spot::free_relation_simulation(rel_dir);
+// 		  if (rel_del)
+// 		    spot::free_relation_simulation(rel_del);
+// 		}
+// 	      tm.stop("reducing A_f w/ sim.");
+// 	    }
+// 	}
 
       if (opt_hanalysis)
 	{
@@ -1343,7 +1343,7 @@ main(int argc, char** argv)
 	}
 
 
-      const spot::tgba_explicit* expl = 0;
+      const spot::tgba* expl = 0;
       switch (dupexp)
 	{
 	case NoneDup:

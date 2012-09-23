@@ -220,7 +220,7 @@ int main(int argc, char **argv)
   // The formula string 
   std::string input =  argv[formula_index];
   // The formula in spot 
-  spot::ltl::formula* f = 0;
+  const spot::ltl::formula* f = 0;
 
   //
   // Building the formula from the input 
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
 	if (simp)
 	  {
 	    tm.start("reducing formula");
-	    spot::ltl::formula* t = simp->simplify(f);
+	    const spot::ltl::formula* t = simp->simplify(f);
 	    f->destroy();
 	    tm.stop("reducing formula");
 	    f = t;

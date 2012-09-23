@@ -88,8 +88,8 @@ namespace spot
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
 
-	const state_explicit* fstate =
-	  dynamic_cast<const state_explicit*> (sproj);
+	const state_explicit_formula* fstate =
+	  dynamic_cast<const state_explicit_formula*> (sproj);
 	assert(fstate);
 	f  = dynamic_cast<const ltl::formula*>
 	  (dynamic_cast<const tgba_explicit_formula*> (f_)->get_label(sproj));
@@ -102,8 +102,8 @@ namespace spot
 	// Compute first formula 
 	state * sproj1 = sys_->project_state(s, f_);
 	assert(sproj1);
-	const state_explicit* fstate1 =
-	  dynamic_cast<const state_explicit*> (sproj1);
+	const state_explicit_formula* fstate1 =
+	  dynamic_cast<const state_explicit_formula*> (sproj1);
 	const ltl::formula* f1  = dynamic_cast<const ltl::formula*>
 	  (dynamic_cast<const tgba_explicit_formula*>
 	   (f_)->get_label(fstate1));
@@ -112,8 +112,8 @@ namespace spot
 	// Compute second formula 
 	state * sproj2 = sys_->project_state(s, s_);
 	assert(sproj1);
-	const state_explicit* fstate2 =
-	  dynamic_cast<const state_explicit*> (sproj2);
+	const state_explicit_formula* fstate2 =
+	  dynamic_cast<const state_explicit_formula*> (sproj2);
 	const ltl::formula* f2  = dynamic_cast<const ltl::formula*>
 	  (dynamic_cast<const tgba_explicit_formula*>
 	   (s_)->get_label(fstate2));
@@ -149,8 +149,8 @@ namespace spot
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
 
-	const state_explicit* fstate =
-	  dynamic_cast<const state_explicit*> (sproj);
+	const state_explicit_formula* fstate =
+	  dynamic_cast<const state_explicit_formula*> (sproj);
 
 	unsigned id_scc = sm->scc_of_state(fstate);
 	res = sm->weak_accepting(id_scc);
@@ -173,13 +173,13 @@ namespace spot
       {
 	state * sproj1 = sys_->project_state(s1, f_);
 	assert(sproj1);
-	const state_explicit* fstate1 =
-	  dynamic_cast<const state_explicit*> (sproj1);
+	const state_explicit_formula* fstate1 =
+	  dynamic_cast<const state_explicit_formula*> (sproj1);
 	unsigned id_scc1 = sm->scc_of_state(fstate1);
 	state * sproj2 = sys_->project_state(s2, f_);
 	assert(sproj2);
-	const state_explicit* fstate2 =
-	  dynamic_cast<const state_explicit*> (sproj2);
+	const state_explicit_formula* fstate2 =
+	  dynamic_cast<const state_explicit_formula*> (sproj2);
 	assert (fstate2);
 	unsigned id_scc2 = sm->scc_of_state(fstate2);
 
@@ -204,13 +204,14 @@ namespace spot
 
     // todo 
     std::stack
-      <spot::state_explicit*> todo_tmp;
+      <spot::state_explicit_formula*> todo_tmp;
 
     // Initial state of the automaton
-    spot::state_explicit *i_src =
-      (spot::state_explicit *) f_->get_init_state();
+    spot::state_explicit_formula *i_src =
+      (spot::state_explicit_formula *) f_->get_init_state();
     visited_tmp->insert(i_src->clone());
-    todo_tmp.push (i_src->clone());
+    //    todo_tmp.push (i_src->clone());
+    todo_tmp.push (i_src);
 
       // Perform work for the initial state 
       {
@@ -226,17 +227,17 @@ namespace spot
       while (!todo_tmp.empty())	// We have always an initial state 
 	{
 	  // Init all vars 
-	  spot::state_explicit *s_src;
+	  spot::state_explicit_formula *s_src;
 	  s_src = todo_tmp.top();
 	  todo_tmp.pop();
 
 	  // Iterator over the successor of the src
-	  spot::tgba_explicit_succ_iterator *si =
-	    (tgba_explicit_succ_iterator*) f_->succ_iter (s_src);
+	  spot::tgba_explicit_succ_iterator<spot::state_explicit_formula> *si =
+	    (tgba_explicit_succ_iterator<spot::state_explicit_formula>*) f_->succ_iter (s_src);
 	  for (si->first(); !si->done(); si->next())
 	    {
 	      // Get successor of the src
-	      spot::state_explicit * succ_src = si->current_state();
+	      spot::state_explicit_formula * succ_src = si->current_state();
 
 	      // It's a new state we have to visit it
 	      if (visited_tmp->find (succ_src) == visited_tmp->end())
@@ -370,8 +371,8 @@ namespace spot
 	state * sproj = sys_->project_state(s, f_);
 	assert(sproj);
 
-	const state_explicit* fstate =
-	  dynamic_cast<const state_explicit*> (sproj);
+	const state_explicit_formula* fstate =
+	  dynamic_cast<const state_explicit_formula*> (sproj);
 
 	unsigned id_scc = sm->scc_of_state(fstate);
 	res = sm->terminal_accepting(id_scc);

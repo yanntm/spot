@@ -228,6 +228,11 @@ namespace spot
       scc_strong    = 0;
     }
 
+    virtual
+    ~stats_hierarchy  ()
+    {
+    }
+
     void stats_automaton ()
     {
       if (fs && sum)

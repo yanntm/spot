@@ -58,11 +58,12 @@ namespace spot
     dict->register_all_variables_of(f, t);
 
     // Create the new initial state for the new TGBA
-    spot::state_explicit *i_src = (spot::state_explicit *)f->get_init_state();
+    spot::state_explicit_formula *i_src =
+      (spot::state_explicit_formula *)f->get_init_state();
 
     // This presuppose that all first state is consider as init 
     // should be documented
-    spot::state_explicit *i_dst =
+    spot::state_explicit_formula *i_dst =
 		t->add_state(f->get_label(i_src)->clone());
       //(spot::state_explicit *) t->get_init_state();
     todo.push(std::make_pair (i_src, i_dst));
@@ -77,7 +78,7 @@ namespace spot
     i_src->destroy();
     i_dst->destroy();
 
-    std::pair <spot::state_explicit *, spot::state_explicit *> apair;
+    std::pair <spot::state_explicit_formula *, spot::state_explicit_formula *> apair;
      while (!todo.empty())	// We have always an initial state 
       {
 	// Get the pair to work on
@@ -85,7 +86,7 @@ namespace spot
 	todo.pop();
 
 	// Init all vars 
-	spot::state_explicit *s_src, *s_dst;
+	spot::state_explicit_formula *s_src, *s_dst;
 	s_src = apair.first;
 	s_dst = apair.second;
 
@@ -98,13 +99,13 @@ namespace spot
  	  new std::list< rebuild::sort_trans >();
 
  	// Iterator over the successor of the src
-	spot::tgba_explicit_succ_iterator *si =
-	  (tgba_explicit_succ_iterator*) f->succ_iter (s_src);
+	spot::tgba_explicit_succ_iterator<spot::state_explicit_formula> *si =
+	  (tgba_explicit_succ_iterator<spot::state_explicit_formula>*) f->succ_iter (s_src);
 	for (si->first(); !si->done(); si->next())
 	  {
 	    // Get successor of the src and dst 
- 	    spot::state_explicit * succ_src = si->current_state();
- 	    spot::state_explicit * succ_dst;
+ 	    spot::state_explicit_formula * succ_src = si->current_state();
+ 	    spot::state_explicit_formula * succ_dst;
 
 	    if (!t->has_state(f->get_label(succ_src)))
 	      succ_dst =
@@ -130,8 +131,8 @@ namespace spot
 
  	    // Get the info store them to rebuild an ordering set later
 	    sort_trans st = {t,
-			     (spot::state_explicit*) s_dst->clone(),
-			     (spot::state_explicit*)succ_dst->clone(),
+			     (spot::state_explicit_formula*) s_dst->clone(),
+			     (spot::state_explicit_formula*)succ_dst->clone(),
 			     cond, acc, visited};
 	    alist->push_back(st);
 
@@ -150,7 +151,7 @@ namespace spot
  	std::list<rebuild::sort_trans>::iterator it;
  	for (it = alist->begin(); it != alist->end();)
 	  {
-	    spot:: state_explicit::transition* trans = 0;
+	    spot::state_explicit_formula::transition* trans = 0;
 	    sort_trans st = *it;
 	    trans = t->create_transition(st.sdst,
 					 st.succdst);

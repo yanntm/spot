@@ -994,7 +994,7 @@ main(int argc, char** argv)
     {
       if (opt_F)
         {
-          spot::ltl::formula* f = generate_formula(rl, *simp,
+          const spot::ltl::formula* f = generate_formula(rl, *simp,
 						   opt_f, opt_ec_seed,
 						   opt_l, opt_u);
           if (!f)

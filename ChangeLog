@@ -1,3 +1,27 @@
+2012-05-10  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/tgbaalgos/stats_hierarchy.hh (spot): add constness 
+
+	* src/tgbatest/ltl2tgba.cc (main): scc comments 
+
+	* src/tgbatest/randtgba.cc (main): add constness 
+
+	* src/tgbaalgos/stats_hierarchy.hh (spot): add destructor
+
+	* src/tgbaalgos/scc_decompose.cc (spot): adapt to take in
+	consideration tgba_explicit_formula 
+
+	* src/tgbaalgos/rebuild.hh (spot): adapt to take in
+	consideration state_explicit_formula
+
+	* src/tgbaalgos/rebuild.cc (spot): adapt to take in
+	consideration state_explicit_formula
+
+	* src/tgbaalgos/emptiness_specifier.cc (spot): adapt to take in
+	consideration state_explicit_formula
+
+	* src/ltltest/randltl.cc (main): add commuting generation 
+
 2012-05-08  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/scc.cc (spot): Detection of weak accepting SCC
