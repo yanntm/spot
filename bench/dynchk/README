@@ -1,7 +1,79 @@
+This directory contains the input files and scripts used to produce
+the measures for dynamic algorithms 
+
+==========
+ CONTENTS
+==========
+
+* models/cl3serv1.pml
+* models/cl3serv3.pml
+
+    Two simple client server models
+
+* models/eeaean1.pml
+* models/eeaean2.pml
+
+    Variations of the leader election protocol with extinction from
+    Tel, Introduction to Distributed Algorithms, 1994, Chapter 7. The
+    network in the model consists of three nodes. In Variant 1, the
+    same node wins every time, in Variant 2, each node gets a turn at
+    winning the election.  These specifications were originally
+    distributed alongside
+
+* models/eeaean1.test_suite
+* models/eeaean2.test_suite
+
+    Formula to check over the two previous algorithms 
+
+* algorithms
+
+    Various algorithms 
+
+* dynchk.cc
+
+    The tool used to perform benchs 
+
+* generator.sh
+
+    A tool alowing to produce commuting formula
+
+* pml2tgba.pl
+
+    A Perl script to translate Promela models into TGBA readable by Spot.
+    This requires a working spin in PATH.
+
+* test_suite.sh
+
+   The main script to launch to run all benchs for commuting formula 
+   with an LaTeX  output 
+
+==========
+ USAGE
+==========
+
+  1. If that is not done already, configure and compile all the Spot
+     library, then come back into this directory.
+
+  2. Run `make' in this directory.  This will call pml2tgba.pl to
+     generate the TGBA input for the two pml-*.sh tests.
+
+     Promela inputs are translated in 4 different graphs.
+     For instance eeaean1.pml is translated as
+       - eeaean1.tgba        full translation
+       - eeaean1fair.tgba    full translation with weak fairness
+       - eeaean1R.tgba       reduced translation
+       - eeaean1Rfair.tgba   reduced translation with weak fairness
+     The "reduced" translation uses Spin's partial order reductions.
+
+     (The "R"educed variants are not shown in the paper.)
+
+  3. Run test_suite.sh
 
 
-test_suite.sh: launch all benchs models
-generator.sh : create a set of commuting formula   
+==========================
+ INTERPRETING THE RESULTS
+==========================
+
+  Juste put the output inside a LaTex File 
 
 
-... to be continue

@@ -185,6 +185,7 @@ doc/              Documentation for libspot.
    spot.html/     HTML reference manual for the library.
 bench/            Benchmarks for ...
    emptchk/       ... emptiness-check algorithms,
+   dynchk/        ... dynamic emptiness-check algorithms,
    ltl2tgba/      ... LTL-to-Büchi translation algorithms,
    ltlcounter/    ... translation of a class of LTL formulae,
    ltlclasses/    ... translation of more classes of LTL formulae,

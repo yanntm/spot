@@ -44,7 +44,7 @@ main(int argc, char **argv)
   if (argc > 3 || argc < 2)
     syntax(argv[0]);
 
-  if( argc == 3)
+  if (argc == 3)
     {
       if (!strcmp(argv[1], "-spin-syntax"))
 	opt_spin = true;
@@ -84,7 +84,7 @@ main(int argc, char **argv)
 
   if (opt_spin)
     to_spin_string (f2, std::cout, true);
-  else 
+  else
     std::cout << f2s << std::endl;
 
   if (f2s != f1s)
