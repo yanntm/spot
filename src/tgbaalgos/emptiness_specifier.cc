@@ -48,7 +48,7 @@ namespace spot
 
   formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a,
 							    const tgba * f)
-    : sys_(a) , f_(f),state_cache_(0), right_cache_(0),
+    : sys_(a) , f_(f), state_cache_(0), right_cache_(0),
       strength_cache_(StrongSubaut), termacc_cache_(false),
       id_cache_(0), weak_accepting_cache_(false)
   {
@@ -73,7 +73,7 @@ namespace spot
     if (state_cache_ == s1)
       id_scc1 = id_cache_;
     else{
-      state * sproj1 = (static_cast<const spot::state_product*> (s1))->right(); 
+      state * sproj1 = (static_cast<const spot::state_product*> (s1))->right();
       id_scc1 = sm->scc_of_state(sproj1);
     }
 
@@ -118,7 +118,7 @@ namespace spot
   //   return !is_guarantee(s) &&  !is_persistence(s);
   // }
 
-  strength 
+  strength
   formula_emptiness_specifier::typeof_subautomaton
   (const state *s)
   {
@@ -144,12 +144,12 @@ namespace spot
 
   inline void formula_emptiness_specifier::update_cache(const state *s)
   {
-    if (state_cache_ == s) 
+    if (state_cache_ == s)
       return;
 
     // This is the correct way to do what we want 
     right_cache_ =  sys_->project_state(s, f_);
-    
+
     // This is an optimisation
     //right_cache_ = (static_cast<const spot::state_product*> (s))->right();
     id_cache_ = sm->scc_of_state(right_cache_);

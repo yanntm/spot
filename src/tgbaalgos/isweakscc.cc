@@ -96,10 +96,9 @@ namespace spot
 	const ltl::formula *f = dynamic_cast<const ltl::formula*>
 	  (((const tgba_explicit_formula*) a)->get_label(s));
 
-	if(//(!(f->is_syntactic_guarantee())) &&
-	   ( f->is_syntactic_obligation() ||
-	     f->is_syntactic_persistence() ||
-	     f->is_syntactic_safety()))
+	if ((f->is_syntactic_obligation() ||
+	    f->is_syntactic_persistence() ||
+	    f->is_syntactic_safety()))
 	  return true;
 
       }

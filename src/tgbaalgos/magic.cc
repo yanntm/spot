@@ -656,7 +656,6 @@ namespace spot
                     c.set_color(RED);
                     push(st_red, f_dest.s, f_dest.label, f_dest.acc);
 
-		    
 		    strength str = StrongSubaut;
 		    if (is_dynamic)
 		      str = es_->typeof_subautomaton(f_dest.s);

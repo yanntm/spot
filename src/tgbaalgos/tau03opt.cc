@@ -657,7 +657,7 @@ inc_reachability();
                         return true;
                       }
 		    strength str = StrongSubaut;
-		    if (is_dynamic) 
+		    if (is_dynamic)
 		      es_->typeof_subautomaton(f.s);
                     if (is_dynamic && c_prime.get_color() == CYAN
 			&& !(str == WeakSubaut)
