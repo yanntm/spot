@@ -84,30 +84,6 @@ namespace spot
           }
       }
 
-      void
-      stats_formula (const spot::state *s)
-      {
-	strength str = es_->typeof_subautomaton (s);
-	if (str == TerminalSubaut)
-	  inc_reachability();
-	else if (str == WeakSubaut)
-	  inc_dfs();
-	else
-	  inc_ndfs();
-      }
-
-      void
-      stats_commut (const spot::state *s)
-      {
-	strength str = es_->typeof_subautomaton (s);
-	if (str == TerminalSubaut)
-	  commut_algo (REACHABILITY);
-	else if (str == WeakSubaut)
-	  commut_algo (DFS);
-	else
-	  commut_algo(NDFS);
-      }
-
       /// \brief Perform a Magic Search.
       ///
       /// \return non null pointer iff the algorithm has found a
@@ -158,18 +134,6 @@ namespace spot
 		// We are in the general case apply default algo.
 		else
 		  is_static = false;
-	      }
-
-	    // If it's dynamic update the good stats.
-	    if (is_dynamic)
-	      {
-		stats_commut (s0);
-		stats_formula (s0);
-	      }
-	    else
-	      {
-		inc_ndfs();
-		commut_algo(NDFS);
 	      }
 
             h.add_new_state(s0, BLUE);
@@ -513,8 +477,6 @@ namespace spot
 		// the same function that static one
 		if (is_dynamic)
 		   {
-		    stats_commut (f.s);
-
 		    // Fast optimisation to avoid a push on the stack
 		    if (is_dynamic && es_->is_terminal_accepting_scc (s_prime))
 		      {
@@ -581,12 +543,6 @@ namespace spot
                   {
                     trace << "  It is white, go down" << std::endl;
                     inc_states();
-		    if (is_dynamic)
-		      {
-			stats_formula (s_prime);
-		      }
-		    else
-		      inc_ndfs();
                     h.add_new_state(s_prime, BLUE);
                     push(st_blue, s_prime, label, acc);
                   }
