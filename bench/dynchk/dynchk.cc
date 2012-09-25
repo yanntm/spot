@@ -139,6 +139,7 @@ void print_results (const char* algo, std::string result,
 const char *dyn_degen [] =
   {
     "SE05_dyn",
+    "SE05_stat",
     "SE05",
     // "CVWY90_dyn",
     // "CVWY90",
