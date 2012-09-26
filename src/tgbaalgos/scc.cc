@@ -25,6 +25,7 @@
 #include "tgba/bddprint.hh"
 #include "misc/escape.hh"
 #include "misc/accconv.hh"
+#include "isweakscc.hh"
 
 namespace spot
 {
@@ -166,48 +167,11 @@ namespace spot
 
     std::list<const spot::state*> states = cc.states;
 
-    // Check if the SCC is weak : all accepting or none 
+    // Tag all SCC  
     int size = states.size();
     while (size)
       {
-	bool weak  = true; // Presuppose every SCC is weak
-
-	// Walk all states included in the SCC
-	//	bool least_self_loop = false;
-	std::list<const spot::state*>::iterator iter =
-	  states.begin();
-	for (; iter != states.end(); ++iter)
-	  {
-	    // For all of these state we look all succ that 
-	    // belong to this SCC and check if the transition 
-	    // is acc 
-	    tgba_succ_iterator *sit = a->succ_iter (*iter);
-	    assert(sit);
- 	    for (sit->first(); !sit->done(); sit->next())
- 	      {
-
-		// Get the current state
-		const spot::state *stt =  sit->current_state();
-
-		// Not same SCC
-		if (scc_of_state(*iter) != scc_of_state(stt))
-		  {
-		    stt->destroy();
-		    continue;
-		  }
-
-		if (sit->current_acceptance_conditions() != all &&
-		    accepting(scc_of_state(stt)))
-		  {
-		    stt->destroy();
-		    weak = false;
-		    break;
-		  }
-		stt->destroy();
-	      }
-  	    delete sit;
-	  }
-	if (weak)
+	if (is_weak_heuristic(*this, state))
 	  {
 	    scc_map_[state].is_weak_subautomaton = true;
 
@@ -223,7 +187,6 @@ namespace spot
     bool w_hard = true;
     bool s_hard = true;
     bool all_term = true;
-    //bool all_weak = true;
     for (sccit = s.begin(); sccit != s.end(); ++sccit)
       {
 	update_weak(sccit->first);
@@ -247,9 +210,6 @@ namespace spot
 
 	if (!scc_map_[sccit->first].is_terminal_subautomaton)
 	  all_term = false;
-
-	// if (!scc_map_[sccit->first].is_weak_subautomaton)
-	//   all_weak = false;
       }
 
     if (scc_map_[state].is_weak_subautomaton &&
@@ -544,36 +504,8 @@ namespace spot
   bool
   scc_map::internal_terminal_accepting(unsigned n)
   {
-    const std::list<const state*>& st = states_of(n);
-
-    // Here it s the assumption that all terminal SCC 
-    // have been reduced to a single state that accept 
-    // all words 
-    if (st.size() != 1)
-      {
-	return false;
-      }
-
-    const state* s = *st.begin();
-    tgba_succ_iterator* it = aut_->succ_iter(s);
-    it->first();
-    if (it->done())
-      {
-	// No successors
-	delete it;
-	return false;
-      }
-    assert(!it->done());
-    state* dest = it->current_state();
-    bdd cond = it->current_condition();
-    it->next();
-    bool result = (!dest->compare(s)) && it->done() && (cond == bddtrue);
-    dest->destroy();
-    delete it;
-
-    return result;
+    return is_terminal_heuristic (aut_, *this, n);
   }
-
 
   const std::list<const state*>& scc_map::states_of(unsigned n) const
   {

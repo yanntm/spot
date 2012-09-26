@@ -38,7 +38,11 @@ namespace spot
   /// necessarily weak.
   /// For other accepting SCCs, this function enumerates all cycles in
   /// the given SCC (it stops if it find a non-accepting cycle).
-  bool is_weak_scc(scc_map& map, unsigned scc);
+  bool is_weak_scc(scc_map& map, unsigned scc, bool easydetect = true);
+
+
+  bool
+  is_complete_scc(const tgba *a, scc_map& map, unsigned scc);
 
 
   /// \addtogroup tgba_misc
@@ -59,6 +63,16 @@ namespace spot
   /// For other accepting SCCs, this function enumerates all cycles in
   /// the given SCC (it stops if it find a non-accepting cycle).
   bool is_syntactic_weak_scc(const tgba *a, scc_map& map, unsigned scc);
+
+
+
+  bool is_syntactic_terminal_scc(const tgba *a, scc_map& map, unsigned scc);
+
+  bool
+  is_terminal_heuristic (const tgba *a, scc_map& map, unsigned scc);
+
+  bool
+  is_weak_heuristic(scc_map& map, unsigned scc);
 
   /// @}
 }
