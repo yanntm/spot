@@ -26,6 +26,7 @@
 #include "ltlast/constant.hh"
 #include "tgbaalgos/minimize.hh"
 #include "tgbaalgos/simulation.hh"
+#include "tgbaalgos/save.hh"
 
 namespace spot
 {
@@ -267,13 +268,18 @@ namespace spot
     if (!terminal_)
       {
 	decompose_terminal();
-
 	// Check at least 1 condition Acc[True]
 	// Which means that there is a reachable 
 	// accepting edge at least (i.e. the automaton
 	// contains terminal states)
 	if (terminal_->number_of_acceptance_conditions() == 0)
 	  return 0;
+
+	// Remove useless 
+      	tgba *tmp  = spot::scc_filter(terminal_, true);
+      	delete terminal_; 
+      	terminal_ = tmp;
+
 
 	spot::tgba* minimized = 0;
 	if (minimize)
@@ -303,6 +309,11 @@ namespace spot
 	// contains a weak accepting SCC)
 	if (weak_->number_of_acceptance_conditions() == 0)
 	  return 0;
+
+	// Remove useless 
+      	tgba *tmp  = spot::scc_filter(weak_, true);
+      	delete weak_; 
+      	weak_ = tmp;
 
 	spot::tgba* minimized = 0;
 	if (minimize)
@@ -334,6 +345,9 @@ namespace spot
     if (!strong_)
       {
 	decompose_strong();
+      	tgba *tmp  = spot::scc_filter(strong_, true);
+      	delete strong_; 
+      	strong_ = tmp;
 	spot::tgba* minimized = 0;
 	if (minimize)
 	  {

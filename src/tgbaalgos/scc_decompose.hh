@@ -24,6 +24,7 @@
 
 #include "tgba/tgba.hh"
 #include "tgbaalgos/scc.hh"
+#include "tgbaalgos/sccfilter.hh"
 
 namespace spot
 {
