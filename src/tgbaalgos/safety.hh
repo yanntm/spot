@@ -47,6 +47,13 @@ namespace spot
   /// build_map() before passing it to this function.
   bool is_guarantee_automaton(const tgba* aut, const scc_map* sm = 0);
 
+
+  bool is_persistence_automaton(const tgba* aut, const scc_map* sm = 0);
+
+
+
+
+
   /// \brief Whether a minimized WDBA represents a safety property.
   ///
   /// A minimized WDBA (as returned by a successful run of

@@ -643,7 +643,7 @@ namespace spot
 
     // If aut_f is a guarantee automaton, the WDBA minimization must be
     // correct.
-    if (is_guarantee_automaton(aut_f))
+    if (is_persistence_automaton(aut_f))
       return min_aut_f;
 
     if (!f && !aut_neg_f)

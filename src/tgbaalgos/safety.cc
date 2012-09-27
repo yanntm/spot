@@ -23,6 +23,30 @@
 namespace spot
 {
   bool
+  is_persistence_automaton(const tgba* aut, const scc_map* sm)
+  {
+    bool need_sm = !sm;
+    if (need_sm)
+      {
+	scc_map* x = new scc_map(aut);
+	x->build_map();
+	sm = x;
+      }
+
+    state* in = aut->get_init_state();
+    int val = sm->scc_of_state(in);
+    in->destroy();
+
+    strength str = sm->typeof_subautomaton (val);
+
+    // Free the scc_map if we created it.
+    if (need_sm)
+      delete sm;
+
+    return str == WeakSubaut;
+  }
+
+  bool
   is_guarantee_automaton(const tgba* aut, const scc_map* sm)
   {
     // Create an scc_map of the user did not give one to us.
