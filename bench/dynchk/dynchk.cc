@@ -433,7 +433,7 @@ int main(int argc, char **argv)
       const spot::tgba* strong = a;
       if (opt_dT)
 	{
-	  sd = new spot::scc_decompose (a, false);
+	  sd = new spot::scc_decompose (a, true);
       	  const spot::tgba* term_a = sd->terminal_automaton();
       	  if (term_a)
       	    {
@@ -465,7 +465,7 @@ int main(int argc, char **argv)
 
       if (opt_dW)
 	{
-	  sd = new spot::scc_decompose (a, false);
+	  sd = new spot::scc_decompose (a, true);
       	  const spot::tgba* weak_a = sd->weak_automaton();
       	  if (weak_a)
       	    {
@@ -497,7 +497,7 @@ int main(int argc, char **argv)
 
       if (opt_dS)
 	{
-	  sd = new spot::scc_decompose (a, false);
+	  sd = new spot::scc_decompose (a, true);
       	  const spot::tgba* strong_a = sd->strong_automaton();
       	  if (strong_a)
       	    {
@@ -526,8 +526,6 @@ int main(int argc, char **argv)
 	    }
       	  assert (a);
 	}
-
-
 
       /// The system has not yet be build  we have to create it 
       /// For dve models.
