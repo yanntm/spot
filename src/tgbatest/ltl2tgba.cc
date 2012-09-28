@@ -1591,7 +1591,7 @@ main(int argc, char** argv)
 	    case 17:
 	      {
 		spot::scc_decompose sd (a);
-		spot::tgba* term = sd.terminal_automaton();
+		const spot::tgba* term = sd.terminal_automaton();
 		if (term)
 		  spot::dotty_reachable(std::cout, term);
 		else
@@ -1602,7 +1602,7 @@ main(int argc, char** argv)
 	    case 18:
 	      {
 		spot::scc_decompose sd (a);
-		spot::tgba* weak = sd.weak_automaton();
+		const spot::tgba* weak = sd.weak_automaton();
 		if (weak)
 		  spot::dotty_reachable(std::cout, weak);
 		else
@@ -1613,7 +1613,7 @@ main(int argc, char** argv)
 	    case 19:
 	      {
 		spot::scc_decompose sd (a);
-		spot::tgba* strong = sd.strong_automaton();
+		const spot::tgba* strong = sd.strong_automaton();
 		if (strong)
 		  spot::dotty_reachable(std::cout, strong);
 		else

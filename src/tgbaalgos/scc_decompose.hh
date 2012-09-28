@@ -38,18 +38,21 @@ namespace spot
     bool is_terminal;
     scc_map *sm;		// The map used to decompose
     const tgba* src_;		// The orginal automaton
-    tgba* terminal_;		// The terminal extracted 
-    tgba* weak_;		// The weak extracted 
-    tgba* strong_;		// The strong extracted 
+    const tgba* terminal_;	// The terminal extracted 
+    const tgba* weak_;		// The weak extracted 
+    const tgba* strong_;	// The strong extracted 
     bool minimize;		// Should we minimize
 
   public :
     scc_decompose(const tgba *a, bool minimize = false):
       src_(a), minimize (minimize)
     {
-      terminal_ = weak_ = strong_ = 0;
+      //terminal_ = 0;//weak_ = 0;//strong_ = 0;
       sm = new scc_map(src_);
       sm->build_map();
+      decompose_weak();
+      decompose_terminal();
+      decompose_strong();
     }
 
     virtual
@@ -68,7 +71,7 @@ namespace spot
     /// will return 0
     ///
     /// This function may call decompose function 
-    tgba*
+    const tgba*
     terminal_automaton ();
 
     /// \brief Return the weakterminal automaton extracted of the 
@@ -78,7 +81,7 @@ namespace spot
     /// will return 0
     ///
     /// This function may call decompose function 
-    tgba*
+    const tgba*
     weak_automaton ();
 
     /// \brief Return the strong automaton extracted of the 
@@ -88,7 +91,7 @@ namespace spot
     /// will return 0
     ///
     /// This function may call decompose function 
-    tgba*
+    const tgba*
     strong_automaton ();
 
     /// \brief This function perform a decomposition into 

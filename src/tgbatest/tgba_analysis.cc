@@ -365,7 +365,7 @@ int main(int argc, char **argv)
       if (opt_dsa)
 	{
 	  spot::scc_decompose sd (a, opt_m);
-	  spot::tgba* strong = sd.strong_automaton();
+	  const spot::tgba* strong = sd.strong_automaton();
 
 	  if (strong)
 	    spot::dotty_reachable(std::cout, strong);
@@ -376,7 +376,7 @@ int main(int argc, char **argv)
       if (opt_dwa)
 	{
 	  spot::scc_decompose sd (a, opt_m);
-	  spot::tgba* weak = sd.weak_automaton();
+	  const spot::tgba* weak = sd.weak_automaton();
 
 	  if (weak)
 	    spot::dotty_reachable(std::cout, weak);
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
       if (opt_dta)
 	{
 	  spot::scc_decompose sd (a, opt_m);
-	  spot::tgba* term = sd.terminal_automaton();
+	  const spot::tgba* term = sd.terminal_automaton();
 
 	  if (term)
 	    spot::dotty_reachable(std::cout, term);
@@ -404,7 +404,7 @@ int main(int argc, char **argv)
       if (opt_ctma)
 	{
 	  spot::scc_decompose sd (a);
-	  spot::tgba* term = sd.terminal_automaton();
+	  const spot::tgba* term = sd.terminal_automaton();
 	  if (!term)
 	    std::cerr << "No terminal automaton associated"
 		      << std::endl;
@@ -416,7 +416,7 @@ int main(int argc, char **argv)
 
 	      // Stat for minimised 
 	      spot::scc_decompose sd1 (a, true);
-	      spot::tgba* minimized = sd1.terminal_automaton();
+	      const spot::tgba* minimized = sd1.terminal_automaton();
 	      spot::tgba_statistics m_size =
 	       	spot::stats_reachable(minimized);
 
@@ -446,7 +446,7 @@ int main(int argc, char **argv)
       if (opt_cwma)
 	{
 	  spot::scc_decompose sd (a);
-	  spot::tgba* weak = sd.weak_automaton();
+	  const spot::tgba* weak = sd.weak_automaton();
 	  if (!weak)
 	    std::cerr << "No weak automaton associated"
 		      << std::endl;
@@ -458,7 +458,7 @@ int main(int argc, char **argv)
 
 	      // Stat for minimised 
 	      spot::scc_decompose sd1 (a, true);
-	      spot::tgba* minimized = sd1.weak_automaton();
+	      const spot::tgba* minimized = sd1.weak_automaton();
 	      spot::tgba_statistics m_size =
 	       	spot::stats_reachable(minimized);
 
@@ -488,7 +488,7 @@ int main(int argc, char **argv)
       if (opt_csma)
 	{
 	  spot::scc_decompose sd (a);
-	  spot::tgba* strong = sd.strong_automaton();
+	  const spot::tgba* strong = sd.strong_automaton();
 	  if (!strong)
 	    std::cerr << "No terminal automaton associated"
 		      << std::endl;
@@ -500,7 +500,7 @@ int main(int argc, char **argv)
 
 	      // Stat for minimised 
 	      spot::scc_decompose sd1 (a, true);
-	      spot::tgba* minimized = sd1.strong_automaton();
+	      const spot::tgba* minimized = sd1.strong_automaton();
 	      spot::tgba_statistics m_size =
 	       	spot::stats_reachable(minimized);
 

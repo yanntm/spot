@@ -95,7 +95,7 @@ int main(int argc, char **argv)
   bool syntaxic = false;//true;
   bool original = false;
 
-  // Parse arguments 
+  // Parse arguments  
   if (argc == 3)
     {
       std::string arg = argv[1];
@@ -142,8 +142,8 @@ int main(int argc, char **argv)
       // Process the formula 
       spot::postprocessor *pp = new spot::postprocessor();
       pp->set_type(spot::postprocessor::TGBA);
-      pp->set_pref(spot::postprocessor::Small);
-      pp->set_level(spot::postprocessor::High);
+      pp->set_pref(spot::postprocessor::Any);
+      pp->set_level(spot::postprocessor::Low);
       a = pp->run (a, f);
 
       // create a timer 
@@ -154,8 +154,8 @@ int main(int argc, char **argv)
       ///
       ///
       int computation;
-      int maxcomputation = 1000;
-      //if (original)
+      int maxcomputation = 10;
+      if (original)
 	maxcomputation = 1;
       for (computation = 0; computation != maxcomputation; ++computation)
       {
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 		      ++weaks;
 		    continue;
 		  }
-
+         
 		// Check weak 
 		if (!is_syntactic_weak_scc(a, map, n))
 		  {
@@ -338,8 +338,8 @@ int main(int argc, char **argv)
 		<< weaks         << ','
 		<< terminals     << ','
 		<< strongs       << ','
-	// 	<< tm.timer("Strength computation").utime() + 
-	// tm.timer("Strength computation").stime() << ","
+		<< tm.timer("Strength computation").utime() + 
+	tm.timer("Strength computation").stime() << ","
 		<< input
 		<< std::endl;
 

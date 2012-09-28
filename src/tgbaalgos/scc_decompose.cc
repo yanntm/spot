@@ -27,6 +27,7 @@
 #include "tgbaalgos/minimize.hh"
 #include "tgbaalgos/simulation.hh"
 #include "tgbaalgos/save.hh"
+#include "tgbaalgos/postproc.hh"
 
 namespace spot
 {
@@ -208,6 +209,18 @@ namespace spot
 	di.run();
 	strong_ = di.result();
       }
+    // Remove useless 
+    tgba *tmp  = spot::scc_filter(strong_, true);
+    delete strong_; 
+    strong_ = tmp;
+
+    // Minimise
+    if (minimize)
+      {
+	spot::postprocessor *pp = new spot::postprocessor();
+	strong_ =  pp->run(strong_, 0);
+	delete pp;
+      }
   }
 
   void
@@ -233,6 +246,19 @@ namespace spot
 	  di  (src_, *sm, WEAK);
 	di.run();
 	weak_ = di.result();
+      }
+
+    // Remove useless 
+    tgba *tmp  = spot::scc_filter(weak_, true);
+    delete weak_; 
+    weak_ = tmp;
+
+    // Minimise
+    if (minimize)
+      {
+	spot::postprocessor *pp = new spot::postprocessor();
+	weak_ =  pp->run(weak_, 0);
+	delete pp;
       }
   }
 
@@ -260,106 +286,38 @@ namespace spot
 	di.run();
 	terminal_ = di.result();
       }
+
+    // Remove useless 
+    tgba *tmp  = spot::scc_filter(terminal_, true);
+    delete terminal_; 
+    terminal_ = tmp;
+
+    // Minimise
+    if (minimize)
+      {
+	spot::postprocessor *pp = new spot::postprocessor();
+	terminal_ =  pp->run(terminal_, 0);
+	delete pp;
+      }
   }
 
-  tgba*
+  const tgba*
   scc_decompose::terminal_automaton ()
   {
-    if (!terminal_)
-      {
-	decompose_terminal();
-	// Check at least 1 condition Acc[True]
-	// Which means that there is a reachable 
-	// accepting edge at least (i.e. the automaton
-	// contains terminal states)
-	if (terminal_->number_of_acceptance_conditions() == 0)
-	  return 0;
-
-	// Remove useless 
-      	tgba *tmp  = spot::scc_filter(terminal_, true);
-      	delete terminal_; 
-      	terminal_ = tmp;
-
-
-	spot::tgba* minimized = 0;
-	if (minimize)
-	  {
-	    minimized = minimize_obligation(terminal_);
-	    if (minimized)
-	      {
-		delete terminal_;
-		terminal_ = minimized;
-	      }
-	  }
-      }
-
+    if (terminal_->number_of_acceptance_conditions() == 0)
+      return 0;
     return terminal_;
   }
 
-  tgba*
+  const tgba*
   scc_decompose::weak_automaton ()
   {
-    if (!weak_)
-      {
-	decompose_weak();
-
-	// Check at least 1 condition Acc[True]
-	// Which means that there is a reachable 
-	// accepting edge at least (i.e. the automaton
-	// contains a weak accepting SCC)
-	if (weak_->number_of_acceptance_conditions() == 0)
-	  return 0;
-
-	// Remove useless 
-      	tgba *tmp  = spot::scc_filter(weak_, true);
-      	delete weak_; 
-      	weak_ = tmp;
-
-	spot::tgba* minimized = 0;
-	if (minimize)
-	  {
-	    minimized = minimize_obligation(weak_);
-	    if (minimized)
-	      {
-		delete weak_;
-		weak_ = minimized;
-	      }
-	    else
-	      {
-		minimized = spot::simulation(weak_);
-		if (minimized)
-		  {
-		    delete weak_;
-		    weak_ = minimized;
-		  }
-	      }
-	  }
-      }
-
     return weak_;
   }
 
-  tgba*
+  const tgba*
   scc_decompose::strong_automaton ()
   {
-    if (!strong_)
-      {
-	decompose_strong();
-      	tgba *tmp  = spot::scc_filter(strong_, true);
-      	delete strong_; 
-      	strong_ = tmp;
-	spot::tgba* minimized = 0;
-	if (minimize)
-	  {
-	    minimized = spot::simulation(strong_);
-	    if (minimized)
-	      {
-		delete strong_;
-		strong_ = minimized;
-	      }
-	  }
-      }
-
     return strong_;
   }
 
