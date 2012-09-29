@@ -50,9 +50,9 @@
 namespace spot
 {
   typedef Sgi::hash_set<const state*,
-                        state_ptr_hash, state_ptr_equal> hash_set;
+			state_ptr_hash, state_ptr_equal> hash_set;
   typedef Sgi::hash_map<const state*, unsigned,
-                        state_ptr_hash, state_ptr_equal> hash_map;
+			state_ptr_hash, state_ptr_equal> hash_map;
 
   namespace
   {
@@ -95,16 +95,16 @@ namespace spot
       tgba_succ_iterator* sit = a->succ_iter(src);
       for (sit->first(); !sit->done(); sit->next())
       {
-        const state* dst = sit->current_state();
-        // Is it a new state ?
-        if (seen->find(dst) == seen->end())
+	const state* dst = sit->current_state();
+	// Is it a new state ?
+	if (seen->find(dst) == seen->end())
 	  {
 	    // Register the successor for later processing.
 	    tovisit.push(dst);
 	    seen->insert(dst);
 	  }
-        else
-          dst->destroy();
+	else
+	  dst->destroy();
       }
       delete sit;
     }
@@ -113,8 +113,8 @@ namespace spot
   // From the base automaton and the list of sets, build the minimal
   // resulting automaton
   sba_explicit_number* build_result(const tgba* a,
-                                     std::list<hash_set*>& sets,
-                                     hash_set* final)
+				     std::list<hash_set*>& sets,
+				     hash_set* final)
   {
     // For each set, create a state in the resulting automaton.
     // For a state s, state_num[s] is the number of the state in the minimal
@@ -127,7 +127,7 @@ namespace spot
       hash_set::iterator hit;
       hash_set* h = *sit;
       for (hit = h->begin(); hit != h->end(); ++hit)
-        state_num[*hit] = num;
+	state_num[*hit] = num;
       ++num;
     }
     typedef state_explicit_number::transition trs;
@@ -149,17 +149,17 @@ namespace spot
       // Connect it to all destinations.
       tgba_succ_iterator* succit = a->succ_iter(src);
       for (succit->first(); !succit->done(); succit->next())
-        {
-          const state* dst = succit->current_state();
+	{
+	  const state* dst = succit->current_state();
 	  hash_map::const_iterator i = state_num.find(dst);
-          dst->destroy();
+	  dst->destroy();
 	  if (i == state_num.end()) // Ignore useless destinations.
 	    continue;
-          trs* t = res->create_transition(src_num, i->second);
-          res->add_conditions(t, succit->current_condition());
-          if (accepting)
-            res->add_acceptance_condition(t, ltl::constant::true_instance());
-        }
+	  trs* t = res->create_transition(src_num, i->second);
+	  res->add_conditions(t, succit->current_condition());
+	  if (accepting)
+	    res->add_acceptance_condition(t, ltl::constant::true_instance());
+	}
       delete succit;
     }
     res->merge_transitions();

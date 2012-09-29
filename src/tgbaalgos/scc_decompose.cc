@@ -210,6 +210,13 @@ namespace spot
 	strong_ = di.result();
       }
 
+    if (strong_->number_of_acceptance_conditions() == 0)
+      {
+	delete strong_;
+	strong_ = 0;
+	return;
+      }
+
     // Remove useless
     tgba *tmp  = spot::scc_filter(strong_, true);
     delete strong_;
@@ -247,6 +254,13 @@ namespace spot
 	  di  (src_, *sm, WEAK);
 	di.run();
 	weak_ = di.result();
+      }
+
+    if (weak_->number_of_acceptance_conditions() == 0)
+      {
+	delete weak_;
+	weak_ = 0;
+	return;
       }
 
     // Remove useless
