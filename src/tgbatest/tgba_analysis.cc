@@ -91,12 +91,12 @@ syntax(char* prog)
 	    << "  -rd   display the reduced formula" << std::endl
 	    << std::endl
 
-            << "Miscalenous :" << std::endl
+	    << "Miscalenous :" << std::endl
 	    << std::endl
 	    << "  -df   display formula"
 	    << std::endl
 
-            << "Automaton conversion:" << std::endl
+	    << "Automaton conversion:" << std::endl
 	    << std::endl
 	    << "  -dfa  display formula automaton"
 	    << std::endl
@@ -115,7 +115,7 @@ syntax(char* prog)
 	    << "  -dmr  decompose minimise and recompose the automaton"
 	    << std::endl
 
-            << "Reduction effects:" << std::endl
+	    << "Reduction effects:" << std::endl
     	    << "  -csma  compare the strong part of the automaton "
 	    << "   and its minimized version"
 	    << std::endl
@@ -137,13 +137,13 @@ int main(int argc, char **argv)
   // Option for the simplifier
   spot::ltl::ltl_simplifier_options redopt(false, false, false, false, false);
 
-  // The reduction for the automaton 
+  // The reduction for the automaton
   bool scc_filter_all = true;
 
   //  The dictionnary
   spot::bdd_dict* dict = new spot::bdd_dict();
 
-  // Timer for computing all steps 
+  // Timer for computing all steps
   spot::timer_map tm;
 
   // The automaton of the formula
@@ -156,16 +156,19 @@ int main(int argc, char **argv)
   bool opt_ha  = false;
   bool opt_df  = false;
 
-  // automaton reduction 
+  // automaton reduction
   bool opt_m   = false;
   bool opt_dmr = false;
 
-  // Comparison of reductions 
+  // Comparison of reductions
   bool opt_ctma = false;
   bool opt_cwma = false;
   bool opt_csma = false;
 
-  // Should whether the formula be reduced 
+  // For the paper
+  bool opt_paper = false;
+
+  // Should whether the formula be reduced
   bool simpltl = false;
 
   // The index of the formula
@@ -265,6 +268,10 @@ int main(int argc, char **argv)
 	  redopt.containment_checks = true;
 	  redopt.containment_checks_stronger = true;
 	}
+      else if (!strcmp(argv[formula_index], "-opt_paper"))
+	{
+	  opt_paper = true;
+	}
       else
 	{
 	  if (argc == (formula_index + 1))
@@ -273,13 +280,13 @@ int main(int argc, char **argv)
 	}
     }
 
-  // The formula string 
+  // The formula string
   std::string input =  argv[formula_index];
-  // The formula in spot 
+  // The formula in spot
   const spot::ltl::formula* f = 0;
 
   //
-  // Building the formula from the input 
+  // Building the formula from the input
   //
   spot::ltl::parse_error_list pel;
   tm.start("parsing formula");
@@ -312,15 +319,15 @@ int main(int argc, char **argv)
 	std::cout << "===>   "
 		  << spot::ltl::to_string(f) << std::endl;
 
-      // 
+      //
       // Building the TGBA of the formula
-      // 
+      //
       a = spot::ltl_to_tgba_fm(f, dict);
       assert (a);
 
-      // 
+      //
       // Remove unused SCC
-      // 
+      //
       {
 	const spot::tgba* aut_scc = 0;
 	tm.start("reducing A_f w/ SCC");
@@ -332,7 +339,7 @@ int main(int argc, char **argv)
 
 
       //
-      // Minimized 
+      // Minimized
       //
       {
       	spot::tgba* minimized = 0;
@@ -355,9 +362,9 @@ int main(int argc, char **argv)
       	  }
       }
 
-      // 
-      // Display options 
-      // 
+      //
+      // Display options
+      //
       if (opt_dfa)
 	{
 	  spot::dotty_reachable(std::cout, a);
@@ -414,7 +421,7 @@ int main(int argc, char **argv)
 	      spot::tgba_statistics a_size =
 	  	spot::stats_reachable(term);
 
-	      // Stat for minimised 
+	      // Stat for minimised
 	      spot::scc_decompose sd1 (a, true);
 	      const spot::tgba* minimized = sd1.terminal_automaton();
 	      spot::tgba_statistics m_size =
@@ -456,7 +463,7 @@ int main(int argc, char **argv)
 	      spot::tgba_statistics a_size =
 	  	spot::stats_reachable(weak);
 
-	      // Stat for minimised 
+	      // Stat for minimised
 	      spot::scc_decompose sd1 (a, true);
 	      const spot::tgba* minimized = sd1.weak_automaton();
 	      spot::tgba_statistics m_size =
@@ -498,7 +505,7 @@ int main(int argc, char **argv)
 	      spot::tgba_statistics a_size =
 	  	spot::stats_reachable(strong);
 
-	      // Stat for minimised 
+	      // Stat for minimised
 	      spot::scc_decompose sd1 (a, true);
 	      const spot::tgba* minimized = sd1.strong_automaton();
 	      spot::tgba_statistics m_size =
@@ -531,6 +538,203 @@ int main(int argc, char **argv)
 	{
 	  spot::scc_decompose sd (a, true);
 	  sd.recompose();
+	}
+      if (opt_paper)
+	{
+	  int orig_states = 0, orig_trans =0, orig_acc = 0;
+	  int term_states = 0, term_trans =0, term_acc = 0;
+	  int weak_states = 0, weak_trans =0, weak_acc = 0;
+	  int strong_states = 0, strong_trans =0, strong_acc = 0;
+	  int mterm_states = 0, mterm_trans =0, mterm_acc = 0;
+	  int mweak_states = 0, mweak_trans =0, mweak_acc = 0;
+	  int mstrong_states = 0, mstrong_trans =0, mstrong_acc = 0;
+
+	  // Compute stats for original
+	  spot::tgba_statistics orig_stat =
+	    spot::stats_reachable(a);
+	  orig_states = orig_stat.states;
+	  orig_trans  = orig_stat.transitions;
+	  orig_acc    = a->number_of_acceptance_conditions();
+
+	  {
+	    // Compute stats for terminal
+	    spot::scc_decompose sd_term (a);
+	    const spot::tgba* term = sd_term.terminal_automaton();
+	    if (!term)
+	      {
+		term_states = 0;
+		term_trans = 0;
+		term_acc = 0;
+	      }
+	    else
+	      {
+		spot::tgba_statistics term_stat =
+		  spot::stats_reachable(term);
+		term_states = term_stat.states;
+		term_trans  = term_stat.transitions;
+		term_acc    = a->number_of_acceptance_conditions();
+	      }
+	  }
+
+	  {
+	    // Compute stats for mterminal
+	    spot::scc_decompose sd_mterm (a, true);
+	    const spot::tgba* mterm = sd_mterm.terminal_automaton();
+	    if (!mterm)
+	      {
+		mterm_states = 0;
+		mterm_trans = 0;
+		mterm_acc = 0;
+	      }
+	    else
+	      {
+		spot::tgba_statistics mterm_stat =
+		  spot::stats_reachable(mterm);
+		mterm_states = mterm_stat.states;
+		mterm_trans  = mterm_stat.transitions;
+		mterm_acc    = a->number_of_acceptance_conditions();
+	      }
+	  }
+
+	  {
+	    // Compute stats for weak
+	    spot::scc_decompose sd_weak (a);
+	    const spot::tgba* weak = sd_weak.weak_automaton();
+	    if (!weak)
+	      {
+		weak_states = 0;
+		weak_trans = 0;
+		weak_acc = 0;
+	      }
+	    else
+	      {
+		spot::tgba_statistics weak_stat =
+		  spot::stats_reachable(weak);
+		weak_states = weak_stat.states;
+		weak_trans  = weak_stat.transitions;
+		weak_acc    = a->number_of_acceptance_conditions();
+	      }
+	  }
+
+	  {
+	    // Compute stats for mweak
+	    spot::scc_decompose sd_mweak (a, true);
+	    const spot::tgba* mweak = sd_mweak.weak_automaton();
+	    if (!mweak)
+	      {
+		mweak_states = 0;
+		mweak_trans = 0;
+		mweak_acc = 0;
+	      }
+	    else
+	      {
+		spot::tgba_statistics mweak_stat =
+		  spot::stats_reachable(mweak);
+		mweak_states = mweak_stat.states;
+		mweak_trans  = mweak_stat.transitions;
+		mweak_acc    = a->number_of_acceptance_conditions();
+	      }
+	  }
+
+	  {
+	    // Compute stats for strong
+	    spot::scc_decompose sd_strong (a);
+	    const spot::tgba* strong = sd_strong.strong_automaton();
+	    if (!strong)
+	      {
+		strong_states = 0;
+		strong_trans = 0;
+		strong_acc = 0;
+	      }
+	    else
+	      {
+		spot::tgba_statistics strong_stat =
+		  spot::stats_reachable(strong);
+		strong_states = strong_stat.states;
+		strong_trans  = strong_stat.transitions;
+		strong_acc    = a->number_of_acceptance_conditions();
+	      }
+	  }
+
+	  {
+	    // Compute stats for mstrong
+	    spot::scc_decompose sd_mstrong (a);
+	    const spot::tgba* mstrong = sd_mstrong.strong_automaton();
+	    if (!mstrong)
+	      {
+		mstrong_states = 0;
+		mstrong_trans = 0;
+		mstrong_acc = 0;
+	      }
+	    else
+	      {
+		spot::tgba_statistics mstrong_stat =
+		  spot::stats_reachable(mstrong);
+		mstrong_states = mstrong_stat.states;
+		mstrong_trans  = mstrong_stat.transitions;
+		mstrong_acc    = a->number_of_acceptance_conditions();
+	      }
+	  }
+
+
+	  std::cout << "#State Orig,"
+		    << "Trans Orig,"
+		    << "Acc Orig,"
+		    << "T States,"
+		    << "T Trans,"
+		    << "T Acc,"
+		    << "W States,"
+		    << "W Trans,"
+		    << "W Acc,"
+		    << "S States,"
+		    << "S Trans,"
+		    << "S Acc,"
+		    << "T (min)States,"
+		    << "T (min)Trans,"
+		    << "T (min)Acc,"
+		    << "W (min)States,"
+		    << "W (min)Trans,"
+		    << "W (min)Acc,"
+		    << "S (min)States,"
+		    << "S (min)Trans,"
+		    << "S (min)Acc,"
+		    << "formula"
+		    << std::endl;
+	  std::cout << orig_states << ","
+		    << orig_trans  << ","
+		    << orig_acc    << ","
+		    << term_states << ","
+		    << term_trans  << ","
+		    << term_acc    << ","
+		    << weak_states << ","
+		    << weak_trans  << ","
+		    << weak_acc    << ","
+		    << strong_states << ","
+		    << strong_trans  << ","
+		    << strong_acc  << ","
+		    << mterm_states << ","
+		    << mterm_trans  << ","
+		    << mterm_acc    << ","
+		    << mweak_states << ","
+		    << mweak_trans  << ","
+		    << mweak_acc    << ","
+		    << mstrong_states << ","
+		    << mstrong_trans  << ","
+		    << mstrong_acc  << ","
+		    << input
+		    << std::endl;
+
+
+
+
+
+
+
+
+
+
+
+
 	}
     }
 
