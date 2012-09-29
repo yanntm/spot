@@ -255,7 +255,7 @@ namespace spot
 
   protected:
     bdd update_supp_rec(unsigned state);
-    void update_weak(unsigned state);
+    void update_weak();//(unsigned state);
     bool internal_terminal_accepting(unsigned n);
     int relabel_component();
 
@@ -266,6 +266,8 @@ namespace spot
 		       supp(bddtrue), supp_rec(bddfalse),
 		       trivial(true), useful_acc(bddfalse),
 		       is_weak_acc(false),
+		       is_weak(false),
+		       is_strong(false),
 		       is_weak_hard(false),
 		       is_strong_hard(false),
 		       is_terminal_accepting(false),
@@ -303,6 +305,11 @@ namespace spot
 
       /// Here consider only weak accepting SCC
       bool is_weak_acc;
+
+      bool is_weak;
+
+      bool is_strong;
+
       /// Allow to know if this scc is is weak hard i.e. if no 
       /// terminal scc can be reached from this scc
       bool is_weak_hard;

@@ -47,7 +47,6 @@ namespace spot
     scc_decompose(const tgba *a, bool minimize = false):
       src_(a), minimize (minimize)
     {
-      //terminal_ = 0;//weak_ = 0;//strong_ = 0;
       sm = new scc_map(src_);
       sm->build_map();
       decompose_weak();

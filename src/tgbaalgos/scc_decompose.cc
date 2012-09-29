@@ -126,7 +126,7 @@ namespace spot
 	typename output_t::state::transition* t =
 	  create_transition(this->aut_, out_, in_s, in, out_s, out);
 	out_->add_conditions(t, si->current_condition());
-
+ 
 	switch (dc_)
 	  {
 	    // In this case all acc conditions have to be the same 
@@ -209,6 +209,7 @@ namespace spot
 	di.run();
 	strong_ = di.result();
       }
+
     // Remove useless 
     tgba *tmp  = spot::scc_filter(strong_, true);
     delete strong_; 
@@ -217,9 +218,9 @@ namespace spot
     // Minimise
     if (minimize)
       {
-	spot::postprocessor *pp = new spot::postprocessor();
-	strong_ =  pp->run(strong_, 0);
-	delete pp;
+    	spot::postprocessor *pp = new spot::postprocessor();
+    	strong_ =  pp->run(strong_, 0);
+    	delete pp;
       }
   }
 
@@ -247,7 +248,7 @@ namespace spot
 	di.run();
 	weak_ = di.result();
       }
-
+    
     // Remove useless 
     tgba *tmp  = spot::scc_filter(weak_, true);
     delete weak_; 
@@ -256,9 +257,9 @@ namespace spot
     // Minimise
     if (minimize)
       {
-	spot::postprocessor *pp = new spot::postprocessor();
-	weak_ =  pp->run(weak_, 0);
-	delete pp;
+    	spot::postprocessor *pp = new spot::postprocessor();
+    	weak_ =  pp->run(weak_, 0);
+    	delete pp;
       }
   }
 
@@ -287,7 +288,14 @@ namespace spot
 	terminal_ = di.result();
       }
 
-    // Remove useless 
+    if (terminal_->number_of_acceptance_conditions() == 0)
+      {
+	delete terminal_;
+	terminal_ = 0;
+	return;
+      }
+
+    //Remove useless 
     tgba *tmp  = spot::scc_filter(terminal_, true);
     delete terminal_; 
     terminal_ = tmp;
@@ -295,17 +303,17 @@ namespace spot
     // Minimise
     if (minimize)
       {
-	spot::postprocessor *pp = new spot::postprocessor();
-	terminal_ =  pp->run(terminal_, 0);
-	delete pp;
+    	spot::postprocessor *pp = new spot::postprocessor();
+    	terminal_ =  pp->run(terminal_, 0);
+    	delete pp;
       }
   }
 
   const tgba*
   scc_decompose::terminal_automaton ()
   {
-    if (terminal_->number_of_acceptance_conditions() == 0)
-      return 0;
+    // if (terminal_->number_of_acceptance_conditions() == 0)
+    //   return 0;
     return terminal_;
   }
 
