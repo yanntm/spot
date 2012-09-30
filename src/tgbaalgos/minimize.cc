@@ -643,12 +643,6 @@ namespace spot
     if (f && f->is_syntactic_obligation())
       return min_aut_f;
 
-    // If aut_f is a guarantee automaton, the WDBA minimization must be
-    // correct.
-    // if (is_guarantee_automaton(aut_f))
-    //   return min_aut_f;
-
-
     // No acceptance set?  Then aut_f is a safety automaton and the WDBA
     // is necessarily correct.
     if (aut_f->number_of_acceptance_conditions() == 0)

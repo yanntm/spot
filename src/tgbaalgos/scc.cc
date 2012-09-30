@@ -162,7 +162,7 @@ namespace spot
     	    scc_map_[curr_scc].is_terminal_accepting = true;
 	  }
     	// Set weak and weak (accepting or not)
-    	if (is_weak_scc(*this, curr_scc)) // TODO extract a internal
+    	if (is_weak_heuristic(*this, curr_scc)) // TODO extract a internal
     	  {
 	    scc_map_[curr_scc].is_weak = true;
 	    scc_map_[curr_scc].is_weak_acc =  accepting(curr_scc);
