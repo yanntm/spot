@@ -572,7 +572,7 @@ int main(int argc, char **argv)
 		  spot::stats_reachable(term);
 		term_states = term_stat.states;
 		term_trans  = term_stat.transitions;
-		term_acc    = a->number_of_acceptance_conditions();
+		term_acc    = term->number_of_acceptance_conditions();
 	      }
 	  }
 
@@ -592,7 +592,7 @@ int main(int argc, char **argv)
 		  spot::stats_reachable(mterm);
 		mterm_states = mterm_stat.states;
 		mterm_trans  = mterm_stat.transitions;
-		mterm_acc    = a->number_of_acceptance_conditions();
+		mterm_acc    = mterm->number_of_acceptance_conditions();
 	      }
 	  }
 
@@ -612,7 +612,7 @@ int main(int argc, char **argv)
 		  spot::stats_reachable(weak);
 		weak_states = weak_stat.states;
 		weak_trans  = weak_stat.transitions;
-		weak_acc    = a->number_of_acceptance_conditions();
+		weak_acc    = weak->number_of_acceptance_conditions();
 	      }
 	  }
 
@@ -632,7 +632,7 @@ int main(int argc, char **argv)
 		  spot::stats_reachable(mweak);
 		mweak_states = mweak_stat.states;
 		mweak_trans  = mweak_stat.transitions;
-		mweak_acc    = a->number_of_acceptance_conditions();
+		mweak_acc    = mweak->number_of_acceptance_conditions();
 	      }
 	  }
 
@@ -652,7 +652,7 @@ int main(int argc, char **argv)
 		  spot::stats_reachable(strong);
 		strong_states = strong_stat.states;
 		strong_trans  = strong_stat.transitions;
-		strong_acc    = a->number_of_acceptance_conditions();
+		strong_acc    = strong->number_of_acceptance_conditions();
 	      }
 	  }
 
@@ -672,7 +672,7 @@ int main(int argc, char **argv)
 		  spot::stats_reachable(mstrong);
 		mstrong_states = mstrong_stat.states;
 		mstrong_trans  = mstrong_stat.transitions;
-		mstrong_acc    = a->number_of_acceptance_conditions();
+		mstrong_acc    = mstrong->number_of_acceptance_conditions();
 	      }
 	  }
 

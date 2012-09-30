@@ -154,7 +154,8 @@ namespace spot
 		    (t, the_acc);
 		else
 		  out_->add_acceptance_conditions
-		    (t, si->current_acceptance_conditions());
+		    (t, bddfalse// si->current_acceptance_conditions()
+		     );
 	      break;
 	    }
 
@@ -171,7 +172,7 @@ namespace spot
 		out_->add_acceptance_conditions (t, the_acc);
 	      else
 		out_->add_acceptance_conditions
-		  (t, si->current_acceptance_conditions());
+		  (t, bddfalse);//si->current_acceptance_conditions());
 	    break;
 	  }
       }
