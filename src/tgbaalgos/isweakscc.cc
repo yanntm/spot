@@ -126,6 +126,8 @@ namespace spot
   bool
   is_weak_heuristic(scc_map& map, unsigned scc)
   {
+    if (!map.accepting (scc))
+      return true;
     if (map.useful_acc_of(scc) ==
 	bdd_support(map.get_aut()->neg_acceptance_conditions()))
       return true;
