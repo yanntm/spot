@@ -49,13 +49,33 @@ namespace spot
   bool
   is_guarantee_automaton(const tgba* aut, const scc_map* sm)
   {
+    // bool need_sm = !sm;
+    // if (need_sm)
+    //   {
+    // 	scc_map* x = new scc_map(aut);
+    // 	x->build_map();
+    // 	sm = x;
+    //   }
+
+    // state* in = aut->get_init_state();
+    // int val = sm->scc_of_state(in);
+    // in->destroy();
+
+    // strength str = sm->typeof_subautomaton (val);
+
+    // // Free the scc_map if we created it.
+    // if (need_sm)
+    //   delete sm;
+
+    // return str == TerminalSubaut;
+
     // Create an scc_map of the user did not give one to us.
     bool need_sm = !sm;
     if (need_sm)
       {
-	scc_map* x = new scc_map(aut);
-	x->build_map();
-	sm = x;
+    	scc_map* x = new scc_map(aut);
+    	x->build_map();
+    	sm = x;
       }
 
     bool result = true;
@@ -63,27 +83,27 @@ namespace spot
     unsigned scc_count = sm->scc_count();
     for (unsigned scc = 0; (scc < scc_count) && result; ++scc)
       {
-	if (!sm->accepting(scc))
-	  continue;
-	// Accepting SCCs should have only one state.
-	const std::list<const state*>& st = sm->states_of(scc);
-	if (st.size() != 1)
-	  {
-	    result = false;
-	    break;
-	  }
-	// The state should have only one transition that is a
-	// self-loop labelled by true.
-	const state* s = *st.begin();
-	tgba_succ_iterator* it = aut->succ_iter(s);
-	it->first();
-	assert(!it->done());
-	state* dest = it->current_state();
-	bdd cond = it->current_condition();
-	it->next();
-	result = (!dest->compare(s)) && it->done() && (cond == bddtrue);
-	dest->destroy();
-	delete it;
+    	if (!sm->accepting(scc))
+    	  continue;
+    	// Accepting SCCs should have only one state.
+    	const std::list<const state*>& st = sm->states_of(scc);
+    	if (st.size() != 1)
+    	  {
+    	    result = false;
+    	    break;
+    	  }
+    	// The state should have only one transition that is a
+    	// self-loop labelled by true.
+    	const state* s = *st.begin();
+    	tgba_succ_iterator* it = aut->succ_iter(s);
+    	it->first();
+    	assert(!it->done());
+    	state* dest = it->current_state();
+    	bdd cond = it->current_condition();
+    	it->next();
+    	result = (!dest->compare(s)) && it->done() && (cond == bddtrue);
+    	dest->destroy();
+    	delete it;
       }
 
     // Free the scc_map if we created it.

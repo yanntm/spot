@@ -46,6 +46,8 @@
 #include "tgbaalgos/ltl2tgba_fm.hh"
 #include "tgbaalgos/bfssteps.hh"
 #include "tgbaalgos/stats.hh"
+#include  "tgbaalgos/isdet.hh"
+#include "tgbaalgos/dotty.hh"
 
 namespace spot
 {
@@ -643,7 +645,21 @@ namespace spot
 
     // If aut_f is a guarantee automaton, the WDBA minimization must be
     // correct.
-    if (is_persistence_automaton(aut_f))
+    // if (is_guarantee_automaton(aut_f))
+    //   return min_aut_f;
+
+
+    // No acceptance set?  Then aut_f is a safety automaton and the WDBA
+    // is necessarily correct.
+    if (aut_f->number_of_acceptance_conditions() == 0)
+      return min_aut_f;
+    // If aut_f is a guarantee automaton, the WDBA minimization must be
+    // correct.
+    if (is_guarantee_automaton(aut_f))
+      return min_aut_f;
+    // if aut_f is a persistence and is deterministic, then it is an obligation,
+    // and the WDBA is correct.
+    if (is_persistence_automaton(aut_f) && is_deterministic(aut_f))
       return min_aut_f;
 
     if (!f && !aut_neg_f)
