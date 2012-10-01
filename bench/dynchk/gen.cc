@@ -115,14 +115,20 @@ int main(int argc, char **argv)
   if (input == "-")
       use_stdin = true;
 
-  int TOVERIFY = 100;		// For each type
+  int TOVERIFY = 3;		// For each type
   int current_verified = 0;
   int current_violated = 0;
   do
     {
+
+      //
+      if (current_verified == TOVERIFY &&
+	  current_violated == TOVERIFY)
+	break;
+
       // If we use stdin
       if (use_stdin && !std::getline(inputcin, input))
-	return 0;
+	break;
 
       // The formula in spot
       const spot::ltl::formula* f = 0;
@@ -154,172 +160,181 @@ int main(int argc, char **argv)
       pp->set_pref(spot::postprocessor::Any);
       pp->set_level(spot::postprocessor::Low);
       a = pp->run (a, f);
+      delete pp;
 
       /// Process
       if (is_commut)
-	{
-	  spot::stats_hierarchy sh (a);
-	  sh.stats_automaton();
-	  if (!sh.is_commuting_automaton())
-	      continue;
-
-	  int SIZE = 2000;
-	  int dmt_trans = 0, dmw_trans = 0, dms_trans = 0, orig_trans = 0;
-	  int dmt_strans = 0, dmw_strans = 0, dms_strans = 0, orig_strans = 0;
-	  int dmt_states = 0, dmw_states = 0, dms_states = 0, orig_states = 0;
-	  int dt_trans = 0, dw_trans = 0, ds_trans = 0;
-	  int dt_strans = 0, dw_strans = 0, ds_strans = 0;
-	  int dt_states = 0, dw_states = 0, ds_states = 0;
-
-	  // Here we are in a favorable case
-	  spot::scc_decompose sdm (a, true);
-	  const spot::tgba* mstrong = sdm.strong_automaton();
-	  if (mstrong)
+      	{
+      	  spot::stats_hierarchy sh (a);
+      	  sh.stats_automaton();
+      	  if (!sh.is_commuting_automaton())
 	    {
-	      const spot::tgba *p_mstrong = new spot::tgba_product(system, mstrong);
-	      spot::tgba_statistics s_mstrong = stats_reachable(p_mstrong);
-	      spot::tgba_statistics ss_mstrong = stats_reachable(p_mstrong);
-	      dms_trans = s_mstrong.transitions;
-	      dms_states = s_mstrong.states;
-	      dms_strans = ss_mstrong.transitions;
-	      delete p_mstrong;
-	    }
-	  const spot::tgba* mweak = sdm.weak_automaton();
-	  if (mweak)
-	    {
-	      const spot::tgba *p_mweak = new spot::tgba_product(system, mweak);
-	      spot::tgba_statistics s_mweak = stats_reachable(p_mweak);
-	      spot::tgba_statistics ss_mweak = stats_reachable(p_mweak);
-	      dmw_trans = s_mweak.transitions;
-	      dmw_states = s_mweak.states;
-	      dmw_strans = ss_mweak.transitions;
-	      delete p_mweak;
-	    }
-	  const spot::tgba* mterminal = sdm.terminal_automaton();
-	  if (mterminal)
-	    {
-	      const spot::tgba *p_mterminal = new spot::tgba_product(system, mterminal);
-	      spot::tgba_statistics s_mterminal = stats_reachable(p_mterminal);
-	      spot::tgba_statistics ss_mterminal = stats_reachable(p_mterminal);
-	      dmt_trans = s_mterminal.transitions;
-	      dmt_states = s_mterminal.states;
-	      dmt_strans = ss_mterminal.transitions;
-	      delete p_mterminal;
+	      goto clean;
 	    }
 
-	  //
-	  // It's a formula we want to keep!
-	  //
-	  if (dms_states >= SIZE || dmw_states >= SIZE || dmt_states >= SIZE)
-	    {
-	      spot::scc_decompose sd (a, false);
-	      const spot::tgba* strong = sd.strong_automaton();
-	      if (strong)
-		{
-		  const spot::tgba *p_strong = new spot::tgba_product(system, strong);
-		  spot::tgba_statistics s_strong = stats_reachable(p_strong);
-		  spot::tgba_statistics ss_strong = stats_reachable(p_strong);
-		  ds_trans = s_strong.transitions;
-		  ds_states = s_strong.states;
-		  ds_strans = ss_strong.transitions;
-		  delete p_strong;
-		}
-	      const spot::tgba* weak = sd.weak_automaton();
-	      if (weak)
-		{
-		  const spot::tgba *p_weak = new spot::tgba_product(system, weak);
-		  spot::tgba_statistics s_weak = stats_reachable(p_weak);
-		  spot::tgba_statistics ss_weak = stats_reachable(p_weak);
-		  dw_trans = s_weak.transitions;
-		  dw_states = s_weak.states;
-		  dw_strans = ss_weak.transitions;
-		  delete p_weak;
-		}
-	      const spot::tgba* terminal = sd.terminal_automaton();
-	      if (terminal)
-		{
-		  const spot::tgba *p_terminal =
-		    new spot::tgba_product(system, terminal);
-		  spot::tgba_statistics s_terminal = stats_reachable(p_terminal);
-		  spot::tgba_statistics ss_terminal = stats_reachable(p_terminal);
-		  dt_trans = s_terminal.transitions;
-		  dt_states = s_terminal.states;
-		  dt_strans = ss_terminal.transitions;
-		  delete p_terminal;
-		}
+      	  int SIZE = 20;
+      	  int dmt_trans = 0, dmw_trans = 0, dms_trans = 0, orig_trans = 0;
+      	  int dmt_strans = 0, dmw_strans = 0, dms_strans = 0, orig_strans = 0;
+      	  int dmt_states = 0, dmw_states = 0, dms_states = 0, orig_states = 0;
+      	  int dt_trans = 0, dw_trans = 0, ds_trans = 0;
+      	  int dt_strans = 0, dw_strans = 0, ds_strans = 0;
+      	  int dt_states = 0, dw_states = 0, ds_states = 0;
 
-	      // And we perform the original product and verification
-	      const spot::tgba *product =
-		new spot::tgba_product(system, a);
-	      spot::tgba_statistics stats  = stats_reachable(product);
-	      spot::tgba_statistics sstats = stats_reachable(product);
-	      orig_trans = stats.transitions;
-	      orig_states = stats.states;
-	      orig_strans = sstats.transitions;
+      	  // Here we are in a favorable case
+      	  spot::scc_decompose sdm (a, true);
+      	  const spot::tgba* mstrong = sdm.strong_automaton();
+      	  if (mstrong)
+      	    {
+      	      const spot::tgba *p_mstrong = new spot::tgba_product(system, mstrong);
+      	      spot::tgba_statistics s_mstrong = stats_reachable(p_mstrong);
+      	      spot::tgba_statistics ss_mstrong = stats_reachable(p_mstrong);
+      	      dms_trans = s_mstrong.transitions;
+      	      dms_states = s_mstrong.states;
+      	      dms_strans = ss_mstrong.transitions;
+      	      delete p_mstrong;
+      	    }
+      	  const spot::tgba* mweak = sdm.weak_automaton();
+      	  if (mweak)
+      	    {
+      	      const spot::tgba *p_mweak = new spot::tgba_product(system, mweak);
+      	      spot::tgba_statistics s_mweak = stats_reachable(p_mweak);
+      	      spot::tgba_statistics ss_mweak = stats_reachable(p_mweak);
+      	      dmw_trans = s_mweak.transitions;
+      	      dmw_states = s_mweak.states;
+      	      dmw_strans = ss_mweak.transitions;
+      	      delete p_mweak;
+      	    }
+      	  const spot::tgba* mterminal = sdm.terminal_automaton();
+      	  if (mterminal)
+      	    {
+      	      const spot::tgba *p_mterminal = new spot::tgba_product(system, mterminal);
+      	      spot::tgba_statistics s_mterminal = stats_reachable(p_mterminal);
+      	      spot::tgba_statistics ss_mterminal = stats_reachable(p_mterminal);
+      	      dmt_trans = s_mterminal.transitions;
+      	      dmt_states = s_mterminal.states;
+      	      dmt_strans = ss_mterminal.transitions;
+      	      delete p_mterminal;
+      	    }
 
-	      // Emptiness check it !!!!!!!!
-	      const char* err;
-	      spot::emptiness_check_instantiator* echeck_inst =
-		spot::emptiness_check_instantiator::construct( "Cou99", &err);
-	      if (!echeck_inst)
-		{
-		  exit(2);
-		}
-	      // Instanciate the emptiness check
-	      spot::emptiness_check* ec  =  echeck_inst->instantiate(product);
-	      spot::emptiness_check_result* res = ec->check();
-	      std::string verified =  res ? "VIOLATED": "VERIFIED";
-	      delete product;
+      	  //
+      	  // It's a formula we want to keep!
+      	  //
+      	  if (dms_states >= SIZE || dmw_states >= SIZE || dmt_states >= SIZE)
+      	    {
+      	      spot::scc_decompose sd (a, false);
+      	      const spot::tgba* strong = sd.strong_automaton();
+      	      if (strong)
+      		{
+      		  const spot::tgba *p_strong = new spot::tgba_product(system, strong);
+      		  spot::tgba_statistics s_strong = stats_reachable(p_strong);
+      		  spot::tgba_statistics ss_strong = stats_reachable(p_strong);
+      		  ds_trans = s_strong.transitions;
+      		  ds_states = s_strong.states;
+      		  ds_strans = ss_strong.transitions;
+      		  delete p_strong;
+      		}
+      	      const spot::tgba* weak = sd.weak_automaton();
+      	      if (weak)
+      		{
+      		  const spot::tgba *p_weak = new spot::tgba_product(system, weak);
+      		  spot::tgba_statistics s_weak = stats_reachable(p_weak);
+      		  spot::tgba_statistics ss_weak = stats_reachable(p_weak);
+      		  dw_trans = s_weak.transitions;
+      		  dw_states = s_weak.states;
+      		  dw_strans = ss_weak.transitions;
+      		  delete p_weak;
+      		}
+      	      const spot::tgba* terminal = sd.terminal_automaton();
+      	      if (terminal)
+      		{
+      		  const spot::tgba *p_terminal =
+      		    new spot::tgba_product(system, terminal);
+      		  spot::tgba_statistics s_terminal = stats_reachable(p_terminal);
+      		  spot::tgba_statistics ss_terminal = stats_reachable(p_terminal);
+      		  dt_trans = s_terminal.transitions;
+      		  dt_states = s_terminal.states;
+      		  dt_strans = ss_terminal.transitions;
+      		  delete p_terminal;
+      		}
 
-	      if (!res)
-		{
-		  if (current_violated >= TOVERIFY)
-		    continue;
-		  ++current_violated;
-		}
-	      else
-		{
-		  if (current_verified >= TOVERIFY)
-		    continue;
-		  ++current_verified;
-		}
+      	      // And we perform the original product and verification
+      	      const spot::tgba *product =
+      		new spot::tgba_product(system, a);
+      	      spot::tgba_statistics stats  = stats_reachable(product);
+      	      spot::tgba_statistics sstats = stats_reachable(product);
+      	      orig_trans = stats.transitions;
+      	      orig_states = stats.states;
+      	      orig_strans = sstats.transitions;
+
+      	      // Emptiness check it !!!!!!!!
+      	      const char* err;
+      	      spot::emptiness_check_instantiator* echeck_inst =
+      		spot::emptiness_check_instantiator::construct( "Cou99", &err);
+      	      if (!echeck_inst)
+      		{
+		  std::cerr << "ERROR\n";
+      		  exit(2);
+      		}
+      	      // Instanciate the emptiness check
+      	      spot::emptiness_check* ec  =  echeck_inst->instantiate(product);
+      	      spot::emptiness_check_result* res = ec->check();
+      	      std::string verified =  res ? "VIOLATED": "VERIFIED";
+
+      	      if (!res)
+      		{
+      		  if (current_violated == TOVERIFY)
+      		    goto clean;
+      		  ++current_violated;
+      		}
+      	      else
+      		{
+      		  if (current_verified == TOVERIFY)
+		    goto clean;
+      		  ++current_verified;
+      		}
 
 
-	      std::cout << dmt_trans    << ","
-			<< dmt_strans   << ","
-			<< dmt_states   << ","
+      	      std::cout << dmt_trans    << ","
+      			<< dmt_strans   << ","
+      			<< dmt_states   << ","
 
-			<< dmw_trans    << ","
-			<< dmw_strans   << ","
-			<< dmw_states   << ","
+      			<< dmw_trans    << ","
+      			<< dmw_strans   << ","
+      			<< dmw_states   << ","
 
-			<< dms_trans    << ","
-			<< dms_strans   << ","
-			<< dms_states   << ","
+      			<< dms_trans    << ","
+      			<< dms_strans   << ","
+      			<< dms_states   << ","
 
-			<< dt_trans     << ","
-			<< dt_strans    << ","
-			<< dt_states    << ","
+      			<< dt_trans     << ","
+      			<< dt_strans    << ","
+      			<< dt_states    << ","
 
-			<< dw_trans     << ","
-			<< dw_strans    << ","
-			<< dw_states    << ","
+      			<< dw_trans     << ","
+      			<< dw_strans    << ","
+      			<< dw_states    << ","
 
-			<< ds_trans     << ","
-			<< ds_strans    << ","
-			<< ds_states    << ","
+      			<< ds_trans     << ","
+      			<< ds_strans    << ","
+      			<< ds_states    << ","
 
-			<< orig_trans     << ","
-			<< orig_strans    << ","
-			<< orig_states    << ","
-			<< a->number_of_acceptance_conditions() << ","
+      			<< orig_trans     << ","
+      			<< orig_strans    << ","
+      			<< orig_states    << ","
+      			<< a->number_of_acceptance_conditions() << ","
 
-			<< verified      << ','
+      			<< verified      << ','
 
-			<< input        << std::endl;
-	    }
-	}
+      			<< input        << std::endl;
 
+      	      delete product;
+      	      delete res;
+      	      delete ec;
+      	      delete echeck_inst;
+      	    }
+      	}
+
+    clean:
       // Clean up
       f->destroy();
       delete a;

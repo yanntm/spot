@@ -66,6 +66,7 @@
 #include "kripkeparse/public.hh"
 #include "tgbaalgos/scc_decompose.hh"
 #include "tgbaalgos/simulation.hh"
+#include "tgbaalgos/scc.hh"
 
 
 void
@@ -568,6 +569,13 @@ int main(int argc, char **argv)
 	      }
 	    else
 	      {
+		spot::scc_map* x = new spot::scc_map(term);
+		x->build_map();
+		const spot::state* s = term->get_init_state();
+		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		assert(str == spot::TerminalSubaut);
+		s->destroy();
+		delete x;
 		spot::tgba_statistics term_stat =
 		  spot::stats_reachable(term);
 		term_states = term_stat.states;
@@ -588,6 +596,13 @@ int main(int argc, char **argv)
 	      }
 	    else
 	      {
+		spot::scc_map* x = new spot::scc_map(mterm);
+		x->build_map();
+		const spot::state* s = mterm->get_init_state();
+		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		assert(str == spot::TerminalSubaut);
+		s->destroy();
+		delete x;
 		spot::tgba_statistics mterm_stat =
 		  spot::stats_reachable(mterm);
 		mterm_states = mterm_stat.states;
@@ -608,6 +623,13 @@ int main(int argc, char **argv)
 	      }
 	    else
 	      {
+		spot::scc_map* x = new spot::scc_map(weak);
+		x->build_map();
+		const spot::state* s = weak->get_init_state();
+		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		assert(str == spot::WeakSubaut);
+		s->destroy();
+		delete x;
 		spot::tgba_statistics weak_stat =
 		  spot::stats_reachable(weak);
 		weak_states = weak_stat.states;
@@ -628,6 +650,13 @@ int main(int argc, char **argv)
 	      }
 	    else
 	      {
+		spot::scc_map* x = new spot::scc_map(mweak);
+		x->build_map();
+		const spot::state* s = mweak->get_init_state();
+		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		assert(str == spot::WeakSubaut);
+		s->destroy();
+		delete x;
 		spot::tgba_statistics mweak_stat =
 		  spot::stats_reachable(mweak);
 		mweak_states = mweak_stat.states;
@@ -648,6 +677,13 @@ int main(int argc, char **argv)
 	      }
 	    else
 	      {
+		spot::scc_map* x = new spot::scc_map(strong);
+		x->build_map();
+		const spot::state* s = strong->get_init_state();
+		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		assert(str == spot::StrongSubaut);
+		s->destroy();
+		delete x;
 		spot::tgba_statistics strong_stat =
 		  spot::stats_reachable(strong);
 		strong_states = strong_stat.states;
@@ -668,6 +704,13 @@ int main(int argc, char **argv)
 	      }
 	    else
 	      {
+		spot::scc_map* x = new spot::scc_map(mstrong);
+		x->build_map();
+		const spot::state* s = mstrong->get_init_state();
+		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		assert(str == spot::StrongSubaut);
+		s->destroy();
+		delete x;
 		spot::tgba_statistics mstrong_stat =
 		  spot::stats_reachable(mstrong);
 		mstrong_states = mstrong_stat.states;
