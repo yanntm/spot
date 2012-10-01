@@ -283,13 +283,25 @@ int main(int argc, char **argv)
       	      if (!res)
       		{
       		  if (current_violated == TOVERIFY)
-      		    goto clean;
+		    {
+		      delete product;
+		      delete res;
+		      delete ec;
+		      delete echeck_inst;
+		      goto clean;
+		    }
       		  ++current_violated;
       		}
       	      else
       		{
       		  if (current_verified == TOVERIFY)
-		    goto clean;
+		    {
+		      delete product;
+		      delete res;
+		      delete ec;
+		      delete echeck_inst;
+		      goto clean;
+		    }
       		  ++current_verified;
       		}
 
