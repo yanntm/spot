@@ -30,9 +30,11 @@ dist_noinst_SCRIPTS = \
   pml2tgba.pl
 
 noinst_PROGRAMS = \
-  dynchk
+  dynchk \
+  gen
 
 dynchk_SOURCES = dynchk.cc
+gen_SOURCES = gen.cc
 
 noinst_SCRIPTS = defs
 
@@ -52,7 +54,8 @@ nodist_noinst_DATA = \
   models/eeaean1R.tgba \
   models/eeaean2.tgba \
   models/eeaean2R.tgba \
-  dynchk
+  dynchk \
+  gen
 
 models/cl3serv1.tgba: $(srcdir)/models/cl3serv1.pml
 	$(mkdir_p) models
@@ -82,28 +85,28 @@ models/eeaean1.tgba: $(srcdir)/models/eeaean1.pml
 	$(mkdir_p) models
 	cp $(srcdir)/models/eeaean1.pml eeaean1.pml
 	$(PML2TGBA) $(srcdir)/eeaean1.pml \
-          noLeader zeroLeads oneLeads twoLeads threeLeads >$@
+	  noLeader zeroLeads oneLeads twoLeads threeLeads >$@
 	rm eeaean1.pml
 
 models/eeaean1R.tgba: $(srcdir)/models/eeaean1.pml
 	$(mkdir_p) models
 	cp $(srcdir)/models/eeaean1.pml eeaean1.pml
 	$(PML2TGBA) -r $(srcdir)/eeaean1.pml \
-          noLeader zeroLeads oneLeads twoLeads threeLeads >$@
+	  noLeader zeroLeads oneLeads twoLeads threeLeads >$@
 	rm  eeaean1.pml
 
 models/eeaean2.tgba: $(srcdir)/models/eeaean2.pml
 	$(mkdir_p) models
 	cp $(srcdir)/models/eeaean2.pml eeaean2.pml
 	$(PML2TGBA) $(srcdir)/eeaean2.pml \
-          noLeader zeroLeads oneLeads twoLeads threeLeads >$@
+	  noLeader zeroLeads oneLeads twoLeads threeLeads >$@
 	rm eeaean2.pml
 
 models/eeaean2R.tgba: $(srcdir)/models/eeaean2.pml
 	$(mkdir_p) models
 	cp $(srcdir)/models/eeaean2.pml eeaean2.pml
 	$(PML2TGBA) -r $(srcdir)/eeaean2.pml \
-          noLeader zeroLeads oneLeads twoLeads threeLeads >$@
+	  noLeader zeroLeads oneLeads twoLeads threeLeads >$@
 	rm eeaean2.pml
 
 
