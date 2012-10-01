@@ -115,7 +115,7 @@ int main(int argc, char **argv)
   if (input == "-")
       use_stdin = true;
 
-  int TOVERIFY = 3;		// For each type
+  int TOVERIFY = 200;		// For each type
   int current_verified = 0;
   int current_violated = 0;
   do
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 	      goto clean;
 	    }
 
-      	  int SIZE = 20;
+      	  int SIZE = 2000;
       	  int dmt_trans = 0, dmw_trans = 0, dms_trans = 0, orig_trans = 0;
       	  int dmt_strans = 0, dmw_strans = 0, dms_strans = 0, orig_strans = 0;
       	  int dmt_states = 0, dmw_states = 0, dms_states = 0, orig_states = 0;
