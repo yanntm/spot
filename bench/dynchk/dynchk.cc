@@ -69,6 +69,12 @@
 #include "tgbaalgos/simulation.hh"
 #include "../iface/dve2/dve2.hh"
 
+#ifdef TRACE
+#define trace std::cerr
+#else
+#define trace while (0) std::cerr
+#endif
+
 void
 syntax(char* prog)
 {
@@ -98,6 +104,15 @@ syntax(char* prog)
 	    << "Automaton reduction:" << std::endl
 	    << "  -dT  decompose the automaton into terminal"
 	    << std::endl
+	    << "  -dW  decompose the automaton into weak"
+	    << std::endl
+	    << "  -dS  decompose the automaton into strong"
+	    << std::endl
+
+	    << "  -BA  launch algos on BA"
+	    << std::endl
+	    << "  -TGBA  launch algos on TGBA"
+	    << std::endl
 
 	    << "Automaton reduction:" << std::endl
 	    << "  -m  minimise the automaton"
@@ -108,7 +123,7 @@ syntax(char* prog)
 ///
 ///
 ///
-void print_results (const char* algo, std::string result, 
+void print_results (const char* algo, std::string result,
 		    std::string type, int ticks,
 		    int pstates, int ptrans,
 		    int pdepth, std::string input)
@@ -126,20 +141,24 @@ void print_results (const char* algo, std::string result,
   std::cout << algo    << ","
 	    << result  << ","
 	    << type    << ","
-	    << ticks   << "," 
+	    << ticks   << ","
 	    << pstates << ","
 	    << ptrans  << ","
 	    << pdepth  << ","
 	    << "\"" << input << "\""
 	    << std::endl;
+  if (result == "VIOLATED")
+    std::cout << "an accepting run exists" << std::endl;
+  else
+    std::cout << "no accepting run found" << std::endl;
 };
 
 
 // Algos that will be used using a single B.A.
 const char *dyn_degen [] =
   {
-    "SE05_dyn",
-    "SE05_stat",
+    // "SE05_dyn",
+    // "SE05_stat",
     "SE05",
     // "CVWY90_dyn",
     // "CVWY90",
@@ -151,12 +170,12 @@ const char *dyn_degen [] =
 // Algos that will be used using a TGBA
 const char *dyn_gen [] =
   {
-    "Cou99_dyn",
+    // "Cou99_dyn",
     "Cou99",
     0
   };
 
-/// This program perform emptiness over BA and TGBA 
+/// This program perform emptiness over BA and TGBA
 /// using previous algorithms
 int main(int argc, char **argv)
 {
@@ -165,31 +184,31 @@ int main(int argc, char **argv)
   // Option for the simplifier
   spot::ltl::ltl_simplifier_options redopt(false, false, false, false, false);
 
-  // The reduction for the automaton 
+  // The reduction for the automaton
   bool scc_filter_all = true;
 
   //  The dictionnary
   spot::bdd_dict* dict = new spot::bdd_dict();
 
-  // Timer for computing all steps 
+  // Timer for computing all steps
   spot::timer_map tm;
 
   // The automaton of the formula
   const spot::tgba* a = 0;
 
-  // The system 
+  // The system
   spot::tgba* system = 0;
 
   // The product automaton
   const spot::tgba* product = 0;
 
-  // the emptiness check instaniator 
+  // the emptiness check instaniator
   spot::emptiness_check_instantiator* echeck_inst = 0;
 
-  // automaton reduction 
+  // automaton reduction
   bool opt_m = false;
 
-  // Should whether the formula be reduced 
+  // Should whether the formula be reduced
   bool simpltl = false;
 
   // Option for the decomposition
@@ -198,10 +217,14 @@ int main(int argc, char **argv)
   bool opt_dS = false;
   spot::scc_decompose *sd = 0;
 
+  // Only process a kind
+  bool opt_BA = true;
+  bool opt_TGBA = true;
+
   // The index of the formula
   int formula_index = 0;
 
-  // Variables for loading DVE models 
+  // Variables for loading DVE models
   bool load_dve_model = false;
   std::string dve_model_name;
 
@@ -277,6 +300,35 @@ int main(int argc, char **argv)
 	  assert (!opt_dT);
 	  opt_dS = true;
 	}
+      else if (!strcmp(argv[formula_index], "-dmT"))
+	{
+	  assert (!opt_dW);
+	  assert (!opt_dS);
+	  opt_dT = true;
+	  opt_m = true;
+	}
+      else if (!strcmp(argv[formula_index], "-dmW"))
+	{
+	  assert (!opt_dT);
+	  assert (!opt_dS);
+	  opt_dW = true;
+	  opt_m = true;
+	}
+      else if (!strcmp(argv[formula_index], "-dmS"))
+	{
+	  assert (!opt_dW);
+	  assert (!opt_dT);
+	  opt_dS = true;
+	  opt_m = true;
+	}
+      else if (!strcmp(argv[formula_index], "-TGBA"))
+	{
+	  opt_BA = false;
+	}
+      else if (!strcmp(argv[formula_index], "-BA"))
+	{
+	  opt_TGBA = false;
+	}
       else if (!strncmp(argv[formula_index], "-P", 2))
 	{
 	  tm.start("reading -P's argument");
@@ -295,7 +347,7 @@ int main(int argc, char **argv)
 	{
 	  // When using DVE model can't be preload as in case
 	  // of spin..
-	  // Set a flag that indicate it should be load 
+	  // Set a flag that indicate it should be load
 	  load_dve_model = true;
 	  dve_model_name = argv[formula_index] + 2;
 	}
@@ -316,6 +368,7 @@ int main(int argc, char **argv)
   if (system)
     assert(system->number_of_acceptance_conditions() == 0);
 
+  assert (opt_BA || opt_TGBA);
 
   // To work with files
   bool isfile = false;
@@ -326,34 +379,34 @@ int main(int argc, char **argv)
     }
 
   //
-  // Process all formula of a file: this allow to 
+  // Process all formula of a file: this allow to
   // avoid loading of the system
   //
   bool again = true;
   int formula_number = 0;
-  while (again) 
+  while (again)
     {
       again = false;
       ++formula_number;
 
-      // The formula string 
+      // The formula string
       std::string input;
 
       // Track the cases where input is a file
       if (!isfile)
 	input =  argv[formula_index];
-      else 
+      else
 	{
 	  again = true;
 	  if (!getline(ifs, input))
 	    break;
 	}
 
-      // The formula in spot 
+      // The formula in spot
       const spot::ltl::formula* f = 0;
 
       //
-      // Building the formula from the input 
+      // Building the formula from the input
       //
       spot::ltl::parse_error_list pel;
       tm.start("parsing formula");
@@ -382,15 +435,15 @@ int main(int argc, char **argv)
 	    delete simp;
 	  }
 
-	  // 
+	  //
 	  // Building the TGBA of the formula
-	  // 
+	  //
 	  a = spot::ltl_to_tgba_fm(f, dict);
 	  assert (a);
 
-	  // 
+	  //
 	  // Remove unused SCC
-	  // 
+	  //
 	  {
 	    const spot::tgba* aut_scc = 0;
 	    tm.start("reducing A_f w/ SCC");
@@ -402,7 +455,7 @@ int main(int argc, char **argv)
 
 
 	  //
-	  // Minimized 
+	  // Minimized
 	  //
 	  {
 	    spot::tgba* minimized = 0;
@@ -426,14 +479,14 @@ int main(int argc, char **argv)
 	  }
 	}
 
-      /// Perform the terminal decomposition 
-      /// 
+      /// Perform the terminal decomposition
+      ///
       const spot::tgba* term = a;
       const spot::tgba* weak = a;
       const spot::tgba* strong = a;
       if (opt_dT)
 	{
-	  sd = new spot::scc_decompose (a, true);
+	  sd = new spot::scc_decompose (a, opt_m);
       	  const spot::tgba* term_a = sd->terminal_automaton();
       	  if (term_a)
       	    {
@@ -442,17 +495,17 @@ int main(int argc, char **argv)
 	  else
 	    {
 	      // Output in standard way then exit
-	      // suppose that degeneralisation doesn't introduce 
+	      // suppose that degeneralisation doesn't introduce
 	      // weak SCC
 	      int i = 0;
-	      while (*(dyn_degen+i))
+	      while (*(dyn_degen+i)  && opt_BA)
 	  	{
 	  	  const char* algo = dyn_degen[i];
 	  	  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
 	  	  ++i;
 	  	}
 	      i= 0;
-	      while (*(dyn_gen+i))
+	      while (*(dyn_gen+i) && opt_TGBA)
 	      	{
 	      	  const char* algo = dyn_gen[i];
 	      	  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
@@ -465,7 +518,7 @@ int main(int argc, char **argv)
 
       if (opt_dW)
 	{
-	  sd = new spot::scc_decompose (a, true);
+	  sd = new spot::scc_decompose (a, opt_m);
       	  const spot::tgba* weak_a = sd->weak_automaton();
       	  if (weak_a)
       	    {
@@ -474,17 +527,17 @@ int main(int argc, char **argv)
 	  else
 	    {
 	      // Output in standard way then exit
-	      // suppose that degeneralisation doesn't introduce 
+	      // suppose that degeneralisation doesn't introduce
 	      // weak SCC
 	      int i = 0;
-	      while (*(dyn_degen+i))
+	      while (*(dyn_degen+i)  && opt_BA)
 		{
 		  const char* algo = dyn_degen[i];
 		  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
 		  ++i;
 		}
 	      i= 0;
-	      while (*(dyn_gen+i))
+	      while (*(dyn_gen+i)  && opt_TGBA)
 		{
 		  const char* algo = dyn_gen[i];
 		  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
@@ -497,7 +550,7 @@ int main(int argc, char **argv)
 
       if (opt_dS)
 	{
-	  sd = new spot::scc_decompose (a, true);
+	  sd = new spot::scc_decompose (a, opt_m);
       	  const spot::tgba* strong_a = sd->strong_automaton();
       	  if (strong_a)
       	    {
@@ -506,7 +559,7 @@ int main(int argc, char **argv)
 	  else
 	    {
 	      // Output in standard way then exit
-	      // suppose that degeneralisation doesn't introduce 
+	      // suppose that degeneralisation doesn't introduce
 	      // weak SCC
 	      int i = 0;
 	      while (*(dyn_degen+i))
@@ -527,7 +580,7 @@ int main(int argc, char **argv)
       	  assert (a);
 	}
 
-      /// The system has not yet be build  we have to create it 
+      /// The system has not yet be build  we have to create it
       /// For dve models.
       ///
       /// If other formalism  are supported and computed "on-the-fly"
@@ -538,7 +591,7 @@ int main(int argc, char **argv)
 	    spot::ltl::atomic_prop_set ap;
 	    atomic_prop_collect(f, &ap);
 	    system = spot::load_dve2(dve_model_name,
-				     dict, &ap, 
+				     dict, &ap,
 				     spot::ltl::constant::true_instance(),
 				     2 /* 0 or 1 or 2 */ , true);
 	  }
@@ -548,161 +601,127 @@ int main(int argc, char **argv)
       /// Build the composed system
       /// and perform emptiness on the degeneralized formula
       ///
-      {
-	// The degeneralized automaton
-	spot::tgba* degen = 0;
+      if (opt_BA)
+	{
+	  // The degeneralized automaton
+	  spot::tgba* degen = 0;
 
-	// Degeneralize product
-	tm.start("degeneralization");
-	degen = spot::degeneralize(a);
-	tm.stop("degeneralization");
+	  // Degeneralize product
+	  tm.start("degeneralization");
+	  degen = spot::degeneralize(a);
+	  tm.stop("degeneralization");
 
-	// Perform the product
-	product = new spot::tgba_product(system, degen);
+	  // Perform the product
+	  product = new spot::tgba_product(system, degen);
 
-	// Walk all emptiness checks
-	int i = 0;
-	while (*(dyn_degen+i))
-	  {
-	    // The timer for the emptiness check
-	    spot::timer_map tm_ec;
+	  // Walk all emptiness checks
+	  int i = 0;
+	  while (*(dyn_degen+i))
+	    {
+	      // The timer for the emptiness check
+	      spot::timer_map tm_ec;
 
-	    // Create the emptiness check procedure
-	    const char* err;
-	    const char* algo = dyn_degen[i];
-	    echeck_inst =
-	      spot::emptiness_check_instantiator::construct( algo, &err);
-	    if (!echeck_inst)
+	      // Create the emptiness check procedure
+	      const char* err;
+	      const char* algo = dyn_degen[i];
+	      echeck_inst =
+		spot::emptiness_check_instantiator::construct( algo, &err);
+	      if (!echeck_inst)
+		{
+		  exit(2);
+		}
+
+	      // Create a specifier
+	      spot::formula_emptiness_specifier *es  = 0;
+	      es = new spot::formula_emptiness_specifier (product, degen);
+
+	      // Instanciate the emptiness check
+	      spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+
+	      tm_ec.start("checking");
+	      spot::emptiness_check_result* res = ec->check();
+	      tm_ec.stop("checking");
+
+	      //
+	      // Now output results
+	      //
 	      {
-		exit(2);
+		const spot::ec_statistics* ecs =
+		  dynamic_cast<const spot::ec_statistics*>(ec);
+
+		print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+			      tm_ec.timer("checking").utime() +
+			      tm_ec.timer("checking").stime(),
+			      ecs->states(), ecs->transitions(),
+			      ecs->max_depth(),
+			      input);
 	      }
 
-	    // Create a specifier 
-	    spot::formula_emptiness_specifier *es  = 0;
-	    es = new spot::formula_emptiness_specifier (product, degen);
-
-	    // Instanciate the emptiness check
-	    spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
-
-	    tm_ec.start("checking");
-	    spot::emptiness_check_result* res = ec->check();
-	    tm_ec.stop("checking");
-
-	    //
-	    // Now output results
-	    //
-	    {
-	      // spot::tgba_statistics a_size =
-	      // 	spot::stats_reachable(ec->automaton());
-	      const spot::ec_statistics* ecs =
-		dynamic_cast<const spot::ec_statistics*>(ec);
-  
-	      std::cout << "# Algo,"
-			<< "Result,"
-			<< "Type,"
-			<< "Ticks,"
-			<< "Product states,"
-			<< "Product trans,"
-			<< "Product depth,"
-			// << "System states," 
-			// << "System trans,"
-			<< "Formula"
-			<< std::endl;
-	      std::cout << algo << ","
-			<< (res ? "VIOLATED,":"VERIFIED,")
-			<< "BA,"
-			<< tm_ec.timer("checking").utime() + tm_ec.timer("checking").stime() << "," 
-			<< ecs->states() << ","
-			<< ecs->transitions() << ","
-			<< ecs->max_depth() << ","
-			// << a_size.states << ","
-			// << a_size.transitions << ","
-			<< "\"" << input << "\""
-			<< std::endl;
+	      i++;
+	      delete echeck_inst;
+	      delete es;
 	    }
-
-	    i++;
-	    delete echeck_inst;
-	    delete es;
-	  }
-	if (degen)
-	  delete degen;
-      }
+	  if (degen)
+	    delete degen;
+	}
 
       ///
       /// Build the composed system
       /// and perform emptiness on the  formula not degeneralized
       ///
-      {
-	// Perform the product
-	product = new spot::tgba_product(system, a);
+      if (opt_TGBA)
+	{
+	  // Perform the product
+	  product = new spot::tgba_product(system, a);
 
-	// Walk all emptiness checks
-	int i = 0;
-	while (*(dyn_gen+i))
-	  {
-	    // The timer for the emptiness check
-	    spot::timer_map tm_ec;
+	  // Walk all emptiness checks
+	  int i = 0;
+	  while (*(dyn_gen+i))
+	    {
+	      // The timer for the emptiness check
+	      spot::timer_map tm_ec;
 
-	    // Create the emptiness check procedure
-	    const char* err;
-	    const char* algo = dyn_gen[i];
-	    echeck_inst =
-	      spot::emptiness_check_instantiator::construct( algo, &err);
-	    if (!echeck_inst)
+	      // Create the emptiness check procedure
+	      const char* err;
+	      const char* algo = dyn_gen[i];
+	      echeck_inst =
+		spot::emptiness_check_instantiator::construct( algo, &err);
+	      if (!echeck_inst)
+		{
+		  exit(2);
+		}
+
+	      // Create a specifier
+	      spot::formula_emptiness_specifier *es  = 0;
+	      es = new spot::formula_emptiness_specifier (product, a);
+
+	      // Instanciate the emptiness check
+	      spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+
+	      tm_ec.start("checking");
+	      spot::emptiness_check_result* res = ec->check();
+	      tm_ec.stop("checking");
+
+	      //
+	      // Now output results
+	      //
 	      {
-		exit(2);
+		const spot::ec_statistics* ecs =
+		  dynamic_cast<const spot::ec_statistics*>(ec);
+
+		print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+			      tm_ec.timer("checking").utime() +
+			      tm_ec.timer("checking").stime(),
+			      ecs->states(), ecs->transitions(),
+			      ecs->max_depth(),
+			      input);
 	      }
 
-	    // Create a specifier 
-	    spot::formula_emptiness_specifier *es  = 0;
-	    es = new spot::formula_emptiness_specifier (product, a);
-
-	    // Instanciate the emptiness check
-	    spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
-
-	    tm_ec.start("checking");
-	    spot::emptiness_check_result* res = ec->check();
-	    tm_ec.stop("checking");
-
-	    //
-	    // Now output results
-	    //
-	    {
-	      // spot::tgba_statistics a_size =
-	      // 	spot::stats_reachable(ec->automaton());
-	      const spot::ec_statistics* ecs =
-		dynamic_cast<const spot::ec_statistics*>(ec);
-  
-	      std::cout << "# Algo,"
-			<< "Result,"
-			<< "Type,"
-			<< "Ticks,"
-			<< "Product states,"
-			<< "Product trans,"
-			<< "Product depth,"
-			// << "System states," 
-			// << "System trans,"
-			<< "Formula"
-			<< std::endl;
-	      std::cout << algo << ","
-			<< (res ? "VIOLATED,":"VERIFIED,")
-			<< "TGBA,"
-			<< tm_ec.timer("checking").utime() + tm_ec.timer("checking").stime() << "," 
-			<< ecs->states() << ","
-			<< ecs->transitions() << ","
-			<< ecs->max_depth() << ","
-			// << a_size.states << ","
-			// << a_size.transitions << ","
-			<< "\"" << input << "\""
-			<< std::endl;
+	      i++;
+	      delete echeck_inst;
+	      delete es;
 	    }
-
-	    i++;
-	    delete echeck_inst;
-	    delete es;
-	  }
-      }
+	}
 
       // refix decomposition
       if (opt_dT)
