@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 
       	  int SIZE = 2000;
 
-	  int A_st = 0, A_tr = 0, A_str = 0, A_acc;
+	  int A_st = 0, A_tr = 0, A_str = 0, A_acc = 0;
 	  int AxK_st = 0, AxK_tr = 0;
 
 	  int Smin_st = 0, Smin_tr = 0, Smin_str = 0, Smin_acc = 0;
