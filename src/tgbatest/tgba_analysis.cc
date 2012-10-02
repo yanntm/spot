@@ -67,7 +67,7 @@
 #include "tgbaalgos/scc_decompose.hh"
 #include "tgbaalgos/simulation.hh"
 #include "tgbaalgos/scc.hh"
-
+#include "tgbaalgos/postproc.hh"
 
 void
 syntax(char* prog)
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
   spot::ltl::ltl_simplifier_options redopt(false, false, false, false, false);
 
   // The reduction for the automaton
-  bool scc_filter_all = true;
+  //bool scc_filter_all = true;
 
   //  The dictionnary
   spot::bdd_dict* dict = new spot::bdd_dict();
@@ -326,42 +326,50 @@ int main(int argc, char **argv)
       a = spot::ltl_to_tgba_fm(f, dict);
       assert (a);
 
-      //
-      // Remove unused SCC
-      //
-      {
-	const spot::tgba* aut_scc = 0;
-	tm.start("reducing A_f w/ SCC");
-	aut_scc = spot::scc_filter(a, scc_filter_all);
-	delete a;
-	a = aut_scc;
-	tm.stop("reducing A_f w/ SCC");
-      }
+      spot::postprocessor *pp = new spot::postprocessor();
+      pp->set_type(spot::postprocessor::TGBA);
+      pp->set_pref(spot::postprocessor::Any);
+      pp->set_level(spot::postprocessor::High);
+      a = pp->run(a, f);
+      delete pp;
 
 
-      //
-      // Minimized
-      //
-      {
-      	spot::tgba* minimized = 0;
-      	if (opt_m)
-      	  {
-      	    minimized = minimize_obligation(a);
-      	    if (minimized)
-      	      {
-      		delete a;
-      		a = minimized;
-      	      }
-      	    else{
-      	      minimized = spot::simulation(a);
-      	      if (minimized)
-      	    	{
-      	    	  delete a;
-      	    	  a = minimized;
-      	    	}
-      	    }
-      	  }
-      }
+      // //
+      // // Remove unused SCC
+      // //
+      // {
+      // 	const spot::tgba* aut_scc = 0;
+      // 	tm.start("reducing A_f w/ SCC");
+      // 	aut_scc = spot::scc_filter(a, scc_filter_all);
+      // 	delete a;
+      // 	a = aut_scc;
+      // 	tm.stop("reducing A_f w/ SCC");
+      // }
+
+
+      // //
+      // // Minimized
+      // //
+      // {
+      // 	spot::tgba* minimized = 0;
+      // 	if (opt_m)
+      // 	  {
+      // 	    minimized = minimize_obligation(a);
+      // 	    if (minimized)
+      // 	      {
+      // 		delete a;
+      // 		a = minimized;
+      // 	      }
+      // 	    else{
+      // 	      minimized = spot::simulation(a);
+      // 	      if (minimized)
+      // 	    	{
+      // 	    	  delete a;
+      // 	    	  a = minimized;
+      // 	    	}
+      // 	    }
+      // 	  }
+      // }
 
       //
       // Display options
@@ -572,8 +580,8 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(term);
 		x->build_map();
 		const spot::state* s = term->get_init_state();
-		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		assert(str == spot::TerminalSubaut);
+		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		//assert(str == spot::TerminalSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics term_stat =
@@ -599,8 +607,8 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(mterm);
 		x->build_map();
 		const spot::state* s = mterm->get_init_state();
-		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		assert(str == spot::TerminalSubaut);
+		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		//assert(str == spot::TerminalSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics mterm_stat =
@@ -626,8 +634,8 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(weak);
 		x->build_map();
 		const spot::state* s = weak->get_init_state();
-		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		assert(str == spot::WeakSubaut);
+		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		//assert(str == spot::WeakSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics weak_stat =
@@ -653,8 +661,8 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(mweak);
 		x->build_map();
 		const spot::state* s = mweak->get_init_state();
-		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		assert(str == spot::WeakSubaut);
+		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		//assert(str == spot::WeakSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics mweak_stat =
@@ -680,8 +688,8 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(strong);
 		x->build_map();
 		const spot::state* s = strong->get_init_state();
-		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		assert(str == spot::StrongSubaut);
+		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		//assert(str == spot::StrongSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics strong_stat =
@@ -707,8 +715,8 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(mstrong);
 		x->build_map();
 		const spot::state* s = mstrong->get_init_state();
-		spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		assert(str == spot::StrongSubaut);
+		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
+		//assert(str == spot::StrongSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics mstrong_stat =
