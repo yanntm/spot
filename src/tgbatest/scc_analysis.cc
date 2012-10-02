@@ -125,10 +125,16 @@ int main(int argc, char **argv)
   if (input == "-")
       use_stdin = true;
 
+  spot::postprocessor *pp = new spot::postprocessor();
+  pp->set_type(spot::postprocessor::TGBA);
+  pp->set_pref(spot::postprocessor::Any);
+  pp->set_level(spot::postprocessor::Low);
+
+  spot::timer_map tm;
   do
     {
       if (use_stdin && !std::getline(inputcin, input))
-	return 0;
+	break;
 
       const spot::ltl::formula* f = 0;
 
@@ -140,30 +146,28 @@ int main(int argc, char **argv)
       assert (a);
 
       // Process the formula
-      spot::postprocessor *pp = new spot::postprocessor();
-      pp->set_type(spot::postprocessor::TGBA);
-      pp->set_pref(spot::postprocessor::Any);
-      pp->set_level(spot::postprocessor::Low);
       a = pp->run (a, f);
 
-      // create a timer
-      spot::timer_map tm;
-      int weaks = 0, non_accepting = 0, terminals = 0, strongs = 0;
 
-      ///
-      ///
-      ///
-      int computation;
-      int maxcomputation = 10;
-      if (original)
-	maxcomputation = 1;
-      for (computation = 0; computation != maxcomputation; ++computation)
+      // create a timer
+      int weaks = 0, non_accepting = 0, terminals = 0, strongs = 0;
       {
 	// Build a map
 	spot::scc_map map(a);
 	map.build_map();
 
-	tm.start("Strength computation");
+
+      ///
+      ///
+      ///
+      int computation;
+      int maxcomputation = 1000;
+      if (original)
+	maxcomputation = 1;
+
+      tm.start("Strength computation");
+      for (computation = 0; computation != maxcomputation; ++computation)
+      {
 	// Walk accross all SCC
 	unsigned max = map.scc_count();
 	int number_of_fully_weak = 0;
@@ -332,24 +336,32 @@ int main(int argc, char **argv)
 	    // assert(number_of_fully_weak >= number_of_syntactic_weak);
 	    // assert(number_of_cycle_weak >= number_of_syntactic_weak);
 	  }
-	tm.stop("Strength computation");
       }
-      std::cout << non_accepting << ','
-		<< weaks         << ','
-		<< terminals     << ','
-		<< strongs       << ','
-		<< tm.timer("Strength computation").utime() +
-	tm.timer("Strength computation").stime() << ","
-		<< input
-		<< std::endl;
+      tm.stop("Strength computation");
+
+      // std::cout << non_accepting << ','
+      // 		<< weaks         << ','
+      // 		<< terminals     << ','
+      // 		<< strongs       << ','
+      // 	// 	<< tm.timer("Strength computation").utime() +
+      // 	// tm.timer("Strength computation").stime() << ","
+      // 		<< input
+      // 		<< std::endl;
 
 
       // Clean up
-      delete pp;
       f->destroy();
+    }
       delete a;
     } while (use_stdin && input != "");
 
+  std::cout << "Computation : "
+	    << tm.timer("Strength computation").utime()  << ","
+	    << tm.timer("Strength computation").stime() << ","
+	    << std::endl;
+
+
+  delete pp;
   delete dict;
   // Check effective clean up
   spot::ltl::atomic_prop::dump_instances(std::cerr);
