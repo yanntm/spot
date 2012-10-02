@@ -92,11 +92,23 @@ namespace spot
 	  sm_(sm),
 	  dc_(dc)
       {
-	int v = aut_->get_dict()
-	  ->register_acceptance_variable
-	  (ltl::constant::true_instance(), aut_);
-	the_acc = bdd_ithvar(v);
-	all = aut_->all_acceptance_conditions();
+	// int v = aut_->get_dict()
+	//   ->register_acceptance_variable
+	//   (ltl::constant::true_instance(), aut_);
+	// the_acc = bdd_ithvar(v);
+	// all = aut_->all_acceptance_conditions();
+
+	if (dc == STRONG)
+	  out_->set_acceptance_conditions(aut_->all_acceptance_conditions());
+	else
+	  {
+	    int v = out_->get_dict()
+	      ->register_acceptance_variable
+	      (ltl::constant::true_instance(), out_);
+	    the_acc = bdd_ithvar(v);
+	    out_->set_acceptance_conditions(the_acc);
+	  }
+	all = out_->all_acceptance_conditions();
       }
 
       T*
@@ -142,20 +154,18 @@ namespace spot
 	    // are removed and terminal SCC are ignored
 	  case WEAK:
 	    {
-	      if (sm_.strong(sm_.scc_of_state(in_s)) ||
-		  sm_.strong(sm_.scc_of_state(out_s)))
+	      // if (sm_.strong(sm_.scc_of_state(in_s)) ||
+	      // 	  sm_.strong(sm_.scc_of_state(out_s)))
+	      if (sm_.scc_of_state(in_s) != sm_.scc_of_state(out_s))
 		out_->add_acceptance_conditions (t, bddfalse);
-	      // if (sm_.strong_subautomaton(sm_.scc_of_state(in_s)) ||
-	      // 	  sm_.strong_subautomaton(sm_.scc_of_state(out_s)))
-	      // 	out_->add_acceptance_conditions (t, bddfalse);
 	      else
-		if (si->current_acceptance_conditions() == all)
-		  out_->add_acceptance_conditions
-		    (t, the_acc);
+		//if (si->current_acceptance_conditions() == all)
+		if (sm_.scc_of_state(in_s) == sm_.scc_of_state(out_s) &&
+		    sm_.weak_accepting(sm_.scc_of_state(in_s)))
+		  out_->add_acceptance_conditions(t, the_acc);
 		else
 		  out_->add_acceptance_conditions
-		    (t, bddfalse// si->current_acceptance_conditions()
-		     );
+		    (t, bddfalse);
 	      break;
 	    }
 
@@ -165,15 +175,27 @@ namespace spot
 	    // All ohter acceptance conditions are removed from
 	    // strong and weak SCC
 	  default:
-	    if (!sm_.terminal_subautomaton(sm_.scc_of_state(in_s)))
-	      out_->add_acceptance_conditions (t, bddfalse);
-	    else
-	      if (si->current_acceptance_conditions() == all)
-		out_->add_acceptance_conditions (t, the_acc);
+	      if (sm_.scc_of_state(in_s) != sm_.scc_of_state(out_s))
+		out_->add_acceptance_conditions (t, bddfalse);
 	      else
-		out_->add_acceptance_conditions
-		  (t, bddfalse);//si->current_acceptance_conditions());
-	    break;
+		//if (si->current_acceptance_conditions() == all)
+		if (sm_.scc_of_state(in_s) == sm_.scc_of_state(out_s) &&
+		    sm_.terminal_accepting(sm_.scc_of_state(in_s)))
+		  out_->add_acceptance_conditions(t, the_acc);
+		else
+		  out_->add_acceptance_conditions
+		    (t, bddfalse);
+	      break;
+
+	    // if (!sm_.terminal_subautomaton(sm_.scc_of_state(in_s)))
+	    //   out_->add_acceptance_conditions (t, bddfalse);
+	    // else
+	    //   if (si->current_acceptance_conditions() == all)
+	    // 	out_->add_acceptance_conditions (t, the_acc);
+	    //   else
+	    // 	out_->add_acceptance_conditions
+	    // 	  (t, bddfalse);//si->current_acceptance_conditions());
+	    // break;
 	  }
       }
 
@@ -196,26 +218,30 @@ namespace spot
 	di.run();
 	strong_ = di.result();
       }
-    if (dynamic_cast<const tgba_explicit_number*>(src_))
+    else if (dynamic_cast<const tgba_explicit_number*>(src_))
       {
 	decomp_iter<tgba_explicit_number>
 	  di  (src_, *sm, STRONG);
 	di.run();
 	strong_ = di.result();
       }
-    if (dynamic_cast<const tgba_explicit_string*>(src_))
+    else if (dynamic_cast<const tgba_explicit_string*>(src_))
       {
 	decomp_iter<tgba_explicit_string>
 	  di  (src_, *sm, STRONG);
 	di.run();
 	strong_ = di.result();
       }
-
-    if (strong_->number_of_acceptance_conditions() == 0)
+    else
       {
-	delete strong_;
 	strong_ = 0;
 	return;
+      }
+    if (!strong_)
+      {
+    	delete strong_;
+    	strong_ = 0;
+    	return;
       }
 
     // Remove useless
@@ -242,26 +268,30 @@ namespace spot
 	di.run();
 	weak_ = di.result();
       }
-    if (dynamic_cast<const tgba_explicit_number*>(src_))
+    else if (dynamic_cast<const tgba_explicit_number*>(src_))
       {
 	decomp_iter<tgba_explicit_number>
 	  di  (src_, *sm, WEAK);
 	di.run();
 	weak_ = di.result();
       }
-    if (dynamic_cast<const tgba_explicit_string*>(src_))
+    else if (dynamic_cast<const tgba_explicit_string*>(src_))
       {
 	decomp_iter<tgba_explicit_string>
 	  di  (src_, *sm, WEAK);
 	di.run();
 	weak_ = di.result();
       }
-
-    if (weak_->number_of_acceptance_conditions() == 0)
+    else
       {
-	delete weak_;
 	weak_ = 0;
 	return;
+      }
+    if (!weak_)
+      {
+    	delete weak_;
+    	weak_ = 0;
+    	return;
       }
 
     // Remove useless
@@ -288,26 +318,31 @@ namespace spot
 	di.run();
 	terminal_ = di.result();
       }
-    if (dynamic_cast<const tgba_explicit_number*>(src_))
+    else if (dynamic_cast<const tgba_explicit_number*>(src_))
       {
 	decomp_iter<tgba_explicit_number>
 	  di  (src_, *sm, TERMINAL);
 	di.run();
 	terminal_ = di.result();
       }
-    if (dynamic_cast<const tgba_explicit_string*>(src_))
+    else if (dynamic_cast<const tgba_explicit_string*>(src_))
       {
 	decomp_iter<tgba_explicit_string>
 	  di  (src_, *sm, TERMINAL);
 	di.run();
 	terminal_ = di.result();
       }
-
-    if (terminal_->number_of_acceptance_conditions() == 0)
+    else
       {
-	delete terminal_;
 	terminal_ = 0;
 	return;
+      }
+
+    if (!terminal_)
+      {
+    	delete terminal_;
+    	terminal_ = 0;
+    	return;
       }
 
     //Remove useless
