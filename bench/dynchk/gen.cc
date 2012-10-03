@@ -439,6 +439,10 @@ int main(int argc, char **argv)
       		{
       		  if (current_violated == TOVERIFY)
 		    {
+		      delete product;
+		      delete res;
+		      delete ec;
+		      delete echeck_inst;
 		      goto clean;
 		    }
       		  ++current_violated;
@@ -447,6 +451,10 @@ int main(int argc, char **argv)
       		{
       		  if (current_verified == TOVERIFY)
 		    {
+		      delete product;
+		      delete res;
+		      delete ec;
+		      delete echeck_inst;
 		      goto clean;
 		    }
       		  ++current_verified;
