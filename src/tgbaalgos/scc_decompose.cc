@@ -72,6 +72,46 @@ namespace spot
       return out_aut->create_transition(in_f, out_f);
     }
 
+    // Tool function used to facilitate the creation of the automaton
+    // for being Generic
+    static
+    state_explicit_number::transition*
+    create_transition(const tgba*, sba_explicit_number* out_aut,
+		      const state*, int in, const state*, int out)
+    {
+      return out_aut->create_transition(in, out);
+    }
+
+    static
+    state_explicit_string::transition*
+    create_transition(const tgba* aut, sba_explicit_string* out_aut,
+		      const state* in_s, int, const state* out_s, int)
+    {
+      const sba_explicit_string* a =
+	static_cast<const sba_explicit_string*>(aut);
+      return out_aut->create_transition(a->get_label(in_s),
+					a->get_label(out_s));
+    }
+
+    static
+    sba_explicit_formula::transition*
+    create_transition(const tgba* aut, sba_explicit_formula* out_aut,
+		      const state* in_s, int, const state* out_s, int)
+    {
+      const sba_explicit_formula* a =
+	static_cast<const sba_explicit_formula*>(aut);
+      const ltl::formula* in_f = a->get_label(in_s);
+      const ltl::formula* out_f = a->get_label(out_s);
+      if (!out_aut->has_state(in_f))
+	in_f->clone();
+      if ((in_f != out_f) && !out_aut->has_state(out_f))
+	out_f->clone();
+      return out_aut->create_transition(in_f, out_f);
+    }
+
+
+
+
     /// This type is used to detect if the decomposition must
     /// focus on making a strong weak or terminal automaton
     enum decomptype {STRONG, WEAK, TERMINAL};
@@ -232,10 +272,31 @@ namespace spot
 	di.run();
 	strong_ = di.result();
       }
+    else if (dynamic_cast<const sba_explicit_formula*>(src_))
+      {
+	decomp_iter<sba_explicit_formula>
+	  di  (src_, *sm, STRONG);
+	di.run();
+	strong_ = di.result();
+      }
+    else if (dynamic_cast<const sba_explicit_number*>(src_))
+      {
+	decomp_iter<sba_explicit_number>
+	  di  (src_, *sm, STRONG);
+	di.run();
+	strong_ = di.result();
+      }
+    else if (dynamic_cast<const sba_explicit_string*>(src_))
+      {
+	decomp_iter<sba_explicit_string>
+	  di  (src_, *sm, STRONG);
+	di.run();
+	strong_ = di.result();
+      }
     else
       {
 	strong_ = 0;
-	return;
+	assert(false);
       }
     if (!strong_)
       {
@@ -282,10 +343,31 @@ namespace spot
 	di.run();
 	weak_ = di.result();
       }
+    else if (dynamic_cast<const sba_explicit_formula*>(src_))
+      {
+	decomp_iter<sba_explicit_formula>
+	  di  (src_, *sm, WEAK);
+	di.run();
+	weak_ = di.result();
+      }
+    else if (dynamic_cast<const sba_explicit_number*>(src_))
+      {
+	decomp_iter<sba_explicit_number>
+	  di  (src_, *sm, WEAK);
+	di.run();
+	weak_ = di.result();
+      }
+    else if (dynamic_cast<const sba_explicit_string*>(src_))
+      {
+	decomp_iter<sba_explicit_string>
+	  di  (src_, *sm, WEAK);
+	di.run();
+	weak_ = di.result();
+      }
     else
       {
 	weak_ = 0;
-	return;
+	assert(false);
       }
     if (!weak_)
       {
@@ -332,10 +414,32 @@ namespace spot
 	di.run();
 	terminal_ = di.result();
       }
+    else if (dynamic_cast<const sba_explicit_formula*>(src_))
+      {
+	decomp_iter<sba_explicit_formula>
+	  di  (src_, *sm, TERMINAL);
+	di.run();
+	terminal_ = di.result();
+      }
+    else if (dynamic_cast<const sba_explicit_number*>(src_))
+      {
+	decomp_iter<sba_explicit_number>
+	  di  (src_, *sm, TERMINAL);
+	di.run();
+	terminal_ = di.result();
+      }
+    else if (dynamic_cast<const sba_explicit_string*>(src_))
+      {
+	decomp_iter<sba_explicit_string>
+	  di  (src_, *sm, TERMINAL);
+	di.run();
+	terminal_ = di.result();
+      }
+
     else
       {
 	terminal_ = 0;
-	return;
+	assert(false);
       }
 
     if (!terminal_)

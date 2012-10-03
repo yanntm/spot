@@ -439,9 +439,9 @@ int main(int argc, char **argv)
       		{
       		  if (current_violated == TOVERIFY)
 		    {
-		      delete product;
 		      delete res;
 		      delete ec;
+		      delete product;
 		      delete echeck_inst;
 		      goto clean;
 		    }
@@ -451,9 +451,9 @@ int main(int argc, char **argv)
       		{
       		  if (current_verified == TOVERIFY)
 		    {
-		      delete product;
 		      delete res;
 		      delete ec;
+		      delete product;
 		      delete echeck_inst;
 		      goto clean;
 		    }
@@ -517,9 +517,9 @@ int main(int argc, char **argv)
 
 			<< verified << ","
 			<< input    << std::endl;
-      	      delete product;
       	      delete res;
       	      delete ec;
+      	      delete product;
       	      delete echeck_inst;
       	    }
       	}
