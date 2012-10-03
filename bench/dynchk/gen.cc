@@ -266,11 +266,10 @@ int main(int argc, char **argv)
 	  /// Compute stats for the original automaton
 	  if (a)
 	    {
-      	      spot::tgba_statistics stat_a  = stats_reachable(a);
       	      spot::tgba_sub_statistics sstat_a = sub_stats_reachable(a);
-      	      A_st = stat_a.states;
-      	      A_tr = stat_a.transitions;
-      	      A_str = sstat_a.transitions;
+      	      A_st = sstat_a.states;
+      	      A_tr = sstat_a.transitions;
+      	      A_str = sstat_a.sub_transitions;
 	      A_acc = a->number_of_acceptance_conditions();
 	    }
 	  assert(A_st || A_tr || A_str || A_acc);
