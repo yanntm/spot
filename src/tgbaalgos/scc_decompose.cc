@@ -291,6 +291,7 @@ namespace spot
 	decomp_iter<sba_explicit_string>
 	  di  (src_, *sm, STRONG);
 	di.run();
+
 	strong_ = di.result();
       }
     else
