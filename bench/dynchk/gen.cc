@@ -281,11 +281,10 @@ int main(int argc, char **argv)
       	  if (mstrong)
       	    {
 	      // Compute stats for smin
-      	      spot::tgba_statistics stat_smin = stats_reachable(mstrong);
       	      spot::tgba_sub_statistics sstat_smin = sub_stats_reachable(mstrong);
-      	      Smin_st = stat_smin.states;
-      	      Smin_tr = stat_smin.transitions;
-      	      Smin_str = sstat_smin.transitions;
+      	      Smin_st = sstat_smin.states;
+      	      Smin_tr = sstat_smin.transitions;
+      	      Smin_str = sstat_smin.sub_transitions;
 	      Smin_acc = mstrong->number_of_acceptance_conditions();
 	      assert(Smin_st || Smin_tr || Smin_str || Smin_acc);
 
@@ -301,11 +300,10 @@ int main(int argc, char **argv)
       	  if (mweak)
       	    {
 	      // Compute stats for Wmin
-      	      spot::tgba_statistics stat_wmin  = stats_reachable(mweak);
       	      spot::tgba_sub_statistics sstat_wmin = sub_stats_reachable(mweak);
-      	      Wmin_st = stat_wmin.states;
-      	      Wmin_tr = stat_wmin.transitions;
-      	      Wmin_str = sstat_wmin.transitions;
+      	      Wmin_st = sstat_wmin.states;
+      	      Wmin_tr = sstat_wmin.transitions;
+      	      Wmin_str = sstat_wmin.sub_transitions;
 	      Wmin_acc = mweak->number_of_acceptance_conditions();
 	      assert(Wmin_st || Wmin_tr || Wmin_str || Wmin_acc);
 
@@ -321,11 +319,10 @@ int main(int argc, char **argv)
       	  if (mterminal)
       	    {
 	      // Compute stats for Tmin
-      	      spot::tgba_statistics stat_tmin  = stats_reachable(mterminal);
       	      spot::tgba_sub_statistics sstat_tmin = sub_stats_reachable(mterminal);
-      	      Tmin_st = stat_tmin.states;
-      	      Tmin_tr = stat_tmin.transitions;
-      	      Tmin_str = sstat_tmin.transitions;
+      	      Tmin_st = sstat_tmin.states;
+      	      Tmin_tr = sstat_tmin.transitions;
+      	      Tmin_str = sstat_tmin.sub_transitions;
 	      Tmin_acc = mterminal->number_of_acceptance_conditions();
 	      assert(Tmin_st || Tmin_tr || Tmin_str || Tmin_acc);
 
@@ -348,11 +345,10 @@ int main(int argc, char **argv)
       	      if (strong)
       		{
 		  // Compute stats for S
-		  spot::tgba_statistics stat_s  = stats_reachable(strong);
 		  spot::tgba_sub_statistics sstat_s = sub_stats_reachable(strong);
-		  S_st = stat_s.states;
-		  S_tr = stat_s.transitions;
-		  S_str = sstat_s.transitions;
+		  S_st = sstat_s.states;
+		  S_tr = sstat_s.transitions;
+		  S_str = sstat_s.sub_transitions;
 		  S_acc = strong->number_of_acceptance_conditions();
 		  assert(Smin_st || Smin_tr || Smin_str || Smin_acc);
 
@@ -368,11 +364,10 @@ int main(int argc, char **argv)
       	      if (weak)
       		{
 		  // Compute stats for W
-		  spot::tgba_statistics stat_w  = stats_reachable(weak);
 		  spot::tgba_sub_statistics sstat_w = sub_stats_reachable(weak);
-		  W_st = stat_w.states;
-		  W_tr = stat_w.transitions;
-		  W_str = sstat_w.transitions;
+		  W_st = sstat_w.states;
+		  W_tr = sstat_w.transitions;
+		  W_str = sstat_w.sub_transitions;
 		  W_acc = weak->number_of_acceptance_conditions();
 		  assert(W_st || W_tr || W_str || W_acc);
 
@@ -388,11 +383,10 @@ int main(int argc, char **argv)
       	      if (terminal)
       		{
 		  // Compute stats for T
-		  spot::tgba_statistics stat_t  = stats_reachable(terminal);
 		  spot::tgba_sub_statistics sstat_t = sub_stats_reachable(terminal);
-		  T_st = stat_t.states;
-		  T_tr = stat_t.transitions;
-		  T_str = sstat_t.transitions;
+		  T_st = sstat_t.states;
+		  T_tr = sstat_t.transitions;
+		  T_str = sstat_t.sub_transitions;
 		  T_acc = terminal->number_of_acceptance_conditions();
 		  assert(T_st || T_tr || T_str || T_acc);
 
