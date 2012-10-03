@@ -299,7 +299,7 @@ namespace spot
 	strong_ = 0;
 	assert(false);
       }
-    if (!strong_)
+    if (!strong_ || strong_->number_of_acceptance_conditions() == 0)
       {
     	delete strong_;
     	strong_ = 0;
@@ -370,7 +370,7 @@ namespace spot
 	weak_ = 0;
 	assert(false);
       }
-    if (!weak_)
+    if (!weak_ || weak_->number_of_acceptance_conditions() == 0)
       {
     	delete weak_;
     	weak_ = 0;
@@ -443,7 +443,7 @@ namespace spot
 	assert(false);
       }
 
-    if (!terminal_)
+    if (!terminal_ || terminal_->number_of_acceptance_conditions() == 0)
       {
     	delete terminal_;
     	terminal_ = 0;
