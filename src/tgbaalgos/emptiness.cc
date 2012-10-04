@@ -30,6 +30,8 @@
 #include "tgbaalgos/se05.hh"
 #include "tgbaalgos/tau03.hh"
 #include "tgbaalgos/tau03opt.hh"
+#include "tgbaalgos/termemptchk.hh"
+#include "tgbaalgos/weakemptchk.hh"
 
 namespace spot
 {
@@ -222,6 +224,8 @@ namespace spot
 	{ "Tau03_opt",      spot::explicit_tau03_opt_search,      0, -1U },
 	{ "Tau03_opt_stat", spot::explicit_tau03_opt_stat_search, 0, -1U },
 	{ "Tau03_opt_dyn",  spot::explicit_tau03_opt_dyn_search,  0, -1U },
+	{ "DFS",            spot::weak_dfs_search,                0,   1 },
+	{ "REACHABILITY",   spot::terminal_search,                0,   1 },
       };
   }
 
@@ -334,13 +338,13 @@ namespace spot
     bdd seen_acc = bddfalse;
 
     typedef Sgi::hash_map<const state*, state_explicit_string*,
-                          state_ptr_hash, state_ptr_equal> state_map;
+			  state_ptr_hash, state_ptr_equal> state_map;
     state_map seen;
 
     if (run->prefix.empty())
-        l = &run->cycle;
+	l = &run->cycle;
     else
-        l = &run->prefix;
+	l = &run->prefix;
 
     tgba_run::steps::const_iterator i = l->begin();
 
@@ -351,70 +355,70 @@ namespace spot
 
     for (; i != l->end();)
       {
-        // expected outgoing transition
-        bdd label = i->label;
-        bdd acc = i->acc;
+	// expected outgoing transition
+	bdd label = i->label;
+	bdd acc = i->acc;
 
-        // compute the next expected state
-        const state* next;
-        ++i;
-        if (i != l->end())
-          {
-            next = i->s;
-          }
-        else
-          {
-            if (l == &run->prefix)
-              {
-                l = &run->cycle;
-                i = l->begin();
-              }
-            next = l->begin()->s;
-          }
+	// compute the next expected state
+	const state* next;
+	++i;
+	if (i != l->end())
+	  {
+	    next = i->s;
+	  }
+	else
+	  {
+	    if (l == &run->prefix)
+	      {
+		l = &run->cycle;
+		i = l->begin();
+	      }
+	    next = l->begin()->s;
+	  }
 
-        // browse the actual outgoing transitions
-        tgba_succ_iterator* j = a->succ_iter(s);
-        s->destroy(); // FIXME: is it always legitimate to destroy s before j?
-        for (j->first(); !j->done(); j->next())
-          {
-            if (j->current_condition() != label
-                || j->current_acceptance_conditions() != acc)
-              continue;
+	// browse the actual outgoing transitions
+	tgba_succ_iterator* j = a->succ_iter(s);
+	s->destroy(); // FIXME: is it always legitimate to destroy s before j?
+	for (j->first(); !j->done(); j->next())
+	  {
+	    if (j->current_condition() != label
+		|| j->current_acceptance_conditions() != acc)
+	      continue;
 
-            const state* s2 = j->current_state();
-            if (s2->compare(next) != 0)
-              {
-                s2->destroy();
-                continue;
-              }
-            else
-              {
-                s = s2;
-                break;
-              }
-          }
-        assert(!j->done());
-        delete j;
+	    const state* s2 = j->current_state();
+	    if (s2->compare(next) != 0)
+	      {
+		s2->destroy();
+		continue;
+	      }
+	    else
+	      {
+		s = s2;
+		break;
+	      }
+	  }
+	assert(!j->done());
+	delete j;
 
-        state_map::const_iterator its = seen.find(next);
-        if (its == seen.end())
-          {
-            dest = res->add_state(format_state(a, next, number));
-            ++number;
-            seen.insert(std::make_pair(next, dest));
-          }
-        else
-          dest = its->second;
+	state_map::const_iterator its = seen.find(next);
+	if (its == seen.end())
+	  {
+	    dest = res->add_state(format_state(a, next, number));
+	    ++number;
+	    seen.insert(std::make_pair(next, dest));
+	  }
+	else
+	  dest = its->second;
 
-        state_explicit_string::transition* t =
+	state_explicit_string::transition* t =
 	  res->create_transition(source, dest);
-        res->add_conditions(t, label);
-        res->add_acceptance_conditions(t, acc);
-        source = dest;
+	res->add_conditions(t, label);
+	res->add_acceptance_conditions(t, acc);
+	source = dest;
 
-        // Sum acceptance conditions.
-        if (l == &run->cycle && i != l->begin())
-            seen_acc |= acc;
+	// Sum acceptance conditions.
+	if (l == &run->cycle && i != l->begin())
+	    seen_acc |= acc;
       }
     s->destroy();
 
