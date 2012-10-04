@@ -79,7 +79,19 @@ syntax(char* prog)
   if (slash && (strncmp(slash + 1, "lt-", 3) == 0))
     prog = slash + 4;
 
-  std::cerr << "Usage: "<< prog << "formula"
+  std::cerr << "Usage: "<< prog << " [option] formula"
+	    << std::endl
+	    << "with option among following :"
+	    << std::endl
+	    << "   --inherent-exact"
+	    << std::endl
+	    << "   --structural"
+	    << std::endl
+	    << "   --syntactic"
+	    << std::endl
+	    << "   --original"
+	    << std::endl
+	    << "   --hybrid"
 	    << std::endl;
 
   exit(2);
@@ -87,34 +99,39 @@ syntax(char* prog)
 
 int main(int argc, char **argv)
 {
-  assert(argc >= 2);
+  if (argc < 2)
+    syntax(argv[0]);
 
   // Which is the chosen approach ?
-  bool exact = false; 		// WARNING Should decoment something
-  bool structural = false;//true;
-  bool syntaxic = false;//true;
+  bool exact = false;
+  bool structural = false;
+  bool syntactic = false;
   bool original = false;
+  bool hybrid = false;
 
   // Parse arguments
   if (argc == 3)
     {
       std::string arg = argv[1];
-      if (arg == "--exact")
+      if (arg == "--inherent-exact")
 	exact = true;
       else if (arg == "--structural")
 	structural = true;
-      else if (arg == "--syntaxic")
-	syntaxic = true;
+      else if (arg == "--syntactic")
+	syntactic = true;
       else if (arg == "--original")
 	original = true;
+      else if (arg == "--hybrid")
+	hybrid = true;
       else
 	assert (false);
     }
 
-  assert (structural ||syntaxic || exact || original);
+  assert (structural ||syntactic || exact || original || hybrid);
 
   spot::ltl::environment& env(spot::ltl::default_environment::instance());
   spot::ltl::parse_error_list pel;
+
   //  The dictionnary
   spot::bdd_dict* dict = new spot::bdd_dict();
 
@@ -233,7 +250,7 @@ int main(int argc, char **argv)
 		continue;
 	      }
 
-	    if (syntaxic)
+	    if (syntactic)
 	      {
 		// Check non accepting SCC
 		if (!map.accepting(n))
@@ -274,6 +291,36 @@ int main(int argc, char **argv)
 		    ++weaks;
 		  }
 	      }
+
+	    if (hybrid)
+	      {
+		// Check non accepting SCC
+		if (!map.accepting(n))
+		  {
+		    ++non_accepting;
+		    continue;
+		  }
+		// Check weak
+		if (is_syntactic_terminal_scc(a, map, n))
+		  {
+		    ++terminals;
+		  }
+		if (is_syntactic_weak_scc(a, map, n))
+		  {
+		    ++weaks;
+		    continue;
+		  }
+		if (!is_weak_heuristic(map, n))
+		  {
+		    ++strongs;
+		    continue;
+		  }
+		else
+		  ++weaks;
+		continue;
+	      }
+
+
 
 	    if (original)
 	      {
