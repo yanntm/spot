@@ -597,6 +597,66 @@ int main(int argc, char **argv)
 	  }
       }
 
+
+      // ------------> NASTY TRICK
+      ///
+      /// Build the composed system
+      /// and perform the most efficient emptiness
+      ///
+      if (opt_dT || opt_dW)
+	{
+	  // Perform the product
+	  product = new spot::tgba_product(system, a);
+
+
+	  // The timer for the emptiness check
+	  spot::timer_map tm_ec;
+
+	  // Create the emptiness check procedure
+	  const char* err;
+	  const char* algo ;
+	  if (opt_dT)
+	    algo = "REACHABILITY";
+	  else
+	    algo = "DFS";
+
+	  echeck_inst =
+	    spot::emptiness_check_instantiator::construct( algo, &err);
+	  if (!echeck_inst)
+	    {
+	      exit(2);
+	    }
+
+	  // Create a specifier
+	  spot::formula_emptiness_specifier *es  = 0;
+	  es = new spot::formula_emptiness_specifier (product, a);
+
+	  // Instanciate the emptiness check
+	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+
+	  tm_ec.start("checking");
+	  spot::emptiness_check_result* res = ec->check();
+	  tm_ec.stop("checking");
+
+	  //
+	  // Now output results
+	  //
+	  const spot::ec_statistics* ecs =
+	    dynamic_cast<const spot::ec_statistics*>(ec);
+
+	  print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+			tm_ec.timer("checking").utime() +
+			tm_ec.timer("checking").stime(),
+			  ecs->states(), ecs->transitions(),
+			ecs->max_depth(),
+			input);
+	  delete echeck_inst;
+	  delete es;
+	  goto decompfinal;
+	}
+
+
+
       ///
       /// Build the composed system
       /// and perform emptiness on the degeneralized formula
@@ -723,6 +783,7 @@ int main(int argc, char **argv)
 	    }
 	}
 
+    decompfinal:
       // refix decomposition
       if (opt_dT)
 	a = term;

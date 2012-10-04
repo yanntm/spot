@@ -229,7 +229,7 @@ namespace spot
 		// Warning :
 		//   - Suppose that acceptance conditions on
 		//     terminal automaton are only on complete SCC
-		if (f.it->current_acceptance_conditions() == all_cond)
+		if (acc == all_cond)
 		  {
 		    // Minimal one node for counterexample!
 		    if (c.is_white ())

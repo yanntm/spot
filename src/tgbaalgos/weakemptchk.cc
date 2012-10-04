@@ -229,7 +229,7 @@ namespace spot
 		// if we want to track inherently weak just
 		// replace by the following code
 		// es_->same_weak_acc (f.s, s_prime)
-		if (f.it->current_acceptance_conditions() == all_cond)
+		if (acc == all_cond)
 		  {
 		    typename heap::color_ref c = h.get_color_ref(s_prime);
 		    if (!c.is_white() && c.get_color() == CYAN)
