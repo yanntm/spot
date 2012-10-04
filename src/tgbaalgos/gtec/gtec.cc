@@ -146,26 +146,6 @@ namespace spot
       }
   }
 
-  void
-  couvreur99_check::stats_formula (const spot::state *s)
-  {
-    strength str = es_->typeof_subautomaton(s);
-    if (str == TerminalSubaut)
-      inc_reachability();
-    else
-      inc_ndfs();
-  }
-
-  void
-  couvreur99_check::stats_commut (const spot::state *s)
-  {
-    strength str = es_->typeof_subautomaton(s);
-    if (str == TerminalSubaut)
-      commut_algo (REACHABILITY);
-    else
-      commut_algo(NDFS);
-  }
-
   emptiness_check_result*
   couvreur99_check::check()
   {
@@ -198,19 +178,6 @@ namespace spot
       iter->first();
       todo.push(pair_state_iter(init, iter));
       inc_depth();
-
-      if (is_dynamic)
-	{
-	  //const ltl::formula * formula =  es_->formula_from_state(init);
-	  assert(init);
-	  stats_commut (init);
-	  stats_formula (init);
-	}
-      else
-	{
-	  inc_ndfs();
-	  commut_algo(NDFS);
-	}
     }
 
     while (!todo.empty())
@@ -287,8 +254,6 @@ namespace spot
 	      {
 		assert(es_);
 		assert(dest);
-		stats_commut (dest);
-		stats_formula (dest);
 		if (es_->is_terminal_accepting_scc (dest))
 		  {
 		    set_states(ecs_->states());
@@ -303,11 +268,11 @@ namespace spot
 		    return new couvreur99_check_result(ecs_, options(), true);
 		  }
 	      }
-	    else
-	      {
-		commut_algo(NDFS);
-		inc_ndfs ();
-	      }
+	    // else
+	    //   {
+	    // 	commut_algo(NDFS);
+	    // 	inc_ndfs ();
+	    //   }
 	    continue;
 	  }
 
@@ -361,7 +326,7 @@ namespace spot
 	    // Use this state to start the computation of an accepting
 	    // cycle.
 	    ecs_->cycle_seed = spi.first;
-            set_states(ecs_->states());
+	    set_states(ecs_->states());
 	    return new couvreur99_check_result(ecs_, options());
 	  }
       }
@@ -479,20 +444,6 @@ namespace spot
     // Position in the loop seeking known successors.
     pos = todo.back().q.begin();
 
-
-    if (is_dynamic)
-      {
-	assert(todo.back().s);
- 	stats_commut (todo.back().s);
-	stats_formula (todo.back().s);
-      }
-    else
-      {
-	inc_ndfs();
-	commut_algo(NDFS);
-      }
-
-
     for (;;)
       {
 #ifdef TRACE
@@ -600,8 +551,6 @@ namespace spot
 	      {
 		assert(es_);
 		assert(succ.s);
-		stats_commut (succ.s);
-		stats_formula (succ.s);
 		if (es_->is_terminal_accepting_scc (succ.s))
 		  {
 		    set_states(ecs_->states());
@@ -609,11 +558,6 @@ namespace spot
 			  << std::endl;
 		    return new couvreur99_check_result(ecs_, options(), true);
 		  }
-	      }
-	    else
-	      {
-		commut_algo(NDFS);
-		inc_ndfs ();
 	      }
 	    continue;
 	  }
