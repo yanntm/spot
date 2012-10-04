@@ -327,9 +327,9 @@ int main(int argc, char **argv)
       assert (a);
 
       spot::postprocessor *pp = new spot::postprocessor();
-      pp->set_type(spot::postprocessor::TGBA);
-      pp->set_pref(spot::postprocessor::Any);
-      pp->set_level(spot::postprocessor::High);
+      // pp->set_type(spot::postprocessor::TGBA);
+      // pp->set_pref(spot::postprocessor::Any);
+      // pp->set_level(spot::postprocessor::High);
       a = pp->run(a, f);
       delete pp;
 
