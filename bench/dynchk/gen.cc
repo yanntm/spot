@@ -120,64 +120,71 @@ int main(int argc, char **argv)
   int current_violated = 0;
 
 
-	      std::cout << "A.st"  << ","
-			<< "A.tr"  << ","
-			<< "A.str" << ","
-			<< "A.acc" << ","
+  std::cout << "A.st"  << ","
+	    << "A.tr"  << ","
+	    << "A.str" << ","
+	    << "A.acc" << ","
+	    << "A.aps" << ","
 
-			<< "S.st" << ","
-			<< "S.tr"  << ","
-			<< "S.str" << ","
-			<< "S.acc" << ","
+	    << "S.st" << ","
+	    << "S.tr"  << ","
+	    << "S.str" << ","
+	    << "S.acc" << ","
+	    << "S.aps" << ","
 
-			<< "W.st" << ","
-			<< "W.tr"  << ","
-			<< "W.str" << ","
-			<< "W.acc" << ","
+	    << "W.st" << ","
+	    << "W.tr"  << ","
+	    << "W.str" << ","
+	    << "W.acc" << ","
+	    << "W.aps" << ","
 
-			<< "T.st" << ","
-			<< "T.tr"  << ","
-			<< "T.str" << ","
-			<< "T.acc" << ","
+	    << "T.st" << ","
+	    << "T.tr"  << ","
+	    << "T.str" << ","
+	    << "T.acc" << ","
+	    << "T.aps" << ","
 
-			<< "Smin.st" << ","
-			<< "Smin.tr"  << ","
-			<< "Smin.str" << ","
-			<< "Smin.acc" << ","
+	    << "Smin.st" << ","
+	    << "Smin.tr"  << ","
+	    << "Smin.str" << ","
+	    << "Smin.acc" << ","
+	    << "Smin.aps" << ","
 
-			<< "Wmin.st" << ","
-			<< "Wmin.tr"  << ","
-			<< "Wmin.str" << ","
-			<< "Wmin.acc" << ","
+	    << "Wmin.st" << ","
+	    << "Wmin.tr"  << ","
+	    << "Wmin.str" << ","
+	    << "Wmin.acc" << ","
+	    << "Wmin.aps" << ","
 
-			<< "Tmin.st" << ","
-			<< "Tmin.tr"  << ","
-			<< "Tmin.str" << ","
-			<< "Tmin.acc" << ","
+	    << "Tmin.st" << ","
+	    << "Tmin.tr"  << ","
+	    << "Tmin.str" << ","
+	    << "Tmin.acc" << ","
+	    << "Tmin.aps" << ","
 
-			<< "AxK.st" << ","
-			<< "AxK.tr"  << ","
+	    << "AxK.st" << ","
+	    << "AxK.tr"  << ","
 
-			<< "SxK.st" << ","
-			<< "SxK.tr"  << ","
+	    << "SxK.st" << ","
+	    << "SxK.tr"  << ","
 
-			<< "WxK.st" << ","
-			<< "WxK.tr"  << ","
+	    << "WxK.st" << ","
+	    << "WxK.tr"  << ","
 
-			<< "TxK.st" << ","
-			<< "TxK.tr"  << ","
+	    << "TxK.st" << ","
+	    << "TxK.tr"  << ","
 
-			<< "SminxK.st" << ","
-			<< "SminxK.tr"  << ","
+	    << "SminxK.st" << ","
+	    << "SminxK.tr"  << ","
 
-			<< "WminxK.st" << ","
-			<< "WminxK.tr"  << ","
+	    << "WminxK.st" << ","
+	    << "WminxK.tr"  << ","
 
-			<< "TminxK.st" << ","
-			<< "TminxK.tr"  << ","
+	    << "TminxK.st" << ","
+	    << "TminxK.tr"  << ","
 
-			<< "Verif/Viol" << ","
-			<< "Formula"  << std::endl;
+	    << "Verif/Viol" << ","
+	    << "Formula"  << std::endl;
   do
     {
       //
@@ -243,24 +250,28 @@ int main(int argc, char **argv)
 	      goto clean;
 	    }
 
+	  // NUMBERS of states minimums required
       	  int SIZE = 2000;
 
-	  int A_st = 0, A_tr = 0, A_str = 0, A_acc = 0;
+	  int A_st = 0, A_tr = 0, A_str = 0, A_acc = 0, A_aps;
 	  int AxK_st = 0, AxK_tr = 0;
 
-	  int Smin_st = 0, Smin_tr = 0, Smin_str = 0, Smin_acc = 0;
+	  int Smin_st = 0, Smin_tr = 0, Smin_str = 0, Smin_acc = 0,
+	    Smin_aps = 0;
 	  int SminxK_st = 0, SminxK_tr = 0;
-	  int S_st = 0, S_tr = 0, S_str = 0, S_acc = 0;
+	  int S_st = 0, S_tr = 0, S_str = 0, S_acc = 0, S_aps = 0;
 	  int SxK_st = 0, SxK_tr = 0;
 
-	  int Wmin_st = 0, Wmin_tr = 0, Wmin_str = 0, Wmin_acc = 0;
+	  int Wmin_st = 0, Wmin_tr = 0, Wmin_str = 0, Wmin_acc = 0,
+	     Wmin_aps = 0;
 	  int WminxK_st = 0, WminxK_tr = 0;
-	  int W_st = 0, W_tr = 0, W_str = 0, W_acc = 0;
+	  int W_st = 0, W_tr = 0, W_str = 0, W_acc = 0, W_aps = 0;
 	  int WxK_st = 0, WxK_tr = 0;
 
-	  int Tmin_st = 0, Tmin_tr = 0, Tmin_str = 0, Tmin_acc = 0;
+	  int Tmin_st = 0, Tmin_tr = 0, Tmin_str = 0, Tmin_acc = 0,
+	    Tmin_aps = 0;
 	  int TminxK_st = 0, TminxK_tr = 0;
-	  int T_st = 0, T_tr = 0, T_str = 0, T_acc = 0;
+	  int T_st = 0, T_tr = 0, T_str = 0, T_acc = 0, T_aps = 0;
 	  int TxK_st = 0, TxK_tr = 0;
 
 	  /// Compute stats for the original automaton
@@ -271,6 +282,13 @@ int main(int argc, char **argv)
       	      A_tr = sstat_a.transitions;
       	      A_str = sstat_a.sub_transitions;
 	      A_acc = a->number_of_acceptance_conditions();
+
+	      // Compute the set of atomics props used
+	      spot::scc_map* x = new spot::scc_map(a);
+	      x->build_map();
+	      bdd aps = x->aprec_set_of(x->initial());
+	      A_aps = bdd_nodecount (aps);
+	      delete x;
 	    }
 	  assert(A_st || A_tr || A_str || A_acc);
 
@@ -286,6 +304,13 @@ int main(int argc, char **argv)
       	      Smin_str = sstat_smin.sub_transitions;
 	      Smin_acc = mstrong->number_of_acceptance_conditions();
 	      assert(Smin_st || Smin_tr || Smin_str || Smin_acc);
+
+	      // Compute the set of atomics props used
+	      spot::scc_map* x = new spot::scc_map(mstrong);
+	      x->build_map();
+	      bdd aps = x->aprec_set_of(x->initial());
+	      Smin_aps = bdd_nodecount (aps);
+	      delete x;
 
 	      // Compute stats for Smin product
       	      const spot::tgba *p_mstrong = new spot::tgba_product(system, mstrong);
@@ -306,6 +331,13 @@ int main(int argc, char **argv)
 	      Wmin_acc = mweak->number_of_acceptance_conditions();
 	      assert(Wmin_st || Wmin_tr || Wmin_str || Wmin_acc);
 
+	      // Compute the set of atomics props used
+	      spot::scc_map* x = new spot::scc_map(mweak);
+	      x->build_map();
+	      bdd aps = x->aprec_set_of(x->initial());
+	      Wmin_aps = bdd_nodecount (aps);
+	      delete x;
+
 	      // Compute stats for Wmin product
       	      const spot::tgba *p_mweak = new spot::tgba_product(system, mweak);
       	      spot::tgba_statistics s_mweak = stats_reachable(p_mweak);
@@ -324,6 +356,13 @@ int main(int argc, char **argv)
       	      Tmin_str = sstat_tmin.sub_transitions;
 	      Tmin_acc = mterminal->number_of_acceptance_conditions();
 	      assert(Tmin_st || Tmin_tr || Tmin_str || Tmin_acc);
+
+	      // Compute the set of atomics props used
+	      spot::scc_map* x = new spot::scc_map(mterminal);
+	      x->build_map();
+	      bdd aps = x->aprec_set_of(x->initial());
+	      Tmin_aps = bdd_nodecount (aps);
+	      delete x;
 
 	      // Compute stats for Tmin product
       	      const spot::tgba *p_mterminal = new spot::tgba_product(system, mterminal);
@@ -349,7 +388,15 @@ int main(int argc, char **argv)
 		  S_tr = sstat_s.transitions;
 		  S_str = sstat_s.sub_transitions;
 		  S_acc = strong->number_of_acceptance_conditions();
-		  assert(Smin_st || Smin_tr || Smin_str || Smin_acc);
+		  assert(S_st || S_tr || S_str || S_acc);
+
+		  // Compute the set of atomics props used
+		  spot::scc_map* x = new spot::scc_map(strong);
+		  x->build_map();
+		  bdd aps = x->aprec_set_of(x->initial());
+		  S_aps = bdd_nodecount (aps);
+		  delete x;
+
 
 		  // Compute stats for S product
       		  const spot::tgba *p_strong = new spot::tgba_product(system, strong);
@@ -370,6 +417,14 @@ int main(int argc, char **argv)
 		  W_acc = weak->number_of_acceptance_conditions();
 		  assert(W_st || W_tr || W_str || W_acc);
 
+		  // Compute the set of atomics props used
+		  spot::scc_map* x = new spot::scc_map(weak);
+		  x->build_map();
+		  bdd aps = x->aprec_set_of(x->initial());
+		  W_aps = bdd_nodecount (aps);
+		  delete x;
+
+
 		  // Compute stats for W product
       		  const spot::tgba *p_weak = new spot::tgba_product(system, weak);
       		  spot::tgba_statistics s_weak = stats_reachable(p_weak);
@@ -388,6 +443,14 @@ int main(int argc, char **argv)
 		  T_str = sstat_t.sub_transitions;
 		  T_acc = terminal->number_of_acceptance_conditions();
 		  assert(T_st || T_tr || T_str || T_acc);
+
+		  // Compute the set of atomics props used
+		  spot::scc_map* x = new spot::scc_map(terminal);
+		  x->build_map();
+		  bdd aps = x->aprec_set_of(x->initial());
+		  T_aps = bdd_nodecount (aps);
+		  delete x;
+
 
 		  // Compute stats for T product
       		  const spot::tgba *p_terminal =
@@ -456,36 +519,43 @@ int main(int argc, char **argv)
 			<< A_tr  << ","
 			<< A_str << ","
 			<< A_acc << ","
+			<< A_aps << ","
 
 			<< S_st << ","
 			<< S_tr  << ","
 			<< S_str << ","
 			<< S_acc << ","
+			<< S_aps << ","
 
 			<< W_st << ","
 			<< W_tr  << ","
 			<< W_str << ","
 			<< W_acc << ","
+			<< W_aps << ","
 
 			<< T_st << ","
 			<< T_tr  << ","
 			<< T_str << ","
 			<< T_acc << ","
+			<< T_aps << ","
 
 			<< Smin_st << ","
 			<< Smin_tr  << ","
 			<< Smin_str << ","
 			<< Smin_acc << ","
+			<< Smin_aps << ","
 
 			<< Wmin_st << ","
 			<< Wmin_tr  << ","
 			<< Wmin_str << ","
 			<< Wmin_acc << ","
+			<< Wmin_aps << ","
 
 			<< Tmin_st << ","
 			<< Tmin_tr  << ","
 			<< Tmin_str << ","
 			<< Tmin_acc << ","
+			<< Tmin_aps << ","
 
 			<< AxK_st << ","
 			<< AxK_tr  << ","
