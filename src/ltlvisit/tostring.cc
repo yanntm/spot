@@ -104,6 +104,7 @@ namespace spot
 	"false", // 0 doesn't work from the command line
 	"true",  // 1 doesn't work from the command line
 	"[*0]",			// not supported
+	"[S]"			// ERROR!
 	" xor ",		// rewritten
 	" -> ",			// rewritten, although supported
 	" <-> ",		// rewritten, although supported
@@ -164,6 +165,7 @@ namespace spot
 	"0",
 	"1",
 	"[*0]",
+	"[S]",
 	"⊕",
 	" → ",
 	" ↔ ",
