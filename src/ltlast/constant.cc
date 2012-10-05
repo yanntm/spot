@@ -132,7 +132,7 @@ namespace spot
 	case EmptyWord:
 	  return "[*0]";
 	case StrongScc:
-	  return "[S]";
+	  return "[Strong]";
 	}
       // Unreachable code.
       assert(0);
