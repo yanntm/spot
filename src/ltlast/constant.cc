@@ -31,6 +31,7 @@ namespace spot
     constant constant::true_instance_(constant::True);
     constant constant::false_instance_(constant::False);
     constant constant::empty_word_instance_(constant::EmptyWord);
+    constant constant::strong_scc_instance_(constant::StrongScc);
 
     constant::constant(type val)
       : formula(Constant), val_(val)
@@ -59,6 +60,7 @@ namespace spot
 	  is.not_marked = true;
 	  is.accepting_eword = false;
 	  break;
+	case constant::StrongScc:
 	case constant::EmptyWord:
 	  is.boolean = false;
 	  is.sugar_free_boolean = false;
@@ -98,6 +100,8 @@ namespace spot
 	  return "constant(0)";
 	case EmptyWord:
 	  return "constant(e)";
+	case StrongScc:
+	  return "constant(strongscc)";
 	}
       // Unreachable code.
       assert(0);
@@ -127,6 +131,8 @@ namespace spot
 	  return "0";
 	case EmptyWord:
 	  return "[*0]";
+	case StrongScc:
+	  return "[S]";
 	}
       // Unreachable code.
       assert(0);

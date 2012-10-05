@@ -42,6 +42,7 @@ namespace spot
 	KFalse = 0,
 	KTrue = 1,
 	KEmptyWord = 2,
+	KStrongScc = 3,
 	KXor,
 	KImplies,
 	KEquiv,
@@ -315,6 +316,9 @@ namespace spot
 	      break;
 	    case constant::EmptyWord:
 	      emit(KEmptyWord);
+	      break;
+	    case constant::StrongScc:
+	      emit(KStrongScc);
 	      break;
 	    }
 	  if (full_parent_)

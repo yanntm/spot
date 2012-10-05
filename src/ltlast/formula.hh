@@ -88,7 +88,7 @@ namespace spot
 	// to constants, and it is convenient to have constants smaller
 	// than all other formulae.
 	if (max_count == 0)
-	  max_count = 3;
+	  max_count = 4;
       }
 
     public:

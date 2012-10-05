@@ -220,7 +220,7 @@ namespace spot
       };
 
       typedef Sgi::hash_map<flagged_formula, translated, flagged_formula_hash>
-              flagged_formula_to_bdd_map;
+	      flagged_formula_to_bdd_map;
     private:
       flagged_formula_to_bdd_map ltl_bdd_;
 
@@ -613,6 +613,9 @@ namespace spot
 	    return;
 	  case constant::EmptyWord:
 	    res_ = now_to_concat();
+	    return;
+	  case constant::StrongScc:
+	    assert(!"Not an LTL operator");
 	    return;
 	  }
 	/* Unreachable code.  */
@@ -1242,6 +1245,8 @@ namespace spot
 	    res_ = bddfalse;
 	    return;
 	  case constant::EmptyWord:
+	    assert(!"Not an LTL operator");
+	  case constant::StrongScc:
 	    assert(!"Not an LTL operator");
 	    return;
 	  }
@@ -2324,11 +2329,11 @@ namespace spot
 	// Consider
 	//   f = r(X(1) R p) = p.(1 + r(X(1) R p))
 	// with exprop the two outgoing arcs would be
-        //         p               p
+	//         p               p
 	//     f ----> 1       f ----> f
 	//
 	// where in fact we could output
-        //         p
+	//         p
 	//     f ----> 1
 	//
 	// because there is no point in looping on f if we can go to 1.

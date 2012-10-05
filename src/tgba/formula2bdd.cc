@@ -63,6 +63,8 @@ namespace spot
 	    return;
 	  case constant::EmptyWord:
 	    assert(!"unsupported operator");
+	  case constant::StrongScc:
+	    assert(!"unsupported operator");
 	  }
 	/* Unreachable code.  */
 	assert(0);
