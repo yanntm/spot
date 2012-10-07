@@ -32,6 +32,7 @@
 #include "tgbaalgos/tau03opt.hh"
 #include "tgbaalgos/termemptchk.hh"
 #include "tgbaalgos/weakemptchk.hh"
+#include "tgbaalgos/se05_opt.hh"
 
 namespace spot
 {
@@ -224,8 +225,9 @@ namespace spot
 	{ "Tau03_opt",      spot::explicit_tau03_opt_search,      0, -1U },
 	{ "Tau03_opt_stat", spot::explicit_tau03_opt_stat_search, 0, -1U },
 	{ "Tau03_opt_dyn",  spot::explicit_tau03_opt_dyn_search,  0, -1U },
-	{ "DFS",            spot::weak_dfs_search,                0,   1 },
-	{ "REACHABILITY",   spot::terminal_search,                0,   1 },
+	{ "DFS",            spot::weak_dfs_search,                0, -1U },
+	{ "REACHABILITY",   spot::terminal_search,                0, -1U },
+	{ "SE05_OPT",       spot::se05_opt,                       0,   1 },
       };
   }
 

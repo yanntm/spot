@@ -65,6 +65,7 @@ tgbaalgos_HEADERS = \
   sccfilter.hh \
   scc_decompose.hh \
   se05.hh \
+  se05_opt.hh \
   simulation.hh \
   stats.hh \
   stripacc.hh \
@@ -116,6 +117,7 @@ libtgbaalgos_la_SOURCES = \
   sccfilter.cc \
   scc_decompose.cc \
   se05.cc \
+  se05_opt.cc  \
   simulation.cc \
   stats.cc \
   stripacc.cc \
