@@ -46,8 +46,6 @@ namespace spot
     }
 
 
-    // Template class that walk the automaton to create another
-    // one repecting the strategy
     class relabel_iter: public tgba_reachable_iterator_depth_first
     {
     public:
@@ -56,15 +54,34 @@ namespace spot
 	  out_(new  spot::tgba_explicit_number(a->get_dict())),
 	  sm_(sm)
       {
+	// Preconditions to apply algo
+	assert(a->number_of_acceptance_conditions() == 1);
+	assert (a->all_acceptance_conditions() != bddtrue);
+
+	// Register variable
 	int v = out_->get_dict()
 	  ->register_acceptance_variable
 	  (ltl::constant::strong_scc_instance(), out_);
-	the_new_acc = bdd_ithvar(v);
+	strong_acc = bdd_ithvar(v);
+	v = out_->get_dict()
+	  ->register_acceptance_variable
+	  (ltl::constant::weak_scc_instance(), out_);
+	weak_acc = bdd_ithvar(v);
+	v = out_->get_dict()
+	  ->register_acceptance_variable
+	  (ltl::constant::terminal_scc_instance(), out_);
+	terminal_acc = bdd_ithvar(v);
+
+	// out_->set_acceptance_conditions
+	//   (a->all_acceptance_conditions() |
+	//    terminal_acc | weak_acc | strong_acc);
+
       }
 
       spot::tgba*
       result()
       {
+	std::cout << out_->number_of_acceptance_conditions() << std::endl;
 	return out_;
       }
 
@@ -87,6 +104,7 @@ namespace spot
 	out_->add_acceptance_conditions
 	  (t, si->current_acceptance_conditions());
 
+
 	// In the case of a strong / strong transition
 	// we just have to add one more acceptance
 	// it's the StrongScc acceptance label
@@ -94,15 +112,92 @@ namespace spot
 	int scc_out = sm_.scc_of_state (out_s);
 	if (scc_in == scc_out && sm_.strong(scc_out))
 	  {
-	    out_->add_acceptance_conditions (t, the_new_acc);
+	    out_->add_acceptance_conditions (t, strong_acc);
+	  }
+	else if (scc_in == scc_out && sm_.terminal_accepting(scc_out))
+	  {
+	    out_->add_acceptance_conditions (t, terminal_acc);
+	    out_->add_acceptance_conditions (t, all_cond);
+	  }
+	else if (scc_in == scc_out && sm_.weak_accepting(scc_out))
+	  {
+	    out_->add_acceptance_conditions (t, weak_acc);
+	    out_->add_acceptance_conditions (t, all_cond);
 	  }
       }
 
     private:
       spot::tgba_explicit_number* out_;
       const scc_map& sm_;
-      bdd the_new_acc;
+      bdd strong_acc;
+      bdd weak_acc;
+      bdd terminal_acc;
+      bdd  all_cond;
     };
+
+
+// class check_iter: public tgba_reachable_iterator_depth_first
+//     {
+//     public:
+//       check_iter(const spot::tgba* a, const spot::scc_map& sm)
+// 	: tgba_reachable_iterator_depth_first(a),
+// 	  out_(new  spot::tgba_explicit_number(a->get_dict())),
+// 	  sm_(sm)
+//       {
+// 	bdd_dict::fv_map::iterator i =  out_->get_dict()
+// 	  ->acc_map.find(ltl::constant::strong_scc_instance());
+// 	strong_acc = bdd_ithvar(i->second);
+// 	bdd_dict::fv_map::iterator j =  out_->get_dict()
+// 	  ->acc_map.find(ltl::constant::weak_scc_instance());
+// 	weak_acc = bdd_ithvar(j->second);
+// 	bdd_dict::fv_map::iterator k =  out_->get_dict()
+// 	  ->acc_map.find(ltl::constant::terminal_scc_instance());
+// 	terminal_acc = bdd_ithvar(k->second);
+// 	assert (a->all_acceptance_conditions() != bddtrue);
+// 	assert(a->number_of_acceptance_conditions() == 4);
+//       }
+
+//       spot::tgba*
+//       result()
+//       {
+// 	return out_;
+//       }
+
+//       bool
+//       want_state(const state*) const
+//       {
+// 	// we want to walk accross all the product
+// 	// so we allways want a state
+// 	return true;
+//       }
+
+//       void
+//       process_link(const state* , int in,
+// 		   const state* , int out,
+// 		   const tgba_succ_iterator* si)
+//       {
+
+// 	if ((si->current_acceptance_conditions() & strong_acc) ==  strong_acc)
+// 	  {
+// 	    if ((si->current_acceptance_conditions() - strong_acc) != bddfalse)
+// 	      std::cout << in << "--"<< out << "   Strong Acc \n";
+// 	    else
+// 	      std::cout << in << "--"<< out << "   Strong\n";
+// 	  }
+// 	if ((si->current_acceptance_conditions() & weak_acc) == weak_acc)
+// 	  std::cout << in << "--"<< out << "   Weak\n";
+// 	if ((si->current_acceptance_conditions() & terminal_acc) == terminal_acc)
+// 	  std::cout << in << "--"<< out << "   terminal\n";
+//       }
+
+//     private:
+//       spot::tgba_explicit_number* out_;
+//       const scc_map& sm_;
+//       bdd strong_acc;
+//       bdd weak_acc;
+//       bdd terminal_acc;
+// };
+
   }
 
   const tgba* add__fake_acceptance_condition (const tgba* a,
@@ -125,6 +220,21 @@ namespace spot
 
     return ri.result();;
   }
-
-
 }
+
+
+      // void
+      // process_link(const state* , int in,
+      // 		   const state* , int out,
+      // 		   const tgba_succ_iterator* si)
+      // {
+      // 	if ((si->current_acceptance_conditions() & the_new_acc) != bddfalse)
+      // 	  {
+      // 	    if ((si->current_acceptance_conditions() - the_new_acc) != bddfalse)
+      // 	      std::cout << in << "--"<< out << "   Strong accepting\n";
+      // 	    else
+      // 	      std::cout << in << "--"<< out << "   Strong\n";
+      // 	  }
+      // 	else
+      // 	  std::cout << in << "--"<< out << "Not Strong\n";
+      // }
