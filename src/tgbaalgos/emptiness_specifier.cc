@@ -37,23 +37,39 @@
 namespace spot
 {
 
-  formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a)
+  formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a,
+							    scc_map *scm)
     : sys_(a) , f_(a), state_cache_(0), right_cache_(0),
       strength_cache_(StrongSubaut), termacc_cache_(false),
       id_cache_(0), weak_accepting_cache_(false)
   {
-    sm = new scc_map(f_);
-    sm->build_map();
+    delete_sm = (scm == 0);
+    if (!scm)
+      {
+	sm = new scc_map(f_);
+	sm->build_map();
+      }
+    else
+      sm = scm;
   }
 
   formula_emptiness_specifier::formula_emptiness_specifier (const tgba * a,
-							    const tgba * f)
-    : sys_(a) , f_(f), state_cache_(0), right_cache_(0),
+							    const tgba * f,
+							    scc_map *scm)
+    : sys_(a) , f_(f),  state_cache_(0), right_cache_(0),
       strength_cache_(StrongSubaut), termacc_cache_(false),
       id_cache_(0), weak_accepting_cache_(false)
   {
-    sm = new scc_map(f_);
-    sm->build_map();
+    delete_sm = (scm == 0);
+    if (!scm)
+      {
+	sm = new scc_map(f_);
+	sm->build_map();
+      }
+    else
+      sm = scm;
+    // sm = new scc_map(f_);
+    // sm->build_map();
   }
 
   bool
@@ -147,7 +163,7 @@ namespace spot
     if (state_cache_ == s)
       return;
 
-    // This is the correct way to do what we want 
+    // This is the correct way to do what we want
     right_cache_ =  sys_->project_state(s, f_);
 
     // This is an optimisation

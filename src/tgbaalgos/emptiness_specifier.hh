@@ -35,8 +35,8 @@ namespace spot
 {
 
   /// This class provides a specifier for emptiness check algorithm
-  /// Indeed some algorithms (especially dynamic ones) needs more 
-  /// informations to perform efficient check. This information can 
+  /// Indeed some algorithms (especially dynamic ones) needs more
+  /// informations to perform efficient check. This information can
   /// be extract from a state
   class emptiness_specifier
   {
@@ -72,23 +72,24 @@ namespace spot
     }
   };
 
-  /// This class represent a specifier which extract algorithm information 
-  /// from the system. Here 3 types of systems must be consider to extract 
-  /// the information : 
-  ///     - single formula system : the emptiness is performed on a single 
+  /// This class represent a specifier which extract algorithm information
+  /// from the system. Here 3 types of systems must be consider to extract
+  /// the information :
+  ///     - single formula system : the emptiness is performed on a single
   ///       automaton wich is a formula
-  ///     - product system : the system is the result of the product of a 
+  ///     - product system : the system is the result of the product of a
   ///       formula and a system (Kripke)
-  ///     - double formula system : the system is the result of the product 
-  ///       of two formula tgba 
-  /// All theses system must be considered to reply to the fonction 
-  /// favorite_emptiness_type 
+  ///     - double formula system : the system is the result of the product
+  ///       of two formula tgba
+  /// All theses system must be considered to reply to the fonction
+  /// favorite_emptiness_type
   class  formula_emptiness_specifier : public  emptiness_specifier
   {
   protected:
     const tgba* sys_;		// The synchronized product automaton
     const tgba* f_;		// The formula automaton
-    scc_map * sm;		// The map of scc 
+    bool delete_sm;
+    scc_map * sm;		// The map of scc
     const state *state_cache_;
     const state *right_cache_;
     strength strength_cache_;
@@ -97,32 +98,33 @@ namespace spot
     bool weak_accepting_cache_;
   public :
 
-    /// Create a specifier for a system composed of a unique formula 
-    /// Can work if there is no proxy around a 
-    formula_emptiness_specifier (const tgba * a);
+  /// Create a specifier for a system composed of a unique formula
+    /// Can work if there is no proxy around a
+    formula_emptiness_specifier (const tgba * a, scc_map* scm = 0);
 
-    /// Create a specifier for a system composed of a unique formula 
+    /// Create a specifier for a system composed of a unique formula
     /// and where this formula is wrapped into a proxy
-    formula_emptiness_specifier (const tgba * a, const tgba * f);
+    formula_emptiness_specifier (const tgba * a, const tgba * f, scc_map* scm = 0);
 
     virtual
     ~formula_emptiness_specifier()
     {
       //state_cache_->destroy();
-      delete sm;
+      if (delete_sm)
+	delete sm;
     }
 
-    /// Return true if the projection over the formula automata is 
+    /// Return true if the projection over the formula automata is
     /// in a weak accepting SCC
     bool
     is_part_of_weak_acc (const state *);
 
-    /// Return true if two states belong to the same weak accepting 
+    /// Return true if two states belong to the same weak accepting
     ///  SCC
     bool
     same_weak_acc (const state *, const state *);
 
-    /// Return true if the state is in an accepting terminal 
+    /// Return true if the state is in an accepting terminal
     /// SCC (i-e, a self lopp that accept all words)
     bool
     is_terminal_accepting_scc (const state *);
