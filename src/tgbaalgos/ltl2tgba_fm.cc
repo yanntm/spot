@@ -617,6 +617,12 @@ namespace spot
 	  case constant::StrongScc:
 	    assert(!"Not an LTL operator");
 	    return;
+	  case constant::WeakScc:
+	    assert(!"Not an LTL operator");
+	    return;
+	  case constant::TerminalScc:
+	    assert(!"Not an LTL operator");
+	    return;
 	  }
 	/* Unreachable code.  */
 	assert(0);
@@ -1247,6 +1253,12 @@ namespace spot
 	  case constant::EmptyWord:
 	    assert(!"Not an LTL operator");
 	  case constant::StrongScc:
+	    assert(!"Not an LTL operator");
+	    return;
+	  case constant::WeakScc:
+	    assert(!"Not an LTL operator");
+	    return;
+	  case constant::TerminalScc:
 	    assert(!"Not an LTL operator");
 	    return;
 	  }

@@ -34,7 +34,8 @@ namespace spot
     class constant : public formula
     {
     public:
-      enum type { False, True, EmptyWord, StrongScc };
+      enum type { False, True, EmptyWord,
+		  StrongScc, WeakScc, TerminalScc };
       virtual void accept(visitor& v) const;
 
       /// Return the value of the constant.
@@ -52,6 +53,10 @@ namespace spot
       static constant* empty_word_instance() { return &empty_word_instance_; }
       /// Get the sole instance of spot::ltl::constant::constant(SrongScc).
       static constant* strong_scc_instance() { return &strong_scc_instance_; }
+      /// Get the sole instance of spot::ltl::constant::constant(WeakScc).
+      static constant* weak_scc_instance() { return &weak_scc_instance_; }
+      /// Get the sole instance of spot::ltl::constant::constant(TerminalScc).
+      static constant* terminal_scc_instance() { return &terminal_scc_instance_; }
 
     protected:
       constant(type val);
@@ -64,6 +69,8 @@ namespace spot
       static constant false_instance_;
       static constant empty_word_instance_;
       static constant strong_scc_instance_;
+      static constant weak_scc_instance_;
+      static constant terminal_scc_instance_;
       // If you add new constants here, be sure to update the
       // formula::formula() constructor.
     };

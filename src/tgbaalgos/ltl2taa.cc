@@ -105,6 +105,12 @@ namespace spot
 	  case constant::StrongScc:
 	    assert(!"unsupported operator");
 	    return;
+	  case constant::WeakScc:
+	    assert(!"unsupported operator");
+	    return;
+	  case constant::TerminalScc:
+	    assert(!"unsupported operator");
+	    return;
 	}
 	/* Unreachable code.  */
 	assert(0);

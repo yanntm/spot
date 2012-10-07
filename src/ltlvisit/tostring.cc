@@ -43,6 +43,8 @@ namespace spot
 	KTrue = 1,
 	KEmptyWord = 2,
 	KStrongScc = 3,
+	KWeakScc = 4,
+	KTerminalScc = 5,
 	KXor,
 	KImplies,
 	KEquiv,
@@ -74,6 +76,8 @@ namespace spot
 	"1",
 	"[*0]",
 	"[S]",
+	"[W]",
+	"[T]",
 	" xor ",
 	" -> ",
 	" <-> ",
@@ -105,6 +109,8 @@ namespace spot
 	"true",  // 1 doesn't work from the command line
 	"[*0]",			// not supported
 	"[S]"			// ERROR!
+	"[W]",
+	"[T]",
 	" xor ",		// rewritten
 	" -> ",			// rewritten, although supported
 	" <-> ",		// rewritten, although supported
@@ -166,6 +172,8 @@ namespace spot
 	"1",
 	"[*0]",
 	"[S]",
+	"[W]",
+	"[T]",
 	"⊕",
 	" → ",
 	" ↔ ",
@@ -322,6 +330,12 @@ namespace spot
 	      break;
 	    case constant::StrongScc:
 	      emit(KStrongScc);
+	      break;
+	    case constant::WeakScc:
+	      emit(KWeakScc);
+	      break;
+	    case constant::TerminalScc:
+	      emit(KTerminalScc);
 	      break;
 	    }
 	  if (full_parent_)
