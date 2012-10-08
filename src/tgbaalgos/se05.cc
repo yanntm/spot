@@ -525,8 +525,8 @@ namespace spot
 			  }
 		      }
 		  }
-		else
-		  commut_algo(NDFS);
+		// else
+		//   commut_algo(NDFS);
 
 		if (inc_me)
 		  {
