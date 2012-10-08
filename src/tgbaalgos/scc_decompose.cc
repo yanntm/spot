@@ -378,7 +378,7 @@ namespace spot
       }
 
     // Remove useless
-    tgba *tmp  = spot::scc_filter(weak_, true);
+    tgba *tmp  = spot::scc_filter(weak_, true, true);
     delete weak_;
     weak_ = tmp;
 
@@ -454,7 +454,7 @@ namespace spot
       }
 
     //Remove useless
-    tgba *tmp  = spot::scc_filter(terminal_, true);
+    tgba *tmp  = spot::scc_filter(terminal_, true, true);
     delete terminal_;
     terminal_ = tmp;
 
