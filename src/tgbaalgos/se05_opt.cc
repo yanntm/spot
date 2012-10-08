@@ -39,6 +39,8 @@
 #include "se05_opt.hh"
 #include "ndfs_result.hxx"
 #include "ltlast/constant.hh"
+#include "ltlenv/environment.hh"
+#include "ltlenv/defaultenv.hh"
 
 
 namespace spot
@@ -65,15 +67,19 @@ namespace spot
 	// TODO : document
 	//assert(a->number_of_acceptance_conditions() == 4);
 
+	spot::ltl::environment& env(spot::ltl::default_environment::instance());
 	// Information provided by acceptance
 	bdd_dict::fv_map::iterator i =  a->get_dict()
-	  ->acc_map.find(ltl::constant::strong_scc_instance());
+	  ->acc_map.find(env.require("[S]"));
+			 //ltl::constant::strong_scc_instance());
 	strong_acc = bdd_ithvar(i->second);
 	bdd_dict::fv_map::iterator j =  a->get_dict()
-	  ->acc_map.find(ltl::constant::weak_scc_instance());
+	  ->acc_map.find(env.require("[W]"));
+	  //	  ->acc_map.find(ltl::constant::weak_scc_instance());
 	weak_acc = bdd_ithvar(j->second);
 	bdd_dict::fv_map::iterator k =  a->get_dict()
-	  ->acc_map.find(ltl::constant::terminal_scc_instance());
+	  ->acc_map.find(env.require("[T]"));
+	  //	  ->acc_map.find(ltl::constant::terminal_scc_instance());
 	terminal_acc = bdd_ithvar(k->second);
 
 	all_cond = a->all_acceptance_conditions() - strong_acc

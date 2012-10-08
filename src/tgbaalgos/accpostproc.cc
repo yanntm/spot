@@ -28,7 +28,8 @@
 #include "tgbaalgos/simulation.hh"
 #include "tgbaalgos/save.hh"
 #include "tgbaalgos/scc.hh"
-
+#include "ltlenv/environment.hh"
+#include "ltlenv/defaultenv.hh"
 
 namespace spot
 {
@@ -58,18 +59,23 @@ namespace spot
 	assert(a->number_of_acceptance_conditions() == 1);
 	assert (a->all_acceptance_conditions() != bddtrue);
 
+	spot::ltl::environment& env(spot::ltl::default_environment::instance());
+
 	// Register variable
 	int v = out_->get_dict()
 	  ->register_acceptance_variable
-	  (ltl::constant::strong_scc_instance(), out_);
+	  (env.require("[S]"), out_);
+	  //	  (ltl::constant::strong_scc_instance(), out_);
 	strong_acc = bdd_ithvar(v);
 	v = out_->get_dict()
 	  ->register_acceptance_variable
-	  (ltl::constant::weak_scc_instance(), out_);
+	  (env.require("[W]"), out_);
+	  //	  (ltl::constant::weak_scc_instance(), out_);
 	weak_acc = bdd_ithvar(v);
 	v = out_->get_dict()
 	  ->register_acceptance_variable
-	  (ltl::constant::terminal_scc_instance(), out_);
+	  (env.require("[T]"), out_);
+	  //	  (ltl::constant::terminal_scc_instance(), out_);
 	terminal_acc = bdd_ithvar(v);
 
 	// out_->set_acceptance_conditions

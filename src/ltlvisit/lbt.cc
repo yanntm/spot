@@ -95,15 +95,6 @@ namespace spot
 	    case constant::EmptyWord:
 	      assert(!"unsupported constant");
 	      break;
-	    case constant::StrongScc:
-	      assert(!"unsupported constant");
-	      break;
-	    case constant::WeakScc:
-	      assert(!"unsupported constant");
-	      break;
-	    case constant::TerminalScc:
-	      assert(!"unsupported constant");
-	      break;
 	    }
 	}
 
