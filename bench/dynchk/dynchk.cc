@@ -68,6 +68,8 @@
 #include "tgbaalgos/scc_decompose.hh"
 #include "tgbaalgos/simulation.hh"
 #include "../iface/dve2/dve2.hh"
+#include "tgbaalgos/accpostproc.hh"
+
 
 #ifdef TRACE
 #define trace std::cerr
@@ -221,6 +223,8 @@ int main(int argc, char **argv)
   bool opt_BA = true;
   bool opt_TGBA = true;
 
+  bool opt_SE05opt = false;
+
   // The index of the formula
   int formula_index = 0;
 
@@ -328,6 +332,10 @@ int main(int argc, char **argv)
       else if (!strcmp(argv[formula_index], "-BA"))
 	{
 	  opt_TGBA = false;
+	}
+      else if (!strcmp(argv[formula_index], "-SE05opt"))
+	{
+	  opt_SE05opt = true;
 	}
       else if (!strncmp(argv[formula_index], "-P", 2))
 	{
@@ -655,6 +663,71 @@ int main(int argc, char **argv)
 	  goto decompfinal;
 	}
 
+
+      if (opt_SE05opt)
+	{
+	  // The degeneralized automaton
+	  spot::tgba* degen = 0;
+	  spot::timer_map tm_ec;
+
+	  // Degeneralize product
+	  tm.start("degeneralization");
+	  degen = spot::degeneralize(a);
+	  tm.stop("degeneralization");
+
+	  std::cout << "--> " << degen->number_of_acceptance_conditions() << std::endl;
+	  const spot::tgba* tmp = add__fake_acceptance_condition (a);
+	  delete a;
+	  a = tmp;
+	  std::cout << "--> " << a->number_of_acceptance_conditions() << std::endl;
+
+	  // Perform the product
+	  product = new spot::tgba_product(system, degen);
+	  std::cout << "--> " << product->number_of_acceptance_conditions() << std::endl;
+
+	  // Create the emptiness check procedure
+	  const char* err;
+	  const char* algo = "SE05_OPT";
+	  echeck_inst =
+	    spot::emptiness_check_instantiator::construct( algo, &err);
+	  if (!echeck_inst)
+	    {
+	      exit(2);
+	    }
+
+	  // Create a specifier
+	  spot::formula_emptiness_specifier *es  = 0;
+	  es = new spot::formula_emptiness_specifier (product, degen);
+
+	  // Instanciate the emptiness check
+	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+
+	  tm_ec.start("checking");
+	  spot::emptiness_check_result* res = ec->check();
+	  tm_ec.stop("checking");
+
+	  //
+	  // Now output results
+	  //
+	  {
+	    const spot::ec_statistics* ecs =
+	      dynamic_cast<const spot::ec_statistics*>(ec);
+
+	    print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+			      tm_ec.timer("checking").utime() +
+			  tm_ec.timer("checking").stime(),
+			  ecs->states(), ecs->transitions(),
+			  ecs->max_depth(),
+			  input);
+	  }
+
+	  delete echeck_inst;
+	  delete es;
+
+	  if (degen)
+	    delete degen;
+	  goto decompfinal;
+	}
 
 
       ///
