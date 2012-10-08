@@ -388,6 +388,9 @@ namespace spot
     	spot::postprocessor *pp = new spot::postprocessor();
     	weak_ =  pp->run(weak_, 0);
     	delete pp;
+	tgba *tmp2  = spot::scc_filter(weak_, true, true);
+	delete weak_;
+	weak_ = tmp2;
       }
   }
 
@@ -461,6 +464,9 @@ namespace spot
     	spot::postprocessor *pp = new spot::postprocessor();
     	terminal_ =  pp->run(terminal_, 0);
     	delete pp;
+	tgba *tmp2  = spot::scc_filter(terminal_, true, true);
+	delete terminal_;
+	terminal_ = tmp2;
       }
   }
 
