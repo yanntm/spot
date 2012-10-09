@@ -223,6 +223,6 @@ namespace spot
     if (!sm)
       delete x;
 
-    return ri.result();;
+    return ri.result();
   }
 }
