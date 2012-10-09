@@ -33,9 +33,20 @@ namespace spot
 
   /// This method add a fake transition condition
   /// on all Strong SCC
-  const tgba* add__fake_acceptance_condition (const tgba *a,
+  const tgba* add_fake_acceptance_condition (const tgba *a,
 					      ltl::declarative_environment* env,
 					      spot::scc_map* sm = 0);
+
+
+  ltl::declarative_environment* create_env_acc()
+  {
+    ltl::declarative_environment* envacc =
+      new spot::ltl::declarative_environment ();
+    envacc->declare("[S]");
+    envacc->declare("[W]");
+    envacc->declare("[T]");
+    return envacc;
+  }
 
   /// @}
 }

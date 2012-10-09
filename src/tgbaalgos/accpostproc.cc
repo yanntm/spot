@@ -204,7 +204,7 @@ namespace spot
 
   }
 
-  const tgba* add__fake_acceptance_condition (const tgba* a,
+  const tgba* add_fake_acceptance_condition (const tgba* a,
 					      ltl::declarative_environment* env,
 					      spot::scc_map* sm)
   {
