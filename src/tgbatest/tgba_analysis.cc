@@ -68,6 +68,7 @@
 #include "tgbaalgos/simulation.hh"
 #include "tgbaalgos/scc.hh"
 #include "tgbaalgos/postproc.hh"
+#include "tgbaalgos/accpostproc.hh"
 
 void
 syntax(char* prog)
@@ -125,6 +126,16 @@ syntax(char* prog)
 	    << std::endl
     	    << "  -ctma  compare the weak part of the automaton "
 	    << "   and its minimized version"
+	    << std::endl
+
+	    << "Misc:"
+	    << std::endl
+	    << "-opt_decomp_eval   Evaluate the effect of the decomposition"
+	    << std::endl
+
+	    << "Transformation:"
+	    << std::endl
+	    << "-opt_swt_acc   Tag all SCC with an acceptance set"
 	    << std::endl;
 
   exit(2);
@@ -167,7 +178,10 @@ int main(int argc, char **argv)
   bool opt_csma = false;
 
   // For the paper
-  bool opt_paper = false;
+  bool opt_decomp_eval = false;
+
+  // If we want to tag all accepting SCC
+  bool opt_swt_acc = false;
 
   // Should whether the formula be reduced
   bool simpltl = false;
@@ -269,9 +283,13 @@ int main(int argc, char **argv)
 	  redopt.containment_checks = true;
 	  redopt.containment_checks_stronger = true;
 	}
-      else if (!strcmp(argv[formula_index], "-opt_paper"))
+      else if (!strcmp(argv[formula_index], "-opt_decomp_eval"))
 	{
-	  opt_paper = true;
+	  opt_decomp_eval = true;
+	}
+      else if (!strcmp(argv[formula_index], "-opt_swt_acc"))
+	{
+	  opt_swt_acc = true;
 	}
       else
 	{
@@ -285,6 +303,9 @@ int main(int argc, char **argv)
   std::string input =  argv[formula_index];
   // The formula in spot
   const spot::ltl::formula* f = 0;
+
+  // The declarative environnment for S/W/T
+  spot::ltl::declarative_environment* envacc  = 0;
 
   //
   // Building the formula from the input
@@ -327,49 +348,24 @@ int main(int argc, char **argv)
       assert (a);
 
       spot::postprocessor *pp = new spot::postprocessor();
-      // pp->set_type(spot::postprocessor::TGBA);
-      // pp->set_pref(spot::postprocessor::Any);
-      // pp->set_level(spot::postprocessor::High);
       a = pp->run(a, f);
       delete pp;
 
-
-      // //
-      // // Remove unused SCC
-      // //
-      // {
-      // 	const spot::tgba* aut_scc = 0;
-      // 	tm.start("reducing A_f w/ SCC");
-      // 	aut_scc = spot::scc_filter(a, scc_filter_all);
-      // 	delete a;
-      // 	a = aut_scc;
-      // 	tm.stop("reducing A_f w/ SCC");
-      // }
-
-
-      // //
-      // // Minimized
-      // //
-      // {
-      // 	spot::tgba* minimized = 0;
-      // 	if (opt_m)
-      // 	  {
-      // 	    minimized = minimize_obligation(a);
-      // 	    if (minimized)
-      // 	      {
-      // 		delete a;
-      // 		a = minimized;
-      // 	      }
-      // 	    else{
-      // 	      minimized = spot::simulation(a);
-      // 	      if (minimized)
-      // 	    	{
-      // 	    	  delete a;
-      // 	    	  a = minimized;
-      // 	    	}
-      // 	    }
-      // 	  }
-      // }
+      //
+      // Display SCC with acceptance set for S/W/T
+      //
+      if (opt_swt_acc)
+	{
+	  envacc = spot::create_env_acc();
+	  const spot::tgba* tmp = add_fake_acceptance_condition (a, envacc);
+	  delete a;
+	  a = tmp;
+	  if (opt_dfa)
+	    {
+	      spot::dotty_reachable(std::cout, a);
+	    }
+	  goto cleanup;
+	}
 
       //
       // Display options
@@ -548,7 +544,7 @@ int main(int argc, char **argv)
 	  spot::scc_decompose sd (a, true);
 	  sd.recompose();
 	}
-      if (opt_paper)
+      if (opt_decomp_eval)
 	{
 	  int orig_states = 0, orig_trans =0, orig_acc = 0;
 	  int term_states = 0, term_trans =0, term_acc = 0;
@@ -774,27 +770,16 @@ int main(int argc, char **argv)
 		    << mstrong_acc  << ","
 		    << input
 		    << std::endl;
-
-
-
-
-
-
-
-
-
-
-
-
 	}
     }
 
+ cleanup:
   // Clean up
   f->destroy();
   //  if (!a)
   delete a;
   delete dict;
-
+  delete envacc;
 
   // Check effective clean up
   spot::ltl::atomic_prop::dump_instances(std::cerr);
