@@ -675,15 +675,16 @@ int main(int argc, char **argv)
 	  degen = spot::degeneralize(a);
 	  tm.stop("degeneralization");
 
-	  std::cout << "--> " << degen->number_of_acceptance_conditions() << std::endl;
-	  const spot::tgba* tmp = add__fake_acceptance_condition (a);
+	  // The environment
+	  spot::ltl::declarative_environment *envacc =  spot::create_env_acc();
+
+	  // Add fake acceptance condition
+	  const spot::tgba* tmp = add_fake_acceptance_condition (a, envacc);
 	  delete a;
 	  a = tmp;
-	  std::cout << "--> " << a->number_of_acceptance_conditions() << std::endl;
 
 	  // Perform the product
 	  product = new spot::tgba_product(system, degen);
-	  std::cout << "--> " << product->number_of_acceptance_conditions() << std::endl;
 
 	  // Create the emptiness check procedure
 	  const char* err;
@@ -700,7 +701,7 @@ int main(int argc, char **argv)
 	  es = new spot::formula_emptiness_specifier (product, degen);
 
 	  // Instanciate the emptiness check
-	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es, envacc);
 
 	  tm_ec.start("checking");
 	  spot::emptiness_check_result* res = ec->check();
@@ -723,9 +724,11 @@ int main(int argc, char **argv)
 
 	  delete echeck_inst;
 	  delete es;
+	  delete envacc;
 
 	  if (degen)
 	    delete degen;
+
 	  goto decompfinal;
 	}
 
@@ -881,6 +884,7 @@ int main(int argc, char **argv)
   if (!(load_dve_model))
     delete system;
   delete dict;
+
 
   // Check effective clean up
   spot::ltl::atomic_prop::dump_instances(std::cerr);
