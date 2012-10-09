@@ -23,6 +23,7 @@
 
 #include "tgba/tgba.hh"
 #include "tgbaalgos/scc.hh"
+#include "ltlenv/declenv.hh"
 
 namespace spot
 {
@@ -33,6 +34,7 @@ namespace spot
   /// This method add a fake transition condition
   /// on all Strong SCC
   const tgba* add__fake_acceptance_condition (const tgba *a,
+					      ltl::declarative_environment* env,
 					      spot::scc_map* sm = 0);
 
   /// @}

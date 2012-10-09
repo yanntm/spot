@@ -61,29 +61,8 @@ namespace spot
       /// condition (i.e. it is a TBA).
       se05_opt_search(const tgba *a, size_t size, option_map o = option_map())
 	: emptiness_check(a, o),
-	  h(size)// ,
-	  // all_cond(a->all_acceptance_conditions())
+	  h(size)
       {
-	// TODO : document
-	//assert(a->number_of_acceptance_conditions() == 4);
-
-	spot::ltl::environment& env(spot::ltl::default_environment::instance());
-	// Information provided by acceptance
-	bdd_dict::fv_map::iterator i =  a->get_dict()
-	  ->acc_map.find(env.require("[S]"));
-			 //ltl::constant::strong_scc_instance());
-	strong_acc = bdd_ithvar(i->second);
-	bdd_dict::fv_map::iterator j =  a->get_dict()
-	  ->acc_map.find(env.require("[W]"));
-	  //	  ->acc_map.find(ltl::constant::weak_scc_instance());
-	weak_acc = bdd_ithvar(j->second);
-	bdd_dict::fv_map::iterator k =  a->get_dict()
-	  ->acc_map.find(env.require("[T]"));
-	  //	  ->acc_map.find(ltl::constant::terminal_scc_instance());
-	terminal_acc = bdd_ithvar(k->second);
-
-	all_cond = a->all_acceptance_conditions() - strong_acc
-	  - terminal_acc - weak_acc;
       }
 
       virtual ~se05_opt_search()
@@ -207,6 +186,30 @@ namespace spot
 
       bool dfs_blue()
       {
+	assert(decenv_);
+
+	// Information provided by acceptance
+	const ltl::formula *f = decenv_->require("[S]");
+	bdd_dict::fv_map::iterator i =  a_->get_dict()
+	  ->acc_map.find(f);
+	strong_acc = bdd_ithvar(i->second);
+	f->destroy();
+
+	f = decenv_->require("[W]");
+	bdd_dict::fv_map::iterator j =  a_->get_dict()
+	  ->acc_map.find(f);
+	weak_acc = bdd_ithvar(j->second);
+	f->destroy();
+
+	f = decenv_->require("[T]");
+	bdd_dict::fv_map::iterator k =  a_->get_dict()
+	  ->acc_map.find(f);
+	terminal_acc = bdd_ithvar(k->second);
+	f->destroy();
+
+	all_cond = a_->all_acceptance_conditions() - strong_acc
+	  - terminal_acc - weak_acc;
+
 	while (!st_blue.empty())
 	  {
 	    stack_item& f = st_blue.front();
@@ -364,7 +367,6 @@ namespace spot
 
 		if ((acc & strong_acc) == bddfalse)
 		  {
-		    std::cout << "Skip\n";
 		    continue;
 		  }
 		typename heap::color_ref c = h.get_color_ref(s_prime);

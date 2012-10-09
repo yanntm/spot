@@ -50,44 +50,41 @@ namespace spot
     class relabel_iter: public tgba_reachable_iterator_depth_first
     {
     public:
-      relabel_iter(const spot::tgba* a, const spot::scc_map& sm)
+      relabel_iter(const spot::tgba* a,
+		   const spot::scc_map& sm,
+		   ltl::declarative_environment& env)
 	: tgba_reachable_iterator_depth_first(a),
 	  out_(new  spot::tgba_explicit_number(a->get_dict())),
-	  sm_(sm)
+	  sm_(sm),
+	  env_(env)
       {
 	// Preconditions to apply algo
 	assert(a->number_of_acceptance_conditions() == 1);
 	assert (a->all_acceptance_conditions() != bddtrue);
 
-	spot::ltl::environment& env(spot::ltl::default_environment::instance());
-
 	// Register variable
+	const ltl::formula* f = env_.require("[S]");
 	int v = out_->get_dict()
-	  ->register_acceptance_variable
-	  (env.require("[S]"), out_);
-	  //	  (ltl::constant::strong_scc_instance(), out_);
+	  ->register_acceptance_variable (f, out_);
 	strong_acc = bdd_ithvar(v);
+	f->destroy();
+
+	f = env_.require("[W]");
 	v = out_->get_dict()
-	  ->register_acceptance_variable
-	  (env.require("[W]"), out_);
-	  //	  (ltl::constant::weak_scc_instance(), out_);
+	  ->register_acceptance_variable (f, out_);
 	weak_acc = bdd_ithvar(v);
+	f->destroy();
+
+	f = env_.require("[T]");
 	v = out_->get_dict()
-	  ->register_acceptance_variable
-	  (env.require("[T]"), out_);
-	  //	  (ltl::constant::terminal_scc_instance(), out_);
+	  ->register_acceptance_variable (f, out_);
 	terminal_acc = bdd_ithvar(v);
-
-	// out_->set_acceptance_conditions
-	//   (a->all_acceptance_conditions() |
-	//    terminal_acc | weak_acc | strong_acc);
-
+	f->destroy();
       }
 
       spot::tgba*
       result()
       {
-	std::cout << out_->number_of_acceptance_conditions() << std::endl;
 	return out_;
       }
 
@@ -139,6 +136,7 @@ namespace spot
       bdd weak_acc;
       bdd terminal_acc;
       bdd  all_cond;
+      ltl::declarative_environment& env_;
     };
 
 
@@ -207,6 +205,7 @@ namespace spot
   }
 
   const tgba* add__fake_acceptance_condition (const tgba* a,
+					      ltl::declarative_environment* env,
 					      spot::scc_map* sm)
   {
     spot::scc_map* x = sm;
@@ -218,7 +217,7 @@ namespace spot
 	x->build_map();
       }
 
-    relabel_iter ri  (a, *x);
+    relabel_iter ri  (a, *x, *env);
     ri.run();
 
     if (!sm)
@@ -227,20 +226,3 @@ namespace spot
     return ri.result();;
   }
 }
-
-
-      // void
-      // process_link(const state* , int in,
-      // 		   const state* , int out,
-      // 		   const tgba_succ_iterator* si)
-      // {
-      // 	if ((si->current_acceptance_conditions() & the_new_acc) != bddfalse)
-      // 	  {
-      // 	    if ((si->current_acceptance_conditions() - the_new_acc) != bddfalse)
-      // 	      std::cout << in << "--"<< out << "   Strong accepting\n";
-      // 	    else
-      // 	      std::cout << in << "--"<< out << "   Strong\n";
-      // 	  }
-      // 	else
-      // 	  std::cout << in << "--"<< out << "Not Strong\n";
-      // }

@@ -257,11 +257,14 @@ namespace spot
 
   emptiness_check*
   emptiness_check_instantiator::instantiate(const tgba* a,
-					    emptiness_specifier *s) const
+					    emptiness_specifier *s,
+					    ltl::declarative_environment *decenv)
+    const
   {
     emptiness_check* es =  static_cast<ec_algo*>(info_)->construct(a, o_);
     assert(es);
     es->set_specifier (s);
+    es->set_env (decenv);
     return es;
   }
 

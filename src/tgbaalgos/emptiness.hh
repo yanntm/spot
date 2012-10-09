@@ -30,6 +30,7 @@
 #include "misc/optionmap.hh"
 #include "tgba/state.hh"
 #include "emptiness_stats.hh"
+#include "ltlenv/declenv.hh"
 
 namespace spot
 {
@@ -134,8 +135,10 @@ namespace spot
   {
   public:
     emptiness_check(const tgba* a, option_map o = option_map(),
-		    emptiness_specifier * e = 0 , bool dyn = false)
-      : a_(a), o_(o), es_(e), is_dynamic(dyn)
+		    emptiness_specifier * e = 0 ,
+		    ltl::declarative_environment *decenv = 0,
+		    bool dyn = false)
+      : a_(a), o_(o), es_(e), decenv_(decenv), is_dynamic(dyn)
     {  }
 
     virtual ~emptiness_check();
@@ -161,7 +164,7 @@ namespace spot
       return *es_;
     }
 
-    /// Allows to modify dynamically the specifier for the emptiness 
+    /// Allows to modify dynamically the specifier for the emptiness
     void
     set_specifier(emptiness_specifier *e)
     {
@@ -169,8 +172,18 @@ namespace spot
       es_ = e;
     }
 
-    /// Return true if the algorithm use temporal properties to reduce 
-    /// the size of the computation w.r.t do not compute the entire cycle 
+    // Some algorithm make assumption about acceptance
+    // conditions and need to know this set with is
+    // in a declarative environment.
+    void
+    set_env (ltl::declarative_environment *decenv)
+    {
+      delete decenv_;
+      decenv_ = decenv;
+    }
+
+    /// Return true if the algorithm use temporal properties to reduce
+    /// the size of the computation w.r.t do not compute the entire cycle
     /// for terminal automata
     virtual bool
     is_dynamic_emptiness ()
@@ -213,6 +226,7 @@ namespace spot
     const tgba* a_;		///< The automaton.
     option_map o_;		///< The options
     emptiness_specifier *es_;	///< The specifier
+    ltl::declarative_environment *decenv_;	///< The specifier
     bool is_dynamic;
   };
 
@@ -236,7 +250,9 @@ namespace spot
     emptiness_check* instantiate(const tgba* a) const;
 
     /// Actually instantiate the emptiness check, for \a a.
-    emptiness_check* instantiate(const tgba* a, emptiness_specifier *e) const;
+    emptiness_check* instantiate(const tgba* a,
+				 emptiness_specifier *e,
+				 ltl::declarative_environment *decenv = 0) const;
 
     /// Accessor to the options.
     /// @{
@@ -316,8 +332,8 @@ namespace spot
   /// actually exists in the automaton (and will also display any
   /// transition annotation).
   std::ostream& print_tgba_run(std::ostream& os,
-                               const tgba* a,
-                               const tgba_run* run);
+			       const tgba* a,
+			       const tgba_run* run);
 
   /// \brief Return an explicit_tgba corresponding to \a run (i.e. comparable
   /// states are merged).

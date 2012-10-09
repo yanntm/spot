@@ -55,6 +55,5 @@ namespace spot
       static default_environment* singleton = new default_environment();
       return *singleton;
     }
-
   }
 }

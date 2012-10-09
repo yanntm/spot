@@ -49,7 +49,6 @@ namespace spot
     protected:
       default_environment();
     };
-
   }
 }
 
