@@ -148,6 +148,7 @@ int main(int argc, char **argv)
   pp->set_level(spot::postprocessor::Low);
 
   spot::timer_map tm;
+  int U = 0, W = 0, S = 0, T = 0;
   do
     {
       if (use_stdin && !std::getline(inputcin, input))
@@ -178,7 +179,7 @@ int main(int argc, char **argv)
       ///
       ///
       int computation;
-      int maxcomputation = 1000;
+      int maxcomputation = 1;//000;
       if (original)
 	maxcomputation = 1;
 
@@ -363,6 +364,10 @@ int main(int argc, char **argv)
 		  ++number_of_strong;
 	      }
 	  }
+	U += non_accepting;
+	T += terminals;
+	W += weaks;
+	S += strongs;
 
 	if (original)
 	  {
@@ -401,6 +406,12 @@ int main(int argc, char **argv)
     }
       delete a;
     } while (use_stdin && input != "");
+
+  std::cout << "U,T,W,S" << std::endl;
+  std::cout << U <<","
+	    << T <<","
+	    << W <<","
+	    << S << std::endl;
 
   std::cout << "Computation : "
 	    << tm.timer("Strength computation").utime()  << ","
