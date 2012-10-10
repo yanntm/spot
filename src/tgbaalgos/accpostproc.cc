@@ -59,8 +59,8 @@ namespace spot
 	  env_(env)
       {
 	// Preconditions to apply algo
-	assert(a->number_of_acceptance_conditions() == 1);
-	assert (a->all_acceptance_conditions() != bddtrue);
+	// assert(a->number_of_acceptance_conditions() == 1);
+	// assert (a->all_acceptance_conditions() != bddtrue);
 
 	// Register variable
 	const ltl::formula* f = env_.require("[S]");
@@ -82,8 +82,8 @@ namespace spot
 	f->destroy();
 
 	all_cond = a->all_acceptance_conditions();
-	assert( all_cond != bddfalse);
-	assert( all_cond != bddtrue);
+	// assert( all_cond != bddfalse);
+	// assert( all_cond != bddtrue);
       }
 
       spot::tgba*
