@@ -210,7 +210,7 @@ namespace spot
 	all_cond = a_->all_acceptance_conditions() - strong_acc
 	  - terminal_acc - weak_acc;
 
-	assert(all_cond != bddfalse);
+	// assert(all_cond != bddfalse);
 
 	while (!st_blue.empty())
 	  {
@@ -244,7 +244,6 @@ namespace spot
 		// Track weak
 		if ((acc & weak_acc) == weak_acc)
 		  {
-		    std::cout << "WEAK\n";
 		    typename heap::color_ref c = h.get_color_ref(s_prime);
 		    if (!c.is_white() && c.get_color() == CYAN)
 		      {
@@ -371,7 +370,6 @@ namespace spot
 
 		if ((acc & strong_acc) == bddfalse)
 		  {
-		    std::cout << "Skip\n";
 		    continue;
 		  }
 
