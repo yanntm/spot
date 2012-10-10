@@ -267,10 +267,10 @@ namespace spot
 		    push(st_blue, s_prime, label, acc);
 		  }
 		else if (c.get_color() == CYAN &&
-			 ( (acc & all_cond) != bddfalse ||
-			   (f.s->compare(s_prime) != 0 //&&
+			 ((acc & all_cond) != bddfalse ||
+			   (f.s->compare(s_prime) != 0))) //&&
 			   // (f.acc & all_cond) != bddfalse)
-			    )))
+
 		// else if (c.get_color() == CYAN && (acc == all_cond ||
 		// 	     (f.s->compare(s_prime) != 0 &&
 		// 	      f.acc == all_cond)))
