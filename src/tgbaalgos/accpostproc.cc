@@ -80,6 +80,10 @@ namespace spot
 	  ->register_acceptance_variable (f, out_);
 	terminal_acc = bdd_ithvar(v);
 	f->destroy();
+
+	all_cond = a->all_acceptance_conditions();
+	assert( all_cond != bddfalse);
+	assert( all_cond != bddtrue);
       }
 
       spot::tgba*
