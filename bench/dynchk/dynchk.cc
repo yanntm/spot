@@ -698,7 +698,7 @@ int main(int argc, char **argv)
 
 	  // Degeneralize product
 	  tm.start("degeneralization");
-	  if (a->number_of_acceptance_conditions() > 1)
+	  if (a->number_of_acceptance_conditions() != 1)
 	    degen = spot::degeneralize(a);
 	  tm.stop("degeneralization");
 
