@@ -611,11 +611,31 @@ int main(int argc, char **argv)
       /// Build the composed system
       /// and perform the most efficient emptiness
       ///
-      if (opt_dT || opt_dW)
+      if (opt_dT || opt_dW || (opt_dS && opt_BA))
 	{
-	  // Perform the product
-	  product = new spot::tgba_product(system, a);
+	  const spot::tgba* degen = a;
 
+	  // The environment
+	  spot::ltl::declarative_environment *envacc =  spot::create_env_acc();
+
+	  if (opt_dS)
+	    {
+	      // Degeneralize product
+	      tm.start("degeneralization");
+	      if (a->number_of_acceptance_conditions() > 1)
+		degen = spot::degeneralize(a);
+	      tm.stop("degeneralization");
+
+	      // Add fake acceptance condition
+	      const spot::tgba* tmp = add_fake_acceptance_condition (degen, envacc);
+	      if (degen != a)
+		delete degen;
+	      degen = tmp;
+	    }
+
+
+	  // Perform the product
+	  product = new spot::tgba_product(system, degen);
 
 	  // The timer for the emptiness check
 	  spot::timer_map tm_ec;
@@ -625,8 +645,10 @@ int main(int argc, char **argv)
 	  const char* algo ;
 	  if (opt_dT)
 	    algo = "REACHABILITY";
-	  else
+	  else if (opt_dW)
 	    algo = "DFS";
+	  else if (opt_dS)
+	    algo = "SE05_OPT";
 
 	  echeck_inst =
 	    spot::emptiness_check_instantiator::construct( algo, &err);
@@ -637,10 +659,10 @@ int main(int argc, char **argv)
 
 	  // Create a specifier
 	  spot::formula_emptiness_specifier *es  = 0;
-	  es = new spot::formula_emptiness_specifier (product, a);
+	  es = new spot::formula_emptiness_specifier (product, degen);
 
 	  // Instanciate the emptiness check
-	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es, envacc);
 
 	  tm_ec.start("checking");
 	  spot::emptiness_check_result* res = ec->check();
@@ -660,6 +682,10 @@ int main(int argc, char **argv)
 			input);
 	  delete echeck_inst;
 	  delete es;
+	  delete envacc;
+	  if (degen != a)
+	    delete degen;
+
 	  goto decompfinal;
 	}
 
@@ -667,21 +693,23 @@ int main(int argc, char **argv)
       if (opt_SE05opt)
 	{
 	  // The degeneralized automaton
-	  spot::tgba* degen = 0;
+	  const spot::tgba* degen = a;
 	  spot::timer_map tm_ec;
 
 	  // Degeneralize product
 	  tm.start("degeneralization");
-	  degen = spot::degeneralize(a);
+	  if (a->number_of_acceptance_conditions() > 1)
+	    degen = spot::degeneralize(a);
 	  tm.stop("degeneralization");
 
 	  // The environment
 	  spot::ltl::declarative_environment *envacc =  spot::create_env_acc();
 
 	  // Add fake acceptance condition
-	  const spot::tgba* tmp = add_fake_acceptance_condition (a, envacc);
-	  delete a;
-	  a = tmp;
+	  const spot::tgba* tmp = add_fake_acceptance_condition (degen, envacc);
+	  if (degen != a)
+	    delete degen;
+	  degen = tmp;
 
 	  // Perform the product
 	  product = new spot::tgba_product(system, degen);
@@ -726,7 +754,7 @@ int main(int argc, char **argv)
 	  delete es;
 	  delete envacc;
 
-	  if (degen)
+	  if (degen != a)
 	    delete degen;
 
 	  goto decompfinal;

@@ -210,6 +210,8 @@ namespace spot
 	all_cond = a_->all_acceptance_conditions() - strong_acc
 	  - terminal_acc - weak_acc;
 
+	assert(all_cond != bddfalse);
+
 	while (!st_blue.empty())
 	  {
 	    stack_item& f = st_blue.front();
@@ -242,6 +244,7 @@ namespace spot
 		// Track weak
 		if ((acc & weak_acc) == weak_acc)
 		  {
+		    std::cout << "WEAK\n";
 		    typename heap::color_ref c = h.get_color_ref(s_prime);
 		    if (!c.is_white() && c.get_color() == CYAN)
 		      {
@@ -249,9 +252,9 @@ namespace spot
 		      }
 		    if (c.is_white())
 		      {
-			inc_states();
-			h.add_new_state(s_prime, CYAN);
-			push(st_blue, s_prime, label, acc);
+		    	inc_states();
+		    	h.add_new_state(s_prime, CYAN);
+		    	push(st_blue, s_prime, label, acc);
 		      }
 		    continue;
 		  }
@@ -265,9 +268,10 @@ namespace spot
 		    push(st_blue, s_prime, label, acc);
 		  }
 		else if (c.get_color() == CYAN &&
-			 ((acc & all_cond) != bddfalse ||
-			  (f.s->compare(s_prime) != 0 &&
-			   (f.acc & all_cond) != bddfalse)))
+			 ( (acc & all_cond) != bddfalse ||
+			   (f.s->compare(s_prime) != 0 //&&
+			   // (f.acc & all_cond) != bddfalse)
+			    )))
 		// else if (c.get_color() == CYAN && (acc == all_cond ||
 		// 	     (f.s->compare(s_prime) != 0 &&
 		// 	      f.acc == all_cond)))
@@ -367,8 +371,10 @@ namespace spot
 
 		if ((acc & strong_acc) == bddfalse)
 		  {
+		    std::cout << "Skip\n";
 		    continue;
 		  }
+
 		typename heap::color_ref c = h.get_color_ref(s_prime);
 		if (c.is_white())
 		  {
