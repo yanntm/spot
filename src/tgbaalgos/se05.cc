@@ -286,8 +286,6 @@ namespace spot
 		  }
 		else
 		  {
-// 		    typename heap::color_ref c = h.get_color_ref(f.s);
-// 		    c.set_color(BLUE);
 		    h.pop_notify(s_prime);
 		  }
 		continue;
@@ -525,8 +523,6 @@ namespace spot
 			  }
 		      }
 		  }
-		// else
-		//   commut_algo(NDFS);
 
 		if (inc_me)
 		  {

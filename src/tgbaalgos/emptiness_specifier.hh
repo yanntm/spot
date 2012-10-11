@@ -73,14 +73,12 @@ namespace spot
   };
 
   /// This class represent a specifier which extract algorithm information
-  /// from the system. Here 3 types of systems must be consider to extract
+  /// from the TGBA. Here 2 types of systems must be consider to extract
   /// the information :
-  ///     - single formula system : the emptiness is performed on a single
+  ///     - single formula TGBA : the emptiness is performed on a single
   ///       automaton wich is a formula
-  ///     - product system : the system is the result of the product of a
+  ///     - product TGBA : the system is the result of the product of a
   ///       formula and a system (Kripke)
-  ///     - double formula system : the system is the result of the product
-  ///       of two formula tgba
   /// All theses system must be considered to reply to the fonction
   /// favorite_emptiness_type
   class  formula_emptiness_specifier : public  emptiness_specifier
@@ -88,17 +86,17 @@ namespace spot
   protected:
     const tgba* sys_;		// The synchronized product automaton
     const tgba* f_;		// The formula automaton
-    bool delete_sm;
+    bool delete_sm;		// Should we delete the sm
     scc_map * sm;		// The map of scc
-    const state *state_cache_;
-    const state *right_cache_;
-    strength strength_cache_;
+    const state *state_cache_;	// The state in cache
+    const state *right_cache_;	// The right part of this state
+    strength strength_cache_;	// The strength in the cache
     bool termacc_cache_;
     unsigned id_cache_;
     bool weak_accepting_cache_;
   public :
 
-  /// Create a specifier for a system composed of a unique formula
+    /// Create a specifier for a system composed of a unique formula
     /// Can work if there is no proxy around a
     formula_emptiness_specifier (const tgba * a, scc_map* scm = 0);
 

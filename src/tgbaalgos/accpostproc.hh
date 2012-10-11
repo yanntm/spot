@@ -31,13 +31,26 @@ namespace spot
   /// \addtogroup tgba_reduction
   /// @{
 
-  /// This method add a fake transition condition
-  /// on all Strong SCC
+
+  /// Returnes a TGBA wich is the same than the original one but
+  /// where other acceptance conditions have been added
+  ///
+  /// Warning: All emptiness check algorithms are not able to deal
+  /// with such automaton, and moreover sccmap can detect these
+  /// acceptance condition as useless and remove it
+  ///
+  /// This method add a fake transition condition on all Strong SCC
+  /// Weak SCC and Termninal SCC
+  ///
+  /// Note that env used here must have been declared by create_env_acc
+  /// or provide a characterisation for Terminal Weak and strong SCC
   const tgba* add_fake_acceptance_condition (const tgba *a,
 					      ltl::declarative_environment* env,
 					      spot::scc_map* sm = 0);
 
 
+  /// Create an environment which is able to provide three acceptance
+  /// conditions in order to tag all scc
   ltl::declarative_environment* create_env_acc()
   {
     ltl::declarative_environment* envacc =

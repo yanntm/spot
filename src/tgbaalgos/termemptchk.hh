@@ -34,6 +34,10 @@ namespace spot
   /// @{
 
   /// \brief Returns an emptiness check on the spot::tgba automaton \a a.
+  ///
+  /// This emptiness algorithm work only on terminal automaton i.e.
+  /// terminal automaton or terminal property automaton synchronized
+  /// with a left total system.
   emptiness_check* terminal_search(const tgba *a,
 				   option_map o = option_map());
   /// @}

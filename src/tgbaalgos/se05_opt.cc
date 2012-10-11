@@ -179,10 +179,14 @@ namespace spot
       /// The unique acceptance condition of the automaton \a a.
       bdd all_cond;
 
+      /// The Strong acceptance condition
       bdd strong_acc;
-      bdd weak_acc;
-      bdd terminal_acc;
 
+      /// The Weak acceptance condition
+      bdd weak_acc;
+
+      /// The Terminal acceptance condition
+      bdd terminal_acc;
 
       bool dfs_blue()
       {

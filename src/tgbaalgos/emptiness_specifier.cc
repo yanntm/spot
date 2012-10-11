@@ -68,8 +68,6 @@ namespace spot
       }
     else
       sm = scm;
-    // sm = new scc_map(f_);
-    // sm->build_map();
   }
 
   bool
@@ -96,43 +94,6 @@ namespace spot
     update_cache(s2);
     return (sm->weak_accepting(id_scc1)) && (id_scc1 == id_cache_);
   }
-
-  // bool
-  // formula_emptiness_specifier::is_guarantee (const state * s) const
-  // {
-  //   assert(s);
-  //   bool res = false;
-
-  //   state * sproj = sys_->project_state(s, f_);
-  //   assert(sproj);
-  //   unsigned id_scc = sm->scc_of_state(sproj);
-  //   res = sm->terminal_subautomaton(id_scc);
-  //   sproj->destroy();
-
-  //   return res;
-  // }
-
-  // bool
-  // formula_emptiness_specifier::is_persistence (const state *s) const
-  // {
-  //   bool res = false;
-
-  //   state * sproj = sys_->project_state(s, f_);
-  //   assert(sproj);
-  //   unsigned id_scc = sm->scc_of_state(sproj);
-  //   res = sm->weak_subautomaton(id_scc);
-  //   sproj->destroy();
-
-  //   return res;
-  // }
-
-  // bool
-  // formula_emptiness_specifier::is_general (const state *s) const
-  // {
-  //   assert(s);
-  //   strength str = typeof_subautomaton(s);
-  //   return !is_guarantee(s) &&  !is_persistence(s);
-  // }
 
   strength
   formula_emptiness_specifier::typeof_subautomaton
@@ -166,7 +127,8 @@ namespace spot
     // This is the correct way to do what we want
     right_cache_ =  sys_->project_state(s, f_);
 
-    // This is an optimisation
+    // This is an optimisation: we don't want to use it
+    // because it's too restrictive!
     //right_cache_ = (static_cast<const spot::state_product*> (s))->right();
     id_cache_ = sm->scc_of_state(right_cache_);
     strength_cache_ = sm->typeof_subautomaton(id_cache_);

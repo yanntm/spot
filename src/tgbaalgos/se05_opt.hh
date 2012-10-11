@@ -34,74 +34,10 @@ namespace spot
 
   /// \brief Returns an emptiness check on the spot::tgba automaton \a a.
   ///
-  /// \pre The automaton \a a must have at most one acceptance condition (i.e.
-  /// it is a TBA).
-  ///
-  /// During the visit of \a a, the returned checker stores explicitely all
-  /// the traversed states.
-  /// The method \a check() of the checker can be called several times
-  /// (until it returns a null pointer) to enumerate all the visited accepting
-  /// paths. The implemented algorithm is an optimization of
-  /// spot::explicit_magic_search and is the following:
-  ///
-  /// \verbatim
-  /// procedure check ()
-  /// begin
-  ///   call dfs_blue(s0);
-  /// end;
-  ///
-  /// procedure dfs_blue (s)
-  /// begin
-  ///   s.color = cyan;
-  ///   for all t in post(s) do
-  ///     if t.color == white then
-  ///       call dfs_blue(t);
-  ///     else if t.color == cyan and
-  ///             (the edge (s,t) is accepting or
-  ///              (the predecessor p of s in st_blue and s != t and
-  ///              the arc between p and s is accepting)) then
-  ///       report cycle;
-  ///     end if;
-  ///     if the edge (s,t) is accepting then
-  ///       call dfs_red(t);
-  ///     end if;
-  ///   end for;
-  ///   s.color = blue;
-  /// end;
-  ///
-  /// procedure dfs_red(s)
-  /// begin
-  ///   if s.color == cyan then
-  ///     report cycle;
-  ///   end if;
-  ///   s.color = red;
-  ///   for all t in post(s) do
-  ///     if t.color == blue then
-  ///       call dfs_red(t);
-  ///     end if;
-  ///   end for;
-  /// end;
-  /// \endverbatim
-  ///
-  /// It is an adaptation to TBA of the one presented in
-  /// \verbatim
-  ///  @techreport{SE04,
-  ///    author = {Stefan Schwoon and Javier Esparza},
-  ///    institution = {Universit{\"a}t Stuttgart, Fakult\"at Informatik,
-  ///    Elektrotechnik und Informationstechnik},
-  ///    month = {November},
-  ///    number = {2004/06},
-  ///    title = {A Note on On-The-Fly Verification Algorithms},
-  ///    year = {2004},
-  ///    url =
-  ///{http://www.fmi.uni-stuttgart.de/szs/publications/info/schwoosn.SE04.shtml}
-  ///  }
-  /// \endverbatim
-  ///
-  /// \sa spot::explicit_magic_search
-  ///
+  /// \pre The automaton \a a must have been preprocessed by accpostproc
+  ///  and must have only one acceptance condition
   emptiness_check* explicit_se05_opt_search(const tgba *a,
-					option_map o = option_map());
+					    option_map o = option_map());
 
   /// \brief Returns an emptiness checker on the spot::tgba automaton \a a.
   ///
