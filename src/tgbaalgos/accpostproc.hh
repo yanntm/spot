@@ -51,15 +51,7 @@ namespace spot
 
   /// Create an environment which is able to provide three acceptance
   /// conditions in order to tag all scc
-  ltl::declarative_environment* create_env_acc()
-  {
-    ltl::declarative_environment* envacc =
-      new spot::ltl::declarative_environment ();
-    envacc->declare("[S]");
-    envacc->declare("[W]");
-    envacc->declare("[T]");
-    return envacc;
-  }
+  ltl::declarative_environment* create_env_acc ();
 
   /// @}
 }

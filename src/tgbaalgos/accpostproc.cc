@@ -229,4 +229,15 @@ namespace spot
 
     return ri.result();
   }
+
+  ltl::declarative_environment* create_env_acc()
+  {
+    ltl::declarative_environment* envacc =
+      new spot::ltl::declarative_environment ();
+    envacc->declare("[S]");
+    envacc->declare("[W]");
+    envacc->declare("[T]");
+    return envacc;
+  }
+
 }
