@@ -23,24 +23,45 @@
 
 set -e
 
-run 0 ../tgba_analysis -r1 -dha '( XX b & (XXG a | XXGF b | XX c))' >stdout
+run 0 ../tgba_analysis -opt_decomp_eval '( XX b & (XXG a | XXGF b | XX c))' >stdout
 cat >expected <<EOF
-init:G,Terminal:1,Weak:1,General:4,commut:1,states:6,trans:9,tgg:5,tgw:1,tgt:1,tww:1,twt:0,ttt:1
-
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+6,9,1,4,4,1,4,4,1,4,5,1,4,4,1,4,4,1,4,5,1,( XX b & (XXG a | XXGF b | XX c))
 EOF
 diff stdout expected
 
 
-run 0 ../tgba_analysis -r1 -dha '(Ga -> G b) W c' >stdout
+run 0 ../tgba_analysis -opt_decomp_eval '(Ga -> G b) W c' >stdout
 cat >expected <<EOF
-init:G,Terminal:2,Weak:1,General:2,commut:1,states:5,trans:12,tgg:4,tgw:1,tgt:3,tww:1,twt:0,ttt:3
-
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+5,12,1,4,10,1,3,6,1,2,4,1,4,10,1,3,6,1,2,4,1,(Ga -> G b) W c
 EOF
 diff stdout expected
 
-run 0 ../tgba_analysis -dha '(GFa R b)' >stdout
+run 0 ../tgba_analysis -opt_decomp_eval '(GFa R b)' >stdout
 cat >expected <<EOF
-init:G,Terminal:0,Weak:0,General:2,commut:0,states:2,trans:4,tgg:4,tgw:0,tgt:0,tww:0,twt:0,ttt:0
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+2,4,1,0,0,0,1,1,1,2,4,1,0,0,0,1,1,1,2,4,1,(GFa R b)
+EOF
+diff stdout expected
 
+run 0 ../tgba_analysis -opt_decomp_eval 'GFa' >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+1,2,1,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,1,2,1,GFa
+EOF
+diff stdout expected
+
+run 0 ../tgba_analysis -opt_decomp_eval 'Fa' >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+2,3,1,2,3,1,0,0,0,0,0,0,2,3,1,0,0,0,0,0,0,Fa
+EOF
+diff stdout expected
+
+run 0 ../tgba_analysis -opt_decomp_eval 'Ga' >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+1,1,1,0,0,0,1,1,1,0,0,0,0,0,0,1,1,1,0,0,0,Ga
 EOF
 diff stdout expected

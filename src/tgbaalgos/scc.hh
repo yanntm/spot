@@ -247,6 +247,15 @@ namespace spot
     ///  \pre This should only be called once build_map() has run.
     bool non_accepting (unsigned n) const;
 
+    /// \brief return true if there is at least one terminal SCC
+    bool has_terminal_scc () const;
+
+    /// \brief return true if there is at least one weak SCC
+    bool has_weak_scc () const;
+
+    /// \brief return true if there is at least one strong SCC
+    bool has_strong_scc () const;
+
   protected:
     bdd update_supp_rec(unsigned state);
     void update_weak();

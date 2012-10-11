@@ -132,12 +132,6 @@ namespace spot
 	  sm_(sm),
 	  dc_(dc)
       {
-	// int v = aut_->get_dict()
-	//   ->register_acceptance_variable
-	//   (ltl::constant::true_instance(), aut_);
-	// the_acc = bdd_ithvar(v);
-	// all = aut_->all_acceptance_conditions();
-
 	if (dc == STRONG)
 	  out_->set_acceptance_conditions(aut_->all_acceptance_conditions());
 	else
@@ -162,7 +156,6 @@ namespace spot
       {
 	if (dc_ == STRONG)
 	  return !sm_.weak_subautomaton(sm_.scc_of_state(s));
-//sm_.strong_subautomaton(sm_.scc_of_state(s));
 	if (dc_ == WEAK)
 	  return !sm_.terminal_subautomaton(sm_.scc_of_state(s)) &&
 	    !sm_.strong_hard(sm_.scc_of_state(s));
@@ -194,12 +187,9 @@ namespace spot
 	    // are removed and terminal SCC are ignored
 	  case WEAK:
 	    {
-	      // if (sm_.strong(sm_.scc_of_state(in_s)) ||
-	      // 	  sm_.strong(sm_.scc_of_state(out_s)))
 	      if (sm_.scc_of_state(in_s) != sm_.scc_of_state(out_s))
 		out_->add_acceptance_conditions (t, bddfalse);
 	      else
-		//if (si->current_acceptance_conditions() == all)
 		if (sm_.scc_of_state(in_s) == sm_.scc_of_state(out_s) &&
 		    sm_.weak_accepting(sm_.scc_of_state(in_s)))
 		  out_->add_acceptance_conditions(t, the_acc);
@@ -218,7 +208,6 @@ namespace spot
 	      if (sm_.scc_of_state(in_s) != sm_.scc_of_state(out_s))
 		out_->add_acceptance_conditions (t, bddfalse);
 	      else
-		//if (si->current_acceptance_conditions() == all)
 		if (sm_.scc_of_state(in_s) == sm_.scc_of_state(out_s) &&
 		    sm_.terminal_accepting(sm_.scc_of_state(in_s)))
 		  out_->add_acceptance_conditions(t, the_acc);
@@ -226,16 +215,6 @@ namespace spot
 		  out_->add_acceptance_conditions
 		    (t, bddfalse);
 	      break;
-
-	    // if (!sm_.terminal_subautomaton(sm_.scc_of_state(in_s)))
-	    //   out_->add_acceptance_conditions (t, bddfalse);
-	    // else
-	    //   if (si->current_acceptance_conditions() == all)
-	    // 	out_->add_acceptance_conditions (t, the_acc);
-	    //   else
-	    // 	out_->add_acceptance_conditions
-	    // 	  (t, bddfalse);//si->current_acceptance_conditions());
-	    // break;
 	  }
       }
 
@@ -251,6 +230,13 @@ namespace spot
   void
   scc_decompose::decompose_strong ()
   {
+    // There is no such SCC
+    if (!sm->has_strong_scc())
+      {
+	strong_ = 0;
+	return;
+      }
+
     if (dynamic_cast<const tgba_explicit_formula*>(src_))
       {
 	decomp_iter<tgba_explicit_formula>
@@ -323,6 +309,14 @@ namespace spot
   void
   scc_decompose::decompose_weak ()
   {
+    // There is no such SCC
+    if (!sm->has_weak_scc())
+      {
+	weak_ = 0;
+	return;
+      }
+
+    // Oterwise compute it
     if (dynamic_cast<const tgba_explicit_formula*>(src_))
       {
 	decomp_iter<tgba_explicit_formula>
@@ -397,6 +391,14 @@ namespace spot
   void
   scc_decompose::decompose_terminal ()
   {
+    // There is no such SCC
+    if (!sm->has_terminal_scc())
+      {
+	terminal_ = 0;
+	return;
+      }
+
+    // Otherwise compute it
     if (dynamic_cast<const tgba_explicit_formula*>(src_))
       {
 	decomp_iter<tgba_explicit_formula>

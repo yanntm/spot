@@ -149,6 +149,37 @@ namespace spot
     return !accepting(n);
   }
 
+  bool
+  scc_map::has_terminal_scc () const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_terminal_accepting)
+	return true;
+    return false;
+  }
+
+  bool
+  scc_map::has_weak_scc () const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_weak_acc && !scc_map_[curr_scc].is_terminal_accepting)
+	return true;
+    return false;
+  }
+
+  bool
+  scc_map::has_strong_scc () const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_strong)
+	return true;
+    return false;
+  }
+
+
   void
   scc_map::update_weak()//(unsigned n)
   {
