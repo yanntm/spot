@@ -251,6 +251,7 @@ namespace spot
     bool has_terminal_scc () const;
 
     /// \brief return true if there is at least one weak SCC
+    /// Terminal SCC are not considered as weak
     bool has_weak_scc () const;
 
     /// \brief return true if there is at least one strong SCC
