@@ -37,130 +37,27 @@
 
 namespace spot
 {
-    class stats_bfs: public spot::tgba_reachable_iterator_breadth_first
-    {
-    public:
-      int sum;		///< Sum is equal to all states
-      int tgw;		///< Transition from general to weak (syntax)
-      int tgg;		///< Transition from general to general (syntax)
-      int tgt;		///< Transition from general to terminal (syntax)
-      int twt;		///< Transition from weak to terminal (syntax)
-      int tww;		///< Transition from weak to weak (syntax)
-      int ttt;		///< Transition from terminal to terminal (syntax)
-      int tsum;		///< The sum of all transition explored 
 
-      int scc_terminal;		/// Number of terminal states 
-      int scc_weak;		/// Number of weak states 
-      int scc_strong;		/// Number of stong states
-
-      formula_emptiness_specifier fes; ///< An acccess to formula informations
-
-      stats_bfs(const spot::tgba* a)
-	: tgba_reachable_iterator_breadth_first(a),
-	  fes(a)
-      {
-	sum           = 0;
-	tgw           = 0;
-	tgt           = 0;
-	twt           = 0;
-	tsum          = 0;
-	tgg           = 0;
-	ttt           = 0;
-	tww           = 0;
-
-	scc_terminal = 0;
-	scc_weak = 0;
-	scc_strong = 0;
-      }
-
-      /// Called by run() to process a state.
-      ///
-      /// \param s The current state.
-      void process_state(const spot::state* s, int, spot:: tgba_succ_iterator*)
-      {
-	++sum;
-	strength str = fes.typeof_subautomaton(s);
-	if (str == TerminalSubaut)
-	  ++scc_terminal;
-	else if (str == WeakSubaut)
-	  ++ scc_weak;
-	else
-	  ++ scc_strong;
-      }
-
-      /// Called by run() to process a transition.
-      ///
-      /// \param s_src The source state
-      /// \param succ_src The destination state
-      ///
-      /// The in_s and out_s states are owned by the
-      /// spot::tgba_reachable_iterator instance and destroyed when the
-      /// instance is destroyed.
-      void process_link(const spot::state*  s_src
-			, int,
-			const spot::state*  succ_src
-			, int ,
-			const spot::tgba_succ_iterator*)
-      {
-	++tsum;
-	strength strs_src = fes.typeof_subautomaton(s_src);
-	strength strsucc_src = fes.typeof_subautomaton(succ_src);
-	if ((strs_src == TerminalSubaut) && (strsucc_src == TerminalSubaut))
-	  ++ttt;
-	else if ((strs_src == WeakSubaut) && (strsucc_src == TerminalSubaut))
-	  ++twt;
-	else if ((strs_src == WeakSubaut) && (strsucc_src == WeakSubaut))
-	  ++tww;
-	else if ((strsucc_src == TerminalSubaut))
-	      ++tgt;
-	else if ((strsucc_src == WeakSubaut))
-	  ++tgw;
-	else
-	  ++tgg;
-      }
-    };
-
-
-  /// This class is used to perform an evaluation of the 
-  /// structure of the automaton of the formula 
-  /// Get info about Weak, Terminal and General automata
+  /// This class is used to know if an automaton is an heterogeneous
+  /// automaton i-e there is multiple strength of SCC inside of this
+  /// automaton
   class stats_hierarchy
   {
   protected:
     const tgba* src;    ///< The original tgba
 
   public:
-    int sum;		///< Sum is equal to all states
-    int tgw;		///< Transition from general to weak
-    int tgg;		///< Transition from general to general
-    int tgt;		///< Transition from general to terminal
-    int twt;		///< Transition from weak to terminal
-    int tww;		///< Transition from weak to weak
-    int ttt;		///< Transition from terminal to terminal
-    int tsum;		///< The sum of all transition explored 
-
-    int scc_terminal;	/// Number of terminal states (by scc analysis)
-    int scc_weak;	/// Number of weak states (by scc analysis)
-    int scc_strong;	/// Number of stong states (by scc analysis)
-
-    stats_bfs processor; 	///<  Use traditional bfs walk
+    bool scc_terminal;		// Is there any terminal scc
+    bool scc_weak;		// Is there any weak scc
+    bool scc_strong;		// Is there any strong scc
 
     /// The constructor with a tgba formula
     stats_hierarchy (const tgba* original) :
-      src(original),
-      processor(original)
+      src(original)
     {
-      sum           = 0;
-      tgw           = 0;
-      tgt           = 0;
-      twt           = 0;
-      tsum          = 0;
-      tgg           = 0;
-      ttt           = 0;
-      tww           = 0;
-      scc_terminal  = 0;
-      scc_weak      = 0;
-      scc_strong    = 0;
+      scc_terminal  = false;
+      scc_weak      = false;
+      scc_strong    = false;
     }
 
     virtual
@@ -170,28 +67,18 @@ namespace spot
 
     void stats_automaton ()
     {
-      if (sum)
-	return; 		// Avoid multiple computation
+      if (scc_terminal || scc_weak || scc_strong)
+	return;
 
-      processor.run();
-      sum           = processor.sum;
-      tgw           = processor.tgw;
-      tgt           = processor.tgt;
-      twt           = processor.twt;
-      tsum          = processor.tsum;
-      tgg           = processor.tgg;
-      ttt           = processor.ttt;
-      tww           = processor.tww;
-
-      scc_terminal  = processor.scc_terminal;
-      scc_weak      = processor.scc_weak;
-      scc_strong    = processor.scc_strong;
-
-      // FIXME : direct access to processor variables 
-      assert (tgg + tgw + tgt + tww + twt + ttt == tsum);
+      spot::scc_map* x = new spot::scc_map(src);
+      x->build_map();
+      scc_terminal = x->has_terminal_scc();
+      scc_weak = x->has_weak_scc();
+      scc_strong = x->has_strong_scc();
+      delete x;
     }
 
-    // This function return true if the automaton is 
+    // This function return true if the automaton is
     // commuting in any way possible
     bool
     is_commuting_automaton()
@@ -245,27 +132,17 @@ namespace spot
 
     os << "init:";
     if (s.scc_strong)
-      os << "G,";
+      os << "S,";
     else if (s.scc_weak)
       os << "W,";
     else
       os << "T,";
 
-    os << "Terminal:"   << s.scc_terminal    << ","
-       << "Weak:"       << s.scc_weak  << ","
-       << "General:"    << s.scc_strong  << ","
-       << "commut:"     << commut << ","
-       << "states:"     << s.sum << ","
-       << "trans:"      << s.tsum << ","
-       << "tgg:"        << s.tgg  << ","
-       << "tgw:"        << s.tgw  << ","
-       << "tgt:"        << s.tgt  << ","
-       << "tww:"        << s.tww  << ","
-       << "twt:"        << s.twt  << ","
-       << "ttt:"        << s.ttt
-       << std::endl;
-
-      return os;
-    }
+    os << "Terminal:"   << s.scc_terminal    << ",";
+    os << "Weak:"       << s.scc_weak  << ",";
+    os << "Strong:"     << s.scc_strong  << ",";
+    os << "commut:" << commut ;
+    return os;
+  }
 }
 #endif // SPOT_TGBAALGO_STATS_HIERARCHY
