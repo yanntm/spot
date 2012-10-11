@@ -28,9 +28,6 @@
 #include "misc/hash.hh"
 #include "misc/bddlt.hh"
 
-
-#include "tgbaalgos/weak_scc.hh"
-
 namespace spot
 {
 

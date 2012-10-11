@@ -74,7 +74,6 @@ tgbaalgos_HEADERS = \
   tau03opt.hh \
   reductgba_sim.hh \
   weight.hh \
-  weak_scc.hh \
   weakemptchk.hh \
   termemptchk.hh
 
@@ -125,7 +124,6 @@ libtgbaalgos_la_SOURCES = \
   tau03opt.cc \
   reductgba_sim.cc \
   weight.cc\
-  weak_scc.cc \
   weakemptchk.cc \
   termemptchk.cc
 
