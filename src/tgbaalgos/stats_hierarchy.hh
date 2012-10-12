@@ -141,7 +141,7 @@ namespace spot
     os << "Terminal:"   << s.scc_terminal    << ",";
     os << "Weak:"       << s.scc_weak  << ",";
     os << "Strong:"     << s.scc_strong  << ",";
-    os << "commut:" << commut ;
+    os << "commut:" << commut;
     return os;
   }
 }
