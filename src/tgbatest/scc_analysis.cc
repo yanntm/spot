@@ -198,7 +198,6 @@ int main(int argc, char **argv)
 	non_accepting = 0;
 	terminals = 0;
 	strongs = 0;
-	int bw = false, bt = false;
 	for (unsigned n = 0; n < max; ++n)
 	  {
 	    if (exact)
@@ -259,22 +258,6 @@ int main(int argc, char **argv)
 		    ++non_accepting;
 		    continue;
 		  }
-		if (bt)
-		  {
-		    ++terminals;
-		    continue;
-		  }
-		if (bw)
-		  {
-		    if (is_syntactic_terminal_scc(a, map, n))
-		      {
-			bt = true;
-			++terminals;
-		      }
-		    else
-		      ++weaks;
-		    continue;
-		  }
 
 		// Check weak
 		if (!is_syntactic_weak_scc(a, map, n))
@@ -284,7 +267,6 @@ int main(int argc, char **argv)
 		  }
 		if (is_syntactic_terminal_scc(a, map, n))
 		  {
-		    bt = true;
 		    ++terminals;
 		  }
 		else
