@@ -570,14 +570,14 @@ int main(int argc, char **argv)
 	      // suppose that degeneralisation doesn't introduce
 	      // weak SCC
 	      int i = 0;
-	      while (*(dyn_degen+i))
+	      while (*(dyn_degen+i) && opt_BA)
 	  	{
 	  	  const char* algo = dyn_degen[i];
 	  	  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
 	  	  ++i;
 	  	}
 	      i= 0;
-	      while (*(dyn_gen+i))
+	      while (*(dyn_gen+i) && opt_TGBA)
 	      	{
 	      	  const char* algo = dyn_gen[i];
 	      	  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
@@ -642,7 +642,7 @@ int main(int argc, char **argv)
 
 	  // Create the emptiness check procedure
 	  const char* err;
-	  const char* algo ;
+	  const char* algo = "SE05_OPT";
 	  if (opt_dT)
 	    algo = "REACHABILITY";
 	  else if (opt_dW)
