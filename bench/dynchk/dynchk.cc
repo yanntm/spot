@@ -768,11 +768,13 @@ int main(int argc, char **argv)
       if (opt_BA)
 	{
 	  // The degeneralized automaton
-	  spot::tgba* degen = 0;
+	  const spot::tgba* degen = a;
 
 	  // Degeneralize product
 	  tm.start("degeneralization");
-	  degen = spot::degeneralize(a);
+	  // degen = spot::degeneralize(a);
+	  if (a->number_of_acceptance_conditions() > 1)
+	    degen = spot::degeneralize(a);
 	  tm.stop("degeneralization");
 
 	  // Perform the product
@@ -825,7 +827,7 @@ int main(int argc, char **argv)
 	      delete echeck_inst;
 	      delete es;
 	    }
-	  if (degen)
+	  if (degen != a)
 	    delete degen;
 	}
 
