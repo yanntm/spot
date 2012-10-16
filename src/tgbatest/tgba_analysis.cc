@@ -69,6 +69,9 @@
 #include "tgbaalgos/scc.hh"
 #include "tgbaalgos/postproc.hh"
 #include "tgbaalgos/accpostproc.hh"
+#include "tgbaalgos/neverclaim.hh"
+#include "misc/unique_ptr.hh"
+#include "tgbaalgos/degen.hh"
 
 void
 syntax(char* prog)
@@ -152,6 +155,9 @@ int main(int argc, char **argv)
   // The reduction for the automaton
   //bool scc_filter_all = true;
 
+  // Display a spin neverclaim
+  bool opt_spin = false;
+
   //  The dictionnary
   spot::bdd_dict* dict = new spot::bdd_dict();
 
@@ -204,6 +210,10 @@ int main(int argc, char **argv)
       else if (!strcmp(argv[formula_index], "-df"))
 	{
 	  opt_df = true;
+	}
+      else if (!strcmp(argv[formula_index], "--spin"))
+	{
+	  opt_spin = true;
 	}
       else if (!strcmp(argv[formula_index], "-dsa"))
 	{
@@ -362,7 +372,13 @@ int main(int argc, char **argv)
 	  a = tmp;
 	  if (opt_dfa)
 	    {
-	      spot::dotty_reachable(std::cout, a);
+	      if (!opt_spin)
+		spot::dotty_reachable(std::cout, a);
+	      else
+		{
+		  spot::unique_ptr<spot::tgba> s(spot::degeneralize(a));
+		  spot::never_claim_reachable(std::cout, s, f, true);
+		}
 	    }
 	  goto cleanup;
 	}
@@ -372,7 +388,13 @@ int main(int argc, char **argv)
       //
       if (opt_dfa)
 	{
-	  spot::dotty_reachable(std::cout, a);
+	  if (!opt_spin)
+	    spot::dotty_reachable(std::cout, a);
+	  else
+	    {
+	      spot::unique_ptr<spot::tgba> s(spot::degeneralize(a));
+	      spot::never_claim_reachable(std::cout, s, f, true);
+	    }
 	}
       if (opt_dsa)
 	{
@@ -380,7 +402,13 @@ int main(int argc, char **argv)
 	  const spot::tgba* strong = sd.strong_automaton();
 
 	  if (strong)
-	    spot::dotty_reachable(std::cout, strong);
+	    if (!opt_spin)
+	      spot::dotty_reachable(std::cout, strong);
+	    else
+	      {
+		spot::unique_ptr<spot::tgba> s(spot::degeneralize(strong));
+		spot::never_claim_reachable(std::cout, s, f, true);
+	      }
 	  else
 	    std::cerr << "No strong automaton associated"
 		      << std::endl;
@@ -391,7 +419,13 @@ int main(int argc, char **argv)
 	  const spot::tgba* weak = sd.weak_automaton();
 
 	  if (weak)
-	    spot::dotty_reachable(std::cout, weak);
+	    if (!opt_spin)
+	      spot::dotty_reachable(std::cout, weak);
+	    else
+	      {
+		spot::unique_ptr<spot::tgba> s(spot::degeneralize(weak));
+		spot::never_claim_reachable(std::cout, s, f, true);
+	      }
 	  else
 	    std::cerr << "No weak automaton associated"
 		      << std::endl;
@@ -402,7 +436,13 @@ int main(int argc, char **argv)
 	  const spot::tgba* term = sd.terminal_automaton();
 
 	  if (term)
-	    spot::dotty_reachable(std::cout, term);
+	    if (!opt_spin)
+	      spot::dotty_reachable(std::cout, term);
+	  else
+	    {
+	      spot::unique_ptr<spot::tgba> s(spot::degeneralize(term));
+	      spot::never_claim_reachable(std::cout, s, f, true);
+	    }
 	  else
 	    std::cerr << "No terminal automaton associated"
 		      << std::endl;
