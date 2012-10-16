@@ -1,0 +1,57 @@
+This directory contains the input files and scripts used to produce
+the measures for dynamic algorithms this bench is a part of the
+one that can be found here :
+
+http://move.lip6.fr/~Etienne.Renault/benchs/TACAS-2013/benchs.html
+
+==========
+ CONTENTS
+==========
+
+* allbenchs.txt
+
+    The set of model formula and results of this bench. This is used to
+    check the consistency and generate the benchmark
+
+* construct_benchs.sh
+
+    This script generate the bench from the formula and generate for
+    each formula 4 neverclaims: one for the original ltl property
+    and 3 for decomposition. Note that the name of atomic propositions
+    are also rewritten to please spin. It could take a while!
+
+* spin_bench.sh
+
+    This is the main tool to launch the bench.
+
+* models/anderson.4.pm
+* models/at.4.pm
+* models/bakery.4.pm
+* models/bopdp.3.pm
+* models/elevator.4.pm
+* models/elevator2.3.pm
+* models/gear.2.pm
+* models/production_cell.3.pm
+* models/sorter.2.pm
+* models/telephony.2.pm
+
+    This is the promela models for the bench
+
+==========
+ USAGE
+==========
+
+  1. If that is not done already, configure and compile all the Spot
+     library, then come back into this directory.
+
+  2. Run construct_bench.sh to construct the benchmark
+
+  3. Run spin_bench.sh to launch the benchmark, std::cout should not
+     contain ERROR messages
+
+
+==========================
+ INTERPRETING THE RESULTS
+==========================
+
+  Results are stored into properties-res

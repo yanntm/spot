@@ -35,9 +35,9 @@ test -z "$CXXFLAGS" && CXXFLAGS=
 adl_ENABLE_DEVEL
 
 AC_ARG_ENABLE([python],
-              [AC_HELP_STRING([--disable-python],
-                              [do not compile Python bindings])],
-              [], [enable_python=yes])
+	      [AC_HELP_STRING([--disable-python],
+			      [do not compile Python bindings])],
+	      [], [enable_python=yes])
 
 AM_CONDITIONAL([USE_PYTHON], [test "x${enable_python:-yes}" = xyes])
 
@@ -124,12 +124,14 @@ AC_CONFIG_FILES([
   bench/ltl2tgba/defs
   bench/scc-stats/Makefile
   bench/split-product/Makefile
+  bench/spin-decomp/Makefile
   bench/wdba/Makefile
   doc/Doxyfile
   doc/Makefile
   doc/tl/Makefile
   iface/dve2/defs
   iface/dve2/Makefile
+  iface/tlcheck/Makefile
   iface/gspn/defs
   iface/gspn/Makefile
   iface/Makefile

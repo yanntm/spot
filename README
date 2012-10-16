@@ -186,6 +186,7 @@ doc/              Documentation for libspot.
 bench/            Benchmarks for ...
    emptchk/       ... emptiness-check algorithms,
    dynchk/        ... dynamic emptiness-check algorithms,
+   spin-decomp/   ... launch bench for decomp using spin and POR
    ltl2tgba/      ... LTL-to-Büchi translation algorithms,
    ltlcounter/    ... translation of a class of LTL formulae,
    ltlclasses/    ... translation of more classes of LTL formulae,
@@ -198,6 +199,7 @@ wrap/             Wrappers for other languages.
       ajax/       LTL-to-TGBA translator with web interface, using Ajax.
 iface/            Interfaces to other libraries.
    dve2/          Interface with DiVinE2.
+   tlcheck/	  model checker in progress
    gspn/          GreatSPN interface.
       examples/   Supporting models used by the test cases.
 
