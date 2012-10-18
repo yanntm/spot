@@ -10,7 +10,7 @@
 
 tgba_analysis=../../src/tgbatest/tgba_analysis
 
-$( head -n3 allbenchs.txt > /tmp/1)
+#$( head -n3 allbenchs.txt > /tmp/1)
 while read prop model status ltl; do
     # The current proposition treated
     echo $prop
@@ -71,4 +71,5 @@ while read prop model status ltl; do
     $tgba_analysis -dsa -m --spin "$newltl" > properties/$prop/strong.neverclaim
     [ ! -s properties/$prop/strong.neverclaim ]  && rm properties/$prop/strong.neverclaim
     [ ! -f properties/$prop/strong.neverclaim ]  && echo "  ->Empty : strong"
- done < /tmp/1
+ done < allbenchs.txt
+#/tmp/1
