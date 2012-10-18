@@ -69,7 +69,14 @@
 #include "tgbaalgos/simulation.hh"
 #include "../iface/dve2/dve2.hh"
 #include "tgbaalgos/accpostproc.hh"
+#include "tgbaalgos/postproc.hh"
 
+#include <iostream>
+#include <fstream>
+
+#include <string.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 #ifdef TRACE
 #define trace std::cerr
@@ -85,7 +92,7 @@ syntax(char* prog)
   if (slash && (strncmp(slash + 1, "lt-", 3) == 0))
     prog = slash + 4;
 
-  std::cerr << "Usage: "<< prog << "[OPTIONS...] "
+  std::cerr << "Usage: "<< prog << " [OPTIONS...] "
 	    << std::endl;
 	    // << "  -Pfile  multiply the formula automaton with the TGBA read"
 	    // << " from `file'\n"
@@ -125,57 +132,115 @@ syntax(char* prog)
 ///
 ///
 ///
-void print_results (const char* algo, std::string result,
-		    std::string type, int ticks,
-		    int pstates, int ptrans,
-		    int pdepth, std::string input)
+void
+print_results (const char* algo, std::string result,
+	       std::string type, int ticks,
+	       int pstates, int ptrans,
+	       int pdepth, std::string input,
+	       std::ostream& os = std::cout,
+	       bool header = false)
 {
-  std::cout << "# Algo,"
-	    << "Result,"
-	    << "Type,"
-	    << "Ticks,"
-	    << "Product states,"
-	    << "Product trans,"
-	    << "Product depth,"
-	    << "Formula"
-	    << std::endl;
+  // We want to check the result to have a fast
+  // comparison for the decomposition.
+  if (header)
+    os << result << std::endl;
 
-  std::cout << algo    << ","
-	    << result  << ","
-	    << type    << ","
-	    << ticks   << ","
-	    << pstates << ","
-	    << ptrans  << ","
-	    << pdepth  << ","
-	    << "\"" << input << "\""
-	    << std::endl;
+  os << "# Algo,"
+     << "Result,"
+     << "Type,"
+     << "Ticks,"
+     << "Product states,"
+     << "Product trans,"
+     << "Product depth,"
+     << "Formula"
+     << std::endl;
+
+  os << algo    << ","
+     << result  << ","
+     << type    << ","
+     << ticks   << ","
+     << pstates << ","
+     << ptrans  << ","
+     << pdepth  << ","
+     << "\"" << input << "\""
+     << std::endl;
   if (result == "VIOLATED")
-    std::cout << "an accepting run exists" << std::endl;
+    os << "an accepting run exists" << std::endl;
   else
-    std::cout << "no accepting run found" << std::endl;
+    os << "no accepting run found" << std::endl;
 };
 
 
-// // Algos that will be used using a single B.A.
-// const char *dyn_degen [] =
-//   {
-//     // "SE05_dyn",
-//     // "SE05_stat",
-//     "SE05",
-//     // "CVWY90_dyn",
-//     // "CVWY90",
-//     // "Cou99_dyn",
-//     // "Cou99",
-//     0
-//   };
 
-// // Algos that will be used using a TGBA
-// const char *dyn_gen [] =
-//   {
-//     // "Cou99_dyn",
-//     "Cou99",
-//     0
-//   };
+///
+///
+///
+void
+perform_emptiness_check (const spot::tgba* a,
+			 const spot::tgba* system,
+			 const char* algo,
+			 std::string input,
+			 std::ostream& os = std::cout,
+			 bool header = false)
+
+{
+  // First we check if a is correct (i.e not NULL)
+  // because decomposition can lead to NULL automaton
+  // when no decomposition is empty
+  if (!a)
+    {
+      print_results(algo,"NODECOMP", "BA",
+		    0, 0, 0, 0, input, os, header);
+      return;
+    }
+
+  // Perform the product
+  const spot::tgba* product = new spot::tgba_product(system, a);
+
+  // The timer for the emptiness check
+  spot::timer_map tm_ec;
+  const char* err;
+
+  // the emptiness check instaniator
+  spot::emptiness_check_instantiator* echeck_inst = 0;
+  echeck_inst = spot::emptiness_check_instantiator::construct( algo, &err);
+
+  if (!echeck_inst)
+    {
+      exit(2);
+    }
+
+  // Create a specifier
+  spot::formula_emptiness_specifier *es  = 0;
+  es = new spot::formula_emptiness_specifier (product, a);
+
+  // Instanciate the emptiness check
+  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+
+  tm_ec.start("checking");
+  spot::emptiness_check_result* res = ec->check();
+  tm_ec.stop("checking");
+
+  //
+  // Now output results
+  //
+  {
+    const spot::ec_statistics* ecs =
+      dynamic_cast<const spot::ec_statistics*>(ec);
+
+    print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+		  tm_ec.timer("checking").utime() +
+		  tm_ec.timer("checking").stime(),
+		  ecs->states(), ecs->transitions(),
+		  ecs->max_depth(),
+		  input, os, header);
+  }
+
+  // Clear Memory
+  delete product;
+  delete es;
+  delete ec;
+}
 
 /// This program perform emptiness check over formula
 int main(int argc, char **argv)
@@ -183,10 +248,7 @@ int main(int argc, char **argv)
   //  The environement for LTL
   spot::ltl::environment& env(spot::ltl::default_environment::instance());
   // Option for the simplifier
-  spot::ltl::ltl_simplifier_options redopt(false, false, false, false, false);
-
-  // The reduction for the automaton
-  bool scc_filter_all = true;
+  spot::ltl::ltl_simplifier_options redopt(true, true, true, true, true);
 
   //  The dictionnary
   spot::bdd_dict* dict = new spot::bdd_dict();
@@ -203,24 +265,12 @@ int main(int argc, char **argv)
   // The product automaton
   const spot::tgba* product = 0;
 
-  // the emptiness check instaniator
-  spot::emptiness_check_instantiator* echeck_inst = 0;
-
-  // automaton reduction
-  bool opt_m = false;
-
-  // Should whether the formula be reduced
-  bool simpltl = false;
+  // automaton reduction, we always want to do it...
+  bool opt_minimize = false;
 
   // Option for the decomposition
-  bool opt_dT = false;
-  bool opt_dW = false;
-  bool opt_dS = false;
+  bool opt_decompose = false;
   spot::scc_decompose *sd = 0;
-
-  // Only process a kind
-  bool opt_BA = true;
-  bool opt_TGBA = true;
 
   bool opt_SE05opt = false;
 
@@ -239,98 +289,13 @@ int main(int argc, char **argv)
 
       ++formula_index;
 
-      if (!strcmp(argv[formula_index], "-m"))
+      if (!strcmp(argv[formula_index], "--minimize"))
   	{
-  	  opt_m = true;
+  	  opt_minimize = true;
   	}
-      else if (!strcmp(argv[formula_index], "-r1"))
+      else if (!strcmp(argv[formula_index], "--decompose"))
   	{
-  	  simpltl = true;
-  	  redopt.reduce_basics = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-r2"))
-  	{
-  	  simpltl = true;
-  	  redopt.event_univ = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-r3"))
-  	{
-  	  simpltl = true;
-  	  redopt.synt_impl = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-r4"))
-  	{
-  	  simpltl = true;
-  	  redopt.reduce_basics = true;
-  	  redopt.event_univ = true;
-  	  redopt.synt_impl = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-r5"))
-  	{
-  	  simpltl = true;
-  	  redopt.containment_checks = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-r6"))
-  	{
-  	  simpltl = true;
-  	  redopt.containment_checks = true;
-  	  redopt.containment_checks_stronger = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-r7"))
-  	{
-  	  simpltl = true;
-  	  redopt.reduce_basics = true;
-  	  redopt.event_univ = true;
-  	  redopt.synt_impl = true;
-  	  redopt.containment_checks = true;
-  	  redopt.containment_checks_stronger = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-dT"))
-  	{
-  	  assert (!opt_dW);
-  	  assert (!opt_dS);
-  	  opt_dT = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-dW"))
-  	{
-  	  assert (!opt_dT);
-  	  assert (!opt_dS);
-  	  opt_dW = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-dS"))
-  	{
-  	  assert (!opt_dW);
-  	  assert (!opt_dT);
-  	  opt_dS = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-dmT"))
-  	{
-  	  assert (!opt_dW);
-  	  assert (!opt_dS);
-  	  opt_dT = true;
-  	  opt_m = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-dmW"))
-  	{
-  	  assert (!opt_dT);
-  	  assert (!opt_dS);
-  	  opt_dW = true;
-  	  opt_m = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-dmS"))
-  	{
-  	  assert (!opt_dW);
-  	  assert (!opt_dT);
-  	  opt_dS = true;
-  	  opt_m = true;
-  	}
-      else if (!strcmp(argv[formula_index], "-TGBA"))
-  	{
-  	  opt_BA = false;
-  	}
-      else if (!strcmp(argv[formula_index], "-BA"))
-  	{
-  	  opt_TGBA = false;
+	  opt_decompose = true;
   	}
       else if (!strcmp(argv[formula_index], "-SE05opt"))
   	{
@@ -375,8 +340,6 @@ int main(int argc, char **argv)
   if (system)
     assert(system->number_of_acceptance_conditions() == 0);
 
-  assert (opt_BA || opt_TGBA);
-
   // To work with files
   bool isfile = false;
   std::ifstream ifs(argv[formula_index]);
@@ -412,186 +375,56 @@ int main(int argc, char **argv)
       // The formula in spot
       const spot::ltl::formula* f = 0;
 
-      //
-      // Building the formula from the input
-      //
+      ///
+      /// Building the formula from the input
+      ///
       spot::ltl::parse_error_list pel;
       tm.start("parsing formula");
       f = spot::ltl::parse(input, pel, env, false);
       tm.stop("parsing formula");
 
-      if (f)
-  	{
-  	  //
-  	  // Simplification for the formula among differents levels
-  	  //
-  	  {
-  	    spot::ltl::ltl_simplifier* simp = 0;
-	    simp = new spot::ltl::ltl_simplifier(redopt, dict);
+      if (!f)
+	{
+	  std::cerr << "Error parsing formula" << std::endl;
+	}
 
-  	    if (simp)
-  	      {
-  		tm.start("reducing formula");
-  		const spot::ltl::formula* t = simp->simplify(f);
-  		f->destroy();
-  		tm.stop("reducing formula");
-  		f = t;
-  		//std::cout << spot::ltl::to_string(f) << std::endl;
-  	      }
-  	    delete simp;
-  	  }
-	  exit(1);
-
-  	  //
-  	  // Building the TGBA of the formula
-  	  //
-  	  a = spot::ltl_to_tgba_fm(f, dict);
-  	  assert (a);
-
-  	  //
-  	  // Remove unused SCC
-  	  //
-  	  {
-  	    const spot::tgba* aut_scc = 0;
-  	    tm.start("reducing A_f w/ SCC");
-  	    aut_scc = spot::scc_filter(a, scc_filter_all);
-  	    delete a;
-  	    a = aut_scc;
-  	    tm.stop("reducing A_f w/ SCC");
-  	  }
-
-
-  	  //
-  	  // Minimized
-  	  //
-  	  {
-  	    spot::tgba* minimized = 0;
-  	    if (opt_m)
-  	      {
-  		minimized = minimize_obligation(a);
-  		if (minimized)
-  		  {
-  		    delete a;
-  		    a = minimized;
-  		  }
-  		else{
-  		  minimized = spot::simulation(a);
-  		  if (minimized)
-  		    {
-  		      delete a;
-  		      a = minimized;
-  		    }
-  		}
-  	      }
-  	  }
-  	}
-
-      /// Perform the terminal decomposition
       ///
-      const spot::tgba* term = a;
-      const spot::tgba* weak = a;
-      const spot::tgba* strong = a;
-      // if (opt_dT)
-      // 	{
-      // 	  sd = new spot::scc_decompose (a, opt_m);
-      // 	  const spot::tgba* term_a = sd->terminal_automaton();
-      // 	  if (term_a)
-      // 	    {
-      // 	      a = term_a;
-      // 	    }
-      // 	  else
-      // 	    {
-      // 	      // Output in standard way then exit
-      // 	      // suppose that degeneralisation doesn't introduce
-      // 	      // weak SCC
-      // 	      int i = 0;
-      // 	      while (*(dyn_degen+i)  && opt_BA)
-      // 	  	{
-      // 	  	  const char* algo = dyn_degen[i];
-      // 	  	  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
-      // 	  	  ++i;
-      // 	  	}
-      // 	      i= 0;
-      // 	      while (*(dyn_gen+i) && opt_TGBA)
-      // 	      	{
-      // 	      	  const char* algo = dyn_gen[i];
-      // 	      	  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
-      // 	      	  ++i;
-      // 	      	}
-      // 	      goto finalize;
-      // 	    }
-      // 	  assert (a);
-      // 	}
+      /// Simplification for the formula among differents levels
+      ///
+      {
+	spot::ltl::ltl_simplifier* simp = 0;
+	simp = new spot::ltl::ltl_simplifier(redopt, dict);
 
-      // if (opt_dW)
-      // 	{
-      // 	  sd = new spot::scc_decompose (a, opt_m);
-      // 	  const spot::tgba* weak_a = sd->weak_automaton();
-      // 	  if (weak_a)
-      // 	    {
-      // 	      a = weak_a;
-      // 	    }
-      // 	  else
-      // 	    {
-      // 	      // Output in standard way then exit
-      // 	      // suppose that degeneralisation doesn't introduce
-      // 	      // weak SCC
-      // 	      int i = 0;
-      // 	      while (*(dyn_degen+i)  && opt_BA)
-      // 		{
-      // 		  const char* algo = dyn_degen[i];
-      // 		  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
-      // 		  ++i;
-      // 		}
-      // 	      i= 0;
-      // 	      while (*(dyn_gen+i)  && opt_TGBA)
-      // 		{
-      // 		  const char* algo = dyn_gen[i];
-      // 		  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
-      // 		  ++i;
-      // 		}
-      // 	      goto finalize;
-      // 	    }
-      // 	  assert (a);
-      // 	}
+	if (simp)
+	  {
+	    tm.start("reducing formula");
+	    const spot::ltl::formula* t = simp->simplify(f);
+	    f->destroy();
+	    tm.stop("reducing formula");
+	    f = t;
+	  }
+	delete simp;
+      }
 
-      // if (opt_dS)
-      // 	{
-      // 	  sd = new spot::scc_decompose (a, opt_m);
-      // 	  const spot::tgba* strong_a = sd->strong_automaton();
-      // 	  if (strong_a)
-      // 	    {
-      // 	      a = strong_a;
-      // 	    }
-      // 	  else
-      // 	    {
-      // 	      // Output in standard way then exit
-      // 	      // suppose that degeneralisation doesn't introduce
-      // 	      // weak SCC
-      // 	      int i = 0;
-      // 	      while (*(dyn_degen+i) && opt_BA)
-      // 	  	{
-      // 	  	  const char* algo = dyn_degen[i];
-      // 	  	  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
-      // 	  	  ++i;
-      // 	  	}
-      // 	      i= 0;
-      // 	      while (*(dyn_gen+i) && opt_TGBA)
-      // 	      	{
-      // 	      	  const char* algo = dyn_gen[i];
-      // 	      	  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
-      // 	      	  ++i;
-      // 	      	}
-      // 	      goto finalize;
-      // 	    }
-      // 	  assert (a);
-      // 	}
+      //
+      // Building the TGBA of the formula
+      //
+      a = spot::ltl_to_tgba_fm(f, dict);
+      assert (a);
+
+      ///
+      /// We use postproc to reduce the automaton
+      ///
+      spot::postprocessor *pp = new spot::postprocessor();
+      a = pp->run(a, f);
+      delete pp;
+
 
       /// The system has not yet be build  we have to create it
       /// For dve models.
       ///
       /// If other formalism  are supported and computed "on-the-fly"
-      /// just follow the same scheme for integrate them into this test_suite
+      /// just follow the same scheme for integrate them here
       {
   	if (load_dve_model)
   	  {
@@ -604,300 +437,160 @@ int main(int argc, char **argv)
   	  }
       }
 
+      ///
+      /// Perform the terminal decomposition
+      ///
+      const spot::tgba* term = 0;
+      const spot::tgba* weak = a;
+      const spot::tgba* strong = a;
+      if (opt_decompose)
+	{
+	  pid_t term_pid = 0;
+	  pid_t weak_pid = 0;
+	  pid_t strong_pid = 0;
 
-      // // ------------> NASTY TRICK
-      // ///
-      // /// Build the composed system
-      // /// and perform the most efficient emptiness
-      // ///
-      // if (opt_dT || opt_dW || (opt_dS && opt_BA))
-      // 	{
-      // 	  const spot::tgba* degen = a;
+	  // Decompose the automaton
+	  sd = new spot::scc_decompose (a, opt_minimize);
 
-      // 	  // The environment
-      // 	  spot::ltl::declarative_environment *envacc =  spot::create_env_acc();
+	  // Test for the creation of a son
+	  if ((term_pid = fork()) == -1)
+	    {
+	      std::cerr << "Fork Fail for terminal decomposition"
+			<< std::endl;
+	    }
 
-      // 	  if (opt_dS)
-      // 	    {
-      // 	      // Degeneralize product
-      // 	      tm.start("degeneralization");
-      // 	      if (a->number_of_acceptance_conditions() > 1)
-      // 		degen = spot::degeneralize(a);
-      // 	      tm.stop("degeneralization");
+	  // We are in the son (Terminal)
+	  if (!term_pid)
+	    {
+	      std::cout << " -->Terminal Compute (pid: "
+			<< getpid() << ")" << std::endl;
 
-      // 	      // Add fake acceptance condition
-      // 	      const spot::tgba* tmp = add_fake_acceptance_condition (degen, envacc);
-      // 	      if (degen != a)
-      // 		delete degen;
-      // 	      degen = tmp;
-      // 	    }
+	      // Grab the terminal automaton
+	      term = sd->terminal_automaton();
 
+	      // Create the output name
+	      std::ostringstream oss;
+	      oss << "pid."<< (int) getpid();
+	      std::ofstream os(oss.str().c_str());
+	      perform_emptiness_check (term, system, "REACHABILITY",
+				       input, os, true);
+	      os.close();
+	      goto finalize;
+	    }
 
-      // 	  // Perform the product
-      // 	  product = new spot::tgba_product(system, degen);
+	  // Test for the creation of a new son
+	  if ((weak_pid = fork()) == -1)
+	    {
+	      std::cerr << "Fork Fail for Weak decomposition"
+	  		<< std::endl;
+	    }
 
-      // 	  // The timer for the emptiness check
-      // 	  spot::timer_map tm_ec;
+	  // We are in the son (Weak)
+	  if (!weak_pid)
+	    {
+	      std::cout << " -->Weak Compute (pid: "
+	  		<< getpid() << ")" << std::endl;
 
-      // 	  // Create the emptiness check procedure
-      // 	  const char* err;
-      // 	  const char* algo = "SE05_OPT";
-      // 	  if (opt_dT)
-      // 	    algo = "REACHABILITY";
-      // 	  else if (opt_dW)
-      // 	    algo = "DFS";
-      // 	  else if (opt_dS)
-      // 	    algo = "SE05_OPT";
+	      // Grab the weak automaton
+	      weak = sd->weak_automaton();
 
-      // 	  echeck_inst =
-      // 	    spot::emptiness_check_instantiator::construct( algo, &err);
-      // 	  if (!echeck_inst)
-      // 	    {
-      // 	      exit(2);
-      // 	    }
+	      // Create the output name
+	      std::ostringstream oss;
+	      oss << "pid."<< (int) getpid();
+	      std::ofstream os(oss.str().c_str());
+	      perform_emptiness_check (weak, system, "DFS",
+				       input, os, true);
+	      os.close();
+	      goto finalize;
+	    }
 
-      // 	  // Create a specifier
-      // 	  spot::formula_emptiness_specifier *es  = 0;
-      // 	  es = new spot::formula_emptiness_specifier (product, degen);
+	  // Test for the creation of a son
+	  if ((strong_pid = fork()) == -1)
+	    {
+	      std::cerr << "Fork Fail for terminal decomposition"
+	  		<< std::endl;
+	    }
 
-      // 	  // Instanciate the emptiness check
-      // 	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es, envacc);
+	  // We are in the son
+	  if (!strong_pid)
+	    {
+	      std::cout << " -->Strong Compute (pid: "
+	  		<< getpid() << ")" << std::endl;
 
-      // 	  tm_ec.start("checking");
-      // 	  spot::emptiness_check_result* res = ec->check();
-      // 	  tm_ec.stop("checking");
+	      // Grab the strong automaton
+	      strong = sd->strong_automaton();
 
-      // 	  //
-      // 	  // Now output results
-      // 	  //
-      // 	  const spot::ec_statistics* ecs =
-      // 	    dynamic_cast<const spot::ec_statistics*>(ec);
+	      // Create the output name
+	      std::ostringstream oss;
+	      oss << "pid."<< (int) getpid();
+	      std::ofstream os(oss.str().c_str());
+	      perform_emptiness_check (strong, system, "Cou99",
+				       input, os, true);
+	      os.close();
+	      goto finalize;
+	    }
 
-      // 	  print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
-      // 			tm_ec.timer("checking").utime() +
-      // 			tm_ec.timer("checking").stime(),
-      // 			  ecs->states(), ecs->transitions(),
-      // 			ecs->max_depth(),
-      // 			input);
-      // 	  delete echeck_inst;
-      // 	  delete es;
-      // 	  delete envacc;
-      // 	  if (degen != a)
-      // 	    delete degen;
+	  // The father wait for all son and only keep the faster
+	  int waited = 0;
+	  std::string line;
+	  while (true)
+	    {
+	      pid_t pid;
+	      pid = wait (NULL);
+	      std::cout << "    -->Answer From " << pid << std::endl;
 
-      // 	  goto decompfinal;
-      // 	}
+	      // Grab information if violated or not
+	      std::ostringstream oss;
+	      oss << "pid."<< (int) pid;
+	      std::ifstream ifs (oss.str().c_str());
+	      getline (ifs, line);
 
+	      // The property is violated , can kill others
+	      if (line == "VIOLATED")
+		{
+		  // Display results for violated properties
+		  while (getline(ifs, line))
+		    std::cout << line << std::endl;
 
-      if (opt_SE05opt)
-  	{
-  	  // The degeneralized automaton
-  	  const spot::tgba* degen = a;
-  	  spot::timer_map tm_ec;
+		  // The faster is terminal
+		  if (pid == term_pid)
+		    {
+		      kill (9, weak_pid);
+		      kill (9, strong_pid);
+		    }
+		  // The faster is weak
+		  else if (pid == weak_pid)
+		    {
+		      kill (9, term_pid);
+		      kill (9, strong_pid);
+		    }
+		  // The faster is strong
+		  else
+		    {
+		      kill (9, term_pid);
+		      kill (9, weak_pid);
+		    }
+		  ifs.close();
+		  break;
+		}
 
-  	  // Degeneralize product
-  	  tm.start("degeneralization");
-  	  if (a->number_of_acceptance_conditions() != 1)
-  	    degen = spot::degeneralize(a);
-  	  tm.stop("degeneralization");
-
-  	  // The environment
-  	  spot::ltl::declarative_environment *envacc =  spot::create_env_acc();
-
-  	  // Add fake acceptance condition
-  	  const spot::tgba* tmp = add_fake_acceptance_condition (degen, envacc);
-  	  if (degen != a)
-  	    delete degen;
-  	  degen = tmp;
-
-  	  // Perform the product
-  	  product = new spot::tgba_product(system, degen);
-
-  	  // Create the emptiness check procedure
-  	  const char* err;
-  	  const char* algo = "SE05_OPT";
-  	  echeck_inst =
-  	    spot::emptiness_check_instantiator::construct (algo, &err);
-  	  if (!echeck_inst)
-  	    {
-  	      exit(2);
-  	    }
-
-  	  // Create a specifier
-  	  spot::formula_emptiness_specifier *es  = 0;
-  	  es = new spot::formula_emptiness_specifier (product, degen);
-
-  	  // Instanciate the emptiness check
-  	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es, envacc);
-
-  	  tm_ec.start("checking");
-  	  spot::emptiness_check_result* res = ec->check();
-  	  tm_ec.stop("checking");
-
-  	  //
-  	  // Now output results
-  	  //
-  	  {
-  	    const spot::ec_statistics* ecs =
-  	      dynamic_cast<const spot::ec_statistics*>(ec);
-
-  	    print_results(algo, (res ? "VIOLATED":"VERIFIED"), "BA",
-  			      tm_ec.timer("checking").utime() +
-  			  tm_ec.timer("checking").stime(),
-  			  ecs->states(), ecs->transitions(),
-  			  ecs->max_depth(),
-  			  input);
-  	  }
-
-  	  delete echeck_inst;
-  	  delete es;
-  	  delete envacc;
-
-  	  if (degen != a)
-  	    delete degen;
-
-  	  goto decompfinal;
-  	}
+	      // Conditionnal Stop
+	      ++waited;
+	      if (waited == 3)
+		{
+		  // Display results for verified properties
+		  while (getline(ifs, line))
+		    std::cout << line << std::endl;
+		  break;
+		}
+	      ifs.close();
+	    }
+	}
+      else
+	perform_emptiness_check (strong, system, "Cou99", input);
 
 
-      // ///
-      // /// Build the composed system
-      // /// and perform emptiness on the degeneralized formula
-      // ///
-      // if (opt_BA)
-      // 	{
-      // 	  // The degeneralized automaton
-      // 	  const spot::tgba* degen = a;
-
-      // 	  // Degeneralize product
-      // 	  tm.start("degeneralization");
-      // 	  // degen = spot::degeneralize(a);
-      // 	  if (a->number_of_acceptance_conditions() > 1)
-      // 	    degen = spot::degeneralize(a);
-      // 	  tm.stop("degeneralization");
-
-      // 	  // Perform the product
-      // 	  product = new spot::tgba_product(system, degen);
-
-      // 	  // Walk all emptiness checks
-      // 	  int i = 0;
-      // 	  while (*(dyn_degen+i))
-      // 	    {
-      // 	      // The timer for the emptiness check
-      // 	      spot::timer_map tm_ec;
-
-      // 	      // Create the emptiness check procedure
-      // 	      const char* err;
-      // 	      const char* algo = dyn_degen[i];
-      // 	      echeck_inst =
-      // 		spot::emptiness_check_instantiator::construct( algo, &err);
-      // 	      if (!echeck_inst)
-      // 		{
-      // 		  exit(2);
-      // 		}
-
-      // 	      // Create a specifier
-      // 	      spot::formula_emptiness_specifier *es  = 0;
-      // 	      es = new spot::formula_emptiness_specifier (product, degen);
-
-      // 	      // Instanciate the emptiness check
-      // 	      spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
-
-      // 	      tm_ec.start("checking");
-      // 	      spot::emptiness_check_result* res = ec->check();
-      // 	      tm_ec.stop("checking");
-
-      // 	      //
-      // 	      // Now output results
-      // 	      //
-      // 	      {
-      // 		const spot::ec_statistics* ecs =
-      // 		  dynamic_cast<const spot::ec_statistics*>(ec);
-
-      // 		print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
-      // 			      tm_ec.timer("checking").utime() +
-      // 			      tm_ec.timer("checking").stime(),
-      // 			      ecs->states(), ecs->transitions(),
-      // 			      ecs->max_depth(),
-      // 			      input);
-      // 	      }
-
-      // 	      i++;
-      // 	      delete echeck_inst;
-      // 	      delete es;
-      // 	    }
-      // 	  if (degen != a)
-      // 	    delete degen;
-      // 	}
-
-      // ///
-      // /// Build the composed system
-      // /// and perform emptiness on the  formula not degeneralized
-      // ///
-      // if (opt_TGBA)
-      // 	{
-      // 	  // Perform the product
-      // 	  product = new spot::tgba_product(system, a);
-
-      // 	  // Walk all emptiness checks
-      // 	  int i = 0;
-      // 	  while (*(dyn_gen+i))
-      // 	    {
-      // 	      // The timer for the emptiness check
-      // 	      spot::timer_map tm_ec;
-
-      // 	      // Create the emptiness check procedure
-      // 	      const char* err;
-      // 	      const char* algo = dyn_gen[i];
-      // 	      echeck_inst =
-      // 		spot::emptiness_check_instantiator::construct( algo, &err);
-      // 	      if (!echeck_inst)
-      // 		{
-      // 		  exit(2);
-      // 		}
-
-      // 	      // Create a specifier
-      // 	      spot::formula_emptiness_specifier *es  = 0;
-      // 	      es = new spot::formula_emptiness_specifier (product, a);
-
-      // 	      // Instanciate the emptiness check
-      // 	      spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
-
-      // 	      tm_ec.start("checking");
-      // 	      spot::emptiness_check_result* res = ec->check();
-      // 	      tm_ec.stop("checking");
-
-      // 	      //
-      // 	      // Now output results
-      // 	      //
-      // 	      {
-      // 		const spot::ec_statistics* ecs =
-      // 		  dynamic_cast<const spot::ec_statistics*>(ec);
-
-      // 		print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
-      // 			      tm_ec.timer("checking").utime() +
-      // 			      tm_ec.timer("checking").stime(),
-      // 			      ecs->states(), ecs->transitions(),
-      // 			      ecs->max_depth(),
-      // 			      input);
-      // 	      }
-
-      // 	      i++;
-      // 	      delete echeck_inst;
-      // 	      delete es;
-      // 	    }
-      // 	}
-
-    decompfinal:
-      // refix decomposition
-      if (opt_dT)
-  	a = term;
-      if (opt_dW)
-  	a = weak;
-      if (opt_dS)
-  	a = strong;
-
-      //    finalize:
+    finalize:
       // Clean up
       f->destroy();
       delete sd;
@@ -929,3 +622,419 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+ // if (opt_dT)
+ // 	{
+ // 	  sd = new spot::scc_decompose (a, opt_m);
+ // 	  const spot::tgba* term_a = sd->terminal_automaton();
+ // 	  if (term_a)
+ // 	    {
+ // 	      a = term_a;
+ // 	    }
+ // 	  else
+ // 	    {
+ // 	      // Output in standard way then exit
+ // 	      // suppose that degeneralisation doesn't introduce
+ // 	      // weak SCC
+ // 	      int i = 0;
+ // 	      while (*(dyn_degen+i)  && opt_BA)
+ // 	  	{
+ // 	  	  const char* algo = dyn_degen[i];
+ // 	  	  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
+ // 	  	  ++i;
+ // 	  	}
+ // 	      i= 0;
+ // 	      while (*(dyn_gen+i) && opt_TGBA)
+ // 	      	{
+ // 	      	  const char* algo = dyn_gen[i];
+ // 	      	  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
+ // 	      	  ++i;
+ // 	      	}
+ // 	      goto finalize;
+ // 	    }
+ // 	  assert (a);
+ // 	}
+
+ // if (opt_dW)
+ // 	{
+ // 	  sd = new spot::scc_decompose (a, opt_m);
+ // 	  const spot::tgba* weak_a = sd->weak_automaton();
+ // 	  if (weak_a)
+ // 	    {
+ // 	      a = weak_a;
+ // 	    }
+ // 	  else
+ // 	    {
+ // 	      // Output in standard way then exit
+ // 	      // suppose that degeneralisation doesn't introduce
+ // 	      // weak SCC
+ // 	      int i = 0;
+ // 	      while (*(dyn_degen+i)  && opt_BA)
+ // 		{
+ // 		  const char* algo = dyn_degen[i];
+ // 		  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
+ // 		  ++i;
+ // 		}
+ // 	      i= 0;
+ // 	      while (*(dyn_gen+i)  && opt_TGBA)
+ // 		{
+ // 		  const char* algo = dyn_gen[i];
+ // 		  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
+ // 		  ++i;
+ // 		}
+ // 	      goto finalize;
+ // 	    }
+ // 	  assert (a);
+ // 	}
+
+ // if (opt_dS)
+ // 	{
+ // 	  sd = new spot::scc_decompose (a, opt_m);
+ // 	  const spot::tgba* strong_a = sd->strong_automaton();
+ // 	  if (strong_a)
+ // 	    {
+ // 	      a = strong_a;
+ // 	    }
+ // 	  else
+ // 	    {
+ // 	      // Output in standard way then exit
+ // 	      // suppose that degeneralisation doesn't introduce
+ // 	      // weak SCC
+ // 	      int i = 0;
+ // 	      while (*(dyn_degen+i) && opt_BA)
+ // 	  	{
+ // 	  	  const char* algo = dyn_degen[i];
+ // 	  	  print_results(algo, "NODECOMP", "BA", 0, 0, 0, 0, input);
+ // 	  	  ++i;
+ // 	  	}
+ // 	      i= 0;
+ // 	      while (*(dyn_gen+i) && opt_TGBA)
+ // 	      	{
+ // 	      	  const char* algo = dyn_gen[i];
+ // 	      	  print_results(algo, "NODECOMP", "TGBA", 0, 0, 0, 0, input);
+ // 	      	  ++i;
+ // 	      	}
+ // 	      goto finalize;
+ // 	    }
+ // 	  assert (a);
+ // 	}
+
+ // /// The system has not yet be build  we have to create it
+ // /// For dve models.
+ // ///
+ // /// If other formalism  are supported and computed "on-the-fly"
+ // /// just follow the same scheme for integrate them into this test_suite
+ // {
+ // 	if (load_dve_model)
+ // 	  {
+ // 	    spot::ltl::atomic_prop_set ap;
+ // 	    atomic_prop_collect(f, &ap);
+ // 	    system = spot::load_dve2(dve_model_name,
+ // 				     dict, &ap,
+ // 				     spot::ltl::constant::true_instance(),
+ // 				     2 /* 0 or 1 or 2 */ , true);
+ // 	  }
+ // }
+
+
+ // // ------------> NASTY TRICK
+ // ///
+ // /// Build the composed system
+ // /// and perform the most efficient emptiness
+ // ///
+ // if (opt_dT || opt_dW || (opt_dS && opt_BA))
+ // 	{
+ // 	  const spot::tgba* degen = a;
+
+ // 	  // The environment
+ // 	  spot::ltl::declarative_environment *envacc =  spot::create_env_acc();
+
+ // 	  if (opt_dS)
+ // 	    {
+ // 	      // Degeneralize product
+ // 	      tm.start("degeneralization");
+ // 	      if (a->number_of_acceptance_conditions() > 1)
+ // 		degen = spot::degeneralize(a);
+ // 	      tm.stop("degeneralization");
+
+ // 	      // Add fake acceptance condition
+ // 	      const spot::tgba* tmp = add_fake_acceptance_condition (degen, envacc);
+ // 	      if (degen != a)
+ // 		delete degen;
+ // 	      degen = tmp;
+ // 	    }
+
+
+ // 	  // Perform the product
+ // 	  product = new spot::tgba_product(system, degen);
+
+ // 	  // The timer for the emptiness check
+ // 	  spot::timer_map tm_ec;
+
+ // 	  // Create the emptiness check procedure
+ // 	  const char* err;
+ // 	  const char* algo = "SE05_OPT";
+ // 	  if (opt_dT)
+ // 	    algo = "REACHABILITY";
+ // 	  else if (opt_dW)
+ // 	    algo = "DFS";
+ // 	  else if (opt_dS)
+ // 	    algo = "SE05_OPT";
+
+ // 	  echeck_inst =
+ // 	    spot::emptiness_check_instantiator::construct( algo, &err);
+ // 	  if (!echeck_inst)
+ // 	    {
+ // 	      exit(2);
+ // 	    }
+
+ // 	  // Create a specifier
+ // 	  spot::formula_emptiness_specifier *es  = 0;
+ // 	  es = new spot::formula_emptiness_specifier (product, degen);
+
+ // 	  // Instanciate the emptiness check
+ // 	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es, envacc);
+
+ // 	  tm_ec.start("checking");
+ // 	  spot::emptiness_check_result* res = ec->check();
+ // 	  tm_ec.stop("checking");
+
+ // 	  //
+ // 	  // Now output results
+ // 	  //
+ // 	  const spot::ec_statistics* ecs =
+ // 	    dynamic_cast<const spot::ec_statistics*>(ec);
+
+ // 	  print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+ // 			tm_ec.timer("checking").utime() +
+ // 			tm_ec.timer("checking").stime(),
+ // 			  ecs->states(), ecs->transitions(),
+ // 			ecs->max_depth(),
+ // 			input);
+ // 	  delete echeck_inst;
+ // 	  delete es;
+ // 	  delete envacc;
+ // 	  if (degen != a)
+ // 	    delete degen;
+
+ // 	  goto decompfinal;
+ // 	}
+
+
+ // if (opt_SE05opt)
+ // 	{
+ // 	  // The degeneralized automaton
+ // 	  const spot::tgba* degen = a;
+ // 	  spot::timer_map tm_ec;
+
+ // 	  // Degeneralize product
+ // 	  tm.start("degeneralization");
+ // 	  if (a->number_of_acceptance_conditions() != 1)
+ // 	    degen = spot::degeneralize(a);
+ // 	  tm.stop("degeneralization");
+
+ // 	  // The environment
+ // 	  spot::ltl::declarative_environment *envacc =  spot::create_env_acc();
+
+ // 	  // Add fake acceptance condition
+ // 	  const spot::tgba* tmp = add_fake_acceptance_condition (degen, envacc);
+ // 	  if (degen != a)
+ // 	    delete degen;
+ // 	  degen = tmp;
+
+ // 	  // Perform the product
+ // 	  product = new spot::tgba_product(system, degen);
+
+ // 	  // Create the emptiness check procedure
+ // 	  const char* err;
+ // 	  const char* algo = "SE05_OPT";
+ // 	  echeck_inst =
+ // 	    spot::emptiness_check_instantiator::construct (algo, &err);
+ // 	  if (!echeck_inst)
+ // 	    {
+ // 	      exit(2);
+ // 	    }
+
+ // 	  // Create a specifier
+ // 	  spot::formula_emptiness_specifier *es  = 0;
+ // 	  es = new spot::formula_emptiness_specifier (product, degen);
+
+ // 	  // Instanciate the emptiness check
+ // 	  spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es, envacc);
+
+ // 	  tm_ec.start("checking");
+ // 	  spot::emptiness_check_result* res = ec->check();
+ // 	  tm_ec.stop("checking");
+
+ // 	  //
+ // 	  // Now output results
+ // 	  //
+ // 	  {
+ // 	    const spot::ec_statistics* ecs =
+ // 	      dynamic_cast<const spot::ec_statistics*>(ec);
+
+ // 	    print_results(algo, (res ? "VIOLATED":"VERIFIED"), "BA",
+ // 			      tm_ec.timer("checking").utime() +
+ // 			  tm_ec.timer("checking").stime(),
+ // 			  ecs->states(), ecs->transitions(),
+ // 			  ecs->max_depth(),
+ // 			  input);
+ // 	  }
+
+ // 	  delete echeck_inst;
+ // 	  delete es;
+ // 	  delete envacc;
+
+ // 	  if (degen != a)
+ // 	    delete degen;
+
+ // 	  goto decompfinal;
+ // 	}
+
+
+ // ///
+ // /// Build the composed system
+ // /// and perform emptiness on the degeneralized formula
+ // ///
+ // if (opt_BA)
+ // 	{
+ // 	  // The degeneralized automaton
+ // 	  const spot::tgba* degen = a;
+
+ // 	  // Degeneralize product
+ // 	  tm.start("degeneralization");
+ // 	  // degen = spot::degeneralize(a);
+ // 	  if (a->number_of_acceptance_conditions() > 1)
+ // 	    degen = spot::degeneralize(a);
+ // 	  tm.stop("degeneralization");
+
+ // 	  // Perform the product
+ // 	  product = new spot::tgba_product(system, degen);
+
+ // 	  // Walk all emptiness checks
+ // 	  int i = 0;
+ // 	  while (*(dyn_degen+i))
+ // 	    {
+ // 	      // The timer for the emptiness check
+ // 	      spot::timer_map tm_ec;
+
+ // 	      // Create the emptiness check procedure
+ // 	      const char* err;
+ // 	      const char* algo = dyn_degen[i];
+ // 	      echeck_inst =
+ // 		spot::emptiness_check_instantiator::construct( algo, &err);
+ // 	      if (!echeck_inst)
+ // 		{
+ // 		  exit(2);
+ // 		}
+
+ // 	      // Create a specifier
+ // 	      spot::formula_emptiness_specifier *es  = 0;
+ // 	      es = new spot::formula_emptiness_specifier (product, degen);
+
+ // 	      // Instanciate the emptiness check
+ // 	      spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+
+ // 	      tm_ec.start("checking");
+ // 	      spot::emptiness_check_result* res = ec->check();
+ // 	      tm_ec.stop("checking");
+
+ // 	      //
+ // 	      // Now output results
+ // 	      //
+ // 	      {
+ // 		const spot::ec_statistics* ecs =
+ // 		  dynamic_cast<const spot::ec_statistics*>(ec);
+
+ // 		print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+ // 			      tm_ec.timer("checking").utime() +
+ // 			      tm_ec.timer("checking").stime(),
+ // 			      ecs->states(), ecs->transitions(),
+ // 			      ecs->max_depth(),
+ // 			      input);
+ // 	      }
+
+ // 	      i++;
+ // 	      delete echeck_inst;
+ // 	      delete es;
+ // 	    }
+ // 	  if (degen != a)
+ // 	    delete degen;
+ // 	}
+
+ // ///
+ // /// Build the composed system
+ // /// and perform emptiness on the  formula not degeneralized
+ // ///
+ // if (opt_TGBA)
+ // 	{
+ // 	  // Perform the product
+ // 	  product = new spot::tgba_product(system, a);
+
+ // 	  // Walk all emptiness checks
+ // 	  int i = 0;
+ // 	  while (*(dyn_gen+i))
+ // 	    {
+ // 	      // The timer for the emptiness check
+ // 	      spot::timer_map tm_ec;
+
+ // 	      // Create the emptiness check procedure
+ // 	      const char* err;
+ // 	      const char* algo = dyn_gen[i];
+ // 	      echeck_inst =
+ // 		spot::emptiness_check_instantiator::construct( algo, &err);
+ // 	      if (!echeck_inst)
+ // 		{
+ // 		  exit(2);
+ // 		}
+
+ // 	      // Create a specifier
+ // 	      spot::formula_emptiness_specifier *es  = 0;
+ // 	      es = new spot::formula_emptiness_specifier (product, a);
+
+ // 	      // Instanciate the emptiness check
+ // 	      spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
+
+ // 	      tm_ec.start("checking");
+ // 	      spot::emptiness_check_result* res = ec->check();
+ // 	      tm_ec.stop("checking");
+
+ // 	      //
+ // 	      // Now output results
+ // 	      //
+ // 	      {
+ // 		const spot::ec_statistics* ecs =
+ // 		  dynamic_cast<const spot::ec_statistics*>(ec);
+
+ // 		print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+ // 			      tm_ec.timer("checking").utime() +
+ // 			      tm_ec.timer("checking").stime(),
+ // 			      ecs->states(), ecs->transitions(),
+ // 			      ecs->max_depth(),
+ // 			      input);
+ // 	      }
+
+ // 	      i++;
+ // 	      delete echeck_inst;
+ // 	      delete es;
+ // 	    }
+ // 	}
+
+ //    decompfinal:
+ // refix decomposition
+ // if (opt_dT)
+ // 	a = term;
+ // if (opt_dW)
+ // 	a = weak;
+ // if (opt_dS)
+ // 	a = strong;

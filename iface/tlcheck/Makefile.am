@@ -46,4 +46,4 @@ tlcheck_SOURCES = tlcheck.cc
 #   models/telephony.2.dve
 
 
-CLEANFILES =  *.dve2C  *.dve.cpp
+CLEANFILES =  *.dve2C  *.dve.cpp pid.*
