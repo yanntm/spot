@@ -92,45 +92,20 @@ syntax(char* prog)
   if (slash && (strncmp(slash + 1, "lt-", 3) == 0))
     prog = slash + 4;
 
-  std::cerr << "Usage: "<< prog << " [OPTIONS...] "
+  std::cerr << "Usage: "<< prog << " [OPTIONS...] [-P|-B] formula"
+	    << std::endl
+
+	    << "  -Pfile        read a TGBA file" 	     << std::endl
+	    << "  -Bfile        read a DVE file"	     << std::endl
+	    << "  --minimize    minimise all automaton"      << std::endl
+	    << "  --decompose   decompose formula automaton" << std::endl
 	    << std::endl;
-	    // << "  -Pfile  multiply the formula automaton with the TGBA read"
-	    // << " from `file'\n"
-	    // << "  -Bfile read a dve file"
-	    // << std::endl
-	    // << "  -r1   reduce formula using basic rewriting" << std::endl
-	    // << "  -r2   reduce formula using class of eventuality and "
-	    // << "universality" << std::endl
-	    // << "  -r3   reduce formula using implication between "
-	    // << "sub-formulae" << std::endl
-	    // << "  -r4   reduce formula using all above rules" << std::endl
-	    // << "  -r5   reduce formula using tau03" << std::endl
-	    // << "  -r6   reduce formula using tau03+" << std::endl
-	    // << "  -r7   reduce formula using tau03+ and -r4" << std::endl
-	    // << "  -rd   display the reduced formula" << std::endl
-	    // << std::endl
-
-	    // << "Automaton reduction:" << std::endl
-	    // << "  -dT  decompose the automaton into terminal"
-	    // << std::endl
-	    // << "  -dW  decompose the automaton into weak"
-	    // << std::endl
-	    // << "  -dS  decompose the automaton into strong"
-	    // << std::endl
-
-	    // << "  -BA  launch algos on BA"
-	    // << std::endl
-	    // << "  -TGBA  launch algos on TGBA"
-	    // << std::endl
-
-	    // << "Automaton reduction:" << std::endl
-	    // << "  -m  minimise the automaton"
-	    // << std::endl;
   exit(2);
 }
 
 ///
-///
+/// This is a main wrapper to have an homogeneous
+/// wrapper
 ///
 void
 print_results (const char* algo, std::string result,
@@ -173,7 +148,9 @@ print_results (const char* algo, std::string result,
 
 
 ///
-///
+/// A wrapper to call all emptiness checks
+/// Warning this wrapper encompasses transformation
+/// to degeneralize and so on
 ///
 void
 perform_emptiness_check (const spot::tgba* a,
