@@ -24,26 +24,13 @@ dist_noinst_DATA = \
   construct_bench.sh \
   spin_bench.sh \
   allbenchs.txt \
-  anderson.4.dve \
   anderson.4.pm \
-  at.4.dve \
   at.4.pm \
-  bakery.4.dve \
   bakery.4.pm \
-  bopdp.3.dve \
   bopdp.3.pm \
-  brp2.3.dve \
-  elevator.4.dve \
   elevator.4.pm \
-  elevator2.3.dve \
   elevator2.3.pm \
-  gear.2.dve \
   gear.2.pm \
-  leader-election.3.dve \
-  lifts.4.dve \
-  production-cell.3.dve \
   production_cell.3.pm \
-  sorter.2.dve \
   sorter.2.pm \
-  telephony.2.dve \
   telephony.2.pm
