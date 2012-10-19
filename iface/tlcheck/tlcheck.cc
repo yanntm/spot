@@ -177,7 +177,7 @@ perform_emptiness_check (const spot::tgba* a,
 
   // the emptiness check instaniator
   spot::emptiness_check_instantiator* echeck_inst = 0;
-  echeck_inst = spot::emptiness_check_instantiator::construct( algo, &err);
+  echeck_inst = spot::emptiness_check_instantiator::construct(algo, &err);
 
   if (!echeck_inst)
     {
@@ -227,7 +227,7 @@ perform_emptiness_check (const spot::tgba* a,
     const spot::ec_statistics* ecs =
       dynamic_cast<const spot::ec_statistics*>(ec);
 
-    print_results(algo,(res ? "VIOLATED":"VERIFIED"),
+    print_results(algo, (res ? "VIOLATED":"VERIFIED"),
 		  (nb_acc > 1 ? "TGBA":"BA"),
 		  tm_ec.timer("checking").utime() +
 		  tm_ec.timer("checking").stime(),
@@ -542,7 +542,7 @@ int main(int argc, char **argv)
 	  while (true)
 	    {
 	      pid_t pid;
-	      pid = wait (NULL);
+	      pid = wait (0);
 	      std::cout << "    -->Answer From " << pid << std::endl;
 
 	      // Grab information if violated or not
