@@ -166,13 +166,10 @@ perform_emptiness_check (const spot::tgba* a,
   // when no decomposition is empty
   if (!a)
     {
-      print_results(algo,"NODECOMP", "BA",
+      print_results(algo,"NODECOMP", "TGBA",
 		    0, 0, 0, 0, input, os, header);
       return;
     }
-
-  // Perform the product
-  const spot::tgba* product = new spot::tgba_product(system, a);
 
   // The timer for the emptiness check
   spot::timer_map tm_ec;
@@ -184,12 +181,37 @@ perform_emptiness_check (const spot::tgba* a,
 
   if (!echeck_inst)
     {
+      std::cerr << "Emptiness Check instanciator";
       exit(2);
     }
 
+  // Check acceptance conditions
+  if (a->number_of_acceptance_conditions()
+      < echeck_inst->min_acceptance_conditions())
+    {
+      std::cerr << "Minimum acceptance conditions Required!" << std::endl;
+      exit (2);
+    }
+
+
+  //
+  int nb_acc = a->number_of_acceptance_conditions();
+  const spot::tgba* degen = 0;
+  if ((nb_acc > 1)  &&
+      (echeck_inst->max_acceptance_conditions() == 1))
+    {
+      degen = spot::degeneralize(a);
+      nb_acc = degen->number_of_acceptance_conditions();
+      // ICI degeneralise
+      //    + accpostproc
+    }
+
+  // Perform the product
+  const spot::tgba* product = new spot::tgba_product(system, degen?degen:a);
+
   // Create a specifier
   spot::formula_emptiness_specifier *es  = 0;
-  es = new spot::formula_emptiness_specifier (product, a);
+  es = new spot::formula_emptiness_specifier (product, degen?degen:a);
 
   // Instanciate the emptiness check
   spot::emptiness_check* ec  =  echeck_inst->instantiate(product, es);
@@ -205,7 +227,8 @@ perform_emptiness_check (const spot::tgba* a,
     const spot::ec_statistics* ecs =
       dynamic_cast<const spot::ec_statistics*>(ec);
 
-    print_results(algo,(res ? "VIOLATED":"VERIFIED"), "BA",
+    print_results(algo,(res ? "VIOLATED":"VERIFIED"),
+		  (nb_acc > 1 ? "TGBA":"BA"),
 		  tm_ec.timer("checking").utime() +
 		  tm_ec.timer("checking").stime(),
 		  ecs->states(), ecs->transitions(),
@@ -214,6 +237,8 @@ perform_emptiness_check (const spot::tgba* a,
   }
 
   // Clear Memory
+  delete echeck_inst;
+  delete degen;
   delete product;
   delete es;
   delete ec;
@@ -249,14 +274,16 @@ int main(int argc, char **argv)
   bool opt_decompose = false;
   spot::scc_decompose *sd = 0;
 
-  bool opt_SE05opt = false;
-
   // The index of the formula
   int formula_index = 0;
 
   // Variables for loading DVE models
   bool load_dve_model = false;
   std::string dve_model_name;
+
+  // The algo to use in general case
+  // this algo will be perform on strong part of decomp
+  const char* echeck_algo = "Cou99";
 
   for (;;)
     {
@@ -274,10 +301,12 @@ int main(int argc, char **argv)
   	{
 	  opt_decompose = true;
   	}
-      else if (!strcmp(argv[formula_index], "-SE05opt"))
-  	{
-  	  opt_SE05opt = true;
-  	}
+      else if (!strncmp(argv[formula_index], "-e", 2))
+	{
+	  echeck_algo = 2 + argv[formula_index];
+	  if (!*echeck_algo)
+	    echeck_algo = "Cou99";
+	}
       else if (!strncmp(argv[formula_index], "-P", 2))
   	{
   	  tm.start("reading -P's argument");
@@ -501,7 +530,7 @@ int main(int argc, char **argv)
 	      std::ostringstream oss;
 	      oss << "pid."<< (int) getpid();
 	      std::ofstream os(oss.str().c_str());
-	      perform_emptiness_check (strong, system, "Cou99",
+	      perform_emptiness_check (strong, system, echeck_algo,
 				       input, os, true);
 	      os.close();
 	      goto finalize;
@@ -564,7 +593,7 @@ int main(int argc, char **argv)
 	    }
 	}
       else
-	perform_emptiness_check (strong, system, "Cou99", input);
+	perform_emptiness_check (strong, system, echeck_algo, input);
 
 
     finalize:
