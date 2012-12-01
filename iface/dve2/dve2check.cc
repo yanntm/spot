@@ -246,6 +246,15 @@ main(int argc, char **argv)
   if (output != DotFormula)
     {
       tm.start("loading dve2");
+
+      if (por && !f->is_X_free())
+      {
+	std::cerr << "ERROR: cannot apply partial order reduction to a formula"
+		  << " containing the next(X) operator." << std::endl;
+	exit(1);
+      }
+
+
       model = spot::load_dve2(argv[1], dict, &ap, deadf,
 			      compress_states, true, por);
       tm.stop("loading dve2");
