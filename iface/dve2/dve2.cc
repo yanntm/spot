@@ -364,8 +364,6 @@ namespace spot
 
     class one_state_iterator: public kripke_succ_iterator
     {
-    protected:
-
     public:
       one_state_iterator(const dve2_state* state, bdd cond):
 	kripke_succ_iterator(cond),
@@ -403,6 +401,101 @@ namespace spot
       bool done_;
     };
 
+    ////////////////////////////////////////////////////////////////////////
+    // AMPLE SET ITERATOR
+
+    bool check_c1 (const int* s, unsigned p, const std::list<trans>& T)
+    {
+      (void) s;
+      (void) p;
+      (void) T;
+
+      return false;
+    }
+
+    bool check_c2 (const int* s, const std::list<trans>& T)
+    {
+      (void) s;
+      (void) T;
+
+      return false;
+    }
+
+    bool check_c3 (const int* s, const std::list<trans>& T)
+    {
+      (void) s;
+      (void) T;
+
+      return false;
+    }
+
+    class ample_iterator: public kripke_succ_iterator
+    {
+    public:
+      ample_iterator(const int* state, bdd cond,
+		     const por_callback& pc,
+		     const std::set<unsigned>& visited,
+		     const dve2_interface* d,
+		     const std::vector<int>& processes)
+	: kripke_succ_iterator(cond)
+	  , state_size_ (pc.state_size)
+      {
+	(void) cond;
+	(void) visited;
+	(void) d;
+	for (unsigned p = 0; p < processes.size (); ++p)
+	{
+	  std::list<trans> T;
+	  for (std::list<trans>::const_iterator it = pc.tr.begin ();
+	       it != pc.tr.end (); ++it)
+	  {
+	    //checker wheter the transition belong to process p
+	    if (state[processes[p]] != it->dst[processes[p]])
+	      T.push_back (*it);
+	  }
+
+	  if (check_c1 (state, p, T)
+	      && check_c2 (state, T)
+	      && check_c3 (state, T))
+	    next_ = T;
+	}
+
+	if (next_.empty ())
+	  next_ = pc.tr;
+      }
+
+      virtual
+      void first()
+      {
+	cur_ = next_.begin ();
+      }
+
+      virtual
+      void next()
+      {
+	if (cur_ != next_.end ())
+	  ++cur_;
+      }
+
+      virtual
+      bool done() const
+      {
+	return cur_ == next_.end ();
+      }
+
+      virtual
+      state* current_state() const
+      {
+	dve2_state* res = new dve2_state (state_size_, 0);
+	memcpy (res->vars, cur_->dst, state_size_ * sizeof(int));
+	return res;
+      }
+
+    protected:
+      unsigned state_size_;
+      std::list<trans> next_;
+      std::list<trans>::const_iterator cur_;
+    };
 
     ////////////////////////////////////////////////////////////////////////
     // PREDICATE EVALUATION
@@ -842,7 +935,7 @@ namespace spot
     public:
 
       dve2_kripke(const dve2_interface* d, bdd_dict* dict, const prop_set* ps,
-		  const ltl::formula* dead, int compress, bool por)
+		  const ltl::formula* dead, int compress, bool por, bool ample)
 	: d_(d),
 	  state_size_(d_->get_state_variable_count()),
 	  dict_(dict), ps_(ps),
@@ -859,6 +952,7 @@ namespace spot
 	  state_condition_last_state_(0), state_condition_last_cc_(0),
 	  por_(por),
 	  even_(true),
+	  ample_(ample),
 	  cur_process_(0)
       {
 	vname_ = new const char*[state_size_];
@@ -1106,6 +1200,16 @@ namespace spot
 	  if (s)
 	    return new one_state_iterator(s, scond);
 	}
+	else if (ample_)
+	{
+	  std::set<unsigned> visited;
+	  por_callback pc(state_size_);
+	  d_->get_successors (0, const_cast<int*> (get_vars(local_state)),
+			      fill_trans_callback, &pc);
+
+	  return new ample_iterator (get_vars(local_state),
+				     scond, pc, visited, d_, processes_);
+	}
 	even_ = !even_;
 
 	callback_context* cc;
@@ -1193,6 +1297,7 @@ namespace spot
       mutable callback_context* state_condition_last_cc_;
       bool por_;
       mutable bool even_;
+      bool ample_;
       unsigned cur_process_;
       std::vector<int> processes_;
     };
@@ -1256,7 +1361,8 @@ namespace spot
 	    const ltl::formula* dead,
 	    int compress,
 	    bool verbose,
-    	    bool por)
+    	    bool por,
+	    bool ample)
   {
     std::string file;
     if (file_arg.find_first_of("/\\") != std::string::npos)
@@ -1369,6 +1475,6 @@ namespace spot
 	return 0;
       }
 
-    return new dve2_kripke(d, dict, ps, dead, compress, por);
+    return new dve2_kripke(d, dict, ps, dead, compress, por, ample);
   }
 }

@@ -64,7 +64,8 @@ namespace spot
 		    const ltl::formula* dead = ltl::constant::true_instance(),
 		    int compress = 0,
 		    bool verbose = true,
-    		    bool por = false);
+    		    bool por = false,
+		    bool ample = false);
 }
 
 #endif // SPOT_IFACE_DVE2_DVE2_HH

@@ -65,6 +65,8 @@ syntax(char* prog)
 	    << std::endl
 	    << "  -po    apply partial order reduction"
 	    << std::endl
+	    << "  -am	 apply partial order reduction using ample set"
+	    << std::endl
             << "  -T     time the different phases of the execution"
 	    << std::endl
             << "  -W     enable WDBA minimization"
@@ -91,6 +93,7 @@ main(int argc, char **argv)
   bool expect_counter_example = false;
   bool wdba = false;
   bool por = false;
+  bool ample = false;
   char *dead = 0;
   int compress_states = 0;
 
@@ -105,6 +108,9 @@ main(int argc, char **argv)
 	{
 	  switch (*++opt)
 	    {
+	    case 'a':
+	      if (opt[1] == 'm')
+		ample = true;
 	    case 'C':
 	      accepting_run = true;
 	      break;
@@ -256,7 +262,7 @@ main(int argc, char **argv)
 
 
       model = spot::load_dve2(argv[1], dict, &ap, deadf,
-			      compress_states, true, por);
+			      compress_states, true, por, ample);
       tm.stop("loading dve2");
 
       if (!model)
