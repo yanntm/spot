@@ -31,8 +31,8 @@ namespace spot
   /// \brief Perform a translation from a Tgba to a Fasttgba
   ///
   /// This method is the only method that should use old Tgba
-  fasttgba*
-  tgba_2_fasttgba(tgba*);
+  const fasttgba*
+  tgba_2_fasttgba(const spot::tgba*);
 
 }
 

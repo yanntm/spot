@@ -17,15 +17,67 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tgba2fasttgba.hh"
-
+#include "tgbaalgos/reachiter.hh"
 
 namespace spot
 {
-  fasttgba*
-  tgba_2_fasttgba(spot::tgba* )
+  namespace
   {
-    std::cout << "HERE!!!" << std::endl;
-    return 0;
+    /// This internal class acts like a converter from a TGBA to a
+    /// FASTTGBA. It walk all transitions and states of the original
+    /// tgba and create the associated fasttgba.
+    class converter_bfs : public tgba_reachable_iterator_breadth_first
+    {
+    public:
+      converter_bfs(const tgba* a)
+	: tgba_reachable_iterator_breadth_first(a)
+      {
+	assert (a != 0);
+      }
+
+      void
+      start()
+      {
+	std::cout  << "start" << std::endl;
+      }
+
+      void
+      end()
+      {
+	std::cout  << "end" << std::endl;
+      }
+
+      void
+      process_state(const state* , int , tgba_succ_iterator* )
+      {
+	std::cout  << "Process state" << std::endl;
+      }
+
+      void
+      process_link(const state* , int ,
+		   const state* , int ,
+		   const tgba_succ_iterator* )
+      {
+	std::cout  << "Process Link" << std::endl;
+      }
+
+      const fasttgba*
+      result ()
+      {
+	return result_;
+      }
+
+    private:
+      const spot::fasttgba *result_;
+    };
+  }
+
+  const fasttgba*
+  tgba_2_fasttgba(const spot::tgba* a)
+  {
+    converter_bfs cb_(a);
+    cb_.run();
+    return cb_.result();
   }
 
 }
