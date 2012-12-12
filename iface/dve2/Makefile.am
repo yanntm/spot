@@ -24,13 +24,24 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 dve2dir = $(pkgincludedir)/iface/dve2
 
-dve2_HEADERS = dve2.hh
+dve2_HEADERS = dve2.hh \
+dve2callback.hh \
+dve2kripke.hh \
+dve2state.hh \
+dve2succiter.hh \
+dve2twophase.hh
 
 lib_LTLIBRARIES = libspotdve2.la
 libspotdve2_la_LIBADD = \
   $(top_builddir)/src/libspot.la \
   $(top_builddir)/ltdl/libltdlc.la
-libspotdve2_la_SOURCES = dve2.cc
+
+libspotdve2_la_SOURCES = dve2.cc \
+dve2callback.cc \
+dve2kripke.cc \
+dve2state.cc \
+dve2succiter.cc \
+dve2twophase.cc
 
 noinst_PROGRAMS = dve2check
 
