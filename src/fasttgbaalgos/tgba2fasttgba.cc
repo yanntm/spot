@@ -16,8 +16,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <string>
 #include "tgba2fasttgba.hh"
+#include "fasttgba/fasttgbaexplicit.hh"
 #include "tgbaalgos/reachiter.hh"
+#include "ltlast/formula.hh"
+#include "ltlast/atomic_prop.hh"
+#include "tgba/bdddict.hh"
 
 namespace spot
 {
@@ -32,13 +37,35 @@ namespace spot
       converter_bfs(const tgba* a)
 	: tgba_reachable_iterator_breadth_first(a)
       {
-	assert (a != 0);
+	//assert (a != 0);
       }
 
       void
       start()
       {
-	std::cout  << "start" << std::endl;
+	// Here this method is used to grab main values needed
+	// to construct a fasttgba
+
+	// First grab Atomic propositions
+	bdd_dict* aps = aut_->get_dict();
+	std::map<const ltl::formula*, int> var_map = aps->var_map;
+	std::map<const ltl::formula*, int>::iterator sii =
+	  var_map.begin();
+	std::map<const ltl::formula*, int>::iterator end =
+	  var_map.end();
+
+	std::vector<std::string> ap_dict ;
+	for(; sii != end; ++sii)
+	  {
+	    const ltl::formula *f = (*sii).first;
+	    std::cout << ((const ltl::atomic_prop*)f)->name() << std::endl;
+	    ap_dict.push_back(((const ltl::atomic_prop*)f)->name());
+	  }
+
+
+	// Here initialize the fasttgba
+	result_ =
+	  new fasttgbaexplicit (aut_->number_of_acceptance_conditions(), ap_dict);
       }
 
       void
@@ -48,17 +75,17 @@ namespace spot
       }
 
       void
-      process_state(const state* , int , tgba_succ_iterator* )
+      process_state(const state* , int s , tgba_succ_iterator* )
       {
-	std::cout  << "Process state" << std::endl;
+	std::cout  << "Process state : " << s << std::endl;
       }
 
       void
-      process_link(const state* , int ,
-		   const state* , int ,
+      process_link(const state* , int src,
+		   const state* , int dst,
 		   const tgba_succ_iterator* )
       {
-	std::cout  << "Process Link" << std::endl;
+	std::cout  << "Process Link " << src << " -> " << dst << std::endl;
       }
 
       const fasttgba*
@@ -68,7 +95,7 @@ namespace spot
       }
 
     private:
-      const spot::fasttgba *result_;
+      const fasttgbaexplicit *result_;
     };
   }
 

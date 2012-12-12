@@ -27,4 +27,10 @@ fasttgbadir = $(pkgincludedir)/fasttgba
 fasttgba_HEADERS = \
   faststate.hh \
   fastsucciter.hh \
-  fasttgba.hh
+  fasttgba.hh \
+  fasttgbaexplicit.hh
+
+noinst_LTLIBRARIES = libfasttgba.la
+libfasttgba_la_SOURCES = \
+  fasttgba.cc \
+  fasttgbaexplicit.cc

@@ -177,10 +177,10 @@ AC_CONFIG_FILES([
   src/taalgos/Makefile
   src/ta/Makefile
   src/tgbaparse/Makefile
-  src/tgbatest/defs
-  src/tgbatest/Makefile
   src/fasttgba/Makefile
   src/fasttgbaalgos/Makefile
+  src/tgbatest/defs
+  src/tgbatest/Makefile
   src/fasttgbatest/Makefile
   wrap/Makefile
   wrap/python/Makefile

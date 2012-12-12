@@ -19,6 +19,7 @@
 #ifndef SPOT_FASTTGBA_FASTTGBA_HH
 # define SPOT_FASTTGBA_FASTTGBA_HH
 
+#include <vector>
 #include <string>
 #include "faststate.hh"
 #include "fastsucciter.hh"
@@ -30,7 +31,7 @@ namespace spot
   class fasttgba
   {
   protected:
-    fasttgba();
+    fasttgba() ;
 
   public:
     virtual ~fasttgba();
@@ -40,7 +41,8 @@ namespace spot
     /// The state has been allocated with \c new.  It is the
     /// responsability of the caller to \c destroy it when no
     /// longer needed.
-    virtual faststate* get_init_state() const = 0;
+    virtual
+    faststate* get_init_state() const = 0;
 
     /// \brief Get an iterator over the successors of \a local_state.
     ///
@@ -49,11 +51,12 @@ namespace spot
     /// it is still the caller's responsability to destroy it when
     /// appropriate (this can be done during the lifetime of
     /// the iterator).
-    virtual tgba_succ_iterator*
+    virtual fasttgba_succ_iterator*
     succ_iter(const faststate* local_state) const = 0;
 
     /// \brief Get the dictionary associated to the automaton.
-    virtual std::vector<std::string>* get_dict() const = 0;
+    virtual
+    std::vector<std::string> get_dict() const = 0;
 
     /// \brief Format the state as a string for printing.
     ///
@@ -64,11 +67,12 @@ namespace spot
     /// \brief Return a possible annotation for the transition
     /// pointed to by the iterator.
     virtual std::string
-    transition_annotation(const tgba_succ_iterator* t) const;
+    transition_annotation(const fasttgba_succ_iterator* t) const = 0;
 
     /// \brief Project a state on an automaton.
-    virtual faststate* project_state(const faststate* s,
-				     const fasttgba* t) const;
+    virtual
+    faststate* project_state(const faststate* s,
+			     const fasttgba* t) const = 0;
 
     /// \brief Return the set of all acceptance conditions used
     /// by this automaton.
@@ -82,7 +86,7 @@ namespace spot
     boost::dynamic_bitset<> all_acceptance_conditions() const = 0;
 
     /// The number of acceptance conditions.
-    virtual unsigned int number_of_acceptance_conditions() const;
+    virtual unsigned int number_of_acceptance_conditions() const = 0;
 
     /// \brief Return the conjuction of all negated acceptance
     /// variables.

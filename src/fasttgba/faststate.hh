@@ -43,7 +43,7 @@ namespace spot
     /// different automata.
     ///
     /// \sa spot::state_ptr_less_than
-    virtual int compare(const state* other) const = 0;
+    virtual int compare(const faststate* other) const = 0;
 
     /// \brief Hash a state.
     ///
@@ -67,7 +67,7 @@ namespace spot
     virtual size_t hash() const = 0;
 
     /// Duplicate a state.
-    virtual state* clone() const = 0;
+    virtual faststate* clone() const = 0;
 
     /// \brief Release a state.
     ///
