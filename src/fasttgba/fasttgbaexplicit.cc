@@ -21,28 +21,136 @@
 
 namespace spot
 {
+  // ----------------------------------------------------------------------
+  // fast_explicit_state code here
+  // ----------------------------------------------------------------------
 
-  fasttgbaexplicit::fasttgbaexplicit(int acc_num, std::vector<std::string> aps):
-    all_cond_ (acc_num),
-    all_cond_neg_ (acc_num)
-
+  fast_explicit_state::fast_explicit_state(int label):
+    label_(label)
   {
-    num_acc_ = acc_num;
+  }
+
+  int
+  fast_explicit_state::compare(const faststate* other) const
+  {
+    return label_ - ((const fast_explicit_state*)other)->label_;
+  }
+
+  size_t
+  fast_explicit_state::hash() const
+  {
+    return label_;
+  }
+
+  faststate*
+  fast_explicit_state::clone() const
+  {
+    return new fast_explicit_state(label_);
+  }
+
+  void*
+  fast_explicit_state::external_information() const
+  {
+    assert(false);
+  }
+
+  int
+  fast_explicit_state::label() const
+  {
+    return label_;
+  }
+
+  void
+  fast_explicit_state::add_successor(const struct transition t)
+  {
+    successors.push_front(t);
+  }
+
+  // ----------------------------------------------------------------------
+  // fast_explicit_iterator code here
+  // ----------------------------------------------------------------------
+
+  fast_explicit_iterator::fast_explicit_iterator
+  (const fast_explicit_state* state):
+    start_(state)
+  { }
+
+  fast_explicit_iterator::~fast_explicit_iterator()
+  {
+  }
+
+  void
+  fast_explicit_iterator::first()
+  {
+    it_ = start_->successors.begin();
+  }
+
+  void
+  fast_explicit_iterator::next()
+  {
+    ++it_;
+  }
+
+  bool
+  fast_explicit_iterator::done() const
+  {
+    return it_ == start_->successors.end();
+  }
+
+  faststate*
+  fast_explicit_iterator::current_state() const
+  {
+    assert(!done());
+    return (faststate*) (it_->dst);
+  }
+
+  cube
+  fast_explicit_iterator::current_condition() const
+  {
+    return it_->conditions;
+  }
+
+  cube
+  fast_explicit_iterator::current_acceptance_conditions() const
+  {
+    return it_->acceptance_conditions;
+  }
+
+  // ----------------------------------------------------------------------
+  // fasttgbaexplicit code here
+  // ----------------------------------------------------------------------
+
+  fasttgbaexplicit::fasttgbaexplicit(std::vector<std::string> aps,
+				     std::vector<std::string> acc):
+    all_cond_ (acc.size()),
+    all_cond_neg_ (acc.size()),
+    aps_(aps),
+    acc_(acc),
+    init_(0)
+  {
+    num_acc_ = acc.size();
 
     // Allocate the bitset and fix all_cond to avoid
     // multiple computations
     all_cond_neg_ = ~all_cond_;
-    aps_ = aps;
   }
 
   fasttgbaexplicit::~fasttgbaexplicit()
   {
+    // Delete all states
+    sm::iterator i = state_map_.begin();
+
+    while (i != state_map_.end())
+      {
+	i->second.destroy();
+	++i;
+      }
   }
 
   faststate*
   fasttgbaexplicit::get_init_state() const
   {
-    assert(false);
+    return init_->clone();
   }
 
   fasttgba_succ_iterator*
@@ -58,9 +166,12 @@ namespace spot
   }
 
   std::string
-  fasttgbaexplicit::format_state(const faststate*) const
+  fasttgbaexplicit::format_state(const faststate* s) const
   {
-    assert(false);
+    std::string res_ = "<state ";
+    res_ += ((const fast_explicit_state*) s)->label();
+    res_ += ">";
+    return res_;
   }
 
 
@@ -95,22 +206,45 @@ namespace spot
     return all_cond_neg_;
   }
 
-  bool
+  faststate*
   fasttgbaexplicit::add_state(int s)
   {
-    if (state_map_.find(s) == state_map_.end())
+    sm::iterator available = state_map_.find(s);
+    if (available == state_map_.end())
       {
-	state_map_.insert(std::make_pair (s, fast_explicit_state(s)));
-	return false;
+	fast_explicit_state *the_state = new fast_explicit_state(s);
+	state_map_.insert(std::make_pair (s, *the_state));
+
+	// Initial state not yet fixed
+	if (init_ == 0)
+	  init_ = the_state;
+
+	return the_state;
       }
-    return true;
+    return &(available->second);
   }
 
   void
-  fasttgbaexplicit::add_transition(faststate*, faststate*,
-				   cube, cube)
+  fasttgbaexplicit::add_transition(int src, int dst,
+				   cube cond, cube acc)
   {
-    assert(false);
-  }
+    fast_explicit_state* source;
+    fast_explicit_state* destination;
+    // The source state is not known
+    if (state_map_.find(src) == state_map_.end())
+      {
+	source = (fast_explicit_state*) add_state(src);
+      }
 
+    // The destination state is not known
+    if (state_map_.find(dst) == state_map_.end())
+      {
+	destination = (fast_explicit_state*) add_state(src);
+      }
+
+    // Now we just have to create condition and acceptance over
+    // the transition
+    spot::transition t = {cond, acc, destination};
+    source->add_successor(t);
+  }
 }

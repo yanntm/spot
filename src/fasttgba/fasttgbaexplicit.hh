@@ -19,51 +19,77 @@
 #ifndef SPOT_FASTTGBA_FASTTGBAEXPLICIT_HH
 # define SPOT_FASTTGBA_FASTTGBAEXPLICIT_HH
 
+#include <list>
 #include "fasttgba.hh"
+#include "fastsucciter.hh"
 #include "misc/hash.hh"
 
 namespace spot
 {
+  class fast_explicit_state;
 
+  ///
+  /// \brief the structure that will store the successors of a state
+  ///
+  struct transition
+  {
+    cube conditions;			///< condition over an arc
+    cube acceptance_conditions;		///< acceptance mark over an arc
+    const fast_explicit_state* dst;	///< the destination state
+  };
+
+
+  ///
   /// This class represent an explicit numbered state which
   /// is usefull to represent formulae
+  ///
   class fast_explicit_state : public faststate
   {
   protected:
     int label_;
 
   public:
-    fast_explicit_state(int label):
-      label_(label)
-    {
-    }
+    fast_explicit_state(int label);
+    virtual int compare(const faststate* other) const;
+    virtual size_t hash() const;
+    virtual faststate* clone() const;
+    virtual void* external_information() const;
+    virtual int label() const;
 
-    virtual int compare(const faststate* other) const
-    {
-      return label_ - ((const fast_explicit_state*)other)->label_;
-    }
-
-    virtual size_t hash() const
-    {
-      return label_;
-    }
-
-    virtual faststate* clone() const
-    {
-      return new fast_explicit_state(label_);
-    }
-
-    virtual void* external_information() const
-    {
-      assert(false);
-    }
+    //// \brief the structure to store transitions
+    void add_successor(const struct transition t);
+    std::list<transition>  successors;	///< list of successors
   };
 
+
+  ///
+  /// \brief an iterator for fast_explicit_state
+  ///
+  /// This class brings noting particular just an implementation
+  ///
+  class fast_explicit_iterator : public fasttgba_succ_iterator
+  {
+  protected :
+    const fast_explicit_state* start_; ///< src of iterator
+    std::list<transition>::const_iterator it_; ///< current iterator
+
+  public:
+    fast_explicit_iterator(const fast_explicit_state* state);
+    virtual ~fast_explicit_iterator();
+    virtual void first();
+    virtual void next();
+    virtual bool done() const;
+    virtual faststate* current_state() const;
+    virtual cube current_condition() const;
+    virtual cube current_acceptance_conditions() const;
+  };
+
+
+  ///
   /// This class is the concrete implementation of the fasttgba
   /// interface. Moreover this interface provides all what is needed
   /// to build such an automaton
   ///
-  /// This class is a template class to avoid redefinition
   class fasttgbaexplicit : public fasttgba
   {
   public:
@@ -72,7 +98,12 @@ namespace spot
     // The FASTTGBA interface
     // -------------------------------------------------------
 
-    fasttgbaexplicit(int num_acc, std::vector<std::string> aps);
+    /// \brief Constructor for a fasttgba
+    ///
+    /// \param aps a set of atomic proposition name
+    /// \param acc a set of acceptance variable name
+    fasttgbaexplicit(std::vector<std::string> aps,
+		     std::vector<std::string> acc);
 
     virtual ~fasttgbaexplicit();
 
@@ -112,22 +143,23 @@ namespace spot
     ///
     /// \param s the integer name for the state
     /// \return true if the state was not already in the automaton
-    bool add_state(int s);
+    faststate* add_state(int s);
 
     /// \brief Provide the way to create a transision between two states
     ///
-    /// \param src the source state
-    /// \param dst the destination state
+    /// \param src the label of the source state
+    /// \param dst the label of the destination state
     /// \param cond the atomic proposition labelling the transition
     /// \param cond the accepting mark on this transition
-    void add_transition(faststate* src, faststate* dst,
+    void add_transition(int src, int dst,
 			cube cond, cube acc);
 
   protected:
     cube all_cond_;	            ///< the set of acceptance mark
-    cube all_cond_neg_;            ///< the negation of all_cond
-    std::vector<std::string> aps_; ///< The set of atomic proposition
-
+    cube all_cond_neg_;             ///< the negation of all_cond
+    std::vector<std::string> aps_;  ///< The set of atomic proposition
+    std::vector<std::string> acc_;  ///< The set of acceptance mark
+    const faststate* init_;
 
     typedef Sgi::hash_map<int, fast_explicit_state, identity_hash<int> > sm;
     sm state_map_;

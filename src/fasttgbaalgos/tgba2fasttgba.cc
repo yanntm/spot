@@ -84,8 +84,7 @@ namespace spot
 
 
 	// Here initialize the fasttgba
-	result_ = new fasttgbaexplicit
-	  (aut_->number_of_acceptance_conditions(), ap_dict);
+	result_ = new fasttgbaexplicit(ap_dict, acc_dict);
       }
 
       void
