@@ -28,6 +28,7 @@ fasttgba_HEADERS = \
   faststate.hh \
   fastsucciter.hh \
   fasttgba.hh \
+  cube.hh \
   fasttgbaexplicit.hh
 
 noinst_LTLIBRARIES = libfasttgba.la

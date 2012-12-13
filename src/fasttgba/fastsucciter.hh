@@ -20,7 +20,7 @@
 # define SPOT_FASTTGBA_FASTSUCCITER_HH
 
 #include "faststate.hh"
-#include <boost/dynamic_bitset.hpp>
+#include "cube.hh"
 
 namespace spot
 {
@@ -90,10 +90,10 @@ namespace spot
     /// \brief Get the condition on the transition leading to this successor.
     ///
     /// This is a boolean function of atomic propositions.
-    virtual boost::dynamic_bitset<> current_condition() const = 0;
+    virtual cube current_condition() const = 0;
     /// \brief Get the acceptance conditions on the transition leading
     /// to this successor.
-    virtual boost::dynamic_bitset<> current_acceptance_conditions() const = 0;
+    virtual cube current_acceptance_conditions() const = 0;
 
     //@}
   };

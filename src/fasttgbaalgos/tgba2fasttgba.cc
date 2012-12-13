@@ -17,6 +17,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
+#include <iosfwd>
 #include "tgba2fasttgba.hh"
 #include "fasttgba/fasttgbaexplicit.hh"
 #include "tgbaalgos/reachiter.hh"
@@ -54,18 +55,37 @@ namespace spot
 	std::map<const ltl::formula*, int>::iterator end =
 	  var_map.end();
 
-	std::vector<std::string> ap_dict ;
-	for(; sii != end; ++sii)
+	std::vector<std::string> ap_dict;
+	for (; sii != end; ++sii)
 	  {
-	    const ltl::formula *f = (*sii).first;
-	    std::cout << ((const ltl::atomic_prop*)f)->name() << std::endl;
+	    const ltl::formula *f = sii->first;
+	    std::cout << "AP : "
+		      << ((const ltl::atomic_prop*)f)->name()
+		      << std::endl;
 	    ap_dict.push_back(((const ltl::atomic_prop*)f)->name());
+	  }
+
+	// Second grab Acceptance variables
+	std::map<const ltl::formula*, int> acc_map = aps->acc_map;
+	std::map<const ltl::formula*, int>::iterator sii2 =
+	  acc_map.begin();
+	std::map<const ltl::formula*, int>::iterator end2 =
+	  acc_map.end();
+
+	std::vector<std::string> acc_dict;
+	for (; sii2 != end2; ++sii2)
+	  {
+	    const ltl::formula *f = sii2->first;
+	    std::cout << "Acc : "
+		      << ((const ltl::atomic_prop*)f)->name()
+		      << std::endl;
+	    acc_dict.push_back(((const ltl::atomic_prop*)f)->name());
 	  }
 
 
 	// Here initialize the fasttgba
-	result_ =
-	  new fasttgbaexplicit (aut_->number_of_acceptance_conditions(), ap_dict);
+	result_ = new fasttgbaexplicit
+	  (aut_->number_of_acceptance_conditions(), ap_dict);
       }
 
       void
@@ -75,7 +95,7 @@ namespace spot
       }
 
       void
-      process_state(const state* , int s , tgba_succ_iterator* )
+      process_state(const state* , int s , tgba_succ_iterator*)
       {
 	std::cout  << "Process state : " << s << std::endl;
       }
@@ -83,9 +103,17 @@ namespace spot
       void
       process_link(const state* , int src,
 		   const state* , int dst,
-		   const tgba_succ_iterator* )
+		   const tgba_succ_iterator*)
       {
 	std::cout  << "Process Link " << src << " -> " << dst << std::endl;
+ 	// bdd cond = it->current_acceptance_conditions();
+
+	// // First we process all acceptance conditions
+	// while (cond != bddfalse)
+	//   {
+	//     bdd one = bdd_satone(cond);
+	//     cond -= one;
+	//   }
       }
 
       const fasttgba*

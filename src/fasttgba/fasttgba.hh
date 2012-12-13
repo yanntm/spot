@@ -23,6 +23,7 @@
 #include <string>
 #include "faststate.hh"
 #include "fastsucciter.hh"
+#include "cube.hh"
 
 namespace spot
 {
@@ -31,7 +32,7 @@ namespace spot
   class fasttgba
   {
   protected:
-    fasttgba() ;
+    fasttgba();
 
   public:
     virtual ~fasttgba();
@@ -83,7 +84,7 @@ namespace spot
     /// of the acceptiong conditions of all transition in
     /// the SCC should be equal to the result of this function.
     virtual
-    boost::dynamic_bitset<> all_acceptance_conditions() const = 0;
+    cube all_acceptance_conditions() const = 0;
 
     /// The number of acceptance conditions.
     virtual unsigned int number_of_acceptance_conditions() const = 0;
@@ -99,7 +100,7 @@ namespace spot
     /// set should be augmented with the neg_acceptance_conditions() of
     /// the other operand.
     virtual
-    boost::dynamic_bitset<> neg_acceptance_conditions() const = 0;
+    cube neg_acceptance_conditions() const = 0;
 
   protected:
     mutable int num_acc_;

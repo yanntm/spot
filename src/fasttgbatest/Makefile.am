@@ -25,7 +25,7 @@ LDADD = ../libspot.la
 
 # These are the most used test programs, and they are also useful
 # to run manually outside the test suite.  Always build them.
-noinst_PROGRAMS = # tgba2fasttgba
+noinst_PROGRAMS =# tgba2fasttgba
 
 check_SCRIPTS = defs
 # Keep this sorted alphabetically.

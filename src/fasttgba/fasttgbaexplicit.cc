@@ -22,13 +22,15 @@
 namespace spot
 {
 
-  fasttgbaexplicit::fasttgbaexplicit(int acc_num, std::vector<std::string> aps)
+  fasttgbaexplicit::fasttgbaexplicit(int acc_num, std::vector<std::string> aps):
+    all_cond_ (acc_num),
+    all_cond_neg_ (acc_num)
+
   {
     num_acc_ = acc_num;
 
     // Allocate the bitset and fix all_cond to avoid
     // multiple computations
-    all_cond_ = boost::dynamic_bitset<>(num_acc_);
     all_cond_neg_ = ~all_cond_;
     aps_ = aps;
   }
@@ -44,7 +46,7 @@ namespace spot
   }
 
   fasttgba_succ_iterator*
-  fasttgbaexplicit::succ_iter(const faststate* ) const
+  fasttgbaexplicit::succ_iter(const faststate*) const
   {
     assert(false);
   }
@@ -56,26 +58,26 @@ namespace spot
   }
 
   std::string
-  fasttgbaexplicit::format_state(const faststate* ) const
+  fasttgbaexplicit::format_state(const faststate*) const
   {
     assert(false);
   }
 
 
   std::string
-  fasttgbaexplicit::transition_annotation(const fasttgba_succ_iterator* ) const
+  fasttgbaexplicit::transition_annotation(const fasttgba_succ_iterator*) const
   {
     assert(false);
   }
 
   faststate*
   fasttgbaexplicit::project_state(const faststate* ,
-				  const fasttgba* ) const
+				  const fasttgba*) const
   {
     assert(false);
   }
 
-  boost::dynamic_bitset<>
+  cube
   fasttgbaexplicit::all_acceptance_conditions() const
   {
     return all_cond_;
@@ -87,9 +89,28 @@ namespace spot
     return num_acc_;
   }
 
-  boost::dynamic_bitset<>
+  cube
   fasttgbaexplicit::neg_acceptance_conditions() const
   {
     return all_cond_neg_;
   }
+
+  bool
+  fasttgbaexplicit::add_state(int s)
+  {
+    if (state_map_.find(s) == state_map_.end())
+      {
+	state_map_.insert(std::make_pair (s, fast_explicit_state(s)));
+	return false;
+      }
+    return true;
+  }
+
+  void
+  fasttgbaexplicit::add_transition(faststate*, faststate*,
+				   cube, cube)
+  {
+    assert(false);
+  }
+
 }

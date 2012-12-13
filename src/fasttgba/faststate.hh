@@ -69,6 +69,11 @@ namespace spot
     /// Duplicate a state.
     virtual faststate* clone() const = 0;
 
+    /// Allow to add more information inside of a state.
+    /// It can be used to store the strength of the current
+    /// SCC or the strength of the strength of the subautomaton
+    virtual void* external_information() const = 0;
+
     /// \brief Release a state.
     ///
     /// Methods from the tgba or tgba_succ_iterator always return a

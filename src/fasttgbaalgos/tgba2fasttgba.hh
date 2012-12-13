@@ -23,7 +23,6 @@
 
 #include "tgba/tgba.hh"
 #include "fasttgba/fasttgba.hh"
-#include <iostream>
 
 namespace spot
 {
