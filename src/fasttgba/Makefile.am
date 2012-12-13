@@ -34,4 +34,5 @@ fasttgba_HEADERS = \
 noinst_LTLIBRARIES = libfasttgba.la
 libfasttgba_la_SOURCES = \
   fasttgba.cc \
-  fasttgbaexplicit.cc
+  fasttgbaexplicit.cc \
+  cube.cc

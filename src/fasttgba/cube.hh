@@ -60,75 +60,48 @@ namespace spot
     /// \brief Initialize a cube of size \a size
     ///
     /// Default initialisation set all the cube to true
-    cube (int size) : size_(size)
-    {
-      true_var = boost::dynamic_bitset<>(size);
-      false_var = boost::dynamic_bitset<>(size);
-    }
+    cube (int size);
 
     /// \brief Perform the negation of the cube
-    cube operator~() const
-    {
-      cube c (size_);
-      std::swap (c.true_var, c.false_var);
-      return c;
-    }
+    cube operator~() const;
+
+    /// \brief Compare two cube
+    ///
+    /// \param rhs the object to compare with
+    bool operator==(const cube& rhs);
 
     /// \brief set values for the true variable
     ///
     /// \param index the index in the bitset
-    void set_true_var(size_t index)
-    {
-      true_var[index] = 1;
-      false_var[index] = 0;
-    }
+    void set_true_var(size_t index);
 
     /// \brief set values for the false variable
     ///
     /// \param index the index in the bitset
-    void set_false_var(size_t index)
-    {
-      true_var[index] = 0;
-      false_var[index] = 1;
-    }
+    void set_false_var(size_t index);
 
     /// \brief set values for the free variable
     ///
     /// \param index the index in the bitset
-    void set_free_var(size_t index)
-    {
-      true_var[index] = 0;
-      false_var[index] = 0;
-    }
+    void set_free_var(size_t index);
 
     /// \brief set values for the true variable
     ///
     /// \param index the index in the bitset
-    void unset_true_var(size_t index)
-    {
-      true_var[index] = 0;
-      false_var[index] = 1;
-    }
+    void unset_true_var(size_t index);
 
     /// \brief set values for the false variables
     ///
     /// \param index the index in the bitset
-    void unset_false_var(size_t index)
-    {
-      true_var[index] = 1;
-      false_var[index] = 0;
-    }
+    void unset_false_var(size_t index);
 
-    void dump()
-    {
-      std::cout << "true var  : " << true_var << std::endl;
-      std::cout << "false var : " << false_var << std::endl;
-    }
+    /// \brief output the description of the cube
+    void dump();
 
   protected:
     boost::dynamic_bitset<> true_var;   ///< the set of variables set to true
     boost::dynamic_bitset<> false_var;  ///< the set of variables set to false
-    int size_;
+    int size_;				///< the size of the 2 bitset
   };
 }
 
