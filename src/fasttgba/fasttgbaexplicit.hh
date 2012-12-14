@@ -143,7 +143,7 @@ namespace spot
     ///
     /// \param s the integer name for the state
     /// \return true if the state was not already in the automaton
-    faststate* add_state(int s);
+    fast_explicit_state* add_state(int s);
 
     /// \brief Provide the way to create a transision between two states
     ///

@@ -102,7 +102,7 @@ namespace spot
       process_state(const state* , int s , tgba_succ_iterator*)
       {
 	std::cout  << "Process state : " << s << std::endl;
-	result_->add_state (s);
+	//result_->add_state (s);
       }
 
       void

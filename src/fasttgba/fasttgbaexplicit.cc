@@ -26,7 +26,7 @@ namespace spot
   // ----------------------------------------------------------------------
 
   fast_explicit_state::fast_explicit_state(int label):
-    label_(label)
+    label_(label), successors()
   {
   }
 
@@ -206,7 +206,7 @@ namespace spot
     return all_cond_neg_;
   }
 
-  faststate*
+  fast_explicit_state*
   fasttgbaexplicit::add_state(int s)
   {
     sm::iterator available = state_map_.find(s);
@@ -228,23 +228,16 @@ namespace spot
   fasttgbaexplicit::add_transition(int src, int dst,
 				   cube cond, mark acc)
   {
+    std::cout << "Add Trans\n";
     fast_explicit_state* source = 0;
     fast_explicit_state* destination = 0;
-    // The source state is not known
-    if (state_map_.find(src) == state_map_.end())
-      {
-	source = (fast_explicit_state*) add_state(src);
-      }
-
-    // The destination state is not known
-    if (state_map_.find(dst) == state_map_.end())
-      {
-	destination = (fast_explicit_state*) add_state(src);
-      }
+    source =  add_state(src);
+    destination = add_state(dst);
 
     // Now we just have to create condition and acceptance over
     // the transition
     spot::transition t = {cond, acc, destination};
+    assert(source != 0);
     source->add_successor(t);
   }
 }
