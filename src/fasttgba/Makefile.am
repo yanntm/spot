@@ -29,10 +29,12 @@ fasttgba_HEADERS = \
   fastsucciter.hh \
   fasttgba.hh \
   cube.hh \
+  mark.hh \
   fasttgbaexplicit.hh
 
 noinst_LTLIBRARIES = libfasttgba.la
 libfasttgba_la_SOURCES = \
   fasttgba.cc \
   fasttgbaexplicit.cc \
-  cube.cc
+  cube.cc \
+  mark.cc
