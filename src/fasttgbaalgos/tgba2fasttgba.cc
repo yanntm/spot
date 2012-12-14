@@ -38,9 +38,9 @@ namespace spot
     public:
       converter_bfs(const tgba* a)
 	: tgba_reachable_iterator_breadth_first(a),
-	  acceptance_number (0)
+	  acceptance_number (0),
+	  variable_number (0)
       {
-	//assert (a != 0);
       }
 
       void
@@ -86,6 +86,7 @@ namespace spot
 
 	// To speed up other processing
 	acceptance_number = acc_dict.size();
+	variable_number = ap_dict.size();
 
 	// Here initialize the fasttgba
 	result_ = new fasttgbaexplicit(ap_dict, acc_dict);
@@ -101,6 +102,7 @@ namespace spot
       process_state(const state* , int s , tgba_succ_iterator*)
       {
 	std::cout  << "Process state : " << s << std::endl;
+	result_->add_state (s);
       }
 
       void
@@ -108,17 +110,16 @@ namespace spot
 		   const state* , int dst,
 		   const tgba_succ_iterator* it)
       {
-	std::cout  << "Process Link " << src << " -> " << dst << std::endl;
- 	bdd cond = it->current_acceptance_conditions();
-
 	//
 	// First we process all acceptance conditions
 	//
+	std::cout  << "Process Link " << src << " -> " << dst << std::endl;
+ 	bdd acc  = it->current_acceptance_conditions();
 	mark current_mark (acceptance_number);
-	while (cond != bddfalse)
+	while (acc != bddfalse)
 	  {
-	    bdd one = bdd_satone(cond);
-	    cond -= one;
+	    bdd one = bdd_satone(acc);
+	    acc -= one;
 
 	    int i = 0;
 	    while (one != bddtrue)
@@ -136,7 +137,41 @@ namespace spot
 		++i;
 	      }
 	  }
+	std::cout << "    current acceptance : " ;
 	current_mark.dump();
+
+
+	//
+	// Second we process the conditions
+	//
+ 	bdd cond  = it->current_condition();
+	while (cond != bddfalse)
+	  {
+	    cube current_cond (variable_number);
+	    bdd one = bdd_satone(cond);
+	    cond -= one;
+
+	    int i = 0;
+	    while (one != bddtrue)
+	      {
+		if (bdd_high(one) == bddfalse)
+		  {
+		    one = bdd_low(one);
+		    current_cond.set_false_var(i);
+		  }
+		else
+		  {
+		    one = bdd_high(one);
+		    current_cond.set_true_var(i);
+		  }
+		++i;
+	      }
+	    std::cout << "    variables : "  << std::endl;
+	    current_cond.dump();
+
+	    // Now we can create the transition
+	    result_->add_transition(src, dst, current_cond, current_mark);
+	  }
       }
 
       const fasttgba*
@@ -146,8 +181,9 @@ namespace spot
       }
 
     private:
-      const fasttgbaexplicit *result_;
+      fasttgbaexplicit *result_;
       int acceptance_number;
+      int variable_number;
     };
   }
 
