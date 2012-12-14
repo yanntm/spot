@@ -18,7 +18,7 @@
 
 
 #ifndef SPOT_FASTTGBA_MARK_HH
-# define SPOT_FASTTGBA_MARk_HH
+# define SPOT_FASTTGBA_MARK_HH
 
 #include <boost/dynamic_bitset.hpp>
 
@@ -27,6 +27,10 @@ namespace spot
   /// \brief This class is used to represent acceptance mark
   class mark
   {
+  private:
+    /// \brief Internal Constructor
+    mark(boost::dynamic_bitset<>);
+
   public:
     /// \brief wrapper of type
     typedef boost::dynamic_bitset<> storage;
@@ -73,7 +77,14 @@ namespace spot
     /// \brief Affect the value of  \a b in this
     mark& operator=(const mark& b);
 
+    /// \brief accessor with subarray
     storage_elt operator[](int pos);
+
+    /// \brief Perform the negation of the mark
+    mark operator~() const;
+
+    /// \brief Display the content of the marking
+    void dump();
 
   protected:
     storage mark_;   ///< the set of acceptance

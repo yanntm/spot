@@ -17,13 +17,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
-#include <iosfwd>
+#include <iostream>
 #include "tgba2fasttgba.hh"
 #include "fasttgba/fasttgbaexplicit.hh"
 #include "tgbaalgos/reachiter.hh"
 #include "ltlast/formula.hh"
 #include "ltlast/atomic_prop.hh"
 #include "tgba/bdddict.hh"
+#include "fasttgba/mark.hh"
 
 namespace spot
 {
@@ -36,7 +37,8 @@ namespace spot
     {
     public:
       converter_bfs(const tgba* a)
-	: tgba_reachable_iterator_breadth_first(a)
+	: tgba_reachable_iterator_breadth_first(a),
+	  acceptance_number (0)
       {
 	//assert (a != 0);
       }
@@ -82,6 +84,8 @@ namespace spot
 	    acc_dict.push_back(((const ltl::atomic_prop*)f)->name());
 	  }
 
+	// To speed up other processing
+	acceptance_number = acc_dict.size();
 
 	// Here initialize the fasttgba
 	result_ = new fasttgbaexplicit(ap_dict, acc_dict);
@@ -102,17 +106,37 @@ namespace spot
       void
       process_link(const state* , int src,
 		   const state* , int dst,
-		   const tgba_succ_iterator*)
+		   const tgba_succ_iterator* it)
       {
 	std::cout  << "Process Link " << src << " -> " << dst << std::endl;
- 	// bdd cond = it->current_acceptance_conditions();
+ 	bdd cond = it->current_acceptance_conditions();
 
-	// // First we process all acceptance conditions
-	// while (cond != bddfalse)
-	//   {
-	//     bdd one = bdd_satone(cond);
-	//     cond -= one;
-	//   }
+	//
+	// First we process all acceptance conditions
+	//
+	mark current_mark (acceptance_number);
+	while (cond != bddfalse)
+	  {
+	    bdd one = bdd_satone(cond);
+	    cond -= one;
+
+	    int i = 0;
+	    while (one != bddtrue)
+	      {
+		if (bdd_high(one) == bddfalse)
+		  {
+		    one = bdd_low(one);
+		  }
+		else
+		  {
+		    one = bdd_high(one);
+		    current_mark[i] = 1;
+		    break;
+		  }
+		++i;
+	      }
+	  }
+	current_mark.dump();
       }
 
       const fasttgba*
@@ -123,6 +147,7 @@ namespace spot
 
     private:
       const fasttgbaexplicit *result_;
+      int acceptance_number;
     };
   }
 

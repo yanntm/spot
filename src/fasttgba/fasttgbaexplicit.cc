@@ -110,7 +110,7 @@ namespace spot
     return it_->conditions;
   }
 
-  cube
+  mark
   fast_explicit_iterator::current_acceptance_conditions() const
   {
     return it_->acceptance_conditions;
@@ -188,7 +188,7 @@ namespace spot
     assert(false);
   }
 
-  cube
+  mark
   fasttgbaexplicit::all_acceptance_conditions() const
   {
     return all_cond_;
@@ -200,7 +200,7 @@ namespace spot
     return num_acc_;
   }
 
-  cube
+  mark
   fasttgbaexplicit::neg_acceptance_conditions() const
   {
     return all_cond_neg_;
@@ -226,10 +226,10 @@ namespace spot
 
   void
   fasttgbaexplicit::add_transition(int src, int dst,
-				   cube cond, cube acc)
+				   cube cond, mark acc)
   {
-    fast_explicit_state* source;
-    fast_explicit_state* destination;
+    fast_explicit_state* source = 0;
+    fast_explicit_state* destination = 0;
     // The source state is not known
     if (state_map_.find(src) == state_map_.end())
       {

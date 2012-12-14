@@ -23,7 +23,7 @@
 #include <string>
 #include "faststate.hh"
 #include "fastsucciter.hh"
-#include "cube.hh"
+#include "mark.hh"
 
 namespace spot
 {
@@ -84,7 +84,7 @@ namespace spot
     /// of the acceptiong conditions of all transition in
     /// the SCC should be equal to the result of this function.
     virtual
-    cube all_acceptance_conditions() const = 0;
+    mark all_acceptance_conditions() const = 0;
 
     /// The number of acceptance conditions.
     virtual unsigned int number_of_acceptance_conditions() const = 0;
@@ -100,7 +100,7 @@ namespace spot
     /// set should be augmented with the neg_acceptance_conditions() of
     /// the other operand.
     virtual
-    cube neg_acceptance_conditions() const = 0;
+    mark neg_acceptance_conditions() const = 0;
 
   protected:
     mutable int num_acc_;

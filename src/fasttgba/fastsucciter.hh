@@ -21,6 +21,7 @@
 
 #include "faststate.hh"
 #include "cube.hh"
+#include "mark.hh"
 
 namespace spot
 {
@@ -93,7 +94,7 @@ namespace spot
     virtual cube current_condition() const = 0;
     /// \brief Get the acceptance conditions on the transition leading
     /// to this successor.
-    virtual cube current_acceptance_conditions() const = 0;
+    virtual mark current_acceptance_conditions() const = 0;
 
     //@}
   };

@@ -16,10 +16,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <iostream>
 #include "mark.hh"
+
 
 namespace spot
 {
+  mark::mark(boost::dynamic_bitset<> m)
+  {
+    mark_ = m;
+  }
+
   mark::mark(int size):
     mark_(size)
   { }
@@ -82,5 +89,17 @@ namespace spot
   mark::operator[](int pos)
   {
     return mark_[pos];
+  }
+
+  mark
+  mark::operator~() const
+  {
+   return mark(~mark_);
+  }
+
+  void
+  mark::dump()
+  {
+    std::cout << "{" << mark_ << "}" << std::endl;
   }
 }

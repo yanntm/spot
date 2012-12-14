@@ -34,7 +34,7 @@ namespace spot
   struct transition
   {
     cube conditions;			///< condition over an arc
-    cube acceptance_conditions;		///< acceptance mark over an arc
+    mark acceptance_conditions;		///< acceptance mark over an arc
     const fast_explicit_state* dst;	///< the destination state
   };
 
@@ -81,7 +81,7 @@ namespace spot
     virtual bool done() const;
     virtual faststate* current_state() const;
     virtual cube current_condition() const;
-    virtual cube current_acceptance_conditions() const;
+    virtual mark current_acceptance_conditions() const;
   };
 
 
@@ -124,13 +124,13 @@ namespace spot
     virtual faststate* project_state(const faststate* s,
 				     const fasttgba* t) const;
     virtual
-    cube all_acceptance_conditions() const;
+    mark all_acceptance_conditions() const;
 
     virtual
     unsigned int number_of_acceptance_conditions() const;
 
     virtual
-    cube neg_acceptance_conditions() const;
+    mark neg_acceptance_conditions() const;
 
     // -------------------------------------------------------
     // This part is for creating a new FASTTGBAEXPLICIT
@@ -152,11 +152,11 @@ namespace spot
     /// \param cond the atomic proposition labelling the transition
     /// \param cond the accepting mark on this transition
     void add_transition(int src, int dst,
-			cube cond, cube acc);
+			cube cond, mark acc);
 
   protected:
-    cube all_cond_;	            ///< the set of acceptance mark
-    cube all_cond_neg_;             ///< the negation of all_cond
+    mark all_cond_;	            ///< the set of acceptance mark
+    mark all_cond_neg_;             ///< the negation of all_cond
     std::vector<std::string> aps_;  ///< The set of atomic proposition
     std::vector<std::string> acc_;  ///< The set of acceptance mark
     const faststate* init_;
