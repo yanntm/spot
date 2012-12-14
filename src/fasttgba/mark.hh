@@ -28,6 +28,12 @@ namespace spot
   class mark
   {
   public:
+    /// \brief wrapper of type
+    typedef boost::dynamic_bitset<> storage;
+
+    // \brief wrapper for a type
+    typedef boost::dynamic_bitset<>::reference storage_elt;
+
     /// \brief Initialize a mark of size \a size
     mark(int size);
 
@@ -67,8 +73,10 @@ namespace spot
     /// \brief Affect the value of  \a b in this
     mark& operator=(const mark& b);
 
+    storage_elt operator[](int pos);
+
   protected:
-    boost::dynamic_bitset<> mark_;   ///< the set of acceptance
+    storage mark_;   ///< the set of acceptance
   };
 }
 

@@ -77,4 +77,10 @@ namespace spot
     mark_ = b.mark_;
     return *this;
   }
+
+  mark::storage_elt
+  mark::operator[](int pos)
+  {
+    return mark_[pos];
+  }
 }
