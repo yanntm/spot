@@ -228,7 +228,6 @@ namespace spot
   fasttgbaexplicit::add_transition(int src, int dst,
 				   cube cond, mark acc)
   {
-    std::cout << "Add Trans\n";
     fast_explicit_state* source = 0;
     fast_explicit_state* destination = 0;
     source =  add_state(src);
