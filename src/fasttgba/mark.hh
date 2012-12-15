@@ -20,6 +20,8 @@
 #ifndef SPOT_FASTTGBA_MARK_HH
 # define SPOT_FASTTGBA_MARK_HH
 
+#include <vector>
+#include <string>
 #include <boost/dynamic_bitset.hpp>
 
 namespace spot
@@ -80,11 +82,17 @@ namespace spot
     /// \brief accessor with subarray
     storage_elt operator[](int pos);
 
+    /// \brief test is a least one mark is set
+    bool null();
+
     /// \brief Perform the negation of the mark
     mark operator~() const;
 
     /// \brief Display the content of the marking
-    void dump();
+    ///
+    /// \param acc is used to specified for each mark
+    /// the label to use in dumping
+    virtual std::string dump(std::vector<std::string> acc);
 
   protected:
     storage mark_;   ///< the set of acceptance

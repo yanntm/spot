@@ -20,6 +20,8 @@
 #ifndef SPOT_FASTTGBA_CUBE_HH
 # define SPOT_FASTTGBA_CUBE_HH
 
+#include <vector>
+#include <string>
 #include <boost/dynamic_bitset.hpp>
 
 namespace spot
@@ -96,7 +98,7 @@ namespace spot
     void unset_false_var(size_t index);
 
     /// \brief output the description of the cube
-    void dump();
+    std::string dump(std::vector<std::string> names);
 
   protected:
     boost::dynamic_bitset<> true_var;   ///< the set of variables set to true

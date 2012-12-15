@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+#include <sstream>
 #include "fasttgbaexplicit.hh"
 
 namespace spot
@@ -25,8 +25,14 @@ namespace spot
   // fast_explicit_state code here
   // ----------------------------------------------------------------------
 
+  void
+  fast_explicit_state::destroy() const
+  {
+
+  }
+
   fast_explicit_state::fast_explicit_state(int label):
-    label_(label), successors()
+    label_(label)
   {
   }
 
@@ -45,7 +51,7 @@ namespace spot
   faststate*
   fast_explicit_state::clone() const
   {
-    return new fast_explicit_state(label_);
+    return const_cast<fast_explicit_state *>(this);
   }
 
   void*
@@ -63,7 +69,7 @@ namespace spot
   void
   fast_explicit_state::add_successor(const struct transition t)
   {
-    successors.push_front(t);
+    successors.insert(successors.end(), t);
   }
 
   // ----------------------------------------------------------------------
@@ -73,7 +79,8 @@ namespace spot
   fast_explicit_iterator::fast_explicit_iterator
   (const fast_explicit_state* state):
     start_(state)
-  { }
+  {
+  }
 
   fast_explicit_iterator::~fast_explicit_iterator()
   {
@@ -101,7 +108,7 @@ namespace spot
   fast_explicit_iterator::current_state() const
   {
     assert(!done());
-    return (faststate*) (it_->dst);
+    return const_cast<fast_explicit_state*>(it_->dst);
   }
 
   cube
@@ -142,7 +149,7 @@ namespace spot
 
     while (i != state_map_.end())
       {
-	i->second.destroy();
+	i->second->destroy();
 	++i;
       }
   }
@@ -154,9 +161,13 @@ namespace spot
   }
 
   fasttgba_succ_iterator*
-  fasttgbaexplicit::succ_iter(const faststate*) const
+  fasttgbaexplicit::succ_iter(const faststate* state) const
   {
-    assert(false);
+    const fast_explicit_state* s =
+      down_cast<const fast_explicit_state*>(state);
+    assert(s);
+
+    return new fast_explicit_iterator(s);
   }
 
   std::vector<std::string>
@@ -168,17 +179,22 @@ namespace spot
   std::string
   fasttgbaexplicit::format_state(const faststate* s) const
   {
-    std::string res_ = "<state ";
-    res_ += ((const fast_explicit_state*) s)->label();
-    res_ += ">";
-    return res_;
+    std::ostringstream oss;
+    oss << down_cast<const fast_explicit_state*> (s)->label();
+    return oss.str();
   }
 
 
   std::string
-  fasttgbaexplicit::transition_annotation(const fasttgba_succ_iterator*) const
+  fasttgbaexplicit::transition_annotation(const fasttgba_succ_iterator* t) const
   {
-    assert(false);
+    std::ostringstream oss;
+    oss << t->current_condition().dump(aps_);
+
+    if (!t->current_acceptance_conditions().null())
+      oss << " \\nAcc { " << t->current_acceptance_conditions().dump(acc_)
+	  << "}";
+    return oss.str();
   }
 
   faststate*
@@ -213,7 +229,7 @@ namespace spot
     if (available == state_map_.end())
       {
 	fast_explicit_state *the_state = new fast_explicit_state(s);
-	state_map_.insert(std::make_pair (s, *the_state));
+	state_map_.insert(std::make_pair (s, the_state));
 
 	// Initial state not yet fixed
 	if (init_ == 0)
@@ -221,7 +237,7 @@ namespace spot
 
 	return the_state;
       }
-    return &(available->second);
+    return available->second;
   }
 
   void
@@ -236,7 +252,6 @@ namespace spot
     // Now we just have to create condition and acceptance over
     // the transition
     spot::transition t = {cond, acc, destination};
-    assert(source != 0);
     source->add_successor(t);
   }
 }

@@ -16,9 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <sstream>
 #include <iostream>
 #include "cube.hh"
-
 
 namespace spot
 {
@@ -78,10 +78,35 @@ namespace spot
     false_var[index] = 0;
   }
 
-  void
-  cube::dump()
+  std::string
+  cube::dump(std::vector<std::string> names)
   {
-    std::cout << "true var  : " << true_var << std::endl;
-    std::cout << "false var : " << false_var << std::endl;
+    std::ostringstream oss;
+    if (names.size() == 0)
+      {
+	oss <<" true_var " << true_var << std::endl;
+	oss <<" false_var " << false_var << std::endl;
+      }
+    else
+      {
+	int i;
+	bool all_free = true;
+	for (i = 0; i < size_; ++i)
+	  {
+	    if (true_var[i])
+	      {
+		oss << names[i] << " ";
+		all_free = false;
+	      }
+	    if (false_var[i])
+	      {
+		oss << "!" << names[i] << " ";
+		all_free = false;
+	      }
+	  }
+	if (all_free)
+	  oss << "1";
+      }
+    return oss.str();
   }
 }

@@ -23,6 +23,7 @@
 #include <cassert>
 #include <functional>
 #include <boost/shared_ptr.hpp>
+#include <string>
 #include "misc/casts.hh"
 #include <boost/dynamic_bitset.hpp>
 
@@ -76,13 +77,7 @@ namespace spot
 
     /// \brief Release a state.
     ///
-    /// Methods from the tgba or tgba_succ_iterator always return a
-    /// new state that you should deallocate with this function.
-    /// Before Spot 0.7, you had to "delete" your state directly.
-    /// Starting with Spot 0.7, you update your code to this function
-    /// instead (which simply calls "delete").  In a future version,
-    /// some subclasses will redefine destroy() to allow better memory
-    /// management (e.g. no memory allocation for explicit automata).
+    /// Sub class can refined this method to be memory efficient
     virtual void destroy() const
     {
       delete this;
@@ -95,6 +90,29 @@ namespace spot
     /// <code>s->destroy();</code> instead of <code>delete s;</code>.
     virtual ~faststate()
     {
+    }
+  };
+
+
+  struct faststate_ptr_equal:
+    public std::binary_function<const faststate*, const faststate*, bool>
+  {
+    bool
+    operator()(const faststate* left, const faststate* right) const
+    {
+      assert(left);
+      return 0 == left->compare(right);
+    }
+  };
+
+  struct faststate_ptr_hash:
+    public std::unary_function<const faststate*, size_t>
+  {
+    size_t
+    operator()(const faststate* that) const
+    {
+      assert(that);
+      return that->hash();
     }
   };
 

@@ -16,9 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <sstream>
 #include <iostream>
 #include "mark.hh"
-
 
 namespace spot
 {
@@ -91,15 +91,40 @@ namespace spot
     return mark_[pos];
   }
 
+  bool
+  mark::null()
+  {
+    size_t i;
+    for (i = 0; i < mark_.size(); ++i)
+      if (mark_[i] == 1)
+	return false;
+    return true;
+  }
+
   mark
   mark::operator~() const
   {
    return mark(~mark_);
   }
 
-  void
-  mark::dump()
+  std::string
+  mark::dump(std::vector<std::string> acc)
   {
-    std::cout << "{" << mark_ << "}" << std::endl;
+    std::ostringstream oss;
+    if (acc.size() == 0)
+      oss << mark_;
+    else if  (acc.size() == 1 && mark_[0])
+      {
+	oss << "[1] ";
+      }
+    else
+      {
+	assert(acc.size() == mark_.size());
+	size_t i;
+	for (i = 0; i < mark_.size(); ++i)
+	  if (mark_[i])
+	    oss << "[" << acc[i] << "] ";
+      }
+    return oss.str();
   }
 }

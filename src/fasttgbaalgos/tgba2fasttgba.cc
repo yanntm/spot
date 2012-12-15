@@ -61,9 +61,6 @@ namespace spot
 	for (; sii != end; ++sii)
 	  {
 	    const ltl::formula *f = sii->first;
-	    std::cout << "AP : "
-		      << ((const ltl::atomic_prop*)f)->name()
-		      << std::endl;
 	    ap_dict.push_back(((const ltl::atomic_prop*)f)->name());
 	  }
 
@@ -78,9 +75,6 @@ namespace spot
 	for (; sii2 != end2; ++sii2)
 	  {
 	    const ltl::formula *f = sii2->first;
-	    std::cout << "Acc : "
-		      << ((const ltl::atomic_prop*)f)->name()
-		      << std::endl;
 	    acc_dict.push_back(((const ltl::atomic_prop*)f)->name());
 	  }
 
@@ -95,14 +89,12 @@ namespace spot
       void
       end()
       {
-	std::cout  << "end" << std::endl;
       }
 
       void
       process_state(const state* , int s , tgba_succ_iterator*)
       {
-	std::cout  << "Process state : " << s << std::endl;
-	//result_->add_state (s);
+	result_->add_state(s);
       }
 
       void
@@ -113,7 +105,6 @@ namespace spot
 	//
 	// First we process all acceptance conditions
 	//
-	std::cout  << "Process Link " << src << " -> " << dst << std::endl;
  	bdd acc  = it->current_acceptance_conditions();
 	mark current_mark (acceptance_number);
 	while (acc != bddfalse)
@@ -137,9 +128,6 @@ namespace spot
 		++i;
 	      }
 	  }
-	std::cout << "    current acceptance : " ;
-	current_mark.dump();
-
 
 	//
 	// Second we process the conditions
@@ -166,8 +154,6 @@ namespace spot
 		  }
 		++i;
 	      }
-	    std::cout << "    variables : "  << std::endl;
-	    current_cond.dump();
 
 	    // Now we can create the transition
 	    result_->add_transition(src, dst, current_cond, current_mark);

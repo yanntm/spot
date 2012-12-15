@@ -55,6 +55,7 @@ namespace spot
     virtual faststate* clone() const;
     virtual void* external_information() const;
     virtual int label() const;
+    virtual void destroy() const;
 
     //// \brief the structure to store transitions
     void add_successor(const struct transition t);
@@ -161,7 +162,7 @@ namespace spot
     std::vector<std::string> acc_;  ///< The set of acceptance mark
     const faststate* init_;
 
-    typedef Sgi::hash_map<int, fast_explicit_state, identity_hash<int> > sm;
+    typedef Sgi::hash_map<int, fast_explicit_state*, identity_hash<int> > sm;
     sm state_map_;
   };
 }

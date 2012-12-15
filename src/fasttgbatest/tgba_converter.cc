@@ -17,11 +17,16 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
+
+// This part is for TGBA
 #include "ltlast/allnodes.hh"
 #include "ltlparse/public.hh"
 #include "tgbaalgos/ltl2tgba_fm.hh"
 #include "tgbaalgos/postproc.hh"
+
+// This part is for FASTTGBA
 #include "fasttgbaalgos/tgba2fasttgba.hh"
+#include "fasttgbaalgos/dotty_dfs.hh"
 
 
 void syntax (char*)
@@ -109,7 +114,10 @@ int main(int argc, char **argv)
       delete pp;
 
 
-      spot::tgba_2_fasttgba(a);
+      const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a);
+      spot::dotty_dfs dotty(ftgba);
+      dotty.run();
+      delete ftgba;
     }
 
   // Clean up
