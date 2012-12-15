@@ -28,7 +28,7 @@
 namespace spot
 {
   /// Spot is centered around the spot::tgba type. Here we provide a simplified
-  /// interface for designing faster implementations
+  /// interface for designing faster implementations.
   class fasttgba
   {
   protected:
@@ -47,13 +47,13 @@ namespace spot
 
     /// \brief Get an iterator over the successors of \a local_state.
     ///
-    /// \param local_state The state whose successors are to be explored.
+    /// \param state The state whose successors are to be explored.
     /// This pointer is not adopted in any way by \c succ_iter, and
     /// it is still the caller's responsability to destroy it when
     /// appropriate (this can be done during the lifetime of
     /// the iterator).
     virtual fasttgba_succ_iterator*
-    succ_iter(const faststate* local_state) const = 0;
+    succ_iter(const faststate* state) const = 0;
 
     /// \brief Get the dictionary associated to the automaton.
     virtual
@@ -87,7 +87,8 @@ namespace spot
     mark all_acceptance_conditions() const = 0;
 
     /// The number of acceptance conditions.
-    virtual unsigned int number_of_acceptance_conditions() const = 0;
+    virtual
+    unsigned int number_of_acceptance_conditions() const = 0;
 
     /// \brief Return the conjuction of all negated acceptance
     /// variables.
@@ -95,16 +96,12 @@ namespace spot
     /// For instance if the automaton uses variables <tt>Acc[a]</tt>,
     /// <tt>Acc[b]</tt> and <tt>Acc[c]</tt> to describe acceptance sets,
     /// this function should return <tt>!Acc[a]\&!Acc[b]\&!Acc[c]</tt>.
-    ///
-    /// This is useful when making products: each operand's condition
-    /// set should be augmented with the neg_acceptance_conditions() of
-    /// the other operand.
     virtual
     mark neg_acceptance_conditions() const = 0;
 
   protected:
-    mutable int num_acc_;
-    mutable int num_var_;
+    mutable int num_acc_;	///< The number of acceptance mark
+    mutable int num_var_;	///< The number of variables
   };
 }
 

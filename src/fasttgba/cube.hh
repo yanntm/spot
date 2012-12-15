@@ -98,6 +98,8 @@ namespace spot
     void unset_false_var(size_t index);
 
     /// \brief output the description of the cube
+    ///
+    /// \param names provides a descriptor for each variable
     std::string dump(std::vector<std::string> names);
 
   protected:

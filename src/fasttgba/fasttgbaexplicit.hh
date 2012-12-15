@@ -163,7 +163,7 @@ namespace spot
     const faststate* init_;
 
     typedef Sgi::hash_map<int, fast_explicit_state*, identity_hash<int> > sm;
-    sm state_map_;
+    sm state_map_;		///< The states of the automaton
   };
 }
 

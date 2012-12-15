@@ -30,7 +30,7 @@
 namespace spot
 {
 
-  /// \brief Abstract class for states.
+  /// \brief This class act as an interface for all classes
   class faststate
   {
   public:
@@ -42,29 +42,12 @@ namespace spot
     ///
     /// This method should not be called to compare states from
     /// different automata.
-    ///
-    /// \sa spot::state_ptr_less_than
     virtual int compare(const faststate* other) const = 0;
 
     /// \brief Hash a state.
     ///
     /// This method returns an integer that can be used as a
     /// hash value for this state.
-    ///
-    /// Note that the hash value is guaranteed to be unique for all
-    /// equal states (in compare()'s sense) for only has long has one
-    /// of these states exists.  So it's OK to use a spot::state as a
-    /// key in a \c hash_map because the mere use of the state as a
-    /// key in the hash will ensure the state continues to exist.
-    ///
-    /// However if you create the state, get its hash key, delete the
-    /// state, recreate the same state, and get its hash key, you may
-    /// obtain two different hash keys if the same state were not
-    /// already used elsewhere.  In practice this weird situation can
-    /// occur only when the state is BDD-encoded, because BDD numbers
-    /// (used to build the hash value) can be reused for other
-    /// formulas.  That probably doesn't matter, since the hash value
-    /// is meant to be used in a \c hash_map, but it had to be noted.
     virtual size_t hash() const = 0;
 
     /// Duplicate a state.
