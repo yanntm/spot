@@ -69,12 +69,12 @@ namespace spot
     /// \brief Perform a shift on the left of size \a b
     ///
     /// Affect the result into this
-    mark& operator<<=(int n);
+    mark& operator <<= (int n);
 
     /// \brief Perform a shift on the right of size \a b
     ///
     /// Affect the result into this
-    mark& operator>>=(int n);
+    mark& operator >>= (int n);
 
     /// \brief Affect the value of  \a b in this
     mark& operator=(const mark& b);

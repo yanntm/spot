@@ -65,14 +65,14 @@ namespace spot
   }
 
   mark&
-  mark::operator<<=(int n)
+  mark::operator <<= (int n)
   {
     mark_ <<= n;
     return *this;
   }
 
   mark&
-  mark::operator>>=(int n)
+  mark::operator >>= (int n)
   {
     mark_ >>= n;
     return *this;
@@ -111,7 +111,7 @@ namespace spot
   mark::dump(std::vector<std::string> acc)
   {
     std::ostringstream oss;
-    if (acc.size() == 0)
+    if (acc.empty())
       oss << mark_;
     else if  (acc.size() == 1 && mark_[0])
       {

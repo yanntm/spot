@@ -82,7 +82,7 @@ namespace spot
   cube::dump(std::vector<std::string> names)
   {
     std::ostringstream oss;
-    if (names.size() == 0)
+    if (names.empty())
       {
 	oss <<" true_var " << true_var << std::endl;
 	oss <<" false_var " << false_var << std::endl;
