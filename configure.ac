@@ -182,6 +182,7 @@ AC_CONFIG_FILES([
   src/tgbatest/defs
   src/tgbatest/Makefile
   src/fasttgbatest/Makefile
+  src/fasttgbatest/defs
   wrap/Makefile
   wrap/python/Makefile
   wrap/python/ajax/Makefile
