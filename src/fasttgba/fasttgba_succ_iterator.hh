@@ -87,7 +87,7 @@ namespace spot
     ///
     /// The returned state should be destroyed (see state::destroy)
     /// by the caller after it is no longer used.
-    virtual faststate* current_state() const = 0;
+    virtual fasttgba_state* current_state() const = 0;
     /// \brief Get the condition on the transition leading to this successor.
     ///
     /// This is a boolean function of atomic propositions.

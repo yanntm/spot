@@ -35,29 +35,29 @@ namespace spot
 
     void run();
 
-    virtual bool want_state(const faststate* s) const;
+    virtual bool want_state(const fasttgba_state* s) const;
 
     virtual void start();
 
     virtual void end();
 
-    virtual void add_state(const faststate* s);
+    virtual void add_state(const fasttgba_state* s);
 
-    virtual const faststate* next_state();
+    virtual const fasttgba_state* next_state();
 
-    virtual void  process_state(const faststate* s, int n,
+    virtual void  process_state(const fasttgba_state* s, int n,
 				fasttgba_succ_iterator* si);
 
-    virtual void  process_link(const faststate* in_s, int in,
-			       const faststate* out_s, int out,
+    virtual void  process_link(const fasttgba_state* in_s, int in,
+			       const fasttgba_state* out_s, int out,
 			       const fasttgba_succ_iterator* si);
 
 
   protected:
     const fasttgba* a_;
-    std::stack<const faststate*> todo; ///< A stack of states yet to explore.
-    typedef Sgi::hash_map<const faststate*, int,
-			  faststate_ptr_hash, faststate_ptr_equal> seen_map;
+    std::stack<const fasttgba_state*> todo; ///< A stack of states yet to explore.
+    typedef Sgi::hash_map<const fasttgba_state*, int,
+			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> seen_map;
     seen_map seen;
   };
 }

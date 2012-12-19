@@ -36,11 +36,11 @@ namespace spot
   {
     int n = 0;
     start();
-    faststate* i = a_->get_init_state();
+    fasttgba_state* i = a_->get_init_state();
     if (want_state(i))
       add_state(i);
     seen[i] = ++n;
-    const faststate* t;
+    const fasttgba_state* t;
     while ((t = next_state()))
       {
 	assert(t);
@@ -50,7 +50,7 @@ namespace spot
 	process_state(t, tn, si);
 	for (si->first(); !si->done(); si->next())
 	  {
-	    const faststate* current = si->current_state();
+	    const fasttgba_state* current = si->current_state();
 	    seen_map::const_iterator s = seen.find(current);
 	    bool ws = want_state(current);
 	    if (s == seen.end())
@@ -75,7 +75,7 @@ namespace spot
   }
 
   bool
-  dotty_dfs::want_state(const faststate*) const
+  dotty_dfs::want_state(const fasttgba_state*) const
   {
     return true;
   }
@@ -97,23 +97,23 @@ namespace spot
   }
 
   void
-  dotty_dfs::add_state(const faststate* s)
+  dotty_dfs::add_state(const fasttgba_state* s)
   {
     todo.push(s);
   }
 
-  const faststate*
+  const fasttgba_state*
   dotty_dfs::next_state()
   {
     if (todo.empty())
       return 0;
-    const faststate* s = todo.top();
+    const fasttgba_state* s = todo.top();
     todo.pop();
     return s;
   }
 
   void
-  dotty_dfs::process_state(const faststate* s, int in,
+  dotty_dfs::process_state(const fasttgba_state* s, int in,
 			   fasttgba_succ_iterator*)
   {
     std::cout << "  " << in
@@ -124,8 +124,8 @@ namespace spot
   }
 
   void
-  dotty_dfs::process_link(const faststate* , int in,
-			  const faststate* , int out,
+  dotty_dfs::process_link(const fasttgba_state* , int in,
+			  const fasttgba_state* , int out,
 			  const fasttgba_succ_iterator* t)
   {
     std::cout << "  " << in << " -> " << out

@@ -43,7 +43,7 @@ namespace spot
     /// responsability of the caller to \c destroy it when no
     /// longer needed.
     virtual
-    faststate* get_init_state() const = 0;
+    fasttgba_state* get_init_state() const = 0;
 
     /// \brief Get an iterator over the successors of \a local_state.
     ///
@@ -53,7 +53,7 @@ namespace spot
     /// appropriate (this can be done during the lifetime of
     /// the iterator).
     virtual fasttgba_succ_iterator*
-    succ_iter(const faststate* state) const = 0;
+    succ_iter(const fasttgba_state* state) const = 0;
 
     /// \brief Get the dictionary associated to the automaton.
     virtual
@@ -63,7 +63,7 @@ namespace spot
     ///
     /// This formating is the responsability of the automata
     /// that owns the state.
-    virtual std::string format_state(const faststate* state) const = 0;
+    virtual std::string format_state(const fasttgba_state* state) const = 0;
 
     /// \brief Return a possible annotation for the transition
     /// pointed to by the iterator.
@@ -72,8 +72,8 @@ namespace spot
 
     /// \brief Project a state on an automaton.
     virtual
-    faststate* project_state(const faststate* s,
-			     const fasttgba* t) const = 0;
+    fasttgba_state* project_state(const fasttgba_state* s,
+				  const fasttgba* t) const = 0;
 
     /// \brief Return the set of all acceptance marks used
     /// by this automaton.

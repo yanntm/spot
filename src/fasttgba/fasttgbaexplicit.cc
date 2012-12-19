@@ -37,7 +37,7 @@ namespace spot
   }
 
   int
-  fast_explicit_state::compare(const faststate* other) const
+  fast_explicit_state::compare(const fasttgba_state* other) const
   {
     return label_ - ((const fast_explicit_state*)other)->label_;
   }
@@ -48,7 +48,7 @@ namespace spot
     return label_;
   }
 
-  faststate*
+  fasttgba_state*
   fast_explicit_state::clone() const
   {
     return const_cast<fast_explicit_state *>(this);
@@ -104,7 +104,7 @@ namespace spot
     return it_ == start_->successors.end();
   }
 
-  faststate*
+  fasttgba_state*
   fast_explicit_iterator::current_state() const
   {
     assert(!done());
@@ -149,14 +149,14 @@ namespace spot
       }
   }
 
-  faststate*
+  fasttgba_state*
   fasttgbaexplicit::get_init_state() const
   {
     return init_->clone();
   }
 
   fasttgba_succ_iterator*
-  fasttgbaexplicit::succ_iter(const faststate* state) const
+  fasttgbaexplicit::succ_iter(const fasttgba_state* state) const
   {
     const fast_explicit_state* s =
       down_cast<const fast_explicit_state*>(state);
@@ -172,7 +172,7 @@ namespace spot
   }
 
   std::string
-  fasttgbaexplicit::format_state(const faststate* s) const
+  fasttgbaexplicit::format_state(const fasttgba_state* s) const
   {
     std::ostringstream oss;
     oss << down_cast<const fast_explicit_state*> (s)->label();
@@ -192,8 +192,8 @@ namespace spot
     return oss.str();
   }
 
-  faststate*
-  fasttgbaexplicit::project_state(const faststate* ,
+  fasttgba_state*
+  fasttgbaexplicit::project_state(const fasttgba_state* ,
 				  const fasttgba*) const
   {
     assert(false);

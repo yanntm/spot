@@ -31,7 +31,7 @@ namespace spot
 {
 
   /// \brief This class act as an interface for all classes
-  class faststate
+  class fasttgba_state
   {
   public:
     /// \brief Compares two states (that come from the same automaton).
@@ -42,7 +42,7 @@ namespace spot
     ///
     /// This method should not be called to compare states from
     /// different automata.
-    virtual int compare(const faststate* other) const = 0;
+    virtual int compare(const fasttgba_state* other) const = 0;
 
     /// \brief Hash a state.
     ///
@@ -51,7 +51,7 @@ namespace spot
     virtual size_t hash() const = 0;
 
     /// Duplicate a state.
-    virtual faststate* clone() const = 0;
+    virtual fasttgba_state* clone() const = 0;
 
     /// Allow to add more information inside of a state.
     /// It can be used to store the strength of the current
@@ -71,28 +71,28 @@ namespace spot
     ///
     /// \deprecated Client code should now call
     /// <code>s->destroy();</code> instead of <code>delete s;</code>.
-    virtual ~faststate()
+    virtual ~fasttgba_state()
     {
     }
   };
 
 
-  struct faststate_ptr_equal:
-    public std::binary_function<const faststate*, const faststate*, bool>
+  struct fasttgba_state_ptr_equal:
+    public std::binary_function<const fasttgba_state*, const fasttgba_state*, bool>
   {
     bool
-    operator()(const faststate* left, const faststate* right) const
+    operator()(const fasttgba_state* left, const fasttgba_state* right) const
     {
       assert(left);
       return 0 == left->compare(right);
     }
   };
 
-  struct faststate_ptr_hash:
-    public std::unary_function<const faststate*, size_t>
+  struct fasttgba_state_ptr_hash:
+    public std::unary_function<const fasttgba_state*, size_t>
   {
     size_t
-    operator()(const faststate* that) const
+    operator()(const fasttgba_state* that) const
     {
       assert(that);
       return that->hash();
