@@ -106,7 +106,7 @@ namespace spot
 	// First we process all acceptance conditions
 	//
  	bdd acc  = it->current_acceptance_conditions();
-	mark current_mark (acceptance_number);
+	markset current_mark (acceptance_number);
 	while (acc != bddfalse)
 	  {
 	    bdd one = bdd_satone(acc);
@@ -122,7 +122,7 @@ namespace spot
 		else
 		  {
 		    one = bdd_high(one);
-		    current_mark[i] = 1;
+		    current_mark.set_mark(i);
 		    break;
 		  }
 		++i;

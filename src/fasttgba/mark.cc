@@ -22,107 +22,101 @@
 
 namespace spot
 {
-  mark::mark(boost::dynamic_bitset<> m)
+  markset::markset(boost::dynamic_bitset<> m)
   {
-    mark_ = m;
+    markset_ = m;
   }
 
-  mark::mark(int size):
-    mark_(size)
+  markset::markset(size_t size):
+    markset_(size)
   { }
 
-  mark::mark(const mark& b)
+  markset::markset(const markset& b)
   {
-    mark_ = b.mark_;
+    markset_ = b.markset_;
   }
 
-  mark&
-  mark::operator&=(const mark& b)
+  markset&
+  markset::operator&=(const markset& b)
   {
-    mark_ &= b.mark_;
+    markset_ &= b.markset_;
     return *this;
   }
 
-  mark&
-  mark::operator|=(const mark& b)
+  markset&
+  markset::operator|=(const markset& b)
   {
-    mark_ |= b.mark_;
+    markset_ |= b.markset_;
     return *this;
   }
 
-  mark&
-  mark::operator^=(const mark& b)
+  markset&
+  markset::operator^=(const markset& b)
   {
-    mark_ ^= b.mark_;
+    markset_ ^= b.markset_;
     return *this;
   }
 
-  mark&
-  mark::operator-=(const mark& b)
+  markset&
+  markset::operator-=(const markset& b)
   {
-    mark_ -= b.mark_;
+    markset_ -= b.markset_;
     return *this;
   }
 
-  mark&
-  mark::operator <<= (int n)
+  markset&
+  markset::operator=(const markset& b)
   {
-    mark_ <<= n;
+    markset_ = b.markset_;
     return *this;
   }
 
-  mark&
-  mark::operator >>= (int n)
+  void
+  markset::set_mark(mark m)
   {
-    mark_ >>= n;
-    return *this;
-  }
-
-  mark&
-  mark::operator=(const mark& b)
-  {
-    mark_ = b.mark_;
-    return *this;
-  }
-
-  mark::storage_elt
-  mark::operator[](int pos)
-  {
-    return mark_[pos];
-  }
-
-  bool
-  mark::null()
-  {
-    size_t i;
-    for (i = 0; i < mark_.size(); ++i)
-      if (mark_[i] == 1)
-	return false;
-    return true;
+    markset_[m];
   }
 
   mark
-  mark::operator~() const
+  markset::one()
   {
-   return mark(~mark_);
+    assert(false);
+  }
+
+  bool
+  markset::empty()
+  {
+    return markset_.none();
+  }
+
+  size_t
+  markset::size()
+  {
+    return markset_.size();//FIXME
+  }
+
+  markset
+  markset::operator~() const
+  {
+   return markset(~markset_);
   }
 
   std::string
-  mark::dump(std::vector<std::string> acc)
+  markset::dump(std::vector<std::string> acc)
   {
     std::ostringstream oss;
     if (acc.empty())
-      oss << mark_;
-    else if  (acc.size() == 1 && mark_[0])
+      oss << markset_;
+    else if  (acc.size() == 1 && markset_[0])
       {
 	oss << "[1] ";
       }
     else
       {
-	assert(acc.size() == mark_.size());
+	assert(acc.size() == markset_.size());
 	size_t i;
-	for (i = 0; i < mark_.size(); ++i)
-	  if (mark_[i])
+	for (i = 0; i < markset_.size(); ++i)
+	  if (markset_[i])
 	    oss << "[" << acc[i] << "] ";
       }
     return oss.str();

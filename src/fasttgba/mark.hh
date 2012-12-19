@@ -26,67 +26,72 @@
 
 namespace spot
 {
-  /// \brief This class is used to represent acceptance mark
-  class mark
+
+  /// \brief the type that represents a mark
+  typedef int mark;
+
+  /// \brief This class represents a set of acceptance marks
+  class markset
   {
   private:
     /// \brief Internal Constructor
-    mark(boost::dynamic_bitset<>);
+    markset(boost::dynamic_bitset<>);
 
   public:
-    /// \brief wrapper of type
-    typedef boost::dynamic_bitset<> storage;
-
-    // \brief wrapper for a type
-    typedef boost::dynamic_bitset<>::reference storage_elt;
-
     /// \brief Initialize a mark of size \a size
-    mark(int size);
+    markset(size_t size);
 
     /// \brief A copy constructor
-    mark(const mark& b);
+    markset(const markset& b);
 
     /// \brief perform a logic AND with \a b
     ///
-    /// Affect the result into this
-    mark& operator&=(const mark& b);
+    /// Assign the result to this
+    markset& operator&=(const markset& b);
 
     /// \brief perform a logic OR with \a b
     ///
-    /// Affect the result into this
-    mark& operator|=(const mark& b);
+    /// Assign the result to this
+    markset& operator|=(const markset& b);
 
     /// \brief perform a logic XOR with \a b
     ///
-    /// Affect the result into this
-    mark& operator^=(const mark& b);
+    /// Assign the result to this
+    markset& operator^=(const markset & b);
 
     /// \brief Compute the difference with \a b
     ///
-    /// Affect the result into this
-    mark& operator-=(const mark& b);
-
-    /// \brief Perform a shift on the left of size \a b
-    ///
-    /// Affect the result into this
-    mark& operator <<= (int n);
-
-    /// \brief Perform a shift on the right of size \a b
-    ///
-    /// Affect the result into this
-    mark& operator >>= (int n);
+    /// Assign the result to this
+    markset& operator-=(const markset& b);
 
     /// \brief Affect the value of  \a b in this
-    mark& operator=(const mark& b);
+    markset& operator=(const markset& b);
 
-    /// \brief accessor with subarray
-    storage_elt operator[](int pos);
+    /// \brief Set a mark in the markset
+    ///
+    /// \param m the mark to be set
+    /// Return true if the mark was not already set, false otherwise
+    void set_mark(mark m);
 
     /// \brief test is a least one mark is set
-    bool null();
+    ///
+    /// Return a boolean that indicates if there is
+    /// at least a mark which is set
+    bool empty();
+
+    /// \brief Access to the first mark on the set
+    ///
+    /// To grab all mark, a loop which remove all
+    /// mark must be realized.
+    mark one();
+
+    /// \brief Return the number of marks in the set
+    size_t size();
 
     /// \brief Perform the negation of the mark
-    mark operator~() const;
+    ///
+    /// Return a new mark which is the negation of thiss
+    markset operator~() const;
 
     /// \brief Display the content of the marking
     ///
@@ -95,7 +100,7 @@ namespace spot
     virtual std::string dump(std::vector<std::string> acc);
 
   protected:
-    storage mark_;   ///< the set of acceptance
+    boost::dynamic_bitset<> markset_;   ///< the set of acceptance
   };
 }
 

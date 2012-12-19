@@ -84,7 +84,7 @@ namespace spot
     /// of the acceptiong conditions of all transition in
     /// the SCC should be equal to the result of this function.
     virtual
-    mark all_acceptance_conditions() const = 0;
+    markset all_acceptance_conditions() const = 0;
 
     /// The number of acceptance conditions.
     virtual
@@ -97,7 +97,7 @@ namespace spot
     /// <tt>Acc[b]</tt> and <tt>Acc[c]</tt> to describe acceptance sets,
     /// this function should return <tt>!Acc[a]\&!Acc[b]\&!Acc[c]</tt>.
     virtual
-    mark neg_acceptance_conditions() const = 0;
+    markset neg_acceptance_conditions() const = 0;
 
   protected:
     mutable int num_acc_;	///< The number of acceptance mark

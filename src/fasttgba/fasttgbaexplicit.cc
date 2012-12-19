@@ -117,7 +117,7 @@ namespace spot
     return it_->conditions;
   }
 
-  mark
+  markset
   fast_explicit_iterator::current_acceptance_conditions() const
   {
     return it_->acceptance_conditions;
@@ -191,7 +191,7 @@ namespace spot
     std::ostringstream oss;
     oss << t->current_condition().dump(aps_);
 
-    if (!t->current_acceptance_conditions().null())
+    if (!t->current_acceptance_conditions().empty())
       oss << " \\nAcc { " << t->current_acceptance_conditions().dump(acc_)
 	  << "}";
     return oss.str();
@@ -204,7 +204,7 @@ namespace spot
     assert(false);
   }
 
-  mark
+  markset
   fasttgbaexplicit::all_acceptance_conditions() const
   {
     return all_cond_;
@@ -216,7 +216,7 @@ namespace spot
     return num_acc_;
   }
 
-  mark
+  markset
   fasttgbaexplicit::neg_acceptance_conditions() const
   {
     return all_cond_neg_;
@@ -242,7 +242,7 @@ namespace spot
 
   void
   fasttgbaexplicit::add_transition(int src, int dst,
-				   cube cond, mark acc)
+				   cube cond, markset acc)
   {
     fast_explicit_state* source = 0;
     fast_explicit_state* destination = 0;
