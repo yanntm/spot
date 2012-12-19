@@ -26,7 +26,7 @@ fasttgbadir = $(pkgincludedir)/fasttgba
 
 fasttgba_HEADERS = \
   faststate.hh \
-  fastsucciter.hh \
+  fasttgbaiterator.hh \
   fasttgba.hh \
   cube.hh \
   markset.hh \

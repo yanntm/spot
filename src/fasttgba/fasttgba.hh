@@ -22,7 +22,7 @@
 #include <vector>
 #include <string>
 #include "faststate.hh"
-#include "fastsucciter.hh"
+#include "fasttgbaiterator.hh"
 #include "markset.hh"
 
 namespace spot

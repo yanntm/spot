@@ -21,7 +21,6 @@
 
 #include <list>
 #include "fasttgba.hh"
-#include "fastsucciter.hh"
 #include "misc/hash.hh"
 
 namespace spot
