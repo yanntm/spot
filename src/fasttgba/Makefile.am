@@ -25,6 +25,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 fasttgbadir = $(pkgincludedir)/fasttgba
 
 fasttgba_HEADERS = \
+  ap_dict.hh \
   faststate.hh \
   fasttgba_succ_iterator.hh \
   fasttgba.hh \
@@ -34,6 +35,7 @@ fasttgba_HEADERS = \
 
 noinst_LTLIBRARIES = libfasttgba.la
 libfasttgba_la_SOURCES = \
+  ap_dict.cc \
   fasttgba.cc \
   fasttgbaexplicit.cc \
   cube.cc \
