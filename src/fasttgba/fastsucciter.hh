@@ -21,7 +21,7 @@
 
 #include "faststate.hh"
 #include "cube.hh"
-#include "mark.hh"
+#include "markset.hh"
 
 namespace spot
 {

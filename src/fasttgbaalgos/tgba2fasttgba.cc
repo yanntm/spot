@@ -24,7 +24,7 @@
 #include "ltlast/formula.hh"
 #include "ltlast/atomic_prop.hh"
 #include "tgba/bdddict.hh"
-#include "fasttgba/mark.hh"
+#include "fasttgba/markset.hh"
 
 namespace spot
 {

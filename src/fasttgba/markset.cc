@@ -18,7 +18,7 @@
 
 #include <sstream>
 #include <iostream>
-#include "mark.hh"
+#include "markset.hh"
 
 namespace spot
 {

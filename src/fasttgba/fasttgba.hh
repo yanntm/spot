@@ -23,7 +23,7 @@
 #include <string>
 #include "faststate.hh"
 #include "fastsucciter.hh"
-#include "mark.hh"
+#include "markset.hh"
 
 namespace spot
 {
