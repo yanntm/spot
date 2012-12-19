@@ -127,13 +127,14 @@ namespace spot
   // fasttgbaexplicit code here
   // ----------------------------------------------------------------------
 
-  fasttgbaexplicit::fasttgbaexplicit(std::vector<std::string> aps,
+  fasttgbaexplicit::fasttgbaexplicit(ap_dict* aps,
 				     std::vector<std::string> acc):
     all_marks_ (acc.size()),
-    aps_(aps),
+    //aps_(aps),
     acc_(acc),
     init_(0)
   {
+    aps_ = aps;
     num_acc_ = acc.size();
   }
 
@@ -165,10 +166,10 @@ namespace spot
     return new fast_explicit_iterator(s);
   }
 
-  std::vector<std::string>
+  ap_dict&
   fasttgbaexplicit::get_dict() const
   {
-    return aps_;
+    return *aps_;
   }
 
   std::string
@@ -184,7 +185,7 @@ namespace spot
   fasttgbaexplicit::transition_annotation(const fasttgba_succ_iterator* t) const
   {
     std::ostringstream oss;
-    oss << t->current_condition().dump(aps_);
+    oss << t->current_condition().dump(*aps_);
 
     if (!t->current_acceptance_marks().empty())
       oss << " \\nAcc { " << t->current_acceptance_marks().dump(acc_)

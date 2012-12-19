@@ -19,11 +19,11 @@
 #ifndef SPOT_FASTTGBA_FASTTGBA_HH
 # define SPOT_FASTTGBA_FASTTGBA_HH
 
-#include <vector>
 #include <string>
 #include "faststate.hh"
 #include "fasttgba_succ_iterator.hh"
 #include "markset.hh"
+#include "ap_dict.hh"
 
 namespace spot
 {
@@ -57,7 +57,7 @@ namespace spot
 
     /// \brief Get the dictionary associated to the automaton.
     virtual
-    std::vector<std::string> get_dict() const = 0;
+    ap_dict& get_dict() const = 0;
 
     /// \brief Format the state as a string for printing.
     ///

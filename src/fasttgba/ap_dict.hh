@@ -29,8 +29,27 @@ namespace spot
     /// \brief a default constructor that construct an empty dictionnary
     ap_dict();
 
+    /// \brief a simple destructor
+    virtual ~ap_dict();
+
     /// \brief add an atomic proposition into this dictionnary
-    virtual void add_ap(ltl::atomic_prop ap) const;
+    ///
+    /// All returned values start from 0 to size ()
+    ///
+    /// Return the unique identifier associated to this \a ap
+    virtual int add_ap(const ltl::atomic_prop* ap);
+
+    /// \brief
+    ///
+    ///
+    virtual const ltl::atomic_prop* get(int i);
+
+    size_t size();
+
+  protected:
+    int id_;
+    std::map<const ltl::atomic_prop*, int> aps_;      ///< formula to int converter
+    std::map<int, const ltl::atomic_prop*> apsback_; ///< int to formula converter
   };
 }
 #endif // SPOT_FASTTGBA_AP_DICT_HH

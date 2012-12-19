@@ -23,6 +23,7 @@
 #include <vector>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
+#include "ap_dict.hh"
 
 namespace spot
 {
@@ -36,7 +37,7 @@ namespace spot
     /// \brief Initialize a cube of size \a size
     ///
     /// Default initialisation set all the cube to true
-    cube (size_t size);
+    cube (ap_dict& aps);
 
     /// \brief Compare two cubes
     ///
@@ -64,7 +65,7 @@ namespace spot
     /// \brief output the description of the cube
     ///
     /// \param names provides a descriptor for each variable
-    std::string dump(std::vector<std::string> names);
+    std::string dump(ap_dict& names);
 
   protected:
 
@@ -95,6 +96,7 @@ namespace spot
 
     boost::dynamic_bitset<> true_var;   ///< the set of variables set to true
     boost::dynamic_bitset<> false_var;  ///< the set of variables set to false
+    ap_dict& aps_;			///< the reference over the atomic props
   };
 }
 

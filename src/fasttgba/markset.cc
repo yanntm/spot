@@ -74,7 +74,7 @@ namespace spot
   void
   markset::set_mark(mark m)
   {
-    markset_[m];
+    markset_[m] = 1;
   }
 
   mark
@@ -92,7 +92,7 @@ namespace spot
   size_t
   markset::size()
   {
-    return markset_.size();//FIXME
+    return markset_.count();
   }
 
   markset

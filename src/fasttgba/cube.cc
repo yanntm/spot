@@ -22,10 +22,10 @@
 
 namespace spot
 {
-  cube::cube (size_t size)
+  cube::cube (ap_dict& aps) : aps_(aps)
   {
-    true_var = boost::dynamic_bitset<>(size);
-    false_var = boost::dynamic_bitset<>(size);
+    true_var = boost::dynamic_bitset<>(aps_.size());
+    false_var = boost::dynamic_bitset<>(aps_.size());
   }
 
   bool
@@ -66,34 +66,26 @@ namespace spot
   }
 
   std::string
-  cube::dump(std::vector<std::string> names)
+  cube::dump(ap_dict& names)
   {
     std::ostringstream oss;
-    if (names.empty())
+    size_t i;
+    bool all_free = true;
+    for (i = 0; i < size(); ++i)
       {
-	oss <<" true_var " << true_var << std::endl;
-	oss <<" false_var " << false_var << std::endl;
-      }
-    else
-      {
-	size_t i;
-	bool all_free = true;
-	for (i = 0; i < size(); ++i)
+	if (true_var[i])
 	  {
-	    if (true_var[i])
-	      {
-		oss << names[i] << " ";
-		all_free = false;
-	      }
-	    if (false_var[i])
-	      {
-		oss << "!" << names[i] << " ";
-		all_free = false;
-	      }
+	    oss << names.get(i)->name() << " ";
+	    all_free = false;
 	  }
-	if (all_free)
-	  oss << "1";
+	if (false_var[i])
+	  {
+	    oss << "!" << names.get(i)->name() << " ";
+	    all_free = false;
+	  }
       }
+    if (all_free)
+      oss << "1";
     return oss.str();
   }
 }

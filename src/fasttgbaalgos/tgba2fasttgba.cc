@@ -25,6 +25,7 @@
 #include "ltlast/atomic_prop.hh"
 #include "tgba/bdddict.hh"
 #include "fasttgba/markset.hh"
+#include "fasttgba/ap_dict.hh"
 
 namespace spot
 {
@@ -57,11 +58,12 @@ namespace spot
 	std::map<const ltl::formula*, int>::iterator end =
 	  var_map.end();
 
-	std::vector<std::string> ap_dict;
+	ap_dict* ap_dict = new spot::ap_dict();
 	for (; sii != end; ++sii)
 	  {
 	    const ltl::formula *f = sii->first;
-	    ap_dict.push_back(((const ltl::atomic_prop*)f)->name());
+	    //ap_dict.push_back(((const ltl::atomic_prop*)f)->name());
+	    ap_dict->add_ap((const ltl::atomic_prop*)f);
 	  }
 
 	// Second grab Acceptance variables
@@ -80,7 +82,7 @@ namespace spot
 
 	// To speed up other processing
 	acceptance_number = acc_dict.size();
-	variable_number = ap_dict.size();
+	variable_number = ap_dict->size();
 
 	// Here initialize the fasttgba
 	result_ = new fasttgbaexplicit(ap_dict, acc_dict);
@@ -135,7 +137,7 @@ namespace spot
  	bdd cond  = it->current_condition();
 	while (cond != bddfalse)
 	  {
-	    cube current_cond (variable_number);
+	    cube current_cond (result_->get_dict());//variable_number);
 	    bdd one = bdd_satone(cond);
 	    cond -= one;
 

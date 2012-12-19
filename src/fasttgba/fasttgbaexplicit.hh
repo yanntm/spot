@@ -102,7 +102,7 @@ namespace spot
     ///
     /// \param aps a set of atomic proposition name
     /// \param acc a set of acceptance variable name
-    fasttgbaexplicit(std::vector<std::string> aps,
+    fasttgbaexplicit(ap_dict* aps,
 		     std::vector<std::string> acc);
 
     virtual ~fasttgbaexplicit();
@@ -113,7 +113,7 @@ namespace spot
     succ_iter(const fasttgba_state* local_state) const;
 
     virtual
-    std::vector<std::string> get_dict() const;
+    ap_dict& get_dict() const;
 
     virtual
     std::string format_state(const fasttgba_state* state) const;
@@ -153,7 +153,7 @@ namespace spot
 
   protected:
     markset all_marks_;	            ///< the set of acceptance mark
-    std::vector<std::string> aps_;  ///< The set of atomic proposition
+    ap_dict* aps_;                   ///< The set of atomic proposition
     std::vector<std::string> acc_;  ///< The set of acceptance mark
     const fasttgba_state* init_;
 

@@ -21,12 +21,36 @@
 
 namespace spot
 {
-  ap_dict::ap_dict()
+  ap_dict::ap_dict() : id_(0)
   {
   }
 
-  void
-  ap_dict::add_ap(ltl::atomic_prop) const
+  ap_dict::~ap_dict()
   {
+  }
+
+  int
+  ap_dict::add_ap(const ltl::atomic_prop* ap)
+  {
+    aps_.insert(std::make_pair(ap, id_));
+    apsback_.insert(std::make_pair(id_, ap));
+    ++id_;
+    return id_;
+  }
+
+  const ltl::atomic_prop*
+  ap_dict::get(int index)
+  {
+    std::map<int, const ltl::atomic_prop*>::iterator it = apsback_.find(index);
+    if (it != apsback_.end())
+      return it->second;
+    assert(false);
+    return 0;
+  }
+
+  size_t
+  ap_dict::size()
+  {
+    return aps_.size();
   }
 }
