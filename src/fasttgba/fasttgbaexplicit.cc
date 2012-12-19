@@ -118,9 +118,9 @@ namespace spot
   }
 
   markset
-  fast_explicit_iterator::current_acceptance_conditions() const
+  fast_explicit_iterator::current_acceptance_marks() const
   {
-    return it_->acceptance_conditions;
+    return it_->acceptance_marks;
   }
 
   // ----------------------------------------------------------------------
@@ -186,8 +186,8 @@ namespace spot
     std::ostringstream oss;
     oss << t->current_condition().dump(aps_);
 
-    if (!t->current_acceptance_conditions().empty())
-      oss << " \\nAcc { " << t->current_acceptance_conditions().dump(acc_)
+    if (!t->current_acceptance_marks().empty())
+      oss << " \\nAcc { " << t->current_acceptance_marks().dump(acc_)
 	  << "}";
     return oss.str();
   }

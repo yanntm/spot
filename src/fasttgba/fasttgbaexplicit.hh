@@ -34,7 +34,7 @@ namespace spot
   struct transition
   {
     cube conditions;			///< condition over an arc
-    markset acceptance_conditions;	///< acceptance mark over an arc
+    markset acceptance_marks;	        ///< acceptance mark over an arc
     const fast_explicit_state* dst;	///< the destination state
   };
 
@@ -82,7 +82,7 @@ namespace spot
     virtual bool done() const;
     virtual faststate* current_state() const;
     virtual cube current_condition() const;
-    virtual markset current_acceptance_conditions() const;
+    virtual markset current_acceptance_marks() const;
   };
 
 

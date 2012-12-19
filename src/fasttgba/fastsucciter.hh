@@ -94,7 +94,7 @@ namespace spot
     virtual cube current_condition() const = 0;
     /// \brief Get the acceptance conditions on the transition leading
     /// to this successor.
-    virtual markset current_acceptance_conditions() const = 0;
+    virtual markset current_acceptance_marks() const = 0;
 
     //@}
   };
