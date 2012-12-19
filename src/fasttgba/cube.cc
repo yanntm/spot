@@ -22,18 +22,10 @@
 
 namespace spot
 {
-  cube::cube (int size) : size_(size)
+  cube::cube (size_t size)
   {
     true_var = boost::dynamic_bitset<>(size);
     false_var = boost::dynamic_bitset<>(size);
-  }
-
-  cube::cube
-  cube::operator~() const
-  {
-    cube c (size_);
-    std::swap (c.true_var, c.false_var);
-    return c;
   }
 
   bool
@@ -46,6 +38,7 @@ namespace spot
   void
   cube::set_true_var(size_t index)
   {
+    assert(index < size());
     true_var[index] = 1;
     false_var[index] = 0;
   }
@@ -53,6 +46,7 @@ namespace spot
   void
   cube::set_false_var(size_t index)
   {
+    assert(index < size());
     true_var[index] = 0;
     false_var[index] = 1;
   }
@@ -60,22 +54,15 @@ namespace spot
   void
   cube::set_free_var(size_t index)
   {
+    assert(index < size());
     true_var[index] = 0;
     false_var[index] = 0;
   }
 
-  void
-  cube::unset_true_var(size_t index)
+  size_t
+  cube::size()
   {
-    true_var[index] = 0;
-    false_var[index] = 1;
-  }
-
-  void
-  cube::unset_false_var(size_t index)
-  {
-    true_var[index] = 1;
-    false_var[index] = 0;
+    return true_var.size();
   }
 
   std::string
@@ -89,9 +76,9 @@ namespace spot
       }
     else
       {
-	int i;
+	size_t i;
 	bool all_free = true;
-	for (i = 0; i < size_; ++i)
+	for (i = 0; i < size(); ++i)
 	  {
 	    if (true_var[i])
 	      {

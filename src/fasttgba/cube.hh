@@ -26,12 +26,47 @@
 
 namespace spot
 {
-  /// \brief This class is used to represent conjunctions of variables
+  /// \brief This class represents conjunction of variables
   ///
-  /// It is used as a wrapper for manipulating set of variable (or
-  /// acceptance mark) without dealing with the implementation.
+  /// It is used as a wrapper for manipulating set of variables
+  /// without dealing with the implementation.
   class cube
   {
+  public:
+    /// \brief Initialize a cube of size \a size
+    ///
+    /// Default initialisation set all the cube to true
+    cube (size_t size);
+
+    /// \brief Compare two cubes
+    ///
+    /// \param rhs the object to compare with
+    bool operator==(const cube& rhs);
+
+    /// \brief Set the variable at the \a index position to true
+    ///
+    /// \param index the index in the cube
+    void set_true_var(size_t index);
+
+    /// \brief Set the variable at the \a index position to false
+    ///
+    /// \param index the index in the cube
+    void set_false_var(size_t index);
+
+    /// \brief Set the variable at the \a index position to free
+    ///
+    /// \param index the index in the cube
+    void set_free_var(size_t index);
+
+    /// \brief return the size of the cube
+    size_t size();
+
+    /// \brief output the description of the cube
+    ///
+    /// \param names provides a descriptor for each variable
+    std::string dump(std::vector<std::string> names);
+
+  protected:
 
     // -----------------------------------------------------------
     // This class is a wrapper for two bitsets :
@@ -40,7 +75,7 @@ namespace spot
     //   - false_var : a bitset representing variables that
     //                 are set to false
     //
-    // In the  two vector bit set to 1 represent a variable to
+    // In the  two vectors a bit set to 1 represent a variable set to
     // true (resp. false) for the true_var (resp. false_var)
     //
     // The cube for (a & !b) will be repensented by :
@@ -58,54 +93,8 @@ namespace spot
     //           same time (consistency! cannot be true and false)
     // -----------------------------------------------------------
 
-  public:
-    /// \brief Initialize a cube of size \a size
-    ///
-    /// Default initialisation set all the cube to true
-    cube (int size);
-
-    /// \brief Perform the negation of the cube
-    cube operator~() const;
-
-    /// \brief Compare two cube
-    ///
-    /// \param rhs the object to compare with
-    bool operator==(const cube& rhs);
-
-    /// \brief set values for the true variable
-    ///
-    /// \param index the index in the bitset
-    void set_true_var(size_t index);
-
-    /// \brief set values for the false variable
-    ///
-    /// \param index the index in the bitset
-    void set_false_var(size_t index);
-
-    /// \brief set values for the free variable
-    ///
-    /// \param index the index in the bitset
-    void set_free_var(size_t index);
-
-    /// \brief set values for the true variable
-    ///
-    /// \param index the index in the bitset
-    void unset_true_var(size_t index);
-
-    /// \brief set values for the false variables
-    ///
-    /// \param index the index in the bitset
-    void unset_false_var(size_t index);
-
-    /// \brief output the description of the cube
-    ///
-    /// \param names provides a descriptor for each variable
-    std::string dump(std::vector<std::string> names);
-
-  protected:
     boost::dynamic_bitset<> true_var;   ///< the set of variables set to true
     boost::dynamic_bitset<> false_var;  ///< the set of variables set to false
-    int size_;				///< the size of the 2 bitset
   };
 }
 
