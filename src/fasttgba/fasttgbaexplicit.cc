@@ -129,17 +129,12 @@ namespace spot
 
   fasttgbaexplicit::fasttgbaexplicit(std::vector<std::string> aps,
 				     std::vector<std::string> acc):
-    all_cond_ (acc.size()),
-    all_cond_neg_ (acc.size()),
+    all_marks_ (acc.size()),
     aps_(aps),
     acc_(acc),
     init_(0)
   {
     num_acc_ = acc.size();
-
-    // Allocate the bitset and fix all_cond to avoid
-    // multiple computations
-    all_cond_neg_ = ~all_cond_;
   }
 
   fasttgbaexplicit::~fasttgbaexplicit()
@@ -205,21 +200,15 @@ namespace spot
   }
 
   markset
-  fasttgbaexplicit::all_acceptance_conditions() const
+  fasttgbaexplicit::all_acceptance_marks() const
   {
-    return all_cond_;
+    return all_marks_;
   }
 
   unsigned int
-  fasttgbaexplicit::number_of_acceptance_conditions() const
+  fasttgbaexplicit::number_of_acceptance_marks() const
   {
     return num_acc_;
-  }
-
-  markset
-  fasttgbaexplicit::neg_acceptance_conditions() const
-  {
-    return all_cond_neg_;
   }
 
   fast_explicit_state*

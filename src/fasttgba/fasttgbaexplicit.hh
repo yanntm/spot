@@ -125,13 +125,10 @@ namespace spot
     virtual faststate* project_state(const faststate* s,
 				     const fasttgba* t) const;
     virtual
-    markset all_acceptance_conditions() const;
+    markset all_acceptance_marks() const;
 
     virtual
-    unsigned int number_of_acceptance_conditions() const;
-
-    virtual
-    markset neg_acceptance_conditions() const;
+    unsigned int number_of_acceptance_marks() const;
 
     // -------------------------------------------------------
     // This part is for creating a new FASTTGBAEXPLICIT
@@ -156,8 +153,7 @@ namespace spot
 			cube cond, markset acc);
 
   protected:
-    markset all_cond_;	            ///< the set of acceptance mark
-    markset all_cond_neg_;             ///< the negation of all_cond
+    markset all_marks_;	            ///< the set of acceptance mark
     std::vector<std::string> aps_;  ///< The set of atomic proposition
     std::vector<std::string> acc_;  ///< The set of acceptance mark
     const faststate* init_;

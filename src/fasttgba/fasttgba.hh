@@ -75,29 +75,20 @@ namespace spot
     faststate* project_state(const faststate* s,
 			     const fasttgba* t) const = 0;
 
-    /// \brief Return the set of all acceptance conditions used
+    /// \brief Return the set of all acceptance marks used
     /// by this automaton.
     ///
     /// The goal of the emptiness check is to ensure that
     /// a strongly connected component walks through each
-    /// of these acceptiong conditions.  I.e., the union
+    /// of these accepting conditions.  I.e., the union
     /// of the acceptiong conditions of all transition in
     /// the SCC should be equal to the result of this function.
     virtual
-    markset all_acceptance_conditions() const = 0;
+    markset all_acceptance_marks() const = 0;
 
-    /// The number of acceptance conditions.
+    /// The number of acceptance marks
     virtual
-    unsigned int number_of_acceptance_conditions() const = 0;
-
-    /// \brief Return the conjuction of all negated acceptance
-    /// variables.
-    ///
-    /// For instance if the automaton uses variables <tt>Acc[a]</tt>,
-    /// <tt>Acc[b]</tt> and <tt>Acc[c]</tt> to describe acceptance sets,
-    /// this function should return <tt>!Acc[a]\&!Acc[b]\&!Acc[c]</tt>.
-    virtual
-    markset neg_acceptance_conditions() const = 0;
+    unsigned int number_of_acceptance_marks() const = 0;
 
   protected:
     mutable int num_acc_;	///< The number of acceptance mark
