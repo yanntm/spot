@@ -16,43 +16,33 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SPOT_FASTTGBA_AP_DICT_HH
-# define SPOT_FASTTGBA_AP_DICT_HH
+#ifndef SPOT_FASTTGBA_ACC_DICT_HH
+# define SPOT_FASTTGBA_ACC_DICT_HH
 
+#include <string>
 #include "ltlast/atomic_prop.hh"
 
 namespace spot
 {
   class fasttgba;
 
-  class ap_dict
+  class acc_dict
   {
   public:
-    /// \brief a default constructor that construct an empty dictionnary
-    ap_dict();
+    acc_dict();
 
-    /// \brief a simple destructor
-    virtual ~ap_dict();
+    virtual ~acc_dict();
 
-    /// \brief add an atomic proposition into this dictionnary
-    ///
-    /// All returned values start from 0 to size ()
-    ///
-    /// Return the unique identifier associated to this \a ap
-    virtual int register_ap_for_aut(const ltl::atomic_prop* ap,
-				    const spot::fasttgba* a);
-
-    /// \brief
-    ///
-    ///
-    virtual const ltl::atomic_prop* get(int i);
+    int register_acc_for_aut(std::string acc,
+			     const spot::fasttgba*);
+    std::string get(int index);
 
     size_t size();
 
   protected:
     int id_;
-    std::map<const ltl::atomic_prop*, int> aps_;      ///< formula to int converter
-    std::map<int, const ltl::atomic_prop*> apsback_; ///< int to formula converter
+    std::map<std::string, int> accs_;
+    std::map<int, std::string> accsback_;
   };
 }
-#endif // SPOT_FASTTGBA_AP_DICT_HH
+#endif // SPOT_FASTTGBA_ACC_DICT_HH

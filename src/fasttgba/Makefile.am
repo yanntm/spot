@@ -26,6 +26,7 @@ fasttgbadir = $(pkgincludedir)/fasttgba
 
 fasttgba_HEADERS = \
   ap_dict.hh \
+  acc_dict.hh \
   faststate.hh \
   fasttgba_succ_iterator.hh \
   fasttgba.hh \
@@ -36,6 +37,7 @@ fasttgba_HEADERS = \
 noinst_LTLIBRARIES = libfasttgba.la
 libfasttgba_la_SOURCES = \
   ap_dict.cc \
+  acc_dict.cc \
   fasttgba.cc \
   fasttgbaexplicit.cc \
   cube.cc \

@@ -22,16 +22,19 @@
 
 namespace spot
 {
-  markset::markset(boost::dynamic_bitset<> m)
+  markset::markset(boost::dynamic_bitset<> m, acc_dict& acc):
+    accs_(acc)
   {
     markset_ = m;
   }
 
-  markset::markset(size_t size):
-    markset_(size)
+  markset::markset(acc_dict& acc):
+    markset_(acc.size()),
+    accs_(acc)
   { }
 
-  markset::markset(const markset& b)
+  markset::markset(const markset& b):
+    accs_(b.accs_)
   {
     markset_ = b.markset_;
   }
@@ -98,26 +101,26 @@ namespace spot
   markset
   markset::operator~() const
   {
-   return markset(~markset_);
+    return markset(~markset_, accs_);
   }
 
   std::string
-  markset::dump(std::vector<std::string> acc)
+  markset::dump()
   {
     std::ostringstream oss;
-    if (acc.empty())
+    if (accs_.size() == 0)
       oss << markset_;
-    else if  (acc.size() == 1 && markset_[0])
+    else if  (accs_.size() == 1 && markset_[0])
       {
 	oss << "[1] ";
       }
     else
       {
-	assert(acc.size() == markset_.size());
+	assert(accs_.size() == markset_.size());
 	size_t i;
 	for (i = 0; i < markset_.size(); ++i)
 	  if (markset_[i])
-	    oss << "[" << acc[i] << "] ";
+	    oss << "[" << accs_.get(i) << "] ";
       }
     return oss.str();
   }

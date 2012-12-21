@@ -23,6 +23,7 @@
 #include <vector>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
+#include "acc_dict.hh"
 
 namespace spot
 {
@@ -35,11 +36,11 @@ namespace spot
   {
   private:
     /// \brief Internal Constructor
-    markset(boost::dynamic_bitset<>);
+    markset(boost::dynamic_bitset<>, acc_dict& acc);
 
   public:
     /// \brief Initialize a mark of size \a size
-    markset(size_t size);
+    markset(acc_dict& acc);
 
     /// \brief A copy constructor
     markset(const markset& b);
@@ -97,10 +98,12 @@ namespace spot
     ///
     /// \param acc is used to specified for each mark
     /// the label to use in dumping
-    virtual std::string dump(std::vector<std::string> acc);
+    virtual std::string dump();
 
   protected:
     boost::dynamic_bitset<> markset_;   ///< the set of acceptance
+    acc_dict& accs_;			///< the reference over the acceptances
+
   };
 }
 

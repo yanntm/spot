@@ -103,7 +103,7 @@ namespace spot
     /// \param aps a set of atomic proposition name
     /// \param acc a set of acceptance variable name
     fasttgbaexplicit(ap_dict* aps,
-		     std::vector<std::string> acc);
+		     acc_dict* acc);
 
     virtual ~fasttgbaexplicit();
 
@@ -153,8 +153,8 @@ namespace spot
 
   protected:
     markset all_marks_;	            ///< the set of acceptance mark
-    ap_dict* aps_;                   ///< The set of atomic proposition
-    std::vector<std::string> acc_;  ///< The set of acceptance mark
+    ap_dict* aps_;                  ///< The set of atomic proposition
+    acc_dict* acc_;                 ///< The set of acceptance mark
     const fasttgba_state* init_;
 
     typedef Sgi::hash_map<int, fast_explicit_state*, identity_hash<int> > sm;

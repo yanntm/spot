@@ -128,14 +128,15 @@ namespace spot
   // ----------------------------------------------------------------------
 
   fasttgbaexplicit::fasttgbaexplicit(ap_dict* aps,
-				     std::vector<std::string> acc):
-    all_marks_ (acc.size()),
+				     acc_dict* acc):
+    all_marks_ (*acc),
     //aps_(aps),
-    acc_(acc),
+    //acc_(acc),
     init_(0)
   {
     aps_ = aps;
-    num_acc_ = acc.size();
+    acc_ = acc;
+    num_acc_ = acc->size();
   }
 
   fasttgbaexplicit::~fasttgbaexplicit()
@@ -188,8 +189,8 @@ namespace spot
     oss << t->current_condition().dump(*aps_);
 
     if (!t->current_acceptance_marks().empty())
-      oss << " \\nAcc { " << t->current_acceptance_marks().dump(acc_)
-	  << "}";
+      oss << " \\nAcc { " << t->current_acceptance_marks().dump()
+    	  << "}";
     return oss.str();
   }
 

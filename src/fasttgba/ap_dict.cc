@@ -30,7 +30,8 @@ namespace spot
   }
 
   int
-  ap_dict::add_ap(const ltl::atomic_prop* ap)
+  ap_dict::register_ap_for_aut(const ltl::atomic_prop* ap,
+			       const spot::fasttgba*)
   {
     aps_.insert(std::make_pair(ap, id_));
     apsback_.insert(std::make_pair(id_, ap));

@@ -119,12 +119,14 @@ int main(int argc, char **argv)
       // Decclare the dictionnary of atomic propositions that will be
       // used all along processing
       spot::ap_dict* aps = new spot::ap_dict();
+      spot::acc_dict* accs = new spot::acc_dict();
 
-      const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a, aps);
+      const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a, *aps, *accs);
       spot::dotty_dfs dotty(ftgba);
       dotty.run();
       delete ftgba;
       delete aps;
+      delete accs;
     }
 
   // Clean up

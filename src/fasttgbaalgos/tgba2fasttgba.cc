@@ -37,9 +37,10 @@ namespace spot
     class converter_bfs : public tgba_reachable_iterator_breadth_first
     {
     public:
-      converter_bfs(const tgba* a, ap_dict* aps)
+      converter_bfs(const tgba* a, ap_dict& aps,  acc_dict& accs)
 	: tgba_reachable_iterator_breadth_first(a),
 	  aps_(aps),
+	  accs_(accs),
 	  acceptance_number (0),
 	  variable_number (0)
       {
@@ -48,6 +49,9 @@ namespace spot
       void
       start()
       {
+	// Here initialize the fasttgba
+	result_ = new fasttgbaexplicit(&aps_, &accs_);
+
 	// Here this method is used to grab main values needed
 	// to construct a fasttgba
 
@@ -63,7 +67,7 @@ namespace spot
 	  {
 	    const ltl::formula *f = sii->first;
 	    //ap_dict.push_back(((const ltl::atomic_prop*)f)->name());
-	    aps_->add_ap((const ltl::atomic_prop*)f);
+	    aps_.register_ap_for_aut((const ltl::atomic_prop*)f, result_);
 	  }
 
 	// Second grab Acceptance variables
@@ -73,19 +77,15 @@ namespace spot
 	std::map<const ltl::formula*, int>::iterator end2 =
 	  acc_map.end();
 
-	std::vector<std::string> acc_dict;
 	for (; sii2 != end2; ++sii2)
 	  {
 	    const ltl::formula *f = sii2->first;
-	    acc_dict.push_back(((const ltl::atomic_prop*)f)->name());
+	    accs_.register_acc_for_aut(((const ltl::atomic_prop*)f)->name(), result_);
 	  }
 
 	// To speed up other processing
-	acceptance_number = acc_dict.size();
-	variable_number = aps_->size();
-
-	// Here initialize the fasttgba
-	result_ = new fasttgbaexplicit(aps_, acc_dict);
+	acceptance_number = accs_.size();
+	variable_number = aps_.size();
       }
 
       void
@@ -108,7 +108,7 @@ namespace spot
 	// First we process all acceptance conditions
 	//
  	bdd acc  = it->current_acceptance_conditions();
-	markset current_mark (acceptance_number);
+	markset current_mark (accs_);
 	while (acc != bddfalse)
 	  {
 	    bdd one = bdd_satone(acc);
@@ -170,16 +170,17 @@ namespace spot
 
     private:
       fasttgbaexplicit *result_;
-      ap_dict* aps_;
+      ap_dict& aps_;
+      acc_dict& accs_;
       int acceptance_number;
       int variable_number;
     };
   }
 
   const fasttgba*
-  tgba_2_fasttgba(const spot::tgba* a, ap_dict* aps)
+  tgba_2_fasttgba(const spot::tgba* a, ap_dict& aps, acc_dict& accs)
   {
-    converter_bfs cb_(a, aps);
+    converter_bfs cb_(a, aps, accs);
     cb_.run();
     return cb_.result();
   }

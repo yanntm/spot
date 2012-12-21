@@ -1,4 +1,4 @@
-// Copyright (C) 2012 Laboratoire de Recherche et Développement
+// Copyright (C) 2012 Laboratoire de Recherche et DÃ©veloppement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -16,31 +16,41 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
-#ifndef SPOT_FASTTGBAALGOS_TGBA2FASTTGBA_HH
-# define SPOT_FASTTGBAALGOS_TGBA2FASTTGBA_HH
-
-#include "tgba/tgba.hh"
-#include "fasttgba/ap_dict.hh"
-#include "fasttgba/acc_dict.hh"
-#include "fasttgba/fasttgba.hh"
+#include "acc_dict.hh"
 
 namespace spot
 {
+  acc_dict::acc_dict()
+  {
+  }
 
-  /// \brief Perform a translation from a Tgba to a Fasttgba
-  ///
-  /// This method is the only method that should use old Tgba
-  /// \a param t the source tgba
-  /// \a param aps the dictionnary of atomic propositions
-  const fasttgba*
-  tgba_2_fasttgba(const spot::tgba* t,
-		  spot::ap_dict& aps,
-		  spot::acc_dict& accs);
+  acc_dict::~acc_dict()
+  {
+  }
 
+  int
+  acc_dict::register_acc_for_aut(std::string acc,
+				const spot::fasttgba*)
+  {
+    accs_.insert(std::make_pair(acc, id_));
+    accsback_.insert(std::make_pair(id_, acc));
+    ++id_;
+    return id_;
+  }
+
+  std::string
+  acc_dict::get(int index)
+  {
+    std::map<int, std::string>::iterator it = accsback_.find(index);
+    if (it != accsback_.end())
+      return it->second;
+    assert(false);
+    return 0;
+  }
+
+  size_t
+  acc_dict::size()
+  {
+    return accs_.size();
+  }
 }
-
-
-
-#endif // SPOT_FASTTGBAALGOS_TGBA2FASTTGBA_HH
