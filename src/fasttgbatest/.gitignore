@@ -3,4 +3,4 @@ defs
 .libs
 Makefile
 Makefile.in
-tgba2fasttgba
+tgba_converter
