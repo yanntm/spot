@@ -22,6 +22,7 @@
 # define SPOT_FASTTGBAALGOS_TGBA2FASTTGBA_HH
 
 #include "tgba/tgba.hh"
+#include "fasttgba/ap_dict.hh"
 #include "fasttgba/fasttgba.hh"
 
 namespace spot
@@ -31,7 +32,7 @@ namespace spot
   ///
   /// This method is the only method that should use old Tgba
   const fasttgba*
-  tgba_2_fasttgba(const spot::tgba*);
+  tgba_2_fasttgba(const spot::tgba*, spot::ap_dict* aps);
 
 }
 

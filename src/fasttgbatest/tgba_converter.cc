@@ -28,7 +28,6 @@
 #include "fasttgbaalgos/tgba2fasttgba.hh"
 #include "fasttgbaalgos/dotty_dfs.hh"
 
-
 void syntax (char*)
 {
   std::cout << "Syntax" << std::endl;
@@ -45,7 +44,6 @@ int main(int argc, char **argv)
 
   //  The dictionnary
   spot::bdd_dict* dict = new spot::bdd_dict();
-
 
   // The automaton of the formula
   const spot::tgba* a = 0;
@@ -114,10 +112,19 @@ int main(int argc, char **argv)
       delete pp;
 
 
-      const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a);
+      // -----------------------------------------------------
+      // Start using fasttgba
+      // -----------------------------------------------------
+
+      // Decclare the dictionnary of atomic propositions that will be
+      // used all along processing
+      spot::ap_dict* aps = new spot::ap_dict();
+
+      const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a, aps);
       spot::dotty_dfs dotty(ftgba);
       dotty.run();
       delete ftgba;
+      delete aps;
     }
 
   // Clean up

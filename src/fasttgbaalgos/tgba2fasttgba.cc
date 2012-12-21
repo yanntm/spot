@@ -37,8 +37,9 @@ namespace spot
     class converter_bfs : public tgba_reachable_iterator_breadth_first
     {
     public:
-      converter_bfs(const tgba* a)
+      converter_bfs(const tgba* a, ap_dict* aps)
 	: tgba_reachable_iterator_breadth_first(a),
+	  aps_(aps),
 	  acceptance_number (0),
 	  variable_number (0)
       {
@@ -58,12 +59,11 @@ namespace spot
 	std::map<const ltl::formula*, int>::iterator end =
 	  var_map.end();
 
-	ap_dict* ap_dict = new spot::ap_dict();
 	for (; sii != end; ++sii)
 	  {
 	    const ltl::formula *f = sii->first;
 	    //ap_dict.push_back(((const ltl::atomic_prop*)f)->name());
-	    ap_dict->add_ap((const ltl::atomic_prop*)f);
+	    aps_->add_ap((const ltl::atomic_prop*)f);
 	  }
 
 	// Second grab Acceptance variables
@@ -82,10 +82,10 @@ namespace spot
 
 	// To speed up other processing
 	acceptance_number = acc_dict.size();
-	variable_number = ap_dict->size();
+	variable_number = aps_->size();
 
 	// Here initialize the fasttgba
-	result_ = new fasttgbaexplicit(ap_dict, acc_dict);
+	result_ = new fasttgbaexplicit(aps_, acc_dict);
       }
 
       void
@@ -137,7 +137,7 @@ namespace spot
  	bdd cond  = it->current_condition();
 	while (cond != bddfalse)
 	  {
-	    cube current_cond (result_->get_dict());//variable_number);
+	    cube current_cond (result_->get_dict());
 	    bdd one = bdd_satone(cond);
 	    cond -= one;
 
@@ -170,15 +170,16 @@ namespace spot
 
     private:
       fasttgbaexplicit *result_;
+      ap_dict* aps_;
       int acceptance_number;
       int variable_number;
     };
   }
 
   const fasttgba*
-  tgba_2_fasttgba(const spot::tgba* a)
+  tgba_2_fasttgba(const spot::tgba* a, ap_dict* aps)
   {
-    converter_bfs cb_(a);
+    converter_bfs cb_(a, aps);
     cb_.run();
     return cb_.result();
   }
