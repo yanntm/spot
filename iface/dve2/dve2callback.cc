@@ -69,7 +69,7 @@ namespace spot
   }
 
   ////////////////////////////////////////////////////////////////////////
-  // POR iterator
+  // POR callback
 
   por_callback::trans::trans(int i, int* d)
     : id(i)
@@ -104,8 +104,8 @@ namespace spot
 
     por_callback* pc = static_cast<por_callback*>(arg);
 
-    int* tmp = new int[4 * sizeof(int)];
-    memcpy(tmp, dst, 4 * sizeof(int));
+    int* tmp = new int[pc->state_size * sizeof(int)];
+    memcpy(tmp, dst, pc->state_size * sizeof(int));
 
     pc->tr.push_back(por_callback::trans(info->group, tmp));
   }
