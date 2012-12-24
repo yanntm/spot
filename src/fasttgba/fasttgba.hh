@@ -20,7 +20,7 @@
 # define SPOT_FASTTGBA_FASTTGBA_HH
 
 #include <string>
-#include "faststate.hh"
+#include "fasttgba_state.hh"
 #include "fasttgba_succ_iterator.hh"
 #include "markset.hh"
 #include "ap_dict.hh"

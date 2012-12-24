@@ -22,7 +22,6 @@
 #include <stack>
 #include "misc/hash.hh"
 #include "fasttgba/fasttgba.hh"
-#include "fasttgba/faststate.hh"
 
 namespace spot
 {

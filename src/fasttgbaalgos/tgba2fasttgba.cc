@@ -52,9 +52,6 @@ namespace spot
 	// Here initialize the fasttgba
 	result_ = new fasttgbaexplicit(&aps_, &accs_);
 
-	// Here this method is used to grab main values needed
-	// to construct a fasttgba
-
 	// First grab Atomic propositions
 	bdd_dict* aps = aut_->get_dict();
 	std::map<const ltl::formula*, int> var_map = aps->var_map;
@@ -66,8 +63,7 @@ namespace spot
 	for (; sii != end; ++sii)
 	  {
 	    const ltl::formula *f = sii->first;
-	    //ap_dict.push_back(((const ltl::atomic_prop*)f)->name());
-	    aps_.register_ap_for_aut((const ltl::atomic_prop*)f, result_);
+	    aps_.register_ap_for_aut(down_cast<const ltl::atomic_prop*>(f), result_);
 	  }
 
 	// Second grab Acceptance variables
@@ -80,7 +76,7 @@ namespace spot
 	for (; sii2 != end2; ++sii2)
 	  {
 	    const ltl::formula *f = sii2->first;
-	    accs_.register_acc_for_aut(((const ltl::atomic_prop*)f)->name(), result_);
+	    accs_.register_acc_for_aut((down_cast<const ltl::atomic_prop*>(f))->name(), result_);
 	  }
 
 	// To speed up other processing

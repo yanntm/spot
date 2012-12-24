@@ -19,7 +19,7 @@
 #ifndef SPOT_FASTTGBA_FASTSUCCITER_HH
 # define SPOT_FASTTGBA_FASTSUCCITER_HH
 
-#include "faststate.hh"
+#include "fasttgba_state.hh"
 #include "cube.hh"
 #include "markset.hh"
 

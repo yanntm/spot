@@ -34,6 +34,7 @@ namespace spot
   /// This method is the only method that should use old Tgba
   /// \a param t the source tgba
   /// \a param aps the dictionnary of atomic propositions
+  /// \a param accs the dictionnary of acceptance set
   const fasttgba*
   tgba_2_fasttgba(const spot::tgba* t,
 		  spot::ap_dict& aps,
