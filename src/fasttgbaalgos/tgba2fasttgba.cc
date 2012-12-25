@@ -23,6 +23,7 @@
 #include "tgbaalgos/reachiter.hh"
 #include "ltlast/formula.hh"
 #include "ltlast/atomic_prop.hh"
+#include "ltlast/constant.hh"
 #include "tgba/bdddict.hh"
 #include "fasttgba/markset.hh"
 #include "fasttgba/ap_dict.hh"
@@ -40,9 +41,7 @@ namespace spot
       converter_bfs(const tgba* a, ap_dict& aps,  acc_dict& accs)
 	: tgba_reachable_iterator_breadth_first(a),
 	  aps_(aps),
-	  accs_(accs),
-	  acceptance_number (0),
-	  variable_number (0)
+	  accs_(accs)
       {
       }
 
@@ -76,12 +75,11 @@ namespace spot
 	for (; sii2 != end2; ++sii2)
 	  {
 	    const ltl::formula *f = sii2->first;
-	    accs_.register_acc_for_aut((down_cast<const ltl::atomic_prop*>(f))->name(), result_);
+	    if ((down_cast<const ltl::atomic_prop*>(f)))
+	      accs_.register_acc_for_aut((down_cast<const ltl::atomic_prop*>(f))->name(), result_);
+	    else if ((down_cast<const ltl::constant*>(f)))
+	      accs_.register_acc_for_aut((down_cast<const ltl::constant*>(f))->val_name(), result_);
 	  }
-
-	// To speed up other processing
-	acceptance_number = accs_.size();
-	variable_number = aps_.size();
       }
 
       void
@@ -168,8 +166,6 @@ namespace spot
       fasttgbaexplicit *result_;
       ap_dict& aps_;
       acc_dict& accs_;
-      int acceptance_number;
-      int variable_number;
     };
   }
 

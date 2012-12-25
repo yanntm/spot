@@ -65,7 +65,7 @@ namespace spot
     /// \brief output the description of the cube
     ///
     /// \param names provides a descriptor for each variable
-    std::string dump(ap_dict& names);
+    std::string dump();
 
   protected:
 

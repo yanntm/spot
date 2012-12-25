@@ -27,6 +27,7 @@
 // This part is for FASTTGBA
 #include "fasttgbaalgos/tgba2fasttgba.hh"
 #include "fasttgbaalgos/dotty_dfs.hh"
+#include "fasttgbaalgos/lbtt_dfs.hh"
 
 void syntax (char*)
 {
@@ -124,6 +125,8 @@ int main(int argc, char **argv)
       const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a, *aps, *accs);
       spot::dotty_dfs dotty(ftgba);
       dotty.run();
+      spot::lbtt_dfs lbtt(ftgba);
+      lbtt.run();
       delete ftgba;
       delete aps;
       delete accs;

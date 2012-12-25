@@ -130,13 +130,10 @@ namespace spot
   fasttgbaexplicit::fasttgbaexplicit(ap_dict* aps,
 				     acc_dict* acc):
     all_marks_ (*acc),
-    //aps_(aps),
-    //acc_(acc),
     init_(0)
   {
     aps_ = aps;
     acc_ = acc;
-    num_acc_ = acc->size();
   }
 
   fasttgbaexplicit::~fasttgbaexplicit()
@@ -186,7 +183,7 @@ namespace spot
   fasttgbaexplicit::transition_annotation(const fasttgba_succ_iterator* t) const
   {
     std::ostringstream oss;
-    oss << t->current_condition().dump(*aps_);
+    oss << t->current_condition().dump();
 
     if (!t->current_acceptance_marks().empty())
       oss << " \\nAcc { " << t->current_acceptance_marks().dump()
@@ -210,7 +207,7 @@ namespace spot
   unsigned int
   fasttgbaexplicit::number_of_acceptance_marks() const
   {
-    return num_acc_;
+    return acc_->size();
   }
 
   fast_explicit_state*

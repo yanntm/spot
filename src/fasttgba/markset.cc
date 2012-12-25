@@ -68,6 +68,13 @@ namespace spot
   }
 
   markset&
+  markset::operator-=(const mark b)
+  {
+    markset_[b] = 0;
+    return *this;
+  }
+
+  markset&
   markset::operator=(const markset& b)
   {
     markset_ = b.markset_;
@@ -83,6 +90,9 @@ namespace spot
   mark
   markset::one()
   {
+    size_t pos = markset_.find_first();
+    if ( pos != markset_.npos)
+      return pos;
     assert(false);
   }
 

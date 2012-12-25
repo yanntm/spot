@@ -24,9 +24,11 @@ fasttgbaalgosdir = $(pkgincludedir)/fasttgbaalgos
 
 fasttgbaalgos_HEADERS = \
   tgba2fasttgba.hh \
+  lbtt_dfs.hh \
   dotty_dfs.hh
 
 noinst_LTLIBRARIES = libfasttgbaalgos.la
 libfasttgbaalgos_la_SOURCES = \
   tgba2fasttgba.cc \
+  lbtt_dfs.cc \
   dotty_dfs.cc

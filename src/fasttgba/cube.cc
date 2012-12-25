@@ -66,7 +66,7 @@ namespace spot
   }
 
   std::string
-  cube::dump(ap_dict& names)
+  cube::dump()
   {
     std::ostringstream oss;
     size_t i;
@@ -75,12 +75,14 @@ namespace spot
       {
 	if (true_var[i])
 	  {
-	    oss << names.get(i)->name() << " ";
+	    oss << aps_.get(i)->name()
+		<< (i != (size() - 1) ? " ": "" );
 	    all_free = false;
 	  }
 	if (false_var[i])
 	  {
-	    oss << "!" << names.get(i)->name() << " ";
+	    oss << "! " << aps_.get(i)->name()
+	      	<< (i != (size() - 1) ? " ": "" );
 	    all_free = false;
 	  }
       }
