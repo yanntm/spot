@@ -19,6 +19,7 @@
 // 02111-1307, USA.
 
 #include "dve2.hh"
+
 #include "tgbaalgos/dotty.hh"
 #include "ltlenv/defaultenv.hh"
 #include "ltlast/allnodes.hh"
@@ -28,6 +29,7 @@
 #include "tgbaalgos/minimize.hh"
 #include "tgbaalgos/emptiness.hh"
 #include "tgbaalgos/reducerun.hh"
+#include "tgbaalgos/stats.hh"
 #include "tgba/tgbaproduct.hh"
 #include "misc/timer.hh"
 #include "misc/memusage.hh"
@@ -61,6 +63,8 @@ syntax(char* prog)
 	    << std::endl
             << "  -gK    output the model state-space in Kripke format"
             << std::endl
+	    << "  -gs	 output statistics about the state space"
+	    << std::endl
 	    << "  -gp    output the product state-space in dot format"
 	    << std::endl
 	    << "  -po    apply partial order reduction"
@@ -87,7 +91,7 @@ main(int argc, char **argv)
 
   bool use_timer = false;
 
-  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke }
+  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke, Stats }
   output = EmptinessCheck;
   bool accepting_run = false;
   bool expect_counter_example = false;
@@ -136,6 +140,9 @@ main(int argc, char **argv)
 		  break;
 		case 'p':
 		  output = DotProduct;
+		  break;
+		case 's':
+		  output = Stats;
 		  break;
 		case 'f':
 		  output = DotFormula;
@@ -284,6 +291,13 @@ main(int argc, char **argv)
 	spot::kripke_save_reachable_renumbered(std::cout, model);
         tm.stop("kripke output");
         goto safe_exit;
+      }
+      if (output == Stats)
+      {
+	tm.start("stat output");
+	stats_reachable(model).dump (std::cout);
+	tm.stop("stat output");
+	goto safe_exit;
       }
     }
 

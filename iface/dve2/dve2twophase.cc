@@ -35,11 +35,25 @@ namespace spot
   {
     const int* dep = k_->d_->get_transition_read_dependencies(t.id);
 
-    for (int i = 0; i < k_->d_->get_state_variable_count(); ++i)
+    for (std::vector<int>::const_iterator it = k_->processes_.begin ();
+    	 it != k_->processes_.end (); ++it)
+    {
+      if (dep[*it] && *it != k_->processes_[p])
+    	return false;
+    }
+
+    for (std::vector<int>::const_iterator it = k_->global_vars_.begin ();
+	 it != k_->global_vars_.end (); ++it)
       {
-	if (dep[i] && i != k_->processes_.at(p))
+	if (dep[*it])
 	  return false;
       }
+
+    // for (int i = 0; i < k_->d_->get_state_variable_count(); ++i)
+    //   {
+    // 	if (dep[i] && i != k_->processes_.at(p))
+    // 	  return false;
+    //   }
 
     return true;
   }
@@ -108,16 +122,15 @@ namespace spot
 	    memcpy(const_cast<int*>(s),
 		   t.dst, k_->state_size_ * sizeof(int));
 
-	    pc.clear();
-
 	    if (visited.find(k_->hash_state(s)) != visited.end())
 	      break;
 	    else
-	      {
-		visited.insert(k_->hash_state(s));
-		k_->d_->get_successors(0, const_cast<int*>(s),
-				   fill_trans_callback, &pc);
-	      }
+	    {
+	      pc.clear();
+	      visited.insert(k_->hash_state(s));
+	      k_->d_->get_successors(0, const_cast<int*>(s),
+				     fill_trans_callback, &pc);
+	    }
 	  }
 
 	if (!pc.tr.empty())

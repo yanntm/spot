@@ -112,7 +112,7 @@ namespace spot
 	 it != in.end(); ++it)
       {
 	dve2_state* nstate =
-	  new(pool->allocate()) dve2_state(k_->state_size_, pool);
+	  new(pool->allocate()) dve2_state(k_->state_size_, 0);
 	memcpy(nstate->vars, it->dst, k_->state_size_ * sizeof(int));
 	res.push_back(nstate);
       }
@@ -131,7 +131,6 @@ namespace spot
 	for (Ti::const_iterator it = procT[p].begin();
 	     it != procT[p].end(); ++it)
 	  {
-	    //std::cerr << "id = " << it->id << std::endl;
 	    const int* dep =
 	      k_->d_->get_transition_read_dependencies(it->id);
 	    if (dep[i])
@@ -198,10 +197,7 @@ namespace spot
       }
 
     if (next_.empty())
-      {
-	std::cerr << "no ample set for this state" << std::endl;
 	next_ = my_copy(pc.tr);
-      }
   }
 
   void

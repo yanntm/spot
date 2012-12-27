@@ -53,7 +53,7 @@ namespace spot
 		 (sizeof(dve2_state) + state_size_ * sizeof(int)))
     , state_condition_last_state_(0), state_condition_last_cc_(0)
     , por_(por)
-    , even_(true)
+    , even_(false)
     , ample_(ample)
     , visited_()
     , cur_process_(0)
@@ -103,13 +103,23 @@ namespace spot
 
 
     //Find the different processes for the partial order reduction
-    for (int i = 0; i < d->get_state_variable_type_count(); ++i)
+    for (int i = 0; i < d->get_state_variable_count(); ++i)
       {
-	std::string tmp(d->get_state_variable_type_name(i));
-
 	//ugly, find a better way to find the number of processes.
-	if (tmp != "byte" && tmp != "integer")
+	// std::string tmp(d->get_state_variable_type_name(i));
+	// if (tmp != "byte" && tmp != "integer")
+	//   processes_.push_back(i);
+
+	//better?
+	if (d->get_state_variable_type_value(d->get_state_variable_type(i), 0))
 	  processes_.push_back(i);
+	else
+	{
+	  std::string tmp = d->get_state_variable_name(i);
+	  if (tmp.find (".") == std::string::npos)
+	    global_vars_.push_back (i);
+	}
+
       }
   }
 

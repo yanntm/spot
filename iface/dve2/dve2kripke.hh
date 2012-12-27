@@ -99,6 +99,7 @@ namespace spot
     mutable std::set<unsigned> visited_;
     unsigned cur_process_;
     std::vector<int> processes_;
+    std::vector<int> global_vars_;
   };
 }
 #endif // SPOT_IFACE_DVE2_DVE2KRIPKE_HH
