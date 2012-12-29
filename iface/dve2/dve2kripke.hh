@@ -94,7 +94,6 @@ namespace spot
     mutable bdd state_condition_last_cond_;
     mutable dve2_callback_context* state_condition_last_cc_;
     bool por_;
-    mutable bool even_;
     bool ample_;
     mutable std::set<unsigned> visited_;
     unsigned cur_process_;

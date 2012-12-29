@@ -28,8 +28,12 @@ namespace spot
   ////////////////////////////////////////////////////////////////////////
   // STATE
 
-  dve2_state::dve2_state(int s, fixed_size_pool* p)
-  : pool(p), hash_value(0), size(s), count(1)
+  dve2_state::dve2_state(int s, fixed_size_pool* p, bool exp)
+  : pool(p)
+    , hash_value(0)
+    , expanded(exp)
+    , size(s)
+    , count(1)
   {
   }
 
@@ -79,8 +83,13 @@ namespace spot
   ////////////////////////////////////////////////////////////////////////
   // COMPRESSED STATE
 
-  dve2_compressed_state::dve2_compressed_state(int s, multiple_size_pool* p)
-    : pool(p), size(s), count(1)
+  dve2_compressed_state::dve2_compressed_state(int s, multiple_size_pool* p,
+					       bool exp)
+  : pool(p)
+    , hash_value(0)
+    , expanded(exp)
+    , size(s)
+    , count(1)
   {
   }
 

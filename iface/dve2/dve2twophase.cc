@@ -141,7 +141,7 @@ namespace spot
       return 0;
 
     fixed_size_pool* p = const_cast<fixed_size_pool*>(&(k_->statepool_));
-    dve2_state* res = new(p->allocate()) dve2_state(k_->state_size_, 0);
+    dve2_state* res = new(p->allocate()) dve2_state(k_->state_size_, 0, false);
     memcpy(res->vars, s, k_->state_size_ * sizeof(int));
 
     return res;

@@ -30,7 +30,7 @@ namespace spot
 {
   struct dve2_state: public state
   {
-    dve2_state(int s, fixed_size_pool* p);
+    dve2_state(int s, fixed_size_pool* p, bool exp = true);
 
     void compute_hash();
 
@@ -49,6 +49,7 @@ namespace spot
   public:
     fixed_size_pool* pool;
     size_t hash_value: 32;
+    bool expanded;
     int size: 16;
     mutable unsigned count: 16;
     int vars[0];
@@ -60,7 +61,7 @@ namespace spot
   class dve2_compressed_state: public state
   {
   public:
-    dve2_compressed_state(int s, multiple_size_pool* p);
+    dve2_compressed_state(int s, multiple_size_pool* p, bool exp = true);
 
     void compute_hash();
 
@@ -79,6 +80,7 @@ namespace spot
   public:
     multiple_size_pool* pool;
     size_t hash_value: 32;
+    bool expanded;
     int size: 16;
     mutable unsigned count: 16;
     int vars[0];

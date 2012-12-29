@@ -53,7 +53,6 @@ namespace spot
 		 (sizeof(dve2_state) + state_size_ * sizeof(int)))
     , state_condition_last_state_(0), state_condition_last_cc_(0)
     , por_(por)
-    , even_(false)
     , ample_(ample)
     , visited_()
     , cur_process_(0)
@@ -301,18 +300,31 @@ namespace spot
   dve2_kripke::succ_iter(const state* local_state,
 			 const state*, const tgba*) const
   {
-    even_ = !even_;
-    if (por_ && even_)
+    if (por_)
       {
-	dve2_twophase tp(this);
+	const dve2_state* uncompstate = 0;
+	const dve2_compressed_state* compstate = 0;
 
-	const int* vstate = get_vars(local_state);
-	assert(vstate);
-	bdd scond = compute_state_condition_aux(vstate);
-	const dve2_state* s = tp.phase1(vstate);
+	uncompstate = static_cast<const dve2_state*> (local_state);
+	if (!uncompstate)
+	{
+	  compstate = static_cast<const dve2_compressed_state*> (local_state);
+	  assert (compstate);
+	}
 
-	if (s)
-	  return new one_state_iterator(s, scond);
+	if ((uncompstate && uncompstate->expanded) ||
+	    (compstate && compstate->expanded))
+	  {
+	    dve2_twophase tp(this);
+
+	    const int* vstate = get_vars(local_state);
+	    assert(vstate);
+	    bdd scond = compute_state_condition_aux(vstate);
+	    const dve2_state* s = tp.phase1(vstate);
+
+	    if (s)
+	      return new one_state_iterator(s, scond);
+	  }
       }
     else if (ample_)
       {
