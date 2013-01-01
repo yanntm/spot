@@ -110,7 +110,8 @@ namespace spot
 	//   processes_.push_back(i);
 
 	//better?
-	if (d->get_state_variable_type_value(d->get_state_variable_type(i), 0))
+	if (d->get_state_variable_type_value_count
+	    (d->get_state_variable_type(i)) > 0)
 	  processes_.push_back(i);
 	else
 	{
