@@ -373,7 +373,8 @@ namespace spot
   tgba_succ_iterator*
   tgba_product::succ_iter(const state* local_state,
 			  const state* global_state,
-			  const tgba* global_automaton) const
+			  const tgba* global_automaton,
+			  const por_info*) const
   {
     const state_product* s =
       down_cast<const state_product*>(local_state);
@@ -386,6 +387,15 @@ namespace spot
 	global_automaton = this;
 	global_state = local_state;
       }
+
+    // if (po)
+    // {
+    //   por_info* ppo = const_cast<por_info*> (po);
+    //   assert(ppo);
+    //   ppo->cur_ap = right_->support_variables(s->right ());
+    // }
+    // por_info* po = new por_info ();
+    // po->cur_ap = right_->support_variables(s->right ());
 
     tgba_succ_iterator* li = left_->succ_iter(s->left(),
 					      global_state, global_automaton);
@@ -462,6 +472,12 @@ namespace spot
   tgba_product::neg_acceptance_conditions() const
   {
     return neg_acceptance_conditions_;
+  }
+
+  const tgba*
+  tgba_product::right() const
+  {
+    return right_;
   }
 
   std::string

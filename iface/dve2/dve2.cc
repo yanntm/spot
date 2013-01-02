@@ -372,8 +372,7 @@ namespace spot
 	    const ltl::formula* dead,
 	    int compress,
 	    bool verbose,
-    	    bool por,
-	    bool ample)
+	    por::type por)
   {
     std::string file;
     if (file_arg.find_first_of("/\\") != std::string::npos)
@@ -486,6 +485,6 @@ namespace spot
 	return 0;
       }
 
-    return new dve2_kripke(d, dict, ps, dead, compress, por, ample);
+    return new dve2_kripke(d, dict, ps, dead, compress, por);
   }
 }

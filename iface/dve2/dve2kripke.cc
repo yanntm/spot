@@ -26,8 +26,11 @@
 #include "dve2succiter.hh"
 #include "dve2twophase.hh"
 
+#include "tgba/tgbaproduct.hh"
+
 #include "misc/intvcomp.hh"
 #include "misc/intvcmp2.hh"
+#include "misc/casts.hh"
 
 #include <cstring>
 #include <sstream>
@@ -36,7 +39,7 @@ namespace spot
 {
   dve2_kripke::dve2_kripke(const dve2_interface* d, bdd_dict* dict,
 			   const dve2_prop_set* ps, const ltl::formula* dead,
-			   int compress, bool por, bool ample)
+			   int compress, por::type por)
   : d_(d)
     , state_size_(d_->get_state_variable_count())
     , dict_(dict)
@@ -52,8 +55,7 @@ namespace spot
     , statepool_(compress ? sizeof(dve2_compressed_state) :
 		 (sizeof(dve2_state) + state_size_ * sizeof(int)))
     , state_condition_last_state_(0), state_condition_last_cc_(0)
-    , por_(por)
-    , ample_(ample)
+    , por_ (por)
     , visited_()
     , cur_process_(0)
   {
@@ -298,9 +300,11 @@ namespace spot
 
   kripke_succ_iterator*
   dve2_kripke::succ_iter(const state* local_state,
-			 const state*, const tgba*) const
+			 const state* prod_state,
+			 const tgba* prod_tgba,
+			 const por_info*) const
   {
-    if (por_)
+    if (por_ == por::TWOP || por_ == por::TWOPD)
       {
 	const dve2_state* uncompstate = 0;
 	const dve2_compressed_state* compstate = 0;
@@ -315,18 +319,34 @@ namespace spot
 	if ((uncompstate && uncompstate->expanded) ||
 	    (compstate && compstate->expanded))
 	  {
+	    bdd form_vars = bddfalse;
+	    // assert (po);
+	    // if (po)
+	    //   form_vars = po->cur_ap;
+
+	    if (por_ == por::TWOPD)
+	      {
+		const state_product* sprod =
+		  down_cast<const state_product*> (prod_state);
+		const tgba_product* tprod =
+		  down_cast<const tgba_product*> (prod_tgba);
+
+		if (sprod && tprod)
+		  form_vars = tprod->right()->support_variables(sprod->right());
+	      }
+
 	    dve2_twophase tp(this);
 
 	    const int* vstate = get_vars(local_state);
 	    assert(vstate);
 	    bdd scond = compute_state_condition_aux(vstate);
-	    const dve2_state* s = tp.phase1(vstate);
+	    const dve2_state* s = tp.phase1(vstate, form_vars);
 
 	    if (s)
 	      return new one_state_iterator(s, scond);
 	  }
       }
-    else if (ample_)
+    else if (por_ == por::AMPLE)
       {
 	const int* vstate = get_vars(local_state);
 	assert(vstate);
@@ -403,7 +423,8 @@ namespace spot
   }
 
   bool
-  dve2_kripke::invisible(const int* start, const int* to) const
+  dve2_kripke::invisible(const int* start, const int* to,
+			 bdd form_vars) const
   {
     assert(start && to);
     for (int i = 0; i < state_size_; ++i)
@@ -411,15 +432,29 @@ namespace spot
 	//labels modified by the transition
 	if (start[i] != to[i])
 	  {
-	    for (dve2_prop_set::const_iterator it = ps_->begin();
-		 it != ps_->end(); ++it)
+	    if (form_vars != bddfalse)
 	      {
-		if (it->var_num == (int) i)
-		  return false;
+		while (form_vars != bddfalse)
+		{
+		  bdd cur = bdd_satone (form_vars);
+
+		  if (bdd_var(cur) == i)
+		    return false;
+
+		  form_vars -= cur;
+		}
+	      }
+	    else
+	      {
+		for (dve2_prop_set::const_iterator it = ps_->begin();
+		     it != ps_->end(); ++it)
+		  {
+		    if (it->var_num == (int) i)
+		      return false;
+		  }
 	      }
 	  }
       }
-
     return true;
   }
 

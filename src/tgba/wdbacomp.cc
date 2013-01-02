@@ -193,7 +193,8 @@ namespace spot
       virtual tgba_succ_iterator*
       succ_iter(const state* local_state,
 		const state* global_state = 0,
-		const tgba* global_automaton = 0) const
+		const tgba* global_automaton = 0,
+		const por_info* = 0) const
       {
 	const state_wdba_comp_proxy* s =
 	  down_cast<const state_wdba_comp_proxy*>(local_state);

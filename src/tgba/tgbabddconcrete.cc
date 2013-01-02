@@ -96,7 +96,8 @@ namespace spot
   tgba_succ_iterator_concrete*
   tgba_bdd_concrete::succ_iter(const state* local_state,
 			       const state* global_state,
-			       const tgba* global_automaton) const
+			       const tgba* global_automaton,
+			       const por_info*) const
   {
     const state_bdd* s = down_cast<const state_bdd*>(local_state);
     assert(s);

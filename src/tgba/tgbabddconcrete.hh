@@ -65,7 +65,8 @@ namespace spot
     virtual tgba_succ_iterator_concrete*
     succ_iter(const state* local_state,
 	      const state* global_state = 0,
-	      const tgba* global_automaton = 0) const;
+	      const tgba* global_automaton = 0,
+	      const por_info* po = 0) const;
 
     virtual std::string format_state(const state* state) const;
 

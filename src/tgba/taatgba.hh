@@ -59,7 +59,8 @@ namespace spot
     virtual tgba_succ_iterator*
     succ_iter(const spot::state* local_state,
 	      const spot::state* global_state = 0,
-	      const tgba* global_automaton = 0) const;
+	      const tgba* global_automaton = 0,
+	      const por_info* po = 0) const;
     virtual bdd_dict* get_dict() const;
     virtual std::string format_state(const spot::state* state) const = 0;
     virtual bdd all_acceptance_conditions() const;

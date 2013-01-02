@@ -177,8 +177,9 @@ namespace spot
   // FIXME : Change the bddtrue.
   kripke_explicit_succ_iterator*
   kripke_explicit::succ_iter(const spot::state* local_state,
-                            const spot::state* global_state,
-                            const tgba* global_automaton) const
+			     const spot::state* global_state,
+			     const tgba* global_automaton,
+			     const por_info*) const
   {
     const state_kripke* s = down_cast<const state_kripke*>(local_state);
     assert(s);

@@ -471,7 +471,8 @@ namespace spot
     virtual tgba_explicit_succ_iterator<State>*
     succ_iter(const spot::state* state,
 	      const spot::state* global_state = 0,
-	      const tgba* global_automaton = 0) const
+	      const tgba* global_automaton = 0,
+	      const por_info* = 0) const
     {
       const State* s = down_cast<const State*>(state);
       assert(s);

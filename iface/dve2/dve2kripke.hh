@@ -45,7 +45,7 @@ namespace spot
 
     dve2_kripke(const dve2_interface* d, bdd_dict* dict,
 		const dve2_prop_set* ps, const ltl::formula* dead,
-		int compress, bool por, bool ample);
+		int compress, por::type por = por::NONE);
 
     ~dve2_kripke();
 
@@ -59,14 +59,17 @@ namespace spot
 
     const int* get_vars(const state* st) const;
     virtual kripke_succ_iterator* succ_iter(const state* local_state,
-					    const state*, const tgba*) const;
+					    const state* prod_state= 0,
+					    const tgba* prod_tgba= 0,
+					    const por_info* = 0) const;
 
     virtual bdd state_condition(const state* st) const;
 
     virtual std::string format_state(const state *st) const;
     virtual spot::bdd_dict* get_dict() const;
 
-    bool invisible(const int* start, const int* to) const;
+    bool invisible(const int* start, const int* to,
+		   bdd form_vars = bddfalse) const;
     unsigned hash_state(const int* in) const;
 
   private:
@@ -93,8 +96,7 @@ namespace spot
     mutable const state* state_condition_last_state_;
     mutable bdd state_condition_last_cond_;
     mutable dve2_callback_context* state_condition_last_cc_;
-    bool por_;
-    bool ample_;
+    por::type por_;
     mutable std::set<unsigned> visited_;
     unsigned cur_process_;
     std::vector<int> processes_;

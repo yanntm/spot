@@ -85,11 +85,12 @@ namespace spot
   bool
   dve2_twophase::deterministic(const int* s, unsigned p,
 			       const std::list<trans>& tr, trans& res,
-			       const std::set<unsigned>& visited) const
+			       const std::set<unsigned>& visited,
+			       bdd form_vars) const
   {
     if (only_one_enabled(s, p, tr, res, visited))
       {
-	if (k_->invisible(s, res.dst) && internal(res, p))
+	if (k_->invisible(s, res.dst, form_vars) && internal(res, p))
 	  return true;
       }
 
@@ -97,7 +98,7 @@ namespace spot
   }
 
   const dve2_state*
-  dve2_twophase::phase1(const int* in) const
+  dve2_twophase::phase1(const int* in, bdd form_vars) const
   {
     const int* s = in;
     std::set<unsigned> visited;
@@ -113,7 +114,7 @@ namespace spot
     trans t(-1, 0);
     for (unsigned p = 0; p < k_->processes_.size(); ++p)
       {
-	while (deterministic(s, p, pc.tr, t, visited))
+	while (deterministic(s, p, pc.tr, t, visited, form_vars))
 	  {
 	    if (s != in)
 	      delete[] s;

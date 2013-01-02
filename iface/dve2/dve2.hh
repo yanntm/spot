@@ -29,8 +29,12 @@
 
 namespace spot
 {
-  // DVE2 --ltsmin interface
+  namespace por
+  {
+    enum type { NONE, AMPLE, TWOP, TWOPD };
+  }
 
+  // DVE2 --ltsmin interface
   typedef struct dve2_transition_info {
     int* labels; // edge labels, NULL, or pointer to the edge label(s)
     int  group;  // holds transition group or -1 if unknown
@@ -109,8 +113,7 @@ namespace spot
 		    const ltl::formula* dead = ltl::constant::true_instance(),
 		    int compress = 0,
 		    bool verbose = true,
-    		    bool por = false,
-		    bool ample = false);
+		    por::type por = por::NONE);
 }
 
 #endif // SPOT_IFACE_DVE2_DVE2_HH

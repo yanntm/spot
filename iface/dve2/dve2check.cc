@@ -63,6 +63,8 @@ syntax(char* prog)
 	    << std::endl
             << "  -gK    output the model state-space in Kripke format"
             << std::endl
+	    << "  -gr	 output statistics about the product automaton"
+	    << std::endl
 	    << "  -gs	 output statistics about the state space"
 	    << std::endl
 	    << "  -gp    output the product state-space in dot format"
@@ -91,13 +93,13 @@ main(int argc, char **argv)
 
   bool use_timer = false;
 
-  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke, Stats }
+  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke, Stats,
+	 ProdStats }
   output = EmptinessCheck;
   bool accepting_run = false;
   bool expect_counter_example = false;
   bool wdba = false;
-  bool por = false;
-  bool ample = false;
+  spot::por::type po = spot::por::NONE;
   char *dead = 0;
   int compress_states = 0;
 
@@ -114,7 +116,7 @@ main(int argc, char **argv)
 	    {
 	    case 'a':
 	      if (opt[1] == 'm')
-		ample = true;
+		po = spot::por::AMPLE;
 	    case 'C':
 	      accepting_run = true;
 	      break;
@@ -141,6 +143,9 @@ main(int argc, char **argv)
 		case 'p':
 		  output = DotProduct;
 		  break;
+		case 'r':
+		  output = ProdStats;
+		  break;
 		case 's':
 		  output = Stats;
 		  break;
@@ -154,11 +159,19 @@ main(int argc, char **argv)
 		  goto error;
 		}
 	      break;
-	    case 'p':
+	    case 't':
 	      switch (opt[1])
 		{
-		case 'o':
-		  por = true;
+		case 'p':
+		  switch (opt[2])
+		  {
+		  case 'd':
+		    po = spot::por::TWOPD;
+		    break;
+		  default:
+		    po = spot::por::TWOP;
+		    break;
+		  }
 		  break;
 		default:
 		  goto error;
@@ -260,7 +273,7 @@ main(int argc, char **argv)
     {
       tm.start("loading dve2");
 
-      if (por && !f->is_X_free())
+      if (po != spot::por::NONE && !f->is_X_free())
       {
 	std::cerr << "ERROR: cannot apply partial order reduction to a formula"
 		  << " containing the next(X) operator." << std::endl;
@@ -269,7 +282,7 @@ main(int argc, char **argv)
 
 
       model = spot::load_dve2(argv[1], dict, &ap, deadf,
-			      compress_states, true, por, ample);
+			      compress_states, true, po);
       tm.stop("loading dve2");
 
       if (!model)
@@ -347,7 +360,13 @@ main(int argc, char **argv)
       tm.stop("dotty output");
       goto safe_exit;
     }
-
+  else if (output == ProdStats)
+  {
+    tm.start("dotty output");
+    stats_reachable(product).dump (std::cout);
+    tm.stop("dotty output");
+    goto safe_exit;
+  }
 
   assert(echeck_inst);
 
