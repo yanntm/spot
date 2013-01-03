@@ -24,6 +24,8 @@
 #ifndef SPOT_TGBAALGOS_GTEC_GTEC_HH
 # define SPOT_TGBAALGOS_GTEC_GTEC_HH
 
+#include "ceporinfo.hh"
+
 #include <stack>
 #include "status.hh"
 #include "tgbaalgos/emptiness.hh"
@@ -184,6 +186,7 @@ namespace spot
     bool poprem_;
     /// Number of dead SCC removed by the algorithm.
     unsigned removed_components;
+    cepor_info poi_;
     unsigned get_removed_components() const;
     unsigned get_vmsize() const;
   };

@@ -69,9 +69,11 @@ syntax(char* prog)
 	    << std::endl
 	    << "  -gp    output the product state-space in dot format"
 	    << std::endl
-	    << "  -po    apply partial order reduction"
+	    << "  -tp    partial order using two phase algorithm"
 	    << std::endl
-	    << "  -am	 apply partial order reduction using ample set"
+	    << "  -tpd   partial order using dynamic two phase algorithm"
+	    << std::endl
+	    << "  -am	 apply partial order using ample set"
 	    << std::endl
             << "  -T     time the different phases of the execution"
 	    << std::endl
@@ -281,8 +283,10 @@ main(int argc, char **argv)
       }
 
 
+
       model = spot::load_dve2(argv[1], dict, &ap, deadf,
 			      compress_states, true, po);
+
       tm.stop("loading dve2");
 
       if (!model)
@@ -300,10 +304,10 @@ main(int argc, char **argv)
 	}
       if (output == Kripke)
       {
-        tm.start("kripke output");
+	tm.start("kripke output");
 	spot::kripke_save_reachable_renumbered(std::cout, model);
-        tm.stop("kripke output");
-        goto safe_exit;
+	tm.stop("kripke output");
+	goto safe_exit;
       }
       if (output == Stats)
       {

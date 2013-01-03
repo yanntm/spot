@@ -302,7 +302,7 @@ namespace spot
   dve2_kripke::succ_iter(const state* local_state,
 			 const state* prod_state,
 			 const tgba* prod_tgba,
-			 const por_info*) const
+			 const por_info* po) const
   {
     if (por_ == por::TWOP || por_ == por::TWOPD)
       {
@@ -348,6 +348,7 @@ namespace spot
       }
     else if (por_ == por::AMPLE)
       {
+	assert (po);
 	const int* vstate = get_vars(local_state);
 	assert(vstate);
 
@@ -359,7 +360,7 @@ namespace spot
 	d_->get_successors(0, const_cast<int*>(vstate),
 			    fill_trans_callback, &pc);
 
-	return new ample_iterator(vstate, scond, pc, this);
+	return new ample_iterator(vstate, scond, pc, this, po);
       }
     // This may also compute successors in state_condition_last_cc
     bdd scond = compute_state_condition(local_state);
@@ -427,33 +428,27 @@ namespace spot
 			 bdd form_vars) const
   {
     assert(start && to);
-    for (int i = 0; i < state_size_; ++i)
+
+    if (form_vars == bddtrue)
+      return false;
+    else if (form_vars != bddfalse)
       {
-	//labels modified by the transition
-	if (start[i] != to[i])
-	  {
-	    if (form_vars != bddfalse)
-	      {
-		while (form_vars != bddfalse)
-		{
-		  bdd cur = bdd_satone (form_vars);
-
-		  if (bdd_var(cur) == i)
-		    return false;
-
-		  form_vars -= cur;
-		}
-	      }
-	    else
-	      {
-		for (dve2_prop_set::const_iterator it = ps_->begin();
-		     it != ps_->end(); ++it)
-		  {
-		    if (it->var_num == (int) i)
-		      return false;
-		  }
-	      }
-	  }
+	while (form_vars != bddtrue)
+	{
+	  for (dve2_prop_set::const_iterator it = ps_->begin ();
+	       it != ps_->end (); ++it)
+	    if (start[it->var_num] != to[it->var_num] &&
+		it->bddvar == bdd_var(form_vars))
+	      return false;
+	  form_vars = bdd_high(form_vars);
+	}
+      }
+    else
+      {
+	for (dve2_prop_set::const_iterator it = ps_->begin();
+	     it != ps_->end(); ++it)
+	  if (start[it->var_num] != to[it->var_num])
+	    return false;
       }
     return true;
   }

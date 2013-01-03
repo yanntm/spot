@@ -28,6 +28,7 @@ gtecdir = $(pkgincludedir)/tgbaalgos/gtec
 
 gtec_HEADERS = \
   ce.hh \
+  ceporinfo.hh \
   explscc.hh \
   gtec.hh \
   nsheap.hh \
@@ -37,6 +38,7 @@ gtec_HEADERS = \
 noinst_LTLIBRARIES = libgtec.la
 libgtec_la_SOURCES = \
   ce.cc \
+  ceporinfo.cc \
   explscc.cc \
   gtec.cc \
   nsheap.cc \

@@ -68,7 +68,8 @@ namespace spot
     ample_iterator(const int* state,
 		   bdd cond,
 		   const por_callback& pc,
-		   const dve2_kripke* k);
+		   const dve2_kripke* k,
+		   const por_info* po);
 
     virtual void first();
     virtual void next();
@@ -86,7 +87,7 @@ namespace spot
 
     bool check_c2(const int* s, Ti& t);
 
-    bool check_c3(Ti& t);
+    bool check_c3(Ti& t, const por_info* po);
 
 
     const dve2_kripke* k_;

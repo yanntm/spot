@@ -68,8 +68,8 @@ namespace spot
     for (std::list<trans>::const_iterator it = tr.begin();
 	 it != tr.end(); ++it)
       {
-	if (visited.find(k_->hash_state(it->dst)) == visited.end() &&
-	    s[k_->processes_[p]] != it->dst[k_->processes_[p]])
+	if (s[k_->processes_[p]] != it->dst[k_->processes_[p]] &&
+	    visited.find(k_->hash_state(it->dst)) == visited.end())
 	  {
 	    ++cpt;
 	    t = *it;
@@ -108,12 +108,18 @@ namespace spot
     por_callback pc(k_->state_size_);
 
     std::list<trans> tr;
-    k_->d_->get_successors(0, const_cast<int*>(s),
-			fill_trans_callback, &pc);
+    // k_->d_->get_successors(0, const_cast<int*>(s),
+    // 			   fill_trans_callback, &pc);
 
     trans t(-1, 0);
     for (unsigned p = 0; p < k_->processes_.size(); ++p)
       {
+	if (!pc.tr.empty ())
+	  pc.clear ();
+	assert(pc.tr.empty ());
+	k_->d_->get_successors(0, const_cast<int*>(s),
+			       fill_trans_callback, &pc);
+
 	while (deterministic(s, p, pc.tr, t, visited, form_vars))
 	  {
 	    if (s != in)
@@ -125,17 +131,14 @@ namespace spot
 
 	    if (visited.find(k_->hash_state(s)) != visited.end())
 	      break;
-	    else
-	    {
-	      pc.clear();
-	      visited.insert(k_->hash_state(s));
-	      k_->d_->get_successors(0, const_cast<int*>(s),
-				     fill_trans_callback, &pc);
-	    }
-	  }
 
-	if (!pc.tr.empty())
-	  pc.clear();
+	    pc.clear ();
+
+	    visited.insert(k_->hash_state(s));
+	    assert (pc.tr.empty ());
+	    k_->d_->get_successors(0, const_cast<int*>(s),
+				   fill_trans_callback, &pc);
+	  }
       }
 
     if (s == in)

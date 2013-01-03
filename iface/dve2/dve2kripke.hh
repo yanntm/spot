@@ -61,7 +61,7 @@ namespace spot
     virtual kripke_succ_iterator* succ_iter(const state* local_state,
 					    const state* prod_state= 0,
 					    const tgba* prod_tgba= 0,
-					    const por_info* = 0) const;
+					    const por_info* po = 0) const;
 
     virtual bdd state_condition(const state* st) const;
 

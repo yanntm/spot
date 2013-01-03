@@ -374,7 +374,7 @@ namespace spot
   tgba_product::succ_iter(const state* local_state,
 			  const state* global_state,
 			  const tgba* global_automaton,
-			  const por_info*) const
+			  const por_info* po) const
   {
     const state_product* s =
       down_cast<const state_product*>(local_state);
@@ -388,17 +388,10 @@ namespace spot
 	global_state = local_state;
       }
 
-    // if (po)
-    // {
-    //   por_info* ppo = const_cast<por_info*> (po);
-    //   assert(ppo);
-    //   ppo->cur_ap = right_->support_variables(s->right ());
-    // }
-    // por_info* po = new por_info ();
-    // po->cur_ap = right_->support_variables(s->right ());
-
+    assert (po);
     tgba_succ_iterator* li = left_->succ_iter(s->left(),
-					      global_state, global_automaton);
+					      global_state, global_automaton,
+					      po);
     tgba_succ_iterator* ri = right_->succ_iter(s->right(),
 					       global_state, global_automaton);
 
