@@ -155,11 +155,11 @@ namespace spot
   }
 
   bool
-  ample_iterator::check_c3(Ti& t)
+  ample_iterator::check_c3(Ti& t, const por_info* po)
   {
     for (Ti::const_iterator it = t.begin();
 	 it != t.end(); ++it)
-      if (k_->visited_.find(k_->hash_state(it->dst)) != k_->visited_.end())
+      if (po->visited(k_->hash_state(it->dst)))
 	return false;
 
     return true;
@@ -168,7 +168,8 @@ namespace spot
   ample_iterator::ample_iterator(const int* state,
 				 bdd cond,
 				 const por_callback& pc,
-				 const dve2_kripke* k)
+				 const dve2_kripke* k,
+				 const por_info* po)
     : kripke_succ_iterator(cond)
       , k_(k)
   {
@@ -187,7 +188,7 @@ namespace spot
       {
 	bool c1 = check_c1(p, procT);
 	bool c2 = check_c2(state, procT[p]);
-	bool c3 = check_c3(procT[p]);
+	bool c3 = check_c3(procT[p], po);
 
 	if (c1 && c2 && c3)
 	  {

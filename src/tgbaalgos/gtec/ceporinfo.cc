@@ -18,17 +18,18 @@
 // Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 // 02111-1307, USA.
 
-#ifndef SPOT_TGBA_PORINFO_HH
-# define SPOT_TGBA_PORINFO_HH
-
-#include "ltlast/atomic_prop.hh"
+#include "ceporinfo.hh"
 
 namespace spot
 {
-  struct por_info
+  bool
+  cepor_info::visited(unsigned hashed_state) const
   {
-    virtual bool visited(unsigned hashed_state) const = 0;
-  };
-}
+    numbered_state_heap_const_iterator* it = heap->iterator ();
+    for (it->first (); !it->done (); it->next ())
+      if (it->get_state()->hash () == hashed_state)
+	return true;
 
-#endif /// SPOT_TGBA_PORINFO_HH
+    return false;
+  }
+}
