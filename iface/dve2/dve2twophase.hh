@@ -28,6 +28,16 @@ namespace spot
 {
   class dve2_twophase
   {
+  protected:
+    struct comp_state: std::binary_function<dve2_state*, dve2_state*, bool>
+    {
+      bool operator() (const dve2_state* s1, const dve2_state* s2) const
+	{
+	  return (s1->compare (s2) == -1);
+	}
+    };
+
+
   public:
     dve2_twophase(const dve2_kripke* k);
 
@@ -39,9 +49,9 @@ namespace spot
     bool internal(const trans& t, int p) const;
     bool only_one_enabled(const int* s, int p,
 			  const std::list<trans>& tr, trans& t,
-			  const std::set<unsigned>& visited) const;
+			  const std::set<dve2_state*, comp_state>& visited) const;
     bool deterministic(const int* s, unsigned p, const std::list<trans>& tr,
-		       trans& res, const std::set<unsigned>& visited,
+		       trans& res, const std::set<dve2_state*, comp_state>& visited,
 		       bdd form_vars = bddfalse) const;
 
     const dve2_kripke* k_;

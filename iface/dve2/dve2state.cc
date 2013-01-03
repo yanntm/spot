@@ -28,13 +28,18 @@ namespace spot
   ////////////////////////////////////////////////////////////////////////
   // STATE
 
-  dve2_state::dve2_state(int s, fixed_size_pool* p, bool exp)
+  dve2_state::dve2_state(int s, fixed_size_pool* p, int* state, bool exp)
   : pool(p)
     , hash_value(0)
     , expanded(exp)
     , size(s)
     , count(1)
   {
+    if (state)
+    {
+      memcpy(vars, state, s * sizeof(int));
+      compute_hash();
+    }
   }
 
   void

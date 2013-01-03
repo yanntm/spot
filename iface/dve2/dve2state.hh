@@ -30,7 +30,7 @@ namespace spot
 {
   struct dve2_state: public state
   {
-    dve2_state(int s, fixed_size_pool* p, bool exp = true);
+    dve2_state(int s, fixed_size_pool* p, int* state = 0, bool exp = true);
 
     void compute_hash();
 

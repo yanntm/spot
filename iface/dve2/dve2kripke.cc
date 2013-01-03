@@ -430,7 +430,7 @@ namespace spot
     assert(start && to);
 
     if (form_vars == bddtrue)
-      return false;
+      return true;
     else if (form_vars != bddfalse)
       {
 	while (form_vars != bddtrue)

@@ -61,22 +61,30 @@ namespace spot
   bool
   dve2_twophase::only_one_enabled(const int* s, int p,
 				  const std::list<trans>& tr, trans& t,
-				  const std::set<unsigned>& visited) const
+				  const std::set<dve2_state*, comp_state>& visited) const
   {
     int cpt = 0;
+    fixed_size_pool* pool = const_cast<fixed_size_pool*>(&(k_->statepool_));
 
     for (std::list<trans>::const_iterator it = tr.begin();
 	 it != tr.end(); ++it)
       {
-	if (s[k_->processes_[p]] != it->dst[k_->processes_[p]] &&
-	    visited.find(k_->hash_state(it->dst)) == visited.end())
+	if (s[k_->processes_[p]] != it->dst[k_->processes_[p]])
 	  {
-	    ++cpt;
-	    t = *it;
-	  }
+	    dve2_state* tmp =
+	      new(pool->allocate()) dve2_state(k_->state_size_, pool, it->dst);
 
-	if (cpt > 1)
-	  return false;
+	    if (visited.find(tmp) == visited.end())
+	      {
+		++cpt;
+		t = *it;
+	      }
+
+	    tmp->destroy();
+
+	    if (cpt > 1)
+	      return false;
+	  }
       }
 
     return cpt == 1;
@@ -85,7 +93,7 @@ namespace spot
   bool
   dve2_twophase::deterministic(const int* s, unsigned p,
 			       const std::list<trans>& tr, trans& res,
-			       const std::set<unsigned>& visited,
+			       const std::set<dve2_state*, comp_state>& visited,
 			       bdd form_vars) const
   {
     if (only_one_enabled(s, p, tr, res, visited))
@@ -100,16 +108,18 @@ namespace spot
   const dve2_state*
   dve2_twophase::phase1(const int* in, bdd form_vars) const
   {
-    const int* s = in;
-    std::set<unsigned> visited;
+    std::set<dve2_state*, comp_state> visited;
 
-    visited.insert(k_->hash_state(in));
+    fixed_size_pool* pool = const_cast<fixed_size_pool*>(&(k_->statepool_));
+
+    dve2_state* ins = new(pool->allocate()) dve2_state(k_->state_size_, pool,
+						    const_cast<int*> (in));
+    visited.insert(ins);
+
+    dve2_state* ss = ins;
 
     por_callback pc(k_->state_size_);
-
     std::list<trans> tr;
-    // k_->d_->get_successors(0, const_cast<int*>(s),
-    // 			   fill_trans_callback, &pc);
 
     trans t(-1, 0);
     for (unsigned p = 0; p < k_->processes_.size(); ++p)
@@ -117,36 +127,45 @@ namespace spot
 	if (!pc.tr.empty ())
 	  pc.clear ();
 	assert(pc.tr.empty ());
-	k_->d_->get_successors(0, const_cast<int*>(s),
+
+	k_->d_->get_successors(0, const_cast<int*>(ss->vars),
 			       fill_trans_callback, &pc);
 
-	while (deterministic(s, p, pc.tr, t, visited, form_vars))
+	while (deterministic(ss->vars, p, pc.tr, t, visited, form_vars))
 	  {
-	    if (s != in)
-	      delete[] s;
+	    ss = new(pool->allocate()) dve2_state(k_->state_size_, pool,
+						  t.dst, false);
 
-	    s = new int[k_->state_size_ * sizeof(int)];
-	    memcpy(const_cast<int*>(s),
-		   t.dst, k_->state_size_ * sizeof(int));
-
-	    if (visited.find(k_->hash_state(s)) != visited.end())
+	    std::set<dve2_state*>::const_iterator it = visited.find(ss);
+	    if (it != visited.end())
+	    {
+	      ss->destroy ();
+	      ss = *it;
 	      break;
+	    }
 
 	    pc.clear ();
 
-	    visited.insert(k_->hash_state(s));
+	    visited.insert(ss);
 	    assert (pc.tr.empty ());
-	    k_->d_->get_successors(0, const_cast<int*>(s),
+	    k_->d_->get_successors(0, const_cast<int*>(ss->vars),
 				   fill_trans_callback, &pc);
 	  }
       }
 
-    if (s == in)
-      return 0;
+    dve2_state* res = 0;
 
-    fixed_size_pool* p = const_cast<fixed_size_pool*>(&(k_->statepool_));
-    dve2_state* res = new(p->allocate()) dve2_state(k_->state_size_, 0, false);
-    memcpy(res->vars, s, k_->state_size_ * sizeof(int));
+    if (!(ss == ins))
+      res = ss->clone ();
+
+    for(std::set<dve2_state*>::iterator it = visited.begin ();
+	it != visited.end ();)
+      {
+	dve2_state* tmp = *it;
+	++it;
+	tmp->destroy ();
+      }
+    visited.clear ();
 
     return res;
   }
