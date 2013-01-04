@@ -61,8 +61,7 @@ namespace spot
   bool
   dve2_twophase::only_one_enabled(const int* s, int p,
 				  const std::list<trans>& tr, trans& t,
-				  const std::set<dve2_state*, comp_state>&
-				  visited) const
+				  const state_set& visited) const
   {
     int cpt = 0;
     fixed_size_pool* pool = const_cast<fixed_size_pool*>(&(k_->statepool_));
@@ -94,7 +93,7 @@ namespace spot
   bool
   dve2_twophase::deterministic(const int* s, unsigned p,
 			       const std::list<trans>& tr, trans& res,
-			       const std::set<dve2_state*, comp_state>& visited,
+			       const state_set& visited,
 			       bdd form_vars) const
   {
     if (only_one_enabled(s, p, tr, res, visited))
@@ -109,7 +108,7 @@ namespace spot
   const dve2_state*
   dve2_twophase::phase1(const int* in, bdd form_vars) const
   {
-    std::set<dve2_state*, comp_state> visited;
+    state_set visited;
 
     fixed_size_pool* pool = const_cast<fixed_size_pool*>(&(k_->statepool_));
 
@@ -137,7 +136,7 @@ namespace spot
 	    ss = new(pool->allocate()) dve2_state(k_->state_size_, pool,
 						  t.dst, false);
 
-	    std::set<dve2_state*>::const_iterator it = visited.find(ss);
+	    state_set::const_iterator it = visited.find(ss);
 	    if (it != visited.end())
 	    {
 	      ss->destroy ();
@@ -152,6 +151,7 @@ namespace spot
 	    k_->d_->get_successors(0, const_cast<int*>(ss->vars),
 				   fill_trans_callback, &pc);
 	  }
+	pc.clear ();
       }
 
     dve2_state* res = 0;
@@ -159,7 +159,7 @@ namespace spot
     if (!(ss == ins))
       res = ss->clone ();
 
-    for(std::set<dve2_state*>::iterator it = visited.begin ();
+    for(state_set::iterator it = visited.begin ();
 	it != visited.end ();)
       {
 	dve2_state* tmp = *it;
