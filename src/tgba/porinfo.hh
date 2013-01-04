@@ -21,13 +21,13 @@
 #ifndef SPOT_TGBA_PORINFO_HH
 # define SPOT_TGBA_PORINFO_HH
 
-#include "ltlast/atomic_prop.hh"
+#include "state.hh"
 
 namespace spot
 {
   struct por_info
   {
-    virtual bool visited(unsigned hashed_state) const = 0;
+    virtual bool visited(const state* state) const = 0;
   };
 }
 

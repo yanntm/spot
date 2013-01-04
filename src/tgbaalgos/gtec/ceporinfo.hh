@@ -29,7 +29,7 @@ namespace spot
   class cepor_info: public por_info
   {
   public:
-    virtual bool visited(unsigned hashed_state) const;
+    virtual bool visited(const state* state) const;
     const numbered_state_heap* heap;
   };
 }

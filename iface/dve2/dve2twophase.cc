@@ -61,7 +61,8 @@ namespace spot
   bool
   dve2_twophase::only_one_enabled(const int* s, int p,
 				  const std::list<trans>& tr, trans& t,
-				  const std::set<dve2_state*, comp_state>& visited) const
+				  const std::set<dve2_state*, comp_state>&
+				  visited) const
   {
     int cpt = 0;
     fixed_size_pool* pool = const_cast<fixed_size_pool*>(&(k_->statepool_));

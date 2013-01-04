@@ -159,9 +159,20 @@ namespace spot
   {
     for (Ti::const_iterator it = t.begin();
 	 it != t.end(); ++it)
-      if (po->visited(k_->hash_state(it->dst)))
-	return false;
+    {
+      fixed_size_pool* pool = const_cast<fixed_size_pool*>(&(k_->statepool_));
 
+      dve2_state* tmp =
+	new(pool->allocate()) dve2_state(k_->state_size_, pool, it->dst);
+
+      if (po->visited(tmp))
+      {
+	tmp->destroy();
+	return false;
+      }
+
+      tmp->destroy();
+    }
     return true;
   }
 

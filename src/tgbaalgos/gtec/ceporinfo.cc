@@ -23,13 +23,15 @@
 namespace spot
 {
   bool
-  cepor_info::visited(unsigned hashed_state) const
+  cepor_info::visited(const state* state) const
   {
     numbered_state_heap_const_iterator* it = heap->iterator ();
     for (it->first (); !it->done (); it->next ())
-      if (it->get_state()->hash () == hashed_state)
-	return true;
+      if (!it->get_state()->compare(state))
+	break;
 
-    return false;
+    bool res = !it->done();
+    delete it;
+    return res;
   }
 }

@@ -37,10 +37,10 @@ namespace spot
 
     const seen_map* m;
     virtual bool
-    visited(unsigned hashed_state) const
+    visited(const state* state) const
     {
       for (seen_map::const_iterator it = m->begin (); it != m->end (); ++it)
-	if (it->first->hash () == hashed_state)
+	if (!it->first->compare(state))
 	  return true;
       return false;
     }
