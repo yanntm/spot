@@ -33,19 +33,20 @@ namespace spot
   bool
   dve2_twophase::internal(const trans& t, int p) const
   {
-    const int* dep = k_->d_->get_transition_read_dependencies(t.id);
+    const int* rdep = k_->d_->get_transition_read_dependencies(t.id);
+    const int* wdep = k_->d_->get_transition_write_dependencies(t.id);
 
     for (std::vector<int>::const_iterator it = k_->processes_.begin ();
     	 it != k_->processes_.end (); ++it)
     {
-      if (dep[*it] && *it != k_->processes_[p])
+      if ((wdep[*it] || rdep[*it]) && *it != k_->processes_[p])
     	return false;
     }
 
     for (std::vector<int>::const_iterator it = k_->global_vars_.begin ();
 	 it != k_->global_vars_.end (); ++it)
       {
-	if (dep[*it])
+	if (wdep[*it] || rdep[*it])
 	  return false;
       }
 

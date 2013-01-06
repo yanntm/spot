@@ -60,6 +60,7 @@ namespace spot
     const char* (*get_state_variable_type_value)(int type, int value);
     int (*get_transition_count)();
     const int* (*get_transition_read_dependencies)(int t);
+    const int* (*get_transition_write_dependencies)(int t);
   };
 
   ////////////////////////////////////////////////////////////////////////

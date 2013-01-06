@@ -442,6 +442,8 @@ namespace spot
       lt_dlsym(h, "get_transition_count");
     d->get_transition_read_dependencies = (const int* (*) (int))
       lt_dlsym(h, "get_transition_read_dependencies");
+    d->get_transition_write_dependencies = (const int* (*) (int))
+      lt_dlsym(h, "get_transition_write_dependencies");
 
     if (!(d->get_initial_state
 	  && d->have_property
@@ -454,7 +456,8 @@ namespace spot
 	  && d->get_state_variable_type_value_count
 	  && d->get_state_variable_type_value
 	  && d->get_transition_count
-	  && d->get_transition_read_dependencies))
+	  && d->get_transition_read_dependencies
+	  && d->get_transition_write_dependencies))
       {
 	if (verbose)
 	  std::cerr << "Failed to resolve some symbol while loading `"
