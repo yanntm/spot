@@ -56,7 +56,6 @@ namespace spot
 		 (sizeof(dve2_state) + state_size_ * sizeof(int)))
     , state_condition_last_state_(0), state_condition_last_cc_(0)
     , por_ (por)
-    , visited_()
     , cur_process_(0)
   {
     vname_ = new const char*[state_size_];
@@ -304,6 +303,11 @@ namespace spot
 			 const tgba* prod_tgba,
 			 const por_info* po) const
   {
+    const state_product* sprod =
+      down_cast<const state_product*> (prod_state);
+    const tgba_product* tprod =
+      down_cast<const tgba_product*> (prod_tgba);
+
     if (por_ == por::TWOP || por_ == por::TWOPD)
       {
 	const dve2_state* uncompstate = 0;
@@ -326,11 +330,6 @@ namespace spot
 
 	    if (por_ == por::TWOPD)
 	      {
-		const state_product* sprod =
-		  down_cast<const state_product*> (prod_state);
-		const tgba_product* tprod =
-		  down_cast<const tgba_product*> (prod_tgba);
-
 		if (sprod && tprod)
 		  form_vars = tprod->right()->support_variables(sprod->right());
 	      }
@@ -349,18 +348,14 @@ namespace spot
     else if (por_ == por::AMPLE)
       {
 	assert (po);
+	assert (prod_state);
+
 	const int* vstate = get_vars(local_state);
 	assert(vstate);
 
-	visited_.insert(hash_state(vstate));
 	bdd scond = compute_state_condition_aux(vstate);
 
-	por_callback pc(state_size_);
-
-	d_->get_successors(0, const_cast<int*>(vstate),
-			    fill_trans_callback, &pc);
-
-	return new ample_iterator(vstate, scond, pc, this, po);
+	return new ample_iterator(vstate, scond, this, sprod, po);
       }
     // This may also compute successors in state_condition_last_cc
     bdd scond = compute_state_condition(local_state);

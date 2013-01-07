@@ -388,7 +388,6 @@ namespace spot
 	global_state = local_state;
       }
 
-    assert (po);
     tgba_succ_iterator* li = left_->succ_iter(s->left(),
 					      global_state, global_automaton,
 					      po);

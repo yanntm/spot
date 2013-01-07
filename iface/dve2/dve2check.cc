@@ -37,6 +37,8 @@
 #include "kripke/kripkeexplicit.hh"
 #include "kripke/kripkeprint.hh"
 
+#include "dve2checkpor.hh"
+
 static void
 syntax(char* prog)
 {
@@ -61,8 +63,8 @@ syntax(char* prog)
 	    << std::endl
 	    << "  -gm    output the model state-space in dot format"
 	    << std::endl
-            << "  -gK    output the model state-space in Kripke format"
-            << std::endl
+	    << "  -gK    output the model state-space in Kripke format"
+	    << std::endl
 	    << "  -gr	 output statistics about the product automaton"
 	    << std::endl
 	    << "  -gs	 output statistics about the state space"
@@ -75,13 +77,15 @@ syntax(char* prog)
 	    << std::endl
 	    << "  -am	 apply partial order using ample set"
 	    << std::endl
-            << "  -T     time the different phases of the execution"
+	    << "  -T     time the different phases of the execution"
 	    << std::endl
-            << "  -W     enable WDBA minimization"
+	    << "  -v	 verify the reduced state space"
 	    << std::endl
-            << "  -z     compress states to handle larger models"
+	    << "  -W     enable WDBA minimization"
 	    << std::endl
-            << "  -Z     compress states (faster) "
+	    << "  -z     compress states to handle larger models"
+	    << std::endl
+	    << "  -Z     compress states (faster) "
 	    << "assuming all values in [0 .. 2^28-1]"
 	    << std::endl;
 
@@ -104,6 +108,7 @@ main(int argc, char **argv)
   spot::por::type po = spot::por::NONE;
   char *dead = 0;
   int compress_states = 0;
+  bool verify = false;
 
   const char* echeck_algo = "Cou99";
 
@@ -181,6 +186,9 @@ main(int argc, char **argv)
 	      break;
 	    case 'T':
 	      use_timer = true;
+	      break;
+	    case 'v':
+	      verify = true;
 	      break;
 	    case 'W':
 	      wdba = true;
@@ -369,6 +377,30 @@ main(int argc, char **argv)
     tm.start("dotty output");
     stats_reachable(product).dump (std::cout);
     tm.stop("dotty output");
+    goto safe_exit;
+  }
+  else if (verify)
+  {
+    tm.start("verify state space");
+    spot::kripke* full_model =
+      spot::load_dve2(argv[1], dict, &ap, deadf,
+		      compress_states, true, spot::por::NONE);
+    spot::tgba* full_prop = spot::ltl_to_tgba_fm(f, dict);
+    spot::tgba* full_product = new spot::tgba_product(full_model,
+						      full_prop);
+
+    spot::dve2_checkpor* cs = new spot::dve2_checkpor(product, full_product);
+    cs->run ();
+
+    if (!cs->ok)
+      exit_code = 1;
+    tm.stop("verify state space");
+
+    delete cs;
+    delete full_product;
+    delete full_prop;
+    delete full_model;
+
     goto safe_exit;
   }
 

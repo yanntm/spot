@@ -26,6 +26,7 @@ dve2dir = $(pkgincludedir)/iface/dve2
 
 dve2_HEADERS = dve2.hh \
 dve2callback.hh \
+dve2checkpor.hh \
 dve2kripke.hh \
 dve2state.hh \
 dve2succiter.hh \
@@ -38,6 +39,7 @@ libspotdve2_la_LIBADD = \
 
 libspotdve2_la_SOURCES = dve2.cc \
 dve2callback.cc \
+dve2checkpor.cc \
 dve2kripke.cc \
 dve2state.cc \
 dve2succiter.cc \

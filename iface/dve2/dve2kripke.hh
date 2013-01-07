@@ -97,7 +97,6 @@ namespace spot
     mutable bdd state_condition_last_cond_;
     mutable dve2_callback_context* state_condition_last_cc_;
     por::type por_;
-    mutable std::set<unsigned> visited_;
     unsigned cur_process_;
     std::vector<int> processes_;
     std::vector<int> global_vars_;

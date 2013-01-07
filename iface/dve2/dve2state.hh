@@ -30,6 +30,14 @@ namespace spot
 {
   struct dve2_state: public state
   {
+    struct compare: std::binary_function<dve2_state*, dve2_state*, bool>
+    {
+      bool operator() (const dve2_state* s1, const dve2_state* s2) const
+	{
+	  return (s1->compare (s2) == -1);
+	}
+    };
+
     dve2_state(int s, fixed_size_pool* p, int* state = 0, bool exp = true);
 
     void compute_hash();

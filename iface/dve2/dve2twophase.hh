@@ -29,14 +29,7 @@ namespace spot
   class dve2_twophase
   {
   protected:
-    struct comp_state: std::binary_function<dve2_state*, dve2_state*, bool>
-    {
-      bool operator() (const dve2_state* s1, const dve2_state* s2) const
-	{
-	  return (s1->compare (s2) == -1);
-	}
-    };
-    typedef std::set<dve2_state*, comp_state> state_set;
+    typedef std::set<dve2_state*, typename dve2_state::compare> state_set;
 
   public:
     dve2_twophase(const dve2_kripke* k);
