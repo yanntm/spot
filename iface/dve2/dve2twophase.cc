@@ -120,7 +120,6 @@ namespace spot
     dve2_state* ss = ins;
 
     por_callback pc(k_->state_size_);
-    std::list<trans> tr;
 
     trans t(-1, 0);
     for (unsigned p = 0; p < k_->processes_.size(); ++p)

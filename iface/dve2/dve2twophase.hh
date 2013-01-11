@@ -29,7 +29,8 @@ namespace spot
   class dve2_twophase
   {
   protected:
-    typedef std::set<dve2_state*, typename dve2_state::compare> state_set;
+    typedef Sgi::hash_set<dve2_state*, state_ptr_hash,
+			  state_ptr_equal> state_set;
 
   public:
     dve2_twophase(const dve2_kripke* k);
