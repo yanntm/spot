@@ -1,11 +1,11 @@
-// Copyright (C) 2011 Laboratoire de Recherche et Developpement
+// Copyright (C) 2011, 2012 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
 //
 // Spot is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 3 of the License, or
+// the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
 //
 // Spot is distributed in the hope that it will be useful, but WITHOUT
@@ -14,18 +14,70 @@
 // License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with Spot; see the file COPYING.  If not, write to the Free
+// Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+// 02111-1307, USA.
 
 #ifndef SPOT_IFACE_DVE2_DVE2_HH
 # define SPOT_IFACE_DVE2_DVE2_HH
 
-#include "kripke/kripke.hh"
-#include "ltlvisit/apcollect.hh"
-#include "ltlast/constant.hh"
+# include <ltdl.h>
 
+# include "kripke/kripke.hh"
+# include "ltlvisit/apcollect.hh"
+# include "ltlast/constant.hh"
 
 namespace spot
 {
+  namespace por
+  {
+    enum type { NONE, AMPLE, TWOP, TWOPD };
+  }
+
+  // DVE2 --ltsmin interface
+  typedef struct dve2_transition_info {
+    int* labels; // edge labels, NULL, or pointer to the edge label(s)
+    int  group;  // holds transition group or -1 if unknown
+  } dve2_transition_info_t;
+
+  typedef void (*TransitionCB)(void *ctx,
+			       dve2_transition_info_t *transition_info,
+			       int *dst);
+
+  struct dve2_interface
+  {
+    lt_dlhandle handle;	// handle to the dynamic library
+    void (*get_initial_state)(void *to);
+    int (*have_property)();
+    int (*get_successors)(void* m, int *in, TransitionCB, void *arg);
+
+    int (*get_state_variable_count)();
+    const char* (*get_state_variable_name)(int var);
+    int (*get_state_variable_type)(int var);
+    int (*get_state_variable_type_count)();
+    const char* (*get_state_variable_type_name)(int type);
+    int (*get_state_variable_type_value_count)(int type);
+    const char* (*get_state_variable_type_value)(int type, int value);
+    int (*get_transition_count)();
+    const int* (*get_transition_read_dependencies)(int t);
+    const int* (*get_transition_write_dependencies)(int t);
+  };
+
+  ////////////////////////////////////////////////////////////////////////
+  // PREDICATE EVALUATION
+
+  typedef enum { OP_EQ, OP_NE, OP_LT, OP_GT, OP_LE, OP_GE } dve2_relop;
+
+  struct dve2_one_prop
+  {
+    int var_num;
+    dve2_relop op;
+    int val;
+    int bddvar;  // if "var_num op val" is true, output bddvar,
+    // else its negation
+  };
+
+  typedef std::vector<dve2_one_prop> dve2_prop_set;
 
   // \brief Load a DVE model.
   //
@@ -55,12 +107,14 @@ namespace spot
   // \a dead an atomic proposition or constant to use for looping on
   //         dead states
   // \a verbose whether to output verbose messages
+  // \a por whether to apply partial order reduction
   kripke* load_dve2(const std::string& file,
 		    bdd_dict* dict,
 		    const ltl::atomic_prop_set* to_observe,
 		    const ltl::formula* dead = ltl::constant::true_instance(),
 		    int compress = 0,
-		    bool verbose = true);
+		    bool verbose = true,
+		    por::type por = por::NONE);
 }
 
 #endif // SPOT_IFACE_DVE2_DVE2_HH

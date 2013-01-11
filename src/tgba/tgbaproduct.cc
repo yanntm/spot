@@ -462,6 +462,12 @@ namespace spot
     return neg_acceptance_conditions_;
   }
 
+  const tgba*
+  tgba_product::right() const
+  {
+    return right_;
+  }
+
   std::string
   tgba_product::transition_annotation(const tgba_succ_iterator* t) const
   {
