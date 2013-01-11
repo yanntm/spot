@@ -347,15 +347,12 @@ namespace spot
       }
     else if (por_ == por::AMPLE)
       {
-	assert (po);
-	assert (prod_state);
-
 	const int* vstate = get_vars(local_state);
 	assert(vstate);
 
 	bdd scond = compute_state_condition_aux(vstate);
 
-	return new ample_iterator(vstate, scond, this, sprod, po);
+	return new ample_iterator(vstate, scond, this, po);
       }
     // This may also compute successors in state_condition_last_cc
     bdd scond = compute_state_condition(local_state);

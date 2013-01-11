@@ -67,7 +67,6 @@ namespace spot
   public:
     ample_iterator(const int* state,
 		   bdd cond,
-		   const por_callback& pc,
 		   const dve2_kripke* k,
 		   const por_info* po);
 

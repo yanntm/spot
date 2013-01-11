@@ -178,12 +178,13 @@ namespace spot
 
   ample_iterator::ample_iterator(const int* state,
 				 bdd cond,
-				 const por_callback& pc,
 				 const dve2_kripke* k,
 				 const por_info* po)
     : kripke_succ_iterator(cond)
       , k_(k)
   {
+    por_callback pc (k->state_size_);
+
     T procT(k->processes_.size(), Ti());
 
     for (Ti::const_iterator it = pc.tr.begin();
