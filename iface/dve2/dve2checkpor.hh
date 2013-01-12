@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SPOT_IFACE_DVE2_CHECKPOR_HH
-# define SPOT_IFACE_DVE2_CHECKPOR_HH
+#ifndef SPOT_IFACE_DVE2_DVE2CHECKPOR_HH
+# define SPOT_IFACE_DVE2_DVE2CHECKPOR_HH
 
 #include "tgbaalgos/reachiter.hh"
 #include "dve2state.hh"
