@@ -32,7 +32,8 @@ fasttgba_HEADERS = \
   fasttgba.hh \
   cube.hh \
   markset.hh \
-  fasttgbaexplicit.hh
+  fasttgbaexplicit.hh \
+  fasttgba_product.hh
 
 noinst_LTLIBRARIES = libfasttgba.la
 libfasttgba_la_SOURCES = \
@@ -40,5 +41,6 @@ libfasttgba_la_SOURCES = \
   acc_dict.cc \
   fasttgba.cc \
   fasttgbaexplicit.cc \
+  fasttgba_product.cc \
   cube.cc \
   markset.cc

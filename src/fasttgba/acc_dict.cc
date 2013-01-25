@@ -20,7 +20,7 @@
 
 namespace spot
 {
-  acc_dict::acc_dict()
+  acc_dict::acc_dict() : id_(0)
   {
   }
 
@@ -32,10 +32,14 @@ namespace spot
   acc_dict::register_acc_for_aut(std::string acc,
 				const spot::fasttgba*)
   {
+    std::map<std::string, int>::iterator it = accs_.find(acc);
+    if (it != accs_.end())
+      return it->second;
+
     accs_.insert(std::make_pair(acc, id_));
     accsback_.insert(std::make_pair(id_, acc));
     ++id_;
-    return id_;
+    return (id_-1);
   }
 
   std::string

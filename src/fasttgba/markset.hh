@@ -73,6 +73,12 @@ namespace spot
     /// \brief Affect the value of  \a b in this
     markset& operator=(const markset& b);
 
+    /// \brief Perform a logical AND
+    markset operator&(const markset& b) const ;
+
+    /// \brief Perform a logical OR
+    markset operator|(const markset& b) const ;
+
     /// \brief Set a mark in the markset
     ///
     /// \param m the mark to be set

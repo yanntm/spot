@@ -39,10 +39,22 @@ namespace spot
     /// Default initialisation set all the cube to true
     cube (ap_dict& aps);
 
+
+    cube (const cube& c);
+
     /// \brief Compare two cubes
     ///
     /// \param rhs the object to compare with
     bool operator==(const cube& rhs);
+
+    /// \brief The logical AND of two cubes
+    ///
+    /// Warning! This function do not check the consistency
+    /// of the resulting cube. To check this consistency
+    /// a call to is_valid is needed.
+    ///
+    /// \param rhs the object to AND  with
+    cube operator&(const cube& rhs) const;
 
     /// \brief Set the variable at the \a index position to true
     ///
@@ -61,6 +73,10 @@ namespace spot
 
     /// \brief return the size of the cube
     size_t size();
+
+    /// \brief return true if the cube is valid considering true and false
+    /// variables
+    bool is_valid() const;
 
     /// \brief output the description of the cube
     ///

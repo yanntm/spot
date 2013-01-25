@@ -61,8 +61,12 @@ namespace spot
 
 	for (; sii != end; ++sii)
 	  {
+	    //std::cout << sii->second << std::endl;
+	    positions_.push_back(sii->second);
+
 	    const ltl::formula *f = sii->first;
-	    aps_.register_ap_for_aut(down_cast<const ltl::atomic_prop*>(f), result_);
+	    aps_.register_ap_for_aut
+	      (down_cast<const ltl::atomic_prop*>(f), result_);
 	  }
 
 	// Second grab Acceptance variables
@@ -74,6 +78,8 @@ namespace spot
 
 	for (; sii2 != end2; ++sii2)
 	  {
+	    std::cout << sii2->second << std::endl;
+	    acceptances_.push_back(sii2->second);
 	    const ltl::formula *f = sii2->first;
 	    if ((down_cast<const ltl::atomic_prop*>(f)))
 	      accs_.register_acc_for_aut((down_cast<const ltl::atomic_prop*>(f))->name(), result_);
@@ -117,8 +123,10 @@ namespace spot
 		  }
 		else
 		  {
+		    std::vector<int>::iterator pp = std::find(acceptances_.begin(), acceptances_.end(), bdd_var(one));
+		    int nth = std::distance(acceptances_.begin(), pp);
+		    current_mark.set_mark(nth);
 		    one = bdd_high(one);
-		    current_mark.set_mark(i);
 		    break;
 		  }
 		++i;
@@ -140,13 +148,17 @@ namespace spot
 	      {
 		if (bdd_high(one) == bddfalse)
 		  {
+		    std::vector<int>::iterator pp = std::find(positions_.begin(), positions_.end(), bdd_var(one));
+		    int nth = std::distance(positions_.begin(), pp);
+		    current_cond.set_false_var(nth);
 		    one = bdd_low(one);
-		    current_cond.set_false_var(i);
 		  }
 		else
 		  {
+		    std::vector<int>::iterator pp = std::find(positions_.begin(), positions_.end(), bdd_var(one));
+		    int nth = std::distance(positions_.begin(), pp);
+		    current_cond.set_true_var(nth);
 		    one = bdd_high(one);
-		    current_cond.set_true_var(i);
 		  }
 		++i;
 	      }
@@ -166,6 +178,8 @@ namespace spot
       fasttgbaexplicit *result_;
       ap_dict& aps_;
       acc_dict& accs_;
+      std::vector<int> positions_;
+      std::vector<int> acceptances_;
     };
   }
 

@@ -134,6 +134,7 @@ namespace spot
   {
     aps_ = aps;
     acc_ = acc;
+    all_marks_ = ~all_marks_;
   }
 
   fasttgbaexplicit::~fasttgbaexplicit()
@@ -168,6 +169,12 @@ namespace spot
   fasttgbaexplicit::get_dict() const
   {
     return *aps_;
+  }
+
+  acc_dict&
+  fasttgbaexplicit::get_acc() const
+  {
+    return *acc_;
   }
 
   std::string

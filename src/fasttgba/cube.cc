@@ -28,11 +28,27 @@ namespace spot
     false_var = boost::dynamic_bitset<>(aps_.size());
   }
 
+  cube::cube (const cube& c): aps_(c.aps_)
+  {
+    true_var = c.true_var;
+    false_var = c.false_var;
+
+  }
+
   bool
   cube::operator==(const cube::cube& rhs)
   {
     return (true_var == rhs.true_var)
       &&  (false_var == rhs.false_var);
+  }
+
+  cube
+  cube::operator&(const cube::cube& rhs) const
+  {
+    cube result (rhs);
+    result.true_var |= true_var;
+    result.false_var |= false_var;
+    return result;
   }
 
   void
@@ -65,6 +81,19 @@ namespace spot
     return true_var.size();
   }
 
+  bool
+  cube::is_valid() const
+  {
+    // Here we check if there is no variable that must
+    // be true and false at the same time.
+    boost::dynamic_bitset<> r = true_var & false_var;
+    if (r.none())
+      {
+    	return true;
+      }
+    return false;
+  }
+
   std::string
   cube::dump()
   {
@@ -79,7 +108,7 @@ namespace spot
 		<< (i != (size() - 1) ? " ": "" );
 	    all_free = false;
 	  }
-	if (false_var[i])
+	else if (false_var[i])
 	  {
 	    oss << "! " << aps_.get(i)->name()
 	      	<< (i != (size() - 1) ? " ": "" );

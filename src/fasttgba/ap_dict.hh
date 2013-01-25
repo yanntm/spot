@@ -25,6 +25,19 @@ namespace spot
 {
   class fasttgba;
 
+  /// \brief This class is used to create a dictionnary that will
+  /// contain all atomic propositions that are needed by an (and
+  /// possibly many) automaton
+  ///
+  /// All atomatic propsitions are register in this class using the
+  /// class ltl::atomic_prop that is used during the translation
+  /// algorithm.
+  ///
+  /// Each atomic proposition is associated to a unique identifier
+  ///
+  /// If this Dicitonnary is used by two automata using the atomic
+  /// proposition 'a' then the id of 'a' will be the same.
+  ///
   class ap_dict
   {
   public:
@@ -42,17 +55,21 @@ namespace spot
     virtual int register_ap_for_aut(const ltl::atomic_prop* ap,
 				    const spot::fasttgba* a);
 
-    /// \brief
-    ///
-    ///
+    /// \brief This provide the reference to the \a i th
+    /// variable that is contained in this dictionnary
     virtual const ltl::atomic_prop* get(int i);
 
+    /// \brief Return the size of this dictionnary
     size_t size();
 
   protected:
-    int id_;
-    std::map<const ltl::atomic_prop*, int> aps_;      ///< formula to int converter
-    std::map<int, const ltl::atomic_prop*> apsback_; ///< int to formula converter
+    int id_;			///< Unique id counter
+
+    /// Formula to int converter
+    std::map<const ltl::atomic_prop*, int> aps_;
+
+    /// Int to formula converter
+    std::map<int, const ltl::atomic_prop*> apsback_;
   };
 }
 #endif // SPOT_FASTTGBA_AP_DICT_HH

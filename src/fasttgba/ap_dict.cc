@@ -33,10 +33,14 @@ namespace spot
   ap_dict::register_ap_for_aut(const ltl::atomic_prop* ap,
 			       const spot::fasttgba*)
   {
+    std::map<const ltl::atomic_prop*, int>::iterator it = aps_.find(ap);
+    if (it != aps_.end())
+      return it->second;
+
     aps_.insert(std::make_pair(ap, id_));
     apsback_.insert(std::make_pair(id_, ap));
     ++id_;
-    return id_;
+    return (id_-1);
   }
 
   const ltl::atomic_prop*

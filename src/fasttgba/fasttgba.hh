@@ -24,6 +24,7 @@
 #include "fasttgba_succ_iterator.hh"
 #include "markset.hh"
 #include "ap_dict.hh"
+#include "acc_dict.hh"
 
 namespace spot
 {
@@ -58,6 +59,10 @@ namespace spot
     /// \brief Get the dictionary associated to the automaton.
     virtual
     ap_dict& get_dict() const = 0;
+
+    /// \brief Get the acceptance dictionary associated to the automaton.
+    virtual
+    acc_dict& get_acc() const = 0;
 
     /// \brief Format the state as a string for printing.
     ///

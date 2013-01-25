@@ -114,6 +114,17 @@ namespace spot
     return markset(~markset_, accs_);
   }
 
+  markset
+  markset::operator&(const markset& b) const
+  {
+    return markset(markset_ &  b.markset_, accs_);
+  }
+  markset
+  markset::operator|(const markset& b) const
+  {
+    return markset(markset_ |  b.markset_, accs_);
+  }
+
   std::string
   markset::dump()
   {

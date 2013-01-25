@@ -65,7 +65,9 @@ namespace spot
 	    else
 	      {
 		if (ws)
-		  process_link(t, tn, s->first, s->second, si);
+		  {
+		    process_link(t, tn, s->first, s->second, si);
+		  }
 		current->destroy();
 	      }
 	  }

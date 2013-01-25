@@ -116,6 +116,9 @@ namespace spot
     ap_dict& get_dict() const;
 
     virtual
+    acc_dict& get_acc() const;
+
+    virtual
     std::string format_state(const fasttgba_state* state) const;
 
     virtual std::string
