@@ -57,6 +57,7 @@ namespace spot
     , state_condition_last_state_(0), state_condition_last_cc_(0)
     , por_ (por)
     , cur_process_(0)
+    , computed_ (false)
   {
     vname_ = new const char*[state_size_];
     format_filter_ = new bool[state_size_];
@@ -127,6 +128,10 @@ namespace spot
   {
     delete[] format_filter_;
     delete[] vname_;
+
+    if (sccmap_)
+      delete sccmap_;
+
     if (compress_)
       {
 	delete[] uncompressed_;
@@ -303,8 +308,7 @@ namespace spot
 			 const tgba* prod_tgba,
 			 const por_info* po) const
   {
-    const state_product* sprod =
-      down_cast<const state_product*> (prod_state);
+    const state_product* sprod = 0;
     const tgba_product* tprod =
       down_cast<const tgba_product*> (prod_tgba);
 
@@ -323,39 +327,27 @@ namespace spot
 	if ((uncompstate && uncompstate->expanded) ||
 	    (compstate && compstate->expanded))
 	  {
-	    bdd form_vars = bddfalse;
-	    // assert (po);
-	    // if (po)
-	    //   form_vars = po->cur_ap;
+	    dve2_twophase tp (this);
 
-	    if (por_ == por::TWOPD)
+	    assert (prod_tgba);
+	    if (!computed_)
 	      {
-		if (sprod && tprod)
-		  form_vars = tprod->right()->support_variables(sprod->right());
+		sccmap_ = new scc_map(tprod->right ());
+		sccmap_->build_map ();
 	      }
-
-	    dve2_twophase tp(this);
 
 	    const int* vstate = get_vars(local_state);
 	    assert(vstate);
 	    bdd scond = compute_state_condition_aux(vstate);
-	    const dve2_state* s = tp.phase1(vstate, form_vars);
+
+	    if (por_ == por::TWOPD)
+	      sprod = down_cast<const state_product*> (prod_state);
+
+	    const dve2_state* s = tp.phase1(vstate, sprod);
 
 	    if (s)
 	      return new one_state_iterator(s, scond);
 	  }
-      }
-    else if (por_ == por::AMPLE)
-      {
-	assert (po);
-	assert (prod_state);
-
-	const int* vstate = get_vars(local_state);
-	assert(vstate);
-
-	bdd scond = compute_state_condition_aux(vstate);
-
-	return new ample_iterator(vstate, scond, this, sprod, po);
       }
     // This may also compute successors in state_condition_last_cc
     bdd scond = compute_state_condition(local_state);
@@ -420,41 +412,35 @@ namespace spot
 
   bool
   dve2_kripke::invisible(const int* start, const int* to,
-			 bdd form_vars) const
+			 const state* form_st) const
   {
     assert(start && to);
 
-    if (form_vars == bddtrue)
-      return true;
-    else if (form_vars != bddfalse)
-      {
-	while (form_vars != bddtrue)
-	{
-	  for (dve2_prop_set::const_iterator it = ps_->begin ();
-	       it != ps_->end (); ++it)
-	    if (start[it->var_num] != to[it->var_num] &&
-		it->bddvar == bdd_var(form_vars))
-	      return false;
-	  form_vars = bdd_high(form_vars);
-	}
-      }
-    else
+    if (!form_st)//Normal version
       {
 	for (dve2_prop_set::const_iterator it = ps_->begin();
 	     it != ps_->end(); ++it)
 	  if (start[it->var_num] != to[it->var_num])
 	    return false;
       }
+    else
+      {
+	bdd aps = sccmap_->aprec_set_of(sccmap_->scc_of_state(form_st));
+
+	if (aps == bddfalse)
+	  return true;
+
+	while (aps != bddtrue)
+	  {
+	    for (dve2_prop_set::const_iterator it = ps_->begin ();
+		 it != ps_->end (); ++it)
+	      if (start[it->var_num] != to[it->var_num] &&
+		  it->bddvar == bdd_var(aps))
+		return false;
+	    aps = bdd_high(aps);
+	  }
+      }
+
     return true;
-  }
-
-  unsigned
-  dve2_kripke::hash_state(const int* in) const
-  {
-    unsigned res = 0;
-    for (int i = 0; i < state_size_; ++i)
-      res = wang32_hash(res ^ in[i]);
-
-    return res;
   }
 }

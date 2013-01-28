@@ -122,8 +122,16 @@ main(int argc, char **argv)
 	  switch (*++opt)
 	    {
 	    case 'a':
-	      if (opt[1] == 'm')
-		po = spot::por::AMPLE;
+	      switch (opt[1])
+	      {
+	      case 't':
+		po = spot::por::TWOPD;
+		break;
+	      default:
+		goto error;
+		break;
+	      }
+	      break;
 	    case 'C':
 	      accepting_run = true;
 	      break;

@@ -35,7 +35,7 @@ namespace spot
   public:
     dve2_twophase(const dve2_kripke* k);
 
-    const dve2_state* phase1(const int* in, bdd form_vars = bddfalse) const;
+    const dve2_state* phase1(const int* in, const state* form_st = 0) const;
 
   protected:
     typedef por_callback::trans trans;
@@ -46,7 +46,7 @@ namespace spot
 			  const state_set& visited) const;
     bool deterministic(const int* s, unsigned p, const std::list<trans>& tr,
 		       trans& res, const state_set& visited,
-		       bdd form_vars = bddfalse) const;
+		       const state* form_st) const;
 
     const dve2_kripke* k_;
   };

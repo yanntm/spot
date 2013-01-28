@@ -25,15 +25,15 @@
 
 # include "misc/fixpool.hh"
 # include "misc/mspool.hh"
+# include "misc/hashfunc.hh"
+
+# include "tgbaalgos/scc.hh"
 
 # include "dve2callback.hh"
-
-#include "misc/hashfunc.hh"
 
 namespace spot
 {
   class dve2_twophase;
-  class ample_iterator;
 
   class dve2_kripke: public kripke
   {
@@ -69,8 +69,7 @@ namespace spot
     virtual spot::bdd_dict* get_dict() const;
 
     bool invisible(const int* start, const int* to,
-		   bdd form_vars = bddfalse) const;
-    unsigned hash_state(const int* in) const;
+		   const state* form_st) const;
 
   private:
     const dve2_interface* d_;
@@ -96,8 +95,13 @@ namespace spot
     mutable const state* state_condition_last_state_;
     mutable bdd state_condition_last_cond_;
     mutable dve2_callback_context* state_condition_last_cc_;
+
     por::type por_;
     unsigned cur_process_;
+
+    mutable bool computed_;
+    mutable scc_map* sccmap_;
+
     std::vector<int> processes_;
     std::vector<int> global_vars_;
   };

@@ -50,12 +50,6 @@ namespace spot
 	  return false;
       }
 
-    // for (int i = 0; i < k_->d_->get_state_variable_count(); ++i)
-    //   {
-    // 	if (dep[i] && i != k_->processes_.at(p))
-    // 	  return false;
-    //   }
-
     return true;
   }
 
@@ -95,11 +89,11 @@ namespace spot
   dve2_twophase::deterministic(const int* s, unsigned p,
 			       const std::list<trans>& tr, trans& res,
 			       const state_set& visited,
-			       bdd form_vars) const
+			       const state* form_st) const
   {
     if (only_one_enabled(s, p, tr, res, visited))
       {
-	if (k_->invisible(s, res.dst, form_vars) && internal(res, p))
+	if (k_->invisible(s, res.dst, form_st) && internal(res, p))
 	  return true;
       }
 
@@ -107,7 +101,7 @@ namespace spot
   }
 
   const dve2_state*
-  dve2_twophase::phase1(const int* in, bdd form_vars) const
+  dve2_twophase::phase1(const int* in, const state* form_st) const
   {
     state_set visited;
 
@@ -131,7 +125,7 @@ namespace spot
 	k_->d_->get_successors(0, const_cast<int*>(ss->vars),
 			       fill_trans_callback, &pc);
 
-	while (deterministic(ss->vars, p, pc.tr, t, visited, form_vars))
+	while (deterministic(ss->vars, p, pc.tr, t, visited, form_st))
 	  {
 	    ss = new(pool->allocate()) dve2_state(k_->state_size_, pool,
 						  t.dst, false);

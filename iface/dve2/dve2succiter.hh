@@ -61,39 +61,6 @@ namespace spot
     const dve2_state* state_;
     bool done_;
   };
-
-  class ample_iterator: public kripke_succ_iterator
-  {
-  public:
-    ample_iterator(const int* state,
-		   bdd cond,
-		   const por_callback& pc,
-		   const dve2_kripke* k,
-		   const por_info* po);
-
-    virtual void first();
-    virtual void next();
-    virtual bool done() const;
-
-    virtual state* current_state() const;
-
-  protected:
-    typedef std::vector<std::list<por_callback::trans> > T;
-    typedef std::list<por_callback::trans> Ti;
-
-    std::list<dve2_state*> my_copy(const Ti& in);
-
-    bool check_c1(unsigned p, const T& procT);
-
-    bool check_c2(const int* s, Ti& t);
-
-    bool check_c3(Ti& t, const por_info* po);
-
-
-    const dve2_kripke* k_;
-    std::list<dve2_state*> next_;
-    std::list<dve2_state*>::const_iterator cur_;
-  };
 }
 
 #endif // SPOT_IFACE_DVE2_DVE2SUCCITER_HH
