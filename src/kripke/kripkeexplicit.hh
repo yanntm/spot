@@ -128,8 +128,7 @@ namespace spot
     kripke_explicit_succ_iterator*
     succ_iter(const spot::state* local_state,
 	      const spot::state* global_state = 0,
-	      const tgba* global_automaton = 0,
-	      const por_info* po = 0) const;
+	      const tgba* global_automaton = 0) const;
 
     /// \brief Get the condition on the state
     bdd state_condition(const state* s) const;

@@ -195,8 +195,7 @@ namespace spot
   tgba_succ_iterator*
   tgba_sgba_proxy::succ_iter(const state* local_state,
 			     const state* global_state,
-			     const tgba* global_automaton,
-			     const por_info*) const
+			     const tgba* global_automaton) const
   {
     const state_sgba_proxy* s =
       down_cast<const state_sgba_proxy*>(local_state);

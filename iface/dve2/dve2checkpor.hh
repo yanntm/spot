@@ -47,11 +47,12 @@ namespace spot
   ///
   /// \param prod: the reduced product automaton.
   /// \param full_prod: the full product automaton.
-  /// \return nothing but update the status of the public variable ok.
+  /// \return nothing but updates the status of the public variable ok.
   class dve2_checkpor: public tgba_reachable_iterator_depth_first
   {
   protected:
-    typedef std::set<const dve2_state*, typename dve2_state::compare> state_set;
+    typedef Sgi::hash_set<const dve2_state*, state_ptr_hash,
+			  state_ptr_equal> state_set;
 
     class keep_states: public tgba_reachable_iterator_depth_first
     {

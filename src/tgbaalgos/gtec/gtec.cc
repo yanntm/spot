@@ -111,7 +111,7 @@ namespace spot
     assert(spi.first == from);
     assert(*spi.second != -1);
     *spi.second = -1;
-    tgba_succ_iterator* i = ecs_->aut->succ_iter(from, 0, 0, &poi_);
+    tgba_succ_iterator* i = ecs_->aut->succ_iter(from, 0, 0);
 
     for (;;)
       {
@@ -134,7 +134,7 @@ namespace spot
 	    if (*spi.second != -1)
 	      {
 		*spi.second = -1;
-		to_remove.push(ecs_->aut->succ_iter(spi.first, 0, 0, &poi_));
+		to_remove.push(ecs_->aut->succ_iter(spi.first, 0, 0));
 	      }
 	  }
 	delete i;
@@ -163,7 +163,6 @@ namespace spot
     //   always be freed when TODO is popped, but STATE should not because
     //   it is also used as a key in H.
     std::stack<pair_state_iter> todo;
-    poi_.heap = ecs_->h;
 
     // Setup depth-first search from the initial state.
     {
@@ -171,7 +170,7 @@ namespace spot
       ecs_->h->insert(init, 1);
       ecs_->root.push(1);
       arc.push(bddfalse);
-      tgba_succ_iterator* iter = ecs_->aut->succ_iter(init, 0, 0, &poi_);
+      tgba_succ_iterator* iter = ecs_->aut->succ_iter(init, 0, 0);
       iter->first();
       todo.push(pair_state_iter(init, iter));
       inc_depth();
@@ -241,7 +240,7 @@ namespace spot
 	    ecs_->h->insert(dest, ++num);
 	    ecs_->root.push(num);
 	    arc.push(acc);
-	    tgba_succ_iterator* iter = ecs_->aut->succ_iter(dest, 0, 0, &poi_);
+	    tgba_succ_iterator* iter = ecs_->aut->succ_iter(dest, 0, 0);
 	    iter->first();
 	    todo.push(pair_state_iter(dest, iter));
 	    inc_depth();

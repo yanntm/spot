@@ -26,6 +26,21 @@
 
 namespace spot
 {
+  /// \addtogroup partial_order_reduction_algorithms
+  /// @{
+
+  /// \brief Try to reduce the size of the state space with partial
+  /// order reduction.
+  ///
+  /// This is based on the following paper.
+  /// \verbatim
+  // @InProceedings{nalumasu.98.fmsd,
+  //   title      = {A partial order reduction algorithm without the proviso},
+  //   author     = {Nalumasu, R. and Gopalakrishnan, G.},
+  //   booktitle  = {Formal Methods in System Design},
+  //   year       = {1998}
+  // }
+  /// \endverbatim
   class dve2_twophase
   {
   protected:
@@ -50,6 +65,9 @@ namespace spot
 
     const dve2_kripke* k_;
   };
+
+
+  /// @}
 }
 
 #endif // SPOT_IFACE_DVE2_DVE2TWOPHASE_HH

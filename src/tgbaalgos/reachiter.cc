@@ -23,29 +23,9 @@
 
 #include <cassert>
 #include "reachiter.hh"
-#include "tgba/porinfo.hh"
 
 namespace spot
 {
-  // por_info
-  //////////////////////////////////////////////////////////////////////
-
-  struct reachpor_info: public por_info
-  {
-    typedef Sgi::hash_map<const state*, int,
-			  state_ptr_hash, state_ptr_equal> seen_map;
-
-    const seen_map* m;
-    virtual bool
-    visited(const state* state) const
-    {
-      for (seen_map::const_iterator it = m->begin (); it != m->end (); ++it)
-	if (!it->first->compare(state))
-	  return true;
-      return false;
-    }
-  };
-
   // tgba_reachable_iterator
   //////////////////////////////////////////////////////////////////////
 
@@ -77,13 +57,11 @@ namespace spot
     seen[i] = ++n;
     const state* t;
 
-    reachpor_info pori;
-    pori.m = &seen;
     while ((t = next_state()))
       {
 	assert(seen.find(t) != seen.end());
 	int tn = seen[t];
-	tgba_succ_iterator* si = aut_->succ_iter(t, 0, 0, &pori);
+	tgba_succ_iterator* si = aut_->succ_iter(t, 0, 0);
 	process_state(t, tn, si);
 	for (si->first(); !si->done(); si->next())
 	  {

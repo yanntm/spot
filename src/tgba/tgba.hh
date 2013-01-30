@@ -24,7 +24,6 @@
 #ifndef SPOT_TGBA_TGBA_HH
 # define SPOT_TGBA_TGBA_HH
 
-#include "porinfo.hh"
 #include "state.hh"
 #include "succiter.hh"
 #include "bdddict.hh"
@@ -112,8 +111,7 @@ namespace spot
     virtual tgba_succ_iterator*
     succ_iter(const state* local_state,
 	      const state* global_state = 0,
-	      const tgba* global_automaton = 0,
-	      const por_info* po = 0) const = 0;
+	      const tgba* global_automaton = 0) const = 0;
 
     /// \brief Get a formula that must hold whatever successor is taken.
     ///

@@ -305,8 +305,7 @@ namespace spot
   kripke_succ_iterator*
   dve2_kripke::succ_iter(const state* local_state,
 			 const state* prod_state,
-			 const tgba* prod_tgba,
-			 const por_info* po) const
+			 const tgba* prod_tgba) const
   {
     const state_product* sprod = 0;
     const tgba_product* tprod =
