@@ -129,8 +129,7 @@ namespace spot
     delete[] format_filter_;
     delete[] vname_;
 
-    if (sccmap_)
-      delete sccmap_;
+    delete sccmap_;
 
     if (compress_)
       {

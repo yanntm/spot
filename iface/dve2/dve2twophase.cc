@@ -153,8 +153,8 @@ namespace spot
     if (!(ss == ins))
       res = ss->clone ();
 
-    for(state_set::iterator it = visited.begin ();
-	it != visited.end ();)
+    for (state_set::iterator it = visited.begin ();
+	 it != visited.end ();)
       {
 	dve2_state* tmp = *it;
 	++it;
