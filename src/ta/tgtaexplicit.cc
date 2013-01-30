@@ -29,8 +29,7 @@ namespace spot
 {
 
   tgta_explicit::tgta_explicit(const tgba* tgba, bdd all_acceptance_conditions,
-			       state_ta_explicit* artificial_initial_state,
-			       bool own_tgba) :
+      state_ta_explicit* artificial_initial_state, bool own_tgba) :
     ta_(tgba, all_acceptance_conditions, artificial_initial_state, own_tgba)
   {
   }
@@ -43,7 +42,7 @@ namespace spot
 
   tgba_succ_iterator*
   tgta_explicit::succ_iter(const spot::state* state, const spot::state*,
-			   const tgba*) const
+      const tgba*) const
   {
     return ta_.succ_iter(state);
   }
@@ -51,7 +50,7 @@ namespace spot
   bdd
   tgta_explicit::compute_support_conditions(const spot::state* in) const
   {
-    const state_ta_explicit* s = down_cast<const state_ta_explicit*>(in);
+    const state_ta_explicit* s = down_cast<const state_ta_explicit*> (in);
     assert(s);
     return ta_.get_tgba()->support_conditions(s->get_tgba_state());
   }
@@ -59,7 +58,7 @@ namespace spot
   bdd
   tgta_explicit::compute_support_variables(const spot::state* in) const
   {
-    const state_ta_explicit* s = down_cast<const state_ta_explicit*>(in);
+    const state_ta_explicit* s = down_cast<const state_ta_explicit*> (in);
     assert(s);
     return ta_.get_tgba()->support_variables(s->get_tgba_state());
   }
@@ -94,4 +93,10 @@ namespace spot
     return ta_.succ_iter(s, chngset);
   }
 
+  void
+  tgta_explicit::build_dont_care_changesets(
+      bool rebuild_succ_iter_by_changeset)
+  {
+    return ta_.build_dont_care_changesets(rebuild_succ_iter_by_changeset);
+  }
 }

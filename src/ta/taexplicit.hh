@@ -41,8 +41,7 @@ namespace spot
   {
   public:
     ta_explicit(const tgba* tgba, bdd all_acceptance_conditions,
-		state_ta_explicit* artificial_initial_state = 0,
-		bool own_tgba = false);
+        state_ta_explicit* artificial_initial_state = 0, bool own_tgba = false);
 
     const tgba*
     get_tgba() const;
@@ -60,6 +59,9 @@ namespace spot
 
     void
     delete_stuttering_transitions();
+
+    void
+    build_dont_care_changesets(bool rebuild_succ_iter_by_changeset = true);
     // ta interface
     virtual
     ~ta_explicit();
@@ -196,6 +198,10 @@ namespace spot
 
     void
     add_transition(transition* t, bool add_at_beginning = false);
+
+    // refresh the transitions_by_condition Map
+    void
+    compute_transitions_by_conditions();
 
     const state*
     get_tgba_state() const;
