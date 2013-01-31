@@ -1,0 +1,6 @@
+F!((G"Node_0.qwcheck" <-> ("Node_4.q1a" U ("Node_0.q2a" & "Node_4.q2n"))) & !FG"Node_1.q2a")
+(("Node_3.start" <-> ("Node_3.qwcheck" U "Node_1.q2a")) <-> F"Node_0.qw") & F("Node_4.qwcheck" <-> ("Node_4.q1n" -> "Node_3.q2a"))
+F"Node_2.q2a" W F(("Node_2.q1a" | !"Node_0.wait") W 0)
+((F"Node_2.q1n" -> G"Node_3.qw") | G(("Node_3.q1" | G"Node_0.wait") U "Node_1.q1a")) W "Node_0.q2n"
+F"Node_2.q2n" <-> (("Node_3.q2" -> !F("Node_3.wait" & F"Node_0.start")) -> ("Node_0.q2n" | "Node_4.q1a"))
+G(!"Node_0.q1n" | FG"Node_3.q2") <-> ("Node_0.q1a" <-> ("Node_2.q2" W "Node_0.q2"))

@@ -53,8 +53,9 @@ dve2check_LDADD = libspotdve2.la
 
 check_SCRIPTS = defs
 
-TESTS = dve2check.test finite.test kripke.test
-EXTRA_DIST = $(TESTS) beem-peterson.4.dve finite.dve
+TESTS = twophase.test dve2check.test finite.test kripke.test
+EXTRA_DIST = $(TESTS) beem-peterson.4.dve finite.dve \
+leader-election.dve leader-election.form  leader-election-tp.ref
 
 distclean-local:
 	rm -rf $(TESTS:.test=.dir)

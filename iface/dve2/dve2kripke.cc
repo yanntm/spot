@@ -128,7 +128,8 @@ namespace spot
     delete[] format_filter_;
     delete[] vname_;
 
-    delete sccmap_;
+    if (computed_)
+      delete sccmap_;
 
     if (compress_)
       {
@@ -430,6 +431,7 @@ namespace spot
 	// (form_st). The resulting BDD has a list shape, so traverse
 	// it and compare each node id whith the BDD id of the AP in
 	// the model.
+	assert(computed_);
 	bdd aps = sccmap_->aprec_set_of(sccmap_->scc_of_state(form_st));
 
 	if (aps == bddfalse)
