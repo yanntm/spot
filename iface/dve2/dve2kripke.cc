@@ -116,8 +116,8 @@ namespace spot
 	else
 	{
 	  std::string tmp = d->get_state_variable_name(i);
-	  if (tmp.find (".") == std::string::npos)
-	    global_vars_.push_back (i);
+	  if (tmp.find(".") == std::string::npos)
+	    global_vars_.push_back(i);
 	}
 
       }
@@ -318,19 +318,19 @@ namespace spot
 	if (!uncompstate)
 	{
 	  compstate = static_cast<const dve2_compressed_state*> (local_state);
-	  assert (compstate);
+	  assert(compstate);
 	}
 
 	if ((uncompstate && uncompstate->expanded) ||
 	    (compstate && compstate->expanded))
 	  {
-	    dve2_twophase tp (this);
+	    dve2_twophase tp(this);
 
-	    assert (prod_tgba);
+	    assert(prod_tgba);
 	    if (!computed_)
 	      {
-		sccmap_ = new scc_map(tprod->right ());
-		sccmap_->build_map ();
+		sccmap_ = new scc_map(tprod->right());
+		sccmap_->build_map();
 	      }
 
 	    const int* vstate = get_vars(local_state);
@@ -342,6 +342,8 @@ namespace spot
 
 	    const dve2_state* s = tp.phase1(vstate, sprod);
 
+	    // If phase1 returned a state, the reduction worked so
+	    // just return it.
 	    if (s)
 	      return new one_state_iterator(s, scond);
 	  }
@@ -413,8 +415,10 @@ namespace spot
   {
     assert(start && to);
 
-    if (!form_st)//Normal version
+    if (!form_st)
       {
+	// Full invisibility condition, juste check the atomic
+	// propositions appearing in the whole formula.
 	for (dve2_prop_set::const_iterator it = ps_->begin();
 	     it != ps_->end(); ++it)
 	  if (start[it->var_num] != to[it->var_num])
@@ -422,6 +426,10 @@ namespace spot
       }
     else
       {
+	// Look at the AP visible from the current formula state
+	// (form_st). The resulting BDD has a list shape, so traverse
+	// it and compare each node id whith the BDD id of the AP in
+	// the model.
 	bdd aps = sccmap_->aprec_set_of(sccmap_->scc_of_state(form_st));
 
 	if (aps == bddfalse)
@@ -429,8 +437,8 @@ namespace spot
 
 	while (aps != bddtrue)
 	  {
-	    for (dve2_prop_set::const_iterator it = ps_->begin ();
-		 it != ps_->end (); ++it)
+	    for (dve2_prop_set::const_iterator it = ps_->begin();
+		 it != ps_->end(); ++it)
 	      if (start[it->var_num] != to[it->var_num] &&
 		  it->bddvar == bdd_var(aps))
 		return false;

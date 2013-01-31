@@ -36,15 +36,15 @@ namespace spot
     const int* rdep = k_->d_->get_transition_read_dependencies(t.id);
     const int* wdep = k_->d_->get_transition_write_dependencies(t.id);
 
-    for (std::vector<int>::const_iterator it = k_->processes_.begin ();
-    	 it != k_->processes_.end (); ++it)
+    for (std::vector<int>::const_iterator it = k_->processes_.begin();
+    	 it != k_->processes_.end(); ++it)
     {
       if ((wdep[*it] || rdep[*it]) && *it != k_->processes_[p])
     	return false;
     }
 
-    for (std::vector<int>::const_iterator it = k_->global_vars_.begin ();
-	 it != k_->global_vars_.end (); ++it)
+    for (std::vector<int>::const_iterator it = k_->global_vars_.begin();
+	 it != k_->global_vars_.end(); ++it)
       {
 	if (wdep[*it] || rdep[*it])
 	  return false;
@@ -118,9 +118,9 @@ namespace spot
     trans t(-1, 0);
     for (unsigned p = 0; p < k_->processes_.size(); ++p)
       {
-	if (!pc.tr.empty ())
-	  pc.clear ();
-	assert(pc.tr.empty ());
+	if (!pc.tr.empty())
+	  pc.clear();
+	assert(pc.tr.empty());
 
 	k_->d_->get_successors(0, const_cast<int*>(ss->vars),
 			       fill_trans_callback, &pc);
@@ -133,34 +133,34 @@ namespace spot
 	    state_set::const_iterator it = visited.find(ss);
 	    if (it != visited.end())
 	    {
-	      ss->destroy ();
+	      ss->destroy();
 	      ss = *it;
 	      break;
 	    }
 
-	    pc.clear ();
+	    pc.clear();
 
 	    visited.insert(ss);
-	    assert (pc.tr.empty ());
+	    assert(pc.tr.empty());
 	    k_->d_->get_successors(0, const_cast<int*>(ss->vars),
 				   fill_trans_callback, &pc);
 	  }
-	pc.clear ();
+	pc.clear();
       }
 
     dve2_state* res = 0;
 
     if (!(ss == ins))
-      res = ss->clone ();
+      res = ss->clone();
 
-    for (state_set::iterator it = visited.begin ();
-	 it != visited.end ();)
+    for (state_set::iterator it = visited.begin();
+	 it != visited.end();)
       {
 	dve2_state* tmp = *it;
 	++it;
-	tmp->destroy ();
+	tmp->destroy();
       }
-    visited.clear ();
+    visited.clear();
 
     return res;
   }
