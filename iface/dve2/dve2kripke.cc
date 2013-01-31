@@ -56,7 +56,6 @@ namespace spot
 		 (sizeof(dve2_state) + state_size_ * sizeof(int)))
     , state_condition_last_state_(0), state_condition_last_cc_(0)
     , por_ (por)
-    , cur_process_(0)
     , computed_ (false)
   {
     vname_ = new const char*[state_size_];

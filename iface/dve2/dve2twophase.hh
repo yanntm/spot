@@ -34,12 +34,25 @@ namespace spot
   ///
   /// This is based on the following paper.
   /// \verbatim
-  // @InProceedings{nalumasu.98.fmsd,
-  //   title      = {A partial order reduction algorithm without the proviso},
-  //   author     = {Nalumasu, R. and Gopalakrishnan, G.},
-  //   booktitle  = {Formal Methods in System Design},
-  //   year       = {1998}
-  // }
+  /// @InProceedings{nalumasu.98.fmsd,
+  ///   title      = {A partial order reduction algorithm without the proviso},
+  ///   author     = {Nalumasu, R. and Gopalakrishnan, G.},
+  ///   booktitle  = {Formal Methods in System Design},
+  ///   year       = {1998}
+  /// }
+  /// \endverbatim
+  ///
+  /// For implementation details see:
+  /// \verbatim
+  /// @TechReport{      parutto.13.seminar,
+  ///     author        = {Pierre Parutto},
+  ///     title         = {Adaptive partial order reduction methods},
+  ///     titre = {M\'ethodes de r\'eduction par ordre partiel
+  ///     adaptatives.},
+  ///     institution   = {EPITA Research and Development Laboratory (LRDE)},
+  ///     year          = 2013,
+  ///     number        = 1213
+  /// }
   /// \endverbatim
   class dve2_twophase
   {
@@ -50,15 +63,37 @@ namespace spot
   public:
     dve2_twophase(const dve2_kripke* k);
 
+    /// \brief phase1 implementation of the two phase algorithm
+    /// Actual phase1 implementation, from a given configuration use
+    /// only deterministic processes to move in the state space.
+    ///
+    /// If form_st is not 0, apply adaptive partial order reduction
+    /// (propagate form_st to the invisible function).
+    ///
+    /// \param in: the starting configuration
+    /// \param form_st: current state of the formula automaton
+    /// \return 0 if no reduction is possible, otherwise the resulting
+    /// state.
     const dve2_state* phase1(const int* in, const state* form_st = 0) const;
 
   protected:
     typedef por_callback::trans trans;
 
+    /// Check if a given operation is internal to process P, i.e. it
+    /// only modified variables belonging to p.
     bool internal(const trans& t, int p) const;
+
+    /// Check if there is only one operation that can be enabled for
+    /// process p at configuration s.
     bool only_one_enabled(const int* s, int p,
 			  const std::list<trans>& tr, trans& t,
 			  const state_set& visited) const;
+
+    /// Use the above condition plus the invisiblity one to check if a
+    /// process is deterministic for a given configuration.
+    ///
+    /// If the result is true, the res variable will contain the only
+    /// enabled operation.
     bool deterministic(const int* s, unsigned p, const std::list<trans>& tr,
 		       trans& res, const state_set& visited,
 		       const state* form_st) const;
