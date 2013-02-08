@@ -142,6 +142,8 @@ AC_CONFIG_FILES([
   doc/org/init.el
   iface/dve2/defs
   iface/dve2/Makefile
+  iface/dve2fasttgba/defs
+  iface/dve2fasttgba/Makefile
   iface/gspn/defs
   iface/gspn/Makefile
   iface/Makefile
