@@ -91,8 +91,9 @@ namespace spot
 
   fast_product_iterator::
   fast_product_iterator( fasttgba_succ_iterator* left,
-			 fasttgba_succ_iterator* right):
-    left_(left), right_(right)
+			 fasttgba_succ_iterator* right,
+			 bool left_is_kripke):
+    left_(left), right_(right), kripke_left(left_is_kripke)
   {
   }
 
@@ -202,6 +203,9 @@ namespace spot
     // This is an OR because when synchronising two transitions
     // with two different acceptance set, the result must contains
     // as well the first acceptance set as well the second
+    if (kripke_left)
+      right_->current_acceptance_marks();
+
     return left_->current_acceptance_marks() |
       right_->current_acceptance_marks();
   }
@@ -212,8 +216,9 @@ namespace spot
   // ------------------------------------------------------------
 
   fasttgba_product::fasttgba_product(const fasttgba* left,
-				     const fasttgba* right) :
-    left_(left), right_(right)
+				     const fasttgba* right,
+				     bool left_is_kripke) :
+    left_(left), right_(right), kripke_left(left_is_kripke)
   {
     assert(&(left_->get_dict()) == &(right_->get_dict()));
     assert(&(left_->get_acc()) == &(right_->get_acc()));

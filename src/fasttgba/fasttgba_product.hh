@@ -77,7 +77,8 @@ namespace spot
     // Fast tgba succ iterator interface
     // ------------------------------------------------------------
     fast_product_iterator(fasttgba_succ_iterator* left,
-			  fasttgba_succ_iterator* right);
+			  fasttgba_succ_iterator* right,
+			  bool left_is_kripke = false);
     virtual ~fast_product_iterator();
     virtual void first();
     virtual void next();
@@ -99,6 +100,7 @@ namespace spot
 
     fasttgba_succ_iterator* left_; ///< Reference on the left iterator
     fasttgba_succ_iterator* right_;///< Reference on the right iterator
+    bool kripke_left;	           ///< The left automaton is a Kripke
   };
 
 
@@ -121,7 +123,8 @@ namespace spot
     // Fast tgba interface
     // ------------------------------------------------------------
     fasttgba_product(const fasttgba* left,
-		     const fasttgba* right);
+		     const fasttgba* right,
+		     bool left_is_kripke = false);
     virtual ~fasttgba_product();
 
     virtual fasttgba_state* get_init_state() const;
@@ -152,6 +155,7 @@ namespace spot
   protected:
     const fasttgba* left_;	///< The left aut. of the product
     const fasttgba* right_;	///< The right aut. of the product
+    bool kripke_left;		///< The left automaton is a Kripke
   };
 }
 

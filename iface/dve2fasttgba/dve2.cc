@@ -31,6 +31,7 @@
 #endif
 
 #include "dve2.hh"
+#include "fasttgba/fasttgba_state.hh"
 #include "misc/hashfunc.hh"
 #include "misc/fixpool.hh"
 #include "misc/mspool.hh"
@@ -72,227 +73,168 @@ namespace spot
       int (*get_transition_count)();
     };
 
-    // ////////////////////////////////////////////////////////////////////////
-    // // STATE
+    ////////////////////////////////////////////////////////////////////////
+    // STATE
 
-    // struct dve2_state: public state
-    // {
-    //   dve2_state(int s, fixed_size_pool* p)
-    // 	: pool(p), size(s), count(1)
-    //   {
-    //   }
+    struct dve2_state: public fasttgba_state
+    {
+      dve2_state(int s, fixed_size_pool* p)
+    	: pool(p), size(s), count(1)
+      {
+      }
 
-    //   void compute_hash()
-    //   {
-    // 	hash_value = 0;
-    // 	for (int i = 0; i < size; ++i)
-    // 	  hash_value = wang32_hash(hash_value ^ vars[i]);
-    //   }
+      void compute_hash()
+      {
+    	hash_value = 0;
+    	for (int i = 0; i < size; ++i)
+    	  hash_value = wang32_hash(hash_value ^ vars[i]);
+      }
 
-    //   dve2_state* clone() const
-    //   {
-    // 	++count;
-    // 	return const_cast<dve2_state*>(this);
-    //   }
+      dve2_state* clone() const
+      {
+    	++count;
+    	return const_cast<dve2_state*>(this);
+      }
 
-    //   void destroy() const
-    //   {
-    // 	if (--count)
-    // 	  return;
-    // 	pool->deallocate(this);
-    //   }
+      void destroy() const
+      {
+    	if (--count)
+    	  return;
+    	pool->deallocate(this);
+      }
 
-    //   size_t hash() const
-    //   {
-    // 	return hash_value;
-    //   }
+      size_t hash() const
+      {
+    	return hash_value;
+      }
 
-    //   int compare(const state* other) const
-    //   {
-    // 	if (this == other)
-    // 	  return 0;
-    // 	const dve2_state* o = down_cast<const dve2_state*>(other);
-    // 	assert(o);
-    // 	if (hash_value < o->hash_value)
-    // 	  return -1;
-    // 	if (hash_value > o->hash_value)
-    // 	  return 1;
-    // 	return memcmp(vars, o->vars, size * sizeof(*vars));
-    //   }
+      int compare(const fasttgba_state* other) const
+      {
+    	if (this == other)
+    	  return 0;
+    	const dve2_state* o = down_cast<const dve2_state*>(other);
+    	assert(o);
+    	if (hash_value < o->hash_value)
+    	  return -1;
+    	if (hash_value > o->hash_value)
+    	  return 1;
+    	return memcmp(vars, o->vars, size * sizeof(*vars));
+      }
 
-    // private:
+      void *
+      external_information() const
+      {
+	assert(false);
+      }
 
-    //   ~dve2_state()
-    //   {
-    //   }
+    private:
 
-    // public:
-    //   fixed_size_pool* pool;
-    //   size_t hash_value: 32;
-    //   int size: 16;
-    //   mutable unsigned count: 16;
-    //   int vars[0];
-    // };
+      ~dve2_state()
+      {
+      }
 
-    // struct dve2_compressed_state: public state
-    // {
-    //   dve2_compressed_state(int s, multiple_size_pool* p)
-    // 	: pool(p), size(s), count(1)
-    //   {
-    //   }
-
-    //   void compute_hash()
-    //   {
-    // 	hash_value = 0;
-    // 	for (int i = 0; i < size; ++i)
-    // 	  hash_value = wang32_hash(hash_value ^ vars[i]);
-    //   }
-
-    //   dve2_compressed_state* clone() const
-    //   {
-    // 	++count;
-    // 	return const_cast<dve2_compressed_state*>(this);
-    //   }
-
-    //   void destroy() const
-    //   {
-    // 	if (--count)
-    // 	  return;
-    // 	pool->deallocate(this, sizeof(*this) + size * sizeof(*vars));
-    //   }
-
-    //   size_t hash() const
-    //   {
-    // 	return hash_value;
-    //   }
-
-    //   int compare(const state* other) const
-    //   {
-    // 	if (this == other)
-    // 	  return 0;
-    // 	const dve2_compressed_state* o =
-    // 	  down_cast<const dve2_compressed_state*>(other);
-    // 	assert(o);
-    // 	if (hash_value < o->hash_value)
-    // 	  return -1;
-    // 	if (hash_value > o->hash_value)
-    // 	  return 1;
-
-    // 	if (size < o->size)
-    // 	  return -1;
-    // 	if (size > o->size)
-    // 	  return 1;
-
-    // 	return memcmp(vars, o->vars, size * sizeof(*vars));
-    //   }
-
-    // private:
-
-    //   ~dve2_compressed_state()
-    //   {
-    //   }
-
-    // public:
-    //   multiple_size_pool* pool;
-    //   size_t hash_value: 32;
-    //   int size: 16;
-    //   mutable unsigned count: 16;
-    //   int vars[0];
-    // };
+    public:
+      fixed_size_pool* pool;
+      size_t hash_value: 32;
+      int size: 16;
+      mutable unsigned count: 16;
+      int vars[0];
+    };
 
     ////////////////////////////////////////////////////////////////////////
     // CALLBACK FUNCTION for transitions.
 
-    // struct callback_context
-    // {
-    //   typedef std::list<state*> transitions_t;
-    //   transitions_t transitions;
-    //   int state_size;
-    //   void* pool;
-    //   int* compressed;
-    //   void (*compress)(const int*, size_t, int*, size_t&);
+    struct callback_context
+    {
+      typedef std::list<fasttgba_state*> transitions_t;
+      transitions_t transitions;
+      int state_size;
+      void* pool;
+      int* compressed;
+      void (*compress)(const int*, size_t, int*, size_t&);
 
-    //   ~callback_context()
-    //   {
-    // 	callback_context::transitions_t::const_iterator it;
-    // 	for (it = transitions.begin(); it != transitions.end(); ++it)
-    // 	  (*it)->destroy();
-    //   }
-    // };
+      ~callback_context()
+      {
+    	callback_context::transitions_t::const_iterator it;
+    	for (it = transitions.begin(); it != transitions.end(); ++it)
+    	  (*it)->destroy();
+      }
+    };
 
-    // void transition_callback(void* arg, transition_info_t*, int *dst)
-    // {
-    //   callback_context* ctx = static_cast<callback_context*>(arg);
-    //   fixed_size_pool* p = static_cast<fixed_size_pool*>(ctx->pool);
-    //   dve2_state* out =
-    // 	new(p->allocate()) dve2_state(ctx->state_size, p);
-    //   memcpy(out->vars, dst, ctx->state_size * sizeof(int));
-    //   out->compute_hash();
-    //   ctx->transitions.push_back(out);
-    // }
-
-    // void transition_callback_compress(void* arg, transition_info_t*, int *dst)
-    // {
-    //   callback_context* ctx = static_cast<callback_context*>(arg);
-    //   multiple_size_pool* p = static_cast<multiple_size_pool*>(ctx->pool);
-
-    //   size_t csize = ctx->state_size * 2;
-    //   ctx->compress(dst, ctx->state_size, ctx->compressed, csize);
-
-    //   void* mem = p->allocate(sizeof(dve2_compressed_state)
-    // 			      + sizeof(int) * csize);
-    //   dve2_compressed_state* out = new(mem) dve2_compressed_state(csize, p);
-    //   memcpy(out->vars, ctx->compressed, csize * sizeof(int));
-    //   out->compute_hash();
-    //   ctx->transitions.push_back(out);
-    // }
+    void transition_callback(void* arg, transition_info_t*, int *dst)
+    {
+      callback_context* ctx = static_cast<callback_context*>(arg);
+      fixed_size_pool* p = static_cast<fixed_size_pool*>(ctx->pool);
+      dve2_state* out =
+    	new(p->allocate()) dve2_state(ctx->state_size, p);
+      memcpy(out->vars, dst, ctx->state_size * sizeof(int));
+      out->compute_hash();
+      ctx->transitions.push_back(out);
+    }
 
     ////////////////////////////////////////////////////////////////////////
     // SUCC_ITERATOR
 
-    // class dve2_succ_iterator: public kripke_succ_iterator
-    // {
-    // public:
+    class dve2_succ_iterator: public fasttgba_succ_iterator
+    {
+    public:
 
-    //   dve2_succ_iterator(const callback_context* cc,
-    // 			 bdd cond)
-    // 	: kripke_succ_iterator(cond), cc_(cc)
-    //   {
-    //   }
+      dve2_succ_iterator(const callback_context* cc,
+    			 const cube cond):
+	cond_(cond), cc_(cc)
+      {
+      }
 
-    //   ~dve2_succ_iterator()
-    //   {
-    // 	delete cc_;
-    //   }
+      ~dve2_succ_iterator()
+      {
+    	delete cc_;
+      }
 
-    //   virtual
-    //   void first()
-    //   {
-    // 	it_ = cc_->transitions.begin();
-    //   }
+      virtual
+      void first()
+      {
+    	it_ = cc_->transitions.begin();
+      }
 
-    //   virtual
-    //   void next()
-    //   {
-    // 	++it_;
-    //   }
+      virtual
+      void next()
+      {
+    	++it_;
+      }
 
-    //   virtual
-    //   bool done() const
-    //   {
-    // 	return it_ == cc_->transitions.end();
-    //   }
+      virtual
+      bool done() const
+      {
+    	return it_ == cc_->transitions.end();
+      }
 
-    //   virtual
-    //   state* current_state() const
-    //   {
-    // 	return (*it_)->clone();
-    //   }
+      virtual
+      fasttgba_state* current_state() const
+      {
+    	return (*it_)->clone();
+      }
 
-    // private:
-    //   const callback_context* cc_;
-    //   callback_context::transitions_t::const_iterator it_;
-    // };
+      cube
+      current_condition() const
+      {
+	return cond_;
+      }
+
+      markset
+      current_acceptance_marks() const
+      {
+	// Can do this because because the product
+	// must be instanciate according the fact that
+	// this class is a kripke.
+	assert(false);
+      }
+
+
+    private:
+      const cube cond_;
+      const callback_context* cc_;
+      callback_context::transitions_t::const_iterator it_;
+    };
 
     ////////////////////////////////////////////////////////////////////////
     // PREDICATE EVALUATION
@@ -336,8 +278,8 @@ namespace spot
     	  int type = d->get_state_variable_type(i);
     	  var_info v = { i , type };
     	  val_map[name] = v;
-
-	  std::cout << "     " << name << std::endl;
+	  if (verbose)
+	    std::cout << "     " << name << std::endl;
     	}
 
       assert(&aps);
@@ -599,121 +541,40 @@ namespace spot
     ////////////////////////////////////////////////////////////////////////
     // KRIPKE
 
-    // class dve2_kripke: public kripke
-    // {
-    // public:
+    class dve2_kripke: public fasttgba
+    {
+    public:
 
-    //   dve2_kripke(const dve2_interface* d, bdd_dict* dict, const prop_set* ps,
-    // 		  const ltl::formula* dead, int compress)
-    // 	: d_(d),
-    // 	  state_size_(d_->get_state_variable_count()),
-    // 	  dict_(dict), ps_(ps),
-    // 	  compress_(compress == 0 ? 0
-    // 		    : compress == 1 ? int_array_array_compress
-    // 		    : int_array_array_compress2),
-    // 	  decompress_(compress == 0 ? 0
-    // 		      : compress == 1 ? int_array_array_decompress
-    // 		      : int_array_array_decompress2),
-    // 	  uncompressed_(compress ? new int[state_size_ + 30] : 0),
-    // 	  compressed_(compress ? new int[state_size_ * 2] : 0),
-    // 	  statepool_(compress ? sizeof(dve2_compressed_state) :
-    // 		     (sizeof(dve2_state) + state_size_ * sizeof(int))),
-    // 	  state_condition_last_state_(0), state_condition_last_cc_(0)
-    //   {
-    // 	vname_ = new const char*[state_size_];
-    // 	format_filter_ = new bool[state_size_];
-    // 	for (int i = 0; i < state_size_; ++i)
-    // 	  {
-    // 	    vname_[i] = d_->get_state_variable_name(i);
-    // 	    // We don't want to print variables that can take a single
-    // 	    // value (e.g. process with a single state) to shorten the
-    // 	    // output.
-    // 	    int type = d->get_state_variable_type(i);
-    // 	    format_filter_[i] =
-    // 	      (d->get_state_variable_type_value_count(type) != 1);
-    // 	  }
+      dve2_kripke(const dve2_interface* d,
+		  spot::ap_dict *aps,
+		  spot::acc_dict *acc
+    		  // const ltl::formula* dead, int compress
+		  )
+	: d_(d),
+	  state_size_(d_->get_state_variable_count()),
+    	  statepool_((sizeof(dve2_state) + state_size_ * sizeof(int)))
+      {
+	aps_ = aps;
+	acc_ = acc;
 
-    // 	// Register the "dead" proposition.  There are three cases to
-    // 	// consider:
-    // 	//  * If DEAD is "false", it means we are not interested in finite
-    // 	//    sequences of the system.
-    // 	//  * If DEAD is "true", we want to check finite sequences as well
-    // 	//    as infinite sequences, but do not need to distinguish them.
-    // 	//  * If DEAD is any other string, this is the name a property
-    // 	//    that should be true when looping on a dead state, and false
-    // 	//    otherwise.
-    // 	// We handle these three cases by setting ALIVE_PROP and DEAD_PROP
-    // 	// appropriately.  ALIVE_PROP is the bdd that should be ANDed
-    // 	// to all transitions leaving a live state, while DEAD_PROP should
-    // 	// be ANDed to all transitions leaving a dead state.
-    // 	if (dead == ltl::constant::false_instance())
-    // 	  {
-    // 	    alive_prop = bddtrue;
-    // 	    dead_prop = bddfalse;
-    // 	  }
-    // 	else if (dead == ltl::constant::true_instance())
-    // 	  {
-    // 	    alive_prop = bddtrue;
-    // 	    dead_prop = bddtrue;
-    // 	  }
-    // 	else
-    // 	  {
-    // 	    int var = dict->register_proposition(dead, d_);
-    // 	    dead_prop = bdd_ithvar(var);
-    // 	    alive_prop = bdd_nithvar(var);
-    // 	  }
-    //   }
+      }
 
-    //   ~dve2_kripke()
-    //   {
-    // 	delete[] format_filter_;
-    // 	delete[] vname_;
-    // 	if (compress_)
-    // 	  {
-    // 	    delete[] uncompressed_;
-    // 	    delete[] compressed_;
-    // 	  }
-    // 	lt_dlclose(d_->handle);
+      ~dve2_kripke()
+      {
+     	lt_dlclose(d_->handle);
+     	delete d_;
+     	lt_dlexit();
+      }
 
-    // 	dict_->unregister_all_my_variables(d_);
-
-    // 	delete d_;
-    // 	delete ps_;
-    // 	lt_dlexit();
-
-    // 	if (state_condition_last_state_)
-    // 	  state_condition_last_state_->destroy();
-    // 	delete state_condition_last_cc_; // Might be 0 already.
-    //   }
-
-    //   virtual
-    //   state* get_init_state() const
-    //   {
-    // 	if (compress_)
-    // 	  {
-    // 	    d_->get_initial_state(uncompressed_);
-    // 	    size_t csize = state_size_ * 2;
-    // 	    compress_(uncompressed_, state_size_, compressed_, csize);
-
-    // 	    multiple_size_pool* p =
-    // 	      const_cast<multiple_size_pool*>(&compstatepool_);
-    // 	    void* mem = p->allocate(sizeof(dve2_compressed_state)
-    // 				    + sizeof(int) * csize);
-    // 	    dve2_compressed_state* res = new(mem)
-    // 	      dve2_compressed_state(csize, p);
-    // 	    memcpy(res->vars, compressed_, csize * sizeof(int));
-    // 	    res->compute_hash();
-    // 	    return res;
-    // 	  }
-    // 	else
-    // 	  {
-    // 	    fixed_size_pool* p = const_cast<fixed_size_pool*>(&statepool_);
-    // 	    dve2_state* res = new(p->allocate()) dve2_state(state_size_, p);
-    // 	    d_->get_initial_state(res->vars);
-    // 	    res->compute_hash();
-    // 	    return res;
-    // 	  }
-    //   }
+      virtual
+      fasttgba_state* get_init_state() const
+      {
+	fixed_size_pool* p = const_cast<fixed_size_pool*>(&statepool_);
+	dve2_state* res = new(p->allocate()) dve2_state(state_size_, p);
+	d_->get_initial_state(res->vars);
+	res->compute_hash();
+	return res;
+      }
 
     //   bdd
     //   compute_state_condition_aux(const int* vars) const
@@ -754,7 +615,7 @@ namespace spot
     // 	      res &= bdd_nithvar(i->bddvar);
     // 	  }
     // 	return res;
-    //   }
+    //  }
 
     //   callback_context* build_cc(const int* vars, int& t) const
     //   {
@@ -815,34 +676,21 @@ namespace spot
     // 	return res;
     //   }
 
-    //   const int*
-    //   get_vars(const state* st) const
-    //   {
-    // 	const int* vars;
-    // 	if (compress_)
-    // 	  {
-    // 	    const dve2_compressed_state* s =
-    // 	      down_cast<const dve2_compressed_state*>(st);
-    // 	    assert(s);
-
-    // 	    decompress_(s->vars, s->size, uncompressed_, state_size_);
-    // 	    vars = uncompressed_;
-    // 	  }
-    // 	else
-    // 	  {
-    // 	    const dve2_state* s = down_cast<const dve2_state*>(st);
-    // 	    assert(s);
-    // 	    vars = s->vars;
-    // 	  }
-    // 	return vars;
-    //   }
+      const int*
+      get_vars(const fasttgba_state* st) const
+      {
+	const int* vars;
+	const dve2_state* s = down_cast<const dve2_state*>(st);
+	assert(s);
+	vars = s->vars;
+    	return vars;
+      }
 
 
-    //   virtual
-    //   dve2_succ_iterator*
-    //   succ_iter(const state* local_state,
-    // 		const state*, const tgba*) const
-    //   {
+      virtual
+      dve2_succ_iterator*
+      succ_iter(const fasttgba_state* ) const
+      {
     // 	// This may also compute successors in state_condition_last_cc
     // 	bdd scond = compute_state_condition(local_state);
 
@@ -860,10 +708,11 @@ namespace spot
     // 	    // Add a self-loop to dead-states if we care about these.
     // 	    if (t == 0 && scond != bddfalse)
     // 	      cc->transitions.push_back(local_state->clone());
-    // 	  }
+    //    }
 
     // 	return new dve2_succ_iterator(cc, scond);
-    //   }
+	return 0;
+      }
 
     //   virtual
     //   bdd
@@ -872,64 +721,87 @@ namespace spot
     // 	return compute_state_condition(st);
     //   }
 
-    //   virtual
-    //   std::string format_state(const state *st) const
-    //   {
-    // 	const int* vars = get_vars(st);
+      virtual
+      std::string format_state(const fasttgba_state *st) const
+      {
+    	const int* vars = get_vars(st);
 
-    // 	std::stringstream res;
+    	std::stringstream res;
 
-    // 	if (state_size_ == 0)
-    // 	  return "empty state";
+    	if (state_size_ == 0)
+    	  return "empty state";
 
-    // 	int i = 0;
-    // 	for (;;)
-    // 	  {
-    // 	    if (!format_filter_[i])
-    // 	      {
-    // 		++i;
-    // 		continue;
-    // 	      }
-    // 	    res << vname_[i] << "=" << vars[i];
-    // 	    ++i;
-    // 	    if (i == state_size_)
-    // 	      break;
-    // 	    res << ", ";
-    // 	  }
-    // 	return res.str();
-    //   }
+    	int i = 0;
+    	for (;;)
+    	  {
+    	    res << d_->get_state_variable_name(i) << "=" << vars[i];
+    	    ++i;
+    	    if (i == state_size_)
+    	      break;
+    	    res << ", ";
+    	  }
+    	return res.str();
+      }
 
-    //   virtual
-    //   spot::bdd_dict* get_dict() const
-    //   {
-    // 	return dict_;
-    //   }
 
-    // private:
-    //   const dve2_interface* d_;
-    //   int state_size_;
-    //   bdd_dict* dict_;
-    //   const char** vname_;
-    //   bool* format_filter_;
-    //   const prop_set* ps_;
-    //   bdd alive_prop;
-    //   bdd dead_prop;
-    //   void (*compress_)(const int*, size_t, int*, size_t&);
-    //   void (*decompress_)(const int*, size_t, int*, size_t);
-    //   int* uncompressed_;
-    //   int* compressed_;
-    //   fixed_size_pool statepool_;
-    //   multiple_size_pool compstatepool_;
+      ap_dict&
+      get_dict() const
+      {
+	return *aps_;
+      }
 
-    //   // This cache is used to speedup repeated calls to state_condition()
-    //   // and get_succ().
-    //   // If state_condition_last_state_ != 0, then state_condition_last_cond_
-    //   // contain its (recently computed) condition.  If additionally
-    //   // state_condition_last_cc_ != 0, then it contains the successors.
-    //   mutable const state* state_condition_last_state_;
-    //   mutable bdd state_condition_last_cond_;
-    //   mutable callback_context* state_condition_last_cc_;
-    // };
+      acc_dict&
+      get_acc() const
+      {
+	return *acc_;
+      }
+
+      markset
+      all_acceptance_marks() const
+      {
+	assert(false);
+      }
+
+      unsigned int
+      number_of_acceptance_marks() const
+      {
+	return 0;
+      }
+
+      std::string
+      transition_annotation(const spot::fasttgba_succ_iterator*) const
+      {
+	assert(false);
+      }
+
+      fasttgba_state*
+      project_state(const fasttgba_state* ,
+		    const fasttgba*) const
+      {
+	assert(false);
+      }
+
+
+    private:
+
+      const dve2_interface* d_;
+      int state_size_;
+      spot::ap_dict *aps_;
+      spot::acc_dict *acc_;
+
+      //   bdd_dict* dict_;
+      const char** vname_;
+      //   bool* format_filter_;
+      //   const prop_set* ps_;
+      //   bdd alive_prop;
+      //   bdd dead_prop;
+      //   void (*compress_)(const int*, size_t, int*, size_t&);
+      //   void (*decompress_)(const int*, size_t, int*, size_t);
+      //   int* uncompressed_;
+      //   int* compressed_;
+      fixed_size_pool statepool_;
+      multiple_size_pool compstatepool_;
+    };
 
   }
 
@@ -985,10 +857,13 @@ namespace spot
 
 
   const spot::fasttgba* load_dve2(const std::string& file_arg,
-				  spot::ap_dict& aps,
+				  spot::ap_dict* aps,
+				  spot::acc_dict* accs,
 				  bool verbose)
   {
-    if (aps.size() != 0)
+    assert(aps);
+    assert(accs);
+    if (aps->size() != 0)
       {
 	std::cerr << "Fail to create the Kripke from a non empty "
 		  << "atomic proposition set" << std::endl;
@@ -1092,13 +967,13 @@ namespace spot
     	return 0;
       }
 
-    int errors = convert_aps(aps, d, verbose);
+    int errors = convert_aps(*aps, d, verbose);
     if (errors)
       {
       }
 
 
-    return 0;
+    return  new dve2_kripke(d, aps, accs);
 
     // prop_set* ps = new prop_set;
     // int errors = convert_aps(to_observe, d, dict, dead, *ps);

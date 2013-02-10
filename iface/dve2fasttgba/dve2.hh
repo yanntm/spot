@@ -57,7 +57,8 @@ namespace spot
   //         dead states
   // \a verbose whether to output verbose messages
   const spot::fasttgba* load_dve2(const std::string& file,
-				  spot::ap_dict& aps,
+				  spot::ap_dict* aps,
+				  spot::acc_dict* accs,
 				  bool verbose = true);
 }
 

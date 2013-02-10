@@ -127,7 +127,7 @@ main(int argc, char **argv)
       spot::ap_dict* aps = new spot::ap_dict();
       spot::acc_dict* accs = new spot::acc_dict();
 
-      const spot::fasttgba* kripke = spot::load_dve2(file, *aps, true);
+      const spot::fasttgba* kripke = spot::load_dve2(file, aps, accs, true);
       assert(kripke);
 
       const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
@@ -135,10 +135,10 @@ main(int argc, char **argv)
       dotty1.run();
 
 
-
-      // const spot::fasttgba_product prod (ftgba1, ftgba2);
-      // spot::dotty_dfs dotty3(&prod);
-      // dotty3.run();
+      // Warning last argument must be set !! See. doc
+      const spot::fasttgba_product prod (kripke, ftgba1, true);
+       spot::dotty_dfs dotty3(&prod);
+       dotty3.run();
 
 
 
@@ -149,6 +149,7 @@ main(int argc, char **argv)
       // dottybis.run();
       // delete prodbis;
 
+      delete kripke;
       delete ftgba1;
       //      delete ftgba2;
       delete aps;
