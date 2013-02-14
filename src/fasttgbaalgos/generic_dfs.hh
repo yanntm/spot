@@ -16,42 +16,48 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SPOT_FASTTGBAALGOS_DOTTY_DFS_HH
-# define SPOT_FASTTGBAALGOS_DOTTY_DFS_HH
+#ifndef SPOT_FASTTGBAALGOS_GENERIC_DFS_HH
+# define SPOT_FASTTGBAALGOS_GENERIC_DFS_HH
 
 #include <stack>
 #include "misc/hash.hh"
 #include "fasttgba/fasttgba.hh"
-#include "generic_dfs.hh"
-
-
 
 namespace spot
 {
-  ///
-  /// This class provides a way to display the automaton using dot
-  /// syntax.
-  ///
-  class dotty_dfs : public generic_dfs
+  class generic_dfs
   {
   public:
-    dotty_dfs(const fasttgba* a);
+    generic_dfs(const fasttgba* a);
 
-    virtual ~dotty_dfs();
+    virtual ~generic_dfs();
 
-    virtual bool want_state(const fasttgba_state* s) const;
+    void run();
 
-    virtual void start();
+    virtual void add_state(const fasttgba_state* s);
 
-    virtual void end();
+    virtual const fasttgba_state* next_state();
+
+    virtual bool want_state(const fasttgba_state* s) const = 0;
+
+    virtual void start() = 0;
+
+    virtual void end() = 0;
 
     virtual void  process_state(const fasttgba_state* s, int n,
-				fasttgba_succ_iterator* si);
+				fasttgba_succ_iterator* si) = 0;
 
     virtual void  process_link(const fasttgba_state* in_s, int in,
 			       const fasttgba_state* out_s, int out,
-			       const fasttgba_succ_iterator* si);
+			       const fasttgba_succ_iterator* si) = 0;
+
+  protected:
+    const fasttgba* a_;
+    std::stack<const fasttgba_state*> todo; ///< A stack of states yet to explore.
+    typedef Sgi::hash_map<const fasttgba_state*, int,
+			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> seen_map;
+    seen_map seen;
   };
 }
 
-#endif // SPOT_FASTTGBAALGOS_DOTTY_DFS_HH
+#endif // SPOT_FASTTGBAALGOS_GENERIC_DFS_HH

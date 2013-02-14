@@ -23,58 +23,11 @@
 namespace spot
 {
   dotty_dfs::dotty_dfs(const fasttgba* a):
-    a_(a)
+    generic_dfs(a)
   { }
 
   dotty_dfs::~dotty_dfs()
-  {
-
-  }
-
-  void
-  dotty_dfs::run()
-  {
-    int n = 0;
-    start();
-    fasttgba_state* i = a_->get_init_state();
-    if (want_state(i))
-      add_state(i);
-    seen[i] = ++n;
-    const fasttgba_state* t;
-    while ((t = next_state()))
-      {
-	assert(t);
-	assert(seen.find(t) != seen.end());
-	int tn = seen[t];
-	fasttgba_succ_iterator* si = a_->succ_iter(t);
-	process_state(t, tn, si);
-	for (si->first(); !si->done(); si->next())
-	  {
-	    const fasttgba_state* current = si->current_state();
-	    seen_map::const_iterator s = seen.find(current);
-	    bool ws = want_state(current);
-	    if (s == seen.end())
-	      {
-		seen[current] = ++n;
-		if (ws)
-		  {
-		    add_state(current);
-		    process_link(t, tn, current, n, si);
-		  }
-	      }
-	    else
-	      {
-		if (ws)
-		  {
-		    process_link(t, tn, s->first, s->second, si);
-		  }
-		current->destroy();
-	      }
-	  }
-	delete si;
-      }
-    end();
-  }
+  { }
 
   bool
   dotty_dfs::want_state(const fasttgba_state*) const
@@ -88,30 +41,12 @@ namespace spot
     std::cout << ("digraph G {\n"
 		  "  0 [label=\"\", style=invis, height=0]\n"
 		  "  0 -> 1\n");
-
   }
 
   void
   dotty_dfs::end()
   {
     std::cout << "}" << std::endl;
-
-  }
-
-  void
-  dotty_dfs::add_state(const fasttgba_state* s)
-  {
-    todo.push(s);
-  }
-
-  const fasttgba_state*
-  dotty_dfs::next_state()
-  {
-    if (todo.empty())
-      return 0;
-    const fasttgba_state* s = todo.top();
-    todo.pop();
-    return s;
   }
 
   void
