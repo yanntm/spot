@@ -22,27 +22,25 @@
 #include <stack>
 #include "misc/hash.hh"
 #include "fasttgba/fasttgba.hh"
+#include "generic_dfs.hh"
 
 namespace spot
 {
-  class lbtt_dfs
+  ///
+  /// This class display an automaton using lbbt syntax
+  ///
+  class lbtt_dfs : public generic_dfs
   {
   public:
     lbtt_dfs(const fasttgba* a);
 
     virtual ~lbtt_dfs();
 
-    void run();
-
     virtual bool want_state(const fasttgba_state* s) const;
 
     virtual void start();
 
     virtual void end();
-
-    virtual void add_state(const fasttgba_state* s);
-
-    virtual const fasttgba_state* next_state();
 
     virtual void  process_state(const fasttgba_state* s, int n,
 				fasttgba_succ_iterator* si);
@@ -53,11 +51,6 @@ namespace spot
 
 
   protected:
-    const fasttgba* a_;
-    std::stack<const fasttgba_state*> todo; ///< A stack of states yet to explore.
-    typedef Sgi::hash_map<const fasttgba_state*, int,
-			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> seen_map;
-    seen_map seen;
     int nb_states;
     int nb_transitions;
     std::ostringstream oss;
