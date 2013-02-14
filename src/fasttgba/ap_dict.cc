@@ -27,6 +27,14 @@ namespace spot
 
   ap_dict::~ap_dict()
   {
+    std::map<const ltl::atomic_prop*, int>::const_iterator itr;
+
+    for(itr = aps_.begin(); itr != aps_.end(); ++itr)
+      {
+	itr->first->destroy();
+      }
+    aps_.clear();
+    apsback_.clear();
   }
 
   int

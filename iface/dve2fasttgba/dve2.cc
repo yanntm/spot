@@ -30,8 +30,13 @@
 # define WEXITSTATUS(x) ((x) & 0xff)
 #endif
 
+
+#include "ltlast/atomic_prop.hh"
+#include "ltlenv/defaultenv.hh"
+
 #include "dve2.hh"
 #include "fasttgba/fasttgba_state.hh"
+#include "fasttgba/fasttgba_product.hh"
 #include "misc/hashfunc.hh"
 #include "misc/fixpool.hh"
 #include "misc/mspool.hh"
@@ -241,301 +246,43 @@ namespace spot
 
     typedef enum { OP_EQ, OP_NE, OP_LT, OP_GT, OP_LE, OP_GE } relop;
 
+    // Structure for complex atomic proposition
     struct one_prop
     {
       int var_num;
       relop op;
       int val;
-      int bddvar;  // if "var_num op val" is true, output bddvar,
-    		   // else its negation
     };
+
+    // Data structure to store complex atomic propositions
     typedef std::vector<one_prop> prop_set;
 
-
-    struct var_info
-    {
-      int num;
-      int type;
-    };
-
-
+    //
+    // Register all atomic propositions that are inside the kripke
+    //
     int
     convert_aps(spot::ap_dict& aps,
 		const dve2_interface* d,
+		fasttgba* kripke,
 		bool verbose)
     {
-      int errors = 0;
-
       int state_size = d->get_state_variable_count();
-      typedef std::map<std::string, var_info> val_map_t;
-      val_map_t val_map;
 
       if (verbose)
 	std::cout << "Atomic Propositions in the Kripke :" << std::endl;
+
       for (int i = 0; i < state_size; ++i)
     	{
+	  // Register for automaton
     	  const char* name = d->get_state_variable_name(i);
-    	  int type = d->get_state_variable_type(i);
-    	  var_info v = { i , type };
-    	  val_map[name] = v;
+	  const ltl::atomic_prop* ap =
+	    ltl::atomic_prop::instance(name, spot::ltl::default_environment::instance());
+	  aps.register_ap_for_aut (ap, kripke);
+
 	  if (verbose)
 	    std::cout << "     " << name << std::endl;
     	}
-
-      assert(&aps);
-
-
-      // int type_count = d->get_state_variable_type_count();
-      // typedef std::map<std::string, int> enum_map_t;
-      // std::vector<enum_map_t> enum_map(type_count);
-      // for (int i = 0; i < type_count; ++i)
-      // 	{
-      // 	  int enum_count = d->get_state_variable_type_value_count(i);
-      // 	  for (int j = 0; j < enum_count; ++j)
-      // 	    enum_map[i]
-      // 	      .insert(std::make_pair(d->get_state_variable_type_value(i, j),
-      // 				     j));
-      // 	}
-
-      // for (ltl::atomic_prop_set::const_iterator ap = aps->begin();
-      // 	   ap != aps->end(); ++ap)
-      // 	{
-      // 	  if (*ap == dead)
-      // 	    continue;
-
-      // 	  std::string str = (*ap)->name();
-      // 	  const char* s = str.c_str();
-
-      // 	  // Skip any leading blank.
-      // 	  while (*s && (*s == ' ' || *s == '\t'))
-      // 	    ++s;
-      // 	  if (!*s)
-      // 	    {
-      // 	      std::cerr << "Proposition `" << str
-      // 			<< "' cannot be parsed." << std::endl;
-      // 	      ++errors;
-      // 	      continue;
-      // 	    }
-
-
-      // 	  char* name = (char*) malloc(str.size() + 1);
-      // 	  char* name_p = name;
-      // 	  char* lastdot = 0;
-      // 	  while (*s && (*s != '=') && *s != '<' && *s != '!'  && *s != '>')
-      // 	    {
-
-      // 	      if (*s == ' ' || *s == '\t')
-      // 		++s;
-      // 	      else
-      // 		{
-      // 		  if (*s == '.')
-      // 		    lastdot = name_p;
-      // 		  *name_p++ = *s++;
-      // 		}
-      // 	    }
-      // 	  *name_p = 0;
-
-      // 	  if (name == name_p)
-      // 	    {
-      // 	      std::cerr << "Proposition `" << str
-      // 			<< "' cannot be parsed." << std::endl;
-      // 	      free(name);
-      // 	      ++errors;
-      // 	      continue;
-      // 	    }
-
-      // 	  // Lookup the name
-      // 	  val_map_t::const_iterator ni = val_map.find(name);
-      // 	  if (ni == val_map.end())
-      // 	    {
-      // 	      // We may have a name such as X.Y.Z
-      // 	      // If it is not a known variable, it might mean
-      // 	      // an enumerated variable X.Y with value Z.
-      // 	      if (lastdot)
-      // 		{
-      // 		  *lastdot++ = 0;
-      // 		  ni = val_map.find(name);
-      // 		}
-
-      // 	      if (ni == val_map.end())
-      // 		{
-      // 		  std::cerr << "No variable `" << name
-      // 			    << "' found in model (for proposition `"
-      // 			    << str << "')." << std::endl;
-      // 		  free(name);
-      // 		  ++errors;
-      // 		  continue;
-      // 		}
-
-      // 	      // We have found the enumerated variable, and lastdot is
-      // 	      // pointing to its expected value.
-      // 	      int type_num = ni->second.type;
-      // 	      enum_map_t::const_iterator ei = enum_map[type_num].find(lastdot);
-      // 	      if (ei == enum_map[type_num].end())
-      // 		{
-      // 		  std::cerr << "No state `" << lastdot
-      // 			    << "' known for variable `"
-      // 			    << name << "'." << std::endl;
-      // 		  std::cerr << "Possible states are:";
-      // 		  for (ei = enum_map[type_num].begin();
-      // 		       ei != enum_map[type_num].end(); ++ei)
-      // 		    std::cerr << " " << ei->first;
-      // 		  std::cerr << std::endl;
-
-      // 		  free(name);
-      // 		  ++errors;
-      // 		  continue;
-      // 		}
-
-      // 	      // At this point, *s should be 0.
-      // 	      if (*s)
-      // 		{
-      // 		  std::cerr << "Trailing garbage `" << s
-      // 			    << "' at end of proposition `"
-      // 			    << str << "'." << std::endl;
-      // 		  free(name);
-      // 		  ++errors;
-      // 		  continue;
-      // 		}
-
-      // 	      // Record that X.Y must be equal to Z.
-      // 	      int v = dict->register_proposition(*ap, d);
-      // 	      one_prop p = { ni->second.num, OP_EQ, ei->second, v };
-      // 	      out.push_back(p);
-      // 	      free(name);
-      // 	      continue;
-      // 	    }
-
-      // 	  int var_num = ni->second.num;
-
-      // 	  if (!*s)		// No operator?  Assume "!= 0".
-      // 	    {
-      // 	      int v = dict->register_proposition(*ap, d);
-      // 	      one_prop p = { var_num, OP_NE, 0, v };
-      // 	      out.push_back(p);
-      // 	      free(name);
-      // 	      continue;
-      // 	    }
-
-      // 	  relop op;
-
-      // 	  switch (*s)
-      // 	    {
-      // 	    case '!':
-      // 	      if (s[1] != '=')
-      // 		goto report_error;
-      // 	      op = OP_NE;
-      // 	      s += 2;
-      // 	      break;
-      // 	    case '=':
-      // 	      if (s[1] != '=')
-      // 		goto report_error;
-      // 	      op = OP_EQ;
-      // 	      s += 2;
-      // 	      break;
-      // 	    case '<':
-      // 	      if (s[1] == '=')
-      // 		{
-      // 		  op = OP_LE;
-      // 		  s += 2;
-      // 		}
-      // 	      else
-      // 		{
-      // 		  op = OP_LT;
-      // 		  ++s;
-      // 		}
-      // 	      break;
-      // 	    case '>':
-      // 	      if (s[1] == '=')
-      // 		{
-      // 		  op = OP_GE;
-      // 		  s += 2;
-      // 		}
-      // 	      else
-      // 		{
-      // 		  op = OP_GT;
-      // 		  ++s;
-      // 		}
-      // 	      break;
-      // 	    default:
-      // 	    report_error:
-      // 	      std::cerr << "Unexpected `" << s
-      // 			<< "' while parsing atomic proposition `" << str
-      // 			<< "'." << std::endl;
-      // 	      ++errors;
-      // 	      free(name);
-      // 	      continue;
-      // 	    }
-
-      // 	  while (*s && (*s == ' ' || *s == '\t'))
-      // 	    ++s;
-
-      // 	  int val = 0; // Initialize to kill a warning from old compilers.
-      // 	  int type_num = ni->second.type;
-      // 	  if (type_num == 0 || (*s >= '0' && *s <= '9') || *s == '-')
-      // 	    {
-      // 	      char* s_end;
-      // 	      val = strtol(s, &s_end, 10);
-      // 	      if (s == s_end)
-      // 		{
-      // 		  std::cerr << "Failed to parse `" << s
-      // 			    << "' as an integer." << std::endl;
-      // 		  ++errors;
-      // 		  free(name);
-      // 		  continue;
-      // 		}
-      // 	      s = s_end;
-      // 	    }
-      // 	  else
-      // 	    {
-      // 	      // We are in a case such as P_0 == S, trying to convert
-      // 	      // the string S into an integer.
-      // 	      const char* end = s;
-      // 	      while (*end && *end != ' ' && *end != '\t')
-      // 		++end;
-      // 	      std::string st(s, end);
-
-      // 	      // Lookup the string.
-      // 	      enum_map_t::const_iterator ei = enum_map[type_num].find(st);
-      // 	      if (ei == enum_map[type_num].end())
-      // 		{
-      // 		  std::cerr << "No state `" << st
-      // 			    << "' known for variable `"
-      // 			    << name << "'." << std::endl;
-      // 		  std::cerr << "Possible states are:";
-      // 		  for (ei = enum_map[type_num].begin();
-      // 		       ei != enum_map[type_num].end(); ++ei)
-      // 		    std::cerr << " " << ei->first;
-      // 		  std::cerr << std::endl;
-
-      // 		  free(name);
-      // 		  ++errors;
-      // 		  continue;
-      // 		}
-      // 	      s = end;
-      // 	      val = ei->second;
-      // 	    }
-
-      // 	  free(name);
-
-      // 	  while (*s && (*s == ' ' || *s == '\t'))
-      // 	    ++s;
-      // 	  if (*s)
-      // 	    {
-      // 	      std::cerr << "Unexpected `" << s
-      // 			<< "' while parsing atomic proposition `" << str
-      // 			<< "'." << std::endl;
-      // 		  ++errors;
-      // 		  continue;
-      // 	    }
-
-
-      // 	  int v = dict->register_proposition(*ap, d);
-      // 	  one_prop p = { var_num, op, val, v };
-      // 	  out.push_back(p);
-      // 	}
-
-      return errors;
+      return 0;
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -546,23 +293,24 @@ namespace spot
     public:
 
       dve2_kripke(const dve2_interface* d,
-		  spot::ap_dict *aps,
-		  spot::acc_dict *acc
+		  spot::ap_dict& aps,
+		  spot::acc_dict& acc
     		  // const ltl::formula* dead, int compress
 		  )
 	: d_(d),
 	  state_size_(d_->get_state_variable_count()),
-    	  statepool_((sizeof(dve2_state) + state_size_ * sizeof(int)))
+	  ps_(new prop_set()),
+    	  statepool_((sizeof(dve2_state) + state_size_ * sizeof(int))),
+	  aps_(aps),
+	  acc_(acc)
       {
-	aps_ = aps;
-	acc_ = acc;
-
       }
 
       ~dve2_kripke()
       {
      	lt_dlclose(d_->handle);
      	delete d_;
+	delete ps_;
      	lt_dlexit();
       }
 
@@ -576,150 +324,105 @@ namespace spot
 	return res;
       }
 
-    //   bdd
-    //   compute_state_condition_aux(const int* vars) const
-    //   {
-    // 	bdd res = bddtrue;
-    // 	for (prop_set::const_iterator i = ps_->begin();
-    // 	     i != ps_->end(); ++i)
-    // 	  {
-    // 	    int l = vars[i->var_num];
-    // 	    int r = i->val;
+    // //   bdd
+      cube
+      compute_state_condition(const int* vars) const
+      {
+    	cube res(aps_);
+	int state_size = d_->get_state_variable_count();
+	for (int i = 0; i < state_size; ++i)
+	  {
+    	    if (vars[i])
+    	      res.set_true_var(i);
+    	    else
+    	      res.set_false_var(i);
+     	  }
 
-    // 	    bool cond = false;
-    // 	    switch (i->op)
-    // 	      {
-    // 	      case OP_EQ:
-    // 		cond = (l == r);
-    // 		break;
-    // 	      case OP_NE:
-    // 		cond = (l != r);
-    // 		break;
-    // 	      case OP_LT:
-    // 		cond = (l < r);
-    // 		break;
-    // 	      case OP_GT:
-    // 		cond = (l > r);
-    // 		break;
-    // 	      case OP_LE:
-    // 		cond = (l <= r);
-    // 		break;
-    // 	      case OP_GE:
-    // 		cond = (l >= r);
-    // 		break;
-    // 	      }
+ 	int cpt = state_size;
+    	for (prop_set::const_iterator i = ps_->begin();
+    	     i != ps_->end(); ++i)
+    	  {
 
-    // 	    if (cond)
-    // 	      res &= bdd_ithvar(i->bddvar);
-    // 	    else
-    // 	      res &= bdd_nithvar(i->bddvar);
-    // 	  }
-    // 	return res;
-    //  }
+    	    int l = vars[i->var_num];
+    	    int r = i->val;
 
-    //   callback_context* build_cc(const int* vars, int& t) const
-    //   {
-    // 	callback_context* cc = new callback_context;
-    // 	cc->state_size = state_size_;
-    // 	cc->pool =
-    // 	  const_cast<void*>(compress_
-    // 			    ? static_cast<const void*>(&compstatepool_)
-    // 			    : static_cast<const void*>(&statepool_));
-    // 	cc->compress = compress_;
-    // 	cc->compressed = compressed_;
-    // 	t = d_->get_successors(0, const_cast<int*>(vars),
-    // 			       compress_
-    // 			       ? transition_callback_compress
-    // 			       : transition_callback,
-    // 			       cc);
-    // 	assert((unsigned)t == cc->transitions.size());
-    // 	return cc;
-    //   }
+    	    bool cond = false;
+    	    switch (i->op)
+    	      {
+    	      case OP_EQ:
+    		cond = (l == r);
+    		break;
+    	      case OP_NE:
+    		cond = (l != r);
+    		break;
+    	      case OP_LT:
+    		cond = (l < r);
+    		break;
+    	      case OP_GT:
+    		cond = (l > r);
+    		break;
+    	      case OP_LE:
+    		cond = (l <= r);
+    		break;
+    	      case OP_GE:
+    		cond = (l >= r);
+    		break;
+    	      }
 
-    //   bdd
-    //   compute_state_condition(const state* st) const
-    //   {
-    // 	// If we just computed it, don't do it twice.
-    // 	if (st == state_condition_last_state_)
-    // 	  return state_condition_last_cond_;
+    	    if (cond)
+    	      res.set_true_var(cpt);
+    	    else
+    	      res.set_false_var(cpt);
+	    ++cpt;
+     	  }
+     	return res;
+      }
 
-    // 	if (state_condition_last_state_)
-    // 	  {
-    // 	    state_condition_last_state_->destroy();
-    // 	    delete state_condition_last_cc_; // Might be 0 already.
-    // 	    state_condition_last_cc_ = 0;
-    // 	  }
+      callback_context* build_cc(const int* vars
+				 , int& t
+				 ) const
+      {
+    	callback_context* cc = new callback_context();
+    	cc->state_size = state_size_;
+	cc->pool =
+    	   const_cast<void*>( static_cast<const void*>(&statepool_));
+    	t = d_->get_successors(0, const_cast<int*>(vars),
+    			       transition_callback,
+    			       cc);
+	assert((unsigned)t == cc->transitions.size());
+    	return cc;
+      }
 
-    // 	const int* vars = get_vars(st);
-
-    // 	bdd res = compute_state_condition_aux(vars);
-    // 	int t;
-    // 	callback_context* cc = build_cc(vars, t);
-
-    // 	if (t)
-    // 	  {
-    // 	    res &= alive_prop;
-    // 	  }
-    // 	else
-    // 	  {
-    // 	    res &= dead_prop;
-
-    // 	    // Add a self-loop to dead-states if we care about these.
-    // 	    if (res != bddfalse)
-    // 	      cc->transitions.push_back(st->clone());
-    // 	  }
-
-    // 	state_condition_last_cc_ = cc;
-    // 	state_condition_last_cond_ = res;
-    // 	state_condition_last_state_ = st->clone();
-
-    // 	return res;
-    //   }
 
       const int*
       get_vars(const fasttgba_state* st) const
       {
 	const int* vars;
-	const dve2_state* s = down_cast<const dve2_state*>(st);
+	const dve2_state* s = down_cast<const  dve2_state*>(st);
 	assert(s);
 	vars = s->vars;
     	return vars;
       }
 
-
       virtual
       dve2_succ_iterator*
-      succ_iter(const fasttgba_state* ) const
+      succ_iter(const fasttgba_state* state) const
       {
-    // 	// This may also compute successors in state_condition_last_cc
-    // 	bdd scond = compute_state_condition(local_state);
+     	callback_context* cc;
+	int t;
+	const int *vars = get_vars(state);
+	cc = build_cc(vars, t);
+	cube scond = compute_state_condition(vars);
 
-    // 	callback_context* cc;
-    // 	if (state_condition_last_cc_)
-    // 	  {
-    // 	    cc = state_condition_last_cc_;
-    // 	    state_condition_last_cc_ = 0; // Now owned by the iterator.
-    // 	  }
-    // 	else
-    // 	  {
-    // 	    int t;
-    // 	    cc = build_cc(get_vars(local_state), t);
 
-    // 	    // Add a self-loop to dead-states if we care about these.
-    // 	    if (t == 0 && scond != bddfalse)
-    // 	      cc->transitions.push_back(local_state->clone());
-    //    }
+	assert(t); //??? No deadlock in the model
+	// // Add a self-loop to dead-states if we care about these.
+	// if (t == 0 && scond != bddfalse)
+	//   cc->transitions.push_back(local_state->clone());
 
-    // 	return new dve2_succ_iterator(cc, scond);
-	return 0;
+     	return new dve2_succ_iterator(cc, scond);
+	assert(false);
       }
-
-    //   virtual
-    //   bdd
-    //   state_condition(const state* st) const
-    //   {
-    // 	return compute_state_condition(st);
-    //   }
 
       virtual
       std::string format_state(const fasttgba_state *st) const
@@ -743,17 +446,16 @@ namespace spot
     	return res.str();
       }
 
-
       ap_dict&
       get_dict() const
       {
-	return *aps_;
+	return aps_;
       }
 
       acc_dict&
       get_acc() const
       {
-	return *acc_;
+	return acc_;
       }
 
       markset
@@ -769,9 +471,9 @@ namespace spot
       }
 
       std::string
-      transition_annotation(const spot::fasttgba_succ_iterator*) const
+      transition_annotation(const spot::fasttgba_succ_iterator* succ) const
       {
-	assert(false);
+	return ("#" + succ->current_condition().dump());
       }
 
       fasttgba_state*
@@ -781,30 +483,310 @@ namespace spot
 	assert(false);
       }
 
+      // --
+      // This part is for bein manipulated by the product
+      // --
+
+      void add_ap (one_prop p) const
+      {
+	ps_->push_back(p);
+      }
+
+
+      const dve2_interface*
+      get_interface() const
+      {
+	return d_;
+      }
 
     private:
-
       const dve2_interface* d_;
       int state_size_;
-      spot::ap_dict *aps_;
-      spot::acc_dict *acc_;
-
-      //   bdd_dict* dict_;
       const char** vname_;
-      //   bool* format_filter_;
-      //   const prop_set* ps_;
-      //   bdd alive_prop;
-      //   bdd dead_prop;
-      //   void (*compress_)(const int*, size_t, int*, size_t&);
-      //   void (*decompress_)(const int*, size_t, int*, size_t);
-      //   int* uncompressed_;
-      //   int* compressed_;
+      prop_set* ps_;
       fixed_size_pool statepool_;
       multiple_size_pool compstatepool_;
-    };
+      spot::ap_dict& aps_;
+      spot::acc_dict& acc_;
 
+    };
   }
 
+  ////////////////////////////////////////////////////////////////////////
+  // Product
+
+  void
+  fasttgba_kripke_product::match_formula_ap()
+  {
+    const dve2_kripke* l = down_cast<const dve2_kripke*>(left_);
+    assert(l);
+    const dve2_interface* d_ = l->get_interface();
+
+    //
+    // If the number of Atomic Propositions is the same this
+    // means that no other variables have been added: the product
+    // only consider variables as True/False value.
+    //
+    if ((int) get_dict().size() == d_->get_state_variable_count())
+      return;
+
+    //
+    // Grab the name of states that are used by processes
+    //
+    int type_count = d_->get_state_variable_type_count();
+    typedef std::map<std::string, int> enum_map_t;
+    std::vector<enum_map_t> enum_map(type_count);
+    for (int i = 0; i < type_count; ++i)
+      {
+	int enum_count = d_->get_state_variable_type_value_count(i);
+	for (int j = 0; j < enum_count; ++j)
+	  {
+	    enum_map[i]
+	      .insert(std::make_pair(d_->get_state_variable_type_value(i, j),
+				   j));
+	  }
+      }
+
+
+    //
+    // Otherwise there are other AP like "P_0.j==2" etc.
+    // We have to check if these APs are correct and the
+    // kripke must update for every successor these APs.
+    //
+    for (int i = d_->get_state_variable_count();
+    	 i < (int) get_dict().size(); ++i)
+      {
+	int var_num = 0;
+
+    	const ltl::atomic_prop* ap = get_dict().get(i);
+	std::string str = ap->name();
+	const char* s = str.c_str();
+
+	// Skip any leading blank.
+	while (*s && (*s == ' ' || *s == '\t'))
+	  ++s;
+	if (!*s)
+	  {
+	    std::cerr << "Proposition `" << str
+		      << "' cannot be parsed." << std::endl;
+	    exit(1);
+	  }
+
+
+      	  char* name = (char*) malloc(str.size() + 1);
+      	  char* name_p = name;
+      	  char* lastdot = 0;
+      	  while (*s && (*s != '=') && *s != '<' && *s != '!'  && *s != '>')
+      	    {
+
+      	      if (*s == ' ' || *s == '\t')
+      		++s;
+      	      else
+      		{
+      		  if (*s == '.')
+      		    lastdot = name_p;
+      		  *name_p++ = *s++;
+      		}
+      	    }
+      	  *name_p = 0;
+
+      	  if (name == name_p)
+      	    {
+      	      std::cerr << "Proposition `" << str
+      			<< "' cannot be parsed." << std::endl;
+      	      free(name);
+	      exit(1);
+      	    }
+
+	  // Lookup the name
+	  int j;
+	  for (j = 0; j < (int) d_->get_state_variable_count(); ++j)
+	    {
+	      const ltl::atomic_prop* a = get_dict().get(j);
+	      std::string sap = a->name();
+	      if (sap.compare(name) == 0)
+		break;
+	    }
+	  var_num = j;
+
+	  if (j >= (int) d_->get_state_variable_count())
+	    {
+	      //
+	      // It's a State name P_0.S
+	      //
+	      if (lastdot)
+		{
+		  std::string proc_name(name, lastdot);
+		  std::cout << proc_name << std::endl;
+
+		  int ii;
+		  for (ii = 0; ii < (int) d_->get_state_variable_count(); ++ii)
+		    {
+		      const ltl::atomic_prop* a = get_dict().get(ii);
+		      std::string sap = a->name();
+		      if (sap.compare(proc_name) == 0)
+			break;
+		    }
+		  var_num = ii;
+
+		  int type_num = d_->get_state_variable_type(ii);
+		  enum_map_t::const_iterator ei = enum_map[type_num].find(lastdot+1);
+		  if (ei == enum_map[type_num].end())
+		    {
+		      std::cerr << "No state `" << lastdot
+				<< "' known for variable `"
+				<< name << "'." << std::endl;
+		      std::cerr << "Possible states are:";
+		      for (ei = enum_map[type_num].begin();
+			   ei != enum_map[type_num].end(); ++ei)
+			std::cerr << " " << ei->first;
+		      std::cerr << std::endl;
+
+		      free(name);
+		      exit(1);
+		    }
+
+		  one_prop p = {var_num, OP_NE, 0 };
+		  l->add_ap(p);
+		  continue;
+		}
+	      //
+	      // It's an unknow variable.
+	      //
+	      else
+		{
+		  std::cerr << "Proposition `" << name
+			    << "' doesn't match any proposition "
+			    << "in the kripke"
+			    << std::endl;
+		  exit (1);
+		}
+	    }
+
+	  //
+	  // It's P_0.var == 2
+	  //
+	  relop op;
+      	  switch (*s)
+      	    {
+      	    case '!':
+      	      if (s[1] != '=')
+      		goto report_error;
+      	      op = OP_NE;
+      	      s += 2;
+      	      break;
+      	    case '=':
+      	      if (s[1] != '=')
+      		goto report_error;
+      	      op = OP_EQ;
+      	      s += 2;
+      	      break;
+      	    case '<':
+      	      if (s[1] == '=')
+      		{
+      		  op = OP_LE;
+      		  s += 2;
+      		}
+      	      else
+      		{
+      		  op = OP_LT;
+      		  ++s;
+      		}
+      	      break;
+      	    case '>':
+      	      if (s[1] == '=')
+      		{
+      		  op = OP_GE;
+      		  s += 2;
+      		}
+      	      else
+      		{
+      		  op = OP_GT;
+      		  ++s;
+      		}
+      	      break;
+      	    default:
+      	    report_error:
+      	      std::cerr << "Unexpected `" << s
+      			<< "' while parsing atomic proposition `" << str
+      			<< "'." << std::endl;
+      	      free(name);
+	      exit(1);
+      	    }
+
+	  // leading blank
+      	  while (*s && (*s == ' ' || *s == '\t'))
+      	    ++s;
+
+      	  int val = 0; // Initialize to kill a warning from old compilers.
+      	  int type_num = d_->get_state_variable_type(i);//ni->second.type;
+      	  if (type_num == 0 || (*s >= '0' && *s <= '9') || *s == '-')
+      	    {
+      	      char* s_end;
+      	      val = strtol(s, &s_end, 10);
+      	      if (s == s_end)
+      		{
+      		  std::cerr << "Failed to parse `" << s
+      			    << "' as an integer." << std::endl;
+      		  free(name);
+		  exit(1);
+      		}
+      	      s = s_end;
+      	    }
+      	  else
+      	    {
+      	      // We are in a case such as P_0 == S, trying to convert
+      	      // the string S into an integer.
+      	      const char* end = s;
+      	      while (*end && *end != ' ' && *end != '\t')
+      		++end;
+      	      std::string st(s, end);
+
+	      std::cout << name <<" " << st << std::endl;
+
+	      int ii;
+	      for (ii = 0; ii < (int) d_->get_state_variable_count(); ++ii)
+		{
+		  const ltl::atomic_prop* a = get_dict().get(ii);
+		  std::string sap = a->name();
+		  if (sap.compare(name) == 0)
+		    break;
+		}
+
+	      int type_num = d_->get_state_variable_type(ii);
+	      enum_map_t::const_iterator ei = enum_map[type_num].find(st);
+	      if (ei == enum_map[type_num].end())
+		{
+		  std::cerr << "No state `" << st
+			    << "' known for variable `"
+			    << name << "'." << std::endl;
+		  std::cerr << "Possible states are:";
+		  for (ei = enum_map[type_num].begin();
+		       ei != enum_map[type_num].end(); ++ei)
+		    std::cerr << " " << ei->first;
+		  std::cerr << std::endl;
+		  free(name);
+		  exit(1);
+		}
+	      while (*s && (*s != ' ' || *s != '\t'))
+		++s;
+      	    }
+
+      	  free(name);
+
+      	  while (*s && (*s == ' ' || *s == '\t'))
+      	    ++s;
+      	  if (*s)
+      	    {
+      	      std::cerr << "Unexpected `" << s
+      			<< "' while parsing atomic proposition `" << str
+      			<< "'." << std::endl;
+	      exit(1);
+      	    }
+      	  one_prop p = { var_num , op, val};
+	  l->add_ap(p);
+      }
+  }
 
   ////////////////////////////////////////////////////////////////////////////
   // LOADER
@@ -857,13 +839,11 @@ namespace spot
 
 
   const spot::fasttgba* load_dve2(const std::string& file_arg,
-				  spot::ap_dict* aps,
-				  spot::acc_dict* accs,
+				  spot::ap_dict& aps,
+				  spot::acc_dict& accs,
 				  bool verbose)
   {
-    assert(aps);
-    assert(accs);
-    if (aps->size() != 0)
+    if (aps.size() != 0)
       {
 	std::cerr << "Fail to create the Kripke from a non empty "
 		  << "atomic proposition set" << std::endl;
@@ -967,25 +947,16 @@ namespace spot
     	return 0;
       }
 
-    int errors = convert_aps(*aps, d, verbose);
+
+    fasttgba *kripke = new dve2_kripke(d, aps, accs);
+    int errors = convert_aps(aps, d, kripke, verbose);
     if (errors)
       {
+    	delete d;
+    	lt_dlexit();
+    	return 0;
       }
 
-
-    return  new dve2_kripke(d, aps, accs);
-
-    // prop_set* ps = new prop_set;
-    // int errors = convert_aps(to_observe, d, dict, dead, *ps);
-    // if (errors)
-    //   {
-    // 	delete ps;
-    // 	dict->unregister_all_my_variables(d);
-    // 	delete d;
-    // 	lt_dlexit();
-    // 	return 0;
-    //   }
-
-    // return new dve2_kripke(d, dict, ps, dead, compress);
+    return kripke;
   }
 }

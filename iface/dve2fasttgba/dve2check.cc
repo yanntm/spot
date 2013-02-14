@@ -85,6 +85,14 @@ main(int argc, char **argv)
   spot::ltl::parse_error_list pel;
   f1 = spot::ltl::parse(input, pel, env, false);
 
+  //
+  // Check wether problems haven been detected during parsing.
+  //
+  int exit_code = spot::ltl::format_parse_errors(std::cerr, argv[1], pel);
+  if (exit_code)
+    goto safe_exit;
+
+
   if (f1)
     {
       //
@@ -127,8 +135,10 @@ main(int argc, char **argv)
       spot::ap_dict* aps = new spot::ap_dict();
       spot::acc_dict* accs = new spot::acc_dict();
 
-      const spot::fasttgba* kripke = spot::load_dve2(file, aps, accs, true);
+      const spot::fasttgba* kripke = spot::load_dve2(file, *aps, *accs, true);
       assert(kripke);
+      spot::dotty_dfs dotty(kripke);
+      dotty.run();
 
       const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
       spot::dotty_dfs dotty1(ftgba1);
@@ -136,9 +146,9 @@ main(int argc, char **argv)
 
 
       // Warning last argument must be set !! See. doc
-      const spot::fasttgba_product prod (kripke, ftgba1, true);
-       spot::dotty_dfs dotty3(&prod);
-       dotty3.run();
+      const spot::fasttgba_kripke_product prod (kripke, ftgba1);
+      spot::dotty_dfs dotty3(&prod);
+      dotty3.run();
 
 
 
@@ -156,6 +166,7 @@ main(int argc, char **argv)
       delete accs;
     }
 
+ safe_exit:
   // Clean up
   f1->destroy();
   delete af1;

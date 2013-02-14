@@ -204,7 +204,7 @@ namespace spot
     // with two different acceptance set, the result must contains
     // as well the first acceptance set as well the second
     if (kripke_left)
-      right_->current_acceptance_marks();
+      return right_->current_acceptance_marks();
 
     return left_->current_acceptance_marks() |
       right_->current_acceptance_marks();
@@ -242,8 +242,8 @@ namespace spot
       down_cast<const fast_product_state*>(local_state);
     assert(s);
     fasttgba_succ_iterator* li = left_->succ_iter(s->left());
-    fasttgba_succ_iterator* ri = left_->succ_iter(s->right());
-    return new fast_product_iterator(li, ri);
+    fasttgba_succ_iterator* ri = right_->succ_iter(s->right());
+    return new fast_product_iterator(li, ri, kripke_left);
   }
 
 

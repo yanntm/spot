@@ -24,9 +24,31 @@
 // #include "ltlast/constant.hh"
 
 #include "fasttgba/fasttgba.hh"
+#include "fasttgba/fasttgba_product.hh"
 
 namespace spot
 {
+  class fasttgba_kripke_product : public fasttgba_product
+  {
+  public:
+    fasttgba_kripke_product(const fasttgba *a1,
+			    const fasttgba *a2,
+			    bool verbose = true)
+      : fasttgba_product(a1, a2, true),
+	verbose_(verbose)
+    {
+      match_formula_ap();
+    }
+
+    ///
+    ///
+    ///
+    void match_formula_ap ();
+
+  private:
+    bool verbose_;
+  };
+
 
   // \brief Load a DVE model.
   //
@@ -57,8 +79,8 @@ namespace spot
   //         dead states
   // \a verbose whether to output verbose messages
   const spot::fasttgba* load_dve2(const std::string& file,
-				  spot::ap_dict* aps,
-				  spot::acc_dict* accs,
+				  spot::ap_dict& aps,
+				  spot::acc_dict& accs,
 				  bool verbose = true);
 }
 
