@@ -26,6 +26,7 @@ fasttgbaalgos_HEADERS = \
   tgba2fasttgba.hh \
   generic_dfs.hh \
   lbtt_dfs.hh \
+  stats_dfs.hh \
   dotty_dfs.hh
 
 noinst_LTLIBRARIES = libfasttgbaalgos.la
@@ -33,4 +34,5 @@ libfasttgbaalgos_la_SOURCES = \
   tgba2fasttgba.cc \
   generic_dfs.cc \
   lbtt_dfs.cc \
+  stats_dfs.cc \
   dotty_dfs.cc

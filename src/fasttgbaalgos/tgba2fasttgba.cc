@@ -61,7 +61,6 @@ namespace spot
 
 	for (; sii != end; ++sii)
 	  {
-	    //std::cout << sii->second << std::endl;
 	    positions_.push_back(sii->second);
 
 	    const ltl::formula *f = sii->first;
@@ -78,7 +77,6 @@ namespace spot
 
 	for (; sii2 != end2; ++sii2)
 	  {
-	    std::cout << sii2->second << std::endl;
 	    acceptances_.push_back(sii2->second);
 	    const ltl::formula *f = sii2->first;
 	    if ((down_cast<const ltl::atomic_prop*>(f)))

@@ -24,14 +24,13 @@
 namespace spot
 {
   lbtt_dfs::lbtt_dfs(const fasttgba* a):
-   generic_dfs(a), nb_states(0), nb_transitions(0)
+    generic_dfs(a), nb_states(0), nb_transitions(0)
   { }
 
   lbtt_dfs::~lbtt_dfs()
   {
 
   }
-
 
   bool
   lbtt_dfs::want_state(const fasttgba_state*) const
