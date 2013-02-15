@@ -36,6 +36,8 @@
 #include "fasttgba/fasttgba_product.hh"
 
 
+#include "misc/timer.hh"
+
 static void
 syntax(char* prog)
 {
@@ -78,6 +80,9 @@ main(int argc, char **argv)
 
   // The formula in spot
   const spot::ltl::formula* f1 = 0;
+
+  // A timer to compute
+  spot::timer_map mtimer;
 
   //
   // Building the formula from the input
@@ -140,32 +145,36 @@ main(int argc, char **argv)
       // spot::dotty_dfs dotty(kripke);
       // dotty.run();
       spot::stats_dfs stats(kripke);
+      std::cout << "Statistic for the Kripke :\n";
+      mtimer.start("Exploring Kripke");
       stats.run();
+      mtimer.stop("Exploring Kripke");
 
       const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
       // spot::dotty_dfs dotty1(ftgba1);
       // dotty1.run();
+      std::cout << "Statistic for the Property :\n";
+      mtimer.start("Exploring Property");
       spot::stats_dfs stats1(ftgba1);
       stats1.run();
+      mtimer.stop("Exploring Property");
+
 
       const spot::fasttgba_kripke_product prod (kripke, ftgba1);
-      // spot::dotty_dfs dotty3(&prod);
-      // dotty3.run();
+      std::cout << "Statistic for the Product :\n";
+      mtimer.start("Exploring Product");
       spot::stats_dfs stats3(&prod);
       stats3.run();
+      mtimer.stop("Exploring Product");
+
+      // spot::dotty_dfs dotty3(&prod);
+      // dotty3.run();
 
 
-
-      // std::cout << "-------------> PRODUCT ! " << std::endl;
-      // const spot::tgba *prodbis = new spot::tgba_product(af1, af2);
-      // const spot::fasttgba* ftgbabis = spot::tgba_2_fasttgba(prodbis, *aps, *accs);
-      // spot::dotty_dfs dottybis(ftgbabis);
-      // dottybis.run();
-      // delete prodbis;
+      mtimer.print (std::cout);
 
       delete kripke;
       delete ftgba1;
-      //      delete ftgba2;
       delete aps;
       delete accs;
     }

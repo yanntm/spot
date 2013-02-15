@@ -1,4 +1,4 @@
-// Copyright (C) 2012 Laboratoire de Recherche et Développement
+// Copyright (C) 2012 Laboratoire de Recherche et DÃ©veloppement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -62,11 +62,20 @@ namespace spot
 	for (; sii != end; ++sii)
 	  {
 	    positions_.push_back(sii->second);
-
 	    const ltl::formula *f = sii->first;
-	    aps_.register_ap_for_aut
+	    int p = aps_.register_ap_for_aut
 	      (down_cast<const ltl::atomic_prop*>(f), result_);
+	    positions2_.push_back(p);
+	    // std::cout << sii->second << "->" << (down_cast<const ltl::atomic_prop*>(sii->first))->name()
+	    // 	      << "        " << p << std::endl;
 	  }
+
+
+	// for (int k = 0; k < (int) aps_.size() ; ++k)
+	//   {
+	//     const ltl::atomic_prop* f = aps_.get(k);
+	//     std::cout << k << " "<< f->name() << std::endl;
+	//   }
 
 	// Second grab Acceptance variables
 	std::map<const ltl::formula*, int> acc_map = aps->acc_map;
@@ -77,12 +86,11 @@ namespace spot
 
 	for (; sii2 != end2; ++sii2)
 	  {
+	    // std::cout << sii2->second << std::endl;
 	    acceptances_.push_back(sii2->second);
 	    const ltl::formula *f = sii2->first;
-	    if ((down_cast<const ltl::atomic_prop*>(f)))
-	      accs_.register_acc_for_aut((down_cast<const ltl::atomic_prop*>(f))->name(), result_);
-	    else if ((down_cast<const ltl::constant*>(f)))
-	      accs_.register_acc_for_aut((down_cast<const ltl::constant*>(f))->val_name(), result_);
+	    int p = accs_.register_acc_for_aut(f->dump(), result_);
+	    acceptances2_.push_back(p);
 	  }
       }
 
@@ -123,7 +131,7 @@ namespace spot
 		  {
 		    std::vector<int>::iterator pp = std::find(acceptances_.begin(), acceptances_.end(), bdd_var(one));
 		    int nth = std::distance(acceptances_.begin(), pp);
-		    current_mark.set_mark(nth);
+		    current_mark.set_mark(acceptances2_[nth]);
 		    one = bdd_high(one);
 		    break;
 		  }
@@ -144,21 +152,23 @@ namespace spot
 	    int i = 0;
 	    while (one != bddtrue)
 	      {
-		if (bdd_high(one) == bddfalse)
-		  {
-		    std::vector<int>::iterator pp = std::find(positions_.begin(), positions_.end(), bdd_var(one));
-		    int nth = std::distance(positions_.begin(), pp);
-		    current_cond.set_false_var(nth);
-		    one = bdd_low(one);
-		  }
-		else
-		  {
-		    std::vector<int>::iterator pp = std::find(positions_.begin(), positions_.end(), bdd_var(one));
-		    int nth = std::distance(positions_.begin(), pp);
-		    current_cond.set_true_var(nth);
-		    one = bdd_high(one);
-		  }
-		++i;
+	    	if (bdd_high(one) == bddfalse)
+	    	  {
+	    	    std::vector<int>::iterator pp = std::find(positions_.begin(), positions_.end(), bdd_var(one));
+	    	    int nth = std::distance(positions_.begin(), pp);
+	    	    //current_cond.set_false_var(nth);
+	    	    current_cond.set_false_var(positions2_[nth]);
+	    	    one = bdd_low(one);
+	    	  }
+	    	else
+	    	  {
+	    	    std::vector<int>::iterator pp = std::find(positions_.begin(), positions_.end(), bdd_var(one));
+	    	    int nth = std::distance(positions_.begin(), pp);
+	    	    //current_cond.set_true_var(nth);
+	    	    current_cond.set_true_var(positions2_[nth]);
+	    	    one = bdd_high(one);
+	    	  }
+	    	++i;
 	      }
 
 	    // Now we can create the transition
@@ -177,7 +187,9 @@ namespace spot
       ap_dict& aps_;
       acc_dict& accs_;
       std::vector<int> positions_;
+      std::vector<int> positions2_;
       std::vector<int> acceptances_;
+      std::vector<int> acceptances2_;
     };
   }
 

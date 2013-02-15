@@ -112,7 +112,7 @@ namespace spot
     // The iterator consider the synchronisation of all
     // outgoing transitions from left with outgoing transitions
     // from right. So when left is done, fix it to zero to
-    // detect effitiently when the iteration is done!
+    // detect efficiently when the iteration is done!
     if (left_->done())
       {
     	left_ = 0;
@@ -121,12 +121,15 @@ namespace spot
 
     // We have to check if the synchro is available for the first
     // iterator of each tgba ; otherwise iterate until a good one is found
-    cube current_cond = current_condition();
+    //    cube current_cond = current_condition();
+    cube r = right_->current_condition();
+    cube l = left_->current_condition();
+    cube current_cond = l & r;
+
     if (!current_cond.is_valid())
       {
     	next();
       }
-
   }
 
   void

@@ -17,6 +17,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "acc_dict.hh"
+#include <iostream>
 
 namespace spot
 {
@@ -39,6 +40,7 @@ namespace spot
     accs_.insert(std::make_pair(acc, id_));
     accsback_.insert(std::make_pair(id_, acc));
     ++id_;
+    std::cout << accs_.size() << std::endl;
     return (id_-1);
   }
 

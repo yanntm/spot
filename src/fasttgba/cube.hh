@@ -72,7 +72,7 @@ namespace spot
     void set_free_var(size_t index);
 
     /// \brief return the size of the cube
-    size_t size();
+    size_t size() const ;
 
     /// \brief return true if the cube is valid considering true and false
     /// variables
@@ -113,6 +113,7 @@ namespace spot
     boost::dynamic_bitset<> true_var;   ///< the set of variables set to true
     boost::dynamic_bitset<> false_var;  ///< the set of variables set to false
     ap_dict& aps_;			///< the reference over the atomic props
+    mutable bool valid;
   };
 }
 

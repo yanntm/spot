@@ -375,6 +375,7 @@ namespace spot
     	      res.set_false_var(cpt);
 	    ++cpt;
      	  }
+	assert(res.is_valid());
      	return res;
       }
 
@@ -489,6 +490,9 @@ namespace spot
 
       void add_ap (one_prop p) const
       {
+	// std::cout << "Add : (" << p.var_num
+	// 	  << "," << p.op << "," << p.val
+	// 	  << ")" << std::endl;
 	ps_->push_back(p);
       }
 
@@ -547,7 +551,6 @@ namespace spot
 	  }
       }
 
-
     //
     // Otherwise there are other AP like "P_0.j==2" etc.
     // We have to check if these APs are correct and the
@@ -578,7 +581,6 @@ namespace spot
       	  char* lastdot = 0;
       	  while (*s && (*s != '=') && *s != '<' && *s != '!'  && *s != '>')
       	    {
-
       	      if (*s == ' ' || *s == '\t')
       		++s;
       	      else
@@ -617,7 +619,7 @@ namespace spot
 	      if (lastdot)
 		{
 		  std::string proc_name(name, lastdot);
-		  std::cout << proc_name << std::endl;
+		  //std::cout << proc_name << std::endl;
 
 		  int ii;
 		  for (ii = 0; ii < (int) d_->get_state_variable_count(); ++ii)
@@ -646,7 +648,7 @@ namespace spot
 		      exit(1);
 		    }
 
-		  one_prop p = {var_num, OP_NE, 0 };
+		  one_prop p = {var_num, OP_EQ, ei->second };
 		  l->add_ap(p);
 		  continue;
 		}
@@ -742,7 +744,7 @@ namespace spot
       		++end;
       	      std::string st(s, end);
 
-	      std::cout << name <<" " << st << std::endl;
+	      //std::cout << name <<" " << st << std::endl;
 
 	      int ii;
 	      for (ii = 0; ii < (int) d_->get_state_variable_count(); ++ii)
@@ -768,6 +770,7 @@ namespace spot
 		  free(name);
 		  exit(1);
 		}
+	      val = ei->second;
 	      while (*s && (*s != ' ' || *s != '\t'))
 		++s;
       	    }
@@ -949,7 +952,7 @@ namespace spot
 
 
     fasttgba *kripke = new dve2_kripke(d, aps, accs);
-    int errors = convert_aps(aps, d, kripke, verbose);
+    int errors = convert_aps(aps, d, kripke, false);//verbose);
     if (errors)
       {
     	delete d;

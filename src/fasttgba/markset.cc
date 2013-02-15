@@ -84,6 +84,7 @@ namespace spot
   void
   markset::set_mark(mark m)
   {
+    assert(((size_t) m) < markset_.size());
     markset_[m] = 1;
   }
 

@@ -46,7 +46,6 @@ namespace spot
   void
   stats_dfs::end()
   {
-    std::cout << "Statistic for the Automaton :\n";
     std::cout << "   * " << nb_states << " states\n";
     std::cout << "   * " << nb_transitions << " trans.\n";
   }

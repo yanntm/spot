@@ -31,6 +31,7 @@
 #include <cstring>
 #include "kripke/kripkeexplicit.hh"
 #include "kripke/kripkeprint.hh"
+#include "tgbaalgos/stats.hh"
 
 static void
 syntax(char* prog)
@@ -64,6 +65,7 @@ int
 main(int argc, char **argv)
 {
   spot::timer_map tm;
+  spot::timer_map mtimer;
 
   bool use_timer = false;
 
@@ -74,6 +76,7 @@ main(int argc, char **argv)
   bool deterministic = false;
   char *dead = 0;
   int compress_states = 0;
+  bool opt_compare = true;
 
   const char* echeck_algo = "Cou99";
 
@@ -164,6 +167,9 @@ main(int argc, char **argv)
   const spot::ltl::formula* f = 0;
   const spot::ltl::formula* deadf = 0;
   spot::postprocessor post;
+  spot::tgba_sub_statistics sstat_a;
+  int A_st;
+  int A_tr;
 
   if (dead == 0 || !strcasecmp(dead, "true"))
     {
@@ -230,7 +236,7 @@ main(int argc, char **argv)
       if (output == DotModel)
 	{
 	  tm.start("dotty output");
-	  spot::dotty_reachable(std::cout, model);
+	  //spot::dotty_reachable(std::cout, model);
 	  tm.stop("dotty output");
 	  goto safe_exit;
 	}
@@ -246,17 +252,59 @@ main(int argc, char **argv)
   if (output == DotFormula)
     {
       tm.start("dotty output");
-      spot::dotty_reachable(std::cout, prop);
+      //spot::dotty_reachable(std::cout, prop);
       tm.stop("dotty output");
       goto safe_exit;
     }
 
+
   product = new spot::tgba_product(model, prop);
+
+  // ---------------------------------------------------------------------------------
+  if (opt_compare)
+    {
+      mtimer.start("Exploring Kripke");
+      std::cout << "Statistic for the Kripke :\n";
+      sstat_a = sub_stats_reachable(model);
+      mtimer.stop("Exploring Kripke");
+      A_st = sstat_a.states;
+      A_tr = sstat_a.transitions;
+      std::cout << "   * " << A_st << " states\n";
+      std::cout << "   * " << A_tr << " trans.\n";
+
+      //spot::dotty_reachable(std::cout, prop);
+      mtimer.start("Exploring Property");
+      std::cout << "Statistic for the Property :\n";
+      sstat_a = sub_stats_reachable(prop);
+      mtimer.stop("Exploring Property");
+      A_st = sstat_a.states;
+      A_tr = sstat_a.transitions;
+      std::cout << "   * " << A_st << " states\n";
+      std::cout << "   * " << A_tr << " trans.\n";
+
+
+      mtimer.start("Exploring Product");
+      std::cout << "Statistic for the Product :\n";
+      sstat_a = sub_stats_reachable(product);
+      mtimer.stop("Exploring Product");
+      A_st = sstat_a.states;
+      A_tr = sstat_a.transitions;
+      std::cout << "   * " << A_st << " states\n";
+      std::cout << "   * " << A_tr << " trans.\n";
+
+
+
+
+
+      mtimer.print (std::cout);
+      goto safe_exit;
+    }
+  // ---------------------------------------------------------------------------------
 
   if (output == DotProduct)
     {
       tm.start("dotty output");
-      spot::dotty_reachable(std::cout, product);
+      //spot::dotty_reachable(std::cout, product);
       tm.stop("dotty output");
       goto safe_exit;
     }
@@ -265,6 +313,8 @@ main(int argc, char **argv)
 
   {
     spot::emptiness_check* ec = echeck_inst->instantiate(product);
+    spot::dotty_reachable(std::cout, product);
+
     bool search_many = echeck_inst->options().get("repeated");
     assert(ec);
     do
