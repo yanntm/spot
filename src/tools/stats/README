@@ -1,0 +1,161 @@
+This directory contains a script for producing some LaTeX
+graphs and tables starting from a json file.
+
+====================
+ QUICK INSTRUCTIONS
+====================
+
+The script 'stats.py' requires python3 to be installed.
+It prints a LaTeX output of your json file depending on 
+the flag selected.
+
+Here are the flags supported:
+
+* tables:
+    --cumul
+    --cumulslim
+    --cross
+    --crosslite
+
+* graphs:
+    --scatter
+    --line
+    --cactus
+    --cactus2
+
+* other:
+    --crosscases
+
+The script will produce by default a full LaTeX output that can be 
+compiled. If you work with your own LaTeX file and wish to
+integrate the script output, just use the --only flag.
+
+You have the possibility to write a little intro text with the
+--intro flag.
+
+Use csv2json if you want to remove some items in inputs.
+
+====================
+ Cumulative summary
+====================
+
+Use --cumul followed by inputs separated by commas.
+The cumulative will be done depending on the number and the order
+of the inputs.
+
+For example, if we have model, tool and formula as inputs:
+    ./stats.py --cumul tool xxx.json
+    ./stats.py --cumul model,tool xxx.json
+    ./stats.py --cumul tool,model xxx.json
+will produce three different tables.
+
+You can also do the cumulative depending on a field that is
+not an input, for example:
+    ./stats.py result,model,tool xxx.json
+
+You can rotate the elements of an input column using '@'
+followed by the angle, for example:
+    ./stats.py --cumul model@90,tool@-42 xxx.json
+
+It is possible to choose which fields to display and in what order.
+To do that, just write ':' after the inputs followed by the fields 
+you want and in the order you want, for example:
+    ./stats.py --cumul model,tool:states,time xxx.json
+    ./stats.py --cumul model,tool:time,states,transitions xxx.json
+
+It is also possible to perform some processing on the fields
+columns, you add the processing inside brackets, without
+separator. For example:
+    ./stats.py --cumul tool:states[minmax],edges[max],time[min] xxx.json
+        Mark the maximum, the minimum or both. A LaTeX definition is
+        created for the max and the min so you can modify it easily.
+    ./stats.py --cumul tool:states[/] xxx.json
+        Do the average.
+    ./stats.py --cumul tool:states[%] xxx.json
+        Add a percent sign.
+    ./stats.py --cumul tool:time[.4] xxx.json
+        Display the numbers of the time column with 4 decimal.
+You can apply these processing to all fields, for example:
+    ./stats.py --cumul tool:[minmax/%.4] xxx.json
+
+You can limit the cumulative to common combinations with '*'
+to have the same number of cases, for example:
+    ./stats.py --cumul tool* xxx.json
+    ./stats.py --cumul mode,*tool xxx.json
+
+You can make a vertical separation depending on a input by 
+using ';', for example:
+    ./stats.py --cumul 'model,tool;type' xxx.json
+
+Of course, all these features can be combined, for example:
+    ./stats.py --cumul 'result,model@90,tool;type*:[minmax/]' xxx.json
+
+If you want another appearance for the table, use --cumulslim.
+
+
+==================
+ Cross comparison
+==================
+
+Use --cross followed by the input you are interested in and the predicate,
+separated by commas.
+For example,
+    ./stats.py --cross 'tool,x[states]>y[states]' xxx.json
+it will print a table counting each time the predicate is verified.
+You can mark the maximum and/or the minimum, for example:
+    ./stats.py --cross 'tool,x[states]>y[states]':[minmax]
+    ./stats.py --cross 'tool,x[states]>y[states]':[max]
+If you want another appearance for the table, use --crosslite.
+
+Use --crosscases followed by the input, the predicate and the two 
+elements you are interested in, separated by commas.
+For example,
+    ./stats.py --crosscases 'tool,x[states]>y[states],Cou,SE' xxx.json
+it will print a csv output with the cases where the predicate is verified.
+
+
+==============
+ Scatter plot
+==============
+
+Use --scatter followed by an input, two elements from this input and a field,
+separated by commas, for example:
+    ./stats.py --scatter tool,Cou,SE,states xxx.json
+
+You can add an extra field to color the points depending on it, for example:
+    ./stats.py --scatter tool,Cou,SE,states,result xxx.json
+
+
+===========
+ Line plot
+===========
+
+Use --line followed by an input and a field, for example:
+    ./stats.py --line tool,states xxx.json
+
+=============
+ Cactus plot
+=============
+
+Use --cactus followed by an input, an element from this input wich is take 
+as reference, and a field, for example:
+    ./stats.py --cactus tool,Cou,states xxx.json
+    ./stats.py --cactus tool,SE,states xxx.json
+
+If you want a sorted cactus plot, you can use the --cactus2 flag.
+
+============
+ Bar graph
+============
+
+Use --ybar, or --ybarstack if you want a stacked bar graph,
+followed by an input, for example:
+    ./stats.py --ybar tool xxx.json
+
+It selects the results in common and does the average.
+
+It is possible to choose which fields to display and in what order.
+To do that, just write ':' after the inputs followed by the fields 
+you want and in the order you want, for example:
+    ./stats.py --ybar tool:states,time xxx.json
+    ./stats.py --ybar tool:time,states,transitions,edges xxx.json

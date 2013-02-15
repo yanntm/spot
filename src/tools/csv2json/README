@@ -1,0 +1,40 @@
+This directory contains a script to convert csv file into json.
+
+====================
+ QUICK INSTRUCTIONS
+====================
+
+The script 'csv2json.py' requires python3 to be installed.
+It prints a json output of your csv file.
+
+To run it, you have to define which columns are inputs in your csv file.
+It is done thanks to the -i flag, followed by the inputs that
+should be separated by commas.
+
+You can define the inputs by using their position in the csv file,
+or by writing them literally.
+
+For example,
+    ./csv2json.py -i model,tool,formula xxx.csv
+    ./csv2json.py -i 0,1,2 xxx.csv
+    ./csv2json.py -i 0,tool,2 xxx.csv
+are equivalent.
+
+===================
+ Filter the inputs
+===================
+
+It is possible to keep only certain elements in the inputs.
+You can write the items you want to keep, or write the items
+you want to remove, and that for each input.
+Write them inside brackets if you want to keep them, or inside
+braces if you want to remove them.
+You don't have to use a separator.
+
+For example:
+    ./csv2json.py -i tool[Cou/SE],formula xxx.csv
+    ./csv2json.py -i tool{Cou/SE},formula xxx.csv
+    ./csv2json.py -i tool{Cou},model[at_4/telephony_2],formula
+    ./csv2json.py -i tool[CouSE],formula xxx.csv
+    ./csv2json.py -i tool,model[at_4telephony_3],formula
+    ./csv2json.py -i tool[OWCTY],model{at_4telephony_3},formula{F001}
