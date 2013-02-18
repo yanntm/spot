@@ -19,7 +19,6 @@
 #include <iostream>
 #include <sstream>
 #include "lbtt_dfs.hh"
-#include "fasttgba/fasttgbaexplicit.hh"
 
 namespace spot
 {

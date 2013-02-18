@@ -18,7 +18,6 @@
 
 #include <iostream>
 #include "generic_dfs.hh"
-#include "fasttgba/fasttgbaexplicit.hh"
 
 namespace spot
 {

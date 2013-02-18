@@ -18,7 +18,6 @@
 
 #include <iostream>
 #include "dotty_dfs.hh"
-#include "fasttgba/fasttgbaexplicit.hh"
 
 namespace spot
 {

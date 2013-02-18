@@ -19,7 +19,7 @@
 #include <string>
 #include <iostream>
 #include "tgba2fasttgba.hh"
-#include "fasttgba/fasttgbaexplicit.hh"
+#include "fasttgba/fasttgba_explicit.hh"
 #include "tgbaalgos/reachiter.hh"
 #include "ltlast/formula.hh"
 #include "ltlast/atomic_prop.hh"

@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SPOT_FASTTGBA_FASTTGBAEXPLICIT_HH
-# define SPOT_FASTTGBA_FASTTGBAEXPLICIT_HH
+#ifndef SPOT_FASTTGBA_FASTTGBA_EXPLICIT_HH
+# define SPOT_FASTTGBA_FASTTGBA_EXPLICIT_HH
 
 #include <list>
 #include "fasttgba.hh"
@@ -165,4 +165,4 @@ namespace spot
   };
 }
 
-#endif // SPOT_FASTTGBA_FASTTGBAEXPLICIT_HH
+#endif // SPOT_FASTTGBA_FASTTGBA_EXPLICIT_HH

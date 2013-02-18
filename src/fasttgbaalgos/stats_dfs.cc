@@ -19,7 +19,6 @@
 #include <iostream>
 #include <sstream>
 #include "stats_dfs.hh"
-#include "fasttgba/fasttgbaexplicit.hh"
 
 namespace spot
 {
