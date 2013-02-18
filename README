@@ -206,6 +206,7 @@ wrap/             Wrappers for other languages.
       ajax/       LTL-to-TGBA translator with web interface, using Ajax.
 iface/            Interfaces to other libraries.
    dve2/          Interface with DiVinE2.
+   dve2fasttgba/  Interface with DiVinE2 using fasttgba
    gspn/          GreatSPN interface.
       examples/   Supporting models used by the test cases.
 

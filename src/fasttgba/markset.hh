@@ -17,8 +17,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#ifndef SPOT_FASTTGBA_MARK_HH
-# define SPOT_FASTTGBA_MARK_HH
+#ifndef SPOT_FASTTGBA_MARKSET_HH
+# define SPOT_FASTTGBA_MARKSET_HH
 
 #include <vector>
 #include <string>
@@ -74,10 +74,10 @@ namespace spot
     markset& operator=(const markset& b);
 
     /// \brief Perform a logical AND
-    markset operator&(const markset& b) const ;
+    markset operator&(const markset& b) const;
 
     /// \brief Perform a logical OR
-    markset operator|(const markset& b) const ;
+    markset operator|(const markset& b) const;
 
     /// \brief Set a mark in the markset
     ///
@@ -113,9 +113,9 @@ namespace spot
 
   protected:
     boost::dynamic_bitset<> markset_;   ///< the set of acceptance
-    acc_dict& accs_;			///< the reference over the acceptances
+    acc_dict& accs_;			///< the reference over the acc
 
   };
 }
 
-#endif  // SPOT_FASTTGBA_MARK_HH
+#endif  // SPOT_FASTTGBA_MARKSET_HH

@@ -16,16 +16,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SPOT_FASTTGBA_FASTSTATE_HH
-# define SPOT_FASTTGBA_FASTSTATE_HH
+#ifndef SPOT_FASTTGBA_FASTTGBA_STATE_HH
+# define SPOT_FASTTGBA_FASTTGBA_STATE_HH
 
-#include <cstddef>
-#include <cassert>
-#include <functional>
 #include <boost/shared_ptr.hpp>
 #include <string>
 #include "misc/casts.hh"
-#include <boost/dynamic_bitset.hpp>
 
 namespace spot
 {
@@ -78,7 +74,8 @@ namespace spot
 
 
   struct fasttgba_state_ptr_equal:
-    public std::binary_function<const fasttgba_state*, const fasttgba_state*, bool>
+    public std::binary_function<const fasttgba_state*,
+				const fasttgba_state*, bool>
   {
     bool
     operator()(const fasttgba_state* left, const fasttgba_state* right) const
@@ -101,4 +98,4 @@ namespace spot
 
 }
 
-#endif // SPOT_FASTTGBA_FASTSTATE_HH
+#endif // SPOT_FASTTGBA_FASTTGBA_STATE_HH

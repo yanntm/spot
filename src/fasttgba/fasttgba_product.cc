@@ -90,9 +90,9 @@ namespace spot
   // ------------------------------------------------------------
 
   fast_product_iterator::
-  fast_product_iterator( fasttgba_succ_iterator* left,
-			 fasttgba_succ_iterator* right,
-			 bool left_is_kripke):
+  fast_product_iterator(fasttgba_succ_iterator* left,
+			fasttgba_succ_iterator* right,
+			bool left_is_kripke):
     left_(left), right_(right), kripke_left(left_is_kripke)
   {
   }
@@ -270,7 +270,7 @@ namespace spot
     assert(s);
     std::string l = left_->format_state(s->left());
     std::string r = right_->format_state(s->right());
-    return (l + " -- " + r);
+    return l + " -- " + r;
   }
 
   std::string
@@ -283,12 +283,6 @@ namespace spot
       oss << " \\nAcc { " << t->current_acceptance_marks().dump()
     	  << "}";
     return oss.str();
-    // const fast_product_iterator* i =
-    //   down_cast<const fast_product_iterator*>(it);
-    // assert(i);
-    // std::string l = left_->transition_annotation(i->left());
-    // std::string r = right_->transition_annotation(i->right());
-    // return (l + " --  " + r);
   }
 
   fasttgba_state*

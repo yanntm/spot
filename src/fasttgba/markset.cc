@@ -92,7 +92,7 @@ namespace spot
   markset::one()
   {
     size_t pos = markset_.find_first();
-    if ( pos != markset_.npos)
+    if (pos != markset_.npos)
       return pos;
     assert(false);
   }
@@ -130,7 +130,7 @@ namespace spot
   markset::dump()
   {
     std::ostringstream oss;
-    if (accs_.size() == 0)
+    if (accs_.empty())
       oss << markset_;
     else if  (accs_.size() == 1 && markset_[0])
       {

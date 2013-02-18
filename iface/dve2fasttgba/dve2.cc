@@ -294,9 +294,7 @@ namespace spot
 
       dve2_kripke(const dve2_interface* d,
 		  spot::ap_dict& aps,
-		  spot::acc_dict& acc
-    		  // const ltl::formula* dead, int compress
-		  )
+		  spot::acc_dict& acc)
 	: d_(d),
 	  state_size_(d_->get_state_variable_count()),
 	  ps_(new prop_set()),
@@ -324,7 +322,7 @@ namespace spot
 	return res;
       }
 
-    // //   bdd
+
       cube
       compute_state_condition(const int* vars) const
       {
@@ -379,14 +377,12 @@ namespace spot
      	return res;
       }
 
-      callback_context* build_cc(const int* vars
-				 , int& t
-				 ) const
+      callback_context* build_cc(const int* vars, int& t) const
       {
     	callback_context* cc = new callback_context();
     	cc->state_size = state_size_;
 	cc->pool =
-    	   const_cast<void*>( static_cast<const void*>(&statepool_));
+    	   const_cast<void*>(static_cast<const void*>(&statepool_));
     	t = d_->get_successors(0, const_cast<int*>(vars),
     			       transition_callback,
     			       cc);
@@ -490,9 +486,6 @@ namespace spot
 
       void add_ap (one_prop p) const
       {
-	// std::cout << "Add : (" << p.var_num
-	// 	  << "," << p.op << "," << p.val
-	// 	  << ")" << std::endl;
 	ps_->push_back(p);
       }
 
@@ -846,7 +839,7 @@ namespace spot
 				  spot::acc_dict& accs,
 				  bool verbose)
   {
-    if (aps.size() != 0)
+    if (!aps.empty())
       {
 	std::cerr << "Fail to create the Kripke from a non empty "
 		  << "atomic proposition set" << std::endl;
@@ -952,7 +945,7 @@ namespace spot
 
 
     fasttgba *kripke = new dve2_kripke(d, aps, accs);
-    int errors = convert_aps(aps, d, kripke, false);//verbose);
+    int errors = convert_aps(aps, d, kripke, false);
     if (errors)
       {
     	delete d;

@@ -85,8 +85,8 @@ namespace spot
     ///
     /// The goal of the emptiness check is to ensure that
     /// a strongly connected component walks through each
-    /// of these accepting conditions.  I.e., the union
-    /// of the acceptiong conditions of all transition in
+    /// of these acceptance conditions.  I.e., the union
+    /// of the acceptance conditions of all transition in
     /// the SCC should be equal to the result of this function.
     virtual
     markset all_acceptance_marks() const = 0;

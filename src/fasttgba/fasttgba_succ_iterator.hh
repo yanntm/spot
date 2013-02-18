@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SPOT_FASTTGBA_FASTSUCCITER_HH
-# define SPOT_FASTTGBA_FASTSUCCITER_HH
+#ifndef SPOT_FASTTGBA_FASTTGBA_SUCC_ITERATOR_HH
+# define SPOT_FASTTGBA_FASTTGBA_SUCC_ITERATOR_HH
 
 #include "fasttgba_state.hh"
 #include "cube.hh"
@@ -101,4 +101,4 @@ namespace spot
 }
 
 
-#endif // SPOT_FASTTGBA_FASTSUCCITER_HH
+#endif // SPOT_FASTTGBA_FASTTGBA_SUCC_ITERATOR_HH

@@ -82,7 +82,7 @@ namespace spot
       {
 	mark one = m.one();
 	m -= one;
-	os << " " << i ;
+	os << " " << i;
 	++i;
       }
 
@@ -93,7 +93,7 @@ namespace spot
     else
       oss << (out -1) // cause we number to 1
 	  << os.str() << " -1 "
-	  << ((t->current_condition().size() > 1) ? " & " : "" )
+	  << ((t->current_condition().size() > 1) ? " & " : "")
 	  << t->current_condition().dump()
 	  << std::endl;
   }

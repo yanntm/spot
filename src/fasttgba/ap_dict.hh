@@ -25,7 +25,7 @@ namespace spot
 {
   class fasttgba;
 
-  /// \brief This class is used to create a dictionnary that will
+  /// \brief This class is used to create a dictionary that will
   /// contain all atomic propositions that are needed by an (and
   /// possibly many) automaton
   ///
@@ -41,13 +41,13 @@ namespace spot
   class ap_dict
   {
   public:
-    /// \brief a default constructor that construct an empty dictionnary
+    /// \brief a default constructor that construct an empty dictionary
     ap_dict();
 
     /// \brief a simple destructor
     virtual ~ap_dict();
 
-    /// \brief add an atomic proposition into this dictionnary
+    /// \brief add an atomic proposition into this dictionary
     ///
     /// All returned values start from 0 to size ()
     ///
@@ -56,11 +56,14 @@ namespace spot
 				    const spot::fasttgba* a);
 
     /// \brief This provide the reference to the \a i th
-    /// variable that is contained in this dictionnary
+    /// variable that is contained in this dictionary
     virtual const ltl::atomic_prop* get(int i);
 
-    /// \brief Return the size of this dictionnary
+    /// \brief Return the size of this dictionary
     size_t size();
+
+    /// \brief Return true if Dicitionnary is empty
+    bool empty ();
 
   protected:
     int id_;			///< Unique id counter

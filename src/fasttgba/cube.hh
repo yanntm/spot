@@ -39,7 +39,7 @@ namespace spot
     /// Default initialisation set all the cube to true
     cube (ap_dict& aps);
 
-
+    /// \breif a copy contructor
     cube (const cube& c);
 
     /// \brief Compare two cubes
@@ -72,7 +72,7 @@ namespace spot
     void set_free_var(size_t index);
 
     /// \brief return the size of the cube
-    size_t size() const ;
+    size_t size() const;
 
     /// \brief return true if the cube is valid considering true and false
     /// variables

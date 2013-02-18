@@ -45,48 +45,8 @@ namespace spot
   cube::operator&(const cube::cube& rhs) const
   {
     cube result (rhs);
-    result.true_var |= true_var ;
+    result.true_var |= true_var;
     result.false_var |=  false_var;
-    return result;
-
-    // cube result (aps_);
-    // if (!is_valid() || !rhs.is_valid())
-    //   {
-    // 	assert(false);
-    //   }
-
-    // for (int i = 0; i < (int)aps_.size(); ++i)
-    //   {
-    // 	if (!true_var[i] && !false_var[i] && !rhs.true_var[i] && !rhs.false_var[i])
-    // 	  result.set_free_var(i);
-
-    // 	else if  (!true_var[i] && !false_var[i] && !rhs.true_var[i] && rhs.false_var[i])
-    // 	  result.set_false_var(i);
-
-    // 	else if  (!true_var[i] && !false_var[i] && rhs.true_var[i] && !rhs.false_var[i])
-    // 	  result.set_true_var(i);
-
-    // 	else if  (!true_var[i] && false_var[i] && !rhs.true_var[i] && !rhs.false_var[i])
-    // 	  result.set_false_var(i);
-
-    // 	else if  (true_var[i] && !false_var[i] && !rhs.true_var[i] && !rhs.false_var[i])
-    // 	  result.set_true_var(i);
-
-    // 	else if  (!true_var[i] && false_var[i] && !rhs.true_var[i] && rhs.false_var[i])
-    // 	  result.set_false_var(i);
-
-    // 	else if  (true_var[i] && !false_var[i] && rhs.true_var[i] && !rhs.false_var[i])
-    // 	  result.set_true_var(i);
-
-    // 	else
-    // 	  {
-    // 	    result.true_var[i] = 1;
-    // 	    result.false_var[i] = 1;
-    // 	    return result;
-    // 	  }
-    // 	  //result.valid = false;
-    //   }
-
     return result;
   }
 
@@ -123,7 +83,6 @@ namespace spot
   bool
   cube::is_valid() const
   {
-    //return valid;
     // Here we check if there is no variable that must
     // be true and false at the same time.
     boost::dynamic_bitset<> r =  true_var & false_var;
@@ -145,13 +104,13 @@ namespace spot
 	if (true_var[i])
 	  {
 	    oss << aps_.get(i)->name()
-		<< (i != (size() - 1) ? " ": "" );
+		<< (i != (size() - 1) ? " ": "");
 	    all_free = false;
 	  }
 	else if (false_var[i])
 	  {
 	    oss << "! " << aps_.get(i)->name()
-	      	<< (i != (size() - 1) ? " ": "" );
+	      	<< (i != (size() - 1) ? " ": "");
 	    all_free = false;
 	  }
       }

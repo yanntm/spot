@@ -29,7 +29,7 @@ namespace spot
   {
     std::map<const ltl::atomic_prop*, int>::const_iterator itr;
 
-    for(itr = aps_.begin(); itr != aps_.end(); ++itr)
+    for (itr = aps_.begin(); itr != aps_.end(); ++itr)
       {
 	itr->first->destroy();
       }
@@ -48,7 +48,7 @@ namespace spot
     aps_.insert(std::make_pair(ap, id_));
     apsback_.insert(std::make_pair(id_, ap));
     ++id_;
-    return (id_-1);
+    return id_-1;
   }
 
   const ltl::atomic_prop*
@@ -65,5 +65,11 @@ namespace spot
   ap_dict::size()
   {
     return aps_.size();
+  }
+
+  bool
+  ap_dict::empty()
+  {
+    return aps_.empty();
   }
 }

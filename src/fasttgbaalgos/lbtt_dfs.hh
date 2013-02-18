@@ -19,9 +19,8 @@
 #ifndef SPOT_FASTTGBAALGOS_LBTT_DFS_HH
 # define SPOT_FASTTGBAALGOS_LBTT_DFS_HH
 
-#include <stack>
-#include "misc/hash.hh"
-#include "fasttgba/fasttgba.hh"
+#include <iosfwd>
+#include <sstream>
 #include "generic_dfs.hh"
 
 namespace spot
@@ -48,7 +47,6 @@ namespace spot
     virtual void  process_link(const fasttgba_state* in_s, int in,
 			       const fasttgba_state* out_s, int out,
 			       const fasttgba_succ_iterator* si);
-
 
   protected:
     int nb_states;

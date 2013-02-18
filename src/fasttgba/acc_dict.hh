@@ -26,21 +26,32 @@ namespace spot
 {
   class fasttgba;
 
+  /// This Class is a dicionary for acceptance set: it
+  /// associates a name to each conditions
   class acc_dict
   {
   public:
+    /// A basic Constructor
     acc_dict();
 
+    /// Refine the destructor
     virtual ~acc_dict();
 
+    /// Register an acceptance condition for an automaton
     int register_acc_for_aut(std::string acc,
 			     const spot::fasttgba*);
+
+    /// An accessor to the ith acceptance condition
     std::string get(int index);
 
-    size_t size();
+    /// \brief Return the size of the dictionary
+    size_t size() const;
+
+    /// \brief return true if the dictionary is empty
+    bool empty() const;
 
   protected:
-    int id_;
+    int id_;			///< counter for uniq ref
     std::map<std::string, int> accs_;
     std::map<int, std::string> accsback_;
   };

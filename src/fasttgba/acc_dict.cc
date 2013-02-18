@@ -41,7 +41,7 @@ namespace spot
     accsback_.insert(std::make_pair(id_, acc));
     ++id_;
     std::cout << accs_.size() << std::endl;
-    return (id_-1);
+    return id_-1;
   }
 
   std::string
@@ -55,8 +55,14 @@ namespace spot
   }
 
   size_t
-  acc_dict::size()
+  acc_dict::size() const
   {
     return accs_.size();
+  }
+
+  bool
+  acc_dict::empty() const
+  {
+    return accs_.empty();
   }
 }
