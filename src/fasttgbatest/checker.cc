@@ -42,6 +42,7 @@ void syntax (char*)
 
 int main(int argc, char **argv)
 {
+  int return_value = 0;
 
   //  The environement for LTL
   spot::ltl::environment& env(spot::ltl::default_environment::instance());
@@ -124,7 +125,6 @@ int main(int argc, char **argv)
       a = pp->run(a, f);
       delete pp;
 
-
       // -----------------------------------------------------
       // Start using fasttgba
       // -----------------------------------------------------
@@ -135,23 +135,28 @@ int main(int argc, char **argv)
       spot::acc_dict* accs = new spot::acc_dict();
 
       const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a, *aps, *accs);
+
       if (opt_cou)
-	{
-	  spot::cou99  checker(ftgba);
-	  if (checker.check())
-	    std::cout << "A counterexample has been found" << std::endl;
-	  else
-	    std::cout << "No counterexample has been found" << std::endl;
-	}
+    	{
+    	  spot::cou99  checker(ftgba);
+    	  if (checker.check())
+    	    {
+    	      return_value = 1;
+    	      std::cout << "A counterexample has been found" << std::endl;
+    	    }
+    	  else
+    	    std::cout << "No counterexample has been found" << std::endl;
+    	}
       delete ftgba;
-      delete aps;
       delete accs;
+      delete aps;
     }
 
   // Clean up
   f->destroy();
   delete a;
   delete dict;
+
 
   // Check effective clean up
   spot::ltl::atomic_prop::dump_instances(std::cerr);
@@ -165,5 +170,5 @@ int main(int argc, char **argv)
   assert(spot::ltl::multop::instance_count() == 0);
   assert(spot::ltl::automatop::instance_count() == 0);
 
-  return 0;
+  return return_value;
 }
