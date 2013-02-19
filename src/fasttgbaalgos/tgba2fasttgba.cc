@@ -28,6 +28,7 @@
 #include "fasttgba/markset.hh"
 #include "fasttgba/ap_dict.hh"
 
+
 namespace spot
 {
   namespace
@@ -43,6 +44,13 @@ namespace spot
 	  aps_(aps),
 	  accs_(accs)
       {
+	sm = new scc_map(aut_);
+	sm->build_map();
+      }
+
+      ~converter_bfs()
+      {
+	delete sm;
       }
 
       void
@@ -174,6 +182,7 @@ namespace spot
       fasttgbaexplicit *result_;
       ap_dict& aps_;
       acc_dict& accs_;
+      scc_map *sm;	        	///< The map used to decompose
       std::vector<int> positions_;
       std::vector<int> positions2_;
       std::vector<int> acceptances_;

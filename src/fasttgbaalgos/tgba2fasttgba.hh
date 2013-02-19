@@ -22,6 +22,9 @@
 # define SPOT_FASTTGBAALGOS_TGBA2FASTTGBA_HH
 
 #include "tgba/tgba.hh"
+#include "tgbaalgos/scc.hh"
+
+
 #include "fasttgba/ap_dict.hh"
 #include "fasttgba/acc_dict.hh"
 #include "fasttgba/fasttgba.hh"
