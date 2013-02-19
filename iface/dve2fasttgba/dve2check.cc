@@ -20,6 +20,7 @@
 
 
 #include <iostream>
+#include <string.h>
 
 // This part is for TGBA
 #include "ltlast/allnodes.hh"
