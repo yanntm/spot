@@ -33,7 +33,9 @@ namespace spot
 {
   cou99strength::cou99strength(const fasttgba* a) :
     counterexample_found(false), a_(a),
-    max(0)
+    max(0),
+    state_cache_(0),
+    strength_cache_(UNKNOWN_SCC)
   {
   }
 
@@ -69,13 +71,22 @@ namespace spot
   enum scc_strength
   cou99strength::get_strength (const fasttgba_state* input)
   {
+    // In the cache
+    if (input == state_cache_)
+      return strength_cache_;
+
+    // Otherwise we provide a cache
     const fast_product_state* s =
       down_cast<const fast_product_state*>(input);
     assert(s);
     const fast_explicit_state* s2 =
       down_cast<const fast_explicit_state*>(s->right());
     assert(s2);
-    return s2->get_strength();
+
+    state_cache_ = input;
+    strength_cache_ = s2->get_strength();
+
+    return strength_cache_;
   }
 
   void cou99strength::init()
@@ -251,7 +262,6 @@ namespace spot
 	    	  }
 	      }
 	  }
-
       }
   }
 }

@@ -91,6 +91,12 @@ namespace spot
 
     /// The map of visited states
     std::map<const fasttgba_state*, int> H;
+
+    // A cache
+    const fasttgba_state* state_cache_; ///< State in cache
+
+    enum scc_strength strength_cache_; ///< strength in cache
+
   };
 }
 
