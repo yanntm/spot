@@ -23,7 +23,7 @@
 
 #include "tgba/tgba.hh"
 #include "tgbaalgos/scc.hh"
-
+#include "tgbaalgos/isweakscc.hh"
 
 #include "fasttgba/ap_dict.hh"
 #include "fasttgba/acc_dict.hh"

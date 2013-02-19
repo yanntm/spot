@@ -98,9 +98,34 @@ namespace spot
       }
 
       void
-      process_state(const state* , int s , tgba_succ_iterator*)
+      process_state(const state* o, int s , tgba_succ_iterator*)
       {
-	result_->add_state(s);
+	fast_explicit_state* st = result_->add_state(s);
+
+	int n = sm->scc_of_state(o);
+	if (!sm->accepting(n))
+	  {
+	    //std::cout << "Non Accepting" << std::endl;
+	    st->set_strength (NON_ACCEPTING_SCC);
+	  }
+	else if (is_weak_scc (*sm, n))
+	  {
+	    if (is_complete_scc (aut_, *sm, n))
+	      {
+		//std::cout << "Terminal\n";
+		st->set_strength (TERMINAL_SCC);
+	      }
+	    else
+	      {
+		//std::cout << "Weak\n";
+		st->set_strength (WEAK_SCC);
+	      }
+	  }
+	else
+	  {
+	    //std::cout << "Strong\n";
+	    st->set_strength (STRONG_SCC);
+	  }
       }
 
       void
