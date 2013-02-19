@@ -94,19 +94,32 @@ namespace spot
     pair_state_iter pair = todo.top();
     delete pair.second;
     todo.pop();
+
+
+    // insert into rem.
+    if (scc.top().get<3>())
+      {
+	scc.top().get<3>()->push_back(pair.first);
+      }
+    else
+      {
+	std::list<const fasttgba_state*> *r =
+	  new  std::list<const fasttgba_state*>();
+	r->push_back (pair.first);
+	scc.top().get<3>() = r;
+      }
+
+
     if (H[pair.first] == scc.top().get<0>())
       {
-	if (scc.top().get<3>())	/* Non empty list */
+	std::list<const fasttgba_state*>::const_iterator i =
+	  scc.top().get<3>()->begin();
+	for (; i != scc.top().get<3>()->end(); ++i)
 	  {
-	    std::list<const fasttgba_state*>::const_iterator i =
-	      scc.top().get<3>()->begin();
-	    for (; i != scc.top().get<3>()->end(); ++i)
-	      {
-		H[*i] = 0;
-	      }
-	    delete scc.top().get<3>();
-	    scc.pop();
+	    H[*i] = 0;
 	  }
+	delete scc.top().get<3>();
+	scc.pop();
       }
   }
 
