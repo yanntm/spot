@@ -43,10 +43,19 @@ namespace spot
 
   protected:
 
+    /// \brief Fix set ups for the algo
     void init();
-    void dfs_push(markset m, fasttgba_state* s);
+
+    /// \brief Push a new state to explore
+    void dfs_push(markset, fasttgba_state*);
+
+    /// \brief  Pop states already explored
     void dfs_pop();
-    void merge(markset , int );
+
+    /// \brief merge multiple states
+    void merge(markset, int);
+
+    /// \brief the main procedure
     void main();
 
 

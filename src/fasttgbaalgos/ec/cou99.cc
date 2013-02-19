@@ -49,7 +49,7 @@ namespace spot
       }
 
     std::map<const fasttgba_state*, int>::const_iterator i;
-    for(i = H.begin(); i != H.end(); ++i)
+    for (i = H.begin(); i != H.end(); ++i)
       {
     	i->first->destroy();
       }
@@ -78,9 +78,11 @@ namespace spot
     ++max;
     s->clone();
     H[s] = max;
-    scc.push (boost::make_tuple(max, acc,
-    				markset(a_->get_acc()),
-    				(std::list<const fasttgba_state *>*) 0 /* empty list */));
+    scc.push
+      (boost::make_tuple
+       (max, acc,
+	markset(a_->get_acc()),
+	(std::list<const fasttgba_state *>*) 0)); /* empty list */
     fasttgba_succ_iterator* si = a_->succ_iter(s);
     si->first();
     todo.push (std::make_pair(s, si));
@@ -98,7 +100,7 @@ namespace spot
 	  {
 	    std::list<const fasttgba_state*>::const_iterator i =
 	      scc.top().get<3>()->begin();
-	    for(;i != scc.top().get<3>()->end(); ++i)
+	    for (; i != scc.top().get<3>()->end(); ++i)
 	      {
 		H[*i] = 0;
 	      }
