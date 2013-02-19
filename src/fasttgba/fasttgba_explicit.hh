@@ -72,6 +72,8 @@ namespace spot
     /// \brief the strength of the SCC
     void set_strength(enum scc_strength str);
 
+    enum scc_strength get_strength() const ;
+
     std::list<transition>  successors;	///< list of successors
   };
 

@@ -72,6 +72,12 @@ namespace spot
     strength_ = str;
   }
 
+  enum scc_strength
+  fast_explicit_state::get_strength() const
+  {
+    return strength_;
+  }
+
   void
   fast_explicit_state::add_successor(const struct transition t)
   {
