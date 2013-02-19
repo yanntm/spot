@@ -41,6 +41,7 @@ namespace spot
     public:
       converter_bfs(const tgba* a, ap_dict& aps,  acc_dict& accs)
 	: tgba_reachable_iterator_breadth_first(a),
+	  result_(0),
 	  aps_(aps),
 	  accs_(accs)
       {
@@ -129,8 +130,8 @@ namespace spot
       }
 
       void
-      process_link(const state* , int src,
-		   const state* , int dst,
+      process_link(const state*, int src,
+		   const state*, int dst,
 		   const tgba_succ_iterator* it)
       {
 	//
