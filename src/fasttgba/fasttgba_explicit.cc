@@ -32,7 +32,7 @@ namespace spot
   }
 
   fast_explicit_state::fast_explicit_state(int label):
-    label_(label)
+    label_(label), strength_(UNKNOWN_SCC)
   {
   }
 
@@ -64,6 +64,12 @@ namespace spot
   fast_explicit_state::label() const
   {
     return label_;
+  }
+
+  void
+  fast_explicit_state::set_strength(enum scc_strength str)
+  {
+    strength_ = str;
   }
 
   void

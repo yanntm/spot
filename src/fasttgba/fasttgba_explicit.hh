@@ -38,6 +38,16 @@ namespace spot
   };
 
 
+  /// \brief this enum is used to provide the stregth of
+  /// the SCC
+  enum scc_strength {
+    STRONG_SCC,
+    WEAK_SCC,
+    TERMINAL_SCC,
+    NON_ACCEPTING_SCC,
+    UNKNOWN_SCC
+  };
+
   ///
   /// This class represent an explicit numbered state which
   /// is usefull to represent formulae
@@ -46,7 +56,7 @@ namespace spot
   {
   protected:
     int label_;
-
+    enum scc_strength strength_;
   public:
     fast_explicit_state(int label);
     virtual int compare(const fasttgba_state* other) const;
@@ -58,6 +68,10 @@ namespace spot
 
     //// \brief the structure to store transitions
     void add_successor(const struct transition t);
+
+    /// \brief the strength of the SCC
+    void set_strength(enum scc_strength str);
+
     std::list<transition>  successors;	///< list of successors
   };
 
