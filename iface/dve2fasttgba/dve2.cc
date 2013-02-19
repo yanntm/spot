@@ -24,7 +24,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <iosfwd>
+#include <iostream>
 
 // MinGW does not define this.
 #ifndef WEXITSTATUS
