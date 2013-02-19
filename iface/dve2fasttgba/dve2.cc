@@ -279,6 +279,7 @@ namespace spot
 	  const ltl::atomic_prop* ap =
 	    ltl::atomic_prop::instance(name, spot::ltl::default_environment::instance());
 	  aps.register_ap_for_aut (ap, kripke);
+	  ap->destroy();
 
 	  if (verbose)
 	    std::cout << "     " << name << std::endl;
