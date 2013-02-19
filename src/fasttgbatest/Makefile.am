@@ -29,11 +29,12 @@ noinst_PROGRAMS =
 
 check_SCRIPTS = defs
 # Keep this sorted alphabetically.
-check_PROGRAMS = tgba_converter formula_product
+check_PROGRAMS = tgba_converter formula_product checker
 
 # Keep this sorted alphabetically.
 tgba_converter_SOURCES = tgba_converter.cc
 formula_product_SOURCES = formula_product.cc
+checker_SOURCES = checker.cc
 
 # Keep this sorted by STRENGTH.  Test basic things first,
 # because such failures will be easier to diagnose and fix.

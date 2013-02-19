@@ -179,6 +179,7 @@ src/              Sources for libspot.
    taalgos/       Algorithms on TA/TGTA.
    fasttgba/      FASTTGBA objects and cousins.
    fasttgbaalgos/ Algorithms on FASTTGBA.
+      ec/	  Emptiness check for FASTTGBA
    fasttgbatest/  Tests for fasttgba/, fasttgbaalgos/
    tgbatest/      Tests for tgba/, tgbaalgos/, tgbaparse/, ta/ and taalgos/.
    saba/          SABA (State-labeled Alternating Büchi Automata) objects.

@@ -16,52 +16,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "acc_dict.hh"
-#include <iostream>
+#ifndef SPOT_FASTTGBAALGOS_EC_EC_HH
+# define SPOT_FASTTGBAALGOS_EC_EC_HH
 
 namespace spot
 {
-  acc_dict::acc_dict() : id_(0)
+  /// This interface must be implemented by all
+  /// emptiness check algorithm
+  class ec
   {
-  }
+  public:
 
-  acc_dict::~acc_dict()
-  {
-  }
-
-  int
-  acc_dict::register_acc_for_aut(std::string acc,
-				const spot::fasttgba*)
-  {
-    std::map<std::string, int>::iterator it = accs_.find(acc);
-    if (it != accs_.end())
-      return it->second;
-
-    accs_.insert(std::make_pair(acc, id_));
-    accsback_.insert(std::make_pair(id_, acc));
-    ++id_;
-    return id_-1;
-  }
-
-  std::string
-  acc_dict::get(int index)
-  {
-    std::map<int, std::string>::iterator it = accsback_.find(index);
-    if (it != accsback_.end())
-      return it->second;
-    assert(false);
-    return 0;
-  }
-
-  size_t
-  acc_dict::size() const
-  {
-    return accs_.size();
-  }
-
-  bool
-  acc_dict::empty() const
-  {
-    return accs_.empty();
-  }
+    /// Launch the emptiness check
+    virtual bool check() = 0;
+  };
 }
+
+#endif // SPOT_FASTTGBAALGOS_EC_EC_HH

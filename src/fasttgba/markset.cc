@@ -103,6 +103,12 @@ namespace spot
     return markset_.none();
   }
 
+  bool
+  markset::any()
+  {
+    return markset_.any();
+  }
+
   size_t
   markset::size()
   {

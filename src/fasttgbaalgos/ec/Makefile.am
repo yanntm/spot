@@ -17,26 +17,15 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = ec
-
-AM_CPPFLAGS = -I$(srcdir)/.. -I.. $(BUDDY_CPPFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/.. -I.. -I../.. $(BUDDY_CPPFLAGS)
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
-fasttgbaalgosdir = $(pkgincludedir)/fasttgbaalgos
+ecdir = $(pkgincludedir)/fasttgbaalgos/ec
 
-fasttgbaalgos_HEADERS = \
-  tgba2fasttgba.hh \
-  generic_dfs.hh \
-  lbtt_dfs.hh \
-  stats_dfs.hh \
-  dotty_dfs.hh
+ec_HEADERS = \
+  ec.hh \
+  cou99.hh
 
-noinst_LTLIBRARIES = libfasttgbaalgos.la
-libfasttgbaalgos_la_SOURCES = \
-  tgba2fasttgba.cc \
-  generic_dfs.cc \
-  lbtt_dfs.cc \
-  stats_dfs.cc \
-  dotty_dfs.cc
-
-libfasttgbaalgos_la_LIBADD = ec/libec.la
+noinst_LTLIBRARIES = libec.la
+libec_la_SOURCES = \
+  cou99.cc

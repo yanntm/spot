@@ -91,6 +91,9 @@ namespace spot
     /// at least a mark which is set
     bool empty();
 
+    /// \brief test if all mark are set
+    bool any();
+
     /// \brief Access to the first mark on the set
     ///
     /// To grab all mark, a loop which remove all
