@@ -17,7 +17,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AM_CPPFLAGS = -I$(srcdir)/.. -I.. -I../.. $(BUDDY_CPPFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/../.. -I.. -I../..
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 ecdir = $(pkgincludedir)/fasttgbaalgos/ec
