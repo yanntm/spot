@@ -152,6 +152,7 @@ namespace spot
   fasttgbaexplicit::~fasttgbaexplicit()
   {
     // Delete all states
+    init_ = 0;
     sm::iterator i = state_map_.begin();
 
     while (i != state_map_.end())
