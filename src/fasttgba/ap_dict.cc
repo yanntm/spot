@@ -41,7 +41,7 @@ namespace spot
   ap_dict::register_ap_for_aut(const ltl::atomic_prop* ap,
 			       const spot::fasttgba*)
   {
-    ap->clone();
+    //ap->clone();
     std::map<const ltl::atomic_prop*, int>::iterator it = aps_.find(ap);
     if (it != aps_.end())
       return it->second;

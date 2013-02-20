@@ -186,8 +186,8 @@ namespace spot
   fasttgba_state*
   fast_product_iterator::current_state() const
   {
-    return new fast_product_state(left_->current_state()->clone(),
-				  right_->current_state()->clone());
+    return new fast_product_state(left_->current_state(),//->clone(),
+				  right_->current_state());//->clone());
   }
 
   cube
@@ -234,8 +234,8 @@ namespace spot
   fasttgba_state*
   fasttgba_product::get_init_state() const
   {
-    return new fast_product_state(left_->get_init_state()->clone(),
-				  right_->get_init_state()->clone());
+    return new fast_product_state(left_->get_init_state(),//->clone(),
+				  right_->get_init_state());//->clone());
   }
 
   fasttgba_succ_iterator*

@@ -26,10 +26,6 @@ namespace spot
     generic_dfs(a), nb_states(0), nb_transitions(0)
   { }
 
-  stats_dfs::~stats_dfs()
-  {
-
-  }
 
   bool
   stats_dfs::want_state(const fasttgba_state*) const

@@ -27,7 +27,12 @@ namespace spot
 
   generic_dfs::~generic_dfs()
   {
-
+    seen_map::const_iterator s = seen.begin();
+    while (s != seen.end())
+      {
+	s->first->destroy();
+	++s;
+      }
   }
 
   void

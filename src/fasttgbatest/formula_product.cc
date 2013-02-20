@@ -170,8 +170,6 @@ int main(int argc, char **argv)
       spot::dotty_dfs dotty3(&prod);
       dotty3.run();
 
-
-
       std::cout << "-------------> PRODUCT ! " << std::endl;
       const spot::tgba *prodbis = new spot::tgba_product(af1, af2);
       const spot::fasttgba* ftgbabis = spot::tgba_2_fasttgba(prodbis, *aps, *accs);

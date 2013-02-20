@@ -34,8 +34,6 @@ namespace spot
   public:
     stats_dfs(const fasttgba* a);
 
-    virtual ~stats_dfs();
-
     virtual bool want_state(const fasttgba_state* s) const;
 
     virtual void start();

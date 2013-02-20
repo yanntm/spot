@@ -278,6 +278,7 @@ namespace spot
     	  const char* name = d->get_state_variable_name(i);
 	  const ltl::atomic_prop* ap =
 	    ltl::atomic_prop::instance(name, spot::ltl::default_environment::instance());
+	  ap->clone();
 	  aps.register_ap_for_aut (ap, kripke);
 	  ap->destroy();
 
@@ -308,8 +309,8 @@ namespace spot
 
       ~dve2_kripke()
       {
-     	lt_dlclose(d_->handle);
-     	delete d_;
+	lt_dlclose(d_->handle);
+	delete d_;
 	delete ps_;
      	lt_dlexit();
       }
@@ -321,6 +322,7 @@ namespace spot
 	dve2_state* res = new(p->allocate()) dve2_state(state_size_, p);
 	d_->get_initial_state(res->vars);
 	res->compute_hash();
+	res->clone();
 	return res;
       }
 

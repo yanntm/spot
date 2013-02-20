@@ -30,8 +30,8 @@ namespace spot
   {
     if (!--count_)
       {
-	//std::cout << this << "   " << count_ << std::endl;
-	delete this;
+    	//std::cout << this << "   " << count_ << std::endl;
+    	this->~fast_explicit_state();
       }
     // else
     //   std::cout << this << "   " << count_ << std::endl;
