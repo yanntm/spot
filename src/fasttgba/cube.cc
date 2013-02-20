@@ -35,14 +35,14 @@ namespace spot
   }
 
   bool
-  cube::operator==(const cube::cube& rhs)
+  cube::operator==(const cube& rhs)
   {
     return (true_var == rhs.true_var)
       &&  (false_var == rhs.false_var);
   }
 
   cube
-  cube::operator&(const cube::cube& rhs) const
+  cube::operator&(const cube& rhs) const
   {
     cube result (rhs);
     result.true_var |= true_var;

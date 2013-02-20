@@ -40,12 +40,12 @@ namespace spot
     cube (ap_dict& aps);
 
     /// \breif a copy contructor
-    cube (const cube& c);
+    cube (const spot::cube& c);
 
     /// \brief Compare two cubes
     ///
     /// \param rhs the object to compare with
-    bool operator==(const cube& rhs);
+    bool operator==(const spot::cube& rhs);
 
     /// \brief The logical AND of two cubes
     ///
