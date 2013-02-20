@@ -75,6 +75,8 @@ namespace spot
     enum scc_strength get_strength() const;
 
     std::list<transition>  successors;	///< list of successors
+
+    mutable int count_;
   };
 
 

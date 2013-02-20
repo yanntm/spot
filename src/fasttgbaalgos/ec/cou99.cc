@@ -67,9 +67,9 @@ namespace spot
   void cou99::init()
   {
     trace << "Cou99::Init" << std::endl;
-    dfs_push(markset(a_->get_acc()),
-	     a_->get_init_state());
-
+    fasttgba_state* init = a_->get_init_state();
+    dfs_push(markset(a_->get_acc()), init);
+    init->destroy();
   }
 
   void cou99::dfs_push(markset acc, fasttgba_state* s)
@@ -181,9 +181,11 @@ namespace spot
 	    	if (scc.top().get<2>().any())
 	    	  {
 	    	    counterexample_found = true;
+		    d->destroy();
 	    	    return;
 	    	  }
 	      }
+	    d->destroy();
 	  }
 
       }

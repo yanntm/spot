@@ -28,12 +28,19 @@ namespace spot
   void
   fast_explicit_state::destroy() const
   {
-
+    if (!--count_)
+      {
+	//std::cout << this << "   " << count_ << std::endl;
+	delete this;
+      }
+    // else
+    //   std::cout << this << "   " << count_ << std::endl;
   }
 
   fast_explicit_state::fast_explicit_state(int label):
-    label_(label), strength_(UNKNOWN_SCC)
+    label_(label), strength_(UNKNOWN_SCC), count_(1)
   {
+    //std::cout << this << std::endl;
   }
 
   int
@@ -51,6 +58,7 @@ namespace spot
   fasttgba_state*
   fast_explicit_state::clone() const
   {
+    ++count_;
     return const_cast<fast_explicit_state *>(this);
   }
 
@@ -120,6 +128,7 @@ namespace spot
   fast_explicit_iterator::current_state() const
   {
     assert(!done());
+    it_->dst->clone();
     return const_cast<fast_explicit_state*>(it_->dst);
   }
 
@@ -237,6 +246,7 @@ namespace spot
     if (available == state_map_.end())
       {
 	fast_explicit_state *the_state = new fast_explicit_state(s);
+	//the_state->clone();
 	state_map_.insert(std::make_pair (s, the_state));
 
 	// Initial state not yet fixed
