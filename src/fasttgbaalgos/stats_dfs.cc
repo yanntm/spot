@@ -41,8 +41,8 @@ namespace spot
   void
   stats_dfs::end()
   {
-    std::cout << "   * " << nb_states << " states\n";
-    std::cout << "   * " << nb_transitions << " trans.\n";
+    // std::cout << "   * " << nb_states << " states\n";
+    // std::cout << "   * " << nb_transitions << " trans.\n";
   }
 
   void
@@ -58,5 +58,12 @@ namespace spot
 			  const fasttgba_succ_iterator*)
   {
     ++nb_transitions;
+  }
+
+  std::string stats_dfs::dump()
+  {
+    std::ostringstream oss;
+    oss << nb_states <<  "," << nb_transitions;
+    return oss.str();
   }
 }

@@ -46,6 +46,10 @@ namespace spot
     virtual void  process_link(const fasttgba_state* in_s, int in,
 			       const fasttgba_state* out_s, int out,
 			       const fasttgba_succ_iterator* si);
+
+    std::string dump();
+
+
   protected:
     int nb_states;
     int nb_transitions;
