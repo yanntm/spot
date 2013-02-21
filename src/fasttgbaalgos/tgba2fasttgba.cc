@@ -72,6 +72,7 @@ namespace spot
 	  {
 	    positions_.push_back(sii->second);
 	    const ltl::formula *f = sii->first;
+	    f->clone();
 	    int p = aps_.register_ap_for_aut
 	      (down_cast<const ltl::atomic_prop*>(f), result_);
 	    positions2_.push_back(p);
