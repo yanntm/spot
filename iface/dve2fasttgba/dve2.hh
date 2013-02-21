@@ -78,10 +78,10 @@ namespace spot
   // \a dead an atomic proposition or constant to use for looping on
   //         dead states
   // \a verbose whether to output verbose messages
-  const spot::fasttgba* load_dve2(const std::string& file,
-				  spot::ap_dict& aps,
-				  spot::acc_dict& accs,
-				  bool verbose = true);
+  const spot::fasttgba* load_dve2fast(const std::string& file,
+				      spot::ap_dict& aps,
+				      spot::acc_dict& accs,
+				      bool verbose = true);
 }
 
 #endif // SPOT_IFACE_DVE2FASTTGBA_DVE2_HH

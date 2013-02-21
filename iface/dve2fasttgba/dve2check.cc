@@ -18,7 +18,6 @@
 
 #include "dve2.hh"
 
-
 #include <iostream>
 #include <string.h>
 
@@ -29,6 +28,12 @@
 #include "ltlparse/public.hh"
 #include "tgbaalgos/ltl2tgba_fm.hh"
 #include "tgbaalgos/postproc.hh"
+
+#include "kripke/kripkeexplicit.hh"
+#include "../dve2/dve2.hh"
+#include "tgbaalgos/stats.hh"
+#include "tgba/tgbaproduct.hh"
+
 
 // This part is for FASTTGBA
 #include "fasttgbaalgos/tgba2fasttgba.hh"
@@ -85,6 +90,9 @@ main(int argc, char **argv)
   // A timer to compute
   spot::timer_map mtimer;
 
+  // Must compare to TGBA ?
+  bool  compare_to_tgba = true;
+
   //
   // Building the formula from the input
   //
@@ -97,7 +105,6 @@ main(int argc, char **argv)
   int exit_code = spot::ltl::format_parse_errors(std::cerr, argv[1], pel);
   if (exit_code)
     goto safe_exit;
-
 
   if (f1)
     {
@@ -144,58 +151,110 @@ main(int argc, char **argv)
       spot::ap_dict* aps = new spot::ap_dict();
       spot::acc_dict* accs = new spot::acc_dict();
 
-      const spot::fasttgba* kripke = spot::load_dve2(file, *aps, *accs, true);
+      const spot::fasttgba* kripke =
+	spot::load_dve2fast(file, *aps, *accs, true);
       assert(kripke);
-      // spot::dotty_dfs dotty(kripke);
-      // dotty.run();
       spot::stats_dfs *stats = new spot::stats_dfs(kripke);
-      std::cout << "Exploring the Kripke:" << std::flush;
-      mtimer.start("Exploring Kripke");
+      std::cout << "Expl. the Kripke (new):" << std::flush;
+      mtimer.start("Expl. Kripke (new)");
       stats->run();
-      mtimer.stop("Exploring Kripke");
+      mtimer.stop("Expl. Kripke (new)");
       std::cout << " ---> done" << std::endl;
       result << stats->dump();
-      t = mtimer.timer("Exploring Kripke");
+      t = mtimer.timer("Expl. Kripke (new)");
       result << "," << t.utime() << "," << t.stime() ;
       delete stats;
 
       const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
       // spot::dotty_dfs dotty1(ftgba1);
       // dotty1.run();
-      std::cout << "Exploring the Property :";
-      mtimer.start("Exploring Property");
+      std::cout << "Expl. the Property (new):";
+      mtimer.start("Expl. Property (new)");
       spot::stats_dfs* stats1 = new spot::stats_dfs (ftgba1);
       stats1->run();
-      mtimer.stop("Exploring Property");
+      mtimer.stop("Expl. Property (new)");
       std::cout << " ---> done" << std::endl;
       result << "," << stats1->dump();
-      t = mtimer.timer("Exploring Property");
+      t = mtimer.timer("Expl. Property (new)");
       result << "," << t.utime() << "," << t.stime() ;
       delete stats1;
 
       const spot::fasttgba_kripke_product prod (kripke, ftgba1);
-      std::cout << "Exploring the Product :";
-      mtimer.start("Exploring Product");
+      std::cout << "Expl. the Product (new):" << std::flush;
+      mtimer.start("Expl. Product (new)");
       spot::stats_dfs* stats3 = new spot::stats_dfs(&prod);
       stats3->run();
-      mtimer.stop("Exploring Product");
+      mtimer.stop("Expl. Product (new)");
       std::cout << " ---> done" << std::endl;
       result << "," << stats3->dump();
-      t = mtimer.timer("Exploring Product");
+      t = mtimer.timer("Expl. Product (new)");
       result << "," << t.utime() << "," << t.stime() ;
       delete stats3;
 
 
+
+      if (compare_to_tgba)
+      	{
+	  spot::ltl::atomic_prop_set ap;
+	  atomic_prop_collect(f1, &ap);
+
+	  spot::kripke* model = 0;
+	  model = spot::load_dve2(file, dict, &ap,
+				  spot::ltl::constant::true_instance(),
+				  false, false);
+	  std::cout << "Expl. the Kripke (old):" << std::flush;
+	  mtimer.start("Expl. Kripke (old)");
+	  spot::tgba_sub_statistics tgba_stats = sub_stats_reachable(model);
+	  mtimer.stop("Expl. Kripke (old)");
+	  std::cout << " ---> done" << std::endl;
+	  result  << "," << tgba_stats.states
+		  << "," << tgba_stats.transitions;
+	  t = mtimer.timer("Expl. Product (old)");
+	  result << "," << t.utime() << "," << t.stime() ;
+
+	  std::cout << "Expl. the Property (old):" << std::flush;
+	  mtimer.start("Expl. Property (old)");
+	  tgba_stats = sub_stats_reachable(af1);
+	  mtimer.stop("Expl. Property (old)");
+	  std::cout << " ---> done" << std::endl;
+	  result  << "," << tgba_stats.states
+		  << "," << tgba_stats.transitions;
+	  t = mtimer.timer("Expl. Product (old)");
+	  result << "," << t.utime() << "," << t.stime() ;
+
+
+	  spot::tgba* product = new spot::tgba_product(model, af1);
+	  std::cout << "Expl. the Product (old):" << std::flush;
+	  mtimer.start("Expl. Product (old)");
+	  tgba_stats = sub_stats_reachable(product);
+	  mtimer.stop("Expl. Product (old)");
+	  std::cout << " ---> done" << std::endl;
+	  result  << "," << tgba_stats.states
+		  << "," << tgba_stats.transitions;
+	  t = mtimer.timer("Expl. Product (old)");
+	  result << "," << t.utime() << "," << t.stime() ;
+
+
+	  delete product;
+	  delete model;
+      	}
+
+
       mtimer.print (std::cout);
 
-      // spot::dotty_dfs dotty3(&prod);
-      // dotty3.run();
+
       std::cout << std::endl;
-      std::cout << "#:nK. st, nK. tr, nK. utime, nK. stime," << ", "
+      std::cout << "#, nK. st, nK. tr, nK. utime, nK. stime, "
 		<< "nF. st, nF. tr, nF. utime, nF. stime" << ", "
 		<< "nK. x nF. st, nK. x nF. tr, nK. x nF. utime, nK. x nF. stime"
+		<< ", oK. st, oK. tr, oK. utime, oK. stime, "
+		<< "oF. st, oF. tr, oF. utime, oF. stime, "
+		<< "oK. x oF. st, oK. x oF. tr, oK. x oF. utime, oK. x oF. stime"
+		<< ", formula"
 		<< std::endl;
-      std::cout << "STATS:" <<  result.str() << std::endl;
+      std::cout << "STATS," <<  result.str()
+		<< "," << spot::ltl::to_string(f1)
+		<< std::endl;
 
 
       delete ftgba1;

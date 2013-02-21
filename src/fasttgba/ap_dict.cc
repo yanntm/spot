@@ -45,7 +45,7 @@ namespace spot
     std::map<const ltl::atomic_prop*, int>::iterator it = aps_.find(ap);
     if (it != aps_.end())
       return it->second;
-
+    ap->clone();
     aps_.insert(std::make_pair(ap, id_));
     apsback_.insert(std::make_pair(id_, ap));
     ++id_;

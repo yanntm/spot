@@ -33,7 +33,7 @@ libspotdve2fasttgba_la_SOURCES = dve2.cc
 noinst_PROGRAMS = dve2check
 
 dve2check_SOURCES = dve2check.cc
-dve2check_LDADD = libspotdve2fasttgba.la
+dve2check_LDADD = libspotdve2fasttgba.la   $(top_builddir)/iface/dve2/libspotdve2.la
 
 check_SCRIPTS = defs
 

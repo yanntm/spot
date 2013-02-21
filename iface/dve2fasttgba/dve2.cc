@@ -278,7 +278,7 @@ namespace spot
     	  const char* name = d->get_state_variable_name(i);
 	  const ltl::atomic_prop* ap =
 	    ltl::atomic_prop::instance(name, spot::ltl::default_environment::instance());
-	  ap->clone();
+	  //ap->clone();
 	  aps.register_ap_for_aut (ap, kripke);
 	  ap->destroy();
 
@@ -795,7 +795,7 @@ namespace spot
   // Call divine to compile "foo.dve" as "foo.dve2C" if the latter
   // does not exist already or is older.
   bool
-  compile_dve2(std::string& filename, bool verbose)
+  compile_dve2fast(std::string& filename, bool verbose)
   {
 
     std::string command = "divine compile --ltsmin " + filename;
@@ -838,10 +838,10 @@ namespace spot
   }
 
 
-  const spot::fasttgba* load_dve2(const std::string& file_arg,
-				  spot::ap_dict& aps,
-				  spot::acc_dict& accs,
-				  bool verbose)
+  const spot::fasttgba* load_dve2fast(const std::string& file_arg,
+				      spot::ap_dict& aps,
+				      spot::acc_dict& accs,
+				      bool verbose)
   {
     if (!aps.empty())
       {
@@ -859,7 +859,7 @@ namespace spot
     std::string ext = file.substr(file.find_last_of("."));
     if (ext == ".dve")
       {
-    	if (compile_dve2(file, verbose))
+    	if (compile_dve2fast(file, verbose))
     	  {
     	    if (verbose)
     	      std::cerr << "Failed to compile `" << file_arg
