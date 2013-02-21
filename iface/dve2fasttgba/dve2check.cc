@@ -136,6 +136,9 @@ main(int argc, char **argv)
       // Start using fasttgba
       // -----------------------------------------------------
 
+      std::ostringstream result;
+      spot::timer t;
+
       // Decclare the dictionnary of atomic propositions that will be
       // used all along processing
       spot::ap_dict* aps = new spot::ap_dict();
@@ -146,36 +149,54 @@ main(int argc, char **argv)
       // spot::dotty_dfs dotty(kripke);
       // dotty.run();
       spot::stats_dfs *stats = new spot::stats_dfs(kripke);
-      std::cout << "Statistic for the Kripke :\n";
+      std::cout << "Exploring the Kripke:" << std::flush;
       mtimer.start("Exploring Kripke");
       stats->run();
       mtimer.stop("Exploring Kripke");
+      std::cout << " ---> done" << std::endl;
+      result << stats->dump();
+      t = mtimer.timer("Exploring Kripke");
+      result << "," << t.utime() << "," << t.stime() ;
       delete stats;
 
       const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
       // spot::dotty_dfs dotty1(ftgba1);
       // dotty1.run();
-      std::cout << "Statistic for the Property :\n";
+      std::cout << "Exploring the Property :";
       mtimer.start("Exploring Property");
       spot::stats_dfs* stats1 = new spot::stats_dfs (ftgba1);
       stats1->run();
       mtimer.stop("Exploring Property");
+      std::cout << " ---> done" << std::endl;
+      result << "," << stats1->dump();
+      t = mtimer.timer("Exploring Property");
+      result << "," << t.utime() << "," << t.stime() ;
       delete stats1;
 
       const spot::fasttgba_kripke_product prod (kripke, ftgba1);
-      std::cout << "Statistic for the Product :\n";
+      std::cout << "Exploring the Product :";
       mtimer.start("Exploring Product");
       spot::stats_dfs* stats3 = new spot::stats_dfs(&prod);
       stats3->run();
       mtimer.stop("Exploring Product");
+      std::cout << " ---> done" << std::endl;
+      result << "," << stats3->dump();
+      t = mtimer.timer("Exploring Product");
+      result << "," << t.utime() << "," << t.stime() ;
       delete stats3;
 
 
+      mtimer.print (std::cout);
+
       // spot::dotty_dfs dotty3(&prod);
       // dotty3.run();
+      std::cout << std::endl;
+      std::cout << "#:nK. st, nK. tr, nK. utime, nK. stime," << ", "
+		<< "nF. st, nF. tr, nF. utime, nF. stime" << ", "
+		<< "nK. x nF. st, nK. x nF. tr, nK. x nF. utime, nK. x nF. stime"
+		<< std::endl;
+      std::cout << "STATS:" <<  result.str() << std::endl;
 
-
-      mtimer.print (std::cout);
 
       delete ftgba1;
       delete kripke;
