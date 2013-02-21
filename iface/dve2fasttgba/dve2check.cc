@@ -162,7 +162,7 @@ main(int argc, char **argv)
       std::cout << " ---> done" << std::endl;
       result << stats->dump();
       t = mtimer.timer("Expl. Kripke (new)");
-      result << "," << t.utime() << "," << t.stime() ;
+      result << "," << t.utime() << "," << t.stime();
       delete stats;
 
       const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
@@ -176,7 +176,7 @@ main(int argc, char **argv)
       std::cout << " ---> done" << std::endl;
       result << "," << stats1->dump();
       t = mtimer.timer("Expl. Property (new)");
-      result << "," << t.utime() << "," << t.stime() ;
+      result << "," << t.utime() << "," << t.stime();
       delete stats1;
 
       const spot::fasttgba_kripke_product prod (kripke, ftgba1);
@@ -188,7 +188,7 @@ main(int argc, char **argv)
       std::cout << " ---> done" << std::endl;
       result << "," << stats3->dump();
       t = mtimer.timer("Expl. Product (new)");
-      result << "," << t.utime() << "," << t.stime() ;
+      result << "," << t.utime() << "," << t.stime();
       delete stats3;
 
 
@@ -210,7 +210,7 @@ main(int argc, char **argv)
 	  result  << "," << tgba_stats.states
 		  << "," << tgba_stats.transitions;
 	  t = mtimer.timer("Expl. Product (old)");
-	  result << "," << t.utime() << "," << t.stime() ;
+	  result << "," << t.utime() << "," << t.stime();
 
 	  std::cout << "Expl. the Property (old):" << std::flush;
 	  mtimer.start("Expl. Property (old)");
@@ -220,7 +220,7 @@ main(int argc, char **argv)
 	  result  << "," << tgba_stats.states
 		  << "," << tgba_stats.transitions;
 	  t = mtimer.timer("Expl. Product (old)");
-	  result << "," << t.utime() << "," << t.stime() ;
+	  result << "," << t.utime() << "," << t.stime();
 
 
 	  spot::tgba* product = new spot::tgba_product(model, af1);
@@ -232,7 +232,7 @@ main(int argc, char **argv)
 	  result  << "," << tgba_stats.states
 		  << "," << tgba_stats.transitions;
 	  t = mtimer.timer("Expl. Product (old)");
-	  result << "," << t.utime() << "," << t.stime() ;
+	  result << "," << t.utime() << "," << t.stime();
 
 
 	  delete product;
