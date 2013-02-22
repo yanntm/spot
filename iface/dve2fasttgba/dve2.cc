@@ -415,8 +415,12 @@ namespace spot
 	cc = build_cc(vars, t);
 	cube scond = compute_state_condition(vars);
 
+	if (!t)
+	  {
+	    cc->transitions.push_back(state->clone());
+	  }
 
-	assert(t); //??? No deadlock in the model
+	//assert(t); //??? No deadlock in the model
 	// // Add a self-loop to dead-states if we care about these.
 	// if (t == 0 && scond != bddfalse)
 	//   cc->transitions.push_back(local_state->clone());
