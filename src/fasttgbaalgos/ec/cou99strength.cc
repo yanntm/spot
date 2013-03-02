@@ -97,11 +97,13 @@ namespace spot
     // If terminal it's over
     if (get_strength(init) == TERMINAL_SCC)
       {
+	init->destroy();
     	counterexample_found = true;
     	return;
       }
 
     dfs_push(markset(a_->get_acc()), init);
+    init->destroy();
   }
 
   void cou99strength::dfs_push(markset acc, fasttgba_state* s)
@@ -137,12 +139,15 @@ namespace spot
     // Check if one successor is terminal
     while (!si->done())
       {
-	if (get_strength(si->current_state()) == TERMINAL_SCC)
+	fasttgba_state* curr = si->current_state();
+	if (get_strength(curr) == TERMINAL_SCC)
 	  {
-	    H[s] = 0;
+	    //H[s] = 0;
+	    curr->destroy();
 	    counterexample_found = true;
 	    return;
 	  }
+	curr->destroy();
 	si->next();
       }
 
@@ -245,11 +250,17 @@ namespace spot
 	    if (H.find(d) == H.end())
 	      {
 	    	dfs_push (a, d);
+		if (counterexample_found)
+		  {
+		    d->destroy();
+		    return;
+		  }
 	      }
 	    else if (H[d])
 	      {
 		if (get_strength(d) == WEAK_SCC)
 		  {
+		    d->destroy();
 		    counterexample_found = true;
 		    return;
 		  }
@@ -257,10 +268,12 @@ namespace spot
 	    	merge(a, H[d]);
 	    	if (scc.top().get<2>().any())
 	    	  {
+		    d->destroy();
 	    	    counterexample_found = true;
 	    	    return;
 	    	  }
 	      }
+	    d->destroy();
 	  }
       }
   }
