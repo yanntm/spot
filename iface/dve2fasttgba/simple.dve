@@ -1,0 +1,12 @@
+
+process P_0 {
+byte j=0;
+state s1, s2, s3;
+init  s1;
+trans
+ s1-> s2 { effect j = j + 1; },
+ s2 -> s3  {effect j = j+ 1;},
+ s3 -> s1 { effect j = 0; };
+}
+
+system async;
