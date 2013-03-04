@@ -66,10 +66,10 @@ namespace spot
   {
     if (--count_)
       return;
-
     left_->destroy();
     right_->destroy();
-    this->~fast_product_state();
+    //this->~fast_product_state();
+    delete this;
   }
 
   const fasttgba_state*
@@ -186,8 +186,9 @@ namespace spot
   fasttgba_state*
   fast_product_iterator::current_state() const
   {
-    return new fast_product_state(left_->current_state(),//->clone(),
-				  right_->current_state());//->clone());
+    fasttgba_state* s = new fast_product_state(left_->current_state(),//->clone(),
+					       right_->current_state());//->clone());
+    return s;//->clone();
   }
 
   cube
@@ -234,8 +235,9 @@ namespace spot
   fasttgba_state*
   fasttgba_product::get_init_state() const
   {
-    return new fast_product_state(left_->get_init_state(),//->clone(),
-				  right_->get_init_state());//->clone());
+    fasttgba_state* init  = new fast_product_state(left_->get_init_state(),//->clone(),
+						   right_->get_init_state());//->clone());
+    return init;//->clone();
   }
 
   fasttgba_succ_iterator*

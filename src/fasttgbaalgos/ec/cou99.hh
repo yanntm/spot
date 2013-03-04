@@ -21,6 +21,8 @@
 
 #include <stack>
 #include <map>
+#include "misc/hash.hh"
+
 #include "boost/tuple/tuple.hpp"
 
 #include "fasttgba/fasttgba.hh"
@@ -87,7 +89,10 @@ namespace spot
     int max;
 
     /// The map of visited states
-    std::map<const fasttgba_state*, int> H;
+    //std::map<const fasttgba_state*, int> H;
+    typedef Sgi::hash_map<const fasttgba_state*, int,
+			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> seen_map;
+    seen_map H;
 
   };
 }

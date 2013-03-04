@@ -37,7 +37,8 @@ namespace spot
       : fasttgba_product(a1, a2, true),
 	verbose_(verbose)
     {
-      match_formula_ap();
+      if (verbose)
+	match_formula_ap();
     }
 
     ///

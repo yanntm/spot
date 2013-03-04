@@ -37,8 +37,11 @@ dve2check_LDADD = libspotdve2fasttgba.la   $(top_builddir)/iface/dve2/libspotdve
 
 check_SCRIPTS = defs
 
+TESTS = simple.test
+EXTRA_DIST = $(TESTS)
+
 # TESTS = dve2check.test finite.test kripke.test
 # EXTRA_DIST = $(TESTS) beem-peterson.4.dve finite.dve
 
-# distclean-local:
-# 	rm -rf $(TESTS:.test=.dir)
+distclean-local:
+	rm -rf $(TESTS:.test=.dir)

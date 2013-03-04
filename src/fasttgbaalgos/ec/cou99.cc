@@ -48,10 +48,11 @@ namespace spot
     	todo.pop();
       }
 
-    std::map<const fasttgba_state*, int>::const_iterator i;
-    for (i = H.begin(); i != H.end(); ++i)
+    seen_map::const_iterator s = H.begin();
+    while (s != H.end())
       {
-    	i->first->destroy();
+	s->first->destroy();
+	++s;
       }
     H.clear();
   }
@@ -69,14 +70,14 @@ namespace spot
     trace << "Cou99::Init" << std::endl;
     fasttgba_state* init = a_->get_init_state();
     dfs_push(markset(a_->get_acc()), init);
-    init->destroy();
   }
 
   void cou99::dfs_push(markset acc, fasttgba_state* s)
   {
-    trace << "Cou99::DFS_push" << std::endl;
+    trace << "Cou99::DFS_push "
+	  << a_->format_state(s)
+	  << std::endl;
     ++max;
-    s->clone();
     H[s] = max;
     scc.push
       (boost::make_tuple
@@ -174,6 +175,7 @@ namespace spot
 	    if (H.find(d) == H.end())
 	      {
 	    	dfs_push (a, d);
+	    	continue;
 	      }
 	    else if (H[d])
 	      {
@@ -181,7 +183,7 @@ namespace spot
 	    	if (scc.top().get<2>().any())
 	    	  {
 	    	    counterexample_found = true;
-		    d->destroy();
+	    	    d->destroy();
 	    	    return;
 	    	  }
 	      }
