@@ -28,13 +28,14 @@
 #include "ltlparse/public.hh"
 #include "tgbaalgos/ltl2tgba_fm.hh"
 #include "tgbaalgos/postproc.hh"
-
+#include "tgbaalgos/emptiness.hh"
 #include "kripke/kripkeexplicit.hh"
 #include "../dve2/dve2.hh"
 #include "tgbaalgos/stats.hh"
 #include "tgba/tgbaproduct.hh"
 
 #include "fasttgbaalgos/ec/cou99.hh"
+#include "fasttgbaalgos/ec/cou99strength.hh"
 
 
 // This part is for FASTTGBA
@@ -274,7 +275,7 @@ main(int argc, char **argv)
 
       if (compare_to_emptchk)
 	{
-
+	  int res_ = 0;
 	  std::ostringstream result;
 	  //spot::timer t;
 
@@ -288,19 +289,20 @@ main(int argc, char **argv)
 
 	  const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
 
-	  const spot::fasttgba_kripke_product prod (kripke, ftgba1);
+	  const spot::fasttgba_kripke_product *prod =
+	    new spot::fasttgba_kripke_product (kripke, ftgba1);
 
-	  spot::cou99  checker(&prod);
+	  spot::cou99 *checker = new spot::cou99(prod);
 	  mtimer.start("Checking cou99 (new)");
-    	  if (checker.check())
+    	  if (checker->check())
     	    {
+	      res_ = 1;
     	      std::cout << "A counterexample has been found" << std::endl;
     	    }
     	  else
     	    std::cout << "No counterexample has been found" << std::endl;
 	  mtimer.stop("Checking cou99 (new)");
-
-	  mtimer.print(std::cout);
+	  delete checker;
 
 
 	  // ----------------------
@@ -315,19 +317,42 @@ main(int argc, char **argv)
 
 	  spot::tgba* product = new spot::tgba_product(model, af1);
 
+	  const char* err;
+	  spot::emptiness_check_instantiator* echeck_inst = 0;
+	  echeck_inst =
+	    spot::emptiness_check_instantiator::construct("Cou99", &err);
 
+	  spot::emptiness_check* ec = echeck_inst->instantiate(product);
+	  assert(ec);
+	  mtimer.start("Checking cou99 (old)");
+
+	  spot::emptiness_check_result* ecres = ec->check();
+
+	  if ((ecres && !res_) || (!ecres && res_))
+	    {
+	      std::cerr << "ERROR: " << spot::ltl::to_string(f1) << std::endl;
+	      assert(false);
+	    }
+
+	  delete ecres;
+	  delete echeck_inst;
+	  delete ec;
 	  delete product;
 	  delete model;
+	  mtimer.stop("Checking cou99 (old)");
 
 
 
+	  // ----------------------
 
 
+	  mtimer.print(std::cout);
 
 
 
 	  delete ftgba1;
 	  delete kripke;
+	  delete prod;
 	  delete aps;
 	  delete accs;
 	}
