@@ -22,6 +22,7 @@
 #include <list>
 #include "fasttgba.hh"
 #include "misc/hash.hh"
+#include "misc/fixpool.hh"
 
 namespace spot
 {
@@ -37,7 +38,8 @@ namespace spot
     // Fast tgba state interface
     // ------------------------------------------------------------
     fast_product_state(const fasttgba_state* left,
-		       const fasttgba_state* right);
+		       const fasttgba_state* right,
+		       fixed_size_pool* p);
     virtual int compare(const fasttgba_state* other) const;
     virtual size_t hash() const;
     virtual fasttgba_state* clone() const;
@@ -54,6 +56,7 @@ namespace spot
     const fasttgba_state* left_;
     const fasttgba_state* right_;
     mutable int count_;
+    fixed_size_pool* pool_;
   };
 
   /// \brief This is an iterator for the product
@@ -78,6 +81,7 @@ namespace spot
     // ------------------------------------------------------------
     fast_product_iterator(fasttgba_succ_iterator* left,
 			  fasttgba_succ_iterator* right,
+			  fixed_size_pool* p,
 			  bool left_is_kripke = false);
     virtual ~fast_product_iterator();
     virtual void first();
@@ -100,6 +104,7 @@ namespace spot
 
     fasttgba_succ_iterator* left_; ///< Reference on the left iterator
     fasttgba_succ_iterator* right_;///< Reference on the right iterator
+    fixed_size_pool* pool_;
     bool kripke_left;	           ///< The left automaton is a Kripke
   };
 
@@ -155,6 +160,7 @@ namespace spot
   protected:
     const fasttgba* left_;	///< The left aut. of the product
     const fasttgba* right_;	///< The right aut. of the product
+    mutable fixed_size_pool pool_;
     bool kripke_left;		///< The left automaton is a Kripke
   };
 }

@@ -26,8 +26,9 @@ namespace spot
   // ------------------------------------------------------------
 
   fast_product_state::fast_product_state(const fasttgba_state* left,
-					 const fasttgba_state* right):
-    left_(left), right_(right), count_(1)
+					 const fasttgba_state* right,
+					 fixed_size_pool* p):
+    left_(left), right_(right), count_(1), pool_(p)
   {
   }
 
@@ -69,7 +70,8 @@ namespace spot
     left_->destroy();
     right_->destroy();
     //this->~fast_product_state();
-    delete this;
+    //delete this;
+    pool_->deallocate(this);
   }
 
   const fasttgba_state*
@@ -92,8 +94,10 @@ namespace spot
   fast_product_iterator::
   fast_product_iterator(fasttgba_succ_iterator* left,
 			fasttgba_succ_iterator* right,
+			fixed_size_pool* p,
 			bool left_is_kripke):
-    left_(left), right_(right), kripke_left(left_is_kripke)
+    left_(left), right_(right),
+    pool_(p), kripke_left(left_is_kripke)
   {
   }
 
@@ -186,8 +190,10 @@ namespace spot
   fasttgba_state*
   fast_product_iterator::current_state() const
   {
-    fasttgba_state* s = new fast_product_state(left_->current_state(),//->clone(),
-					       right_->current_state());//->clone());
+    fasttgba_state* s =
+      new(pool_->allocate()) fast_product_state(left_->current_state(),//->clone(),
+					       right_->current_state(),
+					       pool_);//->clone());
     return s;//->clone();
   }
 
@@ -222,7 +228,8 @@ namespace spot
   fasttgba_product::fasttgba_product(const fasttgba* left,
 				     const fasttgba* right,
 				     bool left_is_kripke) :
-    left_(left), right_(right), kripke_left(left_is_kripke)
+    left_(left), right_(right),
+    pool_(sizeof(fast_product_state)), kripke_left(left_is_kripke)
   {
     assert(&(left_->get_dict()) == &(right_->get_dict()));
     assert(&(left_->get_acc()) == &(right_->get_acc()));
@@ -235,8 +242,10 @@ namespace spot
   fasttgba_state*
   fasttgba_product::get_init_state() const
   {
-    fasttgba_state* init  = new fast_product_state(left_->get_init_state(),//->clone(),
-						   right_->get_init_state());//->clone());
+    fasttgba_state* init  =
+      new(pool_.allocate()) fast_product_state(left_->get_init_state(),//->clone(),
+					      right_->get_init_state(),
+					      &pool_);//->clone());
     return init;//->clone();
   }
 
@@ -248,7 +257,7 @@ namespace spot
     assert(s);
     fasttgba_succ_iterator* li = left_->succ_iter(s->left());
     fasttgba_succ_iterator* ri = right_->succ_iter(s->right());
-    return new fast_product_iterator(li, ri, kripke_left);
+    return new fast_product_iterator(li, ri, &pool_, kripke_left);
   }
 
 
