@@ -25,6 +25,7 @@
 #include "tgba/bddprint.hh"
 #include "misc/escape.hh"
 #include "misc/accconv.hh"
+#include "isweakscc.hh"
 
 namespace spot
 {
@@ -33,7 +34,12 @@ namespace spot
   {
     out << "total SCCs: " << scc_total << std::endl;
     out << "accepting SCCs: " << acc_scc << std::endl;
+    out << "non accepting SCC: " << nonacc_scc << std::endl;
     out << "dead SCCs: " << dead_scc << std::endl;
+    out << "weak SubAut.: " << weak_subaut << std::endl;
+    out << "weak accepting SCCs: " << weak_acc_scc << std::endl;
+    out << "terminal accepting SCCs: " << terminal_accepting << std::endl;
+    out << "terminal SubAut.: " << terminal_subaut << std::endl;
     out << "accepting paths: " << acc_paths << std::endl;
     out << "dead paths: " << dead_paths << std::endl;
     return out;
@@ -102,7 +108,8 @@ namespace spot
     assert(!root_.front().states.empty());
     std::list<const state*>::iterator i;
     int n = scc_map_.size();
-    for (i = root_.front().states.begin(); i != root_.front().states.end(); ++i)
+    for (i = root_.front().states.begin();
+	 i != root_.front().states.end(); ++i)
       {
 	hash_type::iterator spi = h_.find(*i);
 	assert(spi != h_.end());
@@ -134,6 +141,118 @@ namespace spot
       }
 
     return res;
+  }
+
+  bool
+  scc_map::non_accepting(unsigned n) const
+  {
+    return !accepting(n);
+  }
+
+  bool
+  scc_map::has_terminal_scc () const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_terminal_accepting)
+	return true;
+    return false;
+  }
+
+  bool
+  scc_map::has_weak_scc () const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_weak_acc &&
+	  !scc_map_[curr_scc].is_terminal_accepting)
+	return true;
+    return false;
+  }
+
+  bool
+  scc_map::has_strong_scc () const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_strong)
+	return true;
+    return false;
+  }
+
+
+  void
+  scc_map::update_weak ()
+  {
+    // A first pass set the type of all SCC
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      {
+    	// Set terminal SCCs
+    	if (internal_terminal_accepting(curr_scc))
+	  {
+    	    scc_map_[curr_scc].is_terminal_accepting = true;
+	  }
+    	// Set weak and weak (accepting or not)
+    	if (is_weak_heuristic(*this, curr_scc))
+    	  {
+	    scc_map_[curr_scc].is_weak = true;
+	    scc_map_[curr_scc].is_weak_acc = accepting(curr_scc);
+    	  }
+	else if (accepting(curr_scc))
+	  {
+	    scc_map_[curr_scc].is_strong = true;
+	  }
+      }
+
+    // A second pass set the type of all subaut.
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      {
+    	// Check successors
+    	const succ_type& s = succ(curr_scc);
+    	succ_type::const_iterator sccit;
+	bool weak_hard = true;
+    	bool terminal_subaut = true;
+    	bool weak_subaut = true;
+	bool strong_hard = true;
+    	for (sccit = s.begin(); sccit != s.end(); ++sccit)
+    	  {
+    	    assert(sccit->first <= curr_scc);
+    	    assert(sccit->first != curr_scc);
+
+
+    	    if (!scc_map_[sccit->first].is_terminal_subautomaton)
+    	      {
+    	    	terminal_subaut = false;
+    	      }
+
+    	    if (!scc_map_[sccit->first].is_weak_subautomaton)
+	      {
+		weak_subaut = false;
+	      }
+
+	    if (!scc_map_[sccit->first].is_strong_hard)
+	      strong_hard = false;
+
+	    if (!scc_map_[sccit->first].is_weak_hard)
+	      weak_hard = false;
+    	  }
+	// Update Weak Subautomaton
+    	scc_map_[curr_scc].is_weak_subautomaton = weak_subaut
+	  && scc_map_[curr_scc].is_weak;
+
+	// Update Terminal Subautomaton
+    	scc_map_[curr_scc].is_terminal_subautomaton =
+    	  terminal_subaut &&
+	  (non_accepting(curr_scc) || scc_map_[curr_scc].is_terminal_accepting);
+
+    	scc_map_[curr_scc].is_strong_hard =
+	  scc_map_[curr_scc].is_strong && strong_hard;
+
+    	scc_map_[curr_scc].is_weak_hard =
+	  scc_map_[curr_scc].is_weak && weak_hard &&
+	  !scc_map_[curr_scc].is_terminal_subautomaton;
+      }
   }
 
   void
@@ -310,6 +429,7 @@ namespace spot
 
     // recursively update supp_rec
     (void) update_supp_rec(initial());
+    update_weak();
   }
 
   unsigned scc_map::scc_of_state(const state* s) const
@@ -348,6 +468,66 @@ namespace spot
   unsigned scc_map::self_loops() const
   {
     return self_loops_;
+  }
+
+  strength scc_map::typeof_subautomaton (unsigned n) const
+  {
+    if (scc_map_[n].is_terminal_subautomaton)
+      return TerminalSubaut;
+    else if (scc_map_[n].is_weak_subautomaton)
+      return WeakSubaut;
+    return StrongSubaut;
+  }
+
+  bool
+  scc_map::weak_subautomaton(unsigned n) const
+  {
+    return scc_map_[n].is_weak_subautomaton;
+  }
+
+  bool
+  scc_map::weak_hard(unsigned n) const
+  {
+    return scc_map_[n].is_weak_hard;
+  }
+
+  bool
+  scc_map::strong(unsigned n) const
+  {
+    return !scc_map_[n].is_weak_subautomaton &&
+      !non_accepting(n) &&
+      !weak_accepting(n);
+  }
+
+  bool
+  scc_map::strong_hard(unsigned n) const
+  {
+    return scc_map_[n].is_strong_hard;
+  }
+
+  bool
+  scc_map::weak_accepting(unsigned n) const
+  {
+    return scc_map_[n].is_weak_acc;
+  }
+
+  bool
+  scc_map::terminal_subautomaton(unsigned n) const
+  {
+    return scc_map_[n].is_terminal_subautomaton;
+  }
+
+
+  bool
+  scc_map::terminal_accepting(unsigned n) const
+  {
+    return scc_map_[n].is_terminal_accepting;
+  }
+
+  bool
+  scc_map::internal_terminal_accepting(unsigned n)
+  {
+    return is_terminal_heuristic (aut_, *this, n);
   }
 
   const std::list<const state*>& scc_map::states_of(unsigned n) const
@@ -447,12 +627,27 @@ namespace spot
     res.dead_scc = d.dead_scc;
     res.acc_paths = d.acc_paths[init];
     res.dead_paths = d.dead_paths[init];
+    res.weak_subaut = 0;
+    res.weak_acc_scc = 0;
+    res.terminal_subaut = 0;
+    res.terminal_accepting = 0;
+    res.nonacc_scc = 0;
 
     res.useless_scc_map.reserve(res.scc_total);
     res.useful_acc = bddfalse;
     for (unsigned n = 0; n < res.scc_total; ++n)
       {
 	res.useless_scc_map[n] = !d.acc_paths[n];
+	if (m.weak_subautomaton(n))
+	  ++res.weak_subaut;
+	if (m.weak_accepting(n))
+	  ++res.weak_acc_scc;
+	if (m.terminal_subautomaton(n))
+	  ++res.terminal_subaut;
+	if (m.terminal_accepting(n))
+	  ++res.terminal_accepting;
+	if (m.non_accepting(n))
+	  ++res.nonacc_scc;
 	if (m.accepting(n))
 	  res.useful_acc |= m.useful_acc_of(n);
       }
@@ -516,11 +711,37 @@ namespace spot
 	    ostr << "]\\n useful=[";
 	    escape_str(ostr, bdd_format_accset(m.get_aut()->get_dict(),
 					       m.useful_acc_of(state))) << "]";
+
+	    ostr << "\\n TerminalAcc=["
+		 << (m.terminal_accepting(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n TerminalSubAut.=["
+		 << (m.terminal_subautomaton(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n NonAcc=["
+		 << (m.non_accepting(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n Weak SubAut.=["
+		 << (m.weak_subautomaton(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n WeakHard=["
+	    	 << (m.weak_hard(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n WeakAcc=["
+		 << (m.weak_accepting(state) ? "true" : "false") << "]";
+
+	    ostr << "\\n StrongHard=["
+		 << (m.strong_hard(state) ? "true" : "false") << "]";
+
+
+	    ostr << "\\n Strong=["
+		 << (m.strong(state) ? "true" : "false") << "]"
+		 << "\\n";
 	  }
 
 	out << "  " << state << " [shape=box,"
-            << (m.accepting(state) ? "style=bold," : "")
-            << "label=\"" << ostr.str() << "\"]" << std::endl;
+	    << (m.accepting(state) ? "style=bold," : "")
+	    << "label=\"" << ostr.str() << "\"]" << std::endl;
 
 	const scc_map::succ_type& succ = m.succ(state);
 
@@ -532,7 +753,8 @@ namespace spot
 
 	    out << "  " << state << " -> " << dest
 		<< " [label=\"";
-	    escape_str(out, bdd_format_formula(m.get_aut()->get_dict(), label));
+	    escape_str(out, bdd_format_formula(m.get_aut()->get_dict(),
+					       label));
 	    out << "\"]" << std::endl;
 
 	    if (seen[dest])
@@ -555,5 +777,4 @@ namespace spot
     m.build_map();
     return dump_scc_dot(m, out, verbose);
   }
-
 }

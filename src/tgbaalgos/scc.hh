@@ -31,6 +31,9 @@
 namespace spot
 {
 
+  /// This enumeration characterize the type of the subautomaton
+  enum strength { TerminalSubaut, WeakSubaut, StrongSubaut};
+
   struct scc_stats
   {
     /// Total number of SCCs.
@@ -42,7 +45,18 @@ namespace spot
     /// An SCC is dead if no accepting SCC is reachable from it.
     /// Note that an SCC can be neither dead nor accepting.
     unsigned dead_scc;
-
+    /// The number of weak accepting scc into the automata
+    unsigned weak_acc_scc;
+    /// Count the number of SCC that can be considered as a
+    /// terminal subautomaton.
+    int terminal_subaut;
+    /// The number of terminal accepting SCC
+    int terminal_accepting;
+    /// Count the number of SCC that can be considered as a
+    /// weak subautomaton.
+    unsigned weak_subaut;
+    /// Count the number of non accepting SCC
+    int nonacc_scc;
     /// Number of maximal accepting paths.
     ///
     /// A path is maximal and accepting if it ends in an accepting
@@ -176,8 +190,74 @@ namespace spot
     /// \brief Return the number of self loops in the automaton.
     unsigned self_loops() const;
 
+    /// \brief Return the type of the subautomaton
+    strength typeof_subautomaton (unsigned n) const;
+
+    /// \brief Return whether the subautomaton starting from
+    /// this SCC can be considered as Weak (for all SCC s , s
+    /// is wether accepting for all paths, wether non accepting
+    /// for all paths)
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool weak_subautomaton(unsigned n) const;
+
+    /// \brief Return whether an SCC is weak acc i-e if all
+    /// transitions inside this this SCC is wether fully accepting
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool weak_accepting(unsigned n) const;
+
+    /// \brief Return whether an SCC is weak hard i-e if
+    /// no terminal scc can be reached from this SCC
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool weak_hard(unsigned n) const;
+
+    /// \brief Return whether a SCC is strong (existence of
+    /// non accepting run inside this SCC)
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool strong(unsigned n) const;
+
+    /// \brief Return whether an SCC is weak hard i-e if
+    /// no weak SCC or terminal SCC or non acc. can be reached
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool strong_hard(unsigned n) const;
+
+    /// \brief Return true if the sub automaton starting from
+    /// this SCC can be considered as a weak automaton
+    /// e.g. only non accepting and terminal SCC can be reached
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool terminal_subautomaton(unsigned n) const;
+
+    /// \brief Return whether an SCC is terminal acc i-e if
+    /// this scc is complete and accepting
+    ///
+    /// \pre This should only be called once build_map() has run.
+    bool terminal_accepting(unsigned n) const;
+
+    /// \breif Return wether the SCC is unaccepting i-e there
+    /// is no run that is accepting
+    ///
+    ///  \pre This should only be called once build_map() has run.
+    bool non_accepting (unsigned n) const;
+
+    /// \brief return true if there is at least one terminal SCC
+    bool has_terminal_scc () const;
+
+    /// \brief return true if there is at least one weak SCC
+    /// Terminal SCC are not considered as weak
+    bool has_weak_scc () const;
+
+    /// \brief return true if there is at least one strong SCC
+    bool has_strong_scc () const;
+
   protected:
     bdd update_supp_rec(unsigned state);
+    void update_weak();
+    bool internal_terminal_accepting(unsigned n);
     int relabel_component();
 
     struct scc
@@ -185,7 +265,16 @@ namespace spot
     public:
       scc(int index) : index(index), acc(bddfalse),
 		       supp(bddtrue), supp_rec(bddfalse),
-		       trivial(true), useful_acc(bddfalse) {};
+		       trivial(true), useful_acc(bddfalse),
+		       is_weak_acc(false),
+		       is_weak(false),
+		       is_strong(false),
+		       is_weak_hard(false),
+		       is_strong_hard(false),
+		       is_terminal_accepting(false),
+		       is_terminal_subautomaton(false),
+		       is_weak_subautomaton(false)
+      {};
       /// Index of the SCC.
       int index;
       /// The union of all acceptance conditions of transitions which
@@ -214,6 +303,28 @@ namespace spot
       /// then useful_acc will contain
       ///      Acc[a]&Acc[b]&!Acc[c] | !Acc[a]&Acc[b]&Acc[c]
       bdd useful_acc;
+      /// Here consider only weak accepting SCC
+      bool is_weak_acc;
+      // Weak SCC
+      bool is_weak;
+      // Strong SCC
+      bool is_strong;
+      /// Allow to know if this scc is is weak hard i.e. if no
+      /// terminal scc can be reached from this scc
+      bool is_weak_hard;
+      /// Allow to know if this scc is is strong hard i.e. if no
+      /// weak scc can be reached from this scc
+      bool is_strong_hard;
+      // Allow to know if this SCC is terminal complete accepting
+      bool is_terminal_accepting;
+      /// Allow to know if the set of reachable state can be
+      /// considered as a terminal automaton (reachable states
+      /// are terminal SCC and weak non accepting SCC)
+      bool is_terminal_subautomaton;
+      /// Allows to know if a SCC is weak ie fully accepting or not
+      /// at all : a scc is considered weak only if all reachable scc
+      /// are weak
+      bool is_weak_subautomaton;
     };
 
     const tgba* aut_;		// Automata to decompose.
@@ -226,9 +337,9 @@ namespace spot
     typedef Sgi::hash_map<const state*, int,
 			  state_ptr_hash, state_ptr_equal> hash_type;
     hash_type h_;		// Map of visited states.  Values >= 0
-                                // designate maximal SCC.  Values < 0
-                                // number states that are part of
-                                // incomplete SCCs being completed.
+				// designate maximal SCC.  Values < 0
+				// number states that are part of
+				// incomplete SCCs being completed.
     int num_;			// Number of visited nodes, negated.
     typedef std::pair<const spot::state*, tgba_succ_iterator*> pair_state_iter;
     std::stack<pair_state_iter> todo_; // DFS stack.  Holds (STATE,
@@ -243,7 +354,7 @@ namespace spot
     typedef std::vector<scc> scc_map_type;
     scc_map_type scc_map_; // Map of constructed maximal SCC.
 			   // SCC number "n" in H_ corresponds to entry
-                           // "n" in SCC_MAP_.
+			   // "n" in SCC_MAP_.
     unsigned self_loops_; // Self loops count.
  };
 
