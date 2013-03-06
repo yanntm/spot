@@ -20,6 +20,8 @@
 # define SPOT_TGBAALGOS_ISWEAKSCC_CC
 
 #include "cycles.hh"
+#include "tgba/tgbaexplicit.hh"
+#include "ltlast/formula.hh"
 
 namespace spot
 {
@@ -82,6 +84,27 @@ namespace spot
     return w.result;
   }
 
+  bool
+  is_syntactic_weak_scc(const spot::tgba *a, scc_map& map, unsigned scc)
+  {
+    const std::list<const spot::state*> states = map.states_of(scc);
+    std::list<const spot::state*>::const_iterator it;
+    for (it =  states.begin(); it != states.end(); it++)
+      {
+	const state_explicit_formula *s =
+	  dynamic_cast<const state_explicit_formula *>(*it);
+	const ltl::formula *f = dynamic_cast<const ltl::formula*>
+	  (((const tgba_explicit_formula*) a)->get_label(s));
+
+	if(//(!(f->is_syntactic_guarantee())) &&
+	   ( f->is_syntactic_obligation() ||
+	     f->is_syntactic_persistence() ||
+	     f->is_syntactic_safety()))
+	  return true;
+
+      }
+    return false;
+  }
 
 }
 
