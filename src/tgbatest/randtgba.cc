@@ -28,6 +28,7 @@
 #include <string>
 #include <utility>
 #include <set>
+#include <stack>
 #include <vector>
 #include "ltlparse/public.hh"
 #include "ltlvisit/apcollect.hh"
@@ -63,17 +64,27 @@ struct ec_algo
 
 const char* default_algos[] = {
   "Cou99(!poprem)",
+  "Cou99_dyn(!poprem)",
   "Cou99(!poprem shy !group)",
+  "Cou99_dyn(!poprem shy !group)",
   "Cou99(!poprem shy group)",
+  "Cou99_dyn(!poprem shy group)",
   "Cou99(poprem)",
+  "Cou99_dyn(poprem)",
   "Cou99(poprem shy !group)",
+  "Cou99_dyn(poprem shy !group)",
   "Cou99(poprem shy group)",
+  "Cou99_dyn(poprem shy group)",
   "CVWY90",
+  "CVWY90_dyn",
   "CVWY90(bsh=4K)",
   "GV04",
+  "GV04_dyn",
   "SE05",
+  "SE05_dyn",
   "SE05(bsh=4K)",
   "Tau03",
+  "Tau03_dyn",
   "Tau03_opt",
   "Tau03_opt(condstack)",
   "Tau03_opt(condstack ordering)",
@@ -85,15 +96,39 @@ std::vector<ec_algo> ec_algos;
 
 spot::emptiness_check*
 cons_emptiness_check(int num, const spot::tgba* a,
-		     const spot::tgba* degen, unsigned int n_acc)
+		     const spot::tgba* degen, unsigned int n_acc,
+		     const spot::tgba *product, const spot::tgba *formula,
+		     float opt_a)
 {
   spot::emptiness_check_instantiator* inst = ec_algos[num].inst;
   if (n_acc < inst->min_acceptance_conditions()
       || n_acc > inst->max_acceptance_conditions())
     a = degen;
+
+  spot::emptiness_check *echk = 0;
   if (a)
-    return inst->instantiate(a);
-  return 0;
+    echk = inst->instantiate(a);
+
+  // Dynamic emptiness doesn't support
+  if (echk && opt_a != 0.0 && (echk->is_dynamic_emptiness ()))
+    {
+      return 0;
+    }
+  if (echk && n_acc < inst->min_acceptance_conditions()
+      || n_acc > inst->max_acceptance_conditions())
+    {
+      spot::formula_emptiness_specifier *fes  =
+	new spot::formula_emptiness_specifier (degen?degen:product, formula);
+      echk->set_specifier (fes);
+    }
+  else if (echk)
+    {
+      spot::formula_emptiness_specifier *fes  =
+	new spot::formula_emptiness_specifier (product, formula);
+      echk->set_specifier (fes);
+    }
+
+  return echk;
 }
 
 void
@@ -120,6 +155,7 @@ syntax(char* prog)
 	    << "  -n N    number of nodes of the graph [20]" << std::endl
 	    << "  -t F    probability of the atomic propositions to be true"
 	    << " [0.5]" << std::endl
+	    << "  -fs     Stats considering the formula"
 	    << std::endl
 	    << "LTL Formula Generation Options:" << std::endl
 	    << "  -dp     dump priorities, do not generate any formula"
@@ -315,9 +351,9 @@ struct stat_collector
 	  bool total = true) const
   {
     std::ios::fmtflags old = os.flags();
-    os << std::setw(25) << "" << " | "
+    os << std::setw(28) << "" << " | "
        << std::setw(30) << std::left << title << std::right << "|" << std::endl
-       << std::setw(25) << "algorithm"
+       << std::setw(28) << "algorithm"
        << " |   min   < mean  < max | total |  n"
        << std::endl
        << std::setw(64) << std::setfill('-') << "" << std::setfill(' ')
@@ -326,7 +362,7 @@ struct stat_collector
     for (typename alg_1stat_map::const_iterator i = m.begin();
 	 i != m.end(); ++i)
       {
-	os << std::setw(25) << i->first << " |"
+	os << std::setw(28) << i->first << " |"
 	   << std::setw(6) << i->second.min
 	   << " "
 	   << std::setw(8)
@@ -356,8 +392,6 @@ struct stat_collector
       display(os, i->second, i->first, total);
     return os;
   }
-
-
 };
 
 struct ar_stat
@@ -424,17 +458,17 @@ print_ar_stats(ar_stats_type& ar_stats, const std::string& s)
   std::cout << std::endl << s << std::endl;
   std::cout << std::right << std::fixed << std::setprecision(1);
 
-  std::cout << std::setw(25) << ""
+  std::cout << std::setw(28) << ""
             << " |         prefix        |         cycle         |"
             << std::endl
-            << std::setw(25) << "algorithm"
+            << std::setw(28) << "algorithm"
             << " |   min   < mean  < max |   min   < mean  < max |   n"
             << std::endl
             << std::setw(79) << std::setfill('-') << "" << std::setfill(' ')
             << std::endl;
   for (ar_stats_type::const_iterator i = ar_stats.begin();
 	   i != ar_stats.end(); ++i)
-    std::cout << std::setw(25) << i->first << " |"
+    std::cout << std::setw(28) << i->first << " |"
               << std::setw(6) << i->second.min_prefix
               << " "
               << std::setw(8)
@@ -453,17 +487,17 @@ print_ar_stats(ar_stats_type& ar_stats, const std::string& s)
               << std::endl;
   std::cout << std::setw(79) << std::setfill('-') << "" << std::setfill(' ')
             << std::endl
-            << std::setw(25) << ""
+            << std::setw(28) << ""
             << " |          runs         |         total         |"
             << std::endl <<
-	std::setw(25) << "algorithm"
+	std::setw(28) << "algorithm"
             << " |   min   < mean  < max |  pre.   cyc.     runs |   n"
             << std::endl
             << std::setw(79) << std::setfill('-') << "" << std::setfill(' ')
             << std::endl;
   for (ar_stats_type::const_iterator i = ar_stats.begin();
 	   i != ar_stats.end(); ++i)
-    std::cout << std::setw(25) << i->first << " |"
+    std::cout << std::setw(28) << i->first << " |"
               << std::setw(6)
               << i->second.min_run
               << " "
@@ -577,6 +611,8 @@ main(int argc, char** argv)
 
   bool stop_on_first_difference = false;
 
+  bool formula_stats = false;
+
   spot::tgba* formula = 0;
   spot::tgba* product = 0;
 
@@ -588,6 +624,9 @@ main(int argc, char** argv)
 
   spot::ltl::ltl_simplifier_options simpopt(true, true, true, true, true);
   spot::ltl::ltl_simplifier simp(simpopt);
+  int terminal_count = 0;
+  int weak_count = 0;
+  int general_count = 0;
 
   if (argc <= 1)
     syntax(argv[0]);
@@ -744,6 +783,10 @@ main(int argc, char** argv)
 	    syntax(argv[0]);
 	  opt_t = to_float_nonneg(argv[++argn], "-t");
 	}
+      else if (!strcmp(argv[argn], "-fs"))
+	{
+	  formula_stats = true;
+	}
       else if (!strcmp(argv[argn], "-z"))
 	{
 	  opt_z = true;
@@ -892,6 +935,23 @@ main(int argc, char** argv)
             }
         }
 
+      if (formula_stats)
+	{
+	  spot::formula_emptiness_specifier *fes  =
+	    new spot::formula_emptiness_specifier (formula);
+	  const spot::ltl::formula * cf =
+	    fes->formula_from_state(formula->get_init_state());
+	  if (cf->is_syntactic_guarantee())
+	    ++terminal_count;
+	  else if (cf->is_syntactic_safety() ||
+		   cf->is_syntactic_obligation() ||
+		   cf->is_syntactic_persistence())
+	    ++weak_count;
+	  else
+	    ++general_count;
+	  delete fes;
+	}
+
       for (spot::ltl::atomic_prop_set::iterator i = ap->begin();
 	   i != ap->end(); ++i)
 	apf->insert(static_cast<const spot::ltl::atomic_prop*>((*i)->clone()));
@@ -910,8 +970,8 @@ main(int argc, char** argv)
 						     &env);
 
 	      if (formula)
-		a = product = new spot::tgba_product(formula, a);
-
+		a = product = new spot::tgba_product(a, formula);
+	      assert(formula);
 	      int real_n_acc = a->number_of_acceptance_conditions();
 
 	      if (opt_dot)
@@ -927,7 +987,9 @@ main(int argc, char** argv)
 		{
 		  spot::tgba* degen = 0;
 		  if (opt_degen && real_n_acc > 1)
-		    degen = new spot::tgba_tba_proxy(a);
+		    {
+		      degen = new spot::tgba_tba_proxy(a);
+		    }
 
 		  int n_alg = ec_algos.size();
 		  int n_ec = 0;
@@ -940,11 +1002,13 @@ main(int argc, char** argv)
 		    {
 		      spot::emptiness_check* ec;
 		      spot::emptiness_check_result* res;
-		      ec = cons_emptiness_check(i, a, degen, real_n_acc);
+		      ec = cons_emptiness_check(i, a, degen, real_n_acc, product,
+						formula, opt_a);
 		      if (!ec)
 			continue;
 		      ++n_ec;
 		      const std::string algo = ec_algos[i].name;
+
 		      if (!opt_paper)
 			{
 			  std::cout.width(32);
@@ -958,7 +1022,8 @@ main(int argc, char** argv)
 			    break;
 			  delete res;
 			  delete ec;
-			  ec = cons_emptiness_check(i, a, degen, real_n_acc);
+			  ec = cons_emptiness_check(i, a, degen, real_n_acc,
+						    product, formula, opt_a);
 			}
 		      tm_ec.stop(algo);
 		      const spot::unsigned_statistics* ecs = ec->statistics();
@@ -1116,7 +1181,6 @@ main(int argc, char** argv)
 					  << std::endl;
 			      ++n_maybe_empty;
 			    }
-
 			}
 
 		      if (opt_Z && !opt_paper)
@@ -1231,11 +1295,9 @@ main(int argc, char** argv)
       for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
 	{
 	  const std::string algo = ec_algos[ai].name;
-
 	  int n = -1;
 
-	  std::cout << std::setw(25)  << algo << " " << std::setw(8);
-
+	  std::cout << std::setw(28)  << algo << " " << std::setw(8);
 	  ec_iter i = stats["states"].find(algo);
 	  if (i != stats["states"].end())
 	    {
@@ -1264,9 +1326,77 @@ main(int argc, char** argv)
 	    }
 	  else
 	    std::cout << "";
+
 	  if (n >= 0)
 	    std::cout << " " << std::setw(8) << n;
 	  std::cout << std::endl;
+	}
+
+      if (formula_stats)
+	{
+	  float cpt =  terminal_count + weak_count + general_count;
+	  std::cout<< std::endl  << "Static Stats for initial States : "
+		   << (int) cpt
+		   << " formulas checked "  << std::endl;
+	  std::cout << "\tGeneral  :\t" << (general_count*100) /cpt
+		    << "\t%"            << std::endl;
+	  std::cout << "\tWeak     :\t" << (weak_count*100)    /cpt
+		    << "\t%"            << std::endl;
+	  std::cout << "\tTerminal :\t" << (terminal_count*100)/cpt
+		    << "\t%"            << std::endl;
+
+	  std::cout << std::endl << "Dynamic  Stats for pushed state:"
+		    << "(Original-NDFS | Optim-DFS | Optim-REACH | COMMUT)"
+		    << std::endl;
+	  for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
+	    {
+	      const std::string algo = ec_algos[ai].name;
+	      std::cout << std::setw(28)  << algo << " " << std::setw(8);
+
+	      float visited_states = 0.;
+
+	      ec_iter i = stats["states"].find(algo);
+	      if (i != stats["states"].end())
+		{
+		  visited_states = i->second.tot;
+		}
+	      else
+		std::cout << "";
+
+	      i = stats["algo. ndfs"].find(algo);
+	      if (i != stats["algo. ndfs"].end())
+		{
+		  std::cout << std::setw(8) << (i->second.tot/visited_states)*100;
+		}
+	      else
+		std::cout << "";
+
+	      i = stats["algo. dfs"].find(algo);
+	      if (i != stats["algo. dfs"].end())
+		{
+		  std::cout << std::setw(8) << (i->second.tot/visited_states)*100;
+		}
+	      else
+		std::cout << "";
+
+	      i = stats["algo. reachability"].find(algo);
+	      if (i != stats["algo. reachability"].end())
+		{
+		  std::cout << std::setw(8) << (i->second.tot/visited_states)*100;
+		}
+	      else
+		std::cout << "";
+
+	      i = stats["algo. commut"].find(algo);
+	      if (i != stats["algo. commut"].end())
+		{
+		  std::cout << std::setw(8) << (i->second.tot/visited_states)*100;
+		}
+	      else
+		std::cout << "";
+
+	      std::cout << std::endl;
+	    }
 	}
 
       std::cout << std::endl << "Accepting run ratios" << std::endl;
@@ -1277,7 +1407,7 @@ main(int argc, char** argv)
 	{
 	  const std::string algo = ec_algos[ai].name;
 
-	  std::cout << std::setw(25)  << algo << " " << std::setw(8);
+	  std::cout << std::setw(28)  << algo << " " << std::setw(8);
 
 	  ec_iter i = stats2["search space states"].find(algo);
 	  if (i != stats2["search space states"].end())
@@ -1294,6 +1424,7 @@ main(int argc, char** argv)
 	  std::cout << std::endl;
       }
     }
+
 
   if (!failed_seeds.empty())
     {

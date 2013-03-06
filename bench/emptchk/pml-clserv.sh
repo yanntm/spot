@@ -36,7 +36,7 @@ do
   cat "$FORMULAE" |
   while read formula; do
     echo "-----------------------------------------------------------"
-    # echo "###  formula: $formula"
+    echo "###  formula: $formula"
     cat "$ALGORITHMS" |
     while read algo; do
       "$LTL2TGBA" -0 -e"$algo" $opts -Pmodels/$model "$formula"

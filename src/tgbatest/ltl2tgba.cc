@@ -357,9 +357,12 @@ main(int argc, char** argv)
   bool containment = false;
   bool show_fc = false;
   bool spin_comments = false;
+  bool is_dynamic_emptiness = false;
   spot::ltl::environment& env(spot::ltl::default_environment::instance());
   spot::ltl::atomic_prop_set* unobservables = 0;
   spot::tgba* system = 0;
+  const spot::tgba* formula = 0;
+  const spot::tgba* product = 0;
   const spot::tgba* product_to_free = 0;
   spot::bdd_dict* dict = new spot::bdd_dict();
   spot::timer_map tm;
@@ -437,6 +440,11 @@ main(int argc, char** argv)
 	  if (!*echeck_algo)
 	    echeck_algo = "Cou99";
 
+	  if (strcmp("SE05_dyn", echeck_algo) == 0 ||
+	      strcmp("SE05_dyn_opt", echeck_algo) == 0 ||
+	      strcmp("Tau03_dyn", echeck_algo) == 0)
+	    is_dynamic_emptiness = true;
+
 	  const char* err;
 	  echeck_inst =
 	    spot::emptiness_check_instantiator::construct(echeck_algo, &err);
@@ -454,6 +462,11 @@ main(int argc, char** argv)
 	  const char* echeck_algo = 2 + argv[formula_index];
 	  if (!*echeck_algo)
 	    echeck_algo = "Cou99";
+
+	  if (strcmp("SE05_dyn", echeck_algo) == 0 ||
+	      strcmp("SE05_dyn_opt", echeck_algo) == 0 ||
+	      strcmp("Tau03_dyn", echeck_algo) == 0)
+	    is_dynamic_emptiness = true;
 
 	  const char* err;
 	  echeck_inst =
@@ -998,7 +1011,7 @@ main(int argc, char** argv)
 	      a = spot::ltl_to_taa(f, dict, containment);
 	      break;
 	    case TransLaCIM:
-	      a = concrete = spot::ltl_to_tgba_lacim(f, dict);
+	      a = concrete  = spot::ltl_to_tgba_lacim(f, dict);
 	      break;
 	    case TransLaCIM_ELTL:
 	    case TransLaCIM_ELTL_ops:
@@ -1482,7 +1495,13 @@ main(int argc, char** argv)
 
       if (echeck_inst)
 	{
-	  spot::emptiness_check* ec = echeck_inst->instantiate(a);
+	  spot::formula_emptiness_specifier *es  = 0;
+	  if (a == formula)
+	    es = new spot::formula_emptiness_specifier (a);
+	  else
+	    es = new spot::formula_emptiness_specifier (a, formula);
+
+	  spot::emptiness_check* ec  =  echeck_inst->instantiate(a, es);
 	  bool search_many = echeck_inst->options().get("repeated");
 	  assert(ec);
 	  do
@@ -1516,6 +1535,22 @@ main(int argc, char** argv)
                               << ecs->max_depth();
                   else
                     std::cout << "no stats, , ";
+
+		  spot::formula_emptiness_specifier *fes  =
+		    new spot::formula_emptiness_specifier (formula);
+		  const spot::ltl::formula * cf =
+		    fes->formula_from_state(formula->get_init_state());
+		  if (cf->is_syntactic_guarantee())
+		    std::cout << std::right << std::setw(11) << ", TERMINAL";
+		  else if (cf->is_syntactic_safety() ||
+			   cf->is_syntactic_obligation() ||
+			   cf->is_syntactic_persistence())
+		    std::cout << std::right << std::setw(11) << ", WEAK    ";
+		  else
+		    std::cout << std::right << std::setw(11) << ", GENERAL ";
+		  delete fes;
+
+
                   if (res)
                     std::cout << ", accepting run found";
                   else
@@ -1572,7 +1607,8 @@ main(int argc, char** argv)
 			    {
 			      tm.start("replaying acc. run");
 			      if (!spot::replay_tgba_run(std::cout, a,
-							 run, true))
+							 run, true,
+							 is_dynamic_emptiness))
 				exit_code = 1;
 			      tm.stop("replaying acc. run");
 			    }
@@ -1610,6 +1646,8 @@ main(int argc, char** argv)
 	    }
 	  while (search_many);
 	  delete ec;
+	  // if (es)
+	  delete es;
 	}
 
       delete to_free2;
