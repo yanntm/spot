@@ -385,7 +385,6 @@ main(int argc, char** argv)
   spot::timer_map tm;
   spot::timer_map tm_af;
   bool use_timer = false;
-  bool assume_sba = false;
   bool reduction_dir_sim = false;
   bool reduction_rev_sim = false;
   bool reduction_iterated_sim = false;
