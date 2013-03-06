@@ -72,11 +72,11 @@ namespace spot
       return out_aut->create_transition(in_f, out_f);
     }
 
-    /// This type is used to detect if the decomposition must 
+    /// This type is used to detect if the decomposition must
     /// focus on making a strong weak or terminal automaton
     enum decomptype {STRONG, WEAK, TERMINAL};
 
-    // Template class that walk the automaton to create another 
+    // Template class that walk the automaton to create another
     // one repecting the strategy
     template<class T>
     class decomp_iter: public tgba_reachable_iterator_depth_first
@@ -126,20 +126,20 @@ namespace spot
 	typename output_t::state::transition* t =
 	  create_transition(this->aut_, out_, in_s, in, out_s, out);
 	out_->add_conditions(t, si->current_condition());
- 
+
 	switch (dc_)
 	  {
-	    // In this case all acc conditions have to be the same 
-	    // but only strong scc are examined 
+	    // In this case all acc conditions have to be the same
+	    // but only strong scc are examined
 	  case STRONG:
 	    out_->add_acceptance_conditions
 	      (t, si->current_acceptance_conditions());
 	    break;
 
-	    // In this case all acceptance conditions are 
+	    // In this case all acceptance conditions are
 	    // replaced by a single one (Acc[True])
 	    // In strong (not hard) SCC all acceptance conditions
-	    // are removed and terminal SCC are ignored 
+	    // are removed and terminal SCC are ignored
 	  case WEAK:
 	    {
 	      if (sm_.strong(sm_.scc_of_state(in_s)) ||
@@ -161,7 +161,7 @@ namespace spot
 	    // It's the terminal case, all the automaton (except
 	    // strong hard and weak hard) scc are considered and
 	    // acceptance condition is added Acc[True].
-	    // All ohter acceptance conditions are removed from 
+	    // All ohter acceptance conditions are removed from
 	    // strong and weak SCC
 	  default:
 	    if (!sm_.terminal_subautomaton(sm_.scc_of_state(in_s)))
@@ -210,9 +210,9 @@ namespace spot
 	strong_ = di.result();
       }
 
-    // Remove useless 
+    // Remove useless
     tgba *tmp  = spot::scc_filter(strong_, true);
-    delete strong_; 
+    delete strong_;
     strong_ = tmp;
 
     // Minimise
@@ -248,10 +248,10 @@ namespace spot
 	di.run();
 	weak_ = di.result();
       }
-    
-    // Remove useless 
+
+    // Remove useless
     tgba *tmp  = spot::scc_filter(weak_, true);
-    delete weak_; 
+    delete weak_;
     weak_ = tmp;
 
     // Minimise
@@ -295,9 +295,9 @@ namespace spot
 	return;
       }
 
-    //Remove useless 
+    //Remove useless
     tgba *tmp  = spot::scc_filter(terminal_, true);
-    delete terminal_; 
+    delete terminal_;
     terminal_ = tmp;
 
     // Minimise

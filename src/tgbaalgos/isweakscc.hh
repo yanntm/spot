@@ -40,13 +40,12 @@ namespace spot
   /// the given SCC (it stops if it find a non-accepting cycle).
   bool is_weak_scc(scc_map& map, unsigned scc, bool easydetect = true);
 
-
+  /// \brief Whether the SCC number \a scc in \a map is complete
+  ///
+  /// A SCC is complete iff for all states for all label there exist
+  /// a transition that stay into this SCC.
   bool
   is_complete_scc(const tgba *a, scc_map& map, unsigned scc);
-
-
-  /// \addtogroup tgba_misc
-  /// @{
 
   /// \brief Whether the SCC number \a scc in \a map is syntactically weak.
   ///
@@ -64,13 +63,23 @@ namespace spot
   /// the given SCC (it stops if it find a non-accepting cycle).
   bool is_syntactic_weak_scc(const tgba *a, scc_map& map, unsigned scc);
 
-
-
+  /// \brief wether a SCC is syntactically characterized by a gurarantee 
+  /// formula
+  ///
+  /// Work only on tgba where labels are formula 
   bool is_syntactic_terminal_scc(const tgba *a, scc_map& map, unsigned scc);
 
+  /// \brief wether a SCC is terminal using an heuristic
+  ///
+  /// The heuristic try to characterize the SCC by loking if the SCC 
+  /// is complete and all cycle are fully accepting ( all transitions 
+  /// have all acceptance conditions)
   bool
   is_terminal_heuristic (const tgba *a, scc_map& map, unsigned scc);
 
+  /// \brief wether a SCC is weak using an heuristic
+  /// 
+  /// The heuristic looks if all path are fully accepting 
   bool
   is_weak_heuristic(scc_map& map, unsigned scc);
 

@@ -95,7 +95,7 @@ int main(int argc, char **argv)
   bool syntaxic = false;//true;
   bool original = false;
 
-  // Parse arguments  
+  // Parse arguments
   if (argc == 3)
     {
       std::string arg = argv[1];
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   //  The dictionnary
   spot::bdd_dict* dict = new spot::bdd_dict();
 
-  // The formula string 
+  // The formula string
   bool use_stdin = false;
   std::string input =  argv[argc -1];
   std::istream &inputcin = std::cin;
@@ -133,21 +133,21 @@ int main(int argc, char **argv)
       const spot::ltl::formula* f = 0;
 
       //
-      // Building the formula from the input 
+      // Building the formula from the input
       //
       f = spot::ltl::parse(input, pel, env, false);
       const spot::tgba *a = spot::ltl_to_tgba_fm(f, dict);
       assert (a);
 
-      // Process the formula 
+      // Process the formula
       spot::postprocessor *pp = new spot::postprocessor();
       pp->set_type(spot::postprocessor::TGBA);
       pp->set_pref(spot::postprocessor::Any);
       pp->set_level(spot::postprocessor::Low);
       a = pp->run (a, f);
 
-      // create a timer 
-      spot::timer_map tm;      
+      // create a timer
+      spot::timer_map tm;
       int weaks = 0, non_accepting = 0, terminals = 0, strongs = 0;
 
       ///
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 	map.build_map();
 
 	tm.start("Strength computation");
-	// Walk accross all SCC 
+	// Walk accross all SCC
 	unsigned max = map.scc_count();
 	int number_of_fully_weak = 0;
 	int number_of_cycle_weak = 0;
@@ -181,13 +181,13 @@ int main(int argc, char **argv)
 	  {
 	    if (exact)
 	      {
-		// Check non accepting SCC 
+		// Check non accepting SCC
 		if (!map.accepting(n))
 		  {
 		    ++non_accepting;
 		    continue;
 		  }
-		// Check weak 
+		// Check weak
 		if (!is_weak_scc(map, n, false))
 		  {
 		    ++strongs;
@@ -206,13 +206,13 @@ int main(int argc, char **argv)
 
 	    if (structural)
 	      {
-		// Check non accepting SCC 
+		// Check non accepting SCC
 		if (!map.accepting(n))
 		  {
 		    ++non_accepting;
 		    continue;
 		  }
-		// Check weak 
+		// Check weak
 		if (!is_weak_heuristic(map, n))
 		  {
 		    ++strongs;
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
 
 	    if (syntaxic)
 	      {
-		// Check non accepting SCC 
+		// Check non accepting SCC
 		if (!map.accepting(n))
 		  {
 		    ++non_accepting;
@@ -253,13 +253,13 @@ int main(int argc, char **argv)
 		      ++weaks;
 		    continue;
 		  }
-         
-		// Check weak 
+
+		// Check weak
 		if (!is_syntactic_weak_scc(a, map, n))
 		  {
 		    ++strongs;
 		    continue;
-		  } 
+		  }
 		if (is_syntactic_terminal_scc(a, map, n))
 		  {
 		    bt = true;
@@ -277,7 +277,7 @@ int main(int argc, char **argv)
 		// if(is_complete_scc(a, map, n) && is_weak_scc(map, n))
 		//   assert(map.terminal_accepting (n));
 
-		// DO not consider terminal SCC 
+		// DO not consider terminal SCC
 		if (map.terminal_accepting (n))
 		  {
 		    ++number_of_terminal;
@@ -292,10 +292,10 @@ int main(int argc, char **argv)
 		   bdd_support(map.get_aut()->neg_acceptance_conditions()));
 		if (fully_weak)
 		  ++number_of_fully_weak;
-		
+
 		// if (fully_weak)
 		//   assert(map.weak_accepting(n));
-		
+
 		// A SCC can be weak considering  cycles
 		bool cycle_weak = map.accepting(n) && is_weak_scc(map, n, false);
 		if (cycle_weak)
@@ -338,7 +338,7 @@ int main(int argc, char **argv)
 		<< weaks         << ','
 		<< terminals     << ','
 		<< strongs       << ','
-		<< tm.timer("Strength computation").utime() + 
+		<< tm.timer("Strength computation").utime() +
 	tm.timer("Strength computation").stime() << ","
 		<< input
 		<< std::endl;
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
 // 	spot::scc_map map(a);
 // 	map.build_map();
 
-// 	// Walk accross all SCC 
+// 	// Walk accross all SCC
 // 	unsigned max = map.scc_count();
 // 	int number_of_fully_weak = 0;
 // 	int number_of_cycle_weak = 0;
@@ -385,18 +385,18 @@ int main(int argc, char **argv)
 // 	int number_of_nonaccepting = 0;
 // 	for (unsigned n = 0; n < max; ++n)
 // 	  {
-// 	    // Check non accepting SCC 
+// 	    // Check non accepting SCC
 // 	    if (!map.accepting(n))
 // 	      {
 // 		++number_of_nonaccepting;
 // 		continue;
 // 	      }
- 
+
 // 	    // if(is_complete_scc(a, map, n) && is_weak_scc(map, n))
 // 	    //   assert(map.terminal_accepting (n));
 
 
-// 	    // DO not consider terminal SCC 
+// 	    // DO not consider terminal SCC
 // 	    if (map.terminal_accepting (n))
 // 	      {
 // 		++number_of_terminal;

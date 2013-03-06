@@ -214,95 +214,13 @@ namespace spot
     	  terminal_subaut &&
 	  (non_accepting(curr_scc) || scc_map_[curr_scc].is_terminal_accepting);
 
-    	scc_map_[curr_scc].is_strong_hard = 
+    	scc_map_[curr_scc].is_strong_hard =
 	  scc_map_[curr_scc].is_strong && strong_hard;
 
     	scc_map_[curr_scc].is_weak_hard =
 	  scc_map_[curr_scc].is_weak && weak_hard &&
 	  !scc_map_[curr_scc].is_terminal_subautomaton;
-
-
-	// scc_map_[curr_scc].is_strong_hard =
-	//   accepting(curr_scc) &&
-	//   (!scc_map_[curr_scc].is_terminal_subautomaton ||
-	//    !scc_map_[curr_scc].is_weak_subautomaton);
       }
-
-    return ;
-
-    // if (internal_terminal_accepting (n))
-    //   {
-    // 	scc_map_[n].is_terminal_accepting = true;
-    // 	scc_map_[n].is_terminal_subautomaton = true;
-    //   }
-
-    // if (scc_map_[n].is_weak_acc)
-    //   return;			// No need to continue
-
-    // std::list<const spot::state*> states = scc_map_[n].states;
-
-    // // Tag all SCC  
-    // int size = states.size();
-    // while (size)
-    //   {
-    // 	if (is_weak_scc(*this, n))
-    // 	  {
-    // 	    scc_map_[n].is_weak_subautomaton = true;
-
-    // 	    if (accepting(n))
-    // 	      scc_map_[n].is_weak_acc =  true;
-    // 	  }
-    // 	--size;
-    //   }
-
-    // // Reccursive call over all successors
-    // const succ_type& s = succ(n);
-    // succ_type::const_iterator sccit;
-    // bool w_hard = true;
-    // bool s_hard = true;
-    // bool all_term = true;
-    // for (sccit = s.begin(); sccit != s.end(); ++sccit)
-    //   {
-    // 	update_weak(sccit->first);
-
-    // 	// One successor is not weak the subautomaton is so not weak
-    // 	if (!scc_map_[sccit->first].is_weak_subautomaton)
-    // 	  {
-    // 	    scc_map_[n].is_weak_subautomaton = false;
-    // 	    w_hard = false;
-    // 	  }
-
-    // 	if (scc_map_[sccit->first].is_terminal_subautomaton ||
-    // 	    (!scc_map_[sccit->first].is_weak_hard &&
-    // 	     scc_map_[sccit->first].is_weak_subautomaton))
-    // 	  w_hard = false;
-
-    // 	if (scc_map_[sccit->first].is_weak_subautomaton ||
-    // 	    non_accepting(sccit->first) ||
-    // 	    !scc_map_[sccit->first].is_strong_hard)
-    // 	  s_hard = false;
-
-    // 	if (!scc_map_[sccit->first].is_terminal_subautomaton)
-    // 	  all_term = false;
-    //   }
-
-    // if (scc_map_[n].is_weak_subautomaton &&
-    // 	!scc_map_[n].is_weak_acc)
-    //   scc_map_[n].is_terminal_subautomaton = all_term;
-
-    // if (scc_map_[n].is_terminal_subautomaton)
-    //   {
-    // 	scc_map_[n].is_weak_hard = false;
-    // 	scc_map_[n].is_strong_hard = false;
-    //   }
-    // else if (scc_map_[n].is_weak_subautomaton)
-    //   {
-    // 	scc_map_[n].is_weak_hard = w_hard;
-    //   }
-    // else
-    //   {
-    // 	scc_map_[n].is_strong_hard = s_hard && !scc_map_[n].is_weak_acc;
-    //   }
   }
 
   void
@@ -791,8 +709,8 @@ namespace spot
 	  }
 
 	out << "  " << state << " [shape=box,"
-            << (m.accepting(state) ? "style=bold," : "")
-            << "label=\"" << ostr.str() << "\"]" << std::endl;
+	    << (m.accepting(state) ? "style=bold," : "")
+	    << "label=\"" << ostr.str() << "\"]" << std::endl;
 
 	const scc_map::succ_type& succ = m.succ(state);
 
@@ -828,5 +746,4 @@ namespace spot
     m.build_map();
     return dump_scc_dot(m, out, verbose);
   }
-
 }

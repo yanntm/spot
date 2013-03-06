@@ -20,8 +20,9 @@
 common_dep = $(top_srcdir)/configure.ac
 x_to_1 = $(top_builddir)/tools/x-to-1
 convman = ARGP_HELP_FMT=header-col=0 $(SHELL) "$(x_to_1)" \
-          "$(PERL)" "$(top_srcdir)/tools/help2man -N -L 'en_US.UTF-8'"
+	  "$(PERL)" "$(top_srcdir)/tools/help2man -N -L 'en_US.UTF-8'"
 
+dist_man1_MANS =ltlfilt.1 genltl.1 randltl.1 ltl2tgba.1
 dist_man1_MANS = \
   genltl.1 \
   ltl2tgba.1 \
@@ -29,7 +30,6 @@ dist_man1_MANS = \
   ltlcross.1 \
   ltlfilt.1 \
   randltl.1
-
 MAINTAINERCLEANFILES = $(dist_man1_MANS)
 EXTRA_DIST = $(dist_man1_MANS:.1=.x)
 

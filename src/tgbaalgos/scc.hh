@@ -34,8 +34,8 @@
 namespace spot
 {
 
+  /// This enumeration characterize the type of the subautomaton
   enum strength { TerminalSubaut, WeakSubaut, StrongSubaut};
-
 
   struct scc_stats
   {
@@ -48,24 +48,18 @@ namespace spot
     /// An SCC is dead if no accepting SCC is reachable from it.
     /// Note that an SCC can be neither dead nor accepting.
     unsigned dead_scc;
-    /// The number of weak scc into the automata 
-
     /// The number of weak accepting scc into the automata 
     unsigned weak_acc_scc;
-
     /// Count the number of SCC that can be considered as a 
     /// terminal subautomaton.
     int terminal_subaut;
     /// The number of terminal accepting SCC 
     int terminal_accepting;
-
     /// Count the number of SCC that can be considered as a 
     /// weak subautomaton.
     unsigned weak_subaut;
-
     /// Count the number of non accepting SCC 
     int nonacc_scc;
-
     /// Number of maximal accepting paths.
     ///
     /// A path is maximal and accepting if it ends in an accepting
@@ -199,7 +193,7 @@ namespace spot
     /// \brief Return the number of self loops in the automaton.
     unsigned self_loops() const;
 
-
+    /// \brief Return the type of the subautomaton 
     strength typeof_subautomaton (unsigned n) const;
 
     /// \brief Return whether the subautomaton starting from 
@@ -255,7 +249,7 @@ namespace spot
 
   protected:
     bdd update_supp_rec(unsigned state);
-    void update_weak();//(unsigned state);
+    void update_weak();
     bool internal_terminal_accepting(unsigned n);
     int relabel_component();
 
@@ -302,28 +296,24 @@ namespace spot
       /// then useful_acc will contain
       ///      Acc[a]&Acc[b]&!Acc[c] | !Acc[a]&Acc[b]&Acc[c]
       bdd useful_acc;
-
       /// Here consider only weak accepting SCC
       bool is_weak_acc;
-
+      // Weak SCC 
       bool is_weak;
-
+      // Strong SCC
       bool is_strong;
-
       /// Allow to know if this scc is is weak hard i.e. if no 
       /// terminal scc can be reached from this scc
       bool is_weak_hard;
       /// Allow to know if this scc is is strong hard i.e. if no 
       /// weak scc can be reached from this scc
       bool is_strong_hard;
-
+      // Allow to know if this SCC is terminal complete accepting
       bool is_terminal_accepting;
-
       /// Allow to know if the set of reachable state can be 
       /// considered as a terminal automaton (reachable states 
       /// are terminal SCC and weak non accepting SCC)
       bool is_terminal_subautomaton;
-
       /// Allows to know if a SCC is weak ie fully accepting or not
       /// at all : a scc is considered weak only if all reachable scc
       /// are weak

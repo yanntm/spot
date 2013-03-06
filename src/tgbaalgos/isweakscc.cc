@@ -104,7 +104,6 @@ namespace spot
     return false;
   }
 
-
   bool
   is_syntactic_terminal_scc(const spot::tgba *a, scc_map& map, unsigned scc)
   {
@@ -124,8 +123,6 @@ namespace spot
     return false;
   }
 
-
-
   bool
   is_weak_heuristic(scc_map& map, unsigned scc)
   {
@@ -133,54 +130,7 @@ namespace spot
 	bdd_support(map.get_aut()->neg_acceptance_conditions()))
       return true;
     return false;
-
-
-    // bool weak  = true; // Presuppose every SCC is weak
-
-    // // Grab all acceptance conditions of the TGBA 
-    // bdd all = a->all_acceptance_conditions();
-    // std::list<const spot::state*> states = map.states_of(scc);
-
-    // // Walk all states included in the SCC
-    // std::list<const spot::state*>::iterator iter =
-    //   states.begin();
-    // for (; iter != states.end(); ++iter)
-    //   {
-    // 	// For all of these state we look all succ that 
-    // 	// belong to this SCC and check if the transition 
-    // 	// is acc 
-    // 	tgba_succ_iterator *sit = a->succ_iter (*iter);
-    // 	assert(sit);
-    // 	for (sit->first(); !sit->done(); sit->next())
-    // 	  {
-
-    // 	    // Get the current state
-    // 	    const spot::state *stt =  sit->current_state();
-
-    // 	    // Not same SCC
-    // 	    if (map.scc_of_state(*iter) != map.scc_of_state(stt))
-    // 	      {
-    // 		stt->destroy();
-    // 		continue;
-    // 	      }
-
-    // 	    if (sit->current_acceptance_conditions() != all &&
-    // 		map.accepting(map.scc_of_state(stt)))
-    // 	      {
-    // 		stt->destroy();
-    // 		weak = false;
-    // 		break;
-    // 	      }
-    // 	    stt->destroy();
-    // 	  }
-    // 	delete sit;
-    // 	if (!weak)
-    // 	  break;
-    //   }
-    // return weak;
   }
-
-
 
   bool
   is_complete_scc(const spot::tgba *a, scc_map& map, unsigned scc)
@@ -201,7 +151,7 @@ namespace spot
 	  }
 
 	bdd sumall = bddfalse;
-	while (! it->done())
+	while (!it->done())
 	  {
 	    const state *next = it->current_state();
 	    unsigned sccnum = map.scc_of_state(next);
@@ -217,7 +167,7 @@ namespace spot
 	if (sumall != bddtrue)
 	  {
 	    return false;
-	  } 
+	  }
       }
     return true;
   }
@@ -228,38 +178,8 @@ namespace spot
     // If all transitions use all acceptance conditions, the SCC is weak.
     if (map.useful_acc_of(scc) ==
     	bdd_support(map.get_aut()->neg_acceptance_conditions()))
-      return is_complete_scc(a, map,scc);
+      return is_complete_scc(a, map, scc);
     return false;
-
-
-    // const std::list<const state*>& st = map.states_of(scc);
-
-    // // Here it s the assumption that all terminal SCC 
-    // // have been reduced to a single state that accept 
-    // // all words 
-    // if (st.size() != 1)
-    //   {
-    // 	return false;
-    //   }
-
-    // const state* s = *st.begin();
-    // tgba_succ_iterator* it = a->succ_iter(s);
-    // it->first();
-    // if (it->done())
-    //   {
-    // 	// No successors
-    // 	delete it;
-    // 	return false;
-    //   }
-    // assert(!it->done());
-    // state* dest = it->current_state();
-    // bdd cond = it->current_condition();
-    // it->next();
-    // bool result = (!dest->compare(s)) && it->done() && (cond == bddtrue);
-    // dest->destroy();
-    // delete it;
-
-    // return result;
   }
 }
 
