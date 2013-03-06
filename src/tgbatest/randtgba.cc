@@ -916,6 +916,7 @@ main(int argc, char** argv)
 	}
     }
 
+  spot::timer_map tm_af;
   spot::timer_map tm_ec;
   spot::timer_map tm_ar;
   std::set<int> failed_seeds;
@@ -987,11 +988,14 @@ main(int argc, char** argv)
 
       if (opt_af)
 	{
-	  dotty_reachable(std::cout, formula);
+	  //dotty_reachable(std::cout, formula);
 	  spot::rebuild worker (formula, opt_af_strat);
+	  tm_af.start(spot::rebuild::to_string (opt_af_strat));
 	  spot::tgba *new_tgba =
 	    worker.reorder_transitions();
-	  dotty_reachable(std::cout, new_tgba);
+	  tm_af.stop(spot::rebuild::to_string (opt_af_strat));
+
+	  //dotty_reachable(std::cout, new_tgba);
 	  spot::bdd_dict *fdict = formula->get_dict();
 	  fdict-> unregister_all_my_variables(formula);
 	  formula = new_tgba;
@@ -1040,12 +1044,13 @@ main(int argc, char** argv)
 	      spot::tgba *ftmp = formula;
 	      if (!opt_apf)
 		assert (opt_apf_num == 1);
-
+	      
 // 	      std::cout << "######################################\n";
 // 	      dotty_reachable(std::cout, formula);
 
 	      for (ii = 0; ii < opt_apf_num; ++ii)
 		{
+
 		  // We must perform variations on all formulas
 		  if (opt_apf)
 		    {
@@ -1059,11 +1064,13 @@ main(int argc, char** argv)
 		      formula = ftmp;
 
 		      // And now we can rebuild the new automaton of the formula
-		      // dotty_reachable(std::cout, formula);
+		      //dotty_reachable(std::cout, formula);
 		      spot::rebuild worker
 			(formula, (spot::rebuild::iterator_strategy)ii);
+		      tm_af.start(spot::rebuild::to_string (ii));
 		      spot::tgba *new_tgba =
 			worker.reorder_transitions();
+		      tm_af.stop(spot::rebuild::to_string (ii));
 
 // 		      std::cout << "---> " << 
 // 			spot::rebuild::to_string (ii) << std::endl;
@@ -1639,6 +1646,14 @@ main(int argc, char** argv)
 	      std::cout << std::endl;
 	    }
 	}
+      if (!tm_ec.empty())
+	{
+	  std::cout << std::endl
+		    << "Reordering Formula:" << std::endl;
+	  tm_af.print(std::cout);
+	}
+
+
     }
 
 

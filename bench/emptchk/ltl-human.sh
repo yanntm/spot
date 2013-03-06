@@ -23,7 +23,7 @@ set -e
 
 #opts="-1 -D -e 15 -n 1024 -t 0.5 -r -fs -z -i $FORMULAE"
 #opts="-1 -D -e 15 -n 100 -t 0.5 -r -fs -z -i $FORMULAE"
-opts="-1 -D -e 15 -n 1 -t 0.5 -r -fs -z -i $FORMULAE"
+opts="-1 -apf -D -e 5 -n 1024 -t 0.5 -r -fs -z -i $FORMULAE"
 
 echo "WITHOUT ADDITIONAL ACCEPTANCE CONDITIONS"
 

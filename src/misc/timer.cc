@@ -40,10 +40,10 @@ namespace spot
       }
     clock_t grand_total = total.utime + total.stime;
 
-    os << std::setw(23) << ""
+    os << std::setw(35) << ""
        << "|    user time   |    sys. time   |      total     |"
        << std::endl
-       << std::setw(23) << "name "
+       << std::setw(35) << "name "
        << "| ticks        % | ticks        % | ticks        % |   n"
        << std::endl
        << std::setw(79) << std::setfill('-') << "" << std::setfill(' ')
@@ -52,13 +52,13 @@ namespace spot
       {
 	// truncate long keys
 	std::string name = i->first;
-	if (name.size() > 22)
-	  name.erase(22);
+	if (name.size() > 34)
+	  name.erase(34);
 
 	const spot::timer& t = i->second.first;
 	const char* sep = t.is_running() ? "+|" : " |";
 
-	os << std::setw(22) << name << sep
+	os << std::setw(34) << name << sep
 	   << std::setw(6) << t.utime() << " "
 	   << std::setw(8) << (total.utime ?
 			       100.0 * t.utime() / total.utime : 0.)
@@ -77,7 +77,7 @@ namespace spot
       }
     os << std::setw(79) << std::setfill('-') << "" << std::setfill(' ')
        << std::endl
-       << std::setw(22) << "TOTAL" << " |"
+       << std::setw(34) << "TOTAL" << " |"
        << std::setw(6) << total.utime << " "
        << std::setw(8) << 100.
        << " |"

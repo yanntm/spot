@@ -94,7 +94,7 @@ namespace spot
       std::set <spot::state *> *visited;
     };
 
-    tgba* src;		                ///< The original tgba
+    const tgba* src;		        ///< The original tgba
     std::set <spot::state *> *visited;	///< The visited staes
     iterator_strategy        is;	///< The current strategy
 
@@ -104,14 +104,14 @@ namespace spot
 
   public:
 
-    rebuild (tgba* original, iterator_strategy i_s = DEFAULT) :
+    rebuild (const tgba* original, iterator_strategy i_s = DEFAULT) :
       src(original), is (i_s)
     { }
 
     virtual
     ~rebuild ()
     {
-      assert (todo.empty());
+      //assert (todo.empty());
     }
     /// Reorder transition of the TGBA considering the 
     /// hierarchy of temporal properties    

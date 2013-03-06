@@ -47,8 +47,8 @@ namespace spot
     spot::bdd_dict *dict = src->get_dict();
 
     // Convert once for all TGBA and initialize
-    spot::tgba_explicit_formula *f =
-      dynamic_cast<spot::tgba_explicit_formula*> (src);
+    const spot::tgba_explicit_formula *f =
+      dynamic_cast<const spot::tgba_explicit_formula*> (src);
     spot::tgba_explicit_formula *t =
       new spot::tgba_explicit_formula (dict);
 
@@ -204,7 +204,7 @@ namespace spot
   void
   rebuild::strategy_dispatcher (std::list<sort_trans> *l)
   {
-    assert(!l->empty());	// Why call this if empty?
+    //    assert(!l->empty());	// Why call this if empty?
     switch (is)
       {
       case DEFAULT :

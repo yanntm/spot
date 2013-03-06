@@ -37,6 +37,7 @@
 #include "tgbaalgos/save.hh"
 #include "tgbaalgos/dotty.hh"
 #include "tgbaalgos/lbtt.hh"
+#include "tgbaalgos/rebuild.hh"
 #include "tgba/tgbatba.hh"
 #include "tgba/tgbasgba.hh"
 #include "tgbaalgos/degen.hh"
@@ -366,7 +367,9 @@ main(int argc, char** argv)
   const spot::tgba* product_to_free = 0;
   spot::bdd_dict* dict = new spot::bdd_dict();
   spot::timer_map tm;
+  spot::timer_map tm_af;
   bool use_timer = false;
+  bool assume_sba = false;
   bool reduction_dir_sim = false;
   bool reduction_rev_sim = false;
   bool reduction_iterated_sim = false;
@@ -379,6 +382,10 @@ main(int argc, char** argv)
   spot::tgba* temp_rev_sim = 0;
   spot::tgba* temp_iterated_sim = 0;
 
+=======
+  spot::rebuild::iterator_strategy opt_af_strat = spot::rebuild::DEFAULT;
+  bool opt_af = false;
+>>>>>>> 795148f... Benchs setup
 
   for (;;)
     {
@@ -399,6 +406,21 @@ main(int argc, char** argv)
       else if (!strcmp(argv[formula_index], "-a"))
 	{
 	  output = 2;
+	}
+      else if (!strcmp(argv[formula_index], "-af"))
+	{
+	  formula_index++;
+	  opt_af = true;
+	  if (!strcmp(argv[formula_index], "ACC"))
+	      opt_af_strat = spot::rebuild::ACC;
+	  else if (!strcmp(argv[formula_index], "SHY"))
+	    opt_af_strat = spot::rebuild::SHY;
+	  else if (!strcmp(argv[formula_index], "HIERARCHY"))
+	    opt_af_strat = spot::rebuild::HIERARCHY;
+	  else if (!strcmp(argv[formula_index], "PESSIMISTIC"))
+	    opt_af_strat = spot::rebuild::PESSIMISTIC;
+	  else if (!strcmp(argv[formula_index], "H_PESSIMISTIC"))
+	    opt_af_strat = spot::rebuild::H_PESSIMISTIC;
 	}
       else if (!strcmp(argv[formula_index], "-A"))
 	{
@@ -442,6 +464,10 @@ main(int argc, char** argv)
 
 	  if (strcmp("SE05_dyn", echeck_algo) == 0 ||
 	      strcmp("SE05_dyn_opt", echeck_algo) == 0 ||
+	      strncmp("Cou99_dyn", echeck_algo, 9) == 0 ||
+	      strcmp("GV04_dyn", echeck_algo) == 0 ||
+	      strcmp("CVWY90_dyn", echeck_algo) == 0 ||
+	      strcmp("Tau03_opt_dyn", echeck_algo) == 0 ||
 	      strcmp("Tau03_dyn", echeck_algo) == 0)
 	    is_dynamic_emptiness = true;
 
@@ -465,6 +491,10 @@ main(int argc, char** argv)
 
 	  if (strcmp("SE05_dyn", echeck_algo) == 0 ||
 	      strcmp("SE05_dyn_opt", echeck_algo) == 0 ||
+	      strncmp("Cou99_dyn", echeck_algo, 9) == 0 ||
+	      strcmp("GV04_dyn", echeck_algo) == 0 ||
+	      strcmp("CVWY90_dyn", echeck_algo) == 0 ||
+	      strcmp("Tau03_opt_dyn", echeck_algo) == 0 ||
 	      strcmp("Tau03_dyn", echeck_algo) == 0)
 	    is_dynamic_emptiness = true;
 
@@ -1085,7 +1115,26 @@ main(int argc, char** argv)
 
       const spot::tgba* degeneralized = 0;
 
-      spot::tgba* minimized = 0;
+
+      formula = a;
+      spot::tgba *new_tgba;
+      if (opt_af)
+	{
+	  spot::rebuild worker (formula, (spot::rebuild::iterator_strategy)opt_af_strat);
+	  tm_af.start(spot::rebuild::to_string (opt_af_strat));
+	  new_tgba =
+	    worker.reorder_transitions();
+	  tm_af.stop(spot::rebuild::to_string (opt_af_strat));
+
+ 	  spot::bdd_dict *fdict = new_tgba->get_dict();
+	  fdict-> unregister_all_my_variables(new_tgba);
+	  formula = a = new_tgba;
+
+	  assert (formula);
+	}
+
+
+      const spot::tgba* minimized = 0;
       if (opt_minimize)
 	{
 	  tm.start("obligation minimization");
@@ -1516,8 +1565,13 @@ main(int argc, char** argv)
               if (paper_opt)
                 {
                   std::ios::fmtflags old = std::cout.flags();
-                  std::cout << std::left << std::setw(25)
+                  std::cout << std::left << std::setw(35)
                             << echeck_algo << ", ";
+		  if (opt_af)
+		    std::cout<< std::right << std::setw(10)
+			     << spot::rebuild::to_string (opt_af_strat)
+			     << ", ";
+
                   spot::tgba_statistics a_size =
                                         spot::stats_reachable(ec->automaton());
                   std::cout << std::right << std::setw(10)

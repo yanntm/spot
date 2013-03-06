@@ -21,19 +21,23 @@
 . ./defs
 set -e
 
-opts="-1 -D -e 15 -n 1024 -t 0.5 -f 5 -F 200 -l 5 -u -r -z -fs a b c d"
-#opts="-1 -D -e 15 -n 1 -t 0.5 -f 5 -F 200 -l 5 -u -r -z -fs a b c d"
+#opts="-1 -D -e 15 -n 1024 -t 0.5 -f 5 -F 200 -l 5 -u -r -z -fs a b c d"
+#opts="-af HIERARCHY -pgt 1 0.01 -D -e 15 -n 1 -t 0.5 -f 5 -F 200 -l 5 -u -r -z -fs a b c d"
+#opts="-1 -apf -D -e 15 -n 1 -t 0.5 -f 5 -F 200 -l 5 -u -r -z -fs a b c d"
+opts="-1 -fs -apf  -D -e 5 -n 10 -t 0.5 -f 5 -F 200 -l 5  -r -z a b c d"
+
+DENSITY="0.001 0.002 0.01"
 
 echo "WITHOUT ADDITIONAL ACCEPTANCE CONDITIONS"
 
-for d in 0.001 0.002 0.01; do
+for d in $DENSITY; do
   echo "density: $d"
   $RANDTGBA -A "$ALGORITHMS" -d $d $opts
 done
 
 echo "WITH 3 ADDITIONAL ACCEPTANCE CONDITIONS"
 
-for d in 0.001 0.002 0.01; do
+for d in $DENSITY; do
   echo "density: $d"
   $RANDTGBA -A "$ALGORITHMS" -a 3 0.0133333 -d $d $opts
 done

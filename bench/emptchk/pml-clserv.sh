@@ -22,8 +22,10 @@
 set -e
 
 FORMULAE=$srcdir/models/clserv.ltl
-
 opts='-f -x -m'
+STRATEGIES=$srcdir/strategies
+
+trap 'exit 0' INT 
 
 for model in \
   cl3serv1.tgba  cl3serv1fair.tgba  cl3serv3.tgba  cl3serv3fair.tgba \
@@ -39,7 +41,10 @@ do
     echo "###  formula: $formula"
     cat "$ALGORITHMS" |
     while read algo; do
-      "$LTL2TGBA" -0 -e"$algo" $opts -Pmodels/$model "$formula"
+	cat "$STRATEGIES" |
+	while read strat; do
+	    "$LTL2TGBA" -0 -af "$strat" -e"$algo" $opts -Pmodels/$model "$formula"
+	done
     done
   done
 done

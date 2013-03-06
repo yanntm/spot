@@ -263,20 +263,20 @@ namespace spot
 			return true;
 		      }
 
-		    if (!c.is_white() &&
-			//h.has_been_visited(s_prime) && 
-			formula->is_syntactic_persistence() &&
-			c.get_color() == BLUE &&
-			acc == all_cond
-			)
-		      {
-			trace << "  It's a single dfs we can report"
-			      << std::endl;
-			target = f.s;
-			push(st_red, f.s, label, acc);
-			is_dynamic = false;
-			return true;
-		      }
+// 		    if (!c.is_white() &&
+// 			//h.has_been_visited(s_prime) && 
+// 			formula->is_syntactic_persistence() &&
+// 			c.get_color() == BLUE &&
+// 			acc == all_cond
+// 			)
+// 		      {
+// 			trace << "  It's a single dfs we can report"
+// 			      << std::endl;
+// 			target = f.s;
+// 			push(st_red, f.s, label, acc);
+// 			is_dynamic = false;
+// 			return true;
+// 		      }
 		  }
 		else
 		  commut_algo(NDFS);

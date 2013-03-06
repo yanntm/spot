@@ -1,3 +1,30 @@
+2011-12-29  Etienne Renault  <renault@lrde.epita.fr>
+
+	* src/misc/timer.cc (spot): Enlarge size for name (1st column)
+
+	* bench/emptchk/pml-eeaean.sh (STRATEGIES): add strategies -af
+
+	* bench/emptchk/pml-clserv.sh (STRATEGIES): add strategies -af
+
+	* bench/emptchk/ltl-random.sh (DENSITY): Extract density into var
+	add -apf decrease -e
+
+	* bench/emptchk/ltl-human.sh (opts): Add -apf reduce -e
+
+	* bench/emptchk/strategies: Extract ordering strategies into a
+	specific file
+
+	* src/tgbatest/ltl2tgba.cc (main): Add -af support 
+
+	* src/tgbatest/randtgba.cc (main): cleaning 
+
+	* src/tgbaalgos/magic.cc (spot): remove DFS optimisation which is
+	buggy for now
+
+	* src/tgbaalgos/rebuild.hh (spot): Transform the constructor into const
+
+	* src/tgbaalgos/rebuild.cc (spot): Perform changes for constness
+
 2011-12-28  Etienne Renault  <renault@lrde.epita.fr>
 
 	* src/tgbaalgos/scc.cc (spot): cleaning
