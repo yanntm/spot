@@ -45,7 +45,8 @@ namespace spot
   /// remove_all_useless is \c false because some algorithms (like the
   /// degeneralization) will work better if transitions going to an
   /// accepting SCC are accepting.
-  tgba* scc_filter(const tgba* aut, bool remove_all_useless = false);
+  tgba* scc_filter(const tgba* aut,
+		   bool remove_all_useless = false);
 
 }
 
