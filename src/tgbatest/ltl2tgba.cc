@@ -378,7 +378,7 @@ main(int argc, char** argv)
   spot::ltl::environment& env(spot::ltl::default_environment::instance());
   spot::ltl::atomic_prop_set* unobservables = 0;
   spot::tgba* system = 0;
-  const spot::tgba* formula = 0;
+  spot::tgba* formula = 0;
   const spot::tgba* product = 0;
   const spot::tgba* product_to_free = 0;
   spot::bdd_dict* dict = new spot::bdd_dict();
@@ -1251,13 +1251,13 @@ main(int argc, char** argv)
 	  else if (degeneralize_opt == DegenSBA)
 	    {
 	      tm.start("degeneralization");
-	      degeneralized = a = spot::degeneralize(a);
+	      degeneralized = a = formula = spot::degeneralize(a);
 	      tm.stop("degeneralization");
 	      assume_sba = true;
 	    }
 	  else if (labeling_opt == StateLabeled)
 	    {
-	      degeneralized = a = new spot::tgba_sgba_proxy(a);
+	      degeneralized = a = formula = new spot::tgba_sgba_proxy(a);
 	    }
 	}
 
@@ -1405,6 +1405,22 @@ main(int argc, char** argv)
 	      product_degeneralized = a = spot::degeneralize(a);
 	      tm.stop("degeneralize product");
 	      assume_sba = true;
+	      // When the product is done with  a SBA and a system
+	      // without any acceptance conditions this second
+	      // degenralization is useless
+	      //
+	      // Warning ! if you call dynamic algorithms with
+	      // a second degeneralisation this won't work because
+	      // of the impossible projection !
+	      if (system->number_of_acceptance_conditions() != 0 &&
+		  !assume_sba)
+		{
+		  tm.start("degeneralize product");
+		  product = product_degeneralized = a =
+		    spot::degeneralize(product);
+		  tm.stop("degeneralize product");
+		  assume_sba = true;
+		}
 	    }
         }
 
