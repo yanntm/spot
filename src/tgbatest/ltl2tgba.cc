@@ -59,6 +59,7 @@
 #include "eltlparse/public.hh"
 #include "misc/timer.hh"
 #include "misc/unique_ptr.hh"
+#include "tgbaalgos/stats_hierarchy.hh"
 #include "tgbaalgos/stats.hh"
 #include "tgbaalgos/scc.hh"
 #include "tgbaalgos/emptiness_stats.hh"
@@ -379,6 +380,7 @@ main(int argc, char** argv)
   bool reduction_rev_sim = false;
   bool reduction_iterated_sim = false;
   spot::tgba* temp_dir_sim = 0;
+
   bool ta_opt = false;
   bool tgta_opt = false;
   bool opt_with_artificial_initial_state = true;
@@ -389,6 +391,11 @@ main(int argc, char** argv)
 
   spot::rebuild::iterator_strategy opt_af_strat = spot::rebuild::DEFAULT;
   bool opt_af = false;
+
+  spot::rebuild::iterator_strategy opt_af_strat = spot::rebuild::DEFAULT;
+  bool opt_af = false;
+  bool opt_hanalysis = false;
+
   for (;;)
     {
       if (argc < formula_index + 2)
@@ -539,6 +546,10 @@ main(int argc, char** argv)
 	{
 	  accepting_run = true;
 	  graph_run_tgba_opt = true;
+	}
+      else if (!strcmp(argv[formula_index], "-ha"))
+	{
+	  opt_hanalysis = true;
 	}
       else if (!strcmp(argv[formula_index], "-k"))
 	{
@@ -1137,7 +1148,6 @@ main(int argc, char** argv)
 	  assert (formula);
 	}
 
-
       const spot::tgba* minimized = 0;
       if (opt_minimize)
 	{
@@ -1244,7 +1254,74 @@ main(int argc, char** argv)
 				// pointless.
 	}
 
-      const spot::tgba* expl = 0;
+      spot::tgba_reduc* aut_red = 0;
+      if (reduc_aut != spot::Reduce_None)
+	{
+	  if (reduc_aut & ~spot::Reduce_Scc)
+	    {
+	      tm.start("reducing A_f w/ sim.");
+	      a = aut_red = new spot::tgba_reduc(a);
+
+	      if (reduc_aut & (spot::Reduce_quotient_Dir_Sim |
+			       spot::Reduce_transition_Dir_Sim |
+			       spot::Reduce_quotient_Del_Sim |
+			       spot::Reduce_transition_Del_Sim))
+		{
+		  spot::direct_simulation_relation* rel_dir = 0;
+		  spot::delayed_simulation_relation* rel_del = 0;
+
+		  if (reduc_aut & (spot::Reduce_quotient_Dir_Sim |
+				   spot::Reduce_transition_Dir_Sim))
+		    {
+		      rel_dir =
+			spot::get_direct_relation_simulation
+			  (a, std::cout, display_parity_game);
+		      assert(rel_dir);
+		    }
+		  if (reduc_aut & (spot::Reduce_quotient_Del_Sim |
+					spot::Reduce_transition_Del_Sim))
+		    {
+		      rel_del =
+			spot::get_delayed_relation_simulation
+			  (a, std::cout, display_parity_game);
+		      assert(rel_del);
+		    }
+
+		  if (display_rel_sim)
+		    {
+		      if (rel_dir)
+			aut_red->display_rel_sim(rel_dir, std::cout);
+		      if (rel_del)
+			aut_red->display_rel_sim(rel_del, std::cout);
+		    }
+
+		  if (reduc_aut & spot::Reduce_quotient_Dir_Sim)
+		    aut_red->quotient_state(rel_dir);
+		  if (reduc_aut & spot::Reduce_transition_Dir_Sim)
+		    aut_red->delete_transitions(rel_dir);
+		  if (reduc_aut & spot::Reduce_quotient_Del_Sim)
+		    aut_red->quotient_state(rel_del);
+		  if (reduc_aut & spot::Reduce_transition_Del_Sim)
+		    aut_red->delete_transitions(rel_del);
+
+		  if (rel_dir)
+		    spot::free_relation_simulation(rel_dir);
+		  if (rel_del)
+		    spot::free_relation_simulation(rel_del);
+		}
+	      tm.stop("reducing A_f w/ sim.");
+	    }
+	}
+
+      if (opt_hanalysis)
+	{
+	  spot::stats_hierarchy sh (formula);
+	  sh.stats_automaton();
+	  std::cout << sh << std::endl;
+	}
+
+
+      const spot::tgba_explicit* expl = 0;
       switch (dupexp)
 	{
 	case NoneDup:

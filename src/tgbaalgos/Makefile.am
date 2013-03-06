@@ -66,6 +66,7 @@ tgbaalgos_HEADERS = \
   simulation.hh \
   stats.hh \
   stripacc.hh \
+  stats_hierarchy.hh \
   tau03.hh \
   tau03opt.hh \
   reductgba_sim.hh \
