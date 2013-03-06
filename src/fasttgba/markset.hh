@@ -92,7 +92,7 @@ namespace spot
     bool empty();
 
     /// \brief test if all mark are set
-    bool any();
+    bool all();
 
     /// \brief Access to the first mark on the set
     ///

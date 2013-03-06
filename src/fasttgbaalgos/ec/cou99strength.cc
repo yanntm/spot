@@ -266,7 +266,7 @@ namespace spot
 		  }
 
 	    	merge(a, H[d]);
-	    	if (scc.top().get<2>().any())
+	    	if (scc.top().get<2>().all())
 	    	  {
 		    d->destroy();
 	    	    counterexample_found = true;

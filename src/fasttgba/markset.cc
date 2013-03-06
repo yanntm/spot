@@ -104,18 +104,8 @@ namespace spot
   }
 
   bool
-  markset::any()
+  markset::all()
   {
-    // Warning: This is needed! Do not use
-    // markset_.any because the size of the boost bitset
-    // vary. Indeed the OR between (a) 001 and (b) 010
-    // produces (c) 011. Boost representation is such that
-    //    - size(c)  = 3
-    //    - any(c)   = TRUE
-    //    - count(c) = 2
-    // This is a strange behavior! It seems to consider
-    // only bits needed for the construction and other bits
-    // are un(chek)?
     return markset_.count() == accs_.size();
   }
 

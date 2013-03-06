@@ -180,7 +180,7 @@ namespace spot
 	    else if (H[d])
 	      {
 	    	merge(a, H[d]);
-	    	if (scc.top().get<2>().any())
+	    	if (scc.top().get<2>().all())
 	    	  {
 	    	    counterexample_found = true;
 	    	    d->destroy();
