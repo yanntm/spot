@@ -124,6 +124,9 @@ namespace spot
 	    if (!sm.accepting(n))
 	      continue;
 
+	    if (sm_.weak_accepting(n))
+	      continue;
+
 	    bdd missingacc = bddfalse;
 	    for (unsigned a = max_table[n]; a < max_num_; ++a)
 	      missingacc |= acc_[a];
@@ -186,8 +189,15 @@ namespace spot
 	// (See the documentation of scc_filter() for a rational.)
 	unsigned u = sm_.scc_of_state(out_s);
 	unsigned v = sm_.scc_of_state(in_s);
+
 	if (sm_.accepting(u) && (!all_ || u == v))
 	  {
+	    if (sm_.weak_accepting(u))
+	      {
+		t->acceptance_conditions = out_->all_acceptance_conditions();
+		return;
+	      }
+
 	    bdd acc = si->current_acceptance_conditions();
 	    if (acc == bddfalse)
 	      return;
@@ -204,11 +214,11 @@ namespace spot
       std::vector<bdd> acc_;
       remap_t remap_;
     };
-
   } // anonymous
 
 
-  tgba* scc_filter(const tgba* aut, bool remove_all_useless)
+  tgba* scc_filter(const tgba* aut,
+		   bool remove_all_useless)
   {
     scc_map sm(aut);
     sm.build_map();
@@ -217,11 +227,22 @@ namespace spot
     remap_table_t remap_table(ss.scc_total);
     std::vector<unsigned> max_table(ss.scc_total);
     unsigned max_num = 1;
+    int nb_acc = aut->number_of_acceptance_conditions();
 
     for (unsigned n = 0; n < ss.scc_total; ++n)
       {
 	if (!sm.accepting(n))
 	  continue;
+
+	if (sm.weak_accepting(n))
+	  {
+	    unsigned int num = nb_acc ? 2 : 1;
+
+	    max_table[n] = num;
+	    if (num > max_num)
+	      max_num = num;
+	    continue;
+	  }
 	bdd all = sm.useful_acc_of(n);
 	bdd negall = aut->neg_acceptance_conditions();
 
