@@ -28,6 +28,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 tgbaalgosdir = $(pkgincludedir)/tgbaalgos
 
 tgbaalgos_HEADERS = \
+  accpostproc.hh \
   bfssteps.hh \
   cutscc.hh \
   cycles.hh \
@@ -73,6 +74,7 @@ tgbaalgos_HEADERS = \
 
 noinst_LTLIBRARIES = libtgbaalgos.la
 libtgbaalgos_la_SOURCES = \
+  accpostproc.cc \
   bfssteps.cc \
   cutscc.cc \
   cycles.cc \
