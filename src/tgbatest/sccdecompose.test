@@ -1,0 +1,78 @@
+#!/bin/sh
+# Copyright (C) 2013 Laboratoire de Recherche et Developpement de
+# l'Epita (LRDE).
+#
+# This file is part of Spot, a model checking library.
+#
+# Spot is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Spot is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+# License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+. ./defs
+
+set -e
+
+run 0 ../tgba_analysis -opt_decomp_eval '( XX b & (XXG a | XXGF b | XX c))' \
+ >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,\
+S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,\
+W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+6,9,1,4,4,1,4,4,1,4,5,1,4,4,1,4,4,1,4,5,1,( XX b & (XXG a | XXGF b | XX c))
+EOF
+diff stdout expected
+
+
+run 0 ../tgba_analysis -opt_decomp_eval '(Ga -> G b) W c' >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,\
+S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,\
+W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+5,12,1,4,10,1,3,6,1,2,4,1,4,10,1,3,6,1,2,4,1,(Ga -> G b) W c
+EOF
+diff stdout expected
+
+run 0 ../tgba_analysis -opt_decomp_eval '(GFa R b)' >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,\
+S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,\
+W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+2,4,1,0,0,0,1,1,1,2,4,1,0,0,0,1,1,1,2,4,1,(GFa R b)
+EOF
+diff stdout expected
+
+run 0 ../tgba_analysis -opt_decomp_eval 'GFa' >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,\
+S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,\
+W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+1,2,1,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,1,2,1,GFa
+EOF
+diff stdout expected
+
+run 0 ../tgba_analysis -opt_decomp_eval 'Fa' >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,\
+S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,\
+W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+2,3,1,2,3,1,0,0,0,0,0,0,2,3,1,0,0,0,0,0,0,Fa
+EOF
+diff stdout expected
+
+run 0 ../tgba_analysis -opt_decomp_eval 'Ga' >stdout
+cat >expected <<EOF
+#State Orig,Trans Orig,Acc Orig,T States,T Trans,T Acc,W States,W Trans,W Acc,\
+S States,S Trans,S Acc,T (min)States,T (min)Trans,T (min)Acc,W (min)States,\
+W (min)Trans,W (min)Acc,S (min)States,S (min)Trans,S (min)Acc,formula
+1,1,1,0,0,0,1,1,1,0,0,0,0,0,0,1,1,1,0,0,0,Ga
+EOF
+diff stdout expected
