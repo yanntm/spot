@@ -42,6 +42,7 @@ check_PROGRAMS = \
   mixprod \
   powerset \
   taatgba \
+  tgba_analysis \
   tgbaread \
   tripprod
 
@@ -63,7 +64,9 @@ powerset_SOURCES = powerset.cc
 randtgba_SOURCES = randtgba.cc
 taatgba_SOURCES = taatgba.cc
 tgbaread_SOURCES = tgbaread.cc
+tgba_analysis_SOURCES = tgba_analysis.cc
 tripprod_SOURCES = tripprod.cc
+
 
 # Keep this sorted by STRENGTH.  Test basic things first,
 # because such failures will be easier to diagnose and fix.
