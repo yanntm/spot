@@ -20,7 +20,7 @@
 
 namespace spot
 {
-  union_find::union_find (acc_dict& acc):
+  union_find::union_find (acc_dict& acc) :
     acc_(acc)
   {
   }
@@ -29,73 +29,88 @@ namespace spot
   {
   }
 
-
-  const fasttgba_state*
-  union_find::find (const fasttgba_state* state)
+  void
+  union_find::add (const fasttgba_state* s)
   {
-    const fasttgba_state* s = state;
-    uf_element* ue = UF[s];
-    while (ue->parent() != s)
-      {
-	s = ue->parent();
-	ue = UF[s];
-      }
-    return s;
+    assert(el.find(s) != el.end());
+    id.push_back(id.size());
+    rk.push_back(std::make_pair(0, markset(acc_))); // rk.push_back(0);
+    el[s] = el.size();
   }
 
+  int union_find::root (int i)
+  {
+    int parent = id[i];
+
+    // The element is the root
+    if (i == parent)
+      return parent;
+
+    // Grand'Pa is root!
+    int gparent = id[parent];
+    if (parent == gparent)
+      return parent;
+
+    parent = root (parent);	// Can we use gparent?
+    id[i] = parent;
+    return parent;
+  }
+
+  bool
+  union_find::same_partition (const fasttgba_state* left,
+			      const fasttgba_state* right)
+  {
+    assert(el.find(left) != el.end());
+    assert(el.find(right) != el.end());
+    return root(el[left]) == root(el[right]);
+  }
+
+  void
+  union_find::unite (const fasttgba_state* left,
+		     const fasttgba_state* right)
+  {
+    assert(el.find(left) != el.end());
+    assert(el.find(right) != el.end());
+
+    int root_left = root(el[left]);
+    int root_right = root(el[right]);
+
+    // Both are in the same set
+    if (root_left == root_right)
+      return;
+
+    int rk_left = rk[root_left].first;
+    int rk_right = rk[root_right].first;
+
+    // Use weigth
+    if (rk_left < rk_right)
+      {
+	id [root_left] =  root_right;
+	rk[root_left].second |= rk[root_right].second;
+      }
+    else
+      {
+	id [root_right] =  root_left;
+	rk[root_right].second |= rk[root_left].second;
+
+	if (rk_left == rk_right)
+	  {
+	    rk[root_left].first = root_left + 1;
+	  }
+      }
+  }
 
   markset
-  union_find::findacc (const fasttgba_state* state)
+  union_find::get_acc (const fasttgba_state* s)
   {
-    const fasttgba_state* s = find(state);
-    return UF[s]->acceptance();
+    int r = root(el[s]);
+    return rk[r].second;
   }
 
   void
-  union_find::make_union (const fasttgba_state* left,
-			  const fasttgba_state* right)
+  union_find::add_acc (const fasttgba_state* s, markset m)
   {
-    const fasttgba_state* l = find(left);
-    const fasttgba_state* r = find(right);
-
-    uf_element* e = UF[r];
-    e->set_parent (l);
-    UF[l]->add_acceptance(e->acceptance());
-  }
-
-  void
-  union_find::make_set (const fasttgba_state* state, markset m)
-  {
-    if (UF.find(state) == UF.end())
-      {
-	UF[state] = new uf_element(state, m);
-      }
-    else
-      {
-	const fasttgba_state* s = find(state);
-	UF[s]->add_acceptance (m);
-      }
-  }
-
-  void
-  union_find::make_dead_set (const fasttgba_state* state)
-  {
-    // Remember that 0 is Dead
-    if (UF.find(state) == UF.end())
-      {
-	UF[state] = new uf_element(0, markset(acc_));
-      }
-    else
-      {
-	UF[state]->set_parent (0);
-      }
-  }
-
-  void
-  union_find::insert_dead ()
-  {
-    // The Dead element is denoted by the element 0
-    // since 0 is not a valid pointer for a state.
-    UF[0] = new uf_element (0, markset(acc_));
+    int r = root(el[s]);
+    rk[r].second |= m;
   }
 }

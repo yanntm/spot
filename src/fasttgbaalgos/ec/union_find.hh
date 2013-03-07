@@ -19,92 +19,72 @@
 #ifndef SPOT_FASTTGBAALGOS_EC_UNION_FIND_HH
 # define SPOT_FASTTGBAALGOS_EC_UNION_FIND_HH
 
+#include "misc/hash.hh"
 #include "fasttgba/fasttgba.hh"
 
 namespace spot
 {
-  /// This class is the basis class to be manipulated
-  /// by the union find structure
-  class uf_element
-  {
-  public:
-    /// The constructor for a such element
-    uf_element(const fasttgba_state* s, markset m):
-      parent_(s), acc_(m)
-    {
-    }
-
-    /// \brief A Reference to the root of this SCC
-    const fasttgba_state* parent ()
-    {
-      return parent_;
-    }
-
-    /// \brief set the parent of this element
-    void set_parent (const fasttgba_state* p)
-    {
-      parent_ = p;
-    }
-
-    /// The acceptance set of this SCC
-    /// Note that only root that are their own
-    /// parent collect all the acceptance set
-    markset acceptance()
-    {
-      return acc_;
-    }
-
-    void add_acceptance(markset m)
-    {
-      acc_ |= m;
-    }
-
-  protected:
-    const fasttgba_state* parent_; ///< The parent
-    markset acc_;		   ///< The markset
-  };
-
-
   /// This class is a wrapper for manipulating Union
   /// Find structure in emptiness check algotithms
   ///
   /// It's an efficient data structure to compute SCC
   /// In order to be efficient, some methods are added
-  /// to impove the efficience of emptiness check algo
+  /// to impove the efficience of emptiness check algorithm
   class union_find
   {
   public:
 
-    /// The constructor for the union find structure
+    /// \brief The constructor for the Union-Find structure
     union_find (acc_dict&);
 
-    /// A simple destructor
+    /// \brief A simple destructor
     virtual ~union_find ();
 
-    /// \brief Return the parent of \a s
-    const fasttgba_state* find (const fasttgba_state* s);
+    /// \brief Add a partition that contains only \a s
+    void add (const fasttgba_state* s);
 
-    /// \brief Return the acceptance set associated
-    markset findacc (const fasttgba_state*);
+    // /// \brief Return true if the Union-Find have a
+    // /// partition that contains \a s
+    // bool contains (const fasttgba_state* s);
 
-    /// \brief Perform the union of the two SCC represented
-    /// by this two elements
-    void make_union (const fasttgba_state*,
-		     const fasttgba_state*);
+    /// \brief Perform the union of the two partition containing
+    /// \a left and \a right. No assumptions over the resulting
+    /// parent can be do.
+    void unite (const fasttgba_state* left,
+    		const fasttgba_state* right);
 
-    /// \brief Create a new set if it does not yet exist
-    void make_set (const fasttgba_state*, markset m);
+    /// \brief Return true if the partition of \a left is the
+    /// same that the partition of \a right
+    bool same_partition (const fasttgba_state* left,
+    			 const fasttgba_state* right);
 
-    /// \brief The SCC represented by this element is now
-    /// labelled as dead
-    void make_dead_set (const fasttgba_state*);
+    /// \brief Add the acceptance set to the partition that contains
+    /// the state \a s
+    void add_acc (const fasttgba_state* s, markset m);
 
-    /// \brief Create a Dead Fake element
-    void insert_dead ();
+    /// \brief return the acceptance set of the partition containing
+    /// \a s
+    markset get_acc (const fasttgba_state* s);
 
   protected:
+
+    /// \brief grab the id of the root associated to an element.
+    int root (int i);
+
+    // type def for the main structure of the Union-Find
+    typedef Sgi::hash_map<const fasttgba_state*, int,
+			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> uf_map;
+
     /// \brief the structure used to the storage
-    std::map<const fasttgba_state*, uf_element*> UF;
+    /// An element is associated to an integer
+    uf_map el;
+
+    /// \brief For each element store the id of the parent
+    std::vector<int> id;
+
+    /// \brief weigth associated to each subtrees. This vector also contains
+    /// the acceptance set associated
+    std::vector<std::pair<int, markset> > rk;
 
     /// \brief The acceptance dictionary
     acc_dict& acc_;
