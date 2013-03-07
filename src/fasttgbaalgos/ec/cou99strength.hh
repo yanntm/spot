@@ -35,7 +35,10 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    cou99strength(const fasttgba *);
+    /// \a allsuccheuristic must be set only if post
+    //  computationb is not expensive
+    cou99strength(const fasttgba *,
+		  bool allsuccheuristic  = false);
 
     /// A destructor
     virtual ~cou99strength();
@@ -48,11 +51,15 @@ namespace spot
     /// \brief Fix set ups for the algo
     void init();
 
-    /// \brief Push a new state to explore
-    void dfs_push(markset, fasttgba_state*);
-
     /// \brief  Pop states already explored
     void dfs_pop();
+
+    /// Take the merge fonction to use. There are 2 possibles :
+    ///   - first that catches terminal states during the push (default one)
+    ///   - second that visit all successors of a state to detect terminal
+    /// The second heuristic must be used only when the Post operation is not
+    /// expensive
+    void (spot::cou99strength::*dfs_push)(markset, fasttgba_state*);
 
     /// \brief merge multiple states
     void merge(markset, int);
@@ -68,6 +75,14 @@ namespace spot
     bool counterexample_found;
 
   private:
+
+    /// \brief Push a new state to explore and check wheter
+    /// it's a terminal one or not
+    void dfs_push_simple_heuristic(markset, fasttgba_state*);
+
+    /// \brief Push a new state to explore and check wheter
+    /// one of its successor is terminal or not
+    void dfs_push_allsucc_heuristic(markset, fasttgba_state*);
 
     ///< \brief the automaton that will be used for the Emptiness check
     const fasttgba* a_;
@@ -89,8 +104,11 @@ namespace spot
     /// \brief the DFS number
     int max;
 
+
     /// The map of visited states
-    std::map<const fasttgba_state*, int> H;
+    typedef Sgi::hash_map<const fasttgba_state*, int,
+			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> seen_map;
+    seen_map H;
 
     // A cache
     const fasttgba_state* state_cache_; ///< State in cache

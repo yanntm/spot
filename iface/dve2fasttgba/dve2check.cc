@@ -328,10 +328,28 @@ main(int argc, char **argv)
 
 	  spot::emptiness_check_result* ecres = ec->check();
 
+	  // Check if the original algorithm is agree to ref
 	  if ((ecres && !res_) || (!ecres && res_))
 	    {
 	      std::cerr << "ERROR: " << spot::ltl::to_string(f1) << std::endl;
 	      assert(false);
+	    }
+	  else
+	    {
+	      // Yes ! We can test other
+	      std::cout << "checking Other " << std::endl;
+	      spot::cou99strength *chk = new spot::cou99strength(prod);
+	      mtimer.start("Checking cou99strength");
+	      if (chk->check())
+		{
+		  assert(res_);
+		}
+	      else
+		assert(!res_);
+	      mtimer.stop("Checking cou99strength");
+	      delete chk;
+	      std::cout << "End checking Other " << std::endl;
+
 	    }
 
 	  delete ecres;
