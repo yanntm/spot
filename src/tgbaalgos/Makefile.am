@@ -65,6 +65,7 @@ tgbaalgos_HEADERS = \
   se05.hh \
   simulation.hh \
   stats.hh \
+  stats_hierarchy.hh \
   stripacc.hh \
   tau03.hh \
   tau03opt.hh \
