@@ -21,26 +21,35 @@
 namespace spot
 {
   union_find::union_find (acc_dict& acc) :
-    acc_(acc)
+    acc_(acc), cpt(0)
   {
   }
 
   union_find::~union_find ()
   {
+    uf_map::const_iterator s = el.begin();
+    while (s != el.end())
+      {
+	s->first->destroy();
+	++s;
+      }
+    el.clear();
   }
 
   void
   union_find::add (const fasttgba_state* s)
   {
-    assert(el.find(s) != el.end());
-    id.push_back(id.size());
+    //assert(el.find(s) != el.end());
+    id.push_back(cpt);
     rk.push_back(std::make_pair(0, markset(acc_))); // rk.push_back(0);
-    el[s] = el.size();
+    el[s] = cpt;
+    ++cpt;
   }
 
   int union_find::root (int i)
   {
     int parent = id[i];
+    assert((unsigned int) i != id.size());
 
     // The element is the root
     if (i == parent)
@@ -113,4 +122,10 @@ namespace spot
     int r = root(el[s]);
     rk[r].second |= m;
   }
+
+  bool union_find::contains (const fasttgba_state* s)
+  {
+    return el.find(s) != el.end();
+  }
+
 }

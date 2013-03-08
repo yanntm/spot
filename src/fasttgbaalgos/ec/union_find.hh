@@ -41,6 +41,8 @@ namespace spot
     virtual ~union_find ();
 
     /// \brief Add a partition that contains only \a s
+    /// Suppose a clone() has been done and the union-find
+    /// is in charge to perform the destroy()
     void add (const fasttgba_state* s);
 
     // /// \brief Return true if the Union-Find have a
@@ -66,6 +68,9 @@ namespace spot
     /// \a s
     markset get_acc (const fasttgba_state* s);
 
+    /// \brief Return wether a state belong to the Union-Find structure
+    bool contains (const fasttgba_state* s);
+
   protected:
 
     /// \brief grab the id of the root associated to an element.
@@ -88,6 +93,8 @@ namespace spot
 
     /// \brief The acceptance dictionary
     acc_dict& acc_;
+
+    int cpt;
   };
 }
 
