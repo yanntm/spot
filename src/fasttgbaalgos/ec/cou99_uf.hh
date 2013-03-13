@@ -75,11 +75,9 @@ namespace spot
     /// \brief the union_find used for the storage
     union_find *uf;
 
+    /// \brief this is a quick access to detect if a state just come
+    /// on the top of the stack.
     const spot::fasttgba_state* last;
-
-
-    const spot::fasttgba_state* DEAD;
-
   };
 }
 

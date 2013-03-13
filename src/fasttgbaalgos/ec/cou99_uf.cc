@@ -30,57 +30,10 @@
 
 namespace spot
 {
-  namespace
-  {
-    // Create a classe that will represent dead states
-    class dead_state : public fast_product_state
-    {
-    public:
-      dead_state(): fast_product_state (0,0,0){}
-
-      const fasttgba_state* left() const
-      {
-	return this;
-      }
-      const fasttgba_state* right() const
-      {
-	return this;
-      }
-
-      int compare(const fasttgba_state* other) const
-      {
-	if ((const fast_product_state*)other == this)
-	  return 0;
-	return -1;
-      }
-
-      size_t hash() const
-      {
-	return 0;
-      }
-
-      fasttgba_state* clone() const
-      {
-	assert(false);
-      }
-
-      void* external_information() const
-      {
-	assert(false);
-      }
-
-      virtual void destroy() const
-      {
-	delete this;
-      }
-    };
-  }
-
-
   cou99_uf::cou99_uf(const fasttgba* a) :
     counterexample_found(false), a_(a),
     uf(new union_find(a->get_acc())),
-    last(0), DEAD(new dead_state())
+    last(0)
   {}
 
   cou99_uf::~cou99_uf()
@@ -102,7 +55,7 @@ namespace spot
 
     // We consider 0 as a dead state since it cannot
     // be a valid adress for a state
-    uf->add (DEAD);
+    uf->add (0);
 
     fasttgba_state* init = a_->get_init_state();
     dfs_push(init);
@@ -129,19 +82,19 @@ namespace spot
     todo.pop_back();
 
     if (todo.empty() ||
-	uf->same_partition(pair.first, 0))
+	!uf->same_partition(pair.first, 0))
       {
-	uf->unite(pair.first, DEAD);
+	uf->unite(pair.first, 0);
       }
   }
 
 
   void cou99_uf::merge(fasttgba_state* d)
   {
+    //assert(d);
     trace << "Cou99_Uf::Merge" << std::endl;
     int i = todo.size() - 1;
 
-    uf->same_partition(todo[i].first, d);
     while (!uf->same_partition(todo[i].first, d))
       {
  	uf->unite(d, todo[i].first);
@@ -170,18 +123,12 @@ namespace spot
     	else
     	  {
     	    fasttgba_state* d = todo.back().second->current_state();
-	    trace << "Cou99_Uf::DFS_main "
-		  << a_->format_state(d)
-		  << "contains ? "
-		  << uf->contains(d)
-		  << std::endl;
-
     	    if (!uf->contains(d))
     	      {
     	    	dfs_push (d);
     	    	continue;
     	      }
-    	    else if (!uf->same_partition(d, DEAD))
+    	    else if (!uf->same_partition(d, 0))
     	      {
     	    	merge(d);
     	    	if (uf->get_acc(d).all())
@@ -193,7 +140,6 @@ namespace spot
     	      }
     	    d->destroy();
     	  }
-
       }
   }
 }
