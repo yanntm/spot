@@ -24,6 +24,33 @@
 
 namespace spot
 {
+
+  // We need to redefine this because other comparisons techniques
+  // doesn't accept NULL pointer: here NULL pointer means dead state
+  // so we have to refine
+
+  struct fasttgba_state_ptr_equal_uf:
+    public std::binary_function<const fasttgba_state*,
+				const fasttgba_state*, bool>
+  {
+    bool
+    operator()(const fasttgba_state* left, const fasttgba_state* right) const
+    {
+      return (!left || !right) ? right == left : 0 == left->compare(right);
+    }
+  };
+
+  struct fasttgba_state_ptr_hash_uf:
+    public std::unary_function<const fasttgba_state*, size_t>
+  {
+    size_t
+    operator()(const fasttgba_state* that) const
+    {
+      return that ? that->hash() : 0;
+    }
+  };
+
+
   /// This class is a wrapper for manipulating Union
   /// Find structure in emptiness check algotithms
   ///
@@ -82,7 +109,8 @@ namespace spot
 
     // type def for the main structure of the Union-Find
     typedef Sgi::hash_map<const fasttgba_state*, int,
-			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> uf_map;
+			  fasttgba_state_ptr_hash_uf,
+			  fasttgba_state_ptr_equal_uf> uf_map;
 
     /// \brief the structure used to the storage
     /// An element is associated to an integer
@@ -91,15 +119,19 @@ namespace spot
     /// \brief For each element store the id of the parent
     std::vector<int> id;
 
-    /// \brief weigth associated to each subtrees. This vector also contains
-    /// the acceptance set associated
-    std::vector<std::pair<int, markset> > rk;
+    /// \brief weigth associated to each subtrees.
+    std::vector<int> rk;
+
+    /// \brief Acceptance associated to each element
+    std::vector<markset> acc;
 
     /// \brief The acceptance dictionary
     acc_dict& acc_;
 
-    // \brief a counter used to quick acces size of the Union Find
-    int cpt;
+    /// Avoid to re-create some elements
+    markset empty;
+
+
   };
 }
 
