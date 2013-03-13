@@ -30,12 +30,16 @@ namespace spot
   /// It's an efficient data structure to compute SCC
   /// In order to be efficient, some methods are added
   /// to impove the efficience of emptiness check algorithm
+  ///
+  /// Performing operation with a state == 0 will be analysed
+  /// as an operation with a dead state cf cou99_uf
   class union_find
   {
   public:
 
     /// \brief The constructor for the Union-Find structure
-    union_find (acc_dict&);
+    /// \a acc the acceptance dictionary
+    union_find (acc_dict& acc);
 
     /// \brief A simple destructor
     virtual ~union_find ();
@@ -94,6 +98,7 @@ namespace spot
     /// \brief The acceptance dictionary
     acc_dict& acc_;
 
+    // \brief a counter used to quick acces size of the Union Find
     int cpt;
   };
 }

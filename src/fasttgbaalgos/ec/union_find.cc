@@ -39,6 +39,12 @@ namespace spot
   void
   union_find::add (const fasttgba_state* s)
   {
+    // A dead state is represented by a state s == 0
+    // the union find structure consider that dead states
+    // représentation is -1
+    if (!s)
+      return;
+
     //assert(el.find(s) != el.end());
     id.push_back(cpt);
     rk.push_back(std::make_pair(0, markset(acc_))); // rk.push_back(0);
@@ -48,17 +54,19 @@ namespace spot
 
   int union_find::root (int i)
   {
+    if (i == -1)
+      return -1;
+
     int parent = id[i];
-    assert((unsigned int) i != id.size());
 
     // The element is the root
-    if (i == parent)
+    if (i == parent || parent == -1)
       return parent;
 
     // Grand'Pa is root!
     int gparent = id[parent];
-    if (parent == gparent)
-      return parent;
+    if (parent == gparent ||  gparent == -1)
+      return gparent;
 
     parent = root (parent);	// Can we use gparent?
     id[i] = parent;
@@ -69,8 +77,13 @@ namespace spot
   union_find::same_partition (const fasttgba_state* left,
 			      const fasttgba_state* right)
   {
-    assert(el.find(left) != el.end());
-    assert(el.find(right) != el.end());
+    if (left == right)
+      return true;
+    if (!left)
+      return root(el[right]) == -1;
+    if (!right)
+      return root(el[left]) == -1;
+
     return root(el[left]) == root(el[right]);
   }
 
@@ -78,15 +91,42 @@ namespace spot
   union_find::unite (const fasttgba_state* left,
 		     const fasttgba_state* right)
   {
-    assert(el.find(left) != el.end());
-    assert(el.find(right) != el.end());
+    // Both are in the same set
+    if (left == right)
+      return;
+    // left is dead
+    if (!left)
+      {
+	int val = root(el[right]);
+	if (val != -1)
+	  id[val] = -1;
+	return;
+      }
+    // right is dead
+    if (!right)
+      {
+	int val = root(el[left]);
+	if (val != -1)
+	  id[val] = -1;
+	return;
+      }
+
+    // assert(el.find(left) != el.end());
+    // assert(el.find(right) != el.end());
 
     int root_left = root(el[left]);
     int root_right = root(el[right]);
 
-    // Both are in the same set
-    if (root_left == root_right)
-      return;
+    if (root_left == -1)
+      {
+	id[root_right] = -1;
+	return;
+      }
+    if (root_right == -1)
+      {
+	id[root_left] = -1;
+	return;
+      }
 
     int rk_left = rk[root_left].first;
     int rk_right = rk[root_right].first;
@@ -112,19 +152,33 @@ namespace spot
   markset
   union_find::get_acc (const fasttgba_state* s)
   {
+    if (!s)
+      return markset(acc_);
+
     int r = root(el[s]);
+    if (r == -1)
+      return markset(acc_);
+
     return rk[r].second;
   }
 
   void
   union_find::add_acc (const fasttgba_state* s, markset m)
   {
+    if (!s)
+      return;
+
     int r = root(el[s]);
+    if (r == -1)
+      return;
+
     rk[r].second |= m;
   }
 
   bool union_find::contains (const fasttgba_state* s)
   {
+    if (!s)
+      return true;
     return el.find(s) != el.end();
   }
 
