@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//#define COU99_UFTRACE
+// #define COU99_UFTRACE
 #ifdef COU99_UFTRACE
 #define trace std::cerr
 #else
@@ -92,10 +92,10 @@ namespace spot
   void cou99_uf::merge(fasttgba_state* d)
   {
     //assert(d);
-    trace << "Cou99_Uf::Merge" << std::endl;
+    trace << "Cou99_Uf::Merge " << d << std::endl;
     int i = todo.size() - 1;
 
-    while (!uf->same_partition(todo[i].first, d))
+    while (!uf->same_partition(d, todo[i].first))
       {
  	uf->unite(d, todo[i].first);
 	markset m = todo[i].second->current_acceptance_marks();
