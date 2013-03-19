@@ -34,15 +34,16 @@
 #include "tgbaalgos/stats.hh"
 #include "tgba/tgbaproduct.hh"
 
-#include "fasttgbaalgos/ec/cou99.hh"
-#include "fasttgbaalgos/ec/cou99strength.hh"
-
 
 // This part is for FASTTGBA
 #include "fasttgbaalgos/tgba2fasttgba.hh"
 #include "fasttgbaalgos/dotty_dfs.hh"
 #include "fasttgbaalgos/stats_dfs.hh"
 #include "fasttgba/fasttgba_product.hh"
+
+#include "fasttgbaalgos/ec/cou99.hh"
+#include "fasttgbaalgos/ec/cou99_uf.hh"
+#include "fasttgbaalgos/ec/cou99strength.hh"
 
 
 #include "misc/timer.hh"
@@ -55,7 +56,7 @@ syntax(char* prog)
   if (slash && (strncmp(slash + 1, "lt-", 3) == 0))
     prog = slash + 4;
 
-  std::cerr << "usage: " << prog << " formula file" << std::endl;
+  std::cerr << "usage: " << prog << " formula file algo" << std::endl;
   exit(1);
 }
 
@@ -81,6 +82,14 @@ main(int argc, char **argv)
   if (argc != 3)
     syntax(argv[0]);
 
+  bool opt_couuf = true;
+  bool opt_cou99 = true;
+
+  // if (strcmp("-cou99", argv[3]))
+  //   opt_cou99 = true;
+  // else if (strcmp("-cou99_uf", argv[3]))
+  //   opt_couuf = true;
+
   // The formula string
   std::string input =  argv[1];
 
@@ -101,7 +110,7 @@ main(int argc, char **argv)
   // Must compare emptiness checks algorithms ?
   // This option is relevant if comparing to the classic implem
   // of TGBA
-  bool compare_to_emptchk = true;
+  bool compare_to_emptchk = false;
 
   //
   // Building the formula from the input
@@ -152,7 +161,6 @@ main(int argc, char **argv)
       // -----------------------------------------------------
       // Start using fasttgba
       // -----------------------------------------------------
-
 
       if (compare_to_tgba)
       	{
@@ -273,6 +281,101 @@ main(int argc, char **argv)
 
 
 
+      {
+	    std::ostringstream result;
+
+	    // Decclare the dictionnary of atomic propositions that will be
+	    // used all along processing
+	    spot::ap_dict* aps = new spot::ap_dict();
+	    spot::acc_dict* accs = new spot::acc_dict();
+
+	    const spot::fasttgba* kripke =
+	      spot::load_dve2fast(file, *aps, *accs, true);
+
+	    const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
+
+	    const spot::fasttgba_kripke_product *prod =
+	      new spot::fasttgba_kripke_product (kripke, ftgba1);
+
+	    bool res_cou99uf = true;
+	    if (opt_couuf)
+	      {
+		std::ostringstream result;
+		result << "#cou99_uf,";
+
+	  	spot::cou99_uf* checker = new spot::cou99_uf(prod);
+	  	mtimer.start("Checking cou99_uf");
+	  	if (checker->check())
+	  	  {
+		    res_cou99uf = false;
+		    result << "VIOLATED,";
+	  	  }
+	  	else
+		  {
+		    result << "VERIFIED,";
+		  }
+	  	mtimer.stop("Checking cou99_uf");
+	  	delete checker;
+
+		spot::timer t = mtimer.timer("Checking cou99_uf");
+		result << t.utime() + t.stime();
+		result << "," << input;
+		std::cout << result.str() << std::endl;
+	      }
+
+	    bool res_cou99 = true;
+	    if (opt_cou99)
+	      {
+		std::ostringstream result;
+		result << "#cou99," ;
+
+	  	spot::cou99* checker = new spot::cou99(prod);
+	  	mtimer.start("Checking cou99");
+	  	if (checker->check())
+	  	  {
+		    res_cou99 = false;
+		    result << "VIOLATED,";
+	  	  }
+	  	else
+		  {
+		    result << "VERIFIED,";
+		  }
+	  	mtimer.stop("Checking cou99");
+	  	delete checker;
+
+		spot::timer t = mtimer.timer("Checking cou99");
+		result << t.utime() + t.stime();
+		result << "," << input;
+		std::cout << result.str() << std::endl;
+
+
+		assert (res_cou99uf == res_cou99);
+	      }
+	    delete prod;
+	    delete ftgba1;
+	    delete kripke;
+	    delete accs;
+	    delete aps;
+
+
+	    mtimer.print(std::cout);
+	  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       if (compare_to_emptchk)
 	{
 	  int res_ = 0;
@@ -296,12 +399,16 @@ main(int argc, char **argv)
 	  mtimer.start("Checking cou99 (new)");
     	  if (checker->check())
     	    {
+	      mtimer.stop("Checking cou99 (new)");
 	      res_ = 1;
     	      std::cout << "A counterexample has been found" << std::endl;
     	    }
     	  else
-    	    std::cout << "No counterexample has been found" << std::endl;
-	  mtimer.stop("Checking cou99 (new)");
+	    {
+	      mtimer.stop("Checking cou99 (new)");
+	      std::cout << "No counterexample has been found" << std::endl;
+	    }
+
 	  delete checker;
 
 
@@ -317,47 +424,72 @@ main(int argc, char **argv)
 
 	  spot::tgba* product = new spot::tgba_product(model, af1);
 
-	  const char* err;
-	  spot::emptiness_check_instantiator* echeck_inst = 0;
-	  echeck_inst =
-	    spot::emptiness_check_instantiator::construct("Cou99", &err);
+	  // const char* err;
+	  // spot::emptiness_check_instantiator* echeck_inst = 0;
+	  // echeck_inst =
+	  //   spot::emptiness_check_instantiator::construct("Cou99", &err);
 
-	  spot::emptiness_check* ec = echeck_inst->instantiate(product);
-	  assert(ec);
-	  mtimer.start("Checking cou99 (old)");
+	  // spot::emptiness_check* ec = echeck_inst->instantiate(product);
+	  // assert(ec);
+	  // mtimer.start("Checking cou99 (old)");
 
-	  spot::emptiness_check_result* ecres = ec->check();
+	  // spot::emptiness_check_result* ecres = ec->check();
+	  // mtimer.stop("Checking cou99 (old)");
 
-	  // Check if the original algorithm is agree to ref
-	  if ((ecres && !res_) || (!ecres && res_))
-	    {
-	      std::cerr << "ERROR: " << spot::ltl::to_string(f1) << std::endl;
-	      assert(false);
-	    }
-	  else
-	    {
-	      // Yes ! We can test other
-	      std::cout << "checking Other " << std::endl;
-	      spot::cou99strength *chk = new spot::cou99strength(prod);
-	      mtimer.start("Checking cou99strength");
-	      if (chk->check())
+	  // // Check if the original algorithm is agree to ref
+	  // if ((ecres && !res_) || (!ecres && res_))
+	  //   {
+	  //     std::cerr << "ERROR: " << spot::ltl::to_string(f1) << std::endl;
+	  //     assert(false);
+	  //   }
+	  // else
+	  //   {
+	  //     // Yes ! We can test other
+	  //     std::cout << "checking Other " << std::endl;
+	      // spot::cou99strength *chk = new spot::cou99strength(prod);
+	      // mtimer.start("Checking cou99strength");
+	      // if (chk->check())
+	      // 	{
+	      // 	  assert(res_);
+	      // 	}
+	      // else
+	      // 	assert(!res_);
+	      // mtimer.stop("Checking cou99strength");
+	      // delete chk;
+
+	      spot::cou99_uf *chk2 = new spot::cou99_uf(prod);
+	      mtimer.start("Checking cou99_uf");
+	      if (chk2->check())
 		{
+		  mtimer.stop("Checking cou99_uf");
 		  assert(res_);
 		}
 	      else
-		assert(!res_);
-	      mtimer.stop("Checking cou99strength");
-	      delete chk;
-	      std::cout << "End checking Other " << std::endl;
+		{
+		  mtimer.stop("Checking cou99_uf");
+		  assert(!res_);
+		}
+	      delete chk2;
 
-	    }
 
-	  delete ecres;
-	  delete echeck_inst;
-	  delete ec;
+
+	    //   std::cout << "End checking Other " << std::endl;
+
+	    // }
+
+
+
+	  // ---------------------------------------------------------
+	  // This is emptiness check algorithms
+	  // ---------------------------------------------------------
+
+
+
+	  // delete ecres;
+	  // delete echeck_inst;
+	  // delete ec;
 	  delete product;
 	  delete model;
-	  mtimer.stop("Checking cou99 (old)");
 
 
 
