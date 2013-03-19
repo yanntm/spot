@@ -43,19 +43,19 @@ namespace spot
   protected:
 
     /// \brief Fix set ups for the algo
-    void init();
+    inline void init();
 
     /// \brief Push a new state to explore
-    void dfs_push(fasttgba_state*);
+    inline void dfs_push(fasttgba_state*);
 
     /// \brief  Pop states already explored
-    void dfs_pop();
+    inline void dfs_pop();
 
     /// \brief merge multiple states
-    void merge(fasttgba_state*);
+    inline void merge(fasttgba_state*);
 
     /// \brief the main procedure
-    void main();
+    inline void main();
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;

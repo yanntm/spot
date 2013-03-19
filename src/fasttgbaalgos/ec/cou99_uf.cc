@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// #define COU99_UFTRACE
+//#define COU99_UFTRACE
 #ifdef COU99_UFTRACE
 #define trace std::cerr
 #else
@@ -52,11 +52,6 @@ namespace spot
   void cou99_uf::init()
   {
     trace << "Cou99_Uf::Init" << std::endl;
-
-    // We consider 0 as a dead state since it cannot
-    // be a valid adress for a state
-    uf->add (0);
-
     fasttgba_state* init = a_->get_init_state();
     dfs_push(init);
   }
@@ -64,8 +59,9 @@ namespace spot
   void cou99_uf::dfs_push(fasttgba_state* s)
   {
     trace << "Cou99_Uf::DFS_push "
-    	  << a_->format_state(s)
     	  << std::endl;
+
+    // Dead is inserted by default in the Union Find
 
     uf->add (s);
     fasttgba_succ_iterator* si = a_->succ_iter(s);
@@ -76,43 +72,56 @@ namespace spot
 
   void cou99_uf::dfs_pop()
   {
-    trace << "Cou99_Uf::DFS_pop" << std::endl;
+    trace << "Cou99_Uf::DFS_pop " << std::endl;
     pair_state_iter pair = todo.back();
     delete pair.second;
     todo.pop_back();
 
+
     if (todo.empty() ||
-	!uf->same_partition(pair.first, 0))
+	!uf->same_partition(pair.first, todo.back().first))
       {
-	uf->unite(pair.first, 0);
+	uf->make_dead(pair.first);
       }
   }
 
-
   void cou99_uf::merge(fasttgba_state* d)
   {
-    //assert(d);
-    trace << "Cou99_Uf::Merge " << d << std::endl;
     int i = todo.size() - 1;
+    markset a (a_->get_acc());
 
     while (!uf->same_partition(d, todo[i].first))
       {
+	int ref = i;
+	while (ref >= 0 && uf->same_partition(todo[ref].first, todo[i].first))
+	  ref--;
+
+	if (ref < 0)
+	  break;
+
  	uf->unite(d, todo[i].first);
 	markset m = todo[i].second->current_acceptance_marks();
-	uf->add_acc(d, m);
-	--i;
+	a |= m;
+	i = ref;
       }
+
     markset m = todo[i].second->current_acceptance_marks();
-    uf->add_acc(d, m);
+    uf->add_acc(d, m|a);
+
+    assert(!uf->is_dead(todo.back().first));
+    assert(!uf->is_dead(d));
   }
 
   void cou99_uf::main()
   {
     while (!todo.empty())
       {
+	trace << "Main " << std::endl;
+	assert(!uf->is_dead(todo.back().first));
+
 	//  Is there any transitions left ?
 	if (last)
-	  last = 0;
+	    last = 0;
 	else
 	  todo.back().second->next();
 
@@ -128,7 +137,7 @@ namespace spot
     	    	dfs_push (d);
     	    	continue;
     	      }
-    	    else if (!uf->same_partition(d, 0))
+    	    else if (!uf->is_dead(d))
     	      {
     	    	merge(d);
     	    	if (uf->get_acc(d).all())
