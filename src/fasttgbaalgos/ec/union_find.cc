@@ -19,7 +19,7 @@
 #include "union_find.hh"
 
 
-//#define UFTRACE
+// #define UFTRACE
 #ifdef UFTRACE
 #define trace std::cerr
 #else
@@ -28,9 +28,12 @@
 
 namespace spot
 {
-  union_find::union_find (acc_dict& acc) :
-    acc_(acc), empty(acc_)
+  union_find::union_find (acc_dict& a) :
+    acc_(a), empty(acc_)
   {
+    id.push_back(0);
+    rk.push_back(0);
+    acc.push_back(empty);
   }
 
   union_find::~union_find ()
@@ -48,8 +51,8 @@ namespace spot
   void
   union_find::add (const fasttgba_state* s)
   {
-    trace << "union_find::add" << std::endl;
-    el[s] = id.size();
+    trace << "union_find::add " << id.size() << std::endl;
+    el.insert(std::make_pair(s, id.size()));
     id.push_back(id.size());
     rk.push_back(0);
     acc.push_back(empty);
@@ -57,58 +60,62 @@ namespace spot
 
   int union_find::root (int i)
   {
-    trace << "union_find::root "  << i << std::endl;
-    int r;
-    for(r = i; id[r] != r; r = id[r])
-      ;
-    return r;
-
-    // int parent = id[i];
-    // // The element is the root
-    // if (i == parent)
-    //   return parent;
-
-    // // Grand'Pa is root!
-    // int gparent = id[parent];
-    // if (parent == gparent)
-    //   return gparent;
-
-    // parent = root (parent);	// Can we use gparent?
-    // id[i] = parent;
-    // return parent;
+    int p = id[i];
+    if (i == p || p == id[p])
+      return p;
+    p = root(p);
+    return id[i] = p;
   }
 
   bool
   union_find::same_partition (const fasttgba_state* left,
 			      const fasttgba_state* right)
   {
-    trace << "union_find::same_partition" << std::endl;
-    return root(el[left]) == root(el[right]);
+    assert(left);
+    assert(right);
+    int l  = root(el[left]);
+    int r  = root(el[right]);
+    trace << "union_find::same_partition? "
+	  << l << "("<< el[left] << ")   "
+	  << r << "("<< el[right] << ")"
+	  << std::endl;
+    return r == l;
   }
+
+  void
+  union_find::make_dead(const fasttgba_state* s)
+  {
+    trace << "union_find::make_dead " << el[s] << " root_ :"
+	  << root(el[s]) << std::endl;
+    id[root(el[s])] = 0;
+  }
+
+  bool
+  union_find::is_dead(const fasttgba_state* s)
+  {
+    return root(el[s]) == 0;
+  }
+
 
   void
   union_find::unite (const fasttgba_state* left,
 		     const fasttgba_state* right)
   {
-    trace << "union_find::unite" << std::endl;
+    assert(contains(left));
+    assert(contains(right));
     int root_left = root(el[left]);
     int root_right = root(el[right]);
 
-    if (!root_left)
-      {
-    	id[root_right] = 0;
-    	return;
-      }
-    else if (!root_right)
-      {
-    	id[root_left] = 0;
-    	return;
-      }
+    trace << "union_find::unite "
+	  << root_left << " " << root_right << std::endl;
+
+    assert(root_left);
+    assert(root_right);
 
     int rk_left = rk[root_left];
     int rk_right = rk[root_right];
 
-    // Use weigth
+    // Use ranking
     if (rk_left < rk_right)
       {
 	id [root_left] =  root_right;
@@ -131,6 +138,7 @@ namespace spot
   {
     trace << "union_find::get_acc" << std::endl;
     int r = root(el[s]);
+    assert(r);
     return acc[r];
   }
 
@@ -139,8 +147,8 @@ namespace spot
   {
     trace << "union_find::add_acc" << std::endl;
     int r = root(el[s]);
-    if (r)
-      acc[r] |= m;
+    assert(r);
+    acc[r] |= m;
   }
 
   bool union_find::contains (const fasttgba_state* s)
