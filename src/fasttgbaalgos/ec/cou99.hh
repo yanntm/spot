@@ -91,7 +91,8 @@ namespace spot
     /// The map of visited states
     //std::map<const fasttgba_state*, int> H;
     typedef Sgi::hash_map<const fasttgba_state*, int,
-			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> seen_map;
+			  fasttgba_state_ptr_hash,
+			  fasttgba_state_ptr_equal> seen_map;
     seen_map H;
 
   };
