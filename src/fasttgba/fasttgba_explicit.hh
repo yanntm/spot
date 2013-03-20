@@ -35,6 +35,16 @@ namespace spot
     cube conditions;			///< condition over an arc
     markset acceptance_marks;	        ///< acceptance mark over an arc
     const fast_explicit_state* dst;	///< the destination state
+
+    virtual ~transition(){};
+
+    transition (cube c, markset a,const fast_explicit_state* d)
+      : conditions(c),
+	acceptance_marks(a)
+    {
+      dst = d;
+    }
+
   };
 
 
@@ -67,14 +77,14 @@ namespace spot
     virtual void destroy() const;
 
     //// \brief the structure to store transitions
-    void add_successor(const struct transition t);
+    void add_successor(const struct transition *t);
 
     /// \brief the strength of the SCC
     void set_strength(enum scc_strength str);
 
     enum scc_strength get_strength() const;
 
-    std::list<transition>  successors;	///< list of successors
+    std::vector<const struct transition*>  successors;	///< list of successors
 
     mutable int count_;
   };
@@ -89,7 +99,8 @@ namespace spot
   {
   protected :
     const fast_explicit_state* start_; ///< src of iterator
-    std::list<transition>::const_iterator it_; ///< current iterator
+    std::vector
+    <const struct transition*>::const_iterator it_; ///< current iterator
 
   public:
     fast_explicit_iterator(const fast_explicit_state* state);

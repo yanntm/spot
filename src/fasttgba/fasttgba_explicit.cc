@@ -32,6 +32,11 @@ namespace spot
       {
     	// std::cout << this << "   " << count_ << std::endl;
     	//this->~fast_explicit_state();
+	unsigned int i;
+	for (i = 0; i < successors.size(); ++i)
+	  {
+	    delete successors[i];
+	  }
 	delete this;
       }
     // else
@@ -88,9 +93,10 @@ namespace spot
   }
 
   void
-  fast_explicit_state::add_successor(const struct transition t)
+  fast_explicit_state::add_successor(const struct transition *t)
   {
-    successors.insert(successors.end(), t);
+    //successors.insert(successors.end(), t);
+    successors.push_back(t);
   }
 
   // ----------------------------------------------------------------------
@@ -129,20 +135,20 @@ namespace spot
   fast_explicit_iterator::current_state() const
   {
     assert(!done());
-    it_->dst->clone();
-    return const_cast<fast_explicit_state*>(it_->dst);
+    (*it_)->dst->clone();
+    return const_cast<fast_explicit_state*>((*it_)->dst);
   }
 
   cube
   fast_explicit_iterator::current_condition() const
   {
-    return it_->conditions;
+    return (*it_)->conditions;
   }
 
   markset
   fast_explicit_iterator::current_acceptance_marks() const
   {
-    return it_->acceptance_marks;
+    return (*it_)->acceptance_marks;
   }
 
   // ----------------------------------------------------------------------
@@ -270,7 +276,8 @@ namespace spot
 
     // Now we just have to create condition and acceptance over
     // the transition
-    spot::transition t = {cond, acc, destination};
+    spot::transition *t =
+      new spot::transition(cond, acc, destination);
     source->add_successor(t);
   }
 }

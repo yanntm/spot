@@ -152,7 +152,7 @@ namespace spot
 
     struct callback_context
     {
-      typedef std::list<fasttgba_state*> transitions_t;
+      typedef std::vector<fasttgba_state*> transitions_t;
       transitions_t transitions;
       int state_size;
       void* pool;
