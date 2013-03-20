@@ -75,9 +75,11 @@ namespace spot
     /// \brief Return wether a state belong to the Union-Find structure
     bool contains (const fasttgba_state* s);
 
-
+    /// \brief perform a union with dead
     void make_dead (const fasttgba_state* s);
 
+    /// \brief check wether the root of the set containing
+    /// this scc is dead.
     bool is_dead (const fasttgba_state* s);
 
   protected:
