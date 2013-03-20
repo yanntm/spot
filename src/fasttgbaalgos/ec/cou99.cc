@@ -39,13 +39,13 @@ namespace spot
   {
     while (!scc.empty())
       {
-    	delete scc.top().get<3>();
-    	scc.pop();
+	delete scc.top().get<3>();
+	scc.pop();
       }
     while (!todo.empty())
       {
-    	delete todo.top().second;
-    	todo.pop();
+	delete todo.top().second;
+	todo.pop();
       }
 
     seen_map::const_iterator s = H.begin();
@@ -174,18 +174,18 @@ namespace spot
 	    todo.top().second->next();
 	    if (H.find(d) == H.end())
 	      {
-	    	dfs_push (a, d);
-	    	continue;
+		dfs_push (a, d);
+		continue;
 	      }
 	    else if (H[d])
 	      {
-	    	merge(a, H[d]);
-	    	if (scc.top().get<2>().all())
-	    	  {
-	    	    counterexample_found = true;
-	    	    d->destroy();
-	    	    return;
-	    	  }
+		merge(a, H[d]);
+		if (scc.top().get<2>().all())
+		  {
+		    counterexample_found = true;
+		    d->destroy();
+		    return;
+		  }
 	      }
 	    d->destroy();
 	  }
