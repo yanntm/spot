@@ -63,6 +63,7 @@ namespace spot
     fasttgba_state* init = a_->get_init_state();
     //(this->*dfs_push)(init);
     dfs_push_scc(init);
+    // dfs_push_classic(init);
   }
 
   void cou99_uf::dfs_push_classic(fasttgba_state* s)
@@ -154,7 +155,9 @@ namespace spot
     trace << "Cou99_Uf::merge " << std::endl;
 
     int i = todo.size() - 1;
-    markset a = todo[i].second->current_acceptance_marks();
+    unsigned int cpt = scc.size() - 1;
+
+   markset a = todo[i].second->current_acceptance_marks();
 
     while (!uf->same_partition(d, todo[i].first))
       {
@@ -162,9 +165,13 @@ namespace spot
 	markset m = todo[i].second->current_acceptance_marks();
 	a |= m;
 
-	i =  scc.back() - 1;
-	scc.pop_back();
+	// i =  scc.back() - 1;
+	// scc.pop_back();
+	i =  scc[cpt--] - 1;
       }
+
+    if (cpt != scc.size() - 1)
+      scc.erase (scc.begin()+cpt+1, scc.end());
 
     uf->add_acc(d, a);
 
@@ -188,7 +195,8 @@ namespace spot
     	if (todo.back().second->done())
     	  {
     	    // (this->*dfs_pop) ();
-	    dfs_pop_scc ();
+	     dfs_pop_scc ();
+	    //dfs_pop_classic ();
     	  }
     	else
     	  {
@@ -197,12 +205,14 @@ namespace spot
     	      {
     	    	// (this->*dfs_push) (d);
 		dfs_push_scc (d);
+		// dfs_push_classic (d);
     	    	continue;
     	      }
     	    else if (!uf->is_dead(d))
     	      {
     	    	// (this->*merge) (d);
 		merge_scc (d);
+		// merge_classic (d);
     	    	if (uf->get_acc(d).all())
     	    	  {
     	    	    counterexample_found = true;
