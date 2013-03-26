@@ -22,6 +22,8 @@
 #include "misc/hash.hh"
 #include "fasttgba/fasttgba.hh"
 
+#include "boost/tuple/tuple.hpp"
+
 namespace spot
 {
   /// This class is a wrapper for manipulating Union
@@ -104,6 +106,16 @@ namespace spot
 
     /// \brief Acceptance associated to each element
     std::vector<markset> acc;
+
+
+    /// \brief define the type that will be use for the SCC stack
+    typedef boost::tuple <int, int, markset> uf_el;
+    std::vector<uf_el> uf;
+
+
+
+
+
 
     /// \brief The acceptance dictionary
     acc_dict& acc_;
