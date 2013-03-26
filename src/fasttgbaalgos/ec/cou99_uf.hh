@@ -46,13 +46,31 @@ namespace spot
     inline void init();
 
     /// \brief Push a new state to explore
-    inline void dfs_push(fasttgba_state*);
+    void (spot::cou99_uf::*dfs_push)(fasttgba_state*);
 
     /// \brief  Pop states already explored
-    inline void dfs_pop();
+    void (spot::cou99_uf::*dfs_pop)();
+
 
     /// \brief merge multiple states
-    inline void merge(fasttgba_state*);
+    void (spot::cou99_uf::*merge)(fasttgba_state*);
+
+
+
+    inline void dfs_push_classic(fasttgba_state*);
+
+    inline void dfs_pop_classic();
+
+    inline void merge_classic(fasttgba_state*);
+
+
+
+    inline void dfs_push_scc(fasttgba_state*);
+
+    inline void dfs_pop_scc();
+
+    inline void merge_scc(fasttgba_state*);
+
 
     /// \brief the main procedure
     inline void main();
@@ -78,6 +96,15 @@ namespace spot
     /// \brief this is a quick access to detect if a state just come
     /// on the top of the stack.
     const spot::fasttgba_state* last;
+
+
+
+    std::vector<int> scc;
+
+
+
+
+
   };
 }
 

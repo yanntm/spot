@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//#define COU99_UFTRACE
+// #define COU99_UFTRACE
 #ifdef COU99_UFTRACE
 #define trace std::cerr
 #else
@@ -34,7 +34,15 @@ namespace spot
     counterexample_found(false), a_(a),
     uf(new union_find(a->get_acc())),
     last(0)
-  {}
+  {
+    dfs_push  = &spot::cou99_uf::dfs_push_scc;
+    dfs_pop  = &spot::cou99_uf::dfs_pop_scc;
+    merge  = &spot::cou99_uf::merge_scc;
+
+    // dfs_push  = &spot::cou99_uf::dfs_push_classic;
+    // dfs_pop  = &spot::cou99_uf::dfs_pop_classic;
+    // merge  = &spot::cou99_uf::merge_classic;
+  }
 
   cou99_uf::~cou99_uf()
   {
@@ -53,10 +61,11 @@ namespace spot
   {
     trace << "Cou99_Uf::Init" << std::endl;
     fasttgba_state* init = a_->get_init_state();
-    dfs_push(init);
+    //(this->*dfs_push)(init);
+    dfs_push_scc(init);
   }
 
-  void cou99_uf::dfs_push(fasttgba_state* s)
+  void cou99_uf::dfs_push_classic(fasttgba_state* s)
   {
     trace << "Cou99_Uf::DFS_push "
     	  << std::endl;
@@ -70,7 +79,7 @@ namespace spot
     last = s;
   }
 
-  void cou99_uf::dfs_pop()
+  void cou99_uf::dfs_pop_classic()
   {
     trace << "Cou99_Uf::DFS_pop " << std::endl;
     pair_state_iter pair = todo.back();
@@ -85,7 +94,7 @@ namespace spot
       }
   }
 
-  void cou99_uf::merge(fasttgba_state* d)
+  void cou99_uf::merge_classic(fasttgba_state* d)
   {
     int i = todo.size() - 1;
     markset a (a_->get_acc());
@@ -93,11 +102,8 @@ namespace spot
     while (!uf->same_partition(d, todo[i].first))
       {
 	int ref = i;
-	while (ref >= 0 && uf->same_partition(todo[ref].first, todo[i].first))
+	while (uf->same_partition(todo[ref].first, todo[i].first))
 	  ref--;
-
-	if (ref < 0)
-	  break;
 
  	uf->unite(d, todo[i].first);
 	markset m = todo[i].second->current_acceptance_marks();
@@ -107,6 +113,60 @@ namespace spot
 
     markset m = todo[i].second->current_acceptance_marks();
     uf->add_acc(d, m|a);
+
+    assert(!uf->is_dead(todo.back().first));
+    assert(!uf->is_dead(d));
+  }
+
+  void cou99_uf::dfs_push_scc(fasttgba_state* s)
+  {
+    trace << "Cou99_Uf::DFS_push "
+    	  << std::endl;
+
+    // Dead is inserted by default in the Union Find
+
+    uf->add (s);
+    fasttgba_succ_iterator* si = a_->succ_iter(s);
+    si->first();
+    todo.push_back (std::make_pair(s, si));
+    scc.push_back (todo.size() -1);
+    last = s;
+  }
+
+  void cou99_uf::dfs_pop_scc()
+  {
+    trace << "Cou99_Uf::DFS_pop " << std::endl;
+    pair_state_iter pair = todo.back();
+    delete pair.second;
+    todo.pop_back();
+
+
+    if (todo.empty() ||
+	!uf->same_partition(pair.first, todo.back().first))
+      {
+	uf->make_dead(pair.first);
+	scc.pop_back();
+      }
+  }
+
+  void cou99_uf::merge_scc(fasttgba_state* d)
+  {
+    trace << "Cou99_Uf::merge " << std::endl;
+
+    int i = todo.size() - 1;
+    markset a = todo[i].second->current_acceptance_marks();
+
+    while (!uf->same_partition(d, todo[i].first))
+      {
+ 	uf->unite(d, todo[i].first);
+	markset m = todo[i].second->current_acceptance_marks();
+	a |= m;
+
+	i =  scc.back() - 1;
+	scc.pop_back();
+      }
+
+    uf->add_acc(d, a);
 
     assert(!uf->is_dead(todo.back().first));
     assert(!uf->is_dead(d));
@@ -127,19 +187,22 @@ namespace spot
 
     	if (todo.back().second->done())
     	  {
-    	    dfs_pop();
+    	    // (this->*dfs_pop) ();
+	    dfs_pop_scc ();
     	  }
     	else
     	  {
     	    fasttgba_state* d = todo.back().second->current_state();
     	    if (!uf->contains(d))
     	      {
-    	    	dfs_push (d);
+    	    	// (this->*dfs_push) (d);
+		dfs_push_scc (d);
     	    	continue;
     	      }
     	    else if (!uf->is_dead(d))
     	      {
-    	    	merge(d);
+    	    	// (this->*merge) (d);
+		merge_scc (d);
     	    	if (uf->get_acc(d).all())
     	    	  {
     	    	    counterexample_found = true;
