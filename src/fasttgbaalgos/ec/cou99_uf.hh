@@ -45,15 +45,15 @@ namespace spot
     /// \brief Fix set ups for the algo
     inline void init();
 
-    /// \brief Push a new state to explore
-    void (spot::cou99_uf::*dfs_push)(fasttgba_state*);
+    // /// \brief Push a new state to explore
+    // void (spot::cou99_uf::*dfs_push)(fasttgba_state*);
 
-    /// \brief  Pop states already explored
-    void (spot::cou99_uf::*dfs_pop)();
+    // /// \brief  Pop states already explored
+    // void (spot::cou99_uf::*dfs_pop)();
 
 
-    /// \brief merge multiple states
-    void (spot::cou99_uf::*merge)(fasttgba_state*);
+    // /// \brief merge multiple states
+    // void (spot::cou99_uf::*merge)(fasttgba_state*);
 
 
 
@@ -93,17 +93,8 @@ namespace spot
     /// \brief the union_find used for the storage
     union_find *uf;
 
-    /// \brief this is a quick access to detect if a state just come
-    /// on the top of the stack.
-    const spot::fasttgba_state* last;
 
-
-
-    std::vector<int> scc;
-
-
-
-
+    std::stack<int> scc;
 
   };
 }

@@ -35,7 +35,6 @@ namespace spot
     // rk.push_back(0);
     // acc.push_back(empty);
 
-
     uf.push_back(boost::make_tuple(0,0,empty));
   }
 
@@ -83,8 +82,8 @@ namespace spot
   union_find::same_partition (const fasttgba_state* left,
 			      const fasttgba_state* right)
   {
-    assert(left);
-    assert(right);
+    // assert(left);
+    // assert(right);
     int l  = root(el[left]);
     int r  = root(el[right]);
     trace << "union_find::same_partition? "
@@ -103,7 +102,7 @@ namespace spot
 
 
     trace << "union_find::make_dead " << el[s] << " root_ :"
-	  << root(el[s]) << std::endl;
+    	  << root(el[s]) << std::endl;
     uf[root(el[s])].get<0>() = 0;
   }
 
@@ -113,21 +112,20 @@ namespace spot
     return root(el[s]) == 0;
   }
 
-
   void
   union_find::unite (const fasttgba_state* left,
 		     const fasttgba_state* right)
   {
-    // assert(contains(left));
-    // assert(contains(right));
+    // // assert(contains(left));
+    // // assert(contains(right));
     // int root_left = root(el[left]);
     // int root_right = root(el[right]);
 
     // trace << "union_find::unite "
     // 	  << root_left << " " << root_right << std::endl;
 
-    // assert(root_left);
-    // assert(root_right);
+    // // assert(root_left);
+    // // assert(root_right);
 
     // int rk_left = rk[root_left];
     // int rk_right = rk[root_right];
@@ -153,16 +151,16 @@ namespace spot
 
 
 
-    assert(contains(left));
-    assert(contains(right));
+    // assert(contains(left));
+    // assert(contains(right));
     int root_left = root(el[left]);
     int root_right = root(el[right]);
 
     trace << "union_find::unite "
-	  << root_left << " " << root_right << std::endl;
+    	  << root_left << " " << root_right << std::endl;
 
-    assert(root_left);
-    assert(root_right);
+    // assert(root_left);
+    // assert(root_right);
 
     int rk_left = uf[root_left].get<1>();
     int rk_right = uf[root_right].get<1>();
@@ -170,30 +168,27 @@ namespace spot
     // Use ranking
     if (rk_left < rk_right)
       {
-	uf [root_left].get<0>() =  root_right;
-	uf [root_left].get<2>() |= uf[root_right].get<2>();
+    	uf [root_left].get<0>() =  root_right;
+    	uf [root_left].get<2>() |= uf[root_right].get<2>();
       }
     else
       {
-	uf [root_right].get<0>() =  root_left;
-	uf [root_right].get<2>() |= uf[root_left].get<2>();
+    	uf [root_right].get<0>() =  root_left;
+    	uf [root_right].get<2>() |= uf[root_left].get<2>();
 
-	if (rk_left == rk_right)
-	  {
-	    ++uf[root_left].get<1>();
-	  }
+    	if (rk_left == rk_right)
+    	  {
+    	    ++uf[root_left].get<1>();
+    	  }
       }
-
-
-
   }
 
   markset
   union_find::get_acc (const fasttgba_state* s)
   {
-    trace << "union_find::get_acc" << std::endl;
+    // trace << "union_find::get_acc" << std::endl;
     // int r = root(el[s]);
-    // assert(r);
+    // // assert(r);
     // return acc[r];
 
     return uf [root(el[s])].get<2>();
@@ -204,7 +199,7 @@ namespace spot
   {
     // trace << "union_find::add_acc" << std::endl;
     // int r = root(el[s]);
-    // assert(r);
+    // // assert(r);
     // acc[r] |= m;
 
     uf [root(el[s])].get<2>() |= m;

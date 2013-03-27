@@ -98,22 +98,20 @@ namespace spot
     /// An element is associated to an integer
     uf_map el;
 
-    /// \brief For each element store the id of the parent
-    std::vector<int> id;
+    // /// \brief For each element store the id of the parent
+    // std::vector<int> id;
 
-    /// \brief rank associated to each subtrees.
-    std::vector<int> rk;
+    // /// \brief rank associated to each subtrees.
+    // std::vector<int> rk;
 
-    /// \brief Acceptance associated to each element
-    std::vector<markset> acc;
+    // /// \brief Acceptance associated to each element
+    // std::vector<markset> acc;
 
 
     /// \brief define the type that will be use for the SCC stack
+    /// <ID, RK, ACC>
     typedef boost::tuple <int, int, markset> uf_el;
     std::vector<uf_el> uf;
-
-
-
 
 
 

@@ -32,12 +32,11 @@ namespace spot
 {
   cou99_uf::cou99_uf(const fasttgba* a) :
     counterexample_found(false), a_(a),
-    uf(new union_find(a->get_acc())),
-    last(0)
+    uf(new union_find(a->get_acc()))
   {
-    dfs_push  = &spot::cou99_uf::dfs_push_scc;
-    dfs_pop  = &spot::cou99_uf::dfs_pop_scc;
-    merge  = &spot::cou99_uf::merge_scc;
+    // dfs_push  = &spot::cou99_uf::dfs_push_scc;
+    // dfs_pop  = &spot::cou99_uf::dfs_pop_scc;
+    // merge  = &spot::cou99_uf::merge_scc;
 
     // dfs_push  = &spot::cou99_uf::dfs_push_classic;
     // dfs_pop  = &spot::cou99_uf::dfs_pop_classic;
@@ -74,10 +73,7 @@ namespace spot
     // Dead is inserted by default in the Union Find
 
     uf->add (s);
-    fasttgba_succ_iterator* si = a_->succ_iter(s);
-    si->first();
-    todo.push_back (std::make_pair(s, si));
-    last = s;
+    todo.push_back (std::make_pair(s, (fasttgba_succ_iterator*)0));
   }
 
   void cou99_uf::dfs_pop_classic()
@@ -115,8 +111,8 @@ namespace spot
     markset m = todo[i].second->current_acceptance_marks();
     uf->add_acc(d, m|a);
 
-    assert(!uf->is_dead(todo.back().first));
-    assert(!uf->is_dead(d));
+    // assert(!uf->is_dead(todo.back().first));
+    // assert(!uf->is_dead(d));
   }
 
   void cou99_uf::dfs_push_scc(fasttgba_state* s)
@@ -127,11 +123,8 @@ namespace spot
     // Dead is inserted by default in the Union Find
 
     uf->add (s);
-    fasttgba_succ_iterator* si = a_->succ_iter(s);
-    si->first();
-    todo.push_back (std::make_pair(s, si));
-    scc.push_back (todo.size() -1);
-    last = s;
+    todo.push_back (std::make_pair(s, (fasttgba_succ_iterator*)0));
+    scc.push (todo.size() -1);
   }
 
   void cou99_uf::dfs_pop_scc()
@@ -146,7 +139,7 @@ namespace spot
 	!uf->same_partition(pair.first, todo.back().first))
       {
 	uf->make_dead(pair.first);
-	scc.pop_back();
+	scc.pop();
       }
   }
 
@@ -155,8 +148,6 @@ namespace spot
     trace << "Cou99_Uf::merge " << std::endl;
 
     int i = todo.size() - 1;
-    unsigned int cpt = scc.size() - 1;
-
    markset a = todo[i].second->current_acceptance_marks();
 
     while (!uf->same_partition(d, todo[i].first))
@@ -164,19 +155,13 @@ namespace spot
  	uf->unite(d, todo[i].first);
 	markset m = todo[i].second->current_acceptance_marks();
 	a |= m;
-
-	// i =  scc.back() - 1;
-	// scc.pop_back();
-	i =  scc[cpt--] - 1;
+	i =  scc.top() - 1;
+	scc.pop();
       }
-
-    if (cpt != scc.size() - 1)
-      scc.erase (scc.begin()+cpt+1, scc.end());
-
     uf->add_acc(d, a);
 
-    assert(!uf->is_dead(todo.back().first));
-    assert(!uf->is_dead(d));
+    // assert(!uf->is_dead(todo.back().first));
+    // assert(!uf->is_dead(d));
   }
 
   void cou99_uf::main()
@@ -184,18 +169,21 @@ namespace spot
     while (!todo.empty())
       {
 	trace << "Main " << std::endl;
-	assert(!uf->is_dead(todo.back().first));
+	// assert(!uf->is_dead(todo.back().first));
 
 	//  Is there any transitions left ?
-	if (last)
-	    last = 0;
-	else
+	if (todo.back().second)
 	  todo.back().second->next();
+	else
+	  {
+	    todo.back().second = a_->succ_iter(todo.back().first);
+	    todo.back().second->first();
+	  }
 
     	if (todo.back().second->done())
     	  {
     	    // (this->*dfs_pop) ();
-	     dfs_pop_scc ();
+	    dfs_pop_scc ();
 	    //dfs_pop_classic ();
     	  }
     	else
