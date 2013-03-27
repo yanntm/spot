@@ -93,6 +93,7 @@ namespace spot
     /// \brief the union_find used for the storage
     union_find *uf;
 
+    bool last;
 
     std::stack<int> scc;
 

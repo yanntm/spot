@@ -73,7 +73,10 @@ namespace spot
     // Dead is inserted by default in the Union Find
 
     uf->add (s);
-    todo.push_back (std::make_pair(s, (fasttgba_succ_iterator*)0));
+    fasttgba_succ_iterator* si = a_->succ_iter(s);
+    si->first();
+    todo.push_back (std::make_pair(s, si));
+    last = true;
   }
 
   void cou99_uf::dfs_pop_classic()
@@ -123,7 +126,10 @@ namespace spot
     // Dead is inserted by default in the Union Find
 
     uf->add (s);
-    todo.push_back (std::make_pair(s, (fasttgba_succ_iterator*)0));
+    fasttgba_succ_iterator* si = a_->succ_iter(s);
+    si->first();
+    todo.push_back (std::make_pair(s, si));
+    last = true;
     scc.push (todo.size() -1);
   }
 
@@ -148,7 +154,7 @@ namespace spot
     trace << "Cou99_Uf::merge " << std::endl;
 
     int i = todo.size() - 1;
-   markset a = todo[i].second->current_acceptance_marks();
+    markset a = todo[i].second->current_acceptance_marks();
 
     while (!uf->same_partition(d, todo[i].first))
       {
@@ -172,19 +178,17 @@ namespace spot
 	// assert(!uf->is_dead(todo.back().first));
 
 	//  Is there any transitions left ?
-	if (todo.back().second)
-	  todo.back().second->next();
+
+	if (!last)
+	    todo.back().second->next();
 	else
-	  {
-	    todo.back().second = a_->succ_iter(todo.back().first);
-	    todo.back().second->first();
-	  }
+	    last = false;
 
     	if (todo.back().second->done())
     	  {
     	    // (this->*dfs_pop) ();
 	    dfs_pop_scc ();
-	    //dfs_pop_classic ();
+	    // dfs_pop_classic ();
     	  }
     	else
     	  {
