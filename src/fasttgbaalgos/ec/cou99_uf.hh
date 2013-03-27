@@ -45,32 +45,30 @@ namespace spot
     /// \brief Fix set ups for the algo
     inline void init();
 
-    // /// \brief Push a new state to explore
-    // void (spot::cou99_uf::*dfs_push)(fasttgba_state*);
+    // ------------------------------------------------------------
+    // For classic algorithm
+    // ------------------------------------------------------------
 
-    // /// \brief  Pop states already explored
-    // void (spot::cou99_uf::*dfs_pop)();
-
-
-    // /// \brief merge multiple states
-    // void (spot::cou99_uf::*merge)(fasttgba_state*);
-
-
-
+    /// \brief Push a new state to explore
     inline void dfs_push_classic(fasttgba_state*);
 
+    /// \brief  Pop states already explored
     inline void dfs_pop_classic();
 
+    /// \brief merge multiple states
     inline void merge_classic(fasttgba_state*);
 
+    // ------------------------------------------------------------
+    // For integrating SCC stack as original algorithm
+    // ------------------------------------------------------------
 
-
+    /// \brief Push a new state to explore
     inline void dfs_push_scc(fasttgba_state*);
 
+    /// \brief  Pop states already explored
     inline void dfs_pop_scc();
 
     inline void merge_scc(fasttgba_state*);
-
 
     /// \brief the main procedure
     inline void main();
@@ -93,10 +91,11 @@ namespace spot
     /// \brief the union_find used for the storage
     union_find *uf;
 
+    /// \brief to detect if an iterator has already be once incremented
     bool last;
 
+    /// \brief for using scc scc roots
     std::stack<int> scc;
-
   };
 }
 

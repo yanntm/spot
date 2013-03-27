@@ -33,15 +33,7 @@ namespace spot
   cou99_uf::cou99_uf(const fasttgba* a) :
     counterexample_found(false), a_(a),
     uf(new union_find(a->get_acc()))
-  {
-    // dfs_push  = &spot::cou99_uf::dfs_push_scc;
-    // dfs_pop  = &spot::cou99_uf::dfs_pop_scc;
-    // merge  = &spot::cou99_uf::merge_scc;
-
-    // dfs_push  = &spot::cou99_uf::dfs_push_classic;
-    // dfs_pop  = &spot::cou99_uf::dfs_pop_classic;
-    // merge  = &spot::cou99_uf::merge_classic;
-  }
+  {  }
 
   cou99_uf::~cou99_uf()
   {
@@ -60,7 +52,6 @@ namespace spot
   {
     trace << "Cou99_Uf::Init" << std::endl;
     fasttgba_state* init = a_->get_init_state();
-    //(this->*dfs_push)(init);
     dfs_push_scc(init);
     // dfs_push_classic(init);
   }
@@ -114,8 +105,8 @@ namespace spot
     markset m = todo[i].second->current_acceptance_marks();
     uf->add_acc(d, m|a);
 
-    // assert(!uf->is_dead(todo.back().first));
-    // assert(!uf->is_dead(d));
+    assert(!uf->is_dead(todo.back().first));
+    assert(!uf->is_dead(d));
   }
 
   void cou99_uf::dfs_push_scc(fasttgba_state* s)
@@ -166,8 +157,8 @@ namespace spot
       }
     uf->add_acc(d, a);
 
-    // assert(!uf->is_dead(todo.back().first));
-    // assert(!uf->is_dead(d));
+    assert(!uf->is_dead(todo.back().first));
+    assert(!uf->is_dead(d));
   }
 
   void cou99_uf::main()
@@ -175,7 +166,7 @@ namespace spot
     while (!todo.empty())
       {
 	trace << "Main " << std::endl;
-	// assert(!uf->is_dead(todo.back().first));
+	assert(!uf->is_dead(todo.back().first));
 
 	//  Is there any transitions left ?
 
@@ -186,7 +177,6 @@ namespace spot
 
     	if (todo.back().second->done())
     	  {
-    	    // (this->*dfs_pop) ();
 	    dfs_pop_scc ();
 	    // dfs_pop_classic ();
     	  }
@@ -195,14 +185,12 @@ namespace spot
     	    fasttgba_state* d = todo.back().second->current_state();
     	    if (!uf->contains(d))
     	      {
-    	    	// (this->*dfs_push) (d);
 		dfs_push_scc (d);
 		// dfs_push_classic (d);
     	    	continue;
     	      }
     	    else if (!uf->is_dead(d))
     	      {
-    	    	// (this->*merge) (d);
 		merge_scc (d);
 		// merge_classic (d);
     	    	if (uf->get_acc(d).all())
