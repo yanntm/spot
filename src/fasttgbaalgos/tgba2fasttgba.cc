@@ -154,7 +154,10 @@ namespace spot
 		  }
 		else
 		  {
-		    std::vector<int>::iterator pp = std::find(acceptances_.begin(), acceptances_.end(), bdd_var(one));
+		    std::vector<int>::iterator pp =
+		      std::find(acceptances_.begin(),
+				acceptances_.end(),
+				bdd_var(one));
 		    int nth = std::distance(acceptances_.begin(), pp);
 		    current_mark.set_mark(acceptances2_[nth]);
 		    one = bdd_high(one);
@@ -179,14 +182,20 @@ namespace spot
 	      {
 	    	if (bdd_high(one) == bddfalse)
 	    	  {
-	    	    std::vector<int>::iterator pp = std::find(positions_.begin(), positions_.end(), bdd_var(one));
+	    	    std::vector<int>::iterator pp =
+		      std::find(positions_.begin(),
+				positions_.end(),
+				bdd_var(one));
 	    	    int nth = std::distance(positions_.begin(), pp);
 	    	    current_cond.set_false_var(positions2_[nth]);
 	    	    one = bdd_low(one);
 	    	  }
 	    	else
 	    	  {
-	    	    std::vector<int>::iterator pp = std::find(positions_.begin(), positions_.end(), bdd_var(one));
+	    	    std::vector<int>::iterator pp =
+		      std::find(positions_.begin(),
+				positions_.end(),
+				bdd_var(one));
 	    	    int nth = std::distance(positions_.begin(), pp);
 	    	    current_cond.set_true_var(positions2_[nth]);
 	    	    one = bdd_high(one);

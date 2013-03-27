@@ -38,7 +38,7 @@ namespace spot
 
     virtual ~transition(){};
 
-    transition (cube c, markset a,const fast_explicit_state* d)
+    transition (cube c, markset a, const fast_explicit_state* d)
       : conditions(c),
 	acceptance_marks(a)
     {

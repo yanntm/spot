@@ -277,8 +277,9 @@ namespace spot
 	  // Register for automaton
     	  const char* name = d->get_state_variable_name(i);
 	  const ltl::atomic_prop* ap =
-	    ltl::atomic_prop::instance(name, spot::ltl::default_environment::instance());
-	  //ap->clone();
+	    ltl::atomic_prop::instance
+	    (name,
+	     spot::ltl::default_environment::instance());
 	  aps.register_ap_for_aut (ap, kripke);
 	  ap->destroy();
 
@@ -633,7 +634,8 @@ namespace spot
 		  var_num = ii;
 
 		  int type_num = d_->get_state_variable_type(ii);
-		  enum_map_t::const_iterator ei = enum_map[type_num].find(lastdot+1);
+		  enum_map_t::const_iterator ei =
+		    enum_map[type_num].find(lastdot+1);
 		  if (ei == enum_map[type_num].end())
 		    {
 		      std::cerr << "No state `" << lastdot

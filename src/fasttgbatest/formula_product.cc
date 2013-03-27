@@ -172,7 +172,8 @@ int main(int argc, char **argv)
 
       std::cout << "-------------> PRODUCT ! " << std::endl;
       const spot::tgba *prodbis = new spot::tgba_product(af1, af2);
-      const spot::fasttgba* ftgbabis = spot::tgba_2_fasttgba(prodbis, *aps, *accs);
+      const spot::fasttgba* ftgbabis =
+	spot::tgba_2_fasttgba(prodbis, *aps, *accs);
       spot::dotty_dfs dottybis(ftgbabis);
       dottybis.run();
       delete prodbis;

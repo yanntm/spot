@@ -53,9 +53,14 @@ namespace spot
 
   protected:
     const fasttgba* a_;
-    std::stack<const fasttgba_state*> todo; ///< A stack of states yet to explore.
+
+    std::stack<const fasttgba_state*>
+    todo; ///< A stack of states yet to explore.
+
     typedef Sgi::hash_map<const fasttgba_state*, int,
-			  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> seen_map;
+			  fasttgba_state_ptr_hash,
+			  fasttgba_state_ptr_equal> seen_map;
+
     seen_map seen;
   };
 }

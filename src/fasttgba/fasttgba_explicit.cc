@@ -30,8 +30,6 @@ namespace spot
   {
     if (!--count_)
       {
-    	// std::cout << this << "   " << count_ << std::endl;
-    	//this->~fast_explicit_state();
 	unsigned int i;
 	for (i = 0; i < successors.size(); ++i)
 	  {
@@ -39,14 +37,11 @@ namespace spot
 	  }
 	delete this;
       }
-    // else
-    //   std::cout << this << "   " << count_ << std::endl;
   }
 
   fast_explicit_state::fast_explicit_state(int label):
     label_(label), strength_(UNKNOWN_SCC), count_(1)
   {
-    //std::cout << this << std::endl;
   }
 
   int
@@ -95,7 +90,6 @@ namespace spot
   void
   fast_explicit_state::add_successor(const struct transition *t)
   {
-    //successors.insert(successors.end(), t);
     successors.push_back(t);
   }
 
@@ -253,7 +247,6 @@ namespace spot
     if (available == state_map_.end())
       {
 	fast_explicit_state *the_state = new fast_explicit_state(s);
-	//the_state->clone();
 	state_map_.insert(std::make_pair (s, the_state));
 
 	// Initial state not yet fixed

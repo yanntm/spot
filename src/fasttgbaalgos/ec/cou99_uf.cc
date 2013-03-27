@@ -94,7 +94,7 @@ namespace spot
       {
 	int ref = i;
 	while (uf->same_partition(todo[ref].first, todo[i].first))
-	  ref--;
+	 --ref;
 
  	uf->unite(d, todo[i].first);
 	markset m = todo[i].second->current_acceptance_marks();

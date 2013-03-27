@@ -186,7 +186,8 @@ main(int argc, char **argv)
 	  result << "," << t.utime() << "," << t.stime();
 	  delete stats;
 
-	  const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
+	  const spot::fasttgba* ftgba1 =
+	    spot::tgba_2_fasttgba(af1, *aps, *accs);
 	  std::cout << "Expl. the Property (new):";
 	  mtimer.start("Expl. Property (new)");
 	  spot::stats_dfs* stats1 = new spot::stats_dfs (ftgba1);
@@ -262,10 +263,12 @@ main(int argc, char **argv)
 	  std::cout << std::endl;
 	  std::cout << "#, nK. st, nK. tr, nK. utime, nK. stime, "
 		    << "nF. st, nF. tr, nF. utime, nF. stime" << ", "
-		    << "nK. x nF. st, nK. x nF. tr, nK. x nF. utime, nK. x nF. stime"
+		    << "nK. x nF. st, nK. x nF. tr, nK. x nF. utime,"
+		    << " nK. x nF. stime"
 		    << ", oK. st, oK. tr, oK. utime, oK. stime, "
 		    << "oF. st, oF. tr, oF. utime, oF. stime, "
-		    << "oK. x oF. st, oK. x oF. tr, oK. x oF. utime, oK. x oF. stime"
+		    << "oK. x oF. st, oK. x oF. tr, oK. x oF. utime,"
+		    << " oK. x oF. stime"
 		    << ", formula"
 		    << std::endl;
 	  std::cout << "STATS," <<  result.str()
@@ -292,7 +295,8 @@ main(int argc, char **argv)
 	    const spot::fasttgba* kripke =
 	      spot::load_dve2fast(file, *aps, *accs, true);
 
-	    const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
+	    const spot::fasttgba* ftgba1 =
+	      spot::tgba_2_fasttgba(af1, *aps, *accs);
 
 	    const spot::fasttgba_kripke_product *prod =
 	      new spot::fasttgba_kripke_product (kripke, ftgba1);
@@ -390,7 +394,8 @@ main(int argc, char **argv)
 	  const spot::fasttgba* kripke =
 	    spot::load_dve2fast(file, *aps, *accs, true);
 
-	  const spot::fasttgba* ftgba1 = spot::tgba_2_fasttgba(af1, *aps, *accs);
+	  const spot::fasttgba* ftgba1 =
+	    spot::tgba_2_fasttgba(af1, *aps, *accs);
 
 	  const spot::fasttgba_kripke_product *prod =
 	    new spot::fasttgba_kripke_product (kripke, ftgba1);
@@ -439,7 +444,8 @@ main(int argc, char **argv)
 	  // // Check if the original algorithm is agree to ref
 	  // if ((ecres && !res_) || (!ecres && res_))
 	  //   {
-	  //     std::cerr << "ERROR: " << spot::ltl::to_string(f1) << std::endl;
+	  //     std::cerr << "ERROR: "
+	  //      << spot::ltl::to_string(f1) << std::endl;
 	  //     assert(false);
 	  //   }
 	  // else

@@ -69,8 +69,6 @@ namespace spot
       return;
     left_->destroy();
     right_->destroy();
-    //this->~fast_product_state();
-    //delete this;
     pool_->deallocate(this);
   }
 
@@ -191,10 +189,10 @@ namespace spot
   fast_product_iterator::current_state() const
   {
     fasttgba_state* s =
-      new(pool_->allocate()) fast_product_state(left_->current_state(),//->clone(),
-					       right_->current_state(),
-					       pool_);//->clone());
-    return s;//->clone();
+      new(pool_->allocate()) fast_product_state(left_->current_state(),
+						right_->current_state(),
+						pool_);
+    return s;
   }
 
   cube
@@ -243,10 +241,10 @@ namespace spot
   fasttgba_product::get_init_state() const
   {
     fasttgba_state* init  =
-      new(pool_.allocate()) fast_product_state(left_->get_init_state(),//->clone(),
-					      right_->get_init_state(),
-					      &pool_);//->clone());
-    return init;//->clone();
+      new(pool_.allocate()) fast_product_state(left_->get_init_state(),
+					       right_->get_init_state(),
+					       &pool_);
+    return init;
   }
 
   fasttgba_succ_iterator*
