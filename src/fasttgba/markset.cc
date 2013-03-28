@@ -46,6 +46,12 @@ namespace spot
     return *this;
   }
 
+  bool
+  markset::operator==(const markset& b)
+  {
+    return markset_ == b.markset_;
+  }
+
   markset&
   markset::operator|=(const markset& b)
   {

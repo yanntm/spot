@@ -42,6 +42,9 @@ namespace spot
     /// \brief Initialize a mark of size \a size
     markset(acc_dict& acc);
 
+    /// \brief destructor for a markset
+    virtual ~markset(){ }
+
     /// \brief A copy constructor
     markset(const markset& b);
 
@@ -49,6 +52,9 @@ namespace spot
     ///
     /// Assign the result to this
     markset& operator&=(const markset& b);
+
+    /// \brief a comparator for two markset
+    bool operator==(const markset& b);
 
     /// \brief perform a logic OR with \a b
     ///
