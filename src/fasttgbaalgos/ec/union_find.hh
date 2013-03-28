@@ -107,6 +107,8 @@ namespace spot
     /// \brief Acceptance associated to each element
     std::vector<markset> acc;
 
+    std::vector<markset *> accp;
+
 
     // /// \brief define the type that will be use for the SCC stack
     // /// <ID, RK, ACC>

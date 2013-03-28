@@ -33,13 +33,18 @@ namespace spot
   {
     id.push_back(0);
     rk.push_back(0);
-    acc.push_back(empty);
+    //acc.push_back(empty);
+    accp.push_back(&empty);
 
     //uf.push_back(boost::make_tuple(0,0,empty));
   }
 
   union_find::~union_find ()
   {
+    for (unsigned i = 0; i < accp.size(); ++i)
+      if (accp[i] != &empty)
+	delete accp[i];
+
     uf_map::const_iterator s = el.begin();
     while (s != el.end())
       {
@@ -57,7 +62,8 @@ namespace spot
     el.insert(std::make_pair(s, id.size()));
     id.push_back(id.size());
     rk.push_back(0);
-    acc.push_back(empty);
+    //acc.push_back(empty);
+    accp.push_back(&empty);
 
 
     // el.insert(std::make_pair(s, uf.size()));
@@ -134,12 +140,22 @@ namespace spot
     if (rk_left < rk_right)
       {
     	id [root_left] =  root_right;
-    	acc[root_left] |= acc[root_right];
+    	//acc[root_left] |= acc[root_right];
+
+	if (accp[root_left] == &empty)
+	  accp[root_left]  = new markset(acc_);
+
+	accp[root_left]->operator |= (*accp[root_right]);
       }
     else
       {
     	id [root_right] =  root_left;
-    	acc[root_right] |= acc[root_left];
+    	//acc[root_right] |= acc[root_left];
+
+	if (accp[root_right] == &empty)
+	  accp[root_right]  = new markset(acc_);
+
+	accp[root_right]->operator |= (*accp[root_left]);
 
     	if (rk_left == rk_right)
     	  {
@@ -189,7 +205,8 @@ namespace spot
     trace << "union_find::get_acc" << std::endl;
     int r = root(el[s]);
     // assert(r);
-    return acc[r];
+    return *accp[r];
+    //return acc[r];
 
     // return uf [root(el[s])].get<2>();
   }
@@ -200,7 +217,12 @@ namespace spot
     trace << "union_find::add_acc" << std::endl;
     int r = root(el[s]);
     // assert(r);
-    acc[r] |= m;
+    //acc[r] |= m;
+
+    if (accp[r] == &empty)
+      accp[r]  = new markset(acc_);
+
+    accp[r]->operator |= (m);
 
     // uf [root(el[s])].get<2>() |= m;
   }
