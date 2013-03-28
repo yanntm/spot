@@ -50,28 +50,28 @@ namespace spot
     // ------------------------------------------------------------
 
     /// \brief Push a new state to explore
-    inline void dfs_push_classic(fasttgba_state*);
+     void dfs_push_classic(fasttgba_state*);
 
     /// \brief  Pop states already explored
-    inline void dfs_pop_classic();
+     void dfs_pop_classic();
 
     /// \brief merge multiple states
-    inline void merge_classic(fasttgba_state*);
+     void merge_classic(fasttgba_state*);
 
     // ------------------------------------------------------------
     // For integrating SCC stack as original algorithm
     // ------------------------------------------------------------
 
     /// \brief Push a new state to explore
-    inline void dfs_push_scc(fasttgba_state*);
+     void dfs_push_scc(fasttgba_state*);
 
     /// \brief  Pop states already explored
-    inline void dfs_pop_scc();
+     void dfs_pop_scc();
 
-    inline void merge_scc(fasttgba_state*);
+     void merge_scc(fasttgba_state*);
 
     /// \brief the main procedure
-    inline void main();
+     void main();
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
