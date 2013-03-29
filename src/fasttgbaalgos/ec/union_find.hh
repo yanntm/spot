@@ -51,10 +51,6 @@ namespace spot
     /// is in charge to perform the destroy()
     void add (const fasttgba_state* s);
 
-    // /// \brief Return true if the Union-Find have a
-    // /// partition that contains \a s
-    // bool contains (const fasttgba_state* s);
-
     /// \brief Perform the union of the two partition containing
     /// \a left and \a right. No assumptions over the resulting
     /// parent can be do.
@@ -105,17 +101,7 @@ namespace spot
     std::vector<int> rk;
 
     /// \brief Acceptance associated to each element
-    std::vector<markset> acc;
-
     std::vector<markset *> accp;
-
-
-    // /// \brief define the type that will be use for the SCC stack
-    // /// <ID, RK, ACC>
-    // typedef boost::tuple <int, int, markset> uf_el;
-    // std::vector<uf_el> uf;
-
-
 
     /// \brief The acceptance dictionary
     acc_dict& acc_;

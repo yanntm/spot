@@ -52,8 +52,8 @@ namespace spot
   {
     trace << "Cou99_Uf::Init" << std::endl;
     fasttgba_state* init = a_->get_init_state();
-    dfs_push_scc(init);
-    // dfs_push_classic(init);
+    //dfs_push_scc(init);
+    dfs_push_classic(init);
   }
 
   void cou99_uf::dfs_push_classic(fasttgba_state* s)
@@ -177,22 +177,22 @@ namespace spot
 
     	if (todo.back().second->done())
     	  {
-	    dfs_pop_scc ();
-	    // dfs_pop_classic ();
+	    // dfs_pop_scc ();
+	    dfs_pop_classic ();
     	  }
     	else
     	  {
     	    fasttgba_state* d = todo.back().second->current_state();
     	    if (!uf->contains(d))
     	      {
-		dfs_push_scc (d);
-		// dfs_push_classic (d);
+		// dfs_push_scc (d);
+		dfs_push_classic (d);
     	    	continue;
     	      }
     	    else if (!uf->is_dead(d))
     	      {
-		merge_scc (d);
-		// merge_classic (d);
+		// merge_scc (d);
+		merge_classic (d);
     	    	if (uf->get_acc(d).all())
     	    	  {
     	    	    counterexample_found = true;

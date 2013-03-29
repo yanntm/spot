@@ -33,10 +33,7 @@ namespace spot
   {
     id.push_back(0);
     rk.push_back(0);
-    //acc.push_back(empty);
     accp.push_back(&empty);
-
-    //uf.push_back(boost::make_tuple(0,0,empty));
   }
 
   union_find::~union_find ()
@@ -62,12 +59,7 @@ namespace spot
     el.insert(std::make_pair(s, id.size()));
     id.push_back(id.size());
     rk.push_back(0);
-    //acc.push_back(empty);
     accp.push_back(&empty);
-
-
-    // el.insert(std::make_pair(s, uf.size()));
-    // uf.push_back(boost::make_tuple(uf.size(),0,empty));
   }
 
   int union_find::root (int i)
@@ -77,19 +69,14 @@ namespace spot
       return p;
     p = root(p);
     return id[i] = p;
-
-    // int p = uf[i].get<0>();
-    // if (i == p || p == uf[p].get<0>())
-    //   return p;
-    // return uf[i].get<0>() = root(p);
   }
 
   bool
   union_find::same_partition (const fasttgba_state* left,
 			      const fasttgba_state* right)
   {
-    // assert(left);
-    // assert(right);
+    assert(left);
+    assert(right);
     int l  = root(el[left]);
     int r  = root(el[right]);
     trace << "union_find::same_partition? "
@@ -105,11 +92,6 @@ namespace spot
     trace << "union_find::make_dead " << el[s] << " root_ :"
     	  << root(el[s]) << std::endl;
     id[root(el[s])] = 0;
-
-
-    // trace << "union_find::make_dead " << el[s] << " root_ :"
-    // 	  << root(el[s]) << std::endl;
-    // uf[root(el[s])].get<0>() = 0;
   }
 
   bool
@@ -122,16 +104,16 @@ namespace spot
   union_find::unite (const fasttgba_state* left,
 		     const fasttgba_state* right)
   {
-    // assert(contains(left));
-    // assert(contains(right));
+    assert(contains(left));
+    assert(contains(right));
     int root_left = root(el[left]);
     int root_right = root(el[right]);
 
     trace << "union_find::unite "
     	  << root_left << " " << root_right << std::endl;
 
-    // assert(root_left);
-    // assert(root_right);
+    assert(root_left);
+    assert(root_right);
 
     int rk_left = rk[root_left];
     int rk_right = rk[root_right];
@@ -140,8 +122,8 @@ namespace spot
     if (rk_left < rk_right)
       {
     	id [root_left] =  root_right;
-    	//acc[root_left] |= acc[root_right];
 
+	// instanciate only when it's necessary
 	if (accp[root_left] == &empty)
 	  accp[root_left]  = new markset(acc_);
 
@@ -150,8 +132,8 @@ namespace spot
     else
       {
     	id [root_right] =  root_left;
-    	//acc[root_right] |= acc[root_left];
 
+	// instanciate only when it's necessary
 	if (accp[root_right] == &empty)
 	  accp[root_right]  = new markset(acc_);
 
@@ -162,41 +144,6 @@ namespace spot
     	    ++rk[root_left];
     	  }
       }
-
-
-
-
-
-    // // assert(contains(left));
-    // // assert(contains(right));
-    // int root_left = root(el[left]);
-    // int root_right = root(el[right]);
-
-    // trace << "union_find::unite "
-    // 	  << root_left << " " << root_right << std::endl;
-
-    // // assert(root_left);
-    // // assert(root_right);
-
-    // int rk_left = uf[root_left].get<1>();
-    // int rk_right = uf[root_right].get<1>();
-
-    // // Use ranking
-    // if (rk_left < rk_right)
-    //   {
-    // 	uf [root_left].get<0>() =  root_right;
-    // 	uf [root_left].get<2>() |= uf[root_right].get<2>();
-    //   }
-    // else
-    //   {
-    // 	uf [root_right].get<0>() =  root_left;
-    // 	uf [root_right].get<2>() |= uf[root_left].get<2>();
-
-    // 	if (rk_left == rk_right)
-    // 	  {
-    // 	    ++uf[root_left].get<1>();
-    // 	  }
-    //   }
   }
 
   markset
@@ -204,11 +151,8 @@ namespace spot
   {
     trace << "union_find::get_acc" << std::endl;
     int r = root(el[s]);
-    // assert(r);
+    assert(r);
     return *accp[r];
-    //return acc[r];
-
-    // return uf [root(el[s])].get<2>();
   }
 
   void
@@ -216,15 +160,12 @@ namespace spot
   {
     trace << "union_find::add_acc" << std::endl;
     int r = root(el[s]);
-    // assert(r);
-    //acc[r] |= m;
 
+    // instanciate only if necessary
     if (accp[r] == &empty)
       accp[r]  = new markset(acc_);
 
     accp[r]->operator |= (m);
-
-    // uf [root(el[s])].get<2>() |= m;
   }
 
   bool union_find::contains (const fasttgba_state* s)
