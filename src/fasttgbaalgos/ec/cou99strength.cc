@@ -64,13 +64,6 @@ namespace spot
 	++s;
       }
     H.clear();
-
-    // std::map<const fasttgba_state*, int>::const_iterator i;
-    // for (i = H.begin(); i != H.end(); ++i)
-    //   {
-    // 	i->first->destroy();
-    //   }
-    // H.clear();
   }
 
   bool
