@@ -38,6 +38,11 @@ namespace spot
   cou99_uf::~cou99_uf()
   {
     delete uf;
+    while (!todo.empty())
+      {
+    	delete todo.back().second;
+    	todo.pop_back();
+      }
   }
 
   bool
