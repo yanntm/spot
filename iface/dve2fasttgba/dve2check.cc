@@ -44,6 +44,7 @@
 #include "fasttgbaalgos/ec/cou99.hh"
 #include "fasttgbaalgos/ec/cou99_uf.hh"
 #include "fasttgbaalgos/ec/cou99strength.hh"
+#include "fasttgbaalgos/ec/cou99strength_uf.hh"
 
 
 #include "misc/timer.hh"
@@ -83,6 +84,7 @@ main(int argc, char **argv)
     syntax(argv[0]);
 
   bool opt_couuf = true;
+  bool opt_coustrengthuf = true;
   bool opt_cou99 = true;
 
   // if (strcmp("-cou99", argv[3]))
@@ -327,11 +329,44 @@ main(int argc, char **argv)
 		std::cout << result.str() << std::endl;
 	      }
 
+	    bool res_cou99strengthuf = true;
+	    if (opt_coustrengthuf)
+	      {
+		std::ostringstream result;
+		result << "#cou99strength_uf,";
+
+	  	spot::cou99strength_uf* checker =
+		  new spot::cou99strength_uf(prod);
+	  	mtimer.start("Checking cou99str_uf");
+	  	if (checker->check())
+	  	  {
+		    res_cou99strengthuf = false;
+		    result << "VIOLATED,";
+	  	  }
+	  	else
+		  {
+		    result << "VERIFIED,";
+		  }
+	  	mtimer.stop("Checking cou99str_uf");
+	  	delete checker;
+
+
+		spot::timer t = mtimer.timer("Checking cou99str_uf");
+		result << t.utime() + t.stime();
+		result << "," << input;
+		std::cout << result.str() << std::endl;
+
+		assert (res_cou99strengthuf == res_cou99uf);
+
+	      }
+
+
+
 	    bool res_cou99 = true;
 	    if (opt_cou99)
 	      {
 		std::ostringstream result;
-		result << "#cou99," ;
+		result << "#cou99,";
 
 	  	spot::cou99* checker = new spot::cou99(prod);
 	  	mtimer.start("Checking cou99");
