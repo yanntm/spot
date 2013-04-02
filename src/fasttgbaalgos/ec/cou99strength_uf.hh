@@ -56,6 +56,17 @@ namespace spot
     /// \brief merge multiple states
      void merge_classic(fasttgba_state*);
 
+
+    /// \brief Push a new state to explore
+     void dfs_push_classic_uf(fasttgba_state*);
+
+    /// \brief  Pop states already explored
+     void dfs_pop_classic_uf();
+
+    /// \brief merge multiple states
+     void merge_classic_uf(fasttgba_state*);
+
+
     /// \brief the main procedure
      void main();
 

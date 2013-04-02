@@ -94,6 +94,7 @@ namespace spot
     	return;
       }
 
+    //dfs_push_classic_uf(init);
     dfs_push_classic(init);
   }
 
@@ -174,6 +175,79 @@ namespace spot
     assert(!uf->is_dead(d));
   }
 
+
+
+  void cou99strength_uf::dfs_push_classic_uf(fasttgba_state* s)
+  {
+    trace << "Cou99strength_Uf::DFS_push "
+	  << a_->format_state(s)
+    	  << std::endl;
+
+    // If terminal must Stop
+    if (get_strength(s) == TERMINAL_SCC)
+      {
+	counterexample_found = true;
+	return;
+      }
+
+    uf->add (s);
+
+    // Non accepting : mark as dead
+    if (get_strength(s) == NON_ACCEPTING_SCC)
+      {
+	uf->make_dead(s);
+      }
+
+    fasttgba_succ_iterator* si = a_->succ_iter(s);
+    si->first();
+    todo.push_back (std::make_pair(s, si));
+    last = true;
+  }
+
+  void cou99strength_uf::dfs_pop_classic_uf()
+  {
+    trace << "Cou99strength_Uf::DFS_pop " << std::endl;
+    pair_state_iter pair = todo.back();
+    delete pair.second;
+    todo.pop_back();
+
+    if (todo.empty() ||
+	!uf->same_partition(pair.first, todo.back().first))
+      {
+	uf->make_dead(pair.first);
+      }
+  }
+
+  void cou99strength_uf::merge_classic_uf(fasttgba_state* d)
+  {
+    int i = todo.size() - 1;
+    markset a (a_->get_acc());
+
+    while (!uf->same_partition(d, todo[i].first))
+      {
+	int ref = i;
+	while (uf->same_partition(todo[ref].first, todo[i].first))
+	 --ref;
+
+ 	uf->unite(d, todo[i].first);
+	markset m = todo[i].second->current_acceptance_marks();
+	a |= m;
+	i = ref;
+      }
+
+    markset m = todo[i].second->current_acceptance_marks();
+    uf->add_acc(d, m|a);
+
+    assert(!uf->is_dead(todo.back().first));
+    assert(!uf->is_dead(d));
+  }
+
+
+
+
+
+
+
   void cou99strength_uf::main()
   {
     while (!todo.empty())
@@ -189,28 +263,21 @@ namespace spot
 
     	if (todo.back().second->done())
     	  {
-	    dfs_pop_classic ();
+	    dfs_pop_classic_uf ();
     	  }
     	else
     	  {
-    	    fasttgba_state* d = todo.back().second->current_state();
-	    bool inuf = uf->contains(d);
-	    bool inh = H.find(d) != H.end();
-    	    if (!inh && !inuf)
+	    fasttgba_state* d = todo.back().second->current_state();
+    	    if (!uf->contains(d))
     	      {
-		dfs_push_classic (d);
+		dfs_push_classic_uf (d);
 		if (counterexample_found)
 		  return;
     	    	continue;
     	      }
-	    else if (inh && H[d])
-	      {
-		counterexample_found = true;
-		return;
-	      }
-    	    else if (inuf && !uf->is_dead(d))
+    	    else if (!uf->is_dead(d))
     	      {
-		merge_classic (d);
+		merge_classic_uf (d);
     	    	if (uf->get_acc(d).all())
     	    	  {
     	    	    counterexample_found = true;
@@ -219,6 +286,36 @@ namespace spot
     	    	  }
     	      }
 	    d->destroy();
+
+
+
+
+    	    // fasttgba_state* d = todo.back().second->current_state();
+	    // bool inuf = uf->contains(d);
+	    // bool inh = H.find(d) != H.end();
+    	    // if (!inh && !inuf)
+    	    //   {
+	    // 	dfs_push_classic (d);
+	    // 	if (counterexample_found)
+	    // 	  return;
+    	    // 	continue;
+    	    //   }
+	    // else if (inh && H[d])
+	    //   {
+	    // 	counterexample_found = true;
+	    // 	return;
+	    //   }
+    	    // else if (inuf && !uf->is_dead(d))
+    	    //   {
+	    // 	merge_classic (d);
+    	    // 	if (uf->get_acc(d).all())
+    	    // 	  {
+    	    // 	    counterexample_found = true;
+    	    // 	    d->destroy();
+    	    // 	    return;
+    	    // 	  }
+    	    //   }
+	    // d->destroy();
     	  }
       }
   }
