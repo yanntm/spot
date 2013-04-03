@@ -31,8 +31,7 @@ namespace spot
   union_find::union_find (acc_dict& a) :
     acc_(a), empty(acc_)
   {
-    id.push_back(0);
-    rk.push_back(0);
+    idneg.push_back(0);
     accp.push_back(&empty);
   }
 
@@ -55,20 +54,20 @@ namespace spot
   void
   union_find::add (const fasttgba_state* s)
   {
-    trace << "union_find::add " << id.size() << std::endl;
-    el.insert(std::make_pair(s, id.size()));
-    id.push_back(id.size());
-    rk.push_back(0);
+    trace << "union_find::add " << idneg.size() << std::endl;
+    el.insert(std::make_pair(s, idneg.size()));
+    idneg.push_back(-1);
     accp.push_back(&empty);
   }
 
   int union_find::root (int i)
   {
-    int p = id[i];
-    if (i == p || p == id[p])
+    int p = idneg[i];
+    if (p <= 0)
+      return i;
+    if (idneg[p] <= 0)
       return p;
-    p = root(p);
-    return id[i] = p;
+    return  idneg[i] = root(p);
   }
 
   bool
@@ -91,13 +90,13 @@ namespace spot
   {
     trace << "union_find::make_dead " << el[s] << " root_ :"
     	  << root(el[s]) << std::endl;
-    id[root(el[s])] = 0;
+    idneg[root(el[s])] = 0;
   }
 
   bool
   union_find::is_dead(const fasttgba_state* s)
   {
-    return root(el[s]) == 0;
+    return idneg[root(el[s])] == 0;
   }
 
   void
@@ -115,13 +114,13 @@ namespace spot
     assert(root_left);
     assert(root_right);
 
-    int rk_left = rk[root_left];
-    int rk_right = rk[root_right];
+    int rk_left = idneg[root_left];
+    int rk_right = idneg[root_right];
 
     // Use ranking
-    if (rk_left < rk_right)
+    if (rk_left > rk_right)
       {
-    	id [root_left] =  root_right;
+    	idneg [root_left] =  root_right;
 
 	// instanciate only when it's necessary
 	if (accp[root_left] == &empty)
@@ -131,7 +130,7 @@ namespace spot
       }
     else
       {
-    	id [root_right] =  root_left;
+    	idneg [root_right] =  root_left;
 
 	// instanciate only when it's necessary
 	if (accp[root_right] == &empty)
@@ -141,7 +140,7 @@ namespace spot
 
     	if (rk_left == rk_right)
     	  {
-    	    ++rk[root_left];
+	    --idneg[root_left];
     	  }
       }
   }

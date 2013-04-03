@@ -95,10 +95,11 @@ namespace spot
     uf_map el;
 
     /// \brief For each element store the id of the parent
-    std::vector<int> id;
+    // std::vector<int> id;
+    std::vector<int> idneg;
 
     /// \brief rank associated to each subtrees.
-    std::vector<int> rk;
+    // std::vector<int> rk;
 
     /// \brief Acceptance associated to each element
     std::vector<markset *> accp;
