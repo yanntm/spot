@@ -46,7 +46,7 @@ namespace spot
     virtual
     fasttgba_state* get_init_state() const = 0;
 
-    /// \brief Get an iterator over the successors of \a local_state.
+    /// \brief Get an iterator over the successors of \a state.
     ///
     /// \param state The state whose successors are to be explored.
     /// This pointer is not adopted in any way by \c succ_iter, and
@@ -55,6 +55,13 @@ namespace spot
     /// the iterator).
     virtual fasttgba_succ_iterator*
     succ_iter(const fasttgba_state* state) const = 0;
+
+    /// \brief Get a Swarm iterator over the sucessors of a \a state
+    ///
+    /// Such an iterator visits randomly once each outgoing transitions
+    /// \param state the states whose successors are to be explored.
+    virtual fasttgba_succ_iterator*
+    swarm_succ_iter(const fasttgba_state* state) const = 0;
 
     /// \brief Get the dictionary associated to the automaton.
     virtual

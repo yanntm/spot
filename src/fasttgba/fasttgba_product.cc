@@ -258,6 +258,16 @@ namespace spot
     return new fast_product_iterator(li, ri, &pool_, kripke_left);
   }
 
+  fasttgba_succ_iterator*
+  fasttgba_product::swarm_succ_iter(const fasttgba_state* local_state) const
+  {
+    const fast_product_state* s =
+      down_cast<const fast_product_state*>(local_state);
+    assert(s);
+    fasttgba_succ_iterator* li = left_->swarm_succ_iter(s->left());
+    fasttgba_succ_iterator* ri = right_->swarm_succ_iter(s->right());
+    return new fast_product_iterator(li, ri, &pool_, kripke_left);
+  }
 
   ap_dict&
   fasttgba_product::get_dict() const

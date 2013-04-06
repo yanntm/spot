@@ -98,9 +98,14 @@ namespace spot
   // ----------------------------------------------------------------------
 
   fast_explicit_iterator::fast_explicit_iterator
-  (const fast_explicit_state* state):
-    start_(state)
+  (const fast_explicit_state* state, bool swarming):
+    start_(state), swarming_(swarming)
   {
+    for (unsigned int i = 0; i < start_->successors.size(); ++i)
+      crossref_.push_back (i);
+
+    if (swarming_)
+      std::random_shuffle (crossref_.begin(), crossref_.end() );
   }
 
   fast_explicit_iterator::~fast_explicit_iterator()
@@ -110,39 +115,49 @@ namespace spot
   void
   fast_explicit_iterator::first()
   {
-    it_ = start_->successors.begin();
+    //it_ = start_->successors.begin();
+    it_ref = crossref_.begin();
   }
 
   void
   fast_explicit_iterator::next()
   {
-    ++it_;
+    //++it_;
+    ++it_ref;
   }
 
   bool
   fast_explicit_iterator::done() const
   {
-    return it_ == start_->successors.end();
+    //return it_ == start_->successors.end();
+    return it_ref == crossref_.end();
   }
 
   fasttgba_state*
   fast_explicit_iterator::current_state() const
   {
+    // assert(!done());
+    // (*it_)->dst->clone();
+    // return const_cast<fast_explicit_state*>((*it_)->dst);
+
     assert(!done());
-    (*it_)->dst->clone();
-    return const_cast<fast_explicit_state*>((*it_)->dst);
+    start_->successors[*it_ref]->dst->clone();
+    return const_cast<fast_explicit_state*>(start_->successors[*it_ref]->dst);
+
   }
 
   cube
   fast_explicit_iterator::current_condition() const
   {
-    return (*it_)->conditions;
+    //return (*it_)->conditions;
+    return start_->successors[*it_ref]->conditions;
   }
 
   markset
   fast_explicit_iterator::current_acceptance_marks() const
   {
-    return (*it_)->acceptance_marks;
+    //return (*it_)->acceptance_marks;
+    return start_->successors[*it_ref]->acceptance_marks;
   }
 
   // ----------------------------------------------------------------------
@@ -187,6 +202,18 @@ namespace spot
 
     return new fast_explicit_iterator(s);
   }
+
+  fasttgba_succ_iterator*
+  fasttgbaexplicit::swarm_succ_iter(const fasttgba_state* state) const
+  {
+    const fast_explicit_state* s =
+      down_cast<const fast_explicit_state*>(state);
+    assert(s);
+
+    return new fast_explicit_iterator(s, true);
+  }
+
+
 
   ap_dict&
   fasttgbaexplicit::get_dict() const

@@ -137,6 +137,9 @@ namespace spot
     virtual fasttgba_succ_iterator*
     succ_iter(const fasttgba_state* local_state) const;
 
+    virtual fasttgba_succ_iterator*
+    swarm_succ_iter(const fasttgba_state* local_state) const;
+
     virtual
     ap_dict& get_dict() const;
 

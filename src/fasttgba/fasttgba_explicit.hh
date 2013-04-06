@@ -101,9 +101,12 @@ namespace spot
     const fast_explicit_state* start_; ///< src of iterator
     std::vector
     <const struct transition*>::const_iterator it_; ///< current iterator
-
+    bool swarming_;
+    std::vector<int> crossref_;
+    std::vector<int>::const_iterator it_ref;
   public:
-    fast_explicit_iterator(const fast_explicit_state* state);
+    fast_explicit_iterator(const fast_explicit_state* state,
+			   bool swarming = false);
     virtual ~fast_explicit_iterator();
     virtual void first();
     virtual void next();
@@ -140,6 +143,9 @@ namespace spot
 
     virtual fasttgba_succ_iterator*
     succ_iter(const fasttgba_state* local_state) const;
+
+    virtual fasttgba_succ_iterator*
+    swarm_succ_iter(const fasttgba_state* state) const;
 
     virtual
     ap_dict& get_dict() const;

@@ -186,9 +186,15 @@ namespace spot
     public:
 
       dve2_succ_iterator(const callback_context* cc,
-    			 const cube cond):
-	cond_(cond), cc_(cc)
+    			 const cube cond,
+			 bool swarming = false):
+	cond_(cond), cc_(cc), swarming_(swarming)
       {
+	for (unsigned int i = 0; i < cc_->transitions.size(); ++i)
+	  crossref_.push_back (i);
+
+	//	if (swarming_)
+	  std::random_shuffle (crossref_.begin(), crossref_.end() );
       }
 
       ~dve2_succ_iterator()
@@ -199,25 +205,29 @@ namespace spot
       virtual
       void first()
       {
-    	it_ = cc_->transitions.begin();
+    	// it_ = cc_->transitions.begin();
+	it_ref = crossref_.begin();
       }
 
       virtual
       void next()
       {
-    	++it_;
+    	// ++it_;
+	++it_ref;
       }
 
       virtual
       bool done() const
       {
-    	return it_ == cc_->transitions.end();
+    	// return it_ == cc_->transitions.end();
+	return it_ref == crossref_.end();
       }
 
       virtual
       fasttgba_state* current_state() const
       {
-    	return (*it_)->clone();
+    	// return (*it_)->clone();
+	return cc_->transitions[*it_ref]->clone();
       }
 
       cube
@@ -240,6 +250,9 @@ namespace spot
       const cube cond_;
       const callback_context* cc_;
       callback_context::transitions_t::const_iterator it_;
+      bool swarming_;
+      std::vector<int> crossref_;
+      std::vector<int>::const_iterator it_ref;
     };
 
     ////////////////////////////////////////////////////////////////////////
@@ -427,6 +440,30 @@ namespace spot
 	//   cc->transitions.push_back(local_state->clone());
 
      	return new dve2_succ_iterator(cc, scond);
+	assert(false);
+      }
+
+      virtual
+      dve2_succ_iterator*
+      swarm_succ_iter(const fasttgba_state* state) const
+      {
+     	callback_context* cc;
+	int t;
+	const int *vars = get_vars(state);
+	cc = build_cc(vars, t);
+	cube scond = compute_state_condition(vars);
+
+	if (!t)
+	  {
+	    cc->transitions.push_back(state->clone());
+	  }
+
+	//assert(t); //??? No deadlock in the model
+	// // Add a self-loop to dead-states if we care about these.
+	// if (t == 0 && scond != bddfalse)
+	//   cc->transitions.push_back(local_state->clone());
+
+     	return new dve2_succ_iterator(cc, scond, true);
 	assert(false);
       }
 
