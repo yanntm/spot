@@ -193,7 +193,7 @@ namespace spot
 	for (unsigned int i = 0; i < cc_->transitions.size(); ++i)
 	  crossref_.push_back (i);
 
-	//	if (swarming_)
+	if (swarming_)
 	  std::random_shuffle (crossref_.begin(), crossref_.end() );
       }
 
