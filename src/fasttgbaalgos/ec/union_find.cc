@@ -54,8 +54,10 @@ namespace spot
   void
   union_find::add (const fasttgba_state* s)
   {
-    trace << "union_find::add " << idneg.size() << std::endl;
-    el.insert(std::make_pair(s, idneg.size()));
+    trace << "union_find::add " << idneg.size() << std::endl << std::flush;
+    std::pair<uf_map::iterator, bool> i =
+      el.insert(std::make_pair(s, idneg.size()));
+    assert(i.second);
     idneg.push_back(-1);
     accp.push_back(&empty);
   }
@@ -81,7 +83,7 @@ namespace spot
     trace << "union_find::same_partition? "
 	  << l << "("<< el[left] << ")   "
 	  << r << "("<< el[right] << ")"
-	  << std::endl;
+	  << std::endl << std::flush;
     return r == l;
   }
 
@@ -89,7 +91,7 @@ namespace spot
   union_find::make_dead(const fasttgba_state* s)
   {
     trace << "union_find::make_dead " << el[s] << " root_ :"
-    	  << root(el[s]) << std::endl;
+    	  << root(el[s]) << std::endl << std::flush;
     idneg[root(el[s])] = 0;
   }
 
@@ -109,7 +111,7 @@ namespace spot
     int root_right = root(el[right]);
 
     trace << "union_find::unite "
-    	  << root_left << " " << root_right << std::endl;
+    	  << root_left << " " << root_right << std::endl << std::flush;
 
     assert(root_left);
     assert(root_right);
@@ -148,7 +150,7 @@ namespace spot
   markset
   union_find::get_acc (const fasttgba_state* s)
   {
-    trace << "union_find::get_acc" << std::endl;
+    trace << "union_find::get_acc" << std::endl << std::flush;
     int r = root(el[s]);
     assert(r);
     return *accp[r];
@@ -157,7 +159,7 @@ namespace spot
   void
   union_find::add_acc (const fasttgba_state* s, markset m)
   {
-    trace << "union_find::add_acc" << std::endl;
+    trace << "union_find::add_acc" << std::endl << std::flush;
     int r = root(el[s]);
 
     // instanciate only if necessary
@@ -169,7 +171,7 @@ namespace spot
 
   bool union_find::contains (const fasttgba_state* s)
   {
-    trace << "union_find::contains" << std::endl;
+    trace << "union_find::contains" << std::endl << std::flush;
     return el.find(s) != el.end();
   }
 }
