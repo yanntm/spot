@@ -33,7 +33,7 @@ namespace spot
   cou99_uf::cou99_uf(const fasttgba* a) :
     counterexample_found(false), a_(a),
     uf(new union_find(a->get_acc()))
-  {  }
+  { }
 
   cou99_uf::~cou99_uf()
   {

@@ -50,7 +50,7 @@ namespace spot
     // ------------------------------------------------------------
 
     /// \brief Push a new state to explore
-     void dfs_push_classic(fasttgba_state*);
+    virtual void dfs_push_classic(fasttgba_state*);
 
     /// \brief  Pop states already explored
      void dfs_pop_classic();
@@ -63,20 +63,18 @@ namespace spot
     // ------------------------------------------------------------
 
     /// \brief Push a new state to explore
-     void dfs_push_scc(fasttgba_state*);
+    void dfs_push_scc(fasttgba_state*);
 
     /// \brief  Pop states already explored
-     void dfs_pop_scc();
+    void dfs_pop_scc();
 
-     void merge_scc(fasttgba_state*);
+    void merge_scc(fasttgba_state*);
 
     /// \brief the main procedure
-     void main();
+    virtual void main();
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
-
-  private:
 
     ///< \brief the automaton that will be used for the Emptiness check
     const fasttgba* a_;
