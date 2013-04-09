@@ -30,6 +30,38 @@ namespace spot
     /// Launch the emptiness check
     virtual bool check() = 0;
   };
+
+
+  /// \brief A simple wrapper for an automaton
+  class instance_automaton
+  {
+  public :
+    /// \brief return the automaton.
+    /// Warning ! You don't have to delete the
+    // automaton just this class to destroy this automaton
+    virtual const fasttgba* get_automaton() const = 0;
+
+    virtual ~instance_automaton()
+    {
+    }
+  };
+
+  /// A wrapper around the automaton to check is needed for
+  /// some emptiness check that needs to work on multiple distinc instance
+  /// of the automaton
+  ///
+  /// In this case, the emptiness check just have to know a specific
+  /// instanciator to perform the emptiness check
+  class instanciator
+  {
+  public:
+    /// \brief return a new instance of the automaton
+    virtual const instance_automaton* new_instance () = 0;
+
+    virtual ~instanciator()
+    {
+    }
+  };
 }
 
 #endif // SPOT_FASTTGBAALGOS_EC_EC_HH
