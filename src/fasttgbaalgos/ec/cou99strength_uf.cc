@@ -31,13 +31,15 @@
 
 namespace spot
 {
-  cou99strength_uf::cou99strength_uf(const fasttgba* a) :
-    counterexample_found(false), a_(a),
-    uf(new union_find(a->get_acc())),
+  cou99strength_uf::cou99strength_uf(instanciator* i) :
+    counterexample_found(false),
     state_cache_(0),
-    strength_cache_(UNKNOWN_SCC)
-
-  {  }
+    strength_cache_(UNKNOWN_SCC),
+    inst(i->new_instance())
+  {
+    a_ = inst->get_automaton ();
+    uf  = new union_find (a_->get_acc());
+  }
 
   cou99strength_uf::~cou99strength_uf()
   {
@@ -48,6 +50,7 @@ namespace spot
     	delete todo.back().second;
     	todo.pop_back();
       }
+    delete inst;
   }
 
   bool

@@ -29,8 +29,8 @@ namespace spot
     class cou99_uf_swarm_impl : public cou99_uf
     {
     public :
-      cou99_uf_swarm_impl (const fasttgba *a) :
-	cou99_uf(a)
+      cou99_uf_swarm_impl (instanciator* i) :
+	cou99_uf(i)
       {}
 
       void dfs_push_classic(fasttgba_state* s)
@@ -114,9 +114,7 @@ namespace spot
   {
     // This is instanciation part that will be creating
     // at the creation of the swarm emptiness check
-    const instance_automaton* inst = itor_->new_instance();
-    const spot::fasttgba* prod = inst->get_automaton();
-    spot::cou99_uf_swarm_impl* checker = new spot::cou99_uf_swarm_impl(prod);
+    spot::cou99_uf_swarm_impl* checker = new spot::cou99_uf_swarm_impl(itor_);
 
     // Then, Threads waits the GO signal that will become
     // true when the user will launch check
@@ -143,7 +141,6 @@ namespace spot
       }
 
     delete checker;
-    delete inst;
   }
 
     /// The implementation of the interface
@@ -187,6 +184,4 @@ namespace spot
       thread_finalize->join();
       delete thread_finalize;
     }
-
-
 }

@@ -35,7 +35,7 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    cou99(const fasttgba *);
+    cou99(instanciator* i);
 
     /// A destructor
     virtual ~cou99();
@@ -59,8 +59,6 @@ namespace spot
 
     /// \brief the main procedure
     void main();
-
-
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
@@ -95,6 +93,8 @@ namespace spot
 			  fasttgba_state_ptr_equal> seen_map;
     seen_map H;
 
+    // The instance automaton
+    const instance_automaton* inst;
   };
 }
 

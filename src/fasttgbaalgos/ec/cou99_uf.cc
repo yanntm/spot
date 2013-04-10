@@ -30,10 +30,13 @@
 
 namespace spot
 {
-  cou99_uf::cou99_uf(const fasttgba* a) :
-    counterexample_found(false), a_(a),
-    uf(new union_find(a->get_acc()))
-  { }
+  cou99_uf::cou99_uf(instanciator* i) :
+    counterexample_found(false),
+    inst(i->new_instance())
+  {
+    a_ = inst->get_automaton ();
+    uf  = new union_find (a_->get_acc());
+  }
 
   cou99_uf::~cou99_uf()
   {
@@ -43,6 +46,8 @@ namespace spot
     	delete todo.back().second;
     	todo.pop_back();
       }
+
+    delete inst;
   }
 
   bool

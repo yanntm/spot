@@ -34,7 +34,7 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    cou99strength_uf(const fasttgba *);
+    cou99strength_uf(instanciator* i);
 
     /// A destructor
     virtual ~cou99strength_uf();
@@ -105,6 +105,9 @@ namespace spot
     const fasttgba_state* state_cache_; ///< State in cache
 
     enum scc_strength strength_cache_; ///< strength in cache
+
+    // The instance automaton
+    const instance_automaton* inst;
   };
 }
 

@@ -32,7 +32,7 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    cou99_uf(const fasttgba *);
+    cou99_uf(instanciator* i);
 
     /// A destructor
     virtual ~cou99_uf();
@@ -53,10 +53,10 @@ namespace spot
     virtual void dfs_push_classic(fasttgba_state*);
 
     /// \brief  Pop states already explored
-     void dfs_pop_classic();
+    virtual void dfs_pop_classic();
 
     /// \brief merge multiple states
-     void merge_classic(fasttgba_state*);
+    virtual void merge_classic(fasttgba_state*);
 
     // ------------------------------------------------------------
     // For integrating SCC stack as original algorithm
@@ -94,6 +94,9 @@ namespace spot
 
     /// \brief for using scc scc roots
     std::stack<int> scc;
+
+    /// \brief The instance automaton
+    const instance_automaton* inst;
   };
 }
 

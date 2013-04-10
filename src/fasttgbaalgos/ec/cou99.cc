@@ -30,10 +30,12 @@
 
 namespace spot
 {
-  cou99::cou99(const fasttgba* a) :
-    counterexample_found(false), a_(a),
-    max(0)
-  {}
+  cou99::cou99(instanciator* i) :
+    counterexample_found(false),
+    max(0), inst (i->new_instance())
+  {
+    a_ = inst->get_automaton();
+  }
 
   cou99::~cou99()
   {
@@ -55,6 +57,7 @@ namespace spot
 	++s;
       }
     H.clear();
+    delete inst;
   }
 
   bool
