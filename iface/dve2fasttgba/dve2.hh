@@ -26,6 +26,15 @@
 #include "fasttgba/fasttgba.hh"
 #include "fasttgba/fasttgba_product.hh"
 
+#include "tgba/tgba.hh"
+
+// This is for creating Wrappers
+#include "fasttgbaalgos/ec/ec.hh"
+#include "fasttgbaalgos/tgba2fasttgba.hh"
+
+
+#include <mutex>
+
 namespace spot
 {
   class fasttgba_kripke_product : public fasttgba_product
@@ -83,6 +92,102 @@ namespace spot
 				      spot::ap_dict& aps,
 				      spot::acc_dict& accs,
 				      bool verbose = true);
+
+
+
+  // A mutex to protect Buddy access
+  std::mutex mutex_load_dve;
+
+  /// Wrapper around the product automaton of a system and a
+  /// fasttgba
+  class dve2product_instance: public instance_automaton
+  {
+  public:
+    dve2product_instance(const spot::dve2product_instance&) = delete;
+
+    dve2product_instance (const spot::tgba* tgba,
+			  std::string filename):
+      tgba_(tgba), filename_(filename)
+    {
+      std::lock_guard<std::mutex> lk(mutex_load_dve);
+
+      // Instanciate dictionnaries
+      aps_ = new spot::ap_dict();
+      accs_ = new spot::acc_dict();
+
+      // Instanciate kripke
+      kripke =  spot::load_dve2fast(filename, *aps_, *accs_, true);
+
+      // Instanciate
+      ftgba1 = spot::tgba_2_fasttgba(tgba_, *aps_, *accs_);
+
+      prod = new spot::fasttgba_kripke_product (kripke, ftgba1);
+    }
+
+
+    virtual ~dve2product_instance()
+    {
+      std::lock_guard<std::mutex> lk(mutex_load_dve);
+
+      delete prod;
+      delete ftgba1;
+      delete kripke;
+      delete accs_;
+      delete aps_;
+    }
+
+    // The automaton to check
+    const fasttgba* get_automaton () const
+    {
+      return prod;
+    }
+
+  private:
+    const spot::tgba* tgba_;
+    std::string filename_;
+    const spot::fasttgba* ftgba1;
+    const spot::fasttgba* kripke;
+    const spot::fasttgba_kripke_product *prod;
+    spot::ap_dict* aps_;
+    spot::acc_dict* accs_;
+  };
+
+
+  /// A dve2 product instanciator
+  ///
+  /// FIXME: This class should contain the dictionnary to
+  /// avoid redefinitions for each instance.
+  class dve2product_instanciator: public instanciator
+  {
+  private:
+    const spot::tgba* tgba_;
+    std::string filename_;
+
+  public:
+    dve2product_instanciator (const spot::tgba* tgba,
+			      std::string filename):
+      tgba_(tgba), filename_(filename)
+    {
+    }
+
+    const instance_automaton* new_instance ( )
+    {
+      return new dve2product_instance(tgba_, filename_);
+    }
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 #endif // SPOT_IFACE_DVE2FASTTGBA_DVE2_HH
