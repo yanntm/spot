@@ -72,6 +72,7 @@ tgbaalgos_HEADERS = \
   termemptchk.hh \
   translate.hh \
   reductgba_sim.hh \
+  weakemptchk.hh \
   weight.hh
 
 noinst_LTLIBRARIES = libtgbaalgos.la
@@ -119,6 +120,7 @@ libtgbaalgos_la_SOURCES = \
   termemptchk.cc \
   translate.cc \
   reductgba_sim.cc \
+  weakemptchk.cc \
   weight.cc
 
 libtgbaalgos_la_LIBADD = gtec/libgtec.la
