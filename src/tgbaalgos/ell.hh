@@ -1,0 +1,88 @@
+// Copyright (C) 2013 Laboratoire de Recherche et Developpement de
+// l'Epita (LRDE).
+//
+// This file is part of Spot, a model checking library.
+//
+// Spot is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// Spot is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+// or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+// License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef SPOT_TGBAALGOS_ELL_HH
+# define SPOT_TGBAALGOS_ELL_HH
+
+#include <cstddef>
+#include "misc/optionmap.hh"
+
+namespace spot
+{
+  class tgba;
+  class emptiness_check;
+
+  /// \addtogroup emptiness_check_algorithms
+  /// @{
+
+  /// \brief Returns an emptiness check on the spot::tgba automaton \a a.
+  ///
+  /// \pre The automaton \a a must have been preprocessed by accpostproc
+  ///  and must have only one acceptance condition
+  emptiness_check* explicit_ell_search(const tgba *a,
+					    option_map o = option_map());
+
+  /// \brief Returns an emptiness checker on the spot::tgba automaton \a a.
+  ///
+  /// \pre The automaton \a a must have been preprocessed by accpostproc
+  ///  and must have only one acceptance condition
+  ///
+  /// \pre The automaton \a a must have at most one acceptance condition (i.e.
+  /// it is a TBA).
+  ///
+  /// During the visit of \a a, the returned checker does not store explicitely
+  /// the traversed states but uses the bit-state hashing technic presented in:
+  ///
+  /// \verbatim
+  /// @book{Holzmann91,
+  ///    author = {G.J. Holzmann},
+  ///    title = {Design and Validation of Computer Protocols},
+  ///    publisher = {Prentice-Hall},
+  ///    address = {Englewood Cliffs, New Jersey},
+  ///    year = {1991}
+  /// }
+  /// \endverbatim
+  ///
+  /// Consequently, the detection of an acceptence cycle is not ensured.
+  ///
+  /// The size of the heap is limited to \n size bytes.
+  ///
+  /// The implemented algorithm is the same as the one of
+  /// spot::explicit_ell_search.
+  ///
+  /// \sa spot::explicit_ell_search
+  ///
+  emptiness_check* bit_state_hashing_ell_search(const tgba *a, size_t size,
+						 option_map o = option_map());
+
+
+  /// \brief Wrapper for the two ell implementations.
+  ///
+  /// \pre The automaton \a a must have been preprocessed by accpostproc
+  ///  and must have only one acceptance condition
+  ///
+  /// This wrapper calls explicit_ell_search() or
+  /// bit_state_hashing_ell_search() according to the \c "bsh" option
+  /// in the \c option_map.  If \c "bsh" is set and non null, its value
+  /// is used as the size of the hash map.
+  emptiness_check* ell(const tgba *a, option_map o);
+
+  /// @}
+}
+
+#endif // SPOT_TGBAALGOS_ELL_HH
