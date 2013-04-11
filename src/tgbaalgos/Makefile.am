@@ -69,6 +69,7 @@ tgbaalgos_HEADERS = \
   stripacc.hh \
   tau03.hh \
   tau03opt.hh \
+  termemptchk.hh \
   translate.hh \
   reductgba_sim.hh \
   weight.hh
@@ -115,6 +116,7 @@ libtgbaalgos_la_SOURCES = \
   stripacc.cc \
   tau03.cc \
   tau03opt.cc \
+  termemptchk.cc \
   translate.cc \
   reductgba_sim.cc \
   weight.cc
