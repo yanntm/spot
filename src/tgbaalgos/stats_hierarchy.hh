@@ -24,7 +24,6 @@
 #include <string.h>
 #include "tgba/tgba.hh"
 #include "tgba/tgbaexplicit.hh"
-//#include "emptiness_specifier.hh"
 #include "tgba/tgbaexplicit.hh"
 #include "ltlast/formula.hh"
 #include "ltlast/constant.hh"
