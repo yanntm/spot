@@ -33,7 +33,6 @@
 #include "tgbaalgos/save.hh"
 #include "tgbaalgos/dotty.hh"
 #include "tgbaalgos/lbtt.hh"
-#include "tgbaalgos/rebuild.hh"
 #include "tgba/tgbatba.hh"
 #include "tgba/tgbasgba.hh"
 #include "tgba/tgbaproduct.hh"
@@ -611,8 +610,6 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(term);
 		x->build_map();
 		const spot::state* s = term->get_init_state();
-		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		//assert(str == spot::TerminalSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics term_stat =
@@ -638,8 +635,6 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(mterm);
 		x->build_map();
 		const spot::state* s = mterm->get_init_state();
-		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		//assert(str == spot::TerminalSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics mterm_stat =
@@ -665,8 +660,6 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(weak);
 		x->build_map();
 		const spot::state* s = weak->get_init_state();
-		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		//assert(str == spot::WeakSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics weak_stat =
@@ -692,8 +685,6 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(mweak);
 		x->build_map();
 		const spot::state* s = mweak->get_init_state();
-		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		//assert(str == spot::WeakSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics mweak_stat =
@@ -719,8 +710,6 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(strong);
 		x->build_map();
 		const spot::state* s = strong->get_init_state();
-		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		//assert(str == spot::StrongSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics strong_stat =
@@ -746,8 +735,6 @@ int main(int argc, char **argv)
 		spot::scc_map* x = new spot::scc_map(mstrong);
 		x->build_map();
 		const spot::state* s = mstrong->get_init_state();
-		//spot::strength str = x->typeof_subautomaton(x->scc_of_state(s));
-		//assert(str == spot::StrongSubaut);
 		s->destroy();
 		delete x;
 		spot::tgba_statistics mstrong_stat =
@@ -811,7 +798,6 @@ int main(int argc, char **argv)
  cleanup:
   // Clean up
   f->destroy();
-  //  if (!a)
   delete a;
   delete dict;
   delete envacc;
