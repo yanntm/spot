@@ -29,6 +29,7 @@
 #include "misc/optionmap.hh"
 #include "tgba/state.hh"
 #include "emptiness_stats.hh"
+#include "ltlenv/declenv.hh"
 
 namespace spot
 {
@@ -132,10 +133,11 @@ namespace spot
   class emptiness_check
   {
   public:
-    emptiness_check(const tgba* a, option_map o = option_map())
-      : a_(a), o_(o)
-    {
-    }
+    emptiness_check(const tgba* a, option_map o = option_map(),
+		    ltl::declarative_environment *decenv = 0)
+      : a_(a), o_(o), decenv_(decenv)
+    {  }
+
     virtual ~emptiness_check();
 
     /// The automaton that this emptiness-check inspects.
@@ -150,6 +152,16 @@ namespace spot
     options() const
     {
       return o_;
+    }
+
+    // Some algorithm make assumption about acceptance
+    // conditions and need to know this set with is
+    // in a declarative environment.
+    void
+    set_env (ltl::declarative_environment *decenv)
+    {
+      delete decenv_;
+      decenv_ = decenv;
     }
 
     /// Modify the algorithm options.
@@ -186,8 +198,8 @@ namespace spot
   protected:
     const tgba* a_;		///< The automaton.
     option_map o_;		///< The options
+    ltl::declarative_environment *decenv_;	///< The specifier
   };
-
 
   // Dynamically create emptiness checks.  Given their name and options.
   class emptiness_check_instantiator
@@ -206,7 +218,9 @@ namespace spot
 						   const char** err);
 
     /// Actually instantiate the emptiness check, for \a a.
-    emptiness_check* instantiate(const tgba* a) const;
+    emptiness_check* instantiate(const tgba* a,
+				 ltl::declarative_environment *decenv = 0)
+      const;
 
     /// Accessor to the options.
     /// @{
@@ -286,8 +300,8 @@ namespace spot
   /// actually exists in the automaton (and will also display any
   /// transition annotation).
   std::ostream& print_tgba_run(std::ostream& os,
-                               const tgba* a,
-                               const tgba_run* run);
+			       const tgba* a,
+			       const tgba_run* run);
 
   /// \brief Return an explicit_tgba corresponding to \a run (i.e. comparable
   /// states are merged).
