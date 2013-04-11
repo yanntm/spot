@@ -28,6 +28,7 @@
 #include "ltlast/formula.hh"
 #include "ltlast/constant.hh"
 #include "tgbaalgos/reachiter.hh"
+#include "scc.hh"
 
 namespace spot
 {
