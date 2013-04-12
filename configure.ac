@@ -117,6 +117,8 @@ AC_CONFIG_FILES([
   bench/Makefile
   bench/emptchk/Makefile
   bench/emptchk/defs
+  bench/dynchk/Makefile
+  bench/dynchk/defs
   bench/ltlcounter/Makefile
   bench/ltlclasses/Makefile
   bench/ltl2tgba/Makefile
