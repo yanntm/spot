@@ -34,6 +34,8 @@
 # endif
 # include <ctime>
 
+#include <chrono>
+#include <ctime>
 
 namespace spot
 {
@@ -66,6 +68,7 @@ namespace spot
     {
       assert(!running);
       running = true;
+      wall_start_ = std::chrono::high_resolution_clock::now();
 #ifdef SPOT_HAVE_TIMES
       struct tms tmp;
       times(&tmp);
@@ -80,6 +83,9 @@ namespace spot
     void
     stop()
     {
+      auto end = std::chrono::high_resolution_clock::now();
+      wall_cumul_ = std::chrono::duration_cast
+	<std::chrono::milliseconds>(end - wall_start_).count();
 #ifdef SPOT_HAVE_TIMES
       struct tms tmp;
       times(&tmp);
@@ -120,10 +126,23 @@ namespace spot
       return running;
     }
 
+    /// \brief Return cumulative wall time
+    ///
+    /// When using multithreading the cpu time is not
+    /// relevant and we have to deal with wall time to have an
+    /// effective timer
+    std::chrono::milliseconds::rep
+    walltime () const
+    {
+      return wall_cumul_;
+    }
+
   protected:
     time_info start_;
     time_info total_;
     bool running;
+    std::chrono::high_resolution_clock::time_point wall_start_;
+    std::chrono::milliseconds::rep wall_cumul_;
   };
 
   /// \brief A map of timer, where each timer has a name.
