@@ -34,6 +34,8 @@ namespace spot
     /// A basic Constructor
     acc_dict();
 
+    acc_dict(acc_dict& ad) = delete;
+
     /// Refine the destructor
     virtual ~acc_dict();
 
