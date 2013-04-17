@@ -49,36 +49,36 @@ namespace spot
     /// \brief Add a partition that contains only \a s
     /// Suppose a clone() has been done and the union-find
     /// is in charge to perform the destroy()
-    void add (const fasttgba_state* s);
+    virtual bool add (const fasttgba_state* s);
 
     /// \brief Perform the union of the two partition containing
     /// \a left and \a right. No assumptions over the resulting
     /// parent can be do.
-    void unite (const fasttgba_state* left,
+    virtual void unite (const fasttgba_state* left,
     		const fasttgba_state* right);
 
     /// \brief Return true if the partition of \a left is the
     /// same that the partition of \a right
-    bool same_partition (const fasttgba_state* left,
+    virtual bool same_partition (const fasttgba_state* left,
     			 const fasttgba_state* right);
 
     /// \brief Add the acceptance set to the partition that contains
     /// the state \a s
-    void add_acc (const fasttgba_state* s, markset m);
+    virtual void add_acc (const fasttgba_state* s, markset m);
 
     /// \brief return the acceptance set of the partition containing
     /// \a s
-    markset get_acc (const fasttgba_state* s);
+    virtual markset get_acc (const fasttgba_state* s);
 
     /// \brief Return wether a state belong to the Union-Find structure
-    bool contains (const fasttgba_state* s);
+    virtual bool contains (const fasttgba_state* s);
 
     /// \brief perform a union with dead
-    void make_dead (const fasttgba_state* s);
+    virtual void make_dead (const fasttgba_state* s);
 
     /// \brief check wether the root of the set containing
     /// this scc is dead.
-    bool is_dead (const fasttgba_state* s);
+    virtual bool is_dead (const fasttgba_state* s);
 
   protected:
 

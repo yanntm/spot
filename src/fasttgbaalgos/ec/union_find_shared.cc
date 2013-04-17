@@ -16,129 +16,146 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "union_find.hh"
+#include "union_find_shared.hh"
 #include <iostream>
 
-// #define UFTRACE
+//#define UFTRACE
 #ifdef UFTRACE
-#define trace std::cerr << this << "  "
+#define trace std::cerr
 #else
 #define trace while (0) std::cerr
 #endif
 
 namespace spot
 {
-  union_find::union_find (acc_dict& a) :
-    acc_(a), empty(acc_)
-  {
-    idneg.push_back(0);
-    accp.push_back(&empty);
-  }
+  union_find_shared::union_find_shared (acc_dict& a, int n
+					) :
+    union_find(a), ufa_(n)
+  {  }
 
-  union_find::~union_find ()
+  union_find_shared::~union_find_shared ()
   {
-    for (unsigned i = 0; i < accp.size(); ++i)
-      if (accp[i] != &empty)
-	delete accp[i];
-
-    uf_map::const_iterator s = el.begin();
-    while (s != el.end())
-      {
-	if (s->first)
-	  s->first->destroy();
-	++s;
-      }
-    el.clear();
+    // Let superclass do job.
+    //std::cout << "Delete Shared UF\n";
   }
 
   bool
-  union_find::add (const fasttgba_state* s)
+  union_find_shared::add (const fasttgba_state* s)
   {
-    trace << "union_find::add " << idneg.size() << std::endl << std::flush;
+    assert(s);
+    ufa_.P_write();
+    trace << "union_find_shared::add " <<
+      idneg.size() << std::endl << std::flush;
+
     std::pair<uf_map::iterator, bool> i =
       el.insert(std::make_pair(s, idneg.size()));
-    assert(i.second);
+
+    //assert(i.second);
+    if (!i.second)
+      {
+	// In this case the element is already inside
+	ufa_.V_write();
+	return i.second;
+      }
+
     idneg.push_back(-1);
     accp.push_back(&empty);
+    ufa_.V_write();
     return i.second;
   }
 
-  int union_find::root (int i)
+
+  // FIX ME if You want efficience!
+  // There is a write ! in this function
+  int union_find_shared::root (int i)
   {
     int p = idneg[i];
     if (p <= 0)
       return i;
     if (idneg[p] <= 0)
       return p;
-    return  idneg[i] = root(p);
+    return  // idneg[i] =
+      root(p);
   }
 
   bool
-  union_find::same_partition (const fasttgba_state* left,
+  union_find_shared::same_partition (const fasttgba_state* left,
 			      const fasttgba_state* right)
   {
+    ufa_.P_read();
     assert(left);
     assert(right);
     int l  = root(el[left]);
     int r  = root(el[right]);
-    trace << "union_find::same_partition? "
+    trace << "union_find_shared::same_partition? "
 	  << l << "("<< el[left] << ")   "
 	  << r << "("<< el[right] << ")"
 	  << std::endl << std::flush;
+    ufa_.V_read();
     return r == l;
   }
 
   void
-  union_find::make_dead(const fasttgba_state* s)
+  union_find_shared::make_dead(const fasttgba_state* s)
   {
-    trace << "union_find::make_dead " << el[s] << " root_ :"
+    ufa_.P_write();
+    trace << "union_find_shared::make_dead " << el[s] << " root_ :"
     	  << root(el[s]) << std::endl << std::flush;
     idneg[root(el[s])] = 0;
+    ufa_.V_write();
   }
 
   bool
-  union_find::is_dead(const fasttgba_state* s)
+  union_find_shared::is_dead(const fasttgba_state* s)
   {
-    return idneg[root(el[s])] == 0;
+    ufa_.P_read();
+    bool res = idneg[root(el[s])] == 0;
+    ufa_.V_read();
+    return res;
   }
 
   void
-  union_find::unite (const fasttgba_state* left,
+  union_find_shared::unite (const fasttgba_state* left,
 		     const fasttgba_state* right)
   {
     assert(contains(left));
     assert(contains(right));
+    ufa_.P_read();
     int root_left = root(el[left]);
     int root_right = root(el[right]);
 
-    trace << "union_find::unite "
+    trace << "union_find_shared::unite "
     	  << root_left << " " << root_right << std::endl << std::flush;
 
-    assert(root_left > 0);
-    assert(root_right > 0);
+    assert(root_left);
+    assert(root_right);
 
     int rk_left = idneg[root_left];
     int rk_right = idneg[root_right];
+    ufa_.V_read();
 
     // Use ranking
     if (rk_left > rk_right)
       {
+	ufa_.P_write();
     	idneg [root_left] =  root_right;
 
 	// instanciate only when it's necessary
 	if (accp[root_left] == &empty && accp[root_right] == &empty)
-	  return;
+	  {
+	    ufa_.V_write();
+	    return;
+	  }
 
 	if (accp[root_left] == &empty)
 	  accp[root_left]  = new markset(acc_);
 
 	accp[root_left]->operator |= (*accp[root_right]);
+	ufa_.V_write();
       }
     else
       {
-    	idneg [root_right] =  root_left;
-
-	// instanciate only when it's necessary
+	ufa_.P_write();
 	if (accp[root_left] == &empty && accp[root_right] == &empty)
 	  ;
 	else if (accp[root_right] == &empty)
@@ -151,37 +168,59 @@ namespace spot
     	  {
 	    --idneg[root_left];
     	  }
+	ufa_.V_write();
       }
   }
 
   markset
-  union_find::get_acc (const fasttgba_state* s)
+  union_find_shared::get_acc (const fasttgba_state* s)
   {
-    trace << "union_find::get_acc" << std::endl << std::flush;
+    trace << "union_find_shared::get_acc" << std::endl << std::flush;
+    ufa_.P_read();
     int r = root(el[s]);
     assert(r);
-    return *accp[r];
+    markset m = *accp[r];
+    ufa_.V_read();
+    return m;
   }
 
   void
-  union_find::add_acc (const fasttgba_state* s, markset m)
+  union_find_shared::add_acc (const fasttgba_state* s
+			      , markset m
+			      )
   {
-    trace << "union_find::add_acc" << std::endl << std::flush;
+    ufa_.P_write();
+
+    // trace << "union_find_shared::add_acc" << std::endl << std::flush;
     int r = root(el[s]);
 
-    // instanciate only if necessary
+    // assert(r > 0);
+    if (idneg[r] == 0)
+      {
+	ufa_.V_write();
+	return;
+      }
+
+    // Cinstanciate only if necessary
     if (*accp[r] == m)
-      return;
+      {
+    	ufa_.V_write();
+    	return;
+      }
 
     if (accp[r] == &empty)
-      accp[r]  = new markset(acc_);
+      accp[r]  = new markset(empty);
 
     accp[r]->operator |= (m);
+    ufa_.V_write();
   }
 
-  bool union_find::contains (const fasttgba_state* s)
+  bool union_find_shared::contains (const fasttgba_state* s)
   {
-    trace << "union_find::contains" << std::endl << std::flush;
-    return el.find(s) != el.end();
+    trace << "union_find_shared::contains" << std::endl << std::flush;
+    ufa_.P_read();
+    bool res = el.find(s) != el.end();
+    ufa_.V_read();
+    return res;
   }
 }

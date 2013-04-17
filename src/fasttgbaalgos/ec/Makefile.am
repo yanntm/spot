@@ -29,7 +29,9 @@ ec_HEADERS = \
   cou99strength.hh \
   cou99strength_uf.hh \
   cou99_uf_swarm.hh \
-  union_find.hh
+  cou99_uf_shared.hh \
+  union_find.hh \
+  union_find_shared.hh
 
 noinst_LTLIBRARIES = libec.la
 libec_la_SOURCES = \
@@ -38,4 +40,6 @@ libec_la_SOURCES = \
   cou99strength.cc \
   cou99strength_uf.cc \
   cou99_uf_swarm.cc \
-  union_find.cc
+  cou99_uf_shared.cc \
+  union_find.cc \
+  union_find_shared.cc

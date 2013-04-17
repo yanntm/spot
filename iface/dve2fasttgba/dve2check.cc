@@ -44,6 +44,7 @@
 #include "fasttgbaalgos/ec/cou99.hh"
 #include "fasttgbaalgos/ec/cou99_uf.hh"
 #include "fasttgbaalgos/ec/cou99_uf_swarm.hh"
+#include "fasttgbaalgos/ec/cou99_uf_shared.hh"
 #include "fasttgbaalgos/ec/cou99strength.hh"
 #include "fasttgbaalgos/ec/cou99strength_uf.hh"
 
@@ -87,6 +88,7 @@ main(int argc, char **argv)
   // Choose the emptiness check algorithm
   bool opt_couuf = false;
   bool opt_couuf_swarm = false;
+  bool opt_couuf_shared = false;
   bool opt_coustrengthuf = false;
   bool opt_cou99 = false;
   bool opt_all = false;
@@ -99,6 +101,8 @@ main(int argc, char **argv)
     opt_coustrengthuf = true;
   else if (!strcmp("-cou99_uf_swarm", argv[3]))
     opt_couuf_swarm = true;
+  else if (!strcmp("-cou99_uf_shared", argv[3]))
+    opt_couuf_shared = true;
   else if (!strcmp("-all", argv[3]))
     {
       opt_couuf = true;
@@ -106,6 +110,7 @@ main(int argc, char **argv)
       opt_coustrengthuf = true;
       opt_cou99 = true;
       opt_all = true;
+      opt_couuf_shared = true;
     }
   else
     syntax(argv[0]);
@@ -201,7 +206,7 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99_uf");
-	    result << t.utime() + t.stime();
+	    result << t.walltime(); //t.utime() + t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 	  }
@@ -228,7 +233,34 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99_uf_swarm");
-	    result << t.utime() + t.stime();
+	    result << t.walltime();//t.utime() + t.stime();
+	    result << "," << input;
+	    std::cout << result.str() << std::endl;
+	  }
+
+	bool res_cou99ufshared = true;
+	if (opt_couuf_shared)
+	  {
+	    std::ostringstream result;
+	    result << "#cou99_uf_shared,";
+
+	    spot::cou99_uf_shared* checker =
+	      new spot::cou99_uf_shared (itor, 2);
+	    mtimer.start("Checking cou99_uf_shared");
+	    if (checker->check())
+	      {
+		res_cou99ufshared = false;
+		result << "VIOLATED,";
+	      }
+	    else
+	      {
+		result << "VERIFIED,";
+	      }
+	    mtimer.stop("Checking cou99_uf_shared");
+	    delete checker;
+
+	    spot::timer t = mtimer.timer("Checking cou99_uf_shared");
+	    result << t.walltime(); //t.utime() + t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 	  }
@@ -254,7 +286,7 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99str_uf");
-	    result << t.utime() + t.stime();
+	    result << t.walltime(); //t.utime() + t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 	  }
@@ -280,7 +312,7 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99");
-	    result << t.utime() + t.stime();
+	    result << t.walltime(); //t.utime() + t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 
@@ -289,10 +321,11 @@ main(int argc, char **argv)
 		assert (res_cou99uf == res_cou99);
 		assert(res_cou99ufswarm == res_cou99);
 		assert (res_cou99strengthuf == res_cou99);
+		assert (res_cou99ufshared == res_cou99);
 	      }
 	  }
 
-	mtimer.print(std::cout);
+	// mtimer.print(std::cout);
 
 	delete itor;
       }
