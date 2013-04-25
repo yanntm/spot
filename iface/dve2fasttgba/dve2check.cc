@@ -91,6 +91,7 @@ main(int argc, char **argv)
   bool opt_couuf_shared = false;
   bool opt_coustrengthuf = false;
   bool opt_cou99 = false;
+  bool opt_cmp_cou_couuf = false;
   bool opt_all = false;
 
   if (!strcmp("-cou99", argv[3]))
@@ -103,6 +104,12 @@ main(int argc, char **argv)
     opt_couuf_swarm = true;
   else if (!strcmp("-cou99_uf_shared", argv[3]))
     opt_couuf_shared = true;
+  else if (!strcmp("-cmp_cou_uf", argv[3]))
+    {
+      opt_couuf = true;
+      opt_cou99 = true;
+      opt_cmp_cou_couuf = true;
+    }
   else if (!strcmp("-all", argv[3]))
     {
       opt_couuf = true;
@@ -323,6 +330,12 @@ main(int argc, char **argv)
 		assert (res_cou99strengthuf == res_cou99);
 		assert (res_cou99ufshared == res_cou99);
 	      }
+
+	    if (opt_cmp_cou_couuf)
+	      {
+		assert (res_cou99uf == res_cou99);
+	      }
+
 	  }
 
 	// mtimer.print(std::cout);

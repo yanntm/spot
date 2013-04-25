@@ -36,6 +36,8 @@ namespace spot
   {
     a_ = inst->get_automaton ();
     uf  = new union_find (a_->get_acc());
+    uf_stack  = new SetOfDisjointSetsIPC_LRPC (a_->get_acc());
+    r = new stack_of_roots (a_->get_acc());
   }
 
   cou99_uf::~cou99_uf()
@@ -53,17 +55,94 @@ namespace spot
   bool
   cou99_uf::check()
   {
-    init();
-    main();
+    // init();
+    // main();
+    main_stack();
     return counterexample_found;
+  }
+
+
+  bool cou99_uf::merge_stack(markset m, fasttgba_state* dest)
+  {
+    // std::cout << "merge" << std::endl;
+    markset a = m;
+    while (!uf_stack->same_partition(std::get<1>(todo_stack[r->top()]), dest))
+      {
+	a |= r->top_acceptance() | std::get<0>(todo_stack[r->top()]);
+	uf_stack->unite(std::get<1>(todo_stack[r->top()]), dest);
+	r->pop();
+      }
+    return  r->add_acceptance_to_top(a).all();
+  }
+
+  void cou99_uf::main_stack()
+  {
+    fasttgba_state* init = a_->get_init_state();
+    fasttgba_succ_iterator* si = a_->succ_iter(init);
+    si->first();
+
+    // Push initial State!
+    uf_stack->add (init);
+    r->push_trivial(todo_stack.size());
+    todo_stack.push_back (std::make_tuple(markset(a_->get_acc()), init, si));
+
+    while (!todo_stack.empty())
+      {
+	auto current = todo_stack.back();
+
+	if (!std::get<2>(current)->done())
+	  {
+	    markset la = std::get<2>(current)->current_acceptance_marks();
+	    fasttgba_state* dest = std::get<2>(current)->current_state();
+	    std::get<2>(current)->next();
+
+	    if (!uf_stack->contains(dest))
+	      {
+		fasttgba_succ_iterator* it = a_->succ_iter(dest);
+		it->first();
+
+		uf_stack->add (dest);
+		r->push_trivial(todo_stack.size());
+		todo_stack.push_back (std::make_tuple(la, dest, it));
+		continue;
+	      }
+	    else if (!uf_stack->is_dead(dest))
+	      {
+
+		if (merge_stack(la ,dest))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    dest->destroy();
+    	    	    return;
+    	    	  }
+	      }
+	    dest->destroy();
+	  }
+	else
+	  {
+	    dfs_pop_stack(std::get<1>(current));
+	  }
+      }
+  }
+
+  void cou99_uf::dfs_pop_stack(const fasttgba_state* current)
+  {
+    delete std::get<2>(todo_stack.back());
+    todo_stack.pop_back();
+
+    if ((unsigned int) r->top() == todo_stack.size())
+      {
+	r->pop();
+	uf_stack->make_dead(current);
+      }
   }
 
   void cou99_uf::init()
   {
     trace << "Cou99_Uf::Init" << std::endl;
     fasttgba_state* init = a_->get_init_state();
-    //dfs_push_scc(init);
-    dfs_push_classic(init);
+    dfs_push_scc(init);
+    // dfs_push_classic(init);
   }
 
   void cou99_uf::dfs_push_classic(fasttgba_state* s)
@@ -154,7 +233,7 @@ namespace spot
   {
     trace << "Cou99_Uf::merge " << std::endl;
 
-    int i = todo.size() - 1;
+    int i = scc.top(); // todo.size() - 1;
     markset a = todo[i].second->current_acceptance_marks();
 
     while (!uf->same_partition(d, todo[i].first))
@@ -187,22 +266,22 @@ namespace spot
 
     	if (todo.back().second->done())
     	  {
-	    // dfs_pop_scc ();
-	    dfs_pop_classic ();
+	    dfs_pop_scc ();
+	    //dfs_pop_classic ();
     	  }
     	else
     	  {
     	    fasttgba_state* d = todo.back().second->current_state();
     	    if (!uf->contains(d))
     	      {
-		// dfs_push_scc (d);
-		dfs_push_classic (d);
+		dfs_push_scc (d);
+		// dfs_push_classic (d);
     	    	continue;
     	      }
     	    else if (!uf->is_dead(d))
     	      {
-		// merge_scc (d);
-		merge_classic (d);
+		merge_scc (d);
+		//merge_classic (d);
     	    	if (uf->get_acc(d).all())
     	    	  {
     	    	    counterexample_found = true;

@@ -20,6 +20,7 @@
 # define SPOT_FASTTGBAALGOS_EC_COU99_UF_HH
 
 #include <stack>
+#include <tuple>
 #include "misc/hash.hh"
 #include "union_find.hh"
 #include "fasttgba/fasttgba.hh"
@@ -27,6 +28,102 @@
 
 namespace spot
 {
+
+  // This class is used to store one root used in the UF
+  class roots
+  {
+  public:
+    int root_;
+    bool is_trivial_;
+    markset* accset_;
+    const markset& empty_;
+
+    roots(int r, bool it, const markset& empty)
+      : root_(r), is_trivial_(it),
+	accset_(0), empty_(empty)
+    {
+    }
+
+    virtual ~roots()
+    {
+      delete accset_;
+    }
+
+    void add_acceptance (markset& acc)
+    {
+      if (acc == empty_)
+      	return ;
+
+      if (!accset_)
+      	accset_ = new markset (empty_);
+      accset_->operator |= (acc);
+    }
+
+    const markset& get_acceptance ()
+    {
+      if (!accset_)
+	return empty_;
+      return *accset_;
+    }
+  };
+
+  // This class is used to store all roots used by this algorithm
+  class stack_of_roots
+  {
+    std::vector<roots*> stack_;
+    int stack_size_;
+    markset* empty_;
+
+
+  public:
+    stack_of_roots(acc_dict& acc):
+      stack_size_(0), empty_(new markset(acc))
+    { }
+
+    virtual ~stack_of_roots()
+    {
+      /// TODO DELETE
+    }
+
+    void push_trivial (int i)
+    {
+      ++stack_size_;
+      stack_.push_back(new roots(i, true, *empty_));
+    }
+
+    int top ()
+    {
+      return stack_.back()->root_;
+      std::cout << "top "
+		<< stack_.back()->root_
+		<< "  " << stack_size_  << "\n";
+    }
+
+    void pop()
+    {
+      --stack_size_;
+      stack_.pop_back();
+    }
+
+    bool is_top_fully_accepting()
+    {
+      assert(stack_.size());
+      return stack_.back()->get_acceptance().all();
+    }
+
+    const markset& top_acceptance()
+    {
+      assert(stack_.size());
+      return stack_.back()->get_acceptance();
+    }
+
+    const markset& add_acceptance_to_top(markset m)
+    {
+      stack_.back()->add_acceptance (m);
+      return stack_.back()->get_acceptance();
+    }
+  };
+
   class cou99_uf : public ec
   {
   public:
@@ -70,6 +167,21 @@ namespace spot
 
     void merge_scc(fasttgba_state*);
 
+    // ------------------------------------------------------------
+    // Close to the original algorithm with SCC stack
+    // iterator is systematically increased
+    // ------------------------------------------------------------
+
+    void dfs_pop_stack(const fasttgba_state*);
+
+    bool merge_stack(markset, fasttgba_state*);
+
+    void main_stack();
+
+    // ------------------------------------------------------------
+    // For all algorithms
+    // ------------------------------------------------------------
+
     /// \brief the main procedure
     virtual void main();
 
@@ -86,8 +198,16 @@ namespace spot
     /// \brief the todo stack
     std::vector<pair_state_iter> todo;
 
+    /// For the last algorithm (stack)
+    std::vector<std::tuple<markset,
+			   const spot::fasttgba_state*,
+			   fasttgba_succ_iterator*> > todo_stack;
+    /// Toot of stack
+    stack_of_roots *r;
+
     /// \brief the union_find used for the storage
     union_find *uf;
+    union_find *uf_stack;
 
     /// \brief to detect if an iterator has already be once incremented
     bool last;
