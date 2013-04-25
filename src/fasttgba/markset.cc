@@ -110,7 +110,7 @@ namespace spot
   }
 
   bool
-  markset::all()
+  markset::all() const
   {
     return markset_.count() == accs_.size();
   }
