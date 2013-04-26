@@ -32,7 +32,7 @@ namespace spot
   // This class is used to store all roots used by this algorithm
   class stack_of_roots
   {
-    std::stack<std::pair<int, markset*>> stack_;
+    std::stack<std::pair<unsigned int, markset*>> stack_;
     markset* empty_;
 
   public:
@@ -45,12 +45,12 @@ namespace spot
       /// TODO DELETE
     }
 
-    void push_trivial (int i)
+    void push_trivial (unsigned int i)
     {
       stack_.push(std::make_pair(i, empty_));
     }
 
-    int root_of_the_top ()
+    unsigned int root_of_the_top ()
     {
       return stack_.top().first;
     }
@@ -119,18 +119,7 @@ namespace spot
     /// \brief  Pop states already explored
     void dfs_pop_scc();
 
-    void merge_scc(fasttgba_state*);
-
-    // ------------------------------------------------------------
-    // Close to the original algorithm with SCC stack
-    // iterator is systematically increased
-    // ------------------------------------------------------------
-
-    void dfs_pop_stack(const fasttgba_state*);
-
-    bool merge_stack(markset, fasttgba_state*);
-
-    void main_stack();
+    bool merge_scc(fasttgba_state*);
 
     // ------------------------------------------------------------
     // For all algorithms

@@ -35,7 +35,7 @@ namespace spot
     inst(i->new_instance())
   {
     a_ = inst->get_automaton ();
-    uf  = new union_find (a_->get_acc());
+    uf  = new SetOfDisjointSetsIPC_LRPC (a_->get_acc());
     uf_stack  = new SetOfDisjointSetsIPC_LRPC (a_->get_acc());
     r = new stack_of_roots (a_->get_acc());
   }
@@ -55,83 +55,9 @@ namespace spot
   bool
   cou99_uf::check()
   {
-    // init();
-    // main();
-    main_stack();
+    init();
+    main();
     return counterexample_found;
-  }
-
-  void cou99_uf::main_stack()
-  {
-    fasttgba_state* init = a_->get_init_state();
-    fasttgba_succ_iterator* si = a_->succ_iter(init);
-    si->first();
-
-    // Push initial State!
-    uf_stack->add (init);
-    r->push_trivial(todo_stack.size());
-    todo_stack.push_back (std::make_tuple(markset(a_->get_acc()), init, si));
-
-    while (!todo_stack.empty())
-      {
-	auto current = todo_stack.back();
-	auto current_it = std::get<2>(current);
-
-	if (current_it->done())
-	  {
-	    // POP!
-	    delete current_it;
-	    todo_stack.pop_back();
-
-	    if ((unsigned int) r->root_of_the_top() == todo_stack.size())
-	      {
-		r->pop();
-		uf_stack->make_dead(std::get<1>(current));
-	      }
-	  }
-	else
-	  {
-	    markset la = current_it->current_acceptance_marks();
-	    fasttgba_state* dest = current_it->current_state();
-	    current_it->next();
-
-	    if (!uf_stack->contains(dest))
-	      {
-		fasttgba_succ_iterator* it = a_->succ_iter(dest);
-		it->first();
-
-		uf_stack->add (dest);
-		r->push_trivial(todo_stack.size());
-		todo_stack.push_back (std::make_tuple(la, dest, it));
-		continue;
-	      }
-	    else if (!uf_stack->is_dead(dest))
-	      {
-		/// MERGE !
-		const fasttgba_state* root_idx =
-		  std::get<1>(todo_stack[r->root_of_the_top()]);
-
-		while (!uf_stack->same_partition(root_idx, dest))
-		  {
-		    la |= r->top_acceptance() |
-		      std::get<0>(todo_stack[r->root_of_the_top()]);
-		    uf_stack->unite(root_idx, dest);
-		    r->pop();
-		    root_idx = std::get<1>(todo_stack[r->root_of_the_top()]);
-		  }
-
-
-
-		if (r->add_acceptance_to_top(la).all())
-    	    	  {
-    	    	    counterexample_found = true;
-    	    	    dest->destroy();
-    	    	    return;
-    	    	  }
-	      }
-	    dest->destroy();
-	  }
-      }
   }
 
   void cou99_uf::init()
@@ -147,8 +73,6 @@ namespace spot
     trace << "Cou99_Uf::DFS_push "
     	  << std::endl;
 
-    // Dead is inserted by default in the Union Find
-
     uf->add (s);
     fasttgba_succ_iterator* si = a_->succ_iter(s);
     si->first();
@@ -162,7 +86,6 @@ namespace spot
     pair_state_iter pair = todo.back();
     delete pair.second;
     todo.pop_back();
-
 
     if (todo.empty() ||
 	!uf->same_partition(pair.first, todo.back().first))
@@ -200,14 +123,12 @@ namespace spot
     trace << "Cou99_Uf::DFS_push "
     	  << std::endl;
 
-    // Dead is inserted by default in the Union Find
-
     uf->add (s);
     fasttgba_succ_iterator* si = a_->succ_iter(s);
     si->first();
     todo.push_back (std::make_pair(s, si));
     last = true;
-    scc.push (todo.size() -1);
+    r->push_trivial(todo.size()-1);
   }
 
   void cou99_uf::dfs_pop_scc()
@@ -217,20 +138,19 @@ namespace spot
     delete pair.second;
     todo.pop_back();
 
-
-    if (todo.empty() ||
-	!uf->same_partition(pair.first, todo.back().first))
+    if (todo.size() == r->root_of_the_top())
       {
 	uf->make_dead(pair.first);
-	scc.pop();
+	r->pop();
       }
   }
 
-  void cou99_uf::merge_scc(fasttgba_state* d)
+  bool cou99_uf::merge_scc(fasttgba_state* d)
   {
     trace << "Cou99_Uf::merge " << std::endl;
 
-    int i = scc.top(); // todo.size() - 1;
+    int i = r->root_of_the_top();
+
     markset a = todo[i].second->current_acceptance_marks();
 
     while (!uf->same_partition(d, todo[i].first))
@@ -238,13 +158,10 @@ namespace spot
  	uf->unite(d, todo[i].first);
 	markset m = todo[i].second->current_acceptance_marks();
 	a |= m;
-	i =  scc.top() - 1;
-	scc.pop();
+	r->pop();
+	i =  r->root_of_the_top();
       }
-    uf->add_acc(d, a);
-
-    assert(!uf->is_dead(todo.back().first));
-    assert(!uf->is_dead(d));
+    return r->add_acceptance_to_top(a).all();
   }
 
   void cou99_uf::main()
@@ -277,9 +194,8 @@ namespace spot
     	      }
     	    else if (!uf->is_dead(d))
     	      {
-		merge_scc (d);
 		//merge_classic (d);
-    	    	if (uf->get_acc(d).all())
+    	    	if (merge_scc (d))
     	    	  {
     	    	    counterexample_found = true;
     	    	    d->destroy();
