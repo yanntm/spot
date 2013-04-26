@@ -19,6 +19,8 @@
 #ifndef SPOT_FASTTGBAALGOS_EC_COU99_HH
 # define SPOT_FASTTGBAALGOS_EC_COU99_HH
 
+#include <tuple>
+
 #include <stack>
 #include <map>
 #include "misc/hash.hh"
@@ -77,7 +79,7 @@ namespace spot
 
 
     /// \brief define the type that will be use for the SCC stack
-    typedef boost::tuple <int, markset, markset,
+    typedef std::tuple <int, markset, markset,
 			  std::list<const fasttgba_state *>* > scc_tuple;
 
     /// \brief the stack of SCC

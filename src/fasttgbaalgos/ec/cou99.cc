@@ -41,7 +41,7 @@ namespace spot
   {
     while (!scc.empty())
       {
-	delete scc.top().get<3>();
+	delete std::get<3>(scc.top());
 	scc.pop();
       }
     while (!todo.empty())
@@ -83,7 +83,7 @@ namespace spot
     ++max;
     H[s] = max;
     scc.push
-      (boost::make_tuple
+      (std::make_tuple
        (max, acc,
 	markset(a_->get_acc()),
 	(std::list<const fasttgba_state *>*) 0)); /* empty list */
@@ -101,28 +101,28 @@ namespace spot
 
 
     // insert into rem.
-    if (scc.top().get<3>())
+    if (std::get<3>(scc.top()))
       {
-	scc.top().get<3>()->push_back(pair.first);
+	std::get<3>(scc.top())->push_back(pair.first);
       }
     else
       {
 	std::list<const fasttgba_state*> *r =
 	  new  std::list<const fasttgba_state*>();
 	r->push_back (pair.first);
-	scc.top().get<3>() = r;
+	std::get<3>(scc.top()) = r;
       }
 
 
-    if (H[pair.first] == scc.top().get<0>())
+    if (H[pair.first] == std::get<0>(scc.top()))
       {
 	std::list<const fasttgba_state*>::const_iterator i =
-	  scc.top().get<3>()->begin();
-	for (; i != scc.top().get<3>()->end(); ++i)
+	  std::get<3>(scc.top())->begin();
+	for (; i != std::get<3>(scc.top())->end(); ++i)
 	  {
 	    H[*i] = 0;
 	  }
-	delete scc.top().get<3>();
+	delete std::get<3>(scc.top());
 	scc.pop();
       }
   }
@@ -133,32 +133,32 @@ namespace spot
     std::list<const fasttgba_state*> *r =
       new  std::list<const fasttgba_state*>();
 
-    while (t < scc.top().get<0>())
+    while (t < std::get<0>(scc.top()))
       {
-	a |= scc.top().get<1>() | scc.top().get<2>();
+	a |= std::get<1>(scc.top()) | std::get<2>(scc.top());
 
-	if (scc.top().get<3>())	/* Non empty list */
+	if (std::get<3>(scc.top()))	/* Non empty list */
 	  {
 	    r->insert(r->end(),
-		      scc.top().get<3>()->begin(),
-		      scc.top().get<3>()->end());
-	    delete scc.top().get<3>();
+		      std::get<3>(scc.top())->begin(),
+		      std::get<3>(scc.top())->end());
+	    delete std::get<3>(scc.top());
 	  }
 	scc.pop();
       }
 
-    scc.top().get<2>() |= a;
+    std::get<2>(scc.top()) |= a;
 
-    if (scc.top().get<3>())
+    if (std::get<3>(scc.top()))
       {
-	scc.top().get<3>()->insert(scc.top().get<3>()->end(),
-				   r->begin(),
-				   r->end());
+	std::get<3>(scc.top())->insert(std::get<3>(scc.top())->end(),
+				       r->begin(),
+				       r->end());
 	delete r;
      }
     else
       {
-	scc.top().get<3>() = r;
+	std::get<3>(scc.top()) = r;
       }
   }
 
@@ -183,7 +183,7 @@ namespace spot
 	    else if (H[d])
 	      {
 		merge(a, H[d]);
-		if (scc.top().get<2>().all())
+		if (std::get<2>(scc.top()).all())
 		  {
 		    counterexample_found = true;
 		    d->destroy();
