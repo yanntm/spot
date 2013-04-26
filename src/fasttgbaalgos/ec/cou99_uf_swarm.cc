@@ -25,7 +25,6 @@ namespace spot
   {
     std::atomic<bool> stop_world;
 
-
     class cou99_uf_swarm_impl : public cou99_uf
     {
     public :
@@ -33,15 +32,15 @@ namespace spot
 	cou99_uf(i)
       {}
 
-      void dfs_push_classic(fasttgba_state* s)
+      void dfs_push(fasttgba_state* s)
       {
 	uf->add (s);
 	fasttgba_succ_iterator* si = a_->swarm_succ_iter(s);
 	si->first();
 	todo.push_back (std::make_pair(s, si));
 	last = true;
+	roots_stack_->push_trivial(todo.size()-1);
       }
-
 
       void main()
       {
@@ -56,20 +55,19 @@ namespace spot
 
 	    if (todo.back().second->done())
 	      {
-		dfs_pop_classic ();
+		dfs_pop ();
 	      }
 	    else
 	      {
 		fasttgba_state* d = todo.back().second->current_state();
 		if (!uf->contains(d))
 		  {
-		    dfs_push_classic (d);
+		    dfs_push (d);
 		    continue;
 		  }
 		else if (!uf->is_dead(d))
 		  {
-		    merge_classic (d);
-		    if (uf->get_acc(d).all())
+		    if (merge (d))
 		      {
 			counterexample_found = true;
 			d->destroy();

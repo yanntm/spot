@@ -35,13 +35,13 @@ namespace spot
     inst(i->new_instance())
   {
     a_ = inst->get_automaton ();
-    uf  = new SetOfDisjointSetsIPC_LRPC (a_->get_acc());
-    uf_stack  = new SetOfDisjointSetsIPC_LRPC (a_->get_acc());
-    r = new stack_of_roots (a_->get_acc());
+    uf  = new SetOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+    roots_stack_ = new stack_of_roots (a_->get_acc());
   }
 
   cou99_uf::~cou99_uf()
   {
+    delete roots_stack_;
     delete uf;
     while (!todo.empty())
       {
@@ -64,11 +64,95 @@ namespace spot
   {
     trace << "Cou99_Uf::Init" << std::endl;
     fasttgba_state* init = a_->get_init_state();
-    dfs_push_scc(init);
-    // dfs_push_classic(init);
+    dfs_push(init);
   }
 
-  void cou99_uf::dfs_push_classic(fasttgba_state* s)
+  void cou99_uf::dfs_push(fasttgba_state* s)
+  {
+    trace << "Cou99_Uf::DFS_push "
+    	  << std::endl;
+
+    uf->add (s);
+    fasttgba_succ_iterator* si = a_->succ_iter(s);
+    si->first();
+    todo.push_back (std::make_pair(s, si));
+    last = true;
+    roots_stack_->push_trivial(todo.size()-1);
+  }
+
+  void cou99_uf::dfs_pop()
+  {
+    trace << "Cou99_Uf::DFS_pop " << std::endl;
+    pair_state_iter pair = todo.back();
+    delete pair.second;
+    todo.pop_back();
+
+    if (todo.size() == roots_stack_->root_of_the_top())
+      {
+	uf->make_dead(pair.first);
+	roots_stack_->pop();
+      }
+  }
+
+  bool cou99_uf::merge(fasttgba_state* d)
+  {
+    trace << "Cou99_Uf::merge " << std::endl;
+
+    int i = roots_stack_->root_of_the_top();
+
+    markset a = todo[i].second->current_acceptance_marks();
+
+    while (!uf->same_partition(d, todo[i].first))
+      {
+ 	uf->unite(d, todo[i].first);
+	markset m = todo[i].second->current_acceptance_marks();
+	a |= m;
+	roots_stack_->pop();
+	i = roots_stack_->root_of_the_top();
+      }
+    return roots_stack_->add_acceptance_to_top(a).all();
+  }
+
+  void cou99_uf::main()
+  {
+    while (!todo.empty())
+      {
+	trace << "Main " << std::endl;
+	assert(!uf->is_dead(todo.back().first));
+
+	// Is there any transitions left?
+	if (!last)
+	    todo.back().second->next();
+	else
+	    last = false;
+
+    	if (todo.back().second->done())
+    	  {
+	    dfs_pop ();
+    	  }
+    	else
+    	  {
+    	    fasttgba_state* d = todo.back().second->current_state();
+    	    if (!uf->contains(d))
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (!uf->is_dead(d))
+    	      {
+    	    	if (merge (d))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
+      }
+  }
+
+  void cou99_uf_original::dfs_push(fasttgba_state* s)
   {
     trace << "Cou99_Uf::DFS_push "
     	  << std::endl;
@@ -80,7 +164,7 @@ namespace spot
     last = true;
   }
 
-  void cou99_uf::dfs_pop_classic()
+  void cou99_uf_original::dfs_pop()
   {
     trace << "Cou99_Uf::DFS_pop " << std::endl;
     pair_state_iter pair = todo.back();
@@ -94,7 +178,7 @@ namespace spot
       }
   }
 
-  void cou99_uf::merge_classic(fasttgba_state* d)
+  bool cou99_uf_original::merge(fasttgba_state* d)
   {
     int i = todo.size() - 1;
     markset a (a_->get_acc());
@@ -116,94 +200,7 @@ namespace spot
 
     assert(!uf->is_dead(todo.back().first));
     assert(!uf->is_dead(d));
+    return uf->get_acc(d).all();
   }
 
-  void cou99_uf::dfs_push_scc(fasttgba_state* s)
-  {
-    trace << "Cou99_Uf::DFS_push "
-    	  << std::endl;
-
-    uf->add (s);
-    fasttgba_succ_iterator* si = a_->succ_iter(s);
-    si->first();
-    todo.push_back (std::make_pair(s, si));
-    last = true;
-    r->push_trivial(todo.size()-1);
-  }
-
-  void cou99_uf::dfs_pop_scc()
-  {
-    trace << "Cou99_Uf::DFS_pop " << std::endl;
-    pair_state_iter pair = todo.back();
-    delete pair.second;
-    todo.pop_back();
-
-    if (todo.size() == r->root_of_the_top())
-      {
-	uf->make_dead(pair.first);
-	r->pop();
-      }
-  }
-
-  bool cou99_uf::merge_scc(fasttgba_state* d)
-  {
-    trace << "Cou99_Uf::merge " << std::endl;
-
-    int i = r->root_of_the_top();
-
-    markset a = todo[i].second->current_acceptance_marks();
-
-    while (!uf->same_partition(d, todo[i].first))
-      {
- 	uf->unite(d, todo[i].first);
-	markset m = todo[i].second->current_acceptance_marks();
-	a |= m;
-	r->pop();
-	i =  r->root_of_the_top();
-      }
-    return r->add_acceptance_to_top(a).all();
-  }
-
-  void cou99_uf::main()
-  {
-    while (!todo.empty())
-      {
-	trace << "Main " << std::endl;
-	assert(!uf->is_dead(todo.back().first));
-
-	//  Is there any transitions left ?
-
-	if (!last)
-	    todo.back().second->next();
-	else
-	    last = false;
-
-    	if (todo.back().second->done())
-    	  {
-	    dfs_pop_scc ();
-	    //dfs_pop_classic ();
-    	  }
-    	else
-    	  {
-    	    fasttgba_state* d = todo.back().second->current_state();
-    	    if (!uf->contains(d))
-    	      {
-		dfs_push_scc (d);
-		// dfs_push_classic (d);
-    	    	continue;
-    	      }
-    	    else if (!uf->is_dead(d))
-    	      {
-		//merge_classic (d);
-    	    	if (merge_scc (d))
-    	    	  {
-    	    	    counterexample_found = true;
-    	    	    d->destroy();
-    	    	    return;
-    	    	  }
-    	      }
-    	    d->destroy();
-    	  }
-      }
-  }
 }

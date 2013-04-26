@@ -48,9 +48,9 @@ namespace spot
 	//std::cout << "DESTROY" << std::endl;
       }
 
-  void dfs_push_classic(fasttgba_state* s)
+  void dfs_push(fasttgba_state* s)
   {
-    //std::cout << tn_ << " : dfs_push_classic" << std::endl;
+    //std::cout << tn_ << " : dfs_push" << std::endl;
     uf->add (s);
     if (ufshared_->add (s))
       {
@@ -62,9 +62,9 @@ namespace spot
     last = true;
   }
 
-  void dfs_pop_classic()
+  void dfs_pop()
   {
-    //std::cout << tn_ << " : dfs_pop_classic" << std::endl;
+    //std::cout << tn_ << " : dfs_pop" << std::endl;
     pair_state_iter pair = todo.back();
     delete pair.second;
     todo.pop_back();
@@ -78,9 +78,9 @@ namespace spot
       }
   }
 
-  void merge_classic(fasttgba_state* d)
+  bool merge(fasttgba_state* d)
   {
-    //std::cout << tn_ << " : merge_classic" << std::endl;
+    //std::cout << tn_ << " : merge" << std::endl;
     int i = todo.size() - 1;
     markset a (a_->get_acc());
 
@@ -104,6 +104,7 @@ namespace spot
 
     assert(!uf->is_dead(todo.back().first));
     assert(!uf->is_dead(d));
+    return ufshared_->get_acc(d).all();
   }
 
 
@@ -123,20 +124,19 @@ namespace spot
 
     	if (todo.back().second->done())
     	  {
-	    dfs_pop_classic ();
+	    dfs_pop ();
     	  }
     	else
     	  {
     	    fasttgba_state* d = todo.back().second->current_state();
     	    if (!uf->contains(d))
     	      {
-	    	dfs_push_classic (d);
+	    	dfs_push (d);
     	    	continue;
     	      }
     	    else if (!uf->is_dead(d)  && !ufshared_->is_dead(d))
     	      {
-	    	merge_classic (d);
-    	    	if (ufshared_->get_acc(d).all())
+    	    	if (merge (d))
     	    	  {
     	    	    counterexample_found = true;
     	    	    d->destroy();
@@ -152,7 +152,7 @@ namespace spot
   void init()
   {
     fasttgba_state* init = a_->get_init_state();
-    dfs_push_classic(init);
+    dfs_push(init);
   }
 
   bool check()

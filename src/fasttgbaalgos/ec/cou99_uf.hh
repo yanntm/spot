@@ -28,8 +28,9 @@
 
 namespace spot
 {
-
-  // This class is used to store all roots used by this algorithm
+  ///
+  /// This class is used to store all roots used by this algorithm
+  ///
   class stack_of_roots
   {
     std::stack<std::pair<unsigned int, markset*>> stack_;
@@ -97,33 +98,17 @@ namespace spot
     inline void init();
 
     // ------------------------------------------------------------
-    // For classic algorithm
+    // For classic algorithm with stack and UF
     // ------------------------------------------------------------
 
     /// \brief Push a new state to explore
-    virtual void dfs_push_classic(fasttgba_state*);
+    virtual void dfs_push(fasttgba_state*);
 
     /// \brief  Pop states already explored
-    virtual void dfs_pop_classic();
+    virtual void dfs_pop();
 
     /// \brief merge multiple states
-    virtual void merge_classic(fasttgba_state*);
-
-    // ------------------------------------------------------------
-    // For integrating SCC stack as original algorithm
-    // ------------------------------------------------------------
-
-    /// \brief Push a new state to explore
-    void dfs_push_scc(fasttgba_state*);
-
-    /// \brief  Pop states already explored
-    void dfs_pop_scc();
-
-    bool merge_scc(fasttgba_state*);
-
-    // ------------------------------------------------------------
-    // For all algorithms
-    // ------------------------------------------------------------
+    virtual bool merge(fasttgba_state*);
 
     /// \brief the main procedure
     virtual void main();
@@ -146,11 +131,10 @@ namespace spot
 			   const spot::fasttgba_state*,
 			   fasttgba_succ_iterator*> > todo_stack;
     /// Toot of stack
-    stack_of_roots *r;
+    stack_of_roots *roots_stack_;
 
     /// \brief the union_find used for the storage
     union_find *uf;
-    union_find *uf_stack;
 
     /// \brief to detect if an iterator has already be once incremented
     bool last;
@@ -160,6 +144,22 @@ namespace spot
 
     /// \brief The instance automaton
     const instance_automaton* inst;
+  };
+
+
+  class cou99_uf_original : public cou99_uf
+  {
+  public:
+
+    /// \brief Push a new state to explore
+    virtual void dfs_push(fasttgba_state*);
+
+    /// \brief  Pop states already explored
+    virtual void dfs_pop();
+
+    /// \brief merge multiple states
+    virtual bool merge(fasttgba_state*);
+
   };
 }
 
