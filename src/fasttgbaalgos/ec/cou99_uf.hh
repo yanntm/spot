@@ -29,55 +29,15 @@
 namespace spot
 {
 
-  // This class is used to store one root used in the UF
-  class roots
-  {
-  public:
-    int root_;
-    bool is_trivial_;
-    markset* accset_;
-    const markset& empty_;
-
-    roots(int r, bool it, const markset& empty)
-      : root_(r), is_trivial_(it),
-	accset_(0), empty_(empty)
-    {
-    }
-
-    virtual ~roots()
-    {
-      delete accset_;
-    }
-
-    void add_acceptance (markset& acc)
-    {
-      if (acc == empty_)
-      	return ;
-
-      if (!accset_)
-      	accset_ = new markset (empty_);
-      accset_->operator |= (acc);
-    }
-
-    const markset& get_acceptance ()
-    {
-      if (!accset_)
-	return empty_;
-      return *accset_;
-    }
-  };
-
   // This class is used to store all roots used by this algorithm
   class stack_of_roots
   {
-    std::vector<roots*> stack_;
-    int stack_size_;
+    std::stack<std::pair<int, markset*>> stack_;
     markset* empty_;
-
 
   public:
     stack_of_roots(acc_dict& acc):
-      stack_size_(0), empty_(new markset(acc))
+      empty_(new markset(acc))
     { }
 
     virtual ~stack_of_roots()
@@ -87,40 +47,34 @@ namespace spot
 
     void push_trivial (int i)
     {
-      ++stack_size_;
-      stack_.push_back(new roots(i, true, *empty_));
+      stack_.push(std::make_pair(i, empty_));
     }
 
-    int top ()
+    int root_of_the_top ()
     {
-      return stack_.back()->root_;
-      std::cout << "top "
-		<< stack_.back()->root_
-		<< "  " << stack_size_  << "\n";
+      return stack_.top().first;
     }
 
     void pop()
     {
-      --stack_size_;
-      stack_.pop_back();
-    }
-
-    bool is_top_fully_accepting()
-    {
-      assert(stack_.size());
-      return stack_.back()->get_acceptance().all();
+      stack_.pop();
     }
 
     const markset& top_acceptance()
     {
       assert(stack_.size());
-      return stack_.back()->get_acceptance();
+      return *stack_.top().second;
     }
 
     const markset& add_acceptance_to_top(markset m)
     {
-      stack_.back()->add_acceptance (m);
-      return stack_.back()->get_acceptance();
+      if (m  == *stack_.top().second)
+	return *stack_.top().second;
+      if (stack_.top().second == empty_)
+	stack_.top().second = new markset(m);
+      else
+	stack_.top().second->operator |= (m);
+      return *stack_.top().second;
     }
   };
 

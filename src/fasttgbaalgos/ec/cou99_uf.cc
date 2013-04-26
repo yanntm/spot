@@ -61,20 +61,6 @@ namespace spot
     return counterexample_found;
   }
 
-
-  bool cou99_uf::merge_stack(markset m, fasttgba_state* dest)
-  {
-    // std::cout << "merge" << std::endl;
-    markset a = m;
-    while (!uf_stack->same_partition(std::get<1>(todo_stack[r->top()]), dest))
-      {
-	a |= r->top_acceptance() | std::get<0>(todo_stack[r->top()]);
-	uf_stack->unite(std::get<1>(todo_stack[r->top()]), dest);
-	r->pop();
-      }
-    return  r->add_acceptance_to_top(a).all();
-  }
-
   void cou99_uf::main_stack()
   {
     fasttgba_state* init = a_->get_init_state();
@@ -89,12 +75,25 @@ namespace spot
     while (!todo_stack.empty())
       {
 	auto current = todo_stack.back();
+	auto current_it = std::get<2>(current);
 
-	if (!std::get<2>(current)->done())
+	if (current_it->done())
 	  {
-	    markset la = std::get<2>(current)->current_acceptance_marks();
-	    fasttgba_state* dest = std::get<2>(current)->current_state();
-	    std::get<2>(current)->next();
+	    // POP!
+	    delete current_it;
+	    todo_stack.pop_back();
+
+	    if ((unsigned int) r->root_of_the_top() == todo_stack.size())
+	      {
+		r->pop();
+		uf_stack->make_dead(std::get<1>(current));
+	      }
+	  }
+	else
+	  {
+	    markset la = current_it->current_acceptance_marks();
+	    fasttgba_state* dest = current_it->current_state();
+	    current_it->next();
 
 	    if (!uf_stack->contains(dest))
 	      {
@@ -108,8 +107,22 @@ namespace spot
 	      }
 	    else if (!uf_stack->is_dead(dest))
 	      {
+		/// MERGE !
+		const fasttgba_state* root_idx =
+		  std::get<1>(todo_stack[r->root_of_the_top()]);
 
-		if (merge_stack(la ,dest))
+		while (!uf_stack->same_partition(root_idx, dest))
+		  {
+		    la |= r->top_acceptance() |
+		      std::get<0>(todo_stack[r->root_of_the_top()]);
+		    uf_stack->unite(root_idx, dest);
+		    r->pop();
+		    root_idx = std::get<1>(todo_stack[r->root_of_the_top()]);
+		  }
+
+
+
+		if (r->add_acceptance_to_top(la).all())
     	    	  {
     	    	    counterexample_found = true;
     	    	    dest->destroy();
@@ -118,22 +131,6 @@ namespace spot
 	      }
 	    dest->destroy();
 	  }
-	else
-	  {
-	    dfs_pop_stack(std::get<1>(current));
-	  }
-      }
-  }
-
-  void cou99_uf::dfs_pop_stack(const fasttgba_state* current)
-  {
-    delete std::get<2>(todo_stack.back());
-    todo_stack.pop_back();
-
-    if ((unsigned int) r->top() == todo_stack.size())
-      {
-	r->pop();
-	uf_stack->make_dead(current);
       }
   }
 
