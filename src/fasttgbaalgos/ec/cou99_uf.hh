@@ -28,9 +28,9 @@
 
 namespace spot
 {
-  ///
   /// This class is used to store all roots used by this algorithm
-  ///
+  /// It's a wrapper for many implementations and compressions
+  // techniques
   class stack_of_roots
   {
     std::stack<std::pair<unsigned int, markset*>> stack_;
@@ -51,6 +51,14 @@ namespace spot
       stack_.push(std::make_pair(i, empty_));
     }
 
+    void push_non_trivial (unsigned int i, markset m)
+    {
+      if (m == *empty_)
+	stack_.push(std::make_pair(i, empty_));
+      else
+	stack_.push(std::make_pair(i, new markset(m)));
+    }
+
     unsigned int root_of_the_top ()
     {
       return stack_.top().first;
@@ -66,19 +74,11 @@ namespace spot
       assert(stack_.size());
       return *stack_.top().second;
     }
-
-    const markset& add_acceptance_to_top(markset m)
-    {
-      if (m  == *stack_.top().second)
-	return *stack_.top().second;
-      if (stack_.top().second == empty_)
-	stack_.top().second = new markset(m);
-      else
-	stack_.top().second->operator |= (m);
-      return *stack_.top().second;
-    }
   };
 
+  /// This class provides the adaptation of the emptiness
+  /// check of couvreur using an Union Find structure and
+  /// a specific dedicated root stack
   class cou99_uf : public ec
   {
   public:
@@ -146,7 +146,9 @@ namespace spot
     const instance_automaton* inst;
   };
 
-
+  /// This class proposes an algorihtm using the
+  /// Union FINd without using a stack of roots
+  /// which is better for parallel emptiness checks.
   class cou99_uf_original : public cou99_uf
   {
   public:

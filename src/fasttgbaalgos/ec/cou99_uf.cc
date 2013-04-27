@@ -99,18 +99,20 @@ namespace spot
     trace << "Cou99_Uf::merge " << std::endl;
 
     int i = roots_stack_->root_of_the_top();
-
     markset a = todo[i].second->current_acceptance_marks();
+    roots_stack_->pop();
 
     while (!uf->same_partition(d, todo[i].first))
       {
  	uf->unite(d, todo[i].first);
 	markset m = todo[i].second->current_acceptance_marks();
-	a |= m;
-	roots_stack_->pop();
+	a |= m | roots_stack_->top_acceptance();
 	i = roots_stack_->root_of_the_top();
+	roots_stack_->pop();
       }
-    return roots_stack_->add_acceptance_to_top(a).all();
+    roots_stack_->push_non_trivial(i, a);
+
+    return a.all();
   }
 
   void cou99_uf::main()
