@@ -110,7 +110,7 @@ namespace spot
 	i = roots_stack_->root_of_the_top();
 	roots_stack_->pop();
       }
-    roots_stack_->push_non_trivial(i, a);
+    roots_stack_->push_non_trivial(i, a, todo.size() -1);
 
     return a.all();
   }

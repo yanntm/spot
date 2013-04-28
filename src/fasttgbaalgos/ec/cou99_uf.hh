@@ -33,9 +33,6 @@ namespace spot
   // techniques
   class stack_of_roots
   {
-    std::stack<std::pair<unsigned int, markset*>> stack_;
-    markset* empty_;
-
   public:
     stack_of_roots(acc_dict& acc):
       empty_(new markset(acc))
@@ -43,20 +40,31 @@ namespace spot
 
     virtual ~stack_of_roots()
     {
-      /// TODO DELETE
+      while (!stack_.empty())
+	{
+	  pop();
+	}
     }
 
-    void push_trivial (unsigned int i)
+    bool is_empty ()
     {
-      stack_.push(std::make_pair(i, empty_));
+      return stack_.empty();
     }
 
-    void push_non_trivial (unsigned int i, markset m)
+    void push_trivial (unsigned int root)
     {
+      stack_.push(std::make_pair(root, empty_));
+    }
+
+    void push_non_trivial (unsigned int root,
+			   markset m,
+			   unsigned int last = 0)
+    {
+      assert(!last);		// Unused for this implem.
       if (m == *empty_)
-	stack_.push(std::make_pair(i, empty_));
+	stack_.push(std::make_pair(root, empty_));
       else
-	stack_.push(std::make_pair(i, new markset(m)));
+	stack_.push(std::make_pair(root, new markset(m)));
     }
 
     unsigned int root_of_the_top ()
@@ -66,6 +74,8 @@ namespace spot
 
     void pop()
     {
+      if (stack_.top().second != empty_)
+	delete stack_.top().second;
       stack_.pop();
     }
 
@@ -74,7 +84,103 @@ namespace spot
       assert(stack_.size());
       return *stack_.top().second;
     }
+
+  private:
+    std::stack<std::pair<unsigned int, markset*>> stack_; // The stack
+    markset* empty_;		///< The empty markset
   };
+
+  class compressed_stack_of_roots
+  {
+    // out, trivial, acc
+    std::vector<std::tuple<unsigned int, bool, markset*>> stack_;
+    markset* empty_;
+
+  public:
+    compressed_stack_of_roots(acc_dict& acc):
+      empty_(new markset(acc))
+    { }
+
+    virtual ~compressed_stack_of_roots()
+    {
+      while (!stack_.empty())
+	{
+	  pop();
+	}
+    }
+
+    bool is_empty ()
+    {
+      return stack_.empty();
+    }
+
+    void push_trivial (unsigned int root)
+    {
+      // The stack is empty just push it!
+      if (is_empty())
+	{
+	  assert(root == 0);
+	  stack_.push_back(std::make_tuple(root, true, empty_));
+	}
+      // The stack is empty and the back is a trivial SCC
+      // Update it!
+      else if (std::get<1>(stack_.back()))
+	{
+	  assert(root == std::get<0>(stack_.back()) + 1);
+	  pop();
+	  stack_.push_back(std::make_tuple(root, true, empty_));
+	}
+      // Otherwise it's a non trivial SCC fix out for this SCC
+      // and push the new one.
+      else {
+	assert(root_of_the_top() < root &&
+	       root <= std::get<0>(stack_.back()) + 1);
+	markset m  = back_acceptance();
+	pop();
+	stack_.push_back(std::make_tuple(root - 1, false, new markset(m)));
+	stack_.push_back(std::make_tuple(root, true, empty_));
+      }
+    }
+
+    void push_non_trivial (unsigned int root,
+			   markset m,
+			   unsigned int last = 0)
+    {
+      assert(root <= last );
+      assert (! is_empty() || root == 0);
+      assert(is_empty() || root == std::get<0>(stack_.back()) + 1);
+
+      if (m == *empty_)
+	stack_.push_back(std::make_tuple(root, false, empty_));
+      else
+	stack_.push_back(std::make_tuple(root, false, new markset(m)));
+    }
+
+    unsigned int root_of_the_top ()
+    {
+      assert (!is_empty());
+      if (std::get<1>(stack_.back()))
+	return std::get<0>(stack_.back());
+      if (stack_.size() > 1)
+	return std::get<0>(stack_[stack_.size() - 2]) + 1;
+      return 0 ;
+    }
+
+    void pop()
+    {
+      if (std::get<2>(stack_.back()) != empty_)
+	delete std::get<2>(stack_.back());
+      stack_.pop_back();
+    }
+
+    const markset& back_acceptance()
+    {
+      assert(stack_.size());
+      return *std::get<2>(stack_.back());
+    }
+  };
+
+
 
   /// This class provides the adaptation of the emptiness
   /// check of couvreur using an Union Find structure and
