@@ -36,7 +36,7 @@ namespace spot
   {
     a_ = inst->get_automaton ();
     uf  = new SetOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
-    roots_stack_ = new stack_of_roots (a_->get_acc());
+    roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
   }
 
   cou99_uf::~cou99_uf()

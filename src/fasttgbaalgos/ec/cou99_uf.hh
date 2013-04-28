@@ -116,6 +116,7 @@ namespace spot
 
     void push_trivial (unsigned int root)
     {
+      //std::cout << "Push trivial "  << root << std::endl;
       // The stack is empty just push it!
       if (is_empty())
 	{
@@ -127,16 +128,18 @@ namespace spot
       else if (std::get<1>(stack_.back()))
 	{
 	  assert(root == std::get<0>(stack_.back()) + 1);
-	  pop();
+	  stack_.pop_back();
 	  stack_.push_back(std::make_tuple(root, true, empty_));
 	}
       // Otherwise it's a non trivial SCC fix out for this SCC
       // and push the new one.
       else {
+ 	// std::cout << root << std::endl;
+	// std::cout <<  std::get<0>(stack_.back()) << std::endl;
 	assert(root_of_the_top() < root &&
 	       root <= std::get<0>(stack_.back()) + 1);
-	markset m  = back_acceptance();
-	pop();
+	markset m  = top_acceptance();
+	stack_.pop_back();
 	stack_.push_back(std::make_tuple(root - 1, false, new markset(m)));
 	stack_.push_back(std::make_tuple(root, true, empty_));
       }
@@ -146,16 +149,19 @@ namespace spot
 			   markset m,
 			   unsigned int last = 0)
     {
+      //std::cout << "Push non trivial "  << root << std::endl;
       assert(root <= last );
       assert (! is_empty() || root == 0);
       assert(is_empty() || root == std::get<0>(stack_.back()) + 1);
 
       if (m == *empty_)
-	stack_.push_back(std::make_tuple(root, false, empty_));
+	stack_.push_back(std::make_tuple(last, false, empty_));
       else
-	stack_.push_back(std::make_tuple(root, false, new markset(m)));
+	stack_.push_back(std::make_tuple(last, false, new markset(m)));
     }
 
+    /// This method returns the root stored at the top of the
+    /// root stack.
     unsigned int root_of_the_top ()
     {
       assert (!is_empty());
@@ -168,12 +174,32 @@ namespace spot
 
     void pop()
     {
-      if (std::get<2>(stack_.back()) != empty_)
-	delete std::get<2>(stack_.back());
-      stack_.pop_back();
+      //std::cout << "Pop "   << std::endl;
+      unsigned int r = root_of_the_top();
+
+      if (std::get<1>(stack_.back()))
+	{
+	  stack_.pop_back();
+	  if (is_empty())
+	    {
+	      if (r > 0)
+		stack_.push_back(std::make_tuple(r-1, true, empty_));
+	    }
+	  else
+	    {
+	      if (r - 1 > std::get<0>(stack_.back()))
+		stack_.push_back(std::make_tuple(r-1, true, empty_));
+	    }
+	}
+      else
+	{
+	  if (std::get<2>(stack_.back()) != empty_)
+	    delete std::get<2>(stack_.back());
+	  stack_.pop_back();
+	}
     }
 
-    const markset& back_acceptance()
+    const markset& top_acceptance()
     {
       assert(stack_.size());
       return *std::get<2>(stack_.back());
@@ -237,7 +263,7 @@ namespace spot
 			   const spot::fasttgba_state*,
 			   fasttgba_succ_iterator*> > todo_stack;
     /// Toot of stack
-    stack_of_roots *roots_stack_;
+    compressed_stack_of_roots *roots_stack_;
 
     /// \brief the union_find used for the storage
     union_find *uf;
