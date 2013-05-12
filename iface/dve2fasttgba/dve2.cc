@@ -510,7 +510,7 @@ namespace spot
       unsigned int
       number_of_acceptance_marks() const
       {
-	return 0;
+	return acc_.size();
       }
 
       std::string
