@@ -19,9 +19,9 @@
 #ifndef SPOT_IFACE_DVE2FASTTGBA_DVE2_HH
 # define SPOT_IFACE_DVE2FASTTGBA_DVE2_HH
 
-// #include "kripke/kripke.hh"
-// #include "ltlvisit/apcollect.hh"
-// #include "ltlast/constant.hh"
+#include "tgbaalgos/degen.hh"
+#include "tgba/sba.hh"
+
 
 #include "fasttgba/fasttgba.hh"
 #include "fasttgba/fasttgba_product.hh"
@@ -122,18 +122,66 @@ namespace spot
       ftgba1 = spot::tgba_2_fasttgba(tgba_, *aps_, *accs_);
 
       prod = new spot::fasttgba_kripke_product (kripke, ftgba1);
+
+      // -------------------------------------------------------------
+      // Sometimes we need to work on  BA, in this case the product
+      // must be done with BA
+      // -------------------------------------------------------------
+      if (ftgba1->number_of_acceptance_marks() <= 1)
+	{
+	  ba_prod = prod;
+	  return;
+	}
+
+      ba_ = spot::degeneralize(tgba_);
+
+
+      // Instanciate dictionnaries
+      ba_aps_ = new spot::ap_dict();
+      ba_accs_ = new spot::acc_dict();
+
+      // Instanciate kripke
+      ba_kripke =  spot::load_dve2fast(filename, *ba_aps_, *ba_accs_, true);
+
+      // Instanciate
+      ba_ftgba = spot::tgba_2_fasttgba(ba_, *ba_aps_, *ba_accs_);
+
+      ba_prod = new spot::fasttgba_kripke_product (ba_kripke, ba_ftgba);
     }
 
 
     virtual ~dve2product_instance()
     {
       std::lock_guard<std::mutex> lk(mutex_load_dve);
+      bool is_ba = prod->number_of_acceptance_marks() <= 1;
 
+      // Clean up for Tgba
       delete prod;
       delete ftgba1;
       delete kripke;
       delete accs_;
       delete aps_;
+      prod = 0;
+      ftgba1 = 0;
+      kripke = 0;
+      accs_ = 0;
+      aps_ = 0;
+
+      // Clean up for BA
+      if (!is_ba)
+	{
+	  delete ba_;
+	  delete ba_prod;
+	  delete ba_ftgba;
+	  delete ba_kripke;
+	  delete ba_accs_;
+	  delete ba_aps_;
+	  ba_prod = 0;
+	  ba_ftgba = 0;
+	  ba_kripke = 0;
+	  ba_accs_ = 0;
+	  ba_aps_ = 0;
+	}
     }
 
     // The automaton to check
@@ -142,7 +190,16 @@ namespace spot
       return prod;
     }
 
+
+    // Sometimes the product need to be with a number
+    // acceptance set less or equal to 1
+    const fasttgba* get_ba_automaton () const
+    {
+      return ba_prod;
+    }
+
   private:
+    //
     const spot::tgba* tgba_;
     std::string filename_;
     const spot::fasttgba* ftgba1;
@@ -150,6 +207,14 @@ namespace spot
     const spot::fasttgba_kripke_product *prod;
     spot::ap_dict* aps_;
     spot::acc_dict* accs_;
+
+
+    const spot::tgba* ba_;
+    const spot::fasttgba* ba_ftgba;
+    const spot::fasttgba* ba_kripke;
+    const spot::fasttgba_kripke_product *ba_prod;
+    spot::ap_dict* ba_aps_;
+    spot::acc_dict* ba_accs_;
   };
 
 

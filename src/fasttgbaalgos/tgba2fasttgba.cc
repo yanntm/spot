@@ -89,6 +89,13 @@ namespace spot
 	  {
 	    acceptances_.push_back(sii2->second);
 	    const ltl::formula *f = sii2->first;
+
+	    // It's not a variable for me!
+	    // When a degeneralisation is performed some acceptance
+	    // sets  are removed off the tgba
+	    if (!aps->is_registered_acceptance_variable(f, aut_))
+	      continue;
+
 	    int p = accs_.register_acc_for_aut(f->dump(), result_);
 	    acceptances2_.push_back(p);
 	  }
