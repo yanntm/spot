@@ -47,6 +47,7 @@
 #include "fasttgbaalgos/ec/cou99_uf_shared.hh"
 #include "fasttgbaalgos/ec/cou99strength.hh"
 #include "fasttgbaalgos/ec/cou99strength_uf.hh"
+#include "fasttgbaalgos/ec/gv04.hh"
 
 
 #include "misc/timer.hh"
@@ -91,6 +92,7 @@ main(int argc, char **argv)
   bool opt_couuf_shared = false;
   bool opt_coustrengthuf = false;
   bool opt_cou99 = false;
+  bool opt_gv04 = false;
   bool opt_cmp_cou_couuf = false;
   bool opt_all = false;
 
@@ -104,6 +106,12 @@ main(int argc, char **argv)
     opt_couuf_swarm = true;
   else if (!strcmp("-cou99_uf_shared", argv[3]))
     opt_couuf_shared = true;
+  else if (!strcmp("-gv04", argv[3]))
+    {
+      opt_gv04 = true;
+      // FIXME : For debug
+      opt_cou99 = true;
+    }
   else if (!strcmp("-cmp_cou_uf", argv[3]))
     {
       opt_couuf = true;
@@ -298,6 +306,32 @@ main(int argc, char **argv)
 	    std::cout << result.str() << std::endl;
 	  }
 
+	bool res_gv04 = true;
+	if (opt_gv04)
+	  {
+	    std::ostringstream result;
+	    result << "#gv04,";
+
+	    spot::gv04* checker = new spot::gv04(itor);
+	    mtimer.start("Checking gv04");
+	    if (checker->check())
+	      {
+		res_gv04 = false;
+		result << "VIOLATED,";
+	      }
+	    else
+	      {
+		result << "VERIFIED,";
+	      }
+	    mtimer.stop("Checking gv04");
+	    delete checker;
+
+	    spot::timer t = mtimer.timer("Checking gv04");
+	    result << t.walltime(); //t.utime() + t.stime();
+	    result << "," << input;
+	    std::cout << result.str() << std::endl;
+	  }
+
 	bool res_cou99 = true;
 	if (opt_cou99)
 	  {
@@ -326,7 +360,7 @@ main(int argc, char **argv)
 	    if (opt_all)
 	      {
 		assert (res_cou99uf == res_cou99);
-		assert(res_cou99ufswarm == res_cou99);
+		assert (res_cou99ufswarm == res_cou99);
 		assert (res_cou99strengthuf == res_cou99);
 		assert (res_cou99ufshared == res_cou99);
 	      }
@@ -335,6 +369,12 @@ main(int argc, char **argv)
 	      {
 		assert (res_cou99uf == res_cou99);
 	      }
+
+	    if (opt_gv04)
+	      {
+		assert (res_gv04 == res_cou99);
+	      }
+
 
 	  }
 

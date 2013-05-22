@@ -30,6 +30,7 @@ ec_HEADERS = \
   cou99strength_uf.hh \
   cou99_uf_swarm.hh \
   cou99_uf_shared.hh \
+  gv04.hh \
   union_find.hh \
   union_find_shared.hh
 
@@ -41,5 +42,6 @@ libec_la_SOURCES = \
   cou99strength_uf.cc \
   cou99_uf_swarm.cc \
   cou99_uf_shared.cc \
+  gv04.cc \
   union_find.cc \
   union_find_shared.cc
