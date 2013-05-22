@@ -32,6 +32,7 @@ ec_HEADERS = \
   cou99_uf_shared.hh \
   gv04.hh \
   lazycheck.hh \
+  root_stack.hh \
   stackscheck.hh \
   union_find.hh \
   union_find_shared.hh
