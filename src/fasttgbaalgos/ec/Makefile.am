@@ -31,6 +31,7 @@ ec_HEADERS = \
   cou99_uf_swarm.hh \
   cou99_uf_shared.hh \
   gv04.hh \
+  lazycheck.hh \
   union_find.hh \
   union_find_shared.hh
 
@@ -43,5 +44,6 @@ libec_la_SOURCES = \
   cou99_uf_swarm.cc \
   cou99_uf_shared.cc \
   gv04.cc \
+  lazycheck.cc \
   union_find.cc \
   union_find_shared.cc

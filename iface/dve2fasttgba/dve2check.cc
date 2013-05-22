@@ -48,6 +48,7 @@
 #include "fasttgbaalgos/ec/cou99strength.hh"
 #include "fasttgbaalgos/ec/cou99strength_uf.hh"
 #include "fasttgbaalgos/ec/gv04.hh"
+#include "fasttgbaalgos/ec/lazycheck.hh"
 
 
 #include "misc/timer.hh"
@@ -93,6 +94,7 @@ main(int argc, char **argv)
   bool opt_coustrengthuf = false;
   bool opt_cou99 = false;
   bool opt_gv04 = false;
+  bool opt_lc13 = false;
   bool opt_cmp_cou_couuf = false;
   bool opt_all = false;
 
@@ -109,6 +111,12 @@ main(int argc, char **argv)
   else if (!strcmp("-gv04", argv[3]))
     {
       opt_gv04 = true;
+      // FIXME : For debug
+      opt_cou99 = true;
+    }
+  else if (!strcmp("-lc13", argv[3]))
+    {
+      opt_lc13 = true;
       // FIXME : For debug
       opt_cou99 = true;
     }
@@ -332,6 +340,32 @@ main(int argc, char **argv)
 	    std::cout << result.str() << std::endl;
 	  }
 
+	bool res_lc13 = true;
+	if (opt_lc13)
+	  {
+	    std::ostringstream result;
+	    result << "#lc13,";
+
+	    spot::lazycheck* checker = new spot::lazycheck(itor);
+	    mtimer.start("Checking lc13");
+	    if (checker->check())
+	      {
+		res_lc13 = false;
+		result << "VIOLATED,";
+	      }
+	    else
+	      {
+		result << "VERIFIED,";
+	      }
+	    mtimer.stop("Checking lc13");
+	    delete checker;
+
+	    spot::timer t = mtimer.timer("Checking lc13");
+	    result << t.walltime(); //t.utime() + t.stime();
+	    result << "," << input;
+	    std::cout << result.str() << std::endl;
+	  }
+
 	bool res_cou99 = true;
 	if (opt_cou99)
 	  {
@@ -373,6 +407,10 @@ main(int argc, char **argv)
 	    if (opt_gv04)
 	      {
 		assert (res_gv04 == res_cou99);
+	      }
+	    if (opt_lc13)
+	      {
+		assert (res_lc13 == res_cou99);
 	      }
 
 
