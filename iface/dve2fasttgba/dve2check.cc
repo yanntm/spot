@@ -49,6 +49,7 @@
 #include "fasttgbaalgos/ec/cou99strength_uf.hh"
 #include "fasttgbaalgos/ec/gv04.hh"
 #include "fasttgbaalgos/ec/lazycheck.hh"
+#include "fasttgbaalgos/ec/stackscheck.hh"
 
 
 #include "misc/timer.hh"
@@ -95,6 +96,7 @@ main(int argc, char **argv)
   bool opt_cou99 = false;
   bool opt_gv04 = false;
   bool opt_lc13 = false;
+  bool opt_sc13 = false;
   bool opt_cmp_cou_couuf = false;
   bool opt_all = false;
 
@@ -117,6 +119,12 @@ main(int argc, char **argv)
   else if (!strcmp("-lc13", argv[3]))
     {
       opt_lc13 = true;
+      // FIXME : For debug
+      opt_cou99 = true;
+    }
+  else if (!strcmp("-sc13", argv[3]))
+    {
+      opt_sc13 = true;
       // FIXME : For debug
       opt_cou99 = true;
     }
@@ -366,6 +374,32 @@ main(int argc, char **argv)
 	    std::cout << result.str() << std::endl;
 	  }
 
+	bool res_sc13 = true;
+	if (opt_sc13)
+	  {
+	    std::ostringstream result;
+	    result << "#sc13,";
+
+	    spot::stackscheck* checker = new spot::stackscheck(itor);
+	    mtimer.start("Checking sc13");
+	    if (checker->check())
+	      {
+		res_sc13 = false;
+		result << "VIOLATED,";
+	      }
+	    else
+	      {
+		result << "VERIFIED,";
+	      }
+	    mtimer.stop("Checking sc13");
+	    delete checker;
+
+	    spot::timer t = mtimer.timer("Checking sc13");
+	    result << t.walltime(); //t.utime() + t.stime();
+	    result << "," << input;
+	    std::cout << result.str() << std::endl;
+	  }
+
 	bool res_cou99 = true;
 	if (opt_cou99)
 	  {
@@ -411,6 +445,10 @@ main(int argc, char **argv)
 	    if (opt_lc13)
 	      {
 		assert (res_lc13 == res_cou99);
+	      }
+	    if (opt_sc13)
+	      {
+		assert (res_sc13 == res_cou99);
 	      }
 
 

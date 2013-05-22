@@ -76,6 +76,9 @@ namespace spot
     /// Assign the result to this
     markset& operator-=(const mark b);
 
+    /// \brief Retrun true if the mark is set
+    bool is_set(const mark b);
+
     /// \brief Affect the value of  \a b in this
     markset& operator=(const markset& b);
 

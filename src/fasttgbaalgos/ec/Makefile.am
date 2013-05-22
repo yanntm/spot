@@ -32,6 +32,7 @@ ec_HEADERS = \
   cou99_uf_shared.hh \
   gv04.hh \
   lazycheck.hh \
+  stackscheck.hh \
   union_find.hh \
   union_find_shared.hh
 
@@ -45,5 +46,6 @@ libec_la_SOURCES = \
   cou99_uf_shared.cc \
   gv04.cc \
   lazycheck.cc \
+  stackscheck.cc \
   union_find.cc \
   union_find_shared.cc

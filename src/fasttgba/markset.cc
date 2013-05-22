@@ -94,6 +94,13 @@ namespace spot
     markset_[m] = 1;
   }
 
+  bool
+  markset::is_set(mark m)
+  {
+    assert(((size_t) m) < markset_.size());
+    return markset_[m] == 1;
+  }
+
   mark
   markset::one()
   {
