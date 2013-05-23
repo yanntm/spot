@@ -92,8 +92,16 @@ namespace spot
 
   class compressed_stack_of_roots
   {
+    struct stack_entry
+    {
+      unsigned int root;
+      bool is_trivial;
+      markset *mark;
+    };
+
     // out, trivial, acc
-    std::vector<std::tuple<unsigned int, bool, markset*>> stack_;
+    std::vector<// std::tuple<unsigned int, bool, markset*>
+      stack_entry> stack_;
     markset* empty_;
 
   public:
@@ -116,32 +124,28 @@ namespace spot
 
     void push_trivial (unsigned int root)
     {
-      //std::cout << "Push trivial "  << root << std::endl;
+      // std::cout << "Push trivial "  << root << std::endl;
       // The stack is empty just push it!
       if (is_empty())
 	{
 	  assert(root == 0);
-	  stack_.push_back(std::make_tuple(root, true, empty_));
+	  stack_.push_back({root, true, empty_});
 	}
       // The stack is empty and the back is a trivial SCC
       // Update it!
-      else if (std::get<1>(stack_.back()))
+      else if (stack_.back().is_trivial)
 	{
-	  assert(root == std::get<0>(stack_.back()) + 1);
+	  assert(root == stack_.back().root +1);
 	  stack_.pop_back();
-	  stack_.push_back(std::make_tuple(root, true, empty_));
+	  stack_.push_back({root, true, empty_});
 	}
       // Otherwise it's a non trivial SCC fix out for this SCC
       // and push the new one.
       else {
- 	// std::cout << root << std::endl;
-	// std::cout <<  std::get<0>(stack_.back()) << std::endl;
 	assert(root_of_the_top() < root &&
-	       root <= std::get<0>(stack_.back()) + 1);
-	markset m  = top_acceptance();
-	stack_.pop_back();
-	stack_.push_back(std::make_tuple(root - 1, false, new markset(m)));
-	stack_.push_back(std::make_tuple(root, true, empty_));
+	       root <= stack_.back().root +1);
+	stack_.back().root = root -1;
+	stack_.push_back({root, true, empty_});
       }
     }
 
@@ -149,15 +153,15 @@ namespace spot
 			   markset m,
 			   unsigned int last = 0)
     {
-      //std::cout << "Push non trivial "  << root << std::endl;
+      // std::cout << "Push non trivial "  << root << std::endl;
       assert(root <= last );
       assert (! is_empty() || root == 0);
-      assert(is_empty() || root == std::get<0>(stack_.back()) + 1);
+      assert(is_empty() || root == stack_.back().root +1);
 
       if (m == *empty_)
-	stack_.push_back(std::make_tuple(last, false, empty_));
+	stack_.push_back({last, false, empty_});
       else
-	stack_.push_back(std::make_tuple(last, false, new markset(m)));
+	stack_.push_back({last, false, new markset(m)});
     }
 
     /// This method returns the root stored at the top of the
@@ -165,10 +169,10 @@ namespace spot
     unsigned int root_of_the_top ()
     {
       assert (!is_empty());
-      if (std::get<1>(stack_.back()))
-	return std::get<0>(stack_.back());
+      if (stack_.back().is_trivial)
+	return stack_.back().root;
       if (stack_.size() > 1)
-	return std::get<0>(stack_[stack_.size() - 2]) + 1;
+	return  (stack_[stack_.size() - 2]).root + 1;
       return 0 ;
     }
 
@@ -177,24 +181,24 @@ namespace spot
       //std::cout << "Pop "   << std::endl;
       unsigned int r = root_of_the_top();
 
-      if (std::get<1>(stack_.back()))
+      if (stack_.back().is_trivial)
 	{
 	  stack_.pop_back();
 	  if (is_empty())
 	    {
 	      if (r > 0)
-		stack_.push_back(std::make_tuple(r-1, true, empty_));
+		stack_.push_back({r-1, true, empty_});
 	    }
 	  else
 	    {
-	      if (r - 1 > std::get<0>(stack_.back()))
-		stack_.push_back(std::make_tuple(r-1, true, empty_));
+	      if (r - 1 > stack_.back().root)
+		stack_.push_back({r-1, true, empty_});
 	    }
 	}
       else
 	{
-	  if (std::get<2>(stack_.back()) != empty_)
-	    delete std::get<2>(stack_.back());
+	  if (stack_.back().mark != empty_)
+	    delete stack_.back().mark;
 	  stack_.pop_back();
 	}
     }
@@ -202,7 +206,7 @@ namespace spot
     const markset& top_acceptance()
     {
       assert(stack_.size());
-      return *std::get<2>(stack_.back());
+      return *stack_.back().mark;
     }
   };
 }
