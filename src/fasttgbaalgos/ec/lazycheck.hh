@@ -110,7 +110,7 @@ namespace spot
     seen_map H;
 
     /// \brief The store for Deads states
-    deadstore deadstore_;
+    deadstore* deadstore_;
 
     // The instance automaton
     const instance_automaton* inst;

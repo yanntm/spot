@@ -35,6 +35,7 @@ namespace spot
     inst (i->new_instance())
   {
     a_ = inst->get_automaton();
+    deadstore_ = new deadstore();
   }
 
   lazycheck::~lazycheck()
@@ -49,6 +50,7 @@ namespace spot
 	++s;
 	ptr->destroy();
       }
+    delete deadstore_;
     delete inst;
   }
 
@@ -104,7 +106,7 @@ namespace spot
     seen_map::const_iterator i = H.find(state);
     if (i != H.end())
       return Alive;
-    else if (deadstore_.contains(state))
+    else if (deadstore_->contains(state))
       return Dead;
     return Unknown;
   }
@@ -119,7 +121,7 @@ namespace spot
 	  {
 	    delete stack[i].lasttr;
 	    delete stack[i].mark;
-	    deadstore_.add(stack[i].s);
+	    deadstore_->add(stack[i].s);
 	    seen_map::const_iterator it = H.find(stack[i].s);
 	    H.erase(it);
 	    stack.pop_back();
