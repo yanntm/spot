@@ -30,6 +30,7 @@ ec_HEADERS = \
   cou99strength_uf.hh \
   cou99_uf_swarm.hh \
   cou99_uf_shared.hh \
+  deadstore.hh \
   dijkstracheck.hh \
   gv04.hh \
   lazycheck.hh \
