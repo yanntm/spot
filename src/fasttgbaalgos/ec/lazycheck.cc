@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//#define LAZYCHECKTRACE
+// #define LAZYCHECKTRACE
 #ifdef LAZYCHECKTRACE
 #define trace std::cerr
 #else
@@ -98,6 +98,17 @@ namespace spot
       violation = true;
   }
 
+  lazycheck::color
+  lazycheck::get_color(const fasttgba_state* state)
+  {
+    seen_map::const_iterator i = H.find(state);
+    if (i != H.end())
+      return Alive;
+    else if (deadstore_.contains(state))
+      return Dead;
+    return Unknown;
+  }
+
   void lazycheck::dfs_pop()
   {
     int p = stack[dftop].pre;
@@ -108,6 +119,9 @@ namespace spot
 	  {
 	    delete stack[i].lasttr;
 	    delete stack[i].mark;
+	    deadstore_.add(stack[i].s);
+	    seen_map::const_iterator it = H.find(stack[i].s);
+	    H.erase(it);
 	    stack.pop_back();
 	  }
 	top = dftop - 1;
@@ -152,18 +166,18 @@ namespace spot
 		  << a_->format_state(s_prime)
 		  << std::endl;
 
-	    seen_map::const_iterator i = H.find(s_prime);
+	    color c = get_color(s_prime);
 
-	    if (i == H.end())
+	    if (c == Unknown)
 	      {
 		trace << " is a new state." << std::endl;
 		dfs_push(s_prime);
 	      }
 	    else
 	      {
-		if (i->second < stack.size()
-		    && stack[i->second].s->compare(s_prime) == 0)
+		if (c == Alive)
 		  {
+		    seen_map::const_iterator i = H.find(s_prime);
 		    trace << " is on stack." << std::endl;
 		    lowlinkupdate(dftop, i->second,
 				  iter->current_acceptance_marks());

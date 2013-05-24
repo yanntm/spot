@@ -29,6 +29,7 @@
 
 #include "fasttgba/fasttgba.hh"
 #include "ec.hh"
+#include "deadstore.hh"
 
 namespace spot
 {
@@ -68,6 +69,11 @@ namespace spot
 
     void lowlinkupdate(int f, int t, markset acc);
 
+    /// \brief The color for a new State
+    enum color {Alive, Dead, Unknown};
+
+    /// \biref return the color of a state
+    color get_color(const fasttgba_state*);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
@@ -81,7 +87,7 @@ namespace spot
       fasttgba_succ_iterator* lasttr;     // Last transition explored.
       int lowlink;		          // Lowlink value if this entry.
       int pre;			          // DFS predecessor.
-      markset* mark;
+      markset* mark;			  // The associated markset
     };
 
   private:
@@ -95,13 +101,16 @@ namespace spot
 
     int top;		// Top of SCC stack.
     int dftop;		// Top of DFS stack.
-    bool violation;
+    bool violation;	// True if a counterexample is found
 
     /// The map of visited states
     typedef Sgi::hash_map<const fasttgba_state*, size_t,
 			  fasttgba_state_ptr_hash,
 			  fasttgba_state_ptr_equal> seen_map;
     seen_map H;
+
+    /// \brief The store for Deads states
+    deadstore deadstore_;
 
     // The instance automaton
     const instance_automaton* inst;
