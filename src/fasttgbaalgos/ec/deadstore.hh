@@ -48,14 +48,15 @@ namespace spot
     virtual ~deadstore()
     {
       std::unordered_set
-	<const fasttgba_state*,
-	 fasttgba_state_ptr_hash,
-	 fasttgba_state_ptr_equal>::iterator it = store.begin();
+      	<const fasttgba_state*,
+      	 fasttgba_state_ptr_hash,
+      	 fasttgba_state_ptr_equal>::iterator it = store.begin();
       while (it != store.end())
-	{
-	  (*it)->destroy();
+      	{
+	  const fasttgba_state* ptr = *it;
 	  ++it;
-	}
+	  ptr->destroy();
+      }
     }
 
     /// \brief check wheter an element is in the
@@ -68,7 +69,8 @@ namespace spot
     /// \brief Add a new element in the store
     void add (const fasttgba_state* state)
     {
-      store.insert(state);
+      if (!contains(state))
+	  store.insert(state);
     }
 
   private :
