@@ -1,0 +1,179 @@
+// Copyright (C) 2013 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
+//
+// This file is part of Spot, a model checking library.
+//
+// Spot is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// Spot is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+// or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+// License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// #define DIJKSTRACHECKTRACE
+#ifdef DIJKSTRACHECKTRACE
+#define trace std::cerr
+#else
+#define trace while (0) std::cerr
+#endif
+
+#include "fasttgba/fasttgba_product.hh"
+#include <iostream>
+#include "dijkstracheck.hh"
+#include <assert.h>
+
+namespace spot
+{
+  dijkstracheck::dijkstracheck(instanciator* i) :
+    counterexample_found(false),
+    inst(i->new_instance()),
+    max(0), dtop(0)
+  {
+    a_ = inst->get_automaton ();
+    roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+  }
+
+  dijkstracheck::~dijkstracheck()
+  {
+    delete roots_stack_;
+    while (!todo.empty())
+      {
+    	delete todo.back().lasttr;
+    	todo.pop_back();
+      }
+
+    delete inst;
+  }
+
+  bool
+  dijkstracheck::check()
+  {
+    init();
+    main();
+    return counterexample_found;
+  }
+
+  void dijkstracheck::init()
+  {
+    trace << "Dijkstracheck::Init" << std::endl;
+    fasttgba_state* init = a_->get_init_state();
+    dfs_push(init);
+  }
+
+  void dijkstracheck::dfs_push(fasttgba_state* s)
+  {
+    trace << "Dijkstracheck::DFS_push "
+    	  << std::endl;
+
+    live.push_back(s);
+    H[s] = live.size() -1;
+    todo.push_back ({s,0, live.size() -1});
+    roots_stack_->push_trivial(todo.size() -1);
+
+  }
+
+  void dijkstracheck::dfs_pop()
+  {
+    trace << "Dijkstracheck::DFS_pop " << std::endl;
+    delete todo.back().lasttr;
+    todo.pop_back();
+
+    unsigned int rtop = roots_stack_->root_of_the_top();
+    if ( rtop == todo.size())
+      {
+	roots_stack_->pop();
+	while (live.size() > rtop)
+	  {
+	    H[live.back()] = 0;
+	    live.pop_back();
+	  }
+      }
+  }
+
+  bool dijkstracheck::merge(fasttgba_state* d)
+  {
+    trace << "Dijkstracheck::merge " << std::endl;
+
+
+    int dpos = H[d];
+    int rpos = roots_stack_->root_of_the_top();
+    markset a = todo[rpos].lasttr->current_acceptance_marks();
+
+    roots_stack_->pop();
+    while((unsigned)dpos < todo[rpos].position)
+      {
+    	markset m = todo[rpos].lasttr->current_acceptance_marks();
+    	a |= m | roots_stack_->top_acceptance();
+    	rpos = roots_stack_->root_of_the_top();
+    	roots_stack_->pop();
+      }
+    roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
+
+    // int rpos = roots_stack_->root_of_the_top();
+    // assert(todo[rpos].lasttr);
+    // markset a = todo[rpos].lasttr->current_acceptance_marks();
+    // roots_stack_->pop();
+
+    // while (H[d] < rpos)
+    //   {
+    // 	assert(todo[rpos].lasttr);
+    // 	markset m = todo[rpos].lasttr->current_acceptance_marks();
+    // 	a |= m | roots_stack_->top_acceptance();
+    // 	rpos = roots_stack_->root_of_the_top();
+    // 	roots_stack_->pop();
+    //   }
+    // roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
+
+    return a.all();
+  }
+
+  void dijkstracheck::main()
+  {
+    while (!todo.empty())
+      {
+	trace << "Main " << std::endl;
+
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr = a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
+	  }
+
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+    	  }
+    	else
+    	  {
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+    	    if (H.find(d) == H.end())
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (H[d])
+    	      {
+    	    	if (merge (d))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
+      }
+  }
+}

@@ -30,6 +30,7 @@ ec_HEADERS = \
   cou99strength_uf.hh \
   cou99_uf_swarm.hh \
   cou99_uf_shared.hh \
+  dijkstracheck.hh \
   gv04.hh \
   lazycheck.hh \
   root_stack.hh \
@@ -46,6 +47,7 @@ libec_la_SOURCES = \
   cou99strength_uf.cc \
   cou99_uf_swarm.cc \
   cou99_uf_shared.cc \
+  dijkstracheck.cc \
   gv04.cc \
   lazycheck.cc \
   stackscheck.cc \

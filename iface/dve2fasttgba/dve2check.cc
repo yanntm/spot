@@ -51,6 +51,7 @@
 #include "fasttgbaalgos/ec/lazycheck.hh"
 #include "fasttgbaalgos/ec/stackscheck.hh"
 #include "fasttgbaalgos/ec/unioncheck.hh"
+#include "fasttgbaalgos/ec/dijkstracheck.hh"
 
 
 #include "misc/timer.hh"
@@ -99,6 +100,7 @@ main(int argc, char **argv)
   bool opt_lc13 = false;
   bool opt_sc13 = false;
   bool opt_uc13 = false;
+  bool opt_dc13 = false;
   bool opt_cmp_cou_couuf = false;
   bool opt_all = false;
 
@@ -133,6 +135,12 @@ main(int argc, char **argv)
   else if (!strcmp("-uc13", argv[3]))
     {
       opt_uc13 = true;
+      // FIXME : For debug
+      opt_cou99 = true;
+    }
+  else if (!strcmp("-dc13", argv[3]))
+    {
+      opt_dc13 = true;
       // FIXME : For debug
       opt_cou99 = true;
     }
@@ -435,6 +443,35 @@ main(int argc, char **argv)
 	  }
 
 
+	bool res_dc13 = true;
+	if (opt_dc13)
+	  {
+	    std::ostringstream result;
+	    result << "#dc13,";
+
+	    spot::dijkstracheck* checker =
+	      new spot::dijkstracheck(itor);
+	    mtimer.start("Checking dc13");
+	    if (checker->check())
+	      {
+		res_dc13 = false;
+		result << "VIOLATED,";
+	      }
+	    else
+	      {
+		result << "VERIFIED,";
+	      }
+	    mtimer.stop("Checking dc13");
+	    delete checker;
+
+	    spot::timer t = mtimer.timer("Checking dc13");
+	    result << t.walltime(); //t.utime() + t.stime();
+	    result << "," << input;
+	    std::cout << result.str() << std::endl;
+	  }
+
+
+
 	bool res_cou99 = true;
 	if (opt_cou99)
 	  {
@@ -488,6 +525,10 @@ main(int argc, char **argv)
 	    if (opt_uc13)
 	      {
 		assert (res_uc13 == res_cou99);
+	      }
+	    if (opt_dc13)
+	      {
+		assert (res_dc13 == res_cou99);
 	      }
 
 
