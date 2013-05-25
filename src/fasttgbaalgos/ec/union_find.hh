@@ -102,11 +102,7 @@ namespace spot
     uf_map el;
 
     /// \brief For each element store the id of the parent
-    // std::vector<int> id;
     std::vector<int> idneg;
-
-    /// \brief rank associated to each subtrees.
-    // std::vector<int> rk;
 
     /// \brief Acceptance associated to each element
     std::vector<markset *> accp;
@@ -118,9 +114,6 @@ namespace spot
     markset empty;
   };
 
-  // template<typename const fasttgba_state*,
-  // 	   typename Hash = std::hash<const fasttgba_state*>,
-  // 	   typename Pred = std::equal_to<const fasttgba_state*> >
   class SetOfDisjointSetsIPC_LRPC: public union_find
   {
   private:
@@ -132,146 +125,37 @@ namespace spot
     // id of a specially managed partition of "dead" elements
     const int DEAD = 0;
 
-    int root(int i) const {
-      int p = id[i];
-      if (i == p || p == id[p])
-	return p;
-      p = root(p);
-      id[i] = p;
-      return p;
-    }
+    virtual int root(int i) const ;
+
   public:
-    SetOfDisjointSetsIPC_LRPC(acc_dict& acc) :
-      union_find(acc),
-      el(), id(), rk()
-    {
-      id.push_back(DEAD);
-      rk.push_back(0);
-    }
+    SetOfDisjointSetsIPC_LRPC(acc_dict& acc);
 
-    bool add(const fasttgba_state* e) {
-      int n = id.size();
-      auto r = el.insert(std::make_pair(e, n));
-      assert(r.second);
-      id.push_back(n);
-      rk.push_back(0);
-      return r.second;
-    }
+    virtual bool add(const fasttgba_state* e);
 
-    void unite(const fasttgba_state* e1, const fasttgba_state* e2) {
-      auto i1 = el.find(e1);
-      auto i2 = el.find(e2);
-      assert(i1->second);
-      assert(i2->second);
-      assert(i1 != el.end() && i2 != el.end());
-      // IPC - Immediate Parent Check
-      if (id[i1->second] == id[i2->second])
-	return ;//false;
-      int root1 = root(i1->second);
-      int root2 = root(i2->second);
-      if (root1 == root2)
-	return ;//false;
-      int rk1 = rk[root1];
-      int rk2 = rk[root2];
-      if (rk1 < rk2)
-	id[root1] = root2;
-      else {
-	id[root2] = root1;
-	if (rk1 == rk2)
-	  rk[root1] = rk1 + 1;
-      }
-      //return true;
-    }
+    virtual void unite(const fasttgba_state* e1, const fasttgba_state* e2);
 
-    void make_dead(const fasttgba_state* e) {
-      auto i = el.find(e);
-      assert(i != el.end());
-      id[root(i->second)] = DEAD;
-    }
+    virtual void make_dead(const fasttgba_state* e);
 
-    bool contains(const fasttgba_state* e)  {
-      return el.find(e) != el.end();
-    }
+    virtual bool contains(const fasttgba_state* e);
 
-    bool same_partition(const fasttgba_state* e1,
-			 const fasttgba_state* e2)  {
-      auto i1 = el.find(e1);
-      auto i2 = el.find(e2);
-      assert(i1 != el.end() && i2 != el.end());
-      return root(i1->second) == root(i2->second);
-    }
+    virtual bool same_partition(const fasttgba_state* e1,
+				const fasttgba_state* e2) ;
 
-    bool is_dead(const fasttgba_state* e)  {
-      auto i = el.find(e);
-      assert(i != el.end());
-      return root(i->second) == DEAD;
-    }
+    virtual bool is_dead(const fasttgba_state* e);
 
-    int nbPart() const {
-      int nb = 0;
-      int size = (int) id.size();
-      // the dead partition is not considered (i = 1)
-      for (int i = 1; i < size; ++i)
-	if (i == id[i])
-	  ++nb;
-      return nb;
-    }
+    int nbPart() const;
 
-    int maxDepth() const {
-      int max = 0;
-      int size = (int) id.size();
-      // the dead partition is not considered (i = 1)
-      for (int i = 1; i < size; ++i) {
-	int d = 0, j = i;
-	while (j != id[j]) {
-	  ++d;
-	  j = id[j];
-	}
-	if (d > max)
-	  max = d;
-      }
-      return max;
-    }
+    int maxDepth() const;
 
-    int maxPart() const {
-      int max = 0;
-      std::unordered_map<int, int> roots;
-      int size = (int) id.size();
-      // the dead partition is not considered (i = 1)
-      for (int i = 1; i < size; ++i) {
-	int j = i;
-	while (j != id[j])
-	  j = id[j];
-	++roots[j];
-      }
-      for (auto it = roots.begin(); it != roots.end(); ++it)
-	if (it->second > max)
-	  max = it->second;
-      return max;
-    }
+    int maxPart() const;
 
-    void clear() {
-      el.clear();
-      id.clear();
-      rk.clear();
-      id.push_back(DEAD);
-      rk.push_back(0);
-    }
+    void clear();
 
+    virtual void add_acc (const fasttgba_state*, markset);
 
-    virtual void add_acc (const fasttgba_state*, markset)
-    {
-      assert(false);
-    }
-
-    virtual markset get_acc (const fasttgba_state*)
-    {
-      assert(false);
-    }
+    virtual markset get_acc (const fasttgba_state*);
   };
 
-  // template<typename Key, typename Hash = std::hash<Key>,
-  // 	   typename fasttgba_state_ptr_equal = std::equal_to<Key> >
   class SetOfDisjointSetsIPC_LRPC_MS : public union_find
   {
   private:
@@ -281,144 +165,35 @@ namespace spot
     // id of a specially managed partition of "dead" elements
     const int DEAD = 0;
 
-    int root(int i) const {
-      assert(i > 0);
-      int p = id[i];
-      if (p == DEAD)
-	return DEAD;
-      if (p < 0)
-	return i;
-      int gp = id[p];
-      if (gp == DEAD)
-	return DEAD;
-      if (gp < 0)
-	return p;
-      p = root(p);
-      id[i] = p;
-      return p;
-    }
+    virtual int root(int i) const;
+
   public:
-    SetOfDisjointSetsIPC_LRPC_MS(acc_dict& acc) :
-      union_find(acc),
-      el(), id() {
-      id.push_back(DEAD);
-    }
+    SetOfDisjointSetsIPC_LRPC_MS(acc_dict& acc);
 
-    bool add(const fasttgba_state* e) {
-      int n = id.size();
-      auto r = el.insert(std::make_pair(e, n));
-      assert(r.second);
-      id.push_back(-1);
-      return r.second;
-    }
+    virtual bool add(const fasttgba_state* e);
 
-    void unite(const fasttgba_state* e1, const fasttgba_state* e2) {
-      auto i1 = el.find(e1);
-      auto i2 = el.find(e2);
-      assert(i1 != el.end() && i2 != el.end());
-      // IPC - Immediate Parent Check
-      int p1 = id[i1->second];
-      int p2 = id[i2->second];
-      if ((p1 < 0 ? i1->second : p1) == (p2 < 0 ? i2->second : p2))
-	return ;//false;
-      int root1 = root(i1->second);
-      int root2 = root(i2->second);
-      if (root1 == root2)
-	return ;//false;
-      int rk1 = -id[root1];
-      int rk2 = -id[root2];
-      if (rk1 < rk2)
-	id[root1] = root2;
-      else {
-	id[root2] = root1;
-	if (rk1 == rk2)
-	  id[root1] = -(rk1 + 1);
-      }
-      //return true;
-    }
+    virtual void unite(const fasttgba_state* e1, const fasttgba_state* e2);
 
-    void make_dead(const fasttgba_state* e) {
-      auto i = el.find(e);
-      assert(i != el.end());
-      id[root(i->second)] = DEAD;
-    }
+    virtual void make_dead(const fasttgba_state* e);
 
-    bool contains(const fasttgba_state* e) {
-      return el.find(e) != el.end();
-    }
+    virtual bool contains(const fasttgba_state* e);
 
-    bool same_partition(const fasttgba_state* e1,
-			const fasttgba_state* e2)  {
-      auto i1 = el.find(e1);
-      auto i2 = el.find(e2);
-      assert(i1 != el.end() && i2 != el.end());
-      return root(i1->second) == root(i2->second);
-    }
+    virtual bool same_partition(const fasttgba_state* e1,
+				const fasttgba_state* e2);
 
-    bool is_dead(const fasttgba_state* e) {
-      auto i = el.find(e);
-      assert(i != el.end());
-      return root(i->second) == DEAD;
-    }
+    virtual bool is_dead(const fasttgba_state* e);
 
-    int nbPart() const {
-      int nb = 0;
-      int size = (int) id.size();
-      // the dead partition is not considered (i = 1)
-      for (int i = 1; i < size; ++i)
-	if (id[i] < 0)
-	  ++nb;
-      return nb;
-    }
+    int nbPart() const;
 
-    int maxDepth() const {
-      int max = 0;
-      int size = (int) id.size();
-      // the dead partition is not considered (i = 1)
-      for (int i = 1; i < size; ++i) {
-	int d = 0, j = i;
-	while (id[j] > 0) {
-	  ++d;
-	  j = id[j];
-	}
-	if (d > max)
-	  max = d;
-      }
-      return max;
-    }
+    int maxDepth() const;
 
-    int maxPart() const {
-      int max = 0;
-      std::unordered_map<int, int> roots;
-      int size = (int) id.size();
-      // the dead partition is not considered (i = 1)
-      for (int i = 1; i < size; ++i) {
-	int j = i;
-	while (id[j] > 0)
-	  j = id[j];
-	++roots[j];
-      }
-      for (auto it = roots.begin(); it != roots.end(); ++it)
-	if (it->second > max)
-	  max = it->second;
-      return max;
-    }
+    int maxPart() const;
 
-    void clear() {
-      el.clear();
-      id.clear();
-      id.push_back(DEAD);
-    }
+    void clear();
 
-    virtual void add_acc (const fasttgba_state*, markset)
-    {
-      assert(false);
-    }
+    virtual void add_acc (const fasttgba_state*, markset);
 
-    virtual markset get_acc (const fasttgba_state*)
-    {
-      assert(false);
-    }
+    virtual markset get_acc (const fasttgba_state*);
   };
 }
 
