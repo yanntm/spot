@@ -29,11 +29,18 @@
 
 #include "fasttgba/fasttgba.hh"
 #include "ec.hh"
+#include "deadstore.hh"
 
 namespace spot
 {
   class stackscheck : public ec
   {
+  private:
+    /// The map of visited states
+    typedef Sgi::hash_map<const fasttgba_state*, size_t,
+			  fasttgba_state_ptr_hash,
+			  fasttgba_state_ptr_equal> seen_map;
+
   public:
 
     /// A constructor taking the automaton to check
@@ -68,12 +75,30 @@ namespace spot
 
     void lowlinkupdate(int f, int t, markset acc);
 
+    /// \brief The color for a new State
+    enum color {Alive, Dead, Unknown};
+    struct color_pair
+    {
+      color c;
+      seen_map::const_iterator it;
+    };
+
+    /// \brief Access  the color of a state
+    /// The result is a pair whith the second
+    /// element points to the element in table
+    /// if one.
+    ///
+    /// It's a procedure so the result in store in the
+    /// parameter. This avoid extra memory allocation.
+    void  get_color(const fasttgba_state*, color_pair* res);
+
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
 
     /// \brief the number of acceptance sets
     int accsize;
 
+    /// The stack of acceptance conditions
     std::vector <std::stack<int> > accstack_;
 
     //
@@ -100,11 +125,10 @@ namespace spot
     int dftop;		// Top of DFS stack.
     bool violation;
 
-    /// The map of visited states
-    typedef Sgi::hash_map<const fasttgba_state*, size_t,
-			  fasttgba_state_ptr_hash,
-			  fasttgba_state_ptr_equal> seen_map;
     seen_map H;
+
+    /// \brief The store for Deads states
+    deadstore* deadstore_;
 
     // The instance automaton
     const instance_automaton* inst;

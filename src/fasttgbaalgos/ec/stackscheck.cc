@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//#define STACKSCHECKTRACE
+// #define STACKSCHECKTRACE
 #ifdef STACKSCHECKTRACE
 #define trace std::cerr
 #else
@@ -36,6 +36,7 @@ namespace spot
   {
     a_ = inst->get_automaton();
     accsize = a_->get_acc().size() ;
+    deadstore_ = new deadstore();
   }
 
   stackscheck::~stackscheck()
@@ -120,6 +121,21 @@ namespace spot
       violation = true;
   }
 
+  void
+  stackscheck::get_color(const fasttgba_state* state,
+			   stackscheck::color_pair* cp)
+  {
+    seen_map::const_iterator i = H.find(state);
+    cp->it = i;
+    if (i != H.end())
+      cp->c = Alive;
+    else if (deadstore_->contains(state))
+      cp->c = Dead;
+    else
+      cp->c = Unknown;
+  }
+
+
   void stackscheck::dfs_pop()
   {
     int p = stack[dftop].pre;
@@ -138,7 +154,9 @@ namespace spot
 	for (int i = top; i >= dftop; --i)
 	  {
 	    delete stack[i].lasttr;
-	    //delete stack[i].mark;
+	    deadstore_->add(stack[i].s);
+	    seen_map::const_iterator it = H.find(stack[i].s);
+	    H.erase(it);
 	    stack.pop_back();
 	  }
 	top = dftop - 1;
@@ -152,6 +170,7 @@ namespace spot
 
   void stackscheck::main()
   {
+    color_pair cp;
     while (!violation && dftop >= 0)
       {
 	trace << "Main iteration (top = " << top
@@ -184,20 +203,20 @@ namespace spot
 		  << a_->format_state(s_prime)
 		  << std::endl;
 
-	    seen_map::const_iterator i = H.find(s_prime);
+	    // Store the result into cp
+	    get_color(s_prime, &cp);
 
-	    if (i == H.end())
+	    if (cp.c == Unknown)
 	      {
 		trace << " is a new state." << std::endl;
 		dfs_push(s_prime, acc);
 	      }
 	    else
 	      {
-		if (i->second < stack.size()
-		    && stack[i->second].s->compare(s_prime) == 0)
+		if (cp.c == Alive)
 		  {
 		    trace << " is on stack." << std::endl;
-		    lowlinkupdate(dftop, i->second, acc);
+		    lowlinkupdate(dftop, cp.it->second, acc);
 		  }
 		else
 		  {
