@@ -115,7 +115,7 @@ namespace spot
     // outgoing transitions from left with outgoing transitions
     // from right. So when left is done, fix it to zero to
     // detect efficiently when the iteration is done!
-    if (left_->done())
+    if (left_->done() || right_->done())
       {
     	left_ = 0;
     	return;
