@@ -69,8 +69,8 @@ namespace spot
     /// \brief Add a new element in the store
     void add (const fasttgba_state* state)
     {
-      if (!contains(state))
-	  store.insert(state);
+      assert(!contains(state));
+      store.insert(state);
     }
 
   private :
