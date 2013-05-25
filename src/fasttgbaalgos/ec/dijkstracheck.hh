@@ -26,6 +26,7 @@
 #include "fasttgba/fasttgba.hh"
 #include "ec.hh"
 #include "root_stack.hh"
+#include "deadstore.hh"
 
 namespace spot
 {
@@ -67,6 +68,11 @@ namespace spot
     /// \brief the main procedure
     virtual void main();
 
+    /// \brief The color for a new State
+    enum color {Alive, Dead, Unknown};
+
+    color get_color(const fasttgba_state*);
+
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
 
@@ -88,6 +94,9 @@ namespace spot
     /// Root of stack
     compressed_stack_of_roots *roots_stack_;
 
+    /// The store of dead states
+    deadstore* deadstore_;
+
     /// \brief the storage
     typedef Sgi::hash_map<const fasttgba_state*, int,
 			  fasttgba_state_ptr_hash,
@@ -96,11 +105,6 @@ namespace spot
 
     /// \brief The instance automaton
     const instance_automaton* inst;
-
-    int max;
-    int dtop;
-
-
   };
 }
 

@@ -32,11 +32,11 @@ namespace spot
 {
   dijkstracheck::dijkstracheck(instanciator* i) :
     counterexample_found(false),
-    inst(i->new_instance()),
-    max(0), dtop(0)
+    inst(i->new_instance())
   {
     a_ = inst->get_automaton ();
     roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+    deadstore_ = new deadstore();
   }
 
   dijkstracheck::~dijkstracheck()
@@ -90,7 +90,9 @@ namespace spot
 	roots_stack_->pop();
 	while (live.size() > rtop)
 	  {
-	    H[live.back()] = 0;
+	    deadstore_->add(live.back());
+	    seen_map::const_iterator it = H.find(live.back());
+	    H.erase(it);
 	    live.pop_back();
 	  }
       }
@@ -99,7 +101,6 @@ namespace spot
   bool dijkstracheck::merge(fasttgba_state* d)
   {
     trace << "Dijkstracheck::merge " << std::endl;
-
 
     int dpos = H[d];
     int rpos = roots_stack_->root_of_the_top();
@@ -115,26 +116,25 @@ namespace spot
       }
     roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
 
-    // int rpos = roots_stack_->root_of_the_top();
-    // assert(todo[rpos].lasttr);
-    // markset a = todo[rpos].lasttr->current_acceptance_marks();
-    // roots_stack_->pop();
-
-    // while (H[d] < rpos)
-    //   {
-    // 	assert(todo[rpos].lasttr);
-    // 	markset m = todo[rpos].lasttr->current_acceptance_marks();
-    // 	a |= m | roots_stack_->top_acceptance();
-    // 	rpos = roots_stack_->root_of_the_top();
-    // 	roots_stack_->pop();
-    //   }
-    // roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
-
     return a.all();
   }
 
+  dijkstracheck::color
+  dijkstracheck::get_color(const fasttgba_state* state)
+  {
+    seen_map::const_iterator i = H.find(state);
+    if (i != H.end())
+     return Alive;
+    else if (deadstore_->contains(state))
+      return Dead;
+    else
+      return Unknown;
+  }
+
+
   void dijkstracheck::main()
   {
+    dijkstracheck::color c;
     while (!todo.empty())
       {
 	trace << "Main " << std::endl;
@@ -158,12 +158,13 @@ namespace spot
     	  {
 	    assert(todo.back().lasttr);
     	    fasttgba_state* d = todo.back().lasttr->current_state();
-    	    if (H.find(d) == H.end())
+	    c = get_color (d);
+    	    if (c == Unknown)
     	      {
 		dfs_push (d);
     	    	continue;
     	      }
-    	    else if (H[d])
+    	    else if (c == Alive)
     	      {
     	    	if (merge (d))
     	    	  {
