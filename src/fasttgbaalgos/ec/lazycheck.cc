@@ -100,15 +100,18 @@ namespace spot
       violation = true;
   }
 
-  lazycheck::color
-  lazycheck::get_color(const fasttgba_state* state)
+  void
+  lazycheck::get_color(const fasttgba_state* state,
+		       lazycheck::color_pair* cp)
   {
     seen_map::const_iterator i = H.find(state);
+    cp->it = i;
     if (i != H.end())
-      return Alive;
+      cp->c = Alive;
     else if (deadstore_->contains(state))
-      return Dead;
-    return Unknown;
+      cp->c = Dead;
+    else
+      cp->c = Unknown;
   }
 
   void lazycheck::dfs_pop()
@@ -137,6 +140,7 @@ namespace spot
 
   void lazycheck::main()
   {
+    lazycheck::color_pair cp;
     while (!violation && dftop >= 0)
       {
 	trace << "Main iteration (top = " << top
@@ -168,20 +172,19 @@ namespace spot
 		  << a_->format_state(s_prime)
 		  << std::endl;
 
-	    color c = get_color(s_prime);
+	    get_color(s_prime, &cp);
 
-	    if (c == Unknown)
+	    if (cp.c == Unknown)
 	      {
 		trace << " is a new state." << std::endl;
 		dfs_push(s_prime);
 	      }
 	    else
 	      {
-		if (c == Alive)
+		if (cp.c == Alive)
 		  {
-		    seen_map::const_iterator i = H.find(s_prime);
 		    trace << " is on stack." << std::endl;
-		    lowlinkupdate(dftop, i->second,
+		    lowlinkupdate(dftop, cp.it->second,
 				  iter->current_acceptance_marks());
 		  }
 		else

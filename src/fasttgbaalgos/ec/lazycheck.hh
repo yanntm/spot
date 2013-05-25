@@ -35,6 +35,12 @@ namespace spot
 {
   class lazycheck : public ec
   {
+  private:
+    /// The map of visited states
+    typedef Sgi::hash_map<const fasttgba_state*, size_t,
+			  fasttgba_state_ptr_hash,
+			  fasttgba_state_ptr_equal> seen_map;
+
   public:
 
     /// A constructor taking the automaton to check
@@ -71,9 +77,20 @@ namespace spot
 
     /// \brief The color for a new State
     enum color {Alive, Dead, Unknown};
+    struct color_pair
+    {
+      color c;
+      seen_map::const_iterator it;
+    };
 
-    /// \biref return the color of a state
-    color get_color(const fasttgba_state*);
+    /// \brief Access  the color of a state
+    /// The result is a pair whith the second
+    /// element points to the element in table
+    /// if one.
+    ///
+    /// It's a procedure so the result in store in the
+    /// parameter. This avoid extra memory allocation.
+    void  get_color(const fasttgba_state*, color_pair* res);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
@@ -103,10 +120,6 @@ namespace spot
     int dftop;		// Top of DFS stack.
     bool violation;	// True if a counterexample is found
 
-    /// The map of visited states
-    typedef Sgi::hash_map<const fasttgba_state*, size_t,
-			  fasttgba_state_ptr_hash,
-			  fasttgba_state_ptr_equal> seen_map;
     seen_map H;
 
     /// \brief The store for Deads states
