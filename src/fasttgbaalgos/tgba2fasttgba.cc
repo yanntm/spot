@@ -87,7 +87,6 @@ namespace spot
 
 	for (; sii2 != end2; ++sii2)
 	  {
-	    acceptances_.push_back(sii2->second);
 	    const ltl::formula *f = sii2->first;
 
 	    // It's not a variable for me!
@@ -95,6 +94,7 @@ namespace spot
 	    // sets  are removed off the tgba
 	    if (!aps->is_registered_acceptance_variable(f, aut_))
 	      continue;
+	    acceptances_.push_back(sii2->second);
 
 	    int p = accs_.register_acc_for_aut(f->dump(), result_);
 	    acceptances2_.push_back(p);
@@ -119,7 +119,7 @@ namespace spot
 	  }
 	else if (is_weak_scc (*sm, n))
 	  {
-	    if (is_complete_scc (aut_, *sm, n))
+	    if (is_complete_scc (*sm, n))
 	      {
 		//std::cout << "Terminal\n";
 		st->set_strength (TERMINAL_SCC);
