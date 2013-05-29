@@ -30,6 +30,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include "deadstore.hh"
 
 namespace spot
 {
@@ -87,6 +88,11 @@ namespace spot
     /// this scc is dead.
     virtual bool is_dead (const fasttgba_state* s);
 
+    /// \brief The color for a new State
+    enum color {Alive, Dead, Unknown};
+
+    virtual color get_color(const fasttgba_state*);
+
   protected:
 
     /// \brief grab the id of the root associated to an element.
@@ -125,7 +131,7 @@ namespace spot
     // id of a specially managed partition of "dead" elements
     const int DEAD = 0;
 
-    virtual int root(int i) const ;
+    virtual int root(int i);
 
   public:
     SetOfDisjointSetsIPC_LRPC(acc_dict& acc);
@@ -154,6 +160,8 @@ namespace spot
     virtual void add_acc (const fasttgba_state*, markset);
 
     virtual markset get_acc (const fasttgba_state*);
+
+    virtual color get_color(const fasttgba_state*);
   };
 
   class SetOfDisjointSetsIPC_LRPC_MS : public union_find
@@ -165,7 +173,7 @@ namespace spot
     // id of a specially managed partition of "dead" elements
     const int DEAD = 0;
 
-    virtual int root(int i) const;
+    virtual int root(int i);
 
   public:
     SetOfDisjointSetsIPC_LRPC_MS(acc_dict& acc);
@@ -194,6 +202,78 @@ namespace spot
     virtual void add_acc (const fasttgba_state*, markset);
 
     virtual markset get_acc (const fasttgba_state*);
+
+    virtual color get_color(const fasttgba_state*);
+  };
+
+  /// \brief this class propose an union find based on a deadstore.
+  /// The idea is to used a dedicated map for the storage of dead
+  /// state but this storage is done in a lazy way. A counter maintain
+  /// the realsize of the union find structure when a make dead is
+  /// realized : this is possible with the assumption that make dead
+  /// is performed on the dfs root of the SCC. So the structure maintain
+  /// the real size of the structure which is the size of Alive states.
+  /// Adding a new state only checks if this size is the size of the
+  /// structure to avoid extra memory allocation. If it is not true
+  /// this means that there are dead states insides the alive structure.
+  /// Just pick one a insert it inside the dead store. Otherwise it's a
+  /// classic insert.
+  ///
+  /// Note that this class doesn't support contains since get_color
+  /// is the most efficient way to check wheter a state is available
+  class SetOfDisjointSetsIPC_LRPC_MS_Dead : public union_find
+  {
+  private:
+    typedef Sgi::hash_map<const fasttgba_state*, int,
+			  fasttgba_state_ptr_hash,
+			  fasttgba_state_ptr_equal> seen_map;
+    seen_map el;
+
+    // This stucture allows to bind a position with a state
+    struct idpair
+    {
+      int id;
+      const fasttgba_state* state;
+    };
+
+    mutable std::vector<idpair> id;
+    // id of a specially managed partition of "dead" elements
+    const int DEAD = 0;
+
+    deadstore* deadstore_;
+    int realsize_;
+
+    virtual int root(int i);
+
+  public:
+    SetOfDisjointSetsIPC_LRPC_MS_Dead(acc_dict& acc);
+
+    virtual bool add(const fasttgba_state* e);
+
+    virtual void unite(const fasttgba_state* e1, const fasttgba_state* e2);
+
+    virtual void make_dead(const fasttgba_state* e);
+
+    virtual bool contains(const fasttgba_state* e);
+
+    virtual bool same_partition(const fasttgba_state* e1,
+				const fasttgba_state* e2);
+
+    virtual bool is_dead(const fasttgba_state* e);
+
+    int nbPart() const;
+
+    int maxDepth() const;
+
+    int maxPart() const;
+
+    void clear();
+
+    virtual void add_acc (const fasttgba_state*, markset);
+
+    virtual markset get_acc (const fasttgba_state*);
+
+    virtual color get_color(const fasttgba_state*);
   };
 }
 

@@ -63,6 +63,18 @@ namespace spot
     return i.second;
   }
 
+  union_find::color
+  union_find::get_color(const fasttgba_state* state)
+  {
+    uf_map::const_iterator i = el.find(state);
+    if (i != el.end())
+     return Alive;
+    else if (is_dead(state))
+      return Dead;
+    else
+      return Unknown;
+  }
+
   int union_find::root (int i)
   {
     int p = idneg[i];
@@ -189,7 +201,7 @@ namespace spot
   // SetOfDisjointSetsIPC_LRPC
   // ------------------------------------------------------------
 
-   int SetOfDisjointSetsIPC_LRPC::root(int i) const
+   int SetOfDisjointSetsIPC_LRPC::root(int i)
    {
      int p = id[i];
      if (i == p || p == id[p])
@@ -217,10 +229,22 @@ namespace spot
      return r.second;
    }
 
-   void
-   SetOfDisjointSetsIPC_LRPC::unite(const fasttgba_state* e1,
-				    const fasttgba_state* e2)
-   {
+  union_find::color
+  SetOfDisjointSetsIPC_LRPC::get_color(const fasttgba_state* state)
+  {
+    uf_map::const_iterator i = el.find(state);
+    if (i != el.end())
+     return Alive;
+    else if (is_dead(state))
+      return Dead;
+    else
+      return Unknown;
+  }
+
+  void
+  SetOfDisjointSetsIPC_LRPC::unite(const fasttgba_state* e1,
+				   const fasttgba_state* e2)
+  {
      auto i1 = el.find(e1);
      auto i2 = el.find(e2);
      assert(i1->second);
@@ -352,7 +376,7 @@ namespace spot
   // ------------------------------------------------------------
 
   int
-  SetOfDisjointSetsIPC_LRPC_MS::root(int i) const
+  SetOfDisjointSetsIPC_LRPC_MS::root(int i)
   {
     assert(i > 0);
     int p = id[i];
@@ -387,6 +411,18 @@ namespace spot
     return r.second;
   }
 
+  union_find::color
+  SetOfDisjointSetsIPC_LRPC_MS::get_color(const fasttgba_state* state)
+  {
+    uf_map::const_iterator i = el.find(state);
+    if (i == el.end())
+      return Unknown;
+    else if (root(i->second) == DEAD)
+      return Dead;
+    else
+      return Alive;
+  }
+
   void
   SetOfDisjointSetsIPC_LRPC_MS::unite(const fasttgba_state* e1,
 				      const fasttgba_state* e2)
@@ -401,6 +437,7 @@ namespace spot
       return ;
     int root1 = root(i1->second);
     int root2 = root(i2->second);
+    assert(root1 && root2);
     if (root1 == root2)
       return ;
     int rk1 = -id[root1];
@@ -510,6 +547,200 @@ namespace spot
 
   markset
   SetOfDisjointSetsIPC_LRPC_MS::get_acc (const fasttgba_state*)
+  {
+    assert(false);
+  }
+
+
+
+  // ------------------------------------------------------------
+  // SetOfDisjointSetsIPC_LRPC_MS_Dead
+  // ------------------------------------------------------------
+
+  int
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::root(int i)
+  {
+    assert(i >= 0);
+    int p = id[i].id;
+    if (p <= 0)
+	return i;
+    int gp = id[p].id;
+    if (gp < 0)
+	return p;
+    p = root(p);
+    id[i].id = p;
+    return p;
+  }
+
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::SetOfDisjointSetsIPC_LRPC_MS_Dead
+  (acc_dict& acc) : union_find(acc),
+		    el(), id(), realsize_(0)
+  {
+    deadstore_ = new deadstore();
+    id.push_back({DEAD,0});
+    ++realsize_;
+  }
+
+  bool
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::add(const fasttgba_state* e)
+  {
+    int n = id.size();
+    assert(realsize_ <= n);
+
+    // There is no dead to flush
+    if (n == realsize_)
+      {
+	++realsize_;
+	auto r = el.insert(std::make_pair(e, n));
+	assert(r.second);
+	id.push_back({-1, e});
+	return r.second;
+      }
+    // Some deads needs to be pushed
+    else
+      {
+	assert(id[realsize_].state);
+	auto it = el.find(id[realsize_].state);
+	el.erase (it);
+	deadstore_->add(id[realsize_].state);
+	id[realsize_].state = e;
+	id[realsize_].id = -1;
+	el.insert(std::make_pair(e, realsize_));
+	++realsize_;
+	return false;
+      }
+  }
+
+  union_find::color
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::get_color(const fasttgba_state* state)
+  {
+    seen_map::const_iterator i = el.find(state);
+    if (i != el.end())
+      {
+	if (i->second >= realsize_)
+	  return Dead;
+	else
+	  return Alive;
+      }
+    else if (deadstore_->contains(state))
+      return Dead;
+    else
+      return Unknown;
+  }
+
+  void
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::unite(const fasttgba_state* e1,
+					   const fasttgba_state* e2)
+  {
+    //std::cout << "unite" << std::endl;
+    auto i1 = el.find(e1);
+    auto i2 = el.find(e2);
+    assert(i1 != el.end() && i2 != el.end());
+    // IPC - Immediate Parent Check
+    int p1 = id[i1->second].id;
+    int p2 = id[i2->second].id;
+    if ((p1 < 0 ? i1->second : p1) == (p2 < 0 ? i2->second : p2))
+      return ;
+    int root1 = root(i1->second);
+    int root2 = root(i2->second);
+    //assert(root1 && root2);
+    //assert(root1 <= realsize_ && root2 <= realsize_);
+    if (root1 == root2)
+      return ;
+    int rk1 = -id[root1].id;
+    int rk2 = -id[root2].id;
+    if (rk1 < rk2)
+      id[root1].id = root2;
+    else {
+      id[root2].id = root1;
+      if (rk1 == rk2)
+	id[root1].id = -(rk1 + 1);
+    }
+  }
+
+  void
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::make_dead(const fasttgba_state* e)
+  {
+    auto i = el.find(e);
+    assert(i != el.end());
+    assert(i->second < realsize_);
+    realsize_ = i->second;
+  }
+
+  bool
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::contains(const fasttgba_state* )
+  {
+    // For this Union Find prefer Get Color.
+    assert(false);
+  }
+
+  bool
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::same_partition(const fasttgba_state* e1,
+						    const fasttgba_state* e2)
+  {
+    auto i1 = el.find(e1);
+    auto i2 = el.find(e2);
+    bool containse1 = deadstore_->contains(e1);
+    bool containse2 = deadstore_->contains(e2);
+
+    if (containse1 && containse2)
+      return true; // Never Happens?
+    if (containse1 || containse2)
+      return false;
+    assert(i1 != el.end() && i2 != el.end());
+    if (i1->second >= realsize_ && i2->second >= realsize_)
+      return true;
+    if (i1->second >= realsize_ || i2->second >= realsize_)
+      return false;
+
+    return root(i1->second) == root(i2->second);
+  }
+
+  bool
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::is_dead(const fasttgba_state* e)
+  {
+    //std::cout << "is_dead" << std::endl;
+    auto i = el.find(e);
+    bool containse = deadstore_->contains(e);
+    assert(containse || i != el.end());
+    return containse || (i->second >= realsize_);
+  }
+
+  int
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::nbPart() const
+  {
+    assert(false);
+    return 0;
+  }
+
+  int
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::maxDepth() const
+  {
+    assert(false);
+    return 0;
+  }
+
+  int
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::maxPart() const
+  {
+    assert(false);
+    return 0;
+  }
+
+  void
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::clear() {
+    el.clear();
+    id.clear();
+  }
+
+  void
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::add_acc (const fasttgba_state*, markset)
+  {
+    assert(false);
+  }
+
+  markset
+  SetOfDisjointSetsIPC_LRPC_MS_Dead::get_acc (const fasttgba_state*)
   {
     assert(false);
   }

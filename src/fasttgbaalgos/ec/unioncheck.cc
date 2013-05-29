@@ -35,7 +35,7 @@ namespace spot
     inst(i->new_instance())
   {
     a_ = inst->get_automaton ();
-    uf  = new SetOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+    uf  = new SetOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
     roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
   }
 
@@ -116,6 +116,7 @@ namespace spot
 
   void unioncheck::main()
   {
+    union_find::color c;
     while (!todo.empty())
       {
 	trace << "Main " << std::endl;
@@ -140,12 +141,13 @@ namespace spot
     	  {
 	    assert(todo.back().lasttr);
     	    fasttgba_state* d = todo.back().lasttr->current_state();
-    	    if (!uf->contains(d))
+	    c = uf->get_color(d);
+    	    if (c == union_find::Unknown)
     	      {
 		dfs_push (d);
     	    	continue;
     	      }
-    	    else if (!uf->is_dead(d))
+    	    else if (c == union_find::Alive)
     	      {
     	    	if (merge (d))
     	    	  {
