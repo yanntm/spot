@@ -138,7 +138,8 @@ int main(int argc, char **argv)
 
       if (opt_cou)
     	{
-    	  spot::cou99  checker(ftgba);
+	  spot::simple_instanciator si (ftgba);
+    	  spot::cou99  checker(&si);
     	  if (checker.check())
     	    {
     	      return_value = 1;

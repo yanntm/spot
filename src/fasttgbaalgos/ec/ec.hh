@@ -67,6 +67,60 @@ namespace spot
     {
     }
   };
+
+
+
+ class simple_instance: public instance_automaton
+  {
+  public:
+    simple_instance(const spot::simple_instance&) = delete;
+
+    simple_instance (const fasttgba* tgba):
+      ftgba_(tgba)
+    {
+    }
+
+    virtual ~simple_instance()
+    {
+    }
+
+    const fasttgba* get_automaton () const
+    {
+      return ftgba_;
+    }
+
+    const fasttgba* get_ba_automaton () const
+    {
+      // Not Yet Supported
+      assert(false);
+      return 0;
+    }
+
+  private:
+    const spot::fasttgba* ftgba_;
+  };
+
+
+
+
+  class simple_instanciator: public instanciator
+  {
+  private:
+    const fasttgba* tgba_;
+
+  public:
+    simple_instanciator (const fasttgba* tgba):
+      tgba_(tgba)
+    {
+    }
+
+    const instance_automaton* new_instance ( )
+    {
+      return new simple_instance(tgba_);
+    }
+  };
+
+
 }
 
 #endif // SPOT_FASTTGBAALGOS_EC_EC_HH
