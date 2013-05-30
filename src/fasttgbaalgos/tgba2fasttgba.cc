@@ -27,7 +27,7 @@
 #include "tgba/bdddict.hh"
 #include "fasttgba/markset.hh"
 #include "fasttgba/ap_dict.hh"
-
+#include "src/tgba/tgbaexplicit.hh"
 
 namespace spot
 {
@@ -89,11 +89,19 @@ namespace spot
 	  {
 	    const ltl::formula *f = sii2->first;
 
+	    // Is it a trick ?
+	    if (dynamic_cast<const sba_explicit_number*>(aut_) &&
+		aut_->number_of_acceptance_conditions())
+	      {
+		if(!(ltl::constant::true_instance() == f))
+		  continue;
+	      }
+
 	    // It's not a variable for me!
 	    // When a degeneralisation is performed some acceptance
 	    // sets  are removed off the tgba
-	    if (!aps->is_registered_acceptance_variable(f, aut_))
-	      continue;
+	    // if (!aps->is_registered_acceptance_variable(f, aut_))
+	    //   continue;
 	    acceptances_.push_back(sii2->second);
 
 	    int p = accs_.register_acc_for_aut(f->dump(), result_);
@@ -166,8 +174,14 @@ namespace spot
 				acceptances_.end(),
 				bdd_var(one));
 		    int nth = std::distance(acceptances_.begin(), pp);
+
+		    if (nth < 0 ||   nth > (int) acceptances2_.size())
+		      {
+			break;
+		      }
+
 		    current_mark.set_mark(acceptances2_[nth]);
-		    one = bdd_high(one);
+ 		    one = bdd_high(one);
 		    break;
 		  }
 		++i;
