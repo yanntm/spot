@@ -35,7 +35,7 @@ namespace spot
     inst (i->new_instance())
   {
     a_ = inst->get_automaton();
-    accsize = a_->get_acc().size() ;
+    accsize = a_->get_acc().size();
     deadstore_ = new deadstore();
   }
 

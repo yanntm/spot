@@ -26,7 +26,7 @@
 
 
 #include <cassert>
-#include <iostream>
+#include <iosfwd>
 #include <functional>
 #include <memory>
 #include <unordered_set>

@@ -35,7 +35,7 @@ namespace spot
     inst(i->new_instance())
   {
     a_ = inst->get_automaton ();
-    uf  = new SetOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
+    uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
     roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
   }
 
@@ -73,7 +73,7 @@ namespace spot
     	  << std::endl;
 
     uf->add (s);
-    todo.push_back ({s,0});
+    todo.push_back ({s, 0});
     roots_stack_->push_trivial(todo.size()-1);
   }
 

@@ -25,7 +25,7 @@
 
 
 #include <cassert>
-#include <iostream>
+#include <iosfwd>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -120,7 +120,7 @@ namespace spot
     markset empty;
   };
 
-  class SetOfDisjointSetsIPC_LRPC: public union_find
+  class setOfDisjointSetsIPC_LRPC: public union_find
   {
   private:
     Sgi::hash_map<const fasttgba_state*, int,
@@ -134,7 +134,7 @@ namespace spot
     virtual int root(int i);
 
   public:
-    SetOfDisjointSetsIPC_LRPC(acc_dict& acc);
+    setOfDisjointSetsIPC_LRPC(acc_dict& acc);
 
     virtual bool add(const fasttgba_state* e);
 
@@ -145,7 +145,7 @@ namespace spot
     virtual bool contains(const fasttgba_state* e);
 
     virtual bool same_partition(const fasttgba_state* e1,
-				const fasttgba_state* e2) ;
+				const fasttgba_state* e2);
 
     virtual bool is_dead(const fasttgba_state* e);
 
@@ -164,7 +164,7 @@ namespace spot
     virtual color get_color(const fasttgba_state*);
   };
 
-  class SetOfDisjointSetsIPC_LRPC_MS : public union_find
+  class setOfDisjointSetsIPC_LRPC_MS : public union_find
   {
   private:
     Sgi::hash_map<const fasttgba_state*, int,
@@ -176,7 +176,7 @@ namespace spot
     virtual int root(int i);
 
   public:
-    SetOfDisjointSetsIPC_LRPC_MS(acc_dict& acc);
+    setOfDisjointSetsIPC_LRPC_MS(acc_dict& acc);
 
     virtual bool add(const fasttgba_state* e);
 
@@ -221,7 +221,7 @@ namespace spot
   ///
   /// Note that this class doesn't support contains since get_color
   /// is the most efficient way to check wheter a state is available
-  class SetOfDisjointSetsIPC_LRPC_MS_Dead : public union_find
+  class setOfDisjointSetsIPC_LRPC_MS_Dead : public union_find
   {
   private:
     typedef Sgi::hash_map<const fasttgba_state*, int,
@@ -246,7 +246,7 @@ namespace spot
     virtual int root(int i);
 
   public:
-    SetOfDisjointSetsIPC_LRPC_MS_Dead(acc_dict& acc);
+    setOfDisjointSetsIPC_LRPC_MS_Dead(acc_dict& acc);
 
     virtual bool add(const fasttgba_state* e);
 

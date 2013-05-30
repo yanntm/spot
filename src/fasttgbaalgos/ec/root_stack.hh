@@ -81,7 +81,7 @@ namespace spot
 
     const markset& top_acceptance()
     {
-      assert(stack_.size());
+      assert(!stack_.empty());
       return *stack_.top().second;
     }
 
@@ -154,8 +154,8 @@ namespace spot
 			   unsigned int last = 0)
     {
       // std::cout << "Push non trivial "  << root << std::endl;
-      assert(root <= last );
-      assert (! is_empty() || root == 0);
+      assert(root <= last);
+      assert (!is_empty() || root == 0);
       assert(is_empty() || root == stack_.back().root +1);
 
       if (m == *empty_)
@@ -173,7 +173,7 @@ namespace spot
 	return stack_.back().root;
       if (stack_.size() > 1)
 	return  (stack_[stack_.size() - 2]).root + 1;
-      return 0 ;
+      return 0;
     }
 
     void pop()
@@ -205,7 +205,7 @@ namespace spot
 
     const markset& top_acceptance()
     {
-      assert(stack_.size());
+      assert(!stack_.empty());
       return *stack_.back().mark;
     }
   };

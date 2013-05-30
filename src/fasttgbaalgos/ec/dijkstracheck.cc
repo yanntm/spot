@@ -73,7 +73,7 @@ namespace spot
 
     live.push_back(s);
     H[s] = live.size() -1;
-    todo.push_back ({s,0, live.size() -1});
+    todo.push_back ({s, 0, live.size() -1});
     roots_stack_->push_trivial(todo.size() -1);
 
   }
@@ -85,7 +85,7 @@ namespace spot
     todo.pop_back();
 
     unsigned int rtop = roots_stack_->root_of_the_top();
-    if ( rtop == todo.size())
+    if (rtop == todo.size())
       {
 	roots_stack_->pop();
 	while (live.size() > rtop)
@@ -107,7 +107,7 @@ namespace spot
     markset a = todo[rpos].lasttr->current_acceptance_marks();
 
     roots_stack_->pop();
-    while((unsigned)dpos < todo[rpos].position)
+    while ((unsigned)dpos < todo[rpos].position)
       {
     	markset m = todo[rpos].lasttr->current_acceptance_marks();
     	a |= m | roots_stack_->top_acceptance();

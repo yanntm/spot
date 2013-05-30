@@ -95,7 +95,7 @@ namespace spot
 	trace << "    f.lowlink updated to "
 	      << stack[f].lowlink << std::endl;
       }
-    stack[f].mark->operator |=(acc | *stack[t].mark);
+    stack[f].mark->operator|=(acc | *stack[t].mark);
     if (stack[f].mark->all())
       violation = true;
   }

@@ -93,7 +93,7 @@ namespace spot
 	    if (dynamic_cast<const sba_explicit_number*>(aut_) &&
 		aut_->number_of_acceptance_conditions())
 	      {
-		if(!(ltl::constant::true_instance() == f))
+		if (!(ltl::constant::true_instance() == f))
 		  continue;
 	      }
 

@@ -100,7 +100,7 @@ namespace spot
     stop_world = false;
 
     // Launch all threads ...
-    for(unsigned int i = 0; i < nbthread_; ++i)
+    for (unsigned int i = 0; i < nbthread_; ++i)
       {
 	threads.push_back
 	  (std::thread(&spot::cou99_uf_swarm::do_work, this, i));
@@ -169,7 +169,7 @@ namespace spot
       // point is reached this means that one thread is already dead
       // or about to die
       thread_finalize = new std::thread([this] {
-	  std::for_each(threads.begin(),threads.end(),
+	  std::for_each(threads.begin(), threads.end(),
 			std::mem_fn(&std::thread::join));
 	});
 

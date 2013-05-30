@@ -235,7 +235,7 @@ namespace spot
     {
     }
 
-    const instance_automaton* new_instance ( )
+    const instance_automaton* new_instance ()
     {
       return new dve2product_instance(tgba_, filename_);
     }

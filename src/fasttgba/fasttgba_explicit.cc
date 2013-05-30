@@ -105,7 +105,7 @@ namespace spot
       crossref_.push_back (i);
 
     if (swarming_)
-      std::random_shuffle (crossref_.begin(), crossref_.end() );
+      std::random_shuffle (crossref_.begin(), crossref_.end());
   }
 
   fast_explicit_iterator::~fast_explicit_iterator()

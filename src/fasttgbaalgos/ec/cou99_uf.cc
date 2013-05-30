@@ -35,7 +35,7 @@ namespace spot
     inst(i->new_instance())
   {
     a_ = inst->get_automaton ();
-    uf  = new SetOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+    uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
     roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
   }
 

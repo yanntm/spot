@@ -28,8 +28,7 @@
 
 namespace spot
 {
-  union_find_shared::union_find_shared (acc_dict& a, int n
-					) :
+  union_find_shared::union_find_shared (acc_dict& a, int n) :
     union_find(a), ufa_(n)
   {  }
 
@@ -150,18 +149,19 @@ namespace spot
 	if (accp[root_left] == &empty)
 	  accp[root_left]  = new markset(acc_);
 
-	accp[root_left]->operator |= (*accp[root_right]);
+	accp[root_left]->operator|=(*accp[root_right]);
 	ufa_.V_write();
       }
     else
       {
 	ufa_.P_write();
 	if (accp[root_left] == &empty && accp[root_right] == &empty)
-	  ;
+	  {
+	  }
 	else if (accp[root_right] == &empty)
 	  {
 	    accp[root_right]  = new markset(acc_);
-	    accp[root_right]->operator |= (*accp[root_left]);
+	    accp[root_right]->operator|=(*accp[root_left]);
 	  }
 
     	if (rk_left == rk_right)
@@ -185,9 +185,7 @@ namespace spot
   }
 
   void
-  union_find_shared::add_acc (const fasttgba_state* s
-			      , markset m
-			      )
+  union_find_shared::add_acc (const fasttgba_state* s, markset m)
   {
     ufa_.P_write();
 
@@ -211,7 +209,7 @@ namespace spot
     if (accp[r] == &empty)
       accp[r]  = new markset(empty);
 
-    accp[r]->operator |= (m);
+    accp[r]->operator|=(m);
     ufa_.V_write();
   }
 

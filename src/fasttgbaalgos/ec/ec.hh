@@ -19,6 +19,8 @@
 #ifndef SPOT_FASTTGBAALGOS_EC_EC_HH
 # define SPOT_FASTTGBAALGOS_EC_EC_HH
 
+#include "fasttgba/fasttgba.hh"
+
 namespace spot
 {
   /// This interface must be implemented by all
@@ -39,12 +41,12 @@ namespace spot
     /// \brief return the automaton.
     /// Warning ! You don't have to delete the
     // automaton just this class to destroy this automaton
-    virtual const fasttgba* get_automaton() const = 0;
+    virtual const spot::fasttgba* get_automaton() const = 0;
 
     /// \brief return the automaton as a B\¨uchi Automaton.
     /// Warning ! You don't have to delete the
     // automaton just this class to destroy this automaton
-    virtual const fasttgba* get_ba_automaton() const = 0;
+    virtual const spot::fasttgba* get_ba_automaton() const = 0;
 
     virtual ~instance_automaton()
     {
@@ -75,7 +77,7 @@ namespace spot
   public:
     simple_instance(const spot::simple_instance&) = delete;
 
-    simple_instance (const fasttgba* tgba):
+    simple_instance (const spot::fasttgba* tgba):
       ftgba_(tgba)
     {
     }
@@ -84,12 +86,12 @@ namespace spot
     {
     }
 
-    const fasttgba* get_automaton () const
+    const spot::fasttgba* get_automaton () const
     {
       return ftgba_;
     }
 
-    const fasttgba* get_ba_automaton () const
+    const spot::fasttgba* get_ba_automaton () const
     {
       // Not Yet Supported
       assert(false);
@@ -106,15 +108,15 @@ namespace spot
   class simple_instanciator: public instanciator
   {
   private:
-    const fasttgba* tgba_;
+    const spot::fasttgba* tgba_;
 
   public:
-    simple_instanciator (const fasttgba* tgba):
+    simple_instanciator (const spot::fasttgba* tgba):
       tgba_(tgba)
     {
     }
 
-    const instance_automaton* new_instance ( )
+    const instance_automaton* new_instance ()
     {
       return new simple_instance(tgba_);
     }
