@@ -30,13 +30,33 @@
 
 namespace spot
 {
-  unioncheck::unioncheck(instanciator* i) :
+  unioncheck::unioncheck(instanciator* i, std::string option) :
     counterexample_found(false),
     inst(i->new_instance())
   {
     a_ = inst->get_automaton ();
-    uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
-    roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+
+    if (!option.compare( "-cs-ds"))
+      {
+	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+	roots_stack_ = new stack_of_roots (a_->get_acc());
+      }
+    else if (!option.compare( "-cs+ds"))
+      {
+	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
+	roots_stack_ = new stack_of_roots (a_->get_acc());
+      }
+    else if (!option.compare( "+cs-ds"))
+      {
+	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+      }
+    else
+      {
+	assert(!option.compare("+cs+ds") || !option.compare(""));
+	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
+	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+      }
   }
 
   unioncheck::~unioncheck()
@@ -159,5 +179,15 @@ namespace spot
     	    d->destroy();
     	  }
       }
+  }
+
+  std::string
+  unioncheck::extra_info_csv()
+  {
+    return std::to_string(roots_stack_->max_size())
+      + ","
+      + std::to_string(uf->max_alive())
+      + ","
+      + std::to_string(uf->max_dead());
   }
 }

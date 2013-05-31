@@ -73,6 +73,12 @@ namespace spot
       store.insert(state);
     }
 
+    /// \ brief Return the size of the store.
+    int size ()
+    {
+      return store.size();
+    }
+
   private :
     /// The map of Dead states
     std::unordered_set<const fasttgba_state*,

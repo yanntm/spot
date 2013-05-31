@@ -38,13 +38,16 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    unioncheck(instanciator* i);
+    unioncheck(instanciator* i, std::string otpion = "");
 
     /// A destructor
     virtual ~unioncheck();
 
     /// The implementation of the interface
     bool check();
+
+    /// \brief Get extra informations
+    std::string extra_info_csv();
 
   protected:
 
@@ -84,7 +87,7 @@ namespace spot
     std::vector<pair_state_iter> todo;
 
     /// Root of stack
-    compressed_stack_of_roots *roots_stack_;
+    stack_of_roots *roots_stack_;
 
     /// \brief the union_find used for the storage
     union_find *uf;

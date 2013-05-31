@@ -93,6 +93,14 @@ namespace spot
 
     virtual color get_color(const fasttgba_state*);
 
+    /// The size of alive elements i-e elements stored
+    /// in the union find.
+    virtual int max_alive();
+
+    /// The size of dead elements i-e elements stored
+    /// outside the union find
+    virtual int max_dead();
+
   protected:
 
     /// \brief grab the id of the root associated to an element.
@@ -162,6 +170,10 @@ namespace spot
     virtual markset get_acc (const fasttgba_state*);
 
     virtual color get_color(const fasttgba_state*);
+
+    virtual int max_alive();
+
+    virtual int max_dead();
   };
 
   class setOfDisjointSetsIPC_LRPC_MS : public union_find
@@ -204,6 +216,10 @@ namespace spot
     virtual markset get_acc (const fasttgba_state*);
 
     virtual color get_color(const fasttgba_state*);
+
+    virtual int max_alive();
+
+    virtual int max_dead();
   };
 
   /// \brief this class propose an union find based on a deadstore.
@@ -274,6 +290,13 @@ namespace spot
     virtual markset get_acc (const fasttgba_state*);
 
     virtual color get_color(const fasttgba_state*);
+
+    virtual int max_alive();
+
+    virtual int max_dead();
+
+  private:
+    unsigned int max_alive_;
   };
 }
 

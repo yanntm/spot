@@ -198,6 +198,18 @@ namespace spot
     return el.find(s) != el.end();
   }
 
+  int
+  union_find::max_alive()
+  {
+    return el.size();
+  }
+
+  int
+  union_find::max_dead()
+  {
+    return 0;
+  }
+
   // ------------------------------------------------------------
   // setOfDisjointSetsIPC_LRPC
   // ------------------------------------------------------------
@@ -374,6 +386,18 @@ namespace spot
   setOfDisjointSetsIPC_LRPC::get_acc (const fasttgba_state*)
   {
     assert(false);
+  }
+
+  int
+  setOfDisjointSetsIPC_LRPC::max_alive()
+  {
+    return el.size();
+  }
+
+  int
+  setOfDisjointSetsIPC_LRPC::max_dead()
+  {
+    return 0;
   }
 
   // ------------------------------------------------------------
@@ -561,7 +585,17 @@ namespace spot
     assert(false);
   }
 
+  int
+  setOfDisjointSetsIPC_LRPC_MS::max_alive()
+  {
+    return el.size();
+  }
 
+  int
+  setOfDisjointSetsIPC_LRPC_MS::max_dead()
+  {
+    return 0;
+  }
 
   // ------------------------------------------------------------
   // setOfDisjointSetsIPC_LRPC_MS_Dead
@@ -584,7 +618,8 @@ namespace spot
 
   setOfDisjointSetsIPC_LRPC_MS_Dead::setOfDisjointSetsIPC_LRPC_MS_Dead
   (acc_dict& acc) : union_find(acc),
-		    el(), id(), realsize_(0)
+		    el(), id(), realsize_(0),
+		    max_alive_(0)
   {
     deadstore_ = new deadstore();
     id.push_back({DEAD, 0});
@@ -604,6 +639,8 @@ namespace spot
 	auto r = el.insert(std::make_pair(e, n));
 	assert(r.second);
 	id.push_back({-1, e});
+	// WARNING DEAD must not be counted
+	max_alive_ = id.size() -1 > max_alive_ ? id.size() -1 : max_alive_;
 	return r.second;
       }
     // Some deads needs to be pushed
@@ -755,5 +792,17 @@ namespace spot
   setOfDisjointSetsIPC_LRPC_MS_Dead::get_acc (const fasttgba_state*)
   {
     assert(false);
+  }
+
+  int
+  setOfDisjointSetsIPC_LRPC_MS_Dead::max_alive()
+  {
+    return max_alive_;
+  }
+
+  int
+  setOfDisjointSetsIPC_LRPC_MS_Dead::max_dead()
+  {
+    return deadstore_->size();
   }
 }

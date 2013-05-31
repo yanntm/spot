@@ -21,6 +21,7 @@
 
 #include <stack>
 #include <tuple>
+#include <string>
 #include "misc/hash.hh"
 #include "union_find.hh"
 #include "fasttgba/fasttgba.hh"
@@ -35,7 +36,8 @@ namespace spot
   {
   public:
     stack_of_roots(acc_dict& acc):
-      empty_(new markset(acc))
+      empty_(new markset(acc)),
+      max_size_(0)
     { }
 
     virtual ~stack_of_roots()
@@ -46,51 +48,57 @@ namespace spot
 	}
     }
 
-    bool is_empty ()
+    virtual bool is_empty ()
     {
       return stack_.empty();
     }
 
-    void push_trivial (unsigned int root)
+    virtual void push_trivial (unsigned int root)
     {
       stack_.push(std::make_pair(root, empty_));
     }
 
-    void push_non_trivial (unsigned int root,
+    virtual void push_non_trivial (unsigned int root,
 			   markset m,
-			   unsigned int last = 0)
+			   unsigned int) /// < Unused for this implem
     {
-      assert(!last);		// Unused for this implem.
       if (m == *empty_)
 	stack_.push(std::make_pair(root, empty_));
       else
 	stack_.push(std::make_pair(root, new markset(m)));
     }
 
-    unsigned int root_of_the_top ()
+    virtual unsigned int root_of_the_top ()
     {
       return stack_.top().first;
     }
 
-    void pop()
+    virtual void pop()
     {
+      max_size_ = max_size_ > stack_.size()? max_size_ : stack_.size();
       if (stack_.top().second != empty_)
 	delete stack_.top().second;
       stack_.pop();
     }
 
-    const markset& top_acceptance()
+    virtual const markset& top_acceptance()
     {
       assert(!stack_.empty());
       return *stack_.top().second;
     }
 
+    virtual unsigned int max_size()
+    {
+      return max_size_;
+    }
+
   private:
     std::stack<std::pair<unsigned int, markset*>> stack_; // The stack
     markset* empty_;		///< The empty markset
+    unsigned int max_size_;
   };
 
-  class compressed_stack_of_roots
+  class compressed_stack_of_roots : public stack_of_roots
   {
     struct stack_entry
     {
@@ -103,11 +111,15 @@ namespace spot
     std::vector<// std::tuple<unsigned int, bool, markset*>
       stack_entry> stack_;
     markset* empty_;
+    unsigned int max_size_;
 
   public:
     compressed_stack_of_roots(acc_dict& acc):
-      empty_(new markset(acc))
-    { }
+      stack_of_roots(acc),
+      empty_(new markset(acc)),
+      max_size_(0)
+    {
+    }
 
     virtual ~compressed_stack_of_roots()
     {
@@ -117,12 +129,12 @@ namespace spot
 	}
     }
 
-    bool is_empty ()
+    virtual bool is_empty ()
     {
       return stack_.empty();
     }
 
-    void push_trivial (unsigned int root)
+    virtual void push_trivial (unsigned int root)
     {
       // std::cout << "Push trivial "  << root << std::endl;
       // The stack is empty just push it!
@@ -149,7 +161,7 @@ namespace spot
       }
     }
 
-    void push_non_trivial (unsigned int root,
+    virtual void push_non_trivial (unsigned int root,
 			   markset m,
 			   unsigned int last = 0)
     {
@@ -166,7 +178,7 @@ namespace spot
 
     /// This method returns the root stored at the top of the
     /// root stack.
-    unsigned int root_of_the_top ()
+    virtual unsigned int root_of_the_top ()
     {
       assert (!is_empty());
       if (stack_.back().is_trivial)
@@ -176,8 +188,9 @@ namespace spot
       return 0;
     }
 
-    void pop()
+    virtual void pop()
     {
+      max_size_ = max_size_ > stack_.size()? max_size_ : stack_.size();
       //std::cout << "Pop "   << std::endl;
       unsigned int r = root_of_the_top();
 
@@ -203,10 +216,15 @@ namespace spot
 	}
     }
 
-    const markset& top_acceptance()
+    virtual const markset& top_acceptance()
     {
       assert(!stack_.empty());
       return *stack_.back().mark;
+    }
+
+    virtual unsigned int max_size()
+    {
+      return max_size_;
     }
   };
 }
