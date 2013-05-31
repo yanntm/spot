@@ -35,3 +35,6 @@ run 1 ../checker 'Fc & X(a | Xb) & GF(a | Xb) & Gc'
 run 1 ../checker '!((FF a) <=> (F x))'
 run 0 ../checker 'Xa && (!a U b) && !b && X!b'
 run 0 ../checker '(a U !b) && Gb'
+for i in $(seq 1 100); do
+  run 0 ../checker -rndgraph  'a|b|c|d|e|f|g|h|i|k|l'
+done

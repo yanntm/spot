@@ -17,12 +17,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
+#include <string.h>
 
 // This part is for TGBA
 #include "ltlast/allnodes.hh"
 #include "ltlparse/public.hh"
 #include "tgbaalgos/ltl2tgba_fm.hh"
 #include "tgbaalgos/postproc.hh"
+#include "tgbaalgos/randomgraph.hh"
 
 // This part is for FASTTGBA
 #include "fasttgbaalgos/tgba2fasttgba.hh"
@@ -32,11 +34,18 @@
 
 // Emptiness check for fasttgba
 #include "fasttgbaalgos/ec/cou99.hh"
+#include "fasttgbaalgos/ec/unioncheck.hh"
 
 
 void syntax (char*)
 {
-  std::cout << "Syntax" << std::endl;
+  std::cout << std::endl;
+  std::cout << "Syntax : [-rndgraph] phi" << std::endl;
+  std::cout << std::endl;
+  std::cout << "    phi :      the formula to check "
+	    << "if opt -rndgraph is set then phi "
+	    << "must be \"a|b|c....\" to declare AP" << std::endl
+	    << std::endl;
   exit (1);
 }
 
@@ -61,6 +70,8 @@ int main(int argc, char **argv)
   // The index of the formula
   int formula_index = 0;
 
+  bool opt_random = false;
+
   // Wether we want to check with Cou - default -
   bool opt_cou = true;
 
@@ -72,12 +83,12 @@ int main(int argc, char **argv)
 
       ++formula_index;
 
-      // if (!strcmp(argv[formula_index], "-lbtt"))
-      // 	{
-      // 	  opt_lbtt = true;
-      // 	  opt_dotty = false;
-      // 	}
-      // else
+      if (!strcmp(argv[formula_index], "-rndgraph"))
+      	{
+	  opt_random = true;
+	  assert(argc == (formula_index + 2));
+      	}
+
       if (argc == (formula_index + 1))
 	break;
     }
@@ -93,6 +104,7 @@ int main(int argc, char **argv)
   spot::ltl::parse_error_list pel;
   f = spot::ltl::parse(input, pel, env, false);
 
+  // Parse formula
   if (f)
     {
       //
@@ -111,7 +123,59 @@ int main(int argc, char **argv)
 	  }
 	delete simp;
       }
+    }
 
+
+  if (opt_random)
+    {
+      //  Generate a random graph
+      spot::ltl::atomic_prop_set* apf =
+	spot::ltl::atomic_prop_collect(f);
+      a = spot::random_graph(1000, 0.01, apf, dict, 0.0001);
+
+      //  Now use  New TGBA !
+      spot::ap_dict* aps = new spot::ap_dict();
+      spot::acc_dict* accs = new spot::acc_dict();
+      const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a, *aps, *accs);
+
+      //  Create instanciator
+      spot::simple_instanciator si (ftgba);
+
+      // Multi - emptiness check it
+      bool cou99_result = false;
+      spot::cou99  cou99_checker(&si);
+      if (cou99_checker.check())
+	cou99_result = true;
+
+      bool unioncheck_result = false;
+      spot::unioncheck unioncheck_checker(&si);
+      if (unioncheck_checker.check())
+	unioncheck_result = true;
+
+
+      // Check the result
+      if (cou99_result != unioncheck_result)
+	{
+	  spot::dotty_dfs dotty(ftgba);
+	  dotty.run();
+
+	  std::cout <<  "ERROR : Sum Up Results " << std::endl
+		    <<  "   cou99           :  "
+		    << (cou99_result? "true" : "false")
+		    << std::endl
+		    <<  "   unioncheck      :  "
+		    << (unioncheck_result? "true" : "false")
+		    << std::endl;
+	  assert(false);
+	}
+
+
+      delete ftgba;
+      delete accs;
+      delete aps;
+    }
+  else
+    {
       std::cout << "===>   "
 		<< spot::ltl::to_string(f) << std::endl;
 
