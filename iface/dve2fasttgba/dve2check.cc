@@ -105,6 +105,7 @@ main(int argc, char **argv)
   bool opt_all = false;
 
   std::string option_uc13 = "";
+  std::string option_dc13 = "";
 
   if (!strcmp("-cou99", argv[3]))
     opt_cou99 = true;
@@ -141,9 +142,10 @@ main(int argc, char **argv)
       // FIXME : For debug
       opt_cou99 = true;
     }
-  else if (!strcmp("-dc13", argv[3]))
+  else if (!strncmp("-dc13", argv[3], 5))
     {
       opt_dc13 = true;
+      option_dc13 = std::string(argv[3]+5);
       // FIXME : For debug
       opt_cou99 = true;
     }
@@ -442,7 +444,7 @@ main(int argc, char **argv)
 	    spot::timer t = mtimer.timer("Checking uc13");
 	    result << t.walltime(); //t.utime() + t.stime();
 	    result << "," << checker->extra_info_csv() << ","
-		   << input << std::endl;
+		   << input;
 	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
@@ -452,10 +454,10 @@ main(int argc, char **argv)
 	if (opt_dc13)
 	  {
 	    std::ostringstream result;
-	    result << "#dc13,";
+	    result << "#dc13" << option_dc13 << ",";
 
 	    spot::dijkstracheck* checker =
-	      new spot::dijkstracheck(itor);
+	      new spot::dijkstracheck(itor, option_dc13);
 	    mtimer.start("Checking dc13");
 	    if (checker->check())
 	      {
@@ -467,11 +469,12 @@ main(int argc, char **argv)
 		result << "VERIFIED,";
 	      }
 	    mtimer.stop("Checking dc13");
-	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking dc13");
 	    result << t.walltime(); //t.utime() + t.stime();
-	    result << "," << input;
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
 

@@ -39,13 +39,16 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    dijkstracheck(instanciator* i);
+    dijkstracheck(instanciator* i, std::string option = "");
 
     /// A destructor
     virtual ~dijkstracheck();
 
     /// The implementation of the interface
     bool check();
+
+    /// \brief Get extra informations
+    std::string extra_info_csv();
 
   protected:
 
@@ -92,7 +95,7 @@ namespace spot
     std::vector<const spot::fasttgba_state*> live;
 
     /// Root of stack
-    compressed_stack_of_roots *roots_stack_;
+    stack_of_roots *roots_stack_;
 
     /// The store of dead states
     deadstore* deadstore_;
@@ -105,6 +108,9 @@ namespace spot
 
     /// \brief The instance automaton
     const instance_automaton* inst;
+
+    /// Keep value for the pick size
+    unsigned int max_live_size_;
   };
 }
 

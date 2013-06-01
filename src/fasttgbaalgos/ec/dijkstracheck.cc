@@ -30,13 +30,33 @@
 
 namespace spot
 {
-  dijkstracheck::dijkstracheck(instanciator* i) :
+  dijkstracheck::dijkstracheck(instanciator* i, std::string option) :
     counterexample_found(false),
-    inst(i->new_instance())
+    inst(i->new_instance()),
+    max_live_size_(0)
   {
     a_ = inst->get_automaton ();
-    roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
-    deadstore_ = new deadstore();
+    if (!option.compare("-cs-ds"))
+      {
+	deadstore_ = 0;
+	roots_stack_ = new stack_of_roots (a_->get_acc());
+      }
+    else if (!option.compare("-cs+ds"))
+      {
+	roots_stack_ = new stack_of_roots (a_->get_acc());
+	deadstore_ = new deadstore();
+      }
+    else if (!option.compare("+cs-ds"))
+      {
+	deadstore_ = 0;
+	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+      }
+    else
+      {
+	assert(!option.compare("+cs+ds") || !option.compare(""));
+	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+	deadstore_ = new deadstore();
+      }
   }
 
   dijkstracheck::~dijkstracheck()
@@ -73,6 +93,8 @@ namespace spot
 
     live.push_back(s);
     H[s] = live.size() -1;
+    max_live_size_ = H.size() > max_live_size_ ?
+      H.size() : max_live_size_;
     todo.push_back ({s, 0, live.size() -1});
     roots_stack_->push_trivial(todo.size() -1);
 
@@ -90,10 +112,18 @@ namespace spot
 	roots_stack_->pop();
 	while (live.size() > rtop)
 	  {
-	    deadstore_->add(live.back());
-	    seen_map::const_iterator it = H.find(live.back());
-	    H.erase(it);
-	    live.pop_back();
+	    if (deadstore_)	// There is a deadstore
+	      {
+		deadstore_->add(live.back());
+		seen_map::const_iterator it = H.find(live.back());
+		H.erase(it);
+		live.pop_back();
+	      }
+	    else
+	      {
+		H[live.back()] = -1;
+		live.pop_back();
+	      }
 	  }
       }
   }
@@ -124,8 +154,13 @@ namespace spot
   {
     seen_map::const_iterator i = H.find(state);
     if (i != H.end())
-     return Alive;
-    else if (deadstore_->contains(state))
+      {
+	if (deadstore_)
+	  return Alive;
+	else
+	  return i->second == -1 ? Dead : Alive;
+      }
+    else if (deadstore_ && deadstore_->contains(state))
       return Dead;
     else
       return Unknown;
@@ -176,5 +211,16 @@ namespace spot
     	    d->destroy();
     	  }
       }
+  }
+
+  std::string
+  dijkstracheck::extra_info_csv()
+  {
+    return std::to_string(roots_stack_->max_size())
+      + ","
+      + std::to_string(max_live_size_)
+      + ","
+      + std::to_string(deadstore_? deadstore_->size() : 0)
+      ;
   }
 }
