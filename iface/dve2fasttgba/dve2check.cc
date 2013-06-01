@@ -106,6 +106,7 @@ main(int argc, char **argv)
 
   std::string option_uc13 = "";
   std::string option_dc13 = "";
+  std::string option_lc13 = "";
 
   if (!strcmp("-cou99", argv[3]))
     opt_cou99 = true;
@@ -123,9 +124,10 @@ main(int argc, char **argv)
       // FIXME : For debug
       opt_cou99 = true;
     }
-  else if (!strcmp("-lc13", argv[3]))
+  else if (!strncmp("-lc13", argv[3], 5))
     {
       opt_lc13 = true;
+      option_lc13 = std::string(argv[3]+5);
       // FIXME : For debug
       opt_cou99 = true;
     }
@@ -373,9 +375,9 @@ main(int argc, char **argv)
 	if (opt_lc13)
 	  {
 	    std::ostringstream result;
-	    result << "#lc13,";
+	    result << "#lc13" << option_lc13 << ",";
 
-	    spot::lazycheck* checker = new spot::lazycheck(itor);
+	    spot::lazycheck* checker = new spot::lazycheck(itor, option_lc13);
 	    mtimer.start("Checking lc13");
 	    if (checker->check())
 	      {
@@ -387,11 +389,13 @@ main(int argc, char **argv)
 		result << "VERIFIED,";
 	      }
 	    mtimer.stop("Checking lc13");
-	    delete checker;
+
 
 	    spot::timer t = mtimer.timer("Checking lc13");
 	    result << t.walltime(); //t.utime() + t.stime();
-	    result << "," << input;
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
 

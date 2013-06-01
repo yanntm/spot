@@ -30,12 +30,22 @@
 
 namespace spot
 {
-  lazycheck::lazycheck(instanciator* i) :
+  lazycheck::lazycheck(instanciator* i, std::string option) :
     counterexample_found(false),
-    inst (i->new_instance())
+    inst (i->new_instance()),
+    max_live_size_(0)
   {
-    a_ = inst->get_automaton();
-    deadstore_ = new deadstore();
+    if (!option.compare("-ds"))
+      {
+	a_ = inst->get_automaton();
+	deadstore_ = 0;
+      }
+    else
+      {
+	assert(!option.compare("+ds") || !option.compare(""));
+	a_ = inst->get_automaton();
+	deadstore_ = new deadstore();
+      }
   }
 
   lazycheck::~lazycheck()
@@ -78,6 +88,8 @@ namespace spot
     stack_entry ss = { s, 0, top, dftop, new markset(a_->get_acc()) };
     trace << "    s.lowlink = " << top << std::endl;
     stack.push_back(ss);
+    max_live_size_ = max_live_size_ > H.size() ?
+      max_live_size_ : H.size();
     dftop = top;
   }
 
@@ -107,8 +119,13 @@ namespace spot
     seen_map::const_iterator i = H.find(state);
     cp->it = i;
     if (i != H.end())
-      cp->c = Alive;
-    else if (deadstore_->contains(state))
+      {
+	if (deadstore_)
+	  cp->c = Alive;
+	else
+	  cp->c = (i->second == -1) ? Dead : Alive;
+      }
+    else if (deadstore_ && deadstore_->contains(state))
       cp->c = Dead;
     else
       cp->c = Unknown;
@@ -124,10 +141,19 @@ namespace spot
 	  {
 	    delete stack[i].lasttr;
 	    delete stack[i].mark;
-	    deadstore_->add(stack[i].s);
-	    seen_map::const_iterator it = H.find(stack[i].s);
-	    H.erase(it);
-	    stack.pop_back();
+
+	    if (deadstore_)
+	      {
+		deadstore_->add(stack[i].s);
+		seen_map::const_iterator it = H.find(stack[i].s);
+		H.erase(it);
+		stack.pop_back();
+	      }
+	    else
+	      {
+		H[stack[i].s] = -1;
+		stack.pop_back();
+	      }
 	  }
 	top = dftop - 1;
       }
@@ -199,5 +225,13 @@ namespace spot
       }
     if (violation)
       counterexample_found = true;
+  }
+
+  std::string
+  lazycheck::extra_info_csv()
+  {
+    return  std::to_string(max_live_size_)
+      + ","
+      + std::to_string(deadstore_? deadstore_->size() : 0);
   }
 }

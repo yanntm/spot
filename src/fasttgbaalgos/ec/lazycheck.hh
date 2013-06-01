@@ -37,7 +37,7 @@ namespace spot
   {
   private:
     /// The map of visited states
-    typedef Sgi::hash_map<const fasttgba_state*, size_t,
+    typedef Sgi::hash_map<const fasttgba_state*, int,
 			  fasttgba_state_ptr_hash,
 			  fasttgba_state_ptr_equal> seen_map;
 
@@ -47,7 +47,7 @@ namespace spot
     /// Warning! This only work with B\¨uchi Automaton
     /// It means for TGBA that the number of acceptance set
     /// must be less or equal to one! Assertion fail otherwise
-    lazycheck(instanciator* i);
+    lazycheck(instanciator* i, std::string option = "");
 
     /// A destructor
     virtual ~lazycheck();
@@ -57,7 +57,7 @@ namespace spot
 
     /// Supply more information in a CSV way
     /// Informations are : Number of merge, number of states mark as dead.
-    std::string stats_info();
+    std::string extra_info_csv();
 
   protected:
 
@@ -125,8 +125,11 @@ namespace spot
     /// \brief The store for Deads states
     deadstore* deadstore_;
 
-    // The instance automaton
+    /// \brief The instance automaton
     const instance_automaton* inst;
+
+    ///\brief the alive stack size
+    unsigned int max_live_size_;
   };
 }
 
