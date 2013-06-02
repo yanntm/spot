@@ -30,13 +30,24 @@
 
 namespace spot
 {
-  stackscheck::stackscheck(instanciator* i) :
+  stackscheck::stackscheck(instanciator* i, std::string option) :
     counterexample_found(false),
-    inst (i->new_instance())
+    inst (i->new_instance()),
+    max_live_size_(0)
   {
-    a_ = inst->get_automaton();
-    accsize = a_->get_acc().size();
-    deadstore_ = new deadstore();
+    if (!option.compare("-ds"))
+      {
+	a_ = inst->get_automaton();
+	accsize = a_->get_acc().size();
+	deadstore_ = 0;
+      }
+    else
+      {
+	assert(!option.compare("+ds") || !option.compare(""));
+	a_ = inst->get_automaton();
+	accsize = a_->get_acc().size();
+	deadstore_ = new deadstore();
+      }
   }
 
   stackscheck::~stackscheck()
@@ -88,6 +99,8 @@ namespace spot
       }
     stack.push_back(ss);
     dftop = top;
+    max_live_size_ = max_live_size_ > H.size() ?
+      max_live_size_ : H.size();
   }
 
   void
@@ -128,9 +141,14 @@ namespace spot
     seen_map::const_iterator i = H.find(state);
     cp->it = i;
     if (i != H.end())
-      cp->c = Alive;
-    else if (deadstore_->contains(state))
-      cp->c = Dead;
+      {
+	if (deadstore_)
+	  cp->c= Alive;
+	else
+	  cp->c = i->second == -1 ? Dead : Alive;
+      }
+    else if (deadstore_ && deadstore_->contains(state))
+      cp->c =  Dead;
     else
       cp->c = Unknown;
   }
@@ -153,11 +171,20 @@ namespace spot
 	assert(static_cast<unsigned int>(top + 1) == stack.size());
 	for (int i = top; i >= dftop; --i)
 	  {
-	    delete stack[i].lasttr;
-	    deadstore_->add(stack[i].s);
-	    seen_map::const_iterator it = H.find(stack[i].s);
-	    H.erase(it);
-	    stack.pop_back();
+	    if (deadstore_)
+	      {
+		delete stack[i].lasttr;
+		deadstore_->add(stack[i].s);
+		seen_map::const_iterator it = H.find(stack[i].s);
+		H.erase(it);
+		stack.pop_back();
+	      }
+	    else
+	      {
+		delete stack[i].lasttr;
+		H[stack[i].s] = -1;
+		stack.pop_back();
+	      }
 	  }
 	top = dftop - 1;
       }
@@ -231,4 +258,13 @@ namespace spot
     if (violation)
       counterexample_found = true;
   }
+
+  std::string
+  stackscheck::extra_info_csv()
+  {
+    return  std::to_string(max_live_size_)
+      + ","
+      + std::to_string(deadstore_? deadstore_->size() : 0);
+  }
+
 }

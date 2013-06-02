@@ -107,6 +107,7 @@ main(int argc, char **argv)
   std::string option_uc13 = "";
   std::string option_dc13 = "";
   std::string option_lc13 = "";
+  std::string option_sc13 = "";
 
   if (!strcmp("-cou99", argv[3]))
     opt_cou99 = true;
@@ -131,9 +132,10 @@ main(int argc, char **argv)
       // FIXME : For debug
       opt_cou99 = true;
     }
-  else if (!strcmp("-sc13", argv[3]))
+  else if (!strncmp("-sc13", argv[3], 5))
     {
       opt_sc13 = true;
+      option_sc13 = std::string(argv[3]+5);
       // FIXME : For debug
       opt_cou99 = true;
     }
@@ -403,9 +405,10 @@ main(int argc, char **argv)
 	if (opt_sc13)
 	  {
 	    std::ostringstream result;
-	    result << "#sc13,";
+	    result << "#sc13" << option_sc13 << ",";
 
-	    spot::stackscheck* checker = new spot::stackscheck(itor);
+	    spot::stackscheck* checker =
+	      new spot::stackscheck(itor, option_sc13 );
 	    mtimer.start("Checking sc13");
 	    if (checker->check())
 	      {
@@ -417,11 +420,12 @@ main(int argc, char **argv)
 		result << "VERIFIED,";
 	      }
 	    mtimer.stop("Checking sc13");
-	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking sc13");
 	    result << t.walltime(); //t.utime() + t.stime();
-	    result << "," << input;
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
 
