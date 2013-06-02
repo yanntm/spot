@@ -30,12 +30,22 @@
 
 namespace spot
 {
-  gv04::gv04(instanciator* i) :
+  gv04::gv04(instanciator* i, std::string option) :
     counterexample_found(false),
     max(0), inst (i->new_instance()),
-    merge_cpt_(0), dead_cpt_(0), states_cpt_(0)
+    max_live_size_(0)
   {
-    a_ = inst->get_ba_automaton();
+    if (!option.compare("-ds"))
+      {
+	a_ = inst->get_ba_automaton();
+	deadstore_ = 0;
+      }
+    else
+      {
+	assert(!option.compare("+ds") || !option.compare(""));
+	a_ = inst->get_ba_automaton();
+	deadstore_ = new deadstore();
+      }
     assert(a_->number_of_acceptance_marks() <= 1);
   }
 
@@ -51,6 +61,7 @@ namespace spot
 	++s;
 	ptr->destroy();
       }
+    delete deadstore_;
     delete inst;
   }
 
@@ -89,6 +100,8 @@ namespace spot
 
     stack.push_back(ss);
     dftop = top;
+    max_live_size_ = max_live_size_ > H.size() ?
+      max_live_size_ : H.size();
   }
 
   void
@@ -110,6 +123,25 @@ namespace spot
       }
   }
 
+  void
+  gv04::get_color(const fasttgba_state* state,
+		  gv04::color_pair* cp)
+  {
+    seen_map::const_iterator i = H.find(state);
+    cp->it = i;
+    if (i != H.end())
+      {
+	if (deadstore_)
+	  cp->c = Alive;
+	else
+	  cp->c = (i->second == -1) ? Dead : Alive;
+      }
+    else if (deadstore_ && deadstore_->contains(state))
+      cp->c = Dead;
+    else
+      cp->c = Unknown;
+  }
+
   void gv04::dfs_pop()
   {
     int p = stack[dftop].pre;
@@ -121,7 +153,18 @@ namespace spot
 	for (int i = top; i >= dftop; --i)
 	  {
 	    delete stack[i].lasttr;
-	    stack.pop_back();
+	    if (deadstore_)
+	      {
+		deadstore_->add(stack[i].s);
+		seen_map::const_iterator it = H.find(stack[i].s);
+		H.erase(it);
+		stack.pop_back();
+	      }
+	    else
+	      {
+		H[stack[i].s] = -1;
+		stack.pop_back();
+	      }
 	  }
 	top = dftop - 1;
       }
@@ -130,6 +173,7 @@ namespace spot
 
   void gv04::main()
   {
+    gv04::color_pair cp;
     while (!violation && dftop >= 0)
       {
 	trace << "Main iteration (top = " << top
@@ -162,23 +206,25 @@ namespace spot
 		  << a_->format_state(s_prime)
 		  << (acc ? " (with accepting link)" : "");
 
-	    seen_map::const_iterator i = H.find(s_prime);
 
-	    if (i == H.end())
+	    get_color(s_prime, &cp);
+
+	    if (cp.c == Unknown)
 	      {
 		trace << " is a new state." << std::endl;
 		dfs_push(acc, s_prime);
 	      }
 	    else
 	      {
-		if (i->second < stack.size()
-		    && stack[i->second].s->compare(s_prime) == 0)
+		if (cp.c == Alive// i->second < stack.size()
+		    // && stack[i->second].s->compare(s_prime) == 0
+		    )
 		  {
 		    // s_prime has a clone on stack
 		    trace << " is on stack." << std::endl;
 		    // This is an addition to GV04 to support TBA.
 		    violation |= acc;
-		    lowlinkupdate(dftop, i->second);
+		    lowlinkupdate(dftop, cp.it->second);
 		  }
 		else
 		  {
@@ -193,4 +239,13 @@ namespace spot
     if (violation)
       counterexample_found = true;
   }
+
+  std::string
+  gv04::extra_info_csv()
+  {
+    return  std::to_string(max_live_size_)
+      + ","
+      + std::to_string(deadstore_? deadstore_->size() : 0);
+  }
+
 }

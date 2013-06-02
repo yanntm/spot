@@ -25,6 +25,7 @@ ecdir = $(pkgincludedir)/fasttgbaalgos/ec
 ec_HEADERS = \
   ec.hh \
   cou99.hh \
+  cou99check.hh \
   cou99_uf.hh \
   cou99strength.hh \
   cou99strength_uf.hh \
@@ -43,6 +44,7 @@ ec_HEADERS = \
 noinst_LTLIBRARIES = libec.la
 libec_la_SOURCES = \
   cou99.cc \
+  cou99check.cc \
   cou99_uf.cc \
   cou99strength.cc \
   cou99strength_uf.cc \

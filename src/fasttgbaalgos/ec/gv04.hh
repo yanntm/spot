@@ -29,18 +29,26 @@
 
 #include "fasttgba/fasttgba.hh"
 #include "ec.hh"
+#include "deadstore.hh"
 
 namespace spot
 {
   class gv04 : public ec
   {
+  private:
+    /// The map of visited states
+    //std::map<const fasttgba_state*, int> H;
+    typedef Sgi::hash_map<const fasttgba_state*, int,
+			  fasttgba_state_ptr_hash,
+			  fasttgba_state_ptr_equal> seen_map;
+
   public:
 
     /// A constructor taking the automaton to check
     /// Warning! This only work with B\¨uchi Automaton
     /// It means for TGBA that the number of acceptance set
     /// must be less or equal to one! Assertion fail otherwise
-    gv04(instanciator* i);
+    gv04(instanciator* i, std::string option = "");
 
     /// A destructor
     virtual ~gv04();
@@ -50,7 +58,7 @@ namespace spot
 
     /// Supply more information in a CSV way
     /// Informations are : Number of merge, number of states mark as dead.
-    std::string stats_info();
+    std::string extra_info_csv();
 
   protected:
 
@@ -68,6 +76,21 @@ namespace spot
 
     void lowlinkupdate(int f, int t);
 
+    enum color {Alive, Dead, Unknown};
+    struct color_pair
+    {
+      color c;
+      seen_map::const_iterator it;
+    };
+
+    /// \brief Access  the color of a state
+    /// The result is a pair whith the second
+    /// element points to the element in table
+    /// if one.
+    ///
+    /// It's a procedure so the result in store in the
+    /// parameter. This avoid extra memory allocation.
+    void  get_color(const fasttgba_state*, color_pair* res);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
@@ -107,19 +130,15 @@ namespace spot
     /// \brief the DFS number
     int max;
 
-    /// The map of visited states
-    //std::map<const fasttgba_state*, int> H;
-    typedef Sgi::hash_map<const fasttgba_state*, size_t,
-			  fasttgba_state_ptr_hash,
-			  fasttgba_state_ptr_equal> seen_map;
     seen_map H;
 
     // The instance automaton
     const instance_automaton* inst;
 
-    int merge_cpt_;
-    int dead_cpt_;
-    int states_cpt_;
+    /// \brief The store for Deads states
+    deadstore* deadstore_;
+
+    unsigned int max_live_size_;
   };
 }
 

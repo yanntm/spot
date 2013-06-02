@@ -52,6 +52,7 @@
 #include "fasttgbaalgos/ec/stackscheck.hh"
 #include "fasttgbaalgos/ec/unioncheck.hh"
 #include "fasttgbaalgos/ec/dijkstracheck.hh"
+#include "fasttgbaalgos/ec/cou99check.hh"
 
 
 #include "misc/timer.hh"
@@ -101,6 +102,7 @@ main(int argc, char **argv)
   bool opt_sc13 = false;
   bool opt_uc13 = false;
   bool opt_dc13 = false;
+  bool opt_c99 = false;
   bool opt_cmp_cou_couuf = false;
   bool opt_all = false;
 
@@ -108,6 +110,8 @@ main(int argc, char **argv)
   std::string option_dc13 = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
+  std::string option_gv04 = "";
+  std::string option_c99  = "";
 
   if (!strcmp("-cou99", argv[3]))
     opt_cou99 = true;
@@ -119,9 +123,10 @@ main(int argc, char **argv)
     opt_couuf_swarm = true;
   else if (!strcmp("-cou99_uf_shared", argv[3]))
     opt_couuf_shared = true;
-  else if (!strcmp("-gv04", argv[3]))
+  else if (!strncmp("-gv04", argv[3], 5))
     {
       opt_gv04 = true;
+      option_gv04 = std::string(argv[3]+5);
       // FIXME : For debug
       opt_cou99 = true;
     }
@@ -129,6 +134,13 @@ main(int argc, char **argv)
     {
       opt_lc13 = true;
       option_lc13 = std::string(argv[3]+5);
+      // FIXME : For debug
+      opt_cou99 = true;
+    }
+  else if (!strncmp("-c99", argv[3], 4))
+    {
+      opt_c99 = true;
+      option_c99 = std::string(argv[3]+4);
       // FIXME : For debug
       opt_cou99 = true;
     }
@@ -351,9 +363,9 @@ main(int argc, char **argv)
 	if (opt_gv04)
 	  {
 	    std::ostringstream result;
-	    result << "#gv04,";
+	    result << "#gv04" << option_gv04 << ",";
 
-	    spot::gv04* checker = new spot::gv04(itor);
+	    spot::gv04* checker = new spot::gv04(itor, option_gv04);
 	    mtimer.start("Checking gv04");
 	    if (checker->check())
 	      {
@@ -365,11 +377,12 @@ main(int argc, char **argv)
 		result << "VERIFIED,";
 	      }
 	    mtimer.stop("Checking gv04");
-	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking gv04");
 	    result << t.walltime(); //t.utime() + t.stime();
-	    result << "," << input;
+	    result << "," <<  checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
 
@@ -400,6 +413,35 @@ main(int argc, char **argv)
 	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
+
+	bool res_c99 = true;
+	if (opt_c99)
+	  {
+	    std::ostringstream result;
+	    result << "#c99" << option_c99 << ",";
+
+	    spot::cou99check* checker = new spot::cou99check(itor, option_c99);
+	    mtimer.start("Checking c99");
+	    if (checker->check())
+	      {
+		res_c99 = false;
+		result << "VIOLATED,";
+	      }
+	    else
+	      {
+		result << "VERIFIED,";
+	      }
+	    mtimer.stop("Checking c99");
+
+
+	    spot::timer t = mtimer.timer("Checking c99");
+	    result << t.walltime(); //t.utime() + t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
 
 	bool res_sc13 = true;
 	if (opt_sc13)
@@ -545,6 +587,10 @@ main(int argc, char **argv)
 	    if (opt_dc13)
 	      {
 		assert (res_dc13 == res_cou99);
+	      }
+	    if (opt_c99)
+	      {
+		assert (res_c99 == res_cou99);
 	      }
 
 
