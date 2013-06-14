@@ -33,7 +33,7 @@ namespace spot
   lazycheck::lazycheck(instanciator* i, std::string option) :
     counterexample_found(false),
     inst (i->new_instance()),
-    max_live_size_(0)
+    max_live_size_(0), states_cpt_(0), transitions_cpt_(0)
   {
     if (!option.compare("-ds"))
       {
@@ -84,6 +84,8 @@ namespace spot
   void lazycheck::dfs_push(fasttgba_state* s)
   {
     H[s] = ++top;
+
+    ++states_cpt_;
 
     stack_entry ss = { s, 0, top, dftop, new markset(a_->get_acc()) };
     trace << "    s.lowlink = " << top << std::endl;
@@ -169,6 +171,8 @@ namespace spot
     lazycheck::color_pair cp;
     while (!violation && dftop >= 0)
       {
+	++transitions_cpt_;
+
 	trace << "Main iteration (top = " << top
 	      << ", dftop = " << dftop
 	      << ", s = " << a_->format_state(stack[dftop].s)
@@ -232,6 +236,12 @@ namespace spot
   {
     return  std::to_string(max_live_size_)
       + ","
-      + std::to_string(deadstore_? deadstore_->size() : 0);
+      + std::to_string(deadstore_? deadstore_->size() : 0)
+      + ","
+      + std::to_string(transitions_cpt_)
+      + ","
+      + std::to_string(states_cpt_)
+
+      ;
   }
 }
