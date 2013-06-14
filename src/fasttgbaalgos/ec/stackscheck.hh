@@ -135,6 +135,12 @@ namespace spot
 
     ///\brief the alive stack size
     unsigned int max_live_size_;
+
+    /// \brief Count the number of transitions
+    int trans_cpt_;
+
+    /// \brief count the number of states
+    int st_cpt_;
   };
 }
 

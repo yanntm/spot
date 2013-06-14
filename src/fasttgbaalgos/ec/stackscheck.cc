@@ -33,7 +33,7 @@ namespace spot
   stackscheck::stackscheck(instanciator* i, std::string option) :
     counterexample_found(false),
     inst (i->new_instance()),
-    max_live_size_(0)
+    max_live_size_(0), trans_cpt_(0), st_cpt_(0)
   {
     if (!option.compare("-ds"))
       {
@@ -86,6 +86,7 @@ namespace spot
 
   void stackscheck::dfs_push(fasttgba_state* s, markset acc)
   {
+    ++st_cpt_;
     H[s] = ++top;
 
     stack_entry ss = { s, 0, top, dftop};
@@ -122,7 +123,9 @@ namespace spot
     for (int a = 0; a < accsize; ++a)
       {
 	if (acc.is_set(a))
-	  continue;
+	  {
+	    continue;
+	  }
 	if (accstack_[a].empty()  ||
 	    stack_t_lowlink > accstack_[a].top())
 	  {
@@ -200,6 +203,7 @@ namespace spot
     color_pair cp;
     while (!violation && dftop >= 0)
       {
+	++trans_cpt_;
 	trace << "Main iteration (top = " << top
 	      << ", dftop = " << dftop
 	      << ", s = " << a_->format_state(stack[dftop].s)
@@ -243,6 +247,19 @@ namespace spot
 		if (cp.c == Alive)
 		  {
 		    trace << " is on stack." << std::endl;
+
+    for (int a = 0; a < accsize; ++a)
+      {
+	if (acc.is_set(a))
+	  {
+	    if (accstack_[a].empty() || accstack_[a].top() < stack[dftop].pre)
+	      {
+		accstack_[a].push(stack[dftop].pre);
+	      }
+	  }
+      }
+
+
 		    lowlinkupdate(dftop, cp.it->second, acc);
 		  }
 		else
@@ -264,7 +281,11 @@ namespace spot
   {
     return  std::to_string(max_live_size_)
       + ","
-      + std::to_string(deadstore_? deadstore_->size() : 0);
+      + std::to_string(deadstore_? deadstore_->size() : 0)
+      + ","
+      + std::to_string(trans_cpt_)
+      + ","
+      + std::to_string(st_cpt_);
   }
 
 }
