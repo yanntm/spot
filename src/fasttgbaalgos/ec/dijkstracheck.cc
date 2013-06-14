@@ -33,7 +33,9 @@ namespace spot
   dijkstracheck::dijkstracheck(instanciator* i, std::string option) :
     counterexample_found(false),
     inst(i->new_instance()),
-    max_live_size_(0)
+    max_live_size_(0),
+    states_cpt_(0),
+    transitions_cpt_(0)
   {
     a_ = inst->get_automaton ();
     if (!option.compare("-cs-ds"))
@@ -90,6 +92,7 @@ namespace spot
   {
     trace << "Dijkstracheck::DFS_push "
     	  << std::endl;
+    ++states_cpt_;
 
     live.push_back(s);
     H[s] = live.size() -1;
@@ -172,6 +175,7 @@ namespace spot
     dijkstracheck::color c;
     while (!todo.empty())
       {
+	++transitions_cpt_;
 	trace << "Main " << std::endl;
 
 	if (!todo.back().lasttr)
@@ -221,6 +225,10 @@ namespace spot
       + std::to_string(max_live_size_)
       + ","
       + std::to_string(deadstore_? deadstore_->size() : 0)
+      + ","
+      + std::to_string(transitions_cpt_)
+      + ","
+      + std::to_string(states_cpt_)
       ;
   }
 }

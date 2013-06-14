@@ -111,6 +111,9 @@ namespace spot
 
     /// Keep value for the pick size
     unsigned int max_live_size_;
+
+    int states_cpt_;		///< \brief count states
+    int transitions_cpt_;	///< \brief count transitions
   };
 }
 
