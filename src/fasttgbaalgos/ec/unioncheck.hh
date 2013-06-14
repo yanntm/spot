@@ -92,11 +92,11 @@ namespace spot
     /// \brief the union_find used for the storage
     union_find *uf;
 
-    /// \brief to detect if an iterator has already be once incremented
-    //    bool last;
-
     /// \brief The instance automaton
     const instance_automaton* inst;
+
+    int states_cpt_;		///< \brief count states
+    int transitions_cpt_;	///< \brief count transitions
   };
 }
 

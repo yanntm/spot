@@ -32,7 +32,8 @@ namespace spot
 {
   unioncheck::unioncheck(instanciator* i, std::string option) :
     counterexample_found(false),
-    inst(i->new_instance())
+    inst(i->new_instance()),
+    states_cpt_(0), transitions_cpt_(0)
   {
     a_ = inst->get_automaton ();
 
@@ -91,6 +92,7 @@ namespace spot
   {
     trace << "Unioncheck::DFS_push "
     	  << std::endl;
+    ++states_cpt_;
 
     uf->add (s);
     todo.push_back ({s, 0});
@@ -142,6 +144,8 @@ namespace spot
 	trace << "Main " << std::endl;
 	assert(!uf->is_dead(todo.back().state));
 
+	++transitions_cpt_;
+
 	if (!todo.back().lasttr)
 	  {
 	    todo.back().lasttr = a_->succ_iter(todo.back().state);
@@ -188,6 +192,11 @@ namespace spot
       + ","
       + std::to_string(uf->max_alive())
       + ","
-      + std::to_string(uf->max_dead());
+      + std::to_string(uf->max_dead())
+      + ","
+      + std::to_string(transitions_cpt_)
+      + ","
+      + std::to_string(states_cpt_)
+      ;
   }
 }
