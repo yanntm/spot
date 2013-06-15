@@ -113,7 +113,7 @@ namespace spot
     if (rtop == todo.size())
       {
 	roots_stack_->pop();
-	while (live.size() > rtop)
+	while (live.size() > todo[rtop].position)
 	  {
 	    if (deadstore_)	// There is a deadstore
 	      {
