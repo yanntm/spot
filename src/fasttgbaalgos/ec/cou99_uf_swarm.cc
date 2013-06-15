@@ -18,6 +18,7 @@
 
 #include "cou99_uf_swarm.hh"
 #include "misc/timer.hh"
+#include <iostream>
 
 namespace spot
 {

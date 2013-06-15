@@ -20,6 +20,7 @@
 #include "cou99_uf.hh"
 #include "union_find_shared.hh"
 #include "misc/timer.hh"
+#include <iostream>
 
 namespace spot
 {
