@@ -33,7 +33,12 @@ namespace spot
   unioncheck::unioncheck(instanciator* i, std::string option) :
     counterexample_found(false),
     inst(i->new_instance()),
-    states_cpt_(0), transitions_cpt_(0)
+    max_dfs_size_(0),
+    update_cpt_(0),
+    update_loop_cpt_(0),
+    roots_poped_cpt_(0),
+    states_cpt_(0),
+    transitions_cpt_(0)
   {
     a_ = inst->get_automaton ();
 
@@ -96,6 +101,9 @@ namespace spot
 
     uf->add (s);
     todo.push_back ({s, 0});
+    // Count !
+    max_dfs_size_ = max_dfs_size_ > todo.size() ?
+      max_dfs_size_ : todo.size();
     roots_stack_->push_trivial(todo.size()-1);
   }
 
@@ -108,6 +116,7 @@ namespace spot
 
     if (todo.size() == roots_stack_->root_of_the_top())
       {
+	++roots_poped_cpt_;
 	uf->make_dead(pair.state);
 	roots_stack_->pop();
       }
@@ -116,7 +125,7 @@ namespace spot
   bool unioncheck::merge(fasttgba_state* d)
   {
     trace << "Unioncheck::merge " << std::endl;
-
+    ++update_cpt_;
     int i = roots_stack_->root_of_the_top();
     assert(todo[i].lasttr);
     markset a = todo[i].lasttr->current_acceptance_marks();
@@ -124,6 +133,7 @@ namespace spot
 
     while (!uf->same_partition(d, todo[i].state))
       {
+	++update_loop_cpt_;
  	uf->unite(d, todo[i].state);
 	assert(todo[i].lasttr);
 	markset m = todo[i].lasttr->current_acceptance_marks();
@@ -188,11 +198,30 @@ namespace spot
   std::string
   unioncheck::extra_info_csv()
   {
-    return std::to_string(roots_stack_->max_size())
+    // dfs max size
+    // root max size
+    // live max size
+    // deadstore max size
+    // number of UPDATE calls
+    // number of loop inside UPDATE
+    // Number of Roots poped
+    // visited states
+    // visited transitions
+
+    return
+      std::to_string(max_dfs_size_)
+      + ","
+      + std::to_string(roots_stack_->max_size())
       + ","
       + std::to_string(uf->max_alive())
       + ","
       + std::to_string(uf->max_dead())
+      + ","
+      + std::to_string(update_cpt_)
+      + ","
+      + std::to_string(update_loop_cpt_)
+      + ","
+      + std::to_string(roots_poped_cpt_)
       + ","
       + std::to_string(transitions_cpt_)
       + ","

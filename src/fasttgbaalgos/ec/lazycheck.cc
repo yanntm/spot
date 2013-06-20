@@ -33,7 +33,13 @@ namespace spot
   lazycheck::lazycheck(instanciator* i, std::string option) :
     counterexample_found(false),
     inst (i->new_instance()),
-    max_live_size_(0), states_cpt_(0), transitions_cpt_(0)
+    dfs_size_(0),
+    max_live_size_(0),
+    max_dfs_size_(0),
+    update_cpt_(0),
+    roots_poped_cpt_(0),
+    states_cpt_(0),
+    transitions_cpt_(0)
   {
     if (!option.compare("-ds"))
       {
@@ -84,20 +90,25 @@ namespace spot
   void lazycheck::dfs_push(fasttgba_state* s)
   {
     H[s] = ++top;
-
+    ++dfs_size_;
     ++states_cpt_;
 
     stack_entry ss = { s, 0, top, dftop, new markset(a_->get_acc()) };
     trace << "    s.lowlink = " << top << std::endl;
     stack.push_back(ss);
-    max_live_size_ = max_live_size_ > H.size() ?
-      max_live_size_ : H.size();
+    // Count !
+    max_dfs_size_ = max_dfs_size_ > dfs_size_ ?
+      max_dfs_size_ : dfs_size_;
+    max_live_size_ = H.size() > max_live_size_ ?
+      H.size() : max_live_size_;
     dftop = top;
   }
 
   void
   lazycheck::lowlinkupdate(int f, int t, markset acc)
   {
+    ++update_cpt_;
+
     trace << "  lowlinkupdate(f = " << f << ", t = " << t
 	  << ")" << std::endl
 	  << "    t.lowlink = " << stack[t].lowlink << std::endl
@@ -135,9 +146,12 @@ namespace spot
 
   void lazycheck::dfs_pop()
   {
+    --dfs_size_;
     int p = stack[dftop].pre;
     if (stack[dftop].lowlink == dftop)
       {
+	++roots_poped_cpt_;
+
 	assert(static_cast<unsigned int>(top + 1) == stack.size());
 	for (int i = top; i >= dftop; --i)
 	  {
@@ -234,14 +248,34 @@ namespace spot
   std::string
   lazycheck::extra_info_csv()
   {
-    return  std::to_string(max_live_size_)
+    // dfs max size
+    // root max size
+    // live max size
+    // deadstore max size
+    // number of UPDATE calls
+    // number of loop inside UPDATE
+    // Number of Roots poped
+    // visited states
+    // visited transitions
+
+    return
+      std::to_string(max_dfs_size_)
+      + ","
+      + std::to_string(0)
+      + ","
+      + std::to_string(max_live_size_)
       + ","
       + std::to_string(deadstore_? deadstore_->size() : 0)
+      + ","
+      + std::to_string(update_cpt_)
+      + ","
+      + std::to_string(0)
+      + ","
+      + std::to_string(roots_poped_cpt_)
       + ","
       + std::to_string(transitions_cpt_)
       + ","
       + std::to_string(states_cpt_)
-
       ;
   }
 }

@@ -128,11 +128,13 @@ namespace spot
     /// \brief The instance automaton
     const instance_automaton* inst;
 
-    ///\brief the alive stack size
-    unsigned int max_live_size_;
-
-    int states_cpt_;		///< \brief count states
-    int transitions_cpt_;	///< \brief count transitions
+    unsigned int dfs_size_;
+    unsigned int max_live_size_; ///< \brief keep peack size
+    unsigned int max_dfs_size_;	 ///< \brief keep peack size
+    int update_cpt_;		 ///< \brief count UPDATE calls
+    int roots_poped_cpt_;	 ///< \brief count UPDATE loop iterations
+    int states_cpt_;		 ///< \brief count states
+    int transitions_cpt_;	 ///< \brief count transitions
   };
 }
 

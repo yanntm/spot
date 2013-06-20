@@ -95,8 +95,12 @@ namespace spot
     /// \brief The instance automaton
     const instance_automaton* inst;
 
-    int states_cpt_;		///< \brief count states
-    int transitions_cpt_;	///< \brief count transitions
+    unsigned int max_dfs_size_;	 ///< \brief keep peack size
+    int update_cpt_;		 ///< \brief count UPDATE calls
+    int update_loop_cpt_;	 ///< \brief count UPDATE loop iterations
+    int roots_poped_cpt_;	 ///< \brief count UPDATE loop iterations
+    int states_cpt_;		 ///< \brief count states
+    int transitions_cpt_;	 ///< \brief count transitions
   };
 }
 

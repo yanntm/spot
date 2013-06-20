@@ -34,6 +34,10 @@ namespace spot
     counterexample_found(false),
     inst(i->new_instance()),
     max_live_size_(0),
+    max_dfs_size_(0),
+    update_cpt_(0),
+    update_loop_cpt_(0),
+    roots_poped_cpt_(0),
     states_cpt_(0),
     transitions_cpt_(0)
   {
@@ -64,6 +68,7 @@ namespace spot
   dijkstracheck::~dijkstracheck()
   {
     delete roots_stack_;
+    delete deadstore_;
     while (!todo.empty())
       {
     	delete todo.back().lasttr;
@@ -93,12 +98,17 @@ namespace spot
     trace << "Dijkstracheck::DFS_push "
     	  << std::endl;
     ++states_cpt_;
-
     live.push_back(s);
     H[s] = live.size() -1;
+    // Count!
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
+
     todo.push_back ({s, 0, live.size() -1});
+    // Count!
+    max_dfs_size_ = max_dfs_size_ > todo.size() ?
+      max_dfs_size_ : todo.size();
+
     roots_stack_->push_trivial(todo.size() -1);
 
   }
@@ -112,6 +122,7 @@ namespace spot
     unsigned int rtop = roots_stack_->root_of_the_top();
     if (rtop == todo.size())
       {
+	++roots_poped_cpt_;
 	roots_stack_->pop();
 	while (live.size() > todo[rtop].position)
 	  {
@@ -134,7 +145,7 @@ namespace spot
   bool dijkstracheck::merge(fasttgba_state* d)
   {
     trace << "Dijkstracheck::merge " << std::endl;
-
+    ++update_cpt_;
     int dpos = H[d];
     int rpos = roots_stack_->root_of_the_top();
     markset a = todo[rpos].lasttr->current_acceptance_marks();
@@ -142,6 +153,7 @@ namespace spot
     roots_stack_->pop();
     while ((unsigned)dpos < todo[rpos].position)
       {
+	++update_loop_cpt_;
     	markset m = todo[rpos].lasttr->current_acceptance_marks();
     	a |= m | roots_stack_->top_acceptance();
     	rpos = roots_stack_->root_of_the_top();
@@ -220,11 +232,30 @@ namespace spot
   std::string
   dijkstracheck::extra_info_csv()
   {
-    return std::to_string(roots_stack_->max_size())
+    // dfs max size
+    // root max size
+    // live max size
+    // deadstore max size
+    // number of UPDATE calls
+    // number of loop inside UPDATE
+    // Number of Roots poped
+    // visited states
+    // visited transitions
+
+    return
+      std::to_string(max_dfs_size_)
+      + ","
+      + std::to_string(roots_stack_->max_size())
       + ","
       + std::to_string(max_live_size_)
       + ","
       + std::to_string(deadstore_? deadstore_->size() : 0)
+      + ","
+      + std::to_string(update_cpt_)
+      + ","
+      + std::to_string(update_loop_cpt_)
+      + ","
+      + std::to_string(roots_poped_cpt_)
       + ","
       + std::to_string(transitions_cpt_)
       + ","
