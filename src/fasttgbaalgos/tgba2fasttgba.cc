@@ -27,7 +27,7 @@
 #include "tgba/bdddict.hh"
 #include "fasttgba/markset.hh"
 #include "fasttgba/ap_dict.hh"
-#include "src/tgba/tgbaexplicit.hh"
+#include "tgba/tgbaexplicit.hh"
 
 namespace spot
 {
