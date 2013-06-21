@@ -117,14 +117,16 @@ namespace spot
   {
     trace << "Dijkstracheck::DFS_pop " << std::endl;
     delete todo.back().lasttr;
-    todo.pop_back();
 
     unsigned int rtop = roots_stack_->root_of_the_top();
+    unsigned int steppos = todo[rtop].position;
+    todo.pop_back();
+
     if (rtop == todo.size())
       {
 	++roots_poped_cpt_;
 	roots_stack_->pop();
-	while (live.size() > todo[rtop].position)
+	while (live.size() > steppos)//todo[rtop].position)
 	  {
 	    if (deadstore_)	// There is a deadstore
 	      {
