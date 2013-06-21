@@ -39,6 +39,7 @@ ec_HEADERS = \
   root_stack.hh \
   stackscheck.hh \
   unioncheck.hh \
+  union_scc.hh \
   union_find.hh \
   union_find_shared.hh
 
@@ -57,5 +58,6 @@ libec_la_SOURCES = \
   lazycheck.cc \
   stackscheck.cc \
   unioncheck.cc \
+  union_scc.cc \
   union_find.cc \
   union_find_shared.cc

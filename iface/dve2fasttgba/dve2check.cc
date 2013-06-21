@@ -51,6 +51,7 @@
 #include "fasttgbaalgos/ec/lazycheck.hh"
 #include "fasttgbaalgos/ec/stackscheck.hh"
 #include "fasttgbaalgos/ec/unioncheck.hh"
+#include "fasttgbaalgos/ec/union_scc.hh"
 #include "fasttgbaalgos/ec/dijkstracheck.hh"
 #include "fasttgbaalgos/ec/dijkstra_scc.hh"
 #include "fasttgbaalgos/ec/cou99check.hh"
@@ -99,6 +100,7 @@ main(int argc, char **argv)
   bool opt_coustrengthuf = false;
   bool opt_cou99 = false;
   bool opt_dijkstra = false;
+  bool opt_union = false;
   bool opt_gv04 = false;
   bool opt_lc13 = false;
   bool opt_sc13 = false;
@@ -111,6 +113,7 @@ main(int argc, char **argv)
   std::string option_uc13 = "";
   std::string option_dc13 = "";
   std::string option_dijkstra = "";
+  std::string option_union = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
   std::string option_gv04 = "";
@@ -172,6 +175,11 @@ main(int argc, char **argv)
     {
       opt_dijkstra = true;
       option_dijkstra = std::string(argv[3]+9);
+    }
+  else if (!strncmp("-union", argv[3], 6))
+    {
+      opt_union = true;
+      option_union = std::string(argv[3]+6);
     }
   else if (!strcmp("-cmp_cou_uf", argv[3]))
     {
@@ -550,6 +558,27 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking dijkstra");
 
 	    spot::timer t = mtimer.timer("Checking dijkstra");
+	    result << t.walltime(); //t.utime() + t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
+
+	if (opt_union)
+	  {
+	    std::ostringstream result;
+	    result << "#union" << option_union << ",";
+
+	    spot::union_scc* checker =
+	      new spot::union_scc(itor, option_union);
+	    mtimer.start("Checking union");
+	    checker->check();
+	    result << "SCC,";
+	    mtimer.stop("Checking union");
+
+	    spot::timer t = mtimer.timer("Checking union");
 	    result << t.walltime(); //t.utime() + t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
