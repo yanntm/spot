@@ -33,7 +33,13 @@ namespace spot
   cou99check::cou99check(instanciator* i, std::string option) :
     counterexample_found(false),
     inst(i->new_instance()),
-    max_live_size_(0)
+    max_live_size_(0),
+    max_dfs_size_(0),
+    update_cpt_(0),
+    update_loop_cpt_(0),
+    roots_poped_cpt_(0),
+    states_cpt_(0),
+    transitions_cpt_(0)
   {
     a_ = inst->get_automaton ();
     if (!option.compare("-cs-ds"))
@@ -90,12 +96,17 @@ namespace spot
   {
     trace << "Cou99check::DFS_push "
     	  << std::endl;
+    ++states_cpt_;
 
     live.push_back(s);
     H[s] = live.size() -1;
+    // Count!
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
     todo.push_back ({s, 0});
+    // Count!
+    max_dfs_size_ = max_dfs_size_ > todo.size() ?
+      max_dfs_size_ : todo.size();
     roots_stack_->push_trivial(todo.size() -1);
 
   }
@@ -114,7 +125,7 @@ namespace spot
 	fasttgba_succ_iterator* i;
 	i = a_->succ_iter(s);
 
-
+	++roots_poped_cpt_;
 	std::stack<fasttgba_succ_iterator*> kill;
 	if (deadstore_)
 	  {
@@ -133,6 +144,7 @@ namespace spot
 	    kill.pop();
 	    for(i->first(); !i->done(); i->next())
 	      {
+		++transitions_cpt_;
 		s = i->current_state();
 		seen_map::const_iterator it = H.find(s);
 		if (it != H.end())
@@ -160,6 +172,7 @@ namespace spot
   bool cou99check::merge(fasttgba_state* d)
   {
     trace << "Cou99check::merge " << std::endl;
+    ++update_cpt_;
 
     int dpos = H[d];
     int rpos = roots_stack_->root_of_the_top();
@@ -168,6 +181,7 @@ namespace spot
     roots_stack_->pop();
     while (dpos < H[todo[rpos].state])
       {
+	++update_loop_cpt_;
     	markset m = todo[rpos].lasttr->current_acceptance_marks();
     	a |= m | roots_stack_->top_acceptance();
     	rpos = roots_stack_->root_of_the_top();
@@ -202,6 +216,7 @@ namespace spot
     while (!todo.empty())
       {
 	trace << "Main " << std::endl;
+	++transitions_cpt_;
 
 	if (!todo.back().lasttr)
 	  {
@@ -245,11 +260,34 @@ namespace spot
   std::string
   cou99check::extra_info_csv()
   {
-    return std::to_string(roots_stack_->max_size())
+    // dfs max size
+    // root max size
+    // live max size
+    // deadstore max size
+    // number of UPDATE calls
+    // number of loop inside UPDATE
+    // Number of Roots poped
+    // visited states
+    // visited transitions
+
+    return
+      std::to_string(max_dfs_size_)
+      + ","
+      + std::to_string(roots_stack_->max_size())
       + ","
       + std::to_string(max_live_size_)
       + ","
       + std::to_string(deadstore_? deadstore_->size() : 0)
+      + ","
+      + std::to_string(update_cpt_)
+      + ","
+      + std::to_string(update_loop_cpt_)
+      + ","
+      + std::to_string(roots_poped_cpt_)
+      + ","
+      + std::to_string(transitions_cpt_)
+      + ","
+      + std::to_string(states_cpt_)
       ;
   }
 }
