@@ -50,6 +50,7 @@
 #include "fasttgbaalgos/ec/gv04.hh"
 #include "fasttgbaalgos/ec/lazycheck.hh"
 #include "fasttgbaalgos/ec/stackscheck.hh"
+#include "fasttgbaalgos/ec/tarjan_scc.hh"
 #include "fasttgbaalgos/ec/unioncheck.hh"
 #include "fasttgbaalgos/ec/union_scc.hh"
 #include "fasttgbaalgos/ec/dijkstracheck.hh"
@@ -101,6 +102,7 @@ main(int argc, char **argv)
   bool opt_cou99 = false;
   bool opt_dijkstra = false;
   bool opt_union = false;
+  bool opt_tarjan = false;
   bool opt_gv04 = false;
   bool opt_lc13 = false;
   bool opt_sc13 = false;
@@ -114,6 +116,7 @@ main(int argc, char **argv)
   std::string option_dc13 = "";
   std::string option_dijkstra = "";
   std::string option_union = "";
+  std::string option_tarjan = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
   std::string option_gv04 = "";
@@ -180,6 +183,11 @@ main(int argc, char **argv)
     {
       opt_union = true;
       option_union = std::string(argv[3]+6);
+    }
+  else if (!strncmp("-tarjan", argv[3], 7))
+    {
+      opt_tarjan = true;
+      option_tarjan = std::string(argv[3]+7);
     }
   else if (!strcmp("-cmp_cou_uf", argv[3]))
     {
@@ -585,6 +593,27 @@ main(int argc, char **argv)
 	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
+
+	if (opt_tarjan)
+	  {
+	    std::ostringstream result;
+	    result << "#tarjan" << option_tarjan << ",";
+
+	    spot::tarjan_scc* checker =
+	      new spot::tarjan_scc(itor, option_tarjan);
+	    mtimer.start("Checking tarjan");
+	    checker->check();
+	    result << "SCC,";
+	    mtimer.stop("Checking tarjan");
+
+	    spot::timer t = mtimer.timer("Checking tarjan");
+	    result << t.walltime(); //t.utime() + t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
 
 
 
