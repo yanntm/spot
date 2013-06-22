@@ -42,6 +42,7 @@
 #include "fasttgba/fasttgba_product.hh"
 
 #include "fasttgbaalgos/ec/cou99.hh"
+#include "fasttgbaalgos/ec/cou99_scc.hh"
 #include "fasttgbaalgos/ec/cou99_uf.hh"
 #include "fasttgbaalgos/ec/cou99_uf_swarm.hh"
 #include "fasttgbaalgos/ec/cou99_uf_shared.hh"
@@ -102,6 +103,7 @@ main(int argc, char **argv)
   bool opt_cou99 = false;
   bool opt_dijkstra = false;
   bool opt_union = false;
+  bool opt_couvreur = false;
   bool opt_tarjan = false;
   bool opt_gv04 = false;
   bool opt_lc13 = false;
@@ -117,6 +119,7 @@ main(int argc, char **argv)
   std::string option_dijkstra = "";
   std::string option_union = "";
   std::string option_tarjan = "";
+  std::string option_couvreur = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
   std::string option_gv04 = "";
@@ -188,6 +191,11 @@ main(int argc, char **argv)
     {
       opt_tarjan = true;
       option_tarjan = std::string(argv[3]+7);
+    }
+  else if (!strncmp("-couvreur", argv[3], 9))
+    {
+      opt_couvreur = true;
+      option_couvreur = std::string(argv[3]+9);
     }
   else if (!strcmp("-cmp_cou_uf", argv[3]))
     {
@@ -607,6 +615,26 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking tarjan");
 
 	    spot::timer t = mtimer.timer("Checking tarjan");
+	    result << t.walltime(); //t.utime() + t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
+	if (opt_couvreur)
+	  {
+	    std::ostringstream result;
+	    result << "#couvreur" << option_couvreur << ",";
+
+	    spot::cou99_scc* checker =
+	      new spot::cou99_scc(itor, option_couvreur);
+	    mtimer.start("Checking couvreur");
+	    checker->check();
+	    result << "SCC,";
+	    mtimer.stop("Checking couvreur");
+
+	    spot::timer t = mtimer.timer("Checking couvreur");
 	    result << t.walltime(); //t.utime() + t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;

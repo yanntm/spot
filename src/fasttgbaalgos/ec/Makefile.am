@@ -29,6 +29,7 @@ ec_HEADERS = \
   cou99_uf.hh \
   cou99strength.hh \
   cou99strength_uf.hh \
+  cou99_scc.hh \
   cou99_uf_swarm.hh \
   cou99_uf_shared.hh \
   deadstore.hh \
@@ -51,6 +52,7 @@ libec_la_SOURCES = \
   cou99_uf.cc \
   cou99strength.cc \
   cou99strength_uf.cc \
+  cou99_scc.cc \
   cou99_uf_swarm.cc \
   cou99_uf_shared.cc \
   dijkstracheck.cc \
