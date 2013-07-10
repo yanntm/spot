@@ -53,6 +53,11 @@ namespace spot
       return stack_.empty();
     }
 
+    virtual unsigned int size ()
+    {
+      return stack_.size();
+    }
+
     virtual void push_trivial (unsigned int root)
     {
       stack_.push(std::make_pair(root, empty_));
@@ -132,6 +137,11 @@ namespace spot
     virtual bool is_empty ()
     {
       return stack_.empty();
+    }
+
+    virtual unsigned int size ()
+    {
+      return stack_.size();
     }
 
     virtual void push_trivial (unsigned int root)
