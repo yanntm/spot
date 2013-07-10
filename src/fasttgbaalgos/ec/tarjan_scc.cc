@@ -39,7 +39,9 @@ namespace spot
     update_cpt_(0),
     roots_poped_cpt_(0),
     states_cpt_(0),
-    transitions_cpt_(0)
+    transitions_cpt_(0),
+    memory_cost_(0),
+    trivial_scc_(0)
   {
     if (!option.compare("-ds"))
       {
@@ -56,8 +58,11 @@ namespace spot
 
   tarjan_scc::~tarjan_scc()
   {
-    for (stack_type::iterator i = stack.begin(); i != stack.end(); ++i)
-      delete i->lasttr;
+    while (!todo.empty())
+      {
+	delete todo.back().lasttr;
+	todo.pop_back();
+      }
     seen_map::const_iterator s = H.begin();
     while (s != H.end())
       {
@@ -82,162 +87,143 @@ namespace spot
   {
     trace << "Tarjan_Scc::Init" << std::endl;
     fasttgba_state* init = a_->get_init_state();
-    top = dftop = -1;
-    violation = false;
     dfs_push(init);
   }
 
-  void tarjan_scc::dfs_push(fasttgba_state* s)
+  void tarjan_scc::dfs_push(fasttgba_state* q)
   {
-    H[s] = ++top;
+    int position = live.size();
+    live.push_back(q);
+    H.insert(std::make_pair(q, position));
+    dstack_.push_back({position});
+    todo.push_back ({q, 0, live.size() -1});
+
     ++dfs_size_;
     ++states_cpt_;
-
-    stack_entry ss = { s, 0, top, dftop};
-    trace << "    s.lowlink = " << top << std::endl;
-    stack.push_back(ss);
-    // Count !
     max_dfs_size_ = max_dfs_size_ > dfs_size_ ?
       max_dfs_size_ : dfs_size_;
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
-    dftop = top;
+
+    int tmp_cost = 1*dstack_.size() + 2*H.size() +1*live.size()
+      + (deadstore_? deadstore_->size() : 0);
+    if (tmp_cost > memory_cost_)
+      memory_cost_ = tmp_cost;
   }
 
-  void
-  tarjan_scc::lowlinkupdate(int f, int t)
-  {
-    ++update_cpt_;
-
-    trace << "  lowlinkupdate(f = " << f << ", t = " << t
-	  << ")" << std::endl
-	  << "    t.lowlink = " << stack[t].lowlink << std::endl
-	  << "    f.lowlink = " << stack[f].lowlink << std::endl;
-    int stack_t_lowlink = stack[t].lowlink;
-    if (stack_t_lowlink <= stack[f].lowlink)
-      {
-	stack[f].lowlink = stack_t_lowlink;
-	trace << "    f.lowlink updated to "
-	      << stack[f].lowlink << std::endl;
-      }
-  }
-
-  void
-  tarjan_scc::get_color(const fasttgba_state* state,
-		       tarjan_scc::color_pair* cp)
+  tarjan_scc::color
+  tarjan_scc::get_color(const fasttgba_state* state)
   {
     seen_map::const_iterator i = H.find(state);
-    cp->it = i;
     if (i != H.end())
       {
 	if (deadstore_)
-	  cp->c = Alive;
+	  return Alive;
 	else
-	  cp->c = (i->second == -1) ? Dead : Alive;
+	  return i->second == -1 ? Dead : Alive;
       }
     else if (deadstore_ && deadstore_->contains(state))
-      cp->c = Dead;
+      return Dead;
     else
-      cp->c = Unknown;
+      return Unknown;
   }
 
   void tarjan_scc::dfs_pop()
   {
     --dfs_size_;
-    int p = stack[dftop].pre;
-    if (stack[dftop].lowlink == dftop)
+    int ll = dstack_.back().lowlink;
+    dstack_.pop_back();
+
+    unsigned int steppos = todo.back().position;
+    todo.pop_back();
+    assert(dstack_.size() == todo.size());
+
+    if ((int) steppos == ll)
       {
 	++roots_poped_cpt_;
-
-	assert(static_cast<unsigned int>(top + 1) == stack.size());
-	for (int i = top; i >= dftop; --i)
+	int trivial = 0;
+	while (live.size() > steppos)
 	  {
-	    delete stack[i].lasttr;
-
-	    if (deadstore_)
+	    ++trivial;
+	    if (deadstore_)	// There is a deadstore
 	      {
-		deadstore_->add(stack[i].s);
-		seen_map::const_iterator it = H.find(stack[i].s);
+		deadstore_->add(live.back());
+		seen_map::const_iterator it = H.find(live.back());
 		H.erase(it);
-		stack.pop_back();
+		live.pop_back();
 	      }
 	    else
 	      {
-		H[stack[i].s] = -1;
-		stack.pop_back();
+		H[live.back()] = -1;
+		live.pop_back();
 	      }
 	  }
-	top = dftop - 1;
+	if (trivial == 1) // we just popped a trivial
+	  ++trivial_scc_;
       }
     else
       {
-	lowlinkupdate(p, dftop);
+	if (ll < dstack_.back().lowlink)
+	  dstack_.back().lowlink = ll;
       }
-    dftop = p;
+  }
+
+  bool tarjan_scc::dfs_update(fasttgba_state* d)
+  {
+    ++update_cpt_;
+    if ( H[d] < dstack_.back().lowlink)
+      dstack_.back().lowlink = H[d];
+
+    return false;
   }
 
   void tarjan_scc::main()
   {
-    tarjan_scc::color_pair cp;
-    while (!violation && dftop >= 0)
+    tarjan_scc::color c;
+    while (!todo.empty())
       {
 	++transitions_cpt_;
+	trace << "Main " << std::endl;
 
-	trace << "Main iteration (top = " << top
-	      << ", dftop = " << dftop
-	      << ", s = " << a_->format_state(stack[dftop].s)
-	      << ")" << std::endl;
-
-	fasttgba_succ_iterator* iter = stack[dftop].lasttr;
-	if (!iter)
+	if (!todo.back().lasttr)
 	  {
-	    iter = stack[dftop].lasttr = a_->succ_iter(stack[dftop].s);
-	    iter->first();
+	    todo.back().lasttr = a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
 	  }
 	else
 	  {
-	    iter->next();
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
 	  }
 
-	if (iter->done())
-	  {
-	    trace << " No more successors" << std::endl;
-	    dfs_pop();
-	  }
-	else
-	  {
-	    fasttgba_state* s_prime = iter->current_state();
-
-	    trace << " Next successor: s_prime = "
-		  << a_->format_state(s_prime)
-		  << std::endl;
-
-	    get_color(s_prime, &cp);
-
-	    if (cp.c == Unknown)
-	      {
-		trace << " is a new state." << std::endl;
-		dfs_push(s_prime);
-	      }
-	    else
-	      {
-		if (cp.c == Alive)
-		  {
-		    trace << " is on stack." << std::endl;
-		    lowlinkupdate(dftop, cp.it->second);
-		  }
-		else
-		  {
-		    trace << " has been seen, but is no longer on stack."
-			  << std::endl;
-		  }
-
-		s_prime->destroy();
-	      }
-	  }
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+	    if (counterexample_found)
+	      return;
+    	  }
+    	else
+    	  {
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+    	    if (c == Unknown)
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (c == Alive)
+    	      {
+    	    	if (dfs_update (d))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
       }
-    if (violation)
-      counterexample_found = true;
   }
 
   std::string
@@ -252,6 +238,8 @@ namespace spot
     // Number of Roots poped
     // visited states
     // visited transitions
+    // Memory Cost
+    // Trivial SCC
 
     return
       std::to_string(max_dfs_size_)
@@ -271,6 +259,10 @@ namespace spot
       + std::to_string(transitions_cpt_)
       + ","
       + std::to_string(states_cpt_)
+      + ","
+      + std::to_string(memory_cost_)
+      + ","
+      + std::to_string(trivial_scc_)
       ;
   }
 }

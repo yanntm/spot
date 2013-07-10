@@ -44,9 +44,6 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    /// Warning! This only work with B\¨uchi Automaton
-    /// It means for TGBA that the number of acceptance set
-    /// must be less or equal to one! Assertion fail otherwise
     tarjan_scc(instanciator* i, std::string option = "");
 
     /// A destructor
@@ -73,52 +70,43 @@ namespace spot
     /// \brief the main procedure
     void main();
 
-    void lowlinkupdate(int f, int t);
+    /// \brief the update for backedges
+    bool dfs_update (fasttgba_state* s);
 
     /// \brief The color for a new State
     enum color {Alive, Dead, Unknown};
-    struct color_pair
+
+    // An element in Todo stack
+    struct pair_state_iter
     {
-      color c;
-      seen_map::const_iterator it;
+      const spot::fasttgba_state* state;
+      fasttgba_succ_iterator* lasttr;
+      long unsigned int position;
     };
 
+    /// \brief the todo stack
+    std::vector<pair_state_iter> todo;
+
+    struct stack_entry{
+      int lowlink;
+    };
+    typedef std::vector<stack_entry> dstack_type;
+    dstack_type dstack_;
+
+
     /// \brief Access  the color of a state
-    /// The result is a pair whith the second
-    /// element points to the element in table
-    /// if one.
-    ///
-    /// It's a procedure so the result in store in the
-    /// parameter. This avoid extra memory allocation.
-    void  get_color(const fasttgba_state*, color_pair* res);
+    tarjan_scc::color  get_color(const fasttgba_state*);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
-
-    //
-    // Define the struct used in the paper
-    //
-    struct stack_entry
-    {
-      const fasttgba_state* s;		  // State stored in stack entry.
-      fasttgba_succ_iterator* lasttr;     // Last transition explored.
-      int lowlink;		          // Lowlink value if this entry.
-      int pre;			          // DFS predecessor.
-    };
 
   private:
 
     ///< \brief the automaton that will be used for the Emptiness check
     const fasttgba* a_;
 
-    // Stack of visited states on the path.
-    typedef std::vector<stack_entry> stack_type;
-    stack_type stack;
 
-    int top;		// Top of SCC stack.
-    int dftop;		// Top of DFS stack.
-    bool violation;	// True if a counterexample is found
-
+    std::vector<const spot::fasttgba_state*> live;
     seen_map H;
 
     /// \brief The store for Deads states
@@ -134,6 +122,8 @@ namespace spot
     int roots_poped_cpt_;	 ///< \brief count UPDATE loop iterations
     int states_cpt_;		 ///< \brief count states
     int transitions_cpt_;	 ///< \brief count transitions
+    int memory_cost_;		 ///< \brief evaluates memory
+    int trivial_scc_;            ///< \brief count trivial SCCs
   };
 }
 
