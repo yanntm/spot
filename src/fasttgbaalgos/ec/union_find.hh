@@ -101,6 +101,11 @@ namespace spot
     /// outside the union find
     virtual int max_dead();
 
+    /// The current size of the union find.
+    virtual unsigned int size ();
+
+    virtual unsigned int dead_size ();
+
   protected:
 
     /// \brief grab the id of the root associated to an element.
@@ -145,6 +150,10 @@ namespace spot
     setOfDisjointSetsIPC_LRPC(acc_dict& acc);
 
     virtual bool add(const fasttgba_state* e);
+
+    virtual unsigned int size ();
+
+    virtual unsigned int dead_size ();
 
     virtual void unite(const fasttgba_state* e1, const fasttgba_state* e2);
 
@@ -191,6 +200,10 @@ namespace spot
     setOfDisjointSetsIPC_LRPC_MS(acc_dict& acc);
 
     virtual bool add(const fasttgba_state* e);
+
+    virtual unsigned int size ();
+
+    virtual unsigned int dead_size ();
 
     virtual void unite(const fasttgba_state* e1, const fasttgba_state* e2);
 
@@ -265,6 +278,10 @@ namespace spot
     setOfDisjointSetsIPC_LRPC_MS_Dead(acc_dict& acc);
 
     virtual bool add(const fasttgba_state* e);
+
+    virtual unsigned int size ();
+
+    virtual unsigned int dead_size ();
 
     virtual void unite(const fasttgba_state* e1, const fasttgba_state* e2);
 

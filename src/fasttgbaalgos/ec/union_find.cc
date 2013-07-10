@@ -63,6 +63,18 @@ namespace spot
     return i.second;
   }
 
+  unsigned int
+  union_find::size ()
+  {
+    return idneg.size();
+  }
+
+  unsigned int
+  union_find::dead_size ()
+  {
+    return 0;
+  }
+
   union_find::color
   union_find::get_color(const fasttgba_state* state)
   {
@@ -241,6 +253,18 @@ namespace spot
      rk.push_back(0);
      return r.second;
    }
+
+  unsigned int
+  setOfDisjointSetsIPC_LRPC::size ()
+  {
+    return id.size();
+  }
+
+  unsigned int
+  setOfDisjointSetsIPC_LRPC::dead_size ()
+  {
+    return 0;
+  }
 
   union_find::color
   setOfDisjointSetsIPC_LRPC::get_color(const fasttgba_state* state)
@@ -438,6 +462,18 @@ namespace spot
     assert(r.second);
     id.push_back(-1);
     return r.second;
+  }
+
+  unsigned int
+  setOfDisjointSetsIPC_LRPC_MS::size ()
+  {
+    return id.size();
+  }
+
+  unsigned int
+  setOfDisjointSetsIPC_LRPC_MS::dead_size ()
+  {
+    return 0;
   }
 
   union_find::color
@@ -656,6 +692,18 @@ namespace spot
 	++realsize_;
 	return false;
       }
+  }
+
+  unsigned int
+  setOfDisjointSetsIPC_LRPC_MS_Dead::size ()
+  {
+    return id.size();
+  }
+
+  unsigned int
+  setOfDisjointSetsIPC_LRPC_MS_Dead::dead_size ()
+  {
+    return deadstore_->size();
   }
 
   union_find::color
