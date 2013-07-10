@@ -46,21 +46,25 @@ namespace spot
 
     if (!option.compare( "-cs-ds"))
       {
+	K = 3;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
 	roots_stack_ = new stack_of_roots (a_->get_acc());
       }
     else if (!option.compare( "-cs+ds"))
       {
+	K = 4;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
 	roots_stack_ = new stack_of_roots (a_->get_acc());
       }
     else if (!option.compare( "+cs-ds"))
       {
+	K = 3;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
 	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
       }
     else
       {
+	K = 4;
 	assert(!option.compare("+cs+ds") || !option.compare(""));
 	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
 	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
@@ -110,7 +114,7 @@ namespace spot
       max_dfs_size_ : todo.size();
     roots_stack_->push_trivial(todo.size()-1);
 
-    int tmp_cost = 1*roots_stack_->size() + 3*uf->size()
+    int tmp_cost = 1*roots_stack_->size() + K*uf->size()
       + 1*uf->dead_size();
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
