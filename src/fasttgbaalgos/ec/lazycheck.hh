@@ -73,7 +73,9 @@ namespace spot
     /// \brief the main procedure
     void main();
 
-    void lowlinkupdate(int f, int t, markset acc);
+    // void lowlinkupdate(int f, int t, markset acc);
+
+    bool dfs_update (fasttgba_state* s);
 
     /// \brief The color for a new State
     enum color {Alive, Dead, Unknown};
@@ -83,6 +85,27 @@ namespace spot
       seen_map::const_iterator it;
     };
 
+
+    // An element in Todo stack
+    struct pair_state_iter
+    {
+      const spot::fasttgba_state* state;
+      fasttgba_succ_iterator* lasttr;
+      long unsigned int position;
+    };
+
+    /// \brief the todo stack
+    std::vector<pair_state_iter> todo;
+
+    struct stack_entry{
+      int lowlink;
+      markset* mark;			  // The associated markset
+    };
+    typedef std::vector<stack_entry> dstack_type;
+    dstack_type dstack_;
+
+    markset* empty_;
+
     /// \brief Access  the color of a state
     /// The result is a pair whith the second
     /// element points to the element in table
@@ -90,36 +113,37 @@ namespace spot
     ///
     /// It's a procedure so the result in store in the
     /// parameter. This avoid extra memory allocation.
-    void  get_color(const fasttgba_state*, color_pair* res);
+    lazycheck::color  get_color(const fasttgba_state*);//, color_pair* res);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
 
-    //
-    // Define the struct used in the paper
-    //
-    struct stack_entry
-    {
-      const fasttgba_state* s;		  // State stored in stack entry.
-      fasttgba_succ_iterator* lasttr;     // Last transition explored.
-      int lowlink;		          // Lowlink value if this entry.
-      int pre;			          // DFS predecessor.
-      markset* mark;			  // The associated markset
-    };
+    // //
+    // // Define the struct used in the paper
+    // //
+    // struct stack_entry
+    // {
+    //   const fasttgba_state* s;		  // State stored in stack entry.
+    //   fasttgba_succ_iterator* lasttr;     // Last transition explored.
+    //   int lowlink;		          // Lowlink value if this entry.
+    //   int pre;			          // DFS predecessor.
+    //   markset* mark;			  // The associated markset
+    // };
 
   private:
 
     ///< \brief the automaton that will be used for the Emptiness check
     const fasttgba* a_;
 
-    // Stack of visited states on the path.
-    typedef std::vector<stack_entry> stack_type;
-    stack_type stack;
+    // // Stack of visited states on the path.
+    // typedef std::vector<stack_entry> stack_type;
+    // stack_type stack;
 
-    int top;		// Top of SCC stack.
-    int dftop;		// Top of DFS stack.
-    bool violation;	// True if a counterexample is found
+    // int top;		// Top of SCC stack.
+    // int dftop;		// Top of DFS stack.
+    // bool violation;	// True if a counterexample is found
 
+    std::vector<const spot::fasttgba_state*> live;
     seen_map H;
 
     /// \brief The store for Deads states

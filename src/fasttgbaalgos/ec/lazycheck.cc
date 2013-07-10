@@ -52,12 +52,21 @@ namespace spot
 	a_ = inst->get_automaton();
 	deadstore_ = new deadstore();
       }
+    empty_ = new markset(a_->get_acc());
   }
 
   lazycheck::~lazycheck()
   {
-    for (stack_type::iterator i = stack.begin(); i != stack.end(); ++i)
-      delete i->lasttr;
+    for (dstack_type::iterator i = dstack_.begin(); i != dstack_.end(); ++i)
+      {
+	if (i->mark != empty_)
+	  delete i->mark;
+      }
+    while (!todo.empty())
+      {
+	delete todo.back().lasttr;
+	todo.pop_back();
+      }
     seen_map::const_iterator s = H.begin();
     while (s != H.end())
       {
@@ -66,6 +75,7 @@ namespace spot
 	++s;
 	ptr->destroy();
       }
+    delete empty_;
     delete deadstore_;
     delete inst;
   }
@@ -82,167 +92,166 @@ namespace spot
   {
     trace << "Lazycheck::Init" << std::endl;
     fasttgba_state* init = a_->get_init_state();
-    top = dftop = -1;
-    violation = false;
     dfs_push(init);
   }
 
-  void lazycheck::dfs_push(fasttgba_state* s)
+  void lazycheck::dfs_push(fasttgba_state* q)
   {
-    H[s] = ++top;
+    int position = live.size();
+    live.push_back(q);
+    H.insert(std::make_pair(q, position));
+    dstack_.push_back({position, empty_});
+    todo.push_back ({q, 0, live.size() -1});
+
     ++dfs_size_;
     ++states_cpt_;
-
-    stack_entry ss = { s, 0, top, dftop, new markset(a_->get_acc()) };
-    trace << "    s.lowlink = " << top << std::endl;
-    stack.push_back(ss);
-    // Count !
     max_dfs_size_ = max_dfs_size_ > dfs_size_ ?
       max_dfs_size_ : dfs_size_;
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
-    dftop = top;
   }
 
-  void
-  lazycheck::lowlinkupdate(int f, int t, markset acc)
-  {
-    ++update_cpt_;
-
-    trace << "  lowlinkupdate(f = " << f << ", t = " << t
-	  << ")" << std::endl
-	  << "    t.lowlink = " << stack[t].lowlink << std::endl
-	  << "    f.lowlink = " << stack[f].lowlink << std::endl;
-    int stack_t_lowlink = stack[t].lowlink;
-    if (stack_t_lowlink <= stack[f].lowlink)
-      {
-	stack[f].lowlink = stack_t_lowlink;
-	trace << "    f.lowlink updated to "
-	      << stack[f].lowlink << std::endl;
-      }
-    stack[f].mark->operator|=(acc | *stack[t].mark);
-    if (stack[f].mark->all())
-      violation = true;
-  }
-
-  void
-  lazycheck::get_color(const fasttgba_state* state,
-		       lazycheck::color_pair* cp)
+  lazycheck::color
+  lazycheck::get_color(const fasttgba_state* state)
   {
     seen_map::const_iterator i = H.find(state);
-    cp->it = i;
     if (i != H.end())
       {
 	if (deadstore_)
-	  cp->c = Alive;
+	  return Alive;
 	else
-	  cp->c = (i->second == -1) ? Dead : Alive;
+	  return i->second == -1 ? Dead : Alive;
       }
     else if (deadstore_ && deadstore_->contains(state))
-      cp->c = Dead;
+      return Dead;
     else
-      cp->c = Unknown;
+      return Unknown;
   }
 
   void lazycheck::dfs_pop()
   {
     --dfs_size_;
-    int p = stack[dftop].pre;
-    if (stack[dftop].lowlink == dftop)
+    int ll = dstack_.back().lowlink;
+    markset* acc = dstack_.back().mark;
+    dstack_.pop_back();
+
+    unsigned int steppos = todo.back().position;
+    todo.pop_back();
+    assert(dstack_.size() == todo.size());
+
+    if ((int) steppos == ll)
       {
 	++roots_poped_cpt_;
-
-	assert(static_cast<unsigned int>(top + 1) == stack.size());
-	for (int i = top; i >= dftop; --i)
+	while (live.size() > steppos)
 	  {
-	    delete stack[i].lasttr;
-	    delete stack[i].mark;
-
-	    if (deadstore_)
+	    if (deadstore_)	// There is a deadstore
 	      {
-		deadstore_->add(stack[i].s);
-		seen_map::const_iterator it = H.find(stack[i].s);
+		deadstore_->add(live.back());
+		seen_map::const_iterator it = H.find(live.back());
 		H.erase(it);
-		stack.pop_back();
+		live.pop_back();
 	      }
 	    else
 	      {
-		H[stack[i].s] = -1;
-		stack.pop_back();
+		H[live.back()] = -1;
+		live.pop_back();
 	      }
 	  }
-	top = dftop - 1;
       }
     else
       {
-	lowlinkupdate(p, dftop, stack[p].lasttr->current_acceptance_marks());
+	if (ll < dstack_.back().lowlink)
+	  dstack_.back().lowlink = ll;
+
+	markset m = (*acc | todo.back().lasttr->current_acceptance_marks());
+
+	// This is an optimisation : When a state that have a non empty
+	// markset is backtracted and the predecessor have an empty
+	// markset we just transfer the ownership
+	bool fastret = false;
+	if (!(m == *empty_))
+	  {
+	    if (dstack_.back().mark == empty_)
+	      {
+		dstack_.back().mark = acc;
+		fastret = true;
+	      }
+	    dstack_.back().mark->operator|= (m);
+	  }
+	if (dstack_.back().mark->all())
+	  counterexample_found = true;
+	if (fastret)
+	  return;
       }
-    dftop = p;
+
+    // Delete only if it's not empty.
+    if (acc != empty_)
+	delete acc;
+  }
+
+  bool lazycheck::dfs_update(fasttgba_state* d)
+  {
+    ++update_cpt_;
+    if ( H[d] < dstack_.back().lowlink)
+      dstack_.back().lowlink = H[d];
+
+    if (!((todo.back().lasttr->current_acceptance_marks()) == *empty_))
+      {
+	if (dstack_.back().mark == empty_)
+	  dstack_.back().mark = new markset(a_->get_acc());
+	dstack_.back().mark->operator|=
+	  (todo.back().lasttr->current_acceptance_marks());
+      }
+    return dstack_.back().mark->all();
   }
 
   void lazycheck::main()
   {
-    lazycheck::color_pair cp;
-    while (!violation && dftop >= 0)
+    lazycheck::color c;
+    while (!todo.empty())
       {
 	++transitions_cpt_;
+	trace << "Main " << std::endl;
 
-	trace << "Main iteration (top = " << top
-	      << ", dftop = " << dftop
-	      << ", s = " << a_->format_state(stack[dftop].s)
-	      << ")" << std::endl;
-
-	fasttgba_succ_iterator* iter = stack[dftop].lasttr;
-	if (!iter)
+	if (!todo.back().lasttr)
 	  {
-	    iter = stack[dftop].lasttr = a_->succ_iter(stack[dftop].s);
-	    iter->first();
+	    todo.back().lasttr = a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
 	  }
 	else
 	  {
-	    iter->next();
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
 	  }
 
-	if (iter->done())
-	  {
-	    trace << " No more successors" << std::endl;
-	    dfs_pop();
-	  }
-	else
-	  {
-	    fasttgba_state* s_prime = iter->current_state();
-
-	    trace << " Next successor: s_prime = "
-		  << a_->format_state(s_prime)
-		  << std::endl;
-
-	    get_color(s_prime, &cp);
-
-	    if (cp.c == Unknown)
-	      {
-		trace << " is a new state." << std::endl;
-		dfs_push(s_prime);
-	      }
-	    else
-	      {
-		if (cp.c == Alive)
-		  {
-		    trace << " is on stack." << std::endl;
-		    lowlinkupdate(dftop, cp.it->second,
-				  iter->current_acceptance_marks());
-		  }
-		else
-		  {
-		    trace << " has been seen, but is no longer on stack."
-			  << std::endl;
-		  }
-
-		s_prime->destroy();
-	      }
-	  }
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+	    if (counterexample_found)
+	      return;
+    	  }
+    	else
+    	  {
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+    	    if (c == Unknown)
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (c == Alive)
+    	      {
+    	    	if (dfs_update (d))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
       }
-    if (violation)
-      counterexample_found = true;
   }
 
   std::string
