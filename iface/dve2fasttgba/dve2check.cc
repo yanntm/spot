@@ -140,42 +140,42 @@ main(int argc, char **argv)
       opt_gv04 = true;
       option_gv04 = std::string(argv[3]+5);
       // FIXME : For debug
-      opt_cou99 = true;
+      // opt_cou99 = true;
     }
   else if (!strncmp("-lc13", argv[3], 5))
     {
       opt_lc13 = true;
       option_lc13 = std::string(argv[3]+5);
       // FIXME : For debug
-      opt_cou99 = true;
+      // opt_cou99 = true;
     }
   else if (!strncmp("-c99", argv[3], 4))
     {
       opt_c99 = true;
       option_c99 = std::string(argv[3]+4);
       // FIXME : For debug
-      opt_cou99 = true;
+      // opt_cou99 = true;
     }
   else if (!strncmp("-sc13", argv[3], 5))
     {
       opt_sc13 = true;
       option_sc13 = std::string(argv[3]+5);
       // FIXME : For debug
-      opt_cou99 = true;
+      // opt_cou99 = true;
     }
   else if (!strncmp("-uc13", argv[3], 5))
     {
       opt_uc13 = true;
       option_uc13 = std::string(argv[3]+5);
       // FIXME : For debug
-      opt_cou99 = true;
+      // opt_cou99 = true;
     }
   else if (!strncmp("-dc13", argv[3], 5))
     {
       opt_dc13 = true;
       option_dc13 = std::string(argv[3]+5);
       // FIXME : For debug
-      opt_cou99 = true;
+      // opt_cou99 = true;
     }
   else if (!strncmp("-dijkstra", argv[3], 9))
     {
@@ -306,7 +306,7 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99_uf");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 	  }
@@ -333,7 +333,7 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99_uf_swarm");
-	    result << t.walltime();//t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 	  }
@@ -360,7 +360,7 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99_uf_shared");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 	  }
@@ -386,7 +386,7 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99str_uf");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 	  }
@@ -411,7 +411,7 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking gv04");
 
 	    spot::timer t = mtimer.timer("Checking gv04");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," <<  checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -439,7 +439,7 @@ main(int argc, char **argv)
 
 
 	    spot::timer t = mtimer.timer("Checking lc13");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -467,7 +467,7 @@ main(int argc, char **argv)
 
 
 	    spot::timer t = mtimer.timer("Checking c99");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -496,7 +496,7 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking sc13");
 
 	    spot::timer t = mtimer.timer("Checking sc13");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -524,7 +524,7 @@ main(int argc, char **argv)
 
 
 	    spot::timer t = mtimer.timer("Checking uc13");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -553,7 +553,7 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking dc13");
 
 	    spot::timer t = mtimer.timer("Checking dc13");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -574,7 +574,7 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking dijkstra");
 
 	    spot::timer t = mtimer.timer("Checking dijkstra");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -595,7 +595,7 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking union");
 
 	    spot::timer t = mtimer.timer("Checking union");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -615,7 +615,7 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking tarjan");
 
 	    spot::timer t = mtimer.timer("Checking tarjan");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -635,7 +635,7 @@ main(int argc, char **argv)
 	    mtimer.stop("Checking couvreur");
 
 	    spot::timer t = mtimer.timer("Checking couvreur");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;
 	    delete checker;
@@ -666,7 +666,7 @@ main(int argc, char **argv)
 	    delete checker;
 
 	    spot::timer t = mtimer.timer("Checking cou99");
-	    result << t.walltime(); //t.utime() + t.stime();
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << input;
 	    std::cout << result.str() << std::endl;
 
