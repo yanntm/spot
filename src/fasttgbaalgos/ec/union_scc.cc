@@ -38,7 +38,9 @@ namespace spot
     update_loop_cpt_(0),
     roots_poped_cpt_(0),
     states_cpt_(0),
-    transitions_cpt_(0)
+    transitions_cpt_(0),
+    memory_cost_(0),
+    trivial_scc_(0)
   {
     a_ = inst->get_automaton ();
 
@@ -107,6 +109,12 @@ namespace spot
     max_dfs_size_ = max_dfs_size_ > todo.size() ?
       max_dfs_size_ : todo.size();
     roots_stack_->push_trivial(todo.size()-1);
+
+    int tmp_cost = 1*roots_stack_->size() + 3*uf->size()
+      + 1*uf->dead_size();
+    if (tmp_cost > memory_cost_)
+      memory_cost_ = tmp_cost;
+
   }
 
   void union_scc::dfs_pop()
@@ -225,6 +233,10 @@ namespace spot
       + std::to_string(transitions_cpt_)
       + ","
       + std::to_string(states_cpt_)
+      + ","
+      + std::to_string(memory_cost_)
+      + ","
+      + std::to_string(trivial_scc_)
       ;
   }
 }
