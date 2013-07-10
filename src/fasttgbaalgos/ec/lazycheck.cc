@@ -39,7 +39,9 @@ namespace spot
     update_cpt_(0),
     roots_poped_cpt_(0),
     states_cpt_(0),
-    transitions_cpt_(0)
+    transitions_cpt_(0),
+    memory_cost_(0),
+    trivial_scc_(0)
   {
     if (!option.compare("-ds"))
       {
@@ -109,6 +111,11 @@ namespace spot
       max_dfs_size_ : dfs_size_;
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
+
+    int tmp_cost = 2*dstack_.size() + 2*H.size() +1*live.size()
+      + (deadstore_? deadstore_->size() : 0);
+    if (tmp_cost > memory_cost_)
+      memory_cost_ = tmp_cost;
   }
 
   lazycheck::color
@@ -142,8 +149,10 @@ namespace spot
     if ((int) steppos == ll)
       {
 	++roots_poped_cpt_;
+	int trivial = 0;
 	while (live.size() > steppos)
 	  {
+	    ++trivial;
 	    if (deadstore_)	// There is a deadstore
 	      {
 		deadstore_->add(live.back());
@@ -157,6 +166,8 @@ namespace spot
 		live.pop_back();
 	      }
 	  }
+	if (trivial == 1) // we just popped a trivial
+	  ++trivial_scc_;
       }
     else
       {
@@ -266,6 +277,8 @@ namespace spot
     // Number of Roots poped
     // visited states
     // visited transitions
+    // Memory Cost
+    // Trivial SCC
 
     return
       std::to_string(max_dfs_size_)
@@ -285,6 +298,10 @@ namespace spot
       + std::to_string(transitions_cpt_)
       + ","
       + std::to_string(states_cpt_)
+      + ","
+      + std::to_string(memory_cost_)
+      + ","
+      + std::to_string(trivial_scc_)
       ;
   }
 }

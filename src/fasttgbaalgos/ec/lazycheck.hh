@@ -44,9 +44,6 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    /// Warning! This only work with B\¨uchi Automaton
-    /// It means for TGBA that the number of acceptance set
-    /// must be less or equal to one! Assertion fail otherwise
     lazycheck(instanciator* i, std::string option = "");
 
     /// A destructor
@@ -73,18 +70,11 @@ namespace spot
     /// \brief the main procedure
     void main();
 
-    // void lowlinkupdate(int f, int t, markset acc);
-
+    /// \brief the update for backedges
     bool dfs_update (fasttgba_state* s);
 
     /// \brief The color for a new State
     enum color {Alive, Dead, Unknown};
-    struct color_pair
-    {
-      color c;
-      seen_map::const_iterator it;
-    };
-
 
     // An element in Todo stack
     struct pair_state_iter
@@ -107,41 +97,16 @@ namespace spot
     markset* empty_;
 
     /// \brief Access  the color of a state
-    /// The result is a pair whith the second
-    /// element points to the element in table
-    /// if one.
-    ///
-    /// It's a procedure so the result in store in the
-    /// parameter. This avoid extra memory allocation.
-    lazycheck::color  get_color(const fasttgba_state*);//, color_pair* res);
+    lazycheck::color  get_color(const fasttgba_state*);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
-
-    // //
-    // // Define the struct used in the paper
-    // //
-    // struct stack_entry
-    // {
-    //   const fasttgba_state* s;		  // State stored in stack entry.
-    //   fasttgba_succ_iterator* lasttr;     // Last transition explored.
-    //   int lowlink;		          // Lowlink value if this entry.
-    //   int pre;			          // DFS predecessor.
-    //   markset* mark;			  // The associated markset
-    // };
 
   private:
 
     ///< \brief the automaton that will be used for the Emptiness check
     const fasttgba* a_;
 
-    // // Stack of visited states on the path.
-    // typedef std::vector<stack_entry> stack_type;
-    // stack_type stack;
-
-    // int top;		// Top of SCC stack.
-    // int dftop;		// Top of DFS stack.
-    // bool violation;	// True if a counterexample is found
 
     std::vector<const spot::fasttgba_state*> live;
     seen_map H;
@@ -159,6 +124,8 @@ namespace spot
     int roots_poped_cpt_;	 ///< \brief count UPDATE loop iterations
     int states_cpt_;		 ///< \brief count states
     int transitions_cpt_;	 ///< \brief count transitions
+    int memory_cost_;		 ///< \brief evaluates memory
+    int trivial_scc_;            ///< \brief count trivial SCCs
   };
 }
 
