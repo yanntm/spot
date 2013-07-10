@@ -101,6 +101,8 @@ namespace spot
     int roots_poped_cpt_;	 ///< \brief count UPDATE loop iterations
     int states_cpt_;		 ///< \brief count states
     int transitions_cpt_;	 ///< \brief count transitions
+    int memory_cost_;		 ///< \brief evaluates memory
+    int trivial_scc_;            ///< \brief count trivial SCCs
   };
 }
 
