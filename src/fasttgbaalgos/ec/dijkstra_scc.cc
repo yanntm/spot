@@ -116,7 +116,7 @@ namespace spot
 
     roots_stack_->push_trivial(todo.size() -1);
 
-    int tmp_cost = 2*roots_stack_->size() + 2*H.size() + 1*live.size()
+    int tmp_cost = 1*roots_stack_->size() + 2*H.size() + 1*live.size()
       + (deadstore_? deadstore_->size() : 0);
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
