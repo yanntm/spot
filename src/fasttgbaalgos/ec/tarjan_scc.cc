@@ -135,6 +135,7 @@ namespace spot
     dstack_.pop_back();
 
     unsigned int steppos = todo.back().position;
+    delete todo.back().lasttr;
     todo.pop_back();
     assert(dstack_.size() == todo.size());
 
