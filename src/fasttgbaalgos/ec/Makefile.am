@@ -39,6 +39,7 @@ ec_HEADERS = \
   lazycheck.hh \
   root_stack.hh \
   stackscheck.hh \
+  stats.hh \
   tarjan_scc.hh \
   unioncheck.hh \
   union_scc.hh \
@@ -60,6 +61,7 @@ libec_la_SOURCES = \
   gv04.cc \
   lazycheck.cc \
   stackscheck.cc \
+  stats.cc \
   tarjan_scc.cc \
   unioncheck.cc \
   union_scc.cc \
