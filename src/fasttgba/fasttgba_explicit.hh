@@ -58,6 +58,13 @@ namespace spot
     UNKNOWN_SCC
   };
 
+  enum aut_strength {
+    STRONG_AUT,
+    WEAK_AUT,
+    TERMINAL_AUT,
+  };
+
+
   ///
   /// This class represent an explicit numbered state which
   /// is usefull to represent formulae
@@ -167,6 +174,17 @@ namespace spot
     virtual
     unsigned int number_of_acceptance_marks() const;
 
+    /// \brief Ease to detect the strength of an automaton
+    ///
+    /// The strength of an automaton is the strength of
+    /// the highest SCC. If we are not able to detect the
+    /// strength of an SCC, the automaton must be consider
+    /// strong.
+    aut_strength get_strength() const
+    {
+      return strength_;
+    }
+
     // -------------------------------------------------------
     // This part is for creating a new FASTTGBAEXPLICIT
     // -------------------------------------------------------
@@ -189,6 +207,12 @@ namespace spot
     void add_transition(int src, int dst,
 			cube cond, markset acc);
 
+    /// \brief set the strength of an automaton
+    void set_strength(aut_strength s)
+    {
+      strength_ = s;
+    }
+
   protected:
     markset all_marks_;	            ///< the set of acceptance mark
     ap_dict* aps_;                  ///< The set of atomic proposition
@@ -197,6 +221,7 @@ namespace spot
 
     typedef Sgi::hash_map<int, fast_explicit_state*, identity_hash<int> > sm;
     sm state_map_;		///< The states of the automaton
+    aut_strength strength_;
   };
 }
 

@@ -172,6 +172,7 @@ namespace spot
     aps_ = aps;
     acc_ = acc;
     all_marks_ = ~all_marks_;
+    strength_ = STRONG_AUT;
   }
 
   fasttgbaexplicit::~fasttgbaexplicit()

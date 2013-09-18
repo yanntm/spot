@@ -115,6 +115,7 @@ main(int argc, char **argv)
   bool opt_c99 = false;
   bool opt_cmp_cou_couuf = false;
   bool opt_all = false;
+  bool opt_wait = false;
 
   std::string option_uc13 = "";
   std::string option_dc13 = "";
@@ -127,6 +128,7 @@ main(int argc, char **argv)
   std::string option_sc13 = "";
   std::string option_gv04 = "";
   std::string option_c99  = "";
+  std::string option_wait  = "";
 
   if (!strcmp("-cou99", argv[3]))
     opt_cou99 = true;
@@ -211,6 +213,11 @@ main(int argc, char **argv)
       opt_cou99 = true;
       opt_cmp_cou_couuf = true;
     }
+  else if (!strncmp("-wait", argv[3], 5))
+    {
+      option_wait = std::string(argv[3]+5);
+      opt_wait = true;
+    }
   else if (!strcmp("-all", argv[3]))
     {
       opt_couuf = true;
@@ -268,9 +275,10 @@ main(int argc, char **argv)
       }
 
 
-      std::cout << "Checking the property : "
-      		<< spot::ltl::to_string(f1)
-      		<< std::endl << std::endl;
+      if (!opt_wait)
+	std::cout << "Checking the property : "
+		  << spot::ltl::to_string(f1)
+		  << std::endl << std::endl;
 
       //
       // Building the TGBA of the formula
@@ -670,6 +678,122 @@ main(int argc, char **argv)
 	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
+
+
+	//
+	// This option is used to construct a bench with
+	// product exploration that takes at least a certain
+	// amount of time and does not exeed another
+	//
+	if (opt_wait)
+	  {
+	    if (option_wait.compare("") == 0)
+	      option_wait = "verified";
+	    assert(option_wait.compare("verified") == 0||
+		   option_wait.compare("violated") == 0);
+
+	    //
+	    // We just want to keep Strong automaton
+	    //
+	    const spot::dve2product_instance* inststr =
+	      (const spot::dve2product_instance*)itor->new_instance();
+
+	    const spot::fasttgbaexplicit* instaut =
+	      dynamic_cast<const spot::fasttgbaexplicit*>
+	      (inststr->get_formula_automaton());
+	    assert(instaut);
+
+	    if (instaut->get_strength() != spot::STRONG_AUT)
+	      {
+	    	exit(1);
+	      }
+
+	    delete inststr;
+
+
+	    std::ostringstream result;
+
+	    int opt_wait_min = 15000;
+	    int opt_wait_max = 900000;
+	    // std::chrono::milliseconds opt_wait_max( 2000 )
+
+	    // Wheter the execution was stopped
+	    std::atomic<bool> stop_;
+	    stop_ = false;
+
+	    std::thread worker  ([&](){
+		// std::chrono::milliseconds dura( 2000 );
+		// std::this_thread::sleep_for(dura);
+
+		spot::lazycheck* checker =
+		  new spot::lazycheck(itor, "");
+
+
+		mtimer.start("Checking wait");
+		if (checker->check())
+		  {
+		    mtimer.stop("Checking wait");
+
+		    if (!option_wait.compare("violated") == 0)
+		      {
+			// std::cout << "V\n";
+			exit(1);
+		      }
+		    stop_ = true;
+		    result << file.substr(1 + file.find_last_of("\\/")) << ",";
+		    result << "VIOLATED,";
+		  }
+		else
+		  {
+		    mtimer.stop("Checking wait");
+
+		    if (!option_wait.compare("verified") == 0)
+		      {
+			// std::cout << "T\n";
+			exit(1);
+		      }
+		    stop_ = true;
+		    result << file.substr(1 + file.find_last_of("\\/")) << ",";
+		    result << "VERIFIED,";
+		  }
+		spot::timer t = mtimer.timer("Checking wait");
+
+		// here we check wether the time ellapsed is okay
+		if ( t.walltime()  < opt_wait_min ||
+		     t.walltime()  > opt_wait_max )
+		  {
+		    // std::cout << "ERROR : TIME  "
+		    // << t.walltime() << std::endl;
+		    exit(1);
+		  }
+
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		       << input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+
+		// We can safely exit since the result is outputed
+		exit(1);
+	      });
+
+	    // wait a little more
+	    std::chrono::milliseconds dura(opt_wait_max + 1000);
+	    std::this_thread::sleep_for(dura);
+	    if (!stop_)
+	      {
+		// The thread has not finished in time Byebye!
+		//std::cout << "Do not Join the thread" << std::endl;
+		exit (1);
+	      }
+	    else
+	      {
+		// The thread is printing results
+		//std::cout << "Join the thread" << std::endl;
+		worker.join();
+	      }
+	  }
+
 
 
 

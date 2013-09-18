@@ -43,7 +43,10 @@ namespace spot
 	: tgba_reachable_iterator_breadth_first(a),
 	  result_(0),
 	  aps_(aps),
-	  accs_(accs)
+	  accs_(accs),
+	  strong_(false),
+	  weak_(false),
+	  terminal_(false)
       {
 	sm = new scc_map(aut_);
 	sm->build_map();
@@ -131,17 +134,20 @@ namespace spot
 	      {
 		//std::cout << "Terminal\n";
 		st->set_strength (TERMINAL_SCC);
+		terminal_ = true;
 	      }
 	    else
 	      {
 		//std::cout << "Weak\n";
 		st->set_strength (WEAK_SCC);
+		weak_ = true;
 	      }
 	  }
 	else
 	  {
 	    //std::cout << "Strong\n";
 	    st->set_strength (STRONG_SCC);
+	    strong_ = true;
 	  }
       }
 
@@ -232,6 +238,12 @@ namespace spot
       const fasttgba*
       result ()
       {
+	if (strong_)
+	  result_->set_strength(STRONG_AUT);
+	else if (weak_)
+	  result_->set_strength(WEAK_AUT);
+	else
+	  result_->set_strength(TERMINAL_AUT);
 	return result_;
       }
 
@@ -244,6 +256,9 @@ namespace spot
       std::vector<int> positions2_;
       std::vector<int> acceptances_;
       std::vector<int> acceptances2_;
+      bool strong_;
+      bool weak_;
+      bool terminal_;
     };
   }
 

@@ -190,6 +190,10 @@ namespace spot
       return prod;
     }
 
+    const fasttgba* get_formula_automaton () const
+    {
+      return ftgba1;
+    }
 
     // Sometimes the product need to be with a number
     // acceptance set less or equal to 1
