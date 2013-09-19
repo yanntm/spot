@@ -8,7 +8,7 @@ AC_DEFUN([adl_ENABLE_DEBUG],
       # are able to grok the resulting debug infos.
       if test "${ac_cv_prog_cc_g}" = yes; then
         CFLAGS="$CFLAGS -g"
-        CXXFLAGS="$CXXFLAGS -std=c++11 -g"
+        CXXFLAGS="$CXXFLAGS -g"
       fi
       ;;
     no)
