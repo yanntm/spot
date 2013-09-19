@@ -17,6 +17,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+SUBDIRS = opt
+
 AM_CPPFLAGS = -I$(srcdir)/../.. -I.. -I../..
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
@@ -37,6 +39,7 @@ ec_HEADERS = \
   dijkstra_scc.hh \
   gv04.hh \
   lazycheck.hh \
+  lowlink_stack.hh \
   root_stack.hh \
   stackscheck.hh \
   stats.hh \
@@ -67,3 +70,6 @@ libec_la_SOURCES = \
   union_scc.cc \
   union_find.cc \
   union_find_shared.cc
+
+
+libec_la_LIBADD = opt/libopt.la

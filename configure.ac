@@ -182,6 +182,7 @@ AC_CONFIG_FILES([
   src/fasttgba/Makefile
   src/fasttgbaalgos/Makefile
   src/fasttgbaalgos/ec/Makefile
+  src/fasttgbaalgos/ec/opt/Makefile
   src/tgbatest/defs
   src/tgbatest/Makefile
   src/fasttgbatest/Makefile

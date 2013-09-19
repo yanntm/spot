@@ -32,15 +32,16 @@ namespace spot
   /// This class is used to store all lowlink used by Tarjan algorithm
   /// It's a wrapper for many implementations and compressions
   /// techniques
-  class stack_of_lowlinks
+  class stack_of_lowlink
   {
+  public:
     stack_of_lowlink(acc_dict& acc):
       empty_(new markset(acc)),
       max_size_(0)
     { }
 
 
-    /// \brief Clean the stack before desroying it 
+    /// \brief Clean the stack before desroying it
     virtual ~stack_of_lowlink()
     {
       while (!stack_.empty())
@@ -87,14 +88,152 @@ namespace spot
       stack_.top().second =  new markset(m);
     }
 
+    /// \brief Usefull for SCC-computation
+    virtual void set_top(int ll)
+    {
+      stack_.top().first = ll;
+    }
+
     /// \brief Return the peak of this stack
     virtual unsigned int max_size()
     {
       return max_size_;
     }
 
+    /// \brief Return the current size of the stack
+    virtual unsigned int size()
+    {
+      return stack_.size();
+    }
+
   private:
     std::stack<std::pair<unsigned int, markset*>> stack_; // The stack
+    markset* empty_;		///< The empty markset
+    unsigned int max_size_;
+  };
+
+
+  /// \brief this class represents a compaction of the lowlink stack
+  class compressed_stack_of_lowlink
+  {
+  public:
+    // This struct defines a base element that will be store into the stack
+    struct ll_elt
+    {
+      int lowlink;		///< The lowlink
+      bool backedge_updated;	///< Wether it has been updated
+      union {
+	int range;		///< Range when backedge_updated is false
+	markset* mark;		///< Markset otherwise
+      } x;
+    };
+
+    compressed_stack_of_lowlink(acc_dict& acc):
+      empty_(new markset(acc)),
+      max_size_(0)
+    { }
+
+
+    /// \brief Clean the stack before desroying it
+    virtual ~compressed_stack_of_lowlink()
+    {
+      while (!stack2_.empty())
+	{
+	  pop();
+	}
+    }
+
+    /// \brief Insert a new lowlink into the stack
+    virtual void push(int lowlink)
+    {
+      if (stack2_.empty() || stack2_.top().backedge_updated)
+	stack2_.push({lowlink, false, 0});
+      else
+	{
+	  ++stack2_.top().x.range;
+	  assert(stack2_.top().x.range + stack2_.top().lowlink == lowlink);
+	}
+    }
+
+    /// \brief Return the lowlink at the top of the stack
+    virtual int top()
+    {
+      assert(!stack2_.empty());
+      return stack2_.top().lowlink + stack2_.top().x.range;
+    }
+
+    /// \brief Modify the acceptance set at for the elemet
+    /// at the top of the stack
+    virtual const markset& top_acceptance()
+    {
+      if (stack2_.top().backedge_updated)
+	return *stack2_.top().x.mark;
+      else
+	return *empty_;
+    }
+
+    /// \brief pop the element at the top of the stack
+    virtual int pop()
+    {
+      max_size_ = max_size_ > stack2_.size()? max_size_ : stack2_.size();
+      int t = top();
+      if (stack2_.top().backedge_updated || stack2_.top().x.range == 0)
+	{
+	  if (stack2_.top().x.mark != empty_)
+	    delete stack2_.top().x.mark;
+	  stack2_.pop();
+	}
+      else
+	--stack2_.top().x.range;
+      return t;
+    }
+
+    /// Modify lowlink and marset for the element of the top
+    /// of the stack
+    virtual void set_top(int ll, markset m)
+    {
+      if (stack2_.top().backedge_updated)
+	{
+	  stack2_.top().lowlink = ll;
+	  assert(stack2_.top().x.mark != empty_);
+	  delete stack2_.top().x.mark;
+	  stack2_.top().x.mark =  new markset(m);
+	}
+      else if (stack2_.top().x.range == 0)
+	{
+	  stack2_.pop();
+	  stack2_.push({ll, true, 0});
+	  stack2_.top().x.mark = new markset(m);
+	}
+      else
+	{
+	  --stack2_.top().x.range;
+	  stack2_.push({ll, true, 0});
+	  stack2_.top().x.mark = new markset(m);
+	}
+    }
+
+    /// \brief Usefull for SCC-computation
+    virtual void set_top(int)
+    {
+      // We don't want to use this it could lead to numerous errors
+      assert(false);
+    }
+
+    /// \brief Return the peak of this stack
+    virtual unsigned int max_size()
+    {
+      return max_size_;
+    }
+
+    /// \brief Return the current size of the stack
+    virtual unsigned int size()
+    {
+      return stack2_.size();
+    }
+
+  private:
+    std::stack<ll_elt> stack2_; // The stack
     markset* empty_;		///< The empty markset
     unsigned int max_size_;
   };
