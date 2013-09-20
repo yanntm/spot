@@ -31,7 +31,11 @@
 namespace spot
 {
 
-  /// \brief Compute the SCCs of a TGBA
+  /// \brief Compute the SCCs of a TGBA.
+  ///
+  /// This implementation use many optimisations
+  ///   - Keep Live stack as small as possible [Nuutila]
+  ///   - Use (or not!) a compressed lowlink stack
   class opt_tarjan_scc : public ec
   {
   private:

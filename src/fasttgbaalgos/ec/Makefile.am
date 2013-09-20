@@ -17,7 +17,6 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = opt
 
 AM_CPPFLAGS = -I$(srcdir)/../.. -I.. -I../..
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
@@ -71,5 +70,5 @@ libec_la_SOURCES = \
   union_find.cc \
   union_find_shared.cc
 
-
+SUBDIRS = opt
 libec_la_LIBADD = opt/libopt.la

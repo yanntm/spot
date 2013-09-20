@@ -52,7 +52,6 @@ gl_EARLY
 
 AM_PROG_CC_C_O
 AC_PROG_CXX
-AX_CXX_COMPILE_STDCXX_11
 AM_PROG_LEX
 adl_CHECK_BISON
 
@@ -77,6 +76,7 @@ AC_HEADER_EXT_HASH_MAP
 AX_CHECK_BUDDY
 AX_CHECK_GSPNLIB
 AX_CHECK_BOOST([1.34], [103400])
+AX_CXX_COMPILE_STDCXX_11([noext])
 
 AC_CHECK_HEADERS([sys/times.h])
 AC_CHECK_FUNCS([times srand48 drand48 kill alarm])
@@ -180,9 +180,9 @@ AC_CONFIG_FILES([
   src/ta/Makefile
   src/tgbaparse/Makefile
   src/fasttgba/Makefile
-  src/fasttgbaalgos/Makefile
-  src/fasttgbaalgos/ec/Makefile
   src/fasttgbaalgos/ec/opt/Makefile
+  src/fasttgbaalgos/ec/Makefile
+  src/fasttgbaalgos/Makefile
   src/tgbatest/defs
   src/tgbatest/Makefile
   src/fasttgbatest/Makefile

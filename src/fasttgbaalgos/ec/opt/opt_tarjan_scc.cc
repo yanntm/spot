@@ -131,8 +131,10 @@ namespace spot
 	++roots_poped_cpt_;
 	int trivial = 0;
 
+	// Delete the root that is not inside of live Stack
 	deadstore_->add(last);
 	seen_map::const_iterator it1 = H.find(last);
+	H.erase(it1);
 
 	while (H.size() > steppos)
 	  {
@@ -142,7 +144,9 @@ namespace spot
 	    H.erase(it);
 	    live.pop_back();
 	  }
-	if (trivial == 1) // we just popped a trivial
+
+	// This change regarding original algorithm
+	if (trivial == 0)
 	  ++trivial_scc_;
       }
     else
