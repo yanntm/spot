@@ -59,6 +59,8 @@
 #include "fasttgbaalgos/ec/dijkstra_scc.hh"
 #include "fasttgbaalgos/ec/cou99check.hh"
 
+#include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
+
 
 #include "misc/timer.hh"
 
@@ -107,6 +109,7 @@ main(int argc, char **argv)
   bool opt_couvreur = false;
   bool opt_stats = false;
   bool opt_tarjan = false;
+  bool opt_opttarjan = false;
   bool opt_gv04 = false;
   bool opt_lc13 = false;
   bool opt_sc13 = false;
@@ -123,6 +126,7 @@ main(int argc, char **argv)
   std::string option_union = "";
   std::string option_stats = "";
   std::string option_tarjan = "";
+  std::string option_opttarjan = "";
   std::string option_couvreur = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
@@ -201,6 +205,11 @@ main(int argc, char **argv)
     {
       opt_tarjan = true;
       option_tarjan = std::string(argv[3]+7);
+    }
+  else if (!strncmp("-opttarjan", argv[3], 10))
+    {
+      opt_opttarjan = true;
+      option_opttarjan = std::string(argv[3]+10);
     }
   else if (!strncmp("-couvreur", argv[3], 9))
     {
@@ -637,6 +646,36 @@ main(int argc, char **argv)
 	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
+
+
+
+
+	// -------------------------------------------------------------------
+
+	if (opt_opttarjan)
+	  {
+	    std::ostringstream result;
+	    result << "#opttarjan" << option_opttarjan << ",";
+
+	    spot::opt_tarjan_scc* checker =
+	      new spot::opt_tarjan_scc(itor, option_opttarjan);
+	    mtimer.start("Checking opttarjan");
+	    checker->check();
+	    result << "SCC,";
+	    mtimer.stop("Checking opttarjan");
+
+	    spot::timer t = mtimer.timer("Checking opttarjan");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
+	// ------------------------------------------------------------------
+
+
+
 
 
 	if (opt_stats)
