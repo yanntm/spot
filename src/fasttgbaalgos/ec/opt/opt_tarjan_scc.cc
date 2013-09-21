@@ -42,10 +42,15 @@ namespace spot
     memory_cost_(0),
     trivial_scc_(0)
   {
-    assert(!option.compare("+ds") || !option.compare(""));
+    assert(!option.compare("-cs")
+	   || !option.compare("+cs")
+	   || !option.compare(""));
     a_ = inst->get_automaton();
     deadstore_ = new deadstore();
-    dstack_ = new compressed_stack_of_lowlink(a_->get_acc());
+    if (!option.compare("-cs"))
+      dstack_ = new stack_of_lowlink(a_->get_acc());
+    else
+      dstack_ = new compressed_stack_of_lowlink(a_->get_acc());
   }
 
   opt_tarjan_scc::~opt_tarjan_scc()
@@ -86,10 +91,10 @@ namespace spot
   void opt_tarjan_scc::dfs_push(fasttgba_state* q)
   {
     int position = H.size();
-    live.push_back(q);
+    //live.push_back(q);
     H.insert(std::make_pair(q, position));
     dstack_->push(position);
-    todo.push_back ({q, 0, live.size() -1});
+    todo.push_back ({q, 0, H.size() -1});
 
     ++dfs_size_;
     ++states_cpt_;
@@ -122,7 +127,7 @@ namespace spot
     int ll = dstack_->pop();
 
     unsigned int steppos = todo.back().position;
-    //const fasttgba_state* last = todo.back().state;
+    const fasttgba_state* last = todo.back().state;
     delete todo.back().lasttr;
     todo.pop_back();
 
@@ -132,9 +137,9 @@ namespace spot
 	int trivial = 0;
 
 	// Delete the root that is not inside of live Stack
-	// deadstore_->add(last);
-	// seen_map::const_iterator it1 = H.find(last);
-	// H.erase(it1);
+	deadstore_->add(last);
+	seen_map::const_iterator it1 = H.find(last);
+	H.erase(it1);
 	while (H.size() > steppos)
 	  {
 	    ++trivial;
@@ -145,7 +150,7 @@ namespace spot
 	  }
 
 	// This change regarding original algorithm
-	if (trivial == 1)
+	if (trivial == 0)
 	  ++trivial_scc_;
       }
     else
@@ -155,7 +160,7 @@ namespace spot
 	// needed to the compressed stack of lowlink.
 	if (ll <= dstack_->top())
 	  dstack_->set_top(ll);
-	//live.push_back(last);
+	live.push_back(last);
       }
   }
 
