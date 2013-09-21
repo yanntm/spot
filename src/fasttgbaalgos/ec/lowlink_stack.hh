@@ -108,13 +108,15 @@ namespace spot
 
   private:
     std::stack<std::pair<unsigned int, markset*>> stack_; // The stack
+
+  protected:
     markset* empty_;		///< The empty markset
     unsigned int max_size_;
   };
 
 
   /// \brief this class represents a compaction of the lowlink stack
-  class compressed_stack_of_lowlink
+  class compressed_stack_of_lowlink: public stack_of_lowlink
   {
   public:
     // This struct defines a base element that will be store into the stack
@@ -125,19 +127,18 @@ namespace spot
       union {
 	int range;		///< Range when backedge_updated is false
 	markset* mark;		///< Markset otherwise
-      } x;
+      };
     };
 
     compressed_stack_of_lowlink(acc_dict& acc):
-      empty_(new markset(acc)),
-      max_size_(0)
+      stack_of_lowlink(acc)
     { }
 
 
     /// \brief Clean the stack before desroying it
     virtual ~compressed_stack_of_lowlink()
     {
-      while (!stack2_.empty())
+      while (!stack_.empty())
 	{
 	  pop();
 	}
@@ -146,45 +147,60 @@ namespace spot
     /// \brief Insert a new lowlink into the stack
     virtual void push(int lowlink)
     {
-      if (stack2_.empty() || stack2_.top().backedge_updated)
-	stack2_.push({lowlink, false, 0});
+      //std::cout << "Push : " << lowlink << std::endl;
+
+      if (stack_.empty())
+	stack_.push({lowlink, false, 0});
+      else if (stack_.top().backedge_updated)
+	stack_.push({lowlink, false, 0});
       else
 	{
-	  ++stack2_.top().x.range;
-	  assert(stack2_.top().x.range + stack2_.top().lowlink == lowlink);
+	  assert(stack_.top().backedge_updated == false);
+	  assert(stack_.top().range + 1 + stack_.top().lowlink == lowlink);
+	  stack_.top().range = stack_.top().range + 1;
 	}
     }
 
     /// \brief Return the lowlink at the top of the stack
     virtual int top()
     {
-      assert(!stack2_.empty());
-      return stack2_.top().lowlink + stack2_.top().x.range;
+      if (stack_.top().backedge_updated)
+	return stack_.top().lowlink;
+      else
+	return stack_.top().range + stack_.top().lowlink;
     }
 
     /// \brief Modify the acceptance set at for the elemet
     /// at the top of the stack
     virtual const markset& top_acceptance()
     {
-      if (stack2_.top().backedge_updated)
-	return *stack2_.top().x.mark;
-      else
-	return *empty_;
-    }
+      assert(stack_.top().backedge_updated);
+      return *stack_.top().mark;
+   }
 
     /// \brief pop the element at the top of the stack
     virtual int pop()
     {
-      max_size_ = max_size_ > stack2_.size()? max_size_ : stack2_.size();
       int t = top();
-      if (stack2_.top().backedge_updated || stack2_.top().x.range == 0)
+      //std::cout << "Pop : " << t << std::endl;
+      if (stack_.top().backedge_updated)
 	{
-	  if (stack2_.top().x.mark != empty_)
-	    delete stack2_.top().x.mark;
-	  stack2_.pop();
+	  if (stack_.top().mark != empty_)
+	    delete stack_.top().mark;
+	  stack_.pop();
+	  return t;
+	}
+      else if (stack_.top().range == 0)
+	{
+	  if (stack_.top().mark != empty_)
+	    delete stack_.top().mark;
+	  stack_.pop();
+	  return t;
 	}
       else
-	--stack2_.top().x.range;
+	{
+	  stack_.top().range = stack_.top().range - 1;
+	}
       return t;
     }
 
@@ -192,32 +208,41 @@ namespace spot
     /// of the stack
     virtual void set_top(int ll, markset m)
     {
-      if (stack2_.top().backedge_updated)
+      //std::cout << "Settop : " << ll << std::endl;
+      if (stack_.top().backedge_updated)
 	{
-	  stack2_.top().lowlink = ll;
-	  assert(stack2_.top().x.mark != empty_);
-	  delete stack2_.top().x.mark;
-	  stack2_.top().x.mark =  new markset(m);
-	}
-      else if (stack2_.top().x.range == 0)
-	{
-	  stack2_.pop();
-	  stack2_.push({ll, true, 0});
-	  stack2_.top().x.mark = new markset(m);
+	  assert(ll <= stack_.top().lowlink);
+	  if (m == *empty_)
+	    stack_.top().mark = empty_;
+	  stack_.top().lowlink = ll;
 	}
       else
 	{
-	  --stack2_.top().x.range;
-	  stack2_.push({ll, true, 0});
-	  stack2_.top().x.mark = new markset(m);
+
+	  if (stack_.top().range == 0)
+	    {
+	      if (m == *empty_)
+		stack_.top().mark = empty_;
+	      stack_.top().backedge_updated = true;
+	      stack_.top().lowlink = ll;
+	    }
+	  else
+	    {
+	      stack_.top().range = stack_.top().range -1;
+	      stack_.push({ll, true, 0});
+	      if (m == *empty_)
+		stack_.top().mark = empty_;
+	      else
+		stack_.top().mark = new markset(m);
+	    }
 	}
+
     }
 
     /// \brief Usefull for SCC-computation
-    virtual void set_top(int)
+    virtual void set_top(int ll)
     {
-      // We don't want to use this it could lead to numerous errors
-      assert(false);
+      set_top(ll, *empty_);
     }
 
     /// \brief Return the peak of this stack
@@ -229,13 +254,11 @@ namespace spot
     /// \brief Return the current size of the stack
     virtual unsigned int size()
     {
-      return stack2_.size();
+      return stack_.size();
     }
 
   private:
-    std::stack<ll_elt> stack2_; // The stack
-    markset* empty_;		///< The empty markset
-    unsigned int max_size_;
+    std::stack<ll_elt> stack_; // The stack
   };
 }
 
