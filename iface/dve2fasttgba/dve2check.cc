@@ -61,6 +61,7 @@
 #include "fasttgbaalgos/ec/cou99check.hh"
 
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
+#include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
 
 
 #include "misc/timer.hh"
@@ -112,6 +113,7 @@ main(int argc, char **argv)
   bool opt_tarjan = false;
   bool opt_opttarjan = false;
   bool opt_ecopttarjan = false;
+  bool opt_optdijkstra = false;
   bool opt_gv04 = false;
   bool opt_lc13 = false;
   bool opt_sc13 = false;
@@ -130,6 +132,7 @@ main(int argc, char **argv)
   std::string option_tarjan = "";
   std::string option_opttarjan = "";
   std::string option_ecopttarjan = "";
+  std::string option_optdijkstra = "";
   std::string option_couvreur = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
@@ -219,6 +222,11 @@ main(int argc, char **argv)
       std::cout << argv[3] << std::endl;
       opt_ecopttarjan = true;
       option_ecopttarjan = std::string(argv[3]+12);
+    }
+  else if (!strncmp("-optdijkstra", argv[3], 12))
+    {
+      opt_optdijkstra = true;
+      option_optdijkstra = std::string(argv[3]+12);
     }
   else if (!strncmp("-couvreur", argv[3], 9))
     {
@@ -696,6 +704,27 @@ main(int argc, char **argv)
 	    result << (b ? "VIOLATED," :"VERIFIED,");
 
 	    spot::timer t = mtimer.timer("Checking ecopttarjan");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
+
+	if (opt_optdijkstra)
+	  {
+	    std::ostringstream result;
+	    result << "#optdijkstra" << option_optdijkstra << ",";
+
+	    spot::opt_dijkstra_scc* checker =
+	      new spot::opt_dijkstra_scc(itor, option_optdijkstra);
+	    mtimer.start("Checking optdijkstra");
+	    checker->check();
+	    mtimer.stop("Checking optdijkstra");
+	    result << "SCC,";
+
+	    spot::timer t = mtimer.timer("Checking optdijkstra");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;

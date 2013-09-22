@@ -23,8 +23,10 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 optdir = $(pkgincludedir)/fasttgbaalgos/ec/opt
 
 opt_HEADERS = \
-  opt_tarjan_scc.hh
+  opt_tarjan_scc.hh \
+  opt_dijkstra_scc.hh
 
 noinst_LTLIBRARIES = libopt.la
 libopt_la_SOURCES = \
-  opt_tarjan_scc.cc
+  opt_tarjan_scc.cc \
+  opt_dijkstra_scc.cc
