@@ -38,7 +38,7 @@ namespace spot
   ///   - Use (or not!) a compressed lowlink stack
   class opt_tarjan_scc : public ec
   {
-  private:
+  protected:
     /// The map of visited states
     typedef Sgi::hash_map<const fasttgba_state*, int,
 			  fasttgba_state_ptr_hash,
@@ -68,13 +68,13 @@ namespace spot
     void dfs_push(fasttgba_state*);
 
     /// \brief  Pop states already explored
-    void dfs_pop();
+    virtual void dfs_pop();
+
+    /// \brief the update for backedges
+    virtual bool dfs_update (fasttgba_state* s);
 
     /// \brief the main procedure
     void main();
-
-    /// \brief the update for backedges
-    bool dfs_update (fasttgba_state* s);
 
     /// \brief The color for a new State
     enum color {Alive, Dead, Unknown};
@@ -94,12 +94,10 @@ namespace spot
     stack_of_lowlink* dstack_;
 
     /// \brief Access  the color of a state
-    opt_tarjan_scc::color  get_color(const fasttgba_state*);
+    opt_tarjan_scc::color get_color(const fasttgba_state*);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
-
-  private:
 
     /// \brief the automaton that will be used for the Emptiness check
     const fasttgba* a_;
@@ -125,6 +123,24 @@ namespace spot
     int transitions_cpt_;	 ///< \brief count transitions
     int memory_cost_;		 ///< \brief evaluates memory
     int trivial_scc_;            ///< \brief count trivial SCCs
+  };
+
+  /// \brief This class is the implementation of the tarjan-based
+  /// emptiness check.
+  /// It onlys needs to refine two methods that deal with acceptance
+  /// sets : update and pop
+  class opt_tarjan_ec : public opt_tarjan_scc
+  {
+  public:
+    opt_tarjan_ec(instanciator* i, std::string option = "")
+      : opt_tarjan_scc(i, option)
+    {}
+
+    /// \brief  Pop states already explored
+    virtual void dfs_pop();
+
+    /// \brief the update for backedges
+    virtual bool dfs_update (fasttgba_state* s);
   };
 }
 

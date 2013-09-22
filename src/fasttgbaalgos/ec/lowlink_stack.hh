@@ -53,6 +53,7 @@ namespace spot
     /// \brief Insert a new lowlink into the stack
     virtual void push(int lowlink)
     {
+      //std::cout << "[push] " << lowlink << std::endl;
       stack_.push(std::make_pair(lowlink, empty_));
     }
 
@@ -66,6 +67,7 @@ namespace spot
     /// at the top of the stack
     virtual const markset& top_acceptance()
     {
+      assert(!stack_.empty());
       return *stack_.top().second;
     }
 
@@ -77,6 +79,7 @@ namespace spot
       if (stack_.top().second != empty_)
 	delete stack_.top().second;
       stack_.pop();
+      //std::cout << "[pop]  " << t << std::endl;
       return t;
     }
 
@@ -84,7 +87,10 @@ namespace spot
     /// of the stack
     virtual void set_top(int ll, markset m)
     {
+      //std::cout << "[stop] " << ll << std::endl;
       stack_.top().first = ll;
+      if (stack_.top().second != empty_)
+	delete stack_.top().second;
       stack_.top().second =  new markset(m);
     }
 
@@ -174,7 +180,8 @@ namespace spot
     /// at the top of the stack
     virtual const markset& top_acceptance()
     {
-      assert(stack_.top().backedge_updated);
+      if (!stack_.top().backedge_updated)
+	return *empty_;
       return *stack_.top().mark;
    }
 
@@ -214,6 +221,8 @@ namespace spot
 	  assert(ll <= stack_.top().lowlink);
 	  if (m == *empty_)
 	    stack_.top().mark = empty_;
+	  else
+	    stack_.top().mark = new markset(m);
 	  stack_.top().lowlink = ll;
 	}
       else
@@ -223,6 +232,8 @@ namespace spot
 	    {
 	      if (m == *empty_)
 		stack_.top().mark = empty_;
+	      else
+		stack_.top().mark = new markset(m);
 	      stack_.top().backedge_updated = true;
 	      stack_.top().lowlink = ll;
 	    }

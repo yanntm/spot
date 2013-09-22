@@ -33,6 +33,7 @@
 #include "../dve2/dve2.hh"
 #include "tgbaalgos/stats.hh"
 #include "tgba/tgbaproduct.hh"
+#include "tgbaalgos/dotty.hh"
 
 
 // This part is for FASTTGBA
@@ -110,6 +111,7 @@ main(int argc, char **argv)
   bool opt_stats = false;
   bool opt_tarjan = false;
   bool opt_opttarjan = false;
+  bool opt_ecopttarjan = false;
   bool opt_gv04 = false;
   bool opt_lc13 = false;
   bool opt_sc13 = false;
@@ -127,6 +129,7 @@ main(int argc, char **argv)
   std::string option_stats = "";
   std::string option_tarjan = "";
   std::string option_opttarjan = "";
+  std::string option_ecopttarjan = "";
   std::string option_couvreur = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
@@ -210,6 +213,12 @@ main(int argc, char **argv)
     {
       opt_opttarjan = true;
       option_opttarjan = std::string(argv[3]+10);
+    }
+  else if (!strncmp("-ecopttarjan", argv[3], 12))
+    {
+      std::cout << argv[3] << std::endl;
+      opt_ecopttarjan = true;
+      option_ecopttarjan = std::string(argv[3]+12);
     }
   else if (!strncmp("-couvreur", argv[3], 9))
     {
@@ -298,6 +307,8 @@ main(int argc, char **argv)
       af1 = pp1->run(af1, f1);
       delete pp1;
 
+      // spot::dotty_reachable(std::cout, af1);
+      // exit(1);
       // -----------------------------------------------------
       // Start using fasttgba
       // -----------------------------------------------------
@@ -661,10 +672,30 @@ main(int argc, char **argv)
 	      new spot::opt_tarjan_scc(itor, option_opttarjan);
 	    mtimer.start("Checking opttarjan");
 	    checker->check();
-	    result << "SCC,";
 	    mtimer.stop("Checking opttarjan");
+	    result << "SCC,";
 
 	    spot::timer t = mtimer.timer("Checking opttarjan");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
+	if (opt_ecopttarjan)
+	  {
+	    std::ostringstream result;
+	    result << "#ecopttarjan" << option_ecopttarjan << ",";
+
+	    spot::opt_tarjan_ec* checker =
+	      new spot::opt_tarjan_ec(itor, option_ecopttarjan);
+	    mtimer.start("Checking ecopttarjan");
+	    int b = checker->check();
+	    mtimer.stop("Checking ecopttarjan");
+	    result << (b ? "VIOLATED," :"VERIFIED,");
+
+	    spot::timer t = mtimer.timer("Checking ecopttarjan");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << checker->extra_info_csv() << ","
 		   << input;

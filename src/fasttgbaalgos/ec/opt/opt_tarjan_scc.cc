@@ -114,7 +114,7 @@ namespace spot
   {
     seen_map::const_iterator i = H.find(state);
     if (i != H.end())
-	return Alive;
+      return Alive;
     else if (deadstore_->contains(state))
       return Dead;
     else
@@ -159,8 +159,60 @@ namespace spot
 	// Here we check '<=' since the information "==" is
 	// needed to the compressed stack of lowlink.
 	if (ll <= dstack_->top())
-	  dstack_->set_top(ll);
+	    dstack_->set_top(ll);
 	live.push_back(last);
+      }
+  }
+
+  void opt_tarjan_ec::dfs_pop()
+  {
+    --dfs_size_;
+    const markset acc = dstack_->top_acceptance();
+    int ll = dstack_->pop();
+
+    unsigned int steppos = todo.back().position;
+    const fasttgba_state* last = todo.back().state;
+    delete todo.back().lasttr;
+    todo.pop_back();
+
+    if ((int) steppos == ll)
+      {
+	++roots_poped_cpt_;
+	int trivial = 0;
+
+	// Delete the root that is not inside of live Stack
+	deadstore_->add(last);
+	seen_map::const_iterator it1 = H.find(last);
+	H.erase(it1);
+	while (H.size() > steppos)
+	  {
+	    ++trivial;
+	    deadstore_->add(live.back());
+	    seen_map::const_iterator it = H.find(live.back());
+	    H.erase(it);
+	    live.pop_back();
+	  }
+
+	// This change regarding original algorithm
+	if (trivial == 0)
+	  ++trivial_scc_;
+      }
+    else
+      {
+	// Warning !  Do not optimize to '<'
+	// Here we check '<=' since the information "==" is
+	// needed to the compressed stack of lowlink.
+	if (ll <= dstack_->top())
+	  dstack_->set_top(ll , acc | dstack_->top_acceptance() |
+			   todo.back().lasttr->current_acceptance_marks());
+	else
+	  dstack_->set_top(dstack_->top(), acc | dstack_->top_acceptance() |
+			   todo.back().lasttr->current_acceptance_marks());
+
+
+	live.push_back(last);
+	if (dstack_->top_acceptance().all())
+	  counterexample_found = true;
       }
   }
 
@@ -174,6 +226,24 @@ namespace spot
       dstack_->set_top(H[d]);
 
     return false;
+  }
+
+  bool opt_tarjan_ec::dfs_update(fasttgba_state* d)
+  {
+    ++update_cpt_;
+    // Warning !  Do not optimize to '<'
+    // Here we check '<=' since the information "==" is
+    // needed to the compressed stack of lowlink.
+    if ( H[d] <= dstack_->top())
+      dstack_->set_top(H[d] ,
+		       todo.back().lasttr->current_acceptance_marks() |
+		       dstack_->top_acceptance());
+    else
+      dstack_->set_top( dstack_->top(),
+		       todo.back().lasttr->current_acceptance_marks() |
+		       dstack_->top_acceptance());
+
+    return dstack_->top_acceptance().all();
   }
 
   void opt_tarjan_scc::main()
