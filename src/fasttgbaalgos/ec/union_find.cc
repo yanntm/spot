@@ -662,6 +662,23 @@ namespace spot
     ++realsize_;
   }
 
+  setOfDisjointSetsIPC_LRPC_MS_Dead::~setOfDisjointSetsIPC_LRPC_MS_Dead()
+  {
+    for (unsigned i = 0; i < accp.size(); ++i)
+      if (accp[i] != &empty)
+	delete accp[i];
+
+    uf_map::const_iterator s = el.begin();
+    while (s != el.end())
+      {
+	if (s->first)
+	  s->first->destroy();
+	++s;
+      }
+    el.clear();
+    delete deadstore_;
+  }
+
   bool
   setOfDisjointSetsIPC_LRPC_MS_Dead::add(const fasttgba_state* e)
   {

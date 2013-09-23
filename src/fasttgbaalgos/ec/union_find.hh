@@ -277,6 +277,8 @@ namespace spot
   public:
     setOfDisjointSetsIPC_LRPC_MS_Dead(acc_dict& acc);
 
+    virtual ~setOfDisjointSetsIPC_LRPC_MS_Dead();
+
     virtual bool add(const fasttgba_state* e);
 
     virtual unsigned int size ();
