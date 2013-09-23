@@ -30,9 +30,10 @@
 namespace spot
 {
 
-  /// This class provides the adaptation of the emptiness
-  /// check of couvreur using an Union Find structure and
-  /// a specific dedicated root stack
+  /// \brief This is the Dijkstra SCC computation algorithm
+  /// This class also include the optimisation for the live
+  /// stack (provided by Nuutila for Tarjan's algorithm but
+  /// adapted here) and a possibly stack compression technique
   class opt_dijkstra_scc : public ec
   {
   public:
@@ -53,10 +54,6 @@ namespace spot
 
     /// \brief Fix set ups for the algo
     inline void init();
-
-    // ------------------------------------------------------------
-    // For classic algorithm with stack and UF
-    // ------------------------------------------------------------
 
     /// \brief Push a new state to explore
     virtual void dfs_push(fasttgba_state*);
@@ -118,6 +115,20 @@ namespace spot
     int transitions_cpt_;	 ///< \brief count transitions
     int memory_cost_;		 ///< \brief evaluates memory
     int trivial_scc_;            ///< \brief count trivial SCCs
+  };
+
+  /// \brief transform the previous algorithm into an emptiness
+  /// check. Only refine specific methods
+  class  opt_dijkstra_ec : public opt_dijkstra_scc
+  {
+  public :
+    opt_dijkstra_ec(instanciator* i, std::string option = "")
+      : opt_dijkstra_scc(i, option)
+    {}
+
+
+    /// \brief Add acceptance set deal
+    virtual bool merge(fasttgba_state*);
   };
 }
 

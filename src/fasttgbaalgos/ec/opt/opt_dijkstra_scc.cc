@@ -92,14 +92,14 @@ namespace spot
     trace << "Opt_Dijkstra_Scc::DFS_push "
     	  << std::endl;
     ++states_cpt_;
-    live.push_back(s);
+    //live.push_back(s);
     assert(H.find(s) == H.end());
-    H.insert(std::make_pair(s, live.size() -1));
+    H.insert(std::make_pair(s, H.size()));
     // Count!
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
 
-    todo.push_back ({s, 0, live.size() -1});
+    todo.push_back ({s, 0, H.size() -1});
     // Count!
     max_dfs_size_ = max_dfs_size_ > todo.size() ?
       max_dfs_size_ : todo.size();
@@ -119,6 +119,7 @@ namespace spot
     delete todo.back().lasttr;
 
     unsigned int rtop = roots_stack_->root_of_the_top();
+    const fasttgba_state* last = todo.back().state;
     unsigned int steppos = todo.back().position;
     todo.pop_back();
 
@@ -127,7 +128,10 @@ namespace spot
 	++roots_poped_cpt_;
 	roots_stack_->pop();
 	int trivial = 0;
-	while (live.size() > steppos)
+	deadstore_->add(last);
+	seen_map::const_iterator it1 = H.find(last);
+	H.erase(it1);
+	while (H.size() > steppos)
 	  {
 	    ++trivial;
 	    deadstore_->add(live.back());
@@ -135,8 +139,13 @@ namespace spot
 	    H.erase(it);
 	    live.pop_back();
  	  }
-	if (trivial == 1) // we just popped a trivial
+	if (trivial == 0) // we just popped a trivial
 	  ++trivial_scc_;
+      }
+    else
+      {
+	// This is the integration of Nuutila's optimisation.
+	live.push_back(last);
       }
   }
 
@@ -158,6 +167,29 @@ namespace spot
     roots_stack_->push_non_trivial(rpos, *empty_, todo.size() -1);
 
     return false;
+  }
+
+  bool opt_dijkstra_ec::merge(fasttgba_state* d)
+  {
+    trace << "Opt_Dijkstra_Scc::merge " << std::endl;
+    ++update_cpt_;
+    assert(H.find(d) != H.end());
+    int dpos = H[d];
+    int rpos = roots_stack_->root_of_the_top();
+    markset a = todo[rpos].lasttr->current_acceptance_marks();
+
+    roots_stack_->pop();
+    while ((unsigned)dpos < todo[rpos].position)
+      {
+	++update_loop_cpt_;
+    	markset m = todo[rpos].lasttr->current_acceptance_marks();
+    	a |= m | roots_stack_->top_acceptance();
+    	rpos = roots_stack_->root_of_the_top();
+    	roots_stack_->pop();
+      }
+    roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
+
+    return a.all();
   }
 
   opt_dijkstra_scc::color

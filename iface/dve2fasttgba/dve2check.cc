@@ -114,6 +114,7 @@ main(int argc, char **argv)
   bool opt_opttarjan = false;
   bool opt_ecopttarjan = false;
   bool opt_optdijkstra = false;
+  bool opt_ecoptdijkstra = false;
   bool opt_gv04 = false;
   bool opt_lc13 = false;
   bool opt_sc13 = false;
@@ -133,6 +134,7 @@ main(int argc, char **argv)
   std::string option_opttarjan = "";
   std::string option_ecopttarjan = "";
   std::string option_optdijkstra = "";
+  std::string option_ecoptdijkstra = "";
   std::string option_couvreur = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
@@ -227,6 +229,11 @@ main(int argc, char **argv)
     {
       opt_optdijkstra = true;
       option_optdijkstra = std::string(argv[3]+12);
+    }
+  else if (!strncmp("-ecoptdijkstra", argv[3], 14))
+    {
+      opt_ecoptdijkstra = true;
+      option_ecoptdijkstra = std::string(argv[3]+14);
     }
   else if (!strncmp("-couvreur", argv[3], 9))
     {
@@ -732,10 +739,28 @@ main(int argc, char **argv)
 	    std::cout << result.str() << std::endl;
 	  }
 
+	if (opt_ecoptdijkstra)
+	  {
+	    std::ostringstream result;
+	    result << "#ecoptdijkstra" << option_ecoptdijkstra << ",";
+
+	    spot::opt_dijkstra_ec* checker =
+	      new spot::opt_dijkstra_ec(itor, option_ecoptdijkstra);
+	    mtimer.start("Checking ecoptdijkstra");
+	    int b = checker->check();
+	    mtimer.stop("Checking ecoptdijkstra");
+	    result << (b ? "VIOLATED," :"VERIFIED,");
+
+	    spot::timer t = mtimer.timer("Checking ecoptdijkstra");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
+
 	// ------------------------------------------------------------------
-
-
-
 
 
 	if (opt_stats)
