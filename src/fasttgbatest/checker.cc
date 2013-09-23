@@ -173,6 +173,7 @@ int main(int argc, char **argv)
       delete ftgba;
       delete accs;
       delete aps;
+      delete apf;
     }
   else
     {
