@@ -46,6 +46,7 @@ namespace spot
 	{
 	  pop();
 	}
+      delete empty_;
     }
 
     virtual bool is_empty ()
@@ -132,6 +133,7 @@ namespace spot
 	{
 	  pop();
 	}
+      delete empty_;
     }
 
     virtual bool is_empty ()
