@@ -172,7 +172,7 @@ namespace spot
   bool tarjan_scc::dfs_update(fasttgba_state* d)
   {
     ++update_cpt_;
-    if ( H[d] < dstack_.back().lowlink)
+    if (H[d] < dstack_.back().lowlink)
       dstack_.back().lowlink = H[d];
 
     return false;
@@ -263,7 +263,6 @@ namespace spot
       + ","
       + std::to_string(memory_cost_)
       + ","
-      + std::to_string(trivial_scc_)
-      ;
+      + std::to_string(trivial_scc_);
   }
 }

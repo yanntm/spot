@@ -761,7 +761,7 @@ namespace spot
       	    ++s;
 
       	  int val = 0; // Initialize to kill a warning from old compilers.
-      	  int type_num = d_->get_state_variable_type(i);//ni->second.type;
+      	  int type_num = d_->get_state_variable_type(i); //ni->second.type;
       	  if (type_num == 0 || (*s >= '0' && *s <= '9') || *s == '-')
       	    {
       	      char* s_end;

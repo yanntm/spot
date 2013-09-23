@@ -222,7 +222,7 @@ namespace spot
     // Warning !  Do not optimize to '<'
     // Here we check '<=' since the information "==" is
     // needed to the compressed stack of lowlink.
-    if ( H[d] <= dstack_->top())
+    if (H[d] <= dstack_->top())
       dstack_->set_top(H[d]);
 
     return false;
@@ -234,12 +234,12 @@ namespace spot
     // Warning !  Do not optimize to '<'
     // Here we check '<=' since the information "==" is
     // needed to the compressed stack of lowlink.
-    if ( H[d] <= dstack_->top())
+    if (H[d] <= dstack_->top())
       dstack_->set_top(H[d] ,
 		       todo.back().lasttr->current_acceptance_marks() |
 		       dstack_->top_acceptance());
     else
-      dstack_->set_top( dstack_->top(),
+      dstack_->set_top(dstack_->top(),
 		       todo.back().lasttr->current_acceptance_marks() |
 		       dstack_->top_acceptance());
 
@@ -331,7 +331,6 @@ namespace spot
       + ","
       + std::to_string(memory_cost_)
       + ","
-      + std::to_string(trivial_scc_)
-      ;
+      + std::to_string(trivial_scc_);
   }
 }

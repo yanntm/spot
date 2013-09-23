@@ -102,10 +102,10 @@ namespace spot
     /// considering the two sub iterators.
     void step();
 
-    fasttgba_succ_iterator* left_; ///< Reference on the left iterator
-    fasttgba_succ_iterator* right_;///< Reference on the right iterator
+    fasttgba_succ_iterator* left_;  ///< Reference on the left iterator
+    fasttgba_succ_iterator* right_; ///< Reference on the right iterator
     fixed_size_pool* pool_;
-    bool kripke_left;	           ///< The left automaton is a Kripke
+    bool kripke_left;	            ///< The left automaton is a Kripke
   };
 
 

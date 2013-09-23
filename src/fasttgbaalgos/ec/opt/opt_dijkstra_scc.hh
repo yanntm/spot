@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SPOT_FASTTGBAALGOS_EC__OPT_OPT_DIJKSTRA_SCC_HH
+#ifndef SPOT_FASTTGBAALGOS_EC_OPT_OPT_DIJKSTRA_SCC_HH
 # define SPOT_FASTTGBAALGOS_EC_OPT_OPT_DIJKSTRA_SCC_HH
 
 #include <stack>

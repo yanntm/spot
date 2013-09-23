@@ -277,7 +277,6 @@ namespace spot
       + ","
       + std::to_string(memory_cost_)
       + ","
-      + std::to_string(trivial_scc_)
-      ;
+      + std::to_string(trivial_scc_);
   }
 }

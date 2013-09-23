@@ -220,7 +220,7 @@ namespace spot
     }
 
     // Launch the emptiness check ...
-    bool res = chk[i]->check();//checker->check();
+    bool res = chk[i]->check(); //checker->check();
 
     // And then notify the main thread that the result has
     // been found

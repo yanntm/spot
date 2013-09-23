@@ -216,9 +216,9 @@ namespace spot
 	      }
 	    else
 	      {
-		if (cp.c == Alive// i->second < stack.size()
+		if (cp.c == Alive)// i->second < stack.size()
 		    // && stack[i->second].s->compare(s_prime) == 0
-		    )
+		    //)
 		  {
 		    // s_prime has a clone on stack
 		    trace << " is on stack." << std::endl;

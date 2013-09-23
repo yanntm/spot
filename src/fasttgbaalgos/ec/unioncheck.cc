@@ -44,19 +44,19 @@ namespace spot
   {
     a_ = inst->get_automaton ();
 
-    if (!option.compare( "-cs-ds"))
+    if (!option.compare("-cs-ds"))
       {
 	K = 3;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
 	roots_stack_ = new stack_of_roots (a_->get_acc());
       }
-    else if (!option.compare( "-cs+ds"))
+    else if (!option.compare("-cs+ds"))
       {
 	K = 4;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
 	roots_stack_ = new stack_of_roots (a_->get_acc());
       }
-    else if (!option.compare( "+cs-ds"))
+    else if (!option.compare("+cs-ds"))
       {
 	K = 3;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
@@ -241,7 +241,6 @@ namespace spot
       + ","
       + std::to_string(memory_cost_)
       + ","
-      + std::to_string(trivial_scc_)
-      ;
+      + std::to_string(trivial_scc_);
   }
 }

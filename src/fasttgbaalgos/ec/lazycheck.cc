@@ -188,7 +188,7 @@ namespace spot
 		dstack_.back().mark = acc;
 		fastret = true;
 	      }
-	    dstack_.back().mark->operator|= (m);
+	    dstack_.back().mark->operator|=(m);
 	  }
 	if (dstack_.back().mark->all())
 	  counterexample_found = true;
@@ -204,15 +204,15 @@ namespace spot
   bool lazycheck::dfs_update(fasttgba_state* d)
   {
     ++update_cpt_;
-    if ( H[d] < dstack_.back().lowlink)
+    if (H[d] < dstack_.back().lowlink)
       dstack_.back().lowlink = H[d];
 
     if (!((todo.back().lasttr->current_acceptance_marks()) == *empty_))
       {
 	if (dstack_.back().mark == empty_)
 	  dstack_.back().mark = new markset(a_->get_acc());
-	dstack_.back().mark->operator|=
-	  (todo.back().lasttr->current_acceptance_marks());
+	dstack_.back().mark
+	  ->operator|=(todo.back().lasttr->current_acceptance_marks());
       }
     return dstack_.back().mark->all();
   }
@@ -302,7 +302,6 @@ namespace spot
       + ","
       + std::to_string(memory_cost_)
       + ","
-      + std::to_string(trivial_scc_)
-      ;
+      + std::to_string(trivial_scc_);
   }
 }

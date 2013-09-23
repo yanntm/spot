@@ -533,7 +533,7 @@ main(int argc, char **argv)
 	    result << "#sc13" << option_sc13 << ",";
 
 	    spot::stackscheck* checker =
-	      new spot::stackscheck(itor, option_sc13 );
+	      new spot::stackscheck(itor, option_sc13);
 	    mtimer.start("Checking sc13");
 	    if (checker->check())
 	      {
@@ -883,8 +883,8 @@ main(int argc, char **argv)
 		spot::timer t = mtimer.timer("Checking wait");
 
 		// here we check wether the time ellapsed is okay
-		if ( t.walltime()  < opt_wait_min ||
-		     t.walltime()  > opt_wait_max )
+		if (t.walltime()  < opt_wait_min ||
+		    t.walltime()  > opt_wait_max)
 		  {
 		    // std::cout << "ERROR : TIME  "
 		    // << t.walltime() << std::endl;

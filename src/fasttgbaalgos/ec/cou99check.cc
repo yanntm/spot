@@ -142,7 +142,7 @@ namespace spot
 	  {
 	    i = kill.top();
 	    kill.pop();
-	    for(i->first(); !i->done(); i->next())
+	    for (i->first(); !i->done(); i->next())
 	      {
 		++transitions_cpt_;
 		s = i->current_state();
@@ -287,7 +287,6 @@ namespace spot
       + ","
       + std::to_string(transitions_cpt_)
       + ","
-      + std::to_string(states_cpt_)
-      ;
+      + std::to_string(states_cpt_);
   }
 }
