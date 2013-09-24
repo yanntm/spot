@@ -35,6 +35,8 @@
 // Emptiness check for fasttgba
 #include "fasttgbaalgos/ec/cou99.hh"
 #include "fasttgbaalgos/ec/unioncheck.hh"
+#include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
+#include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
 
 
 void syntax (char*)
@@ -152,23 +154,57 @@ int main(int argc, char **argv)
       if (unioncheck_checker.check())
 	unioncheck_result = true;
 
+      bool optdijkstracheck_result = false;
+      spot::opt_dijkstra_ec opt_dijkstra_ec_checker(&si, "-cs");
+      if (opt_dijkstra_ec_checker.check())
+	optdijkstracheck_result = true;
+
+      bool optdijkstracheckcs_result = false;
+      spot::opt_dijkstra_ec opt_dijkstra_ec_cs_checker(&si, "+cs");
+      if (opt_dijkstra_ec_cs_checker.check())
+	optdijkstracheckcs_result = true;
+
+      bool opttarjancheck_result = false;
+      spot::opt_tarjan_ec opt_tarjan_ec_checker(&si, "-cs");
+      if (opt_tarjan_ec_checker.check())
+	opttarjancheck_result = true;
+
+      bool opttarjancheckcs_result = false;
+      spot::opt_tarjan_ec opt_tarjan_ec_cs_checker(&si, "+cs");
+      if (opt_tarjan_ec_cs_checker.check())
+	opttarjancheckcs_result = true;
 
       // Check the result
-      if (cou99_result != unioncheck_result)
+      if (cou99_result != unioncheck_result ||
+	  cou99_result != optdijkstracheck_result ||
+	  cou99_result != optdijkstracheckcs_result ||
+	  cou99_result != opttarjancheck_result ||
+	  cou99_result != opttarjancheckcs_result)
 	{
 	  spot::dotty_dfs dotty(ftgba);
 	  dotty.run();
 
 	  std::cout <<  "ERROR : Sum Up Results " << std::endl
-		    <<  "   cou99           :  "
+		    <<  "   cou99                :  "
 		    << (cou99_result? "true" : "false")
 		    << std::endl
-		    <<  "   unioncheck      :  "
+		    <<  "   opt_dijkstra_ec      :  "
+		    << (optdijkstracheck_result? "true" : "false")
+		    << std::endl
+		    <<  "   opt_dijkstra_ec+cs   :  "
+		    << (optdijkstracheckcs_result? "true" : "false")
+		    << std::endl
+		    <<  "   opt_tarjan_ec      :  "
+		    << (opttarjancheck_result? "true" : "false")
+		    << std::endl
+		    <<  "   opt_tarjan_ec+cs   :  "
+		    << (opttarjancheckcs_result? "true" : "false")
+		    << std::endl
+		    <<  "   unioncheck           :  "
 		    << (unioncheck_result? "true" : "false")
 		    << std::endl;
 	  assert(false);
 	}
-
 
       delete ftgba;
       delete accs;
