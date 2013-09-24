@@ -858,7 +858,7 @@ main(int argc, char **argv)
 		  {
 		    mtimer.stop("Checking wait");
 
-		    if (!option_wait.compare("violated") == 0)
+		    if (!(option_wait.compare("violated") == 0))
 		      {
 			// std::cout << "V\n";
 			exit(1);
@@ -871,7 +871,7 @@ main(int argc, char **argv)
 		  {
 		    mtimer.stop("Checking wait");
 
-		    if (!option_wait.compare("verified") == 0)
+		    if (!(option_wait.compare("verified") == 0))
 		      {
 			// std::cout << "T\n";
 			exit(1);
