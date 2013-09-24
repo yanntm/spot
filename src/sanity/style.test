@@ -212,11 +212,28 @@ for dir in "${INCDIR-..}" "${INCDIR-..}"/../iface; do
       grep -v 'for (.*;;)' $tmp | grep ';[^	 ")]' &&
 	diag 'Must have space or newline after semicolon.'
 
-      grep '}.*}' $tmp &&
-	diag 'No two } on the same line.'
+      #
+      # Do not apply these two rules since we can have in C++11
+      # Initialization Lists
+      #
+      # struct s_ {
+      #   int b;
+      #   union {
+      #      int a;
+      #      int* a;
+      #   }
+      # }
+      #
+      # And later:
+      #    stack<s_> st;
+      #    st.push({0, {8}});
 
-      grep '{.*{' $tmp &&
-	diag 'No two { on the same line.'
+
+      # grep '}.*}' $tmp &&
+      # 	diag 'No two } on the same line.'
+
+      # grep '{.*{' $tmp &&
+      # 	diag 'No two { on the same line.'
 
       grep 'delete[	 ]*[(][^(]*[)];' $tmp &&
 	diag 'No useless parentheses after delete.'
