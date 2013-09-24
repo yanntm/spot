@@ -157,9 +157,9 @@ namespace spot
       //std::cout << "Push : " << lowlink << std::endl;
 
       if (stack_.empty())
-	stack_.push({lowlink, false, 0});
+	stack_.push({lowlink, false, {0}});
       else if (stack_.top().backedge_updated)
-	stack_.push({lowlink, false, 0});
+	stack_.push({lowlink, false, {0}});
       else
 	{
 	  assert(stack_.top().backedge_updated == false);
@@ -241,7 +241,7 @@ namespace spot
 	  else
 	    {
 	      stack_.top().range = stack_.top().range -1;
-	      stack_.push({ll, true, 0});
+	      stack_.push({ll, true, {0}});
 	      if (m == *empty_)
 		stack_.top().mark = empty_;
 	      else
