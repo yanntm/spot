@@ -149,7 +149,6 @@ namespace spot
 	{
 	  pop();
 	}
-      delete empty_;
     }
 
     /// \brief Insert a new lowlink into the stack
