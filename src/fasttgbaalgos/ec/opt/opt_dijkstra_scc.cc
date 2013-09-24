@@ -69,6 +69,14 @@ namespace spot
     	todo.pop_back();
       }
 
+    seen_map::const_iterator s = H.begin();
+    while (s != H.end())
+      {
+	s->first->destroy();
+	++s;
+      }
+    H.clear();
+
     delete inst;
   }
 
