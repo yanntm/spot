@@ -127,9 +127,6 @@ namespace spot
     /// \brief the stack of SCC
     std::stack<scc_tuple> scc;
 
-    /// \brief the DFS number
-    int max;
-
     seen_map H;
 
     // The instance automaton

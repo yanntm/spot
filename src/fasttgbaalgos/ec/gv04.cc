@@ -32,7 +32,7 @@ namespace spot
 {
   gv04::gv04(instanciator* i, std::string option) :
     counterexample_found(false),
-    max(0), inst (i->new_instance()),
+    inst (i->new_instance()),
     max_live_size_(0)
   {
     if (!option.compare("-ds"))

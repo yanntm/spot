@@ -545,7 +545,6 @@ namespace spot
     private:
       const dve2_interface* d_;
       int state_size_;
-      const char** vname_;
       prop_set* ps_;
       fixed_size_pool statepool_;
       multiple_size_pool compstatepool_;

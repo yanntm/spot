@@ -33,12 +33,10 @@ namespace spot
     {
     private:
       union_find* ufshared_;
-      int tn_;
     public :
       cou99_uf_shared_impl (instanciator* i,
-			    union_find* u,
-			    int threadnumber) :
-	cou99_uf(i), tn_(threadnumber)
+			    union_find* u) :
+	cou99_uf(i)
       {
 	ufshared_ = u;
       }
@@ -196,7 +194,7 @@ namespace spot
       {
 	threads.push_back
 	  (std::thread(&spot::cou99_uf_shared::do_work, this, i));
-	chk.push_back(new spot::cou99_uf_shared_impl(itor_, uf_, i));
+	chk.push_back(new spot::cou99_uf_shared_impl(itor_, uf_));
       }
   }
 
