@@ -454,6 +454,22 @@ namespace spot
     id.push_back(DEAD);
   }
 
+  setOfDisjointSetsIPC_LRPC_MS::~setOfDisjointSetsIPC_LRPC_MS()
+  {
+    for (unsigned i = 0; i < accp.size(); ++i)
+      if (accp[i] != &empty)
+	delete accp[i];
+
+    uf_map::const_iterator s = el.begin();
+    while (s != el.end())
+      {
+	if (s->first)
+	  s->first->destroy();
+	++s;
+      }
+    el.clear();
+  }
+
   bool
   setOfDisjointSetsIPC_LRPC_MS::add(const fasttgba_state* e)
   {

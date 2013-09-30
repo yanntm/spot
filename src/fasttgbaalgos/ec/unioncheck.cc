@@ -28,6 +28,8 @@
 #include "unioncheck.hh"
 #include <assert.h>
 
+#include "misc/memusage.hh"
+
 namespace spot
 {
   unioncheck::unioncheck(instanciator* i, std::string option) :
@@ -40,7 +42,8 @@ namespace spot
     states_cpt_(0),
     transitions_cpt_(0),
     memory_cost_(0),
-    trivial_scc_(0)
+    trivial_scc_(0),
+    memory_usage_(-1)
   {
     a_ = inst->get_automaton ();
 
@@ -165,7 +168,8 @@ namespace spot
       {
 	trace << "Main " << std::endl;
 	assert(!uf->is_dead(todo.back().state));
-
+	int mmu = memusage();
+	memory_usage_ = memory_usage_ > mmu ? memory_usage_ : mmu;
 	++transitions_cpt_;
 
 	if (!todo.back().lasttr)
@@ -241,6 +245,8 @@ namespace spot
       + ","
       + std::to_string(memory_cost_)
       + ","
-      + std::to_string(trivial_scc_);
+      + std::to_string(trivial_scc_)
+      + ","
+      + std::to_string(memory_usage_);
   }
 }

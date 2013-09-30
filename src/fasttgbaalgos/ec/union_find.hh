@@ -199,6 +199,8 @@ namespace spot
   public:
     setOfDisjointSetsIPC_LRPC_MS(acc_dict& acc);
 
+    virtual ~setOfDisjointSetsIPC_LRPC_MS();
+
     virtual bool add(const fasttgba_state* e);
 
     virtual unsigned int size ();
