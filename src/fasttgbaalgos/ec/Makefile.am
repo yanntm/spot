@@ -36,7 +36,6 @@ ec_HEADERS = \
   deadstore.hh \
   dijkstracheck.hh \
   dijkstra_scc.hh \
-  gv04.hh \
   lazycheck.hh \
   lowlink_stack.hh \
   root_stack.hh \
@@ -60,7 +59,6 @@ libec_la_SOURCES = \
   cou99_uf_shared.cc \
   dijkstracheck.cc \
   dijkstra_scc.cc \
-  gv04.cc \
   lazycheck.cc \
   stackscheck.cc \
   stats.cc \

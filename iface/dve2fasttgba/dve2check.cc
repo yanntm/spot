@@ -49,7 +49,6 @@
 #include "fasttgbaalgos/ec/cou99_uf_shared.hh"
 #include "fasttgbaalgos/ec/cou99strength.hh"
 #include "fasttgbaalgos/ec/cou99strength_uf.hh"
-#include "fasttgbaalgos/ec/gv04.hh"
 #include "fasttgbaalgos/ec/lazycheck.hh"
 #include "fasttgbaalgos/ec/stackscheck.hh"
 #include "fasttgbaalgos/ec/stats.hh"
@@ -115,7 +114,6 @@ main(int argc, char **argv)
   bool opt_ecopttarjan = false;
   bool opt_optdijkstra = false;
   bool opt_ecoptdijkstra = false;
-  bool opt_gv04 = false;
   bool opt_lc13 = false;
   bool opt_sc13 = false;
   bool opt_uc13 = false;
@@ -138,7 +136,6 @@ main(int argc, char **argv)
   std::string option_couvreur = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
-  std::string option_gv04 = "";
   std::string option_c99  = "";
   std::string option_wait  = "";
 
@@ -152,13 +149,6 @@ main(int argc, char **argv)
     opt_couuf_swarm = true;
   else if (!strcmp("-cou99_uf_shared", argv[3]))
     opt_couuf_shared = true;
-  else if (!strncmp("-gv04", argv[3], 5))
-    {
-      opt_gv04 = true;
-      option_gv04 = std::string(argv[3]+5);
-      // FIXME : For debug
-      // opt_cou99 = true;
-    }
   else if (!strncmp("-lc13", argv[3], 5))
     {
       opt_lc13 = true;
@@ -439,33 +429,6 @@ main(int argc, char **argv)
 	    spot::timer t = mtimer.timer("Checking cou99str_uf");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << input;
-	    std::cout << result.str() << std::endl;
-	  }
-
-	bool res_gv04 = true;
-	if (opt_gv04)
-	  {
-	    std::ostringstream result;
-	    result << "#gv04" << option_gv04 << ",";
-
-	    spot::gv04* checker = new spot::gv04(itor, option_gv04);
-	    mtimer.start("Checking gv04");
-	    if (checker->check())
-	      {
-		res_gv04 = false;
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking gv04");
-
-	    spot::timer t = mtimer.timer("Checking gv04");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," <<  checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
 
@@ -960,10 +923,6 @@ main(int argc, char **argv)
 		assert (res_cou99uf == res_cou99);
 	      }
 
-	    if (opt_gv04)
-	      {
-		assert (res_gv04 == res_cou99);
-	      }
 	    if (opt_lc13)
 	      {
 		assert (res_lc13 == res_cou99);
