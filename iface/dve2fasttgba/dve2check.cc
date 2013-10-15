@@ -47,7 +47,6 @@
 #include "fasttgbaalgos/ec/cou99_uf.hh"
 #include "fasttgbaalgos/ec/cou99_uf_swarm.hh"
 #include "fasttgbaalgos/ec/cou99_uf_shared.hh"
-#include "fasttgbaalgos/ec/cou99strength.hh"
 #include "fasttgbaalgos/ec/cou99strength_uf.hh"
 #include "fasttgbaalgos/ec/lazycheck.hh"
 #include "fasttgbaalgos/ec/stackscheck.hh"
