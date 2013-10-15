@@ -105,7 +105,6 @@ namespace spot
     int memory_cost_;		 ///< \brief evaluates memory
     int trivial_scc_;            ///< \brief count trivial SCCs
     int K;			 ///< \brief constant to evaluate cost
-    int memory_usage_;		 ///< \brief memory consumption
   };
 }
 

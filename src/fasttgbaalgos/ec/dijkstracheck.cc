@@ -28,8 +28,6 @@
 #include "dijkstracheck.hh"
 #include <assert.h>
 
-#include "misc/memusage.hh"
-
 namespace spot
 {
   dijkstracheck::dijkstracheck(instanciator* i, std::string option) :
@@ -43,8 +41,7 @@ namespace spot
     states_cpt_(0),
     transitions_cpt_(0),
     memory_cost_(0),
-    trivial_scc_(0),
-    memory_usage_(-1)
+    trivial_scc_(0)
   {
     a_ = inst->get_automaton ();
     if (!option.compare("-cs-ds"))
@@ -211,8 +208,6 @@ namespace spot
     dijkstracheck::color c;
     while (!todo.empty())
       {
-	int mmu = memusage();
-	memory_usage_ = memory_usage_ > mmu ? memory_usage_ : mmu;
 	++transitions_cpt_;
 	trace << "Main " << std::endl;
 
@@ -289,8 +284,6 @@ namespace spot
       + ","
       + std::to_string(memory_cost_)
       + ","
-      + std::to_string(trivial_scc_)
-      + ","
-      + std::to_string(memory_usage_);
+      + std::to_string(trivial_scc_);
   }
 }
