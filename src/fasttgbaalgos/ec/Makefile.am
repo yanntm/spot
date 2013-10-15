@@ -25,16 +25,12 @@ ecdir = $(pkgincludedir)/fasttgbaalgos/ec
 
 ec_HEADERS = \
   ec.hh \
-  cou99.hh \
-  cou99check.hh \
-  cou99_scc.hh \
   deadstore.hh \
   dijkstracheck.hh \
   dijkstra_scc.hh \
   lazycheck.hh \
   lowlink_stack.hh \
   root_stack.hh \
-  stackscheck.hh \
   stats.hh \
   tarjan_scc.hh \
   unioncheck.hh \
@@ -43,13 +39,9 @@ ec_HEADERS = \
 
 noinst_LTLIBRARIES = libec.la
 libec_la_SOURCES = \
-  cou99.cc \
-  cou99check.cc \
-  cou99_scc.cc \
   dijkstracheck.cc \
   dijkstra_scc.cc \
   lazycheck.cc \
-  stackscheck.cc \
   stats.cc \
   tarjan_scc.cc \
   unioncheck.cc \

@@ -43,17 +43,13 @@
 #include "fasttgba/fasttgba_product.hh"
 #include "fasttgba/fasttgba_explicit.hh"
 
-#include "fasttgbaalgos/ec/cou99.hh"
-#include "fasttgbaalgos/ec/cou99_scc.hh"
 #include "fasttgbaalgos/ec/lazycheck.hh"
-#include "fasttgbaalgos/ec/stackscheck.hh"
 #include "fasttgbaalgos/ec/stats.hh"
 #include "fasttgbaalgos/ec/tarjan_scc.hh"
 #include "fasttgbaalgos/ec/unioncheck.hh"
 #include "fasttgbaalgos/ec/union_scc.hh"
 #include "fasttgbaalgos/ec/dijkstracheck.hh"
 #include "fasttgbaalgos/ec/dijkstra_scc.hh"
-#include "fasttgbaalgos/ec/cou99check.hh"
 
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
 #include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
@@ -105,10 +101,8 @@ main(int argc, char **argv)
     syntax(argv[0]);
 
   // Choose the emptiness check algorithm
-  bool opt_cou99 = false;
   bool opt_dijkstra = false;
   bool opt_union = false;
-  bool opt_couvreur = false;
   bool opt_stats = false;
   bool opt_tarjan = false;
   bool opt_opttarjan = false;
@@ -116,11 +110,8 @@ main(int argc, char **argv)
   bool opt_optdijkstra = false;
   bool opt_ecoptdijkstra = false;
   bool opt_lc13 = false;
-  bool opt_sc13 = false;
   bool opt_uc13 = false;
   bool opt_dc13 = false;
-  bool opt_c99 = false;
-  bool opt_all = false;
   bool opt_wait = false;
 
   std::string option_uc13 = "";
@@ -133,48 +124,25 @@ main(int argc, char **argv)
   std::string option_ecopttarjan = "";
   std::string option_optdijkstra = "";
   std::string option_ecoptdijkstra = "";
-  std::string option_couvreur = "";
   std::string option_lc13 = "";
   std::string option_sc13 = "";
   std::string option_c99  = "";
   std::string option_wait  = "";
 
-  if (!strcmp("-cou99", argv[3]))
-    opt_cou99 = true;
-  else if (!strncmp("-lc13", argv[3], 5))
+  if (!strncmp("-lc13", argv[3], 5))
     {
       opt_lc13 = true;
       option_lc13 = std::string(argv[3]+5);
-      // FIXME : For debug
-      // opt_cou99 = true;
-    }
-  else if (!strncmp("-c99", argv[3], 4))
-    {
-      opt_c99 = true;
-      option_c99 = std::string(argv[3]+4);
-      // FIXME : For debug
-      // opt_cou99 = true;
-    }
-  else if (!strncmp("-sc13", argv[3], 5))
-    {
-      opt_sc13 = true;
-      option_sc13 = std::string(argv[3]+5);
-      // FIXME : For debug
-      // opt_cou99 = true;
     }
   else if (!strncmp("-uc13", argv[3], 5))
     {
       opt_uc13 = true;
       option_uc13 = std::string(argv[3]+5);
-      // FIXME : For debug
-      // opt_cou99 = true;
     }
   else if (!strncmp("-dc13", argv[3], 5))
     {
       opt_dc13 = true;
       option_dc13 = std::string(argv[3]+5);
-      // FIXME : For debug
-      // opt_cou99 = true;
     }
   else if (!strncmp("-dijkstra", argv[3], 9))
     {
@@ -217,20 +185,10 @@ main(int argc, char **argv)
       opt_ecoptdijkstra = true;
       option_ecoptdijkstra = std::string(argv[3]+14);
     }
-  else if (!strncmp("-couvreur", argv[3], 9))
-    {
-      opt_couvreur = true;
-      option_couvreur = std::string(argv[3]+9);
-    }
   else if (!strncmp("-wait", argv[3], 5))
     {
       option_wait = std::string(argv[3]+5);
       opt_wait = true;
-    }
-  else if (!strcmp("-all", argv[3]))
-    {
-      opt_cou99 = true;
-      opt_all = true;
     }
   else
     syntax(argv[0]);
@@ -308,7 +266,6 @@ main(int argc, char **argv)
 	spot::instanciator* itor =
 	  new spot::dve2product_instanciator(af1, file);
 
-	bool res_lc13 = true;
 	if (opt_lc13)
 	  {
 	    std::ostringstream result;
@@ -318,7 +275,6 @@ main(int argc, char **argv)
 	    mtimer.start("Checking lc13");
 	    if (checker->check())
 	      {
-		res_lc13 = false;
 		result << "VIOLATED,";
 	      }
 	    else
@@ -336,64 +292,6 @@ main(int argc, char **argv)
 	    std::cout << result.str() << std::endl;
 	  }
 
-	bool res_c99 = true;
-	if (opt_c99)
-	  {
-	    std::ostringstream result;
-	    result << "#c99" << option_c99 << ",";
-
-	    spot::cou99check* checker = new spot::cou99check(itor, option_c99);
-	    mtimer.start("Checking c99");
-	    if (checker->check())
-	      {
-		res_c99 = false;
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking c99");
-
-
-	    spot::timer t = mtimer.timer("Checking c99");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
-	  }
-
-
-	bool res_sc13 = true;
-	if (opt_sc13)
-	  {
-	    std::ostringstream result;
-	    result << "#sc13" << option_sc13 << ",";
-
-	    spot::stackscheck* checker =
-	      new spot::stackscheck(itor, option_sc13);
-	    mtimer.start("Checking sc13");
-	    if (checker->check())
-	      {
-		res_sc13 = false;
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking sc13");
-
-	    spot::timer t = mtimer.timer("Checking sc13");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
-	  }
-
-	bool res_uc13 = true;
 	if (opt_uc13)
 	  {
 	    std::ostringstream result;
@@ -403,7 +301,6 @@ main(int argc, char **argv)
 	    mtimer.start("Checking uc13");
 	    if (checker->check())
 	      {
-		res_uc13 = false;
 		result << "VIOLATED,";
 	      }
 	    else
@@ -421,8 +318,6 @@ main(int argc, char **argv)
 	    std::cout << result.str() << std::endl;
 	  }
 
-
-	bool res_dc13 = true;
 	if (opt_dc13)
 	  {
 	    std::ostringstream result;
@@ -433,7 +328,6 @@ main(int argc, char **argv)
 	    mtimer.start("Checking dc13");
 	    if (checker->check())
 	      {
-		res_dc13 = false;
 		result << "VIOLATED,";
 	      }
 	    else
@@ -622,25 +516,6 @@ main(int argc, char **argv)
 	    std::cout << result.str() << std::endl;
 	  }
 
-	if (opt_couvreur)
-	  {
-	    std::ostringstream result;
-	    result << "#couvreur" << option_couvreur << ",";
-
-	    spot::cou99_scc* checker =
-	      new spot::cou99_scc(itor, option_couvreur);
-	    mtimer.start("Checking couvreur");
-	    checker->check();
-	    result << "SCC,";
-	    mtimer.stop("Checking couvreur");
-
-	    spot::timer t = mtimer.timer("Checking couvreur");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
-	  }
 
 
 	//
@@ -755,63 +630,6 @@ main(int argc, char **argv)
 		//std::cout << "Join the thread" << std::endl;
 		worker.join();
 	      }
-	  }
-
-
-
-
-
-	bool res_cou99 = true;
-	if (opt_cou99)
-	  {
-	    std::ostringstream result;
-	    result << "#cou99,";
-
-	    spot::cou99* checker = new spot::cou99(itor);
-	    mtimer.start("Checking cou99");
-	    if (checker->check())
-	      {
-		res_cou99 = false;
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking cou99");
-	    delete checker;
-
-	    spot::timer t = mtimer.timer("Checking cou99");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << input;
-	    std::cout << result.str() << std::endl;
-
-	    if (opt_all)
-	      {
-	      }
-
-	    if (opt_lc13)
-	      {
-		assert (res_lc13 == res_cou99);
-	      }
-	    if (opt_sc13)
-	      {
-		assert (res_sc13 == res_cou99);
-	      }
-	    if (opt_uc13)
-	      {
-		assert (res_uc13 == res_cou99);
-	      }
-	    if (opt_dc13)
-	      {
-		assert (res_dc13 == res_cou99);
-	      }
-	    if (opt_c99)
-	      {
-		assert (res_c99 == res_cou99);
-	      }
-
-
 	  }
 
 	// mtimer.print(std::cout);
