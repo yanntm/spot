@@ -70,5 +70,5 @@ libec_la_SOURCES = \
   union_find.cc \
   union_find_shared.cc
 
-SUBDIRS = opt
-libec_la_LIBADD = opt/libopt.la
+SUBDIRS = opt concur
+libec_la_LIBADD = opt/libopt.la concur/libconcur.la

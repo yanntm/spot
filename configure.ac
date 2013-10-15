@@ -120,6 +120,35 @@ AC_CHECK_PROG([WRING2LBTT], [wring2lbtt], [wring2lbtt])
 # an alias for swig-1.3.  Let's use the former when available.
 AC_CHECK_PROGS([SWIG], [swig2.0 swig], [swig])
 
+# ----------------------------------------------------------------------
+# Integrate LTSmin concurent hash table
+# ======================================================================
+AC_CHECK_LIB([popt],[poptGetContext],,[AC_MSG_FAILURE([popt not found.])])
+AC_CHECK_HEADER([popt.h],[], [AC_MSG_FAILURE([popt.h not found.])])
+AC_DEFINE([LTSMIN_PATHNAME_MAX], 1024, [Define maximal length of pathnames])
+ACX_CLINE_DEF([], [])
+AC_CACHE_SAVE
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INT64_T
+AC_TYPE_INT8_T
+AC_TYPE_OFF_T
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
+AC_CACHE_SAVE
+
+
+
+
+
 AC_SUBST([CROSS_COMPILING], [$cross_compiling])
 
 AC_CONFIG_FILES([
@@ -181,6 +210,7 @@ AC_CONFIG_FILES([
   src/tgbaparse/Makefile
   src/fasttgba/Makefile
   src/fasttgbaalgos/ec/opt/Makefile
+  src/fasttgbaalgos/ec/concur/Makefile
   src/fasttgbaalgos/ec/Makefile
   src/fasttgbaalgos/Makefile
   src/tgbatest/defs

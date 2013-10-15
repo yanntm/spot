@@ -62,9 +62,9 @@
 
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
 #include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
-
-
 #include "misc/timer.hh"
+
+#include "fasttgbaalgos/ec/concur/uf.hh"
 
 static void
 syntax(char* prog)

@@ -1,0 +1,126 @@
+#include <atomics.h>
+#include <unionfind.h>
+#include <hashtable.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+
+
+uf_t* uf_alloc(const datatype_t *key_type, size_t size)
+{
+  uf_t* uf_ = (uf_t*) malloc(sizeof(uf_t));
+  uf_->table = ht_alloc (key_type, size);
+  assert(uf_->table);
+  uf_->dead_ = (uf_node_t*) malloc (sizeof(uf_node_t));
+  uf_->dead_->parent = uf_->dead_;
+  return uf_;
+}
+
+void fun (void* elt)
+{
+  if (!elt)
+    return;
+  uf_node_t * node = (uf_node_t*) elt;
+  //  printf("delete [%zu]\n", (size_t) node);
+  assert(node);
+  free (node);
+}
+
+void uf_free(uf_t* uf, int verbose)
+{
+  if (verbose)
+    {
+      ht_print(uf->table, true);
+      ht_iter_value(uf->table,
+		    (process_fun_t) print_uf_node_t); // Thread Safe!
+    }
+
+  // Destroy all table
+  free(uf->dead_);
+  ht_iter_value(uf->table, (process_fun_t) fun); // Thread Safe!
+  ht_free(uf->table);
+  free(uf);
+}
+
+// TODO : Here allocate a new value each time but if there
+//        if conflicts must be release. Many allocation
+//        can be avoid.
+uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted)
+{
+  map_val_t old = 0;
+  map_key_t clone = 0;
+
+  uf_node_t *alloc = (uf_node_t*) malloc (sizeof(uf_node_t));
+  alloc->parent = alloc;
+
+  // Hashmap.insert(map,   key, val, res, context)
+  //      Ne pas inserer de clefs negatives
+  //      Ne pas inserer de valeur negatives
+  old = ht_cas_empty (uf->table, key, (map_val_t)alloc, &clone, (void*)NULL);
+
+  if (old == DOES_NOT_EXIST)
+    {
+      *inserted = 1;
+      return alloc;
+    }
+  else
+    free (alloc);
+
+  *inserted = 0;
+  return (uf_node_t*)old;
+}
+
+uf_node_t* uf_find(uf_node_t* n)
+{
+  uf_node_t* node = n;
+  uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent;
+  assert(parent);
+
+  // Look for the root
+  uf_node_t* tmp;
+  while ((tmp = ((uf_node_t)atomic_read(node)).parent) != node)
+    {
+      node = tmp;
+    }
+  return node;
+}
+
+void uf_make_dead(uf_t* uf, uf_node_t* n)
+{
+  uf_node_t* node = n;
+  uf_node_t* old;
+
+  while (1)
+    {
+      node = uf_find(node);
+      if (node->parent == uf->dead_)
+	return;
+
+      old = cas_ret(&node->parent, node, uf->dead_);
+      if (old == node)
+	return ;
+    }
+}
+
+int uf_is_dead(uf_t* uf, uf_node_t* n)
+{
+  uf_node_t* node = uf_find(n);
+  if (node->parent == uf->dead_)
+    return 1;
+  return 0;
+}
+
+void print_uf_node_t (void *node)
+{
+  if (!node)
+    return;
+  assert(node);
+  uf_node_t* pnode = (uf_node_t*) node;
+  assert(pnode && pnode->parent);
+  if (pnode == pnode->parent)
+    printf ("self [%zu]\n", (size_t)pnode->parent);
+  else
+    printf("     [%zu] ---> [%zu]\n", (size_t)pnode, (size_t)pnode->parent);
+}
