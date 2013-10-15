@@ -41,13 +41,10 @@
 #include "fasttgbaalgos/dotty_dfs.hh"
 #include "fasttgbaalgos/stats_dfs.hh"
 #include "fasttgba/fasttgba_product.hh"
+#include "fasttgba/fasttgba_explicit.hh"
 
 #include "fasttgbaalgos/ec/cou99.hh"
 #include "fasttgbaalgos/ec/cou99_scc.hh"
-#include "fasttgbaalgos/ec/cou99_uf.hh"
-#include "fasttgbaalgos/ec/cou99_uf_swarm.hh"
-#include "fasttgbaalgos/ec/cou99_uf_shared.hh"
-#include "fasttgbaalgos/ec/cou99strength_uf.hh"
 #include "fasttgbaalgos/ec/lazycheck.hh"
 #include "fasttgbaalgos/ec/stackscheck.hh"
 #include "fasttgbaalgos/ec/stats.hh"
@@ -62,6 +59,15 @@
 #include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
 #include "misc/timer.hh"
 
+//
+// Concurency -- C++ 11
+//
+#include <atomic>
+#include <thread>
+
+//
+// Concurrency -- Spot
+//
 #include "fasttgbaalgos/ec/concur/uf.hh"
 
 static void
@@ -99,10 +105,6 @@ main(int argc, char **argv)
     syntax(argv[0]);
 
   // Choose the emptiness check algorithm
-  bool opt_couuf = false;
-  bool opt_couuf_swarm = false;
-  bool opt_couuf_shared = false;
-  bool opt_coustrengthuf = false;
   bool opt_cou99 = false;
   bool opt_dijkstra = false;
   bool opt_union = false;
@@ -118,7 +120,6 @@ main(int argc, char **argv)
   bool opt_uc13 = false;
   bool opt_dc13 = false;
   bool opt_c99 = false;
-  bool opt_cmp_cou_couuf = false;
   bool opt_all = false;
   bool opt_wait = false;
 
@@ -140,14 +141,6 @@ main(int argc, char **argv)
 
   if (!strcmp("-cou99", argv[3]))
     opt_cou99 = true;
-  else if (!strcmp("-cou99_uf", argv[3]))
-    opt_couuf = true;
-  else if (!strcmp("-cou99strength_uf", argv[3]))
-    opt_coustrengthuf = true;
-  else if (!strcmp("-cou99_uf_swarm", argv[3]))
-    opt_couuf_swarm = true;
-  else if (!strcmp("-cou99_uf_shared", argv[3]))
-    opt_couuf_shared = true;
   else if (!strncmp("-lc13", argv[3], 5))
     {
       opt_lc13 = true;
@@ -229,12 +222,6 @@ main(int argc, char **argv)
       opt_couvreur = true;
       option_couvreur = std::string(argv[3]+9);
     }
-  else if (!strcmp("-cmp_cou_uf", argv[3]))
-    {
-      opt_couuf = true;
-      opt_cou99 = true;
-      opt_cmp_cou_couuf = true;
-    }
   else if (!strncmp("-wait", argv[3], 5))
     {
       option_wait = std::string(argv[3]+5);
@@ -242,12 +229,8 @@ main(int argc, char **argv)
     }
   else if (!strcmp("-all", argv[3]))
     {
-      opt_couuf = true;
-      opt_couuf_swarm = true;
-      opt_coustrengthuf = true;
       opt_cou99 = true;
       opt_all = true;
-      opt_couuf_shared = true;
     }
   else
     syntax(argv[0]);
@@ -324,112 +307,6 @@ main(int argc, char **argv)
 	// Create the instanciator
 	spot::instanciator* itor =
 	  new spot::dve2product_instanciator(af1, file);
-
-	bool res_cou99uf = true;
-	if (opt_couuf)
-	  {
-	    std::ostringstream result;
-	    result << "#cou99_uf,";
-
-	    spot::cou99_uf* checker = new spot::cou99_uf(itor);
-	    mtimer.start("Checking cou99_uf");
-	    if (checker->check())
-	      {
-		res_cou99uf = false;
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking cou99_uf");
-	    delete checker;
-
-	    spot::timer t = mtimer.timer("Checking cou99_uf");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << input;
-	    std::cout << result.str() << std::endl;
-	  }
-
-	bool res_cou99ufswarm = true;
-	if (opt_couuf_swarm)
-	  {
-	    std::ostringstream result;
-	    result << "#cou99_uf_swarm,";
-
-	    spot::cou99_uf_swarm* checker = new spot::cou99_uf_swarm (itor, 2);
-
-	    mtimer.start("Checking cou99_uf_swarm");
-	    if (checker->check())
-	      {
-		res_cou99ufswarm = false;
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking cou99_uf_swarm");
-	    delete checker;
-
-	    spot::timer t = mtimer.timer("Checking cou99_uf_swarm");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << input;
-	    std::cout << result.str() << std::endl;
-	  }
-
-	bool res_cou99ufshared = true;
-	if (opt_couuf_shared)
-	  {
-	    std::ostringstream result;
-	    result << "#cou99_uf_shared,";
-
-	    spot::cou99_uf_shared* checker =
-	      new spot::cou99_uf_shared (itor, 2);
-	    mtimer.start("Checking cou99_uf_shared");
-	    if (checker->check())
-	      {
-		res_cou99ufshared = false;
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking cou99_uf_shared");
-	    delete checker;
-
-	    spot::timer t = mtimer.timer("Checking cou99_uf_shared");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << input;
-	    std::cout << result.str() << std::endl;
-	  }
-
-	bool res_cou99strengthuf = true;
-	if (opt_coustrengthuf)
-	  {
-	    std::ostringstream result;
-	    result << "#cou99strength_uf,";
-
-	    spot::cou99strength_uf* checker = new spot::cou99strength_uf(itor);
-	    mtimer.start("Checking cou99str_uf");
-	    if (checker->check())
-	      {
-		res_cou99strengthuf = false;
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking cou99str_uf");
-	    delete checker;
-
-	    spot::timer t = mtimer.timer("Checking cou99str_uf");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << input;
-	    std::cout << result.str() << std::endl;
-	  }
 
 	bool res_lc13 = true;
 	if (opt_lc13)
@@ -911,15 +788,6 @@ main(int argc, char **argv)
 
 	    if (opt_all)
 	      {
-		assert (res_cou99uf == res_cou99);
-		assert (res_cou99ufswarm == res_cou99);
-		assert (res_cou99strengthuf == res_cou99);
-		assert (res_cou99ufshared == res_cou99);
-	      }
-
-	    if (opt_cmp_cou_couuf)
-	      {
-		assert (res_cou99uf == res_cou99);
 	      }
 
 	    if (opt_lc13)

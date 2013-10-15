@@ -27,11 +27,7 @@ ec_HEADERS = \
   ec.hh \
   cou99.hh \
   cou99check.hh \
-  cou99_uf.hh \
-  cou99strength_uf.hh \
   cou99_scc.hh \
-  cou99_uf_swarm.hh \
-  cou99_uf_shared.hh \
   deadstore.hh \
   dijkstracheck.hh \
   dijkstra_scc.hh \
@@ -43,18 +39,13 @@ ec_HEADERS = \
   tarjan_scc.hh \
   unioncheck.hh \
   union_scc.hh \
-  union_find.hh \
-  union_find_shared.hh
+  union_find.hh
 
 noinst_LTLIBRARIES = libec.la
 libec_la_SOURCES = \
   cou99.cc \
   cou99check.cc \
-  cou99_uf.cc \
-  cou99strength_uf.cc \
   cou99_scc.cc \
-  cou99_uf_swarm.cc \
-  cou99_uf_shared.cc \
   dijkstracheck.cc \
   dijkstra_scc.cc \
   lazycheck.cc \
@@ -63,8 +54,7 @@ libec_la_SOURCES = \
   tarjan_scc.cc \
   unioncheck.cc \
   union_scc.cc \
-  union_find.cc \
-  union_find_shared.cc
+  union_find.cc
 
 SUBDIRS = opt concur
 libec_la_LIBADD = opt/libopt.la concur/libconcur.la
