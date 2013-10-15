@@ -164,7 +164,6 @@ namespace spot
       {
 	trace << "Main " << std::endl;
 	assert(!uf->is_dead(todo.back().state));
-	++transitions_cpt_;
 
 	if (!todo.back().lasttr)
 	  {
@@ -183,6 +182,7 @@ namespace spot
     	  }
     	else
     	  {
+	    ++transitions_cpt_;
 	    assert(todo.back().lasttr);
     	    fasttgba_state* d = todo.back().lasttr->current_state();
 	    c = uf->get_color(d);

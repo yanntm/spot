@@ -208,7 +208,6 @@ namespace spot
     dijkstra_scc::color c;
     while (!todo.empty())
       {
-	++transitions_cpt_;
 	trace << "Main " << std::endl;
 
 	if (!todo.back().lasttr)
@@ -228,6 +227,7 @@ namespace spot
     	  }
     	else
     	  {
+	    ++transitions_cpt_;
 	    assert(todo.back().lasttr);
     	    fasttgba_state* d = todo.back().lasttr->current_state();
 	    c = get_color (d);
