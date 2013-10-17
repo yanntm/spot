@@ -30,16 +30,12 @@
 #include "fasttgbaalgos/ec/lazycheck.hh"
 
 #include "fasttgbaalgos/ec/concur/uf.hh"
+#include "concur_ec_stat.hh"
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
+
 
 namespace spot
 {
-  class concur_ec_stat
-  {
-  public:
-
-    virtual bool has_counterexample() = 0;
-  };
 
   /// \brief The method that will be used by thread performing a Tarjan SCC
   ///

@@ -23,12 +23,9 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 concurecdir = $(pkgincludedir)/fasttgbaalgos/ec/concurec
 
 concurec_HEADERS = \
-  dead_share.hh
-# \
-#   concurec_dijkstra_scc.hh
+  dead_share.hh \
+  concur_ec_stat.hh
 
 noinst_LTLIBRARIES = libconcurec.la
 libconcurec_la_SOURCES = \
   dead_share.cc
- # \
- #  concurec_dijkstra_scc.cc
