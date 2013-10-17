@@ -33,8 +33,8 @@ void uf_free(uf_t* uf, int verbose)
   if (verbose)
     {
       ht_print(uf->table, true);
-      ht_iter_value(uf->table,
-		    (process_fun_t) print_uf_node_t); // Thread Safe!
+      /* ht_iter_value(uf->table, */
+      /* 		    (process_fun_t) print_uf_node_t); // Thread Safe! */
     }
 
   // Destroy all table
@@ -85,6 +85,67 @@ uf_node_t* uf_find(uf_node_t* n)
       node = tmp;
     }
   return node;
+}
+
+void uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right)
+{
+  uf_node_t* pleft;
+  uf_node_t* pright;
+  uf_node_t* old;
+
+  if (left == right)
+    return;
+
+  if (left == uf->dead_)
+    {
+      uf_make_dead(uf, right);
+      return;
+    }
+
+  if (right == uf->dead_)
+    {
+      uf_make_dead(uf, left);
+      return;
+    }
+
+  while (1)
+    {
+      pleft = uf_find(left);
+      pright = uf_find(right);
+
+      if (pleft == pright)
+	return;
+
+      if (pleft == uf->dead_)
+	{
+	  uf_make_dead(uf, pright);
+	  return;
+	}
+
+      if (pright == uf->dead_)
+	{
+	  uf_make_dead(uf, pleft);
+	  return;
+	}
+
+      /*
+       * Always link to smaller since memory allocation
+       * usually follows a growing style this optimize
+       * chances to link to the oldest element
+       */
+      if (pleft < pright)
+	{
+	  old = cas_ret(&pright->parent, pright, pleft);
+	  if (old == pright)
+	    return;
+	}
+      else
+	{
+	  old = cas_ret(&pleft->parent, pleft, pright);
+	  if (old == pleft)
+	    return;
+	}
+    }
 }
 
 void uf_make_dead(uf_t* uf, uf_node_t* n)

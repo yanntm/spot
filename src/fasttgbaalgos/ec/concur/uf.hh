@@ -1,4 +1,4 @@
-// Copyright (C) 2012 Laboratoire de Recherche et Développement
+// Copyright (C) 2013 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -21,19 +21,13 @@
 
 #include "fasttgba/fasttgba.hh"
 #include <iostream>
+#include <atomic>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "fasttgbaalgos/ec/concur/unionfind.h"
-// #include <hre/config.h>
-// #include <assert.h>
-// #include <hre/runtime.h>
-// #include <mc-lib/hashtable.h>
-// #include <mc-lib/unionfind.h>
-// #include <mc-lib/atomics.h>
-// #include <string.h>
 
 #ifdef __cplusplus
 } // extern "C"
@@ -49,10 +43,8 @@ fasttgba_state_ptrint_cmp_wrapper ( void *hash1, void *hash2)
 {
   const spot::fasttgba_state* l = (const spot::fasttgba_state*)hash1;
   const spot::fasttgba_state* r = (const spot::fasttgba_state*)hash2;
+  assert(l && r);
   return l->compare(r);
-  // int* a = (int*)&hash1;
-  // int* b = (int*)&hash2;
-  // return *a - *b;
 }
 
 uint32_t
@@ -63,14 +55,12 @@ fasttgba_state_ptrint_hash_wrapper ( void *elt, void *ctx)
   assert(hash);
   return hash;
   (void)ctx;
-  // int* a = (int*)&elt;
-  // return *a;
-  // (void)ctx;
 }
 
 void *
 fasttgba_state_ptrint_clone_wrapper (void *key, void *ctx)
 {
+  // FIXME?
   assert(key);
   return key;
   (void)ctx;
@@ -80,8 +70,8 @@ void
 fasttgba_state_ptrint_free_wrapper (void *elt)
 {
   assert(elt);
-  const spot::fasttgba_state* l = (const spot::fasttgba_state*)elt;
-  l->destroy();
+  //const spot::fasttgba_state* l = (const spot::fasttgba_state*)elt;
+  //l->destroy();
   (void) elt;
 }
 
@@ -109,7 +99,7 @@ namespace spot
   class uf
   {
   public :
-    uf()
+    uf() : size_(0)
     {
       effective_uf = uf_alloc(&DATATYPE_INT_PTRINT, INIT_SCALE);
     }
@@ -126,10 +116,12 @@ namespace spot
       // it represent a special tag.
       assert(key);
 
-      int inserted =0;
+      int inserted = 0;
       // uf_node_t* node;
       // node =
       uf_make_set(effective_uf, (map_key_t) key, &inserted);
+      if (inserted)
+	++size_;
       return inserted;
     }
 
@@ -145,16 +137,35 @@ namespace spot
       uf_make_dead(effective_uf, node);
     }
 
+    /// \brief Mark two states in the same set
+    void unite(const fasttgba_state* left, const fasttgba_state* right)
+    {
+      uf_node_t* l = (uf_node_t*)
+	ht_get(effective_uf->table, (map_key_t) left);
+      uf_node_t* r = (uf_node_t*)
+	ht_get(effective_uf->table, (map_key_t) right);
+      uf_unite (effective_uf, l, r);
+    }
+
     /// \brief check wether an element is linked to dead
     bool is_dead(const fasttgba_state* key)
     {
       uf_node_t* node = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) key);
-      return  uf_is_dead(effective_uf, node);;
+
+      if (node == DOES_NOT_EXIST)
+	return false;
+      return uf_is_dead(effective_uf, node);;
+    }
+
+    int size()
+    {
+      return size_;
     }
 
   private:
     uf_t* effective_uf;		///< \brief the union find
+    std::atomic<int> size_;
   };
 }
 #endif // SPOT_FASTTGBAALGOS_EC_CONCUR_UF_HH

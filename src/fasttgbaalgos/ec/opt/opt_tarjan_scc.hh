@@ -47,7 +47,8 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    opt_tarjan_scc(instanciator* i, std::string option = "");
+    opt_tarjan_scc(instanciator* i, std::string option = "",
+		   bool swarm = false);
 
     /// A destructor
     virtual ~opt_tarjan_scc();
@@ -65,7 +66,7 @@ namespace spot
     void init();
 
     /// \brief Push a new state to explore
-    void dfs_push(fasttgba_state*);
+    virtual void dfs_push(fasttgba_state*);
 
     /// \brief  Pop states already explored
     virtual void dfs_pop();
@@ -74,7 +75,7 @@ namespace spot
     virtual bool dfs_update (fasttgba_state* s);
 
     /// \brief the main procedure
-    void main();
+    virtual void main();
 
     /// \brief The color for a new State
     enum color {Alive, Dead, Unknown};
@@ -94,7 +95,7 @@ namespace spot
     stack_of_lowlink* dstack_;
 
     /// \brief Access  the color of a state
-    opt_tarjan_scc::color get_color(const fasttgba_state*);
+    virtual opt_tarjan_scc::color get_color(const fasttgba_state*);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
@@ -123,6 +124,7 @@ namespace spot
     int transitions_cpt_;	 ///< \brief count transitions
     int memory_cost_;		 ///< \brief evaluates memory
     int trivial_scc_;            ///< \brief count trivial SCCs
+    bool swarm_;		 ///< \brief shall use swarming?
   };
 
   /// \brief This class is the implementation of the tarjan-based

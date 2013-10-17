@@ -65,6 +65,7 @@
 // Concurrency -- Spot
 //
 #include "fasttgbaalgos/ec/concur/uf.hh"
+#include "fasttgbaalgos/ec/concurec/dead_share.hh"
 
 static void
 syntax(char* prog)
@@ -114,6 +115,9 @@ main(int argc, char **argv)
   bool opt_dc13 = false;
   bool opt_wait = false;
 
+  bool opt_concur_dead_tarjan = false;
+  unsigned int  nb_threads = 1;
+
   std::string option_uc13 = "";
   std::string option_dc13 = "";
   std::string option_dijkstra = "";
@@ -133,6 +137,13 @@ main(int argc, char **argv)
     {
       opt_lc13 = true;
       option_lc13 = std::string(argv[3]+5);
+    }
+  else if (!strncmp("-concur_dead_tarjan", argv[3], 19))
+    {
+      opt_concur_dead_tarjan = true;
+      std::string s = std::string(argv[3]+19);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
     }
   else if (!strncmp("-uc13", argv[3], 5))
     {
@@ -265,6 +276,16 @@ main(int argc, char **argv)
 	// Create the instanciator
 	spot::instanciator* itor =
 	  new spot::dve2product_instanciator(af1, file);
+
+
+	if (opt_concur_dead_tarjan)
+	  {
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+				   spot::dead_share::FULL_TARJAN);
+	    d->check();
+	    delete d;
+	  }
 
 	if (opt_lc13)
 	  {

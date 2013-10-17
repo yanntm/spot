@@ -18,7 +18,7 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 AM_CPPFLAGS = -I$(srcdir)/../../.. -I .. -I$(top_builddir)/src \
-	 -Wall -Werror -std=gnu99 -lpthread -DENABLE_TRACE #-I/Users/etienne/local/install/popt-1.14-bin/include/ -L/Users/etienne/local/install/popt-1.14-bin/lib/ -lpopt
+	 -Wall -Werror -std=gnu99 -lpthread -g -DENABLE_TRACE #-I/Users/etienne/local/install/popt-1.14-bin/include/ -L/Users/etienne/local/install/popt-1.14-bin/lib/ -lpopt
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 concurdir = $(pkgincludedir)/fasttgbaalgos/ec/concur

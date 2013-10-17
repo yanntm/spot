@@ -7,7 +7,7 @@
 ## Spot is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 3 of the License, or
-## (at your option) any later version.
+## (at your concurecion) any later version.
 ##
 ## Spot is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -17,36 +17,18 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-AM_CPPFLAGS = -I$(srcdir)/../.. -I.. -I../..
+AM_CPPFLAGS = -I$(srcdir)/../../.. -I .. -I ../.. -I$(top_builddir)/src
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
-ecdir = $(pkgincludedir)/fasttgbaalgos/ec
+concurecdir = $(pkgincludedir)/fasttgbaalgos/ec/concurec
 
-ec_HEADERS = \
-  ec.hh \
-  deadstore.hh \
-  dijkstracheck.hh \
-  dijkstra_scc.hh \
-  lazycheck.hh \
-  lowlink_stack.hh \
-  root_stack.hh \
-  stats.hh \
-  tarjan_scc.hh \
-  unioncheck.hh \
-  union_scc.hh \
-  union_find.hh
+concurec_HEADERS = \
+  dead_share.hh
+# \
+#   concurec_dijkstra_scc.hh
 
-noinst_LTLIBRARIES = libec.la
-libec_la_SOURCES = \
-  dijkstracheck.cc \
-  dijkstra_scc.cc \
-  lazycheck.cc \
-  stats.cc \
-  tarjan_scc.cc \
-  unioncheck.cc \
-  union_scc.cc \
-  union_find.cc
-
-SUBDIRS = opt concur concurec
-libec_la_LIBADD = opt/libopt.la concur/libconcur.la concurec/libconcurec.la
+noinst_LTLIBRARIES = libconcurec.la
+libconcurec_la_SOURCES = \
+  dead_share.cc
+ # \
+ #  concurec_dijkstra_scc.cc
