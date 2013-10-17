@@ -24,6 +24,129 @@
 namespace spot
 {
   // ----------------------------------------------------------------------
+  // Concurrent Dijkstra Algorithm with shared union find.
+  // ======================================================================
+  concur_opt_dijkstra_scc::concur_opt_dijkstra_scc(instanciator* i,
+					       spot::uf* uf,
+					       int *stop,
+					       std::string option)
+    : opt_dijkstra_scc(i, option, true)
+  {
+    uf_ = uf;
+    stop_ = stop;
+  }
+
+  bool
+  concur_opt_dijkstra_scc::check()
+  {
+    init();
+    main();
+    *stop_ = 1;
+    return counterexample_found;
+  }
+
+  void concur_opt_dijkstra_scc::dfs_push(fasttgba_state* s)
+  {
+    ++states_cpt_;
+
+    assert(H.find(s) == H.end());
+    H.insert(std::make_pair(s, H.size()));
+
+    uf_->make_set(s);
+
+    // Count!
+    max_live_size_ = H.size() > max_live_size_ ?
+      H.size() : max_live_size_;
+
+    todo.push_back ({s, 0, H.size() -1});
+    // Count!
+    max_dfs_size_ = max_dfs_size_ > todo.size() ?
+      max_dfs_size_ : todo.size();
+
+    roots_stack_->push_trivial(todo.size() -1);
+
+    int tmp_cost = 1*roots_stack_->size() + 2*H.size() + 1*live.size()
+      + (deadstore_? deadstore_->size() : 0);
+    if (tmp_cost > memory_cost_)
+      memory_cost_ = tmp_cost;
+
+  }
+
+  bool concur_opt_dijkstra_scc::merge(fasttgba_state* d)
+  {
+    ++update_cpt_;
+    assert(H.find(d) != H.end());
+    int dpos = H[d];
+    int rpos = roots_stack_->root_of_the_top();
+
+    roots_stack_->pop();
+    while ((unsigned)dpos < todo[rpos].position)
+      {
+	++update_loop_cpt_;
+    	rpos = roots_stack_->root_of_the_top();
+    	roots_stack_->pop();
+	uf_->unite (d, todo[rpos].state);
+      }
+    roots_stack_->push_non_trivial(rpos, *empty_, todo.size() -1);
+
+    return false;
+  }
+
+  void concur_opt_dijkstra_scc::dfs_pop()
+  {
+    delete todo.back().lasttr;
+
+    unsigned int rtop = roots_stack_->root_of_the_top();
+    const fasttgba_state* last = todo.back().state;
+    unsigned int steppos = todo.back().position;
+    todo.pop_back();
+
+    if (rtop == todo.size())
+      {
+	++roots_poped_cpt_;
+	roots_stack_->pop();
+	int trivial = 0;
+	//deadstore_->add(last);
+	uf_->make_dead(last);
+	seen_map::const_iterator it1 = H.find(last);
+	H.erase(it1);
+	while (H.size() > steppos)
+	  {
+	    ++trivial;
+	    //deadstore_->add(live.back());
+	    seen_map::const_iterator it = H.find(live.back());
+	    H.erase(it);
+	    live.pop_back();
+ 	  }
+	if (trivial == 0) // we just popped a trivial
+	  ++trivial_scc_;
+      }
+    else
+      {
+	// This is the integration of Nuutila's optimisation.
+	live.push_back(last);
+      }
+  }
+
+  opt_dijkstra_scc::color
+  concur_opt_dijkstra_scc::get_color(const fasttgba_state* state)
+  {
+    seen_map::const_iterator i = H.find(state);
+    if (i != H.end())
+      return Alive;
+    else if (uf_->is_dead(state))
+      return Dead;
+    else
+      return Unknown;
+  }
+
+  bool
+  concur_opt_dijkstra_scc::has_counterexample()
+  {
+    return counterexample_found;
+  }
+
+  // ----------------------------------------------------------------------
   // Concurrent Tarjan Algorithm with shared union find.
   // ======================================================================
   concur_opt_tarjan_scc::concur_opt_tarjan_scc(instanciator* i,
@@ -151,10 +274,22 @@ namespace spot
     int stop = 0;
 
     // Let us instanciate the checker according to the policy
-    std::vector<spot::concur_opt_tarjan_scc*> chk;
+    std::vector<spot::concur_ec_stat*> chk;
     for (int i = 0; i < tn_; ++i)
       {
-	chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_, &stop));
+	if (policy_ == FULL_TARJAN)
+	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_, &stop));
+	else if (policy_ == FULL_DIJKSTRA)
+	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_, &stop));
+	else
+	  {
+	    assert(policy_ == MIXED);
+	    if (i%2)
+	      chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_, &stop));
+	    else
+	      chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
+							      &stop));
+	  }
       }
 
     // Start Global Timer
@@ -187,7 +322,7 @@ namespace spot
 	ctrexple |= chk[i]->has_counterexample();
 	std::cout << "      thread : " << i << "  csv : "
 		  << (chk[i]->has_counterexample() ? "VIOLATED," : "VERIFIED,")
-		  << chk[i]->extra_info_csv() << std::endl;
+      		  << chk[i]->csv() << std::endl;
 	delete chk[i];
       }
 

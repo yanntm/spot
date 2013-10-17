@@ -31,7 +31,9 @@
 
 #include "fasttgbaalgos/ec/concur/uf.hh"
 #include "concur_ec_stat.hh"
+
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
+#include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
 
 
 namespace spot
@@ -42,7 +44,7 @@ namespace spot
   /// This class only redefine methods that are specific to multi threading env.
   /// The deadstore is remove and the thread use a shared union find to mark
   /// states  dead.
-    class concur_opt_tarjan_scc : public opt_tarjan_scc, public concur_ec_stat
+  class concur_opt_tarjan_scc : public opt_tarjan_scc, public concur_ec_stat
   {
   public:
     concur_opt_tarjan_scc(instanciator* i,
@@ -60,12 +62,48 @@ namespace spot
 
     virtual bool has_counterexample();
 
+    virtual std::string csv()
+    {
+      return "tarjan," + extra_info_csv();
+    }
+
   private:
     spot::uf* uf_;		/// \brief a reference to shared union find
     int * stop_;		/// \brief stop the world varibale
   };
 
-  /// Launch all threads
+  class concur_opt_dijkstra_scc : public opt_dijkstra_scc, public concur_ec_stat
+  {
+  public:
+    concur_opt_dijkstra_scc(instanciator* i,
+			    spot::uf* uf,
+			    int *stop,
+			    std::string option = "");
+
+    virtual bool check();
+
+    virtual void dfs_push(fasttgba_state* q);
+
+    virtual color get_color(const fasttgba_state* state);
+
+    virtual bool merge(fasttgba_state* d);
+
+    virtual void dfs_pop();
+
+    virtual bool has_counterexample();
+
+    virtual std::string csv()
+    {
+      return "dijkstra," + extra_info_csv();
+    }
+
+  private:
+    spot::uf* uf_;		/// \brief a reference to shared union find
+    int * stop_;		/// \brief stop the world varibale
+  };
+
+
+  /// \brief Wrapper Launch all threads
   class dead_share: public ec
   {
   public:
@@ -91,6 +129,12 @@ namespace spot
     virtual ~dead_share();
 
     bool check();
+
+    virtual std::string csv()
+    {
+      return "FIXME";
+    }
+
 
   protected:
     spot::uf* uf_;

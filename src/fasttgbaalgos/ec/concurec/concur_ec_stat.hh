@@ -19,13 +19,18 @@
 #ifndef SPOT_FASTTGBAALGOS_EC_CONCUREC_CONCUR_EC_STAT_HH
 # define SPOT_FASTTGBAALGOS_EC_CONCUREC_CONCUR_EC_STAT_HH
 
+#include "fasttgbaalgos/ec/ec.hh"
+#include <string>
+
 namespace spot
 {
-  class concur_ec_stat
+  class concur_ec_stat : public ec
   {
   public:
 
     virtual bool has_counterexample() = 0;
+
+    virtual std::string csv() = 0;
   };
 }
 

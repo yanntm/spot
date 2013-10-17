@@ -39,7 +39,8 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    opt_dijkstra_scc(instanciator* i, std::string option = "");
+    opt_dijkstra_scc(instanciator* i, std::string option = "",
+		     bool swarm = false);
 
     /// A destructor
     virtual ~opt_dijkstra_scc();
@@ -53,7 +54,7 @@ namespace spot
   protected:
 
     /// \brief Fix set ups for the algo
-    inline void init();
+    virtual void init();
 
     /// \brief Push a new state to explore
     virtual void dfs_push(fasttgba_state*);
@@ -70,7 +71,7 @@ namespace spot
     /// \brief The color for a new State
     enum color {Alive, Dead, Unknown};
 
-    color get_color(const fasttgba_state*);
+    virtual color get_color(const fasttgba_state*);
 
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
@@ -115,6 +116,7 @@ namespace spot
     int transitions_cpt_;	 ///< \brief count transitions
     int memory_cost_;		 ///< \brief evaluates memory
     int trivial_scc_;            ///< \brief count trivial SCCs
+    bool swarm_;		 ///< \brief shall use swarming?
   };
 
   /// \brief transform the previous algorithm into an emptiness

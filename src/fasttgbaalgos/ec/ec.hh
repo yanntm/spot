@@ -31,6 +31,8 @@ namespace spot
 
     /// Launch the emptiness check
     virtual bool check() = 0;
+
+    virtual ~ec() {}
   };
 
 

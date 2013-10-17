@@ -30,7 +30,9 @@
 
 namespace spot
 {
-  opt_dijkstra_scc::opt_dijkstra_scc(instanciator* i, std::string option) :
+  opt_dijkstra_scc::opt_dijkstra_scc(instanciator* i,
+				     std::string option,
+				     bool swarm) :
     counterexample_found(false),
     inst(i->new_instance()),
     max_live_size_(0),
@@ -41,7 +43,8 @@ namespace spot
     states_cpt_(0),
     transitions_cpt_(0),
     memory_cost_(0),
-    trivial_scc_(0)
+    trivial_scc_(0),
+    swarm_(swarm)
   {
     a_ = inst->get_automaton ();
     if (!option.compare("-cs"))
@@ -222,7 +225,9 @@ namespace spot
 
 	if (!todo.back().lasttr)
 	  {
-	    todo.back().lasttr = a_->succ_iter(todo.back().state);
+	    todo.back().lasttr = swarm_ ?
+	      a_->swarm_succ_iter(todo.back().state) :
+	      a_->succ_iter(todo.back().state);
 	    todo.back().lasttr->first();
 	  }
 	else

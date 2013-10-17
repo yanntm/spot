@@ -116,6 +116,8 @@ main(int argc, char **argv)
   bool opt_wait = false;
 
   bool opt_concur_dead_tarjan = false;
+  bool opt_concur_dead_dijkstra = false;
+  bool opt_concur_dead_mixed = false;
   unsigned int  nb_threads = 1;
 
   std::string option_uc13 = "";
@@ -142,6 +144,21 @@ main(int argc, char **argv)
     {
       opt_concur_dead_tarjan = true;
       std::string s = std::string(argv[3]+19);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-concur_dead_dijkstra", argv[3], 21))
+    {
+      opt_concur_dead_dijkstra = true;
+      std::string s = std::string(argv[3]+21);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-concur_dead_mixed", argv[3], 18))
+    {
+      opt_concur_dead_mixed = true;
+      std::string s = std::string(argv[3]+18);
+      std::cout << s << std::endl;
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -283,6 +300,22 @@ main(int argc, char **argv)
 	    spot::dead_share* d =
 	      new spot::dead_share(itor, nb_threads,
 				   spot::dead_share::FULL_TARJAN);
+	    d->check();
+	    delete d;
+	  }
+	if (opt_concur_dead_dijkstra)
+	  {
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+				   spot::dead_share::FULL_DIJKSTRA);
+	    d->check();
+	    delete d;
+	  }
+	if (opt_concur_dead_mixed)
+	  {
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+				   spot::dead_share::MIXED);
 	    d->check();
 	    delete d;
 	  }
