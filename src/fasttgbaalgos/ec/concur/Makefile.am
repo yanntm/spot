@@ -29,7 +29,6 @@ concur_HEADERS =    \
    balloc.h	    \
    bitset.h	    \
    chunk_support.h  \
-   config.h	    \
    context.h	    \
    dir_ops.h	    \
    dynamic-array.h  \
