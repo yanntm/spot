@@ -8,13 +8,21 @@
 #include <assert.h>
 
 
-uf_t* uf_alloc(const datatype_t *key_type, size_t size)
+uf_t* uf_alloc(const datatype_t *key_type, size_t size, size_t tn)
 {
   uf_t* uf_ = (uf_t*) malloc(sizeof(uf_t));
   uf_->table = ht_alloc (key_type, size);
   assert(uf_->table);
   uf_->dead_ = (uf_node_t*) malloc (sizeof(uf_node_t));
   uf_->dead_->parent = uf_->dead_;
+  uf_->prealloc_ = (uf_node_t**) malloc (sizeof(uf_node_t)*tn);
+
+  int i;
+  for (i = 0; i < tn; ++i)
+    {
+      uf_->prealloc_ [i] = (uf_node_t*)  malloc (sizeof(uf_node_t));
+      uf_->prealloc_ [i]->parent = uf_->prealloc_ [i];
+    }
   return uf_;
 }
 
@@ -28,7 +36,7 @@ void fun (void* elt)
   free (node);
 }
 
-void uf_free(uf_t* uf, int verbose)
+void uf_free(uf_t* uf, int verbose, size_t tn)
 {
   if (verbose)
     {
@@ -40,6 +48,11 @@ void uf_free(uf_t* uf, int verbose)
   // Destroy all table
   free(uf->dead_);
   ht_iter_value(uf->table, (process_fun_t) fun); // Thread Safe!
+
+  int i;
+  for (i = 0; i < tn; ++i)
+    free(uf->prealloc_[i]);
+  free(uf->prealloc_);
   ht_free(uf->table);
   free(uf);
 }
@@ -47,13 +60,14 @@ void uf_free(uf_t* uf, int verbose)
 // TODO : Here allocate a new value each time but if there
 //        if conflicts must be release. Many allocation
 //        can be avoid.
-uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted)
+uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted, int tn)
 {
   map_val_t old = 0;
   map_key_t clone = 0;
 
-  uf_node_t *alloc = (uf_node_t*) malloc (sizeof(uf_node_t));
-  alloc->parent = alloc;
+  uf_node_t *alloc = uf->prealloc_[tn];
+    //(uf_node_t*) malloc (sizeof(uf_node_t));
+  //  alloc->parent = alloc;
 
   // Hashmap.insert(map,   key, val, res, context)
   //      Ne pas inserer de clefs negatives
@@ -63,10 +77,12 @@ uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted)
   if (old == DOES_NOT_EXIST)
     {
       *inserted = 1;
+      uf->prealloc_[tn] = (uf_node_t*) malloc (sizeof(uf_node_t));
+      uf->prealloc_[tn]->parent = uf->prealloc_[tn];
       return alloc;
     }
-  else
-    free (alloc);
+  /* else */
+  /*   free (alloc); */
 
   *inserted = 0;
   return (uf_node_t*)old;

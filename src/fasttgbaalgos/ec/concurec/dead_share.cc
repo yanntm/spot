@@ -27,12 +27,14 @@ namespace spot
   // Concurrent Dijkstra Algorithm with shared union find.
   // ======================================================================
   concur_opt_dijkstra_scc::concur_opt_dijkstra_scc(instanciator* i,
-					       spot::uf* uf,
-					       int *stop,
-					       std::string option)
+						   spot::uf* uf,
+						   int tn,
+						   int *stop,
+						   std::string option)
     : opt_dijkstra_scc(i, option, true)
   {
     uf_ = uf;
+    tn_ = tn;
     stop_ = stop;
   }
 
@@ -52,7 +54,7 @@ namespace spot
     assert(H.find(s) == H.end());
     H.insert(std::make_pair(s, H.size()));
 
-    uf_->make_set(s);
+    uf_->make_set(s, tn_);
 
     // Count!
     max_live_size_ = H.size() > max_live_size_ ?
@@ -151,11 +153,13 @@ namespace spot
   // ======================================================================
   concur_opt_tarjan_scc::concur_opt_tarjan_scc(instanciator* i,
 					       spot::uf* uf,
+					       int tn,
 					       int *stop,
 					       std::string option)
     : opt_tarjan_scc(i, option, true)
   {
     uf_ = uf;
+    tn_ = tn;
     stop_ = stop;
   }
 
@@ -176,7 +180,7 @@ namespace spot
     dstack_->push(position);
     todo.push_back ({q, 0, H.size() -1});
 
-    uf_->make_set(q);
+    uf_->make_set(q, tn_);
 
     ++dfs_size_;
     ++states_cpt_;
@@ -278,17 +282,20 @@ namespace spot
     for (int i = 0; i < tn_; ++i)
       {
 	if (policy_ == FULL_TARJAN)
-	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_, &stop));
+	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
+							i, &stop));
 	else if (policy_ == FULL_DIJKSTRA)
-	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_, &stop));
+	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
+							  i, &stop));
 	else
 	  {
 	    assert(policy_ == MIXED);
 	    if (i%2)
-	      chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_, &stop));
+	      chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
+							    i, &stop));
 	    else
 	      chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
-							      &stop));
+							      i, &stop));
 	  }
       }
 

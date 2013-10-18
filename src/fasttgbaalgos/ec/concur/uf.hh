@@ -99,18 +99,18 @@ namespace spot
   class uf
   {
   public :
-    uf() : size_(0)
+    uf(int thread_number) : thread_number_(thread_number), size_(0)
     {
-      effective_uf = uf_alloc(&DATATYPE_INT_PTRINT, INIT_SCALE);
+      effective_uf = uf_alloc(&DATATYPE_INT_PTRINT, INIT_SCALE, thread_number);
     }
 
     virtual ~uf()
     {
-      uf_free (effective_uf, true);
+      uf_free (effective_uf, true, thread_number_);
     }
 
     /// \brief insert a new element in the union find
-    bool make_set(const fasttgba_state* key)
+    bool make_set(const fasttgba_state* key, int tn)
     {
       // The Concurent Hash Map doesn't support key == 0 because
       // it represent a special tag.
@@ -119,7 +119,7 @@ namespace spot
       int inserted = 0;
       // uf_node_t* node;
       // node =
-      uf_make_set(effective_uf, (map_key_t) key, &inserted);
+      uf_make_set(effective_uf, (map_key_t) key, &inserted, tn);
       if (inserted)
 	++size_;
       return inserted;
@@ -165,6 +165,7 @@ namespace spot
 
   private:
     uf_t* effective_uf;		///< \brief the union find
+    int thread_number_;
     std::atomic<int> size_;
   };
 }

@@ -49,6 +49,7 @@ namespace spot
   public:
     concur_opt_tarjan_scc(instanciator* i,
 			  spot::uf* uf,
+			  int thread_number,
 			  int *stop,
 			  std::string option = "");
 
@@ -69,6 +70,7 @@ namespace spot
 
   private:
     spot::uf* uf_;		/// \brief a reference to shared union find
+    int tn_;
     int * stop_;		/// \brief stop the world varibale
   };
 
@@ -77,6 +79,7 @@ namespace spot
   public:
     concur_opt_dijkstra_scc(instanciator* i,
 			    spot::uf* uf,
+			    int thread_number,
 			    int *stop,
 			    std::string option = "");
 
@@ -99,6 +102,7 @@ namespace spot
 
   private:
     spot::uf* uf_;		/// \brief a reference to shared union find
+    int tn_;
     int * stop_;		/// \brief stop the world varibale
   };
 
@@ -123,7 +127,7 @@ namespace spot
       itor_(i), tn_(thread_number), policy_(policy)
     {
       assert(i && thread_number && !option.compare(""));
-      uf_ = new spot::uf();
+      uf_ = new spot::uf(tn_);
     }
 
     virtual ~dead_share();
