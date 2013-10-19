@@ -2,7 +2,7 @@
 # Author: Alfons Laarman <a.w.laarman@cs.utwente.nl>
 #
 # SYNOPSIS
-# 
+#
 #   ACX_CLINE_DEF([ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 #
 AC_DEFUN([ACX_CLINE_DEF],[
@@ -80,9 +80,18 @@ size_t cache_line_size() {
 #include <math.h>
 
 /* return log2(cache_line_size) */
+unsigned int xCacheLineSizeLog(size_t line) {
+  unsigned int i = 0;
+  while (line > 1) {
+    line = line >> 1;
+    i++;
+  }
+  return i;
+}
+
 int main() {
     size_t cl = cache_line_size();
-    size_t cl2 = log(cl)/log(2);
+    size_t cl2 = xCacheLineSizeLog(cl);//log(cl)/log(2);
     if ((1UL << cl2) != cl)
         return 0;
     return cl2;

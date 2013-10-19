@@ -123,6 +123,65 @@ AC_CHECK_PROGS([SWIG], [swig2.0 swig], [swig])
 # ----------------------------------------------------------------------
 # Integrate LTSmin concurent hash table
 # ======================================================================
+ACX_PTHREAD(
+  [LIBS="$PTHREAD_LIBS $LIBS"
+   CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+   CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+   CC="$PTHREAD_CC"],
+  [AC_MSG_FAILURE([no pthread support found.])])
+
+AC_LANG_SAVE
+AC_LANG_C
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <sys/types.h>
+#include <pthread.h>
+int main()
+{
+    pthread_mutex_t mutex;
+    pthread_mutexattr_t attr;
+    if (pthread_mutexattr_init(&attr))
+        exit(1);
+    if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED))
+        exit(2);
+    if (pthread_mutex_init(&mutex, &attr))
+        exit(3);
+    if (pthread_mutexattr_destroy(&attr))
+        exit(4);
+    if (pthread_mutex_destroy(&mutex))
+        exit(5);
+    exit(0);
+}
+]])], [POSIX_SHARED=yes], [POSIX_SHARED=no
+    AC_MSG_WARN([No POSIX support found.])])
+AC_LANG_RESTORE
+
+# check for fine-grained multi-core synchronization primitives
+acx_atomics=yes
+AX_CHECK_FUNC_INCLUDE([],[__sync_bool_compare_and_swap],
+  [int x = 0;
+   __sync_bool_compare_and_swap(&x,0,1)],
+  [],[acx_atomics=no])
+AX_CHECK_FUNC_INCLUDE([],[__sync_fetch_and_add],
+  [int x = 0;
+   __sync_fetch_and_add(&x,1)],
+  [],[acx_atomics=no])
+AX_CHECK_FUNC_INCLUDE([],[__sync_fetch_and_and],
+  [int x = 0;
+   __sync_fetch_and_and(&x,1)],
+  [],[acx_atomics=no])
+AX_CHECK_FUNC_INCLUDE([],[__sync_fetch_and_or],
+  [int x = 0;
+   __sync_fetch_and_or(&x,1)],
+  [],[acx_atomics=no])
+AX_CHECK_FUNC_INCLUDE([],[__sync_synchronize],
+  [__sync_synchronize()],
+  [],[acx_atomics=no])
+if test x"$acx_atomics" != "xyes"; then
+  AC_MSG_WARN([no acceptable atomic operations found.])
+fi
+
+
+AC_CHECK_LIB([rt], [aio_error])
 AC_CHECK_LIB([popt],[poptGetContext],,[AC_MSG_FAILURE([popt not found.])])
 AC_CHECK_HEADER([popt.h],[], [AC_MSG_FAILURE([popt.h not found.])])
 AC_DEFINE([LTSMIN_PATHNAME_MAX], 1024, [Define maximal length of pathnames])
