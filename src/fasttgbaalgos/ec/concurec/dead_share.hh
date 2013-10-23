@@ -61,6 +61,8 @@ namespace spot
 
     virtual void dfs_pop();
 
+    virtual bool dfs_update (fasttgba_state* s);
+
     virtual bool has_counterexample();
 
     virtual std::string csv()

@@ -195,6 +195,19 @@ namespace spot
       memory_cost_ = tmp_cost;
   }
 
+  bool concur_opt_tarjan_scc::dfs_update(fasttgba_state* d)
+  {
+    ++update_cpt_;
+    // Warning !  Do not optimize to '<'
+    // Here we check '<=' since the information "==" is
+    // needed to the compressed stack of lowlink.
+    if (H[d] <= dstack_->top())
+      dstack_->set_top(H[d]);
+
+    uf_->unite (d, todo.back().state);
+    return false;
+  }
+
   opt_tarjan_scc::color
   concur_opt_tarjan_scc::get_color(const fasttgba_state* state)
   {
