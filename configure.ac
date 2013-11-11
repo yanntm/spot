@@ -76,7 +76,7 @@ AC_HEADER_EXT_HASH_MAP
 AX_CHECK_BUDDY
 AX_CHECK_GSPNLIB
 AX_CHECK_BOOST([1.34], [103400])
-AX_CXX_COMPILE_STDCXX_11([noext])
+#AX_CXX_COMPILE_STDCXX_11([noext])
 
 AC_CHECK_HEADERS([sys/times.h])
 AC_CHECK_FUNCS([times srand48 drand48 kill alarm])
@@ -187,6 +187,8 @@ AC_CHECK_HEADER([popt.h],[], [AC_MSG_FAILURE([popt.h not found.])])
 AC_DEFINE([LTSMIN_PATHNAME_MAX], 1024, [Define maximal length of pathnames])
 ACX_CLINE_DEF([], [])
 AC_CACHE_SAVE
+
+AX_CXX_COMPILE_STDCXX_11([noext])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
