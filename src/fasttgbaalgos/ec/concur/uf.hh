@@ -138,13 +138,37 @@ namespace spot
     }
 
     /// \brief Mark two states in the same set
-    void unite(const fasttgba_state* left, const fasttgba_state* right)
+    ///
+    /// Can be seen as a binary operation where left and right
+    /// operands are unite and where acceptance sets are merged
+    /// \param left the left operand
+    /// \param right the right operand
+    /// \param markset the acceptance set to add to the parent of the two
+    /// operands once merged.
+    markset unite(const fasttgba_state* left, const fasttgba_state* right,
+		  const markset acc, bool *is_dead)
     {
       uf_node_t* l = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) left);
       uf_node_t* r = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) right);
-      uf_unite (effective_uf, l, r);
+      uf_node_t* fast_ret = uf_unite (effective_uf, l, r);
+      *is_dead = fast_ret == effective_uf->dead_;
+
+      unsigned long tmp = acc.to_ulong();
+      //printf("%s %zu\n", acc.dump().c_str(), tmp);
+      // The markset is empty don't need to go further
+      if (!tmp || *is_dead)
+	return acc;
+
+      // Grab the representative int.
+      unsigned long res = uf_add_acc(effective_uf, l, acc.to_ulong());
+
+      // if res equal 0 the state is dead!
+      // The add doesn't change anything
+      if(!res || tmp == res)
+	return acc;
+      return acc | res;
     }
 
     /// \brief check wether an element is linked to dead
