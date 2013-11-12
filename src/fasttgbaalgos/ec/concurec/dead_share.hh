@@ -35,6 +35,7 @@
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
 #include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
 
+#include <sstream>
 
 namespace spot
 {
@@ -63,6 +64,8 @@ namespace spot
 
     virtual bool dfs_update (fasttgba_state* s);
 
+    virtual void main ();
+
     virtual bool has_counterexample();
 
     virtual std::string csv()
@@ -70,10 +73,20 @@ namespace spot
       return "tarjan," + extra_info_csv();
     }
 
-  private:
+    virtual std::chrono::milliseconds::rep
+    get_elapsed_time()
+    {
+      auto elapsed_seconds = std::chrono::duration_cast
+	<std::chrono::milliseconds>(end-start).count();
+      return elapsed_seconds;
+    }
+
+  protected:
     spot::uf* uf_;		/// \brief a reference to shared union find
     int tn_;
     int * stop_;		/// \brief stop the world varibale
+    std::chrono::time_point<std::chrono::system_clock> start;
+    std::chrono::time_point<std::chrono::system_clock> end;
   };
 
   class concur_opt_dijkstra_scc : public opt_dijkstra_scc, public concur_ec_stat
@@ -95,6 +108,8 @@ namespace spot
 
     virtual void dfs_pop();
 
+    virtual void main ();
+
     virtual bool has_counterexample();
 
     virtual std::string csv()
@@ -102,10 +117,64 @@ namespace spot
       return "dijkstra," + extra_info_csv();
     }
 
-  private:
+    virtual std::chrono::milliseconds::rep
+    get_elapsed_time()
+    {
+      auto elapsed_seconds = std::chrono::duration_cast
+	<std::chrono::milliseconds>(end-start).count();
+      return elapsed_seconds;
+    }
+
+  protected:
     spot::uf* uf_;		/// \brief a reference to shared union find
     int tn_;
     int * stop_;		/// \brief stop the world varibale
+    std::chrono::time_point<std::chrono::system_clock> start;
+    std::chrono::time_point<std::chrono::system_clock> end;
+  };
+
+
+  class concur_opt_tarjan_ec : public concur_opt_tarjan_scc
+  {
+  public:
+    concur_opt_tarjan_ec(instanciator* i,
+			    spot::uf* uf,
+			    int thread_number,
+			    int *stop,
+			    std::string option = "")
+      : concur_opt_tarjan_scc(i, uf, thread_number, stop, option)
+    { }
+
+
+    /// \brief  Pop states already explored
+    virtual void dfs_pop();
+
+    /// \brief the update for backedges
+    virtual bool dfs_update (fasttgba_state* s);
+
+    virtual void fastbacktrack()
+    {
+      assert(!todo.empty());
+      int ref = dstack_->top();
+      const fasttgba_state* last;
+      while (dstack_->top() >= ref || !uf_->is_dead((last = todo.back().state)))
+	{
+	  live.pop_back();
+	  todo.pop_back();
+	  dstack_->pop();
+	  seen_map::const_iterator it1 = H.find(last);
+	  H.erase(it1);
+
+	  if (todo.empty())
+	    break;
+	}
+    }
+
+    /// \brief Display the csv of for this thread
+    virtual std::string csv()
+    {
+      return "tarjan_ec," + extra_info_csv();
+    }
   };
 
 
@@ -119,7 +188,8 @@ namespace spot
       {
 	FULL_TARJAN = 0,	/// \brief All threads use Tarjan Algorithm
 	FULL_DIJKSTRA = 1,	/// \brief All threads use Dijkstra Algorithm
-	MIXED = 2		/// \brief Combinaison of both previous
+	MIXED = 2,		/// \brief Combinaison of both previous
+	FULL_TARJAN_EC = 3	/// \brief All treads use Tarjan Emptiness Check
       };
 
     dead_share(instanciator* i,
@@ -138,7 +208,28 @@ namespace spot
 
     virtual std::string csv()
     {
-      return "FIXME";
+      std::stringstream res;
+      switch (policy_)
+	{
+	case FULL_TARJAN:
+	  res << "FULL_TARJAN,";
+	  break;
+	case FULL_DIJKSTRA:
+	  res << "FULL_DIJKSTRA,";
+	  break;
+	case MIXED:
+	  res << "MIXED,";
+	  break;
+	case FULL_TARJAN_EC:
+	  res << "FULL_TARJAN_EC,";
+	  break;
+	default:
+	  std::cout << "Error undefined thread policy" << std::endl;
+	  assert(false);
+	}
+
+      res << tn_ << ",";
+      return res.str();
     }
 
 
@@ -147,6 +238,9 @@ namespace spot
     instanciator* itor_;
     int tn_;
     DeadSharePolicy policy_;
+
+
+
   };
 }
 

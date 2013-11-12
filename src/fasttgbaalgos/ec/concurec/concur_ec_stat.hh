@@ -31,6 +31,8 @@ namespace spot
     virtual bool has_counterexample() = 0;
 
     virtual std::string csv() = 0;
+
+    virtual std::chrono::milliseconds::rep get_elapsed_time() = 0;
   };
 }
 

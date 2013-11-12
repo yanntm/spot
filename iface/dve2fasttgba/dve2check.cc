@@ -116,6 +116,7 @@ main(int argc, char **argv)
   bool opt_wait = false;
 
   bool opt_concur_dead_tarjan = false;
+  bool opt_concur_ec_dead_tarjan = false;
   bool opt_concur_dead_dijkstra = false;
   bool opt_concur_dead_mixed = false;
   unsigned int  nb_threads = 1;
@@ -144,6 +145,13 @@ main(int argc, char **argv)
     {
       opt_concur_dead_tarjan = true;
       std::string s = std::string(argv[3]+19);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-concur_ec_dead_tarjan", argv[3], 22))
+    {
+      opt_concur_ec_dead_tarjan = true;
+      std::string s = std::string(argv[3]+22);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -301,6 +309,24 @@ main(int argc, char **argv)
 	      new spot::dead_share(itor, nb_threads,
 				   spot::dead_share::FULL_TARJAN);
 	    d->check();
+	    delete d;
+	  }
+
+	if (opt_concur_ec_dead_tarjan)
+	  {
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+				   spot::dead_share::FULL_TARJAN_EC);
+	    mtimer.start("concur_ec_dead_tarjan");
+	    if (d->check())
+	      result << "VIOLATED,";
+	    else
+	      result << "VERIFIED,";
+	    mtimer.stop("concur_ec_dead_tarjan");
+	    spot::timer t = mtimer.timer("concur_ec_dead_tarjan");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << d->csv() << "," << input;
+	    std::cout << result.str() << std::endl;
 	    delete d;
 	  }
 	if (opt_concur_dead_dijkstra)

@@ -41,9 +41,11 @@ namespace spot
   bool
   concur_opt_dijkstra_scc::check()
   {
+    start = std::chrono::system_clock::now();
     init();
     main();
     *stop_ = 1;
+    end  = std::chrono::system_clock::now();
     return counterexample_found;
   }
 
@@ -87,7 +89,9 @@ namespace spot
 	++update_loop_cpt_;
     	rpos = roots_stack_->root_of_the_top();
     	roots_stack_->pop();
-	uf_->unite (d, todo[rpos].state);
+	bool fast_backtrack = false;
+	uf_->unite (d, todo[rpos].state, roots_stack_->top_acceptance(),
+		    &fast_backtrack);
       }
     roots_stack_->push_non_trivial(rpos, *empty_, todo.size() -1);
 
@@ -148,6 +152,53 @@ namespace spot
     return counterexample_found;
   }
 
+  void concur_opt_dijkstra_scc::main()
+  {
+    opt_dijkstra_scc::color c;
+    while (!todo.empty() && !*stop_)
+      {
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr = swarm_ ?
+	      a_->swarm_succ_iter(todo.back().state) :
+	      a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
+	  }
+
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+    	  }
+    	else
+    	  {
+	    ++transitions_cpt_;
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+    	    if (c == Unknown)
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (c == Alive)
+    	      {
+    	    	if (merge (d))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
+      }
+  }
+
   // ----------------------------------------------------------------------
   // Concurrent Tarjan Algorithm with shared union find.
   // ======================================================================
@@ -166,9 +217,11 @@ namespace spot
   bool
   concur_opt_tarjan_scc::check()
   {
+    start = std::chrono::system_clock::now();
     init();
     main();
     *stop_ = 1;
+    end = std::chrono::system_clock::now();
     return counterexample_found;
   }
 
@@ -204,7 +257,9 @@ namespace spot
     if (H[d] <= dstack_->top())
       dstack_->set_top(H[d]);
 
-    uf_->unite (d, todo.back().state);
+    bool fast_backtrack = false;
+    uf_->unite (d, todo.back().state, dstack_->top_acceptance(),
+		&fast_backtrack);
     return false;
   }
 
@@ -219,7 +274,6 @@ namespace spot
     else
       return Unknown;
   }
-
 
   void
   concur_opt_tarjan_scc::dfs_pop()
@@ -261,7 +315,10 @@ namespace spot
 	if (ll <= dstack_->top())
 	  dstack_->set_top(ll);
 	live.push_back(last);
-	uf_->unite (last, todo.back().state);
+
+	bool fast_backtrack = false;
+	uf_->unite (last, todo.back().state, dstack_->top_acceptance(),
+		    &fast_backtrack);
       }
   }
 
@@ -269,6 +326,149 @@ namespace spot
   concur_opt_tarjan_scc::has_counterexample()
   {
     return counterexample_found;
+  }
+
+
+  void concur_opt_tarjan_scc::main()
+  {
+    opt_tarjan_scc::color c;
+    while (!todo.empty() && !*stop_)
+      {
+
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr = swarm_ ?
+	      a_->swarm_succ_iter(todo.back().state) :
+	      a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
+	  }
+
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+	    if (counterexample_found)
+	      return;
+    	  }
+    	else
+    	  {
+	    ++transitions_cpt_;
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+    	    if (c == Unknown)
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (c == Alive)
+    	      {
+    	    	if (dfs_update (d))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
+      }
+  }
+
+  // ----------------------------------------------------------------------
+  // Concurrent Tarjan Emptiness check  with shared union find.
+  // ======================================================================
+  void concur_opt_tarjan_ec::dfs_pop()
+  {
+    --dfs_size_;
+    const markset acc = dstack_->top_acceptance();
+    int ll = dstack_->pop();
+
+    unsigned int steppos = todo.back().position;
+    const fasttgba_state* last = todo.back().state;
+    delete todo.back().lasttr;
+    todo.pop_back();
+
+    if ((int) steppos == ll)
+      {
+	++roots_poped_cpt_;
+	int trivial = 0;
+
+	// Delete the root that is not inside of live Stack
+	uf_->make_dead(last);
+	seen_map::const_iterator it1 = H.find(last);
+	H.erase(it1);
+	while (H.size() > steppos)
+	  {
+	    ++trivial;
+	    //deadstore_->add(live.back());
+	    seen_map::const_iterator it = H.find(live.back());
+	    H.erase(it);
+	    live.pop_back();
+	  }
+
+	// This change regarding original algorithm
+	if (trivial == 0)
+	  ++trivial_scc_;
+      }
+    else
+      {
+	// Warning !  Do not optimize to '<'
+	// Here we check '<=' since the information "==" is
+	// needed to the compressed stack of lowlink.
+	if (ll <= dstack_->top())
+	  dstack_->set_top(ll , acc | dstack_->top_acceptance() |
+			   todo.back().lasttr->current_acceptance_marks());
+	else
+	  dstack_->set_top(dstack_->top(), acc | dstack_->top_acceptance() |
+			   todo.back().lasttr->current_acceptance_marks());
+
+	live.push_back(last);
+	bool fast_backtrack = false;
+	dstack_->set_top(dstack_->top(),
+			 uf_->unite (last, todo.back().state,
+				     dstack_->top_acceptance(),
+				     &fast_backtrack));
+	if (dstack_->top_acceptance().all())
+	  counterexample_found = true;
+
+	if (fast_backtrack)
+	  assert(false);//fastbacktrack();
+      }
+  }
+
+
+
+
+  bool concur_opt_tarjan_ec::dfs_update(fasttgba_state* d)
+  {
+    ++update_cpt_;
+    // Warning !  Do not optimize to '<'
+    // Here we check '<=' since the information "==" is
+    // needed to the compressed stack of lowlink.
+    if (H[d] <= dstack_->top())
+      dstack_->set_top(H[d] ,
+		       todo.back().lasttr->current_acceptance_marks() |
+		       dstack_->top_acceptance());
+    else
+      dstack_->set_top(dstack_->top(),
+		       todo.back().lasttr->current_acceptance_marks() |
+		       dstack_->top_acceptance());
+
+    bool fast_backtrack = false;
+    dstack_->set_top(dstack_->top(),
+    		     uf_->unite (d, todo.back().state,
+    				 dstack_->top_acceptance(),
+    				 &fast_backtrack));
+
+    if (fast_backtrack)
+      assert(false);//fastbacktrack();
+
+    return dstack_->top_acceptance().all();
   }
 
   // ----------------------------------------------------------------------
@@ -296,6 +496,9 @@ namespace spot
       {
 	if (policy_ == FULL_TARJAN)
 	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
+							i, &stop));
+	else if (policy_ == FULL_TARJAN_EC)
+	  chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
 							i, &stop));
 	else if (policy_ == FULL_DIJKSTRA)
 	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
@@ -342,6 +545,7 @@ namespace spot
 	ctrexple |= chk[i]->has_counterexample();
 	std::cout << "      thread : " << i << "  csv : "
 		  << (chk[i]->has_counterexample() ? "VIOLATED," : "VERIFIED,")
+		  << chk[i]->get_elapsed_time() << ","
       		  << chk[i]->csv() << std::endl;
 	delete chk[i];
       }
@@ -350,6 +554,6 @@ namespace spot
     printf("[WF]  num of threads = %d insert = %d  elapsed time = %d\n\n",
 	   tn_, uf_->size(), (int)elapsed_seconds);
 
-    return true;
+    return ctrexple;
   }
 }
