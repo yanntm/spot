@@ -15,6 +15,7 @@ uf_t* uf_alloc(const datatype_t *key_type, size_t size, size_t tn)
   assert(uf_->table);
   uf_->dead_ = (uf_node_t*) malloc (sizeof(uf_node_t));
   uf_->dead_->parent = uf_->dead_;
+  assert(uf_->dead_ == uf_->dead_->parent);
   uf_->prealloc_ = (uf_node_t**) malloc (sizeof(uf_node_t)*tn);
 
   int i;
@@ -22,6 +23,7 @@ uf_t* uf_alloc(const datatype_t *key_type, size_t size, size_t tn)
     {
       uf_->prealloc_ [i] = (uf_node_t*)  malloc (sizeof(uf_node_t));
       uf_->prealloc_ [i]->parent = uf_->prealloc_ [i];
+      uf_->prealloc_ [i]->markset = 0;
     }
   return uf_;
 }
@@ -66,6 +68,7 @@ uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted, int tn)
   map_key_t clone = 0;
 
   uf_node_t *alloc = uf->prealloc_[tn];
+
     //(uf_node_t*) malloc (sizeof(uf_node_t));
   //  alloc->parent = alloc;
 
@@ -79,6 +82,7 @@ uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted, int tn)
       *inserted = 1;
       uf->prealloc_[tn] = (uf_node_t*) malloc (sizeof(uf_node_t));
       uf->prealloc_[tn]->parent = uf->prealloc_[tn];
+      uf->prealloc_[tn]->markset = 0;
       return alloc;
     }
   /* else */
@@ -91,8 +95,8 @@ uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted, int tn)
 uf_node_t* uf_find(uf_node_t* n)
 {
   uf_node_t* node = n;
-  uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent;
-  assert(parent);
+  /* uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent; */
+  /* assert(parent); */
 
   // Look for the root
   uf_node_t* tmp;
@@ -103,25 +107,55 @@ uf_node_t* uf_find(uf_node_t* n)
   return node;
 }
 
-void uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right)
+unsigned long uf_add_acc(uf_t* uf, uf_node_t* n, unsigned long acc)
+{
+  uf_node_t* parent = uf_find(n);
+  unsigned long cumulated_acc = acc;
+
+  while (1)
+    {
+      if (parent == uf->dead_)
+	return 0;
+
+      unsigned long tmp = ((uf_node_t)atomic_read(parent)).markset;
+      cumulated_acc |= tmp;
+
+      unsigned long old;
+      old = cas_ret(&parent->markset, tmp, cumulated_acc);
+      if (old == tmp)
+	{
+	  // success !
+	  if (((uf_node_t)atomic_read(parent)).parent == parent)
+	    {
+	      //printf("%p %zu %zu %zu\n", parent, cumulated_acc, acc, tmp);
+	      return cumulated_acc;
+	    }
+	}
+      cumulated_acc |= old;
+      parent = uf_find(parent);
+    }
+
+}
+
+uf_node_t* uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right)
 {
   uf_node_t* pleft;
   uf_node_t* pright;
   uf_node_t* old;
 
   if (left == right)
-    return;
+    return left;
 
   if (left == uf->dead_)
     {
       uf_make_dead(uf, right);
-      return;
+      return uf->dead_;
     }
 
   if (right == uf->dead_)
     {
       uf_make_dead(uf, left);
-      return;
+      return uf->dead_;
     }
 
   while (1)
@@ -130,18 +164,18 @@ void uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right)
       pright = uf_find(right);
 
       if (pleft == pright)
-	return;
+	return pleft;
 
       if (pleft == uf->dead_)
 	{
 	  uf_make_dead(uf, pright);
-	  return;
+	  return uf->dead_;
 	}
 
       if (pright == uf->dead_)
 	{
 	  uf_make_dead(uf, pleft);
-	  return;
+	  return uf->dead_;
 	}
 
       /*
@@ -153,13 +187,13 @@ void uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right)
 	{
 	  old = cas_ret(&pright->parent, pright, pleft);
 	  if (old == pright)
-	    return;
+	    return pleft;
 	}
       else
 	{
 	  old = cas_ret(&pleft->parent, pleft, pright);
 	  if (old == pleft)
-	    return;
+	    return pright;
 	}
     }
 }
@@ -177,7 +211,7 @@ void uf_make_dead(uf_t* uf, uf_node_t* n)
 
       old = cas_ret(&node->parent, node, uf->dead_);
       if (old == node)
-	return ;
+	  return ;
     }
 }
 
