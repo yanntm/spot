@@ -117,11 +117,14 @@ namespace spot
     /// Return a new mark which is the negation of thiss
     markset operator~() const;
 
+    unsigned long to_ulong() const;
+    markset operator|(const unsigned long) const;
+
     /// \brief Display the content of the marking
     ///
     /// \param acc is used to specified for each mark
     /// the label to use in dumping
-    virtual std::string dump();
+    virtual std::string dump() const;
 
   protected:
     boost::dynamic_bitset<> markset_;   ///< the set of acceptance

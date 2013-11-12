@@ -145,8 +145,19 @@ namespace spot
     return markset(markset_ |  b.markset_, accs_);
   }
 
+  unsigned long markset::to_ulong() const
+  {
+    return markset_.to_ulong();
+  }
+
+  markset markset::operator|(const unsigned long n) const
+  {
+    assert(n);			// Why doing this otherwise?
+    return markset(markset_ | boost::dynamic_bitset<>(accs_.size(), n), accs_);
+  }
+
   std::string
-  markset::dump()
+  markset::dump() const
   {
     std::ostringstream oss;
     if (accs_.empty())
@@ -161,7 +172,7 @@ namespace spot
 	size_t i;
 	for (i = 0; i < markset_.size(); ++i)
 	  if (markset_[i])
-	    oss << "[" << accs_.get(i) << "] ";
+	    oss << i<<"[" << accs_.get(i) << "] ";
       }
     return oss.str();
   }
