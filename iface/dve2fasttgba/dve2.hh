@@ -111,6 +111,8 @@ namespace spot
     {
       std::lock_guard<std::mutex> lk(mutex_load_dve);
 
+      //ba_ = spot::degeneralize(tgba_);
+
       // Instanciate dictionnaries
       aps_ = new spot::ap_dict();
       accs_ = new spot::acc_dict();
@@ -132,21 +134,21 @@ namespace spot
 	  ba_prod = prod;
 	  return;
 	}
+      return;
+      // //      ba_ = spot::degeneralize(tgba_);
 
-      ba_ = spot::degeneralize(tgba_);
 
+      // // Instanciate dictionnaries
+      // ba_aps_ = new spot::ap_dict();
+      // ba_accs_ = new spot::acc_dict();
 
-      // Instanciate dictionnaries
-      ba_aps_ = new spot::ap_dict();
-      ba_accs_ = new spot::acc_dict();
+      // // Instanciate kripke
+      // ba_kripke =  spot::load_dve2fast(filename, *ba_aps_, *ba_accs_, true);
 
-      // Instanciate kripke
-      ba_kripke =  spot::load_dve2fast(filename, *ba_aps_, *ba_accs_, true);
+      // // Instanciate
+      // ba_ftgba = spot::tgba_2_fasttgba(ba_, *ba_aps_, *ba_accs_);
 
-      // Instanciate
-      ba_ftgba = spot::tgba_2_fasttgba(ba_, *ba_aps_, *ba_accs_);
-
-      ba_prod = new spot::fasttgba_kripke_product (ba_kripke, ba_ftgba);
+      // ba_prod = new spot::fasttgba_kripke_product (ba_kripke, ba_ftgba);
     }
 
 
