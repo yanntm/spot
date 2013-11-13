@@ -125,6 +125,14 @@ namespace spot
 
       prod = new spot::fasttgba_kripke_product (kripke, ftgba1);
 
+
+      ba_prod = 0;
+      ba_ftgba = 0;
+      ba_kripke = 0;
+      ba_accs_ = 0;
+      ba_aps_ = 0;
+
+      return;
       // -------------------------------------------------------------
       // Sometimes we need to work on  BA, in this case the product
       // must be done with BA
@@ -134,7 +142,6 @@ namespace spot
 	  ba_prod = prod;
 	  return;
 	}
-      return;
       // //      ba_ = spot::degeneralize(tgba_);
 
 
@@ -155,7 +162,7 @@ namespace spot
     virtual ~dve2product_instance()
     {
       std::lock_guard<std::mutex> lk(mutex_load_dve);
-      bool is_ba = prod->number_of_acceptance_marks() <= 1;
+      //bool is_ba = prod->number_of_acceptance_marks() <= 1;
 
       // Clean up for Tgba
       delete prod;
@@ -169,21 +176,21 @@ namespace spot
       accs_ = 0;
       aps_ = 0;
 
-      // Clean up for BA
-      if (!is_ba)
-	{
-	  delete ba_;
-	  delete ba_prod;
-	  delete ba_ftgba;
-	  delete ba_kripke;
-	  delete ba_accs_;
-	  delete ba_aps_;
-	  ba_prod = 0;
-	  ba_ftgba = 0;
-	  ba_kripke = 0;
-	  ba_accs_ = 0;
-	  ba_aps_ = 0;
-	}
+      // // Clean up for BA
+      // if (!is_ba)
+      // 	{
+      // 	  delete ba_;
+      // 	  delete ba_prod;
+      // 	  delete ba_ftgba;
+      // 	  delete ba_kripke;
+      // 	  delete ba_accs_;
+      // 	  delete ba_aps_;
+      // 	  ba_prod = 0;
+      // 	  ba_ftgba = 0;
+      // 	  ba_kripke = 0;
+      // 	  ba_accs_ = 0;
+      // 	  ba_aps_ = 0;
+      // 	}
     }
 
     // The automaton to check
