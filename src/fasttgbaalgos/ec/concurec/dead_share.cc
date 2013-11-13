@@ -436,8 +436,8 @@ namespace spot
 	if (dstack_->top_acceptance().all())
 	  counterexample_found = true;
 
-	if (fast_backtrack)
-	  assert(false);//fastbacktrack();
+	// if (fast_backtrack)
+	//   assert(false);//fastbacktrack();
       }
   }
 
@@ -465,8 +465,8 @@ namespace spot
     				 dstack_->top_acceptance(),
     				 &fast_backtrack));
 
-    if (fast_backtrack)
-      assert(false);//fastbacktrack();
+    // if (fast_backtrack)
+    //   assert(false);//fastbacktrack();
 
     return dstack_->top_acceptance().all();
   }
@@ -537,18 +537,31 @@ namespace spot
     auto elapsed_seconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
 
-
-    // Clean up checker
+    // Clean up checker and construct CSV
     bool ctrexple = false;
+    auto tmpi = 0;
     for (int i = 0; i < tn_; ++i)
       {
 	ctrexple |= chk[i]->has_counterexample();
+
+	if (max_diff < std::abs(chk[i]->get_elapsed_time()
+			   - chk[tmpi]->get_elapsed_time()))
+	  {
+	    max_diff = std::abs(chk[tmpi]->get_elapsed_time()
+				- chk[i]->get_elapsed_time());
+	    tmpi = i;
+	  }
+
 	std::cout << "      thread : " << i << "  csv : "
 		  << (chk[i]->has_counterexample() ? "VIOLATED," : "VERIFIED,")
 		  << chk[i]->get_elapsed_time() << ","
       		  << chk[i]->csv() << std::endl;
-	delete chk[i];
       }
+
+    // Release memrory
+    for (int i = 0; i < tn_; ++i)
+      	delete chk[i];
+
 
     // Display results
     printf("[WF]  num of threads = %d insert = %d  elapsed time = %d\n\n",

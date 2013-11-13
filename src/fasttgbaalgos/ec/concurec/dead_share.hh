@@ -196,7 +196,7 @@ namespace spot
 	       int thread_number = 1,
 	       DeadSharePolicy policy = FULL_TARJAN,
 	       std::string option = "") :
-      itor_(i), tn_(thread_number), policy_(policy)
+      itor_(i), tn_(thread_number), policy_(policy), max_diff(0)
     {
       assert(i && thread_number && !option.compare(""));
       uf_ = new spot::uf(tn_);
@@ -228,7 +228,7 @@ namespace spot
 	  assert(false);
 	}
 
-      res << tn_ << ",";
+      res << tn_  << "," << max_diff;
       return res.str();
     }
 
@@ -238,9 +238,7 @@ namespace spot
     instanciator* itor_;
     int tn_;
     DeadSharePolicy policy_;
-
-
-
+    std::chrono::milliseconds::rep max_diff;
   };
 }
 
