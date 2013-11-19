@@ -326,6 +326,7 @@ main(int argc, char **argv)
 	    spot::timer t = mtimer.timer("concur_ec_dead_tarjan");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << d->csv() << "," << input;
+	    d->dump_threads();
 	    std::cout << result.str() << std::endl;
 	    delete d;
 	  }

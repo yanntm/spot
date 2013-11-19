@@ -24,185 +24,6 @@
 namespace spot
 {
   // ----------------------------------------------------------------------
-  // Concurrent Dijkstra Algorithm with shared union find.
-  // ======================================================================
-  concur_opt_dijkstra_scc::concur_opt_dijkstra_scc(instanciator* i,
-						   spot::uf* uf,
-						   int tn,
-						   int *stop,
-						   bool swarming,
-						   std::string option)
-    : opt_dijkstra_scc(i, option, swarming)
-  {
-    uf_ = uf;
-    tn_ = tn;
-    stop_ = stop;
-    make_cpt_ = 0;
-  }
-
-  bool
-  concur_opt_dijkstra_scc::check()
-  {
-    start = std::chrono::system_clock::now();
-    init();
-    main();
-    *stop_ = 1;
-    end  = std::chrono::system_clock::now();
-    return counterexample_found;
-  }
-
-  void concur_opt_dijkstra_scc::dfs_push(fasttgba_state* s)
-  {
-    ++states_cpt_;
-
-    assert(H.find(s) == H.end());
-    H.insert(std::make_pair(s, H.size()));
-
-    if (uf_->make_set(s, tn_))
-      ++make_cpt_;
-
-    // Count!
-    max_live_size_ = H.size() > max_live_size_ ?
-      H.size() : max_live_size_;
-
-    todo.push_back ({s, 0, H.size() -1});
-    // Count!
-    max_dfs_size_ = max_dfs_size_ > todo.size() ?
-      max_dfs_size_ : todo.size();
-
-    roots_stack_->push_trivial(todo.size() -1);
-
-    int tmp_cost = 1*roots_stack_->size() + 2*H.size() + 1*live.size()
-      + (deadstore_? deadstore_->size() : 0);
-    if (tmp_cost > memory_cost_)
-      memory_cost_ = tmp_cost;
-
-  }
-
-  bool concur_opt_dijkstra_scc::merge(fasttgba_state* d)
-  {
-    ++update_cpt_;
-    assert(H.find(d) != H.end());
-    int dpos = H[d];
-    int rpos = roots_stack_->root_of_the_top();
-
-    roots_stack_->pop();
-    while ((unsigned)dpos < todo[rpos].position)
-      {
-	++update_loop_cpt_;
-    	rpos = roots_stack_->root_of_the_top();
-    	roots_stack_->pop();
-	bool fast_backtrack = false;
-	uf_->unite (d, todo[rpos].state, roots_stack_->top_acceptance(),
-		    &fast_backtrack);
-      }
-    roots_stack_->push_non_trivial(rpos, *empty_, todo.size() -1);
-
-    return false;
-  }
-
-  void concur_opt_dijkstra_scc::dfs_pop()
-  {
-    delete todo.back().lasttr;
-
-    unsigned int rtop = roots_stack_->root_of_the_top();
-    const fasttgba_state* last = todo.back().state;
-    unsigned int steppos = todo.back().position;
-    todo.pop_back();
-
-    if (rtop == todo.size())
-      {
-	++roots_poped_cpt_;
-	roots_stack_->pop();
-	int trivial = 0;
-	//deadstore_->add(last);
-	uf_->make_dead(last);
-	seen_map::const_iterator it1 = H.find(last);
-	H.erase(it1);
-	while (H.size() > steppos)
-	  {
-	    ++trivial;
-	    //deadstore_->add(live.back());
-	    seen_map::const_iterator it = H.find(live.back());
-	    H.erase(it);
-	    live.pop_back();
- 	  }
-	if (trivial == 0) // we just popped a trivial
-	  ++trivial_scc_;
-      }
-    else
-      {
-	// This is the integration of Nuutila's optimisation.
-	live.push_back(last);
-      }
-  }
-
-  opt_dijkstra_scc::color
-  concur_opt_dijkstra_scc::get_color(const fasttgba_state* state)
-  {
-    seen_map::const_iterator i = H.find(state);
-    if (i != H.end())
-      return Alive;
-    else if (uf_->is_dead(state))
-      return Dead;
-    else
-      return Unknown;
-  }
-
-  bool
-  concur_opt_dijkstra_scc::has_counterexample()
-  {
-    return counterexample_found;
-  }
-
-  void concur_opt_dijkstra_scc::main()
-  {
-    opt_dijkstra_scc::color c;
-    while (!todo.empty() && !*stop_)
-      {
-	if (!todo.back().lasttr)
-	  {
-	    todo.back().lasttr = swarm_ ?
-	      a_->swarm_succ_iter(todo.back().state) :
-	      a_->succ_iter(todo.back().state);
-	    todo.back().lasttr->first();
-	  }
-	else
-	  {
-	    assert(todo.back().lasttr);
-	    todo.back().lasttr->next();
-	  }
-
-    	if (todo.back().lasttr->done())
-    	  {
-	    dfs_pop ();
-    	  }
-    	else
-    	  {
-	    ++transitions_cpt_;
-	    assert(todo.back().lasttr);
-    	    fasttgba_state* d = todo.back().lasttr->current_state();
-	    c = get_color (d);
-    	    if (c == Unknown)
-    	      {
-		dfs_push (d);
-    	    	continue;
-    	      }
-    	    else if (c == Alive)
-    	      {
-    	    	if (merge (d))
-    	    	  {
-    	    	    counterexample_found = true;
-    	    	    d->destroy();
-    	    	    return;
-    	    	  }
-    	      }
-    	    d->destroy();
-    	  }
-      }
-  }
-
-  // ----------------------------------------------------------------------
   // Concurrent Tarjan Algorithm with shared union find.
   // ======================================================================
   concur_opt_tarjan_scc::concur_opt_tarjan_scc(instanciator* i,
@@ -385,6 +206,203 @@ namespace spot
       }
   }
 
+
+  std::chrono::milliseconds::rep concur_opt_tarjan_scc::get_elapsed_time()
+  {
+    auto elapsed_seconds = std::chrono::duration_cast
+      <std::chrono::milliseconds>(end-start).count();
+    return elapsed_seconds;
+  }
+
+  std::string concur_opt_tarjan_scc::csv()
+  {
+    return "tarjan," + extra_info_csv();
+  }
+
+  int concur_opt_tarjan_scc::nb_inserted()
+  {
+    return make_cpt_;
+  }
+
+  // ----------------------------------------------------------------------
+  // Concurrent Dijkstra Algorithm with shared union find.
+  // ======================================================================
+  concur_opt_dijkstra_scc::concur_opt_dijkstra_scc(instanciator* i,
+						   spot::uf* uf,
+						   int tn,
+						   int *stop,
+						   bool swarming,
+						   std::string option)
+    : opt_dijkstra_scc(i, option, swarming)
+  {
+    uf_ = uf;
+    tn_ = tn;
+    stop_ = stop;
+    make_cpt_ = 0;
+  }
+
+  bool
+  concur_opt_dijkstra_scc::check()
+  {
+    start = std::chrono::system_clock::now();
+    init();
+    main();
+    *stop_ = 1;
+    end  = std::chrono::system_clock::now();
+    return counterexample_found;
+  }
+
+  void concur_opt_dijkstra_scc::dfs_push(fasttgba_state* s)
+  {
+    ++states_cpt_;
+
+    assert(H.find(s) == H.end());
+    H.insert(std::make_pair(s, H.size()));
+
+    if (uf_->make_set(s, tn_))
+      ++make_cpt_;
+
+    // Count!
+    max_live_size_ = H.size() > max_live_size_ ?
+      H.size() : max_live_size_;
+
+    todo.push_back ({s, 0, H.size() -1});
+    // Count!
+    max_dfs_size_ = max_dfs_size_ > todo.size() ?
+      max_dfs_size_ : todo.size();
+
+    roots_stack_->push_trivial(todo.size() -1);
+
+    int tmp_cost = 1*roots_stack_->size() + 2*H.size() + 1*live.size()
+      + (deadstore_? deadstore_->size() : 0);
+    if (tmp_cost > memory_cost_)
+      memory_cost_ = tmp_cost;
+
+  }
+
+  bool concur_opt_dijkstra_scc::merge(fasttgba_state* d)
+  {
+    ++update_cpt_;
+    assert(H.find(d) != H.end());
+    int dpos = H[d];
+    int rpos = roots_stack_->root_of_the_top();
+
+    roots_stack_->pop();
+    while ((unsigned)dpos < todo[rpos].position)
+      {
+	++update_loop_cpt_;
+    	rpos = roots_stack_->root_of_the_top();
+    	roots_stack_->pop();
+	bool fast_backtrack = false;
+	uf_->unite (d, todo[rpos].state, roots_stack_->top_acceptance(),
+		    &fast_backtrack);
+      }
+    roots_stack_->push_non_trivial(rpos, *empty_, todo.size() -1);
+
+    return false;
+  }
+
+  void concur_opt_dijkstra_scc::dfs_pop()
+  {
+    delete todo.back().lasttr;
+
+    unsigned int rtop = roots_stack_->root_of_the_top();
+    const fasttgba_state* last = todo.back().state;
+    unsigned int steppos = todo.back().position;
+    todo.pop_back();
+
+    if (rtop == todo.size())
+      {
+	++roots_poped_cpt_;
+	roots_stack_->pop();
+	int trivial = 0;
+	//deadstore_->add(last);
+	uf_->make_dead(last);
+	seen_map::const_iterator it1 = H.find(last);
+	H.erase(it1);
+	while (H.size() > steppos)
+	  {
+	    ++trivial;
+	    //deadstore_->add(live.back());
+	    seen_map::const_iterator it = H.find(live.back());
+	    H.erase(it);
+	    live.pop_back();
+ 	  }
+	if (trivial == 0) // we just popped a trivial
+	  ++trivial_scc_;
+      }
+    else
+      {
+	// This is the integration of Nuutila's optimisation.
+	live.push_back(last);
+      }
+  }
+
+  opt_dijkstra_scc::color
+  concur_opt_dijkstra_scc::get_color(const fasttgba_state* state)
+  {
+    seen_map::const_iterator i = H.find(state);
+    if (i != H.end())
+      return Alive;
+    else if (uf_->is_dead(state))
+      return Dead;
+    else
+      return Unknown;
+  }
+
+  bool
+  concur_opt_dijkstra_scc::has_counterexample()
+  {
+    return counterexample_found;
+  }
+
+  void concur_opt_dijkstra_scc::main()
+  {
+    opt_dijkstra_scc::color c;
+    while (!todo.empty() && !*stop_)
+      {
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr = swarm_ ?
+	      a_->swarm_succ_iter(todo.back().state) :
+	      a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
+	  }
+
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+    	  }
+    	else
+    	  {
+	    ++transitions_cpt_;
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+    	    if (c == Unknown)
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (c == Alive)
+    	      {
+    	    	if (merge (d))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
+      }
+  }
+
   // ----------------------------------------------------------------------
   // Concurrent Tarjan Emptiness check  with shared union find.
   // ======================================================================
@@ -443,15 +461,10 @@ namespace spot
 	  counterexample_found = true;
 
 	if (fast_backtrack)
-	  {
-	    //std::cout << "POP : fastbacktrack!\n";
-	    fastbacktrack();
-	  }
+	  fastbacktrack();
+
       }
   }
-
-
-
 
   bool concur_opt_tarjan_ec::dfs_update(fasttgba_state* d)
   {
@@ -475,36 +488,63 @@ namespace spot
     				 &fast_backtrack));
 
     if (fast_backtrack)
-      {
-	// std::cout << "Update : fastbacktrack!\n";
-	fastbacktrack();
-      }
+      fastbacktrack();
 
     return dstack_->top_acceptance().all();
+  }
+
+  void concur_opt_tarjan_ec::fastbacktrack()
+  {
+      //assert(!todo.empty());
+      int ref = dstack_->top();
+      int i = 0;
+      while ( dstack_->top() >= ref)
+	{
+	  ++i;
+	  seen_map::const_iterator it1 = H.find(todo.back().state);
+	  H.erase(it1);
+	  todo.pop_back();
+	  dstack_->pop();
+
+	  if (todo.empty())
+	    break;
+	}
+
+      while (H.size() > (unsigned) ref)
+	  {
+	    seen_map::const_iterator it = H.find(live.back());
+	    H.erase(it);
+	    live.pop_back();
+	  }
+
+
+      std::cout << "FastBacktrack : " << i << std::endl;
+  }
+
+  std::string concur_opt_tarjan_ec::csv()
+  {
+    return "tarjan_ec," + extra_info_csv();
   }
 
   // ----------------------------------------------------------------------
   // Definition of the core of Dead_share
   // ======================================================================
 
-  dead_share::~dead_share()
+  dead_share::dead_share(instanciator* i,
+			 int thread_number,
+			 DeadSharePolicy policy,
+			 std::string option) :
+    itor_(i), tn_(thread_number), policy_(policy), max_diff(0)
   {
-    delete uf_;
-  }
-
-  bool
-  dead_share::check()
-  {
-    std::vector<std::thread> v;
-    std::chrono::time_point<std::chrono::system_clock> start, end;
+    assert(i && thread_number && !option.compare(""));
+    uf_ = new spot::uf(tn_);
 
     // Must we stop the world? It is valid to use a non atomic variable
     // since it will only pass this variable to true once
-    int stop = 0;
+    stop = 0;
     bool s_ = tn_ != 1;
 
     // Let us instanciate the checker according to the policy
-    std::vector<spot::concur_ec_stat*> chk;
     for (int i = 0; i < tn_; ++i)
       {
 	if (policy_ == FULL_TARJAN)
@@ -527,6 +567,22 @@ namespace spot
 							      i, &stop, s_));
 	  }
       }
+  }
+
+  dead_share::~dead_share()
+  {
+    // Release memory
+    for (int i = 0; i < tn_; ++i)
+      	delete chk[i];
+
+    delete uf_;
+  }
+
+  bool
+  dead_share::check()
+  {
+    std::vector<std::thread> v;
+    std::chrono::time_point<std::chrono::system_clock> start, end;
 
     // Start Global Timer
     std::cout << "Start threads ..." << std::endl;
@@ -535,7 +591,7 @@ namespace spot
     // Launch all threads
     for (int i = 0; i < tn_; ++i)
       v.push_back( std::thread ([&](int tid){
-	    srand ((tid+1) * time(NULL));
+	    srand ((tid+1) * time(NULL)); // To avoid 0 multiplication
 	    chk[tid]->check();
 	  }, i));
 
@@ -553,13 +609,24 @@ namespace spot
 
     // Clean up checker and construct CSV
     bool ctrexple = false;
+    for (int i = 0; i < tn_; ++i)
+      ctrexple |= chk[i]->has_counterexample();
+
+    // Display results
+    printf("\n[WF]  num of threads = %d insert = %d  elapsed time = %d\n",
+	   tn_, uf_->size(), (int)elapsed_seconds);
+
+    return ctrexple;
+  }
+
+  void dead_share::dump_threads()
+  {
+    std::cout << std::endl << "THREADS DUMP : " << std::endl;
     auto tmpi = 0;
     for (int i = 0; i < tn_; ++i)
       {
-	ctrexple |= chk[i]->has_counterexample();
-
 	if (max_diff < std::abs(chk[i]->get_elapsed_time()
-			   - chk[tmpi]->get_elapsed_time()))
+				- chk[tmpi]->get_elapsed_time()))
 	  {
 	    max_diff = std::abs(chk[tmpi]->get_elapsed_time()
 				- chk[i]->get_elapsed_time());
@@ -567,22 +634,40 @@ namespace spot
 	  }
 
 	std::cout << "      thread : " << i << "  csv : "
-		  << (chk[i]->has_counterexample() ? "VIOLATED," : "VERIFIED,")
+		  << (chk[i]->has_counterexample() ? "VIOLATED,"
+		      : "VERIFIED,")
 		  << chk[i]->get_elapsed_time() << ","
-      		  << chk[i]->csv() << ","
+		  << chk[i]->csv() << ","
 		  << chk[i]->nb_inserted()
 		  << std::endl;
       }
-
-    // Release memory
-    for (int i = 0; i < tn_; ++i)
-      	delete chk[i];
-
-
-    // Display results
-    printf("[WF]  num of threads = %d insert = %d  elapsed time = %d\n\n",
-	   tn_, uf_->size(), (int)elapsed_seconds);
-
-    return ctrexple;
+    std::cout << std::endl;
   }
+
+  std::string dead_share::csv()
+  {
+    std::stringstream res;
+    switch (policy_)
+      {
+      case FULL_TARJAN:
+	res << "FULL_TARJAN,";
+	break;
+      case FULL_DIJKSTRA:
+	res << "FULL_DIJKSTRA,";
+	break;
+      case MIXED:
+	res << "MIXED,";
+	break;
+      case FULL_TARJAN_EC:
+	res << "FULL_TARJAN_EC,";
+	break;
+      default:
+	std::cout << "Error undefined thread policy" << std::endl;
+	assert(false);
+      }
+
+    res << tn_  << "," << max_diff;
+    return res.str();
+  }
+
 }

@@ -39,8 +39,11 @@
 
 namespace spot
 {
+  // ----------------------------------------------------------------------
+  // Tarjan Concurrent SCC Computation
+  // ======================================================================
 
-  /// \brief The method that will be used by thread performing a Tarjan SCC
+  /// \brief The class that will be used by thread performing a Tarjan SCC
   ///
   /// This class only redefine methods that are specific to multi threading env.
   /// The deadstore is remove and the thread use a shared union find to mark
@@ -69,33 +72,30 @@ namespace spot
 
     virtual bool has_counterexample();
 
-    virtual std::string csv()
-    {
-      return "tarjan," + extra_info_csv();
-    }
+    virtual std::string csv();
 
-    virtual std::chrono::milliseconds::rep
-    get_elapsed_time()
-    {
-      auto elapsed_seconds = std::chrono::duration_cast
-	<std::chrono::milliseconds>(end-start).count();
-      return elapsed_seconds;
-    }
+    virtual std::chrono::milliseconds::rep  get_elapsed_time();
 
-    virtual int nb_inserted()
-    {
-      return make_cpt_;
-    }
+    virtual int nb_inserted();
 
   protected:
     spot::uf* uf_;		/// \brief a reference to shared union find
-    int tn_;
+    int tn_;			/// \brief the thread identifier
     int * stop_;		/// \brief stop the world varibale
-    std::chrono::time_point<std::chrono::system_clock> start;
-    std::chrono::time_point<std::chrono::system_clock> end;
-    int make_cpt_;
+    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+    int make_cpt_;		/// \biref number of succed insertions
   };
 
+  // ----------------------------------------------------------------------
+  // Disjkstra Concurrent SCC Computation
+  // ======================================================================
+
+  /// \brief The class that will be used by thread performing a Dijkstra SCC
+  ///
+  /// This class only redefine methods that are specific to multi threading env.
+  /// The deadstore is remove and the thread use a shared union find to mark
+  /// states  dead.
   class concur_opt_dijkstra_scc : public opt_dijkstra_scc, public concur_ec_stat
   {
   public:
@@ -147,10 +147,16 @@ namespace spot
     int make_cpt_;
   };
 
+  // ----------------------------------------------------------------------
+  // Tarjan Concurrent Emptiness Check
+  // ======================================================================
 
+  /// \brief An emptiness based on the tarjan parallel computation algorithm
+  /// above
   class concur_opt_tarjan_ec : public concur_opt_tarjan_scc
   {
   public:
+    /// \brief A constuctor
     concur_opt_tarjan_ec(instanciator* i,
 			 spot::uf* uf,
 			 int thread_number,
@@ -160,46 +166,18 @@ namespace spot
       : concur_opt_tarjan_scc(i, uf, thread_number, stop, swarming, option)
     { }
 
-
     /// \brief  Pop states already explored
     virtual void dfs_pop();
 
     /// \brief the update for backedges
     virtual bool dfs_update (fasttgba_state* s);
 
-    virtual void fastbacktrack()
-    {
-      //assert(!todo.empty());
-      int ref = dstack_->top();
-      int i = 0;
-      while ( dstack_->top() >= ref)
-	{
-	  ++i;
-	  seen_map::const_iterator it1 = H.find(todo.back().state);
-	  H.erase(it1);
-	  todo.pop_back();
-	  dstack_->pop();
-
-	  if (todo.empty())
-	    break;
-	}
-
-      while (H.size() > (unsigned) ref)
-	  {
-	    seen_map::const_iterator it = H.find(live.back());
-	    H.erase(it);
-	    live.pop_back();
-	  }
-
-
-      std::cout << "FastBacktrack : " << i << std::endl;
-    }
+    /// \brief Speed up the backtrack when the current state as been
+    /// already marked dead by another thread.
+    virtual void fastbacktrack();
 
     /// \brief Display the csv of for this thread
-    virtual std::string csv()
-    {
-      return "tarjan_ec," + extra_info_csv();
-    }
+    virtual std::string csv();
   };
 
 
@@ -217,53 +195,41 @@ namespace spot
 	FULL_TARJAN_EC = 3	/// \brief All treads use Tarjan Emptiness Check
       };
 
+    /// \brief Constructor for the multithreaded emptiness check
+    ///
+    /// This emptiness check is a wrapper for many and the policy to
+    /// use can be defined using the \policy parameter.
+    ///
+    /// \param thread_number the number of thread to use
     dead_share(instanciator* i,
 	       int thread_number = 1,
 	       DeadSharePolicy policy = FULL_TARJAN,
-	       std::string option = "") :
-      itor_(i), tn_(thread_number), policy_(policy), max_diff(0)
-    {
-      assert(i && thread_number && !option.compare(""));
-      uf_ = new spot::uf(tn_);
-    }
+	       std::string option = "");
 
+    /// \brief Release all memory
     virtual ~dead_share();
 
+    /// \brief launch every thread with associated data and
+    /// wait them to end.
     bool check();
 
-    virtual std::string csv()
-    {
-      std::stringstream res;
-      switch (policy_)
-	{
-	case FULL_TARJAN:
-	  res << "FULL_TARJAN,";
-	  break;
-	case FULL_DIJKSTRA:
-	  res << "FULL_DIJKSTRA,";
-	  break;
-	case MIXED:
-	  res << "MIXED,";
-	  break;
-	case FULL_TARJAN_EC:
-	  res << "FULL_TARJAN_EC,";
-	  break;
-	default:
-	  std::cout << "Error undefined thread policy" << std::endl;
-	  assert(false);
-	}
+    /// \brief A CSV containing :
+    ///    - the Name of the algo used
+    ///    - the number of threads in use
+    ///    - the maximum elapsed time between 2 threads stop!
+    virtual std::string csv();
 
-      res << tn_  << "," << max_diff;
-      return res.str();
-    }
-
+    /// Additionnal information threads by threads
+    void dump_threads();
 
   protected:
-    spot::uf* uf_;
-    instanciator* itor_;
-    int tn_;
-    DeadSharePolicy policy_;
-    std::chrono::milliseconds::rep max_diff;
+    spot::uf* uf_;		///< The shared Union Find
+    instanciator* itor_;	///< The instanciator
+    int tn_;			///< The number of threads
+    DeadSharePolicy policy_;	///< The current policy to use
+    std::chrono::milliseconds::rep max_diff; ///< Elapse time between 2 stops
+    std::vector<spot::concur_ec_stat*> chk;  ///< Local data for each threads
+    int stop;				     ///< Stop the world variable
   };
 }
 
