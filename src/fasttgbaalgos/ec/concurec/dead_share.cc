@@ -495,30 +495,29 @@ namespace spot
 
   void concur_opt_tarjan_ec::fastbacktrack()
   {
-      //assert(!todo.empty());
-      int ref = dstack_->top();
-      int i = 0;
-      while ( dstack_->top() >= ref)
-	{
-	  ++i;
-	  seen_map::const_iterator it1 = H.find(todo.back().state);
-	  H.erase(it1);
-	  todo.pop_back();
-	  dstack_->pop();
+      // //assert(!todo.empty());
+      // int ref = dstack_->top();
+      // int i = 0;
+      // while ( dstack_->top() >= ref)
+      // 	{
+      // 	  ++i;
+      // 	  seen_map::const_iterator it1 = H.find(todo.back().state);
+      // 	  H.erase(it1);
+      // 	  todo.pop_back();
+      // 	  dstack_->pop();
 
-	  if (todo.empty())
-	    break;
-	}
+      // 	  if (todo.empty())
+      // 	    break;
+      // 	}
 
-      while (H.size() > (unsigned) ref)
-	  {
-	    seen_map::const_iterator it = H.find(live.back());
-	    H.erase(it);
-	    live.pop_back();
-	  }
+      // while (H.size() > (unsigned) ref)
+      // 	{
+      // 	  seen_map::const_iterator it = H.find(live.back());
+      // 	  H.erase(it);
+      // 	  live.pop_back();
+      // 	}
 
-
-      std::cout << "FastBacktrack : " << i << std::endl;
+      // std::cout << "FastBacktrack : " << i << "\n";
   }
 
   std::string concur_opt_tarjan_ec::csv()
