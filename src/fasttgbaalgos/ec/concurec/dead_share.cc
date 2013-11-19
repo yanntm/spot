@@ -495,29 +495,50 @@ namespace spot
 
   void concur_opt_tarjan_ec::fastbacktrack()
   {
-      // //assert(!todo.empty());
-      // int ref = dstack_->top();
-      // int i = 0;
-      // while ( dstack_->top() >= ref)
-      // 	{
-      // 	  ++i;
-      // 	  seen_map::const_iterator it1 = H.find(todo.back().state);
-      // 	  H.erase(it1);
-      // 	  todo.pop_back();
-      // 	  dstack_->pop();
+    int ref = dstack_->top();
+    int i = 0;
 
-      // 	  if (todo.empty())
-      // 	    break;
-      // 	}
 
-      // while (H.size() > (unsigned) ref)
-      // 	{
-      // 	  seen_map::const_iterator it = H.find(live.back());
-      // 	  H.erase(it);
-      // 	  live.pop_back();
-      // 	}
+    while ( dstack_->top() >= ref)
+      {
+	++i;
+	seen_map::const_iterator it1 = H.find(todo.back().state);
+	H.erase(it1);
+	delete todo.back().lasttr;
+	todo.pop_back();
+	dstack_->pop();
+      }
 
-      // std::cout << "FastBacktrack : " << i << "\n";
+    while (live.size() > H.size())
+      {
+	++i;
+	seen_map::const_iterator it = H.find(live.back());
+	H.erase(it);
+	live.pop_back();
+      }
+// //assert(!todo.empty());
+//       int ref = dstack_->top();
+//       int i = 0;
+//       while ( dstack_->top() >= ref)
+//       	{
+//       	  ++i;
+//       	  seen_map::const_iterator it1 = H.find(todo.back().state);
+//       	  H.erase(it1);
+//       	  todo.pop_back();
+//       	  dstack_->pop();
+
+//       	  if (todo.empty())
+//       	    break;
+//       	}
+
+//       while (H.size() > (unsigned) ref)
+//       	{
+//       	  seen_map::const_iterator it = H.find(live.back());
+//       	  H.erase(it);
+//       	  live.pop_back();
+//       	}
+
+      std::cout << "FastBacktrack : " << i << "\n";
   }
 
   std::string concur_opt_tarjan_ec::csv()
