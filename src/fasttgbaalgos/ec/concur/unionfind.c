@@ -92,24 +92,42 @@ uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted, int tn)
   return (uf_node_t*)old;
 }
 
+/* uf_node_t* uf_find(uf_node_t* n) */
+/* { */
+/*   uf_node_t* node = n; */
+/*   /\* uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent; *\/ */
+/*   /\* assert(parent); *\/ */
+
+/*   // Look for the root */
+/*   int i = 0; */
+/*   uf_node_t* tmp; */
+/*   while ((tmp = ((uf_node_t)atomic_read(node)).parent) != node) */
+/*     { */
+/*       node = tmp; */
+/*       ++i; */
+/*     } */
+/*   printf("%d ", i); */
+
+/*   /\* // We don't care if there is a fail! *\/ */
+/*   uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent; */
+/*   (void) cas_ret(&n->parent, parent, node); */
+
+/*   return node; */
+/* } */
+
+
+
 uf_node_t* uf_find(uf_node_t* n)
 {
-  uf_node_t* node = n;
-  /* uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent; */
-  /* assert(parent); */
-
   // Look for the root
-  uf_node_t* tmp;
-  while ((tmp = ((uf_node_t)atomic_read(node)).parent) != node)
-    {
-      node = tmp;
-    }
+   uf_node_t* p = ((uf_node_t)atomic_read(n)).parent;
+   if (p == n)
+     return p;
 
-  /* // We don't care if there is a fail! */
-  uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent;
-  (void) cas_ret(&n->parent, parent, node);
+   uf_node_t* root = uf_find(p);
+   (void) cas_ret(&n->parent, p, root);
 
-  return node;
+   return root;
 }
 
 unsigned long uf_add_acc(uf_t* uf, uf_node_t* n, unsigned long acc)
