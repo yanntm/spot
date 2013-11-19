@@ -30,12 +30,14 @@ namespace spot
 						   spot::uf* uf,
 						   int tn,
 						   int *stop,
+						   bool swarming,
 						   std::string option)
-    : opt_dijkstra_scc(i, option, true)
+    : opt_dijkstra_scc(i, option, swarming)
   {
     uf_ = uf;
     tn_ = tn;
     stop_ = stop;
+    make_cpt_ = 0;
   }
 
   bool
@@ -56,7 +58,8 @@ namespace spot
     assert(H.find(s) == H.end());
     H.insert(std::make_pair(s, H.size()));
 
-    uf_->make_set(s, tn_);
+    if (uf_->make_set(s, tn_))
+      ++make_cpt_;
 
     // Count!
     max_live_size_ = H.size() > max_live_size_ ?
@@ -206,12 +209,14 @@ namespace spot
 					       spot::uf* uf,
 					       int tn,
 					       int *stop,
+					       bool swarming,
 					       std::string option)
-    : opt_tarjan_scc(i, option, true)
+    : opt_tarjan_scc(i, option, swarming)
   {
     uf_ = uf;
     tn_ = tn;
     stop_ = stop;
+    make_cpt_ = 0;
   }
 
   bool
@@ -233,7 +238,8 @@ namespace spot
     dstack_->push(position);
     todo.push_back ({q, 0, H.size() -1});
 
-    uf_->make_set(q, tn_);
+    if (uf_->make_set(q, tn_))
+      ++make_cpt_;
 
     ++dfs_size_;
     ++states_cpt_;
@@ -436,8 +442,11 @@ namespace spot
 	if (dstack_->top_acceptance().all())
 	  counterexample_found = true;
 
-	// if (fast_backtrack)
-	//   assert(false);//fastbacktrack();
+	if (fast_backtrack)
+	  {
+	    //std::cout << "POP : fastbacktrack!\n";
+	    fastbacktrack();
+	  }
       }
   }
 
@@ -465,8 +474,11 @@ namespace spot
     				 dstack_->top_acceptance(),
     				 &fast_backtrack));
 
-    // if (fast_backtrack)
-    //   assert(false);//fastbacktrack();
+    if (fast_backtrack)
+      {
+	// std::cout << "Update : fastbacktrack!\n";
+	fastbacktrack();
+      }
 
     return dstack_->top_acceptance().all();
   }
@@ -489,6 +501,7 @@ namespace spot
     // Must we stop the world? It is valid to use a non atomic variable
     // since it will only pass this variable to true once
     int stop = 0;
+    bool s_ = tn_ != 1;
 
     // Let us instanciate the checker according to the policy
     std::vector<spot::concur_ec_stat*> chk;
@@ -496,22 +509,22 @@ namespace spot
       {
 	if (policy_ == FULL_TARJAN)
 	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
-							i, &stop));
+							i, &stop, s_));
 	else if (policy_ == FULL_TARJAN_EC)
 	  chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
-							i, &stop));
+						       i, &stop, s_));
 	else if (policy_ == FULL_DIJKSTRA)
 	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
-							  i, &stop));
+							  i, &stop, s_));
 	else
 	  {
 	    assert(policy_ == MIXED);
 	    if (i%2)
 	      chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
-							    i, &stop));
+							    i, &stop, s_));
 	    else
 	      chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
-							      i, &stop));
+							      i, &stop, s_));
 	  }
       }
 
@@ -522,6 +535,7 @@ namespace spot
     // Launch all threads
     for (int i = 0; i < tn_; ++i)
       v.push_back( std::thread ([&](int tid){
+	    srand ((tid+1) * time(NULL));
 	    chk[tid]->check();
 	  }, i));
 
@@ -555,10 +569,12 @@ namespace spot
 	std::cout << "      thread : " << i << "  csv : "
 		  << (chk[i]->has_counterexample() ? "VIOLATED," : "VERIFIED,")
 		  << chk[i]->get_elapsed_time() << ","
-      		  << chk[i]->csv() << std::endl;
+      		  << chk[i]->csv() << ","
+		  << chk[i]->nb_inserted()
+		  << std::endl;
       }
 
-    // Release memrory
+    // Release memory
     for (int i = 0; i < tn_; ++i)
       	delete chk[i];
 

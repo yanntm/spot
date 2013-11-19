@@ -52,6 +52,7 @@ namespace spot
 			  spot::uf* uf,
 			  int thread_number,
 			  int *stop,
+			  bool swarming,
 			  std::string option = "");
 
     virtual bool check();
@@ -81,12 +82,18 @@ namespace spot
       return elapsed_seconds;
     }
 
+    virtual int nb_inserted()
+    {
+      return make_cpt_;
+    }
+
   protected:
     spot::uf* uf_;		/// \brief a reference to shared union find
     int tn_;
     int * stop_;		/// \brief stop the world varibale
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
+    int make_cpt_;
   };
 
   class concur_opt_dijkstra_scc : public opt_dijkstra_scc, public concur_ec_stat
@@ -96,6 +103,7 @@ namespace spot
 			    spot::uf* uf,
 			    int thread_number,
 			    int *stop,
+			    bool swarming,
 			    std::string option = "");
 
     virtual bool check();
@@ -125,12 +133,18 @@ namespace spot
       return elapsed_seconds;
     }
 
+    virtual int nb_inserted()
+    {
+      return make_cpt_;
+    }
+
   protected:
     spot::uf* uf_;		/// \brief a reference to shared union find
     int tn_;
     int * stop_;		/// \brief stop the world varibale
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
+    int make_cpt_;
   };
 
 
@@ -138,11 +152,12 @@ namespace spot
   {
   public:
     concur_opt_tarjan_ec(instanciator* i,
-			    spot::uf* uf,
-			    int thread_number,
-			    int *stop,
-			    std::string option = "")
-      : concur_opt_tarjan_scc(i, uf, thread_number, stop, option)
+			 spot::uf* uf,
+			 int thread_number,
+			 int *stop,
+			 bool swarming,
+			 std::string option = "")
+      : concur_opt_tarjan_scc(i, uf, thread_number, stop, swarming, option)
     { }
 
 
@@ -154,20 +169,30 @@ namespace spot
 
     virtual void fastbacktrack()
     {
-      assert(!todo.empty());
+      //assert(!todo.empty());
       int ref = dstack_->top();
-      const fasttgba_state* last;
-      while (dstack_->top() >= ref || !uf_->is_dead((last = todo.back().state)))
+      int i = 0;
+      while ( dstack_->top() >= ref)
 	{
-	  live.pop_back();
+	  ++i;
+	  seen_map::const_iterator it1 = H.find(todo.back().state);
+	  H.erase(it1);
 	  todo.pop_back();
 	  dstack_->pop();
-	  seen_map::const_iterator it1 = H.find(last);
-	  H.erase(it1);
 
 	  if (todo.empty())
 	    break;
 	}
+
+      while (H.size() > (unsigned) ref)
+	  {
+	    seen_map::const_iterator it = H.find(live.back());
+	    H.erase(it);
+	    live.pop_back();
+	  }
+
+
+      std::cout << "FastBacktrack : " << i << std::endl;
     }
 
     /// \brief Display the csv of for this thread

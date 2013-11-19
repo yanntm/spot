@@ -33,6 +33,8 @@ namespace spot
     virtual std::string csv() = 0;
 
     virtual std::chrono::milliseconds::rep get_elapsed_time() = 0;
+
+    virtual int nb_inserted() = 0;
   };
 }
 
