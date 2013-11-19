@@ -152,17 +152,20 @@ namespace spot
 	ht_get(effective_uf->table, (map_key_t) left);
       uf_node_t* r = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) right);
-      uf_node_t* fast_ret = uf_unite (effective_uf, l, r);
+      unsigned long ret_acc = 0;
+
+      uf_node_t* fast_ret = uf_unite (effective_uf, l, r, &ret_acc);
       *is_dead = fast_ret == effective_uf->dead_;
 
       unsigned long tmp = acc.to_ulong();
-      //printf("%s %zu\n", acc.dump().c_str(), tmp);
+      // printf("%s %zu %zu\n", acc.dump().c_str(), tmp, ret_acc);
       // The markset is empty don't need to go further
-      if (!tmp || *is_dead)
+
+      if (!tmp || *is_dead || ret_acc == tmp)
 	return acc;
 
       // Grab the representative int.
-      unsigned long res = uf_add_acc(effective_uf, l, acc.to_ulong());
+      unsigned long res = uf_add_acc(effective_uf, fast_ret, tmp);
 
       // if res equal 0 the state is dead!
       // The add doesn't change anything

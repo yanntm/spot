@@ -104,6 +104,11 @@ uf_node_t* uf_find(uf_node_t* n)
     {
       node = tmp;
     }
+
+  /* // We don't care if there is a fail! */
+  uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent;
+  (void) cas_ret(&n->parent, parent, node);
+
   return node;
 }
 
@@ -137,10 +142,11 @@ unsigned long uf_add_acc(uf_t* uf, uf_node_t* n, unsigned long acc)
 
 }
 
-uf_node_t* uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right)
+uf_node_t* uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right,
+		    unsigned long* acc)
 {
-  uf_node_t* pleft;
-  uf_node_t* pright;
+  uf_node_t* pleft = left;
+  uf_node_t* pright = right;
   uf_node_t* old;
 
   if (left == right)
@@ -160,11 +166,14 @@ uf_node_t* uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right)
 
   while (1)
     {
-      pleft = uf_find(left);
-      pright = uf_find(right);
+      pleft = uf_find(pleft);
+      pright = uf_find(pright);
 
       if (pleft == pright)
-	return pleft;
+	{
+	  *acc = ((uf_node_t)atomic_read(pleft)).markset;
+	  return pleft;
+	}
 
       if (pleft == uf->dead_)
 	{
@@ -187,13 +196,19 @@ uf_node_t* uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right)
 	{
 	  old = cas_ret(&pright->parent, pright, pleft);
 	  if (old == pright)
-	    return pleft;
+	    {
+	      *acc = ((uf_node_t)atomic_read(pleft)).markset;
+	      return pleft;
+	    }
 	}
       else
 	{
 	  old = cas_ret(&pleft->parent, pleft, pright);
 	  if (old == pleft)
-	    return pright;
+	    {
+	      *acc = ((uf_node_t)atomic_read(pright)).markset;
+	      return pright;
+	    }
 	}
     }
 }
