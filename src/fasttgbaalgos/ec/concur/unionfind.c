@@ -125,9 +125,9 @@ uf_node_t* uf_find(uf_node_t* n)
      return p;
 
    uf_node_t* root = uf_find(p);
-   (void) cas_ret(&n->parent, p, root);
+   uf_node_t* old = cas_ret(&n->parent, p, root);
 
-   return root;
+   return p == old ? root : old;
 }
 
 unsigned long uf_add_acc(uf_t* uf, uf_node_t* n, unsigned long acc)
@@ -218,6 +218,7 @@ uf_node_t* uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right,
 	      *acc = ((uf_node_t)atomic_read(pleft)).markset;
 	      return pleft;
 	    }
+	  pright = old;
 	}
       else
 	{
@@ -227,6 +228,7 @@ uf_node_t* uf_unite(uf_t* uf, uf_node_t* left, uf_node_t* right,
 	      *acc = ((uf_node_t)atomic_read(pright)).markset;
 	      return pright;
 	    }
+	  pleft = old;
 	}
     }
 }
@@ -245,6 +247,7 @@ void uf_make_dead(uf_t* uf, uf_node_t* n)
       old = cas_ret(&node->parent, node, uf->dead_);
       if (old == node)
 	  return ;
+      node = old;
     }
 }
 
