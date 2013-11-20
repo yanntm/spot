@@ -162,9 +162,11 @@ namespace spot
 			 int thread_number,
 			 int *stop,
 			 bool swarming,
-			 std::string option = "")
+			 std::string option = "-cs")
       : concur_opt_tarjan_scc(i, uf, thread_number, stop, swarming, option)
-    { }
+    {
+      fastb_cpt_ = 0;
+    }
 
     /// \brief  Pop states already explored
     virtual void dfs_pop();
@@ -178,6 +180,9 @@ namespace spot
 
     /// \brief Display the csv of for this thread
     virtual std::string csv();
+
+  private:
+    int fastb_cpt_;
   };
 
 

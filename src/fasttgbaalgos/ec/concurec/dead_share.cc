@@ -60,7 +60,10 @@ namespace spot
     todo.push_back ({q, 0, H.size() -1});
 
     if (uf_->make_set(q, tn_))
-      ++make_cpt_;
+      {
+	q->clone();
+	++make_cpt_;
+      }
 
     ++dfs_size_;
     ++states_cpt_;
@@ -125,8 +128,10 @@ namespace spot
 	while (H.size() > steppos)
 	  {
 	    ++trivial;
-	    seen_map::const_iterator it = H.find(live.back());
+	    auto toerase = live.back();
+	    seen_map::const_iterator it = H.find(toerase);
 	    H.erase(it);
+	    toerase->destroy();
 	    live.pop_back();
 	  }
 
@@ -430,8 +435,10 @@ namespace spot
 	  {
 	    ++trivial;
 	    //deadstore_->add(live.back());
-	    seen_map::const_iterator it = H.find(live.back());
+	    auto toerase = live.back();
+	    seen_map::const_iterator it = H.find(toerase);
 	    H.erase(it);
+	    toerase->destroy();
 	    live.pop_back();
 	  }
 
@@ -488,62 +495,68 @@ namespace spot
     				 &fast_backtrack));
 
     if (fast_backtrack)
-      fastbacktrack();
+      {
+	fastbacktrack();
+	return false;
+      }
 
     return dstack_->top_acceptance().all();
   }
 
   void concur_opt_tarjan_ec::fastbacktrack()
   {
+    // return ;
     int ref = dstack_->top();
     int i = 0;
 
 
-    while ( dstack_->top() >= ref)
+    //live.push_back(todo.back().state);
+	seen_map::const_iterator it = H.find(todo.back().state);
+	H.erase(it);
+	todo.back().state->destroy();
+    delete todo.back().lasttr;
+    todo.pop_back();
+    dstack_->pop();
+
+    while ( dstack_->top() > ref)
       {
-	++i;
-	seen_map::const_iterator it1 = H.find(todo.back().state);
-	H.erase(it1);
+	seen_map::const_iterator it = H.find(todo.back().state);
+	H.erase(it);
+	todo.back().state->destroy();
+	// live.push_back(todo.back().state);
 	delete todo.back().lasttr;
 	todo.pop_back();
 	dstack_->pop();
       }
 
-    while (live.size() > H.size())
+    if (!todo.empty())
       {
-	++i;
-	seen_map::const_iterator it = H.find(live.back());
-	H.erase(it);
-	live.pop_back();
+    	unsigned int steppos = todo.back().position;
+    	// printf("H:%zu todo:%zu live:%zu steppos:%d ref:%d\n", H.size(),
+    	//        todo.size(), live.size(), steppos, ref);
+
+    	while (H.size() > steppos+1)
+    	  {
+    	    ++i;
+    	    // if (live.empty())
+    	    //   {
+    	    // 	printf("%zu %zu %d \n", H.size(), todo.size(), steppos);
+    	    // 	assert(false);
+    	    //   }
+	    auto toerase = live.back();
+    	    seen_map::const_iterator it = H.find(toerase);
+    	    H.erase(it);
+	    toerase->destroy();
+    	    live.pop_back();
+    	  }
       }
-// //assert(!todo.empty());
-//       int ref = dstack_->top();
-//       int i = 0;
-//       while ( dstack_->top() >= ref)
-//       	{
-//       	  ++i;
-//       	  seen_map::const_iterator it1 = H.find(todo.back().state);
-//       	  H.erase(it1);
-//       	  todo.pop_back();
-//       	  dstack_->pop();
-
-//       	  if (todo.empty())
-//       	    break;
-//       	}
-
-//       while (H.size() > (unsigned) ref)
-//       	{
-//       	  seen_map::const_iterator it = H.find(live.back());
-//       	  H.erase(it);
-//       	  live.pop_back();
-//       	}
-
-      std::cout << "FastBacktrack : " << i << "\n";
+    fastb_cpt_ = fastb_cpt_ > i ? fastb_cpt_ : i;
+    //      std::cout << "FastBacktrack : " << i << "\n";
   }
 
   std::string concur_opt_tarjan_ec::csv()
   {
-    return "tarjan_ec," + extra_info_csv();
+    return "tarjan_ec," + extra_info_csv() + "," + std::to_string(fastb_cpt_);
   }
 
   // ----------------------------------------------------------------------
