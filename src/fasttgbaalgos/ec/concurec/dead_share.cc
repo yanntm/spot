@@ -494,18 +494,19 @@ namespace spot
     				 dstack_->top_acceptance(),
     				 &fast_backtrack));
 
-    if (fast_backtrack)
-      {
-	fastbacktrack();
-	return false;
-      }
+    bool rv = dstack_->top_acceptance().all();
 
-    return dstack_->top_acceptance().all();
+    if (!rv && fast_backtrack)
+      fastbacktrack();
+
+    return rv;
   }
 
   void concur_opt_tarjan_ec::fastbacktrack()
   {
-    // return ;
+    ++fastb_cpt_;
+    return ;
+
     int ref = dstack_->top();
     int i = 0;
 
@@ -624,7 +625,7 @@ namespace spot
     // Launch all threads
     for (int i = 0; i < tn_; ++i)
       v.push_back( std::thread ([&](int tid){
-	    srand ((tid+1) * time(NULL)); // To avoid 0 multiplication
+	    srand (tid); // To avoid 0 multiplication
 	    chk[tid]->check();
 	  }, i));
 
