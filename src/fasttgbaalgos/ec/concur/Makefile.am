@@ -27,7 +27,6 @@ concur_HEADERS =    \
    MurmurHash3.h    \
    atomics.h	    \
    balloc.h	    \
-   bitset.h	    \
    context.h	    \
    dir_ops.h	    \
    dynamic-array.h  \
@@ -51,6 +50,7 @@ concur_HEADERS =    \
    util.h           \
    uf.hh
 
+#   bitset.h
   # MurmurHash3.h \
   # atomics.h \
   # balloc.h \
@@ -69,7 +69,6 @@ noinst_LTLIBRARIES = libconcur.la
 libconcur_la_SOURCES = \
    MurmurHash3.c         \
    balloc.c		 \
-   bitset.c		 \
    dynamic-array.c	 \
    fast_hash.c		 \
    fast_set.c		 \
@@ -96,7 +95,7 @@ libconcur_la_SOURCES = \
 
 #   hre_popt.c
 #   qsortex.c
-
+#    bitset.c
 
 
   # MurmurHash3.c \
