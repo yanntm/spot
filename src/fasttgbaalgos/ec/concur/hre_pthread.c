@@ -106,10 +106,10 @@ static void area_free(void*area,void *rt_ptr){
 
 static void queue_put(hre_context_t context,hre_msg_t msg,int queue){
     if (msg->comm >= QUEUE_SIZE) Abort("number of communicators exceeds maximum of %d",QUEUE_SIZE);
-    pthread_mutex_lock(&context->queues[queue].lock);
-    hre_put_msg(&context->queues[queue].comm[msg->comm],msg);
-    pthread_cond_broadcast(&context->queues[queue].cond);
-    pthread_mutex_unlock(&context->queues[queue].lock);
+    /* pthread_mutex_lock(&context->queues[queue].lock); */
+    /* hre_put_msg(&context->queues[queue].comm[msg->comm],msg); */
+    /* pthread_cond_broadcast(&context->queues[queue].cond); */
+    /* pthread_mutex_unlock(&context->queues[queue].lock); */
 }
 
 static void queue_send(hre_context_t context,hre_msg_t msg){
@@ -117,40 +117,40 @@ static void queue_send(hre_context_t context,hre_msg_t msg){
 }
 
 static void queue_while(hre_context_t ctx,int*condition){
-    int me=HREme(ctx);
-    hre_msg_t msg=NULL;
-    int max_comm=array_size(HREcommManager(ctx));
-    int comm;
-    for(;;){
-        pthread_mutex_lock(&ctx->queues[me].lock);
-        //Print(infoShort,"scanning queue %d below %d",me,max_comm);
-        for(comm=0;comm<max_comm;comm++){
-            msg=hre_get_msg(&ctx->queues[me].comm[comm]);
-            if (msg) break;
-        }
-        while(!msg && *condition) {
-            //Print(infoShort,"blocking %d",*condition);
-            pthread_cond_wait(&ctx->queues[me].cond, &ctx->queues[me].lock);
-            //Print(infoShort,"scanning queue %d below %d",me,max_comm);
-            for(comm=0;comm<max_comm;comm++){
-                msg=hre_get_msg(&ctx->queues[me].comm[comm]);
-                if (msg) break;
-            }
-        }
-        pthread_mutex_unlock(&ctx->queues[me].lock);
-        if (!msg) break;
-        /* Messages are put in the queue with the sending context.
-           They have to be processed with respect to the receiving context.
-        */
-        msg->context=ctx;
-        if (me==(int)msg->target) {
-            // Message is sent to us.
-            HREdeliverMessage(msg);
-        } else {
-            // Message is being returned to us.
-            HREmsgReady(msg);
-        }
-    }
+    /* int me=HREme(ctx); */
+    /* hre_msg_t msg=NULL; */
+    /* int max_comm=array_size(HREcommManager(ctx)); */
+    /* int comm; */
+    /* for(;;){ */
+    /*     pthread_mutex_lock(&ctx->queues[me].lock); */
+    /*     //Print(infoShort,"scanning queue %d below %d",me,max_comm); */
+    /*     for(comm=0;comm<max_comm;comm++){ */
+    /*         msg=hre_get_msg(&ctx->queues[me].comm[comm]); */
+    /*         if (msg) break; */
+    /*     } */
+    /*     while(!msg && *condition) { */
+    /*         //Print(infoShort,"blocking %d",*condition); */
+    /*         pthread_cond_wait(&ctx->queues[me].cond, &ctx->queues[me].lock); */
+    /*         //Print(infoShort,"scanning queue %d below %d",me,max_comm); */
+    /*         for(comm=0;comm<max_comm;comm++){ */
+    /*             msg=hre_get_msg(&ctx->queues[me].comm[comm]); */
+    /*             if (msg) break; */
+    /*         } */
+    /*     } */
+    /*     pthread_mutex_unlock(&ctx->queues[me].lock); */
+    /*     if (!msg) break; */
+    /*     /\* Messages are put in the queue with the sending context. */
+    /*        They have to be processed with respect to the receiving context. */
+    /*     *\/ */
+    /*     msg->context=ctx; */
+    /*     if (me==(int)msg->target) { */
+    /*         // Message is sent to us. */
+    /*         HREdeliverMessage(msg); */
+    /*     } else { */
+    /*         // Message is being returned to us. */
+    /*         HREmsgReady(msg); */
+    /*     } */
+    /* } */
 }
 
 static void queue_recv(hre_context_t ctx,hre_msg_t msg){

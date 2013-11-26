@@ -194,12 +194,12 @@ typedef struct msg_queue_s {
 /**
 \brief Put message in queue.
 */
-extern void hre_put_msg(msg_queue_t queue, hre_msg_t msg);
+//extern void hre_put_msg(msg_queue_t queue, hre_msg_t msg);
 
 /**
 \brief Get message from queue.
 */
-extern hre_msg_t hre_get_msg(msg_queue_t queue);
+//extern hre_msg_t hre_get_msg(msg_queue_t queue);
 
 /// Opaque type message buffer.
 typedef struct hre_buffer_s *hre_buffer_t;
