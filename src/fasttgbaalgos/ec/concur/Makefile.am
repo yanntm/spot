@@ -41,10 +41,10 @@ concur_HEADERS =    \
    unionfind.h	    \
    unix.h	    \
    user.h	    \
-   util.h           \
    uf.hh
 
 #   fast_set.h
+#   util.h
 
   # MurmurHash3.h \
   # atomics.h \
@@ -75,14 +75,14 @@ libconcur_la_SOURCES = \
    hre_runtime.c	 \
    hre_unix.c		 \
    hre_utils.c		 \
-   unionfind.c		 \
-   util.c
+   unionfind.c
 
 #    hre_queue.c
 #    fast_set.c
 #    hre_messaging.c
 #    hre_pthread.c
 #    hre_timer.c
+#   util.c
 
   # MurmurHash3.c \
   # balloc.c \
