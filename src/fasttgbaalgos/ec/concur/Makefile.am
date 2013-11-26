@@ -73,7 +73,6 @@ libconcur_la_SOURCES = \
    hre_malloc.c		 \
    hre_reduce.c		 \
    hre_runtime.c	 \
-   hre_timer.c		 \
    hre_unix.c		 \
    hre_utils.c		 \
    unionfind.c		 \
@@ -83,7 +82,7 @@ libconcur_la_SOURCES = \
 #    fast_set.c
 #    hre_messaging.c
 #    hre_pthread.c
-
+#    hre_timer.c
 
   # MurmurHash3.c \
   # balloc.c \
