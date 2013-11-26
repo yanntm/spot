@@ -87,7 +87,6 @@ libconcur_la_SOURCES = \
    hre_timer.c		 \
    hre_unix.c		 \
    hre_utils.c		 \
-   qsortex.c		 \
    simplemap.c		 \
    string-map.c		 \
    stringindex.c	 \
@@ -96,6 +95,9 @@ libconcur_la_SOURCES = \
    util.c
 
 #   hre_popt.c
+#   qsortex.c
+
+
 
   # MurmurHash3.c \
   # balloc.c \

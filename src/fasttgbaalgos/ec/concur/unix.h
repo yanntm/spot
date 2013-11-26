@@ -61,9 +61,8 @@ extern char *mkdtemp(char *);
 #error "Don't know how to deal with endianness on this platform."
 #endif
 
-extern void qsortr(void *base, size_t num, size_t width,
-                   int (*comp)(const void *, const void *,void *ExtraArgs),
-                   void *ExtraArgs);
+/* extern void qsortr(void *base, size_t num, size_t width, */
+/*                    int (*comp)(const void *, const void *,void *ExtraArgs), */
+/*                    void *ExtraArgs); */
 
 #endif
-
