@@ -28,7 +28,6 @@ concur_HEADERS =    \
    atomics.h	    \
    balloc.h	    \
    context.h	    \
-   dir_ops.h	    \
    dynamic-array.h  \
    fast_hash.h	    \
    fast_set.h	    \
@@ -51,6 +50,8 @@ concur_HEADERS =    \
    uf.hh
 
 #   bitset.h
+#    dir_ops.h
+
   # MurmurHash3.h \
   # atomics.h \
   # balloc.h \
@@ -74,7 +75,6 @@ libconcur_la_SOURCES = \
    fast_set.c		 \
    hashtable.c		 \
    hre_context.c	 \
-   hre_dir_ops.c	 \
    hre_feedback.c	 \
    hre_main.c		 \
    hre_malloc.c		 \
@@ -96,6 +96,7 @@ libconcur_la_SOURCES = \
 #   hre_popt.c
 #   qsortex.c
 #    bitset.c
+#   hre_dir_ops.c
 
 
   # MurmurHash3.c \
