@@ -18,7 +18,7 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 AM_CPPFLAGS = -I$(srcdir)/../../.. -I .. -I$(top_builddir)/src \
-	 -Wall -Werror -std=gnu99 -lpthread -g -DENABLE_TRACE #-I/Users/etienne/local/install/popt-1.14-bin/include/ -L/Users/etienne/local/install/popt-1.14-bin/lib/ -lpopt
+	 -Wall -Werror -std=gnu99 -lpthread -g -DENABLE_TRACE
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 concurdir = $(pkgincludedir)/fasttgbaalgos/ec/concur
@@ -80,7 +80,6 @@ libconcur_la_SOURCES = \
    hre_main.c		 \
    hre_malloc.c		 \
    hre_messaging.c	 \
-   hre_popt.c		 \
    hre_pthread.c	 \
    hre_queue.c		 \
    hre_reduce.c		 \
@@ -95,6 +94,8 @@ libconcur_la_SOURCES = \
    treedbs.c		 \
    unionfind.c		 \
    util.c
+
+#   hre_popt.c
 
   # MurmurHash3.c \
   # balloc.c \

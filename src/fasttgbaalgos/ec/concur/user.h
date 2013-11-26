@@ -152,7 +152,7 @@ extern void HREexit(int code) __attribute__ ((noreturn));
 /**
 \brief Print usage info and perform a graceful shutdown (collaborative).
 */
-extern void HREexitUsage(int code);
+//extern void HREexitUsage(int code);
 
 /**
 Set the label of this thread.
@@ -203,7 +203,7 @@ The sequence of events when using popt options is:
 /**
 \brief Register options to be parsed.
 */
-extern void HREaddOptions(const struct poptOption *options,const char* header);
+/* extern void HREaddOptions(const struct poptOption *options,const char* header); */
 
 /**
 \brief Initialize the runtime library using popt.
@@ -230,7 +230,7 @@ extern char* HREnextArg();
 /**
 \brief Print usage during argument fase of option parsing.
 */
-extern void HREprintUsage();
+//extern void HREprintUsage();
 
 /**
 \brief Print help during argument fase of option parsing.
@@ -342,4 +342,3 @@ extern void RTparseOptions(const char* argline,int *argc_p,char***argv_p);
 
 
 #endif
-

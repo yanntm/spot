@@ -39,11 +39,11 @@ struct thread_context {
     char label[256];
 };
 
-extern struct poptOption hre_feedback_options[];
-extern struct poptOption hre_boot_options[];
+/* extern struct poptOption hre_feedback_options[]; */
+/* extern struct poptOption hre_boot_options[]; */
 
-extern void HREinitPopt();
-extern void HREinitFeedback();
+/* extern void HREinitPopt(); */
+/* extern void HREinitFeedback(); */
 
 /**
 \brief start threads and exit when all threads have stopped.
@@ -97,4 +97,3 @@ extern void hre_init_reduce(hre_context_t ctx);
 extern uint32_t HREactionCreateUnchecked(hre_context_t context,uint32_t comm,uint32_t size,hre_receive_cb response,void* response_arg);
 
 #endif
-
