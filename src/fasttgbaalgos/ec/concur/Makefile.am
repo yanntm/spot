@@ -30,7 +30,6 @@ concur_HEADERS =    \
    context.h	    \
    dynamic-array.h  \
    fast_hash.h	    \
-   fast_set.h	    \
    feedback.h	    \
    git_version.h    \
    hashtable.h	    \
@@ -45,7 +44,7 @@ concur_HEADERS =    \
    util.h           \
    uf.hh
 
-
+#   fast_set.h
 
   # MurmurHash3.h \
   # atomics.h \
@@ -67,7 +66,6 @@ libconcur_la_SOURCES = \
    balloc.c		 \
    dynamic-array.c	 \
    fast_hash.c		 \
-   fast_set.c		 \
    hashtable.c		 \
    hre_context.c	 \
    hre_feedback.c	 \
@@ -84,6 +82,8 @@ libconcur_la_SOURCES = \
    util.c
 
 #    hre_queue.c
+#    fast_set.c
+
 
   # MurmurHash3.c \
   # balloc.c \
