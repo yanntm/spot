@@ -287,10 +287,10 @@ void TreeDBSstats(treedbs_t dbs) {
 
 static void TreeInfoPrint(int depth,int node,treedbs_t dbs){
 	if (node>=dbs->nPars) return;
-	char prefix[2*depth+1];
-	for(int i=0; i<(2*depth); i++) prefix[i]=' ';
-	prefix[2*depth]=0;
-	Warning(info,"%s%d: node has %d elements and %d hash slots",prefix,node,dbs->db_next[node],dbs->db_hash_size[node]);
+	/* char prefix[2*depth+1]; */
+	/* for(int i=0; i<(2*depth); i++) prefix[i]=' '; */
+	/* prefix[2*depth]=0; */
+	/* Warning(info,"%s%d: node has %d elements and %d hash slots",prefix,node,dbs->db_next[node],dbs->db_hash_size[node]); */
 	TreeInfoPrint(depth+1,dbs->db_tree_left[node],dbs);
 	TreeInfoPrint(depth+1,dbs->db_tree_right[node],dbs);
 }
@@ -327,4 +327,3 @@ void WriteDBS(char *pattern){
 	}
 }
 */
-

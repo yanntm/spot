@@ -78,21 +78,21 @@ void RTstopTimer(rt_timer_t timer){
 }
 
 void RTprintTimer(log_t log,rt_timer_t timer,char *msg){
-    clock_t tick=sysconf(_SC_CLK_TCK);
-    float tm_real, tm_user, tm_sys;
-    if (timer->running) {
-        struct tms tmp;
-        clock_t real_time;
-        real_time=times(&tmp);
-        tm_real=((float)(real_time+timer->real_time))/((float)tick);
-        tm_user=((float)(tmp.tms_utime+timer->times.tms_utime))/((float)tick);
-        tm_sys=((float)(tmp.tms_stime+timer->times.tms_stime))/((float)tick);
-    } else {
-        tm_real=((float)(timer->real_time))/((float)tick);
-        tm_user=((float)(timer->times.tms_utime))/((float)tick);
-        tm_sys=((float)(timer->times.tms_stime))/((float)tick);
-    }
-    Print(log,"%s %5.3f real %5.3f user %5.3f sys",msg,tm_real,tm_user,tm_sys);
+    /* clock_t tick=sysconf(_SC_CLK_TCK); */
+    /* /\* float tm_real, tm_user, tm_sys; *\/ */
+    /* if (timer->running) { */
+    /*     struct tms tmp; */
+    /*     clock_t real_time; */
+    /*     real_time=times(&tmp); */
+    /*     tm_real=((float)(real_time+timer->real_time))/((float)tick); */
+    /*     tm_user=((float)(tmp.tms_utime+timer->times.tms_utime))/((float)tick); */
+    /*     tm_sys=((float)(tmp.tms_stime+timer->times.tms_stime))/((float)tick); */
+    /* } else { */
+    /*     tm_real=((float)(timer->real_time))/((float)tick); */
+    /*     tm_user=((float)(timer->times.tms_utime))/((float)tick); */
+    /*     tm_sys=((float)(timer->times.tms_stime))/((float)tick); */
+    /* } */
+    /* Print(log,"%s %5.3f real %5.3f user %5.3f sys",msg,tm_real,tm_user,tm_sys); */
 }
 
 float RTrealTime(rt_timer_t timer){
@@ -106,4 +106,3 @@ float RTrealTime(rt_timer_t timer){
         return ((float)(timer->real_time))/((float)tick);
     }
 }
-

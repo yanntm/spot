@@ -323,7 +323,7 @@ static void hre_process_exit(hre_context_t ctx,int code){
     exit(code);
 }
 
-static const char      *process_class="HRE multi-process";
+/* static const char      *process_class="HRE multi-process"; */
 
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 
@@ -380,166 +380,166 @@ void* hre_posix_shm_get(hre_context_t context,size_t size){
 }
 
 
-static int fork_started=0;
-static int fork_count;
-static struct hre_runtime_s fork_runtime;
+/* static int fork_started=0; */
+/* static int fork_count; */
+/* static struct hre_runtime_s fork_runtime; */
 
-static void fork_popt(poptContext con,
-                     enum poptCallbackReason reason,
-                     const struct poptOption * opt,
-                     const char * arg, void * data);
+/* static void fork_popt(poptContext con, */
+/*                      enum poptCallbackReason reason, */
+/*                      const struct poptOption * opt, */
+/*                      const char * arg, void * data); */
 
-static struct poptOption fork_options[]={
-    { NULL, 0 , POPT_ARG_CALLBACK , (void*)fork_popt , 0 , NULL ,NULL },
-    { "procs" , 0 , POPT_ARG_INT|POPT_ARGFLAG_OPTIONAL , NULL , 0 ,
-      "number of processes to fork" , "<process count>" },
-    POPT_TABLEEND
-};
+/* static struct poptOption fork_options[]={ */
+/*     { NULL, 0 , POPT_ARG_CALLBACK , (void*)fork_popt , 0 , NULL ,NULL }, */
+/*     { "procs" , 0 , POPT_ARG_INT|POPT_ARGFLAG_OPTIONAL , NULL , 0 , */
+/*       "number of processes to fork" , "<process count>" }, */
+/*     POPT_TABLEEND */
+/* }; */
 
-static void fork_popt(poptContext con,
-                     enum poptCallbackReason reason,
-                     const struct poptOption * opt,
-                     const char * arg, void * data){
-    (void)con;(void)data;
-    if(!fork_started) switch(reason){
-        case POPT_CALLBACK_REASON_PRE:
-        case POPT_CALLBACK_REASON_POST:
-            Abort("unexpected call to hre_popt");
-        case POPT_CALLBACK_REASON_OPTION:
-            if (!strcmp(opt->longName,"procs")){
-                fork_runtime.selected=1;
-                if (arg) {
-                    fork_count=atoi(arg);
-                    if (fork_count<=0) {
-                        Abort("less than one process is impossible!");
-                    }
-                }
-                return;
-            }
-            Abort("unimplemented option: %s",opt->longName);
-            exit(HRE_EXIT_FAILURE);
-    }
-}
+/* static void fork_popt(poptContext con, */
+/*                      enum poptCallbackReason reason, */
+/*                      const struct poptOption * opt, */
+/*                      const char * arg, void * data){ */
+/*     (void)con;(void)data; */
+/*     if(!fork_started) switch(reason){ */
+/*         case POPT_CALLBACK_REASON_PRE: */
+/*         case POPT_CALLBACK_REASON_POST: */
+/*             Abort("unexpected call to hre_popt"); */
+/*         case POPT_CALLBACK_REASON_OPTION: */
+/*             if (!strcmp(opt->longName,"procs")){ */
+/*                 fork_runtime.selected=1; */
+/*                 if (arg) { */
+/*                     fork_count=atoi(arg); */
+/*                     if (fork_count<=0) { */
+/*                         Abort("less than one process is impossible!"); */
+/*                     } */
+/*                 } */
+/*                 return; */
+/*             } */
+/*             Abort("unimplemented option: %s",opt->longName); */
+/*             exit(HRE_EXIT_FAILURE); */
+/*     } */
+/* } */
 
-static void
-handle_signal (int sig)
-{
-    // nada
-    (void) sig;
-}
+/* static void */
+/* handle_signal (int sig) */
+/* { */
+/*     // nada */
+/*     (void) sig; */
+/* } */
 
-static void fork_start(int* argc,char **argv[],int run_threads){
-    if (run_threads){
-        Abort("multi-process and threads are incompatible");
-    }
-    int procs=fork_count;
-    int children=0;
-    int success=1;
-    int code = 0;
-    int kill_sent=0;
-    pid_t pid[procs];
-    for(int i=0;i<procs;i++) pid[i]=0;
+/* static void fork_start(int* argc,char **argv[],int run_threads){ */
+/*     if (run_threads){ */
+/*         Abort("multi-process and threads are incompatible"); */
+/*     } */
+/*     int procs=fork_count; */
+/*     int children=0; */
+/*     int success=1; */
+/*     int code = 0; */
+/*     int kill_sent=0; */
+/*     pid_t pid[procs]; */
+/*     for(int i=0;i<procs;i++) pid[i]=0; */
 
-    // this area is mmapped before the fork, so no shm_open is required
-    struct shared_area* shared = create_shared_region(RTmemSize()*4, true);
-    hre_region_t region=HREcreateRegion(shared,area_malloc,area_align,area_realloc,area_free);
+/*     // this area is mmapped before the fork, so no shm_open is required */
+/*     struct shared_area* shared = create_shared_region(RTmemSize()*4, true); */
+/*     hre_region_t region=HREcreateRegion(shared,area_malloc,area_align,area_realloc,area_free); */
 
-    struct message_queue *queues=HREmallocZero(region,procs*sizeof(struct message_queue));
-    for(int i=0;i<procs;i++){
-        pthread_mutex_init(&queues[i].lock,&shared->mutexattr);
-        pthread_cond_init(&queues[i].cond,&shared->condattr);
-        queues[i].comm=HREmallocZero(region,QUEUE_SIZE*sizeof(struct msg_queue_s));
-    }
-    for(int i=0;i<procs;i++){
-        pid[i]=fork();
-        if (pid[i]==-1) {
-            PrintCall(error,"fork");
-            success=0;
-            break;
-        }
-        if (pid[i]==0) {
-            Debug("forked process %d/%d",i,procs);
-            set_label("%s(%2d/%2d)",strdup(get_label()),i,procs);
-            hre_context_t hre_ctx=HREctxCreate(i,procs,process_class,sizeof(struct hre_context_s));
-            hre_ctx->shared=shared;
-            hre_ctx->queues=queues;
-            HREyieldSet(hre_ctx,queue_yield);
-            HREyieldWhileSet(hre_ctx,queue_while);
-            HREsendSet(hre_ctx,queue_send);
-            HRErecvSet(hre_ctx,queue_recv,HRErecvActive);
-            HREmsgRegionSet(hre_ctx,region);
-            HREsetExit(hre_ctx,hre_process_exit);
-            HREshmGetSet(hre_ctx,hre_posix_shm_get);
-            HREctxComplete(hre_ctx);
-            HREmainSet(hre_ctx);
-            HREglobalSet(hre_ctx);
-            return;
-        }
-        children++;
-    }
-    signal (SIGINT, handle_signal); // avoid exit on ctrl + c
-    while(children>0){
-        // If a failure occurred then we need to shut down all children.
-        if (!success && !kill_sent) {
-            for(int i=0;i<procs;i++){
-                if (pid[i]) {
-                    Debug("killing child %d",i);
-                    kill(pid[i],SIGKILL);
-                }
-            }
-            kill_sent=1;
-        }
-        int status;
-        pid_t res=wait(&status);
-        Debug("process %d received %d,%d (exit: %d, signal: %d)", res, WEXITSTATUS(status), status, WIFEXITED(status), WIFSIGNALED(status));
-        if (res==-1 ) {
-            PrintCall(error,"wait");
-            success=0;
-        } else {
-            int i;
-            for(i=0;i<procs;i++){
-                if (pid[i]==res) {
-                    break;
-                }
-            }
-            if (i==procs) {
-                Debug("child was not one of the workers");
-                continue;
-            }
-            if (WIFEXITED(status) || WIFSIGNALED(status)) {
-                Debug("child %d terminated",i);
-                pid[i]=0;
-                children--;
-                if (WEXITSTATUS(status) || WIFSIGNALED(status)) {
-                    if (success) code = WEXITSTATUS(status);
-                    success=0;
-                }
-            }
-        }
-    }
-    Debug("last child terminated");
-    if (success) {
-        HREexit(HRE_EXIT_SUCCESS);
-    } else {
-        HREexit(code);
-    }
-    (void)argc;(void)argv;
-}
+/*     struct message_queue *queues=HREmallocZero(region,procs*sizeof(struct message_queue)); */
+/*     for(int i=0;i<procs;i++){ */
+/*         pthread_mutex_init(&queues[i].lock,&shared->mutexattr); */
+/*         pthread_cond_init(&queues[i].cond,&shared->condattr); */
+/*         queues[i].comm=HREmallocZero(region,QUEUE_SIZE*sizeof(struct msg_queue_s)); */
+/*     } */
+/*     for(int i=0;i<procs;i++){ */
+/*         pid[i]=fork(); */
+/*         if (pid[i]==-1) { */
+/*             PrintCall(error,"fork"); */
+/*             success=0; */
+/*             break; */
+/*         } */
+/*         if (pid[i]==0) { */
+/*             Debug("forked process %d/%d",i,procs); */
+/*             set_label("%s(%2d/%2d)",strdup(get_label()),i,procs); */
+/*             hre_context_t hre_ctx=HREctxCreate(i,procs,process_class,sizeof(struct hre_context_s)); */
+/*             hre_ctx->shared=shared; */
+/*             hre_ctx->queues=queues; */
+/*             HREyieldSet(hre_ctx,queue_yield); */
+/*             HREyieldWhileSet(hre_ctx,queue_while); */
+/*             HREsendSet(hre_ctx,queue_send); */
+/*             HRErecvSet(hre_ctx,queue_recv,HRErecvActive); */
+/*             HREmsgRegionSet(hre_ctx,region); */
+/*             HREsetExit(hre_ctx,hre_process_exit); */
+/*             HREshmGetSet(hre_ctx,hre_posix_shm_get); */
+/*             HREctxComplete(hre_ctx); */
+/*             HREmainSet(hre_ctx); */
+/*             HREglobalSet(hre_ctx); */
+/*             return; */
+/*         } */
+/*         children++; */
+/*     } */
+/*     signal (SIGINT, handle_signal); // avoid exit on ctrl + c */
+/*     while(children>0){ */
+/*         // If a failure occurred then we need to shut down all children. */
+/*         if (!success && !kill_sent) { */
+/*             for(int i=0;i<procs;i++){ */
+/*                 if (pid[i]) { */
+/*                     Debug("killing child %d",i); */
+/*                     kill(pid[i],SIGKILL); */
+/*                 } */
+/*             } */
+/*             kill_sent=1; */
+/*         } */
+/*         int status; */
+/*         pid_t res=wait(&status); */
+/*         Debug("process %d received %d,%d (exit: %d, signal: %d)", res, WEXITSTATUS(status), status, WIFEXITED(status), WIFSIGNALED(status)); */
+/*         if (res==-1 ) { */
+/*             PrintCall(error,"wait"); */
+/*             success=0; */
+/*         } else { */
+/*             int i; */
+/*             for(i=0;i<procs;i++){ */
+/*                 if (pid[i]==res) { */
+/*                     break; */
+/*                 } */
+/*             } */
+/*             if (i==procs) { */
+/*                 Debug("child was not one of the workers"); */
+/*                 continue; */
+/*             } */
+/*             if (WIFEXITED(status) || WIFSIGNALED(status)) { */
+/*                 Debug("child %d terminated",i); */
+/*                 pid[i]=0; */
+/*                 children--; */
+/*                 if (WEXITSTATUS(status) || WIFSIGNALED(status)) { */
+/*                     if (success) code = WEXITSTATUS(status); */
+/*                     success=0; */
+/*                 } */
+/*             } */
+/*         } */
+/*     } */
+/*     Debug("last child terminated"); */
+/*     if (success) { */
+/*         HREexit(HRE_EXIT_SUCCESS); */
+/*     } else { */
+/*         HREexit(code); */
+/*     } */
+/*     (void)argc;(void)argv; */
+/* } */
 
 void HREenableFork(int procs){
-    Debug("Enabling process runtime environment.");
-    pthread_condattr_t attr;
-    pthread_condattr_init(&attr);
-    int res=pthread_condattr_setpshared(&attr,PTHREAD_PROCESS_SHARED);
-    pthread_condattr_destroy(&attr);
-    if (res){
-        Warning(infoLong,"multi-process disabled: inter process locks are not supported");
-        return;
-    }
-    fork_runtime.start=fork_start;
-    fork_runtime.options=fork_options;
-    fork_count=procs;
-    HREregisterRuntime(&fork_runtime);
+    /* Debug("Enabling process runtime environment."); */
+    /* pthread_condattr_t attr; */
+    /* pthread_condattr_init(&attr); */
+    /* int res=pthread_condattr_setpshared(&attr,PTHREAD_PROCESS_SHARED); */
+    /* pthread_condattr_destroy(&attr); */
+    /* if (res){ */
+    /*     Warning(infoLong,"multi-process disabled: inter process locks are not supported"); */
+    /*     return; */
+    /* } */
+    /* fork_runtime.start=fork_start; */
+    /* fork_runtime.options=fork_options; */
+    /* fork_count=procs; */
+    /* HREregisterRuntime(&fork_runtime); */
 }
 
 size_t

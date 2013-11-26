@@ -314,6 +314,6 @@ void HREinitStart(int *argc,char **argv[],int min_args,int max_args,char*args[],
 }
 
 void HREenableStandard(){
-    HREenableThreads(RTnumCPUs());
-    HREenableFork(RTnumCPUs());
+  //HREenableThreads(RTnumCPUs());
+  //    HREenableFork(RTnumCPUs());
 }

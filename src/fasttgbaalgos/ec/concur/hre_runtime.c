@@ -19,9 +19,9 @@ RTdlsym (const char *libname, void *handle, const char *symbol)
 {
     void *ret = dlsym (handle, symbol);
     if (ret == NULL) {
-        const char *dlerr = dlerror ();
-        Abort("dynamically loading from `%s': %s", libname,
-               dlerr != NULL ? dlerr : "unknown error");
+        /* const char *dlerr = dlerror (); */
+        /* Abort("dynamically loading from `%s': %s", libname, */
+        /*        dlerr != NULL ? dlerr : "unknown error"); */
     }
     return ret;
 }

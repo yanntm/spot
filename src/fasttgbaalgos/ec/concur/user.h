@@ -66,7 +66,7 @@ extern void HREenableThreads(int threads);
 
 The argument sets the default number of processes used when this runtime is selected.
 */
-extern void HREenableFork(int procs);
+// extern void HREenableFork(int procs);
 
 /**
 \brief Disable the single process runtime.

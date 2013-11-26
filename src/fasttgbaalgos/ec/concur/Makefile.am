@@ -38,8 +38,6 @@ concur_HEADERS =    \
    provider.h	    \
    queue.h	    \
    runtime.h	    \
-   simplemap.h	    \
-   stringindex.h    \
    table.h	    \
    treedbs.h	    \
    unionfind.h	    \
@@ -51,6 +49,8 @@ concur_HEADERS =    \
 #   bitset.h
 #    dir_ops.h
 #    string-map.h
+#   stringindex.h
+#    simplemap.h
 
   # MurmurHash3.h \
   # atomics.h \
@@ -86,8 +86,6 @@ libconcur_la_SOURCES = \
    hre_timer.c		 \
    hre_unix.c		 \
    hre_utils.c		 \
-   simplemap.c		 \
-   stringindex.c	 \
    treedbs.c		 \
    unionfind.c		 \
    util.c
@@ -97,6 +95,8 @@ libconcur_la_SOURCES = \
 # bitset.c
 # hre_dir_ops.c
 # string-map.c
+#   stringindex.c
+#   simplemap.c
 
   # MurmurHash3.c \
   # balloc.c \
