@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#include <chunk_support.h>
+//#include <chunk_support.h>
 
 /**
 \brief type of a value index
@@ -78,17 +78,17 @@ extern void VTgetNative(value_table_t vt,value_index_t idx,...);
 typedef void(*get_native_t)(value_table_t vt,value_index_t idx,va_list args);
 extern void VTgetNativeSet(value_table_t vt,get_native_t method);
 
-extern value_index_t VTputChunk(value_table_t vt,chunk item);
-typedef value_index_t(*put_chunk_t)(value_table_t vt,chunk item);
-extern void VTputChunkSet(value_table_t vt,put_chunk_t method);
+/* extern value_index_t VTputChunk(value_table_t vt,chunk item); */
+/* typedef value_index_t(*put_chunk_t)(value_table_t vt,chunk item); */
+/* extern void VTputChunkSet(value_table_t vt,put_chunk_t method); */
 
-extern void VTputAtChunk(value_table_t vt,chunk item,value_index_t pos);
-typedef void(*put_at_chunk_t)(value_table_t vt,chunk item,value_index_t pos);
-extern void VTputAtChunkSet(value_table_t vt,put_at_chunk_t method);
+/* extern void VTputAtChunk(value_table_t vt,chunk item,value_index_t pos); */
+/* typedef void(*put_at_chunk_t)(value_table_t vt,chunk item,value_index_t pos); */
+/* extern void VTputAtChunkSet(value_table_t vt,put_at_chunk_t method); */
 
-extern chunk VTgetChunk(value_table_t vt,value_index_t idx);
-typedef chunk(*get_chunk_t)(value_table_t vt,value_index_t idx);
-extern void VTgetChunkSet(value_table_t vt,get_chunk_t method);
+/* extern chunk VTgetChunk(value_table_t vt,value_index_t idx); */
+/* typedef chunk(*get_chunk_t)(value_table_t vt,value_index_t idx); */
+/* extern void VTgetChunkSet(value_table_t vt,get_chunk_t method); */
 
 extern int VTgetCount(value_table_t vt);
 typedef int(*vt_get_count_t)(value_table_t vt);
@@ -196,5 +196,3 @@ extern void MTsimplify(matrix_table_t dst, matrix_table_t src);
 
 
 #endif
-
-

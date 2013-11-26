@@ -1,7 +1,7 @@
 // -*- tab-width:4 ; indent-tabs-mode:nil -*-
 
 #include <config.h>
-
+#include <string.h>
 #include <stdlib.h>
 
 #include <internal.h>
@@ -137,5 +137,3 @@ void HREreduce(hre_context_t ctx,int len,void*in,void*out,unit_t type,operand_t 
     memcpy(out,ctx->reduce_out[turn],size);
     Debug("leave reduce");
 }
-
-

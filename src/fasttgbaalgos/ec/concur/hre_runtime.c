@@ -5,7 +5,7 @@
 #endif
 
 #include <config.h>
-
+#include <string.h>
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -106,4 +106,3 @@ size_t RTpageSize(){
     long res=sysconf(_SC_PAGESIZE);
     return (size_t)res;
 }
-

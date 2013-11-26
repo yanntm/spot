@@ -28,7 +28,6 @@ concur_HEADERS =    \
    atomics.h	    \
    balloc.h	    \
    bitset.h	    \
-   chunk_support.h  \
    context.h	    \
    dir_ops.h	    \
    dynamic-array.h  \
@@ -45,14 +44,12 @@ concur_HEADERS =    \
    string-map.h	    \
    stringindex.h    \
    table.h	    \
-   tables.h	    \
    treedbs.h	    \
    unionfind.h	    \
    unix.h	    \
    user.h	    \
    util.h           \
    uf.hh
-
 
   # MurmurHash3.h \
   # atomics.h \
@@ -73,8 +70,6 @@ libconcur_la_SOURCES = \
    MurmurHash3.c         \
    balloc.c		 \
    bitset.c		 \
-   chunk_support.c	 \
-   chunk_table_factory.c \
    dynamic-array.c	 \
    fast_hash.c		 \
    fast_set.c		 \
@@ -90,7 +85,6 @@ libconcur_la_SOURCES = \
    hre_queue.c		 \
    hre_reduce.c		 \
    hre_runtime.c	 \
-   hre_table.c		 \
    hre_timer.c		 \
    hre_unix.c		 \
    hre_utils.c		 \
@@ -98,17 +92,9 @@ libconcur_la_SOURCES = \
    simplemap.c		 \
    string-map.c		 \
    stringindex.c	 \
-   tables.c		 \
    treedbs.c		 \
    unionfind.c		 \
    util.c
-
-
-
-
-
-
-
 
   # MurmurHash3.c \
   # balloc.c \

@@ -16,6 +16,7 @@
 
 #include <provider.h>
 #include <internal.h>
+#include <string.h>
 
 static hre_region_t region = NULL;
 
@@ -227,4 +228,3 @@ hre_region_t HREcreateRegion(void* area,hre_malloc_t malloc,hre_align_t align,hr
     res->free=free;
     return res;
 }
-

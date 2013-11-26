@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <git_version.h>
 #include <internal.h>
@@ -154,5 +155,3 @@ void RTparseOptions(const char* argline,int *argc_p,char***argv_p){
     }
     (*argv_p)[0]=strdup(HREgetApplication());
 }
-
-

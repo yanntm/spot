@@ -1,7 +1,7 @@
 // -*- tab-width:4 ; indent-tabs-mode:nil -*-
 
 #include <config.h>
-
+#include <string.h>
 #include <stdint.h>
 
 #include <user.h>
@@ -341,4 +341,3 @@ hre_task_t TaskCreate(hre_task_queue_t queue,uint32_t prio,uint32_t buffer_size,
 hre_context_t TQcontext(hre_task_queue_t queue){
     return queue->ctx;
 }
-

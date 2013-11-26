@@ -2,6 +2,7 @@
 #define NB_HASHTABLE_H
 
 #include <stdint.h>
+#include <string.h>
 
 #ifndef __x86_64__
 #define NBD32
