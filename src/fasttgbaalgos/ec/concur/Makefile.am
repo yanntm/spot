@@ -70,7 +70,6 @@ libconcur_la_SOURCES = \
    hre_context.c	 \
    hre_main.c		 \
    hre_malloc.c		 \
-   hre_reduce.c		 \
    hre_runtime.c	 \
    unionfind.c
 
@@ -83,6 +82,8 @@ libconcur_la_SOURCES = \
 #   hre_feedback.c
 #   hre_unix.c
 #    hre_utils.c
+#   hre_reduce.c
+
   # MurmurHash3.c \
   # balloc.c \
   # dynamic-array.c \

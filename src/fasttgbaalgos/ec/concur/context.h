@@ -83,10 +83,10 @@ typedef enum {
 
 typedef enum {Sum,Max} operand_t;
 
-extern void HREreduce(hre_context_t ctx,int len,void*in,void*out,unit_t type,operand_t op);
+//extern void HREreduce(hre_context_t ctx,int len,void*in,void*out,unit_t type,operand_t op);
 
 /// Check if any of the peers passes true.
-extern int HREcheckAny(hre_context_t ctx,int arg);
+//extern int HREcheckAny(hre_context_t ctx,int arg);
 
 extern void HREbarrier(hre_context_t ctx);
 

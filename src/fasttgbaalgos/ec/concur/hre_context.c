@@ -34,9 +34,9 @@ hre_context_t HREcreateSingle(){
     return ctx;
 }
 
-static void nop_destroy(hre_context_t ctx){
-    (void)ctx;
-}
+/* static void nop_destroy(hre_context_t ctx){ */
+/*     (void)ctx; */
+/* } */
 
 /* abstract class methods */
 
@@ -75,18 +75,18 @@ void hre_ready_decr(hre_msg_t self,void* ready_ctx){
 
 
 void HREctxComplete(hre_context_t ctx){
-    ctx=USR2SYS(ctx);
-    if (ctx->send==NULL && ctx->peers>1) Abort("send mandatory for more than 1 peer.");
-    if (ctx->recv==NULL){
-        if (ctx->peers>1) Abort("recv mandatory for more than 1 peer.");
-        ctx->recv_type=HRErecvActive;
-    }
-    if(ctx->destroy==NULL) {
-        ctx->destroy=nop_destroy;
-    }
-    if(ctx->abort==NULL) ctx->abort=process_abort;
-    if(ctx->exit==NULL) ctx->exit=process_exit;
-    hre_init_reduce(SYS2USR(ctx));
+    /* ctx=USR2SYS(ctx); */
+    /* if (ctx->send==NULL && ctx->peers>1) Abort("send mandatory for more than 1 peer."); */
+    /* if (ctx->recv==NULL){ */
+    /*     if (ctx->peers>1) Abort("recv mandatory for more than 1 peer."); */
+    /*     ctx->recv_type=HRErecvActive; */
+    /* } */
+    /* if(ctx->destroy==NULL) { */
+    /*     ctx->destroy=nop_destroy; */
+    /* } */
+    /* if(ctx->abort==NULL) ctx->abort=process_abort; */
+    /* if(ctx->exit==NULL) ctx->exit=process_exit; */
+    /* hre_init_reduce(SYS2USR(ctx)); */
 }
 
 void HREsetDestroy(hre_context_t ctx,hre_destroy_m method){
@@ -111,10 +111,11 @@ int HREleader(hre_context_t ctx){
 }
 
 int HREcheckAny(hre_context_t ctx,int arg){
-    uint32_t in=arg?1:0;
-    uint32_t res;
-    HREreduce(ctx,1,&in,&res,UInt32,Max);
-    return res>0;
+    /* uint32_t in=arg?1:0; */
+    /* uint32_t res; */
+    /* //    HREreduce(ctx,1,&in,&res,UInt32,Max); */
+    /* return res>0; */
+  return 0;
 }
 
 void HREsetAbort(hre_context_t ctx,hre_abort_m method){
@@ -243,11 +244,12 @@ uint32_t HREactionCreateUnchecked(hre_context_t context,uint32_t comm,uint32_t s
 }
 
 uint32_t HREactionCreate(hre_context_t context,uint32_t comm,uint32_t size,hre_receive_cb response,void* response_arg){
-    uint32_t tag=HREactionCreateUnchecked(context,comm,size,response,response_arg);
-    uint32_t tmp;
-    HREreduce(context,1,&tag,&tmp,UInt32,Max);
-    if (tmp!=tag) Abort("inconsistent tags %d and %d",tmp,tag);
-    return tag;
+    /* uint32_t tag=HREactionCreateUnchecked(context,comm,size,response,response_arg); */
+    /* uint32_t tmp; */
+    /* HREreduce(context,1,&tag,&tmp,UInt32,Max); */
+    /* if (tmp!=tag) Abort("inconsistent tags %d and %d",tmp,tag); */
+    /* return tag; */
+  return 0;
 }
 
 void HREactionDelete(hre_context_t context,uint32_t comm,uint32_t tag){
@@ -299,5 +301,3 @@ void* HREshmGet(hre_context_t context,size_t size){
         return NULL;
     }
 }
-
-
