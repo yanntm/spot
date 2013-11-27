@@ -46,7 +46,8 @@ map_val_t     ht_cas        (hashtable_t *ht, map_key_t key,
                              map_val_t expected_val, map_val_t val,
                              map_key_t *clone_key, void *ctx);
 map_val_t     ht_get        (hashtable_t *ht, map_key_t key);
-map_val_t     ht_remove     (hashtable_t *ht, map_key_t key, map_key_t *clone_key);
+map_val_t     ht_remove     (hashtable_t *ht, map_key_t key,
+			     map_key_t *clone_key);
 size_t        ht_count      (hashtable_t *ht);
 void          ht_print      (hashtable_t *ht, int verbose);
 void          ht_free       (hashtable_t *ht);
