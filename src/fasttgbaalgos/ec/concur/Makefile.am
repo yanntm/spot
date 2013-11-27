@@ -31,7 +31,6 @@ concur_HEADERS =    \
    dynamic-array.h  \
    fast_hash.h	    \
    feedback.h	    \
-   git_version.h    \
    hashtable.h	    \
    internal.h	    \
    provider.h	    \
@@ -45,7 +44,7 @@ concur_HEADERS =    \
 #   fast_set.h
 #   util.h
 #   unix.h
-
+#   git_version.h
 
   # MurmurHash3.h \
   # atomics.h \
