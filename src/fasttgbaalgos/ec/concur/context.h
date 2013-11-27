@@ -20,7 +20,7 @@ When work on HRE advances, we'll need HRElocal, HREprocess, etc.
 This information is provided as a function because it is thread
 specific information.
 */
-extern hre_context_t HREglobal();
+//extern hre_context_t HREglobal();
 
 /**
 \brief Get the process context.

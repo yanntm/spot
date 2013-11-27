@@ -156,7 +156,7 @@ extern log_t hre_debug;
 \brief Macro that prints an error messages and then aborts.
 */
 #define Abort(...) {\
-    HREabort(HRE_EXIT_FAILURE);\
+    /* HREabort(HRE_EXIT_FAILURE) */exit(1);    \
 }
 
 /**
@@ -167,7 +167,7 @@ extern log_t hre_debug;
 }
 
 #define Warning Print
-#define Print1(log,...) if (HREme(HREglobal()) == 0) HREmessage(log,__VA_ARGS__);
+#define Print1(log,...) /* if (HREme(HREglobal()) == 0) */ HREmessage(log,__VA_ARGS__);
 
 #define Fatal(code,chan,...) Abort(__VA_ARGS__)
 

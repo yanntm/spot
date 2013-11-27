@@ -126,7 +126,7 @@ extern void HREinit(int *argc,char **argv[]);
             buf[0] = '\0';\
         Print(assertion, "assertion \"%s\" failed%s", #e, buf);\
         PRINT_STACK\
-        HREabort(HRE_EXIT_FAILURE);\
+        /* HREabort(HRE_EXIT_FAILURE) */;\
     }
 #endif
 
@@ -142,7 +142,7 @@ extern void HREinit(int *argc,char **argv[]);
 /**
 \brief Emergency shutdown (async).
 */
-extern void HREabort(int code) __attribute__ ((noreturn));
+//extern void HREabort(int code) __attribute__ ((noreturn));
 
 /**
 \brief Perform a graceful shutdown (collaborative).

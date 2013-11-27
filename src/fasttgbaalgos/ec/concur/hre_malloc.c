@@ -147,7 +147,7 @@ RTswitchAlloc (bool shared)
     if (shared) {
         HREassert (RTgetMallocRegion() == NULL);
         //HREassert (HREdefaultRegion(HREglobal()) != NULL);
-        RTsetMallocRegion (HREdefaultRegion(HREglobal()));
+        //RTsetMallocRegion (HREdefaultRegion(HREglobal()));
     } else {
         //HREassert (RTgetMallocRegion() != NULL);
         RTsetMallocRegion (NULL);
