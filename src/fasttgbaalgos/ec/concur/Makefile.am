@@ -36,7 +36,6 @@ concur_HEADERS =    \
    provider.h	    \
    queue.h	    \
    runtime.h	    \
-   table.h	    \
    unionfind.h	    \
    user.h	    \
    uf.hh
@@ -45,6 +44,7 @@ concur_HEADERS =    \
 #   util.h
 #   unix.h
 #   git_version.h
+#  table.h
 
   # MurmurHash3.h \
   # atomics.h \
