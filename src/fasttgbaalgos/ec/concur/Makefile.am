@@ -39,12 +39,13 @@ concur_HEADERS =    \
    runtime.h	    \
    table.h	    \
    unionfind.h	    \
-   unix.h	    \
    user.h	    \
    uf.hh
 
 #   fast_set.h
 #   util.h
+#   unix.h
+
 
   # MurmurHash3.h \
   # atomics.h \
@@ -72,7 +73,6 @@ libconcur_la_SOURCES = \
    hre_malloc.c		 \
    hre_reduce.c		 \
    hre_runtime.c	 \
-   hre_unix.c		 \
    hre_utils.c		 \
    unionfind.c
 
@@ -83,6 +83,7 @@ libconcur_la_SOURCES = \
 #    hre_timer.c
 #   util.c
 #   hre_feedback.c
+#   hre_unix.c
 
   # MurmurHash3.c \
   # balloc.c \
