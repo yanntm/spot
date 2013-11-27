@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <pthread.h>
+#include <sys/time.h>
+
+
 #ifdef RUNTIME_H
 #error "runtime defined: inconsistent include sequence!"
 #else

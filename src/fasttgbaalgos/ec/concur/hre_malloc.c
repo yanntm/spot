@@ -15,7 +15,7 @@
 #endif
 
 #include <provider.h>
-#include <internal.h>
+#include <user.h>
 #include <string.h>
 
 static hre_region_t region = NULL;
