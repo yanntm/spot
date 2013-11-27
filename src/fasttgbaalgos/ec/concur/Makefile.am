@@ -32,7 +32,6 @@ concur_HEADERS =    \
    hashtable.h	    \
    internal.h	    \
    provider.h	    \
-   queue.h	    \
    runtime.h	    \
    unionfind.h	    \
    user.h	    \
@@ -45,7 +44,7 @@ concur_HEADERS =    \
 #  table.h
 #    balloc.h
 #    dynamic-array.h
-
+#    queue.h
   # MurmurHash3.h \
   # atomics.h \
   # balloc.h \
