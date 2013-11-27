@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-/* #include <trace.h> */
 typedef size_t              ref_t;
 
 #include <MurmurHash3.h>
