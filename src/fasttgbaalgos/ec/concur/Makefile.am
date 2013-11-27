@@ -27,9 +27,8 @@ concur_HEADERS =    \
    MurmurHash3.h    \
    atomics.h	    \
    fast_hash.h	    \
+   feedback.h	    \
    hashtable.h	    \
-   internal.h	    \
-   provider.h	    \
    runtime.h	    \
    unionfind.h	    \
    user.h	    \

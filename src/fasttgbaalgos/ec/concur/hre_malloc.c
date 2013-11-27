@@ -14,7 +14,6 @@
 #include <sys/sysctl.h>
 #endif
 
-#include <provider.h>
 #include <user.h>
 #include <string.h>
 
