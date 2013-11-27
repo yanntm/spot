@@ -182,8 +182,6 @@ fi
 
 
 AC_CHECK_LIB([rt], [aio_error])
-AC_CHECK_LIB([popt],[poptGetContext],,[AC_MSG_FAILURE([popt not found.])])
-AC_CHECK_HEADER([popt.h],[], [AC_MSG_FAILURE([popt.h not found.])])
 AC_DEFINE([LTSMIN_PATHNAME_MAX], 1024, [Define maximal length of pathnames])
 ACX_CLINE_DEF([], [])
 AC_CACHE_SAVE

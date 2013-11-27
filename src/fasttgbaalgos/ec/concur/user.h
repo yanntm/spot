@@ -2,7 +2,7 @@
 #ifndef HRE_USER_H
 #define HRE_USER_H
 
-#include <popt.h>
+//#include <popt.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

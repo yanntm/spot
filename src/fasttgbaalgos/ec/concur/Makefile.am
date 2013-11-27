@@ -36,30 +36,6 @@ concur_HEADERS =    \
    user.h	    \
    uf.hh
 
-#   fast_set.h
-#   util.h
-#   unix.h
-#   git_version.h
-#  table.h
-#    balloc.h
-#    dynamic-array.h
-#    queue.h
-#    context.h
-
-  # MurmurHash3.h \
-  # atomics.h \
-  # balloc.h \
-  # config.h \
-  # context.h \
-  # dynamic-array.h \
-  # fast_hash.h \
-  # hashtable.h \
-  # internal.h \
-  # provider.h \
-  # runtime.h \
-  # unionfind.h \
-  # user.h
-
 noinst_LTLIBRARIES = libconcur.la
 libconcur_la_SOURCES = \
    MurmurHash3.c         \
@@ -67,30 +43,3 @@ libconcur_la_SOURCES = \
    hashtable.c		 \
    hre_malloc.c		 \
    unionfind.c
-
-#    hre_queue.c
-#    fast_set.c
-#    hre_messaging.c
-#    hre_pthread.c
-#    hre_timer.c
-#   util.c
-#   hre_feedback.c
-#   hre_unix.c
-#    hre_utils.c
-#   hre_reduce.c
-#    balloc.c
-#    hre_main.c
-#    dynamic-array.c
-#    hre_context.c
-#   hre_runtime.c
-
-  # MurmurHash3.c \
-  # balloc.c \
-  # dynamic-array.c \
-  # fast_hash.c \
-  # hashtable.c \
-  # hre_context.c \
-  # hre_malloc.c \
-  # hre_reduce.c \
-  # hre_runtime.c \
-  # unionfind.c
