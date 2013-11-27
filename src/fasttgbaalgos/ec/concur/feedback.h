@@ -3,7 +3,6 @@
 #define HRE_FEEDBACK_H
 
 #include <errno.h>
-//#include <popt.h>
 #include <stdlib.h>
 
 
@@ -67,24 +66,12 @@ can be found.
 extern FILE* log_get_stream(log_t log);
 
 /**
-\brief Utility function for printing single line messages with headers.
-\deprecated Please use the Print macro instead.
-*/
-/* extern void log_message(log_t log,const char*file,int line,int errnum, */
-/*                         const char *fmt,...) */
-/*                         __attribute__ ((format (printf, 5, 6))); */
-
-/**
 \brief Output directly to a log stream.
 \deprecated Please use the Printf macro instead.
 */
 extern void log_printf(log_t log,const char *fmt,...)
                        __attribute__ ((format (printf, 2, 3)));
 
-/**
-\brief Test if the given log is active.
-*/
-/* extern int log_active(log_t log); */
 
 /**
 \brief Channel for printing debug messages.
@@ -156,7 +143,7 @@ extern log_t hre_debug;
 \brief Macro that prints an error messages and then aborts.
 */
 #define Abort(...) {\
-    /* HREabort(HRE_EXIT_FAILURE) */exit(1);    \
+    exit(1);    \
 }
 
 /**
@@ -167,7 +154,7 @@ extern log_t hre_debug;
 }
 
 #define Warning Print
-#define Print1(log,...) /* if (HREme(HREglobal()) == 0) */ HREmessage(log,__VA_ARGS__);
+#define Print1(log,...)  HREmessage(log,__VA_ARGS__);
 
 #define Fatal(code,chan,...) Abort(__VA_ARGS__)
 
