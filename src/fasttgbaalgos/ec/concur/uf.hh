@@ -20,7 +20,7 @@
 # define SPOT_FASTTGBAALGOS_EC_CONCUR_UF_HH
 
 #include "fasttgba/fasttgba.hh"
-#include <iostream>
+#include <iosfwd>
 #include <atomic>
 
 #ifdef __cplusplus
@@ -39,7 +39,7 @@ extern "C" {
 // ============================================================
 
 static int
-fasttgba_state_ptrint_cmp_wrapper ( void *hash1, void *hash2)
+fasttgba_state_ptrint_cmp_wrapper(void *hash1, void *hash2)
 {
   const spot::fasttgba_state* l = (const spot::fasttgba_state*)hash1;
   const spot::fasttgba_state* r = (const spot::fasttgba_state*)hash2;
@@ -48,7 +48,7 @@ fasttgba_state_ptrint_cmp_wrapper ( void *hash1, void *hash2)
 }
 
 uint32_t
-fasttgba_state_ptrint_hash_wrapper ( void *elt, void *ctx)
+fasttgba_state_ptrint_hash_wrapper(void *elt, void *ctx)
 {
   const spot::fasttgba_state* l = (const spot::fasttgba_state*)elt;
   int hash = l->hash();
@@ -58,7 +58,7 @@ fasttgba_state_ptrint_hash_wrapper ( void *elt, void *ctx)
 }
 
 void *
-fasttgba_state_ptrint_clone_wrapper (void *key, void *ctx)
+fasttgba_state_ptrint_clone_wrapper(void *key, void *ctx)
 {
   // FIXME?
   assert(key);
@@ -67,7 +67,7 @@ fasttgba_state_ptrint_clone_wrapper (void *key, void *ctx)
 }
 
 void
-fasttgba_state_ptrint_free_wrapper (void *elt)
+fasttgba_state_ptrint_free_wrapper(void *elt)
 {
   assert(elt);
   //const spot::fasttgba_state* l = (const spot::fasttgba_state*)elt;
@@ -169,7 +169,7 @@ namespace spot
 
       // if res equal 0 the state is dead!
       // The add doesn't change anything
-      if(!res || tmp == res)
+      if (!res || tmp == res)
 	return acc;
       return acc | res;
     }
@@ -182,7 +182,7 @@ namespace spot
 
       if (node == DOES_NOT_EXIST)
 	return false;
-      return uf_is_dead(effective_uf, node);;
+      return uf_is_dead(effective_uf, node);
     }
 
     int size()
