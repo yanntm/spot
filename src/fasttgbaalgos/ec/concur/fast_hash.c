@@ -16,8 +16,8 @@
                        +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
-uint32_t 
-SuperFastHash (const void *data_, int len, uint32_t hash) 
+uint32_t
+SuperFastHash (const void *data_, int len, uint32_t hash)
 {
     const unsigned char *data = data_;
     uint32_t tmp;
