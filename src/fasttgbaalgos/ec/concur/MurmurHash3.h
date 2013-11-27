@@ -9,12 +9,15 @@
 
 //-----------------------------------------------------------------------------
 
-extern uint32_t MurmurHash32  ( const void * key, int len, uint32_t seed);
+extern uint32_t MurmurHash32(const void * key, int len, uint32_t seed);
 
-extern void MurmurHash3_x86_32  ( const void * key, int len, uint32_t seed, void * out );
+extern void
+MurmurHash3_x86_32(const void * key, int len, uint32_t seed, void * out);
 
-extern void MurmurHash3_x86_128 ( const void * key, int len, uint32_t seed, void * out );
+extern void
+MurmurHash3_x86_128(const void * key, int len, uint32_t seed, void * out);
 
-extern void MurmurHash3_x64_128 ( const void * key, int len, uint32_t seed, void * out );
+extern void
+MurmurHash3_x64_128(const void * key, int len, uint32_t seed, void * out);
 
 #endif // _MURMURHASH3_H_
