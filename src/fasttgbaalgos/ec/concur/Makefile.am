@@ -26,7 +26,6 @@ concurdir = $(pkgincludedir)/fasttgbaalgos/ec/concur
 concur_HEADERS =    \
    MurmurHash3.h    \
    atomics.h	    \
-   context.h	    \
    fast_hash.h	    \
    feedback.h	    \
    hashtable.h	    \
@@ -45,6 +44,8 @@ concur_HEADERS =    \
 #    balloc.h
 #    dynamic-array.h
 #    queue.h
+#    context.h
+
   # MurmurHash3.h \
   # atomics.h \
   # balloc.h \
