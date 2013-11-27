@@ -22,7 +22,7 @@ struct action {
 };
 
 struct comm {
-    array_manager_t action_man;
+  //    array_manager_t action_man;
     struct action *action;
 };
 
@@ -76,7 +76,7 @@ struct hre_context_s{
     hre_xfer_m recv;
     hre_shm_get_m shm_get;
     hre_region_t msg_region;
-    array_manager_t comm_man;
+  //    array_manager_t comm_man;
     struct comm *comm;
     uint32_t reduce_tag;
     hre_msg_t *reduce_msg;

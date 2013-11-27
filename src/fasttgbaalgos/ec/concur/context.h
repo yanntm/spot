@@ -10,7 +10,7 @@ A context is the rough equivalent of the MPI communicator.
 #define HRE_CONTEXT_H
 
 #include <provider.h>
-#include <dynamic-array.h>
+//#include <dynamic-array.h>
 //#include <tables.h>
 
 /**
@@ -30,7 +30,7 @@ The members of this context are the threads of the current process.
 extern hre_context_t HREprocessGet();
 
 /// create bare object
-extern hre_context_t HREctxCreate(int me,int peers,const char* class_name,size_t user_size);
+//extern hre_context_t HREctxCreate(int me,int peers,const char* class_name,size_t user_size);
 
 /// check and complete
 extern void HREctxComplete(hre_context_t ctx);
@@ -247,7 +247,7 @@ extern void HREactionDelete(hre_context_t context,uint32_t prio,uint32_t tag);
 
 /*}@*/
 
-extern array_manager_t HREcommManager(hre_context_t context);
+//extern array_manager_t HREcommManager(hre_context_t context);
 
 /**
 \brief Set the memory region for messages.

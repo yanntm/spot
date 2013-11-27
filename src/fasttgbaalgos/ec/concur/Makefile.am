@@ -27,7 +27,6 @@ concur_HEADERS =    \
    MurmurHash3.h    \
    atomics.h	    \
    context.h	    \
-   dynamic-array.h  \
    fast_hash.h	    \
    feedback.h	    \
    hashtable.h	    \
@@ -45,6 +44,7 @@ concur_HEADERS =    \
 #   git_version.h
 #  table.h
 #    balloc.h
+#    dynamic-array.h
 
   # MurmurHash3.h \
   # atomics.h \
@@ -63,7 +63,6 @@ concur_HEADERS =    \
 noinst_LTLIBRARIES = libconcur.la
 libconcur_la_SOURCES = \
    MurmurHash3.c         \
-   dynamic-array.c	 \
    fast_hash.c		 \
    hashtable.c		 \
    hre_context.c	 \
@@ -83,6 +82,8 @@ libconcur_la_SOURCES = \
 #   hre_reduce.c
 #    balloc.c
 #    hre_main.c
+#    dynamic-array.c
+
   # MurmurHash3.c \
   # balloc.c \
   # dynamic-array.c \
