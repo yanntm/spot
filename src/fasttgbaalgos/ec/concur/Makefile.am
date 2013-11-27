@@ -26,7 +26,6 @@ concurdir = $(pkgincludedir)/fasttgbaalgos/ec/concur
 concur_HEADERS =    \
    MurmurHash3.h    \
    atomics.h	    \
-   balloc.h	    \
    context.h	    \
    dynamic-array.h  \
    fast_hash.h	    \
@@ -45,6 +44,7 @@ concur_HEADERS =    \
 #   unix.h
 #   git_version.h
 #  table.h
+#    balloc.h
 
   # MurmurHash3.h \
   # atomics.h \
@@ -63,7 +63,6 @@ concur_HEADERS =    \
 noinst_LTLIBRARIES = libconcur.la
 libconcur_la_SOURCES = \
    MurmurHash3.c         \
-   balloc.c		 \
    dynamic-array.c	 \
    fast_hash.c		 \
    hashtable.c		 \
@@ -83,6 +82,7 @@ libconcur_la_SOURCES = \
 #   hre_unix.c
 #    hre_utils.c
 #   hre_reduce.c
+#    balloc.c
 
   # MurmurHash3.c \
   # balloc.c \
