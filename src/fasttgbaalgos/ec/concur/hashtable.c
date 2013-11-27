@@ -94,10 +94,16 @@ struct ht {
 };
 
 static
-const unsigned ENTRIES_PER_BUCKET     = CACHE_LINE_SIZE/sizeof(entry_t);
+const inline unsigned ENTRIES_PER_BUCKET()
+{
+  return get_cache_line_size()/sizeof(entry_t);
+}
 
 static
-const unsigned ENTRIES_PER_COPY_CHUNK = CACHE_LINE_SIZE/sizeof(entry_t)*2;
+const inline unsigned ENTRIES_PER_COPY_CHUNK()
+{
+  return get_cache_line_size()/sizeof(entry_t)*2;
+}
 
 static const unsigned MIN_SCALE              = 4; // min 16 entries (4 buckets)
 
@@ -118,7 +124,7 @@ nbd_free (void *x)
 static inline void *
 nbd_malloc (size_t n) {
   TRACE("m1", "nbd_malloc: request size %llu", n, 0);
-  void *x = RTalignZero (CACHE_LINE_SIZE, n);
+  void *x = RTalignZero (get_cache_line_size(), n);
   TRACE("m1", "nbd_malloc: returning %p", x, 0);
   HREassert(x, "Allocation failed!");
   return x;
@@ -130,10 +136,10 @@ get_next_ndx(int old_ndx, uint32_t key_hash, int ht_scale)
 {
 #if 1
   unsigned incr = (key_hash >> (32 - ht_scale));
-  if (incr < ENTRIES_PER_BUCKET) { incr += ENTRIES_PER_BUCKET; }
+  if (incr < ENTRIES_PER_BUCKET()) { incr += ENTRIES_PER_BUCKET(); }
   return (old_ndx + incr) & MASK(ht_scale);
 #else
-  return (old_ndx + ENTRIES_PER_BUCKET) & MASK(ht_scale);
+  return (old_ndx + ENTRIES_PER_BUCKET()) & MASK(ht_scale);
 #endif
 }
 
@@ -171,13 +177,13 @@ volatile entry_t *hti_lookup (hti_t *hti, map_key_t key, uint32_t key_hash,
     {
 
       // The start of the bucket is the first entry in the cache line.
-      volatile entry_t *bucket = hti->table + (ndx & ~(ENTRIES_PER_BUCKET-1));
+      volatile entry_t *bucket = hti->table + (ndx & ~(ENTRIES_PER_BUCKET()-1));
 
       // Start searching at the indexed entry.
       // Then loop around to the begining of the cache line.
-      for (unsigned j = 0; j < ENTRIES_PER_BUCKET; ++j)
+      for (unsigned j = 0; j < ENTRIES_PER_BUCKET(); ++j)
 	{
-	  volatile entry_t *ent = bucket + ((ndx + j) & (ENTRIES_PER_BUCKET-1));
+	  volatile entry_t *ent = bucket + ((ndx + j) & (ENTRIES_PER_BUCKET()-1));
 
 	  map_key_t ent_key = ent->key;
 	  if (ent_key == DOES_NOT_EXIST)
@@ -243,7 +249,7 @@ static hti_t *hti_alloc (hashtable_t *parent, size_t scale) {
   //memset((void *)hti->table, 0, sz); // ensured by HREalignZero
 
   hti->probe = (int)(hti->scale * 1.5) + 2;
-  int quarter = (1ULL << (hti->scale - 2)) / ENTRIES_PER_BUCKET;
+  int quarter = (1ULL << (hti->scale - 2)) / ENTRIES_PER_BUCKET();
   if (hti->probe > quarter && quarter > 4) {
     // When searching for a key probe a maximum of 1/4
     hti->probe = quarter;
@@ -254,8 +260,8 @@ static hti_t *hti_alloc (hashtable_t *parent, size_t scale) {
   // size must be a power of 2
   HREassert(hti->scale >= MIN_SCALE && hti->scale < 63);
   // divisible into cache
-  HREassert(sizeof(entry_t) * ENTRIES_PER_BUCKET % CACHE_LINE_SIZE == 0);
-  HREassert((size_t)hti->table % CACHE_LINE_SIZE == 0); // cache aligned
+  HREassert(sizeof(entry_t) * ENTRIES_PER_BUCKET() % get_cache_line_size() == 0);
+  HREassert((size_t)hti->table % get_cache_line_size() == 0); // cache aligned
 
   return hti;
 }
@@ -641,12 +647,12 @@ static int hti_help_copy (hti_t *hti, void *ctx) {
     // haven't finished the copy.
     int panic = (x >= (1ULL << (hti->scale + 1)));
     if (!panic) {
-      limit = ENTRIES_PER_COPY_CHUNK;
+      limit = ENTRIES_PER_COPY_CHUNK();
 
       // Reserve some entries for this thread to copy.
       // There is a race condition here because the
       // fetch and add isn't atomic, but that is ok.
-      hti->copy_scan = x + ENTRIES_PER_COPY_CHUNK;
+      hti->copy_scan = x + ENTRIES_PER_COPY_CHUNK();
 
       // <copy_scan> might be larger than the size of the table,
       // if some thread stalls while

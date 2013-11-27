@@ -46,8 +46,8 @@ void* RTmallocZero(size_t size){
   if (region)
     return HREmallocZero(region, size);
   if(size==0) return NULL;
-  void *tmp=calloc((size + CACHE_LINE_SIZE - 1) >> CACHE_LINE,
-                   CACHE_LINE_SIZE);
+  void *tmp=calloc((size + get_cache_line_size() - 1) >> get_cache_line_size(),
+                   get_cache_line_size());
   if (tmp==NULL) Abort("out of memory trying to get %zu",size);
   Debug("allocated %zu in anonymous pages from system", size);
   return tmp;

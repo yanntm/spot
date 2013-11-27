@@ -326,4 +326,92 @@ extern char* HREstrdup(const char *str);
 extern void RTparseOptions(const char* argline,int *argc_p,char***argv_p);
 
 
+
+
+static bool cache_line_initialized_ = false;
+// Author: Nick Strupat
+// Date: October 29, 2010
+// Returns the cache line size (in bytes) of the processor, or 0 on failure
+
+#include <stddef.h>
+
+#if defined(__APPLE__)
+
+#undef _XOPEN_SOURCE
+#include <dlfcn.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+inline static size_t compute_cache_line_size() {
+    size_t line_size = 0;
+    size_t sizeof_line_size = sizeof(line_size);
+    sysctlbyname("hw.cachelinesize", &line_size, &sizeof_line_size, 0, 0);
+    return line_size;
+}
+
+#elif defined(_WIN32)
+
+#include <stdlib.h>
+#include <windows.h>
+inline static size_t compute_cache_line_size() {
+    size_t line_size = 0;
+    DWORD buffer_size = 0;
+    DWORD i = 0;
+    SYSTEM_LOGICAL_PROCESSOR_INFORMATION * buffer = 0;
+
+    GetLogicalProcessorInformation(0, &buffer_size);
+    buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(buffer_size);
+    GetLogicalProcessorInformation(&buffer[0], &buffer_size);
+
+    for (i = 0; i != buffer_size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+        if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
+            line_size = buffer[i].Cache.LineSize;
+            break;
+        }
+    }
+
+    free(buffer);
+    return line_size;
+}
+
+#elif defined(linux)
+
+#include <stdio.h>
+inline static size_t compute_cache_line_size() {
+  FILE * p = 0;
+  p = fopen("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size",
+            "r");
+  unsigned int i = 0;
+  if (p) {
+        fscanf(p, "%d", &i);
+        fclose(p);
+  }
+  return i;
+}
+
+#else
+size_t cache_line_size() {
+    return 0;
+}
+#endif
+
+/* inline static int compute_cache_line_size() */
+/* { */
+/*   cache_line_initialized_ = true; */
+/*   return 64; */
+
+
+static size_t cache_line_size_ = 0;
+inline static size_t get_cache_line_size()
+{
+  if (!cache_line_initialized_)
+    {
+      cache_line_initialized_ = true;
+      cache_line_size_ = compute_cache_line_size();
+    }
+  return cache_line_size_;
+}
+
+
+
+
 #endif

@@ -183,7 +183,6 @@ fi
 
 AC_CHECK_LIB([rt], [aio_error])
 AC_DEFINE([LTSMIN_PATHNAME_MAX], 1024, [Define maximal length of pathnames])
-ACX_CLINE_DEF([], [])
 AC_CACHE_SAVE
 
 AX_CXX_COMPILE_STDCXX_11([noext])
