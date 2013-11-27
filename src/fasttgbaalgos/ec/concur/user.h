@@ -2,7 +2,6 @@
 #ifndef HRE_USER_H
 #define HRE_USER_H
 
-//#include <popt.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -27,9 +26,6 @@ Opaque type for runtime context.
 typedef struct hre_context_s *hre_context_t;
 
 #include <feedback.h>
-//#include <context.h>
-//#include <queue.h>
-//#include <table.h>
 #include <runtime.h>
 
 /**
@@ -61,12 +57,6 @@ Thread support can be disabled by calling this function with 0 as argument.
 */
 extern void HREenableThreads(int threads);
 
-/**
-\brief Enable the multi process runtime.
-
-The argument sets the default number of processes used when this runtime is selected.
-*/
-// extern void HREenableFork(int procs);
 
 /**
 \brief Disable the single process runtime.
@@ -96,7 +86,9 @@ This call will start the selected runtime. During the startup,
 the registered options will be parsed. It is up to the selected
 runtime exactly when options are parsed.
 */
-extern void HREinitStart(int *argc,char **argv[],int min_args,int max_args,char*args[],const char* arg_help);
+extern void HREinitStart(int *argc,char **argv[],
+                         int min_args,int max_args,char*args[],
+                         const char* arg_help);
 
 /**
 \brief Start the HRE environment.
@@ -140,19 +132,9 @@ extern void HREinit(int *argc,char **argv[]);
 #endif
 
 /**
-\brief Emergency shutdown (async).
-*/
-//extern void HREabort(int code) __attribute__ ((noreturn));
-
-/**
 \brief Perform a graceful shutdown (collaborative).
 */
 extern void HREexit(int code) __attribute__ ((noreturn));
-
-/**
-\brief Print usage info and perform a graceful shutdown (collaborative).
-*/
-//extern void HREexitUsage(int code);
 
 /**
 Set the label of this thread.
@@ -193,25 +175,24 @@ extern void* HREstackBottom();
 
 The sequence of events when using popt options is:
  -# Use the HREaddOptions function to add the options for every subsytem.
- -# Call HREparseOptions to parse the options. If there is a maximum number of argument then option parsing is finished.
+ -# Call HREparseOptions to parse the options. If there is a maximum number
+ of argument then option parsing is finished.
  -# If the number of arguments is unlimited then the function
    HREnextOption() has to be called te retrieve those options.
    When there are no option left this function cleans up and returns NULL
 */
 /*@{*/
 
-/**
-\brief Register options to be parsed.
-*/
-/* extern void HREaddOptions(const struct poptOption *options,const char* header); */
 
 /**
 \brief Initialize the runtime library using popt.
 \param argc Number of arguments to be parsed.
 \param argv Arguments to be parsed.
 \param min_args The minimum number of arguments allowed.
-\param max_args The maximum number of arguments allowed, where -1 denotes infinite.
-\param args Array of length min(min_args,max_args) in which arguments are returned.
+\param max_args The maximum number of arguments allowed, where -1
+denotes infinite.
+\param args Array of length min(min_args,max_args) in which arguments
+are returned.
 */
 extern void HREparseOptions(
     int argc,char*argv[],
