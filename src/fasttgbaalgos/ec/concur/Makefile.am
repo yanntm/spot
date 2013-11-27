@@ -66,7 +66,6 @@ libconcur_la_SOURCES = \
    fast_hash.c		 \
    hashtable.c		 \
    hre_malloc.c		 \
-   hre_runtime.c	 \
    unionfind.c
 
 #    hre_queue.c
@@ -83,6 +82,7 @@ libconcur_la_SOURCES = \
 #    hre_main.c
 #    dynamic-array.c
 #    hre_context.c
+#   hre_runtime.c
 
   # MurmurHash3.c \
   # balloc.c \
