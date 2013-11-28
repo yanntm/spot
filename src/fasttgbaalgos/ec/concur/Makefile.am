@@ -18,7 +18,7 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 AM_CPPFLAGS =  -Wall -Werror -std=gnu99
-AM_CXXFLAGS = $(WARNING_CXXFLAGS)
+#AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 concurdir = $(pkgincludedir)/fasttgbaalgos/ec/concur
 
