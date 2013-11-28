@@ -20,6 +20,7 @@
 #include <thread>
 #include <vector>
 #include "dead_share.hh"
+#include <iostream>
 
 namespace spot
 {
