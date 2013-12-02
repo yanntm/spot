@@ -580,7 +580,7 @@ namespace spot
     // Let us instanciate the checker according to the policy
     for (int i = 0; i < tn_; ++i)
       {
-	bool s_ = i != 0;
+	bool s_ = true;//i != 0;
 
 	if (policy_ == FULL_TARJAN)
 	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
@@ -626,7 +626,7 @@ namespace spot
     // Launch all threads
     for (int i = 0; i < tn_; ++i)
       v.push_back(std::thread ([&](int tid){
-	    srand (tid); // Unused if tid equal 0
+	    srand (tid);
 	    chk[tid]->check();
 	  }, i));
 
