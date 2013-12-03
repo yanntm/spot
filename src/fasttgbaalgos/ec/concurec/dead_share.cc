@@ -432,6 +432,7 @@ namespace spot
 	uf_->make_dead(last);
 	seen_map::const_iterator it1 = H.find(last);
 	H.erase(it1);
+	last->destroy();
 	while (H.size() > steppos)
 	  {
 	    ++trivial;
@@ -442,6 +443,7 @@ namespace spot
 	    toerase->destroy();
 	    live.pop_back();
 	  }
+	assert(H.size() == steppos);
 
 	// This change regarding original algorithm
 	if (trivial == 0)
@@ -453,10 +455,12 @@ namespace spot
 	// Here we check '<=' since the information "==" is
 	// needed to the compressed stack of lowlink.
 	if (ll <= dstack_->top())
-	  dstack_->set_top(ll , acc | dstack_->top_acceptance() |
+	  dstack_->set_top(ll,  acc |
+			   dstack_->top_acceptance() |
 			   todo.back().lasttr->current_acceptance_marks());
 	else
-	  dstack_->set_top(dstack_->top(), acc | dstack_->top_acceptance() |
+	  dstack_->set_top(dstack_->top(),  acc |
+			   dstack_->top_acceptance() |
 			   todo.back().lasttr->current_acceptance_marks());
 
 	live.push_back(last);
@@ -470,7 +474,6 @@ namespace spot
 
 	if (fast_backtrack)
 	  fastbacktrack();
-
       }
   }
 
