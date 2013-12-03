@@ -432,7 +432,7 @@ namespace spot
 	uf_->make_dead(last);
 	seen_map::const_iterator it1 = H.find(last);
 	H.erase(it1);
-	last->destroy();
+	//last->destroy();
 	while (H.size() > steppos)
 	  {
 	    ++trivial;
