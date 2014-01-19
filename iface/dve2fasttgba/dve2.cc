@@ -185,16 +185,20 @@ namespace spot
     {
     public:
 
-      dve2_succ_iterator(const callback_context* cc,
+      dve2_succ_iterator(callback_context* cc,
     			 const cube cond,
 			 bool swarming = false):
 	cond_(cond), cc_(cc), swarming_(swarming)
       {
-	for (unsigned int i = 0; i < cc_->transitions.size(); ++i)
-	  crossref_.push_back (i);
+	//for (unsigned int i = 0; i < cc_->transitions.size(); ++i)
+	  //  crossref_.push_back (i);
+
+	static std::random_device rd;
+	static std::mt19937 g(rd());
 
 	if (swarming_)
-	  std::random_shuffle (crossref_.begin(), crossref_.end());
+	  std::shuffle (cc_->transitions.begin(),
+			cc_->transitions.end(), g);
       }
 
       ~dve2_succ_iterator()
@@ -205,29 +209,29 @@ namespace spot
       virtual
       void first()
       {
-    	// it_ = cc_->transitions.begin();
-	it_ref = crossref_.begin();
+    	 it_ = cc_->transitions.begin();
+	 //it_ref = crossref_.begin();
       }
 
       virtual
       void next()
       {
-    	// ++it_;
-	++it_ref;
+    	 ++it_;
+	 //++it_ref;
       }
 
       virtual
       bool done() const
       {
-    	// return it_ == cc_->transitions.end();
-	return it_ref == crossref_.end();
+    	 return it_ == cc_->transitions.end();
+	 //return it_ref == crossref_.end();
       }
 
       virtual
       fasttgba_state* current_state() const
       {
-    	// return (*it_)->clone();
-	return cc_->transitions[*it_ref]->clone();
+    	 return (*it_)->clone();
+	//return cc_->transitions[*it_ref]->clone();
       }
 
       cube
@@ -248,7 +252,7 @@ namespace spot
 
     private:
       const cube cond_;
-      const callback_context* cc_;
+      callback_context* cc_;
       callback_context::transitions_t::const_iterator it_;
       bool swarming_;
       std::vector<int> crossref_;

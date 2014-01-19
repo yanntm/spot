@@ -104,8 +104,11 @@ namespace spot
     for (unsigned int i = 0; i < start_->successors.size(); ++i)
       crossref_.push_back (i);
 
+    static std::random_device rd;
+    static std::mt19937 g(rd());
+
     if (swarming_)
-      std::random_shuffle (crossref_.begin(), crossref_.end());
+      std::shuffle (crossref_.begin(), crossref_.end(), g);
   }
 
   fast_explicit_iterator::~fast_explicit_iterator()

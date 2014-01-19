@@ -508,6 +508,48 @@ namespace spot
   void concur_opt_tarjan_ec::fastbacktrack()
   {
     ++fastb_cpt_;
+
+    int s = todo.back().position;
+    while (!todo.empty() && !uf_->is_dead(todo.back().state))
+      {
+	// Grab the position
+	s = todo.back().position;
+
+	// Remove from H
+	seen_map::const_iterator it = H.find(todo.back().state);
+    	H.erase(it);
+
+	// Release memory
+	todo.back().state->destroy();
+
+	// Pop todo and dstack
+	todo.pop_back();
+	dstack_->pop();
+      }
+
+    if (todo.empty())
+      {
+	while (!live.empty())
+	  {
+	    auto toerase = live.back();
+	    seen_map::const_iterator it = H.find(toerase);
+	    H.erase(it);
+	    toerase->destroy();
+	    live.pop_back();
+	  }
+      }
+    else
+      {
+	while (!live.empty() && H[live.back()] > s)
+	  {
+	    auto toerase = live.back();
+	    seen_map::const_iterator it = H.find(toerase);
+	    H.erase(it);
+	    toerase->destroy();
+	    live.pop_back();
+	  }
+      }
+
     return;
 
     // int ref = dstack_->top();
