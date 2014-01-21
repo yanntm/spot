@@ -35,9 +35,9 @@ test -z "$CXXFLAGS" && CXXFLAGS=
 adl_ENABLE_DEVEL
 
 AC_ARG_ENABLE([python],
-              [AC_HELP_STRING([--disable-python],
-                              [do not compile Python bindings])],
-              [], [enable_python=yes])
+	      [AC_HELP_STRING([--disable-python],
+			      [do not compile Python bindings])],
+	      [], [enable_python=yes])
 
 AM_CONDITIONAL([USE_PYTHON], [test "x${enable_python:-yes}" = xyes])
 
@@ -179,6 +179,9 @@ AC_CONFIG_FILES([
   src/tgbaparse/Makefile
   src/tgbatest/defs
   src/tgbatest/Makefile
+  src/fasttgba/Makefile
+  src/fasttgbaalgos/Makefile
+  src/fasttgbatest/Makefile
   wrap/Makefile
   wrap/python/Makefile
   wrap/python/ajax/Makefile

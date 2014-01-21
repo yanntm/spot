@@ -1,0 +1,6 @@
+defs
+.deps
+.libs
+Makefile
+Makefile.in
+tgba2fasttgba

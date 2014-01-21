@@ -27,8 +27,9 @@ AUTOMAKE_OPTIONS = subdir-objects
 # libspot.la needed by the tests)
 SUBDIRS = misc priv ltlenv ltlast ltlvisit ltlparse eltlparse tgba	\
           tgbaalgos tgbaparse ta taalgos kripke saba sabaalgos		\
-          neverparse kripkeparse dstarparse . bin ltltest eltltest	\
-          tgbatest sabatest kripketest sanity
+          neverparse kripkeparse dstarparse fasttgba fasttgbaalgos .    \
+	  bin ltltest eltltest tgbatest sabatest kripketest             \
+	  fasttgbatest sanity
 
 lib_LTLIBRARIES = libspot.la
 libspot_la_SOURCES =
@@ -52,6 +53,8 @@ libspot_la_LIBADD =  \
   tgbaalgos/libtgbaalgos.la \
   tgba/libtgba.la \
   tgbaparse/libtgbaparse.la \
+  fasttgba/libfasttgba.la \
+  fasttgbaalgos/libfasttgbaalgos.la \
   ../lib/libgnu.la
 
 # Dummy C++ source to cause C++ linking.
