@@ -495,7 +495,6 @@ namespace spot
     				 &fast_backtrack));
 
     bool rv = dstack_->top_acceptance().all();
-
     if (!rv && fast_backtrack)
       fastbacktrack();
 
@@ -576,11 +575,12 @@ namespace spot
     // Must we stop the world? It is valid to use a non atomic variable
     // since it will only pass this variable to true once
     stop = 0;
-    bool s_ = tn_ != 1;
 
     // Let us instanciate the checker according to the policy
     for (int i = 0; i < tn_; ++i)
       {
+	bool s_ = i != 0;
+
 	if (policy_ == FULL_TARJAN)
 	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
 							i, &stop, s_));
