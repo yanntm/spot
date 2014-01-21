@@ -33,7 +33,7 @@
 #include "fasttgba/fasttgba_product.hh"
 
 // Emptiness check for fasttgba
-#include "fasttgbaalgos/ec/cou99.hh"
+// #include "fasttgbaalgos/ec/cou99.hh"
 #include "fasttgbaalgos/ec/unioncheck.hh"
 #include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
   bool opt_random = false;
 
   // Wether we want to check with Cou - default -
-  bool opt_cou = true;
+  bool opt_odij = true;
 
   for (;;)
     {
@@ -144,10 +144,10 @@ int main(int argc, char **argv)
       spot::simple_instanciator si (ftgba);
 
       // Multi - emptiness check it
-      bool cou99_result = false;
-      spot::cou99  cou99_checker(&si);
-      if (cou99_checker.check())
-	cou99_result = true;
+      // bool cou99_result = false;
+      // spot::cou99  cou99_checker(&si);
+      // if (cou99_checker.check())
+      // 	cou99_result = true;
 
       bool unioncheck_result = false;
       spot::unioncheck unioncheck_checker(&si);
@@ -175,19 +175,19 @@ int main(int argc, char **argv)
 	opttarjancheckcs_result = true;
 
       // Check the result
-      if (cou99_result != unioncheck_result ||
-	  cou99_result != optdijkstracheck_result ||
-	  cou99_result != optdijkstracheckcs_result ||
-	  cou99_result != opttarjancheck_result ||
-	  cou99_result != opttarjancheckcs_result)
+      if (//cou99_result != unioncheck_result ||
+	  unioncheck_result != optdijkstracheck_result ||
+	  unioncheck_result != optdijkstracheckcs_result ||
+	  unioncheck_result != opttarjancheck_result ||
+	  unioncheck_result != opttarjancheckcs_result)
 	{
 	  spot::dotty_dfs dotty(ftgba);
 	  dotty.run();
 
 	  std::cout <<  "ERROR : Sum Up Results " << std::endl
-		    <<  "   cou99                :  "
-		    << (cou99_result? "true" : "false")
-		    << std::endl
+		    // <<  "   cou99                :  "
+		    // << (cou99_result? "true" : "false")
+		    // << std::endl
 		    <<  "   opt_dijkstra_ec      :  "
 		    << (optdijkstracheck_result? "true" : "false")
 		    << std::endl
@@ -237,10 +237,10 @@ int main(int argc, char **argv)
 
       const spot::fasttgba* ftgba = spot::tgba_2_fasttgba(a, *aps, *accs);
 
-      if (opt_cou)
+      if (opt_odij)
     	{
 	  spot::simple_instanciator si (ftgba);
-    	  spot::cou99  checker(&si);
+    	  spot::opt_dijkstra_ec  checker(&si);
     	  if (checker.check())
     	    {
     	      return_value = 1;

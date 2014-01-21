@@ -154,63 +154,62 @@ Layout of the source tree
 Core directories
 ----------------
 
-src/              Sources for libspot.
-   bin/           User tools built using the Spot library.
-      man/        Man pages for the above tools.
-   dstarparse/    Parser for the output of ltl2dstar.
-   eltlparse/     Parser for ELTL formulae.
-   eltltest/      Tests for ELTL nodes in ltlast/ and eltlparse/.
-   kripke/        Kripke Structure interface.
-   kripkeparse/   Parser for explicit Kripke.
-   kripketest/    Tests for kripke explicit.
-   ltlast/        LTL abstract syntax tree (including nodes for ELTL).
-   ltlenv/        LTL environments.
-   ltlparse/      Parser for LTL formulae.
-   ltlvisit/      Visitors of LTL formulae.
-   ltltest/       Tests for ltlast/, ltlenv/, ltlparse/, and ltlvisit/.
-   misc/          Miscellaneous support files.
-   neverparse/    Parser for SPIN never claims.
-   priv/          Private algorithms, used internally but not exported.
-   tgba/          TGBA objects and cousins.
-   tgbaalgos/     Algorithms on TGBA.
-      gtec/       Couvreur's Emptiness-Check.
-   tgbaparse/     Parser for explicit TGBA.
-   ta/            TA objects and cousins (TGTA).
-   taalgos/       Algorithms on TA/TGTA.
-   fasttgba/      FASTTGBA objects and cousins.
-   fasttgbaalgos/ Algorithms on FASTTGBA.
-      ec/	  Emptiness check for FASTTGBA
-         opt/	  Optimized Emptiness check for FASTTGBA
-   fasttgbatest/  Tests for fasttgba/, fasttgbaalgos/
-   tgbatest/      Tests for tgba/, tgbaalgos/, tgbaparse/, ta/ and taalgos/.
-   saba/          SABA (State-labeled Alternating Büchi Automata) objects.
-   sabaalgos/     Algorithms on SABA.
-   sabatest/      Tests for saba/, sabaalgos/.
-   sanity/        Sanity tests for the whole project.
-doc/              Documentation for libspot.
-   org/           Source of userdoc/ as org-mode files.
-   tl/            Documentation of the Temporal Logic operators.
-   userdoc/       HTML documentation about the command-line tools.
-   spot.html/     HTML reference manual for the library.
-bench/            Benchmarks for ...
-   dtgbasat/      ... SAT-based minimization of DTGBA,
-   emptchk/       ... emptiness-check algorithms,
-   ltl2tgba/      ... LTL-to-Büchi translation algorithms,
-   ltlcounter/    ... translation of a class of LTL formulae,
-   ltlclasses/    ... translation of more classes of LTL formulae,
-   scc-stats/     ... SCC statistics after translation of LTL formulae,
-   split-product/ ... parallelizing gain after splitting LTL automata,
-   spin13/        ... compositional suspension and other improvements,
-   wdba/          ... WDBA minimization (for obligation properties).
-wrap/             Wrappers for other languages.
-   python/        Python bindings for Spot and BuDDy
-      tests/      Tests for these bindings
-      ajax/       LTL-to-TGBA translator with web interface, using Ajax.
-iface/            Interfaces to other libraries.
-   dve2/          Interface with DiVinE2.
-   dve2fasttgba/  Interface with DiVinE2 using fasttgba
-   gspn/          GreatSPN interface.
-      examples/   Supporting models used by the test cases.
+src/                 Sources for libspot.
+   kripke/           Kripke Structure interface.
+   kripkeparse/      Parser for explicit Kripke.
+   kripketest/       Tests for kripke explicit.
+   ltlast/           LTL abstract syntax tree (including nodes for ELTL).
+   ltlenv/           LTL environments.
+   ltlparse/         Parser for LTL formulae.
+   ltlvisit/         Visitors of LTL formulae.
+   ltltest/          Tests for ltlast/, ltlenv/, ltlparse/, and ltlvisit/.
+   misc/             Miscellaneous support files.
+   tgba/             TGBA objects and cousins.
+   tgbaalgos/        Algorithms on TGBA.
+      gtec/          Couvreur's Emptiness-Check.
+   tgbaparse/        Parser for explicit TGBA.
+   ta/               TA objects and cousins (TGTA).
+   taalgos/          Algorithms on TA/TGTA.
+   fasttgba/         FASTTGBA objects and cousins.
+   fasttgbaalgos/    Algorithms on FASTTGBA.
+      ec/	     Emptiness check for FASTTGBA
+         concur/     A set of concurrent data structures.
+         concurec/   Parallel Emptiness Checks.
+         opt/	     Optimized Emptiness check for FASTTGBA
+   fasttgbatest/     Tests for fasttgba/, fasttgbaalgos/
+   tgbatest/         Tests for tgba/, tgbaalgos/, tgbaparse/, ta/ and taalgos/.
+   eltlparse/        Parser for ELTL formulae.
+   eltltest/         Tests for ELTL nodes in ltlast/ and eltlparse/.
+   saba/             SABA (State-labeled Alternating Büchi Automata) objects.
+   sabaalgos/        Algorithms on SABA.
+   sabatest/         Tests for saba/, sabaalgos/.
+   neverparse/       Parser for SPIN never claims.
+   bin/              User tools built using the Spot library.
+      man/           Man pages for the above tools.
+   sanity/           Sanity tests for the whole project.
+doc/                 Documentation for libspot.
+   org/              Source of userdoc/ as org-mode files.
+   tl/               Documentation of the Temporal Logic operators.
+   userdoc/          HTML documentation about the command-line tools.
+   spot.html/        HTML reference manual for the library.
+bench/               Benchmarks for ...
+   emptchk/          ... emptiness-check algorithms,
+   ltl2tgba/         ... LTL-to-Büchi translation algorithms,
+   ltlcounter/       ... translation of a class of LTL formulae,
+   ltlclasses/       ... translation of more classes of LTL formulae,
+   scc-stats/        ... SCC statistics after translation of LTL formulae,
+   split-product/    ... parallelizing gain after splitting LTL automata,
+   spin13/           ... compositional suspension and other improvements,
+   wdba/             ... WDBA minimization (for obligation properties).
+wrap/                Wrappers for other languages.
+   python/           Python bindings for Spot and BuDDy
+      tests/         Tests for these bindings
+      ajax/          LTL-to-TGBA translator with web interface, using Ajax.
+iface/               Interfaces to other libraries.
+   dve2/             Interface with DiVinE2.
+   dve2fasttgba/     Interface with DiVinE2 using fasttgba
+   gspn/             GreatSPN interface.
+      examples/      Supporting models used by the test cases.
 
 Third party software
 --------------------

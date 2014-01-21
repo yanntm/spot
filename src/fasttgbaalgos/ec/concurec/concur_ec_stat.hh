@@ -21,6 +21,7 @@
 
 #include "fasttgbaalgos/ec/ec.hh"
 #include <string>
+#include <chrono>
 
 namespace spot
 {
