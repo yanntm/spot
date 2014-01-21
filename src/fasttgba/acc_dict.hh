@@ -28,7 +28,7 @@ namespace spot
 
   /// This Class is a dicionary for acceptance set: it
   /// associates a name to each conditions
-  class acc_dict
+  class SPOT_API acc_dict
   {
   public:
     /// A basic Constructor

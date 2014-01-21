@@ -34,7 +34,7 @@ namespace spot
   /// This class also include the optimisation for the live
   /// stack (provided by Nuutila for Tarjan's algorithm but
   /// adapted here) and a possibly stack compression technique
-  class opt_dijkstra_scc : public ec
+  class SPOT_API opt_dijkstra_scc : public ec
   {
   public:
 
@@ -121,7 +121,7 @@ namespace spot
 
   /// \brief transform the previous algorithm into an emptiness
   /// check. Only refine specific methods
-  class  opt_dijkstra_ec : public opt_dijkstra_scc
+  class SPOT_API opt_dijkstra_ec : public opt_dijkstra_scc
   {
   public :
     opt_dijkstra_ec(instanciator* i, std::string option = "")

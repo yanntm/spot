@@ -37,7 +37,7 @@
 
 namespace spot
 {
-  class fasttgba_kripke_product : public fasttgba_product
+  class SPOT_API fasttgba_kripke_product : public fasttgba_product
   {
   public:
     fasttgba_kripke_product(const fasttgba *a1,
@@ -88,7 +88,7 @@ namespace spot
   // \a dead an atomic proposition or constant to use for looping on
   //         dead states
   // \a verbose whether to output verbose messages
-  const spot::fasttgba* load_dve2fast(const std::string& file,
+  SPOT_API const spot::fasttgba* load_dve2fast(const std::string& file,
 				      spot::ap_dict& aps,
 				      spot::acc_dict& accs,
 				      bool verbose = true);
@@ -235,7 +235,7 @@ namespace spot
   ///
   /// FIXME: This class should contain the dictionnary to
   /// avoid redefinitions for each instance.
-  class dve2product_instanciator: public instanciator
+  class SPOT_API dve2product_instanciator: public instanciator
   {
   private:
     const spot::tgba* tgba_;

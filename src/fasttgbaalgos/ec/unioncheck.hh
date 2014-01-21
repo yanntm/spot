@@ -33,7 +33,7 @@ namespace spot
   /// This class provides the adaptation of the emptiness
   /// check of couvreur using an Union Find structure and
   /// a specific dedicated root stack
-  class unioncheck : public ec
+  class SPOT_API unioncheck : public ec
   {
   public:
 

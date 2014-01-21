@@ -187,7 +187,7 @@ namespace spot
 
 
   /// \brief Wrapper Launch all threads
-  class dead_share: public ec
+  class SPOT_API dead_share: public ec
   {
   public:
 

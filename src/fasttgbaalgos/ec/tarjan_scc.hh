@@ -33,7 +33,7 @@
 
 namespace spot
 {
-  class tarjan_scc : public ec
+  class SPOT_API tarjan_scc : public ec
   {
   private:
     /// The map of visited states

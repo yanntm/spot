@@ -31,7 +31,7 @@ namespace spot
   ///
   /// It is used as a wrapper for manipulating set of variables
   /// without dealing with the implementation.
-  class cube
+  class SPOT_API cube
   {
   public:
     /// \brief Initialize a cube of size \a size

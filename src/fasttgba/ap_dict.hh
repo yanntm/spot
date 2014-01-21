@@ -38,7 +38,7 @@ namespace spot
   /// If this Dicitonnary is used by two automata using the atomic
   /// proposition 'a' then the id of 'a' will be the same.
   ///
-  class ap_dict
+  class SPOT_API ap_dict
   {
   public:
     /// \brief a default constructor that construct an empty dictionary

@@ -33,7 +33,7 @@
 
 namespace spot
 {
-  class lazycheck : public ec
+  class SPOT_API lazycheck : public ec
   {
   private:
     /// The map of visited states

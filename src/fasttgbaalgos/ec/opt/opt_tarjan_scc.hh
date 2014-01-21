@@ -36,7 +36,7 @@ namespace spot
   /// This implementation use many optimisations
   ///   - Keep Live stack as small as possible [Nuutila]
   ///   - Use (or not!) a compressed lowlink stack
-  class opt_tarjan_scc : public ec
+  class SPOT_API opt_tarjan_scc : public ec
   {
   protected:
     /// The map of visited states
@@ -131,7 +131,7 @@ namespace spot
   /// emptiness check.
   /// It onlys needs to refine two methods that deal with acceptance
   /// sets : update and pop
-  class opt_tarjan_ec : public opt_tarjan_scc
+  class SPOT_API opt_tarjan_ec : public opt_tarjan_scc
   {
   public:
     opt_tarjan_ec(instanciator* i, std::string option = "")

@@ -34,7 +34,7 @@ namespace spot
   /// This class provides the adaptation of the emptiness
   /// check of couvreur using an Union Find structure and
   /// a specific dedicated root stack
-  class dijkstracheck : public ec
+  class SPOT_API dijkstracheck : public ec
   {
   public:
 

@@ -30,7 +30,7 @@ namespace spot
 {
   /// Spot is centered around the spot::tgba type. Here we provide a simplified
   /// interface for designing faster implementations.
-  class fasttgba
+  class SPOT_API fasttgba
   {
   protected:
     fasttgba();

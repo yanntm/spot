@@ -33,7 +33,7 @@
 
 namespace spot
 {
-  class stats : public ec
+  class SPOT_API stats : public ec
   {
   private:
     /// The map of visited states
@@ -101,13 +101,13 @@ namespace spot
     ///< \brief Storage for counterexample found or not
     bool counterexample_found;
 
-    /// structure to store stats about the product 
+    /// structure to store stats about the product
     struct stats_entry
     {
       int count;		// The number of SCCs
       int ingoing_edge; 	// The number of internal transitions
       int outgoing_edge; 	// The number of external transitions
-      int accepting;		// The number of accepting SCC 
+      int accepting;		// The number of accepting SCC
     };
 
     Sgi::hash_map<int, stats_entry> hstats;

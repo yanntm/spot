@@ -129,7 +129,7 @@ namespace spot
   /// interface. Moreover this interface provides all what is needed
   /// to build such an automaton
   ///
-  class fasttgbaexplicit : public fasttgba
+  class SPOT_API fasttgbaexplicit : public fasttgba
   {
   public:
 

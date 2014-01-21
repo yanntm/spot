@@ -121,7 +121,7 @@ namespace spot
   /// Remark :  in order to do parallel emptiness checks, this product
   ///           do not write in this two dicitonnaries
   ///
-  class fasttgba_product : public fasttgba
+  class SPOT_API fasttgba_product : public fasttgba
   {
   public:
     // ------------------------------------------------------------

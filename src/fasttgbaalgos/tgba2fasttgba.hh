@@ -38,7 +38,7 @@ namespace spot
   /// \a param t the source tgba
   /// \a param aps the dictionnary of atomic propositions
   /// \a param accs the dictionnary of acceptance set
-  const fasttgba*
+  SPOT_API const fasttgba*
   tgba_2_fasttgba(const spot::tgba* t,
 		  spot::ap_dict& aps,
 		  spot::acc_dict& accs);
