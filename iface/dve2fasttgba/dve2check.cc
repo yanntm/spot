@@ -114,6 +114,7 @@ main(int argc, char **argv)
   bool opt_uc13 = false;
   bool opt_dc13 = false;
   bool opt_wait = false;
+  bool opt_fstat = false;
 
   bool opt_concur_dead_tarjan = false;
   bool opt_concur_ec_dead_tarjan = false;
@@ -226,6 +227,10 @@ main(int argc, char **argv)
       option_wait = std::string(argv[3]+5);
       opt_wait = true;
     }
+  else if (!strncmp("-fstat", argv[3], 6))
+    {
+      opt_fstat = true;
+    }
   else
     syntax(argv[0]);
 
@@ -274,7 +279,7 @@ main(int argc, char **argv)
       }
 
 
-      if (!opt_wait)
+      if (!opt_wait && !opt_fstat)
 	std::cout << "Checking the property : "
 		  << spot::ltl::to_string(f1)
 		  << std::endl << std::endl;
@@ -712,6 +717,63 @@ main(int argc, char **argv)
 		worker.join();
 	      }
 	  }
+
+	if (opt_fstat)
+	  {
+	    // if (option_wait.compare("") == 0)
+	    //   option_wait = "verified";
+
+	    //
+	    // We just want to keep Strong automaton
+	    //
+	    const spot::dve2product_instance* inststr =
+	      (const spot::dve2product_instance*)itor->new_instance();
+
+	    const spot::fasttgbaexplicit* instaut =
+	      dynamic_cast<const spot::fasttgbaexplicit*>
+	      (inststr->get_formula_automaton());
+	    assert(instaut);
+
+	    if (instaut->get_strength() != spot::STRONG_AUT)
+	      {
+		std::cout << input << "Not Strong !" << std::endl;
+	    	exit(1);
+	      }
+
+	    std::string nacc = std::to_string
+	      (instaut->number_of_acceptance_marks());
+
+	    // spot::dotty_dfs dotty(instaut);
+	    // dotty.run();
+
+
+	    std::ostringstream result;
+	    unsigned found = file.find_last_of("/\\");
+
+	    result << "#fstats,"<< file.substr(found+1)
+		   << option_stats << "," << nacc << ",";
+
+	    spot::stats* checker =
+	      new spot::stats(new spot::simple_instanciator(instaut),
+			      option_stats);
+	    mtimer.start("Checking stats");
+	    checker->check();
+
+	    mtimer.stop("Checking stats");
+
+	    spot::timer t = mtimer.timer("Checking stats");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+
+
+	    delete inststr;
+	  }
+
+
+
 
 	// mtimer.print(std::cout);
 

@@ -134,6 +134,10 @@ namespace spot
     int roots_poped_cpt_;	 ///< \brief count UPDATE loop iterations
     int states_cpt_;		 ///< \brief count states
     int transitions_cpt_;	 ///< \brief count transitions
+
+    int strong_states;
+    int weak_states;
+    int terminal_states;
   };
 }
 

@@ -27,6 +27,7 @@
 #include <iostream>
 #include "stats.hh"
 #include <assert.h>
+#include "fasttgba/fasttgba_explicit.hh"
 
 namespace spot
 {
@@ -39,7 +40,10 @@ namespace spot
     update_cpt_(0),
     roots_poped_cpt_(0),
     states_cpt_(0),
-    transitions_cpt_(0)
+    transitions_cpt_(0),
+    strong_states(0),
+    weak_states(0),
+    terminal_states(0)
   {
     if (!option.compare("-ds"))
       {
@@ -102,6 +106,17 @@ namespace spot
       max_dfs_size_ : dfs_size_;
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
+
+    if (auto t = dynamic_cast<fast_explicit_state*>(q))
+      {
+	if (t->get_strength() == STRONG_SCC)
+	  ++strong_states;
+	if (t->get_strength() == WEAK_SCC)
+	  ++weak_states;
+	if (t->get_strength() == TERMINAL_SCC)
+	  ++terminal_states;
+      }
+
   }
 
   stats::color
@@ -303,6 +318,12 @@ namespace spot
       + std::to_string(transitions_cpt_)
       + ","
       + std::to_string(states_cpt_)
+      + ","
+      + std::to_string(strong_states)
+      + ","
+      + std::to_string(weak_states)
+      + ","
+      + std::to_string(terminal_states)
       + ","
       + dump_stats;
   }

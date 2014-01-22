@@ -155,6 +155,10 @@ Core directories
 ----------------
 
 src/                 Sources for libspot.
+   bin/              User tools built using the Spot library.
+      man/           Man pages for the above tools.
+   priv/             Private algorithms, used internally but not exported.
+   dstarparse/       Parser for the output of ltl2dstar.
    kripke/           Kripke Structure interface.
    kripkeparse/      Parser for explicit Kripke.
    kripketest/       Tests for kripke explicit.
@@ -193,6 +197,7 @@ doc/                 Documentation for libspot.
    userdoc/          HTML documentation about the command-line tools.
    spot.html/        HTML reference manual for the library.
 bench/               Benchmarks for ...
+   dtgbasat/         ... SAT-based minimization of DTGBA,
    emptchk/          ... emptiness-check algorithms,
    ltl2tgba/         ... LTL-to-Büchi translation algorithms,
    ltlcounter/       ... translation of a class of LTL formulae,
