@@ -48,7 +48,7 @@ namespace spot
 
     /// A constructor taking the automaton to check
     opt_tarjan_scc(instanciator* i, std::string option = "",
-		   bool swarm = false);
+		   bool swarm = false, int tid = 0);
 
     /// A destructor
     virtual ~opt_tarjan_scc();
@@ -125,6 +125,7 @@ namespace spot
     int memory_cost_;		 ///< \brief evaluates memory
     int trivial_scc_;            ///< \brief count trivial SCCs
     bool swarm_;		 ///< \brief shall use swarming?
+    int tid_;                    ///< \brief the thread id
   };
 
   /// \brief This class is the implementation of the tarjan-based

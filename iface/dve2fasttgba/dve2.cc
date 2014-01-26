@@ -187,14 +187,15 @@ namespace spot
 
       dve2_succ_iterator(callback_context* cc,
     			 const cube cond,
-			 bool swarming = false):
+			 bool swarming = false,
+			 int seed = 0):
 	cond_(cond), cc_(cc), swarming_(swarming)
       {
 	//for (unsigned int i = 0; i < cc_->transitions.size(); ++i)
 	  //  crossref_.push_back (i);
 
 	static std::random_device rd;
-	static std::mt19937 g(rd());
+	static std::mt19937 g(seed); //rd());
 
 	if (swarming_)
 	  std::shuffle (cc_->transitions.begin(),
@@ -449,7 +450,7 @@ namespace spot
 
       virtual
       dve2_succ_iterator*
-      swarm_succ_iter(const fasttgba_state* state) const
+      swarm_succ_iter(const fasttgba_state* state, int seed) const
       {
      	callback_context* cc;
 	int t;
@@ -467,7 +468,7 @@ namespace spot
 	// if (t == 0 && scond != bddfalse)
 	//   cc->transitions.push_back(local_state->clone());
 
-     	return new dve2_succ_iterator(cc, scond, true);
+     	return new dve2_succ_iterator(cc, scond, true, seed);
 	assert(false);
       }
 

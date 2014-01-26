@@ -61,7 +61,7 @@ namespace spot
     /// Such an iterator visits randomly once each outgoing transitions
     /// \param state the states whose successors are to be explored.
     virtual fasttgba_succ_iterator*
-    swarm_succ_iter(const fasttgba_state* state) const = 0;
+    swarm_succ_iter(const fasttgba_state* state, int seed) const = 0;
 
     /// \brief Get the dictionary associated to the automaton.
     virtual

@@ -33,7 +33,7 @@ namespace spot
 					       int *stop,
 					       bool swarming,
 					       std::string option)
-    : opt_tarjan_scc(i, option, swarming)
+    : opt_tarjan_scc(i, option, swarming, tn)
   {
     uf_ = uf;
     tn_ = tn;
@@ -171,7 +171,7 @@ namespace spot
 	if (!todo.back().lasttr)
 	  {
 	    todo.back().lasttr = swarm_ ?
-	      a_->swarm_succ_iter(todo.back().state) :
+	      a_->swarm_succ_iter(todo.back().state, tn_) :
 	      a_->succ_iter(todo.back().state);
 	    todo.back().lasttr->first();
 	  }
@@ -239,7 +239,7 @@ namespace spot
 						   int *stop,
 						   bool swarming,
 						   std::string option)
-    : opt_dijkstra_scc(i, option, swarming)
+    : opt_dijkstra_scc(i, option, swarming, tn)
   {
     uf_ = uf;
     tn_ = tn;
@@ -370,7 +370,7 @@ namespace spot
 	if (!todo.back().lasttr)
 	  {
 	    todo.back().lasttr = swarm_ ?
-	      a_->swarm_succ_iter(todo.back().state) :
+	      a_->swarm_succ_iter(todo.back().state, tn_) :
 	      a_->succ_iter(todo.back().state);
 	    todo.back().lasttr->first();
 	  }

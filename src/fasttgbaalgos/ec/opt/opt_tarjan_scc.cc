@@ -31,7 +31,8 @@ namespace spot
 {
   opt_tarjan_scc::opt_tarjan_scc(instanciator* i,
 				 std::string option,
-				 bool swarm) :
+				 bool swarm,
+				 int tid) :
     counterexample_found(false),
     inst (i->new_instance()),
     dfs_size_(0),
@@ -43,7 +44,8 @@ namespace spot
     transitions_cpt_(0),
     memory_cost_(0),
     trivial_scc_(0),
-    swarm_(swarm)
+    swarm_(swarm),
+    tid_(tid)
   {
     assert(!option.compare("-cs")
 	   || !option.compare("+cs")
@@ -259,7 +261,7 @@ namespace spot
 	if (!todo.back().lasttr)
 	  {
 	    todo.back().lasttr = swarm_ ?
-	      a_->swarm_succ_iter(todo.back().state) :
+	      a_->swarm_succ_iter(todo.back().state, tid_) :
 	      a_->succ_iter(todo.back().state);
 	    todo.back().lasttr->first();
 	  }

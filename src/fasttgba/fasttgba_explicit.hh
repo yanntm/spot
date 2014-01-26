@@ -113,7 +113,7 @@ namespace spot
     std::vector<int>::const_iterator it_ref;
   public:
     fast_explicit_iterator(const fast_explicit_state* state,
-			   bool swarming = false);
+			   bool swarming = false, int seed = 0);
     virtual ~fast_explicit_iterator();
     virtual void first();
     virtual void next();
@@ -152,7 +152,7 @@ namespace spot
     succ_iter(const fasttgba_state* local_state) const;
 
     virtual fasttgba_succ_iterator*
-    swarm_succ_iter(const fasttgba_state* state) const;
+    swarm_succ_iter(const fasttgba_state* state, int seed) const;
 
     virtual
     ap_dict& get_dict() const;

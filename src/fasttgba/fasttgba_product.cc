@@ -259,13 +259,14 @@ namespace spot
   }
 
   fasttgba_succ_iterator*
-  fasttgba_product::swarm_succ_iter(const fasttgba_state* local_state) const
+  fasttgba_product::swarm_succ_iter(const fasttgba_state* local_state,
+				    int seed) const
   {
     const fast_product_state* s =
       down_cast<const fast_product_state*>(local_state);
     assert(s);
-    fasttgba_succ_iterator* li = left_->swarm_succ_iter(s->left());
-    fasttgba_succ_iterator* ri = right_->swarm_succ_iter(s->right());
+    fasttgba_succ_iterator* li = left_->swarm_succ_iter(s->left(), seed);
+    fasttgba_succ_iterator* ri = right_->swarm_succ_iter(s->right(), seed);
     return new fast_product_iterator(li, ri, &pool_, kripke_left);
   }
 

@@ -98,14 +98,14 @@ namespace spot
   // ----------------------------------------------------------------------
 
   fast_explicit_iterator::fast_explicit_iterator
-  (const fast_explicit_state* state, bool swarming):
+  (const fast_explicit_state* state, bool swarming, int seed):
     start_(state), swarming_(swarming)
   {
     for (unsigned int i = 0; i < start_->successors.size(); ++i)
       crossref_.push_back (i);
 
     static std::random_device rd;
-    static std::mt19937 g(rd());
+    static std::mt19937 g(seed); //rd());
 
     if (swarming_)
       std::shuffle (crossref_.begin(), crossref_.end(), g);
@@ -208,13 +208,13 @@ namespace spot
   }
 
   fasttgba_succ_iterator*
-  fasttgbaexplicit::swarm_succ_iter(const fasttgba_state* state) const
+  fasttgbaexplicit::swarm_succ_iter(const fasttgba_state* state, int seed) const
   {
     const fast_explicit_state* s =
       down_cast<const fast_explicit_state*>(state);
     assert(s);
 
-    return new fast_explicit_iterator(s, true);
+    return new fast_explicit_iterator(s, true, seed);
   }
 
 
