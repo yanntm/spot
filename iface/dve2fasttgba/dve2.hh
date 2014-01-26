@@ -222,7 +222,7 @@ namespace spot
     spot::acc_dict* accs_;
 
 
-    const spot::tgba* ba_;
+    //const spot::tgba* ba_;
     const spot::fasttgba* ba_ftgba;
     const spot::fasttgba* ba_kripke;
     const spot::fasttgba_kripke_product *ba_prod;
