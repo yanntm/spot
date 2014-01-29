@@ -107,7 +107,7 @@ namespace spot
     int position = live.size();
     live.push_back(q);
     H.insert(std::make_pair(q, position));
-    dstack_.push_back({position});
+    dstack_.push_back({position, 0, 0, 0});
     todo.push_back ({q, 0, live.size() -1});
 
     ++dfs_size_;
@@ -167,12 +167,22 @@ namespace spot
   {
     --dfs_size_;
     int ll = dstack_.back().lowlink;
+    int seq = dstack_.back().seq_trivial;
+    int seq_sl = dstack_.back().seq_trivial_sl;
+    int out = dstack_.back().out_degree;
     dstack_.pop_back();
 
     unsigned int steppos = todo.back().position;
     delete todo.back().lasttr;
     todo.pop_back();
     assert(dstack_.size() == todo.size());
+
+
+    // Compute the outgoing degree histogram
+    if (histo.find(out) == histo.end())
+      histo[out] = 1;
+    else
+      ++histo[out];
 
     if ((int) steppos == ll)
       {
@@ -238,20 +248,31 @@ namespace spot
 	    ++trivial_states;
 	    // ++seq_trivials;
 	    // ++seq_trivials_sl;
-	    //	    max_seq_trivials = max_seq_trivials > seq_trivials?
-	    //   max_seq_trivials : seq_trivials;
+	    max_seq_trivials = max_seq_trivials > seq + 1 ?
+	      max_seq_trivials : seq + 1;
+	    max_seq_trivials_sl = max_seq_trivials_sl > seq_sl + 1 ?
+	      max_seq_trivials_sl : seq_sl + 1;
+	    if (!dstack_.empty())
+	      {
+		dstack_.back().seq_trivial =
+		  dstack_.back().seq_trivial > seq + 1 ?
+		  dstack_.back().seq_trivial : seq + 1;
+		dstack_.back().seq_trivial_sl =
+		  dstack_.back().seq_trivial_sl > seq + 1 ?
+		  dstack_.back().seq_trivial_sl : seq_sl + 1;
+	      }
 	  }
-	// else
-	//   {
-	//     seq_trivials = 0;
-	//     if (inttrans != 1 || m.all())
-	//       seq_trivials_sl = 0;
-	//     else
-	//       ++seq_trivials_sl;
-	//   }
+	else
+	  {
+	    if (inttrans == 1 || !m.all())
+	      dstack_.back().seq_trivial_sl =
+		dstack_.back().seq_trivial_sl > seq + 1 ?
+		dstack_.back().seq_trivial_sl : seq_sl + 1;
 
-	max_seq_trivials_sl = max_seq_trivials_sl > seq_trivials?
-	  max_seq_trivials_sl : seq_trivials_sl;
+	  }
+
+	// max_seq_trivials_sl = max_seq_trivials_sl > seq_trivials?
+	//   max_seq_trivials_sl : seq_trivials_sl;
 
 
 
@@ -343,6 +364,7 @@ namespace spot
     	else
     	  {
 	    ++transitions_cpt_;
+	    ++dstack_.back().out_degree;
 	    assert(todo.back().lasttr);
     	    fasttgba_state* d = todo.back().lasttr->current_state();
 	    c = get_color (d);
@@ -396,6 +418,18 @@ namespace spot
 	accepting_sccs += i->second.accepting;
       }
 
+    std::string dump_histo = "";
+    for (auto i = histo.begin(); i != histo.end(); ++i)
+      {
+	if (i != histo.begin())
+	  dump_histo += " ";
+	dump_histo +=
+	  "<" + std::to_string(i->first)
+	  + ";" + std::to_string(i->second)
+	  + ">";
+      }
+
+
     return
       std::to_string(states_cpt_)
       + ","
@@ -439,6 +473,8 @@ namespace spot
       // + ","
       // + std::to_string(0)
       // + ","
-      + dump_stats;
+      + dump_stats
+      + ","
+      + dump_histo;
   }
 }

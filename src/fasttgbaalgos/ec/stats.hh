@@ -90,6 +90,9 @@ namespace spot
     struct stack_entry
     {
       int lowlink;
+      int seq_trivial;
+      int seq_trivial_sl;
+      int out_degree;
     };
     typedef std::vector<stack_entry> dstack_type;
     dstack_type dstack_;
@@ -114,6 +117,7 @@ namespace spot
     };
 
     Sgi::hash_map<int, stats_entry> hstats;
+    Sgi::hash_map<int, int> histo;
 
   private:
 
