@@ -199,6 +199,12 @@ namespace spot
       return prod;
     }
 
+    // Get the kripke
+    const fasttgba* get_kripke () const
+    {
+      return kripke;
+    }
+
     const fasttgba* get_formula_automaton () const
     {
       return ftgba1;

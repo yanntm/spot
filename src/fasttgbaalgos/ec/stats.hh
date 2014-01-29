@@ -44,7 +44,7 @@ namespace spot
   public:
 
     /// A constructor taking the automaton to check
-    stats(instanciator* i, std::string option = "");
+    stats(instanciator* i, std::string option = "", bool iskripke = false);
 
     /// A destructor
     virtual ~stats();
@@ -156,7 +156,7 @@ namespace spot
     int max_seq_trivials;
     int max_seq_trivials_sl;
     bool last_was_trivial;
-
+    bool iskripke_;
   };
 }
 

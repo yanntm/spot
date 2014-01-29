@@ -115,6 +115,7 @@ main(int argc, char **argv)
   bool opt_dc13 = false;
   bool opt_wait = false;
   bool opt_fstat = false;
+  bool opt_kstat = false;
 
   bool opt_concur_dead_tarjan = false;
   bool opt_concur_ec_dead_tarjan = false;
@@ -230,6 +231,10 @@ main(int argc, char **argv)
   else if (!strncmp("-fstat", argv[3], 6))
     {
       opt_fstat = true;
+    }
+  else if (!strncmp("-kstat", argv[3], 6))
+    {
+      opt_kstat = true;
     }
   else
     syntax(argv[0]);
@@ -587,24 +592,65 @@ main(int argc, char **argv)
 	    std::ostringstream result;
 	    result << "#stats" << option_stats << ",";
 
-	    spot::stats* checker =
-	      new spot::stats(itor, option_stats);
-	    mtimer.start("Checking stats");
-	    checker->check();
-	    // result << "SCC,";
-	    result << file.substr(1 + file.find_last_of("\\/")) << ",";
-	    result << input << ",";
+	    // Compute stats for the product.
+	    {
+	      spot::stats* checker =
+	    	new spot::stats(itor, option_stats);
+	      mtimer.start("Checking stats");
+	      checker->check();
+	      result << file.substr(1 + file.find_last_of("\\/")) << ",";
+	      result << input << ",";
+	      mtimer.stop("Checking stats");
+	      spot::timer t = mtimer.timer("Checking stats");
+	      result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	      result << "," << checker->extra_info_csv();
+	      delete checker;
+	    }
 
+	    // Compute stats for the formula
+	    {
+	      const spot::dve2product_instance* inststr =
+	    	(const spot::dve2product_instance*)itor->new_instance();
 
-	    mtimer.stop("Checking stats");
-
-	    spot::timer t = mtimer.timer("Checking stats");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv();
-	    delete checker;
+	      const spot::fasttgbaexplicit* instaut =
+	    	dynamic_cast<const spot::fasttgbaexplicit*>
+	    	(inststr->get_formula_automaton());
+	      assert(instaut);
+	      spot::stats* checker =
+	        new spot::stats(new spot::simple_instanciator(instaut),
+	      		      option_stats);
+	      mtimer.start("Checking stats for formula");
+	      checker->check();
+	      mtimer.stop("Checking stats for formula");
+	      result << "," << checker->extra_info_csv();
+	      delete checker;
+	      delete inststr;
+	    }
 	    std::cout << result.str() << std::endl;
 	  }
 
+
+	if (opt_kstat)
+	  {
+	    // Compute stats for the model
+	    std::ostringstream result;
+	    result << "#kstats" << option_stats << ",";
+
+	    const spot::dve2product_instance* inststr =
+	      (const spot::dve2product_instance*)itor->new_instance();
+
+	    auto instaut = inststr->get_kripke();
+	    spot::stats* checker =
+	      new spot::stats(new spot::simple_instanciator(instaut),
+			      option_stats, true);
+	    mtimer.start("Checking stats for formula");
+	    checker->check();
+	    mtimer.stop("Checking stats for formula");
+	    result << checker->extra_info_csv() << ",";
+	    delete checker;
+	    delete inststr;
+	    std::cout << result.str() << std::endl;
+	  }
 
 
 	//

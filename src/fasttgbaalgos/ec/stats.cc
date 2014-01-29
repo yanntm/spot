@@ -32,7 +32,7 @@
 
 namespace spot
 {
-  stats::stats(instanciator* i, std::string option) :
+  stats::stats(instanciator* i, std::string option, bool iskripke) :
     counterexample_found(false),
     inst (i->new_instance()),
     dfs_size_(0),
@@ -53,7 +53,8 @@ namespace spot
     seq_trivials(0),
     seq_trivials_sl(0),
     max_seq_trivials(0),
-    max_seq_trivials_sl(0)
+    max_seq_trivials_sl(0),
+    iskripke_(iskripke)
   {
     if (!option.compare("-ds"))
       {
@@ -233,7 +234,8 @@ namespace spot
 		if (get_color(d) == Alive)
 		  {
 		    ++inttrans;
-		    m |= it->current_acceptance_marks();
+		    if (!iskripke_)
+		      m |= it->current_acceptance_marks();
 		  }
 		else
 		  ++outtrans;
@@ -435,7 +437,7 @@ namespace spot
       + ","
       + std::to_string(transitions_cpt_)
       + ","
-      + std::to_string(a_->number_of_acceptance_marks())
+      + std::to_string(iskripke_ ? 0 : a_->number_of_acceptance_marks())
       + ","
       + std::to_string(roots_poped_cpt_)
       + ","
