@@ -28,6 +28,7 @@
 #include "stats.hh"
 #include <assert.h>
 #include "fasttgba/fasttgba_explicit.hh"
+#include "fasttgba/fasttgba_product.hh"
 
 namespace spot
 {
@@ -43,7 +44,16 @@ namespace spot
     transitions_cpt_(0),
     strong_states(0),
     weak_states(0),
-    terminal_states(0)
+    terminal_states(0),
+    nonaccepting_states(0),
+    trivial_states(0),
+    trivial_states_sl(0),
+    trivial_states_sl_acc(0),
+    nonaccepting_sccs(0),
+    seq_trivials(0),
+    seq_trivials_sl(0),
+    max_seq_trivials(0),
+    max_seq_trivials_sl(0)
   {
     if (!option.compare("-ds"))
       {
@@ -115,6 +125,23 @@ namespace spot
 	  ++weak_states;
 	if (t->get_strength() == TERMINAL_SCC)
 	  ++terminal_states;
+	if (t->get_strength() == NON_ACCEPTING_SCC)
+	  ++nonaccepting_states;
+      }
+
+    if (auto t = dynamic_cast<fast_product_state*>(q))
+      {
+	if (auto t2 = dynamic_cast<const fast_explicit_state*>(t->right()))
+	  {
+	    if (t2->get_strength() == STRONG_SCC)
+	      ++strong_states;
+	    if (t2->get_strength() == WEAK_SCC)
+	      ++weak_states;
+	    if (t2->get_strength() == TERMINAL_SCC)
+	      ++terminal_states;
+	    if (t2->get_strength() == NON_ACCEPTING_SCC)
+	      ++nonaccepting_states;
+	  }
       }
 
   }
@@ -149,6 +176,33 @@ namespace spot
 
     if ((int) steppos == ll)
       {
+
+	int strong =0;
+	int weak = 0;
+	int terminal = 0;
+	if (auto t = dynamic_cast<const fast_explicit_state*>(live.back()))
+	  {
+	    if (t->get_strength() == STRONG_SCC)
+	      ++strong;
+	    if (t->get_strength() == WEAK_SCC)
+	      ++weak;
+	    if (t->get_strength() == TERMINAL_SCC)
+	      ++terminal;
+	  }
+
+	if (auto t = dynamic_cast<const fast_product_state*>(live.back()))
+	  {
+	    if (auto t2 = dynamic_cast<const fast_explicit_state*>(t->right()))
+	      {
+		if (t2->get_strength() == STRONG_SCC)
+		  ++strong;
+		if (t2->get_strength() == WEAK_SCC)
+		  ++weak;
+		if (t2->get_strength() == TERMINAL_SCC)
+		  ++terminal;
+	      }
+	  }
+
 	++roots_poped_cpt_;
 
 	// Here compute stats about scc
@@ -179,23 +233,60 @@ namespace spot
 	    delete it;
 	  }
 
+	if (scc_size == 1 && inttrans == 0)
+	  {
+	    ++trivial_states;
+	    // ++seq_trivials;
+	    // ++seq_trivials_sl;
+	    //	    max_seq_trivials = max_seq_trivials > seq_trivials?
+	    //   max_seq_trivials : seq_trivials;
+	  }
+	// else
+	//   {
+	//     seq_trivials = 0;
+	//     if (inttrans != 1 || m.all())
+	//       seq_trivials_sl = 0;
+	//     else
+	//       ++seq_trivials_sl;
+	//   }
+
+	max_seq_trivials_sl = max_seq_trivials_sl > seq_trivials?
+	  max_seq_trivials_sl : seq_trivials_sl;
+
+
+
+	if (scc_size == 1 && inttrans == 1)
+	  {
+	    ++trivial_states_sl;
+	    if (m.all())
+	      ++trivial_states_sl_acc;
+	  }
+
+	if (!m.all())
+	  ++nonaccepting_sccs;
+
 	// Update Results
 	if (hstats.find(scc_size) == hstats.end())
 	  {
-	    hstats[scc_size] = {1, inttrans, outtrans, m.all() ? 1 : 0};
+	    hstats[scc_size] = {1, inttrans, outtrans, m.all() ? 1 : 0,
+				strong, weak, terminal};
 	  }
 	else
 	  {
 	    ++hstats[scc_size].count;
 	    hstats[scc_size].ingoing_edge += inttrans;
 	    hstats[scc_size].outgoing_edge += outtrans;
+	    hstats[scc_size].strong += strong;
+	    hstats[scc_size].weak += weak;
+	    hstats[scc_size].terminal += terminal;
+
 	    if (m.all())
 	      ++hstats[scc_size].accepting;
 	  }
 
 	while (live.size() > steppos)
 	  {
-	    ++scc_size;
+	    // ++scc_size;
 	    if (deadstore_)	// There is a deadstore
 	      {
 		deadstore_->add(live.back());
@@ -288,36 +379,37 @@ namespace spot
     // visited states
 
     std::string dump_stats = "";
+    int accepting_sccs = 0;
     for (auto i = hstats.begin(); i != hstats.end(); ++i)
       {
 	if (i != hstats.begin())
-	  dump_stats += ",";
+	  dump_stats += " ";
 	dump_stats += "<" + std::to_string(i->first)
-	  + "," + std::to_string(i->second.count)
-	  + "," + std::to_string(i->second.ingoing_edge)
-	  + "," + std::to_string(i->second.outgoing_edge)
-	  + "," + std::to_string(i->second.accepting)
+	  + ";" + std::to_string(i->second.count)
+	  + ";" + std::to_string(i->second.ingoing_edge)
+	  + ";" + std::to_string(i->second.outgoing_edge)
+	  + ";" + std::to_string(i->second.accepting)
+	  + ";" + std::to_string(i->second.strong)
+	  + ";" + std::to_string(i->second.weak)
+	  + ";" + std::to_string(i->second.terminal)
 	  + ">";
+	accepting_sccs += i->second.accepting;
       }
 
     return
-      std::to_string(max_dfs_size_)
-      + ","
-      + std::to_string(0)
-      + ","
-      + std::to_string(max_live_size_)
-      + ","
-      + std::to_string(deadstore_? deadstore_->size() : 0)
-      + ","
-      + std::to_string(update_cpt_)
-      + ","
-      + std::to_string(0)
-      + ","
-      + std::to_string(roots_poped_cpt_)
+      std::to_string(states_cpt_)
       + ","
       + std::to_string(transitions_cpt_)
       + ","
-      + std::to_string(states_cpt_)
+      + std::to_string(a_->number_of_acceptance_marks())
+      + ","
+      + std::to_string(roots_poped_cpt_)
+      + ","
+      + std::to_string(accepting_sccs)
+      + ","
+      + std::to_string(nonaccepting_sccs)
+      + ","
+      + std::to_string(update_cpt_)
       + ","
       + std::to_string(strong_states)
       + ","
@@ -325,6 +417,28 @@ namespace spot
       + ","
       + std::to_string(terminal_states)
       + ","
+      + std::to_string(nonaccepting_states)
+      + ","
+      + std::to_string(trivial_states)
+      + ","
+      + std::to_string(trivial_states_sl)
+      + ","
+      + std::to_string(trivial_states_sl_acc)
+      +","
+      + std::to_string(max_seq_trivials)
+      + ","
+      + std::to_string(max_seq_trivials_sl)
+      + ","
+      + std::to_string(max_live_size_)
+      + ","
+      + std::to_string(max_dfs_size_)
+      + ","
+      // + std::to_string(0)
+      // + ","
+      // + std::to_string(deadstore_? deadstore_->size() : 0)
+      // + ","
+      // + std::to_string(0)
+      // + ","
       + dump_stats;
   }
 }

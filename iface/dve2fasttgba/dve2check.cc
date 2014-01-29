@@ -591,13 +591,16 @@ main(int argc, char **argv)
 	      new spot::stats(itor, option_stats);
 	    mtimer.start("Checking stats");
 	    checker->check();
-	    result << "SCC,";
+	    // result << "SCC,";
+	    result << file.substr(1 + file.find_last_of("\\/")) << ",";
+	    result << input << ",";
+
+
 	    mtimer.stop("Checking stats");
 
 	    spot::timer t = mtimer.timer("Checking stats");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
+	    result << "," << checker->extra_info_csv();
 	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }

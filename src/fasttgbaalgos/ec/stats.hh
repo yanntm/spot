@@ -108,6 +108,9 @@ namespace spot
       int ingoing_edge; 	// The number of internal transitions
       int outgoing_edge; 	// The number of external transitions
       int accepting;		// The number of accepting SCC
+      int strong;
+      int weak;
+      int terminal;
     };
 
     Sgi::hash_map<int, stats_entry> hstats;
@@ -138,6 +141,18 @@ namespace spot
     int strong_states;
     int weak_states;
     int terminal_states;
+    int nonaccepting_states;
+
+    int trivial_states;
+    int trivial_states_sl;
+    int trivial_states_sl_acc;
+    int nonaccepting_sccs;
+    int seq_trivials;
+    int seq_trivials_sl;
+    int max_seq_trivials;
+    int max_seq_trivials_sl;
+    bool last_was_trivial;
+
   };
 }
 
