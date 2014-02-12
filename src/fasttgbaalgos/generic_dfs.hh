@@ -25,7 +25,7 @@
 
 namespace spot
 {
-  class generic_dfs
+  class SPOT_API generic_dfs
   {
   public:
     generic_dfs(const fasttgba* a);

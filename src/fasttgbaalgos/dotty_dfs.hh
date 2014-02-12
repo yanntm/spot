@@ -32,7 +32,7 @@ namespace spot
   /// This class provides a way to display the automaton using dot
   /// syntax.
   ///
-  class dotty_dfs : public generic_dfs
+  class SPOT_API dotty_dfs : public generic_dfs
   {
   public:
     dotty_dfs(const fasttgba* a);
