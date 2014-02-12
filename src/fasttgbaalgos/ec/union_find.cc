@@ -238,7 +238,7 @@ namespace spot
 
   setOfDisjointSetsIPC_LRPC::setOfDisjointSetsIPC_LRPC(acc_dict& acc) :
     union_find(acc),
-    el(), id(), rk()
+    el(), id(), rk(), DEAD(0)
   {
     id.push_back(DEAD);
     rk.push_back(0);
@@ -449,7 +449,7 @@ namespace spot
 
   setOfDisjointSetsIPC_LRPC_MS::setOfDisjointSetsIPC_LRPC_MS(acc_dict& acc) :
     union_find(acc),
-    el(), id()
+    el(), id(), DEAD(0)
   {
     id.push_back(DEAD);
   }
@@ -670,8 +670,7 @@ namespace spot
 
   setOfDisjointSetsIPC_LRPC_MS_Dead::setOfDisjointSetsIPC_LRPC_MS_Dead
   (acc_dict& acc) : union_find(acc),
-		    el(), id(), realsize_(0),
-		    max_alive_(0)
+		    el(), id(), DEAD(0), realsize_(0), max_alive_(0)
   {
     deadstore_ = new deadstore();
     id.push_back({DEAD, 0});

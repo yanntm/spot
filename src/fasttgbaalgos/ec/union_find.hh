@@ -142,7 +142,7 @@ namespace spot
     mutable std::vector<int> id;
     mutable std::vector<int> rk;
     // id of a specially managed partition of "dead" elements
-    const int DEAD = 0;
+    const int DEAD;
 
     virtual int root(int i);
 
@@ -192,7 +192,7 @@ namespace spot
 		  fasttgba_state_ptr_hash, fasttgba_state_ptr_equal> el;
     mutable std::vector<int> id;
     // id of a specially managed partition of "dead" elements
-    const int DEAD = 0;
+    const int DEAD;
 
     virtual int root(int i);
 
@@ -269,7 +269,7 @@ namespace spot
 
     mutable std::vector<idpair> id;
     // id of a specially managed partition of "dead" elements
-    const int DEAD = 0;
+    const int DEAD;
 
     deadstore* deadstore_;
     int realsize_;

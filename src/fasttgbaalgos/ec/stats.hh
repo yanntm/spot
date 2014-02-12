@@ -151,11 +151,8 @@ namespace spot
     int trivial_states_sl;
     int trivial_states_sl_acc;
     int nonaccepting_sccs;
-    int seq_trivials;
-    int seq_trivials_sl;
     int max_seq_trivials;
     int max_seq_trivials_sl;
-    bool last_was_trivial;
     bool iskripke_;
   };
 }

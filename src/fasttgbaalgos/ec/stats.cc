@@ -50,8 +50,6 @@ namespace spot
     trivial_states_sl(0),
     trivial_states_sl_acc(0),
     nonaccepting_sccs(0),
-    seq_trivials(0),
-    seq_trivials_sl(0),
     max_seq_trivials(0),
     max_seq_trivials_sl(0),
     iskripke_(iskripke)
