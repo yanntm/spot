@@ -28,7 +28,7 @@ namespace spot
   ///
   /// This class display an automaton using lbbt syntax
   ///
-  class lbtt_dfs : public generic_dfs
+  class SPOT_API lbtt_dfs : public generic_dfs
   {
   public:
     lbtt_dfs(const fasttgba* a);
