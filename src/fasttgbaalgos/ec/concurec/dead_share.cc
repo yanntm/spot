@@ -266,7 +266,10 @@ namespace spot
     H.insert(std::make_pair(s, H.size()));
 
     if (uf_->make_set(s, tn_))
-      ++make_cpt_;
+      {
+	s->clone();
+	++make_cpt_;
+      }
 
     // Count!
     max_live_size_ = H.size() > max_live_size_ ?
@@ -330,8 +333,12 @@ namespace spot
 	  {
 	    ++trivial;
 	    //deadstore_->add(live.back());
-	    seen_map::const_iterator it = H.find(live.back());
+	    //seen_map::const_iterator it = H.find(live.back());
+	    //H.erase(it);
+	    auto toerase = live.back();
+	    seen_map::const_iterator it = H.find(toerase);
 	    H.erase(it);
+	    toerase->destroy();
 	    live.pop_back();
  	  }
 	if (trivial == 0) // we just popped a trivial
@@ -606,6 +613,50 @@ namespace spot
   }
 
   // ----------------------------------------------------------------------
+  // Concurrent Dijkstra Emptiness check  with shared union find.
+  // ======================================================================
+
+
+
+  bool concur_opt_dijkstra_ec::merge(fasttgba_state* d)
+  {
+    ++update_cpt_;
+    assert(H.find(d) != H.end());
+    int dpos = H[d];
+    int rpos = roots_stack_->root_of_the_top();
+    markset a = todo[rpos].lasttr->current_acceptance_marks();
+
+    roots_stack_->pop();
+    while ((unsigned)dpos < todo[rpos].position)
+      {
+  	++update_loop_cpt_;
+    	rpos = roots_stack_->root_of_the_top();
+  	bool fast_backtrack = false;
+
+    	markset m = todo[rpos].lasttr->current_acceptance_marks();
+    	a |= m | roots_stack_->top_acceptance();
+    	roots_stack_->pop();
+
+
+	if (fast_backtrack)
+	  {
+	    ++fastb_cpt_;
+	    continue;
+	  }
+
+  	uf_->unite (d, todo[rpos].state, a, &fast_backtrack);
+      }
+    roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
+
+    return a.all();
+  }
+
+  std::string concur_opt_dijkstra_ec::csv()
+  {
+    return "dijkstra_ec," + extra_info_csv() + "," + std::to_string(fastb_cpt_);
+  }
+
+  // ----------------------------------------------------------------------
   // Definition of the core of Dead_share
   // ======================================================================
 
@@ -636,6 +687,9 @@ namespace spot
 	else if (policy_ == FULL_DIJKSTRA)
 	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
 							  i, &stop, s_));
+	else if (policy_ == FULL_DIJKSTRA_EC)
+	  chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
+							 i, &stop, s_));
 	else
 	  {
 	    assert(policy_ == MIXED);
@@ -740,6 +794,9 @@ namespace spot
 	break;
       case FULL_TARJAN_EC:
 	res << "FULL_TARJAN_EC,";
+	break;
+      case FULL_DIJKSTRA_EC:
+	res << "FULL_DIJKSTRA_EC,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;

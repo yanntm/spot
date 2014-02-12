@@ -186,6 +186,44 @@ namespace spot
   };
 
 
+  // ----------------------------------------------------------------------
+  // Dijkstra Concurrent Emptiness Check
+  // ======================================================================
+
+  /// \brief An emptiness based on the dijkstra parallel computation algorithm
+  /// above
+  class concur_opt_dijkstra_ec : public concur_opt_dijkstra_scc
+  {
+  public:
+    /// \brief A constuctor
+    concur_opt_dijkstra_ec(instanciator* i,
+			 spot::uf* uf,
+			 int thread_number,
+			 int *stop,
+			 bool swarming,
+			 std::string option = "-cs")
+      : concur_opt_dijkstra_scc(i, uf, thread_number, stop, swarming, option)
+    {
+      fastb_cpt_ = 0;
+    }
+
+    /// \brief The update for backedges
+    virtual bool merge(fasttgba_state* d);
+
+    /// \brief Display the csv of for this thread
+    virtual std::string csv();
+
+  private:
+    int fastb_cpt_;
+  };
+
+
+
+
+
+
+
+
   /// \brief Wrapper Launch all threads
   class SPOT_API dead_share: public ec
   {
@@ -197,7 +235,8 @@ namespace spot
 	FULL_TARJAN = 0,	/// \brief All threads use Tarjan Algorithm
 	FULL_DIJKSTRA = 1,	/// \brief All threads use Dijkstra Algorithm
 	MIXED = 2,		/// \brief Combinaison of both previous
-	FULL_TARJAN_EC = 3	/// \brief All treads use Tarjan Emptiness Check
+	FULL_TARJAN_EC = 3,	/// \brief All treads use Tarjan Emptiness Check
+	FULL_DIJKSTRA_EC = 4
       };
 
     /// \brief Constructor for the multithreaded emptiness check
