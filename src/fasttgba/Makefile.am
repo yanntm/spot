@@ -31,7 +31,6 @@ fasttgba_HEADERS = \
   fasttgba_succ_iterator.hh \
   fasttgba.hh \
   cube.hh \
-  markset.hh \
   fasttgba_explicit.hh \
   fasttgba_product.hh
 
@@ -43,4 +42,5 @@ libfasttgba_la_SOURCES = \
   fasttgba_explicit.cc \
   fasttgba_product.cc \
   cube.cc \
+  markset.hh \
   markset.cc

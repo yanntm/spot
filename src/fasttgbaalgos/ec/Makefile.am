@@ -34,8 +34,7 @@ ec_HEADERS = \
   stats.hh \
   tarjan_scc.hh \
   unioncheck.hh \
-  union_scc.hh \
-  union_find.hh
+  union_scc.hh
 
 noinst_LTLIBRARIES = libec.la
 libec_la_SOURCES = \
@@ -46,6 +45,7 @@ libec_la_SOURCES = \
   tarjan_scc.cc \
   unioncheck.cc \
   union_scc.cc \
+  union_find.hh \
   union_find.cc
 
 SUBDIRS = opt concur concurec
