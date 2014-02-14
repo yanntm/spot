@@ -690,6 +690,15 @@ namespace spot
 	else if (policy_ == FULL_DIJKSTRA_EC)
 	  chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
 							 i, &stop, s_));
+	else if (policy_ == MIXED_EC)
+	  {
+	    if (i%2)
+	      chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
+							   i, &stop, s_));
+	    else
+	      chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
+							     i, &stop, s_));
+	  }
 	else
 	  {
 	    assert(policy_ == MIXED);
@@ -797,6 +806,9 @@ namespace spot
 	break;
       case FULL_DIJKSTRA_EC:
 	res << "FULL_DIJKSTRA_EC,";
+	break;
+      case MIXED_EC:
+	res << "MIXED_EC,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;

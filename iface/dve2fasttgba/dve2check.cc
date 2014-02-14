@@ -120,6 +120,7 @@ main(int argc, char **argv)
   bool opt_concur_dead_tarjan = false;
   bool opt_concur_ec_dead_tarjan = false;
   bool opt_concur_ec_dead_dijkstra = false;
+  bool opt_concur_ec_dead_mixed = false;
   bool opt_concur_dead_dijkstra = false;
   bool opt_concur_dead_mixed = false;
   unsigned int  nb_threads = 1;
@@ -162,6 +163,13 @@ main(int argc, char **argv)
     {
       opt_concur_ec_dead_dijkstra = true;
       std::string s = std::string(argv[3]+24);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-concur_ec_dead_mixed", argv[3], 21))
+    {
+      opt_concur_ec_dead_mixed = true;
+      std::string s = std::string(argv[3]+21);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -353,14 +361,32 @@ main(int argc, char **argv)
 	    spot::dead_share* d =
 	      new spot::dead_share(itor, nb_threads,
 				   spot::dead_share::FULL_DIJKSTRA_EC);
-	    mtimer.start("concur_ec_dead_tarjan");
+	    mtimer.start("concur_ec_dead_dijkstra");
 	    if (d->check())
 	      result << "VIOLATED,";
 	    else
 	      result << "VERIFIED,";
-	    mtimer.stop("concur_ec_dead_tarjan");
+	    mtimer.stop("concur_ec_dead_dijkstra");
 	    d->dump_threads();
-	    spot::timer t = mtimer.timer("concur_ec_dead_tarjan");
+	    spot::timer t = mtimer.timer("concur_ec_dead_dijkstra");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << d->csv() << "," << input;
+	    std::cout << result.str() << std::endl;
+	    delete d;
+	  }
+	if (opt_concur_ec_dead_mixed)
+	  {
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+				   spot::dead_share::MIXED_EC);
+	    mtimer.start("concur_ec_dead_mixed");
+	    if (d->check())
+	      result << "VIOLATED,";
+	    else
+	      result << "VERIFIED,";
+	    mtimer.stop("concur_ec_dead_mixed");
+	    d->dump_threads();
+	    spot::timer t = mtimer.timer("concur_ec_dead_mixed");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << d->csv() << "," << input;
 	    std::cout << result.str() << std::endl;

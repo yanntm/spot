@@ -236,7 +236,8 @@ namespace spot
 	FULL_DIJKSTRA = 1,	/// \brief All threads use Dijkstra Algorithm
 	MIXED = 2,		/// \brief Combinaison of both previous
 	FULL_TARJAN_EC = 3,	/// \brief All treads use Tarjan Emptiness Check
-	FULL_DIJKSTRA_EC = 4
+	FULL_DIJKSTRA_EC = 4,
+	MIXED_EC = 5
       };
 
     /// \brief Constructor for the multithreaded emptiness check
