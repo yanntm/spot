@@ -517,7 +517,7 @@ namespace spot
     ++fastb_cpt_;
 
     int s = todo.back().position;
-    while (!todo.empty() && !uf_->is_dead(todo.back().state))
+    while (!todo.empty() && uf_->is_dead(todo.back().state))
       {
 	// Grab the position
 	s = todo.back().position;
