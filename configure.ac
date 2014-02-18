@@ -180,6 +180,9 @@ AC_CONFIG_FILES([
   src/eltlparse/Makefile
   src/eltltest/defs
   src/eltltest/Makefile
+  src/graph/Makefile
+  src/graphtest/defs
+  src/graphtest/Makefile
   src/kripke/Makefile
   src/ltlast/Makefile
   src/ltlenv/Makefile

@@ -148,6 +148,8 @@ src/              Sources for libspot.
    dstarparse/    Parser for the output of ltl2dstar.
    eltlparse/     Parser for ELTL formulae.
    eltltest/      Tests for ELTL nodes in ltlast/ and eltlparse/.
+   graph/         Implementation of different graphs.
+   graphtest/     Tests for different graphs.
    kripke/        Kripke Structure interface.
    kripkeparse/   Parser for explicit Kripke.
    kripketest/    Tests for kripke explicit.
