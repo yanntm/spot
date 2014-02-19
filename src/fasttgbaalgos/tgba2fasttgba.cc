@@ -46,7 +46,8 @@ namespace spot
 	  accs_(accs),
 	  strong_(false),
 	  weak_(false),
-	  terminal_(false)
+	  terminal_(false),
+	  toadd_(bddfalse)
       {
 	sm = new scc_map(aut_);
 	sm->build_map();
@@ -103,8 +104,10 @@ namespace spot
 	    // It's not a variable for me!
 	    // When a degeneralisation is performed some acceptance
 	    // sets  are removed off the tgba
-	    // if (!aps->is_registered_acceptance_variable(f, aut_))
-	    //   continue;
+	    if (!aps->is_registered_acceptance_variable(f, aut_))
+	      //continue;
+	      toadd_ |= bdd_ithvar(sii2->second);
+
 	    acceptances_.push_back(sii2->second);
 
 	    int p = accs_.register_acc_for_aut(f->dump(), result_);
@@ -159,7 +162,9 @@ namespace spot
 	//
 	// First we process all acceptance conditions
 	//
- 	bdd acc  = it->current_acceptance_conditions();
+ 	bdd acc  =  it->current_acceptance_conditions();
+	if (acc != bddfalse)
+	  acc |= toadd_;
 	markset current_mark (accs_);
 	while (acc != bddfalse)
 	  {
@@ -259,6 +264,7 @@ namespace spot
       bool strong_;
       bool weak_;
       bool terminal_;
+      bdd toadd_;
     };
   }
 
