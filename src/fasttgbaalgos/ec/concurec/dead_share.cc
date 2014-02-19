@@ -558,53 +558,6 @@ namespace spot
       }
 
     return;
-
-    // int ref = dstack_->top();
-    // int i = 0;
-
-
-    // //live.push_back(todo.back().state);
-    // 	seen_map::const_iterator it = H.find(todo.back().state);
-    // 	H.erase(it);
-    // 	todo.back().state->destroy();
-    // delete todo.back().lasttr;
-    // todo.pop_back();
-    // dstack_->pop();
-
-    // while(dstack_->top() > ref)
-    //   {
-    // 	seen_map::const_iterator it = H.find(todo.back().state);
-    // 	H.erase(it);
-    // 	todo.back().state->destroy();
-    // 	// live.push_back(todo.back().state);
-    // 	delete todo.back().lasttr;
-    // 	todo.pop_back();
-    // 	dstack_->pop();
-    //   }
-
-    // if (!todo.empty())
-    //   {
-    // 	unsigned int steppos = todo.back().position;
-    // 	// printf("H:%zu todo:%zu live:%zu steppos:%d ref:%d\n", H.size(),
-    // 	//        todo.size(), live.size(), steppos, ref);
-
-    // 	while (H.size() > steppos+1)
-    // 	  {
-    // 	    ++i;
-    // 	    // if (live.empty())
-    // 	    //   {
-    // 	    // 	printf("%zu %zu %d \n", H.size(), todo.size(), steppos);
-    // 	    // 	assert(false);
-    // 	    //   }
-    // 	    auto toerase = live.back();
-    // 	    seen_map::const_iterator it = H.find(toerase);
-    // 	    H.erase(it);
-    // 	    toerase->destroy();
-    // 	    live.pop_back();
-    // 	  }
-    //   }
-    // fastb_cpt_ = fastb_cpt_ > i ? fastb_cpt_ : i;
-    // //      std::cout << "FastBacktrack : " << i << "\n";
   }
 
   std::string concur_opt_tarjan_ec::csv()
@@ -635,21 +588,75 @@ namespace spot
 
     	markset m = todo[rpos].lasttr->current_acceptance_marks();
     	a |= m | roots_stack_->top_acceptance();
-    	roots_stack_->pop();
 
+  	uf_->unite (d, todo[rpos].state, a, &fast_backtrack);
 
 	if (fast_backtrack)
 	  {
-	    ++fastb_cpt_;
-	    continue;
+	    // continue;
+	    fastbacktrack();
+	    return false;
 	  }
-
-  	uf_->unite (d, todo[rpos].state, a, &fast_backtrack);
+    	roots_stack_->pop();
       }
     roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
 
     return a.all();
   }
+
+
+ void concur_opt_dijkstra_ec::fastbacktrack()
+  {
+    ++fastb_cpt_;
+
+    int s = todo.back().position;
+    while (!todo.empty() && uf_->is_dead(todo.back().state))
+      {
+	// Grab the position
+	s = todo.back().position;
+
+	// Remove from H
+	seen_map::const_iterator it = H.find(todo.back().state);
+    	H.erase(it);
+
+	// Release memory
+	todo.back().state->destroy();
+
+	// Pop todo and the root stack
+	// Only pop root stack when the top of todo is the top of root stack
+	// There are no consistency problems since the pop is done after
+	// calling fastbacktrack in the merge
+	todo.pop_back();
+	if ((int) roots_stack_->root_of_the_top() == s)
+	  roots_stack_->pop();
+      }
+
+    if (todo.empty())
+      {
+	while (!live.empty())
+	  {
+	    auto toerase = live.back();
+	    seen_map::const_iterator it = H.find(toerase);
+	    H.erase(it);
+	    toerase->destroy();
+	    live.pop_back();
+	  }
+      }
+    else
+      {
+	while (!live.empty() && H[live.back()] > s)
+	  {
+	    auto toerase = live.back();
+	    seen_map::const_iterator it = H.find(toerase);
+	    H.erase(it);
+	    toerase->destroy();
+	    live.pop_back();
+	  }
+      }
+
+    return;
+  }
+
 
   std::string concur_opt_dijkstra_ec::csv()
   {

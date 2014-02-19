@@ -213,6 +213,10 @@ namespace spot
     /// \brief Display the csv of for this thread
     virtual std::string csv();
 
+    /// \brief Speed up the backtrack when the current state as been
+    /// already marked dead by another thread.
+    virtual void fastbacktrack();
+
   private:
     int fastb_cpt_;
   };
