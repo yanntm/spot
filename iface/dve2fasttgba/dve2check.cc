@@ -34,6 +34,7 @@
 #include "tgbaalgos/stats.hh"
 #include "tgba/tgbaproduct.hh"
 #include "tgbaalgos/dotty.hh"
+#include "tgbaalgos/scc_decompose.hh"
 
 
 // This part is for FASTTGBA
@@ -123,6 +124,7 @@ main(int argc, char **argv)
   bool opt_concur_ec_dead_mixed = false;
   bool opt_concur_dead_dijkstra = false;
   bool opt_concur_dead_mixed = false;
+  bool use_decomp = false;
   unsigned int  nb_threads = 1;
 
   std::string option_uc13 = "";
@@ -144,6 +146,10 @@ main(int argc, char **argv)
     {
       opt_lc13 = true;
       option_lc13 = std::string(argv[3]+5);
+    }
+  else if (!strncmp("-decomp_ec", argv[3], 10))
+    {
+      use_decomp = true;
     }
   else if (!strncmp("-concur_dead_tarjan", argv[3], 19))
     {
@@ -314,13 +320,40 @@ main(int argc, char **argv)
       af1 = pp1->run(af1, f1);
       delete pp1;
 
-      // spot::dotty_reachable(std::cout, af1);
-      // exit(1);
-      // -----------------------------------------------------
-      // Start using fasttgba
-      // -----------------------------------------------------
+      if (use_decomp)
+	{
+	  std::cout << "ORIGINAL\n";
+	  spot::dotty_reachable(std::cout, af1);
+	  spot::scc_decompose *sd = new spot::scc_decompose (af1,false);
 
+ 	  const spot::tgba* strong_a = sd->strong_automaton();
+	  if (strong_a)
+	    {
+	      std::cout << "STRONG\n";
+	      spot::dotty_reachable(std::cout, strong_a);
+	    }
+
+	  const spot::tgba* weak_a = sd->weak_automaton();
+	  if (weak_a)
+	    {
+	      std::cout << "WEAK\n";
+	      spot::dotty_reachable(std::cout, weak_a);
+	    }
+
+	  const spot::tgba* term_a = sd->terminal_automaton();
+	  if (term_a)
+	    {
+	      std::cout << "TERMINAL\n";
+	      spot::dotty_reachable(std::cout, term_a);
+	    }
+	  delete sd;
+	}
+      else
       {
+	// -----------------------------------------------------
+	// Start using fasttgba
+	// -----------------------------------------------------
+
 	// The string that will contain all results
 	std::ostringstream result;
 

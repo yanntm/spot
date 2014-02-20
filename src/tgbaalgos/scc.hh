@@ -176,16 +176,36 @@ namespace spot
     /// \brief Return the number of self loops in the automaton.
     unsigned self_loops() const;
 
+    /// \brief Return whether the associated automaton has strong scc
+    bool has_strong_scc() const;
+
+    /// \brief Return whether the associated automaton has strong scc
+    bool has_weak_scc() const;
+
+    /// \brief Return whether the associated automaton has strong scc
+    bool has_terminal_scc() const;
+
+    bool weak_subautomaton(unsigned n) const;
+    bool terminal_subautomaton(unsigned n) const;
+    bool strong_hard(unsigned n) const;
+    bool weak_hard(unsigned n) const;
+    bool weak(unsigned n) const;
+    bool terminal(unsigned n) const;
+
   protected:
     bdd update_supp_rec(unsigned state);
     int relabel_component();
-
+    void update_strength();
+    bool intern_is_terminal(unsigned n);
+    bool intern_is_weak(unsigned n);
     struct scc
     {
     public:
       scc(int index) : index(index), acc(bddfalse),
 		       supp(bddtrue), supp_rec(bddfalse),
-		       trivial(true), useful_acc(bddfalse) {};
+		       trivial(true), useful_acc(bddfalse),
+                       is_terminal(false), is_weak(false),
+                       is_strong(false) {};
       /// Index of the SCC.
       int index;
       /// The union of all acceptance conditions of transitions which
@@ -214,6 +234,18 @@ namespace spot
       /// then useful_acc will contain
       ///      Acc[a]&Acc[b]&!Acc[c] | !Acc[a]&Acc[b]&Acc[c]
       bdd useful_acc;
+      // \brief Wheter this scc is terminal
+      bool is_terminal;
+      // \brief Wheter this scc is weak
+      bool is_weak;
+      // \brief Wheter this scc is strong
+      bool is_strong;
+
+      bool is_terminal_subautomaton;
+      bool is_weak_subautomaton;
+      bool is_weak_hard;
+      bool is_strong_subautomaton;
+      bool is_strong_hard;
     };
 
     const tgba* aut_;		// Automata to decompose.

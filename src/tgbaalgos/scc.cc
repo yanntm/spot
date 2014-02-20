@@ -22,6 +22,7 @@
 #include <iostream>
 #include <sstream>
 #include "scc.hh"
+#include "isweakscc.hh"
 #include "tgba/bddprint.hh"
 #include "misc/escape.hh"
 #include "priv/accconv.hh"
@@ -310,6 +311,7 @@ namespace spot
 
     // recursively update supp_rec
     (void) update_supp_rec(initial());
+    (void) update_strength();
   }
 
   unsigned scc_map::scc_of_state(const state* s) const
@@ -373,6 +375,161 @@ namespace spot
     assert(scc_map_.size() > n);
     return scc_map_[n].useful_acc;
   }
+
+  // ------------------------------------------------------------
+
+  bool
+  scc_map::has_strong_scc() const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_strong)
+        return true;
+    return false;
+  }
+
+  bool
+  scc_map::has_weak_scc() const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_weak && !scc_map_[curr_scc].is_terminal)
+        return true;
+    return false;
+  }
+
+  bool
+  scc_map::has_terminal_scc() const
+  {
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      if (scc_map_[curr_scc].is_terminal)
+        return true;
+    return false;
+  }
+
+  bool
+  scc_map::intern_is_terminal(unsigned n)
+  {
+    return is_terminal_scc(*this, n);
+  }
+
+  bool
+  scc_map::intern_is_weak(unsigned n)
+  {
+    return is_weak_scc(*this, n);
+  }
+
+  void
+  scc_map::update_strength()
+  {
+    // A first pass set the type of all SCC, according to
+    // policy defined in intern* functions.
+    unsigned curr_scc = 0;
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      {
+        if (intern_is_terminal(curr_scc))
+          {
+            scc_map_[curr_scc].is_terminal = true;
+          }
+	if (intern_is_weak(curr_scc))
+          {
+            scc_map_[curr_scc].is_weak = true;
+          }
+        else if (accepting (curr_scc))
+	  {
+	    scc_map_[curr_scc].is_strong = true;
+          }
+      }
+
+    // A second pass set the type of all subaut.
+    for (curr_scc = 0; curr_scc < scc_count(); ++curr_scc)
+      {
+	// Check successors
+	const succ_type& s = succ(curr_scc);
+	succ_type::const_iterator sccit;
+	bool weak_hard = true;
+	bool terminal_subaut = true;
+	bool weak_subaut = true;
+	bool strong_hard = true;
+	for (sccit = s.begin(); sccit != s.end(); ++sccit)
+	  {
+	    assert(sccit->first <= curr_scc);
+	    assert(sccit->first != curr_scc);
+
+	    if (!scc_map_[sccit->first].is_terminal_subautomaton)
+	      {
+		terminal_subaut = false;
+	      }
+
+	    if (!scc_map_[sccit->first].is_weak_subautomaton)
+	      {
+		weak_subaut = false;
+	      }
+
+	    if (!scc_map_[sccit->first].is_strong_hard)
+	      strong_hard = false;
+
+	    if (!scc_map_[sccit->first].is_weak_hard)
+	      weak_hard = false;
+	  }
+
+	// Update Weak Subautomaton
+      	scc_map_[curr_scc].is_weak_subautomaton = weak_subaut &&
+	  scc_map_[curr_scc].is_weak;
+
+      	// Update Terminal Subautomaton
+      	scc_map_[curr_scc].is_terminal_subautomaton = terminal_subaut &&
+	  (!accepting(curr_scc) || scc_map_[curr_scc].is_terminal);
+
+      	scc_map_[curr_scc].is_strong_hard = scc_map_[curr_scc].is_strong &&
+	  strong_hard;
+
+      	scc_map_[curr_scc].is_weak_hard =
+      	  scc_map_[curr_scc].is_weak && weak_hard &&
+      	  !scc_map_[curr_scc].is_terminal_subautomaton;
+      }
+  }
+
+  bool
+  scc_map::weak_subautomaton(unsigned n) const
+  {
+    return scc_map_[n].is_weak_subautomaton;
+  }
+
+  bool
+  scc_map::terminal_subautomaton(unsigned n) const
+  {
+    return scc_map_[n].is_terminal_subautomaton;
+  }
+
+  bool
+  scc_map::strong_hard(unsigned n) const
+  {
+    return scc_map_[n].is_strong_hard;
+  }
+
+  bool
+  scc_map::weak_hard(unsigned n) const
+  {
+    return scc_map_[n].is_weak_hard;
+  }
+
+  bool
+  scc_map::weak(unsigned n) const
+  {
+    return scc_map_[n].is_weak;
+  }
+
+
+  bool
+  scc_map::terminal(unsigned n) const
+  {
+    return scc_map_[n].is_terminal;
+  }
+
+
+  // ------------------------------------------------------------
 
   namespace
   {
