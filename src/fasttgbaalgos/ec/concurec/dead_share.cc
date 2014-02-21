@@ -20,6 +20,8 @@
 #include <thread>
 #include <vector>
 #include "dead_share.hh"
+#include "fasttgba/fasttgba_explicit.hh"
+#include "fasttgba/fasttgba_product.hh"
 #include <iostream>
 
 namespace spot
@@ -772,9 +774,17 @@ namespace spot
   }
 
   bool
-  concur_reachability_ec::is_terminal(fasttgba_state* )
+  concur_reachability_ec::is_terminal(const fasttgba_state* s)
   {
-    // TODO
+    if (auto t = dynamic_cast<const fast_product_state*>(s))
+      {
+	if (auto q = dynamic_cast<const fast_explicit_state*>(t->right()))
+	  {
+	    return q->get_strength() == TERMINAL_SCC;
+	  }
+      }
+
+    // Otherwise what to do? Simple reachability
     return false;
   }
 

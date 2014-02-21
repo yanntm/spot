@@ -246,7 +246,7 @@ namespace spot
 
     /// \brief check wether a state is synchronised with a terminal
     /// state of the property automaton
-    bool is_terminal(fasttgba_state* );
+    bool is_terminal(const fasttgba_state* );
 
     virtual bool has_counterexample();
 
