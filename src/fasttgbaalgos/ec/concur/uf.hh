@@ -106,7 +106,7 @@ namespace spot
 
     virtual ~uf()
     {
-      uf_free (effective_uf, true, thread_number_);
+      uf_free (effective_uf, size_, thread_number_);
     }
 
     /// \brief insert a new element in the union find
