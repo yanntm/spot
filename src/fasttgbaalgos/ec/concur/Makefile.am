@@ -31,7 +31,9 @@ concur_HEADERS =    \
    runtime.h	    \
    unionfind.h	    \
    user.h	    \
-   uf.hh
+   open_set.h	    \
+   uf.hh            \
+   openset.hh
 
 noinst_LTLIBRARIES = libconcur.la
 libconcur_la_SOURCES = \
@@ -39,4 +41,5 @@ libconcur_la_SOURCES = \
    fast_hash.c		 \
    hashtable.c		 \
    hre_malloc.c		 \
-   unionfind.c
+   unionfind.c           \
+   open_set.c
