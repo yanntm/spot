@@ -30,6 +30,7 @@
 #include "fasttgbaalgos/ec/lazycheck.hh"
 
 #include "fasttgbaalgos/ec/concur/uf.hh"
+#include "fasttgbaalgos/ec/concur/openset.hh"
 #include "concur_ec_stat.hh"
 
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
@@ -222,6 +223,63 @@ namespace spot
   };
 
 
+  // ----------------------------------------------------------------------
+  // Reachability Concurrent Emptiness Check
+  // ======================================================================
+
+  class concur_reachability_ec : public concur_ec_stat
+  {
+  public:
+    /// \brief A constuctor
+    concur_reachability_ec(instanciator* i,
+			   spot::openset* os,
+			   int thread_number,
+			   int total_threads,
+			   int *stop,
+			   int *stop_terminal,
+			   std::atomic<int>& giddle);
+
+    /// \brief A simple destructor
+    virtual ~concur_reachability_ec();
+
+    bool check();
+
+    /// \brief check wether a state is synchronised with a terminal
+    /// state of the property automaton
+    bool is_terminal(fasttgba_state* );
+
+    virtual bool has_counterexample();
+
+    virtual std::string csv();
+
+    virtual std::chrono::milliseconds::rep get_elapsed_time();
+
+    virtual int nb_inserted();
+
+  private:
+    int tn_;			///< The id of the thread
+    int tt_;			///< Total number of threads
+    int insert_cpt_;		///< The number of successfull insert
+    int fail_cpt_;		///< The number of failled insert
+    bool iddle_;		///< Is this thread iddle
+    int * stop_;		///< stop the world variable
+    int * stop_terminal_;	///< stop the terminal variable
+    spot::openset* os_;		///< The shared Open Set
+    const fasttgba* a_;         ///< The automaton to check
+    const instance_automaton* inst; ///< The instanciator
+    bool counterexample_;	    ///< Wether a counterexample exist
+
+    /// \brief the store that will keep states discovered by this thread
+    std::unordered_set<const fasttgba_state*,
+		       fasttgba_state_ptr_hash,
+		       fasttgba_state_ptr_equal> store;
+
+    /// \brief to avoid terminaison problem
+    std::atomic<int>& giddle_;
+
+    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+  };
 
 
 
@@ -241,7 +299,9 @@ namespace spot
 	MIXED = 2,		/// \brief Combinaison of both previous
 	FULL_TARJAN_EC = 3,	/// \brief All treads use Tarjan Emptiness Check
 	FULL_DIJKSTRA_EC = 4,
-	MIXED_EC = 5
+	MIXED_EC = 5,
+	DECOMP_EC = 6
+
       };
 
     /// \brief Constructor for the multithreaded emptiness check
@@ -273,12 +333,15 @@ namespace spot
 
   protected:
     spot::uf* uf_;		///< The shared Union Find
+    spot::openset* os_;		///< The shared Open Set
     instanciator* itor_;	///< The instanciator
     int tn_;			///< The number of threads
     DeadSharePolicy policy_;	///< The current policy to use
     std::chrono::milliseconds::rep max_diff; ///< Elapse time between 2 stops
     std::vector<spot::concur_ec_stat*> chk;  ///< Local data for each threads
     int stop;				     ///< Stop the world variable
+    int stop_terminal;			     ///< Stop terminal variable
+    std::atomic<int> term_iddle_;
   };
 }
 

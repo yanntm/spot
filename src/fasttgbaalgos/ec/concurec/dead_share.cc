@@ -664,6 +664,148 @@ namespace spot
   }
 
   // ----------------------------------------------------------------------
+  // Concurrent Reachability with shared Open Set.
+  // ======================================================================
+
+  concur_reachability_ec::concur_reachability_ec(instanciator* i,
+						 spot::openset* os,
+						 int thread_number,
+						 int total_threads,
+						 int *stop,
+						 int *stop_terminal,
+						 std::atomic<int>& giddle)
+    : tn_(thread_number),
+      tt_(total_threads),
+      iddle_(false),
+      inst(i->new_instance()),
+      counterexample_(false),
+      giddle_(giddle)
+  {
+    insert_cpt_ = 0;
+    fail_cpt_ = 0;
+    stop_ = stop;
+    stop_terminal_ = stop_terminal;
+    os_ = os;
+    a_ = inst->get_automaton ();
+  }
+
+  concur_reachability_ec::~concur_reachability_ec()
+  {
+    std::unordered_set
+      <const fasttgba_state*,
+       fasttgba_state_ptr_hash,
+       fasttgba_state_ptr_equal>::iterator it = store.begin();
+    while (it != store.end())
+      {
+	const fasttgba_state* ptr = *it;
+	++it;
+	ptr->destroy();
+      }
+    delete inst;
+  }
+
+  bool
+  concur_reachability_ec::check()
+  {
+    start = std::chrono::system_clock::now();
+
+    auto init = a_->get_init_state();
+    if (os_->find_or_put(init))
+      {
+	++insert_cpt_;
+	store.insert(init);
+      }
+    else
+      init->destroy();
+
+    while (!*stop_ && !*stop_terminal_)
+      {
+	auto s = os_->get_one();
+
+	// Nothing to grab ! The thread become iddle, if all threads
+	// are iddle the reachability must end now!
+	if (s == 0)
+	  {
+	    ++giddle_;
+	    if (giddle_ == tt_)
+	      {
+		*stop_terminal_ = 1;
+		break;
+	      }
+	    --giddle_;
+	    continue;
+	  }
+
+	// Walk all successors
+	auto succ = a_->succ_iter(s);
+	succ->first();
+	while (!succ->done())
+	  {
+	    auto next = succ->current_state();
+
+	    // Check wether this state belong to Terminal (under
+	    // assumption that models always have succ!
+	    if (is_terminal(next))
+	      {
+		*stop_ = 1;
+		counterexample_ = true;
+		break;
+	      }
+
+	    // If new insert it ! and keep it for destroy it later!
+	    if (os_->find_or_put(next))
+	      {
+		++insert_cpt_;
+		store.insert(succ->current_state());
+	      }
+	    else
+	      {
+		next->destroy();
+		++fail_cpt_;
+	      }
+	    succ->next();
+	  }
+      }
+    end = std::chrono::system_clock::now();
+
+    return counterexample_;
+  }
+
+  bool
+  concur_reachability_ec::is_terminal(fasttgba_state* )
+  {
+    // TODO
+    return false;
+  }
+
+  bool
+  concur_reachability_ec::has_counterexample()
+  {
+    return counterexample_;
+  }
+
+  std::string
+  concur_reachability_ec::csv()
+  {
+    return  "reachability," + std::to_string(fail_cpt_);
+  }
+
+
+  std::chrono::milliseconds::rep
+  concur_reachability_ec::get_elapsed_time()
+  {
+    auto elapsed_seconds = std::chrono::duration_cast
+      <std::chrono::milliseconds>(end-start).count();
+    return elapsed_seconds;
+  }
+
+  int
+  concur_reachability_ec::nb_inserted()
+  {
+    return insert_cpt_;
+  }
+
+  // ----------------------------------------------------------------------
   // Definition of the core of Dead_share
   // ======================================================================
 
@@ -675,10 +817,13 @@ namespace spot
   {
     assert(i && thread_number && !option.compare(""));
     uf_ = new spot::uf(tn_);
+    os_ = new spot::openset(tn_);
 
     // Must we stop the world? It is valid to use a non atomic variable
     // since it will only pass this variable to true once
     stop = 0;
+    stop_terminal = 0;
+    term_iddle_ = 0;
 
     // Let us instanciate the checker according to the policy
     for (int i = 0; i < tn_; ++i)
@@ -706,15 +851,21 @@ namespace spot
 	      chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
 							     i, &stop, s_));
 	  }
-	else
+	else if (policy_ == MIXED_EC)
 	  {
-	    assert(policy_ == MIXED);
 	    if (i%2)
 	      chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
 							    i, &stop, s_));
 	    else
 	      chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
 							      i, &stop, s_));
+	  }
+	else
+	  {
+	    assert(policy_ == DECOMP_EC);
+	      chk.push_back(new spot::concur_reachability_ec
+			    (itor_, os_,i, tn_, &stop, &stop_terminal,
+			     term_iddle_));
 	  }
       }
   }
@@ -724,7 +875,7 @@ namespace spot
     // Release memory
     for (int i = 0; i < tn_; ++i)
       	delete chk[i];
-
+    delete os_;
     delete uf_;
   }
 
@@ -763,8 +914,14 @@ namespace spot
       ctrexple |= chk[i]->has_counterexample();
 
     // Display results
-    printf("\n[WF]  num of threads = %d insert = %d  elapsed time = %d\n",
-	   tn_, uf_->size(), (int)elapsed_seconds);
+    if (policy_ == DECOMP_EC)
+      {
+	printf("\n[WF]  num of threads = %d insert = %d  elapsed time = %d\n",
+	   tn_, os_->size(), (int)elapsed_seconds);
+      }
+    else
+      printf("\n[WF]  num of threads = %d insert = %d  elapsed time = %d\n",
+	     tn_, uf_->size(), (int)elapsed_seconds);
 
     return ctrexple;
   }
@@ -816,6 +973,9 @@ namespace spot
 	break;
       case MIXED_EC:
 	res << "MIXED_EC,";
+	break;
+      case DECOMP_EC:
+	res << "DECOMP_EC,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;
