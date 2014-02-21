@@ -33,6 +33,7 @@ namespace spot
 					       spot::uf* uf,
 					       int tn,
 					       int *stop,
+					       int *stop_strong,
 					       bool swarming,
 					       std::string option)
     : opt_tarjan_scc(i, option, swarming, tn)
@@ -40,6 +41,7 @@ namespace spot
     uf_ = uf;
     tn_ = tn;
     stop_ = stop;
+    stop_strong_ = stop_strong;
     make_cpt_ = 0;
   }
 
@@ -49,7 +51,7 @@ namespace spot
     start = std::chrono::system_clock::now();
     init();
     main();
-    *stop_ = 1;
+    *stop_strong_ = 1;
     end = std::chrono::system_clock::now();
     return counterexample_found;
   }
@@ -167,7 +169,7 @@ namespace spot
   void concur_opt_tarjan_scc::main()
   {
     opt_tarjan_scc::color c;
-    while (!todo.empty() && !*stop_)
+    while (!todo.empty() && !*stop_ && !*stop_strong_)
       {
 
 	if (!todo.back().lasttr)
@@ -204,6 +206,7 @@ namespace spot
     	      {
     	    	if (dfs_update (d))
     	    	  {
+		    *stop_ = 1;
     	    	    counterexample_found = true;
     	    	    d->destroy();
     	    	    return;
@@ -239,6 +242,7 @@ namespace spot
 						   spot::uf* uf,
 						   int tn,
 						   int *stop,
+						   int *stop_strong,
 						   bool swarming,
 						   std::string option)
     : opt_dijkstra_scc(i, option, swarming, tn)
@@ -246,6 +250,7 @@ namespace spot
     uf_ = uf;
     tn_ = tn;
     stop_ = stop;
+    stop_strong_ = stop_strong;
     make_cpt_ = 0;
   }
 
@@ -255,7 +260,7 @@ namespace spot
     start = std::chrono::system_clock::now();
     init();
     main();
-    *stop_ = 1;
+    *stop_strong_ = 1;
     end  = std::chrono::system_clock::now();
     return counterexample_found;
   }
@@ -374,7 +379,7 @@ namespace spot
   void concur_opt_dijkstra_scc::main()
   {
     opt_dijkstra_scc::color c;
-    while (!todo.empty() && !*stop_)
+    while (!todo.empty() && !*stop_ && !*stop_strong_)
       {
 	if (!todo.back().lasttr)
 	  {
@@ -408,6 +413,7 @@ namespace spot
     	      {
     	    	if (merge (d))
     	    	  {
+		    *stop_ = 1;
     	    	    counterexample_found = true;
     	    	    d->destroy();
     	    	    return;
@@ -834,6 +840,7 @@ namespace spot
     stop = 0;
     stop_terminal = 0;
     term_iddle_ = 0;
+    stop_strong = 0;
 
     // Let us instanciate the checker according to the policy
     for (int i = 0; i < tn_; ++i)
@@ -842,33 +849,41 @@ namespace spot
 
 	if (policy_ == FULL_TARJAN)
 	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
-							i, &stop, s_));
+							i, &stop,
+							&stop_strong, s_));
 	else if (policy_ == FULL_TARJAN_EC)
 	  chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
-						       i, &stop, s_));
+						       i, &stop,
+							&stop_strong, s_));
 	else if (policy_ == FULL_DIJKSTRA)
 	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
-							  i, &stop, s_));
+							  i, &stop,
+							  &stop_strong, s_));
 	else if (policy_ == FULL_DIJKSTRA_EC)
 	  chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
-							 i, &stop, s_));
+							 i, &stop,
+							 &stop_strong, s_));
 	else if (policy_ == MIXED_EC)
 	  {
 	    if (i%2)
 	      chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
-							   i, &stop, s_));
+							   i, &stop,
+							   &stop_strong, s_));
 	    else
 	      chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
-							     i, &stop, s_));
+							     i, &stop,
+							     &stop_strong, s_));
 	  }
-	else if (policy_ == MIXED_EC)
+	else if (policy_ == MIXED)
 	  {
 	    if (i%2)
 	      chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
-							    i, &stop, s_));
+							    i, &stop,
+							    &stop_strong, s_));
 	    else
 	      chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
-							      i, &stop, s_));
+							      i, &stop,
+							     &stop_strong, s_));
 	  }
 	else
 	  {

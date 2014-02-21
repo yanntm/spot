@@ -56,6 +56,7 @@ namespace spot
 			  spot::uf* uf,
 			  int thread_number,
 			  int *stop,
+			  int *stop_strong,
 			  bool swarming,
 			  std::string option = "");
 
@@ -83,6 +84,7 @@ namespace spot
     spot::uf* uf_;		/// \brief a reference to shared union find
     int tn_;			/// \brief the thread identifier
     int * stop_;		/// \brief stop the world varibale
+    int * stop_strong_;		/// \brief stop strong varibale
     std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
     std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
     int make_cpt_;		/// \biref number of succed insertions
@@ -104,6 +106,7 @@ namespace spot
 			    spot::uf* uf,
 			    int thread_number,
 			    int *stop,
+			    int *stop_strong,
 			    bool swarming,
 			    std::string option = "");
 
@@ -143,6 +146,7 @@ namespace spot
     spot::uf* uf_;		/// \brief a reference to shared union find
     int tn_;
     int * stop_;		/// \brief stop the world varibale
+    int * stop_strong_;		/// \brief stop strong variable
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
     int make_cpt_;
@@ -162,9 +166,11 @@ namespace spot
 			 spot::uf* uf,
 			 int thread_number,
 			 int *stop,
+			 int *stop_strong,
 			 bool swarming,
 			 std::string option = "-cs")
-      : concur_opt_tarjan_scc(i, uf, thread_number, stop, swarming, option)
+      : concur_opt_tarjan_scc(i, uf, thread_number,
+			      stop, stop_strong, swarming, option)
     {
       fastb_cpt_ = 0;
     }
@@ -198,12 +204,14 @@ namespace spot
   public:
     /// \brief A constuctor
     concur_opt_dijkstra_ec(instanciator* i,
-			 spot::uf* uf,
-			 int thread_number,
-			 int *stop,
-			 bool swarming,
-			 std::string option = "-cs")
-      : concur_opt_dijkstra_scc(i, uf, thread_number, stop, swarming, option)
+			   spot::uf* uf,
+			   int thread_number,
+			   int *stop,
+			   int *stop_strong,
+			   bool swarming,
+			   std::string option = "-cs")
+      : concur_opt_dijkstra_scc(i, uf, thread_number, stop,
+				stop_strong,  swarming, option)
     {
       fastb_cpt_ = 0;
     }
@@ -342,6 +350,7 @@ namespace spot
     int stop;				     ///< Stop the world variable
     int stop_terminal;			     ///< Stop terminal variable
     std::atomic<int> term_iddle_;
+    int stop_strong;			     ///< Stop strong variable
   };
 }
 
