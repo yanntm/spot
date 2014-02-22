@@ -39,6 +39,7 @@ check_PROGRAMS = \
   explicit3 \
   expldot \
   explprod \
+  fas \
   intvcomp \
   intvcmp2 \
   ltlprod \
@@ -61,6 +62,7 @@ explicit3_SOURCES = explicit3.cc
 expldot_SOURCES  = powerset.cc
 expldot_CXXFLAGS = -DDOTTY
 explprod_SOURCES = explprod.cc
+fas_SOURCES = fas.cc
 intvcomp_SOURCES = intvcomp.cc
 intvcmp2_SOURCES = intvcmp2.cc
 ltl2tgba_SOURCES = ltl2tgba.cc
@@ -99,6 +101,7 @@ TESTS = \
   ltl2neverclaim.test \
   ltl2neverclaim-lbtt.test \
   ltl2ta.test \
+  fas.test \
   ltlprod.test \
   bddprod.test \
   explprod.test \
