@@ -72,55 +72,35 @@ namespace spot
       assert(res);
       return res;
     }
-
-    void
-    add_ordered_state(fas_order* res, spot::state* s, unsigned order)
-    {
-      auto& vect = (*res)[s->hash()];
-      vect.emplace_back(s, order);
-    }
-
   }
 
-  unsigned
-  get_state_order(fas_order* res, const spot::state* s)
+  bool
+  fas::operator()(const spot::state* src, const spot::state* dst)
   {
-    auto& vect = (*res)[s->hash()];
-    for (auto p : vect)
-      {
-        if (!s->compare(p.first))
-          return p.second;
-      }
-    assert(false);
-    return 0;
-
+    // States are ordered from 0, ..., n. The transitions form j -> i with
+    // j > i belong to the fas.
+    return ordered_states[src] > ordered_states[dst];
   }
 
-  void
-  destroy_fas_order(fas_order* ordered_states)
+  fas::~fas()
   {
-    for (auto p : *ordered_states)
-      for (auto s : p.second)
-        s.first->destroy();
-    delete ordered_states;
+    for (auto p : ordered_states)
+      p.first->destroy();
   }
 
-  fas_order*
-  fas(const spot::tgba* g)
+  fas::fas(const spot::tgba* g)
   {
     unsigned order = 0;
-    // Ideally we shold use the hash function of spot::state
-    fas_order* res = new fas_order();
     spot::graph::bidigraph bdg(g);
     // Need to push_front, will push_back and iterate backwards
-    std::vector<spot::state*> s2;
+    std::vector<const spot::state*> s2;
     while (!bdg.get_bidistates().empty())
       {
         spot::graph::bidistate* sink;
         // At each iteration we delete a sink and update the graph.
         while ((sink = has_sinks(bdg)))
           {
-            spot::state* tgba_sink = bdg.get_tgba_state(sink);
+            const spot::state* tgba_sink = bdg.get_tgba_state(sink);
             s2.emplace_back(tgba_sink);
             bdg.cache_tgba_state(sink);
             bdg.remove_state(sink);
@@ -128,22 +108,21 @@ namespace spot
         spot::graph::bidistate* source;
         while ((source = has_source(bdg)))
           {
-            spot::state* tgba_source = bdg.get_tgba_state(source);
-            add_ordered_state(res, tgba_source, order++);
+            const spot::state* tgba_source = bdg.get_tgba_state(source);
+            ordered_states[tgba_source] = order++;
             bdg.cache_tgba_state(source);
             bdg.remove_state(source);
           }
         if (!bdg.get_bidistates().empty())
           {
             spot::graph::bidistate* delta = get_delta(bdg);
-            spot::state* tgba_delta = bdg.get_tgba_state(delta);
-            add_ordered_state(res, tgba_delta, order++);
+            const spot::state* tgba_delta = bdg.get_tgba_state(delta);
+            ordered_states[tgba_delta] = order++;
             bdg.cache_tgba_state(delta);
             bdg.remove_state(delta);
           }
       }
     for (auto it = s2.rbegin(); it != s2.rend(); ++it)
-      add_ordered_state(res, *it, order++);
-    return res;
+      ordered_states[*it] = order++;
   }
 }

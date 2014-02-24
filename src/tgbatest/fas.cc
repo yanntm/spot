@@ -40,10 +40,9 @@ namespace spot
                                  const tgba_succ_iterator*,
                                  const std::string&)
       {
-        if (ordered_states)
+        if (is_fas)
           {
-            if (get_state_order(ordered_states, in_s) >
-                get_state_order(ordered_states, out_s))
+            if ((*is_fas)(in_s, out_s))
               return "[color=\"red\"]";
           }
         return "[]";
@@ -55,11 +54,11 @@ namespace spot
         return &d;
       }
 
-      static spot::fas_order* ordered_states;
+      static spot::fas* is_fas;
     };
   }
 
-  spot::fas_order* spot::fas_dotty_decorator::ordered_states = nullptr;
+  spot::fas* spot::fas_dotty_decorator::is_fas = nullptr;
 }
 
 int main(int argc, char* argv[])
@@ -80,13 +79,13 @@ int main(int argc, char* argv[])
       return 2;
     }
 
-  spot::fas_order* ordered_states = spot::fas(g);
+  spot::fas* is_fas = new spot::fas(g);
 
-  spot::fas_dotty_decorator::ordered_states = ordered_states;
+  spot::fas_dotty_decorator::is_fas = is_fas;
   spot::dotty_reachable(std::cout, g, false,
                         spot::fas_dotty_decorator::instance());
 
-  destroy_fas_order(ordered_states);
+  delete is_fas;
   delete g;
   delete dict;
 }

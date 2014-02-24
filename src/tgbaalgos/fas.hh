@@ -30,26 +30,26 @@
 
 namespace spot
 {
-  using hash_value = size_t;
-  using fas_order = std::unordered_map<hash_value,
-                           std::vector<std::pair<spot::state*, unsigned>>>;
-  /// \brief Find a feed back arc-set from a TGBA.
-  ///
-  /// For the FAS problem we chose to use the GR algorithm. To use this
-  /// algorithm we need a new representation of our automaton with it's in and
-  /// out degree.
-  ///
-  /// \param g The automata to search the FAS.
-  ///
-  /// \return Return a map of the order of the states.
-  SPOT_API fas_order* fas(const tgba* g);
+  class SPOT_API fas
+  {
+  public:
+    /// \brief Find a feed back arc-set from a TGBA.
+    ///
+    /// For the FAS problem we chose to use the GR algorithm. To use this
+    /// algorithm we need a new representation of our automaton with it's in and
+    /// out degree.
+    ///
+    /// \param g The automata to search the FAS.
+    fas(const tgba* g);
+    ~fas();
 
-  /// Get index value of a state. When index of a state is greater than the
-  /// index of another state, the transition is part of the fas.
-  SPOT_API unsigned get_state_order(fas_order* res, const spot::state* s);
+    /// Check if the transition from \a src to \dst is part of the fas.
+    bool operator()(const spot::state* src, const spot::state* dst);
 
-  /// Call this to free the resources of the fas_order object.
-  SPOT_API void destroy_fas_order(fas_order* ordered_states);
+  private:
+    std::unordered_map<const spot::state*, unsigned, const spot::state_ptr_hash,
+                       spot::state_ptr_equal> ordered_states;
+  };
 }
 
 #endif // SPOT_TGBAALGOS_FAS_HH

@@ -21,6 +21,8 @@
 # define SPOT_GRAPH_BIDIGRAPH_HH
 
 # include "misc/common.hh"
+# include "tgba/state.hh"
+# include "tgbaalgos/reachiter.hh"
 # include <unordered_map>
 # include <unordered_set>
 # include <vector>
@@ -101,7 +103,7 @@ namespace spot
     /// \brief A representation of a graph with no information on transitions,
     /// nor on the accepting and initial states.  Bidigraphs have information on
     /// their out and in degree.
-    class SPOT_API bidigraph
+    class SPOT_API bidigraph : public tgba_reachable_iterator_breadth_first
     {
       using graph_states = std::vector<bidistate*>;
       using hash_value = size_t;
@@ -117,9 +119,9 @@ namespace spot
       /// correct bidistate*, iterate through a list of bidistate*.
       /// For each of these bidistates, get the corresponding tgba_state and
       /// compare it to \a tgba_state.
-      bidistate* get_bidistate(spot::state* tgba_state) const;
+      bidistate* get_bidistate(const spot::state* tgba_state) const;
 
-      spot::state* get_tgba_state(bidistate* bidistate) const;
+      const spot::state* get_tgba_state(bidistate* bidistate) const;
 
       graph_states& get_bidistates() const;
 
@@ -129,22 +131,29 @@ namespace spot
       ///
       /// \return A pointer to the cached tgba_state is returned. Use this
       /// poniter to free it.
-      spot::state* cache_tgba_state(bidistate* bidistate);
+      const spot::state* cache_tgba_state(bidistate* bidistate);
 
       friend SPOT_API std::ostream&
       operator<<(std::ostream& os, const bidigraph& bdg);
 
     private:
       graph_states* states_;
-      std::unordered_set<spot::state*> cached_tgba_;
-      std::unordered_map<bidistate*, spot::state*> bidistate_to_tgba_;
-      std::unordered_map<hash_value, std::vector<bidistate*>* >
-        tgba_to_bidistate_;
+      std::unordered_set<const spot::state*, spot::state_ptr_hash,
+                         spot::state_ptr_equal> cached_tgba_;
+      std::unordered_map<bidistate*, const spot::state*> bidistate_to_tgba_;
+      std::unordered_map<const spot::state*, bidistate*,
+                         const spot::state_ptr_hash,
+                         spot::state_ptr_equal> tgba_to_bidistate_;
 
       /// Check the existance of a state in the bidigraph
-      bool exist(spot::state* tgba_state) const;
+      bool exist(const spot::state* tgba_state) const;
 
-      void create_bidistate(spot::state* tgba_state);
+      void create_bidistate(const spot::state* tgba_state);
+      virtual void process_state(const state* s, int n, tgba_succ_iterator* si);
+      virtual void process_link(const state* in_s, int in,
+                                const state* out_s, int out,
+                                const tgba_succ_iterator* si);
+
     };
   } // graph namespace
 }
