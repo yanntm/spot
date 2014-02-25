@@ -28,33 +28,35 @@ namespace spot
 {
   namespace
   {
-    spot::graph::bidistate*
-    has_source(spot::graph::bidigraph& bdg)
+    bool
+    has_source(spot::graph::bidigraph& bdg,
+               std::vector<spot::graph::bidistate*>& container)
     {
       for (auto bds : bdg.get_bidistates())
         {
           if (bds->get_in_degree() == 0)
-            return bds;
+            container.emplace_back(bds);
         }
-      return nullptr;
+      return !container.empty();
     }
 
-    spot::graph::bidistate*
-    has_sinks(spot::graph::bidigraph& bdg)
+    bool
+    has_sinks(spot::graph::bidigraph& bdg,
+              std::vector<spot::graph::bidistate*>& container)
     {
       for (auto bds : bdg.get_bidistates())
         {
           if (bds->get_out_degree() == 0)
-            return bds;
+            container.emplace_back(bds);
         }
-      return nullptr;
+      return !container.empty();
     }
 
     spot::graph::bidistate*
     get_delta(spot::graph::bidigraph& bdg)
     {
       spot::graph::bidistate* res = nullptr;
-      unsigned in;
+      unsigned in = 0;
       int delta = INT_MIN;
       for (auto bds : bdg.get_bidistates())
         {
@@ -93,32 +95,39 @@ namespace spot
     unsigned order = 0;
     spot::graph::bidigraph bdg(g);
     // Need to push_front, will push_back and iterate backwards
+    // s2 contains Sources and deltas.
     std::vector<const spot::state*> s2;
+    // Used to get every sinks, and sources.
+    std::vector<spot::graph::bidistate*> container;
     while (!bdg.get_bidistates().empty())
       {
-        spot::graph::bidistate* sink;
-        // At each iteration we delete a sink and update the graph.
-        while ((sink = has_sinks(bdg)))
+        // At each iteration we delete every sinks, update the graph, and check
+        // for new sinks.
+        while (has_sinks(bdg, container))
           {
-            const spot::state* tgba_sink = bdg.get_tgba_state(sink);
-            s2.emplace_back(tgba_sink);
-            bdg.cache_tgba_state(sink);
-            bdg.remove_state(sink);
+            for (auto sink : container)
+              {
+                const spot::state* tgba_sink = bdg.get_tgba_state(sink);
+                s2.emplace_back(tgba_sink);
+                bdg.remove_state(sink);
+              }
+            container.resize(0);
           }
-        spot::graph::bidistate* source;
-        while ((source = has_source(bdg)))
+        while (has_source(bdg, container))
           {
-            const spot::state* tgba_source = bdg.get_tgba_state(source);
-            ordered_states[tgba_source] = order++;
-            bdg.cache_tgba_state(source);
-            bdg.remove_state(source);
+            for (auto source : container)
+              {
+                const spot::state* tgba_source = bdg.get_tgba_state(source);
+                ordered_states[tgba_source] = order++;
+                bdg.remove_state(source);
+              }
+            container.resize(0);
           }
         if (!bdg.get_bidistates().empty())
           {
             spot::graph::bidistate* delta = get_delta(bdg);
             const spot::state* tgba_delta = bdg.get_tgba_state(delta);
             ordered_states[tgba_delta] = order++;
-            bdg.cache_tgba_state(delta);
             bdg.remove_state(delta);
           }
       }

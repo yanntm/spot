@@ -36,12 +36,13 @@ namespace spot
   namespace graph
   {
 
+    class bidistate;
+    typedef std::vector<bidistate*> bidigraph_states;
     class bidistate
     {
-      using graph_states = std::vector<bidistate*>;
     public:
       bidistate()
-        : out_(new graph_states()), in_(new graph_states())
+        : out_(new bidigraph_states()), in_(new bidigraph_states())
       {
       }
 
@@ -63,13 +64,13 @@ namespace spot
         return out_->size();
       }
 
-      graph_states*
+      bidigraph_states*
       get_succ() const
       {
         return out_;
       }
 
-      graph_states*
+      bidigraph_states*
       get_pred() const
       {
         return in_;
@@ -96,8 +97,8 @@ namespace spot
       remove_pred(const bidistate* s);
 
     private:
-      graph_states* out_;
-      graph_states* in_;
+      bidigraph_states* out_;
+      bidigraph_states* in_;
     };
 
     /// \brief A representation of a graph with no information on transitions,
@@ -105,8 +106,6 @@ namespace spot
     /// their out and in degree.
     class SPOT_API bidigraph : public tgba_reachable_iterator_breadth_first
     {
-      using graph_states = std::vector<bidistate*>;
-      using hash_value = size_t;
     public:
       /// When creating a bidigraph from a tgba, make sure to call it's
       /// destructor before destroying the \a tgba and it's corresponding
@@ -123,23 +122,13 @@ namespace spot
 
       const spot::state* get_tgba_state(bidistate* bidistate) const;
 
-      graph_states& get_bidistates() const;
-
-      /// When bidigraph is destroyed the tgba_state associated to \a bidistate
-      /// will stay in memory.  It will be the callers responsibility to free
-      /// that corresponding \a tgba_state.
-      ///
-      /// \return A pointer to the cached tgba_state is returned. Use this
-      /// poniter to free it.
-      const spot::state* cache_tgba_state(bidistate* bidistate);
+      bidigraph_states& get_bidistates() const;
 
       friend SPOT_API std::ostream&
       operator<<(std::ostream& os, const bidigraph& bdg);
 
     private:
-      graph_states* states_;
-      std::unordered_set<const spot::state*, spot::state_ptr_hash,
-                         spot::state_ptr_equal> cached_tgba_;
+      bidigraph_states* states_;
       std::unordered_map<bidistate*, const spot::state*> bidistate_to_tgba_;
       std::unordered_map<const spot::state*, bidistate*,
                          const spot::state_ptr_hash,

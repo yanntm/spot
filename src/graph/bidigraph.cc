@@ -58,7 +58,8 @@ namespace spot
 /////////////////////////////////////
 
     bidigraph::bidigraph(const tgba* g)
-      : tgba_reachable_iterator_breadth_first(g), states_(new graph_states())
+      : tgba_reachable_iterator_breadth_first(g),
+        states_(new bidigraph_states())
     {
       run();
     }
@@ -93,37 +94,27 @@ namespace spot
         delete bds;
       delete states_;
 
-      // Remove every non cached spot::state* associated to the bidistates
+      // Remove every spot::state* associated to the bidistates
       for (std::unordered_map<bidistate*, const spot::state*>::iterator it =
            bidistate_to_tgba_.begin(); it != bidistate_to_tgba_.end(); ++it)
         {
           assert(it->second);
-          if (cached_tgba_.find(it->second) != cached_tgba_.end())
-            continue;
           it->second->destroy();
         }
-    }
-
-    const spot::state*
-    bidigraph::cache_tgba_state(bidistate* bidistate)
-    {
-      auto res = get_tgba_state(bidistate);
-      cached_tgba_.emplace(res);
-      return res;
     }
 
     void
     bidigraph::remove_state(bidistate* s)
     {
       // Remove transitions to s.
-      graph_states* pred = s->get_pred();
-      for (graph_states::iterator it = pred->begin();
+      bidigraph_states* pred = s->get_pred();
+      for (bidigraph_states::iterator it = pred->begin();
            it != pred->end(); ++it)
         (*it)->remove_succ(s);
 
       // Remove transitions from s.
-      graph_states* succ = s->get_succ();
-      for (graph_states::iterator it = succ->begin();
+      bidigraph_states* succ = s->get_succ();
+      for (bidigraph_states::iterator it = succ->begin();
            it != succ->end(); ++it)
         (*it)->remove_pred(s);
 
@@ -140,9 +131,8 @@ namespace spot
 
       tgba_to_bidistate_.erase(tgba_state_it->second);
 
-      // If not cached destroy spot::state
-      if (cached_tgba_.find(tgba_state_it->second) == cached_tgba_.end())
-        tgba_state_it->second->destroy();
+      // destroy spot::state
+      tgba_state_it->second->destroy();
       bidistate_to_tgba_.erase(tgba_state_it);
       delete s;
     }
@@ -163,7 +153,7 @@ namespace spot
       return bidistate_to_tgba_.find(bds)->second;
     }
 
-    bidigraph::graph_states&
+    graph::bidigraph_states&
     bidigraph::get_bidistates() const
     {
       return *states_;
