@@ -30,6 +30,7 @@
 #include "fasttgbaalgos/ec/lazycheck.hh"
 
 #include "fasttgbaalgos/ec/concur/uf.hh"
+#include "fasttgbaalgos/ec/concur/sharedhashtable.hh"
 #include "fasttgbaalgos/ec/concur/openset.hh"
 #include "concur_ec_stat.hh"
 
@@ -290,6 +291,70 @@ namespace spot
   };
 
 
+  // ----------------------------------------------------------------------
+  // Weak Concurrent Emptiness Check
+  // ======================================================================
+
+  class concur_weak_ec : public concur_ec_stat
+  {
+  public:
+    /// \brief A constuctor
+    concur_weak_ec(instanciator* i,
+		   spot::sharedhashtable* sht,
+		   int thread_number,
+		   int *stop,
+		   int *stop_weak);
+    /// \brief A simple destructor
+    virtual ~concur_weak_ec();
+    void push_state(const spot::fasttgba_state* state);
+
+    enum color {Alive, Dead, Unknown};
+
+    color get_color(const spot::fasttgba_state* state);
+    void dfs_pop();
+    bool check();
+    void accepting_cycle_check(const fasttgba_state* left,
+			       const fasttgba_state* right);
+    virtual bool has_counterexample();
+    virtual std::string csv();
+    virtual std::chrono::milliseconds::rep get_elapsed_time();
+    virtual int nb_inserted();
+
+  private:
+    const instance_automaton* inst;
+    const fasttgba* a_;
+    sharedhashtable* sht_;
+
+    int tn_;			///< The id of the thread
+    int insert_cpt_;		///< The number of successfull insert
+    int * stop_;		///< stop the world variable
+    int * stop_weak_;	        ///< stop the terminal variable
+    bool counterexample_;	    ///< Wether a counterexample exist
+
+    struct pair_state_iter
+    {
+      const spot::fasttgba_state* state;
+      fasttgba_succ_iterator* lasttr;
+    };
+
+    std::vector<pair_state_iter> todo;
+
+    /// The map of visited states
+    typedef std::unordered_set<const fasttgba_state*,
+		       fasttgba_state_ptr_hash,
+		       fasttgba_state_ptr_equal> seen_map;
+    seen_map H;
+
+    /// \brief the store that will keep states discovered by this thread
+    std::unordered_set<const fasttgba_state*,
+    		       fasttgba_state_ptr_hash,
+    		       fasttgba_state_ptr_equal> store;
+
+    std::chrono::time_point<std::chrono::system_clock> start; /// \bref start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \bref stop!
+  };
+
+
 
 
 
@@ -342,6 +407,7 @@ namespace spot
   protected:
     spot::uf* uf_;		///< The shared Union Find
     spot::openset* os_;		///< The shared Open Set
+    sharedhashtable* sht_;	///< The shared Hash Table
     instanciator* itor_;	///< The instanciator
     int tn_;			///< The number of threads
     DeadSharePolicy policy_;	///< The current policy to use
@@ -349,6 +415,7 @@ namespace spot
     std::vector<spot::concur_ec_stat*> chk;  ///< Local data for each threads
     int stop;				     ///< Stop the world variable
     int stop_terminal;			     ///< Stop terminal variable
+    int stop_weak;			     ///< Stop terminal variable
     std::atomic<int> term_iddle_;
     int stop_strong;			     ///< Stop strong variable
   };

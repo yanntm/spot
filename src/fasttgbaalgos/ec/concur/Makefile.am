@@ -22,17 +22,18 @@ AM_CPPFLAGS =  -Wall -Werror -std=gnu99
 
 concurdir = $(pkgincludedir)/fasttgbaalgos/ec/concur
 
-concur_HEADERS =    \
-   MurmurHash3.h    \
-   atomics.h	    \
-   fast_hash.h	    \
-   feedback.h	    \
-   hashtable.h	    \
-   runtime.h	    \
-   unionfind.h	    \
-   user.h	    \
-   open_set.h	    \
-   uf.hh            \
+concur_HEADERS =        \
+   MurmurHash3.h        \
+   atomics.h	        \
+   fast_hash.h	        \
+   feedback.h	        \
+   hashtable.h	        \
+   runtime.h	        \
+   unionfind.h	        \
+   user.h	        \
+   open_set.h	        \
+   uf.hh                \
+   sharedhashtable.hh   \
    openset.hh
 
 noinst_LTLIBRARIES = libconcur.la

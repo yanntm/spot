@@ -94,6 +94,10 @@ namespace spot
     std::vector<const struct transition*>  successors;	///< list of successors
 
     mutable int count_;
+
+
+    int formula_scc_number;
+    bool formula_scc_accepting;
   };
 
 

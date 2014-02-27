@@ -55,6 +55,7 @@ ht_iter_t *   ht_iter_begin (hashtable_t *ht, map_key_t key);
 map_val_t     ht_iter_next  (ht_iter_t *iter, map_key_t *key_ptr);
 void          ht_iter_free  (ht_iter_t *iter);
 void          ht_iter_value (hashtable_t *ht, process_fun_t process);
+void          ht_iter_key   (hashtable_t *ht, process_fun_t process);
 size_t        ht_size       (hashtable_t *ht);
 
 static inline map_val_t

@@ -722,9 +722,12 @@ namespace spot
       {
 	++insert_cpt_;
 	store.insert(init);
+	init->clone();
       }
     else
       init->destroy();
+
+    int before_stop = 50;
 
     while (!*stop_ && !*stop_terminal_)
       {
@@ -740,9 +743,15 @@ namespace spot
 		*stop_terminal_ = 1;
 		break;
 	      }
+
+	    // Force Iddle detection!
+	    if (!--before_stop)
+	      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 	    --giddle_;
 	    continue;
 	  }
+	before_stop = 50;
 
 	// Walk all successors
 	auto succ = a_->succ_iter(s);
@@ -764,7 +773,8 @@ namespace spot
 	    if (os_->find_or_put(next))
 	      {
 		++insert_cpt_;
-		store.insert(succ->current_state());
+		store.insert(next);
+		next->clone();
 	      }
 	    else
 	      {
@@ -821,6 +831,193 @@ namespace spot
     return insert_cpt_;
   }
 
+
+  // ----------------------------------------------------------------------
+  // Concurrent DFS with shared Hash Table
+  // ======================================================================
+
+  concur_weak_ec::concur_weak_ec(instanciator* i,
+				 spot::sharedhashtable* sht,
+				 int thread_number,
+				 int *stop,
+				 int *stop_weak)
+    : inst(i->new_instance()),
+      sht_(sht),
+      tn_(thread_number),
+      insert_cpt_(0),
+      counterexample_(false)
+  {
+    a_ = inst->get_automaton ();
+    stop_ = stop;
+    stop_weak_ = stop_weak;
+  }
+
+  /// \brief A simple destructor
+  concur_weak_ec::~concur_weak_ec()
+  {
+    // Delete states discovered by this thread
+    std::unordered_set<const fasttgba_state*,
+		       fasttgba_state_ptr_hash,
+		       fasttgba_state_ptr_equal>::const_iterator s;
+    s = store.begin();
+    while (s != store.end())
+      {
+	// Advance the iterator before deleting the "key" pointer.
+	const fasttgba_state* ptr = *s;
+	++s;
+	ptr->destroy();
+      }
+    delete inst;
+  }
+
+  void
+  concur_weak_ec::push_state(const spot::fasttgba_state* state)
+  {
+    auto st_ref = sht_->find_or_put(state);
+    if (st_ref != state)
+      {
+	state->destroy();
+      }
+    else
+      {
+	++insert_cpt_;
+	state->clone();
+	store.insert(state);
+      }
+    H.insert(st_ref);
+    todo.push_back ({st_ref, 0});
+  }
+
+  concur_weak_ec::color
+  concur_weak_ec::get_color(const spot::fasttgba_state* state)
+  {
+    seen_map::const_iterator i = H.find(state);
+    if (i != H.end())
+      return Alive;
+    else if (sht_->is_dead(state))
+      return Dead;
+    else
+      return Unknown;
+  }
+
+  void
+  concur_weak_ec::dfs_pop()
+  {
+    const fasttgba_state* last = todo.back().state;
+    delete todo.back().lasttr;
+    todo.pop_back();
+    seen_map::const_iterator it = H.find(last);
+    H.erase(it);
+    sht_->mark_dead(last);
+  }
+
+  bool
+  concur_weak_ec::check()
+  {
+    start = std::chrono::system_clock::now();
+    concur_weak_ec::color c;
+    auto init = a_->get_init_state();
+    push_state(init);
+
+    while (!todo.empty() && !*stop_ && !*stop_weak_)
+      {
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr =
+	      a_->swarm_succ_iter(todo.back().state, tn_);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    todo.back().lasttr->next();
+	  }
+
+	if (todo.back().lasttr->done())
+	  {
+	    dfs_pop ();
+	  }
+	else
+	  {
+	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+	    if (c == Unknown)
+	      {
+		push_state (d);
+		continue;
+	      }
+	    else if (c == Alive)
+	      {
+		accepting_cycle_check(todo.back().state, d);
+		if (counterexample_)
+		  {
+		    *stop_ = 1;
+		  }
+		continue;
+	      }
+
+	    // Only check if the owner is this thread! in this case should
+	    // not be destroyed!
+	    //if (store.find(d) == store.end())
+	    d->destroy();
+	  }
+      }
+    end = std::chrono::system_clock::now();
+    return counterexample_;
+  }
+
+  void
+  concur_weak_ec::accepting_cycle_check(const fasttgba_state* left,
+					const fasttgba_state* right)
+  {
+    if (auto t = dynamic_cast<const fast_product_state*>(left))
+      {
+	if (auto q = dynamic_cast<const fast_explicit_state*>(t->right()))
+	  {
+	    if (!q->formula_scc_accepting)
+	      return;
+
+	    if (auto tt = dynamic_cast<const fast_product_state*>(right))
+	      {
+		if (auto qq = dynamic_cast<const fast_explicit_state*>
+		    (tt->right()))
+		  {
+		    if (q->formula_scc_number == qq->formula_scc_number)
+		      counterexample_ = true;
+		  }
+	      }
+	  }
+      }
+  }
+
+  bool
+  concur_weak_ec::has_counterexample()
+  {
+    return counterexample_;
+  }
+
+  std::string
+  concur_weak_ec::csv()
+  {
+    return "weak_dfs";
+  }
+
+  std::chrono::milliseconds::rep
+  concur_weak_ec::get_elapsed_time()
+  {
+    auto elapsed_seconds = std::chrono::duration_cast
+      <std::chrono::milliseconds>(end-start).count();
+    return elapsed_seconds;
+  }
+
+  int
+  concur_weak_ec::nb_inserted()
+  {
+    return insert_cpt_;
+  }
+
+
+
+
   // ----------------------------------------------------------------------
   // Definition of the core of Dead_share
   // ======================================================================
@@ -834,11 +1031,13 @@ namespace spot
     assert(i && thread_number && !option.compare(""));
     uf_ = new spot::uf(tn_);
     os_ = new spot::openset(tn_);
+    sht_ = new spot::sharedhashtable(tn_);
 
     // Must we stop the world? It is valid to use a non atomic variable
     // since it will only pass this variable to true once
     stop = 0;
     stop_terminal = 0;
+    stop_weak = 0;
     term_iddle_ = 0;
     stop_strong = 0;
 
@@ -888,9 +1087,11 @@ namespace spot
 	else
 	  {
 	    assert(policy_ == DECOMP_EC);
-	      chk.push_back(new spot::concur_reachability_ec
-			    (itor_, os_,i, tn_, &stop, &stop_terminal,
-			     term_iddle_));
+	      // chk.push_back(new spot::concur_reachability_ec
+	      // 		    (itor_, os_,i, tn_, &stop, &stop_terminal,
+	      // 		     term_iddle_));
+	      chk.push_back(new spot::concur_weak_ec
+	      		    (itor_, sht_, i, &stop, &stop_weak));
 	  }
       }
   }
@@ -899,7 +1100,10 @@ namespace spot
   {
     // Release memory
     for (int i = 0; i < tn_; ++i)
-      	delete chk[i];
+      {
+  	delete chk[i];
+      }
+    delete sht_;
     delete os_;
     delete uf_;
   }
@@ -941,11 +1145,15 @@ namespace spot
     // Display results
     if (policy_ == DECOMP_EC)
       {
-	printf("\n[WF]  num of threads = %d insert = %d  elapsed time = %d\n",
-	   tn_, os_->size(), (int)elapsed_seconds);
+	if (os_->size())
+	  printf("\n[OS] num of threads = %d insert = %d  elapsed time = %d\n",
+		 tn_, os_->size(), (int)elapsed_seconds);
+	if (sht_->size())
+	  printf("\n[SHT] num of threads = %d insert = %d  elapsed time = %d\n",
+		 tn_, sht_->size(), (int)elapsed_seconds);
       }
     else
-      printf("\n[WF]  num of threads = %d insert = %d  elapsed time = %d\n",
+      printf("\n[WF] num of threads = %d insert = %d  elapsed time = %d\n",
 	     tn_, uf_->size(), (int)elapsed_seconds);
 
     return ctrexple;

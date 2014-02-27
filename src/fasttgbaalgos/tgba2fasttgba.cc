@@ -126,6 +126,9 @@ namespace spot
 	fast_explicit_state* st = result_->add_state(s);
 
 	int n = sm->scc_of_state(o);
+	st->formula_scc_number = n;
+	st->formula_scc_accepting = sm->accepting(n);
+
 	if (!sm->accepting(n))
 	  {
 	    //std::cout << "Non Accepting" << std::endl;

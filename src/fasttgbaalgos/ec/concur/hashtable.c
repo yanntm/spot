@@ -847,6 +847,30 @@ void ht_iter_value (hashtable_t *ht, process_fun_t process)
   }
 }
 
+void ht_iter_key (hashtable_t *ht, process_fun_t process)
+{
+  hti_t *hti = ht->hti;
+  while (hti && hti->next) {
+    hti_t *next = hti->next;
+    hti = next;
+  }
+
+  if (!hti)
+    return;
+
+  for (size_t i = 1; i < (1ULL << hti->scale); ++i) {
+
+    volatile entry_t *ent = hti->table + i;
+    if ((size_t)ent->key != DOES_NOT_EXIST )
+      {
+	if(hti->ht->key_type->clone == NULL)
+	  (*process) ((void*)ent->key);
+	else
+	  (*process) ((void*)GET_PTR(ent->key));
+      }
+  }
+}
+
 
 ht_iter_t *ht_iter_begin (hashtable_t *ht, map_key_t key) {
   hti_t *hti;
