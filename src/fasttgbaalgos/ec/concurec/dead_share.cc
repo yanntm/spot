@@ -536,6 +536,7 @@ namespace spot
 
 	// Release memory
 	todo.back().state->destroy();
+	delete todo.back().lasttr;
 
 	// Pop todo and dstack
 	todo.pop_back();
@@ -629,13 +630,16 @@ namespace spot
 
 	// Release memory
 	todo.back().state->destroy();
+	delete todo.back().lasttr;
 
 	// Pop todo and the root stack
 	// Only pop root stack when the top of todo is the top of root stack
 	// There are no consistency problems since the pop is done after
 	// calling fastbacktrack in the merge
+	//
+	// Warning ! The root stack must not be bigger than todo!
 	todo.pop_back();
-	if ((int) roots_stack_->root_of_the_top() == s)
+	if ((int) roots_stack_->root_of_the_top() == todo.size())
 	  roots_stack_->pop();
       }
 
