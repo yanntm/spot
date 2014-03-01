@@ -20,6 +20,7 @@
 #include "graph/bidigraph.hh"
 #include "tgba/succiter.hh"
 #include "tgba/tgba.hh"
+#include <algorithm>
 #include <unordered_map>
 #include <vector>
 
@@ -27,17 +28,18 @@ namespace spot
 {
   namespace graph
   {
-
     void
     bidistate::remove_succ(const bidistate* s)
     {
       size_t pos = 0;
-      for (; pos < out_->size() && (*out_)[pos] != s; ++pos)
+      size_t size = out_->size();
+      for (; pos < size && (*out_)[pos] != s; ++pos)
         continue;
       // Make sure the transition was found.
-      assert(pos < out_->size());
+      assert(pos < size);
 
-      out_->erase(out_->begin() + pos);
+      std::iter_swap(out_->begin() + pos, out_->end() - 1);
+      out_->pop_back();
     }
 
     // Remove the transition coming from s.
@@ -45,30 +47,59 @@ namespace spot
     bidistate::remove_pred(const bidistate* s)
     {
       size_t pos = 0;
-      for (; pos < in_->size() && (*in_)[pos] != s; ++pos)
+      size_t size = in_->size();
+      for (; pos < size && (*in_)[pos] != s; ++pos)
         continue;
       // Make sure the transition was found.
-      assert(pos < in_->size());
+      assert(pos < size);
 
-      in_->erase(in_->begin() + pos);
+      std::iter_swap(in_->begin() + pos, in_->end() - 1);
+      in_->pop_back();
     }
 
-/////////////////////////////////////
-// Gaph implementation
-/////////////////////////////////////
+    /////////////////////////////////////
+    // Gaph implementation
+    /////////////////////////////////////
 
     bidigraph::bidigraph(const tgba* g)
-      : tgba_reachable_iterator_breadth_first(g),
-        states_(new bidigraph_states())
+      : tgba_reachable_iterator(g)
     {
       run();
+      order_ = states_.size();
+      deltas_.resize(2 * order_ - 1);
+      max_index_ = 0;
+      for (auto bds : states_)
+        {
+          if (bds->get_out_degree() == 0)
+            sinks_.emplace_back(bds);
+          else if (bds->get_in_degree() == 0)
+            sources_.emplace_back(bds);
+          else
+            {
+              unsigned delta_value = bds->get_out_degree() -
+                                     bds->get_in_degree() + order_ - 1;
+              deltas_[delta_value].emplace_back(bds);
+              if (max_index_ < delta_value)
+                max_index_ = delta_value;
+            }
+        }
     }
 
     void
-    bidigraph::process_state(const state* s, int, tgba_succ_iterator*)
+    bidigraph::add_state(const state* s)
     {
-      if (!exist(s))
-        create_bidistate(s);
+      create_bidistate(s->clone());
+      todo.push_back(s);
+    }
+
+    const state*
+    bidigraph::next_state()
+    {
+      if (todo.empty())
+        return nullptr;
+      const state* s = todo.front();
+      todo.pop_front();
+      return s;
     }
 
     void
@@ -76,11 +107,7 @@ namespace spot
                             const state* out_s, int,
                             const tgba_succ_iterator*)
     {
-      if (!exist(in_s))
-        create_bidistate(in_s);
       bidistate* src = get_bidistate(in_s);
-      if (!exist(out_s))
-        create_bidistate(out_s);
       bidistate* dst = get_bidistate(out_s);
       src->add_succ(dst);
       dst->add_pred(src);
@@ -90,9 +117,8 @@ namespace spot
     bidigraph::~bidigraph()
     {
       // Remove all bidistates of bidigraph
-      for (auto bds : *states_)
+      for (auto bds : states_)
         delete bds;
-      delete states_;
 
       // Remove every spot::state* associated to the bidistates
       for (std::unordered_map<bidistate*, const spot::state*>::iterator it =
@@ -104,27 +130,86 @@ namespace spot
     }
 
     void
+    bidigraph::move_delta(bidistate* s, int step)
+    {
+      size_t pos = 0;
+      unsigned delta_value = s->get_out_degree() - s->get_in_degree() + order_ -
+                             1 + step;
+      size_t size = deltas_[delta_value].size();
+      std::vector<bidistate*>& delta_class = deltas_[delta_value];
+      for (; pos < size && delta_class[pos] != s; ++pos)
+        continue;
+      // Make sure the transition was found.
+      assert(pos < delta_class.size());
+      std::iter_swap(delta_class.begin() + pos, delta_class.end() - 1);
+      delta_class.pop_back();
+    }
+
+    void
     bidigraph::remove_state(bidistate* s)
     {
       // Remove transitions to s.
       bidigraph_states* pred = s->get_pred();
       for (bidigraph_states::iterator it = pred->begin();
            it != pred->end(); ++it)
-        (*it)->remove_succ(s);
+        {
+          (*it)->remove_succ(s);
+          // *it was either source or delta
+          if ((*it)->get_out_degree() == 0)
+            {
+              // Check if *it was a delta.
+              if ((*it)->get_in_degree())
+                {
+                  sinks_.emplace_back(*it);
+                  move_delta(*it, 1);
+                }
+            }
+          // Move to lower delta class
+          else
+            {
+              move_delta(*it, 1);
+              int delta_value = (*it)->get_out_degree() - (*it)->get_in_degree()
+                                + order_ - 1;
+              deltas_[delta_value].emplace_back(*it);
+            }
+        }
 
       // Remove transitions from s.
       bidigraph_states* succ = s->get_succ();
       for (bidigraph_states::iterator it = succ->begin();
            it != succ->end(); ++it)
-        (*it)->remove_pred(s);
+        {
+          (*it)->remove_pred(s);
+          // *it was either sink or delta
+          if ((*it)->get_in_degree() == 0)
+            {
+              // Check if *it was a delta.
+              if ((*it)->get_out_degree())
+                {
+                  sources_.emplace_back(*it);
+                  move_delta(*it, -1);
+                }
+            }
+          else
+            {
+              move_delta(*it, -1);
+              unsigned delta_value = (*it)->get_out_degree() -
+                                     (*it)->get_in_degree() + order_ - 1;
+              deltas_[delta_value].emplace_back(*it);
+              if (delta_value > max_index_)
+                max_index_ = delta_value;
+            }
+        }
 
       // Find position of s in vector and remove it.
       size_t pos = 0;
-      for (; pos < states_->size() && (*states_)[pos] != s; ++pos)
+      for (; pos < states_.size() && states_[pos] != s; ++pos)
         continue;
-      assert(pos < states_->size());
-      states_->erase(states_->begin() + pos);
+      assert(pos < states_.size());
+      std::iter_swap(states_.begin() + pos, states_.end() - 1);
+      states_.pop_back();
 
+      // remove state from maps.
       std::unordered_map<bidistate*, const spot::state*>::iterator
         tgba_state_it = bidistate_to_tgba_.find(s);
       assert(tgba_state_it != bidistate_to_tgba_.end());
@@ -153,18 +238,30 @@ namespace spot
       return bidistate_to_tgba_.find(bds)->second;
     }
 
-    graph::bidigraph_states&
-    bidigraph::get_bidistates() const
+    bidigraph_states&
+    bidigraph::get_sources()
     {
-      return *states_;
+      return sources_;
     }
 
-    bool
-    bidigraph::exist(const spot::state* tgba_state) const
+    bidigraph_states&
+    bidigraph::get_sinks()
     {
-      auto tgba_to_bidistate_it = tgba_to_bidistate_.find(tgba_state);
+      return sinks_;
+    }
 
-      return tgba_to_bidistate_it != tgba_to_bidistate_.end();
+    bidigraph_states&
+    bidigraph::get_max_delta()
+    {
+      while (deltas_[max_index_].empty() && max_index_)
+        --max_index_;
+      return deltas_[max_index_];
+    }
+
+    const graph::bidigraph_states&
+    bidigraph::get_bidistates() const
+    {
+      return states_;
     }
 
     void
@@ -174,7 +271,7 @@ namespace spot
       tgba_to_bidistate_[tgba_state] = bidistate;
       bidistate_to_tgba_[bidistate] = tgba_state;
       // Add bidistate to list of bidistates of bidgraph
-      states_->emplace_back(bidistate);
+      states_.emplace_back(bidistate);
     }
 
     std::ostream& operator<<(std::ostream& os, const bidigraph& bdg)

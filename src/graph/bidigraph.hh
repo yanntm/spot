@@ -24,7 +24,7 @@
 # include "tgba/state.hh"
 # include "tgbaalgos/reachiter.hh"
 # include <unordered_map>
-# include <unordered_set>
+# include <deque>
 # include <vector>
 
 namespace spot
@@ -37,10 +37,13 @@ namespace spot
   {
 
     class bidistate;
+    class bidigraph;
     typedef std::vector<bidistate*> bidigraph_states;
     class bidistate
     {
-    public:
+      friend class bidigraph;
+      friend std::ostream& operator<<(std::ostream& os, const bidigraph& bdg);
+
       bidistate()
         : out_(new bidigraph_states()), in_(new bidigraph_states())
       {
@@ -96,7 +99,6 @@ namespace spot
       void
       remove_pred(const bidistate* s);
 
-    private:
       bidigraph_states* out_;
       bidigraph_states* in_;
     };
@@ -104,7 +106,7 @@ namespace spot
     /// \brief A representation of a graph with no information on transitions,
     /// nor on the accepting and initial states.  Bidigraphs have information on
     /// their out and in degree.
-    class SPOT_API bidigraph : public tgba_reachable_iterator_breadth_first
+    class SPOT_API bidigraph : public tgba_reachable_iterator
     {
     public:
       /// When creating a bidigraph from a tgba, make sure to call it's
@@ -122,26 +124,39 @@ namespace spot
 
       const spot::state* get_tgba_state(bidistate* bidistate) const;
 
-      bidigraph_states& get_bidistates() const;
+      virtual const state* next_state();
+
+      const bidigraph_states& get_bidistates() const;
+      bidigraph_states& get_sources();
+      bidigraph_states& get_sinks();
+      bidigraph_states& get_max_delta();
 
       friend SPOT_API std::ostream&
       operator<<(std::ostream& os, const bidigraph& bdg);
 
+    protected:
+      std::deque<const state*> todo; ///< A queue of states yet to explore.
+
     private:
-      bidigraph_states* states_;
+      // Needed to access right delta class. delta_value + order_ - 1.
+      unsigned order_;
+      // Needed to know which delta class to access next.
+      unsigned max_index_;
+      bidigraph_states states_;
+      bidigraph_states sinks_;
+      bidigraph_states sources_;
+      std::vector<bidigraph_states> deltas_; // 2n - 1 classes
       std::unordered_map<bidistate*, const spot::state*> bidistate_to_tgba_;
       std::unordered_map<const spot::state*, bidistate*,
                          const spot::state_ptr_hash,
                          spot::state_ptr_equal> tgba_to_bidistate_;
 
-      /// Check the existance of a state in the bidigraph
-      bool exist(const spot::state* tgba_state) const;
-
       void create_bidistate(const spot::state* tgba_state);
-      virtual void process_state(const state* s, int n, tgba_succ_iterator* si);
+      virtual void add_state(const state* s);
       virtual void process_link(const state* in_s, int in,
                                 const state* out_s, int out,
                                 const tgba_succ_iterator* si);
+    void move_delta(bidistate* s, int step);
 
     };
   } // graph namespace

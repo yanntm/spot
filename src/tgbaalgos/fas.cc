@@ -21,61 +21,12 @@
 #include "graph/bidigraph.hh"
 #include "tgba/state.hh"
 #include "tgba/succiter.hh"
+#include <algorithm>
 #include <climits>
 #include <vector>
 
 namespace spot
 {
-  namespace
-  {
-    bool
-    has_source(spot::graph::bidigraph& bdg,
-               std::vector<spot::graph::bidistate*>& container)
-    {
-      for (auto bds : bdg.get_bidistates())
-        {
-          if (bds->get_in_degree() == 0)
-            container.emplace_back(bds);
-        }
-      return !container.empty();
-    }
-
-    bool
-    has_sinks(spot::graph::bidigraph& bdg,
-              std::vector<spot::graph::bidistate*>& container)
-    {
-      for (auto bds : bdg.get_bidistates())
-        {
-          if (bds->get_out_degree() == 0)
-            container.emplace_back(bds);
-        }
-      return !container.empty();
-    }
-
-    spot::graph::bidistate*
-    get_delta(spot::graph::bidigraph& bdg)
-    {
-      spot::graph::bidistate* res = nullptr;
-      unsigned in = 0;
-      int delta = INT_MIN;
-      for (auto bds : bdg.get_bidistates())
-        {
-          unsigned new_in = bds->get_in_degree();
-          int new_delta = bds->get_out_degree() - new_in;
-          // When delta are equal, chosse smaller in_degree.  This diminishes
-          // the number or arcs.
-          if (new_delta > delta || (new_delta == delta && new_in < in))
-            {
-              res = bds;
-              in = new_in;
-              delta = new_delta;
-            }
-        }
-      assert(res);
-      return res;
-    }
-  }
-
   bool
   fas::operator()(const spot::state* src, const spot::state* dst)
   {
@@ -86,8 +37,6 @@ namespace spot
 
   fas::~fas()
   {
-    for (auto p : ordered_states)
-      p.first->destroy();
   }
 
   fas::fas(const spot::tgba* g)
@@ -99,39 +48,55 @@ namespace spot
     std::vector<const spot::state*> s2;
     // Used to get every sinks, and sources.
     std::vector<spot::graph::bidistate*> container;
-    while (!bdg.get_bidistates().empty())
+    unsigned counter = bdg.get_bidistates().size();
+    while (counter)
       {
         // At each iteration we delete every sinks, update the graph, and check
         // for new sinks.
-        while (has_sinks(bdg, container))
+        std::vector<spot::graph::bidistate*>& sinks = bdg.get_sinks();
+        while (!sinks.empty())
           {
-            for (auto sink : container)
-              {
-                const spot::state* tgba_sink = bdg.get_tgba_state(sink);
-                s2.emplace_back(tgba_sink);
-                bdg.remove_state(sink);
-              }
-            container.resize(0);
+            spot::graph::bidistate* sink = sinks.back();
+            sinks.pop_back();
+            const spot::state* tgba_sink = bdg.get_tgba_state(sink);
+            s2.emplace_back(tgba_sink);
+            bdg.remove_state(sink);
+            --counter;
           }
-        while (has_source(bdg, container))
+        std::vector<spot::graph::bidistate*>& sources = bdg.get_sources();
+        while (!sources.empty())
           {
-            for (auto source : container)
-              {
-                const spot::state* tgba_source = bdg.get_tgba_state(source);
-                ordered_states[tgba_source] = order++;
-                bdg.remove_state(source);
-              }
-            container.resize(0);
+            spot::graph::bidistate* source = sources.back();
+            sources.pop_back();
+            const spot::state* tgba_source = bdg.get_tgba_state(source);
+            ordered_states[tgba_source] = order++;
+            bdg.remove_state(source);
+            --counter;
           }
-        if (!bdg.get_bidistates().empty())
+        graph::bidigraph_states& max_deltas = bdg.get_max_delta();
+        if (!max_deltas.empty())
           {
-            spot::graph::bidistate* delta = get_delta(bdg);
+            spot::graph::bidistate* delta = max_deltas.back();
+            max_deltas.pop_back();
             const spot::state* tgba_delta = bdg.get_tgba_state(delta);
             ordered_states[tgba_delta] = order++;
             bdg.remove_state(delta);
+            --counter;
           }
       }
     for (auto it = s2.rbegin(); it != s2.rend(); ++it)
       ordered_states[*it] = order++;
   }
 }
+// struct bin
+// {
+//   unsigned in; // Vector ??
+//   unsigned out;
+// };
+// std::set<bin*, spot::state*> nodes;
+// for (auto n : nodes)
+// {
+//   if sink push bin1;
+//   if source push bin2;
+//   push bin3;
+// }
