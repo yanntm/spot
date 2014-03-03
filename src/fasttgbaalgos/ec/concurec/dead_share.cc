@@ -639,7 +639,7 @@ namespace spot
 	//
 	// Warning ! The root stack must not be bigger than todo!
 	todo.pop_back();
-	if ((int) roots_stack_->root_of_the_top() == todo.size())
+	if (roots_stack_->root_of_the_top() == todo.size())
 	  roots_stack_->pop();
       }
 
