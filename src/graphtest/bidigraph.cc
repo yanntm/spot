@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
   const spot::ltl::formula* f = spot::ltl::parse(argv[1], pel);
   spot::tgba* a = spot::ltl_to_tgba_fm(f, dict);
 
-  spot::graph::bidigraph* bdg = new spot::graph::bidigraph(a);
+  spot::graph::bidigraph* bdg = new spot::graph::bidigraph(a, true);
   std::cout << *bdg;
 
   delete bdg;

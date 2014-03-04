@@ -145,3 +145,118 @@ EOF
 
 run 0 ../fas in4.spot > out4.gv
 cmp out4.gv out4.exp
+
+# Check source
+cat << EOF > in5.spot
+acc = "1";
+"1", "2", "a", "";
+"2", "3", "a", "";
+"3", "4", "a", "";
+"4", "5", "a", "";
+"5", "1", "a", "";
+"5", "2", "a", "";
+"5", "3", "a", "";
+"5", "4", "a", "";
+"4", "5", "a", "";
+"4", "5", "a", "";
+"4", "5", "a", "";
+EOF
+
+cat << EOF > out5.exp
+digraph G {
+  0 [label="", style=invis, height=0]
+  0 -> 1
+  1 [label="1"]
+  1 -> 2 []
+  2 [label="2"]
+  2 -> 3 []
+  3 [label="3"]
+  3 -> 4 [color="red"]
+  4 [label="4"]
+  4 -> 5 []
+  4 -> 5 []
+  4 -> 5 []
+  4 -> 5 []
+  5 [label="5"]
+  5 -> 1 []
+  5 -> 2 []
+  5 -> 3 []
+  5 -> 4 [color="red"]
+}
+EOF
+
+run 0 ../fas in5.spot > out5.gv
+cmp out5.gv out5.exp
+
+# Check sink
+cat << EOF > in6.spot
+acc = "1";
+"1", "2", "a", "";
+"2", "3", "a", "";
+"3", "4", "a", "";
+"4", "5", "a", "";
+"5", "1", "a", "";
+"5", "2", "a", "";
+"5", "3", "a", "";
+"5", "4", "a", "";
+EOF
+
+cat << EOF > out6.exp
+digraph G {
+  0 [label="", style=invis, height=0]
+  0 -> 1
+  1 [label="1"]
+  1 -> 2 []
+  2 [label="2"]
+  2 -> 3 []
+  3 [label="3"]
+  3 -> 4 []
+  4 [label="4"]
+  4 -> 5 [color="red"]
+  5 [label="5"]
+  5 -> 1 []
+  5 -> 2 []
+  5 -> 3 []
+  5 -> 4 []
+}
+EOF
+
+run 0 ../fas in6.spot > out6.gv
+cmp out6.gv out6.exp
+
+cat << EOF > in7.spot
+acc = "1";
+"1", "2", "a", "";
+"2", "3", "a", "";
+"3", "4", "a", "";
+"4", "5", "a", "";
+"5", "1", "a", "";
+"5", "2", "a", "";
+"5", "3", "a", "";
+"5", "4", "a", "";
+"5", "5", "a", "";
+EOF
+
+cat << EOF > out7.exp
+digraph G {
+  0 [label="", style=invis, height=0]
+  0 -> 1
+  1 [label="1"]
+  1 -> 2 []
+  2 [label="2"]
+  2 -> 3 []
+  3 [label="3"]
+  3 -> 4 []
+  4 [label="4"]
+  4 -> 5 [color="red"]
+  5 [label="5"]
+  5 -> 1 []
+  5 -> 2 []
+  5 -> 3 []
+  5 -> 4 []
+  5 -> 5 []
+}
+EOF
+
+run 0 ../fas in7.spot > out7.gv
+cmp out7.gv out7.exp

@@ -112,7 +112,7 @@ namespace spot
       /// When creating a bidigraph from a tgba, make sure to call it's
       /// destructor before destroying the \a tgba and it's corresponding
       /// dictionary.
-      bidigraph(const tgba* g);
+      bidigraph(const tgba* g, bool do_loops);
       ~bidigraph();
       void remove_state(bidistate* s);
 
@@ -138,6 +138,8 @@ namespace spot
       std::deque<const state*> todo; ///< A queue of states yet to explore.
 
     private:
+      // Allows to ignore loops a -> a.
+      bool do_loops_;
       // Needed to access right delta class. delta_value + order_ - 1.
       unsigned order_;
       // Needed to know which delta class to access next.

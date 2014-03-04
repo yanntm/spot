@@ -61,8 +61,8 @@ namespace spot
     // Gaph implementation
     /////////////////////////////////////
 
-    bidigraph::bidigraph(const tgba* g)
-      : tgba_reachable_iterator(g)
+    bidigraph::bidigraph(const tgba* g, bool do_loops)
+      : tgba_reachable_iterator(g), do_loops_(do_loops)
     {
       run();
       order_ = states_.size();
@@ -103,14 +103,18 @@ namespace spot
     }
 
     void
-    bidigraph::process_link(const state* in_s, int,
-                            const state* out_s, int,
+    bidigraph::process_link(const state* in_s, int in,
+                            const state* out_s, int out,
                             const tgba_succ_iterator*)
     {
       bidistate* src = get_bidistate(in_s);
       bidistate* dst = get_bidistate(out_s);
-      src->add_succ(dst);
-      dst->add_pred(src);
+      // Ignore loops.
+      if (do_loops_ || in != out)
+        {
+          src->add_succ(dst);
+          dst->add_pred(src);
+        }
     }
 
 
@@ -154,8 +158,13 @@ namespace spot
            it != pred->end(); ++it)
         {
           (*it)->remove_succ(s);
-          // *it was either source or delta
-          if ((*it)->get_out_degree() == 0)
+
+          // *it could have become a source from previous loup.
+          if ((*it)->get_in_degree() == 0)
+            continue;
+
+          // *it is now either a sink or a delta of lower class.
+          else if ((*it)->get_out_degree() == 0)
             {
               // Check if *it was a delta.
               if ((*it)->get_in_degree())
@@ -180,8 +189,13 @@ namespace spot
            it != succ->end(); ++it)
         {
           (*it)->remove_pred(s);
-          // *it was either sink or delta
-          if ((*it)->get_in_degree() == 0)
+
+          // *it could have become a sink from the removal of s's successors.
+          if ((*it)->get_out_degree() == 0)
+            continue;
+
+          // *it is now either a source or a delta of upper class.
+          else if ((*it)->get_in_degree() == 0)
             {
               // Check if *it was a delta.
               if ((*it)->get_out_degree())
@@ -190,12 +204,14 @@ namespace spot
                   move_delta(*it, -1);
                 }
             }
+          // Move to upper class.
           else
             {
               move_delta(*it, -1);
               unsigned delta_value = (*it)->get_out_degree() -
                                      (*it)->get_in_degree() + order_ - 1;
               deltas_[delta_value].emplace_back(*it);
+              // Get next maximal delta index.
               if (delta_value > max_index_)
                 max_index_ = delta_value;
             }

@@ -42,7 +42,7 @@ namespace spot
   fas::fas(const spot::tgba* g)
   {
     unsigned order = 0;
-    spot::graph::bidigraph bdg(g);
+    spot::graph::bidigraph bdg(g, false);
     // Need to push_front, will push_back and iterate backwards
     // s2 contains Sources and deltas.
     std::vector<const spot::state*> s2;
@@ -88,15 +88,3 @@ namespace spot
       ordered_states[*it] = order++;
   }
 }
-// struct bin
-// {
-//   unsigned in; // Vector ??
-//   unsigned out;
-// };
-// std::set<bin*, spot::state*> nodes;
-// for (auto n : nodes)
-// {
-//   if sink push bin1;
-//   if source push bin2;
-//   push bin3;
-// }
