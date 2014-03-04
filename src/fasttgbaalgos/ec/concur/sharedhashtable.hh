@@ -65,19 +65,6 @@ namespace spot
 	{
 	  ht_print(effective_table_, true);
 	}
-       // ht_iter_key(effective_table_,
-       // 		  [] (void * s) {
-       // 		    assert(s != 0);
-       // 		    //printf("---> 0x%zu\n", (size_t)s);
-       // 		    // std::cout << "--- > " << s  <<"\n";
-       // 		    // std::cout << "--- > " << ((const fasttgba_state*) s) <<"\n";
-       // 		    ((const fasttgba_state*) s)->destroy();
-       //  // const fasttgba_state* a = (const fasttgba_state*) s;
-       //  // if (auto st = dynamic_cast<const fasttgba_state*>(a))
-       //  //   st->destroy();
-       //  // else
-       //  //   assert(false);
-       // 		  });
 
       ht_free(effective_table_);
     }
