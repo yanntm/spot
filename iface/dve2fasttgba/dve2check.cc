@@ -325,63 +325,44 @@ main(int argc, char **argv)
 
       if (use_decomp)
 	{
-	  // std::cout << "ORIGINAL\n";
-	  // spot::dotty_reachable(std::cout, af1);
-	  // spot::scc_decompose *sd = new spot::scc_decompose (af1,false);
+	  spot::scc_decompose *sd = new spot::scc_decompose (af1,false);
+ 	  const spot::tgba* strong_a = sd->strong_automaton();
+	  const spot::tgba* weak_a = sd->weak_automaton();
+	  const spot::tgba* term_a = sd->terminal_automaton();
 
- 	  // const spot::tgba* strong_a = sd->strong_automaton();
-	  // if (strong_a)
-	  //   {
-	  //     std::cout << "STRONG\n";
-	  //     spot::dotty_reachable(std::cout, strong_a);
-	  //   }
+	  if (term_a || weak_a)
+	    {
+	      //The string that will contain all results
+	      std::ostringstream result;
 
-	  // const spot::tgba* weak_a = sd->weak_automaton();
-	  // if (weak_a)
-	  //   {
-	  //     std::cout << "WEAK\n";
-	  //     spot::dotty_reachable(std::cout, weak_a);
-	  //   }
+	      // Create the instanciator
+	      spot::instanciator* itor =
+	      	new spot::dve2product_instanciator(strong_a, file, weak_a,
+	      					   term_a);
 
-	  // const spot::tgba* term_a = sd->terminal_automaton();
-	  // if (term_a)
-	  //   {
-	  //     std::cout << "TERMINAL\n";
-	  //     spot::dotty_reachable(std::cout, term_a);
-	  //   }
+	      spot::dead_share* d =
+	      	new spot::dead_share(itor, nb_threads,
+	      			     spot::dead_share::DECOMP_EC);
 
+	      mtimer.start("decomp_ec");
+	      if (d->check())
+	      	result << "VIOLATED,";
+	      else
+	      	result << "VERIFIED,";
+	      mtimer.stop("decomp_ec");
+	      d->dump_threads();
+	      spot::timer t = mtimer.timer("decomp_ec");
+	      result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	      result << "," << d->csv() << "," << input;
+	      std::cout << result.str() << std::endl;
 
-// delete sd;
+	      delete d;
+	      delete itor;
+	    }
+	  else
+	    std::cout << "NOP" << std::endl;
 
-
-	  {
-	    // The string that will contain all results
-	    std::ostringstream result;
-
-	    // Create the instanciator
-	    spot::instanciator* itor =
-	      new spot::dve2product_instanciator(af1, file);
-
-	    spot::dead_share* d =
-	    new spot::dead_share(itor, nb_threads,
-				 spot::dead_share::DECOMP_EC);
-
-	    mtimer.start("decomp_ec");
-	    if (d->check())
-	      result << "VIOLATED,";
-	    else
-	      result << "VERIFIED,";
-	    mtimer.stop("decomp_ec");
-	    d->dump_threads();
-	    spot::timer t = mtimer.timer("decomp_ec");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << d->csv() << "," << input;
-	    std::cout << result.str() << std::endl;
-
-
-	    delete d;
-	  }
-
+	  delete sd;
 
 	}
       else

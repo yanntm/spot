@@ -698,7 +698,8 @@ namespace spot
     stop_ = stop;
     stop_terminal_ = stop_terminal;
     os_ = os;
-    a_ = inst->get_automaton ();
+    a_ = inst->get_terminal_automaton ();
+    assert(a_);
   }
 
   concur_reachability_ec::~concur_reachability_ec()
@@ -851,7 +852,8 @@ namespace spot
       insert_cpt_(0),
       counterexample_(false)
   {
-    a_ = inst->get_automaton ();
+    a_ = inst->get_weak_automaton ();
+    assert(a_);
     stop_ = stop;
     stop_weak_ = stop_weak;
   }
@@ -1028,11 +1030,10 @@ namespace spot
 
   dead_share::dead_share(instanciator* i,
 			 int thread_number,
-			 DeadSharePolicy policy,
-			 std::string option) :
+			 DeadSharePolicy policy) :
     itor_(i), tn_(thread_number), policy_(policy), max_diff(0)
   {
-    assert(i && thread_number && !option.compare(""));
+    assert(i && thread_number);
     uf_ = new spot::uf(tn_);
     os_ = new spot::openset(tn_);
     sht_ = new spot::sharedhashtable(tn_);
@@ -1091,11 +1092,64 @@ namespace spot
 	else
 	  {
 	    assert(policy_ == DECOMP_EC);
-	      // chk.push_back(new spot::concur_reachability_ec
-	      // 		    (itor_, os_,i, tn_, &stop, &stop_terminal,
-	      // 		     term_iddle_));
-	      chk.push_back(new spot::concur_weak_ec
-	      		    (itor_, sht_, i, &stop, &stop_weak));
+	    int how_many = 1; // At least strong
+	    if (itor_->have_weak())
+	      ++how_many;
+	    if (itor_->have_terminal())
+	      ++how_many;
+
+	    int how_many_strong = tn_ / how_many + tn_ % how_many;
+	    int how_many_weak = ! itor_->have_weak() ? 0 : tn_ / how_many ;
+	    int how_many_terminal = ! itor_->have_terminal() ? 0 :
+	      tn_ / how_many ;
+
+	    int k = 0;
+	    int j = 0;
+	    // Launch Strong
+	    while (k++ != how_many_strong)
+	      {
+		// It's the mixed algorithm!
+		if (j%2)
+		  chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
+							       j, &stop,
+							       &stop_strong,
+							       s_));
+		else
+		  chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
+								 j, &stop,
+								 &stop_strong,
+								 s_));
+		j++;
+	      }
+
+	    std::cout << "Number of threads : " << tn_
+	    	      << ", strong: " << how_many_strong
+	    	      << ", weak: " << how_many_weak
+	    	      << ", terminal: " << how_many_terminal
+	    	      << std::endl;
+
+
+	    // Launch Weak
+	    k = 0;
+	    while (k++ != how_many_weak)
+	      {
+	    	chk.push_back(new spot::concur_weak_ec
+	    		      (itor_, sht_, j, &stop, &stop_weak));
+	    	++j;
+	      }
+
+	    k = 0;
+	    // Launch terminal
+	    while (k++ != how_many_terminal)
+	      {
+	    	chk.push_back(new spot::concur_reachability_ec
+	    		      (itor_, os_, j, tn_, &stop, &stop_terminal,
+	    		       term_iddle_));
+	    	++j;
+	      }
+
+	    // All threads have been set ! That's it!
+	    break;
 	  }
       }
   }
@@ -1155,6 +1209,10 @@ namespace spot
 	if (sht_->size())
 	  printf("\n[SHT] num of threads = %d insert = %d  elapsed time = %d\n",
 		 tn_, sht_->size(), (int)elapsed_seconds);
+	if (uf_->size())
+	  printf("\n[WF] num of threads = %d insert = %d  elapsed time = %d\n",
+		 tn_, uf_->size(), (int)elapsed_seconds);
+
       }
     else
       printf("\n[WF] num of threads = %d insert = %d  elapsed time = %d\n",

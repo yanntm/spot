@@ -50,6 +50,13 @@ namespace spot
     // automaton just this class to destroy this automaton
     virtual const spot::fasttgba* get_ba_automaton() const = 0;
 
+
+    /// \brief return a weak instance of the automaton
+    virtual const spot::fasttgba* get_weak_automaton() const = 0;
+
+    /// \brief return a terminal instance of the automaton
+    virtual const spot::fasttgba* get_terminal_automaton() const = 0;
+
     virtual ~instance_automaton()
     {
     }
@@ -64,12 +71,18 @@ namespace spot
   class instanciator
   {
   public:
-    /// \brief return a new instance of the automaton
+    /// \brief Return a new instance of the automaton
     virtual const instance_automaton* new_instance () = 0;
 
     virtual ~instanciator()
     {
     }
+
+    /// \brief Return wether there is a weak instance
+    virtual bool have_weak() = 0;
+
+    /// \brief Return wether there is a terminal instance
+    virtual bool have_terminal() = 0;
   };
 
 
@@ -95,7 +108,21 @@ namespace spot
 
     const spot::fasttgba* get_ba_automaton () const
     {
-      // Not Yet Supported
+      // Not Supported
+      assert(false);
+      return 0;
+    }
+
+    const spot::fasttgba* get_weak_automaton () const
+    {
+      // Not Supported
+      assert(false);
+      return 0;
+    }
+
+    const spot::fasttgba* get_terminal_automaton () const
+    {
+      // Not Supported
       assert(false);
       return 0;
     }
@@ -103,9 +130,6 @@ namespace spot
   private:
     const spot::fasttgba* ftgba_;
   };
-
-
-
 
   class simple_instanciator: public instanciator
   {
@@ -118,9 +142,19 @@ namespace spot
     {
     }
 
-    const instance_automaton* new_instance ()
+    virtual const instance_automaton* new_instance ()
     {
       return new simple_instance(tgba_);
+    }
+
+    virtual bool have_weak()
+    {
+      return false;
+    }
+
+    virtual bool have_terminal()
+    {
+      return false;
     }
   };
 

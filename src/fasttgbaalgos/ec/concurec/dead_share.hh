@@ -385,8 +385,7 @@ namespace spot
     /// \param thread_number the number of thread to use
     dead_share(instanciator* i,
 	       int thread_number = 1,
-	       DeadSharePolicy policy = FULL_TARJAN,
-	       std::string option = "");
+	       DeadSharePolicy policy = FULL_TARJAN);
 
     /// \brief Release all memory
     virtual ~dead_share();

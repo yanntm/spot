@@ -106,8 +106,10 @@ namespace spot
     dve2product_instance(const spot::dve2product_instance&) = delete;
 
     dve2product_instance (const spot::tgba* tgba,
-			  std::string filename):
-      tgba_(tgba), filename_(filename)
+			  std::string filename,
+			  const spot::tgba* weak = 0,
+			  const spot::tgba* terminal = 0):
+      tgba_(tgba), filename_(filename), weak_(weak), term_(terminal)
     {
       std::lock_guard<std::mutex> lk(mutex_load_dve);
 
@@ -120,11 +122,13 @@ namespace spot
       // Instanciate kripke
       kripke =  spot::load_dve2fast(filename, *aps_, *accs_, true);
 
-      // Instanciate
-      ftgba1 = spot::tgba_2_fasttgba(tgba_, *aps_, *accs_);
-
-      prod = new spot::fasttgba_kripke_product (kripke, ftgba1);
-
+      // Set Up to Zero !
+      ftgba1 = 0;
+      prod = 0;
+      fweak_ = 0;
+      fweak_prod = 0;
+      fterm_ = 0;
+      fterm_prod = 0;
 
       ba_prod = 0;
       ba_ftgba = 0;
@@ -133,29 +137,6 @@ namespace spot
       ba_aps_ = 0;
 
       return;
-      // -------------------------------------------------------------
-      // Sometimes we need to work on  BA, in this case the product
-      // must be done with BA
-      // -------------------------------------------------------------
-      if (ftgba1->number_of_acceptance_marks() <= 1)
-	{
-	  ba_prod = prod;
-	  return;
-	}
-      // //      ba_ = spot::degeneralize(tgba_);
-
-
-      // // Instanciate dictionnaries
-      // ba_aps_ = new spot::ap_dict();
-      // ba_accs_ = new spot::acc_dict();
-
-      // // Instanciate kripke
-      // ba_kripke =  spot::load_dve2fast(filename, *ba_aps_, *ba_accs_, true);
-
-      // // Instanciate
-      // ba_ftgba = spot::tgba_2_fasttgba(ba_, *ba_aps_, *ba_accs_);
-
-      // ba_prod = new spot::fasttgba_kripke_product (ba_kripke, ba_ftgba);
     }
 
 
@@ -165,6 +146,10 @@ namespace spot
       //bool is_ba = prod->number_of_acceptance_marks() <= 1;
 
       // Clean up for Tgba
+      delete fweak_;
+      delete fweak_prod;
+      delete fterm_;
+      delete fterm_prod;
       delete prod;
       delete ftgba1;
       delete kripke;
@@ -196,7 +181,26 @@ namespace spot
     // The automaton to check
     const fasttgba* get_automaton () const
     {
+      ftgba1 = spot::tgba_2_fasttgba(tgba_, *aps_, *accs_);
+      prod = new spot::fasttgba_kripke_product (kripke, ftgba1);
       return prod;
+    }
+
+
+    const spot::fasttgba* get_weak_automaton () const
+    {
+      assert(weak_);
+      fweak_ = spot::tgba_2_fasttgba(weak_, *aps_, *accs_);
+      fweak_prod = new spot::fasttgba_kripke_product (kripke, fweak_);
+      return fweak_prod;
+    }
+
+    const spot::fasttgba* get_terminal_automaton () const
+    {
+      assert(term_);
+      fterm_ = spot::tgba_2_fasttgba(term_, *aps_, *accs_);
+      fterm_prod = new spot::fasttgba_kripke_product (kripke, fterm_);
+      return fterm_prod;
     }
 
     // Get the kripke
@@ -214,6 +218,31 @@ namespace spot
     // acceptance set less or equal to 1
     const fasttgba* get_ba_automaton () const
     {
+      // -------------------------------------------------------------
+      // Sometimes we need to work on  BA, in this case the product
+      // must be done with BA
+      // -------------------------------------------------------------
+      // if (ftgba1->number_of_acceptance_marks() <= 1)
+      // 	{
+      // 	  ba_prod = prod;
+      // 	  return;
+      // 	}
+      // //      ba_ = spot::degeneralize(tgba_);
+
+
+      // // Instanciate dictionnaries
+      // ba_aps_ = new spot::ap_dict();
+      // ba_accs_ = new spot::acc_dict();
+
+      // // Instanciate kripke
+      // ba_kripke =  spot::load_dve2fast(filename, *ba_aps_, *ba_accs_, true);
+
+      // // Instanciate
+      // ba_ftgba = spot::tgba_2_fasttgba(ba_, *ba_aps_, *ba_accs_);
+
+      // ba_prod = new spot::fasttgba_kripke_product (ba_kripke, ba_ftgba);
+
+
       return ba_prod;
     }
 
@@ -221,9 +250,24 @@ namespace spot
     //
     const spot::tgba* tgba_;
     std::string filename_;
-    const spot::fasttgba* ftgba1;
+    const spot::tgba* weak_;
+    const spot::tgba* term_;
+
+
+
     const spot::fasttgba* kripke;
-    const spot::fasttgba_kripke_product *prod;
+
+    mutable const spot::fasttgba_kripke_product *prod;
+    mutable const spot::fasttgba* ftgba1;
+
+
+    mutable const spot::fasttgba *fweak_;
+    mutable const spot::fasttgba_kripke_product *fweak_prod;
+
+
+    mutable const spot::fasttgba *fterm_;
+    mutable const spot::fasttgba_kripke_product *fterm_prod;
+
     spot::ap_dict* aps_;
     spot::acc_dict* accs_;
 
@@ -246,32 +290,33 @@ namespace spot
   private:
     const spot::tgba* tgba_;
     std::string filename_;
+    const spot::tgba* weak_;
+    const spot::tgba* terminal_;
 
   public:
     dve2product_instanciator (const spot::tgba* tgba,
-			      std::string filename):
-      tgba_(tgba), filename_(filename)
+			      std::string filename,
+			      const spot::tgba* weak = 0,
+			      const spot::tgba* terminal = 0):
+      tgba_(tgba), filename_(filename), weak_(weak), terminal_(terminal)
     {
     }
 
     const instance_automaton* new_instance ()
     {
-      return new dve2product_instance(tgba_, filename_);
+      return new dve2product_instance(tgba_, filename_, weak_, terminal_);
+    }
+
+    virtual bool have_weak()
+    {
+      return weak_ != 0;
+    }
+
+    virtual bool have_terminal()
+    {
+      return terminal_ != 0;;
     }
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 #endif // SPOT_IFACE_DVE2FASTTGBA_DVE2_HH
