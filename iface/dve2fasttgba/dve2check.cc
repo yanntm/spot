@@ -107,6 +107,7 @@ main(int argc, char **argv)
   bool opt_union = false;
   bool opt_stats = false;
   bool opt_tarjan = false;
+  bool opt_concur_ec_reach = false;
   bool opt_opttarjan = false;
   bool opt_ecopttarjan = false;
   bool opt_optdijkstra = false;
@@ -165,6 +166,13 @@ main(int argc, char **argv)
     {
       opt_concur_ec_dead_tarjan = true;
       std::string s = std::string(argv[3]+22);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-concur_ec_reach", argv[3], 16))
+    {
+      opt_concur_ec_reach = true;
+      std::string s = std::string(argv[3]+16);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -401,6 +409,24 @@ main(int argc, char **argv)
 	    mtimer.stop("concur_ec_dead_tarjan");
 	    d->dump_threads();
 	    spot::timer t = mtimer.timer("concur_ec_dead_tarjan");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << d->csv() << "," << input;
+	    std::cout << result.str() << std::endl;
+	    delete d;
+	  }
+	if (opt_concur_ec_reach)
+	  {
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+				   spot::dead_share::REACHABILITY_EC);
+	    mtimer.start("concur_ec_reach");
+	    if (d->check())
+	      result << "VIOLATED,";
+	    else
+	      result << "VERIFIED,";
+	    mtimer.stop("concur_ec_reach");
+	    d->dump_threads();
+	    spot::timer t = mtimer.timer("concur_ec_reach");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << d->csv() << "," << input;
 	    std::cout << result.str() << std::endl;

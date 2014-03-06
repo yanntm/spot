@@ -373,8 +373,8 @@ namespace spot
 	FULL_TARJAN_EC = 3,	/// \brief All treads use Tarjan Emptiness Check
 	FULL_DIJKSTRA_EC = 4,
 	MIXED_EC = 5,
-	DECOMP_EC = 6
-
+	DECOMP_EC = 6,
+	REACHABILITY_EC = 7
       };
 
     /// \brief Constructor for the multithreaded emptiness check

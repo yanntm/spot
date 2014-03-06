@@ -19,6 +19,11 @@ open_set_t* open_set_alloc(const datatype_t *key_type, size_t size, size_t tn)
   os_->table_ = ht_alloc (key_type, size);
   assert(os_->table_);
 
+  os_->to_free_ = (open_set_node_t**) malloc (sizeof(open_set_node_t)*tn);
+  int i;
+  for (i = 0; i < tn; ++i)
+    os_->to_free_[i] = 0;
+
   /* Initialize the open set (aka linked list)
    */
   os_->head_ = 0;
@@ -83,7 +88,7 @@ int open_set_find_or_put(open_set_t* os, map_key_t key)
 
       do
 	{
-	  tmp = os->head_;
+	  tmp = ((open_set_t)atomic_read(os)).head_;//os->head_;
 	  node->next = tmp;
 	  old_node = cas_ret(&os->head_, tmp, node);
 	}
@@ -93,24 +98,30 @@ int open_set_find_or_put(open_set_t* os, map_key_t key)
   return result;
 }
 
-void* open_set_get_one(open_set_t* os)
+void* open_set_get_one(open_set_t* os, int tn)
 {
-  open_set_node_t* current = os->head_;
   open_set_node_t* old_node;
   open_set_node_t* tmp;
+  open_set_node_t* current = ((open_set_t)atomic_read(os)).head_;
 
   while (current)
     {
-      tmp = current->next;
+      tmp = ((open_set_node_t)atomic_read(current)).next;//current->next;
       old_node = cas_ret(&os->head_, current, tmp);
 
       if (old_node == current)
 	{
-	  void* result = current->data;
-	  free (current);
+	  void* result =
+	    ((open_set_node_t)atomic_read(current)).data;//current->data;
+	  if (os->to_free_[tn])
+	    {
+	      free (os->to_free_[tn]);
+	    }
+	  os->to_free_[tn] = current;
+	  //free (current);
 	  return result;
 	}
-      current = os->head_;
+      current = ((open_set_t)atomic_read(os)).head_;//os->head_;
     }
 
   return 0;

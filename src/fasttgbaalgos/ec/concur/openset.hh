@@ -72,9 +72,9 @@ namespace spot
 
     /// \brief Get the next state to deal with
     /// Return a new state or 0
-    const fasttgba_state*  get_one()
+    const fasttgba_state*  get_one(int tn)
     {
-      return (const fasttgba_state*)open_set_get_one(effective_os);
+      return (const fasttgba_state*)open_set_get_one(effective_os, tn);
     }
 
     /// \brief the current size of the open_set

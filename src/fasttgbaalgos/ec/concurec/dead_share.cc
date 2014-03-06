@@ -698,7 +698,10 @@ namespace spot
     stop_ = stop;
     stop_terminal_ = stop_terminal;
     os_ = os;
-    a_ = inst->get_terminal_automaton ();
+    if (i->have_terminal())
+      a_ = inst->get_terminal_automaton ();
+    else
+      a_ = inst->get_automaton ();
     assert(a_);
   }
 
@@ -732,11 +735,9 @@ namespace spot
     else
       init->destroy();
 
-    int before_stop = 50;
-
     while (!*stop_ && !*stop_terminal_)
       {
-	auto s = os_->get_one();
+	auto s = os_->get_one(tn_);
 
 	// Nothing to grab ! The thread become iddle, if all threads
 	// are iddle the reachability must end now!
@@ -749,14 +750,19 @@ namespace spot
 		break;
 	      }
 
-	    // Force Iddle detection!
-	    if (!--before_stop)
-	      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	    int size = os_->size();
+	    while (os_->size() == size)
+	      {
+		if (giddle_ == tt_)
+		  {
+		    *stop_terminal_ = 1;
+		    break;
+		  }
+	      }
 
 	    --giddle_;
 	    continue;
 	  }
-	before_stop = 50;
 
 	// Walk all successors
 	auto succ = a_->succ_iter(s);
@@ -783,7 +789,7 @@ namespace spot
 	      }
 	    else
 	      {
-		next->destroy();
+		//next->destroy();
 		++fail_cpt_;
 	      }
 	    succ->next();
@@ -1059,6 +1065,10 @@ namespace spot
 	  chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
 						       i, &stop,
 							&stop_strong, s_));
+	else if (policy_ == REACHABILITY_EC)
+	  chk.push_back(new spot::concur_reachability_ec
+			(itor_, os_, i, tn_, &stop, &stop_terminal,
+			 term_iddle_));
 	else if (policy_ == FULL_DIJKSTRA)
 	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
 							  i, &stop,
@@ -1201,7 +1211,7 @@ namespace spot
       ctrexple |= chk[i]->has_counterexample();
 
     // Display results
-    if (policy_ == DECOMP_EC)
+    if (policy_ == DECOMP_EC || policy_ == REACHABILITY_EC)
       {
 	if (os_->size())
 	  printf("\n[OS] num of threads = %d insert = %d  elapsed time = %d\n",
@@ -1271,6 +1281,9 @@ namespace spot
 	break;
       case DECOMP_EC:
 	res << "DECOMP_EC,";
+	break;
+      case REACHABILITY_EC:
+	res << "REACHABILITY_EC,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;
