@@ -93,7 +93,7 @@ namespace spot
       return (const fasttgba_state*) clone;
     }
 
-   void mark_dead(const fasttgba_state* key)
+   void mark_dead(const fasttgba_state* )
     {
       assert(false);
       // map_key_t clone = 0;
