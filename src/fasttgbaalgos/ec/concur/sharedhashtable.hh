@@ -72,6 +72,7 @@ namespace spot
 
     const fasttgba_state* find_or_put(const fasttgba_state* key)
     {
+      assert(key);
       map_val_t old = 0;
       map_key_t clone = 0;
 
@@ -81,6 +82,8 @@ namespace spot
       old = ht_cas_empty (effective_table_, (map_key_t)key,
       			  (map_val_t)Alive_state, &clone, (void*)NULL);
 
+      // printf("key : %zu, clone : %zu,old :  %zu \n",
+      // 	     (size_t)key, (size_t)clone, (size_t)old);
       if (old == DOES_NOT_EXIST)
 	{
 	  ++size_;
@@ -92,25 +95,30 @@ namespace spot
 
    void mark_dead(const fasttgba_state* key)
     {
-      map_key_t clone = 0;
-      ht_cas (effective_table_, (map_key_t)key, CAS_EXPECT_EXISTS,
-      	      (map_val_t)Dead_state, &clone, NULL);
+      assert(false);
+      // map_key_t clone = 0;
+      // ht_cas (effective_table_, (map_key_t)key, CAS_EXPECT_EXISTS,
+      // 	      (map_val_t)Dead_state, &clone, NULL);
     }
 
     bool is_dead(const fasttgba_state* key)
     {
-      map_val_t old = 0;
-      old = ht_get(effective_table_, (map_key_t) key);
-      if (old == DOES_NOT_EXIST)
-	{
-	  return false;
-	}
-      // State is alive
-      if (old == Alive_state)
+      if (ht_get(effective_table_, (map_key_t) key) == DOES_NOT_EXIST)
 	return false;
-
-      // Not alive
       return true;
+
+      // map_val_t old = 0;
+      // old = ht_get(effective_table_, (map_key_t) key);
+      // if (old == DOES_NOT_EXIST)
+      // 	{
+      // 	  return false;
+      // 	}
+      // // State is alive
+      // if (old == Alive_state)
+      // 	return false;
+
+      // // Not alive
+      // return true;
     }
 
 

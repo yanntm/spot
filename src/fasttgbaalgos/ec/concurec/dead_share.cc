@@ -888,19 +888,8 @@ namespace spot
   void
   concur_weak_ec::push_state(const spot::fasttgba_state* state)
   {
-    auto st_ref = sht_->find_or_put(state);
-    if (st_ref != state)
-      {
-	state->destroy();
-      }
-    else
-      {
-	++insert_cpt_;
-	state->clone();
-	store.insert(state);
-      }
-    H.insert(st_ref);
-    todo.push_back ({st_ref, 0});
+    H.insert(state);
+    todo.push_back ({state, 0});
   }
 
   concur_weak_ec::color
@@ -919,11 +908,20 @@ namespace spot
   concur_weak_ec::dfs_pop()
   {
     const fasttgba_state* last = todo.back().state;
+
+
+    auto st_ref = sht_->find_or_put(last);
+    if (st_ref == last)
+      {
+    	++insert_cpt_;
+	last->clone();
+	store.insert(last);
+      }
+
     delete todo.back().lasttr;
     todo.pop_back();
     seen_map::const_iterator it = H.find(last);
     H.erase(it);
-    sht_->mark_dead(last);
   }
 
   bool
@@ -988,6 +986,7 @@ namespace spot
       {
 	if (auto q = dynamic_cast<const fast_explicit_state*>(t->right()))
 	  {
+	    assert(q);
 	    if (!q->formula_scc_accepting)
 	      return;
 
@@ -996,6 +995,7 @@ namespace spot
 		if (auto qq = dynamic_cast<const fast_explicit_state*>
 		    (tt->right()))
 		  {
+		    assert(qq);
 		    if (q->formula_scc_number == qq->formula_scc_number)
 		      counterexample_ = true;
 		  }
