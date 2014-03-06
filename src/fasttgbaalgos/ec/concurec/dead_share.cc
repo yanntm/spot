@@ -754,7 +754,7 @@ namespace spot
 	      }
 
 	    int size = os_->size();
-	    while (os_->size() == size && !*stop_terminal_)
+	    while (os_->size() == size && !*stop_ && !*stop_terminal_)
 	      {
 		if (giddle_ == tt_)
 		  {
@@ -779,6 +779,7 @@ namespace spot
 	    if (is_terminal(next))
 	      {
 		*stop_ = 1;
+		*stop_terminal_ = 1;
 		counterexample_ = true;
 		break;
 	      }
