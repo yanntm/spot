@@ -713,9 +713,9 @@ namespace spot
        fasttgba_state_ptr_equal>::iterator it = store.begin();
     while (it != store.end())
       {
-	const fasttgba_state* ptr = *it;
-	++it;
-	ptr->destroy();
+    	const fasttgba_state* ptr = *it;
+    	++it;
+    	ptr->destroy();
       }
     delete inst;
   }
@@ -733,7 +733,10 @@ namespace spot
 	init->clone();
       }
     else
-      init->destroy();
+      {
+	++fail_cpt_;
+	//   init->destroy();
+      }
 
     while (!*stop_ && !*stop_terminal_)
       {
@@ -1018,7 +1021,7 @@ namespace spot
   {
     auto elapsed_seconds = std::chrono::duration_cast
       <std::chrono::milliseconds>(end-start).count();
-    return elapsed_seconds;
+    return elapsed_seconds > 0 ? elapsed_seconds : 0;
   }
 
   int
@@ -1153,7 +1156,8 @@ namespace spot
 	    while (k++ != how_many_terminal)
 	      {
 	    	chk.push_back(new spot::concur_reachability_ec
-	    		      (itor_, os_, j, tn_, &stop, &stop_terminal,
+	    		      (itor_, os_, j, how_many_terminal,
+			       &stop, &stop_terminal,
 	    		       term_iddle_));
 	    	++j;
 	      }
@@ -1167,7 +1171,7 @@ namespace spot
   dead_share::~dead_share()
   {
     // Release memory
-    for (int i = 0; i < tn_; ++i)
+    for (int i = 0; i < (int)chk.size(); ++i)
       {
   	delete chk[i];
       }
@@ -1187,14 +1191,14 @@ namespace spot
     start = std::chrono::system_clock::now();
 
     // Launch all threads
-    for (int i = 0; i < tn_; ++i)
+    for (int i = 0; i < (int)chk.size(); ++i)
       v.push_back(std::thread ([&](int tid){
 	    srand (tid);
 	    chk[tid]->check();
 	  }, i));
 
     // Wait all threads
-    for (int i = 0; i < tn_; ++i)
+    for (int i = 0; i < (int) v.size(); ++i)
       {
 	v[i].join();
       }
@@ -1207,7 +1211,7 @@ namespace spot
 
     // Clean up checker and construct CSV
     bool ctrexple = false;
-    for (int i = 0; i < tn_; ++i)
+    for (int i = 0; i < (int)chk.size(); ++i)
       ctrexple |= chk[i]->has_counterexample();
 
     // Display results
@@ -1235,7 +1239,7 @@ namespace spot
   {
     std::cout << std::endl << "THREADS DUMP : " << std::endl;
     auto tmpi = 0;
-    for (int i = 0; i < tn_; ++i)
+    for (int i = 0; i < (int)chk.size(); ++i)
       {
 	if (max_diff < std::abs(chk[i]->get_elapsed_time()
 				- chk[tmpi]->get_elapsed_time()))
