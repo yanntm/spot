@@ -333,7 +333,7 @@ main(int argc, char **argv)
 
       if (use_decomp)
 	{
-	  spot::scc_decompose *sd = new spot::scc_decompose (af1,false);
+	  spot::scc_decompose *sd = new spot::scc_decompose (af1,true);
  	  const spot::tgba* strong_a = sd->strong_automaton();
 	  const spot::tgba* weak_a = sd->weak_automaton();
 	  const spot::tgba* term_a = sd->terminal_automaton();

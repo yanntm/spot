@@ -105,8 +105,8 @@ namespace spot
 	    // When a degeneralisation is performed some acceptance
 	    // sets  are removed off the tgba
 	    if (!aps->is_registered_acceptance_variable(f, aut_))
-	      //continue;
-	      toadd_ |= bdd_ithvar(sii2->second);
+	      continue;
+	      //toadd_ |= bdd_ithvar(sii2->second);
 
 	    acceptances_.push_back(sii2->second);
 
