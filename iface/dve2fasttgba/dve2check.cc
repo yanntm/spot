@@ -350,7 +350,7 @@ main(int argc, char **argv)
 
 	      spot::dead_share* d =
 	      	new spot::dead_share(itor, nb_threads,
-	      			     spot::dead_share::DECOMP_EC);
+	      			     spot::dead_share::DECOMP_EC_SEQ);
 
 	      mtimer.start("decomp_ec");
 	      if (d->check())

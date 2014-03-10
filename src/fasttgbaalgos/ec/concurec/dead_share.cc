@@ -1105,66 +1105,114 @@ namespace spot
 	  }
 	else
 	  {
-	    assert(policy_ == DECOMP_EC);
-	    int how_many = 1; // At least strong
-	    if (itor_->have_weak())
-	      ++how_many;
-	    if (itor_->have_terminal())
-	      ++how_many;
+	    assert(policy_ == DECOMP_EC || policy_ == DECOMP_EC_SEQ);
 
-	    int how_many_strong = tn_ / how_many + tn_ % how_many;
-	    int how_many_weak = ! itor_->have_weak() ? 0 : tn_ / how_many ;
-	    int how_many_terminal = ! itor_->have_terminal() ? 0 :
-	      tn_ / how_many ;
 
-	    int k = 0;
-	    int j = 0;
-	    // Launch Strong
-	    while (k++ != how_many_strong)
+	    if (policy_ == DECOMP_EC)
 	      {
-		// It's the mixed algorithm!
-		if (j%2)
-		  chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
-							       j, &stop,
-							       &stop_strong,
-							       s_));
-		else
-		  chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
-								 j, &stop,
-								 &stop_strong,
-								 s_));
-		j++;
+		int how_many = 1; // At least strong
+		if (itor_->have_weak())
+		  ++how_many;
+		if (itor_->have_terminal())
+		  ++how_many;
+
+		int how_many_strong = tn_ / how_many + tn_ % how_many;
+		int how_many_weak = ! itor_->have_weak() ? 0 : tn_ / how_many ;
+		int how_many_terminal = ! itor_->have_terminal() ? 0 :
+		  tn_ / how_many ;
+
+		int k = 0;
+		int j = 0;
+		// Launch Strong
+		while (k++ != how_many_strong)
+		  {
+		    // It's the mixed algorithm!
+		    if (j%2)
+		      chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
+								   j, &stop,
+								   &stop_strong,
+								   s_));
+		    else
+		      chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
+								     j, &stop,
+								     &stop_strong,
+								     s_));
+		    j++;
+		  }
+
+		std::cout << "Number of threads : " << tn_
+			  << ", strong: " << how_many_strong
+			  << ", weak: " << how_many_weak
+			  << ", terminal: " << how_many_terminal
+			  << std::endl;
+
+
+		// Launch Weak
+		k = 0;
+		while (k++ != how_many_weak)
+		  {
+		    chk.push_back(new spot::concur_weak_ec
+				  (itor_, sht_, j, &stop, &stop_weak));
+		    ++j;
+		  }
+
+		k = 0;
+		// Launch terminal
+		while (k++ != how_many_terminal)
+		  {
+		    chk.push_back(new spot::concur_reachability_ec
+				  (itor_, os_, j, how_many_terminal,
+				   &stop, &stop_terminal,
+				   term_iddle_));
+		    ++j;
+		  }
+
+		// All threads have been set ! That's it!
+		break;
 	      }
-
-	    std::cout << "Number of threads : " << tn_
-	    	      << ", strong: " << how_many_strong
-	    	      << ", weak: " << how_many_weak
-	    	      << ", terminal: " << how_many_terminal
-	    	      << std::endl;
-
-
-	    // Launch Weak
-	    k = 0;
-	    while (k++ != how_many_weak)
+	    else
 	      {
-	    	chk.push_back(new spot::concur_weak_ec
-	    		      (itor_, sht_, j, &stop, &stop_weak));
-	    	++j;
-	      }
+		int k = 0;
+		int j = 0;
+		while (k++ != tn_)
+		  {
+		    // It's the mixed algorithm!
+		    if (j%2)
+		      chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
+								   j, &stop,
+								   &stop_strong,
+								   s_));
+		    else
+		      chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
+								     j, &stop,
+								   &stop_strong,
+								     s_));
+		    j++;
+		  }
 
-	    k = 0;
-	    // Launch terminal
-	    while (k++ != how_many_terminal)
-	      {
-	    	chk.push_back(new spot::concur_reachability_ec
-	    		      (itor_, os_, j, how_many_terminal,
-			       &stop, &stop_terminal,
-	    		       term_iddle_));
-	    	++j;
-	      }
+		j = 0;
+		k = 0;
+		while (k++ != tn_ && itor_->have_weak())
+		  {
+		    chk.push_back(new spot::concur_weak_ec
+				  (itor_, sht_, j, &stop, &stop_weak));
+		    ++j;
+		  }
 
-	    // All threads have been set ! That's it!
-	    break;
+		j = 0;
+		k = 0;
+		// Launch terminal
+		while (k++ != tn_ && itor_->have_terminal())
+		  {
+		    chk.push_back(new spot::concur_reachability_ec
+				  (itor_, os_, j, tn_,
+				   &stop, &stop_terminal,
+				   term_iddle_));
+		    ++j;
+		  }
+
+		break;
+	      }
 	  }
       }
   }
@@ -1191,6 +1239,34 @@ namespace spot
     std::cout << "Start threads ..." << std::endl;
     start = std::chrono::system_clock::now();
 
+
+    if (policy_ == DECOMP_EC_SEQ)
+      {
+	int curr = chk.size();
+
+	while (curr)
+	  {
+	    curr -= tn_;
+	    for (int i = curr; i < curr + tn_; ++i)
+	      {
+		v.push_back(std::thread ([&](int tid){
+		    srand (tid);
+		    chk[tid]->check();
+		    }, i));
+	      }
+
+	    // Wait all threads
+	    for (int i = 0; i < (int) v.size(); ++i)
+	      {
+		v[i].join();
+	      }
+	    if (stop)
+	      break;
+	    v.clear();
+	  }
+	goto the_end;
+      }
+
     // Launch all threads
     for (int i = 0; i < (int)chk.size(); ++i)
       v.push_back(std::thread ([&](int tid){
@@ -1204,6 +1280,7 @@ namespace spot
 	v[i].join();
       }
 
+  the_end:
     // Stop Global Timer
     end  = std::chrono::system_clock::now();
 
@@ -1286,6 +1363,9 @@ namespace spot
 	break;
       case DECOMP_EC:
 	res << "DECOMP_EC,";
+	break;
+      case DECOMP_EC_SEQ:
+	res << "DECOMP_EC_SEQ,";
 	break;
       case REACHABILITY_EC:
 	res << "REACHABILITY_EC,";

@@ -374,7 +374,8 @@ namespace spot
 	FULL_DIJKSTRA_EC = 4,
 	MIXED_EC = 5,
 	DECOMP_EC = 6,
-	REACHABILITY_EC = 7
+	REACHABILITY_EC = 7,
+	DECOMP_EC_SEQ = 8
       };
 
     /// \brief Constructor for the multithreaded emptiness check
