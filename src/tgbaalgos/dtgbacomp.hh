@@ -31,7 +31,7 @@ namespace spot
   /// state-based.  The resulting automaton is very unlikely to be
   /// deterministic.
   SPOT_API tgba_explicit_number*
-  dtgba_complement(const tgba* aut);
+  dtgba_complement(const tgba* aut, bool use_fas = true);
 }
 
 #endif // SPOT_TGBAALGOS_DTGBACOMP_HH

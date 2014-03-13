@@ -39,10 +39,11 @@ namespace spot
   {
   }
 
-  fas::fas(const spot::tgba* g)
+  void
+  fas::build()
   {
     unsigned order = 0;
-    spot::graph::bidigraph bdg(g, false);
+    spot::graph::bidigraph bdg(aut_, false);
     // Need to push_front, will push_back and iterate backwards
     // s2 contains Sources and deltas.
     std::vector<const spot::state*> s2;
@@ -86,5 +87,10 @@ namespace spot
       }
     for (auto it = s2.rbegin(); it != s2.rend(); ++it)
       ordered_states[*it] = order++;
+  }
+
+  fas::fas(const spot::tgba* g)
+  {
+    aut_ = g;
   }
 }

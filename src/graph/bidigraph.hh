@@ -141,9 +141,9 @@ namespace spot
       // Allows to ignore loops a -> a.
       bool do_loops_;
       // Needed to access right delta class. delta_value + order_ - 1.
-      unsigned order_;
+      int order_;
       // Needed to know which delta class to access next.
-      unsigned max_index_;
+      int max_index_;
       bidigraph_states states_;
       bidigraph_states sinks_;
       bidigraph_states sources_;
@@ -158,7 +158,7 @@ namespace spot
       virtual void process_link(const state* in_s, int in,
                                 const state* out_s, int out,
                                 const tgba_succ_iterator* si);
-    void move_delta(bidistate* s, int step);
+    void remove_delta(bidistate* s, int step);
 
     };
   } // graph namespace

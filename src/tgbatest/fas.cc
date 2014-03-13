@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
     }
 
   spot::fas* is_fas = new spot::fas(g);
+  is_fas->build();
 
   spot::fas_dotty_decorator::is_fas = is_fas;
   spot::dotty_reachable(std::cout, g, false,

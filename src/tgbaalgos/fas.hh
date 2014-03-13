@@ -46,7 +46,11 @@ namespace spot
     /// Check if the transition from \a src to \dst is part of the fas.
     bool operator()(const spot::state* src, const spot::state* dst);
 
+    /// Compute the fas, call this before using operator ()
+    void build(void);
+
   private:
+    const spot::tgba* aut_;
     std::unordered_map<const spot::state*, unsigned, const spot::state_ptr_hash,
                        spot::state_ptr_equal> ordered_states;
   };

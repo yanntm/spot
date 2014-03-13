@@ -396,6 +396,7 @@ main(int argc, char** argv)
   unsigned opt_determinize_threshold = 0;
   unsigned opt_o_threshold = 0;
   bool opt_dtgbacomp = false;
+  bool opt_fas = false;
   bool reject_bigger = false;
   bool opt_bisim_ta = false;
   bool opt_monitor = false;
@@ -487,6 +488,10 @@ main(int argc, char** argv)
       else if (!strcmp(argv[formula_index], "-DC"))
 	{
 	  opt_dtgbacomp = true;
+	}
+      else if (!strcmp(argv[formula_index], "-FAS"))
+	{
+	  opt_fas = true;
 	}
       else if (!strncmp(argv[formula_index], "-DS", 3))
 	{
@@ -1545,7 +1550,7 @@ main(int argc, char** argv)
       if (opt_dtgbacomp)
 	{
 	  tm.start("DTGBA complement");
-	  a = complemented = dtgba_complement(a);
+	  a = complemented = dtgba_complement(a, opt_fas);
 	  tm.stop("DTGBA complement");
 	}
 

@@ -76,8 +76,11 @@ namespace spot
             sources_.emplace_back(bds);
           else
             {
-              unsigned delta_value = bds->get_out_degree() -
+              int delta_value = bds->get_out_degree() -
                                      bds->get_in_degree() + order_ - 1;
+              // We need to make sure we don't get out of bounds of classes.
+              // Indeed, states can have several successors to the same state.
+              delta_value = std::min(2 * order_ - 2, std::max(0, delta_value));
               deltas_[delta_value].emplace_back(bds);
               if (max_index_ < delta_value)
                 max_index_ = delta_value;
@@ -133,12 +136,16 @@ namespace spot
         }
     }
 
+    // Remove bidistate from one of the delta_clases, these are deleted after
+    // being updated, so we take in consideration \a step with values +1, or -1
+    // depending on what kind of transition was removed.
     void
-    bidigraph::move_delta(bidistate* s, int step)
+    bidigraph::remove_delta(bidistate* s, int step)
     {
       size_t pos = 0;
-      unsigned delta_value = s->get_out_degree() - s->get_in_degree() + order_ -
+      int delta_value = s->get_out_degree() - s->get_in_degree() + order_ -
                              1 + step;
+      delta_value = std::min(2 * order_ - 2, std::max(0, delta_value));
       size_t size = deltas_[delta_value].size();
       std::vector<bidistate*>& delta_class = deltas_[delta_value];
       for (; pos < size && delta_class[pos] != s; ++pos)
@@ -170,15 +177,16 @@ namespace spot
               if ((*it)->get_in_degree())
                 {
                   sinks_.emplace_back(*it);
-                  move_delta(*it, 1);
+                  remove_delta(*it, 1);
                 }
             }
           // Move to lower delta class
           else
             {
-              move_delta(*it, 1);
+              remove_delta(*it, 1);
               int delta_value = (*it)->get_out_degree() - (*it)->get_in_degree()
                                 + order_ - 1;
+              delta_value = std::min(2 * order_ - 2, std::max(0, delta_value));
               deltas_[delta_value].emplace_back(*it);
             }
         }
@@ -201,15 +209,16 @@ namespace spot
               if ((*it)->get_out_degree())
                 {
                   sources_.emplace_back(*it);
-                  move_delta(*it, -1);
+                  remove_delta(*it, -1);
                 }
             }
           // Move to upper class.
           else
             {
-              move_delta(*it, -1);
-              unsigned delta_value = (*it)->get_out_degree() -
+              remove_delta(*it, -1);
+              int delta_value = (*it)->get_out_degree() -
                                      (*it)->get_in_degree() + order_ - 1;
+              delta_value = std::min(2 * order_ - 2, std::max(0, delta_value));
               deltas_[delta_value].emplace_back(*it);
               // Get next maximal delta index.
               if (delta_value > max_index_)

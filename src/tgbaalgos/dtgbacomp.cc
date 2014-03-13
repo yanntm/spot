@@ -18,6 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dtgbacomp.hh"
+#include "fas.hh"
 #include "ltlast/constant.hh"
 #include "reachiter.hh"
 
@@ -34,13 +35,17 @@ namespace spot
       bdd_dict* dict_;
       tgba_explicit_number* out_;
       int num_acc_;
+      fas get_fas_;
+      bool use_fas_;
 
       typedef state_explicit_number::transition trans;
     public:
-      dtgbacomp_iter(const tgba* a)
+      dtgbacomp_iter(const tgba* a, bool use_fas)
 	: tgba_reachable_iterator_depth_first_stack(a),
 	  dict_(a->get_dict()),
-	  out_(new tgba_explicit_number(dict_))
+	  out_(new tgba_explicit_number(dict_)),
+          get_fas_(a),
+          use_fas_(use_fas)
       {
 	dict_->register_all_variables_of(a, out_);
 	orig_acc_ = a->all_acceptance_conditions();
@@ -52,6 +57,8 @@ namespace spot
 	  (ltl::constant::true_instance(), out_);
 	acc_ = bdd_ithvar(accvar);
 	out_->set_acceptance_conditions(acc_);
+        if (use_fas)
+          get_fas_.build();
       }
 
       tgba_explicit_number*
@@ -90,8 +97,8 @@ namespace spot
       }
 
       void
-      process_link(const state*, int in,
-		   const state*, int out,
+      process_link(const state* in_s, int in,
+		   const state* out_s, int out,
 		   const tgba_succ_iterator* si)
       {
 	assert(in > 0);
@@ -111,7 +118,8 @@ namespace spot
 	// labeled S*-NUM_ACC, S*-NUM_ACC+1, ... S*-NUM_ACC+(NUM_ACC-1),
 	if (a != orig_acc_)
 	  {
-	    bool backlink = on_stack(out);
+            bool backlink = use_fas_ ? get_fas_(in_s, out_s) ||
+                            in == out : on_stack(out);
 	    int add = 0;
 	    if (a == bddfalse)
 	      a = all_neg_;
@@ -127,7 +135,7 @@ namespace spot
 		    t2->condition = si->current_condition();
 		    t2->acceptance_conditions = acc_;
 
-		    if (backlink)
+                    if(backlink)
 		      {
 			// Since we are closing a cycle, add
 			// a non-deterministic transition from
@@ -164,9 +172,9 @@ namespace spot
 
   } // anonymous
 
-  tgba_explicit_number* dtgba_complement(const tgba* aut)
+  tgba_explicit_number* dtgba_complement(const tgba* aut, bool use_fas)
   {
-    dtgbacomp_iter dci(aut);
+    dtgbacomp_iter dci(aut, use_fas);
     dci.run();
     return dci.result();
   }
