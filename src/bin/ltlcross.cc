@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013 Laboratoire de Recherche et Développement
+// Copyright (C) 2012, 2013, 2014 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -40,6 +40,8 @@
 #include "neverparse/public.hh"
 #include "dstarparse/public.hh"
 #include "ltlast/unop.hh"
+#include "ltlast/constant.hh"
+#include "ltlparse/public.hh"
 #include "ltlvisit/tostring.hh"
 #include "ltlvisit/apcollect.hh"
 #include "ltlvisit/lbt.hh"
@@ -57,6 +59,7 @@
 #include "misc/formater.hh"
 #include "tgbaalgos/stats.hh"
 #include "tgbaalgos/isdet.hh"
+#include "tgba/univmodel.hh"
 #include "misc/escape.hh"
 #include "misc/hash.hh"
 #include "misc/random.hh"
@@ -94,6 +97,7 @@ Exit status:\n\
 #define OPT_COLOR 10
 #define OPT_NOCOMP 11
 #define OPT_OMIT 12
+#define OPT_UNIVERSAL 13
 
 static const argp_option options[] =
   {
@@ -145,6 +149,10 @@ static const argp_option options[] =
     { "products", OPT_PRODUCTS, "[+]INT", 0,
       "number of products to perform (1 by default), statistics will be "
       "averaged unless the number is prefixed with '+'", 0 },
+    { "universal" , OPT_UNIVERSAL, "[FORMULA]", OPTION_ARG_OPTIONAL,
+      "make the product with a universal model instead of a random "
+      "state-space, optionally restricting the model to states matching "
+      "FORMULA", 0 },
     /**************************************************/
     { 0, 0, 0, 0, "Statistics output:", 6 },
     { "json", OPT_JSON, "FILENAME", OPTION_ARG_OPTIONAL,
@@ -206,6 +214,7 @@ unsigned products = 1;
 bool products_avg = true;
 bool opt_omit = false;
 bool has_sr = false; // Has Streett or Rabin automata to process.
+const spot::ltl::formula* opt_universal;
 
 struct translator_spec
 {
@@ -530,6 +539,19 @@ parse_opt(int key, char* arg, struct argp_state*)
     case OPT_JSON:
       want_stats = true;
       json_output = arg ? arg : "-";
+      break;
+    case OPT_UNIVERSAL:
+      if (arg)
+	{
+	  spot::ltl::parse_error_list pel;
+	  opt_universal = spot::ltl::parse(arg, pel);
+	  if (spot::ltl::format_parse_errors(std::cerr, arg, pel))
+	    error(2, 0, "incorrect argument for --universal");
+	}
+      else
+	{
+	  opt_universal = spot::ltl::constant::true_instance();
+	}
       break;
     case OPT_PRODUCTS:
       if (*arg == '+')
@@ -1182,7 +1204,13 @@ namespace
     state_set s;
     states_in_acc(pos, sspace, s);
     states_in_acc(neg, sspace, s);
-    bool res = s.size() == states;
+    bool res;
+    if (!opt_universal)
+      res = s.size() == states;
+    else
+      // Universal models that have more than one state have an extra
+      // initial state that does not belong to any cycle.
+      res = s.size() == states - (states != 1);
     state_set::iterator it;
     for (it = s.begin(); it != s.end(); ++it)
       (*it)->destroy();
@@ -1405,8 +1433,16 @@ namespace
 	{
 	  // build a random state-space.
 	  spot::srand(seed);
-	  spot::tgba* statespace = spot::random_graph(states, density,
-						      ap, &dict);
+	  spot::tgba* statespace;
+	  if (opt_universal)
+	    {
+	      statespace = spot::universal_model(&dict, ap, opt_universal);
+	      states = spot::stats_reachable(statespace).states;
+	    }
+	  else
+	    {
+	      statespace = spot::random_graph(states, density, ap, &dict);
+	    }
 
 	  // Products of the state space with the positive automata.
 	  std::vector<spot::tgba*> pos_prod(m);
