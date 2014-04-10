@@ -47,7 +47,8 @@ check_PROGRAMS = \
   readsat \
   taatgba \
   tgbaread \
-  tripprod
+  tripprod \
+  univ
 
 # Keep this sorted alphabetically.
 bddprod_SOURCES  = ltlprod.cc
@@ -71,6 +72,7 @@ readsat_SOURCES = readsat.cc
 taatgba_SOURCES = taatgba.cc
 tgbaread_SOURCES = tgbaread.cc
 tripprod_SOURCES = tripprod.cc
+univ_SOURCES = univ.cc
 
 # Keep this sorted by STRENGTH.  Test basic things first,
 # because such failures will be easier to diagnose and fix.
