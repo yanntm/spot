@@ -121,6 +121,7 @@ TESTS = \
   wdba2.test \
   babiak.test \
   ltlcross4.test \
+  univtrim.test \
   ltl2dstar.test \
   ltl2dstar2.test \
   randtgba.test \

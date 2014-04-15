@@ -315,6 +315,9 @@ struct statistics
       states(0),
       edges(0),
       transitions(0),
+      trim_states(0),
+      trim_edges(0),
+      trim_transitions(0),
       acc(0),
       scc(0),
       nonacc_scc(0),
@@ -346,6 +349,9 @@ struct statistics
   unsigned states;
   unsigned edges;
   unsigned transitions;
+  unsigned trim_states;
+  unsigned trim_edges;
+  unsigned trim_transitions;
   unsigned acc;
   unsigned scc;
   unsigned nonacc_scc;
@@ -360,6 +366,8 @@ struct statistics
   std::vector<double> product_states;
   std::vector<double> product_transitions;
   std::vector<double> product_scc;
+  std::vector<double> product_trim_states;
+  std::vector<double> product_trim_transitions;
 
   static void
   fields(std::ostream& os, bool show_exit, bool show_sr)
@@ -373,6 +381,9 @@ struct statistics
     os << ("\"states\","
 	   "\"edges\","
 	   "\"transitions\","
+	   "\"trim_states\","
+	   "\"trim_edges\","
+	   "\"trim_transitions\","
 	   "\"acc\","
 	   "\"scc\","
 	   "\"nonacc_scc\","
@@ -386,7 +397,9 @@ struct statistics
 	   "\"strong_aut\"");
     size_t m = products_avg ? 1U : products;
     for (size_t i = 0; i < m; ++i)
-      os << ",\"product_states\",\"product_transitions\",\"product_scc\"";
+      os << (",\"product_states\",\"product_transitions\","
+	     "\"product_trim_states\",\"product_trim_transitions\","
+	     "\"product_scc\"");
   }
 
   void
@@ -410,6 +423,9 @@ struct statistics
 	os << states << ','
 	   << edges << ','
 	   << transitions << ','
+	   << trim_states << ','
+	   << trim_edges << ','
+	   << trim_transitions << ','
 	   << acc << ','
 	   << scc << ','
 	   << nonacc_scc << ','
@@ -426,29 +442,37 @@ struct statistics
 	    for (size_t i = 0; i < products; ++i)
 	      os << ',' << product_states[i]
 		 << ',' << product_transitions[i]
+		 << ',' << product_trim_states[i]
+		 << ',' << product_trim_transitions[i]
 		 << ',' << product_scc[i];
 	  }
 	else
 	  {
 	    double st = 0.0;
 	    double tr = 0.0;
+	    double tst = 0.0;
+	    double ttr = 0.0;
 	    double sc = 0.0;
 	    for (size_t i = 0; i < products; ++i)
 	      {
 		st += product_states[i];
 		tr += product_transitions[i];
+		tst += product_trim_states[i];
+		ttr += product_trim_transitions[i];
 		sc += product_scc[i];
 	      }
 	    os << ',' << (st / products)
 	       << ',' << (tr / products)
+	       << ',' << (tst / products)
+	       << ',' << (ttr / products)
 	       << ',' << (sc / products);
 	  }
       }
     else
       {
 	size_t m = products_avg ? 1U : products;
-	m *= 3;
-	m += 13 + show_sr * 6;
+	m *= 5;
+	m += 16 + show_sr * 6;
 	os << na;
 	for (size_t i = 0; i < m; ++i)
 	  os << ',' << na;
@@ -1035,10 +1059,18 @@ namespace
 	  if (res)
 	    {
 	      st->ok = true;
-	      spot::tgba_sub_statistics s = sub_stats_reachable(res);
-	      st->states = s.states;
-	      st->edges = s.transitions;
-	      st->transitions = s.sub_transitions;
+	      {
+		spot::tgba_sub_statistics s = sub_stats_reachable(res);
+		st->states = s.states;
+		st->edges = s.transitions;
+		st->transitions = s.sub_transitions;
+	      }
+	      {
+		spot::tgba_sub_statistics s = sub_stats_prefixtrim(res);
+		st->trim_states= s.states;
+		st->trim_edges = s.transitions;
+		st->trim_transitions = s.sub_transitions;
+	      }
 	      st->acc = res->number_of_acceptance_conditions();
 	      spot::scc_map m(res);
 	      m.build_map();
@@ -1421,11 +1453,15 @@ namespace
 	  {
 	    (*pstats)[i].product_states.reserve(products);
 	    (*pstats)[i].product_transitions.reserve(products);
+	    (*pstats)[i].product_trim_states.reserve(products);
+	    (*pstats)[i].product_trim_transitions.reserve(products);
 	    (*pstats)[i].product_scc.reserve(products);
 	    if (neg[i])
 	      {
 		(*nstats)[i].product_states.reserve(products);
 		(*nstats)[i].product_transitions.reserve(products);
+		(*nstats)[i].product_trim_states.reserve(products);
+		(*nstats)[i].product_trim_transitions.reserve(products);
 		(*nstats)[i].product_scc.reserve(products);
 	      }
 	  }
@@ -1464,9 +1500,14 @@ namespace
 		if (want_stats)
 		  {
 		    (*pstats)[i].product_scc.push_back(sm->scc_count());
-		    spot::tgba_statistics s = spot::stats_reachable(p);
-		    (*pstats)[i].product_states.push_back(s.states);
-		    (*pstats)[i].product_transitions.push_back(s.transitions);
+		    spot::tgba_statistics s1 = spot::stats_reachable(p);
+		    (*pstats)[i].product_states.push_back(s1.states);
+		    (*pstats)[i].product_transitions.push_back(s1.transitions);
+		    spot::tgba_sub_statistics s2 =
+		      spot::sub_stats_prefixtrim(p);
+		    (*pstats)[i].product_trim_states.push_back(s2.states);
+		    (*pstats)[i].product_trim_transitions.push_back
+		      (s2.transitions);
 		  }
 	      }
 
@@ -1484,9 +1525,15 @@ namespace
 		  if (want_stats)
 		    {
 		      (*nstats)[i].product_scc.push_back(sm->scc_count());
-		      spot::tgba_statistics s = spot::stats_reachable(p);
-		      (*nstats)[i].product_states.push_back(s.states);
-		      (*nstats)[i].product_transitions.push_back(s.transitions);
+		      spot::tgba_statistics s1 = spot::stats_reachable(p);
+		      (*nstats)[i].product_states.push_back(s1.states);
+		      (*nstats)[i].product_transitions.push_back
+			(s1.transitions);
+		      spot::tgba_sub_statistics s2 =
+			spot::sub_stats_prefixtrim(p);
+		      (*nstats)[i].product_trim_states.push_back(s2.states);
+		      (*nstats)[i].product_trim_transitions.push_back
+			(s2.transitions);
 		    }
 		}
 

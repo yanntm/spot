@@ -1,7 +1,8 @@
-// Copyright (C) 2008, 2011, 2012, 2013 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// -*- coding: utf-8 -*-
+// Copyright (C) 2008, 2011, 2012, 2013, 2014 Laboratoire de Recherche
+// et DÃ©veloppement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
-// département Systèmes Répartis Coopératifs (SRC), Université Pierre
+// dÃ©partement SystÃ¨mes RÃ©partis CoopÃ©ratifs (SRC), UniversitÃ© Pierre
 // et Marie Curie.
 //
 // This file is part of Spot, a model checking library.
@@ -94,10 +95,39 @@ namespace spot
 	  }
       }
 
-    private:
+    protected:
       tgba_sub_statistics& s_;
       bdd seen_;
     };
+
+
+    class trim_sub_stats_bfs: public sub_stats_bfs
+    {
+      state_set& ignore_;
+    public:
+      trim_sub_stats_bfs(const tgba* a, tgba_sub_statistics& s,
+			 state_set& ignore)
+	: sub_stats_bfs(a, s), ignore_(ignore)
+      {
+      }
+
+      void
+      process_state(const state* s, int, tgba_succ_iterator*)
+      {
+	if (ignore_.find(s) == ignore_.end())
+	  ++s_.states;
+      }
+
+      void
+      process_link(const state* s, int ns, const state* d, int nd,
+		   const tgba_succ_iterator* it)
+      {
+	if (ignore_.find(s) != ignore_.end())
+	  return;
+	this->sub_stats_bfs::process_link(s, ns, d, nd, it);
+      }
+    };
+
   } // anonymous
 
 
@@ -129,6 +159,57 @@ namespace spot
   {
     tgba_sub_statistics s;
     sub_stats_bfs d(g, s);
+    d.run();
+    return s;
+  }
+
+  tgba_sub_statistics
+  sub_stats_prefixtrim(const tgba* g)
+  {
+    scc_map m(g);
+    m.build_map();
+    unsigned scc_count = m.scc_count();
+
+    // SCCs are topologically sorted, with
+    // scc_count - 1 being the initial SCC.
+    assert(m.initial() == scc_count - 1);
+
+    // No prefix to trim?
+    if (!m.trivial(scc_count - 1))
+      return sub_stats_reachable(g);
+
+    // Assume all SCC have to be trimmed.
+    std::vector<bool> to_trim(scc_count, true);
+
+    // All non-trivial SCCs and their descendants must be kept.
+    for (unsigned s = scc_count - 1; s > 0; --s)
+      {
+	if (!m.trivial(s))
+	  to_trim[s] = false;
+	if (!to_trim[s])
+	  {
+	    const scc_map::succ_type& succ = m.succ(s);
+	    for (scc_map::succ_type::const_iterator j = succ.begin();
+		 j != succ.end(); ++j)
+	      to_trim[j->first] = false;
+	  }
+      }
+    // It's OK to not process s=0 in the above loop because SCC 0
+    // cannot have any successor.
+    assert(m.succ(0).empty());
+    if (!m.trivial(0))
+      to_trim[0] = false;
+
+    state_set to_ignore;
+    for (unsigned s = 0; s < scc_count; ++s)
+      if (to_trim[s])
+	{
+	  const std::list<const state*>& l = m.states_of(s);
+	  to_ignore.insert(l.begin(), l.end());
+	}
+
+    tgba_sub_statistics s;
+    trim_sub_stats_bfs d(g, s, to_ignore);
     d.run();
     return s;
   }

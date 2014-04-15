@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2011, 2012, 2013 Laboratoire de Recherche et
+// Copyright (C) 2008, 2011, 2012, 2013, 2014 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -54,6 +54,14 @@ namespace spot
   SPOT_API tgba_statistics stats_reachable(const tgba* g);
   /// \brief Compute subended statistics for an automaton.
   SPOT_API tgba_sub_statistics sub_stats_reachable(const tgba* g);
+
+
+  /// \brief Statistics for our SPIN'14 paper.
+  ///
+  /// Same as sub_stats_reachable() but ignore all states that cannot
+  /// be reached after passing through any cycle.  (Those states
+  /// necessarily form finite prefixes of the languages.)
+  SPOT_API tgba_sub_statistics sub_stats_prefixtrim(const tgba* g);
 
 
   class SPOT_API printable_formula: public printable_value<const ltl::formula*>
