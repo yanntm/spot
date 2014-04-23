@@ -135,7 +135,7 @@ namespace spot
 		    t2->condition = si->current_condition();
 		    t2->acceptance_conditions = acc_;
 
-                    if(backlink)
+                    if (backlink)
 		      {
 			// Since we are closing a cycle, add
 			// a non-deterministic transition from

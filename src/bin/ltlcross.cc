@@ -94,6 +94,7 @@ Exit status:\n\
 #define OPT_COLOR 10
 #define OPT_NOCOMP 11
 #define OPT_OMIT 12
+#define OPT_FAS 13
 
 static const argp_option options[] =
   {
@@ -159,6 +160,8 @@ static const argp_option options[] =
       "colorize output; WHEN can be 'never', 'always' (the default if "
       "--color is used without argument), or "
       "'auto' (the default if --color is not used)", 0 },
+    { "FAS", OPT_FAS, 0, 0,
+      "When complementing, use feed back arc-set algorithm:", 0 },
     { 0, 0, 0, 0, 0, 0 }
   };
 
@@ -206,6 +209,7 @@ unsigned products = 1;
 bool products_avg = true;
 bool opt_omit = false;
 bool has_sr = false; // Has Streett or Rabin automata to process.
+bool use_fas = false; // For dtgba_complement
 
 struct translator_spec
 {
@@ -498,6 +502,9 @@ parse_opt(int key, char* arg, struct argp_state*)
   // This switch is alphabetically-ordered.
   switch (key)
     {
+    case OPT_FAS:
+      use_fas = true;
+      break;
     case 't':
     case ARGP_KEY_ARG:
       translators.push_back(arg);
@@ -1291,7 +1298,7 @@ namespace
 	  if (!no_complement && pos[n]
 	      && ((want_stats && !(*pstats)[n].nondeterministic)
 		  || (!want_stats && is_deterministic(pos[n]))))
-	    comp_pos[n] = dtgba_complement(pos[n]);
+	    comp_pos[n] = dtgba_complement(pos[n], use_fas);
 	}
 
       // ---------- Negative Formula ----------
@@ -1329,7 +1336,7 @@ namespace
 	      if (!no_complement && neg[n]
 		  && ((want_stats && !(*nstats)[n].nondeterministic)
 		      || (!want_stats && is_deterministic(neg[n]))))
-		comp_neg[n] = dtgba_complement(neg[n]);
+		comp_neg[n] = dtgba_complement(neg[n], use_fas);
 	    }
 	  nf->destroy();
 	}

@@ -489,7 +489,7 @@ main(int argc, char** argv)
 	{
 	  opt_dtgbacomp = true;
 	}
-      else if (!strcmp(argv[formula_index], "-FAS"))
+      else if (!strcmp(argv[formula_index], "--FAS"))
 	{
 	  opt_fas = true;
 	}

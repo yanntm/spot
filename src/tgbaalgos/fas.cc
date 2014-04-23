@@ -47,38 +47,30 @@ namespace spot
     // Need to push_front, will push_back and iterate backwards
     // s2 contains Sources and deltas.
     std::vector<const spot::state*> s2;
-    // Used to get every sinks, and sources.
-    std::vector<spot::graph::bidistate*> container;
     unsigned counter = bdg.get_bidistates().size();
     while (counter)
       {
         // At each iteration we delete every sinks, update the graph, and check
         // for new sinks.
-        std::vector<spot::graph::bidistate*>& sinks = bdg.get_sinks();
-        while (!sinks.empty())
+        spot::graph::bidistate* sink;
+        while ((sink = bdg.pop_sink()))
           {
-            spot::graph::bidistate* sink = sinks.back();
-            sinks.pop_back();
             const spot::state* tgba_sink = bdg.get_tgba_state(sink);
             s2.emplace_back(tgba_sink);
             bdg.remove_state(sink);
             --counter;
           }
-        std::vector<spot::graph::bidistate*>& sources = bdg.get_sources();
-        while (!sources.empty())
+        spot::graph::bidistate* source;
+        while ((source = bdg.pop_source()))
           {
-            spot::graph::bidistate* source = sources.back();
-            sources.pop_back();
             const spot::state* tgba_source = bdg.get_tgba_state(source);
             ordered_states[tgba_source] = order++;
             bdg.remove_state(source);
             --counter;
           }
-        graph::bidigraph_states& max_deltas = bdg.get_max_delta();
-        if (!max_deltas.empty())
+        spot::graph::bidistate* delta = bdg.pop_max_delta();
+        if (delta)
           {
-            spot::graph::bidistate* delta = max_deltas.back();
-            max_deltas.pop_back();
             const spot::state* tgba_delta = bdg.get_tgba_state(delta);
             ordered_states[tgba_delta] = order++;
             bdg.remove_state(delta);
