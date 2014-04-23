@@ -51,7 +51,7 @@ namespace spot
 
   private:
     const spot::tgba* aut_;
-    std::unordered_map<const spot::state*, unsigned, const spot::state_ptr_hash,
+    std::unordered_map<const spot::state*, unsigned, spot::state_ptr_hash,
                        spot::state_ptr_equal> ordered_states;
   };
 }

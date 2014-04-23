@@ -21,6 +21,7 @@
 #include "fas.hh"
 #include "ltlast/constant.hh"
 #include "reachiter.hh"
+#include "tgba/tgbamask.hh"
 
 namespace spot
 {
@@ -35,8 +36,8 @@ namespace spot
       bdd_dict* dict_;
       tgba_explicit_number* out_;
       int num_acc_;
-      fas get_fas_;
       bool use_fas_;
+      std::vector<fas> get_fas_;
 
       typedef state_explicit_number::transition trans;
     public:
@@ -44,8 +45,8 @@ namespace spot
 	: tgba_reachable_iterator_depth_first_stack(a),
 	  dict_(a->get_dict()),
 	  out_(new tgba_explicit_number(dict_)),
-          get_fas_(a),
-          use_fas_(use_fas)
+          use_fas_(use_fas),
+          get_fas_()
       {
 	dict_->register_all_variables_of(a, out_);
 	orig_acc_ = a->all_acceptance_conditions();
@@ -58,7 +59,23 @@ namespace spot
 	acc_ = bdd_ithvar(accvar);
 	out_->set_acceptance_conditions(acc_);
         if (use_fas)
-          get_fas_.build();
+          {
+            get_fas_.reserve(num_acc_);
+            bdd all = a->all_acceptance_conditions();
+            while (all != bddfalse)
+              {
+                bdd one = bdd_satone(all);
+                all -= one;
+
+                const spot::tgba* masked =
+                                     spot::build_tgba_mask_acc_ignore(a, one);
+                fas my_fas(masked);
+                my_fas.build();
+                delete masked;
+                get_fas_.push_back(my_fas);
+              }
+            assert(get_fas_.size() == a->number_of_acceptance_conditions());
+          }
       }
 
       tgba_explicit_number*
@@ -118,8 +135,6 @@ namespace spot
 	// labeled S*-NUM_ACC, S*-NUM_ACC+1, ... S*-NUM_ACC+(NUM_ACC-1),
 	if (a != orig_acc_)
 	  {
-            bool backlink = use_fas_ ? get_fas_(in_s, out_s) ||
-                            in == out : on_stack(out);
 	    int add = 0;
 	    if (a == bddfalse)
 	      a = all_neg_;
@@ -135,6 +150,8 @@ namespace spot
 		    t2->condition = si->current_condition();
 		    t2->acceptance_conditions = acc_;
 
+                    bool backlink = use_fas_ ? get_fas_[add](in_s, out_s) ||
+                                    in == out : on_stack(out);
                     if (backlink)
 		      {
 			// Since we are closing a cycle, add
