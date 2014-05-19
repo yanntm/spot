@@ -41,6 +41,7 @@ int main(int argc, char* argv[])
   spot::tgba* a = spot::ltl_to_tgba_fm(f, dict);
 
   spot::graph::bidigraph* bdg = new spot::graph::bidigraph(a, true);
+  bdg->build();
   std::cout << *bdg;
 
   delete bdg;

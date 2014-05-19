@@ -37,7 +37,39 @@ namespace spot
         do_loops_(do_loops),
         max_index_(0),
         max_out_(0),
-        max_in_(0)
+        max_in_(0),
+        scc_index_(-1),
+        scc_(nullptr)
+    {
+    }
+
+    bidigraph::bidigraph(const tgba* g, bool do_loops, spot::scc_map* scc,
+                         int scc_index)
+        : tgba_reachable_iterator(g),
+        do_loops_(do_loops),
+        max_index_(0),
+        max_out_(0),
+        max_in_(0),
+        scc_index_(scc_index),
+        scc_(scc)
+    {
+      std::unordered_map<int, unsigned> nb_sub_tr;
+      bdd ap = scc_->ap_set_of(scc_index_);
+      for (bdd cond : scc_->cond_set_of(scc_index_))
+        {
+          unsigned count = 0;
+          int bdd_id = cond.id();
+          while (cond != bddfalse)
+            {
+              cond -= bdd_satoneset(cond, ap, bddtrue);
+              ++count;
+            }
+          nb_sub_tr_[bdd_id] = count;
+        }
+    }
+
+    void
+    bidigraph::build()
     {
       run();
       // Compute max_out_ and max_in_ degree for every node of graph
@@ -108,15 +140,21 @@ namespace spot
     void
     bidigraph::process_link(const state* in_s, int in,
                             const state* out_s, int out,
-                            const tgba_succ_iterator*)
+                            const tgba_succ_iterator* it)
     {
       bidistate* src = get_bidistate(in_s);
       bidistate* dst = get_bidistate(out_s);
       // Ignore loops.
       if (do_loops_ || in != out)
         {
-          src->add_succ(dst);
-          dst->add_pred(src);
+          bdd cond = it->current_condition();
+          unsigned count = scc_index_ == -1 ? 1 : nb_sub_tr_[cond.id()];
+          // add arc for each sub transition if an scc_ was given
+          for (unsigned i = 0; i < count; ++i)
+            {
+              src->add_succ(dst);
+              dst->add_pred(src);
+            }
         }
     }
 

@@ -25,7 +25,9 @@
 
 # include "tgba/state.hh"
 # include "tgba/tgba.hh"
+# include "tgbaalgos/scc.hh"
 # include <utility>
+# include "graph/bidigraph.hh"
 # include <vector>
 
 namespace spot
@@ -53,6 +55,11 @@ namespace spot
     const spot::tgba* aut_;
     std::unordered_map<const spot::state*, unsigned, spot::state_ptr_hash,
                        spot::state_ptr_equal> ordered_states;
+    // SCC of aut_ allowing FAS to be applied on each one of these individually
+    spot::scc_map scc_;
+
+    // Compute fas on a sub-part of the graph, one of its SCCs
+    void worker_build(spot::graph::bidigraph& bdg, unsigned& order);
   };
 }
 

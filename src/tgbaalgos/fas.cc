@@ -21,6 +21,7 @@
 #include "graph/bidigraph.hh"
 #include "tgba/state.hh"
 #include "tgba/succiter.hh"
+#include "tgba/tgbamask.hh"
 #include <algorithm>
 #include <climits>
 #include <vector>
@@ -32,7 +33,7 @@ namespace spot
   {
     // States are ordered from 0, ..., n. The transitions form j -> i with
     // j > i belong to the fas.
-    return ordered_states[src] > ordered_states[dst];
+    return ordered_states[src] < ordered_states[dst];
   }
 
   fas::~fas()
@@ -42,8 +43,28 @@ namespace spot
   void
   fas::build()
   {
+    // Counter associated with number of spot::state*
     unsigned order = 0;
-    spot::graph::bidigraph bdg(aut_, false);
+    scc_.build_map();
+    // Number of SCCs in aut_
+    unsigned scc_count = scc_.scc_count();
+    for (unsigned current_scc = 0; current_scc < scc_count; ++current_scc)
+      {
+        std::list<const spot::state*> state_list = scc_.states_of(current_scc);
+        const state_set to_keep(state_list.begin(), state_list.end());
+        // Create SCC component, initial state is any of the SCC
+        const spot::tgba* scc_aut = build_tgba_mask_keep(aut_, to_keep,
+                                                         state_list.front());
+        spot::graph::bidigraph bdg(scc_aut, false, &scc_, current_scc);
+        bdg.build();
+        worker_build(bdg, order);
+        delete scc_aut;
+      }
+  }
+
+  void
+  fas::worker_build(spot::graph::bidigraph& bdg, unsigned& order)
+  {
     // Need to push_front, will push_back and iterate backwards
     // s2 contains Sources and deltas.
     std::vector<const spot::state*> s2;
@@ -56,7 +77,7 @@ namespace spot
         while ((sink = bdg.pop_sink()))
           {
             const spot::state* tgba_sink = bdg.get_tgba_state(sink);
-            s2.emplace_back(tgba_sink);
+            ordered_states[tgba_sink] = order++;
             bdg.remove_state(sink);
             --counter;
           }
@@ -64,7 +85,7 @@ namespace spot
         while ((source = bdg.pop_source()))
           {
             const spot::state* tgba_source = bdg.get_tgba_state(source);
-            ordered_states[tgba_source] = order++;
+            s2.emplace_back(tgba_source);
             bdg.remove_state(source);
             --counter;
           }
@@ -72,7 +93,7 @@ namespace spot
         if (delta)
           {
             const spot::state* tgba_delta = bdg.get_tgba_state(delta);
-            ordered_states[tgba_delta] = order++;
+            s2.emplace_back(tgba_delta);
             bdg.remove_state(delta);
             --counter;
           }
@@ -82,7 +103,7 @@ namespace spot
   }
 
   fas::fas(const spot::tgba* g)
+    : aut_(g), scc_(g)
   {
-    aut_ = g;
   }
 }

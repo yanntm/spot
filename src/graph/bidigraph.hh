@@ -23,8 +23,9 @@
 # include "misc/common.hh"
 # include "tgba/state.hh"
 # include "tgbaalgos/reachiter.hh"
-# include <unordered_map>
+# include "tgbaalgos/scc.hh"
 # include <deque>
+# include <unordered_map>
 # include <vector>
 
 namespace spot
@@ -143,8 +144,12 @@ namespace spot
       /// destructor before destroying the \a tgba and it's corresponding
       /// dictionary.
       bidigraph(const tgba* g, bool do_loops);
+      bidigraph(const tgba* g, bool do_loops, spot::scc_map* scc,
+                int scc_index);
       ~bidigraph();
       void remove_state(bidistate* s);
+      // Initialise graph, and build it from tgba*
+      void build();
 
       /// From a tgba state's hash, get a list of bidistate*. To get the
       /// correct bidistate*, iterate through a list of bidistate*.
@@ -179,6 +184,12 @@ namespace spot
       unsigned max_out_;
       // Maximum in degree found in graph
       unsigned max_in_;
+      // SCC of aut_ to count the number of sub transitions
+      int scc_index_;
+      // SCC of aut_ to count the number of sub transitions
+      const spot::scc_map* scc_;
+      // given a BDD's id, return number of sub transitions
+      std::unordered_map<int, unsigned> nb_sub_tr_;
 
       bidigraph_states states_;
       // deltas_[0] are sinks

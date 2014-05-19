@@ -61,18 +61,18 @@ namespace spot
         if (use_fas)
           {
             get_fas_.reserve(num_acc_);
-            bdd all = a->all_acceptance_conditions();
-            while (all != bddfalse)
-              {
-                bdd one = bdd_satone(all);
-                all -= one;
+            bdd allneg = a->neg_acceptance_conditions();
 
+            for (bdd cur = allneg; cur != bddtrue; cur = bdd_low(cur))
+              {
+                int i = bdd_var(cur);
+                bdd one = bdd_compose(allneg, bdd_nithvar(i), i);
                 const spot::tgba* masked =
                                      spot::build_tgba_mask_acc_ignore(a, one);
                 fas my_fas(masked);
                 my_fas.build();
-                delete masked;
                 get_fas_.push_back(my_fas);
+                delete masked;
               }
             assert(get_fas_.size() == a->number_of_acceptance_conditions());
           }

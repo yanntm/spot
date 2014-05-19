@@ -44,7 +44,7 @@ digraph G {
   1 -> 2 [color="red"]
   2 [label="1"]
   2 -> 1 []
-  2 -> 3 [color="red"]
+  2 -> 3 []
   3 [label="3"]
   3 -> 4 []
   3 -> 5 []
@@ -60,6 +60,47 @@ EOF
 
 run 0 ../fas in.spot > out.gv
 cmp out.gv out.exp
+
+# Check that sub_transition are taken into consideration
+cat << EOF > in_bis.spot
+acc = "2";
+"2", "1", "a", "";
+"1", "2", "a", "";
+"1", "3", "a", "";
+
+"3", "4", "a", "";
+"3", "5", "a", "";
+"3", "6", "a", "";
+"6", "5", "a", "";
+
+"4", "5", "a", "";
+"5", "4", "a & b", "";
+EOF
+
+cat << EOF > out_bis.exp
+digraph G {
+  0 [label="", style=invis, height=0]
+  0 -> 1
+  1 [label="2"]
+  1 -> 2 [color="red"]
+  2 [label="1"]
+  2 -> 1 []
+  2 -> 3 []
+  3 [label="3"]
+  3 -> 4 []
+  3 -> 5 []
+  3 -> 6 []
+  4 [label="4"]
+  4 -> 5 []
+  5 [label="5"]
+  5 -> 4 [color="red"]
+  6 [label="6"]
+  6 -> 5 []
+}
+EOF
+
+run 0 ../fas in_bis.spot > out_bis.gv
+cmp out_bis.gv out_bis.exp
 
 cat << EOF > in2.spot
 acc = "2";
