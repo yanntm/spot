@@ -59,6 +59,7 @@
 #include "misc/formater.hh"
 #include "tgbaalgos/stats.hh"
 #include "tgbaalgos/isdet.hh"
+#include "tgbaalgos/nondet.hh"
 #include "tgba/univmodel.hh"
 #include "misc/escape.hh"
 #include "misc/hash.hh"
@@ -325,6 +326,7 @@ struct statistics
       weak_scc(0),
       strong_scc(0),
       nondetstates(0),
+      nondetmetric(0.0),
       nondeterministic(false),
       terminal_aut(false),
       weak_aut(false),
@@ -359,6 +361,7 @@ struct statistics
   unsigned weak_scc;
   unsigned strong_scc;
   unsigned nondetstates;
+  double nondetmetric;
   bool nondeterministic;
   bool terminal_aut;
   bool weak_aut;
@@ -391,6 +394,7 @@ struct statistics
 	   "\"weak_scc\","
 	   "\"strong_scc\","
 	   "\"nondet_states\","
+	   "\"nondet_metric\","
 	   "\"nondet_aut\","
 	   "\"terminal_aut\","
 	   "\"weak_aut\","
@@ -433,6 +437,7 @@ struct statistics
 	   << weak_scc << ','
 	   << strong_scc << ','
 	   << nondetstates << ','
+	   << nondetmetric << ','
 	   << nondeterministic << ','
 	   << terminal_aut << ','
 	   << weak_aut << ','
@@ -1077,6 +1082,7 @@ namespace
 	      unsigned c = m.scc_count();
 	      st->scc = c;
 	      st->nondetstates = spot::count_nondet_states(res);
+	      st->nondetmetric = spot::nondet_metric(res, st->states * 25);
 	      st->nondeterministic = st->nondetstates != 0;
 	      for (unsigned n = 0; n < c; ++n)
 		{

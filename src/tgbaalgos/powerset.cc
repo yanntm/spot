@@ -1,4 +1,4 @@
-// Copyright (C) 2009, 2010, 2011, 2013 Laboratoire de Recherche et
+// Copyright (C) 2009, 2010, 2011, 2013, 2014 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -60,6 +60,7 @@ namespace spot
       todo.push_back(ps);
       seen[ps] = 1;
       pm.map_[1] = ps;
+      res->set_init_state(1);
     }
 
     unsigned state_num = 1;

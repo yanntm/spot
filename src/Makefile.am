@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2009, 2010, 2012, 2013 Laboratoire de Recherche et
+## Copyright (C) 2009, 2010, 2012, 2013, 2014 Laboratoire de Recherche et
 ## Développement de l'Epita (LRDE).
 ## Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 ## département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -32,7 +32,7 @@ SUBDIRS = misc priv ltlenv ltlast ltlvisit ltlparse eltlparse tgba	\
 
 lib_LTLIBRARIES = libspot.la
 libspot_la_SOURCES =
-libspot_la_LDFLAGS = $(BUDDY_LDFLAGS) -no-undefined
+libspot_la_LDFLAGS = $(BUDDY_LDFLAGS) -no-undefined -larmadillo
 libspot_la_LIBADD =  \
   dstarparse/libdstarparse.la \
   eltlparse/libeltlparse.la \

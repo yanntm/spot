@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Laboratoire
-// de Recherche et Développement de l'Epita (LRDE).
+// Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014
+// Laboratoire de Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006, 2007 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis
 // Coopératifs (SRC), Université Pierre et Marie Curie.
@@ -74,6 +74,7 @@
 #include "tgbaalgos/complete.hh"
 #include "tgbaalgos/dtbasat.hh"
 #include "tgbaalgos/dtgbasat.hh"
+#include "tgbaalgos/nondet.hh"
 
 #include "taalgos/tgba2ta.hh"
 #include "taalgos/dotty.hh"
@@ -314,6 +315,7 @@ syntax(char* prog)
 	    << std::endl
 	    << "  -NN   output the never clain for Spin, with commented states"
 	    << " (implies -DS)" << std::endl
+	    << "  -NDM  nondeterminism metric\n"
 	    << "  -O    tell if a formula represents a safety, guarantee, "
 	    << "or obligation property"
 	    << std::endl
@@ -658,6 +660,10 @@ main(int argc, char** argv)
 	  degeneralize_opt = DegenSBA;
 	  output = 8;
 	  spin_comments = true;
+	}
+      else if (!strcmp(argv[formula_index], "-NDM"))
+	{
+	  output = 17;
 	}
       else if (!strncmp(argv[formula_index], "-O", 2))
 	{
@@ -1883,7 +1889,11 @@ main(int argc, char** argv)
 		  }
 		break;
 	      }
-
+	    case 17:
+	      {
+		std::cout << nondet_metric(a, 100) << "\n";
+		break;
+	      }
 	    default:
 	      assert(!"unknown output option");
 	    }
