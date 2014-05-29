@@ -35,11 +35,11 @@ namespace spot
   ///@{
   SPOT_API tgba*
   universal_model(bdd_dict* d,
-		  ltl::atomic_prop_set* ap, bdd restrictval = bddtrue);
+		  ltl::atomic_prop_set* ap, bdd restrictval = bddtrue, bool push = false);
 
   SPOT_API tgba*
   universal_model(bdd_dict* d,
-		  ltl::atomic_prop_set* ap, const ltl::formula* restrictval);
+		  ltl::atomic_prop_set* ap, const ltl::formula* restrictval, bool push = false);
   /// }@
 }
 

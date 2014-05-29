@@ -74,13 +74,14 @@ namespace spot
 
     class universal_model_succ_iterator: public tgba_succ_iterator
     {
+      bdd source_;
       bdd vars_;
       bdd restrict_;
       bdd all_;
       bdd cur_;
     public:
-      universal_model_succ_iterator(bdd vars, bdd restrictval)
-	: vars_(vars), restrict_(restrictval), all_(restrictval), cur_(bddfalse)
+      universal_model_succ_iterator(bdd source, bdd vars, bdd restrictval)
+	: source_(source), vars_(vars), restrict_(restrictval), all_(restrictval), cur_(bddfalse)
       {
       }
 
@@ -122,7 +123,11 @@ namespace spot
       bdd
       current_condition() const
       {
-	return cur_;
+	if (source_ == bddtrue)
+	  return cur_;
+	if (source_ == bddfalse)
+	  return bddtrue;
+	return source_;
       }
 
       bdd
@@ -137,11 +142,13 @@ namespace spot
       bdd_dict* d_;
       bdd vars_;
       bdd restrict_;
+      bool push_;
     public:
       universal_model_tgba(bdd_dict* d,
 			   const ltl::atomic_prop_set* ap,
-			   bdd restrictval)
-	: d_(d), restrict_(restrictval)
+			   bdd restrictval,
+			   bool push)
+	: d_(d), restrict_(restrictval), push_(push)
       {
 	bdd vars = bddtrue;
 	for (ltl::atomic_prop_set::const_iterator i = ap->begin();
@@ -161,15 +168,23 @@ namespace spot
 
       virtual state* get_init_state() const
       {
-	return new universal_model_state(bddtrue);
+	if (push_)
+	  return new universal_model_state(bddfalse);
+	else
+	  return new universal_model_state(bddtrue);
       }
 
       virtual tgba_succ_iterator*
-      succ_iter(const state*,
+      succ_iter(const state* s,
 		const state* = 0,
 		const tgba* = 0) const
       {
-	return new universal_model_succ_iterator(vars_, restrict_);
+	if (!push_)
+	  return new universal_model_succ_iterator(bddtrue, vars_, restrict_);
+
+	const universal_model_state* us = down_cast<const universal_model_state*>(s);
+	assert(us);
+	return new universal_model_succ_iterator(us->get_label(), vars_, restrict_);
       }
 
       virtual bdd_dict*
@@ -220,18 +235,18 @@ namespace spot
 
 
   SPOT_API tgba*
-  universal_model(bdd_dict* d, ltl::atomic_prop_set* ap, bdd restrictval)
+  universal_model(bdd_dict* d, ltl::atomic_prop_set* ap, bdd restrictval, bool push)
   {
-    return new universal_model_tgba(d, ap, restrictval);
+    return new universal_model_tgba(d, ap, restrictval, push);
   }
 
 
   SPOT_API tgba*
   universal_model(bdd_dict* d, ltl::atomic_prop_set* ap,
-		  const ltl::formula* restrictval)
+		  const ltl::formula* restrictval, bool push)
   {
     ltl::ltl_simplifier l(d);
-    return universal_model(d, ap, l.as_bdd(restrictval));
+    return universal_model(d, ap, l.as_bdd(restrictval), push);
   }
 
 }

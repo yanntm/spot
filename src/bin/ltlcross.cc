@@ -150,10 +150,11 @@ static const argp_option options[] =
     { "products", OPT_PRODUCTS, "[+]INT", 0,
       "number of products to perform (1 by default), statistics will be "
       "averaged unless the number is prefixed with '+'", 0 },
-    { "universal" , OPT_UNIVERSAL, "[FORMULA]", OPTION_ARG_OPTIONAL,
+    { "universal" , OPT_UNIVERSAL, "[+][FORMULA]", OPTION_ARG_OPTIONAL,
       "make the product with a universal model instead of a random "
       "state-space, optionally restricting the model to states matching "
-      "FORMULA", 0 },
+      "FORMULA.  Use '+' to use the 'push' version of the universal "
+      "model.", 0 },
     /**************************************************/
     { 0, 0, 0, 0, "Statistics output:", 6 },
     { "json", OPT_JSON, "FILENAME", OPTION_ARG_OPTIONAL,
@@ -216,6 +217,7 @@ bool products_avg = true;
 bool opt_omit = false;
 bool has_sr = false; // Has Streett or Rabin automata to process.
 const spot::ltl::formula* opt_universal;
+bool opt_universal_push = false;
 
 struct translator_spec
 {
@@ -570,7 +572,12 @@ parse_opt(int key, char* arg, struct argp_state*)
       json_output = arg ? arg : "-";
       break;
     case OPT_UNIVERSAL:
-      if (arg)
+      if (arg && *arg == '+')
+	{
+	  opt_universal_push = true;
+	  ++arg;
+	}
+      if (arg && *arg)
 	{
 	  spot::ltl::parse_error_list pel;
 	  opt_universal = spot::ltl::parse(arg, pel);
@@ -1478,7 +1485,8 @@ namespace
 	  spot::tgba* statespace;
 	  if (opt_universal)
 	    {
-	      statespace = spot::universal_model(&dict, ap, opt_universal);
+	      statespace = spot::universal_model(&dict, ap, opt_universal,
+						 opt_universal_push);
 	      states = spot::stats_reachable(statespace).states;
 	    }
 	  else

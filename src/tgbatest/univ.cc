@@ -39,6 +39,14 @@ int main(int argc, char** argv)
   const spot::ltl::formula* restrict;
   spot::ltl::environment& env(spot::ltl::default_environment::instance());
 
+  bool push = false;
+  if (argv[1][0] == '+')
+    {
+      push = true;
+      ++argv[1];
+    }
+
+
   {
     spot::ltl::parse_error_list pel;
     restrict = spot::ltl::parse(argv[1], pel, env);
@@ -53,7 +61,7 @@ int main(int argc, char** argv)
 
   {
     spot::bdd_dict d;
-    spot::tgba* univ = spot::universal_model(&d, &ap, restrict);
+    spot::tgba* univ = spot::universal_model(&d, &ap, restrict, push);
 
     spot::dotty_reachable(std::cout, univ);
 
