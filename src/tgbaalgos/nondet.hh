@@ -27,6 +27,8 @@ namespace spot
   class tgba;
 
   SPOT_API double nondet_metric(const tgba* aut, unsigned iter);
+
+  SPOT_API double acc_metric(const tgba* aut, unsigned iter);
 }
 
 #endif // SPOT_TGBAALGOS_NONDET_HH

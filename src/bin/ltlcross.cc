@@ -330,6 +330,7 @@ struct statistics
       terminal_scc(0),
       weak_scc(0),
       strong_scc(0),
+      accmetric(0.0),
       nondetstates(0),
       nondetmetric(0.0),
       nondeterministic(false),
@@ -368,6 +369,7 @@ struct statistics
   unsigned terminal_scc;
   unsigned weak_scc;
   unsigned strong_scc;
+  double accmetric;
   unsigned nondetstates;
   double nondetmetric;
   bool nondeterministic;
@@ -406,6 +408,7 @@ struct statistics
 	   "\"terminal_scc\","
 	   "\"weak_scc\","
 	   "\"strong_scc\","
+	   "\"acc_metric\","
 	   "\"nondet_states\","
 	   "\"nondet_metric\","
 	   "\"nondet_aut\","
@@ -453,6 +456,7 @@ struct statistics
 	   << terminal_scc << ','
 	   << weak_scc << ','
 	   << strong_scc << ','
+	   << accmetric << ','
 	   << nondetstates << ','
 	   << nondetmetric << ','
 	   << nondeterministic << ','
@@ -502,7 +506,7 @@ struct statistics
       {
 	size_t m = products_avg ? 1U : products;
 	m *= 7;
-	m += 19 + show_sr * 6;
+	m += 21 + show_sr * 6;
 	os << na;
 	for (size_t i = 0; i < m; ++i)
 	  os << ',' << na;
@@ -1117,6 +1121,7 @@ namespace
 	      m.build_map();
 	      unsigned c = m.scc_count();
 	      st->scc = c;
+	      st->accmetric = spot::acc_metric(res, st->states * 2);
 	      st->nondetstates = spot::count_nondet_states(res);
 	      st->nondetmetric = spot::nondet_metric(res, st->states * 25);
 	      st->nondeterministic = st->nondetstates != 0;

@@ -1892,6 +1892,8 @@ main(int argc, char** argv)
 	    case 17:
 	      {
 		std::cout << nondet_metric(a, 100) << "\n";
+		std::cout << acc_metric(a, 2 * stats_reachable(a).states)
+			  << "\n";
 		break;
 	      }
 	    default:

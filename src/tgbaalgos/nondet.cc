@@ -23,6 +23,98 @@
 
 namespace spot
 {
+  namespace
+  {
+    bool has_accepting(const tgba* aut,
+		       const power_map::power_state& st)
+    {
+      power_map::power_state::const_iterator it;
+      for (it = st.begin(); it != st.end(); ++it)
+	{
+	  tgba_succ_iterator* j = aut->succ_iter(*it);
+	  j->first();
+	  bool res = false;
+	  if (!j->done())
+	    res = j->current_acceptance_conditions() != bddfalse;
+	  delete j;
+	  if (res)
+	    return true;
+	}
+      return false;
+    }
+  }
+
+  double acc_metric(const tgba* aut, unsigned iter)
+  {
+    power_map pm;
+    tgba_explicit_number* det = tgba_powerset(aut, pm);
+    unsigned ns = det->num_states();
+
+    arma::sp_mat tr(ns, ns);
+    arma::sp_mat acc(ns, 1);
+
+    for (unsigned s = 1; s <= ns; ++s)
+      {
+	if (has_accepting(aut, pm.states_of(s)))
+	  {
+	    tr(s - 1, s - 1) = 1;
+	    acc(s - 1, 0) = 1;
+	    continue;
+	  }
+
+	const state_explicit_number* ss = det->get_state(s);
+	tgba_succ_iterator* it = det->succ_iter(ss);
+
+	// Get all used variables by outgoing transition
+	bdd vars = bddtrue;
+	for (it->first(); !it->done(); it->next())
+	  vars &= bdd_support(it->current_condition());
+
+	// Fill a row in the matrix
+	for (it->first(); !it->done(); it->next())
+	  {
+	    bdd cond = it->current_condition();
+
+	    unsigned count = 0;
+	    while (cond != bddfalse)
+	      {
+		cond -= bdd_satoneset(cond, vars, bddtrue);
+		++count;
+	      }
+	    state_explicit_number* dest =
+	      down_cast<state_explicit_number*>(it->current_state());
+	    tr(s - 1, dest->label() - 1) = count;
+	  }
+	delete it;
+
+        unsigned nc = bdd_nodecount(vars);
+
+	// Fix the row
+	if (nc > 0)
+	  {
+	    double total = pow(2, nc);
+	    for (unsigned d = 0; d < ns; ++d)
+	      tr(s - 1, d) /= total;
+	  }
+      }
+    delete det;
+
+    //std::cout << tr << " ** " << static_cast<double>(iter) << " =\n";
+    arma::mat res(ns, ns, arma::fill::eye);
+    while (iter != 0)
+      {
+	if (iter & 1)
+	  res *= tr;
+	tr *= tr;
+	iter >>= 1;
+      }
+    //std::cout << res << " *\n" << acc << " =\n";
+    res *= acc;
+    //std::cout << res << "\n";
+    return res(0, 0);
+  }
+
+
   double nondet_metric(const tgba* aut, unsigned iter)
   {
     power_map pm;

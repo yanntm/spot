@@ -110,7 +110,8 @@ test `grep 'error:.*returned exit code 1' stderr | wc -l` -eq 2
 test `grep '"exit code",1' out.csv | wc -l` -eq 0
 check_csv out.csv
 
-test $q -eq `expr $p + 20`
+# Each of the 4 additional product has 7 columns.
+test $q -eq `expr $p + 28`
 
 
 # Check with Rabin/Streett output
