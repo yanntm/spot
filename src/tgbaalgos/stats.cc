@@ -164,7 +164,7 @@ namespace spot
   }
 
   tgba_sub_statistics
-  sub_stats_prefixtrim(const tgba* g)
+  sub_stats_prefixtrim(const tgba* g, bool accepting)
   {
     scc_map m(g);
     m.build_map();
@@ -174,8 +174,11 @@ namespace spot
     // scc_count - 1 being the initial SCC.
     assert(m.initial() == scc_count - 1);
 
+    typedef bool (scc_map::*check_t) (unsigned) const;
+    check_t check = accepting ? &scc_map::accepting : &scc_map::trivial;
+
     // No prefix to trim?
-    if (!m.trivial(scc_count - 1))
+    if ((m.*check)(scc_count - 1) == accepting)
       return sub_stats_reachable(g);
 
     // Assume all SCC have to be trimmed.
@@ -184,7 +187,7 @@ namespace spot
     // All non-trivial SCCs and their descendants must be kept.
     for (unsigned s = scc_count - 1; s > 0; --s)
       {
-	if (!m.trivial(s))
+	if ((m.*check)(s) == accepting)
 	  to_trim[s] = false;
 	if (!to_trim[s])
 	  {
@@ -197,7 +200,7 @@ namespace spot
     // It's OK to not process s=0 in the above loop because SCC 0
     // cannot have any successor.
     assert(m.succ(0).empty());
-    if (!m.trivial(0))
+    if ((m.*check)(0) == accepting)
       to_trim[0] = false;
 
     state_set to_ignore;

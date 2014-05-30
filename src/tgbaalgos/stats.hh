@@ -61,7 +61,10 @@ namespace spot
   /// Same as sub_stats_reachable() but ignore all states that cannot
   /// be reached after passing through any cycle.  (Those states
   /// necessarily form finite prefixes of the languages.)
-  SPOT_API tgba_sub_statistics sub_stats_prefixtrim(const tgba* g);
+  ///
+  /// If accepting == true, keep only states in or after some
+  /// accepting SCC.
+  SPOT_API tgba_sub_statistics sub_stats_prefixtrim(const tgba* g, bool accepting = false);
 
 
   class SPOT_API printable_formula: public printable_value<const ltl::formula*>

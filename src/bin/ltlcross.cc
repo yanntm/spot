@@ -321,6 +321,9 @@ struct statistics
       trim_states(0),
       trim_edges(0),
       trim_transitions(0),
+      acch_states(0),
+      acch_edges(0),
+      acch_transitions(0),
       acc(0),
       scc(0),
       nonacc_scc(0),
@@ -356,6 +359,9 @@ struct statistics
   unsigned trim_states;
   unsigned trim_edges;
   unsigned trim_transitions;
+  unsigned acch_states;
+  unsigned acch_edges;
+  unsigned acch_transitions;
   unsigned acc;
   unsigned scc;
   unsigned nonacc_scc;
@@ -373,6 +379,8 @@ struct statistics
   std::vector<double> product_scc;
   std::vector<double> product_trim_states;
   std::vector<double> product_trim_transitions;
+  std::vector<double> product_acch_states;
+  std::vector<double> product_acch_transitions;
 
   static void
   fields(std::ostream& os, bool show_exit, bool show_sr)
@@ -389,6 +397,9 @@ struct statistics
 	   "\"trim_states\","
 	   "\"trim_edges\","
 	   "\"trim_transitions\","
+	   "\"acch_states\","
+	   "\"acch_edges\","
+	   "\"acch_transitions\","
 	   "\"acc\","
 	   "\"scc\","
 	   "\"nonacc_scc\","
@@ -405,6 +416,7 @@ struct statistics
     for (size_t i = 0; i < m; ++i)
       os << (",\"product_states\",\"product_transitions\","
 	     "\"product_trim_states\",\"product_trim_transitions\","
+	     "\"product_acch_states\",\"product_acch_transitions\","
 	     "\"product_scc\"");
   }
 
@@ -432,6 +444,9 @@ struct statistics
 	   << trim_states << ','
 	   << trim_edges << ','
 	   << trim_transitions << ','
+	   << acch_states << ','
+	   << acch_edges << ','
+	   << acch_transitions << ','
 	   << acc << ','
 	   << scc << ','
 	   << nonacc_scc << ','
@@ -451,6 +466,8 @@ struct statistics
 		 << ',' << product_transitions[i]
 		 << ',' << product_trim_states[i]
 		 << ',' << product_trim_transitions[i]
+		 << ',' << product_acch_states[i]
+		 << ',' << product_acch_transitions[i]
 		 << ',' << product_scc[i];
 	  }
 	else
@@ -459,6 +476,8 @@ struct statistics
 	    double tr = 0.0;
 	    double tst = 0.0;
 	    double ttr = 0.0;
+	    double ast = 0.0;
+	    double atr = 0.0;
 	    double sc = 0.0;
 	    for (size_t i = 0; i < products; ++i)
 	      {
@@ -466,20 +485,24 @@ struct statistics
 		tr += product_transitions[i];
 		tst += product_trim_states[i];
 		ttr += product_trim_transitions[i];
+		ast += product_acch_states[i];
+		atr += product_acch_transitions[i];
 		sc += product_scc[i];
 	      }
 	    os << ',' << (st / products)
 	       << ',' << (tr / products)
 	       << ',' << (tst / products)
 	       << ',' << (ttr / products)
+	       << ',' << (ast / products)
+	       << ',' << (atr / products)
 	       << ',' << (sc / products);
 	  }
       }
     else
       {
 	size_t m = products_avg ? 1U : products;
-	m *= 5;
-	m += 16 + show_sr * 6;
+	m *= 7;
+	m += 19 + show_sr * 6;
 	os << na;
 	for (size_t i = 0; i < m; ++i)
 	  os << ',' << na;
@@ -1083,6 +1106,12 @@ namespace
 		st->trim_edges = s.transitions;
 		st->trim_transitions = s.sub_transitions;
 	      }
+	      {
+		spot::tgba_sub_statistics s = sub_stats_prefixtrim(res, true);
+		st->acch_states= s.states;
+		st->acch_edges = s.transitions;
+		st->acch_transitions = s.sub_transitions;
+	      }
 	      st->acc = res->number_of_acceptance_conditions();
 	      spot::scc_map m(res);
 	      m.build_map();
@@ -1468,6 +1497,8 @@ namespace
 	    (*pstats)[i].product_transitions.reserve(products);
 	    (*pstats)[i].product_trim_states.reserve(products);
 	    (*pstats)[i].product_trim_transitions.reserve(products);
+	    (*pstats)[i].product_acch_states.reserve(products);
+	    (*pstats)[i].product_acch_transitions.reserve(products);
 	    (*pstats)[i].product_scc.reserve(products);
 	    if (neg[i])
 	      {
@@ -1475,6 +1506,8 @@ namespace
 		(*nstats)[i].product_transitions.reserve(products);
 		(*nstats)[i].product_trim_states.reserve(products);
 		(*nstats)[i].product_trim_transitions.reserve(products);
+		(*nstats)[i].product_acch_states.reserve(products);
+		(*nstats)[i].product_acch_transitions.reserve(products);
 		(*nstats)[i].product_scc.reserve(products);
 	      }
 	  }
@@ -1522,6 +1555,11 @@ namespace
 		    (*pstats)[i].product_trim_states.push_back(s2.states);
 		    (*pstats)[i].product_trim_transitions.push_back
 		      (s2.transitions);
+		    spot::tgba_sub_statistics s3 =
+		      spot::sub_stats_prefixtrim(p, true);
+		    (*pstats)[i].product_acch_states.push_back(s3.states);
+		    (*pstats)[i].product_acch_transitions.push_back
+		      (s3.transitions);
 		  }
 	      }
 
@@ -1548,6 +1586,11 @@ namespace
 		      (*nstats)[i].product_trim_states.push_back(s2.states);
 		      (*nstats)[i].product_trim_transitions.push_back
 			(s2.transitions);
+		      spot::tgba_sub_statistics s3 =
+			spot::sub_stats_prefixtrim(p, true);
+		      (*nstats)[i].product_acch_states.push_back(s3.states);
+		      (*nstats)[i].product_acch_transitions.push_back
+			(s3.transitions);
 		    }
 		}
 
