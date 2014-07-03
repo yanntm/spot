@@ -32,7 +32,11 @@ namespace spot
   fas::operator()(const spot::state* src, const spot::state* dst)
   {
     // States are ordered from 0, ..., n. The transitions form j -> i with
-    // j > i belong to the fas.
+    // j < i belong to the fas.  States that where not encountered are not
+    // accessible, don't have an ordering value and therefor cannot be part of
+    // the FAS.
+    if (ordered_states.find(src) == ordered_states.end())
+      return false;
     return ordered_states[src] < ordered_states[dst];
   }
 
