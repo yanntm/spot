@@ -118,6 +118,7 @@ main(int argc, char **argv)
   bool opt_wait = false;
   bool opt_fstat = false;
   bool opt_kstat = false;
+  bool opt_dot = false;
 
   bool opt_concur_dead_tarjan = false;
   bool opt_concur_ec_dead_tarjan = false;
@@ -147,6 +148,10 @@ main(int argc, char **argv)
     {
       opt_lc13 = true;
       option_lc13 = std::string(argv[3]+5);
+    }
+  else if (!strncmp("-dot", argv[3], 4))
+    {
+      opt_dot = true;
     }
   else if (!strncmp("-decomp_ec", argv[3], 10))
     {
@@ -395,6 +400,19 @@ main(int argc, char **argv)
 	    d->check();
 	    delete d;
 	  }
+
+	if (opt_dot)
+	  {
+	    const spot::dve2product_instance* inststr =
+	      (const spot::dve2product_instance*)itor->new_instance();
+
+	    auto tmp = inststr->get_automaton();//kripke();
+	    assert(tmp);
+	    spot::dotty_dfs dotty(tmp);
+	    dotty.run();
+	    delete inststr;
+	  }
+
 
 	if (opt_concur_ec_dead_tarjan)
 	  {
