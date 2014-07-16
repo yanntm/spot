@@ -364,8 +364,8 @@ namespace spot
 	int p = stack_->root_of_the_top();
 	markset a = stack_->top_acceptance();
 	stack_->pop();
-	if (pair.pos <= p)
-	  stack_->push_non_trivial(pair.pos,
+	if (ll <= p)
+	  stack_->push_non_trivial(ll,
 				   a | acc |
 				   todo.back()
 				   .lasttr->current_acceptance_marks(),
@@ -387,7 +387,6 @@ namespace spot
     trace << "Tarjanunioncheck::merge " << std::endl;
     ++update_cpt_;
     uf->unite(d, todo.back().state);
-
 
     int p = stack_->root_of_the_top();
     markset a = stack_->top_acceptance() | todo.back()
