@@ -206,11 +206,15 @@ namespace spot
     // Get the kripke
     const fasttgba* get_kripke () const
     {
+      assert(kripke);
       return kripke;
     }
 
     const fasttgba* get_formula_automaton () const
     {
+      if (!ftgba1)
+	ftgba1 = spot::tgba_2_fasttgba(tgba_, *aps_, *accs_);
+
       return ftgba1;
     }
 
