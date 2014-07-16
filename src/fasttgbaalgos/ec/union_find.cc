@@ -52,7 +52,7 @@ namespace spot
   }
 
   bool
-  union_find::add (const fasttgba_state* s)
+  union_find::add (const fasttgba_state* s, int*)
   {
     trace << "union_find::add " << idneg.size() << std::endl << std::flush;
     std::pair<uf_map::iterator, bool> i =
@@ -244,7 +244,7 @@ namespace spot
     rk.push_back(0);
   }
 
-   bool setOfDisjointSetsIPC_LRPC::add(const fasttgba_state* e)
+  bool setOfDisjointSetsIPC_LRPC::add(const fasttgba_state* e, int*)
    {
      int n = id.size();
      auto r = el.insert(std::make_pair(e, n));
@@ -471,7 +471,7 @@ namespace spot
   }
 
   bool
-  setOfDisjointSetsIPC_LRPC_MS::add(const fasttgba_state* e)
+  setOfDisjointSetsIPC_LRPC_MS::add(const fasttgba_state* e, int*)
   {
     int n = id.size();
     auto r = el.insert(std::make_pair(e, n));
@@ -695,7 +695,7 @@ namespace spot
   }
 
   bool
-  setOfDisjointSetsIPC_LRPC_MS_Dead::add(const fasttgba_state* e)
+  setOfDisjointSetsIPC_LRPC_MS_Dead::add(const fasttgba_state* e, int* live)
   {
     int n = id.size();
     assert(realsize_ <= n);
@@ -705,6 +705,7 @@ namespace spot
       {
 	++realsize_;
 	auto r = el.insert(std::make_pair(e, n));
+	*live = n;
 	assert(r.second);
 	id.push_back({-1, e});
 	// WARNING DEAD must not be counted
@@ -721,6 +722,7 @@ namespace spot
 	id[realsize_].state = e;
 	id[realsize_].id = -1;
 	el.insert(std::make_pair(e, realsize_));
+	*live = realsize_;
 	++realsize_;
 	return false;
       }
@@ -884,5 +886,13 @@ namespace spot
   setOfDisjointSetsIPC_LRPC_MS_Dead::max_dead()
   {
     return deadstore_->size();
+  }
+
+  int
+  setOfDisjointSetsIPC_LRPC_MS_Dead::live_get(const fasttgba_state* s)
+  {
+    auto i = el.find(s);
+    assert(i != el.end() && (i->second < realsize_));
+    return i->second;
   }
 }

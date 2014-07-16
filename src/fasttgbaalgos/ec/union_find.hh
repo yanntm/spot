@@ -42,7 +42,7 @@ namespace spot
   /// to impove the efficience of emptiness check algorithm
   ///
   /// Performing operation with a state == 0 will be analysed
-  /// as an operation with a dead state cf cou99_uf
+  /// as an operation with a dead state
   class union_find
   {
   public:
@@ -57,7 +57,7 @@ namespace spot
     /// \brief Add a partition that contains only \a s
     /// Suppose a clone() has been done and the union-find
     /// is in charge to perform the destroy()
-    virtual bool add (const fasttgba_state* s);
+    virtual bool add (const fasttgba_state* s, int* livenum);
 
     /// \brief Perform the union of the two partition containing
     /// \a left and \a right. No assumptions over the resulting
@@ -106,6 +106,12 @@ namespace spot
 
     virtual unsigned int dead_size ();
 
+    virtual int live_get(const fasttgba_state*)
+    {
+      assert(false);
+      return 0;
+    }
+
   protected:
 
     /// \brief grab the id of the root associated to an element.
@@ -149,7 +155,7 @@ namespace spot
   public:
     setOfDisjointSetsIPC_LRPC(acc_dict& acc);
 
-    virtual bool add(const fasttgba_state* e);
+    virtual bool add(const fasttgba_state* e, int* livenum);
 
     virtual unsigned int size ();
 
@@ -183,6 +189,12 @@ namespace spot
     virtual int max_alive();
 
     virtual int max_dead();
+
+    virtual int live_get(const fasttgba_state*)
+    {
+      assert(false);
+      return 0;
+    }
   };
 
   class setOfDisjointSetsIPC_LRPC_MS : public union_find
@@ -201,7 +213,7 @@ namespace spot
 
     virtual ~setOfDisjointSetsIPC_LRPC_MS();
 
-    virtual bool add(const fasttgba_state* e);
+    virtual bool add(const fasttgba_state* e, int* livenum);
 
     virtual unsigned int size ();
 
@@ -235,6 +247,12 @@ namespace spot
     virtual int max_alive();
 
     virtual int max_dead();
+
+    virtual int live_get(const fasttgba_state*)
+    {
+      assert(false);
+      return 0;
+    }
   };
 
   /// \brief this class propose an union find based on a deadstore.
@@ -281,7 +299,7 @@ namespace spot
 
     virtual ~setOfDisjointSetsIPC_LRPC_MS_Dead();
 
-    virtual bool add(const fasttgba_state* e);
+    virtual bool add(const fasttgba_state* e, int* livenum);
 
     virtual unsigned int size ();
 
@@ -315,6 +333,8 @@ namespace spot
     virtual int max_alive();
 
     virtual int max_dead();
+
+    virtual int live_get(const fasttgba_state*);
 
   private:
     unsigned int max_alive_;

@@ -31,7 +31,7 @@ namespace spot
 {
 
   /// This class provides the adaptation of the emptiness
-  /// check of couvreur using an Union Find structure and
+  /// check of dijkstra using an Union Find structure and
   /// a specific dedicated root stack
   class SPOT_API unioncheck : public ec
   {
@@ -88,6 +88,82 @@ namespace spot
 
     /// Root of stack
     stack_of_roots *roots_stack_;
+
+    /// \brief the union_find used for the storage
+    union_find *uf;
+
+    /// \brief The instance automaton
+    const instance_automaton* inst;
+
+    unsigned int max_dfs_size_;	 ///< \brief keep peack size
+    int update_cpt_;		 ///< \brief count UPDATE calls
+    int update_loop_cpt_;	 ///< \brief count UPDATE loop iterations
+    int roots_poped_cpt_;	 ///< \brief count UPDATE loop iterations
+    int states_cpt_;		 ///< \brief count states
+    int transitions_cpt_;	 ///< \brief count transitions
+    int memory_cost_;		 ///< \brief evaluates memory
+    int trivial_scc_;            ///< \brief count trivial SCCs
+    int K;
+    int memory_usage_;		 ///< \brief memory consumption
+  };
+
+
+  class SPOT_API tarjanunioncheck : public ec
+  {
+  public:
+
+    /// A constructor taking the automaton to check
+    tarjanunioncheck(instanciator* i, std::string otpion = "");
+
+    /// A destructor
+    virtual ~tarjanunioncheck();
+
+    /// The implementation of the interface
+    bool check();
+
+    /// \brief Get extra informations
+    std::string extra_info_csv();
+
+  protected:
+
+    /// \brief Fix set ups for the algo
+    inline void init();
+
+    // ------------------------------------------------------------
+    // For classic algorithm with stack and UF
+    // ------------------------------------------------------------
+
+    /// \brief Push a new state to explore
+    virtual void dfs_push(fasttgba_state*);
+
+    /// \brief  Pop states already explored
+    virtual void dfs_pop();
+
+    /// \brief merge multiple states
+    virtual bool merge(fasttgba_state*);
+
+    /// \brief the main procedure
+    virtual void main();
+
+    ///< \brief Storage for counterexample found or not
+    bool counterexample_found;
+
+    ///< \brief the automaton that will be used for the Emptiness check
+    const fasttgba* a_;
+
+    // An element in Todo stack
+    struct pair_state_iter
+    {
+      const spot::fasttgba_state* state;
+      fasttgba_succ_iterator* lasttr;
+      int pos;
+    };
+
+    /// \brief the todo stack
+    std::vector<pair_state_iter> todo;
+
+    /// Root of stack
+    stack_of_roots *stack_;
 
     /// \brief the union_find used for the storage
     union_find *uf;

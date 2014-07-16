@@ -107,7 +107,9 @@ namespace spot
     	  << std::endl;
     ++states_cpt_;
 
-    uf->add (s);
+    int p;
+    uf->add (s, &p);
+
     todo.push_back ({s, 0});
     // Count !
     max_dfs_size_ = max_dfs_size_ > todo.size() ?

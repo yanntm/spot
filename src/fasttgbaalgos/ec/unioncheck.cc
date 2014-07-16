@@ -105,7 +105,9 @@ namespace spot
     	  << std::endl;
     ++states_cpt_;
 
-    uf->add (s);
+    int p;
+    uf->add (s, &p);
+
     todo.push_back ({s, 0});
     // Count !
     max_dfs_size_ = max_dfs_size_ > todo.size() ?
@@ -242,4 +244,253 @@ namespace spot
       + ","
       + std::to_string(trivial_scc_);
   }
+
+
+
+
+
+  tarjanunioncheck::tarjanunioncheck(instanciator* i, std::string option) :
+    counterexample_found(false),
+    inst(i->new_instance()),
+    max_dfs_size_(0),
+    update_cpt_(0),
+    update_loop_cpt_(0),
+    roots_poped_cpt_(0),
+    states_cpt_(0),
+    transitions_cpt_(0),
+    memory_cost_(0),
+    trivial_scc_(0)
+  {
+    a_ = inst->get_automaton ();
+
+    if (!option.compare("-cs-ds"))
+      {
+	K = 3;
+	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+	stack_ = new stack_of_roots (a_->get_acc());
+      }
+    else if (!option.compare("-cs+ds"))
+      {
+	K = 4;
+	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
+	stack_ = new stack_of_roots (a_->get_acc());
+      }
+    else if (!option.compare("+cs-ds"))
+      {
+	K = 3;
+	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+	stack_ = new compressed_stack_of_roots (a_->get_acc());
+      }
+    else
+      {
+	K = 4;
+	assert(!option.compare("+cs+ds") || !option.compare(""));
+	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
+	stack_ = new compressed_stack_of_roots (a_->get_acc());
+      }
+  }
+
+  tarjanunioncheck::~tarjanunioncheck()
+  {
+    delete stack_;
+    delete uf;
+    while (!todo.empty())
+      {
+    	delete todo.back().lasttr;
+    	todo.pop_back();
+      }
+
+    delete inst;
+  }
+
+  bool
+  tarjanunioncheck::check()
+  {
+    init();
+    main();
+    return counterexample_found;
+  }
+
+  void tarjanunioncheck::init()
+  {
+    trace << "Tarjanunioncheck::Init" << std::endl;
+    fasttgba_state* init = a_->get_init_state();
+    dfs_push(init);
+  }
+
+  void tarjanunioncheck::dfs_push(fasttgba_state* s)
+  {
+    trace << "Tarjanunioncheck::DFS_push "
+	  << a_->format_state(s)
+    	  << std::endl;
+    ++states_cpt_;
+
+    int p;
+    uf->add (s, &p);
+    todo.push_back ({s, 0, p});
+
+
+    // Count !
+    max_dfs_size_ = max_dfs_size_ > todo.size() ?
+      max_dfs_size_ : todo.size();
+    stack_->push_trivial(p);//todo.size()-1);
+
+    int tmp_cost = 2*stack_->size() + K*uf->size()
+      + 1*uf->dead_size();
+    if (tmp_cost > memory_cost_)
+      memory_cost_ = tmp_cost;
+
+  }
+
+  void tarjanunioncheck::dfs_pop()
+  {
+    trace << "Tarjanunioncheck::DFS_pop " << std::endl;
+    pair_state_iter pair = todo.back();
+    delete pair.lasttr;
+    todo.pop_back();
+
+    int ll = stack_->root_of_the_top();
+    markset acc = stack_->top_acceptance();
+    stack_->pop();
+
+    if (pair.pos == ll)
+      {
+	++roots_poped_cpt_;
+	uf->make_dead(pair.state);
+      }
+    else
+      {
+ 	uf->unite(pair.state, todo.back().state);
+	int p = stack_->root_of_the_top();
+	markset a = stack_->top_acceptance();
+	stack_->pop();
+	if (pair.pos <= p)
+	  stack_->push_non_trivial(pair.pos,
+				   a | acc |
+				   todo.back()
+				   .lasttr->current_acceptance_marks(),
+				   -1 /*unused*/);
+	else
+	  stack_->push_non_trivial(p,
+				   a | acc |
+				   todo.back()
+				   .lasttr->current_acceptance_marks(),
+				   -1 /*unused*/);
+
+	if (stack_->top_acceptance().all())
+	  counterexample_found = true;
+      }
+  }
+
+  bool tarjanunioncheck::merge(fasttgba_state* d)
+  {
+    trace << "Tarjanunioncheck::merge " << std::endl;
+    ++update_cpt_;
+    uf->unite(d, todo.back().state);
+
+
+    int p = stack_->root_of_the_top();
+    markset a = stack_->top_acceptance() | todo.back()
+      .lasttr->current_acceptance_marks();
+    stack_->pop();
+
+    int livenum = uf->live_get(d);
+    if (livenum <= p)
+      stack_->push_non_trivial(livenum, a , -1 /*unused*/);
+    else
+      stack_->push_non_trivial(p, a , -1 /*unused*/);
+
+    return a.all();
+  }
+
+  void tarjanunioncheck::main()
+  {
+    union_find::color c;
+    while (!todo.empty())
+      {
+	trace << "Main " << std::endl;
+	assert(!uf->is_dead(todo.back().state));
+
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr = a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
+	  }
+
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+    	  }
+    	else
+    	  {
+	    ++transitions_cpt_;
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = uf->get_color(d);
+    	    if (c == union_find::Unknown)
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (c == union_find::Alive)
+    	      {
+    	    	if (merge (d))
+    	    	  {
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
+      }
+  }
+
+  std::string
+  tarjanunioncheck::extra_info_csv()
+  {
+    // dfs max size
+    // root max size
+    // live max size
+    // deadstore max size
+    // number of UPDATE calls
+    // number of loop inside UPDATE
+    // Number of Roots poped
+    // visited states
+    // visited transitions
+
+    return
+      std::to_string(max_dfs_size_)
+      + ","
+      + std::to_string(stack_->max_size())
+      + ","
+      + std::to_string(uf->max_alive())
+      + ","
+      + std::to_string(uf->max_dead())
+      + ","
+      + std::to_string(update_cpt_)
+      + ","
+      + std::to_string(update_loop_cpt_)
+      + ","
+      + std::to_string(roots_poped_cpt_)
+      + ","
+      + std::to_string(transitions_cpt_)
+      + ","
+      + std::to_string(states_cpt_)
+      + ","
+      + std::to_string(memory_cost_)
+      + ","
+      + std::to_string(trivial_scc_);
+  }
+
+
+
+
+
+
 }

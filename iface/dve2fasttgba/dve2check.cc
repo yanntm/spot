@@ -114,6 +114,7 @@ main(int argc, char **argv)
   bool opt_ecoptdijkstra = false;
   bool opt_lc13 = false;
   bool opt_uc13 = false;
+  bool opt_tuc13 = false;
   bool opt_dc13 = false;
   bool opt_wait = false;
   bool opt_fstat = false;
@@ -130,6 +131,7 @@ main(int argc, char **argv)
   unsigned int  nb_threads = 1;
 
   std::string option_uc13 = "";
+  std::string option_tuc13 = "";
   std::string option_dc13 = "";
   std::string option_dijkstra = "";
   std::string option_union = "";
@@ -214,6 +216,11 @@ main(int argc, char **argv)
     {
       opt_uc13 = true;
       option_uc13 = std::string(argv[3]+5);
+    }
+  else if (!strncmp("-tuc13", argv[3], 6))
+    {
+      opt_tuc13 = true;
+      option_tuc13 = std::string(argv[3]+6);
     }
   else if (!strncmp("-dc13", argv[3], 5))
     {
@@ -556,6 +563,36 @@ main(int argc, char **argv)
 	    delete checker;
 	    std::cout << result.str() << std::endl;
 	  }
+
+
+	if (opt_tuc13)
+	  {
+	    std::ostringstream result;
+	    result << "#tuc13" << option_tuc13 << ",";
+
+	    spot::tarjanunioncheck* checker =
+	      new spot::tarjanunioncheck(itor, option_tuc13);
+	    mtimer.start("Checking tuc13");
+	    if (checker->check())
+	      {
+		result << "VIOLATED,";
+	      }
+	    else
+	      {
+		result << "VERIFIED,";
+	      }
+	    mtimer.stop("Checking tuc13");
+
+
+	    spot::timer t = mtimer.timer("Checking tuc13");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << checker->extra_info_csv() << ","
+		   << input;
+	    delete checker;
+	    std::cout << result.str() << std::endl;
+	  }
+
+
 
 	if (opt_dc13)
 	  {
