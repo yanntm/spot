@@ -265,9 +265,10 @@ namespace spot
 
     if (!option.compare("-cs-ds"))
       {
-	K = 3;
-	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
-	stack_ = new stack_of_roots (a_->get_acc());
+	// K = 3;
+	// uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+	// stack_ = new stack_of_roots (a_->get_acc());
+	assert(false);
       }
     else if (!option.compare("-cs+ds"))
       {
@@ -277,15 +278,16 @@ namespace spot
       }
     else if (!option.compare("+cs-ds"))
       {
-	K = 3;
-	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
-	stack_ = new compressed_stack_of_roots (a_->get_acc());
+	// K = 3;
+	// uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
+	// stack_ = new compressed_stack_of_roots (a_->get_acc());
+	assert(false);
       }
     else
       {
-	K = 4;
-	assert(!option.compare("+cs+ds") || !option.compare(""));
-	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
+	// K = 4;
+	// assert(!option.compare("+cs+ds") || !option.compare(""));
+	// uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
 	stack_ = new compressed_stack_of_roots (a_->get_acc());
       }
   }
