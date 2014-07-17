@@ -347,7 +347,7 @@ namespace spot
   void tarjanunioncheck::dfs_pop()
   {
     trace << "Tarjanunioncheck::DFS_pop " << std::endl;
-    pair_state_iter pair = todo.back();
+    dfs_element pair = todo.back();
     delete pair.lasttr;
     todo.pop_back();
 
@@ -376,7 +376,7 @@ namespace spot
       }
   }
 
-  bool tarjanunioncheck::merge(fasttgba_state* d)
+  bool tarjanunioncheck::dfs_update(fasttgba_state* d)
   {
     trace << "Tarjanunioncheck::merge " << std::endl;
     ++update_cpt_;
@@ -430,7 +430,7 @@ namespace spot
     	      }
     	    else if (c == union_find::Alive)
     	      {
-    	    	if (merge (d))
+    	    	if (dfs_update(d))
     	    	  {
     	    	    counterexample_found = true;
     	    	    d->destroy();

@@ -140,7 +140,7 @@ namespace spot
     virtual void dfs_pop();
 
     /// \brief merge multiple states
-    virtual bool merge(fasttgba_state*);
+    virtual bool dfs_update(fasttgba_state*);
 
     /// \brief the main procedure
     virtual void main();
@@ -152,7 +152,7 @@ namespace spot
     const fasttgba* a_;
 
     // An element in Todo stack
-    struct pair_state_iter
+    struct dfs_element
     {
       const spot::fasttgba_state* state;
       fasttgba_succ_iterator* lasttr;
@@ -160,10 +160,9 @@ namespace spot
     };
 
     /// \brief the todo stack
-    std::vector<pair_state_iter> todo;
+    std::vector<dfs_element> todo;
 
     /// Root of stack
-    //    stack_of_roots
     generic_stack* stack_;
 
     /// \brief the union_find used for the storage
