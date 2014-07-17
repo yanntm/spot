@@ -301,6 +301,12 @@ namespace spot
       return ret_val;
     }
 
+    virtual stack_pair top(int)
+    {
+      stack_pair ret_val = {stack_.top().first, *stack_.top().second};
+      return ret_val;
+    }
+
     virtual unsigned int max_size()
     {
       return max_size_;
@@ -379,6 +385,21 @@ namespace spot
 	  if (p == (int)stack_.top().pos)
 	     stack_.pop();
 
+	  generic_stack::stack_pair ret_val = {(unsigned)p,*empty_};
+	  return ret_val;
+	}
+    }
+
+    virtual generic_stack::stack_pair top(int p)
+    {
+      if (!stack_.top().is_transient)
+	{
+	  generic_stack::stack_pair ret_val = {stack_.top().pos,
+					       *stack_.top().acc};
+	  return ret_val;
+	}
+      else
+	{
 	  generic_stack::stack_pair ret_val = {(unsigned)p,*empty_};
 	  return ret_val;
 	}

@@ -44,36 +44,24 @@ namespace spot
   {
     a_ = inst->get_automaton ();
 
-    if (!option.compare("-cs-ds"))
-      {
-	K = 3;
-	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
-	roots_stack_ = new stack_of_roots (a_->get_acc());
-      }
-    else if (!option.compare("-cs+ds"))
+    if (!option.compare("-cs"))
       {
 	K = 4;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
-	roots_stack_ = new stack_of_roots (a_->get_acc());
-      }
-    else if (!option.compare("+cs-ds"))
-      {
-	K = 3;
-	uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
-	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+	stack_ = new generic_stack (a_->get_acc());
       }
     else
       {
 	K = 4;
-	assert(!option.compare("+cs+ds") || !option.compare(""));
+	assert(!option.compare("+cs") || !option.compare(""));
 	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
-	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+	stack_ = new compressed_generic_stack (a_->get_acc());
       }
   }
 
   unioncheck::~unioncheck()
   {
-    delete roots_stack_;
+    delete stack_;
     delete uf;
     while (!todo.empty())
       {
@@ -107,14 +95,14 @@ namespace spot
 
     int p;
     uf->add (s, &p);
+    stack_->push_transient(todo.size());
 
     todo.push_back ({s, 0});
     // Count !
     max_dfs_size_ = max_dfs_size_ > todo.size() ?
       max_dfs_size_ : todo.size();
-    roots_stack_->push_trivial(todo.size()-1);
 
-    int tmp_cost = 2*roots_stack_->size() + K*uf->size()
+    int tmp_cost = 2*stack_->size() + K*uf->size()
       + 1*uf->dead_size();
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
@@ -128,11 +116,12 @@ namespace spot
     delete pair.lasttr;
     todo.pop_back();
 
-    if (todo.size() == roots_stack_->root_of_the_top())
+    // todo is already popped (no need -1)
+    if (todo.size() == stack_->top(todo.size()).pos)
       {
 	++roots_poped_cpt_;
 	uf->make_dead(pair.state);
-	roots_stack_->pop();
+	stack_->pop(todo.size());
       }
   }
 
@@ -140,22 +129,23 @@ namespace spot
   {
     trace << "Unioncheck::merge " << std::endl;
     ++update_cpt_;
-    int i = roots_stack_->root_of_the_top();
-    assert(todo[i].lasttr);
-    markset a = todo[i].lasttr->current_acceptance_marks();
-    roots_stack_->pop();
 
-    while (!uf->same_partition(d, todo[i].state))
+    auto top = stack_->pop(todo.size()-1);
+    markset a = top.acc |
+      top.acc = todo.back().lasttr->current_acceptance_marks();
+    int r = top.pos;
+    assert(todo[r].state);
+
+    while (!uf->same_partition(d, todo[r].state))
       {
 	++update_loop_cpt_;
- 	uf->unite(d, todo[i].state);
-	assert(todo[i].lasttr);
-	markset m = todo[i].lasttr->current_acceptance_marks();
-	a |= m | roots_stack_->top_acceptance();
-	i = roots_stack_->root_of_the_top();
-	roots_stack_->pop();
+ 	uf->unite(d, todo[r].state);
+	assert(todo[r].lasttr);
+	auto newtop = stack_->pop(r-1);
+	r = newtop.pos;
+	a |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
       }
-    roots_stack_->push_non_trivial(i, a, todo.size() -1);
+    stack_->push_non_transient(r, a);
 
     return a.all();
   }
@@ -224,7 +214,7 @@ namespace spot
     return
       std::to_string(max_dfs_size_)
       + ","
-      + std::to_string(roots_stack_->max_size())
+      + std::to_string(stack_->max_size())
       + ","
       + std::to_string(uf->max_alive())
       + ","
@@ -244,9 +234,6 @@ namespace spot
       + ","
       + std::to_string(trivial_scc_);
   }
-
-
-
 
 
   tarjanunioncheck::tarjanunioncheck(instanciator* i, std::string option) :
@@ -464,10 +451,4 @@ namespace spot
       + ","
       + std::to_string(trivial_scc_);
   }
-
-
-
-
-
-
 }
