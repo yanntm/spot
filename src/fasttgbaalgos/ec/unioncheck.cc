@@ -263,34 +263,18 @@ namespace spot
   {
     a_ = inst->get_automaton ();
 
-    if (!option.compare("-cs-ds"))
-      {
-	// K = 3;
-	// uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
-	// stack_ = new stack_of_roots (a_->get_acc());
-	assert(false);
-      }
-    else if (!option.compare("-cs+ds"))
+    if (!option.compare("-cs"))
       {
 	K = 4;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
 	stack_ = new generic_stack(a_->get_acc());
-	  //stack_of_roots (a_->get_acc());
-      }
-    else if (!option.compare("+cs-ds"))
-      {
-	// K = 3;
-	// uf  = new setOfDisjointSetsIPC_LRPC_MS (a_->get_acc());
-	// stack_ = new compressed_stack_of_roots (a_->get_acc());
-	assert(false);
       }
     else
       {
-	// K = 4;
-	// assert(!option.compare("+cs+ds") || !option.compare(""));
-	// uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
-	//stack_ = new compressed_stack_of_roots (a_->get_acc());
-	assert(false);
+	K = 4;
+	assert(!option.compare("+cs") || !option.compare(""));
+	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
+	stack_ = new compressed_generic_stack (a_->get_acc());
       }
   }
 
@@ -329,7 +313,7 @@ namespace spot
     	  << std::endl;
     ++states_cpt_;
 
-    int p;
+    int p = 0;
     uf->add (s, &p);
     todo.push_back ({s, 0, p});
 
@@ -351,7 +335,7 @@ namespace spot
     delete pair.lasttr;
     todo.pop_back();
 
-    auto top = stack_->pop();
+    auto top = stack_->pop(pair.pos);
 
     if (pair.pos == (int) top.pos)
       {
@@ -362,16 +346,16 @@ namespace spot
       {
  	uf->unite(pair.state, todo.back().state);
 
-	auto newtop = stack_->pop();
-	markset a = top.acc | newtop.acc |
+	auto newtop = stack_->pop(todo.back().pos);
+	newtop.acc |= top.acc |
 	  todo.back().lasttr->current_acceptance_marks();
 
 	if (top.pos <= newtop.pos)
-	  stack_->push_non_transient(top.pos, a);
+	  stack_->push_non_transient(top.pos, newtop.acc);
 	else
-	  stack_->push_non_transient(newtop.pos, a);
+	  stack_->push_non_transient(newtop.pos, newtop.acc);
 
-	if (a.all())
+	if (newtop.acc.all())
 	  counterexample_found = true;
       }
   }
@@ -382,16 +366,16 @@ namespace spot
     ++update_cpt_;
     uf->unite(d, todo.back().state);
 
-    auto top = stack_->pop();
-    markset a = top.acc | todo.back().lasttr->current_acceptance_marks();
+    auto top = stack_->pop(todo.back().pos);
+    top.acc |= todo.back().lasttr->current_acceptance_marks();
 
     int livenum = uf->live_get(d);
     if (livenum <= (int) top.pos)
-      stack_->push_non_transient(livenum, a);
+      stack_->push_non_transient(livenum, top.acc);
     else
-      stack_->push_non_transient(top.pos, a);
+      stack_->push_non_transient(top.pos, top.acc);
 
-    return a.all();
+    return top.acc.all();
   }
 
   void tarjanunioncheck::main()
@@ -416,6 +400,8 @@ namespace spot
     	if (todo.back().lasttr->done())
     	  {
 	    dfs_pop ();
+	    if (counterexample_found)
+	      return;
     	  }
     	else
     	  {
@@ -459,7 +445,7 @@ namespace spot
       std::to_string(max_dfs_size_)
       + ","
       + std::to_string(stack_->max_size())
-      + ","
+      + ",!"
       + std::to_string(uf->max_alive())
       + ","
       + std::to_string(uf->max_dead())

@@ -259,7 +259,7 @@ namespace spot
     {
       while (!stack_.empty())
 	{
-	  pop();
+	  pop(-1/*unused*/);
 	}
       delete empty_;
     }
@@ -278,7 +278,7 @@ namespace spot
 				     const markset& m)
     {
       if (*empty_ == m)
-	stack_.push(std::make_pair(root, empty_));
+      	stack_.push(std::make_pair(root, empty_));
       else
 	stack_.push(std::make_pair(root, new markset(m)));
     }
@@ -286,17 +286,17 @@ namespace spot
     struct stack_pair
     {
       unsigned int pos;
-      const markset& acc;
+      markset acc;		// It's a copy you can use it!
     };
 
 
-    virtual stack_pair pop()
+    virtual stack_pair pop(int)
     {
       stack_pair ret_val = {stack_.top().first, *stack_.top().second};
 
       max_size_ = max_size_ > stack_.size()? max_size_ : stack_.size();
       if (stack_.top().second != empty_)
-	delete stack_.top().second;
+      	delete stack_.top().second;
       stack_.pop();
       return ret_val;
     }
@@ -308,17 +308,92 @@ namespace spot
 
   private:
     std::stack<std::pair<unsigned int, markset*>> stack_; ///< The stack.
+
+  protected:
     markset* empty_;		///< The empty markset.
     unsigned int max_size_;	///< The max size of the stack.
   };
 
 
 
+  class compressed_generic_stack: public generic_stack
+  {
+
+  public:
+    compressed_generic_stack(acc_dict& acc):
+      generic_stack(acc)
+    {
+    }
+
+    virtual ~compressed_generic_stack()
+    {
+      while (!stack_.empty())
+      	{
+	  if (stack_.top().acc != empty_)
+	    delete stack_.top().acc;
+	  stack_.pop();
+      	}
+    }
+
+    virtual unsigned int size ()
+    {
+      return stack_.size();
+    }
+
+    virtual void push_transient (unsigned int p)
+    {
+      if (stack_.empty() || !stack_.top().is_transient)
+	stack_.push({p, empty_, true});
+    }
+
+    virtual void push_non_transient (unsigned int p,
+  				     const markset& m)
+    {
+      if (*empty_ == m)
+	stack_.push({p, empty_, false});
+      else
+	stack_.push({p, new markset(m), false});
+    }
+
+    struct stack_pair
+    {
+      unsigned int pos;
+      markset acc;		// It's a copy you can use it!
+    };
 
 
+    virtual generic_stack::stack_pair pop(int p)
+    {
+      max_size_ = max_size_ > stack_.size()? max_size_ : stack_.size();
+      if (!stack_.top().is_transient)
+	{
+	  generic_stack::stack_pair ret_val = {stack_.top().pos,
+					       *stack_.top().acc};
+	  if (stack_.top().acc != empty_)
+	    delete stack_.top().acc;
+	  stack_.pop();
+	  return ret_val;
+	}
+      else
+	{
+	  if (p == (int)stack_.top().pos)
+	     stack_.pop();
 
+	  generic_stack::stack_pair ret_val = {(unsigned)p,*empty_};
+	  return ret_val;
+	}
+    }
 
+  private:
+    struct stack_entry
+    {
+      unsigned int pos;
+      markset *acc;
+      bool is_transient;
+    };
 
+    std::stack<stack_entry> stack_;
+  };
 }
 
 
