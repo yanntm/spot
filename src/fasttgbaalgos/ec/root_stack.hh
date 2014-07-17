@@ -239,6 +239,86 @@ namespace spot
       return max_size_;
     }
   };
+
+
+
+
+  // -------------------------------------------
+  // Compressed Stack -- Experimental
+
+
+  class generic_stack
+  {
+  public:
+    generic_stack(acc_dict& acc):
+      empty_(new markset(acc)),
+      max_size_(0)
+    { }
+
+    virtual ~generic_stack()
+    {
+      while (!stack_.empty())
+	{
+	  pop();
+	}
+      delete empty_;
+    }
+
+    virtual unsigned int size ()
+    {
+      return stack_.size();
+    }
+
+    virtual void push_transient (unsigned int root)
+    {
+      stack_.push(std::make_pair(root, empty_));
+    }
+
+    virtual void push_non_transient (unsigned int root,
+				     const markset& m)
+    {
+      if (*empty_ == m)
+	stack_.push(std::make_pair(root, empty_));
+      else
+	stack_.push(std::make_pair(root, new markset(m)));
+    }
+
+    struct stack_pair
+    {
+      unsigned int pos;
+      const markset& acc;
+    };
+
+
+    virtual stack_pair pop()
+    {
+      stack_pair ret_val = {stack_.top().first, *stack_.top().second};
+
+      max_size_ = max_size_ > stack_.size()? max_size_ : stack_.size();
+      if (stack_.top().second != empty_)
+	delete stack_.top().second;
+      stack_.pop();
+      return ret_val;
+    }
+
+    virtual unsigned int max_size()
+    {
+      return max_size_;
+    }
+
+  private:
+    std::stack<std::pair<unsigned int, markset*>> stack_; ///< The stack.
+    markset* empty_;		///< The empty markset.
+    unsigned int max_size_;	///< The max size of the stack.
+  };
+
+
+
+
+
+
+
+
 }
 
 

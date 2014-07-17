@@ -274,7 +274,8 @@ namespace spot
       {
 	K = 4;
 	uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
-	stack_ = new stack_of_roots (a_->get_acc());
+	stack_ = new generic_stack(a_->get_acc());
+	  //stack_of_roots (a_->get_acc());
       }
     else if (!option.compare("+cs-ds"))
       {
@@ -288,7 +289,8 @@ namespace spot
 	// K = 4;
 	// assert(!option.compare("+cs+ds") || !option.compare(""));
 	// uf  = new setOfDisjointSetsIPC_LRPC_MS_Dead (a_->get_acc());
-	stack_ = new compressed_stack_of_roots (a_->get_acc());
+	//stack_ = new compressed_stack_of_roots (a_->get_acc());
+	assert(false);
       }
   }
 
@@ -331,14 +333,12 @@ namespace spot
     uf->add (s, &p);
     todo.push_back ({s, 0, p});
 
-
     // Count !
     max_dfs_size_ = max_dfs_size_ > todo.size() ?
       max_dfs_size_ : todo.size();
-    stack_->push_trivial(p);//todo.size()-1);
+    stack_->push_transient(p);
 
-    int tmp_cost = 2*stack_->size() + K*uf->size()
-      + 1*uf->dead_size();
+    int tmp_cost = 2*stack_->size() + K*uf->size() + 1*uf->dead_size();
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
 
@@ -351,11 +351,9 @@ namespace spot
     delete pair.lasttr;
     todo.pop_back();
 
-    int ll = stack_->root_of_the_top();
-    markset acc = stack_->top_acceptance();
-    stack_->pop();
+    auto top = stack_->pop();
 
-    if (pair.pos == ll)
+    if (pair.pos == (int) top.pos)
       {
 	++roots_poped_cpt_;
 	uf->make_dead(pair.state);
@@ -363,23 +361,17 @@ namespace spot
     else
       {
  	uf->unite(pair.state, todo.back().state);
-	int p = stack_->root_of_the_top();
-	markset a = stack_->top_acceptance();
-	stack_->pop();
-	if (ll <= p)
-	  stack_->push_non_trivial(ll,
-				   a | acc |
-				   todo.back()
-				   .lasttr->current_acceptance_marks(),
-				   -1 /*unused*/);
-	else
-	  stack_->push_non_trivial(p,
-				   a | acc |
-				   todo.back()
-				   .lasttr->current_acceptance_marks(),
-				   -1 /*unused*/);
 
-	if (stack_->top_acceptance().all())
+	auto newtop = stack_->pop();
+	markset a = top.acc | newtop.acc |
+	  todo.back().lasttr->current_acceptance_marks();
+
+	if (top.pos <= newtop.pos)
+	  stack_->push_non_transient(top.pos, a);
+	else
+	  stack_->push_non_transient(newtop.pos, a);
+
+	if (a.all())
 	  counterexample_found = true;
       }
   }
@@ -390,16 +382,14 @@ namespace spot
     ++update_cpt_;
     uf->unite(d, todo.back().state);
 
-    int p = stack_->root_of_the_top();
-    markset a = stack_->top_acceptance() | todo.back()
-      .lasttr->current_acceptance_marks();
-    stack_->pop();
+    auto top = stack_->pop();
+    markset a = top.acc | todo.back().lasttr->current_acceptance_marks();
 
     int livenum = uf->live_get(d);
-    if (livenum <= p)
-      stack_->push_non_trivial(livenum, a , -1 /*unused*/);
+    if (livenum <= (int) top.pos)
+      stack_->push_non_transient(livenum, a);
     else
-      stack_->push_non_trivial(p, a , -1 /*unused*/);
+      stack_->push_non_transient(top.pos, a);
 
     return a.all();
   }

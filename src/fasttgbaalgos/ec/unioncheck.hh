@@ -163,7 +163,8 @@ namespace spot
     std::vector<pair_state_iter> todo;
 
     /// Root of stack
-    stack_of_roots *stack_;
+    //    stack_of_roots
+    generic_stack* stack_;
 
     /// \brief the union_find used for the storage
     union_find *uf;
