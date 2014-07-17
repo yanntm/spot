@@ -306,7 +306,7 @@ namespace spot
   opt_tarjan_scc::extra_info_csv()
   {
     // dfs max size
-    // root max size
+    // lowlink max size
     // live max size
     // deadstore max size
     // number of UPDATE calls
@@ -320,7 +320,7 @@ namespace spot
     return
       std::to_string(max_dfs_size_)
       + ","
-      + std::to_string(0)
+      + std::to_string(dstack_->max_size())
       + ","
       + std::to_string(max_live_size_)
       + ","
