@@ -53,9 +53,13 @@ namespace spot
     a_ = inst->get_automaton();
     deadstore_ = new deadstore();
     if (!option.compare("-cs"))
-      dstack_ = new stack_of_lowlink(a_->get_acc());
+      {
+	stack_ = new generic_stack(a_->get_acc());
+      }
     else
-      dstack_ = new compressed_stack_of_lowlink(a_->get_acc());
+      {
+	stack_ = new compressed_generic_stack(a_->get_acc());
+      }
   }
 
   opt_tarjan_scc::~opt_tarjan_scc()
@@ -74,7 +78,8 @@ namespace spot
 	ptr->destroy();
       }
     delete deadstore_;
-    delete dstack_;
+    //delete dstack_;
+    delete stack_;
     delete inst;
   }
 
@@ -96,9 +101,8 @@ namespace spot
   void opt_tarjan_scc::dfs_push(fasttgba_state* q)
   {
     int position = H.size();
-    //live.push_back(q);
     H.insert(std::make_pair(q, position));
-    dstack_->push(position);
+    stack_->push_transient(position);
     todo.push_back ({q, 0, H.size() -1});
 
     ++dfs_size_;
@@ -108,7 +112,7 @@ namespace spot
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
 
-    int tmp_cost = 1*dstack_->size() + 2*H.size() +1*live.size()
+    int tmp_cost = 1*stack_->size() + 2*H.size() +1*live.size()
       + (deadstore_? deadstore_->size() : 0);
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
@@ -129,23 +133,22 @@ namespace spot
   void opt_tarjan_scc::dfs_pop()
   {
     --dfs_size_;
-    int ll = dstack_->pop();
+    auto top = stack_->pop(todo.back().position);
 
-    unsigned int steppos = todo.back().position;
-    const fasttgba_state* last = todo.back().state;
-    delete todo.back().lasttr;
+    auto pair = todo.back();
+    delete pair.lasttr;
     todo.pop_back();
 
-    if ((int) steppos == ll)
+    if (pair.position == (unsigned) top.pos)
       {
 	++roots_poped_cpt_;
 	int trivial = 0;
 
 	// Delete the root that is not inside of live Stack
-	deadstore_->add(last);
-	seen_map::const_iterator it1 = H.find(last);
+	deadstore_->add(pair.state);
+	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
-	while (H.size() > steppos)
+	while (H.size() > pair.position)
 	  {
 	    ++trivial;
 	    deadstore_->add(live.back());
@@ -160,36 +163,36 @@ namespace spot
       }
     else
       {
-	// Warning !  Do not optimize to '<'
-	// Here we check '<=' since the information "==" is
-	// needed to the compressed stack of lowlink.
-	if (ll <= dstack_->top())
-	    dstack_->set_top(ll);
-	live.push_back(last);
+	auto newtop = stack_->pop(todo.back().position);
+
+	if (top.pos <= newtop.pos)
+	  stack_->push_non_transient(top.pos, newtop.acc);
+	else
+	  stack_->push_non_transient(newtop.pos, newtop.acc);
+
+	live.push_back(pair.state);
       }
   }
 
   void opt_tarjan_ec::dfs_pop()
   {
     --dfs_size_;
-    const markset acc = dstack_->top_acceptance();
-    int ll = dstack_->pop();
+    auto top = stack_->pop(todo.back().position);
 
-    unsigned int steppos = todo.back().position;
-    const fasttgba_state* last = todo.back().state;
-    delete todo.back().lasttr;
+    auto pair = todo.back();
+    delete pair.lasttr;
     todo.pop_back();
 
-    if ((int) steppos == ll)
+    if (pair.position == (unsigned) top.pos)
       {
 	++roots_poped_cpt_;
 	int trivial = 0;
 
 	// Delete the root that is not inside of live Stack
-	deadstore_->add(last);
-	seen_map::const_iterator it1 = H.find(last);
+	deadstore_->add(pair.state);
+	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
-	while (H.size() > steppos)
+	while (H.size() > pair.position)
 	  {
 	    ++trivial;
 	    deadstore_->add(live.back());
@@ -204,19 +207,16 @@ namespace spot
       }
     else
       {
-	// Warning !  Do not optimize to '<'
-	// Here we check '<=' since the information "==" is
-	// needed to the compressed stack of lowlink.
-	if (ll <= dstack_->top())
-	  dstack_->set_top(ll , acc | dstack_->top_acceptance() |
-			   todo.back().lasttr->current_acceptance_marks());
+	auto newtop = stack_->pop(todo.back().position);
+	newtop.acc |= top.acc | todo.back().lasttr->current_acceptance_marks();
+
+	if (top.pos <= newtop.pos)
+	  stack_->push_non_transient(top.pos, newtop.acc);
 	else
-	  dstack_->set_top(dstack_->top(), acc | dstack_->top_acceptance() |
-			   todo.back().lasttr->current_acceptance_marks());
+	  stack_->push_non_transient(newtop.pos, newtop.acc);
 
-
-	live.push_back(last);
-	if (dstack_->top_acceptance().all())
+	live.push_back(pair.state);
+	if (newtop.acc.all())
 	  counterexample_found = true;
       }
   }
@@ -224,11 +224,12 @@ namespace spot
   bool opt_tarjan_scc::dfs_update(fasttgba_state* d)
   {
     ++update_cpt_;
-    // Warning !  Do not optimize to '<'
-    // Here we check '<=' since the information "==" is
-    // needed to the compressed stack of lowlink.
-    if (H[d] <= dstack_->top())
-      dstack_->set_top(H[d]);
+    auto top = stack_->pop(todo.back().position);
+
+    if (H[d] <= (int) top.pos)
+      stack_->push_non_transient(H[d], top.acc/*empty*/);
+    else
+      stack_->push_non_transient(top.pos, top.acc/*empty*/);
 
     return false;
   }
@@ -236,19 +237,15 @@ namespace spot
   bool opt_tarjan_ec::dfs_update(fasttgba_state* d)
   {
     ++update_cpt_;
-    // Warning !  Do not optimize to '<'
-    // Here we check '<=' since the information "==" is
-    // needed to the compressed stack of lowlink.
-    if (H[d] <= dstack_->top())
-      dstack_->set_top(H[d] ,
-		       todo.back().lasttr->current_acceptance_marks() |
-		       dstack_->top_acceptance());
-    else
-      dstack_->set_top(dstack_->top(),
-		       todo.back().lasttr->current_acceptance_marks() |
-		       dstack_->top_acceptance());
+    auto top = stack_->pop(todo.back().position);
+    top.acc |= todo.back().lasttr->current_acceptance_marks();
 
-    return dstack_->top_acceptance().all();
+    if (H[d] <= (int) top.pos)
+      stack_->push_non_transient(H[d], top.acc);
+    else
+      stack_->push_non_transient(top.pos, top.acc);
+
+    return top.acc.all();
   }
 
   void opt_tarjan_scc::main()
@@ -320,7 +317,7 @@ namespace spot
     return
       std::to_string(max_dfs_size_)
       + ","
-      + std::to_string(dstack_->max_size())
+      + std::to_string(stack_->max_size())
       + ","
       + std::to_string(max_live_size_)
       + ","

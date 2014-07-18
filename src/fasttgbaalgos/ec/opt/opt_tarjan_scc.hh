@@ -27,6 +27,7 @@
 #include "fasttgbaalgos/ec/ec.hh"
 #include "fasttgbaalgos/ec/deadstore.hh"
 #include "fasttgbaalgos/ec/lowlink_stack.hh"
+#include "fasttgbaalgos/ec/root_stack.hh"
 
 namespace spot
 {
@@ -93,6 +94,7 @@ namespace spot
 
     /// \brief Use a "generic" lowlink stack
     stack_of_lowlink* dstack_;
+    generic_stack* stack_;
 
     /// \brief Access  the color of a state
     virtual opt_tarjan_scc::color get_color(const fasttgba_state*);
