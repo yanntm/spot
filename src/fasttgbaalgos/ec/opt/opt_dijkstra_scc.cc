@@ -51,13 +51,15 @@ namespace spot
     a_ = inst->get_automaton ();
     if (!option.compare("-cs"))
       {
-	roots_stack_ = new stack_of_roots (a_->get_acc());
+	//roots_stack_ = new stack_of_roots (a_->get_acc());
+	stack_ = new generic_stack (a_->get_acc());
 	deadstore_ = new deadstore();
       }
     else
       {
 	assert(!option.compare("+cs") || !option.compare(""));
-	roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+	//roots_stack_ = new compressed_stack_of_roots (a_->get_acc());
+	stack_ = new compressed_generic_stack (a_->get_acc());
 	deadstore_ = new deadstore();
       }
     empty_ = new markset(a_->get_acc());
@@ -66,7 +68,8 @@ namespace spot
   opt_dijkstra_scc::~opt_dijkstra_scc()
   {
     delete empty_;
-    delete roots_stack_;
+    delete stack_;
+    //delete roots_stack_;
     delete deadstore_;
     while (!todo.empty())
       {
@@ -112,14 +115,17 @@ namespace spot
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
 
+
+    //roots_stack_->push_trivial(todo.size());
+    stack_->push_transient(todo.size());
+
     todo.push_back ({s, 0, H.size() -1});
     // Count!
     max_dfs_size_ = max_dfs_size_ > todo.size() ?
       max_dfs_size_ : todo.size();
 
-    roots_stack_->push_trivial(todo.size() -1);
 
-    int tmp_cost = 1*roots_stack_->size() + 2*H.size() + 1*live.size()
+    int tmp_cost = 1*stack_->size() + 2*H.size() + 1*live.size()
       + (deadstore_? deadstore_->size() : 0);
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
@@ -129,26 +135,25 @@ namespace spot
   void opt_dijkstra_scc::dfs_pop()
   {
     trace << "Opt_Dijkstra_Scc::DFS_pop " << std::endl;
-    delete todo.back().lasttr;
-
-    unsigned int rtop = roots_stack_->root_of_the_top();
-    const fasttgba_state* last = todo.back().state;
-    unsigned int steppos = todo.back().position;
+    auto pair = todo.back();
+    delete pair.lasttr;
     todo.pop_back();
 
-    if (rtop == todo.size())
+
+    if (todo.size() == stack_->top(todo.size()).pos)
       {
 	++roots_poped_cpt_;
-	roots_stack_->pop();
+	stack_->pop(todo.size());
 	int trivial = 0;
-	deadstore_->add(last);
-	seen_map::const_iterator it1 = H.find(last);
+	deadstore_->add(pair.state);
+	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
-	while (H.size() > steppos)
+	while (H.size() > pair.position)
 	  {
 	    ++trivial;
-	    deadstore_->add(live.back());
-	    seen_map::const_iterator it = H.find(live.back());
+	    auto toerase = live.back();
+	    deadstore_->add(toerase);
+	    seen_map::const_iterator it = H.find(toerase);
 	    H.erase(it);
 	    live.pop_back();
  	  }
@@ -158,7 +163,7 @@ namespace spot
     else
       {
 	// This is the integration of Nuutila's optimisation.
-	live.push_back(last);
+	live.push_back(pair.state);
       }
   }
 
@@ -167,40 +172,47 @@ namespace spot
     trace << "Opt_Dijkstra_Scc::merge " << std::endl;
     ++update_cpt_;
     assert(H.find(d) != H.end());
-    int dpos = H[d];
-    int rpos = roots_stack_->root_of_the_top();
 
-    roots_stack_->pop();
-    while ((unsigned)dpos < todo[rpos].position)
+    int dpos = H[d];
+    auto top = stack_->pop(todo.size()-1);
+    int r = top.pos;
+    assert(todo[r].state);
+
+    while ((unsigned)dpos < todo[r].position)
       {
 	++update_loop_cpt_;
-    	rpos = roots_stack_->root_of_the_top();
-    	roots_stack_->pop();
+	assert(todo[r].lasttr);
+	auto newtop = stack_->pop(r-1);
+	r = newtop.pos;
       }
-    roots_stack_->push_non_trivial(rpos, *empty_, todo.size() -1);
+    stack_->push_non_transient(r, top.acc/*empty*/);
 
     return false;
   }
 
   bool opt_dijkstra_ec::merge(fasttgba_state* d)
   {
-    trace << "Opt_Dijkstra_Scc::merge " << std::endl;
+    trace << "Opt_Dijkstra_EC::merge " << std::endl;
     ++update_cpt_;
     assert(H.find(d) != H.end());
-    int dpos = H[d];
-    int rpos = roots_stack_->root_of_the_top();
-    markset a = todo[rpos].lasttr->current_acceptance_marks();
 
-    roots_stack_->pop();
-    while ((unsigned)dpos < todo[rpos].position)
+    int dpos = H[d];
+
+    auto top = stack_->pop(todo.size()-1);
+    markset a = top.acc |
+      top.acc = todo.back().lasttr->current_acceptance_marks();
+    int r = top.pos;
+    assert(todo[r].state);
+
+    while ((unsigned)dpos < todo[r].position)
       {
 	++update_loop_cpt_;
-    	markset m = todo[rpos].lasttr->current_acceptance_marks();
-    	a |= m | roots_stack_->top_acceptance();
-    	rpos = roots_stack_->root_of_the_top();
-    	roots_stack_->pop();
+	assert(todo[r].lasttr);
+	auto newtop = stack_->pop(r-1);
+	r = newtop.pos;
+	a |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
       }
-    roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
+    stack_->push_non_transient(r, a);
 
     return a.all();
   }
@@ -283,7 +295,7 @@ namespace spot
     return
       std::to_string(max_dfs_size_)
       + ","
-      + std::to_string(roots_stack_->max_size())
+      + std::to_string(stack_->max_size())
       + ","
       + std::to_string(max_live_size_)
       + ","

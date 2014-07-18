@@ -93,6 +93,7 @@ namespace spot
 
     /// Root of stack
     stack_of_roots *roots_stack_;
+    generic_stack *stack_;
 
     /// The store of dead states
     deadstore* deadstore_;
