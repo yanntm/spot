@@ -347,28 +347,28 @@ namespace spot
   void concur_opt_dijkstra_scc::dfs_push(fasttgba_state* s)
   {
     ++states_cpt_;
-
     assert(H.find(s) == H.end());
     H.insert(std::make_pair(s, H.size()));
 
     if (uf_->make_set(s, tn_))
       {
-	s->clone();
-	++make_cpt_;
+    	s->clone();
+    	++make_cpt_;
       }
 
     // Count!
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
 
+    stack_->push_transient(todo.size());
+
     todo.push_back ({s, 0, H.size() -1});
     // Count!
     max_dfs_size_ = max_dfs_size_ > todo.size() ?
       max_dfs_size_ : todo.size();
 
-    roots_stack_->push_trivial(todo.size() -1);
 
-    int tmp_cost = 1*roots_stack_->size() + 2*H.size() + 1*live.size()
+    int tmp_cost = 1*stack_->size() + 2*H.size() + 1*live.size()
       + (deadstore_? deadstore_->size() : 0);
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
@@ -379,52 +379,48 @@ namespace spot
   {
     ++update_cpt_;
     assert(H.find(d) != H.end());
-    int dpos = H[d];
-    int rpos = roots_stack_->root_of_the_top();
 
-    roots_stack_->pop();
-    while ((unsigned)dpos < todo[rpos].position)
+    int dpos = H[d];
+    auto top = stack_->pop(todo.size()-1);
+    int r = top.pos;
+    assert(todo[r].state);
+
+    while ((unsigned)dpos < todo[r].position)
       {
 	++update_loop_cpt_;
-    	rpos = roots_stack_->root_of_the_top();
-    	roots_stack_->pop();
-	bool fast_backtrack = false;
-	uf_->unite (d, todo[rpos].state, roots_stack_->top_acceptance(),
-		    &fast_backtrack);
+	assert(todo[r].lasttr);
+	auto newtop = stack_->pop(r-1);
+	r = newtop.pos;
+    	bool fast_backtrack = false;
+    	uf_->unite (d, todo[r].state, top.acc, &fast_backtrack);
       }
-    roots_stack_->push_non_trivial(rpos, *empty_, todo.size() -1);
+    stack_->push_non_transient(r, top.acc/*empty*/);
 
     return false;
   }
 
   void concur_opt_dijkstra_scc::dfs_pop()
   {
-    delete todo.back().lasttr;
 
-    unsigned int rtop = roots_stack_->root_of_the_top();
-    const fasttgba_state* last = todo.back().state;
-    unsigned int steppos = todo.back().position;
+    auto pair = todo.back();
+    delete pair.lasttr;
     todo.pop_back();
 
-    if (rtop == todo.size())
+    if (todo.size() == stack_->top(todo.size()).pos)
       {
 	++roots_poped_cpt_;
-	roots_stack_->pop();
+	stack_->pop(todo.size());
 	int trivial = 0;
-	//deadstore_->add(last);
-	uf_->make_dead(last);
-	seen_map::const_iterator it1 = H.find(last);
+	uf_->make_dead(pair.state);
+	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
-	while (H.size() > steppos)
+	while (H.size() > pair.position)
 	  {
 	    ++trivial;
-	    //deadstore_->add(live.back());
-	    //seen_map::const_iterator it = H.find(live.back());
-	    //H.erase(it);
 	    auto toerase = live.back();
+	    deadstore_->add(toerase);
 	    seen_map::const_iterator it = H.find(toerase);
 	    H.erase(it);
-	    toerase->destroy();
 	    live.pop_back();
  	  }
 	if (trivial == 0) // we just popped a trivial
@@ -433,7 +429,7 @@ namespace spot
     else
       {
 	// This is the integration of Nuutila's optimisation.
-	live.push_back(last);
+	live.push_back(pair.state);
       }
   }
 

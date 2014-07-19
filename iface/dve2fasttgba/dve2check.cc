@@ -523,6 +523,7 @@ main(int argc, char **argv)
 	      new spot::dead_share(itor, nb_threads,
 				   spot::dead_share::FULL_DIJKSTRA);
 	    d->check();
+	    d->dump_threads();
 	    delete d;
 	  }
 	if (opt_concur_dead_mixed)

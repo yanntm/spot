@@ -115,8 +115,6 @@ namespace spot
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
 
-
-    //roots_stack_->push_trivial(todo.size());
     stack_->push_transient(todo.size());
 
     todo.push_back ({s, 0, H.size() -1});
@@ -138,7 +136,6 @@ namespace spot
     auto pair = todo.back();
     delete pair.lasttr;
     todo.pop_back();
-
 
     if (todo.size() == stack_->top(todo.size()).pos)
       {
@@ -199,8 +196,8 @@ namespace spot
     int dpos = H[d];
 
     auto top = stack_->pop(todo.size()-1);
-    markset a = top.acc |
-      top.acc = todo.back().lasttr->current_acceptance_marks();
+    //markset a = top.acc |
+    top.acc |= todo.back().lasttr->current_acceptance_marks();
     int r = top.pos;
     assert(todo[r].state);
 
@@ -210,11 +207,11 @@ namespace spot
 	assert(todo[r].lasttr);
 	auto newtop = stack_->pop(r-1);
 	r = newtop.pos;
-	a |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
+	top.acc |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
       }
-    stack_->push_non_transient(r, a);
+    stack_->push_non_transient(r, top.acc);
 
-    return a.all();
+    return top.acc.all();
   }
 
   opt_dijkstra_scc::color
