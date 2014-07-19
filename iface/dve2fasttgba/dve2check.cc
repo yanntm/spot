@@ -350,9 +350,15 @@ main(int argc, char **argv)
       //
       af1 = spot::ltl_to_tgba_fm(f1, dict);
       assert (af1);
+      mtimer.start("reduce formula");
       spot::postprocessor *pp1 = new spot::postprocessor();
       af1 = pp1->run(af1, f1);
+      mtimer.stop("reduce formula");
       delete pp1;
+      spot::timer t = mtimer.timer("reduce formula");
+      std::cout  << "Reduce formula : " << t.walltime()
+		 << "ms "
+		 << input << std::endl;
 
       if (use_decomp)
 	{
