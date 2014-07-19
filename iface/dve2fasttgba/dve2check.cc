@@ -148,6 +148,7 @@ main(int argc, char **argv)
 
   std::string option_concur_ec_dead_tarjan = "";
   std::string option_concur_ec_dead_dijkstra = "";
+  std::string option_concur_ec_dead_mixed = "";
 
   if (!strncmp("-lc13", argv[3], 5))
     {
@@ -211,10 +212,19 @@ main(int argc, char **argv)
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
-  else if (!strncmp("-concur_ec_dead_mixed", argv[3], 21))
+  else if (!strncmp("-concur_ec_dead_mixed-cs", argv[3], 24))
     {
       opt_concur_ec_dead_mixed = true;
-      std::string s = std::string(argv[3]+21);
+      option_concur_ec_dead_mixed = "-cs";
+      std::string s = std::string(argv[3]+24);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-concur_ec_dead_mixed+cs", argv[3], 24))
+    {
+      opt_concur_ec_dead_mixed = true;
+      option_concur_ec_dead_mixed = "+cs";
+      std::string s = std::string(argv[3]+24);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -496,7 +506,8 @@ main(int argc, char **argv)
 		   << nb_threads << ",";
 	    spot::dead_share* d =
 	      new spot::dead_share(itor, nb_threads,
-				   spot::dead_share::FULL_DIJKSTRA_EC);
+				   spot::dead_share::FULL_DIJKSTRA_EC,
+				   option_concur_ec_dead_dijkstra);
 	    mtimer.start("concur_ec_dead_dijkstra");
 	    if (d->check())
 	      result << "VIOLATED,";
@@ -512,9 +523,13 @@ main(int argc, char **argv)
 	  }
 	if (opt_concur_ec_dead_mixed)
 	  {
+	    result << "#concur_ec_dead_mixed"
+		   << option_concur_ec_dead_mixed
+		   << nb_threads << ",";
 	    spot::dead_share* d =
 	      new spot::dead_share(itor, nb_threads,
-				   spot::dead_share::MIXED_EC);
+				   spot::dead_share::MIXED_EC,
+				   option_concur_ec_dead_mixed);
 	    mtimer.start("concur_ec_dead_mixed");
 	    if (d->check())
 	      result << "VIOLATED,";
