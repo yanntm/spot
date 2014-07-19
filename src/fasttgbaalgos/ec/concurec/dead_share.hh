@@ -246,7 +246,8 @@ namespace spot
 			   int total_threads,
 			   int *stop,
 			   int *stop_terminal,
-			   std::atomic<int>& giddle);
+			   std::atomic<int>& giddle,
+			   std::string option = "");
 
     /// \brief A simple destructor
     virtual ~concur_reachability_ec();
@@ -303,7 +304,8 @@ namespace spot
 		   spot::sharedhashtable* sht,
 		   int thread_number,
 		   int *stop,
-		   int *stop_weak);
+		   int *stop_weak,
+		   std::string option = "");
     /// \brief A simple destructor
     virtual ~concur_weak_ec();
     void push_state(const spot::fasttgba_state* state);

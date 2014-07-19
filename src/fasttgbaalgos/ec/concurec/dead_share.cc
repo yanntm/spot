@@ -836,7 +836,8 @@ namespace spot
 						 int total_threads,
 						 int *stop,
 						 int *stop_terminal,
-						 std::atomic<int>& giddle)
+						 std::atomic<int>& giddle,
+						 std::string)
     : tn_(thread_number),
       tt_(total_threads),
       iddle_(false),
@@ -1006,7 +1007,8 @@ namespace spot
 				 spot::sharedhashtable* sht,
 				 int thread_number,
 				 int *stop,
-				 int *stop_weak)
+				 int *stop_weak,
+				 std::string)
     : inst(i->new_instance()),
       sht_(sht),
       tn_(thread_number),
@@ -1230,32 +1232,38 @@ namespace spot
 	else if (policy_ == FULL_DIJKSTRA)
 	  chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
 							  i, &stop,
-							  &stop_strong, s_));
+							  &stop_strong,
+							  s_, option_));
 	else if (policy_ == FULL_DIJKSTRA_EC)
 	  chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
 							 i, &stop,
-							 &stop_strong, s_));
+							 &stop_strong,
+							 s_, option_));
 	else if (policy_ == MIXED_EC)
 	  {
 	    if (i%2)
 	      chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
 							   i, &stop,
-							   &stop_strong, s_));
+							   &stop_strong,
+							   s_, option_));
 	    else
 	      chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
 							     i, &stop,
-							     &stop_strong, s_));
+							     &stop_strong,
+							     s_, option_));
 	  }
 	else if (policy_ == MIXED)
 	  {
 	    if (i%2)
 	      chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
 							    i, &stop,
-							    &stop_strong, s_));
+							    &stop_strong,
+							    s_, option_));
 	    else
 	      chk.push_back(new spot::concur_opt_dijkstra_scc(itor_, uf_,
 							      i, &stop,
-							     &stop_strong, s_));
+							     &stop_strong,
+							      s_, option_));
 	  }
 	else
 	  {
@@ -1282,15 +1290,17 @@ namespace spot
 		  {
 		    // It's the mixed algorithm!
 		    if (j%2)
-		      chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
-								   j, &stop,
-								   &stop_strong,
-								   s_));
+		      chk.push_back(new spot::concur_opt_tarjan_ec
+				    (itor_, uf_,
+				     j, &stop,
+				     &stop_strong,
+				     s_, option_));
 		    else
-		      chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
-								     j, &stop,
-								     &stop_strong,
-								     s_));
+		      chk.push_back(new spot::concur_opt_dijkstra_ec
+				    (itor_, uf_,
+				     j, &stop,
+				     &stop_strong,
+				     s_, option_));
 		    j++;
 		  }
 
@@ -1306,7 +1316,7 @@ namespace spot
 		while (k++ != how_many_weak)
 		  {
 		    chk.push_back(new spot::concur_weak_ec
-				  (itor_, sht_, j, &stop, &stop_weak));
+				  (itor_, sht_, j, &stop, &stop_weak, option_));
 		    ++j;
 		  }
 
@@ -1317,7 +1327,7 @@ namespace spot
 		    chk.push_back(new spot::concur_reachability_ec
 				  (itor_, os_, j, how_many_terminal,
 				   &stop, &stop_terminal,
-				   term_iddle_));
+				   term_iddle_, option_));
 		    ++j;
 		  }
 
@@ -1335,12 +1345,14 @@ namespace spot
 		      chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
 								   j, &stop,
 								   &stop_strong,
-								   s_));
+								   s_,
+								   option_));
 		    else
-		      chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
-								     j, &stop,
-								   &stop_strong,
-								     s_));
+		      chk.push_back(new spot::concur_opt_dijkstra_ec
+				    (itor_, uf_,
+				     j, &stop,
+				     &stop_strong,
+				     s_, option_));
 		    j++;
 		  }
 
@@ -1349,7 +1361,7 @@ namespace spot
 		while (k++ != tn_ && itor_->have_weak())
 		  {
 		    chk.push_back(new spot::concur_weak_ec
-				  (itor_, sht_, j, &stop, &stop_weak));
+				  (itor_, sht_, j, &stop, &stop_weak, option_));
 		    ++j;
 		  }
 
@@ -1361,7 +1373,7 @@ namespace spot
 		    chk.push_back(new spot::concur_reachability_ec
 				  (itor_, os_, j, tn_,
 				   &stop, &stop_terminal,
-				   term_iddle_));
+				   term_iddle_, option_));
 		    ++j;
 		  }
 
