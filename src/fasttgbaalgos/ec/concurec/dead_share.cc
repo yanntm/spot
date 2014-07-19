@@ -81,30 +81,6 @@ namespace spot
       + (deadstore_? deadstore_->size() : 0);
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
-
-
-    // int position = H.size();
-    // H.insert(std::make_pair(q, position));
-    // dstack_->push(position);
-    // todo.push_back ({q, 0, H.size() -1});
-
-    // if (uf_->make_set(q, tn_))
-    //   {
-    // 	q->clone();
-    // 	++make_cpt_;
-    //   }
-
-    // ++dfs_size_;
-    // ++states_cpt_;
-    // max_dfs_size_ = max_dfs_size_ > dfs_size_ ?
-    //   max_dfs_size_ : dfs_size_;
-    // max_live_size_ = H.size() > max_live_size_ ?
-    //   H.size() : max_live_size_;
-
-    // int tmp_cost = 1*dstack_->size() + 2*H.size() +1*live.size()
-    //   + (deadstore_? deadstore_->size() : 0);
-    // if (tmp_cost > memory_cost_)
-    //   memory_cost_ = tmp_cost;
   }
 
   bool concur_opt_tarjan_scc::dfs_update(fasttgba_state* d)
@@ -116,13 +92,6 @@ namespace spot
       stack_->push_non_transient(H[d], top.acc/*empty*/);
     else
       stack_->push_non_transient(top.pos, top.acc/*empty*/);
-
-
-    // // Warning !  Do not optimize to '<'
-    // // Here we check '<=' since the information "==" is
-    // // needed to the compressed stack of lowlink.
-    // if (H[d] <= dstack_->top())
-    //   dstack_->set_top(H[d]);
 
     bool fast_backtrack = false;
     uf_->unite (d, todo.back().state, top.acc, &fast_backtrack);
@@ -187,55 +156,6 @@ namespace spot
     	uf_->unite (pair.state, todo.back().state, newtop.acc,
     		    &fast_backtrack);
       }
-
-
-
-
-
-    // --dfs_size_;
-    // int ll = dstack_->pop();
-
-    // unsigned int steppos = todo.back().position;
-    // const fasttgba_state* last = todo.back().state;
-    // delete todo.back().lasttr;
-    // todo.pop_back();
-
-    // if ((int) steppos == ll)
-    //   {
-    // 	++roots_poped_cpt_;
-    // 	int trivial = 0;
-
-    // 	// Delete the root that is not inside of live Stack
-    // 	uf_->make_dead(last);
-    // 	seen_map::const_iterator it1 = H.find(last);
-    // 	H.erase(it1);
-    // 	while (H.size() > steppos)
-    // 	  {
-    // 	    ++trivial;
-    // 	    auto toerase = live.back();
-    // 	    seen_map::const_iterator it = H.find(toerase);
-    // 	    H.erase(it);
-    // 	    toerase->destroy();
-    // 	    live.pop_back();
-    // 	  }
-
-    // 	// This change regarding original algorithm
-    // 	if (trivial == 0)
-    // 	  ++trivial_scc_;
-    //   }
-    // else
-    //   {
-    // 	// Warning !  Do not optimize to '<'
-    // 	// Here we check '<=' since the information "==" is
-    // 	// needed to the compressed stack of lowlink.
-    // 	if (ll <= dstack_->top())
-    // 	  dstack_->set_top(ll);
-    // 	live.push_back(last);
-
-    // 	bool fast_backtrack = false;
-    // 	uf_->unite (last, todo.back().state, dstack_->top_acceptance(),
-    // 		    &fast_backtrack);
-    //   }
   }
 
   bool
@@ -418,7 +338,7 @@ namespace spot
 	  {
 	    ++trivial;
 	    auto toerase = live.back();
-	    deadstore_->add(toerase);
+	    //deadstore_->add(toerase);
 	    seen_map::const_iterator it = H.find(toerase);
 	    H.erase(it);
 	    live.pop_back();
@@ -523,7 +443,6 @@ namespace spot
 	while (H.size() > pair.position)
 	  {
 	    ++trivial;
-	    //deadstore_->add(live.back());
 	    seen_map::const_iterator it = H.find(live.back());
 	    H.erase(it);
 	    live.pop_back();
@@ -555,98 +474,10 @@ namespace spot
     	if (fast_backtrack)
     	  fastbacktrack();
       }
-
-
-    // --dfs_size_;
-    // const markset acc = dstack_->top_acceptance();
-    // int ll = dstack_->pop();
-
-    // unsigned int steppos = todo.back().position;
-    // const fasttgba_state* last = todo.back().state;
-    // delete todo.back().lasttr;
-    // todo.pop_back();
-
-    // if ((int) steppos == ll)
-    //   {
-    // 	++roots_poped_cpt_;
-    // 	int trivial = 0;
-
-    // 	// Delete the root that is not inside of live Stack
-    // 	uf_->make_dead(last);
-    // 	seen_map::const_iterator it1 = H.find(last);
-    // 	H.erase(it1);
-    // 	//last->destroy();
-    // 	while (H.size() > steppos)
-    // 	  {
-    // 	    ++trivial;
-    // 	    //deadstore_->add(live.back());
-    // 	    auto toerase = live.back();
-    // 	    seen_map::const_iterator it = H.find(toerase);
-    // 	    H.erase(it);
-    // 	    toerase->destroy();
-    // 	    live.pop_back();
-    // 	  }
-    // 	assert(H.size() == steppos);
-
-    // 	// This change regarding original algorithm
-    // 	if (trivial == 0)
-    // 	  ++trivial_scc_;
-    //   }
-    // else
-    //   {
-    // 	// Warning !  Do not optimize to '<'
-    // 	// Here we check '<=' since the information "==" is
-    // 	// needed to the compressed stack of lowlink.
-    // 	if (ll <= dstack_->top())
-    // 	  dstack_->set_top(ll,  acc |
-    // 			   dstack_->top_acceptance() |
-    // 			   todo.back().lasttr->current_acceptance_marks());
-    // 	else
-    // 	  dstack_->set_top(dstack_->top(),  acc |
-    // 			   dstack_->top_acceptance() |
-    // 			   todo.back().lasttr->current_acceptance_marks());
-
-    // 	live.push_back(last);
-    // 	bool fast_backtrack = false;
-    // 	dstack_->set_top(dstack_->top(),
-    // 			 uf_->unite (last, todo.back().state,
-    // 				     dstack_->top_acceptance(),
-    // 				     &fast_backtrack));
-    // 	if (dstack_->top_acceptance().all())
-    // 	  counterexample_found = true;
-
-    // 	if (fast_backtrack)
-    // 	  fastbacktrack();
-    //   }
   }
 
   bool concur_opt_tarjan_ec::dfs_update(fasttgba_state* d)
   {
-    // ++update_cpt_;
-    // // Warning !  Do not optimize to '<'
-    // // Here we check '<=' since the information "==" is
-    // // needed to the compressed stack of lowlink.
-    // if (H[d] <= dstack_->top())
-    //   dstack_->set_top(H[d] ,
-    // 		       todo.back().lasttr->current_acceptance_marks() |
-    // 		       dstack_->top_acceptance());
-    // else
-    //   dstack_->set_top(dstack_->top(),
-    // 		       todo.back().lasttr->current_acceptance_marks() |
-    // 		       dstack_->top_acceptance());
-
-    // bool fast_backtrack = false;
-    // dstack_->set_top(dstack_->top(),
-    // 		     uf_->unite (d, todo.back().state,
-    // 				 dstack_->top_acceptance(),
-    // 				 &fast_backtrack));
-
-    // bool rv = dstack_->top_acceptance().all();
-    // if (!rv && fast_backtrack)
-    //   fastbacktrack();
-
-    // return rv;
-
     ++update_cpt_;
     auto top = stack_->pop(todo.back().position);
     top.acc |= todo.back().lasttr->current_acceptance_marks();
@@ -725,39 +556,42 @@ namespace spot
   // Concurrent Dijkstra Emptiness check  with shared union find.
   // ======================================================================
 
-
-
   bool concur_opt_dijkstra_ec::merge(fasttgba_state* d)
   {
     ++update_cpt_;
     assert(H.find(d) != H.end());
+
     int dpos = H[d];
-    int rpos = roots_stack_->root_of_the_top();
-    markset a = todo[rpos].lasttr->current_acceptance_marks();
 
-    roots_stack_->pop();
-    while ((unsigned)dpos < todo[rpos].position)
+    auto top = stack_->pop(todo.size()-1);
+    top.acc |= todo.back().lasttr->current_acceptance_marks();
+    int r = top.pos;
+    assert(todo[r].state);
+
+    while ((unsigned)dpos < todo[r].position)
       {
-  	++update_loop_cpt_;
-    	rpos = roots_stack_->root_of_the_top();
-  	bool fast_backtrack = false;
+	++update_loop_cpt_;
+	assert(todo[r].lasttr);
+	auto newtop = stack_->top(r-1);
+	int oldr = r;
+	r = newtop.pos;
+	top.acc |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
 
-    	markset m = todo[rpos].lasttr->current_acceptance_marks();
-    	a |= m | roots_stack_->top_acceptance();
+	bool fast_backtrack = false;
+    	uf_->unite (d, todo[r].state, top.acc, &fast_backtrack);
 
-  	uf_->unite (d, todo[rpos].state, a, &fast_backtrack);
-
-	if (fast_backtrack)
-	  {
-	    // continue;
-	    fastbacktrack();
-	    return false;
-	  }
-    	roots_stack_->pop();
+    	if (fast_backtrack)
+    	  {
+    	    fastbacktrack();
+    	    return false;
+    	  }
+	// To fastbacktrack efficently
+	stack_->pop(oldr -1);
       }
-    roots_stack_->push_non_trivial(rpos, a, todo.size() -1);
+    stack_->push_non_transient(r, top.acc);
 
-    return a.all();
+    return top.acc.all();
+
   }
 
 
@@ -786,8 +620,8 @@ namespace spot
 	//
 	// Warning ! The root stack must not be bigger than todo!
 	todo.pop_back();
-	if (roots_stack_->root_of_the_top() == todo.size())
-	  roots_stack_->pop();
+	if (stack_->top(todo.size()).pos == todo.size())
+	  stack_->pop(todo.size());
       }
 
     if (todo.empty())
@@ -855,10 +689,7 @@ namespace spot
 
   concur_reachability_ec::~concur_reachability_ec()
   {
-    std::unordered_set
-      <const fasttgba_state*,
-       fasttgba_state_ptr_hash,
-       fasttgba_state_ptr_equal>::iterator it = store.begin();
+    auto  it = store.begin();
     while (it != store.end())
       {
     	const fasttgba_state* ptr = *it;

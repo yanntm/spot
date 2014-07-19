@@ -147,6 +147,7 @@ main(int argc, char **argv)
   std::string option_wait  = "";
 
   std::string option_concur_ec_dead_tarjan = "";
+  std::string option_concur_ec_dead_dijkstra = "";
 
   if (!strncmp("-lc13", argv[3], 5))
     {
@@ -194,10 +195,19 @@ main(int argc, char **argv)
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
-  else if (!strncmp("-concur_ec_dead_dijkstra", argv[3], 24))
+  else if (!strncmp("-concur_ec_dead_dijkstra+cs", argv[3], 27))
     {
       opt_concur_ec_dead_dijkstra = true;
-      std::string s = std::string(argv[3]+24);
+      option_concur_ec_dead_dijkstra = "+cs";
+      std::string s = std::string(argv[3]+27);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-concur_ec_dead_dijkstra-cs", argv[3], 27))
+    {
+      opt_concur_ec_dead_dijkstra = true;
+      option_concur_ec_dead_dijkstra = "-cs";
+      std::string s = std::string(argv[3]+27);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -481,6 +491,9 @@ main(int argc, char **argv)
 	  }
 	if (opt_concur_ec_dead_dijkstra)
 	  {
+	    result << "#concur_ec_dead_dijkstra"
+		   << option_concur_ec_dead_dijkstra
+		   << nb_threads << ",";
 	    spot::dead_share* d =
 	      new spot::dead_share(itor, nb_threads,
 				   spot::dead_share::FULL_DIJKSTRA_EC);
