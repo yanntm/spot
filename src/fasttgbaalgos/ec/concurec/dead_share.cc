@@ -61,13 +61,13 @@ namespace spot
   {
     int position = H.size();
     H.insert(std::make_pair(q, position));
-    dstack_->push(position);
+    stack_->push_transient(position);
     todo.push_back ({q, 0, H.size() -1});
 
     if (uf_->make_set(q, tn_))
       {
-	q->clone();
-	++make_cpt_;
+    	q->clone();
+    	++make_cpt_;
       }
 
     ++dfs_size_;
@@ -77,24 +77,55 @@ namespace spot
     max_live_size_ = H.size() > max_live_size_ ?
       H.size() : max_live_size_;
 
-    int tmp_cost = 1*dstack_->size() + 2*H.size() +1*live.size()
+    int tmp_cost = 1*stack_->size() + 2*H.size() +1*live.size()
       + (deadstore_? deadstore_->size() : 0);
     if (tmp_cost > memory_cost_)
       memory_cost_ = tmp_cost;
+
+
+    // int position = H.size();
+    // H.insert(std::make_pair(q, position));
+    // dstack_->push(position);
+    // todo.push_back ({q, 0, H.size() -1});
+
+    // if (uf_->make_set(q, tn_))
+    //   {
+    // 	q->clone();
+    // 	++make_cpt_;
+    //   }
+
+    // ++dfs_size_;
+    // ++states_cpt_;
+    // max_dfs_size_ = max_dfs_size_ > dfs_size_ ?
+    //   max_dfs_size_ : dfs_size_;
+    // max_live_size_ = H.size() > max_live_size_ ?
+    //   H.size() : max_live_size_;
+
+    // int tmp_cost = 1*dstack_->size() + 2*H.size() +1*live.size()
+    //   + (deadstore_? deadstore_->size() : 0);
+    // if (tmp_cost > memory_cost_)
+    //   memory_cost_ = tmp_cost;
   }
 
   bool concur_opt_tarjan_scc::dfs_update(fasttgba_state* d)
   {
     ++update_cpt_;
-    // Warning !  Do not optimize to '<'
-    // Here we check '<=' since the information "==" is
-    // needed to the compressed stack of lowlink.
-    if (H[d] <= dstack_->top())
-      dstack_->set_top(H[d]);
+    auto top = stack_->pop(todo.back().position);
+
+    if (H[d] <= (int) top.pos)
+      stack_->push_non_transient(H[d], top.acc/*empty*/);
+    else
+      stack_->push_non_transient(top.pos, top.acc/*empty*/);
+
+
+    // // Warning !  Do not optimize to '<'
+    // // Here we check '<=' since the information "==" is
+    // // needed to the compressed stack of lowlink.
+    // if (H[d] <= dstack_->top())
+    //   dstack_->set_top(H[d]);
 
     bool fast_backtrack = false;
-    uf_->unite (d, todo.back().state, dstack_->top_acceptance(),
-		&fast_backtrack);
+    uf_->unite (d, todo.back().state, top.acc, &fast_backtrack);
     return false;
   }
 
@@ -114,29 +145,27 @@ namespace spot
   concur_opt_tarjan_scc::dfs_pop()
   {
     --dfs_size_;
-    int ll = dstack_->pop();
+    auto top = stack_->pop(todo.back().position);
 
-    unsigned int steppos = todo.back().position;
-    const fasttgba_state* last = todo.back().state;
-    delete todo.back().lasttr;
+    auto pair = todo.back();
+    delete pair.lasttr;
     todo.pop_back();
 
-    if ((int) steppos == ll)
+    if (pair.position == (unsigned) top.pos)
       {
 	++roots_poped_cpt_;
 	int trivial = 0;
 
 	// Delete the root that is not inside of live Stack
-	uf_->make_dead(last);
-	seen_map::const_iterator it1 = H.find(last);
+	uf_->make_dead(pair.state);
+	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
-	while (H.size() > steppos)
+	while (H.size() > pair.position)
 	  {
 	    ++trivial;
-	    auto toerase = live.back();
-	    seen_map::const_iterator it = H.find(toerase);
+	    //deadstore_->add(live.back());
+	    seen_map::const_iterator it = H.find(live.back());
 	    H.erase(it);
-	    toerase->destroy();
 	    live.pop_back();
 	  }
 
@@ -146,17 +175,67 @@ namespace spot
       }
     else
       {
-	// Warning !  Do not optimize to '<'
-	// Here we check '<=' since the information "==" is
-	// needed to the compressed stack of lowlink.
-	if (ll <= dstack_->top())
-	  dstack_->set_top(ll);
-	live.push_back(last);
+	auto newtop = stack_->pop(todo.back().position);
 
-	bool fast_backtrack = false;
-	uf_->unite (last, todo.back().state, dstack_->top_acceptance(),
-		    &fast_backtrack);
+	if (top.pos <= newtop.pos)
+	  stack_->push_non_transient(top.pos, newtop.acc);
+	else
+	  stack_->push_non_transient(newtop.pos, newtop.acc);
+
+	live.push_back(pair.state);
+    	bool fast_backtrack = false;
+    	uf_->unite (pair.state, todo.back().state, newtop.acc,
+    		    &fast_backtrack);
       }
+
+
+
+
+
+    // --dfs_size_;
+    // int ll = dstack_->pop();
+
+    // unsigned int steppos = todo.back().position;
+    // const fasttgba_state* last = todo.back().state;
+    // delete todo.back().lasttr;
+    // todo.pop_back();
+
+    // if ((int) steppos == ll)
+    //   {
+    // 	++roots_poped_cpt_;
+    // 	int trivial = 0;
+
+    // 	// Delete the root that is not inside of live Stack
+    // 	uf_->make_dead(last);
+    // 	seen_map::const_iterator it1 = H.find(last);
+    // 	H.erase(it1);
+    // 	while (H.size() > steppos)
+    // 	  {
+    // 	    ++trivial;
+    // 	    auto toerase = live.back();
+    // 	    seen_map::const_iterator it = H.find(toerase);
+    // 	    H.erase(it);
+    // 	    toerase->destroy();
+    // 	    live.pop_back();
+    // 	  }
+
+    // 	// This change regarding original algorithm
+    // 	if (trivial == 0)
+    // 	  ++trivial_scc_;
+    //   }
+    // else
+    //   {
+    // 	// Warning !  Do not optimize to '<'
+    // 	// Here we check '<=' since the information "==" is
+    // 	// needed to the compressed stack of lowlink.
+    // 	if (ll <= dstack_->top())
+    // 	  dstack_->set_top(ll);
+    // 	live.push_back(last);
+
+    // 	bool fast_backtrack = false;
+    // 	uf_->unite (last, todo.back().state, dstack_->top_acceptance(),
+    // 		    &fast_backtrack);
+    //   }
   }
 
   bool
@@ -430,35 +509,29 @@ namespace spot
   void concur_opt_tarjan_ec::dfs_pop()
   {
     --dfs_size_;
-    const markset acc = dstack_->top_acceptance();
-    int ll = dstack_->pop();
+    auto top = stack_->pop(todo.back().position);
 
-    unsigned int steppos = todo.back().position;
-    const fasttgba_state* last = todo.back().state;
-    delete todo.back().lasttr;
+    auto pair = todo.back();
+    delete pair.lasttr;
     todo.pop_back();
 
-    if ((int) steppos == ll)
+    if (pair.position == (unsigned) top.pos)
       {
 	++roots_poped_cpt_;
 	int trivial = 0;
 
 	// Delete the root that is not inside of live Stack
-	uf_->make_dead(last);
-	seen_map::const_iterator it1 = H.find(last);
+	uf_->make_dead(pair.state);
+	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
-	//last->destroy();
-	while (H.size() > steppos)
+	while (H.size() > pair.position)
 	  {
 	    ++trivial;
 	    //deadstore_->add(live.back());
-	    auto toerase = live.back();
-	    seen_map::const_iterator it = H.find(toerase);
+	    seen_map::const_iterator it = H.find(live.back());
 	    H.erase(it);
-	    toerase->destroy();
 	    live.pop_back();
 	  }
-	assert(H.size() == steppos);
 
 	// This change regarding original algorithm
 	if (trivial == 0)
@@ -466,54 +539,131 @@ namespace spot
       }
     else
       {
-	// Warning !  Do not optimize to '<'
-	// Here we check '<=' since the information "==" is
-	// needed to the compressed stack of lowlink.
-	if (ll <= dstack_->top())
-	  dstack_->set_top(ll,  acc |
-			   dstack_->top_acceptance() |
-			   todo.back().lasttr->current_acceptance_marks());
-	else
-	  dstack_->set_top(dstack_->top(),  acc |
-			   dstack_->top_acceptance() |
-			   todo.back().lasttr->current_acceptance_marks());
+	auto newtop = stack_->pop(todo.back().position);
+	newtop.acc |= top.acc | todo.back().lasttr->current_acceptance_marks();
 
-	live.push_back(last);
-	bool fast_backtrack = false;
-	dstack_->set_top(dstack_->top(),
-			 uf_->unite (last, todo.back().state,
-				     dstack_->top_acceptance(),
-				     &fast_backtrack));
-	if (dstack_->top_acceptance().all())
+	if (top.pos <= newtop.pos)
+	  stack_->push_non_transient(top.pos, newtop.acc);
+	else
+	  stack_->push_non_transient(newtop.pos, newtop.acc);
+
+	live.push_back(pair.state);
+
+	if (newtop.acc.all())
 	  counterexample_found = true;
 
-	if (fast_backtrack)
-	  fastbacktrack();
+    	bool fast_backtrack = false;
+    	uf_->unite (pair.state, todo.back().state, newtop.acc,
+    		    &fast_backtrack);
+
+    	if (fast_backtrack)
+    	  fastbacktrack();
       }
+
+
+    // --dfs_size_;
+    // const markset acc = dstack_->top_acceptance();
+    // int ll = dstack_->pop();
+
+    // unsigned int steppos = todo.back().position;
+    // const fasttgba_state* last = todo.back().state;
+    // delete todo.back().lasttr;
+    // todo.pop_back();
+
+    // if ((int) steppos == ll)
+    //   {
+    // 	++roots_poped_cpt_;
+    // 	int trivial = 0;
+
+    // 	// Delete the root that is not inside of live Stack
+    // 	uf_->make_dead(last);
+    // 	seen_map::const_iterator it1 = H.find(last);
+    // 	H.erase(it1);
+    // 	//last->destroy();
+    // 	while (H.size() > steppos)
+    // 	  {
+    // 	    ++trivial;
+    // 	    //deadstore_->add(live.back());
+    // 	    auto toerase = live.back();
+    // 	    seen_map::const_iterator it = H.find(toerase);
+    // 	    H.erase(it);
+    // 	    toerase->destroy();
+    // 	    live.pop_back();
+    // 	  }
+    // 	assert(H.size() == steppos);
+
+    // 	// This change regarding original algorithm
+    // 	if (trivial == 0)
+    // 	  ++trivial_scc_;
+    //   }
+    // else
+    //   {
+    // 	// Warning !  Do not optimize to '<'
+    // 	// Here we check '<=' since the information "==" is
+    // 	// needed to the compressed stack of lowlink.
+    // 	if (ll <= dstack_->top())
+    // 	  dstack_->set_top(ll,  acc |
+    // 			   dstack_->top_acceptance() |
+    // 			   todo.back().lasttr->current_acceptance_marks());
+    // 	else
+    // 	  dstack_->set_top(dstack_->top(),  acc |
+    // 			   dstack_->top_acceptance() |
+    // 			   todo.back().lasttr->current_acceptance_marks());
+
+    // 	live.push_back(last);
+    // 	bool fast_backtrack = false;
+    // 	dstack_->set_top(dstack_->top(),
+    // 			 uf_->unite (last, todo.back().state,
+    // 				     dstack_->top_acceptance(),
+    // 				     &fast_backtrack));
+    // 	if (dstack_->top_acceptance().all())
+    // 	  counterexample_found = true;
+
+    // 	if (fast_backtrack)
+    // 	  fastbacktrack();
+    //   }
   }
 
   bool concur_opt_tarjan_ec::dfs_update(fasttgba_state* d)
   {
+    // ++update_cpt_;
+    // // Warning !  Do not optimize to '<'
+    // // Here we check '<=' since the information "==" is
+    // // needed to the compressed stack of lowlink.
+    // if (H[d] <= dstack_->top())
+    //   dstack_->set_top(H[d] ,
+    // 		       todo.back().lasttr->current_acceptance_marks() |
+    // 		       dstack_->top_acceptance());
+    // else
+    //   dstack_->set_top(dstack_->top(),
+    // 		       todo.back().lasttr->current_acceptance_marks() |
+    // 		       dstack_->top_acceptance());
+
+    // bool fast_backtrack = false;
+    // dstack_->set_top(dstack_->top(),
+    // 		     uf_->unite (d, todo.back().state,
+    // 				 dstack_->top_acceptance(),
+    // 				 &fast_backtrack));
+
+    // bool rv = dstack_->top_acceptance().all();
+    // if (!rv && fast_backtrack)
+    //   fastbacktrack();
+
+    // return rv;
+
     ++update_cpt_;
-    // Warning !  Do not optimize to '<'
-    // Here we check '<=' since the information "==" is
-    // needed to the compressed stack of lowlink.
-    if (H[d] <= dstack_->top())
-      dstack_->set_top(H[d] ,
-		       todo.back().lasttr->current_acceptance_marks() |
-		       dstack_->top_acceptance());
+    auto top = stack_->pop(todo.back().position);
+    top.acc |= todo.back().lasttr->current_acceptance_marks();
+
+    if (H[d] <= (int) top.pos)
+      stack_->push_non_transient(H[d], top.acc);
     else
-      dstack_->set_top(dstack_->top(),
-		       todo.back().lasttr->current_acceptance_marks() |
-		       dstack_->top_acceptance());
+      stack_->push_non_transient(top.pos, top.acc);
 
     bool fast_backtrack = false;
-    dstack_->set_top(dstack_->top(),
-    		     uf_->unite (d, todo.back().state,
-    				 dstack_->top_acceptance(),
-    				 &fast_backtrack));
+    uf_->unite (d, todo.back().state, top.acc, &fast_backtrack);
 
-    bool rv = dstack_->top_acceptance().all();
+    bool rv = top.acc.all();
     if (!rv && fast_backtrack)
       fastbacktrack();
 
@@ -539,8 +689,9 @@ namespace spot
 	delete todo.back().lasttr;
 
 	// Pop todo and dstack
+	stack_->pop(todo.back().position);
 	todo.pop_back();
-	dstack_->pop();
+	//dstack_->pop();
       }
 
     if (todo.empty())
@@ -1040,8 +1191,9 @@ namespace spot
 
   dead_share::dead_share(instanciator* i,
 			 int thread_number,
-			 DeadSharePolicy policy) :
-    itor_(i), tn_(thread_number), policy_(policy), max_diff(0)
+			 DeadSharePolicy policy,
+			 std::string option) :
+    itor_(i), tn_(thread_number), policy_(policy), max_diff(0), option_(option)
   {
     assert(i && thread_number);
     uf_ = new spot::uf(tn_);
@@ -1059,16 +1211,18 @@ namespace spot
     // Let us instanciate the checker according to the policy
     for (int i = 0; i < tn_; ++i)
       {
-	bool s_ = true; //i != 0;
+	bool s_ = i != 0;// true;
 
 	if (policy_ == FULL_TARJAN)
 	  chk.push_back(new spot::concur_opt_tarjan_scc(itor_, uf_,
 							i, &stop,
-							&stop_strong, s_));
+							&stop_strong, s_,
+							option_));
 	else if (policy_ == FULL_TARJAN_EC)
 	  chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
 						       i, &stop,
-							&stop_strong, s_));
+						       &stop_strong, s_,
+						       option_));
 	else if (policy_ == REACHABILITY_EC)
 	  chk.push_back(new spot::concur_reachability_ec
 			(itor_, os_, i, tn_, &stop, &stop_terminal,
@@ -1316,18 +1470,16 @@ namespace spot
   void dead_share::dump_threads()
   {
     std::cout << std::endl << "THREADS DUMP : " << std::endl;
-    auto tmpi = 0;
+    auto  min = chk[0]->get_elapsed_time();
+    auto  max = chk[0]->get_elapsed_time();
     for (int i = 0; i < (int)chk.size(); ++i)
       {
-	if (max_diff < std::abs(chk[i]->get_elapsed_time()
-				- chk[tmpi]->get_elapsed_time()))
-	  {
-	    max_diff = std::abs(chk[tmpi]->get_elapsed_time()
-				- chk[i]->get_elapsed_time());
-	    tmpi = i;
-	  }
+	min = min > chk[i]->get_elapsed_time() ?
+	  chk[i]->get_elapsed_time() : min;
+        max = max < chk[i]->get_elapsed_time() ?
+	  chk[i]->get_elapsed_time() : max;
 
-	std::cout << "      thread : " << i << "  csv : "
+	std::cout << "      @thread : " << i << "  csv : "
 		  << (chk[i]->has_counterexample() ? "VIOLATED,"
 		      : "VERIFIED,")
 		  << chk[i]->get_elapsed_time() << ","
@@ -1336,6 +1488,7 @@ namespace spot
 		  << std::endl;
       }
     std::cout << std::endl;
+    max_diff = max-min;
   }
 
   std::string dead_share::csv()

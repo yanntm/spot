@@ -146,6 +146,8 @@ main(int argc, char **argv)
   std::string option_c99  = "";
   std::string option_wait  = "";
 
+  std::string option_concur_ec_dead_tarjan = "";
+
   if (!strncmp("-lc13", argv[3], 5))
     {
       opt_lc13 = true;
@@ -169,10 +171,19 @@ main(int argc, char **argv)
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
-  else if (!strncmp("-concur_ec_dead_tarjan", argv[3], 22))
+  else if (!strncmp("-concur_ec_dead_tarjan+cs", argv[3], 25))
     {
+      option_concur_ec_dead_tarjan = "+cs";
       opt_concur_ec_dead_tarjan = true;
-      std::string s = std::string(argv[3]+22);
+      std::string s = std::string(argv[3]+25);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-concur_ec_dead_tarjan-cs", argv[3], 25))
+    {
+      option_concur_ec_dead_tarjan = "-cs";
+      opt_concur_ec_dead_tarjan = true;
+      std::string s = std::string(argv[3]+25);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -405,6 +416,7 @@ main(int argc, char **argv)
 	      new spot::dead_share(itor, nb_threads,
 				   spot::dead_share::FULL_TARJAN);
 	    d->check();
+	    d->dump_threads();
 	    delete d;
 	  }
 
@@ -423,9 +435,13 @@ main(int argc, char **argv)
 
 	if (opt_concur_ec_dead_tarjan)
 	  {
+	    result << "#concur_ec_dead_tarjan"
+		   << option_concur_ec_dead_tarjan
+		   << nb_threads << ",";
 	    spot::dead_share* d =
 	      new spot::dead_share(itor, nb_threads,
-				   spot::dead_share::FULL_TARJAN_EC);
+				   spot::dead_share::FULL_TARJAN_EC,
+				   option_concur_ec_dead_tarjan);
 	    mtimer.start("concur_ec_dead_tarjan");
 	    if (d->check())
 	      result << "VIOLATED,";

@@ -42,7 +42,7 @@ void uf_free(uf_t* uf, int verbose, size_t tn)
 {
   if (verbose)
     {
-      ht_print(uf->table, true);
+      ht_print(uf->table, false);
       /* ht_iter_value(uf->table, */
       /* 		    (process_fun_t) print_uf_node_t); // Thread Safe! */
     }

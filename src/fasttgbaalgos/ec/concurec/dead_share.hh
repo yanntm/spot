@@ -386,7 +386,8 @@ namespace spot
     /// \param thread_number the number of thread to use
     dead_share(instanciator* i,
 	       int thread_number = 1,
-	       DeadSharePolicy policy = FULL_TARJAN);
+	       DeadSharePolicy policy = FULL_TARJAN,
+	       std::string option = "");
 
     /// \brief Release all memory
     virtual ~dead_share();
@@ -418,6 +419,7 @@ namespace spot
     int stop_weak;			     ///< Stop terminal variable
     std::atomic<int> term_iddle_;
     int stop_strong;			     ///< Stop strong variable
+    std::string option_;		     ///< option to pass to ec.
   };
 }
 
