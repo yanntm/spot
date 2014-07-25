@@ -131,8 +131,8 @@ namespace spot
     ++update_cpt_;
 
     auto top = stack_->pop(todo.size()-1);
-    markset a = top.acc |
-      top.acc = todo.back().lasttr->current_acceptance_marks();
+    //    markset a //= top.acc |
+    top.acc |= todo.back().lasttr->current_acceptance_marks();
     int r = top.pos;
     assert(todo[r].state);
 
@@ -143,11 +143,11 @@ namespace spot
 	assert(todo[r].lasttr);
 	auto newtop = stack_->pop(r-1);
 	r = newtop.pos;
-	a |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
+	top.acc |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
       }
-    stack_->push_non_transient(r, a);
+    stack_->push_non_transient(r, top.acc);
 
-    return a.all();
+    return top.acc.all();
   }
 
   void unioncheck::main()

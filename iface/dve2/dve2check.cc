@@ -76,7 +76,7 @@ main(int argc, char **argv)
   bool deterministic = false;
   char *dead = 0;
   int compress_states = 0;
-  bool opt_compare = true;
+  bool opt_compare = false;
 
   const char* echeck_algo = "Cou99";
 
@@ -313,7 +313,7 @@ main(int argc, char **argv)
 
   {
     spot::emptiness_check* ec = echeck_inst->instantiate(product);
-    spot::dotty_reachable(std::cout, product);
+    //spot::dotty_reachable(std::cout, product);
 
     bool search_many = echeck_inst->options().get("repeated");
     assert(ec);

@@ -674,9 +674,19 @@ namespace spot
 		    }
 		  var_num = ii;
 
+		  if (ii == (int) d_->get_state_variable_count())
+		    {
+		      std::cerr << proc_name
+		  		<< lastdot
+		  		<< " not known! \n";
+		      exit(1);
+		    }
+
 		  int type_num = d_->get_state_variable_type(ii);
+
 		  enum_map_t::const_iterator ei =
 		    enum_map[type_num].find(lastdot+1);
+
 		  if (ei == enum_map[type_num].end())
 		    {
 		      std::cerr << "No state `" << lastdot

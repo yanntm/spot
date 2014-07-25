@@ -54,6 +54,7 @@
 
 #include "fasttgbaalgos/ec/opt/opt_tarjan_scc.hh"
 #include "fasttgbaalgos/ec/opt/opt_dijkstra_scc.hh"
+#include "fasttgbaalgos/ec/opt/opt_ndfs.hh"
 #include "misc/timer.hh"
 
 //
@@ -120,6 +121,7 @@ main(int argc, char **argv)
   bool opt_fstat = false;
   bool opt_kstat = false;
   bool opt_dot = false;
+  bool opt_ndfs = false;
 
   bool opt_concur_dead_tarjan = false;
   bool opt_concur_ec_dead_tarjan = false;
@@ -158,6 +160,10 @@ main(int argc, char **argv)
   else if (!strncmp("-dot", argv[3], 4))
     {
       opt_dot = true;
+    }
+  else if (!strncmp("-ndfs", argv[3], 4))
+    {
+      opt_ndfs = true;
     }
   else if (!strncmp("-decomp_ec", argv[3], 10))
     {
@@ -458,6 +464,24 @@ main(int argc, char **argv)
 	    delete inststr;
 	  }
 
+
+	if (opt_ndfs)
+	  {
+	    result << "#ndfs,";
+	    spot::opt_ndfs* d =
+	      new spot::opt_ndfs(itor);
+	    mtimer.start("ndfs");
+	    if (d->check())
+	      result << "VIOLATED,";
+	    else
+	      result << "VERIFIED,";
+	    mtimer.stop("ndfs");
+	    spot::timer t = mtimer.timer("ndfs");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << d->extra_info_csv() << "," << input;
+	    std::cout << result.str() << std::endl;
+	    delete d;
+	  }
 
 	if (opt_concur_ec_dead_tarjan)
 	  {
@@ -762,7 +786,6 @@ main(int argc, char **argv)
 	  {
 	    std::ostringstream result;
 	    result << "#ecopttarjan" << option_ecopttarjan << ",";
-
 	    spot::opt_tarjan_ec* checker =
 	      new spot::opt_tarjan_ec(itor, option_ecopttarjan);
 	    mtimer.start("Checking ecopttarjan");

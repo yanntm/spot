@@ -24,9 +24,11 @@ optdir = $(pkgincludedir)/fasttgbaalgos/ec/opt
 
 opt_HEADERS = \
   opt_tarjan_scc.hh \
-  opt_dijkstra_scc.hh
+  opt_dijkstra_scc.hh \
+  opt_ndfs.hh
 
 noinst_LTLIBRARIES = libopt.la
 libopt_la_SOURCES = \
   opt_tarjan_scc.cc \
-  opt_dijkstra_scc.cc
+  opt_dijkstra_scc.cc \
+  opt_ndfs.cc
