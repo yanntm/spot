@@ -471,8 +471,8 @@ namespace spot
     	uf_->unite (pair.state, todo.back().state, newtop.acc,
     		    &fast_backtrack);
 
-    	if (fast_backtrack)
-    	  fastbacktrack();
+    	// if (fast_backtrack)
+    	//   fastbacktrack();
       }
   }
 
@@ -491,8 +491,8 @@ namespace spot
     uf_->unite (d, todo.back().state, top.acc, &fast_backtrack);
 
     bool rv = top.acc.all();
-    if (!rv && fast_backtrack)
-      fastbacktrack();
+    // if (!rv && fast_backtrack)
+    //   fastbacktrack();
 
     return rv;
   }
@@ -583,11 +583,11 @@ namespace spot
 	bool fast_backtrack = false;
     	uf_->unite (d, todo[r].state, top.acc, &fast_backtrack);
 
-    	if (fast_backtrack)
-    	  {
-    	    fastbacktrack();
-    	    return false;
-    	  }
+    	// if (fast_backtrack)
+    	//   {
+    	//     fastbacktrack();
+    	//     return false;
+    	//   }
 	// To fastbacktrack efficently
 	stack_->pop(oldr -1);
       }
