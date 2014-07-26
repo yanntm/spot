@@ -90,6 +90,7 @@ namespace spot
   void unioncheck::dfs_push(fasttgba_state* s)
   {
     trace << "Unioncheck::DFS_push "
+	  << a_->format_state(s)
     	  << std::endl;
     ++states_cpt_;
 
@@ -127,7 +128,9 @@ namespace spot
 
   bool unioncheck::merge(fasttgba_state* d)
   {
-    trace << "Unioncheck::merge " << std::endl;
+    trace << "Unioncheck::merge "
+	  << a_->format_state(todo.back().state)
+	  << std::endl;
     ++update_cpt_;
 
     auto top = stack_->pop(todo.size()-1);
@@ -142,8 +145,10 @@ namespace spot
  	uf->unite(d, todo[r].state);
 	assert(todo[r].lasttr);
 	auto newtop = stack_->pop(r-1);
+
+	// [r-1] Because acceptances are stored in the predecessor!
+	top.acc |= newtop.acc | todo[r-1].lasttr->current_acceptance_marks();
 	r = newtop.pos;
-	top.acc |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
       }
     stack_->push_non_transient(r, top.acc);
 
@@ -317,7 +322,9 @@ namespace spot
 
   void tarjanunioncheck::dfs_pop()
   {
-    trace << "Tarjanunioncheck::DFS_pop " << std::endl;
+    trace << "Tarjanunioncheck::DFS_pop "
+	  << a_->format_state(todo.back().state)
+	  << std::endl;
     dfs_element pair = todo.back();
     delete pair.lasttr;
     todo.pop_back();
@@ -349,7 +356,9 @@ namespace spot
 
   bool tarjanunioncheck::dfs_update(fasttgba_state* d)
   {
-    trace << "Tarjanunioncheck::merge " << std::endl;
+    trace << "Tarjanunioncheck::merge "
+	  << a_->format_state(todo.back().state)
+	  << std::endl;
     ++update_cpt_;
     uf->unite(d, todo.back().state);
 

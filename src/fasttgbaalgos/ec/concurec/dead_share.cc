@@ -575,7 +575,10 @@ namespace spot
 	auto newtop = stack_->top(r-1);
 	int oldr = r;
 	r = newtop.pos;
-	top.acc |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
+
+	// [r-1] Because acceptances are stored in the predecessor!
+	top.acc |= newtop.acc | todo[oldr-1].lasttr->current_acceptance_marks();
+	//top.acc |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
 
 	bool fast_backtrack = false;
     	uf_->unite (d, todo[r].state, top.acc, &fast_backtrack);

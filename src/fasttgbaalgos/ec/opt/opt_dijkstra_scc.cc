@@ -206,8 +206,10 @@ namespace spot
 	++update_loop_cpt_;
 	assert(todo[r].lasttr);
 	auto newtop = stack_->pop(r-1);
+
+	// [r-1] Because acceptances are stored in the predecessor!
+	top.acc |= newtop.acc | todo[r-1].lasttr->current_acceptance_marks();
 	r = newtop.pos;
-	top.acc |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
       }
     stack_->push_non_transient(r, top.acc);
 
