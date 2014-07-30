@@ -22,6 +22,7 @@
 #include "dead_share.hh"
 #include "fasttgba/fasttgba_explicit.hh"
 #include "fasttgba/fasttgba_product.hh"
+#include "fasttgbaalgos/dotty_dfs.hh"
 #include <iostream>
 
 namespace spot
@@ -1015,6 +1016,425 @@ namespace spot
   }
 
 
+  // ----------------------------------------------------------------------
+  // TACAS13 -- Single Reachability with swarming
+  // ======================================================================
+
+  reachability_ec::reachability_ec(instanciator* i,
+				   int thread_number,
+				   int *stop)   :
+    tn_(thread_number),
+    insert_cpt_(0),
+    inst(i->new_instance()),
+    counterexample_(false)
+  {
+    a_ = inst->get_terminal_automaton ();
+    stop_ = stop;
+  }
+
+  reachability_ec::~reachability_ec()
+  {
+    // Delete states discovered by this thread
+    std::unordered_set<const fasttgba_state*,
+		       fasttgba_state_ptr_hash,
+		       fasttgba_state_ptr_equal>::const_iterator s;
+    s = store.begin();
+    while (s != store.end())
+      {
+	// Advance the iterator before deleting the "key" pointer.
+	const fasttgba_state* ptr = *s;
+	++s;
+	ptr->destroy();
+      }
+    delete inst;
+
+  }
+
+  bool
+  reachability_ec::check()
+  {
+    start = std::chrono::system_clock::now();
+    auto init = a_->get_init_state();
+    store.insert(init);
+    todo.push_back ({init, 0});
+    ++insert_cpt_;
+    if (is_terminal(init))
+      {
+	*stop_ = 1;
+	end = std::chrono::system_clock::now();
+	counterexample_ = true;
+	return counterexample_;
+      }
+
+    while (!todo.empty() && !*stop_)
+      {
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr =
+	      a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    todo.back().lasttr->next();
+	  }
+
+	if (todo.back().lasttr->done())
+	  {
+	    auto top = todo.back();
+	    delete top.lasttr;
+	    todo.pop_back();
+	  }
+	else
+	  {
+	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    if (store.find(d) == store.end())
+	      {
+		store.insert(d);
+		todo.push_back ({d, 0});
+		++insert_cpt_;
+
+		if (is_terminal(d))
+		  {
+		    *stop_ = 1;
+		    counterexample_ = true;
+		    break;
+		  }
+
+		continue;
+	      }
+	    d->destroy();
+	  }
+      }
+      end = std::chrono::system_clock::now();
+      return counterexample_;
+    }
+
+  bool
+  reachability_ec::is_terminal(const fasttgba_state* s)
+  {
+    if (auto t = dynamic_cast<const fast_product_state*>(s))
+      {
+	if (auto q = dynamic_cast<const fast_explicit_state*>(t->right()))
+	  {
+	    return q->get_strength() == TERMINAL_SCC;
+	  }
+      }
+
+    // Otherwise what to do? Simple reachability
+      return false;
+  }
+
+  bool
+  reachability_ec::has_counterexample()
+  {
+    return counterexample_;
+  }
+
+  std::string
+  reachability_ec::csv()
+  {
+    return "reachability";
+  }
+
+  std::chrono::milliseconds::rep
+  reachability_ec::get_elapsed_time()
+  {
+    auto elapsed_seconds = std::chrono::duration_cast
+      <std::chrono::milliseconds>(end-start).count();
+    return elapsed_seconds < 0 ? 0 : elapsed_seconds;//too quick!
+  }
+
+  int
+  reachability_ec::nb_inserted()
+  {
+    return insert_cpt_;
+  }
+
+
+
+  // ----------------------------------------------------------------------
+  // TACAS'13 -- Single Weak EC with swarming
+  // ======================================================================
+
+  weak_ec::weak_ec(instanciator* i,
+		   int thread_number,
+		   int *stop)
+    : inst(i->new_instance()),
+      tn_(thread_number),
+      insert_cpt_(0),
+      counterexample_(false)
+  {
+    a_ = inst->get_weak_automaton ();
+    assert(a_);
+    stop_ = stop;
+    deadstore_ = new deadstore();
+  }
+
+  /// \brief A simple destructor
+  weak_ec::~weak_ec()
+  {
+    // Delete states discovered by this thread
+    std::unordered_set<const fasttgba_state*,
+		       fasttgba_state_ptr_hash,
+		       fasttgba_state_ptr_equal>::const_iterator s;
+    s = H.begin();
+    while (s != H.end())
+      {
+	// Advance the iterator before deleting the "key" pointer.
+	const fasttgba_state* ptr = *s;
+	++s;
+	ptr->destroy();
+      }
+    delete deadstore_;
+    delete inst;
+  }
+
+  void
+  weak_ec::push_state(const spot::fasttgba_state* state)
+  {
+    H.insert(state);
+    todo.push_back ({state, 0});
+    ++insert_cpt_;
+  }
+
+  weak_ec::color
+  weak_ec::get_color(const spot::fasttgba_state* state)
+  {
+    seen_map::const_iterator i = H.find(state);
+    if (i != H.end())
+      return Alive;
+    else if (deadstore_->contains(state))
+      return Dead;
+    else
+      return Unknown;
+  }
+
+  void
+  weak_ec::dfs_pop()
+  {
+    const fasttgba_state* last = todo.back().state;
+    deadstore_->add(last);
+    delete todo.back().lasttr;
+    todo.pop_back();
+    seen_map::const_iterator it = H.find(last);
+    H.erase(it);
+  }
+
+  bool
+  weak_ec::check()
+  {
+    start = std::chrono::system_clock::now();
+    weak_ec::color c;
+    auto init = a_->get_init_state();
+    push_state(init);
+
+    while (!todo.empty() && !*stop_)
+      {
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr =
+	      a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    todo.back().lasttr->next();
+	  }
+
+	if (todo.back().lasttr->done())
+	  {
+	    dfs_pop ();
+	  }
+	else
+	  {
+	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+	    if (c == Unknown)
+	      {
+		push_state (d);
+		continue;
+	      }
+	    else if (c == Alive)
+	      {
+		accepting_cycle_check(todo.back().state, d);
+		if (counterexample_)
+		  {
+		    *stop_ = 1;
+		  }
+		continue;
+	      }
+
+	    d->destroy();
+	  }
+      }
+    end = std::chrono::system_clock::now();
+    return counterexample_;
+  }
+
+  void
+  weak_ec::accepting_cycle_check(const fasttgba_state* left,
+					const fasttgba_state* right)
+  {
+    if (auto t = dynamic_cast<const fast_product_state*>(left))
+      {
+	if (auto q = dynamic_cast<const fast_explicit_state*>(t->right()))
+	  {
+	    assert(q);
+	    if (!q->formula_scc_accepting)
+	      return;
+
+	    if (auto tt = dynamic_cast<const fast_product_state*>(right))
+	      {
+		if (auto qq = dynamic_cast<const fast_explicit_state*>
+		    (tt->right()))
+		  {
+		    assert(qq);
+		    if (q->formula_scc_number == qq->formula_scc_number)
+		      counterexample_ = true;
+		  }
+	      }
+	  }
+      }
+  }
+
+  bool
+  weak_ec::has_counterexample()
+  {
+    return counterexample_;
+  }
+
+  std::string
+  weak_ec::csv()
+  {
+    return "weak_dfs";
+  }
+
+  std::chrono::milliseconds::rep
+  weak_ec::get_elapsed_time()
+  {
+    auto elapsed_seconds = std::chrono::duration_cast
+      <std::chrono::milliseconds>(end-start).count();
+    return elapsed_seconds > 0 ? elapsed_seconds : 0;
+  }
+
+  int
+  weak_ec::nb_inserted()
+  {
+    return insert_cpt_;
+  }
+
+  // ----------------------------------------------------------------------
+  // TACAS'13 -- Single Tarjan Algorithm with swarming
+  // ======================================================================
+
+  single_opt_tarjan_ec::single_opt_tarjan_ec(instanciator* i,
+					     int thread_number,
+					     int *stop,
+					     std::string option)
+    : opt_tarjan_ec(i, option)
+  {
+    tn_ = thread_number;
+    stop_ =  stop;
+  }
+
+  void
+  single_opt_tarjan_ec::main ()
+  {
+    opt_tarjan_scc::color c;
+    while (!todo.empty() && !*stop_)
+      {
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr = swarm_ ?
+	      a_->swarm_succ_iter(todo.back().state, tn_) :
+	      a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
+	  }
+
+	if (todo.back().lasttr->done())
+	  {
+	    dfs_pop ();
+	    if (counterexample_found)
+	      return;
+	  }
+	else
+	  {
+	    ++transitions_cpt_;
+	    assert(todo.back().lasttr);
+	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+	    if (c == Unknown)
+	      {
+		dfs_push (d);
+		continue;
+	      }
+	    else if (c == Alive)
+	      {
+		if (dfs_update (d))
+		  {
+		    *stop_ = 1;
+		    counterexample_found = true;
+		    d->destroy();
+		    return;
+		  }
+	      }
+	    d->destroy();
+	  }
+      }
+  }
+
+  bool
+  single_opt_tarjan_ec::check()
+  {
+    start = std::chrono::system_clock::now();
+    init();
+    main();
+    end = std::chrono::system_clock::now();
+    return counterexample_found;
+  }
+
+  bool
+  single_opt_tarjan_ec::has_counterexample()
+  {
+    return counterexample_found;
+  }
+
+  std::string
+  single_opt_tarjan_ec::csv()
+  {
+    return "tarjan," + extra_info_csv();
+  }
+
+  std::chrono::milliseconds::rep
+  single_opt_tarjan_ec::get_elapsed_time()
+  {
+    auto elapsed_seconds = std::chrono::duration_cast
+      <std::chrono::milliseconds>(end-start).count();
+    return elapsed_seconds < 0 ? 0 : elapsed_seconds;//too quick!
+  }
+
+  int
+  single_opt_tarjan_ec::nb_inserted()
+  {
+    return states_cpt_;
+  }
+
+
+
+
+
+
+
+
+
+
+
 
 
   // ----------------------------------------------------------------------
@@ -1097,7 +1517,8 @@ namespace spot
 	  }
 	else
 	  {
-	    assert(policy_ == DECOMP_EC || policy_ == DECOMP_EC_SEQ);
+	    assert(policy_ == DECOMP_EC || policy_ == DECOMP_EC_SEQ ||
+		   policy_ == DECOMP_TACAS13_TARJAN);
 
 
 	    if (policy_ == DECOMP_EC)
@@ -1164,7 +1585,7 @@ namespace spot
 		// All threads have been set ! That's it!
 		break;
 	      }
-	    else
+	    else if (policy_ == DECOMP_EC_SEQ)
 	      {
 		int k = 0;
 		int j = 0;
@@ -1206,6 +1627,31 @@ namespace spot
 				   term_iddle_, option_));
 		    ++j;
 		  }
+
+		break;
+	      }
+	    else
+	      {
+		assert(policy == DECOMP_TACAS13_TARJAN);
+
+		stop = 0;
+		if(!itor_->have_terminal())
+		  chk.push_back(new spot::fake_ec(0/*id*/));
+		else
+		  chk.push_back(new spot::reachability_ec
+				(itor_, 0/*id*/, &stop));
+
+		if(!itor_->have_weak())
+		  chk.push_back(new spot::fake_ec(1/*id*/));
+		else
+		  chk.push_back(new spot::weak_ec
+				(itor_, 1 /*id*/, &stop));
+
+		if(!itor_->have_strong())
+		  chk.push_back(new spot::fake_ec(2/*id*/));
+		else
+		  chk.push_back(new spot::single_opt_tarjan_ec
+				(itor_, 2/*id*/,&stop, option_));
 
 		break;
 	      }
@@ -1289,7 +1735,8 @@ namespace spot
       ctrexple |= chk[i]->has_counterexample();
 
     // Display results
-    if (policy_ == DECOMP_EC || policy_ == REACHABILITY_EC)
+    if (policy_ == DECOMP_EC || policy_ == REACHABILITY_EC ||
+	policy_ == DECOMP_TACAS13_TARJAN)
       {
 	if (os_->size())
 	  printf("\n[OS] num of threads = %d insert = %d  elapsed time = %d\n",
@@ -1364,6 +1811,9 @@ namespace spot
 	break;
       case REACHABILITY_EC:
 	res << "REACHABILITY_EC,";
+	break;
+      case DECOMP_TACAS13_TARJAN:
+	res << "DECOMP_TACAS13_TARJAN,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;

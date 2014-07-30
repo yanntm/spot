@@ -130,9 +130,11 @@ main(int argc, char **argv)
   bool opt_concur_dead_dijkstra = false;
   bool opt_concur_dead_mixed = false;
   bool use_decomp = false;
+  bool opt_tacas13_tarjan = false;
   unsigned int  nb_threads = 1;
 
   std::string option_uc13 = "";
+  std::string option_tacas13 = "";
   std::string option_tuc13 = "";
   std::string option_dc13 = "";
   std::string option_dijkstra = "";
@@ -170,6 +172,13 @@ main(int argc, char **argv)
       use_decomp = true;
       std::string s = std::string(argv[3]+10);
       nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-tacas13tarjan", argv[3], 14))
+    {
+      opt_tacas13_tarjan = true;
+      option_tacas13 = std::string(argv[3]+14);
+      nb_threads = 3;
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
   else if (!strncmp("-concur_dead_tarjan", argv[3], 19))
@@ -386,14 +395,56 @@ main(int argc, char **argv)
 		 << "ms "
 		 << input << std::endl;
 
-      if (use_decomp)
+      if (use_decomp || opt_tacas13_tarjan)
 	{
 	  spot::scc_decompose *sd = new spot::scc_decompose (af1,true);
  	  const spot::tgba* strong_a = sd->strong_automaton();
 	  const spot::tgba* weak_a = sd->weak_automaton();
 	  const spot::tgba* term_a = sd->terminal_automaton();
 
-	  if (term_a || weak_a)
+
+	  if (opt_tacas13_tarjan)
+	    {
+	      std::cout << "Has strong......." << (strong_a? "yes" : "no")
+			<< std::endl;
+	      std::cout << "Has weak........." << (weak_a? "yes" : "no")
+			<< std::endl;
+	      std::cout << "Has term........." << (term_a? "yes" : "no")
+			<< std::endl;
+	      //The string that will contain all results
+	      std::ostringstream result;
+	      result << "#tacas13tarjan"
+		     << option_tacas13 << ",";
+
+	      // Create the instanciator
+	      spot::instanciator* itor =
+	      	new spot::dve2product_instanciator(strong_a, file, weak_a,
+	      					   term_a);
+
+	      spot::dead_share* d =
+	      	new spot::dead_share(itor, nb_threads,
+	      			     spot::dead_share::DECOMP_TACAS13_TARJAN,
+				     option_tacas13);
+
+	      mtimer.start("decomp_ec");
+	      if (d->check())
+	      	result << "VIOLATED,";
+	      else
+	      	result << "VERIFIED,";
+	      mtimer.stop("decomp_ec");
+	      d->dump_threads();
+	      spot::timer t = mtimer.timer("decomp_ec");
+	      result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	      result << "," << d->csv() << "," << input;
+	      std::cout << result.str() << std::endl;
+
+	      delete d;
+	      delete itor;
+
+
+
+	    }
+	  else if (term_a || weak_a)
 	    {
 	      //The string that will contain all results
 	      std::ostringstream result;

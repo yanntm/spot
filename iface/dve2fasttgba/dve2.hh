@@ -304,6 +304,11 @@ namespace spot
     {
       return terminal_ != 0;;
     }
+
+    virtual bool have_strong()
+    {
+      return tgba_ != 0;;
+    }
   };
 }
 

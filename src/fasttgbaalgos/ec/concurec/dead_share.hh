@@ -356,6 +356,176 @@ namespace spot
     std::chrono::time_point<std::chrono::system_clock> end;   /// \bref stop!
   };
 
+  // ======================================================================
+  // Fake Ec when needed.
+  // ======================================================================
+
+
+  class fake_ec : public concur_ec_stat
+  {
+  public:
+    /// \brief A constuctor
+    fake_ec(int thread_number): tn_(thread_number)
+    {}
+
+    virtual
+    bool has_counterexample()
+    {
+      return false;
+    }
+
+    virtual
+    std::string csv()
+    {
+      return "Tbd.";
+    }
+
+    virtual std::chrono::milliseconds::rep get_elapsed_time()
+    {
+      return 0;
+    }
+
+    virtual int nb_inserted()
+    {
+      return 0;
+    }
+
+    virtual bool check()
+    {
+      return false;
+    }
+
+  private:
+    int tn_;
+  };
+
+  // ======================================================================
+  // Reachability for only one thread.
+  // ======================================================================
+  class reachability_ec : public concur_ec_stat
+  {
+  public:
+    /// \brief A constuctor
+    reachability_ec(instanciator* i,
+		    int thread_number,
+		    int *stop);
+
+    /// \brief A simple destructor
+    virtual ~reachability_ec();
+    bool check();
+
+    /// \brief check wether a state is synchronised with a terminal
+    /// state of the property automaton
+    bool is_terminal(const fasttgba_state* s);
+    virtual bool has_counterexample();
+    virtual std::string csv();
+    virtual std::chrono::milliseconds::rep get_elapsed_time();
+    virtual int nb_inserted();
+
+  private:
+    int tn_;			///< The id of the thread
+    int insert_cpt_;		///< The number of successfull insert
+    int * stop_;		///< stop the world variable
+    const fasttgba* a_;         ///< The automaton to check
+    const instance_automaton* inst; ///< The instanciator
+    bool counterexample_;	    ///< Wether a counterexample exist
+
+    struct pair_state_iter
+    {
+      const spot::fasttgba_state* state;
+      fasttgba_succ_iterator* lasttr;
+    };
+
+    std::vector<pair_state_iter> todo;
+    /// \brief the store that will keep states discovered by this thread
+    std::unordered_set<const fasttgba_state*,
+		       fasttgba_state_ptr_hash,
+		       fasttgba_state_ptr_equal> store;
+
+    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+  };
+
+
+  // ----------------------------------------------------------------------
+  // Single Weak Emptiness Check
+  // ======================================================================
+
+  class weak_ec : public concur_ec_stat
+  {
+  public:
+    /// \brief A constuctor
+    weak_ec(instanciator* i,
+	    int thread_number,
+	    int *stop);
+    /// \brief A simple destructor
+    virtual ~weak_ec();
+    void push_state(const spot::fasttgba_state* state);
+
+    enum color {Alive, Dead, Unknown};
+
+    color get_color(const spot::fasttgba_state* state);
+    void dfs_pop();
+    bool check();
+    void accepting_cycle_check(const fasttgba_state* left,
+			       const fasttgba_state* right);
+    virtual bool has_counterexample();
+    virtual std::string csv();
+    virtual std::chrono::milliseconds::rep get_elapsed_time();
+    virtual int nb_inserted();
+
+  private:
+    const instance_automaton* inst;
+    const fasttgba* a_;
+    deadstore* deadstore_;
+
+
+    int tn_;			///< The id of the thread
+    int insert_cpt_;		///< The number of successfull insert
+    int * stop_;		///< stop the world variable
+    bool counterexample_;	    ///< Wether a counterexample exist
+
+    struct pair_state_iter
+    {
+      const spot::fasttgba_state* state;
+      fasttgba_succ_iterator* lasttr;
+    };
+
+    std::vector<pair_state_iter> todo;
+
+    /// The map of visited states
+    typedef std::unordered_set<const fasttgba_state*,
+		       fasttgba_state_ptr_hash,
+		       fasttgba_state_ptr_equal> seen_map;
+    seen_map H;
+
+    std::chrono::time_point<std::chrono::system_clock> start; /// \bref start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \bref stop!
+  };
+
+
+
+
+  class single_opt_tarjan_ec : public opt_tarjan_ec, public concur_ec_stat
+  {
+  public:
+    single_opt_tarjan_ec(instanciator* i,
+			 int thread_number,
+			 int *stop,
+			 std::string option = "");
+    virtual void main ();
+    virtual bool check();
+    virtual bool has_counterexample();
+    virtual std::string csv();
+    virtual std::chrono::milliseconds::rep  get_elapsed_time();
+    virtual int nb_inserted();
+  protected:
+    int tn_;			/// \brief the thread identifier
+    int * stop_;		/// \brief stop the world varibale
+    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+    int make_cpt_;		/// \biref number of succed insertions
+  };
 
 
 
@@ -377,7 +547,8 @@ namespace spot
 	MIXED_EC = 5,
 	DECOMP_EC = 6,
 	REACHABILITY_EC = 7,
-	DECOMP_EC_SEQ = 8
+	DECOMP_EC_SEQ = 8,
+	DECOMP_TACAS13_TARJAN = 9
       };
 
     /// \brief Constructor for the multithreaded emptiness check

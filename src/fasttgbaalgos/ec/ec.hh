@@ -81,6 +81,9 @@ namespace spot
     /// \brief Return wether there is a weak instance
     virtual bool have_weak() = 0;
 
+    /// \brief Return wether there is a weak instance
+    virtual bool have_strong() = 0;
+
     /// \brief Return wether there is a terminal instance
     virtual bool have_terminal() = 0;
   };
@@ -155,6 +158,11 @@ namespace spot
     virtual bool have_terminal()
     {
       return false;
+    }
+
+    virtual bool have_strong()
+    {
+      return true;
     }
   };
 
