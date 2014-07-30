@@ -441,7 +441,7 @@ namespace spot
       std::to_string(max_dfs_size_)
       + ","
       + std::to_string(stack_->max_size())
-      + ",!"
+      + ","
       + std::to_string(uf->max_alive())
       + ","
       + std::to_string(uf->max_dead())
