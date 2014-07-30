@@ -1425,6 +1425,105 @@ namespace spot
     return states_cpt_;
   }
 
+  // ----------------------------------------------------------------------
+  // TACAS'13 -- Single Dijkstra Algorithm with swarming
+  // ======================================================================
+
+  single_opt_dijkstra_ec::single_opt_dijkstra_ec(instanciator* i,
+					     int thread_number,
+					     int *stop,
+					     std::string option)
+    : opt_dijkstra_ec(i, option)
+  {
+    tn_ = thread_number;
+    stop_ =  stop;
+  }
+
+  void
+  single_opt_dijkstra_ec::main ()
+  {
+    opt_dijkstra_scc::color c;
+    while (!todo.empty() && !*stop_)
+      {
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr = swarm_ ?
+	      a_->swarm_succ_iter(todo.back().state, tn_) :
+	      a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
+	  }
+
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+    	  }
+    	else
+    	  {
+	    ++transitions_cpt_;
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+    	    if (c == Unknown)
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (c == Alive)
+    	      {
+    	    	if (merge (d))
+    	    	  {
+		    *stop_ = 1;
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
+      }
+  }
+
+  bool
+  single_opt_dijkstra_ec::check()
+  {
+    start = std::chrono::system_clock::now();
+    init();
+    main();
+    end = std::chrono::system_clock::now();
+    return counterexample_found;
+  }
+
+  bool
+  single_opt_dijkstra_ec::has_counterexample()
+  {
+    return counterexample_found;
+  }
+
+  std::string
+  single_opt_dijkstra_ec::csv()
+  {
+    return "dijkstra," + extra_info_csv();
+  }
+
+  std::chrono::milliseconds::rep
+  single_opt_dijkstra_ec::get_elapsed_time()
+  {
+    auto elapsed_seconds = std::chrono::duration_cast
+      <std::chrono::milliseconds>(end-start).count();
+    return elapsed_seconds < 0 ? 0 : elapsed_seconds;//too quick!
+  }
+
+  int
+  single_opt_dijkstra_ec::nb_inserted()
+  {
+    return states_cpt_;
+  }
+
 
 
 
@@ -1518,7 +1617,8 @@ namespace spot
 	else
 	  {
 	    assert(policy_ == DECOMP_EC || policy_ == DECOMP_EC_SEQ ||
-		   policy_ == DECOMP_TACAS13_TARJAN);
+		   policy_ == DECOMP_TACAS13_TARJAN ||
+		   policy_ == DECOMP_TACAS13_DIJKSTRA);
 
 
 	    if (policy_ == DECOMP_EC)
@@ -1632,7 +1732,8 @@ namespace spot
 	      }
 	    else
 	      {
-		assert(policy == DECOMP_TACAS13_TARJAN);
+		assert(policy == DECOMP_TACAS13_TARJAN ||
+		       policy == DECOMP_TACAS13_DIJKSTRA);
 
 		stop = 0;
 		if(!itor_->have_terminal())
@@ -1650,9 +1751,14 @@ namespace spot
 		if(!itor_->have_strong())
 		  chk.push_back(new spot::fake_ec(2/*id*/));
 		else
-		  chk.push_back(new spot::single_opt_tarjan_ec
-				(itor_, 2/*id*/,&stop, option_));
-
+		  {
+		    if (policy == DECOMP_TACAS13_TARJAN)
+		      chk.push_back(new spot::single_opt_tarjan_ec
+				    (itor_, 2/*id*/,&stop, option_));
+		    else
+		      chk.push_back(new spot::single_opt_dijkstra_ec
+				    (itor_, 2/*id*/,&stop, option_));
+		  }
 		break;
 	      }
 	  }
@@ -1736,7 +1842,7 @@ namespace spot
 
     // Display results
     if (policy_ == DECOMP_EC || policy_ == REACHABILITY_EC ||
-	policy_ == DECOMP_TACAS13_TARJAN)
+	policy_ == DECOMP_TACAS13_TARJAN || policy_ == DECOMP_TACAS13_DIJKSTRA)
       {
 	if (os_->size())
 	  printf("\n[OS] num of threads = %d insert = %d  elapsed time = %d\n",
@@ -1814,6 +1920,9 @@ namespace spot
 	break;
       case DECOMP_TACAS13_TARJAN:
 	res << "DECOMP_TACAS13_TARJAN,";
+	break;
+      case DECOMP_TACAS13_DIJKSTRA:
+	res << "DECOMP_TACAS13_DIJKSTRA,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;

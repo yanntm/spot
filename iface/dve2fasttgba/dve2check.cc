@@ -131,6 +131,7 @@ main(int argc, char **argv)
   bool opt_concur_dead_mixed = false;
   bool use_decomp = false;
   bool opt_tacas13_tarjan = false;
+  bool opt_tacas13_dijkstra = false;
   unsigned int  nb_threads = 1;
 
   std::string option_uc13 = "";
@@ -178,6 +179,13 @@ main(int argc, char **argv)
     {
       opt_tacas13_tarjan = true;
       option_tacas13 = std::string(argv[3]+14);
+      nb_threads = 3;
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-tacas13dijkstra", argv[3], 16))
+    {
+      opt_tacas13_dijkstra = true;
+      option_tacas13 = std::string(argv[3]+16);
       nb_threads = 3;
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -395,7 +403,7 @@ main(int argc, char **argv)
 		 << "ms "
 		 << input << std::endl;
 
-      if (use_decomp || opt_tacas13_tarjan)
+      if (use_decomp || opt_tacas13_tarjan || opt_tacas13_dijkstra)
 	{
 	  spot::scc_decompose *sd = new spot::scc_decompose (af1,true);
  	  const spot::tgba* strong_a = sd->strong_automaton();
@@ -403,7 +411,7 @@ main(int argc, char **argv)
 	  const spot::tgba* term_a = sd->terminal_automaton();
 
 
-	  if (opt_tacas13_tarjan)
+	  if (opt_tacas13_tarjan || opt_tacas13_dijkstra)
 	    {
 	      std::cout << "Has strong......." << (strong_a? "yes" : "no")
 			<< std::endl;
@@ -413,8 +421,11 @@ main(int argc, char **argv)
 			<< std::endl;
 	      //The string that will contain all results
 	      std::ostringstream result;
-	      result << "#tacas13tarjan"
-		     << option_tacas13 << ",";
+
+	      if (opt_tacas13_tarjan)
+		result << "#tacas13tarjan"  << option_tacas13 << ",";
+	      else
+		result << "#tacas13dijkstra"  << option_tacas13 << ",";
 
 	      // Create the instanciator
 	      spot::instanciator* itor =
@@ -422,8 +433,12 @@ main(int argc, char **argv)
 	      					   term_a);
 
 	      spot::dead_share* d =
+		opt_tacas13_tarjan ?
 	      	new spot::dead_share(itor, nb_threads,
 	      			     spot::dead_share::DECOMP_TACAS13_TARJAN,
+				     option_tacas13):
+	      	new spot::dead_share(itor, nb_threads,
+	      			     spot::dead_share::DECOMP_TACAS13_DIJKSTRA,
 				     option_tacas13);
 
 	      mtimer.start("decomp_ec");

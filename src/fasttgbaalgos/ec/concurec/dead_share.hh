@@ -527,6 +527,28 @@ namespace spot
     int make_cpt_;		/// \biref number of succed insertions
   };
 
+  class single_opt_dijkstra_ec : public opt_dijkstra_ec, public concur_ec_stat
+  {
+  public:
+    single_opt_dijkstra_ec(instanciator* i,
+			 int thread_number,
+			 int *stop,
+			 std::string option = "");
+    virtual void main ();
+    virtual bool check();
+    virtual bool has_counterexample();
+    virtual std::string csv();
+    virtual std::chrono::milliseconds::rep  get_elapsed_time();
+    virtual int nb_inserted();
+  protected:
+    int tn_;			/// \brief the thread identifier
+    int * stop_;		/// \brief stop the world varibale
+    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+    int make_cpt_;		/// \biref number of succed insertions
+  };
+
+
 
 
 
@@ -548,7 +570,8 @@ namespace spot
 	DECOMP_EC = 6,
 	REACHABILITY_EC = 7,
 	DECOMP_EC_SEQ = 8,
-	DECOMP_TACAS13_TARJAN = 9
+	DECOMP_TACAS13_TARJAN = 9,
+	DECOMP_TACAS13_DIJKSTRA = 10
       };
 
     /// \brief Constructor for the multithreaded emptiness check
