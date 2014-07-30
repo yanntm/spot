@@ -1030,6 +1030,11 @@ namespace spot
   {
     a_ = inst->get_terminal_automaton ();
     stop_ = stop;
+    deadstore_ = new deadstore();
+    transitions_cpt_ = 0;
+    max_dfs_size_ = 0;
+    memory_cost_ = 0;
+    max_live_size_ = 0;
   }
 
   reachability_ec::~reachability_ec()
@@ -1038,16 +1043,55 @@ namespace spot
     std::unordered_set<const fasttgba_state*,
 		       fasttgba_state_ptr_hash,
 		       fasttgba_state_ptr_equal>::const_iterator s;
-    s = store.begin();
-    while (s != store.end())
+    s = H.begin();
+    while (s != H.end())
       {
 	// Advance the iterator before deleting the "key" pointer.
 	const fasttgba_state* ptr = *s;
 	++s;
 	ptr->destroy();
       }
+    delete deadstore_;
     delete inst;
 
+  }
+
+  void
+  reachability_ec::push_state(const spot::fasttgba_state* state)
+  {
+    H.insert(state);
+    todo.push_back ({state, 0});
+    ++insert_cpt_;
+    if (is_terminal(state))
+      {
+	*stop_ = 1;
+	end = std::chrono::system_clock::now();
+	counterexample_ = true;
+      }
+
+    ++insert_cpt_;
+    max_dfs_size_ = max_dfs_size_ > todo.size() ?
+      max_dfs_size_ : todo.size();
+
+    max_live_size_ = H.size() > max_live_size_ ?
+      H.size() : max_live_size_;
+
+    unsigned int tmp_cost = 1*H.size() + (deadstore_? deadstore_->size() : 0);
+    if (tmp_cost > memory_cost_)
+      memory_cost_ = tmp_cost;
+
+  }
+
+  reachability_ec::color
+  reachability_ec::get_color(const spot::fasttgba_state* state)
+  {
+    seen_map::const_iterator i = H.find(state);
+    if (i != H.end())
+      return Alive;
+    else if (deadstore_->contains(state))
+      return Dead;
+    else
+      return Unknown;
   }
 
   bool
@@ -1055,16 +1099,7 @@ namespace spot
   {
     start = std::chrono::system_clock::now();
     auto init = a_->get_init_state();
-    store.insert(init);
-    todo.push_back ({init, 0});
-    ++insert_cpt_;
-    if (is_terminal(init))
-      {
-	*stop_ = 1;
-	end = std::chrono::system_clock::now();
-	counterexample_ = true;
-	return counterexample_;
-      }
+    push_state(init);
 
     while (!todo.empty() && !*stop_)
       {
@@ -1081,26 +1116,21 @@ namespace spot
 
 	if (todo.back().lasttr->done())
 	  {
-	    auto top = todo.back();
-	    delete top.lasttr;
+	    const fasttgba_state* last = todo.back().state;
+	    deadstore_->add(last);
+	    delete todo.back().lasttr;
 	    todo.pop_back();
+	    seen_map::const_iterator it = H.find(last);
+	    H.erase(it);
 	  }
 	else
 	  {
+	    ++transitions_cpt_;
 	    fasttgba_state* d = todo.back().lasttr->current_state();
-	    if (store.find(d) == store.end())
+	    auto c = get_color (d);
+	    if (c == Unknown)
 	      {
-		store.insert(d);
-		todo.push_back ({d, 0});
-		++insert_cpt_;
-
-		if (is_terminal(d))
-		  {
-		    *stop_ = 1;
-		    counterexample_ = true;
-		    break;
-		  }
-
+		push_state(d);
 		continue;
 	      }
 	    d->destroy();
@@ -1134,7 +1164,28 @@ namespace spot
   std::string
   reachability_ec::csv()
   {
-    return "reachability";
+    return "reachability,"
+      + std::to_string(max_dfs_size_)
+      + ","
+      + std::to_string(0/*stack_->max_size()*/)
+      + ","
+      + std::to_string(max_live_size_)
+      + ","
+      + std::to_string(deadstore_? deadstore_->size() : 0)
+      + ","
+      + std::to_string(0/*update_cpt_*/)
+      + ","
+      + std::to_string(0/*update_loop_cpt_*/)
+      + ","
+      + std::to_string(0/*roots_poped_cpt_*/)
+      + ",@"
+      + std::to_string(transitions_cpt_)
+      + ","
+      + std::to_string(insert_cpt_/*states_cpt_*/)
+      + ","
+      + std::to_string(memory_cost_)
+      + ","
+      + std::to_string(0/*trivial_scc_*/);
   }
 
   std::chrono::milliseconds::rep
@@ -1169,6 +1220,11 @@ namespace spot
     assert(a_);
     stop_ = stop;
     deadstore_ = new deadstore();
+    transitions_cpt_ = 0;
+    max_dfs_size_ = 0;
+    memory_cost_ = 0;
+    max_live_size_ = 0;
+    update_cpt_ = 0;
   }
 
   /// \brief A simple destructor
@@ -1196,6 +1252,15 @@ namespace spot
     H.insert(state);
     todo.push_back ({state, 0});
     ++insert_cpt_;
+    max_dfs_size_ = max_dfs_size_ > todo.size() ?
+      max_dfs_size_ : todo.size();
+
+    max_live_size_ = H.size() > max_live_size_ ?
+      H.size() : max_live_size_;
+
+    unsigned int tmp_cost = 1*H.size() + (deadstore_? deadstore_->size() : 0);
+    if (tmp_cost > memory_cost_)
+      memory_cost_ = tmp_cost;
   }
 
   weak_ec::color
@@ -1248,6 +1313,7 @@ namespace spot
 	  }
 	else
 	  {
+	    ++transitions_cpt_;
 	    fasttgba_state* d = todo.back().lasttr->current_state();
 	    c = get_color (d);
 	    if (c == Unknown)
@@ -1276,6 +1342,7 @@ namespace spot
   weak_ec::accepting_cycle_check(const fasttgba_state* left,
 					const fasttgba_state* right)
   {
+    ++update_cpt_;
     if (auto t = dynamic_cast<const fast_product_state*>(left))
       {
 	if (auto q = dynamic_cast<const fast_explicit_state*>(t->right()))
@@ -1307,7 +1374,28 @@ namespace spot
   std::string
   weak_ec::csv()
   {
-    return "weak_dfs";
+    return "weak_dfs,"
+      + std::to_string(max_dfs_size_)
+      + ","
+      + std::to_string(0/*stack_->max_size()*/)
+      + ","
+      + std::to_string(max_live_size_)
+      + ","
+      + std::to_string(deadstore_? deadstore_->size() : 0)
+      + ","
+      + std::to_string(update_cpt_)
+      + ","
+      + std::to_string(0/*update_loop_cpt_*/)
+      + ","
+      + std::to_string(0/*roots_poped_cpt_*/)
+      + ","
+      + std::to_string(transitions_cpt_)
+      + ","
+      + std::to_string(insert_cpt_/*states_cpt_*/)
+      + ","
+      + std::to_string(memory_cost_)
+      + ","
+      + std::to_string(0/*trivial_scc_*/);
   }
 
   std::chrono::milliseconds::rep

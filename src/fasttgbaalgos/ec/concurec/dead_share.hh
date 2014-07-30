@@ -413,6 +413,9 @@ namespace spot
     /// \brief A simple destructor
     virtual ~reachability_ec();
     bool check();
+    void push_state(const spot::fasttgba_state* state);
+    enum color {Alive, Dead, Unknown};
+    color get_color(const spot::fasttgba_state* state);
 
     /// \brief check wether a state is synchronised with a terminal
     /// state of the property automaton
@@ -438,12 +441,19 @@ namespace spot
 
     std::vector<pair_state_iter> todo;
     /// \brief the store that will keep states discovered by this thread
-    std::unordered_set<const fasttgba_state*,
+    typedef std::unordered_set<const fasttgba_state*,
 		       fasttgba_state_ptr_hash,
-		       fasttgba_state_ptr_equal> store;
+		       fasttgba_state_ptr_equal> seen_map;
+    seen_map H;
 
     std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
     std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+    deadstore* deadstore_;
+    unsigned int transitions_cpt_;
+    unsigned int max_dfs_size_;
+    unsigned int memory_cost_;
+    unsigned int max_live_size_;
+    unsigned int update_cpt_;
   };
 
 
@@ -501,6 +511,11 @@ namespace spot
 
     std::chrono::time_point<std::chrono::system_clock> start; /// \bref start!
     std::chrono::time_point<std::chrono::system_clock> end;   /// \bref stop!
+    unsigned int transitions_cpt_;
+    unsigned int max_dfs_size_;
+    unsigned int memory_cost_;
+    unsigned int max_live_size_;
+    unsigned int update_cpt_;
   };
 
 
