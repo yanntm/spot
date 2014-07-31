@@ -377,7 +377,7 @@ namespace spot
     virtual
     std::string csv()
     {
-      return "Tbd.";
+      return "no_ec,0,0,0,0,0,0,0,0,0,0,0,0";
     }
 
     virtual std::chrono::milliseconds::rep get_elapsed_time()

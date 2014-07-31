@@ -413,12 +413,13 @@ main(int argc, char **argv)
 
 	  if (opt_tacas13_tarjan || opt_tacas13_dijkstra)
 	    {
-	      std::cout << "Has strong......." << (strong_a? "yes" : "no")
+	      std::cout << "Has term......... " << (term_a? "yes" : "no")
 			<< std::endl;
-	      std::cout << "Has weak........." << (weak_a? "yes" : "no")
+	      std::cout << "Has weak......... " << (weak_a? "yes" : "no")
 			<< std::endl;
-	      std::cout << "Has term........." << (term_a? "yes" : "no")
+	      std::cout << "Has strong....... " << (strong_a? "yes" : "no")
 			<< std::endl;
+
 	      //The string that will contain all results
 	      std::ostringstream result;
 
