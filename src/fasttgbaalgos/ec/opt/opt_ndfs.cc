@@ -213,7 +213,7 @@ namespace spot
 	if (H[st] == Cyan)
 	  {
 
-	    std::cout << "------*\n";
+	    //std::cout << "------*\n";
 
 	    counterexample_found = true;
 	    return;
