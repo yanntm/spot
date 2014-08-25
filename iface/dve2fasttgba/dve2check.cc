@@ -534,20 +534,23 @@ main(int argc, char **argv)
 
 	if (opt_ndfs)
 	  {
-	    result << "#ndfs,";
-	    spot::opt_ndfs* d =
-	      new spot::opt_ndfs(itor);
-	    mtimer.start("ndfs");
-	    if (d->check())
-	      result << "VIOLATED,";
-	    else
-	      result << "VERIFIED,";
-	    mtimer.stop("ndfs");
-	    spot::timer t = mtimer.timer("ndfs");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << d->extra_info_csv() << "," << input;
-	    std::cout << result.str() << std::endl;
-	    delete d;
+	    auto th = std::thread ([&](){
+		result << "#ndfs,";
+		spot::opt_ndfs* d =
+		new spot::opt_ndfs(itor);
+		mtimer.start("ndfs");
+		if (d->check())
+		  result << "VIOLATED,";
+		else
+		  result << "VERIFIED,";
+		mtimer.stop("ndfs");
+		spot::timer t = mtimer.timer("ndfs");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << d->extra_info_csv() << "," << input;
+		std::cout << result.str() << std::endl;
+		delete d;
+	      });
+	    th.join();
 	  }
 
 	if (opt_concur_ec_dead_tarjan)
@@ -656,172 +659,195 @@ main(int argc, char **argv)
 
 	if (opt_lc13)
 	  {
-	    std::ostringstream result;
-	    result << "#lc13" << option_lc13 << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#lc13" << option_lc13 << ",";
 
-	    spot::lazycheck* checker = new spot::lazycheck(itor, option_lc13);
-	    mtimer.start("Checking lc13");
-	    if (checker->check())
-	      {
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking lc13");
+		spot::lazycheck* checker =
+                    new spot::lazycheck(itor, option_lc13);
+		mtimer.start("Checking lc13");
+		if (checker->check())
+		  {
+		    result << "VIOLATED,";
+		  }
+		else
+		  {
+		    result << "VERIFIED,";
+		  }
+		mtimer.stop("Checking lc13");
 
 
-	    spot::timer t = mtimer.timer("Checking lc13");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking lc13");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 	if (opt_uc13)
 	  {
-	    std::ostringstream result;
-	    result << "#uc13" << option_uc13 << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#uc13" << option_uc13 << ",";
 
-	    spot::unioncheck* checker = new spot::unioncheck(itor, option_uc13);
-	    mtimer.start("Checking uc13");
-	    if (checker->check())
-	      {
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking uc13");
+		spot::unioncheck* checker =
+		   new spot::unioncheck(itor, option_uc13);
+		mtimer.start("Checking uc13");
+		if (checker->check())
+		  {
+		    result << "VIOLATED,";
+		  }
+		else
+		  {
+		    result << "VERIFIED,";
+		  }
+		mtimer.stop("Checking uc13");
 
 
-	    spot::timer t = mtimer.timer("Checking uc13");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking uc13");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 
 	if (opt_tuc13)
 	  {
-	    std::ostringstream result;
-	    result << "#tuc13" << option_tuc13 << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#tuc13" << option_tuc13 << ",";
 
-	    spot::tarjanunioncheck* checker =
-	      new spot::tarjanunioncheck(itor, option_tuc13);
-	    mtimer.start("Checking tuc13");
-	    if (checker->check())
-	      {
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking tuc13");
+		spot::tarjanunioncheck* checker =
+		new spot::tarjanunioncheck(itor, option_tuc13);
+		mtimer.start("Checking tuc13");
+		if (checker->check())
+		  {
+		    result << "VIOLATED,";
+		  }
+		else
+		  {
+		    result << "VERIFIED,";
+		  }
+		mtimer.stop("Checking tuc13");
 
 
-	    spot::timer t = mtimer.timer("Checking tuc13");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking tuc13");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 
 
 	if (opt_dc13)
 	  {
-	    std::ostringstream result;
-	    result << "#dc13" << option_dc13 << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#dc13" << option_dc13 << ",";
 
-	    spot::dijkstracheck* checker =
-	      new spot::dijkstracheck(itor, option_dc13);
-	    mtimer.start("Checking dc13");
-	    if (checker->check())
-	      {
-		result << "VIOLATED,";
-	      }
-	    else
-	      {
-		result << "VERIFIED,";
-	      }
-	    mtimer.stop("Checking dc13");
+		spot::dijkstracheck* checker =
+		new spot::dijkstracheck(itor, option_dc13);
+		mtimer.start("Checking dc13");
+		if (checker->check())
+		  {
+		    result << "VIOLATED,";
+		  }
+		else
+		  {
+		    result << "VERIFIED,";
+		  }
+		mtimer.stop("Checking dc13");
 
-	    spot::timer t = mtimer.timer("Checking dc13");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking dc13");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 
 	if (opt_dijkstra)
 	  {
-	    std::ostringstream result;
-	    result << "#dijkstra" << option_dijkstra << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#dijkstra" << option_dijkstra << ",";
 
-	    spot::dijkstra_scc* checker =
-	      new spot::dijkstra_scc(itor, option_dijkstra);
-	    mtimer.start("Checking dijkstra");
-	    checker->check();
-	    result << "SCC,";
-	    mtimer.stop("Checking dijkstra");
+		spot::dijkstra_scc* checker =
+		new spot::dijkstra_scc(itor, option_dijkstra);
+		mtimer.start("Checking dijkstra");
+		checker->check();
+		result << "SCC,";
+		mtimer.stop("Checking dijkstra");
 
-	    spot::timer t = mtimer.timer("Checking dijkstra");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking dijkstra");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 
 	if (opt_union)
 	  {
-	    std::ostringstream result;
-	    result << "#union" << option_union << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#union" << option_union << ",";
 
-	    spot::union_scc* checker =
-	      new spot::union_scc(itor, option_union);
-	    mtimer.start("Checking union");
-	    checker->check();
-	    result << "SCC,";
-	    mtimer.stop("Checking union");
+		spot::union_scc* checker =
+		new spot::union_scc(itor, option_union);
+		mtimer.start("Checking union");
+		checker->check();
+		result << "SCC,";
+		mtimer.stop("Checking union");
 
-	    spot::timer t = mtimer.timer("Checking union");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking union");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 	if (opt_tarjan)
 	  {
-	    std::ostringstream result;
-	    result << "#tarjan" << option_tarjan << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#tarjan" << option_tarjan << ",";
 
-	    spot::tarjan_scc* checker =
-	      new spot::tarjan_scc(itor, option_tarjan);
-	    mtimer.start("Checking tarjan");
-	    checker->check();
-	    result << "SCC,";
-	    mtimer.stop("Checking tarjan");
+		spot::tarjan_scc* checker =
+		new spot::tarjan_scc(itor, option_tarjan);
+		mtimer.start("Checking tarjan");
+		checker->check();
+		result << "SCC,";
+		mtimer.stop("Checking tarjan");
 
-	    spot::timer t = mtimer.timer("Checking tarjan");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking tarjan");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 
@@ -831,82 +857,94 @@ main(int argc, char **argv)
 
 	if (opt_opttarjan)
 	  {
-	    std::ostringstream result;
-	    result << "#opttarjan" << option_opttarjan << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#opttarjan" << option_opttarjan << ",";
 
-	    spot::opt_tarjan_scc* checker =
-	      new spot::opt_tarjan_scc(itor, option_opttarjan);
-	    mtimer.start("Checking opttarjan");
-	    checker->check();
-	    mtimer.stop("Checking opttarjan");
-	    result << "SCC,";
+		spot::opt_tarjan_scc* checker =
+		new spot::opt_tarjan_scc(itor, option_opttarjan);
+		mtimer.start("Checking opttarjan");
+		checker->check();
+		mtimer.stop("Checking opttarjan");
+		result << "SCC,";
 
-	    spot::timer t = mtimer.timer("Checking opttarjan");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking opttarjan");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 	if (opt_ecopttarjan)
 	  {
-	    std::ostringstream result;
-	    result << "#ecopttarjan" << option_ecopttarjan << ",";
-	    spot::opt_tarjan_ec* checker =
-	      new spot::opt_tarjan_ec(itor, option_ecopttarjan);
-	    mtimer.start("Checking ecopttarjan");
-	    int b = checker->check();
-	    mtimer.stop("Checking ecopttarjan");
-	    result << (b ? "VIOLATED," :"VERIFIED,");
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#ecopttarjan" << option_ecopttarjan << ",";
+		spot::opt_tarjan_ec* checker =
+		new spot::opt_tarjan_ec(itor, option_ecopttarjan);
+		mtimer.start("Checking ecopttarjan");
+		int b = checker->check();
+		mtimer.stop("Checking ecopttarjan");
+		result << (b ? "VIOLATED," :"VERIFIED,");
 
-	    spot::timer t = mtimer.timer("Checking ecopttarjan");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking ecopttarjan");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 
 	if (opt_optdijkstra)
 	  {
-	    std::ostringstream result;
-	    result << "#optdijkstra" << option_optdijkstra << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#optdijkstra" << option_optdijkstra << ",";
 
-	    spot::opt_dijkstra_scc* checker =
-	      new spot::opt_dijkstra_scc(itor, option_optdijkstra);
-	    mtimer.start("Checking optdijkstra");
-	    checker->check();
-	    mtimer.stop("Checking optdijkstra");
-	    result << "SCC,";
+		spot::opt_dijkstra_scc* checker =
+		new spot::opt_dijkstra_scc(itor, option_optdijkstra);
+		mtimer.start("Checking optdijkstra");
+		checker->check();
+		mtimer.stop("Checking optdijkstra");
+		result << "SCC,";
 
-	    spot::timer t = mtimer.timer("Checking optdijkstra");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking optdijkstra");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 	if (opt_ecoptdijkstra)
 	  {
-	    std::ostringstream result;
-	    result << "#ecoptdijkstra" << option_ecoptdijkstra << ",";
+	    auto th = std::thread ([&](){
+		std::ostringstream result;
+		result << "#ecoptdijkstra" << option_ecoptdijkstra << ",";
 
-	    spot::opt_dijkstra_ec* checker =
-	      new spot::opt_dijkstra_ec(itor, option_ecoptdijkstra);
-	    mtimer.start("Checking ecoptdijkstra");
-	    int b = checker->check();
-	    mtimer.stop("Checking ecoptdijkstra");
-	    result << (b ? "VIOLATED," :"VERIFIED,");
+		spot::opt_dijkstra_ec* checker =
+		new spot::opt_dijkstra_ec(itor, option_ecoptdijkstra);
+		mtimer.start("Checking ecoptdijkstra");
+		int b = checker->check();
+		mtimer.stop("Checking ecoptdijkstra");
+		result << (b ? "VIOLATED," :"VERIFIED,");
 
-	    spot::timer t = mtimer.timer("Checking ecoptdijkstra");
-	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
-	    result << "," << checker->extra_info_csv() << ","
-		   << input;
-	    delete checker;
-	    std::cout << result.str() << std::endl;
+		spot::timer t = mtimer.timer("Checking ecoptdijkstra");
+		result << t.walltime() << "," << t.utime()  << "," << t.stime();
+		result << "," << checker->extra_info_csv() << ","
+		<< input;
+		delete checker;
+		std::cout << result.str() << std::endl;
+	      });
+	    th.join();
 	  }
 
 
