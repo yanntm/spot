@@ -168,7 +168,7 @@ namespace spot
 	  }
 	else
 	  {
-	    nested_dfs(todo.back().state);
+	    nested_dfs(d);//todo.back().state);
 	    H[d] = Red;
 	    if (counterexample_found)
 	      return true;
