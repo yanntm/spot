@@ -134,6 +134,7 @@ main(int argc, char **argv)
   bool opt_tacas13_dijkstra = false;
   bool opt_tacas13_ndfs = false;
   bool opt_tacas13_uc13 = false;
+  bool opt_tacas13_tuc13 = false;
   unsigned int  nb_threads = 1;
 
   std::string option_uc13 = "";
@@ -202,6 +203,13 @@ main(int argc, char **argv)
     {
       opt_tacas13_uc13 = true;
       option_tacas13 = std::string(argv[3]+12);
+      nb_threads = 3;
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-tacas13tuc13", argv[3], 13))
+    {
+      opt_tacas13_tuc13 = true;
+      option_tacas13 = std::string(argv[3]+13);
       nb_threads = 3;
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -420,7 +428,7 @@ main(int argc, char **argv)
 		 << input << std::endl;
 
       if (use_decomp || opt_tacas13_tarjan || opt_tacas13_dijkstra
-	  || opt_tacas13_ndfs || opt_tacas13_uc13)
+	  || opt_tacas13_ndfs || opt_tacas13_uc13 || opt_tacas13_tuc13)
 	{
 	  spot::scc_decompose *sd = new spot::scc_decompose (af1,true);
  	  const spot::tgba* strong_a = sd->strong_automaton();
@@ -429,7 +437,7 @@ main(int argc, char **argv)
 
 
 	  if (opt_tacas13_tarjan || opt_tacas13_dijkstra || opt_tacas13_ndfs
-	      || opt_tacas13_uc13)
+	      || opt_tacas13_uc13 || opt_tacas13_tuc13)
 	    {
 	      std::cout << "Has term......... " << (term_a? "yes" : "no")
 			<< std::endl;
@@ -468,9 +476,13 @@ main(int argc, char **argv)
 		d = new spot::dead_share(itor, nb_threads,
 	      			     spot::dead_share::DECOMP_TACAS13_NDFS,
 				     option_tacas13);
-	      else
+	      else if (opt_tacas13_uc13)
 		d = new spot::dead_share(itor, nb_threads,
 					 spot::dead_share::DECOMP_TACAS13_UC13,
+					 option_tacas13);
+	      else
+		d = new spot::dead_share(itor, nb_threads,
+					 spot::dead_share::DECOMP_TACAS13_TUC13,
 					 option_tacas13);
 
 	      mtimer.start("decomp_ec");

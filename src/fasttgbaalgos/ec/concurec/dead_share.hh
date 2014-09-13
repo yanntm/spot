@@ -610,6 +610,28 @@ namespace spot
   };
 
 
+  class single_opt_tuc13_ec : public tarjanunioncheck, public concur_ec_stat
+  {
+  public:
+    single_opt_tuc13_ec(instanciator* i,
+			 int thread_number,
+			 int *stop,
+			 std::string option = "");
+    virtual void main ();
+    virtual bool check();
+    virtual bool has_counterexample();
+    virtual std::string csv();
+    virtual std::chrono::milliseconds::rep  get_elapsed_time();
+    virtual int nb_inserted();
+  protected:
+    int tn_;			/// \brief the thread identifier
+    int * stop_;		/// \brief stop the world varibale
+    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+    int make_cpt_;		/// \biref number of succed insertions
+  };
+
+
 
 
 
@@ -634,7 +656,8 @@ namespace spot
 	DECOMP_TACAS13_TARJAN = 9,
 	DECOMP_TACAS13_DIJKSTRA = 10,
 	DECOMP_TACAS13_NDFS = 11,
-	DECOMP_TACAS13_UC13 = 12
+	DECOMP_TACAS13_UC13 = 12,
+	DECOMP_TACAS13_TUC13 = 13
       };
 
     /// \brief Constructor for the multithreaded emptiness check

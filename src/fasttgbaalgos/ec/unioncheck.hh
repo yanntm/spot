@@ -127,7 +127,7 @@ namespace spot
   protected:
 
     /// \brief Fix set ups for the algo
-    inline void init();
+    virtual void init();
 
     // ------------------------------------------------------------
     // For classic algorithm with stack and UF
