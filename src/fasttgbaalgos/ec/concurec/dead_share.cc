@@ -1069,7 +1069,6 @@ namespace spot
 	counterexample_ = true;
       }
 
-    ++insert_cpt_;
     max_dfs_size_ = max_dfs_size_ > todo.size() ?
       max_dfs_size_ : todo.size();
 
