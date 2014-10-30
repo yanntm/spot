@@ -23,7 +23,8 @@
 
 namespace spot
 {
-  ta_scc_map::ta_scc_map(const ta* t):
+  ta_scc_map::ta_scc_map(const ta* t,
+			 bool remove_trivial_livelock_buchi_acc):
     t_(t),
     transitions_(0),
     states_(0),
@@ -31,6 +32,9 @@ namespace spot
     id_(0)
   {
     build_map();
+    if (remove_trivial_livelock_buchi_acc)
+      scc_prune_livelock_buchi();
+    scc_reach();
   }
 
   ta_scc_map::~ta_scc_map()
@@ -43,6 +47,8 @@ namespace spot
         ++s;
         t_->free_state(ptr);
       }
+    for (unsigned int i = 0; i < infos.size(); ++i)
+      delete infos[i].scc_reachable;
   }
 
   void ta_scc_map::dfs_push(const spot::state* st)
@@ -67,15 +73,17 @@ namespace spot
     if (ll == seen[st])
       {
 	// Root !
-	scc_info i = {false, false, true};
+	scc_info i = {false, false, false, false, true, new std::vector<int>()};
 	infos.push_back(i);
 
 	int scc_size = 0;
+	std::vector<const state*> in_states;
 	while (live_stack.size() != todo.size())
 	  {
 	    ++scc_size;
 	    const state* state = live_stack.back();
 	    live_stack.pop_back();
+	    in_states.push_back(state);
 
 	    // Now a state is associate to its (negated) scc number
 	    seen[state] = -sccs_;
@@ -87,8 +95,32 @@ namespace spot
 	    if (t_->is_accepting_state(state))
 	      infos.back().contains_buchi_acc_state = true;
 	  }
+
+	// Check wether the SCC is trivial
 	if (scc_size > 1)
 	  infos.back().is_trivial = false;
+
+	// And now compute SCC that can be reached using the
+	// set of all states previously computed
+	// It's easy because when a root is popped all reachable SCCs have
+	// already been computed!
+	for (unsigned int i = 0; i < in_states.size(); ++i)
+	  {
+	    ta_succ_iterator* si = t_->succ_iter(in_states[i]);
+
+	    for (si->first(); !si->done(); si->next())
+	      {
+		state* st = si->current_state();
+		int dst_scc = seen[st];
+
+		// Warning! If two transitions go in the same SCC they will
+		// be both in scc_reachable!
+		if (-dst_scc != sccs_ /*current scc*/)
+		  infos[sccs_].scc_reachable->push_back(-dst_scc);
+		st->destroy();
+	      }
+	    delete si;
+	  }
 
 	// Finally increment the scc number!
 	++sccs_;
@@ -97,7 +129,6 @@ namespace spot
       {
 	lowlink_stack.back() = std::min(ll, lowlink_stack.back());
       }
-
   }
 
   void ta_scc_map::dfs_update(const state* src, const state* dst)
@@ -167,7 +198,7 @@ namespace spot
     return states_;
   }
 
-  unsigned ta_scc_map::sccs()
+  int ta_scc_map::sccs()
   {
     return sccs_;
   }
@@ -186,8 +217,53 @@ namespace spot
 	std::cout << "    contains_buchi_acc_state    : "
 		  << infos[i].contains_buchi_acc_state << std::endl;
 	std::cout << "    is_trivial : " << infos[i].is_trivial << std::endl;
-      }
 
+	std::cout << "    can_reach_livelock_acc_state : "
+		  << infos[i].can_reach_livelock_acc_state << std::endl;
+	std::cout << "    can_reach_buchi_acc_state    : "
+		  << infos[i].can_reach_buchi_acc_state << std::endl;
+
+
+	std::cout << "    Can reach  : ";
+	for (unsigned int j = 0; j < infos[i].scc_reachable->size(); ++j)
+	  std::cout << (*infos[i].scc_reachable)[j] << "  ";
+	std::cout << std::endl;
+      }
+  }
+
+
+  void ta_scc_map::scc_prune_livelock_buchi()
+  {
+    for (unsigned int i = 0; i < infos.size(); ++i)
+      {
+	if (infos[i].is_trivial &&
+	    infos[i].contains_livelock_acc_state &&
+	    infos[i].contains_livelock_acc_state)
+	  {
+	    infos[i].contains_buchi_acc_state = false;
+	  }
+      }
+  }
+
+  void ta_scc_map::scc_reach()
+  {
+    for (unsigned int i = 0; i < infos.size(); ++i)
+      {
+	if (infos[i].contains_livelock_acc_state)
+	  infos[i].can_reach_livelock_acc_state = true;
+
+	if (infos[i].contains_buchi_acc_state)
+	  infos[i].can_reach_buchi_acc_state = true;
+
+	for (unsigned int j = 0; j < infos[i].scc_reachable->size(); ++j)
+	  {
+	    if (infos[j].contains_livelock_acc_state)
+	      infos[i].can_reach_livelock_acc_state = true;
+
+	    if (infos[j].contains_buchi_acc_state)
+	      infos[i].can_reach_buchi_acc_state = true;
+	  }
+      }
   }
 
   void ta_build_scc_map(const ta* t)

@@ -34,7 +34,7 @@ namespace spot
   {
   public:
     /// \brief Simple constructor
-    ta_scc_map(const ta* t);
+    ta_scc_map(const ta* t, bool remove_trivial_livelock_buchi_acc = true);
 
     /// \brief Simple Destructor
     virtual ~ta_scc_map();
@@ -46,14 +46,22 @@ namespace spot
     unsigned states();
 
     /// \brief Number of scc in the automaton
-    unsigned sccs();
+    int sccs();
 
+    /// \brief display infos about SCCs
     void dump_infos();
 
   private:
     /// \brief Construct the SCC map of the TA automaton using a
-    // Tarjan-like algorithm
+    /// Tarjan-like algorithm
     void build_map();
+
+    /// \brief When a trivial state is livelock and Buchi we can
+    /// reduce it to livelock only.
+    void scc_prune_livelock_buchi();
+
+    /// \brief Set what kind of SCCs can be reached
+    void scc_reach();
 
     /// \brief The TA considered
     const ta* t_;
@@ -65,14 +73,17 @@ namespace spot
     unsigned states_;
 
     /// \brief Count the number of sccs
-    unsigned sccs_;
+    int sccs_;
 
     /// \brief The informations associated to an SCC
     struct scc_info
     {
       bool contains_livelock_acc_state;
       bool contains_buchi_acc_state;
+      bool can_reach_livelock_acc_state;
+      bool can_reach_buchi_acc_state;
       bool is_trivial;
+      std::vector<int> *scc_reachable;
     };
 
     /// \brief The informations of each SCCs
