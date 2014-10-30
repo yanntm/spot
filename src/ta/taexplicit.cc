@@ -204,7 +204,7 @@ namespace spot
   }
 
   void
-  state_ta_explicit::set_accepting_state(bool is_accepting_state)
+  state_ta_explicit::set_accepting_state(bool is_accepting_state) const
   {
     is_accepting_state_ = is_accepting_state;
   }

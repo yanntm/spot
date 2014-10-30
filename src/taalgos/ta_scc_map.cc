@@ -18,6 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ta/ta.hh"
+#include "ta/taexplicit.hh"
 #include "ta_scc_map.hh"
 #include <iosfwd>
 
@@ -232,6 +233,8 @@ namespace spot
   }
 
 
+  // This Can be more efficient because it can be do during the
+  // computations of SCCs
   void ta_scc_map::scc_prune_livelock_buchi()
   {
     for (unsigned int i = 0; i < infos.size(); ++i)
@@ -241,6 +244,30 @@ namespace spot
 	    infos[i].contains_livelock_acc_state)
 	  {
 	    infos[i].contains_buchi_acc_state = false;
+
+	    // Now we wan to update the TA
+
+	    // First, find the state
+	    seen_map::const_iterator s = seen.begin();
+	    while (s != seen.end())
+	      {
+		// Recall that scc numbers are stored in negated way
+		int key = -i;
+		if (s->second == key)
+		  {
+		    const state* state = s->first;
+		    const state_ta_explicit* s =
+		      dynamic_cast<const state_ta_explicit*> (state);
+		    assert(s);
+
+		    // Now we change the acceptance
+		    s->set_accepting_state(false);
+
+		    // There is only one state! Can break.
+		    break;
+		  }
+		++s;
+	      }
 	  }
       }
   }
