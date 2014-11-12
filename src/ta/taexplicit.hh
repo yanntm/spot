@@ -209,7 +209,7 @@ namespace spot
     bool
     is_livelock_accepting_state() const;
     void
-    set_livelock_accepting_state(bool is_livelock_accepting_state);
+    set_livelock_accepting_state(bool is_livelock_accepting_state) const;
 
     bool
     is_initial_state() const;
@@ -234,7 +234,7 @@ namespace spot
     const bdd tgba_condition_;
     bool is_initial_state_;
     mutable bool is_accepting_state_;
-    bool is_livelock_accepting_state_;
+    mutable bool is_livelock_accepting_state_;
     transitions* transitions_;
     Sgi::hash_map<int, transitions*, Sgi::hash<int> > transitions_by_condition;
 #endif // !SWIG

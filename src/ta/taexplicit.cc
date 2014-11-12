@@ -217,7 +217,7 @@ namespace spot
 
   void
   state_ta_explicit::set_livelock_accepting_state(
-      bool is_livelock_accepting_state)
+      bool is_livelock_accepting_state) const
   {
     is_livelock_accepting_state_ = is_livelock_accepting_state;
   }

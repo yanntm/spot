@@ -79,6 +79,7 @@
 #include "taalgos/tgba2ta.hh"
 #include "taalgos/dotty.hh"
 #include "taalgos/stats.hh"
+#include "taalgos/ta_scc_map.hh"
 
 std::string
 ltl_defs()
@@ -423,6 +424,7 @@ main(int argc, char** argv)
   bool tgta_opt = false;
   bool opt_with_artificial_initial_state = true;
   bool opt_single_pass_emptiness_check = false;
+  bool opt_decomposable = false;
   bool opt_with_artificial_livelock = false;
   spot::tgba* temp_rev_sim = 0;
   spot::tgba* temp_iterated_sim = 0;
@@ -883,6 +885,10 @@ main(int argc, char** argv)
       else if (!strcmp(argv[formula_index], "-sp"))
         {
           opt_single_pass_emptiness_check = true;
+        }
+      else if (!strcmp(argv[formula_index], "-decomposable"))
+        {
+          opt_decomposable = true;
         }
       else if (!strcmp(argv[formula_index], "-in"))
         {
@@ -1601,14 +1607,14 @@ main(int argc, char** argv)
           if (ta_opt)
             {
 	      tm.start("conversion to TA");
-              spot::ta* testing_automaton
+              const spot::ta* testing_automaton
                   = tgba_to_ta(a, atomic_props_set_bdd, degeneralize_opt
                       == DegenSBA, opt_with_artificial_initial_state,
                       opt_single_pass_emptiness_check,
                       opt_with_artificial_livelock);
 	      tm.stop("conversion to TA");
 
-              spot::ta* testing_automaton_nm = 0;
+              const spot::ta* testing_automaton_nm = 0;
               if (opt_bisim_ta)
                 {
 		  tm.start("TA bisimulation");
@@ -1616,6 +1622,37 @@ main(int argc, char** argv)
                   testing_automaton = minimize_ta(testing_automaton);
 		  tm.stop("TA bisimulation");
                 }
+
+	      {
+	      	// Deal with decomposed automata
+	      	spot::ta_scc_map* map =
+	      	  ta_build_scc_map(testing_automaton, true);
+	      	if (opt_decomposable)
+	      	  {
+	      	    std::cout << "Is decomposable "
+			      << input
+			      <<" ? " <<
+		      map->decomposable() << std::endl;
+		    delete map;
+		    goto endta;
+	      	  }
+		else
+		  {
+		    map->dump_infos(true);
+		    map->dump_scc_graph();
+		    const spot::ta* decomp_live =
+		      ta_build_decomp(testing_automaton, map, true, false);
+		    assert(decomp_live);
+		    const spot::ta* decomp_min =  minimize_ta(decomp_live);
+
+
+		    std::cout << "-----" << std::endl;
+		    spot::dotty_reachable(std::cout, decomp_min);
+		    delete decomp_min;
+		    delete decomp_live;
+		    delete map;
+		  }
+	      }
 
               if (output != -1)
                 {
@@ -1635,6 +1672,7 @@ main(int argc, char** argv)
                   tm.stop("producing output");
                 }
 
+	    endta:
               delete testing_automaton_nm;
               delete testing_automaton;
 	      delete a;

@@ -49,7 +49,19 @@ namespace spot
     int sccs();
 
     /// \brief display infos about SCCs
-    void dump_infos();
+    void dump_infos(bool verbose);
+
+    /// \brief display infos about SCCs
+    void dump_scc_graph();
+
+    /// \brief check wether the automaton is decomposable
+    bool decomposable();
+
+    /// \brief check wether the state can reach a livelock state
+    bool can_reach_livelock(const spot::state*);
+
+    /// \brief check wether the state can reach a Buchi state
+    bool can_reach_buchi(const spot::state*);
 
   private:
     /// \brief Construct the SCC map of the TA automaton using a
@@ -129,7 +141,14 @@ namespace spot
   };
 
   /// \brief Compute statistics for an automaton.
-  SPOT_API void ta_build_scc_map(const ta* t);
+  SPOT_API ta_scc_map* ta_build_scc_map(const ta* t,
+				 bool rm_trivial_livelock_buchi_acc = true);
+
+  /// \brief Compute a decomposed automaton: livelock or buchi.
+  SPOT_API const ta* ta_build_decomp(const ta* t,
+				     ta_scc_map* map,
+				     bool livelock_aut,
+				     bool buchi_aut);
 
   /// @}
 }
