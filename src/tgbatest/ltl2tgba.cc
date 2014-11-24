@@ -1629,11 +1629,10 @@ main(int argc, char** argv)
 	      	  ta_build_scc_map(testing_automaton, true);
 	      	if (opt_decomposable)
 	      	  {
-	      	    std::cout << "Is decomposable "
-			      << input
-			      <<" ? " <<
-		      map->decomposable() << std::endl;
-
+	      	    // std::cout << "Is decomposable "
+		    // 	      << input
+		    // 	      <<" ? " <<
+		    //   map->decomposable() << std::endl;
 		    //
 		    const spot::ta* decomp_live =
 		      ta_build_decomp(testing_automaton, map, true, false);
@@ -1650,7 +1649,7 @@ main(int argc, char** argv)
 		      ta_build_scc_map(decomp_buchi_min, true);
 
 
-		    std::cout << "#" << map->decomposable()
+		    std::cout << "#" <<  map->decomposable()
 			      << "," << map->states()
 			      << "," << map->transitions()
 			      << "," << map->sccs()
@@ -1659,7 +1658,8 @@ main(int argc, char** argv)
 			      << "," << map_live->sccs()
 			      << "," << map_buchi->states()
 			      << "," << map_buchi->transitions()
-			      << "," << map_buchi->sccs();
+			      << "," << map_buchi->sccs()
+			      << ","  << input;
 
 		    delete map_buchi;
 		    delete decomp_buchi_min;
