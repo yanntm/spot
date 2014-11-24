@@ -1633,18 +1633,57 @@ main(int argc, char** argv)
 			      << input
 			      <<" ? " <<
 		      map->decomposable() << std::endl;
+
+		    //
+		    const spot::ta* decomp_live =
+		      ta_build_decomp(testing_automaton, map, true, false);
+		    const spot::ta* decomp_live_min =  minimize_ta(decomp_live);
+		    spot::ta_scc_map* map_live =
+		      ta_build_scc_map(decomp_live_min, true);
+
+
+		    const spot::ta* decomp_buchi =
+		      ta_build_decomp(testing_automaton, map, false, true);
+		    const spot::ta* decomp_buchi_min =
+		      minimize_ta(decomp_buchi);
+		    spot::ta_scc_map* map_buchi =
+		      ta_build_scc_map(decomp_buchi_min, true);
+
+
+		    std::cout << "#" << map->decomposable()
+			      << "," << map->states()
+			      << "," << map->transitions()
+			      << "," << map->sccs()
+			      << "," << map_live->states()
+			      << "," << map_live->transitions()
+			      << "," << map_live->sccs()
+			      << "," << map_buchi->states()
+			      << "," << map_buchi->transitions()
+			      << "," << map_buchi->sccs();
+
+		    delete map_buchi;
+		    delete decomp_buchi_min;
+		    delete decomp_buchi;
+
+		    delete map_live;
+		    delete decomp_live_min;
+		    delete decomp_live;
+
 		    delete map;
 		    goto endta;
 	      	  }
 		else
 		  {
-		    map->dump_infos(true);
-		    map->dump_scc_graph();
+		    // map->dump_infos(true);
+		    // map->dump_scc_graph();
 		    const spot::ta* decomp_live =
 		      ta_build_decomp(testing_automaton, map, true, false);
 		    assert(decomp_live);
 		    const spot::ta* decomp_min =  minimize_ta(decomp_live);
 
+
+		    // stats_reachable s(decomp_min);
+		    // std::cout << decomp_min << std::endl
 
 		    std::cout << "-----" << std::endl;
 		    spot::dotty_reachable(std::cout, decomp_min);

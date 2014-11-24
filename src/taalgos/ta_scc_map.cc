@@ -61,7 +61,6 @@ namespace spot
     lowlink_stack.push_back(id_);
     ++states_;
     live_stack.push_back(st);
-    // std::cout << "PUSH " << t_->format_state(st) << " " << id_<< std::endl;
   }
 
   void ta_scc_map::dfs_pop()
@@ -74,9 +73,6 @@ namespace spot
     lowlink_stack.pop_back();
     if (ll == seen[st])
       {
-	// std::cout << "POP ROOT " << t_->format_state(st) << " "
-	// 	  << std::endl;
-
 	// Root !
 	scc_info i = {false, false, false, false, true, new std::vector<int>()};
 	infos.push_back(i);
@@ -145,9 +141,6 @@ namespace spot
 
   void ta_scc_map::dfs_update(const state* /*src*/, const state* dst)
   {
-    // std::cout << "UPDATE " << t_->format_state(src) << " "
-    // 	      <<  t_->format_state(dst) << std::endl;
-
     int ll_src = lowlink_stack.back();
     int ll_dst = seen[dst];
     lowlink_stack.back() = std::min(ll_src, ll_dst);
@@ -155,7 +148,6 @@ namespace spot
 
   void ta_scc_map::build_map()
   {
-
     // Get the artificial initial state
     spot::state* artificial_initial_state = t_->get_artificial_initial_state();
 
@@ -238,7 +230,6 @@ namespace spot
     	std::cout << "    can_reach_buchi_acc_state    : "
     		  << infos[i].can_reach_buchi_acc_state << std::endl;
 
-
     	std::cout << "    Can reach  : ";
     	for (unsigned int j = 0; j < infos[i].scc_reachable->size(); ++j)
     	  std::cout << (*infos[i].scc_reachable)[j] << "  ";
@@ -319,7 +310,6 @@ namespace spot
 
   void ta_scc_map::dump_scc_graph()
   {
-    seen_map::const_iterator s = seen.begin();
     std::cout << "digraph G {" << std::endl;
 
     // NODES
@@ -457,8 +447,6 @@ namespace spot
 		       livelock? false : current_ta->is_accepting_state(),
 		       !livelock? false :
 		       current_ta->is_livelock_accepting_state(),
-		       // false,//current_ta->is_accepting_state(),
-		       // current_ta->is_livelock_accepting_state(),
 		       0);
 
 		    ret_ta_->add_state(dst);
