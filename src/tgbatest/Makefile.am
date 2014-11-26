@@ -43,6 +43,7 @@ check_PROGRAMS = \
   intvcmp2 \
   ltlprod \
   maskacc \
+  perf \
   powerset \
   readsat \
   taatgba \
@@ -64,6 +65,7 @@ intvcmp2_SOURCES = intvcmp2.cc
 ltl2tgba_SOURCES = ltl2tgba.cc
 ltlprod_SOURCES  = ltlprod.cc
 maskacc_SOURCES  = maskacc.cc
+perf_SOURCES = perf.cc
 powerset_SOURCES = powerset.cc
 randtgba_SOURCES = randtgba.cc
 readsat_SOURCES = readsat.cc
