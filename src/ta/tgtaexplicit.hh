@@ -40,7 +40,7 @@ namespace spot
   public:
     tgta_explicit(const const_tgba_ptr& tgba,
 		  unsigned n_acc,
-		  state_ta_explicit* artificial_initial_state);
+		  ta_graph_state* artificial_initial_state);
 
     // tgba interface
     virtual spot::state* get_init_state() const;
@@ -51,8 +51,8 @@ namespace spot
     virtual bdd_dict_ptr
     get_dict() const;
 
-    const_ta_explicit_ptr get_ta() const { return ta_; }
-    ta_explicit_ptr get_ta() { return ta_; }
+    const_ta_digraph_ptr get_ta() const { return ta_; }
+    ta_digraph_ptr get_ta() { return ta_; }
 
     virtual std::string format_state(const spot::state* s) const;
 
@@ -61,7 +61,7 @@ namespace spot
   protected:
     virtual bdd compute_support_conditions(const spot::state* state) const;
 
-    ta_explicit_ptr ta_;
+    ta_digraph_ptr ta_;
   };
 
   typedef std::shared_ptr<tgta_explicit> tgta_explicit_ptr;
@@ -69,7 +69,7 @@ namespace spot
 
   inline tgta_explicit_ptr make_tgta_explicit(const const_tgba_ptr& tgba,
 					      unsigned n_acc,
-					      state_ta_explicit*
+					      ta_graph_state*
 					      artificial_initial_state = 0)
   {
     return std::make_shared<tgta_explicit>(tgba, n_acc,

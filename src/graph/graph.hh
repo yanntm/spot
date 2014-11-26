@@ -598,6 +598,12 @@ namespace spot
       return s;
     }
 
+    void delete_last_state()
+    {
+      assert(num_states() > 1);
+      states_.pop_back();
+    }
+
     state_storage_t&
     state_storage(state s)
     {

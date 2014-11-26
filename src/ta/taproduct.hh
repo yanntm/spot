@@ -48,6 +48,21 @@ namespace spot
     virtual
     ~state_ta_product();
 
+
+    virtual state* get_init_state() const
+    {
+      // FIXME
+      assert(false);
+      return nullptr;
+    }
+
+    virtual bdd compute_support_conditions(const state*) const
+    {
+      //FIXME
+      assert(false);
+      return bddfalse;
+    }
+
     state*
     get_ta_state() const
     {

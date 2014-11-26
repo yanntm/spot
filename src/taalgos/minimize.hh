@@ -56,7 +56,7 @@ namespace spot
       \endverbatim */
   ///
   /// \param ta_ the TA automaton to convert into a simplified TA
-  SPOT_API ta_explicit_ptr
+  SPOT_API ta_digraph_ptr
   minimize_ta(const const_ta_ptr& ta_);
 
 

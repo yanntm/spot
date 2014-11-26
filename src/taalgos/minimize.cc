@@ -76,7 +76,7 @@ namespace spot
      // automaton
      static void
      build_result(const const_ta_ptr& a, std::list<hash_set*>& sets,
-		  tgba_digraph_ptr result_tgba, const ta_explicit_ptr& result)
+		  tgba_digraph_ptr result_tgba, const ta_digraph_ptr& result)
      {
        // For each set, create a state in the tgbaulting automaton.
        // For a state s, state_num[s] is the number of the state in the minimal
@@ -113,13 +113,13 @@ namespace spot
 	   bool is_livelock_accepting_state =
 	     a->is_livelock_accepting_state(src);
 
-	   state_ta_explicit* new_src =
-	     new state_ta_explicit(result_tgba->state_from_number(src_num),
+	   ta_graph_state* new_src =
+	     new ta_graph_state(result_tgba->state_from_number(src_num),
 				   tgba_condition, is_initial_state,
 				   is_accepting_state,
 				   is_livelock_accepting_state);
 
-	   state_ta_explicit* ta_src = result->add_state(new_src);
+	   ta_graph_state* ta_src = result->add_state(new_src);
 
 	   if (ta_src != new_src)
 	     {
@@ -127,12 +127,14 @@ namespace spot
 	     }
 	   else if (a->get_artificial_initial_state() != 0)
 	     {
-	       if (a->get_artificial_initial_state() == src)
-		 result->set_artificial_initial_state(new_src);
+	       // FIXME
+	       // if (a->get_artificial_initial_state() == src)
+	       // 	 result->set_artificial_initial_state(new_src);
 	     }
 	   else if (is_initial_state)
 	     {
-	       result->add_to_initial_states_set(new_src);
+	       //FIXME
+	       //result->add_to_initial_states_set(new_src);
 	     }
 
 	   ta_succ_iterator* succit = a->succ_iter(src);
@@ -153,14 +155,14 @@ namespace spot
 	       bool is_livelock_accepting_state =
 		 a->is_livelock_accepting_state(dst);
 
-	       state_ta_explicit* new_dst =
-		 new state_ta_explicit
+	       ta_graph_state* new_dst =
+		 new ta_graph_state
 		 (result_tgba->state_from_number(i->second),
 		  tgba_condition, is_initial_state,
 		  is_accepting_state,
 		  is_livelock_accepting_state);
 
-	       state_ta_explicit* ta_dst = result->add_state(new_dst);
+	       ta_graph_state* ta_dst = result->add_state(new_dst);
 
 	       if (ta_dst != new_dst)
 		 {
@@ -168,17 +170,23 @@ namespace spot
 		 }
 	       else if (a->get_artificial_initial_state() != 0)
 		 {
-		   if (a->get_artificial_initial_state() == dst)
-		     result->set_artificial_initial_state(new_dst);
+		   // FIXME
+		   // if (a->get_artificial_initial_state() == dst)
+		   //   result->set_artificial_initial_state(new_dst);
 		 }
 
 	       else if (is_initial_state)
-		 result->add_to_initial_states_set(new_dst);
+		 {
+		   // FIXME
+		   //result->add_to_initial_states_set(new_dst);
+		 }
 
-	       result->create_transition
-		 (ta_src, succit->current_condition(),
-		  succit->current_acceptance_conditions(),
-		  ta_dst);
+
+	       // FIXME
+	       // result->create_transition
+	       // 	 (ta_src, succit->current_condition(),
+	       // 	  succit->current_acceptance_conditions(),
+	       // 	  ta_dst);
 	     }
 	   delete succit;
 	 }
@@ -504,7 +512,7 @@ namespace spot
     }
   }
 
-  ta_explicit_ptr
+  ta_digraph_ptr
   minimize_ta(const const_ta_ptr& ta_)
   {
 

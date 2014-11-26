@@ -41,7 +41,8 @@ namespace spot
       {
         os_ << "digraph G {" << std::endl;
 
-        artificial_initial_state_ = t_automata_->get_artificial_initial_state();
+        artificial_initial_state_ =
+	  t_automata_->get_artificial_initial_state();
 
         ta::states_set_t init_states_set;
 
@@ -78,7 +79,6 @@ namespace spot
       void
       process_state(const state* s, int n)
       {
-
         std::string style;
         if (t_automata_->is_accepting_state(s))
 	  style = ",peripheries=2";

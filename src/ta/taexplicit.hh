@@ -20,53 +20,222 @@
 #ifndef SPOT_TA_TAEXPLICIT_HH
 # define SPOT_TA_TAEXPLICIT_HH
 
-#include "misc/hash.hh"
 #include <list>
-#include "tgba/tgba.hh"
 #include <set>
-#include "ltlast/formula.hh"
 #include <cassert>
 #include "misc/bddlt.hh"
 #include "ta.hh"
+#include "tgba/tgba.hh"
+#include "tgba/tgba.hh"
+#include "fwd.hh"
+#include "graph/graph.hh"
+#include "graph/ngraph.hh"
+#include "misc/hash.hh"
 
 namespace spot
 {
-  // Forward declarations.  See below.
-  class state_ta_explicit;
-  class ta_explicit_succ_iterator;
-  class ta_explicit;
+  /// states used by spot::ta_explicit.
+  /// \ingroup ta_representation
+  class SPOT_API ta_graph_state : public spot::state
+  {
+#ifndef SWIG
+  public:
+
+    /// Explicit transitions.
+    struct transition
+    {
+      bdd condition;
+      acc_cond::mark_t acceptance_conditions;
+      ta_graph_state* dest;
+    };
+
+    typedef std::list<transition*> transitions;
+
+    ta_graph_state(const state* tgba_state,
+		   const bdd tgba_condition,
+		   bool is_initial_state = false,
+		   bool is_accepting_state = false,
+		   bool is_livelock_accepting_state = false) :
+      tgba_state_(tgba_state),
+      tgba_condition_(tgba_condition),
+      is_initial_state_(is_initial_state),
+      is_accepting_state_(is_accepting_state),
+      is_livelock_accepting_state_(is_livelock_accepting_state)
+    {
+    }
+
+    virtual ~ta_graph_state() noexcept
+    {
+    }
+
+    virtual int compare(const spot::state* other) const;
+
+    virtual size_t hash() const;
+
+    virtual ta_graph_state* clone() const;
+
+    virtual void destroy() const
+    {
+    }
+
+    const state*
+    get_tgba_state() const;
+    const bdd
+    get_tgba_condition() const;
+    bool
+    is_accepting_state() const;
+    void
+    set_accepting_state(bool is_accepting_state);
+    bool
+    is_livelock_accepting_state() const;
+    void
+    set_livelock_accepting_state(bool is_livelock_accepting_state);
+
+    bool
+    is_initial_state() const;
+    void
+    set_initial_state(bool is_initial_state);
+
+    ta_graph_state* stuttering_reachable_livelock;
+  private:
+    const state* tgba_state_;
+    bdd tgba_condition_;
+    bool is_initial_state_;
+    bool is_accepting_state_;
+    bool is_livelock_accepting_state_;
+#endif // !SWIG
+  };
+
+
+  struct SPOT_API ta_graph_trans_data
+  {
+    bdd cond;
+    acc_cond::mark_t acc;
+
+    explicit ta_graph_trans_data()
+      : cond(bddfalse), acc(0)
+      {
+      }
+
+    ta_graph_trans_data(bdd cond, acc_cond::mark_t acc = 0U)
+      : cond(cond), acc(acc)
+    {
+    }
+  };
 
   /// Explicit representation of a spot::ta.
   /// \ingroup ta_representation
-  class SPOT_API ta_explicit : public ta
+  class SPOT_API ta_digraph : public ta
   {
   public:
-    ta_explicit(const const_tgba_ptr& tgba,
-		unsigned n_acc,
-		state_ta_explicit* artificial_initial_state = 0);
+    typedef digraph<ta_graph_state, ta_graph_trans_data> graph_t;
+  protected:
+    graph_t g_;
+    mutable unsigned init_number_;
+
+  public:
+    ta_digraph(const const_tgba_ptr& tgba,
+	       unsigned n_acc,
+	       bool add_artificial_state);
 
     const_tgba_ptr
     get_tgba() const;
 
-    state_ta_explicit*
-    add_state(state_ta_explicit* s);
+    graph_t& get_graph()
+    {
+      return g_;
+    }
+
+    const graph_t& get_graph() const
+    {
+      return g_;
+    }
+
+    unsigned
+    add_state(const state* tgba_state,
+	      const bdd tgba_condition,
+	      bool is_initial_state = false,
+	      bool is_accepting_state = false,
+	      bool is_livelock_accepting_state = false);
+
+    ta_graph_state* add_state(ta_graph_state*)
+    {
+      assert(false);
+      return nullptr;
+    }
+
+    int exist_state(ta_graph_state* newstate)
+    {
+      for(unsigned i = 0; i < num_states(); ++i)
+      {
+	if (newstate->compare(state_from_number(i)) == 0)
+	  {
+	    return (int)i;
+	  }
+      }
+      return -1;
+    }
+
+    void free_transitions(const state* s);
 
     void
-    add_to_initial_states_set(state* s, bdd condition = bddfalse);
+    add_to_initial_states_set(unsigned s, bdd condition = bddfalse);
 
     void
-    create_transition(state_ta_explicit* source, bdd condition,
+    create_transition(unsigned source, bdd condition,
 		      acc_cond::mark_t acceptance_conditions,
-		      state_ta_explicit* dest,
-		      bool add_at_beginning = false);
+		      unsigned dest);
 
-    void
-    delete_stuttering_transitions();
     // ta interface
     virtual
-    ~ta_explicit();
+    ~ta_digraph();
     virtual const states_set_t
     get_initial_states_set() const;
+
+    unsigned num_states() const
+    {
+      return g_.num_states();
+    }
+
+    unsigned num_transitions() const
+    {
+      return g_.num_transitions();
+    }
+
+    void set_init_state(graph_t::state s)
+    {
+      assert(s < num_states());
+      init_number_ = s;
+    }
+
+    void set_init_state(const state* s)
+    {
+      set_init_state(state_number(s));
+    }
+
+    virtual state* get_init_state() const
+    {
+      if (num_states() == 0)
+      	assert(false);
+      return const_cast<ta_graph_state*>(state_from_number(init_number_));
+    }
+
+    graph_t::state
+    state_number(const state* st) const
+    {
+      auto s = down_cast<const typename graph_t::state_storage_t*>(st);
+      assert(s);
+      return s - &g_.state_storage(0);
+    }
+
+    const ta_graph_state*
+    state_from_number(graph_t::state n) const
+    {
+      return &g_.state_data(n);
+    }
+
+    bool
+    is_hole_state(const state*) const;
 
     virtual ta_succ_iterator*
     succ_iter(const spot::state* s) const;
@@ -98,14 +267,20 @@ namespace spot
     spot::state*
     get_artificial_initial_state() const
     {
-      return (spot::state*) artificial_initial_state_;
+      return const_cast<ta_graph_state*>
+	(state_from_number(artificial_initial_state_));
+    }
+
+    unsigned
+    get_initial_artificial_state() const
+    {
+      return artificial_initial_state_;
     }
 
     void
-    set_artificial_initial_state(state_ta_explicit* s)
+    set_artificial_initial_state(unsigned s)
     {
       artificial_initial_state_ = s;
-
     }
 
     virtual void
@@ -119,148 +294,161 @@ namespace spot
 
   private:
     // Disallow copy.
-    ta_explicit(const ta_explicit& other) SPOT_DELETED;
-    ta_explicit& operator=(const ta_explicit& other) SPOT_DELETED;
+    ta_digraph(const ta_digraph& other) SPOT_DELETED;
+    ta_digraph& operator=(const ta_digraph& other) SPOT_DELETED;
 
     const_tgba_ptr tgba_;
-    state_ta_explicit* artificial_initial_state_;
+    unsigned  artificial_initial_state_;
     ta::states_set_t states_set_;
     ta::states_set_t initial_states_set_;
   };
 
-  /// states used by spot::ta_explicit.
-  /// \ingroup ta_representation
-  class SPOT_API state_ta_explicit : public spot::state
-  {
-#ifndef SWIG
-  public:
-
-    /// Explicit transitions.
-    struct transition
-    {
-      bdd condition;
-      acc_cond::mark_t acceptance_conditions;
-      state_ta_explicit* dest;
-    };
-
-    typedef std::list<transition*> transitions;
-
-    state_ta_explicit(const state* tgba_state, const bdd tgba_condition,
-        bool is_initial_state = false, bool is_accepting_state = false,
-        bool is_livelock_accepting_state = false, transitions* trans = 0) :
-      tgba_state_(tgba_state), tgba_condition_(tgba_condition),
-          is_initial_state_(is_initial_state), is_accepting_state_(
-              is_accepting_state), is_livelock_accepting_state_(
-              is_livelock_accepting_state), transitions_(trans)
-    {
-    }
-
-    virtual int
-    compare(const spot::state* other) const;
-    virtual size_t
-    hash() const;
-    virtual state_ta_explicit*
-    clone() const;
-
-    virtual void
-    destroy() const
-    {
-    }
-
-    virtual
-    ~state_ta_explicit()
-    {
-    }
-
-    transitions*
-    get_transitions() const;
-
-    // return transitions filtred by condition
-    transitions*
-    get_transitions(bdd condition) const;
-
-    void
-    add_transition(transition* t, bool add_at_beginning = false);
-
-    const state*
-    get_tgba_state() const;
-    const bdd
-    get_tgba_condition() const;
-    bool
-    is_accepting_state() const;
-    void
-    set_accepting_state(bool is_accepting_state);
-    bool
-    is_livelock_accepting_state() const;
-    void
-    set_livelock_accepting_state(bool is_livelock_accepting_state);
-
-    bool
-    is_initial_state() const;
-    void
-    set_initial_state(bool is_initial_state);
-
-    /// \brief Return true if the state has no successors
-    bool
-    is_hole_state() const;
-
-    /// \brief Remove stuttering transitions
-    /// and transitions leading to states having no successors
-    void
-    delete_stuttering_and_hole_successors();
-
-    void
-    free_transitions();
-
-    state_ta_explicit* stuttering_reachable_livelock;
-  private:
-    const state* tgba_state_;
-    const bdd tgba_condition_;
-    bool is_initial_state_;
-    bool is_accepting_state_;
-    bool is_livelock_accepting_state_;
-    transitions* transitions_;
-    std::unordered_map<int, transitions*, std::hash<int>>
-      transitions_by_condition;
-#endif // !SWIG
-  };
-
   /// Successor iterators used by spot::ta_explicit.
+  template<class Graph>
   class SPOT_API ta_explicit_succ_iterator : public ta_succ_iterator
   {
-  public:
-    ta_explicit_succ_iterator(const state_ta_explicit* s);
-
-    ta_explicit_succ_iterator(const state_ta_explicit* s, bdd condition);
-
-    virtual bool first();
-    virtual bool next();
-    virtual bool done() const;
-
-    virtual state*
-    current_state() const;
-    virtual bdd
-    current_condition() const;
-
-    virtual acc_cond::mark_t
-    current_acceptance_conditions() const;
-
   private:
-    state_ta_explicit::transitions* transitions_;
-    state_ta_explicit::transitions::const_iterator i_;
+    typedef typename Graph::transition transition;
+    typedef typename Graph::state_data_t state;
+    const Graph* g_;
+    transition t_;
+    transition p_;
+
+  public:
+    ta_explicit_succ_iterator(const Graph* g, transition t)
+      : g_(g), t_(t)
+    {
+    }
+
+    virtual void recycle(transition t)
+    {
+      t_ = t;
+    }
+
+    virtual bool first()
+    {
+      p_ = t_;
+      return p_;
+    }
+
+    virtual bool next()
+    {
+      p_ = g_->trans_storage(p_).next_succ;
+      return p_;
+    }
+
+    virtual bool done() const
+    {
+      return !p_;
+    }
+
+    virtual ta_graph_state* current_state() const
+    {
+      assert(!done());
+      return const_cast<ta_graph_state*>
+	(&g_->state_data(g_->trans_storage(p_).dst));
+    }
+
+    virtual bdd current_condition() const
+    {
+      assert(!done());
+      return g_->trans_data(p_).cond;
+    }
+
+    virtual acc_cond::mark_t current_acceptance_conditions() const
+    {
+      assert(!done());
+      return g_->trans_data(p_).acc;
+    }
+
+    transition pos() const
+    {
+      return p_;
+    }
   };
 
-  typedef std::shared_ptr<ta_explicit> ta_explicit_ptr;
-  typedef std::shared_ptr<const ta_explicit> const_ta_explicit_ptr;
 
-  inline ta_explicit_ptr make_ta_explicit(const const_tgba_ptr& tgba,
-					  unsigned n_acc,
-					  state_ta_explicit*
-					  artificial_initial_state = 0)
+  template<class Graph>
+  class SPOT_API ta_explicit_succ_iterator_cond : public ta_succ_iterator
   {
-    return std::make_shared<ta_explicit>(tgba, n_acc, artificial_initial_state);
-  }
+  private:
+    typedef typename Graph::transition transition;
+    typedef typename Graph::state_data_t state;
+    const Graph* g_;
+    transition t_;
+    transition p_;
+    bdd cond_;
 
+  public:
+    ta_explicit_succ_iterator_cond(const Graph* g, transition t, bdd cond)
+      : g_(g), t_(t), cond_(cond)
+    {
+    }
+
+    virtual void recycle(transition t)
+    {
+      t_ = t;
+    }
+
+    virtual bool first()
+    {
+      p_ = t_;
+      select();
+      return p_;
+    }
+
+    virtual bool next()
+    {
+      p_ = g_->trans_storage(p_).next_succ;
+      select();
+      return p_;
+    }
+
+    virtual bool done() const
+    {
+      return !p_;
+    }
+
+    virtual ta_graph_state* current_state() const
+    {
+      assert(!done());
+      return const_cast<ta_graph_state*>
+	(&g_->state_data(g_->trans_storage(p_).dst));
+    }
+
+    virtual bdd current_condition() const
+    {
+      assert(!done());
+      return g_->trans_data(p_).cond;
+    }
+
+    virtual acc_cond::mark_t current_acceptance_conditions() const
+    {
+      assert(!done());
+      return g_->trans_data(p_).acc;
+    }
+
+    transition pos() const
+    {
+      return p_;
+    }
+
+  private:
+    void select()
+    {
+      while (!done() && current_condition() != cond_)
+	{
+	  next();
+	}
+    }
+  };
+
+  inline ta_digraph_ptr make_ta_explicit(const const_tgba_ptr& tgba,
+					 unsigned n_acc,
+					 bool add_artificial_init_state)
+  {
+    return std::make_shared<ta_digraph>(tgba, n_acc, add_artificial_init_state);
+  }
 }
 
 #endif // SPOT_TA_TAEXPLICIT_HH

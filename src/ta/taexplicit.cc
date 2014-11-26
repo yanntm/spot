@@ -37,209 +37,69 @@
 
 namespace spot
 {
-
-  ////////////////////////////////////////
-  // ta_explicit_succ_iterator
-
-  ta_explicit_succ_iterator::ta_explicit_succ_iterator(
-      const state_ta_explicit* s)
-  {
-    transitions_ = s->get_transitions();
-  }
-
-  ta_explicit_succ_iterator::ta_explicit_succ_iterator(
-      const state_ta_explicit* s, bdd condition)
-  {
-    transitions_ = s->get_transitions(condition);
-  }
-
-  bool
-  ta_explicit_succ_iterator::first()
-  {
-    if (!transitions_)
-      return false;
-    i_ = transitions_->begin();
-    return i_ != transitions_->end();
-  }
-
-  bool
-  ta_explicit_succ_iterator::next()
-  {
-    ++i_;
-    return i_ != transitions_->end();
-  }
-
-  bool
-  ta_explicit_succ_iterator::done() const
-  {
-    return !transitions_ || i_ == transitions_->end();
-  }
-
-  state*
-  ta_explicit_succ_iterator::current_state() const
-  {
-    trace
-      << "***ta_explicit_succ_iterator::current_state()  if(done()) =***"
-          << done() << std::endl;
-    assert(!done());
-    trace
-      << "***ta_explicit_succ_iterator::current_state() (*i_)->condition =***"
-          << (*i_)->condition << std::endl;
-    state_ta_explicit* s = (*i_)->dest;
-    return s;
-  }
-
-  bdd
-  ta_explicit_succ_iterator::current_condition() const
-  {
-    assert(!done());
-    return (*i_)->condition;
-  }
-
-  acc_cond::mark_t
-  ta_explicit_succ_iterator::current_acceptance_conditions() const
-  {
-    assert(!done());
-    return (*i_)->acceptance_conditions;
-  }
-
-  ////////////////////////////////////////
-  // state_ta_explicit
-
-  state_ta_explicit::transitions*
-  state_ta_explicit::get_transitions() const
-  {
-    return transitions_;
-  }
-
-  // return transitions filtred by condition
-  state_ta_explicit::transitions*
-  state_ta_explicit::get_transitions(bdd condition) const
-  {
-
-    std::unordered_map<int, transitions*, std::hash<int> >::const_iterator i =
-        transitions_by_condition.find(condition.id());
-
-    if (i == transitions_by_condition.end())
-      {
-        return 0;
-      }
-    else
-      {
-        return i->second;
-      }
-
-  }
-
-  void
-  state_ta_explicit::add_transition(state_ta_explicit::transition* t,
-      bool add_at_beginning)
-  {
-    if (transitions_ == 0)
-      transitions_ = new transitions;
-
-    transitions* trans_by_condition = get_transitions(t->condition);
-
-    if (trans_by_condition == 0)
-      {
-        trans_by_condition = new transitions;
-        transitions_by_condition[(t->condition).id()] = trans_by_condition;
-      }
-
-    state_ta_explicit::transitions::iterator it_trans;
-    bool transition_found = false;
-
-    for (it_trans = trans_by_condition->begin(); (it_trans
-        != trans_by_condition->end() && !transition_found); ++it_trans)
-      {
-        transition_found = ((*it_trans)->dest == t->dest);
-        if (transition_found)
-          {
-            (*it_trans)->acceptance_conditions |= t->acceptance_conditions;
-          }
-      }
-
-    if (!transition_found)
-      {
-        if (add_at_beginning)
-          {
-            trans_by_condition->push_front(t);
-            transitions_->push_front(t);
-          }
-        else
-          {
-            trans_by_condition->push_back(t);
-            transitions_->push_back(t);
-          }
-
-      }
-    else
-      {
-        delete t;
-      }
-
-  }
-
   const state*
-  state_ta_explicit::get_tgba_state() const
+  ta_graph_state::get_tgba_state() const
   {
     return tgba_state_;
   }
 
   const bdd
-  state_ta_explicit::get_tgba_condition() const
+  ta_graph_state::get_tgba_condition() const
   {
     return tgba_condition_;
   }
 
   bool
-  state_ta_explicit::is_accepting_state() const
+  ta_graph_state::is_accepting_state() const
   {
     return is_accepting_state_;
   }
 
   bool
-  state_ta_explicit::is_initial_state() const
+  ta_graph_state::is_initial_state() const
   {
     return is_initial_state_;
   }
 
   void
-  state_ta_explicit::set_accepting_state(bool is_accepting_state)
+  ta_graph_state::set_accepting_state(bool is_accepting_state)
   {
     is_accepting_state_ = is_accepting_state;
   }
 
   bool
-  state_ta_explicit::is_livelock_accepting_state() const
+  ta_graph_state::is_livelock_accepting_state() const
   {
     return is_livelock_accepting_state_;
   }
 
   void
-  state_ta_explicit::set_livelock_accepting_state(
+  ta_graph_state::set_livelock_accepting_state(
       bool is_livelock_accepting_state)
   {
     is_livelock_accepting_state_ = is_livelock_accepting_state;
   }
 
   void
-  state_ta_explicit::set_initial_state(bool is_initial_state)
+  ta_graph_state::set_initial_state(bool is_initial_state)
   {
     is_initial_state_ = is_initial_state;
   }
 
   bool
-  state_ta_explicit::is_hole_state() const
+  ta_digraph::is_hole_state(const state* s) const
   {
-    state_ta_explicit::transitions* trans = get_transitions();
-    return trans == 0 || trans->empty();
+    auto it = succ_iter(s);
+    it->first();
+    if (!it->done())
+      return false;
+    return true;
   }
 
   int
-  state_ta_explicit::compare(const spot::state* other) const
+  ta_graph_state::compare(const spot::state* other) const
   {
-    const state_ta_explicit* o = down_cast<const state_ta_explicit*>(other);
+    const ta_graph_state* o = down_cast<const ta_graph_state*>(other);
     assert(o);
 
     int compare_value = tgba_state_->compare(o->tgba_state_);
@@ -248,261 +108,176 @@ namespace spot
       return compare_value;
 
     compare_value = tgba_condition_.id() - o->tgba_condition_.id();
-
-    //    if (compare_value != 0)
-    //      return compare_value;
-    //
-    //    //unique artificial_livelock_accepting_state
-    //    if (o->is_the_artificial_livelock_accepting_state())
-    //      return is_the_artificial_livelock_accepting_state();
-
     return compare_value;
   }
 
   size_t
-  state_ta_explicit::hash() const
+  ta_graph_state::hash() const
   {
-    //return wang32_hash(tgba_state_->hash());
     return wang32_hash(tgba_state_->hash()) ^ wang32_hash(tgba_condition_.id());
-
   }
 
-  state_ta_explicit*
-  state_ta_explicit::clone() const
+  ta_graph_state*
+  ta_graph_state::clone() const
   {
-    return new state_ta_explicit(*this);
-  }
-
-  void
-  state_ta_explicit::delete_stuttering_and_hole_successors()
-  {
-    state_ta_explicit::transitions* trans = get_transitions();
-    state_ta_explicit::transitions::iterator it_trans;
-
-    if (trans != 0)
-      for (it_trans = trans->begin(); it_trans != trans->end();)
-        {
-          state_ta_explicit* dest = (*it_trans)->dest;
-          bool is_stuttering_transition = (get_tgba_condition()
-              == (dest)->get_tgba_condition());
-          bool dest_is_livelock_accepting =
-	    dest->is_livelock_accepting_state();
-
-          //Before deleting stuttering transitions, propaged back livelock
-          //and initial state's properties
-          if (is_stuttering_transition)
-            {
-              if (!is_livelock_accepting_state() && dest_is_livelock_accepting)
-                {
-                  set_livelock_accepting_state(true);
-                  stuttering_reachable_livelock
-                      = dest->stuttering_reachable_livelock;
-                }
-              if (dest->is_initial_state())
-                set_initial_state(true);
-            }
-
-          //remove hole successors states
-          state_ta_explicit::transitions* dest_trans =
-              (dest)->get_transitions();
-          bool dest_trans_empty = dest_trans == 0 || dest_trans->empty();
-          if (is_stuttering_transition || (dest_trans_empty
-              && (!dest_is_livelock_accepting)))
-            {
-              get_transitions((*it_trans)->condition)->remove(*it_trans);
-              delete *it_trans;
-              it_trans = trans->erase(it_trans);
-            }
-          else
-            {
-              ++it_trans;
-            }
-        }
-
-  }
-
-  void
-  state_ta_explicit::free_transitions()
-  {
-    state_ta_explicit::transitions* trans = transitions_;
-    state_ta_explicit::transitions::iterator it_trans;
-    // We don't destroy the transitions in the state's destructor because
-    // they are not cloned.
-    if (trans != 0)
-      for (it_trans = trans->begin(); it_trans != trans->end(); ++it_trans)
-        {
-          delete *it_trans;
-        }
-    delete trans;
-
-    std::unordered_map<int, transitions*, std::hash<int> >::iterator i =
-      transitions_by_condition.begin();
-    while (i != transitions_by_condition.end())
-      {
-        delete i->second;
-        ++i;
-      }
-
-    transitions_ = 0;
+    return new ta_graph_state(*this);
   }
 
   ////////////////////////////////////////
   // ta_explicit
 
-
-  ta_explicit::ta_explicit(const const_tgba_ptr& tgba,
-			   unsigned n_acc,
-			   state_ta_explicit* artificial_initial_state):
+  ta_digraph::ta_digraph(const const_tgba_ptr& tgba,
+			 unsigned n_acc,
+			 bool add_artificial_state):
     ta(tgba->get_dict()),
+    init_number_(0),
     tgba_(tgba),
-    artificial_initial_state_(artificial_initial_state)
+    artificial_initial_state_(0)
   {
+    iter_cache_ = nullptr;
     get_dict()->register_all_variables_of(&tgba_, this);
     acc().add_sets(n_acc);
-    if (artificial_initial_state != 0)
+    if (add_artificial_state)
       {
-        state_ta_explicit* is = add_state(artificial_initial_state);
-        assert(is == artificial_initial_state);
+	artificial_initial_state_ =
+	  add_state(tgba_->get_init_state(), bddfalse, true);
       }
+    else
+      assert(false);
   }
 
-  ta_explicit::~ta_explicit()
+  ta_digraph::~ta_digraph()
   {
     ta::states_set_t::iterator it;
     for (it = states_set_.begin(); it != states_set_.end(); ++it)
       {
-        state_ta_explicit* s = down_cast<state_ta_explicit*>(*it);
+        ta_graph_state* s = down_cast<ta_graph_state*>(*it);
 
-        s->free_transitions();
+        free_transitions(s);
         s->get_tgba_state()->destroy();
         delete s;
       }
     get_dict()->unregister_all_my_variables(this);
   }
 
-  state_ta_explicit*
-  ta_explicit::add_state(state_ta_explicit* s)
+  unsigned
+  ta_digraph::add_state(const state* tgba_state,
+			const bdd tgba_condition,
+			bool is_initial_state,
+			bool is_accepting_state,
+			bool is_livelock_accepting_state)
   {
-    std::pair<ta::states_set_t::iterator, bool> add_state_to_ta =
-        states_set_.insert(s);
-
-    return static_cast<state_ta_explicit*>(*add_state_to_ta.first);
+    return g_.new_state(tgba_state->clone(),
+			     tgba_condition,
+			     is_initial_state,
+			     is_accepting_state,
+			     is_livelock_accepting_state);
   }
 
   void
-  ta_explicit::add_to_initial_states_set(state* state, bdd condition)
+  ta_digraph::add_to_initial_states_set(unsigned state, bdd condition)
   {
-    state_ta_explicit* s = down_cast<state_ta_explicit*>(state);
-    s->set_initial_state(true);
+    //initials_.insert(state);
     if (condition == bddfalse)
-      condition = get_state_condition(s);
-    std::pair<ta::states_set_t::iterator, bool> add_state =
-        initial_states_set_.insert(s);
-    if (get_artificial_initial_state() != 0)
-      if (add_state.second)
-	{
-	  state_ta_explicit* i =
-	    down_cast<state_ta_explicit*>(get_artificial_initial_state());
-	  create_transition(i, condition, 0U, s);
-	}
-  }
-
-  void
-  ta_explicit::delete_stuttering_and_hole_successors(spot::state* s)
-  {
-    state_ta_explicit * state = down_cast<state_ta_explicit*>(s);
-    assert(state);
-    state->delete_stuttering_and_hole_successors();
-    if (state->is_initial_state())
-      add_to_initial_states_set(state);
-
-  }
-
-  void
-  ta_explicit::create_transition(state_ta_explicit* source, bdd condition,
-				 acc_cond::mark_t acceptance_conditions,
-				 state_ta_explicit* dest, bool add_at_beginning)
-  {
-    state_ta_explicit::transition* t = new state_ta_explicit::transition;
-    t->dest = dest;
-    t->condition = condition;
-    t->acceptance_conditions = acceptance_conditions;
-    source->add_transition(t, add_at_beginning);
-
+      condition = get_state_condition(state_from_number(state));
+    create_transition(artificial_initial_state_, condition, 0U, state);
   }
 
   const ta::states_set_t
-  ta_explicit::get_initial_states_set() const
+  ta_digraph::get_initial_states_set() const
   {
     return initial_states_set_;
-
   }
 
   bdd
-  ta_explicit::get_state_condition(const spot::state* initial_state) const
+  ta_digraph::get_state_condition(const spot::state* initial_state) const
   {
-    const state_ta_explicit* sta =
-        down_cast<const state_ta_explicit*>(initial_state);
+    const ta_graph_state* sta =
+        down_cast<const ta_graph_state*>(initial_state);
     assert(sta);
     return sta->get_tgba_condition();
   }
 
   bool
-  ta_explicit::is_accepting_state(const spot::state* s) const
+  ta_digraph::is_accepting_state(const spot::state* s) const
   {
-    const state_ta_explicit* sta = down_cast<const state_ta_explicit*>(s);
+    const ta_graph_state* sta = down_cast<const ta_graph_state*>(s);
     assert(sta);
     return sta->is_accepting_state();
   }
 
   bool
-  ta_explicit::is_initial_state(const spot::state* s) const
+  ta_digraph::is_initial_state(const spot::state* s) const
   {
-    const state_ta_explicit* sta = down_cast<const state_ta_explicit*>(s);
+    const ta_graph_state* sta = down_cast<const ta_graph_state*>(s);
     assert(sta);
     return sta->is_initial_state();
   }
 
   bool
-  ta_explicit::is_livelock_accepting_state(const spot::state* s) const
+  ta_digraph::is_livelock_accepting_state(const spot::state* s) const
   {
-    const state_ta_explicit* sta = down_cast<const state_ta_explicit*>(s);
+    const ta_graph_state* sta = down_cast<const ta_graph_state*>(s);
     assert(sta);
     return sta->is_livelock_accepting_state();
   }
 
   ta_succ_iterator*
-  ta_explicit::succ_iter(const spot::state* state) const
+  ta_digraph::succ_iter(const spot::state* st) const
   {
-    const state_ta_explicit* s = down_cast<const state_ta_explicit*>(state);
-    assert(s);
-    return new ta_explicit_succ_iterator(s);
+    {
+      auto s = down_cast<const typename graph_t::state_storage_t*>(st);
+      assert(s);
+      assert(!s->succ || g_.valid_trans(s->succ));
+
+      if (this->iter_cache_)
+      	{
+      	  auto it =
+      	    down_cast<ta_explicit_succ_iterator<graph_t>*>(this->iter_cache_);
+      	  it->recycle(s->succ);
+      	  this->iter_cache_ = nullptr;
+      	  return it;
+      	}
+      return new ta_explicit_succ_iterator<graph_t>(&g_, s->succ);
+    }
   }
 
   ta_succ_iterator*
-  ta_explicit::succ_iter(const spot::state* state, bdd condition) const
+  ta_digraph::succ_iter(const spot::state* st, bdd cond) const
   {
-    const state_ta_explicit* s = down_cast<const state_ta_explicit*>(state);
-    assert(s);
-    return new ta_explicit_succ_iterator(s, condition);
+    {
+      auto s = down_cast<const typename graph_t::state_storage_t*>(st);
+      assert(s);
+      assert(!s->succ || g_.valid_trans(s->succ));
+
+      if (this->iter_cache_)
+	{
+	  auto it = down_cast<ta_explicit_succ_iterator_cond<graph_t>*>
+	    (this->iter_cache_);
+	  it->recycle(s->succ);
+	  this->iter_cache_ = nullptr;
+	  return it;
+	}
+      return new ta_explicit_succ_iterator_cond<graph_t>(&g_, s->succ, cond);
+    }
   }
 
   bdd_dict_ptr
-  ta_explicit::get_dict() const
+  ta_digraph::get_dict() const
   {
     return tgba_->get_dict();
   }
 
   const_tgba_ptr
-  ta_explicit::get_tgba() const
+  ta_digraph::get_tgba() const
   {
     return tgba_;
   }
 
   std::string
-  ta_explicit::format_state(const spot::state* s) const
+  ta_digraph::format_state(const spot::state* s) const
   {
-    const state_ta_explicit* sta = down_cast<const state_ta_explicit*>(s);
+    const ta_graph_state* sta = down_cast<const ta_graph_state*>(s);
     assert(sta);
 
     if (sta->get_tgba_condition() == bddtrue)
@@ -510,42 +285,94 @@ namespace spot
 
     return tgba_->format_state(sta->get_tgba_state()) + "\n"
         + bdd_format_formula(get_dict(), sta->get_tgba_condition());
-
   }
 
   void
-  ta_explicit::delete_stuttering_transitions()
+  ta_digraph::free_transitions(const state* s)
   {
-    ta::states_set_t::iterator it;
-    for (it = states_set_.begin(); it != states_set_.end(); ++it)
+    auto t = g_.out_iteraser(state_number(s));
+    while (t)
       {
+    	t.erase();
+      }
+    g_.defrag();
+  }
 
-        const state_ta_explicit* source =
-            static_cast<const state_ta_explicit*>(*it);
+  void
+  ta_digraph::delete_stuttering_and_hole_successors(spot::state* s)
+  {
+    unsigned src = state_number(s);
+    ta_graph_state* src_data = &g_.state_data(src);
+    auto src_cond = src_data->get_tgba_condition();
+    auto t = g_.out_iteraser(src);
+    while(t)
+      {
+	ta_graph_state* dst_data = &g_.state_data(t->dst);
+	auto dst_cond = dst_data->get_tgba_condition();
+	bool is_stuttering_transition = (src_cond == dst_cond);
+	bool dest_is_livelock_accepting =
+	  dst_data->is_livelock_accepting_state();
 
-        state_ta_explicit::transitions* trans = source->get_transitions();
-        state_ta_explicit::transitions::iterator it_trans;
+	if (is_stuttering_transition)
+	  {
+	    if (!src_data->is_livelock_accepting_state() &&
+		dest_is_livelock_accepting)
+	      {
+		src_data->set_livelock_accepting_state(true);
+		src_data->stuttering_reachable_livelock =
+		  dst_data->stuttering_reachable_livelock;
+	      }
+	    if (dst_data->is_initial_state())
+	      src_data->set_initial_state(true);
+	  }
 
-        if (trans != 0)
-          for (it_trans = trans->begin(); it_trans != trans->end();)
-            {
-              if (source->get_tgba_condition()
-                  == ((*it_trans)->dest)->get_tgba_condition())
-                {
-                  delete *it_trans;
-                  it_trans = trans->erase(it_trans);
-                }
-              else
-                {
-                  ++it_trans;
-                }
-            }
+	bool is_hole = true;
+	for (auto tmp: g_.out(t->dst))
+	  {
+	    is_hole = false;
+	    break;
+	  }
+
+	if (is_stuttering_transition ||
+	    (is_hole && (!dest_is_livelock_accepting)))
+	  {
+	    t.erase();
+	    continue;
+	  }
+	++t;
       }
 
+    // if (src_data.is_initial_state())
+    //   add_to_initial_states_set(src);
+    //g_.defrag();
   }
 
   void
-  ta_explicit::free_state(const spot::state*) const
+  ta_digraph::create_transition(unsigned src,
+				bdd condition,
+				acc_cond::mark_t acceptance_conditions,
+				unsigned dst)
+  {
+    bool transition_found = false;
+    for (auto& t: g_.out(src))
+    {
+	// Restrict to transitions with the same condition
+	if (condition != t.cond)
+	    continue;
+
+	if (t.dst == dst)
+	  {
+	     t.acc |= acceptance_conditions;
+	    transition_found = true;
+	  }
+      }
+
+    if (!transition_found)
+      g_.new_transition(src, dst, condition, acceptance_conditions);
+  }
+
+  void
+  ta_digraph::free_state(const spot::state*) const
   {
   }
 

@@ -25,13 +25,86 @@
 #include <cassert>
 #include "misc/bddlt.hh"
 #include "tgba/tgba.hh"
+#include "fwd.hh"
 #include "tgba/bdddict.hh"
 
 namespace spot
 {
 
-  // Forward declarations.  See below.
-  class ta_succ_iterator;
+  /// \ingroup ta_essentials
+  /// \brief Iterate over the successors of a state.
+  ///
+  /// This class provides the basic functionalities required to
+  /// iterate over the successors of a state, as well as querying
+  /// transition labels.  Because transitions are never explicitely
+  /// encoded, labels (conditions and acceptance conditions) can only
+  /// be queried while iterating over the successors.
+  class ta_succ_iterator : public tgba_succ_iterator
+  {
+  public:
+    virtual
+    ~ta_succ_iterator()
+    {
+    }
+
+    virtual bool first() = 0;
+    virtual bool next() = 0;
+    virtual bool done() const = 0;
+
+    virtual state*
+    current_state() const = 0;
+
+    /// \brief Get the changeset on the transition leading to current successor.
+    ///
+    /// This is a boolean function of atomic propositions.
+    virtual bdd
+    current_condition() const = 0;
+
+    acc_cond::mark_t
+    current_acceptance_conditions() const = 0;
+
+  };
+
+  namespace internal
+  {
+    struct SPOT_API succ_iterator_ta
+    {
+    protected:
+      ta_succ_iterator* it_;
+    public:
+
+      succ_iterator_ta(ta_succ_iterator* it):
+	it_(it)
+	{
+	}
+
+      bool operator==(succ_iterator_ta o) const
+      {
+	return it_ == o.it_;
+      }
+
+      bool operator!=(succ_iterator_ta o) const
+      {
+	return it_ != o.it_;
+      }
+
+      const ta_succ_iterator* operator*() const
+      {
+	return it_;
+      }
+
+      void operator++()
+      {
+	if (!it_->next())
+	  it_ = nullptr;
+      }
+    };
+  }
+
+  // typedef std::shared_ptr<ta> ta_ptr;
+  // typedef std::shared_ptr<const ta> const_ta_ptr;
+
+
 
   /// \defgroup ta TA (Testing Automata)
   ///
@@ -74,7 +147,7 @@ namespace spot
   /// obtained by querying the iterator over the successors of
   /// a state.
 
-  class SPOT_API ta
+  class SPOT_API ta: public std::enable_shared_from_this<ta>
   {
   protected:
     acc_cond acc_;
@@ -82,11 +155,11 @@ namespace spot
   public:
     ta(const bdd_dict_ptr& d)
       : acc_(d)
-    {
-    }
+      {
+      }
 
     virtual
-    ~ta()
+      ~ta()
     {
     }
 
@@ -94,7 +167,7 @@ namespace spot
 
     /// \brief Get the initial states set of the automaton.
     virtual const states_set_t
-    get_initial_states_set() const = 0;
+      get_initial_states_set() const = 0;
 
     /// \brief Get the artificial initial state set of the automaton.
     /// Return 0 if this artificial state is not implemented
@@ -103,8 +176,8 @@ namespace spot
     /// artificial initial state have one transition to each real initial state,
     /// and this transition is labeled by the corresponding initial condition.
     /// (For more details, see the paper cited above)
-    virtual spot::state*
-    get_artificial_initial_state() const
+    virtual  spot::state*
+      get_artificial_initial_state() const
     {
       return 0;
     }
@@ -116,17 +189,17 @@ namespace spot
     /// longer needed.
     ///
     virtual ta_succ_iterator*
-    succ_iter(const spot::state* state) const = 0;
+      succ_iter(const spot::state* state) const = 0;
 
-    /// \brief Get an iterator over the successors of \a state
-    /// filtred by the changeset on transitions
-    ///
-    /// The iterator has been allocated with \c new.  It is the
-    /// responsability of the caller to \c delete it when no
-    /// longer needed.
-    ///
+    // /// \brief Get an iterator over the successors of \a state
+    // /// filtred by the changeset on transitions
+    // ///
+    // /// The iterator has been allocated with \c new.  It is the
+    // /// responsability of the caller to \c delete it when no
+    // /// longer needed.
+    // ///
     virtual ta_succ_iterator*
-    succ_iter(const spot::state* state, bdd changeset) const = 0;
+      succ_iter(const spot::state* state, bdd changeset) const = 0;
 
     /// \brief Get the dictionary associated to the automaton.
     ///
@@ -136,7 +209,7 @@ namespace spot
     /// may use the same BDD variable for different formula),
     /// or simply when printing.
     bdd_dict_ptr
-    get_dict() const
+      get_dict() const
     {
       return acc_.get_dict();
     }
@@ -146,29 +219,29 @@ namespace spot
     /// This formating is the responsability of the automata
     /// that owns the state.
     virtual std::string
-    format_state(const spot::state* s) const = 0;
+      format_state(const spot::state* s) const = 0;
 
     /// \brief Return true if \a s is a Buchi-accepting state, otherwise false
     virtual bool
-    is_accepting_state(const spot::state* s) const = 0;
+      is_accepting_state(const spot::state* s) const = 0;
 
     /// \brief Return true if \a s is a livelock-accepting state
     /// , otherwise false
     virtual bool
-    is_livelock_accepting_state(const spot::state* s) const = 0;
+      is_livelock_accepting_state(const spot::state* s) const = 0;
 
     /// \brief Return true if \a s is an initial state, otherwise false
     virtual bool
-    is_initial_state(const spot::state* s) const = 0;
+      is_initial_state(const spot::state* s) const = 0;
 
     /// \brief Return a BDD condition that represents the valuation
     /// of atomic propositions in the state \a s
     virtual bdd
-    get_state_condition(const spot::state* s) const = 0;
+      get_state_condition(const spot::state* s) const = 0;
 
     /// \brief Release a state \a s
     virtual void
-    free_state(const spot::state* s) const = 0;
+      free_state(const spot::state* s) const = 0;
 
 
     const acc_cond& acc() const
@@ -181,44 +254,60 @@ namespace spot
       return acc_;
     }
 
-  };
 
-  typedef std::shared_ptr<ta> ta_ptr;
-  typedef std::shared_ptr<const ta> const_ta_ptr;
-
-  /// \ingroup ta_essentials
-  /// \brief Iterate over the successors of a state.
-  ///
-  /// This class provides the basic functionalities required to
-  /// iterate over the successors of a state, as well as querying
-  /// transition labels.  Because transitions are never explicitely
-  /// encoded, labels (conditions and acceptance conditions) can only
-  /// be queried while iterating over the successors.
-  class ta_succ_iterator : public tgba_succ_iterator
-  {
-  public:
-    virtual
-    ~ta_succ_iterator()
+#ifndef SWIG
+    class succ_iterable
     {
-    }
+    protected:
+      const ta* aut_;
+      ta_succ_iterator* it_;
+    public:
+      succ_iterable(const ta* aut, ta_succ_iterator* it)
+	: aut_(aut), it_(it)
+      {
+      }
 
-    virtual bool first() = 0;
-    virtual bool next() = 0;
-    virtual bool done() const = 0;
+      succ_iterable(succ_iterable&& other)
+	: aut_(other.aut_), it_(other.it_)
+      {
+	other.it_ = nullptr;
+      }
 
-    virtual state*
-    current_state() const = 0;
+      ~succ_iterable()
+      {
+	if (it_)
+	  aut_->release_iter(it_);
+      }
 
-    /// \brief Get the changeset on the transition leading to current successor.
+      internal::succ_iterator_ta begin()
+      {
+	return it_->first() ? it_ : nullptr;
+      }
+
+      internal::succ_iterator_ta end()
+      {
+	return nullptr;
+      }
+    };
+#endif
+
+    mutable tgba_succ_iterator* iter_cache_;
+
+    /// \brief Release an iterator after usage.
     ///
-    /// This is a boolean function of atomic propositions.
-    virtual bdd
-    current_condition() const = 0;
-
-    acc_cond::mark_t
-    current_acceptance_conditions() const = 0;
-
+    /// This iterator can then be reused by succ_iter() to avoid
+    /// memory allocation.
+    void release_iter(ta_succ_iterator* i) const
+    {
+      if (iter_cache_)
+	delete i;
+      else
+	iter_cache_ = i;
+    }
   };
+
+
+
 
 #ifndef SWIG
   // A stack of Strongly-Connected Components
@@ -275,27 +364,27 @@ namespace spot
   };
 #endif // !SWIG
 
-/// \addtogroup ta_representation TA representations
-/// \ingroup ta
+  /// \addtogroup ta_representation TA representations
+  /// \ingroup ta
 
-/// \addtogroup ta_algorithms TA algorithms
-/// \ingroup ta
+  /// \addtogroup ta_algorithms TA algorithms
+  /// \ingroup ta
 
-/// \addtogroup ta_io Input/Output of TA
-/// \ingroup ta_algorithms
+  /// \addtogroup ta_io Input/Output of TA
+  /// \ingroup ta_algorithms
 
-/// \addtogroup tgba_ta Transforming TGBA into TA
-/// \ingroup ta_algorithms
+  /// \addtogroup tgba_ta Transforming TGBA into TA
+  /// \ingroup ta_algorithms
 
 
-/// \addtogroup ta_generic Algorithm patterns
-/// \ingroup ta_algorithms
+  /// \addtogroup ta_generic Algorithm patterns
+  /// \ingroup ta_algorithms
 
-/// \addtogroup ta_reduction TA simplifications
-/// \ingroup ta_algorithms
+  /// \addtogroup ta_reduction TA simplifications
+  /// \ingroup ta_algorithms
 
-/// \addtogroup ta_misc Miscellaneous algorithms on TA
-/// \ingroup ta_algorithms
+  /// \addtogroup ta_misc Miscellaneous algorithms on TA
+  /// \ingroup ta_algorithms
 
 
 }

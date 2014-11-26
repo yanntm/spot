@@ -272,7 +272,7 @@ namespace spot
     bdd kripke_init_state_condition = kripke_->state_condition(
         kripke_init_state);
 
-    spot::state* artificial_initial_state =
+    const spot::state* artificial_initial_state =
       ta_->get_artificial_initial_state();
 
     if (artificial_initial_state != 0)

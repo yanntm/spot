@@ -79,7 +79,7 @@ namespace spot
   ///
   /// \return A spot::ta_explicit that recognizes the same language as the
   /// TGBA \a tgba_to_convert.
-  SPOT_API ta_explicit_ptr
+  SPOT_API ta_digraph_ptr
   tgba_to_ta(const const_tgba_ptr& tgba_to_convert, bdd atomic_propositions_set,
 	     bool degeneralized = true,
 	     bool artificial_initial_state_mode = true,

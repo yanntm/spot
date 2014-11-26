@@ -23,6 +23,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 tadir = $(pkgincludedir)/ta
 
 ta_HEADERS = \
+  fwd.hh \
   ta.hh \
   taexplicit.hh \
   taproduct.hh \

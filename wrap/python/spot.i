@@ -44,7 +44,7 @@
 %shared_ptr(spot::ta)
 %shared_ptr(spot::taa_tgba_formula)
 %shared_ptr(spot::taa_tgba_string)
-%shared_ptr(spot::ta_explicit)
+%shared_ptr(spot::ta_digraph)
 %shared_ptr(spot::ta_product)
 %shared_ptr(spot::taa_tgba)
 %shared_ptr(spot::tgba)
