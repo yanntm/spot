@@ -168,10 +168,10 @@ namespace spot
 			bool is_livelock_accepting_state)
   {
     return g_.new_state(tgba_state->clone(),
-			     tgba_condition,
-			     is_initial_state,
-			     is_accepting_state,
-			     is_livelock_accepting_state);
+			tgba_condition,
+			is_initial_state,
+			is_accepting_state,
+			is_livelock_accepting_state);
   }
 
   void
@@ -356,16 +356,16 @@ namespace spot
     bool transition_found = false;
     for (auto& t: g_.out(src))
     {
-	// Restrict to transitions with the same condition
-	if (condition != t.cond)
-	    continue;
+      // Restrict to transitions with the same condition
+      if (condition != t.cond)
+	continue;
 
-	if (t.dst == dst)
-	  {
-	     t.acc |= acceptance_conditions;
-	    transition_found = true;
-	  }
-      }
+      if (t.dst == dst)
+	{
+	  t.acc |= acceptance_conditions;
+	  transition_found = true;
+	}
+    }
 
     if (!transition_found)
       g_.new_transition(src, dst, condition, acceptance_conditions);
