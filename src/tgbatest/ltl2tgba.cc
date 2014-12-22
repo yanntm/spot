@@ -1399,7 +1399,7 @@ checked_main(int argc, char** argv)
                       opt_with_artificial_livelock);
 	      tm.stop("conversion to TA");
 
-              if (opt_bisim_ta)
+	      if (opt_bisim_ta)
                 {
 		  tm.start("TA bisimulation");
                   testing_automaton = minimize_ta(testing_automaton);

@@ -164,15 +164,15 @@ namespace spot
       return nullptr;
     }
 
-    int exist_state(ta_graph_state* newstate)
+    int exist_state(const ta_graph_state* newstate)
     {
-      for(unsigned i = 0; i < num_states(); ++i)
-      {
-	if (newstate->compare(state_from_number(i)) == 0)
-	  {
+      assert(newstate);
+      for(unsigned i = 1; i < num_states(); ++i)
+	{
+	  auto st = state_from_number(i);
+	  if (newstate->compare(st) == 0)
 	    return (int)i;
-	  }
-      }
+	}
       return -1;
     }
 
@@ -289,6 +289,7 @@ namespace spot
     ta::states_set_t
     get_states_set()
     {
+      assert(false);
       return states_set_;
     }
 

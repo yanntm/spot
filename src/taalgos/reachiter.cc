@@ -63,6 +63,7 @@ namespace spot
       }
     else
       {
+	assert(false); /*FIXME*/
         init_states_set = t_automata_->get_initial_states_set();
       }
 
@@ -71,8 +72,8 @@ namespace spot
         state* init_state = (*it);
         if (want_state(init_state))
           add_state(init_state);
+	assert(init_state);
         seen[init_state] = ++n;
-
       }
 
     const state* t;

@@ -101,7 +101,6 @@ namespace spot
   {
     const ta_graph_state* o = down_cast<const ta_graph_state*>(other);
     assert(o);
-
     int compare_value = tgba_state_->compare(o->tgba_state_);
 
     if (compare_value != 0)
@@ -139,6 +138,7 @@ namespace spot
     acc().add_sets(n_acc);
     if (add_artificial_state)
       {
+	assert(tgba_->get_init_state() != 0);
 	artificial_initial_state_ =
 	  add_state(tgba_->get_init_state(), bddfalse, true);
       }

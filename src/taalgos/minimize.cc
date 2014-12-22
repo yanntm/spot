@@ -94,6 +94,7 @@ namespace spot
 	   ++num;
 	 }
 
+
        // For each transition in the initial automaton, add the corresponding
        // transition in ta.
 
@@ -113,29 +114,25 @@ namespace spot
 	   bool is_livelock_accepting_state =
 	     a->is_livelock_accepting_state(src);
 
-	   ta_graph_state* new_src =
+	   const ta_graph_state* new_src_tmp =
 	     new ta_graph_state(result_tgba->state_from_number(src_num),
-				   tgba_condition, is_initial_state,
-				   is_accepting_state,
-				   is_livelock_accepting_state);
+				tgba_condition, is_initial_state,
+				is_accepting_state,
+				is_livelock_accepting_state);
 
-	   ta_graph_state* ta_src = result->add_state(new_src);
+	   int new_src = result->exist_state(new_src_tmp);
+	   if (new_src == -1)
+	     {
+	       new_src = result->add_state
+		 (result_tgba->state_from_number(src_num),
+		  tgba_condition, is_initial_state,
+		  is_accepting_state,
+		  is_livelock_accepting_state);
 
-	   if (ta_src != new_src)
-	     {
-	       delete new_src;
+	       if (is_initial_state)
+		 result->set_artificial_initial_state(new_src);
 	     }
-	   else if (a->get_artificial_initial_state() != 0)
-	     {
-	       // FIXME
-	       // if (a->get_artificial_initial_state() == src)
-	       // 	 result->set_artificial_initial_state(new_src);
-	     }
-	   else if (is_initial_state)
-	     {
-	       //FIXME
-	       //result->add_to_initial_states_set(new_src);
-	     }
+	   new_src_tmp->destroy();
 
 	   ta_succ_iterator* succit = a->succ_iter(src);
 
@@ -155,38 +152,27 @@ namespace spot
 	       bool is_livelock_accepting_state =
 		 a->is_livelock_accepting_state(dst);
 
-	       ta_graph_state* new_dst =
-		 new ta_graph_state
-		 (result_tgba->state_from_number(i->second),
-		  tgba_condition, is_initial_state,
-		  is_accepting_state,
-		  is_livelock_accepting_state);
+	       const ta_graph_state* new_dst_tmp =
+	       	 new ta_graph_state
+	       	 (result_tgba->state_from_number(i->second),
+	       	  tgba_condition, is_initial_state,
+	       	  is_accepting_state,
+	       	  is_livelock_accepting_state);
 
-	       ta_graph_state* ta_dst = result->add_state(new_dst);
-
-	       if (ta_dst != new_dst)
+	       int new_dst = result->exist_state(new_dst_tmp);
+	       if (new_dst == -1 )
 		 {
-		   delete new_dst;
+		   new_dst = result->add_state
+		     (result_tgba->state_from_number(i->second),
+		      tgba_condition, is_initial_state,
+		      is_accepting_state,
+		      is_livelock_accepting_state);
 		 }
-	       else if (a->get_artificial_initial_state() != 0)
-		 {
-		   // FIXME
-		   // if (a->get_artificial_initial_state() == dst)
-		   //   result->set_artificial_initial_state(new_dst);
-		 }
+	       new_dst_tmp->destroy();
 
-	       else if (is_initial_state)
-		 {
-		   // FIXME
-		   //result->add_to_initial_states_set(new_dst);
-		 }
-
-
-	       // FIXME
-	       // result->create_transition
-	       // 	 (ta_src, succit->current_condition(),
-	       // 	  succit->current_acceptance_conditions(),
-	       // 	  ta_dst);
+	       result->create_transition
+	       	 (new_src, succit->current_condition(),
+	       	  succit->current_acceptance_conditions(), new_dst);
 	     }
 	   delete succit;
 	 }
@@ -517,7 +503,7 @@ namespace spot
   {
 
     auto tgba = make_tgba_digraph(ta_->get_dict());
-    auto res = make_ta_explicit(tgba, ta_->acc().num_sets(), 0);
+    auto res = make_ta_explicit(tgba, ta_->acc().num_sets(), true);
 
     partition_t partition = build_partition(ta_);
 
