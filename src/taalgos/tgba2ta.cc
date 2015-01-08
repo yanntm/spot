@@ -92,8 +92,14 @@ namespace spot
       	  for (auto& trans_id: transitions_to_livelock_states)
       	    {
       	      ta_graph_trans_data* t = &g_.trans_data(trans_id);
-      	      testing_automata->create_transition
-      	      	(testing_automata->state_number(&source.data()),
+	      auto the_src = testing_automata->state_number(&source.data());
+
+	      // FIXME? Due to the presence of an initial artificial
+	      if (the_src == testing_automata->get_initial_artificial_state())
+		continue;
+
+	      testing_automata->create_transition
+      	      	(the_src,
       	      	 t->cond,
       	      	 t->acc,
       	      	 artificial_livelock_acc_state);
@@ -149,6 +155,13 @@ namespace spot
       std::stack<state*> init_set;
 
       init_set.push(testing_aut->get_artificial_initial_state());
+      // FIXME
+      // auto& g_ = testing_aut->get_graph();
+      // for (auto& t: g_.out(testing_aut->get_initial_artificial_state()))
+      // 	{
+      // 	  init_set.push(const_cast<ta_graph_state*>(testing_aut->state_from_number(t.dst)));
+      // 	}
+
       while (!init_set.empty())
 	{
 	  // Setup depth-first search from initial states.
@@ -502,8 +515,9 @@ namespace spot
   {
     ta_digraph_ptr ta;
 
-    if (artificial_initial_state_mode)
-      ta = make_ta_explicit(tgba_, tgba_->acc().num_sets(), true);
+    // FIXME
+    (void)(artificial_initial_state_mode);
+    ta = make_ta_explicit(tgba_, tgba_->acc().num_sets(), true);
 
     // build ta automaton
     build_ta(ta, atomic_propositions_set_, degeneralized,
@@ -525,7 +539,7 @@ namespace spot
 
       if (src_data->is_accepting_state())
 	{
-	  for (auto t: g_.out(src))
+	  for (auto& t: g_.out(src))
 	    {
 	      t.acc =  ta->acc().all_sets();
 	    }

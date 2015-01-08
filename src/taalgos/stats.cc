@@ -38,8 +38,16 @@ namespace spot
       }
 
       void
-      process_state(const state* s, int)
+      process_state(const state* s, int id)
       {
+	// FIXME: to be consistent with previous code
+	// only "REAL" initial states must be counted. In this implementation
+	// there is ALWAYS one single artificial state
+	if (t_automata_->get_artificial_initial_state() == s)
+	  {
+	    artificial_ = id;
+	    return;
+	  }
         ++s_.states;
         if (t_automata_->is_accepting_state(s)
             || t_automata_->is_livelock_accepting_state(s))
@@ -47,13 +55,17 @@ namespace spot
       }
 
       void
-      process_link(int, int, const ta_succ_iterator*)
+      process_link(int src, int, const ta_succ_iterator*)
       {
+	if (artificial_ == src)
+	  return;
         ++s_.transitions;
       }
 
     private:
       ta_statistics& s_;
+      int artificial_;
+      std::unordered_set<int> real_initials_;
     };
   } // anonymous
 

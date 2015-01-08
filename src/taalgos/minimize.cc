@@ -90,10 +90,10 @@ namespace spot
 	   hash_set* h = *sit;
 	   for (hit = h->begin(); hit != h->end(); ++hit)
 	     state_num[*hit] = num;
-	   result_tgba->new_state();
+	   // FIXME Ugly to fix this before
+	   //result_tgba->new_state();
 	   ++num;
 	 }
-
 
        // For each transition in the initial automaton, add the corresponding
        // transition in ta.
@@ -129,28 +129,36 @@ namespace spot
 		  is_accepting_state,
 		  is_livelock_accepting_state);
 
-	       if (is_initial_state)
-		 result->set_artificial_initial_state(new_src);
+
+	       if (is_initial_state){
+		 result->add_to_initial_states_set(new_src);
+	       }
 	     }
+	   else if (is_initial_state)
+	     {
+	       result->add_to_initial_states_set(new_src);
+	     }
+
 	   new_src_tmp->destroy();
 
-	   ta_succ_iterator* succit = a->succ_iter(src);
 
+	   ta_succ_iterator* succit = a->succ_iter(src);
+	   assert(succit != NULL);
 	   for (succit->first(); !succit->done(); succit->next())
 	     {
 	       const state* dst = succit->current_state();
 	       hash_map::const_iterator i = state_num.find(dst);
 
 	       if (i == state_num.end()) // Ignore useless destinations.
-		 continue;
+	   	 continue;
 
 	       bdd tgba_condition = bddtrue;
 	       is_initial_state = a->is_initial_state(dst);
 	       if ((a->get_artificial_initial_state() == 0) && is_initial_state)
-		 tgba_condition = a->get_state_condition(dst);
+	   	 tgba_condition = a->get_state_condition(dst);
 	       bool is_accepting_state = a->is_accepting_state(dst);
 	       bool is_livelock_accepting_state =
-		 a->is_livelock_accepting_state(dst);
+	   	 a->is_livelock_accepting_state(dst);
 
 	       const ta_graph_state* new_dst_tmp =
 	       	 new ta_graph_state
@@ -161,13 +169,13 @@ namespace spot
 
 	       int new_dst = result->exist_state(new_dst_tmp);
 	       if (new_dst == -1 )
-		 {
-		   new_dst = result->add_state
-		     (result_tgba->state_from_number(i->second),
-		      tgba_condition, is_initial_state,
-		      is_accepting_state,
-		      is_livelock_accepting_state);
-		 }
+	   	 {
+	   	   new_dst = result->add_state
+	   	     (result_tgba->state_from_number(i->second),
+	   	      tgba_condition, is_initial_state,
+	   	      is_accepting_state,
+	   	      is_livelock_accepting_state);
+	   	 }
 	       new_dst_tmp->destroy();
 
 	       result->create_transition
@@ -232,8 +240,8 @@ namespace spot
 	{
 	  const state* s = *it;
 	  if (s == artificial_initial_state)
-	    I->insert(s);
-	  else if (artificial_initial_state == 0 && ta_->is_initial_state(s))
+	    continue;
+	  else if (ta_->is_initial_state(s))
 	    I->insert(s);
 	  else if (ta_->is_livelock_accepting_state(s)
 		   && ta_->is_accepting_state(s))
@@ -501,11 +509,10 @@ namespace spot
   ta_digraph_ptr
   minimize_ta(const const_ta_ptr& ta_)
   {
-
-    auto tgba = make_tgba_digraph(ta_->get_dict());
-    auto res = make_ta_explicit(tgba, ta_->acc().num_sets(), true);
-
     partition_t partition = build_partition(ta_);
+    auto tgba = make_tgba_digraph(ta_->get_dict());
+    tgba->new_states(partition.size());
+    auto res = make_ta_explicit(tgba, ta_->acc().num_sets(), true);
 
     // Build the ta automata result.
     build_result(ta_, partition, tgba, res);
@@ -527,6 +534,8 @@ namespace spot
 
     auto ta = tgta_->get_ta();
 
+    // FIXME same problem than TA above
+    assert(false);
     partition_t partition = build_partition(ta);
 
     // Build the minimal tgta automaton.
