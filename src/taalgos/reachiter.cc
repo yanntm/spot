@@ -54,18 +54,8 @@ namespace spot
         t_automata_->get_artificial_initial_state();
 
     ta::states_set_t init_states_set;
-
     ta::states_set_t::const_iterator it;
-
-    if (artificial_initial_state != 0)
-      {
-        init_states_set.insert(artificial_initial_state);
-      }
-    else
-      {
-	assert(false); /*FIXME*/
-        init_states_set = t_automata_->get_initial_states_set();
-      }
+    init_states_set.insert(artificial_initial_state);
 
     for (it = init_states_set.begin(); it != init_states_set.end(); ++it)
       {
