@@ -48,7 +48,8 @@ namespace spot
     typedef std::pair<spot::state*, tgba_succ_iterator*> pair_state_iter;
 
     static void
-    transform_to_single_pass_automaton(const ta_digraph_ptr& testing_automata)
+    transform_to_single_pass_automaton(const ta_digraph_ptr& testing_automata,
+				       bool artificial_livelock_state_mode)
     {
       auto& g_ = testing_automata->get_graph();
       auto artificial_livelock_acc_state =
@@ -98,11 +99,21 @@ namespace spot
 	      if (the_src == testing_automata->get_initial_artificial_state())
 		continue;
 
+
+	      unsigned the_dst =  artificial_livelock_state_mode?
+		artificial_livelock_acc_state :
+		testing_automata
+		->state_from_number(g_.trans_storage(trans_id).dst)
+		->stuttering_reachable_livelock;
+
+
+
 	      testing_automata->create_transition
       	      	(the_src,
       	      	 t->cond,
       	      	 t->acc,
-      	      	 artificial_livelock_acc_state);
+		 the_dst);
+		 //artificial_livelock_acc_state);
 	    }
        	}
 
@@ -125,7 +136,8 @@ namespace spot
 
     static void
     compute_livelock_acceptance_states(const ta_digraph_ptr& testing_aut,
-				       bool single_pass_emptiness_check)
+				       bool single_pass_emptiness_check,
+				       bool artificial_livelock_state_mode)
     {
       // We use five main data in this algorithm:
       // * sscc: a stack of strongly stuttering-connected components (SSCC)
@@ -245,11 +257,18 @@ namespace spot
 
 			      if (single_pass_emptiness_check)
 				{
+				  // std::cerr << "LA " << j << std::endl;
 				  livelock_accepting_state
 				    ->set_accepting_state(true);
+				  // livelock_accepting_state
+				  //   ->stuttering_reachable_livelock
+				  //   = livelock_accepting_state;
+
 				  livelock_accepting_state
 				    ->stuttering_reachable_livelock
-				    = livelock_accepting_state;
+				    = testing_aut->state_number(livelock_accepting_state);
+
+
 				}
 			    }
 			}
@@ -325,9 +344,12 @@ namespace spot
 		      self_loop_state->set_livelock_accepting_state(true);
 		      if (single_pass_emptiness_check)
 			{
+			  // std::cerr << "LA " << std::endl;
 			  self_loop_state->set_accepting_state(true);
+			  // self_loop_state->stuttering_reachable_livelock
+			  //   = self_loop_state;
 			  self_loop_state->stuttering_reachable_livelock
-			    = self_loop_state;
+			    =  testing_aut->state_number(self_loop_state);
 			}
 		    }
 
@@ -378,7 +400,10 @@ namespace spot
 	}
 
       if (single_pass_emptiness_check)
-	transform_to_single_pass_automaton(testing_aut);
+	{
+	  transform_to_single_pass_automaton(testing_aut,
+					     artificial_livelock_state_mode);
+	}
     }
 
     ta_digraph_ptr
@@ -463,7 +488,7 @@ namespace spot
 		      {
 			all_props -= dest_condition;
 			ta_graph_state* new_dest =
-			  new ta_graph_state(tgba_state->clone(),
+			  new ta_graph_state(tgba_state,
 					     dest_condition, false, is_acc);
 
 			int pos = ta->exist_state(new_dest);/*FIXME Quadratic*/
@@ -499,10 +524,12 @@ namespace spot
       trace << "*** build_ta: artificial_livelock_acc_state_mode = ***"
 	    << artificial_livelock_state_mode << std::endl;
 
-      if (artificial_livelock_state_mode)
+      if (artificial_livelock_state_mode){
 	single_pass_emptiness_check = true;
+      }
 
-      compute_livelock_acceptance_states(ta, single_pass_emptiness_check);
+      compute_livelock_acceptance_states(ta, single_pass_emptiness_check,
+					 artificial_livelock_state_mode);
 
       return ta;
     }
@@ -528,6 +555,17 @@ namespace spot
       {
 	return ta;
       }
+
+
+
+    return ta;
+
+
+
+
+
+
+
 
     // (degeneralized=false) => GTA
     // adapt a GTA to remove acceptance conditions from states

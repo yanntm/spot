@@ -40,7 +40,6 @@ namespace spot
   {
 #ifndef SWIG
   public:
-
     /// Explicit transitions.
     struct transition
     {
@@ -96,7 +95,8 @@ namespace spot
     void
     set_initial_state(bool is_initial_state);
 
-    ta_graph_state* stuttering_reachable_livelock;
+    //ta_graph_state*
+    unsigned stuttering_reachable_livelock;
   private:
     const state* tgba_state_;
     bdd tgba_condition_;
