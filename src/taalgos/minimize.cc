@@ -528,15 +528,12 @@ namespace spot
   tgta_explicit_ptr
   minimize_tgta(const const_tgta_explicit_ptr& tgta_)
   {
-
+    auto ta = tgta_->get_ta();
+    partition_t partition = build_partition(ta);
     auto tgba = make_tgba_digraph(tgta_->get_dict());
+    tgba->new_states(partition.size());
     auto res = make_tgta_explicit(tgba, tgta_->acc().num_sets(), 0);
 
-    auto ta = tgta_->get_ta();
-
-    // FIXME same problem than TA above
-    assert(false);
-    partition_t partition = build_partition(ta);
 
     // Build the minimal tgta automaton.
     build_result(ta, partition, tgba, res->get_ta());
