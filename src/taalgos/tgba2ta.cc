@@ -556,17 +556,6 @@ namespace spot
 	return ta;
       }
 
-
-
-    return ta;
-
-
-
-
-
-
-
-
     // (degeneralized=false) => GTA
     // adapt a GTA to remove acceptance conditions from states
     auto& g_ = ta->get_graph();
