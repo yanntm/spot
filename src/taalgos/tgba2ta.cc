@@ -49,7 +49,8 @@ namespace spot
 
     static void
     transform_to_single_pass_automaton(const ta_digraph_ptr& testing_automata,
-				       bool artificial_livelock_state_mode)
+				       bool artificial_livelock_state_mode,
+				       bool target_tgta)
     {
       auto& g_ = testing_automata->get_graph();
       auto artificial_livelock_acc_state =
@@ -96,9 +97,9 @@ namespace spot
 	      auto the_src = testing_automata->state_number(&source.data());
 
 	      // FIXME? Due to the presence of an initial artificial
-	      if (the_src == testing_automata->get_initial_artificial_state())
+	      if (the_src == testing_automata->get_initial_artificial_state()
+		  && !target_tgta)
 		continue;
-
 
 	      unsigned the_dst =  artificial_livelock_state_mode?
 		artificial_livelock_acc_state :
@@ -137,7 +138,8 @@ namespace spot
     static void
     compute_livelock_acceptance_states(const ta_digraph_ptr& testing_aut,
 				       bool single_pass_emptiness_check,
-				       bool artificial_livelock_state_mode)
+				       bool artificial_livelock_state_mode,
+				       bool target_tgta = false)
     {
       // We use five main data in this algorithm:
       // * sscc: a stack of strongly stuttering-connected components (SSCC)
@@ -267,8 +269,6 @@ namespace spot
 				  livelock_accepting_state
 				    ->stuttering_reachable_livelock
 				    = testing_aut->state_number(livelock_accepting_state);
-
-
 				}
 			    }
 			}
@@ -402,7 +402,8 @@ namespace spot
       if (single_pass_emptiness_check)
 	{
 	  transform_to_single_pass_automaton(testing_aut,
-					     artificial_livelock_state_mode);
+					     artificial_livelock_state_mode,
+					     target_tgta);
 	}
     }
 
@@ -410,7 +411,8 @@ namespace spot
     build_ta(const ta_digraph_ptr& ta, bdd atomic_propositions_set_,
 	     bool degeneralized,
 	     bool single_pass_emptiness_check,
-	     bool artificial_livelock_state_mode)
+	     bool artificial_livelock_state_mode,
+	     bool target_tgta = false)
     {
       std::vector<unsigned> todo;
       const_tgba_ptr tgba_ = ta->get_tgba();
@@ -529,7 +531,8 @@ namespace spot
       }
 
       compute_livelock_acceptance_states(ta, single_pass_emptiness_check,
-					 artificial_livelock_state_mode);
+					 artificial_livelock_state_mode,
+					 target_tgta);
 
       return ta;
     }
@@ -579,24 +582,23 @@ namespace spot
   tgta_explicit_ptr
   tgba_to_tgta(const const_tgba_ptr& tgba_, bdd atomic_propositions_set_)
   {
-    state* tgba_init_state = tgba_->get_init_state();
-    auto artificial_init_state = new ta_graph_state(tgba_init_state->clone(),
-						    bddfalse, true);
-    tgba_init_state->destroy();
-
-    auto tgta = make_tgta_explicit(tgba_, tgba_->acc().num_sets(),
-				   artificial_init_state);
+    // state* tgba_init_state = tgba_->get_init_state();
+    // auto artificial_init_state = new ta_graph_state(tgba_init_state->clone(),
+    // 						    bddfalse, true);
+    // tgba_init_state->destroy();
+    auto tgta = make_tgta_explicit(tgba_, tgba_->acc().num_sets(), /* FIXME*/ (spot::ta_graph_state*) 1);
+				   // artificial_init_state);
 
     // build a Generalized TA automaton involving a single_pass_emptiness_check
     // (without an artificial livelock state):
     auto ta = tgta->get_ta();
-    build_ta(ta, atomic_propositions_set_, false, true, false);
+    build_ta(ta, atomic_propositions_set_, false, true, false, true);
 
     trace << "***tgba_to_tgbta: POST build_ta***" << std::endl;
 
     // adapt a ta automata to build tgta automata :
-    ta::states_set_t states_set = ta->get_states_set();
-    ta::states_set_t::iterator it;
+    //    ta::states_set_t states_set = ta->get_states_set();
+    //ta::states_set_t::iterator it;
     tgba_succ_iterator* initial_states_iter =
       ta->succ_iter(ta->get_artificial_initial_state());
     initial_states_iter->first();
@@ -611,30 +613,59 @@ namespace spot
     bdd bdd_stutering_transition = bdd_setxor(first_state_condition,
 					      first_state_condition);
 
-    for (it = states_set.begin(); it != states_set.end(); ++it)
-      {
-        ta_graph_state* state = static_cast<ta_graph_state*> (*it);
+    //    for (it = states_set.begin(); it != states_set.end(); ++it)
 
-        ta_graph_state::transitions* trans = 0; // FIXME state->get_transitions();
-        if (state->is_livelock_accepting_state())
-          {
-            bool trans_empty = (trans == 0 || trans->empty());
-            if (trans_empty || state->is_accepting_state())
-              {
-		// FIXME
-                // ta->create_transition(state, bdd_stutering_transition,
-		// 		      ta->acc().all_sets(), state);
-              }
-          }
+    auto& g_ = ta->get_graph();
+    for (unsigned src = 0; src < g_.num_states(); ++src)
+    {
+      //ta_graph_state* state = static_cast<ta_graph_state*> (*it);
 
-        if (state->compare(ta->get_artificial_initial_state()))
-	  {
-	    // FIXME
-	    // ta->create_transition(state, bdd_stutering_transition,
-	    // 			0U, state);
-	  }
-        state->set_livelock_accepting_state(false);
-        state->set_accepting_state(false);
+      ta_graph_state* src_data  =
+        const_cast<ta_graph_state*>(&g_.state_data(src));
+
+      if (src_data->is_livelock_accepting_state())
+	{
+	  bool trans_empty = true;
+	  for (auto& t: g_.out(src))
+	    {
+	      (void) t;
+	      trans_empty = false;
+	      break;
+	    }
+	  if (trans_empty || src_data->is_accepting_state())
+	    {
+	      ta->create_transition(src, bdd_stutering_transition,
+				    ta->acc().all_sets(), src);
+	    }
+	}
+
+      if (//src_data->compare(ta->get_artificial_initial_state()))
+	  src != ta->get_initial_artificial_state())
+	{
+	  ta->create_transition(src, bdd_stutering_transition,
+				0U, src);
+	}
+
+        // ta_graph_state::transitions* trans = 0; // FIXME state->get_transitions();
+        // if (state->is_livelock_accepting_state())
+        //   {
+        //     bool trans_empty = (trans == 0 || trans->empty());
+        //     if (trans_empty || state->is_accepting_state())
+        //       {
+	// 	// FIXME
+        //         // ta->create_transition(state, bdd_stutering_transition,
+	// 	// 		      ta->acc().all_sets(), state);
+        //       }
+        //   }
+
+        // if (state->compare(ta->get_artificial_initial_state()))
+	//   {
+	//     // FIXME
+	//     // ta->create_transition(state, bdd_stutering_transition,
+	//     // 			0U, state);
+	//   }
+        src_data->set_livelock_accepting_state(false);
+        src_data->set_accepting_state(false);
         trace << "***tgba_to_tgbta: POST create_transition ***" << std::endl;
       }
 

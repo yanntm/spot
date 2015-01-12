@@ -39,10 +39,7 @@ namespace spot
   state*
   tgta_explicit::get_init_state() const
   {
-    assert(false);
-    return nullptr;
-      // FIXME
-      //ta_->get_artificial_initial_state();
+    return ta_->get_artificial_initial_state();
   }
 
   tgba_succ_iterator*
@@ -74,6 +71,7 @@ namespace spot
   spot::tgba_succ_iterator*
   tgta_explicit::succ_iter_by_changeset(const spot::state* s, bdd /* FIXME chngset*/ ) const
   {
+    assert(false);
     return ta_->succ_iter(s/*, chngset*/);
   }
 

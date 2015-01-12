@@ -323,8 +323,10 @@ namespace spot
 		  //dst_data->stuttering_reachable_livelock;
 		  t->dst;
 	      }
-	    if (dst_data->is_initial_state())
+	    if (dst_data->is_initial_state()){
 	      src_data->set_initial_state(true);
+	      add_to_initial_states_set(src);
+	    }
 	  }
 
 	bool is_hole = true;
@@ -343,7 +345,7 @@ namespace spot
 	++t;
       }
 
-    // if (src_data.is_initial_state())
+    // if (src_data->is_initial_state() && src != artificial_initial_state_)
     //   add_to_initial_states_set(src);
     //g_.defrag();
   }
