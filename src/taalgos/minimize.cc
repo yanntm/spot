@@ -18,7 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-//#define TRACE
+// #define TRACE
 
 #ifdef TRACE
 #  define trace std::cerr
@@ -35,6 +35,7 @@
 #include "misc/bddlt.hh"
 #include "ta/tgtaexplicit.hh"
 #include "taalgos/statessetbuilder.hh"
+#include "taalgos/dotty.hh"
 #include "tgba/tgbagraph.hh"
 #include "tgba/bddprint.hh"
 
@@ -76,7 +77,8 @@ namespace spot
      // automaton
      static void
      build_result(const const_ta_ptr& a, std::list<hash_set*>& sets,
-		  tgba_digraph_ptr result_tgba, const ta_digraph_ptr& result)
+		  tgba_digraph_ptr result_tgba, const ta_digraph_ptr& result,
+		  bool target_tgta = false)
      {
        // For each set, create a state in the tgbaulting automaton.
        // For a state s, state_num[s] is the number of the state in the minimal
@@ -130,15 +132,15 @@ namespace spot
 		  is_livelock_accepting_state);
 
 
-	       if (is_initial_state){
-		 result->add_to_initial_states_set(new_src);
-	       }
+	       if (target_tgta && a->get_artificial_initial_state() == src)
+		 {
+		   result->set_artificial_initial_state(new_src);
+		 }
+	       else if (is_initial_state)
+		 {
+		   result->add_to_initial_states_set(new_src);
+		 }
 	     }
-	   else if (is_initial_state)
-	     {
-	       result->add_to_initial_states_set(new_src);
-	     }
-
 	   new_src_tmp->destroy();
 
 
@@ -176,7 +178,9 @@ namespace spot
 	   	      is_accepting_state,
 	   	      is_livelock_accepting_state);
 	   	 }
+
 	       new_dst_tmp->destroy();
+
 
 	       result->create_transition
 	       	 (new_src, succit->current_condition(),
@@ -187,7 +191,7 @@ namespace spot
      }
 
     static partition_t
-    build_partition(const const_ta_ptr& ta_)
+    build_partition(const const_ta_ptr& ta_, bool target_tgta = false)
     {
       unsigned num_sets = ta_->acc().num_sets();
       std::map<acc_cond::mark_t, bdd> m2b;
@@ -235,13 +239,14 @@ namespace spot
 
       spot::state* artificial_initial_state =
 	ta_->get_artificial_initial_state();
-
       for (it = states_set.begin(); it != states_set.end(); ++it)
 	{
 	  const state* s = *it;
-	  if (s == artificial_initial_state)
+	  if (s == artificial_initial_state && !target_tgta)
 	    continue;
-	  else if (ta_->is_initial_state(s))
+	  if (s == artificial_initial_state && target_tgta)
+	    I->insert(s);
+	  else if (ta_->is_initial_state(s) && !target_tgta)
 	    I->insert(s);
 	  else if (ta_->is_livelock_accepting_state(s)
 		   && ta_->is_accepting_state(s))
@@ -528,15 +533,16 @@ namespace spot
   tgta_explicit_ptr
   minimize_tgta(const const_tgta_explicit_ptr& tgta_)
   {
-    auto ta = tgta_->get_ta();
-    partition_t partition = build_partition(ta);
     auto tgba = make_tgba_digraph(tgta_->get_dict());
-    tgba->new_states(partition.size());
-    auto res = make_tgta_explicit(tgba, tgta_->acc().num_sets(), 0);
+    auto res = make_tgta_explicit(tgba, tgta_->acc().num_sets(),
+				  true);///*FIXME*/  (spot::ta_graph_state*) 1);
 
+    const const_ta_ptr& ta = tgta_->get_ta();
+    partition_t partition = build_partition(ta, true);
+    tgba->new_states(partition.size());
 
     // Build the minimal tgta automaton.
-    build_result(ta, partition, tgba, res->get_ta());
+    build_result(ta, partition, tgba, res->get_ta(), true);
 
     // Free all the allocated memory.
     std::list<hash_set*>::iterator itdone;

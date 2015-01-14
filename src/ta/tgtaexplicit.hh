@@ -40,7 +40,7 @@ namespace spot
   public:
     tgta_explicit(const const_tgba_ptr& tgba,
 		  unsigned n_acc,
-		  ta_graph_state* artificial_initial_state);
+		  bool artificial_initial_state);
 
     // tgba interface
     virtual spot::state* get_init_state() const;
@@ -69,8 +69,8 @@ namespace spot
 
   inline tgta_explicit_ptr make_tgta_explicit(const const_tgba_ptr& tgba,
 					      unsigned n_acc,
-					      ta_graph_state*
-					      artificial_initial_state = 0)
+					      bool artificial_initial_state
+					      = false)
   {
     return std::make_shared<tgta_explicit>(tgba, n_acc,
 					   artificial_initial_state);

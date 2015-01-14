@@ -320,8 +320,7 @@ namespace spot
 	      {
 		src_data->set_livelock_accepting_state(true);
 		src_data->stuttering_reachable_livelock =
-		  //dst_data->stuttering_reachable_livelock;
-		  t->dst;
+		  dst_data->stuttering_reachable_livelock;
 	      }
 	    if (dst_data->is_initial_state()){
 	      src_data->set_initial_state(true);

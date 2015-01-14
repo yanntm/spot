@@ -30,7 +30,7 @@ namespace spot
 
   tgta_explicit::tgta_explicit(const const_tgba_ptr& tgba,
 			       unsigned n_acc,
-			       ta_graph_state* artificial_initial_state) :
+			       bool artificial_initial_state) :
     tgta(tgba->get_dict()),
     ta_(make_ta_explicit(tgba, n_acc, artificial_initial_state))
   {
