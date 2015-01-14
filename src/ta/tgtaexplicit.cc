@@ -28,11 +28,9 @@
 namespace spot
 {
 
-  tgta_explicit::tgta_explicit(const const_tgba_ptr& tgba,
-			       unsigned n_acc,
-			       bool artificial_initial_state) :
+  tgta_explicit::tgta_explicit(const const_tgba_ptr& tgba, unsigned n_acc) :
     tgta(tgba->get_dict()),
-    ta_(make_ta_explicit(tgba, n_acc, artificial_initial_state))
+    ta_(make_ta_explicit(tgba, n_acc))
   {
   }
 
@@ -69,10 +67,10 @@ namespace spot
   }
 
   spot::tgba_succ_iterator*
-  tgta_explicit::succ_iter_by_changeset(const spot::state* s, bdd /* FIXME chngset*/ ) const
+  tgta_explicit::succ_iter_by_changeset(const spot::state* s, bdd chngset) const
   {
     assert(false);
-    return ta_->succ_iter(s/*, chngset*/);
+    return ta_->succ_iter(s, chngset);
   }
 
 }

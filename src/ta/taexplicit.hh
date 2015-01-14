@@ -40,16 +40,6 @@ namespace spot
   {
 #ifndef SWIG
   public:
-    /// Explicit transitions.
-    struct transition
-    {
-      bdd condition;
-      acc_cond::mark_t acceptance_conditions;
-      ta_graph_state* dest;
-    };
-
-    typedef std::list<transition*> transitions;
-
     ta_graph_state(const state* tgba_state,
 		   const bdd tgba_condition,
 		   bool is_initial_state = false,
@@ -95,7 +85,6 @@ namespace spot
     void
     set_initial_state(bool is_initial_state);
 
-    //ta_graph_state*
     unsigned stuttering_reachable_livelock;
   private:
     const state* tgba_state_;
@@ -134,9 +123,7 @@ namespace spot
     mutable unsigned init_number_;
 
   public:
-    ta_digraph(const const_tgba_ptr& tgba,
-	       unsigned n_acc,
-	       bool add_artificial_state);
+    ta_digraph(const const_tgba_ptr& tgba, unsigned n_acc);
 
     const_tgba_ptr
     get_tgba() const;
@@ -158,16 +145,10 @@ namespace spot
 	      bool is_accepting_state = false,
 	      bool is_livelock_accepting_state = false);
 
-    ta_graph_state* add_state(ta_graph_state*)
-    {
-      assert(false);
-      return nullptr;
-    }
-
     int exist_state(const ta_graph_state* newstate)
     {
       assert(newstate);
-      for(unsigned i = 1; i < num_states(); ++i)
+      for (unsigned i = 1; i < num_states(); ++i)
 	{
 	  auto st = state_from_number(i);
 	  if (newstate->compare(st) == 0)
@@ -285,13 +266,6 @@ namespace spot
 
     virtual void
     delete_stuttering_and_hole_successors(spot::state* s);
-
-    ta::states_set_t
-    get_states_set()
-    {
-      assert(false);
-      return states_set_;
-    }
 
   private:
     // Disallow copy.
@@ -445,10 +419,9 @@ namespace spot
   };
 
   inline ta_digraph_ptr make_ta_explicit(const const_tgba_ptr& tgba,
-					 unsigned n_acc,
-					 bool add_artificial_init_state)
+					 unsigned n_acc)
   {
-    return std::make_shared<ta_digraph>(tgba, n_acc, add_artificial_init_state);
+    return std::make_shared<ta_digraph>(tgba, n_acc);
   }
 }
 

@@ -86,16 +86,6 @@ namespace spot
     is_initial_state_ = is_initial_state;
   }
 
-  bool
-  ta_digraph::is_hole_state(const state* s) const
-  {
-    auto it = succ_iter(s);
-    it->first();
-    if (!it->done())
-      return false;
-    return true;
-  }
-
   int
   ta_graph_state::compare(const spot::state* other) const
   {
@@ -125,9 +115,7 @@ namespace spot
   ////////////////////////////////////////
   // ta_explicit
 
-  ta_digraph::ta_digraph(const const_tgba_ptr& tgba,
-			 unsigned n_acc,
-			 bool add_artificial_state):
+  ta_digraph::ta_digraph(const const_tgba_ptr& tgba, unsigned n_acc):
     ta(tgba->get_dict()),
     init_number_(0),
     tgba_(tgba),
@@ -136,14 +124,9 @@ namespace spot
     iter_cache_ = nullptr;
     get_dict()->register_all_variables_of(&tgba_, this);
     acc().add_sets(n_acc);
-    if (add_artificial_state)
-      {
-	assert(tgba_->get_init_state() != 0);
-	artificial_initial_state_ =
-	  add_state(tgba_->get_init_state(), bddfalse, true);
-      }
-    else
-      assert(false);
+    assert(tgba_->get_init_state() != 0);
+    artificial_initial_state_ =
+      add_state(tgba_->get_init_state(), bddfalse, true);
   }
 
   ta_digraph::~ta_digraph()
@@ -177,10 +160,19 @@ namespace spot
   void
   ta_digraph::add_to_initial_states_set(unsigned state, bdd condition)
   {
-    //initials_.insert(state);
     if (condition == bddfalse)
       condition = get_state_condition(state_from_number(state));
     create_transition(artificial_initial_state_, condition, 0U, state);
+  }
+
+  bool
+  ta_digraph::is_hole_state(const state* s) const
+  {
+    auto it = succ_iter(s);
+    it->first();
+    if (!it->done())
+      return false;
+    return true;
   }
 
   const ta::states_set_t
@@ -305,7 +297,7 @@ namespace spot
     ta_graph_state* src_data = &g_.state_data(src);
     auto src_cond = src_data->get_tgba_condition();
     auto t = g_.out_iteraser(src);
-    while(t)
+    while (t)
       {
 	ta_graph_state* dst_data = &g_.state_data(t->dst);
 	auto dst_cond = dst_data->get_tgba_condition();
@@ -322,10 +314,11 @@ namespace spot
 		src_data->stuttering_reachable_livelock =
 		  dst_data->stuttering_reachable_livelock;
 	      }
-	    if (dst_data->is_initial_state()){
-	      src_data->set_initial_state(true);
-	      add_to_initial_states_set(src);
-	    }
+	    if (dst_data->is_initial_state())
+	      {
+		src_data->set_initial_state(true);
+		add_to_initial_states_set(src);
+	      }
 	  }
 
 	bool is_hole = true;
@@ -343,10 +336,6 @@ namespace spot
 	  }
 	++t;
       }
-
-    // if (src_data->is_initial_state() && src != artificial_initial_state_)
-    //   add_to_initial_states_set(src);
-    //g_.defrag();
   }
 
   void

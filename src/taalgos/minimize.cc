@@ -145,7 +145,7 @@ namespace spot
 
 
 	   ta_succ_iterator* succit = a->succ_iter(src);
-	   assert(succit != NULL);
+	   assert(succit != 0);
 	   for (succit->first(); !succit->done(); succit->next())
 	     {
 	       const state* dst = succit->current_state();
@@ -170,7 +170,7 @@ namespace spot
 	       	  is_livelock_accepting_state);
 
 	       int new_dst = result->exist_state(new_dst_tmp);
-	       if (new_dst == -1 )
+	       if (new_dst == -1)
 	   	 {
 	   	   new_dst = result->add_state
 	   	     (result_tgba->state_from_number(i->second),
@@ -517,7 +517,7 @@ namespace spot
     partition_t partition = build_partition(ta_);
     auto tgba = make_tgba_digraph(ta_->get_dict());
     tgba->new_states(partition.size());
-    auto res = make_ta_explicit(tgba, ta_->acc().num_sets(), true);
+    auto res = make_ta_explicit(tgba, ta_->acc().num_sets());
 
     // Build the ta automata result.
     build_result(ta_, partition, tgba, res);
@@ -534,8 +534,7 @@ namespace spot
   minimize_tgta(const const_tgta_explicit_ptr& tgta_)
   {
     auto tgba = make_tgba_digraph(tgta_->get_dict());
-    auto res = make_tgta_explicit(tgba, tgta_->acc().num_sets(),
-				  true);///*FIXME*/  (spot::ta_graph_state*) 1);
+    auto res = make_tgta_explicit(tgba, tgta_->acc().num_sets());
 
     const const_ta_ptr& ta = tgta_->get_ta();
     partition_t partition = build_partition(ta, true);

@@ -58,7 +58,7 @@ namespace spot
 
     virtual bdd compute_support_conditions(const state*) const
     {
-      //FIXME
+      // FIXME
       assert(false);
       return bddfalse;
     }

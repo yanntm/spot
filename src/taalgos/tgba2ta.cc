@@ -474,15 +474,13 @@ namespace spot
 			  new ta_graph_state(tgba_state,
 					     dest_condition, false, is_acc);
 
-			int pos = ta->exist_state(new_dest);/*FIXME Quadratic*/
+			int pos = ta->exist_state(new_dest); /*FIXME Quadratic*/
 			new_dest->destroy();
 			delete new_dest;
 
 			unsigned upos;
-			if (pos >= 0 )
-			  {
+			if (pos >= 0)
 			    upos = (unsigned) pos;
-			  }
 			else
 			  {
 			    upos = ta->add_state(tgba_state,
@@ -507,9 +505,8 @@ namespace spot
       trace << "*** build_ta: artificial_livelock_acc_state_mode = ***"
 	    << artificial_livelock_state_mode << std::endl;
 
-      if (artificial_livelock_state_mode){
+      if (artificial_livelock_state_mode)
 	single_pass_emptiness_check = true;
-      }
 
       compute_livelock_acceptance_states(ta, single_pass_emptiness_check,
 					 artificial_livelock_state_mode,
@@ -527,8 +524,8 @@ namespace spot
     ta_digraph_ptr ta;
 
     // FIXME
-    (void)(artificial_initial_state_mode);
-    ta = make_ta_explicit(tgba_, tgba_->acc().num_sets(), true);
+    assert(artificial_initial_state_mode == false);
+    ta = make_ta_explicit(tgba_, tgba_->acc().num_sets());
 
     // build ta automaton
     build_ta(ta, atomic_propositions_set_, degeneralized,
@@ -563,7 +560,7 @@ namespace spot
   tgta_explicit_ptr
   tgba_to_tgta(const const_tgba_ptr& tgba_, bdd atomic_propositions_set_)
   {
-    auto tgta = make_tgta_explicit(tgba_, tgba_->acc().num_sets(), true);
+    auto tgta = make_tgta_explicit(tgba_, tgba_->acc().num_sets());
 
     // build a Generalized TA automaton involving a single_pass_emptiness_check
     // (without an artificial livelock state):
