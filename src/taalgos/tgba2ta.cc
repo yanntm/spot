@@ -518,13 +518,10 @@ namespace spot
 
   ta_digraph_ptr
   tgba_to_ta(const const_tgba_ptr& tgba_, bdd atomic_propositions_set_,
-      bool degeneralized, bool artificial_initial_state_mode,
+      bool degeneralized,
       bool single_pass_emptiness_check, bool artificial_livelock_state_mode)
   {
     ta_digraph_ptr ta;
-
-    // FIXME
-    assert(artificial_initial_state_mode == false);
     ta = make_ta_explicit(tgba_, tgba_->acc().num_sets());
 
     // build ta automaton

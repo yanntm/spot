@@ -57,7 +57,6 @@ stuttering-insensitive.";
 #define OPT_GTA 3
 #define OPT_SPLV 4
 #define OPT_SPNO 5
-#define OPT_INIT 6
 
 static const argp_option options[] =
   {
@@ -73,8 +72,6 @@ static const argp_option options[] =
       "add an artificial livelock state to obtain a single-pass (G)TA", 0 },
     { "single-pass", OPT_SPNO, 0, 0,
       "create a single-pass (G)TA without artificial livelock state", 0 },
-    { "multiple-init", OPT_INIT, 0, 0,
-      "do not create the fake initial state", 0 },
     /**************************************************/
     { 0, 0, 0, 0, "Output options:", 4 },
     { "utf8", '8', 0, 0, "enable UTF-8 characters in output", 0 },
@@ -99,7 +96,6 @@ ta_types ta_type = TGTA;
 bool utf8 = false;
 const char* stats = "";
 spot::option_map extra_options;
-bool opt_with_artificial_initial_state = true;
 bool opt_single_pass_emptiness_check = false;
 bool opt_with_artificial_livelock = false;
 
@@ -133,9 +129,6 @@ parse_opt(int key, char* arg, struct argp_state*)
     case OPT_TA:
       ta_type = TA;
       type = spot::postprocessor::BA;
-      break;
-    case OPT_INIT:
-      opt_with_artificial_initial_state = false;
       break;
     case OPT_SPLV:
       opt_with_artificial_livelock = true;
@@ -191,7 +184,6 @@ namespace
 	{
 	  auto testing_automaton =
 	    tgba_to_ta(aut, ap_set, type == spot::postprocessor::BA,
-		       opt_with_artificial_initial_state,
 		       opt_single_pass_emptiness_check,
 		       opt_with_artificial_livelock);
 	  if (level != spot::postprocessor::Low)

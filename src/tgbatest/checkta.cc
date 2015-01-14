@@ -108,7 +108,6 @@ main(int argc, char** argv)
 	  // run 0 ../ltl2tgba -TA -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    false, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    false, // single_pass (-sp),
 				    false); // artificial_livelock (-lv)
 	  stats("-TA", t);
@@ -120,7 +119,6 @@ main(int argc, char** argv)
 	  // run 0 ../ltl2tgba -TA -lv -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    false, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    false, // single_pass (-sp),
 				    true); // artificial_livelock (-lv)
 	  stats("-TA -lv", t);
@@ -132,7 +130,6 @@ main(int argc, char** argv)
 	  // run 0 ../ltl2tgba -TA -sp -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    false, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    true, // single_pass (-sp),
 				    false); // artificial_livelock (-lv)
 	  stats("-TA -sp", t);
@@ -144,7 +141,6 @@ main(int argc, char** argv)
 	  // run 0 ../ltl2tgba -TA -lv -sp -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    false, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    true, // single_pass (-sp),
 				    true); // artificial_livelock (-lv)
 	  stats("-TA -lv -sp", t);
@@ -158,7 +154,6 @@ main(int argc, char** argv)
 	  // run 0 ../ltl2tgba -TA -DS -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    true, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    false, // single_pass (-sp),
 				    false); // artificial_livelock (-lv)
 	  stats("-TA -DS", t);
@@ -170,7 +165,6 @@ main(int argc, char** argv)
 	  // run 0 ../ltl2tgba -TA -DS -lv -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    true, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    false, // single_pass (-sp),
 				    true); // artificial_livelock (-lv)
 	  stats("-TA -DS -lv", t);
@@ -182,7 +176,6 @@ main(int argc, char** argv)
 	  // run 0 ../ltl2tgba -TA -DS -sp -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    true, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    true, // single_pass (-sp),
 				    false); // artificial_livelock (-lv)
 	  stats("-TA -DS -sp", t);
@@ -194,7 +187,6 @@ main(int argc, char** argv)
 	  // run 0 ../ltl2tgba -TA -DS -lv -sp -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    true, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    true, // single_pass (-sp),
 				    true); // artificial_livelock (-lv)
 	  stats("-TA -DS -lv -sp", t);
@@ -207,11 +199,10 @@ main(int argc, char** argv)
 	bdd ap_set = atomic_prop_collect_as_bdd(f, a);
 
 	{
-	  // run 0 ../ltl2tgba -x -R3 -DS -TA -in -ks "$1"
-	  // run 0 ../ltl2tgba -x -R3 -DS -TA -in -RT -ks "$1"
+	  // run 0 ../ltl2tgba -x -R3 -DS -TA -ks "$1"
+	  // run 0 ../ltl2tgba -x -R3 -DS -TA -RT -ks "$1"
 	  auto t = spot::tgba_to_ta(a, ap_set,
 				    true, // degen (-DS)
-				    false, // artificial_initial_state (-in)
 				    false, // single_pass (-sp),
 				    true); // artificial_livelock (-lv)
 	  stats("-x -TA -DS -in", t);

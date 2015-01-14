@@ -232,7 +232,6 @@ syntax(char* prog)
 	    << "Single-pass (G)TA\n"
             << "  -sp   convert into a single-pass (G)TA without artificial "
 	    << "livelock state\n"
-	    << "  -in   do not use an artificial initial state\n"
             << "  -TGTA output a Transition-based Generalized TA"
             << std::endl
 	    << "  -RT   reduce the (G)TA/TGTA using bisimulation.\n"
@@ -387,7 +386,6 @@ checked_main(int argc, char** argv)
   bool opt_bisim_ta = false;
   bool ta_opt = false;
   bool tgta_opt = false;
-  bool opt_with_artificial_initial_state = true;
   bool opt_single_pass_emptiness_check = false;
   bool opt_with_artificial_livelock = false;
   bool cs_nowdba = true;
@@ -795,10 +793,6 @@ checked_main(int argc, char** argv)
       else if (!strcmp(argv[formula_index], "-sp"))
         {
           opt_single_pass_emptiness_check = true;
-        }
-      else if (!strcmp(argv[formula_index], "-in"))
-        {
-          opt_with_artificial_initial_state = false;
         }
       else if (!strcmp(argv[formula_index], "-taa"))
 	{
@@ -1394,8 +1388,7 @@ checked_main(int argc, char** argv)
 	      tm.start("conversion to TA");
               auto testing_automaton
                   = tgba_to_ta(a, atomic_props_set_bdd, degeneralize_opt
-                      == DegenSBA, opt_with_artificial_initial_state,
-                      opt_single_pass_emptiness_check,
+                      == DegenSBA, opt_single_pass_emptiness_check,
                       opt_with_artificial_livelock);
 	      tm.stop("conversion to TA");
 

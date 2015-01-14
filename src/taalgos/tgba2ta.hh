@@ -58,12 +58,6 @@ namespace spot
   /// livelock-accepting cycle (like a TA). The spot emptiness check algorithm
   /// for TA (spot::ta_check::check) can also be used to check GTA.
   ///
-  /// \param artificial_initial_state_mode When set, the algorithm will build
-  /// a TA automaton with an unique initial state.  This
-  /// artificial initial state have one transition to each real initial state,
-  /// and this transition is labeled by the corresponding initial condition.
-  /// (see spot::ta::get_artificial_initial_state())
-  ///
   /// \param single_pass_emptiness_check When set, the product between the
   /// returned automaton and a kripke structure requires only the fist pass of
   /// the emptiness check algorithm (see the parameter \c disable_second_pass
@@ -82,7 +76,6 @@ namespace spot
   SPOT_API ta_digraph_ptr
   tgba_to_ta(const const_tgba_ptr& tgba_to_convert, bdd atomic_propositions_set,
 	     bool degeneralized = true,
-	     bool artificial_initial_state_mode = true,
 	     bool single_pass_emptiness_check = false,
 	     bool artificial_livelock_state_mode = false);
 
