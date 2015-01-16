@@ -47,6 +47,74 @@ namespace spot
   {
     typedef std::pair<spot::state*, tgba_succ_iterator*> pair_state_iter;
 
+    class infos
+    {
+    public :
+      const spot::state* tgba_state_;
+      bdd dest_condition_;
+      bool initial_;
+      bool accepting_;
+      bool livelock_;
+
+      infos(const spot::state* tgba_state,
+	    bdd dest_condition,
+	    bool initial,
+	    bool accepting,
+	    bool livelock = false):
+	tgba_state_(tgba_state),
+	dest_condition_(dest_condition),
+	initial_(initial),
+	accepting_(accepting),
+	livelock_(livelock)
+      { }
+
+      infos(const infos&& other)
+      {
+	dest_condition_ = other.dest_condition_;
+	initial_ = other.initial_;
+	accepting_ = other.accepting_;
+	livelock_ = other.livelock_;
+      }
+      infos(const infos& other)
+      {
+	dest_condition_ = other.dest_condition_;
+	initial_ = other.initial_;
+	accepting_ = other.accepting_;
+	livelock_ = other.livelock_;
+      }
+
+    };
+
+
+    struct infos_equal:
+      public std::binary_function<const infos*,
+				  const infos*, bool>
+    {
+      bool
+      operator()(const infos* i1, const infos* i2) const
+      {
+	return i1->tgba_state_ == i2->tgba_state_ &&
+	  i1->accepting_ == i2->accepting_ &&
+	  i1->livelock_ == i2->livelock_ &&
+	  i1->dest_condition_.id() == i2->dest_condition_.id();
+      }
+    };
+
+    struct infos_hash:
+      public std::unary_function<const infos*, size_t>
+    {
+      size_t
+      operator()(const infos* that) const
+      {
+	return (size_t) that->tgba_state_->hash();
+      }
+    };
+
+
+    typedef std::unordered_map<infos*, unsigned,
+			       infos_hash, infos_equal> ta_infos;
+
+
     static void
     transform_to_single_pass_automaton(const ta_digraph_ptr& testing_automata,
 				       bool artificial_livelock_state_mode,
@@ -252,7 +320,8 @@ namespace spot
 
 				  livelock_accepting_state
 				    ->stuttering_reachable_livelock
-				    = testing_aut->state_number(livelock_accepting_state);
+				    = testing_aut->state_number
+				    (livelock_accepting_state);
 				}
 			    }
 			}
@@ -396,6 +465,7 @@ namespace spot
 	     bool target_tgta = false)
     {
       std::vector<unsigned> todo;
+      ta_infos infos_;
       const_tgba_ptr tgba_ = ta->get_tgba();
 
       // build Initial states set:
@@ -422,6 +492,9 @@ namespace spot
 				 satone_tgba_condition,
 				 true,
 				 is_acc);
+	  infos* i = new infos(tgba_init_state,
+			       satone_tgba_condition, true, is_acc);
+	  infos_.insert({i, s});
 	  ta->add_to_initial_states_set(s);
 	  todo.push_back(s);
 	}
@@ -470,22 +543,23 @@ namespace spot
 			   != bddfalse)
 		      {
 			all_props -= dest_condition;
-			ta_graph_state* new_dest =
-			  new ta_graph_state(tgba_state,
-					     dest_condition, false, is_acc);
 
-			int pos = ta->exist_state(new_dest); /*FIXME Quadratic*/
-			new_dest->destroy();
-			delete new_dest;
+			infos* inf = new infos(tgba_state, dest_condition,
+					       false, is_acc);
+			auto inf_iter = infos_.find(inf);
 
 			unsigned upos;
-			if (pos >= 0)
-			    upos = (unsigned) pos;
+			if (inf_iter != infos_.end())
+			  {
+			    upos = inf_iter->second;
+			    delete inf;
+			  }
 			else
 			  {
 			    upos = ta->add_state(tgba_state,
 						 dest_condition,
 						 false, is_acc);
+			    infos_.insert({inf, upos});
 			    todo.push_back(upos);
 			  }
 			bdd cs = bdd_setxor(ta->state_from_number(source)
@@ -500,6 +574,11 @@ namespace spot
 		}
 	    }
 	  tgba_->release_iter(tgba_succ_it);
+	}
+
+      for (auto key: infos_)
+	{
+	  delete key.first;
 	}
 
       trace << "*** build_ta: artificial_livelock_acc_state_mode = ***"

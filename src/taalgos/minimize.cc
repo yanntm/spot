@@ -41,6 +41,86 @@
 
 namespace spot
 {
+  namespace
+  {
+    typedef std::pair<spot::state*, tgba_succ_iterator*> pair_state_iter;
+
+    class infos
+    {
+    public :
+      const spot::state* tgba_state_;
+      bdd dest_condition_;
+      bool initial_;
+      bool accepting_;
+      bool livelock_;
+
+      infos(const spot::state* tgba_state,
+	    bdd dest_condition,
+	    bool initial,
+	    bool accepting,
+	    bool livelock = false):
+	tgba_state_(tgba_state),
+	dest_condition_(dest_condition),
+	initial_(initial),
+	accepting_(accepting),
+	livelock_(livelock)
+      { }
+
+      infos(const infos&& other)
+      {
+	dest_condition_ = other.dest_condition_;
+	initial_ = other.initial_;
+	accepting_ = other.accepting_;
+	livelock_ = other.livelock_;
+      }
+      infos(const infos& other)
+      {
+	dest_condition_ = other.dest_condition_;
+	initial_ = other.initial_;
+	accepting_ = other.accepting_;
+	livelock_ = other.livelock_;
+      }
+
+    };
+
+
+    struct infos_equal:
+      public std::binary_function<const infos*,
+				  const infos*, bool>
+    {
+      bool
+      operator()(const infos* i1, const infos* i2) const
+      {
+	return i1->tgba_state_ == i2->tgba_state_ &&
+	  i1->accepting_ == i2->accepting_ &&
+	  i1->livelock_ == i2->livelock_ &&
+	  i1->dest_condition_.id() == i2->dest_condition_.id();
+      }
+    };
+
+    struct infos_hash:
+      public std::unary_function<const infos*, size_t>
+    {
+      size_t
+      operator()(const infos* that) const
+      {
+	return (size_t) that->tgba_state_->hash();
+      }
+    };
+
+
+    typedef std::unordered_map<infos*, unsigned,
+			       infos_hash, infos_equal> ta_infos;
+  }
+
+
+
+
+
+
+
+
+
   typedef std::unordered_set<const state*,
 			     state_ptr_hash, state_ptr_equal> hash_set;
   typedef std::unordered_map<const state*, unsigned,
@@ -99,7 +179,7 @@ namespace spot
 
        // For each transition in the initial automaton, add the corresponding
        // transition in ta.
-
+       ta_infos infos_;
        for (sit = sets.begin(); sit != sets.end(); ++sit)
 	 {
 	   hash_set::iterator hit;
@@ -116,21 +196,21 @@ namespace spot
 	   bool is_livelock_accepting_state =
 	     a->is_livelock_accepting_state(src);
 
-	   const ta_graph_state* new_src_tmp =
-	     new ta_graph_state(result_tgba->state_from_number(src_num),
-				tgba_condition, is_initial_state,
-				is_accepting_state,
-				is_livelock_accepting_state);
+	   infos* inf = new infos(result_tgba->state_from_number(src_num),
+				  tgba_condition, is_initial_state,
+				  is_accepting_state,
+				  is_livelock_accepting_state);
+	   auto inf_iter = infos_.find(inf);
 
-	   int new_src = result->exist_state(new_src_tmp);
-	   if (new_src == -1)
+	   int new_src;
+	   if (inf_iter == infos_.end())
 	     {
 	       new_src = result->add_state
 		 (result_tgba->state_from_number(src_num),
 		  tgba_condition, is_initial_state,
 		  is_accepting_state,
 		  is_livelock_accepting_state);
-
+	       infos_.insert({inf, new_src});
 
 	       if (target_tgta && a->get_artificial_initial_state() == src)
 		 {
@@ -141,7 +221,12 @@ namespace spot
 		   result->add_to_initial_states_set(new_src);
 		 }
 	     }
-	   new_src_tmp->destroy();
+	     else
+	       {
+		 new_src = inf_iter->second;
+		 delete inf;
+	       }
+	     //new_src_tmp->destroy();
 
 
 	   ta_succ_iterator* succit = a->succ_iter(src);
@@ -162,31 +247,39 @@ namespace spot
 	       bool is_livelock_accepting_state =
 	   	 a->is_livelock_accepting_state(dst);
 
-	       const ta_graph_state* new_dst_tmp =
-	       	 new ta_graph_state
-	       	 (result_tgba->state_from_number(i->second),
-	       	  tgba_condition, is_initial_state,
-	       	  is_accepting_state,
-	       	  is_livelock_accepting_state);
+	       infos* inf =
+		 new infos (result_tgba->state_from_number(i->second),
+			    tgba_condition, is_initial_state,
+			    is_accepting_state,
+			    is_livelock_accepting_state);
+	       auto inf_iter = infos_.find(inf);
 
-	       int new_dst = result->exist_state(new_dst_tmp);
-	       if (new_dst == -1)
-	   	 {
-	   	   new_dst = result->add_state
-	   	     (result_tgba->state_from_number(i->second),
-	   	      tgba_condition, is_initial_state,
-	   	      is_accepting_state,
-	   	      is_livelock_accepting_state);
-	   	 }
-
-	       new_dst_tmp->destroy();
-
+	       int new_dst;
+	       if (inf_iter == infos_.end())
+		 {
+		   new_dst = result->add_state
+		     (result_tgba->state_from_number(i->second),
+		      tgba_condition, is_initial_state,
+		      is_accepting_state,
+		      is_livelock_accepting_state);
+		   infos_.insert({inf, new_dst});
+		 }
+	       else
+		 {
+		   new_dst = inf_iter->second;
+		   delete inf;
+		 }
 
 	       result->create_transition
-	       	 (new_src, succit->current_condition(),
-	       	  succit->current_acceptance_conditions(), new_dst);
+		 (new_src, succit->current_condition(),
+		  succit->current_acceptance_conditions(), new_dst);
 	     }
 	   delete succit;
+	 }
+
+       for (auto key: infos_)
+	 {
+	   delete key.first;
 	 }
      }
 

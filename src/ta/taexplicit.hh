@@ -145,18 +145,6 @@ namespace spot
 	      bool is_accepting_state = false,
 	      bool is_livelock_accepting_state = false);
 
-    int exist_state(const ta_graph_state* newstate)
-    {
-      assert(newstate);
-      for (unsigned i = 1; i < num_states(); ++i)
-	{
-	  auto st = state_from_number(i);
-	  if (newstate->compare(st) == 0)
-	    return (int)i;
-	}
-      return -1;
-    }
-
     void free_transitions(const state* s);
 
     void
