@@ -38,3 +38,34 @@ run 0 ../../bin/ltlfilt --remove-x -f 'F(!a & Xb)' > out
 grep -v X out
 # The output is stutter invariant, even if the input wasn't.
 run 0 ../../bin/ltlfilt -q --stutter-invariant -F 'out'
+
+
+## This tests remove_x on PSL formulas.  Unfortunately we
+## found that construction in the Dax et al. paper seems incorrect
+## in at least two points.
+##
+##   Lemma 4 is wrong w.r.t. intersection: the SERE a && (a; a) has an
+##   empty language, but its rewriting with κ has a+ for language.
+##   Both languages are stutter-invariant, and yet they are different,
+##   contradicting Lemma 4.
+##
+##   Lemma 9 is wrong w.r.t. the <>-> operator: the PSL formula
+##   {a}<>->b is equivalent to a&b (which is stutter invariant) but
+##   its rewriting with τ gives the siPSL formula {a[+]}<>->b which is
+##   equivalent to b M a, a different stutter-invariant language.
+##   Since both languages are stutter-invariant, this contradict Lemma 9.
+##
+## The following commands were used to find the above problems for
+## Lemma 9 (Remove the --sere-prio=and=0,andNLM=0 to find
+## counterexamples for lemma 4.)
+# ../../bin/randltl --psl --sere-prio=and=0,andNLM=0 -n -1 a b |
+# ../../bin/ltlfilt -v --syntactic-stutter-invariant |
+# ../../bin/ltlfilt --stutter-invariant -n 100 > formulas
+#
+# run 0 ../../bin/ltlfilt --remove-x < formulas > formulas.nox
+# paste -d, formulas formulas.nox > input
+#
+# : > bugs
+# while IFS=, read fin fou; do
+#     ../../bin/ltlfilt -q -f "$fin" --equivalent-to "$fou" || exit 1
+# done < input
