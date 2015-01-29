@@ -287,7 +287,7 @@ namespace spot
       {
     	t.erase();
       }
-    g_.defrag();
+    g_.remove_dead_transitions_();
   }
 
   void
