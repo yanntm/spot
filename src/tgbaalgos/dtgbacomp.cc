@@ -24,7 +24,8 @@
 
 namespace spot
 {
-  tgba_digraph_ptr dtgba_complement_nonweak(const const_tgba_digraph_ptr& aut)
+  tgba_digraph_ptr dtgba_complement_nonweak(const const_tgba_digraph_ptr& aut,
+                                            bool use_fas)
   {
     // Clone the original automaton.
     auto res = make_tgba_digraph(aut,
@@ -48,14 +49,17 @@ namespace spot
     unsigned n = res->num_states();
     // Compute a specific feedback arc set for each clone.
     std::vector<fas> in_fas;
-    in_fas.reserve(num_sets);
-    for (unsigned set = 0; set < num_sets; ++set)
+    if (use_fas)
       {
-        const_tgba_digraph_ptr masked =
-          mask_acc_sets(aut, oldacc.mark(set));
-        assert(in_fas.size() == set);
-        in_fas.emplace_back(masked);
-        in_fas[set].build();
+        in_fas.reserve(num_sets);
+        for (unsigned set = 0; set < num_sets; ++set)
+          {
+            const_tgba_digraph_ptr masked =
+            mask_acc_sets(aut, oldacc.mark(set));
+            assert(in_fas.size() == set);
+            in_fas.emplace_back(masked);
+            in_fas[set].build();
+          }
       }
     // We will duplicate the automaton as many times as we have
     // acceptance sets, and we need one extra sink state.
@@ -105,7 +109,9 @@ namespace spot
 		    // At least one transition per cycle should have a
 		    // nondeterministic copy from the original clone.
                     // These transition are found in a feedback arc set.
-		    if (src == dst || in_fas[set](src, dst))
+                    bool backlink = use_fas ? src == dst ||
+                      in_fas[set](src, dst) : dst <= src;
+		    if (backlink)
 		      res->new_transition(src, dst + add, cond);
 		  }
 	      }
@@ -168,11 +174,12 @@ namespace spot
     return res;
   }
 
-  tgba_digraph_ptr dtgba_complement(const const_tgba_digraph_ptr& aut)
+  tgba_digraph_ptr dtgba_complement(const const_tgba_digraph_ptr& aut,
+                                    bool use_fas)
   {
     if (aut->is_inherently_weak())
       return dtgba_complement_weak(aut);
     else
-      return dtgba_complement_nonweak(aut);
+      return dtgba_complement_nonweak(aut, use_fas);
   }
 }

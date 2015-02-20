@@ -32,7 +32,7 @@ namespace spot
   /// which case the output will also be weak and deterministic) the
   /// resulting automaton is very unlikely to be deterministic.
   SPOT_API tgba_digraph_ptr
-  dtgba_complement(const const_tgba_digraph_ptr& aut);
+  dtgba_complement(const const_tgba_digraph_ptr& aut, bool use_fas = true);
 }
 
 #endif // SPOT_TGBAALGOS_DTGBACOMP_HH

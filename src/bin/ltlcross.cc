@@ -91,6 +91,7 @@ Exit status:\n\
 #define OPT_VERBOSE 14
 #define OPT_GRIND 15
 #define OPT_IGNORE_EXEC_FAIL 16
+#define OPT_FAS 17
 
 static const argp_option options[] =
   {
@@ -146,6 +147,8 @@ static const argp_option options[] =
       "print what is being done, for debugging", 0 },
     { 0, 0, 0, 0, "If an output FILENAME is prefixed with '>>', is it open "
       "in append mode instead of being truncated.", -1 },
+     { "FAS", OPT_FAS, 0, 0,
+       "When complementing, use feed back arc-set algorithm:", 0 },
     { 0, 0, 0, 0, 0, 0 }
   };
 
@@ -193,6 +196,7 @@ static unsigned products = 1;
 static bool products_avg = true;
 static bool opt_omit = false;
 static bool has_sr = false; // Has Streett or Rabin automata to process.
+static bool use_fas = false; // For dtgba_complement
 static const char* bogus_output_filename = 0;
 static output_file* bogus_output = 0;
 static output_file* grind_output = 0;
@@ -423,6 +427,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_DUPS:
       allow_dups = true;
+      break;
+    case OPT_FAS:
+      use_fas = true;
       break;
     case OPT_GRIND:
       grind_output = new output_file(arg);
@@ -1047,7 +1054,7 @@ namespace
 	  if (!no_complement && pos[n]
 	      && ((want_stats && !(*pstats)[n].nondeterministic)
 		  || (!want_stats && is_deterministic(pos[n]))))
-	    comp_pos[n] = dtgba_complement(pos[n]);
+	    comp_pos[n] = dtgba_complement(pos[n], use_fas);
 	}
 
       // ---------- Negative Formula ----------
@@ -1088,7 +1095,7 @@ namespace
 	      if (!no_complement && neg[n]
 		  && ((want_stats && !(*nstats)[n].nondeterministic)
 		      || (!want_stats && is_deterministic(neg[n]))))
-		comp_neg[n] = dtgba_complement(neg[n]);
+		comp_neg[n] = dtgba_complement(neg[n], use_fas);
 	    }
 	  nf->destroy();
 	}
