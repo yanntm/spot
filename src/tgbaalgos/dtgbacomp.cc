@@ -18,7 +18,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dtgbacomp.hh"
+#include "fas.hh"
 #include "sccinfo.hh"
+#include "tgbaalgos/mask.hh"
 
 namespace spot
 {
@@ -44,6 +46,17 @@ namespace spot
 
     unsigned num_sets = oldacc.num_sets();
     unsigned n = res->num_states();
+    // Compute a specific feedback arc set for each clone.
+    std::vector<fas> in_fas;
+    in_fas.reserve(num_sets);
+    for (unsigned set = 0; set < num_sets; ++set)
+      {
+        const_tgba_digraph_ptr masked =
+          mask_acc_sets(aut, oldacc.mark(set));
+        assert(in_fas.size() == set);
+        in_fas.emplace_back(masked);
+        in_fas[set].build();
+      }
     // We will duplicate the automaton as many times as we have
     // acceptance sets, and we need one extra sink state.
     res->new_states(num_sets * n + 1);
@@ -74,7 +87,7 @@ namespace spot
 	    bdd cond = t.cond;
 
 	    // Iterate over all the acceptance conditions in 'curacc',
-	    // an duplicate it for each clone for which it does not
+	    // and duplicate it for each clone for which it does not
 	    // belong to the acceptance set.
 	    unsigned add = 0;
 	    for (unsigned set = 0; set < num_sets; ++set)
@@ -91,11 +104,8 @@ namespace spot
 
 		    // At least one transition per cycle should have a
 		    // nondeterministic copy from the original clone.
-		    // We use state numbers to select it, as any cycle
-		    // is guaranteed to have at least one transition
-		    // with dst <= src.  FIXME: Computing a feedback
-		    // arc set would be better.
-		    if (dst <= src)
+                    // These transition are found in a feedback arc set.
+		    if (src == dst || in_fas[set](src, dst))
 		      res->new_transition(src, dst + add, cond);
 		  }
 	      }
