@@ -37,6 +37,7 @@ check_PROGRAMS = \
   checkpsl \
   checkta \
   emptchk \
+  fas \
   intvcomp \
   intvcmp2 \
   ltlprod \
@@ -50,6 +51,7 @@ checkpsl_SOURCES = checkpsl.cc
 checkta_SOURCES = checkta.cc
 complement_SOURCES = complementation.cc
 emptchk_SOURCES  = emptchk.cc
+fas_SOURCES = fas.cc
 intvcomp_SOURCES = intvcomp.cc
 intvcmp2_SOURCES = intvcmp2.cc
 ltl2tgba_SOURCES = ltl2tgba.cc
@@ -82,6 +84,7 @@ TESTS = \
   ltl2tgba.test \
   ltl2neverclaim.test \
   ltl2neverclaim-lbtt.test \
+  fas.test \
   ltlprod.test \
   explprod.test \
   explpro2.test \

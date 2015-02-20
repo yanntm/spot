@@ -42,6 +42,7 @@ tgbaalgos_HEADERS = \
   dupexp.hh \
   emptiness.hh \
   emptiness_stats.hh \
+  fas.hh \
   gv04.hh \
   hoa.hh \
   isdet.hh \
@@ -93,6 +94,7 @@ libtgbaalgos_la_SOURCES = \
   dtgbasat.cc \
   dupexp.cc \
   emptiness.cc \
+  fas.cc \
   gv04.cc \
   hoa.cc \
   isdet.cc \
