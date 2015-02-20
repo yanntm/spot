@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2014 Laboratoire de Recherche et Développement de
+## Copyright (C) 2014, 2015 Laboratoire de Recherche et Développement de
 ## l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
@@ -17,13 +17,16 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-AM_CPPFLAGS = -I$(srcdir)/..
+AM_CPPFLAGS = -I$(srcdir)/.. -I.. $(BUDDY_CPPFLAGS)
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 graphdir = $(pkgincludedir)/graph
 
 graph_HEADERS = \
   graph.hh \
-  ngraph.hh
+  ngraph.hh \
+  bidigraph.hh
 
+noinst_LTLIBRARIES = libgraph.la
+libgraph_la_SOURCES = \
+  bidigraph.cc

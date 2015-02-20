@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2014 Laboratoire de Recherche et Développement de
+## Copyright (C) 2014, 2015 Laboratoire de Recherche et Développement de
 ## l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
@@ -24,11 +24,17 @@ LDADD = ../libspot.la
 
 noinst_PROGRAMS = graph ngraph tgbagraph
 
+check_SCRIPTS = defs
+
+check_PROGRAMS = \
+  bidigraph
+
+bidigraph_SOURCES = bidigraph.cc
 graph_SOURCES = graph.cc
 ngraph_SOURCES = ngraph.cc
 tgbagraph_SOURCES = tgbagraph.cc
 
-TESTS = graph.test ngraph.test tgbagraph.test
+TESTS = graph.test ngraph.test tgbagraph.test bidigraph.test
 
 EXTRA_DIST = $(TESTS)
 

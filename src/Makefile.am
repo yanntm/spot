@@ -35,6 +35,7 @@ libspot_la_LDFLAGS = $(BUDDY_LDFLAGS) -no-undefined
 libspot_la_LIBADD =  \
   dstarparse/libdstarparse.la \
   hoaparse/libhoaparse.la \
+  graph/libgraph.la \
   kripke/libkripke.la \
   kripkeparse/libkripkeparse.la \
   ltlast/libltlast.la \

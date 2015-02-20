@@ -61,6 +61,7 @@ DOT='@DOT@'
 top_builddir='../@top_builddir@'
 VALGRIND='@VALGRIND@'
 PYTHON='@PYTHON@'
+top_srcdir='../@top_srcdir@'
 
 run()
 {
