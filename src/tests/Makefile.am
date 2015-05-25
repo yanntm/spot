@@ -63,7 +63,8 @@ check_PROGRAMS = \
   tgbagraph \
   tostring \
   tunabbrev \
-  tunenoform
+  tunenoform \
+  weighted
 
 # Keep this sorted alphabetically.
 acc_SOURCES = acc.cc
@@ -110,6 +111,8 @@ tunabbrev_SOURCES = equalsf.cc
 tunabbrev_CPPFLAGS = $(AM_CPPFLAGS) -DTUNABBREV
 tunenoform_SOURCES = equalsf.cc
 tunenoform_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM -DTUNABBREV
+weighted_SOURCES = weighted.cc
+weighted_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM -DTUNABBREV
 
 
 # Keep this sorted by STRENGTH.  Test basic things first,
@@ -242,7 +245,8 @@ TESTS_twa = \
   ltlcross2.test \
   complementation.test \
   randpsl.test \
-  cycles.test
+  cycles.test \
+  weighted.test
 
 EXTRA_DIST = $(TESTS)
 

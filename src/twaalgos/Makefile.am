@@ -82,6 +82,7 @@ twaalgos_HEADERS = \
   tau03opt.hh \
   totgba.hh \
   translate.hh \
+  weighted_ec.hh \
   word.hh
 
 noinst_LTLIBRARIES = libtwaalgos.la

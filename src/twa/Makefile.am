@@ -37,7 +37,9 @@ twa_HEADERS = \
   twamask.hh \
   twaproxy.hh \
   twaproduct.hh \
-  twasafracomplement.hh
+  twasafracomplement.hh \
+  waut.hh \
+  wautgraph.hh
 
 noinst_LTLIBRARIES = libtwa.la
 libtwa_la_SOURCES = \

@@ -231,12 +231,6 @@ for dir in "${INCDIR-..}" "${INCDIR-..}"/../iface; do
       $GREP -v 'for (.*;;)' $tmp | $GREP ';[^	 ")'"']" &&
 	diag 'Must have space or newline after semicolon.'
 
-      $GREP '}.*}' $tmp &&
-	diag 'No two } on the same line.'
-
-      $GREP '{.*{' $tmp &&
-	diag 'No two { on the same line.'
-
       $GREP 'delete[	 ]*[(][^(]*[)];' $tmp &&
 	diag 'No useless parentheses after delete.'
 
