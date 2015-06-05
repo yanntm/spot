@@ -79,8 +79,6 @@ namespace spot
     bool is_valid() const;
 
     /// \brief output the description of the cube
-    ///
-    /// \param names provides a descriptor for each variable
     std::string dump();
 
   protected:

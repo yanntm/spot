@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
+#include <random>
 
 // MinGW does not define this.
 #ifndef WEXITSTATUS

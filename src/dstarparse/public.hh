@@ -54,10 +54,6 @@ namespace spot
     size_t accpair_count;
     /// \brief acceptance sets encoded as 2*num_state bit-vectors of
     /// num_pairs bits
-    ///
-    /// Assuming $F=\{(L_0,U_0),\ldots,(L_i,U_i),\ldots\}$,
-    /// $s\in L_i$ iff <code>accsets->at(s * 2).get(i)$</code>,
-    /// an $s\in $U_i$ iff <code>accsets->at(s * 2 + 1).get(i)</code>.
     bitvect_array* accsets;
 
     ~dstar_aut()

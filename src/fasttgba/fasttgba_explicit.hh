@@ -207,7 +207,7 @@ namespace spot
     /// \param src the label of the source state
     /// \param dst the label of the destination state
     /// \param cond the atomic proposition labelling the transition
-    /// \param cond the accepting mark on this transition
+    /// \param acc the accepting mark on this transition
     void add_transition(int src, int dst,
 			cube cond, markset acc);
 

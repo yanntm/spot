@@ -368,7 +368,9 @@ namespace spot
   public:
     /// \brief A constuctor
     fake_ec(int thread_number): tn_(thread_number)
-    {}
+    {
+      (void) tn_;
+    }
 
     virtual
     bool has_counterexample()

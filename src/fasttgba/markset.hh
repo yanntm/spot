@@ -121,9 +121,6 @@ namespace spot
     markset operator|(const unsigned long) const;
 
     /// \brief Display the content of the marking
-    ///
-    /// \param acc is used to specified for each mark
-    /// the label to use in dumping
     virtual std::string dump() const;
 
   protected:

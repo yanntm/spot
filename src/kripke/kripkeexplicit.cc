@@ -247,7 +247,8 @@ namespace spot
   void kripke_explicit::add_transition(std::string source,
                                        std::string dest)
   {
-    std::map<std::string, state_kripke*>::iterator destination
+    //std::map<std::string, state_kripke*>::iterator
+    auto  destination
       = ns_nodes_.find(dest);
 
     if (ns_nodes_.find(dest) == ns_nodes_.end())

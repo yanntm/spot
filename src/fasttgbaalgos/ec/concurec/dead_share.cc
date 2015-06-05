@@ -679,6 +679,7 @@ namespace spot
       counterexample_(false),
       giddle_(giddle)
   {
+    (void) iddle_;
     insert_cpt_ = 0;
     fail_cpt_ = 0;
     stop_ = stop;
@@ -1028,6 +1029,8 @@ namespace spot
     inst(i->new_instance()),
     counterexample_(false)
   {
+    (void) tn_;
+    (void) update_cpt_;
     a_ = inst->get_terminal_automaton ();
     stop_ = stop;
     deadstore_ = new deadstore();
@@ -1215,6 +1218,7 @@ namespace spot
       insert_cpt_(0),
       counterexample_(false)
   {
+    (void) tn_;
     a_ = inst->get_weak_automaton ();
     assert(a_);
     stop_ = stop;

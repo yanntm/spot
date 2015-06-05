@@ -54,6 +54,7 @@ namespace spot
     /// Constructor
     sharedhashtable(int thread_number) : thread_number_(thread_number), size_(0)
     {
+      (void) thread_number_;
       effective_table_ = ht_alloc(&DATATYPE_INT_PTRINT, INIT_SCALE);
     }
 

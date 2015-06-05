@@ -65,7 +65,7 @@ namespace spot
   protected:
     /// \brief Destructor.
     ///
-    /// \deprecated Client code should now call
+    /// Client code should now call
     /// <code>s->destroy();</code> instead of <code>delete s;</code>.
     virtual ~fasttgba_state()
     {

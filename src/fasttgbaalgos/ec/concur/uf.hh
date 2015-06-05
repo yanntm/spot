@@ -143,7 +143,7 @@ namespace spot
     /// operands are unite and where acceptance sets are merged
     /// \param left the left operand
     /// \param right the right operand
-    /// \param markset the acceptance set to add to the parent of the two
+    /// \return  the acceptance set to add to the parent of the two
     /// operands once merged.
     markset unite(const fasttgba_state* left, const fasttgba_state* right,
 		  const markset acc, bool *is_dead)
