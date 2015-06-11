@@ -41,11 +41,7 @@ void fun (void* elt)
 void uf_free(uf_t* uf, int verbose, size_t tn)
 {
   if (verbose)
-    {
-      ht_print(uf->table, false);
-      /* ht_iter_value(uf->table, */
-      /* 		    (process_fun_t) print_uf_node_t); // Thread Safe! */
-    }
+    ht_print(uf->table, false);
 
   // Destroy all table
   free(uf->dead_);
@@ -66,11 +62,8 @@ uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted, int tn)
 {
   map_val_t old = 0;
   map_key_t clone = 0;
-
   uf_node_t *alloc = uf->prealloc_[tn];
 
-    //(uf_node_t*) malloc (sizeof(uf_node_t));
-  //  alloc->parent = alloc;
 
   // Hashmap.insert(map,   key, val, res, context)
   //      Ne pas inserer de clefs negatives
@@ -85,36 +78,10 @@ uf_node_t* uf_make_set(uf_t* uf, map_key_t key, int *inserted, int tn)
       uf->prealloc_[tn]->markset = 0;
       return alloc;
     }
-  /* else */
-  /*   free (alloc); */
 
   *inserted = 0;
   return (uf_node_t*)old;
 }
-
-/* uf_node_t* uf_find(uf_node_t* n) */
-/* { */
-/*   uf_node_t* node = n; */
-/*   /\* uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent; *\/ */
-/*   /\* assert(parent); *\/ */
-
-/*   // Look for the root */
-/*   int i = 0; */
-/*   uf_node_t* tmp; */
-/*   while ((tmp = ((uf_node_t)atomic_read(node)).parent) != node) */
-/*     { */
-/*       node = tmp; */
-/*       ++i; */
-/*     } */
-
-/*   /\* // We don't care if there is a fail! *\/ */
-/*   uf_node_t* parent = ((uf_node_t) atomic_read(node)).parent; */
-/*   (void) cas_ret(&n->parent, parent, node); */
-
-/*   return node; */
-/* } */
-
-
 
 uf_node_t* uf_find(uf_node_t* n)
 {
@@ -257,6 +224,18 @@ int uf_is_dead(uf_t* uf, uf_node_t* n)
     return 1;
   return 0;
 }
+
+// Warning: This method only look one parent
+// above to decide wether a state is DEAD, so
+// it can return outdated information.
+int uf_maybe_dead(uf_t* uf, uf_node_t* n)
+{
+  uf_node_t* p = ((uf_node_t)atomic_read(n)).parent;
+  if (p == uf->dead_)
+    return 1;
+  return 0;
+}
+
 
 void print_uf_node_t (void *node)
 {

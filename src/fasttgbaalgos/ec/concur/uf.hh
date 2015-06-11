@@ -185,6 +185,18 @@ namespace spot
       return uf_is_dead(effective_uf, node);
     }
 
+    /// \brief check wether an element is possibly linked
+    /// to dead
+    bool is_maybe_dead(const fasttgba_state* key)
+    {
+      uf_node_t* node = (uf_node_t*)
+	ht_get(effective_uf->table, (map_key_t) key);
+
+      if (node == DOES_NOT_EXIST)
+	return false;
+      return uf_maybe_dead(effective_uf, node);
+    }
+
     int size()
     {
       return size_;

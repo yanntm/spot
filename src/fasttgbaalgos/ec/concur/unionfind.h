@@ -33,6 +33,7 @@ unsigned long uf_add_acc(uf_t* uf, uf_node_t* n, unsigned long acc);
 uf_node_t*    uf_make_set(uf_t* uf, map_key_t key, int *inserted, int tn);
 void          uf_make_dead(uf_t* uf, uf_node_t* n);
 int           uf_is_dead(uf_t* uf, uf_node_t* n);
+int           uf_maybe_dead(uf_t* uf, uf_node_t* n);
 void          print_uf_node_t (void *node);
 
 #endif // NB_UNIONFIND_H
