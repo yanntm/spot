@@ -46,6 +46,7 @@
 
 #include "fasttgbaalgos/ec/lazycheck.hh"
 #include "fasttgbaalgos/ec/stats.hh"
+#include "fasttgbaalgos/ec/ingoing.hh"
 #include "fasttgbaalgos/ec/tarjan_scc.hh"
 #include "fasttgbaalgos/ec/unioncheck.hh"
 #include "fasttgbaalgos/ec/union_scc.hh"
@@ -135,6 +136,7 @@ main(int argc, char **argv)
   bool opt_tacas13_ndfs = false;
   bool opt_tacas13_uc13 = false;
   bool opt_tacas13_tuc13 = false;
+  bool opt_ingoing = false;
   unsigned int  nb_threads = 1;
 
   std::string option_uc13 = "";
@@ -170,6 +172,10 @@ main(int argc, char **argv)
   else if (!strncmp("-ndfs", argv[3], 4))
     {
       opt_ndfs = true;
+    }
+  else if (!strncmp("-ingoing", argv[3], 8))
+    {
+      opt_ingoing = true;
     }
   else if (!strncmp("-decomp_ec", argv[3], 10))
     {
@@ -990,10 +996,6 @@ main(int argc, char **argv)
 	    th.join();
 	  }
 
-
-	// ------------------------------------------------------------------
-
-
 	if (opt_stats)
 	  {
 	    std::ostringstream result;
@@ -1036,6 +1038,25 @@ main(int argc, char **argv)
 	    std::cout << result.str() << std::endl;
 	  }
 
+	if (opt_ingoing)
+	  {
+	    const spot::dve2product_instance* inststr =
+	      (const spot::dve2product_instance*)itor->new_instance();
+	    const spot::fasttgbaexplicit* instaut =
+	      dynamic_cast<const spot::fasttgbaexplicit*>
+	      (inststr->get_formula_automaton());
+	    assert(instaut);
+	    spot::dotty_dfs dotty(instaut);
+	    dotty.run();
+	    spot::ingoing* checker =
+	      new spot::ingoing(new spot::simple_instanciator(instaut),
+				option_stats);
+	    checker->check();
+	    std::cout << "to_publish: " <<
+	      checker->extra_info_csv() << std::endl;
+	    delete checker;
+	    delete inststr;
+	  }
 
 	if (opt_kstat)
 	  {

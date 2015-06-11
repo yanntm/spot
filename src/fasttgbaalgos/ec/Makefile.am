@@ -32,6 +32,7 @@ ec_HEADERS = \
   lowlink_stack.hh \
   root_stack.hh \
   stats.hh \
+  ingoing.hh \
   tarjan_scc.hh \
   unioncheck.hh \
   union_scc.hh
@@ -42,6 +43,7 @@ libec_la_SOURCES = \
   dijkstra_scc.cc \
   lazycheck.cc \
   stats.cc \
+  ingoing.cc \
   tarjan_scc.cc \
   unioncheck.cc \
   union_scc.cc \
