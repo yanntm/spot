@@ -68,6 +68,7 @@
 // Concurrency -- Spot
 //
 #include "fasttgbaalgos/ec/concur/uf.hh"
+#include "fasttgbaalgos/ec/concur/queue.hh"
 #include "fasttgbaalgos/ec/concurec/dead_share.hh"
 
 static void
