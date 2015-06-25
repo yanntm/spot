@@ -30,6 +30,7 @@
 #include "fasttgbaalgos/ec/lazycheck.hh"
 
 #include "fasttgbaalgos/ec/concur/uf.hh"
+#include "fasttgbaalgos/ec/concur/queue.hh"
 #include "fasttgbaalgos/ec/concur/sharedhashtable.hh"
 #include "fasttgbaalgos/ec/concur/openset.hh"
 #include "concur_ec_stat.hh"
@@ -40,6 +41,7 @@
 #include "fasttgbaalgos/ec/unioncheck.hh"
 
 #include <sstream>
+#include <iostream>
 
 namespace spot
 {
@@ -86,11 +88,11 @@ namespace spot
   protected:
     spot::uf* uf_;		/// \brief a reference to shared union find
     int tn_;			/// \brief the thread identifier
-    int * stop_;		/// \brief stop the world varibale
-    int * stop_strong_;		/// \brief stop strong varibale
-    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
-    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
-    int make_cpt_;		/// \biref number of succed insertions
+    int * stop_;		/// \brief stop the world variable
+    int * stop_strong_;		/// \brief stop strong variable
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
+    int make_cpt_;		/// \brief number of succed insertions
   };
 
   // ----------------------------------------------------------------------
@@ -148,7 +150,7 @@ namespace spot
   protected:
     spot::uf* uf_;		/// \brief a reference to shared union find
     int tn_;
-    int * stop_;		/// \brief stop the world varibale
+    int * stop_;		/// \brief stop the world variable
     int * stop_strong_;		/// \brief stop strong variable
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
@@ -289,8 +291,8 @@ namespace spot
     /// \brief to avoid terminaison problem
     std::atomic<int>& giddle_;
 
-    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
-    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
   };
 
 
@@ -450,8 +452,8 @@ namespace spot
 		       fasttgba_state_ptr_equal> seen_map;
     seen_map H;
 
-    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
-    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
     deadstore* deadstore_;
     unsigned int transitions_cpt_;
     unsigned int max_dfs_size_;
@@ -540,10 +542,10 @@ namespace spot
     virtual int nb_inserted();
   protected:
     int tn_;			/// \brief the thread identifier
-    int * stop_;		/// \brief stop the world varibale
-    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
-    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
-    int make_cpt_;		/// \biref number of succed insertions
+    int * stop_;		/// \brief stop the world variable
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
+    int make_cpt_;		/// \brief number of succed insertions
   };
 
   class single_opt_dijkstra_ec : public opt_dijkstra_ec, public concur_ec_stat
@@ -561,10 +563,10 @@ namespace spot
     virtual int nb_inserted();
   protected:
     int tn_;			/// \brief the thread identifier
-    int * stop_;		/// \brief stop the world varibale
-    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
-    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
-    int make_cpt_;		/// \biref number of succed insertions
+    int * stop_;		/// \brief stop the world variable
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
+    int make_cpt_;		/// \brief number of succed insertions
   };
 
 
@@ -583,10 +585,10 @@ namespace spot
     virtual int nb_inserted();
   protected:
     int tn_;			/// \brief the thread identifier
-    int * stop_;		/// \brief stop the world varibale
-    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
-    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
-    int make_cpt_;		/// \biref number of succed insertions
+    int * stop_;		/// \brief stop the world variable
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
+    int make_cpt_;		/// \brief number of succed insertions
   };
 
 
@@ -605,10 +607,10 @@ namespace spot
     virtual int nb_inserted();
   protected:
     int tn_;			/// \brief the thread identifier
-    int * stop_;		/// \brief stop the world varibale
-    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
-    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
-    int make_cpt_;		/// \biref number of succed insertions
+    int * stop_;		/// \brief stop the world variable
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
+    int make_cpt_;		/// \brief number of succed insertions
   };
 
 
@@ -627,11 +629,375 @@ namespace spot
     virtual int nb_inserted();
   protected:
     int tn_;			/// \brief the thread identifier
-    int * stop_;		/// \brief stop the world varibale
-    std::chrono::time_point<std::chrono::system_clock> start; /// \biref start!
-    std::chrono::time_point<std::chrono::system_clock> end;   /// \biref stop!
-    int make_cpt_;		/// \biref number of succed insertions
+    int * stop_;		/// \brief stop the world variable
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
+    int make_cpt_;		/// \brief number of succed insertions
   };
+
+
+  // ----------------------------------------------------------------------
+  // Async Emptiness check
+  // ======================================================================
+
+  class async_worker: public concur_ec_stat
+  {
+  public:
+    async_worker(instanciator* i,
+		 spot::uf* uf,
+		 spot::queue* queue,
+		 int thread_number,
+		 int *stop,
+		 int *stop_strong,
+		 std::string option = "")
+    {
+      uf_ = uf;
+      tn_ = thread_number;
+      queue_ = queue;
+      stop_ = stop;
+      inst = i->new_instance();
+      counterexample = false;
+      (void) option;
+      (void) stop_strong;
+    }
+
+    virtual ~async_worker()
+    {
+      delete inst;
+    }
+
+    virtual bool check()
+    {
+      while (!*stop_)
+	{
+	  shared_op* op = queue_->get();
+	  assert(op);
+	  if (op->op_ == spot::op_type::end)
+	    {
+	      delete op;
+	      break;
+	    }
+	  // else if (op->op_ == spot::op_type::makeset)
+	  //   {
+	  //     assert(op->arg1_);
+	  //     uf_->make_set(op->arg1_, tn_);
+	  //   }
+	  // else
+	    if (op->op_ == spot::op_type::unite)
+	    {
+	      //assert(op->arg1_ &&  op->arg2_ && op->acc_);
+	      uf_->make_set(op->arg1_, tn_);
+	      uf_->make_set(op->arg2_, tn_);
+	      bool tmp; /* useless in this special case*/
+	      auto m = uf_->unite (op->arg1_,
+	      			   op->arg2_,
+	      			   *op->acc_,
+	      			   &tmp);
+
+	      if (m.all())
+	      	{
+
+	      	  delete op;
+	      	  counterexample = true;
+	      	  break;
+	      	}
+	    }
+	  else if (op->op_ == spot::op_type::makedead)
+	    {
+	      // assert(op->op_ == spot::op_type::makedead);
+	      // assert(op->arg1_);
+	      uf_->make_set(op->arg1_, tn_);
+	      uf_->make_dead(op->arg1_);
+	    }
+	  assert(op->arg1_);
+	  delete op;
+	}
+      *stop_ = 1;
+      return counterexample;
+    }
+
+    virtual bool has_counterexample()
+    {
+      start = std::chrono::system_clock::now();
+      end = std::chrono::system_clock::now();
+      return counterexample;
+    }
+
+    virtual std::string csv()
+    {
+      return "xxx";
+    }
+
+    virtual std::chrono::milliseconds::rep  get_elapsed_time()
+    {
+      auto elapsed_seconds = std::chrono::duration_cast
+	<std::chrono::milliseconds>(end-start).count();
+      return elapsed_seconds;
+    }
+
+    virtual int nb_inserted()
+    {
+      return 0;
+    }
+
+  protected:
+    spot::uf* uf_;
+    spot::queue* queue_;
+    const instance_automaton* inst; ///< The instanciator
+    int tn_;			    /// \brief the thread identifier
+    int * stop_;		    /// \brief stop the world variable
+    std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
+    std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
+    bool counterexample;
+  };
+
+
+  class dijkstra_async : public opt_dijkstra_scc, public concur_ec_stat
+  {
+  public:
+    dijkstra_async(instanciator* i,
+		   spot::uf* uf,
+		   spot::queue* queue,
+		   int thread_number,
+		   int *stop,
+		   int *stop_strong,
+		   bool swarming,
+		   std::string option = "")
+      : opt_dijkstra_scc(i, option, swarming, thread_number)
+    {
+      uf_ = uf;
+      queue_ = queue;
+      tn_ = thread_number;
+      stop_ = stop;
+      stop_strong_ = stop_strong; /* Useless? */
+      make_cpt_ = 0;
+    }
+
+
+    virtual bool check()
+    {
+      start = std::chrono::system_clock::now();
+      init();
+      main();
+      *stop_strong_ = 1;
+      end  = std::chrono::system_clock::now();
+      queue_->put(new shared_op(spot::end, 0, 0, 0), tn_);
+      *stop_ = 1; // Ok since this algo is exact!
+      return counterexample_found;
+    }
+
+    virtual void dfs_push(fasttgba_state* s)
+    {
+      ++states_cpt_;
+      assert(H.find(s) == H.end());
+      H.insert(std::make_pair(s, H.size()));
+
+      //s->clone();
+      //queue_->put(new shared_op(makeset, s, 0, 0), tn_);
+
+      // Count!
+      max_live_size_ = H.size() > max_live_size_ ?
+	H.size() : max_live_size_;
+
+      stack_->push_transient(todo.size());
+
+      todo.push_back ({s, 0, H.size() -1});
+      // Count!
+      max_dfs_size_ = max_dfs_size_ > todo.size() ?
+	max_dfs_size_ : todo.size();
+
+
+      int tmp_cost = 1*stack_->size() + 2*H.size() + 1*live.size()
+	+ (deadstore_? deadstore_->size() : 0);
+      if (tmp_cost > memory_cost_)
+	memory_cost_ = tmp_cost;
+
+    }
+
+    int cpt_maybe = 0;
+    virtual color get_color(const fasttgba_state* state)
+    {
+      ++cpt_maybe;
+      seen_map::const_iterator i = H.find(state);
+      if (i != H.end())
+	return Alive;
+      else if (uf_->is_dead(state))
+      	return Dead;
+      else
+	return Unknown;
+
+    }
+
+    virtual bool merge(fasttgba_state* d)
+    {
+      ++update_cpt_;
+      assert(H.find(d) != H.end());
+
+      int dpos = H[d];
+
+      auto top = stack_->pop(todo.size()-1);
+      top.acc |= todo.back().lasttr->current_acceptance_marks();
+      int r = top.pos;
+      assert(todo[r].state);
+
+      while ((unsigned)dpos < todo[r].position)
+	{
+
+	  ++update_loop_cpt_;
+	  assert(todo[r].lasttr);
+	  auto newtop = stack_->top(r-1);
+	  int oldr = r;
+	  r = newtop.pos;
+
+	  // [r-1] Because acceptances are stored in the predecessor!
+	  top.acc |= newtop.acc |
+	    todo[oldr-1].lasttr->current_acceptance_marks();
+
+	  // FIXME Do something
+	  //uf_->unite (d, todo[r].state,  top.acc, &fast_backtrack);
+	  todo[r].state->clone();
+	  d->clone(); // FIXME
+	  queue_->put(new shared_op(unite, d, todo[r].state,
+				    new markset(top.acc)), tn_);
+	  stack_->pop(oldr -1);
+	}
+      stack_->push_non_transient(r, top.acc);
+      return top.acc.all();
+    }
+
+    virtual void dfs_pop()
+    {
+      auto pair = todo.back();
+      delete pair.lasttr;
+      todo.pop_back();
+
+      if (todo.size() == stack_->top(todo.size()).pos)
+	{
+	  ++roots_poped_cpt_;
+	  stack_->pop(todo.size());
+	  int trivial = 0;
+	  //uf_->make_dead(pair.state);
+	  pair.state->clone();
+	  queue_->put(new shared_op(makedead, pair.state, 0, 0), tn_);
+	  seen_map::const_iterator it1 = H.find(pair.state);
+	  H.erase(it1);
+	  while (H.size() > pair.position)
+	    {
+	      ++trivial;
+	      auto toerase = live.back();
+	      //deadstore_->add(toerase);
+	      seen_map::const_iterator it = H.find(toerase);
+	      H.erase(it);
+	      live.pop_back();
+	    }
+	  if (trivial == 0) // we just popped a trivial
+	    ++trivial_scc_;
+	}
+      else
+	{
+	  // This is the integration of Nuutila's optimisation.
+	  live.push_back(pair.state);
+	}
+    }
+
+    virtual void main ()
+    {
+    opt_dijkstra_scc::color c;
+    while (!todo.empty() && !*stop_)
+      {
+	if (!todo.back().lasttr)
+	  {
+	    todo.back().lasttr = swarm_ ?
+	      a_->swarm_succ_iter(todo.back().state, tn_) :
+	      a_->succ_iter(todo.back().state);
+	    todo.back().lasttr->first();
+	  }
+	else
+	  {
+	    assert(todo.back().lasttr);
+	    todo.back().lasttr->next();
+	  }
+
+    	if (todo.back().lasttr->done())
+    	  {
+	    dfs_pop ();
+    	  }
+    	else
+    	  {
+	    ++transitions_cpt_;
+	    assert(todo.back().lasttr);
+    	    fasttgba_state* d = todo.back().lasttr->current_state();
+	    c = get_color (d);
+    	    if (c == Unknown)
+    	      {
+		dfs_push (d);
+    	    	continue;
+    	      }
+    	    else if (c == Alive)
+    	      {
+    	    	if (merge (d))
+    	    	  {
+		    *stop_ = 1;
+    	    	    counterexample_found = true;
+    	    	    d->destroy();
+    	    	    return;
+    	    	  }
+    	      }
+    	    d->destroy();
+    	  }
+      }
+    }
+
+    virtual bool has_counterexample()
+    {
+      return counterexample_found;
+    }
+
+
+    virtual std::string csv()
+    {
+      return "dijkstra_async," + extra_info_csv();
+    }
+
+    virtual std::chrono::milliseconds::rep
+    get_elapsed_time()
+    {
+      auto elapsed_seconds = std::chrono::duration_cast
+	<std::chrono::milliseconds>(end-start).count();
+      return elapsed_seconds;
+    }
+
+    virtual int nb_inserted()
+    {
+      return make_cpt_;
+    }
+
+  protected:
+    spot::uf* uf_;		/// \brief a reference to shared union find
+    spot::queue* queue_;
+    int tn_;
+    int * stop_;		/// \brief stop the world variable
+    int * stop_strong_;		/// \brief stop strong variable
+    std::chrono::time_point<std::chrono::system_clock> start;
+    std::chrono::time_point<std::chrono::system_clock> end;
+    int make_cpt_;
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -659,7 +1025,8 @@ namespace spot
 	DECOMP_TACAS13_DIJKSTRA = 10,
 	DECOMP_TACAS13_NDFS = 11,
 	DECOMP_TACAS13_UC13 = 12,
-	DECOMP_TACAS13_TUC13 = 13
+	DECOMP_TACAS13_TUC13 = 13,
+	ASYNC_DIJKSTRA = 14
       };
 
     /// \brief Constructor for the multithreaded emptiness check
@@ -691,6 +1058,7 @@ namespace spot
 
   protected:
     spot::uf* uf_;		///< The shared Union Find
+    spot::queue* queue_;	///< The shared Queue
     spot::openset* os_;		///< The shared Open Set
     sharedhashtable* sht_;	///< The shared Hash Table
     instanciator* itor_;	///< The instanciator

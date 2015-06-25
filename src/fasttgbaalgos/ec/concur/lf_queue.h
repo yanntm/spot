@@ -22,7 +22,7 @@ typedef struct lf_queue_
 
 
 lf_queue_t*   lf_queue_alloc();
-void          lf_queue_free(lf_queue_t* os, int verbose);
+void          lf_queue_free(lf_queue_t* os);
 int           lf_queue_put(lf_queue_t* os, void* key);
 void*         lf_queue_get_one(lf_queue_t* os);
 

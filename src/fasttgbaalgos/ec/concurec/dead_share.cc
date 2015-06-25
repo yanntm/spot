@@ -1950,6 +1950,7 @@ namespace spot
   {
     assert(i && thread_number);
     uf_ = new spot::uf(tn_);
+    queue_ = new spot::queue(tn_);
     os_ = new spot::openset(tn_);
     sht_ = new spot::sharedhashtable(tn_);
 
@@ -2015,6 +2016,19 @@ namespace spot
 							      i, &stop,
 							     &stop_strong,
 							      s_, option_));
+	  }
+	else if (policy_ == ASYNC_DIJKSTRA)
+	  {
+	    if (i == 0)
+	      chk.push_back(new spot::async_worker(itor_, uf_, queue_,
+						   i, &stop,
+						   &stop_strong,
+						   option_));
+	    else
+	      chk.push_back(new spot::dijkstra_async(itor_, uf_, queue_,
+						     i, &stop,
+						     &stop_strong,
+						     s_, option_));
 	  }
 	else
 	  {
@@ -2191,6 +2205,7 @@ namespace spot
       }
     delete sht_;
     delete os_;
+    delete queue_;
     delete uf_;
   }
 
@@ -2349,6 +2364,9 @@ namespace spot
 	break;
       case DECOMP_TACAS13_TUC13:
 	res << "DECOMP_TACAS13_TUC13,";
+	break;
+      case ASYNC_DIJKSTRA:
+	res << "ASYNC_DIJKSTRA,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;

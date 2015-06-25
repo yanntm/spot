@@ -23,7 +23,7 @@
 #include <iosfwd>
 #include <atomic>
 #include <array>
-
+#include <iostream>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,48 +38,57 @@ namespace spot
 {
   enum op_type
     {
-      unite,			// Ask for unite operation
-      makeset,			// Ask for creation
-      end			// This thread is iddle
+      unite = 2,			// Ask for unite operation
+      makeset = 4,			// Ask for creation
+      makedead = 8,			// Ask for marking dead
+      end = 16			        // This thread is iddle
     };
 
-  struct shared_op
+  class shared_op
   {
-    op_type op;
-    const spot::fasttgba_state* arg1;
-    const spot::fasttgba_state* arg2;
+  public:
+    shared_op(op_type op,
+	      const spot::fasttgba_state* arg1,
+	      const spot::fasttgba_state* arg2,
+	      const markset* acc):
+      op_(op), arg1_(arg1), arg2_(arg2), acc_(acc)
+    { }
+
+    ~shared_op()
+    {
+      delete acc_;
+    }
+
+    op_type op_;
+    const spot::fasttgba_state* arg1_;
+    const spot::fasttgba_state* arg2_;
+    const markset* acc_;
   };
 
   class queue
   {
   public :
-    queue(int thread_number) : thread_number_(thread_number), nb_iddle(0)
+    queue(int thread_number) : thread_number_(thread_number), curr(0)
     {
       effective_queue = new lf_queue_t*[thread_number_];
-      //available_ = new std::vector<std::atomic<bool>>(thread_number_);
       for (int i = 0; i < thread_number_; ++i)
 	{
 	  effective_queue[i] = lf_queue_alloc();
-	  //  (*available_)[i] = false;
 	}
     }
 
     int put(shared_op* sop, int tn)
     {
       int res = lf_queue_put(effective_queue[tn], sop);
-      //(*available_)[tn] = true;
       return res;
     }
 
-
     // Warning ! this method is not thread safe. To be
-    // thread safe, must make curr atomic and modify
-    // while condition
-    shared_op* get(int* the_end)
+    // thread safe, must modify  while condition
+    shared_op* get()
     {
-      assert(nb_iddle != thread_number_);
-      shared_op* sop;
-
+      shared_op* sop = 0;
+  curr=1;
       while(true)
 	{
 	  sop = (shared_op*)lf_queue_get_one(effective_queue[curr]);
@@ -87,27 +96,28 @@ namespace spot
 	  if (sop)
 	    break;
 	}
-      if (sop->op == end)
-	++nb_iddle;
 
-      *the_end = (nb_iddle == thread_number_);
       return sop;
     }
 
     virtual ~queue()
     {
       for (int i = 0; i < thread_number_; ++i)
-	lf_queue_free (effective_queue[i], 0);
+	{
+      	  shared_op* sop;
+      	  while ((sop = (shared_op*)lf_queue_get_one(effective_queue[i]))
+      		 != 0)
+	    delete sop;
+	  lf_queue_free (effective_queue[i]);
+      	  effective_queue[i] = 0;
+      	}
       delete[] effective_queue;
-      //delete available_;
     }
 
   private:
     lf_queue_t** effective_queue;  ///< \brief one queue per thread
     int thread_number_;		   ///< \brief the number of thread
-    //    std::vector<std::atomic<bool>>* available_;
-    int nb_iddle;
-    int curr = 0;
+    int curr;
   };
 }
 #endif // SPOT_FASTTGBAALGOS_EC_CONCUR_QUEUE_HH
