@@ -29,6 +29,7 @@ extern "C" {
 #endif
 
 #include "fasttgbaalgos/ec/concur/lf_queue.h"
+#include "fasttgbaalgos/ec/concur/hashtable.h"
 
 #ifdef __cplusplus
 } // extern "C"
@@ -38,11 +39,13 @@ namespace spot
 {
   enum op_type
     {
-      unite = 2,			// Ask for unite operation
-      makeset = 4,			// Ask for creation
+      makeset = 2,			// Ask for creation
+      unite = 4,			// Ask for unite operation
       makedead = 8,			// Ask for marking dead
       end = 16			        // This thread is iddle
     };
+
+
 
   class shared_op
   {
@@ -65,8 +68,70 @@ namespace spot
     const markset* acc_;
   };
 
+
+static int
+opvalues_cmp_wrapper(void *hash1, void *hash2)
+{
+  spot::shared_op* left = (spot::shared_op*)hash1;
+  spot::shared_op* right = (spot::shared_op*)hash2;
+
+  if (left->op_ == right->op_ &&
+      left->arg1_->compare(right->arg1_) == 0 &&
+      left->arg2_->compare(right->arg2_) == 0)
+    return 0;
+
+  if (left->op_ == right->op_ &&
+    left->arg2_->compare(right->arg1_) == 0 &&
+    left->arg1_->compare(right->arg2_) == 0)
+    return 0;
+
+  //really?
+  return left->arg1_->compare(right->arg2_);
+}
+
+uint32_t
+opvalues_hash_wrapper(void *elt, void *ctx)
+{
+  spot::shared_op* e = (spot::shared_op*)elt;
+  int hash1 = e->arg1_? e->arg1_->hash() : 0;
+  int hash2 = e->arg2_? e->arg2_->hash() : 0;
+  return hash1 + hash2;
+  (void)ctx;
+}
+
+void *
+opvalues_clone_wrapper(void *key, void *ctx)
+{
+  assert(key);
+  return key;
+  (void)ctx;
+}
+
+void
+opvalues_free_wrapper(void *elt)
+{
+  assert(elt);
+
+  // Really?
+  // delete (spot::shared_op*)elt;
+  // elt = 0;
+  (void) elt;
+}
+
+const size_t INIT_SCALE = 12;
+static const datatype_t DATATYPE_OPVALUES =
+  {
+    opvalues_cmp_wrapper,
+    opvalues_hash_wrapper,
+    opvalues_clone_wrapper,
+    opvalues_free_wrapper
+  };
+
+
   class queue
   {
+    //    hashtable_t *table_;
+
   public :
     queue(int thread_number) : thread_number_(thread_number), curr(0)
     {
@@ -75,12 +140,23 @@ namespace spot
 	{
 	  effective_queue[i] = lf_queue_alloc();
 	}
+      // (void)table_;
+      //      table_ = ht_alloc(&DATATYPE_OPVALUES, INIT_SCALE);
     }
 
     int put(shared_op* sop, int tn)
     {
+      // map_key_t clone = 0;
+      // map_val_t old =
+      // 	ht_cas_empty (table_, (map_key_t)sop,
+      // 		      (map_val_t)1, &clone, (void*)NULL);
+      // std::cout << "LA\n";
+      // if (old == DOES_NOT_EXIST)
+      // 	{
       int res = lf_queue_put(effective_queue[tn], sop);
       return res;
+      // 	}
+      // return 1;
     }
 
     // Warning ! this method is not thread safe. To be
@@ -88,7 +164,7 @@ namespace spot
     shared_op* get()
     {
       shared_op* sop = 0;
-  curr=1;
+
       while(true)
 	{
 	  sop = (shared_op*)lf_queue_get_one(effective_queue[curr]);

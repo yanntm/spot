@@ -11,144 +11,93 @@
 lf_queue_t* lf_queue_alloc()
 {
   lf_queue_t* os_ = (lf_queue_t*) malloc(sizeof(lf_queue_t));
-  os_->head_ = 0;
+  lf_queue_node_t* sentinel =
+    (lf_queue_node_t*) malloc (sizeof(lf_queue_node_t));
+  sentinel->data_ = 0;
+  sentinel->next_ = 0;
+  os_->head_ = sentinel;
+  os_->tail_ = sentinel;
   return os_;
 }
 
 void lf_queue_free(lf_queue_t* os)
 {
-  assert(os->head_ == 0);
+  assert(os->head_->next_ == 0);
   free(os);
 }
 
 
 int lf_queue_put(lf_queue_t* os, void* data)
 {
-  // Now the value must be insert in the open set
+  lf_queue_node_t* tail;
+  lf_queue_node_t* next;
   lf_queue_node_t* old_node;
-  lf_queue_node_t* tmp;
   lf_queue_node_t* node =
     (lf_queue_node_t*) malloc (sizeof(lf_queue_node_t));
-  node->data = (void*)data;
-  node->next = 0;
+  node->data_ = (void*)data;
+  node->next_ = 0;
 
   do
     {
-      tmp = ((lf_queue_t)atomic_read(os)).head_;//os->head_;
-      node->next = tmp;
-      old_node = cas_ret(&os->head_, tmp, node);
-    }
-  while (old_node != tmp);
+      tail = ((lf_queue_t)atomic_read(os)).tail_;
+      next = ((lf_queue_node_t)atomic_read(tail)).next_;
+
+      // Was next pointing to the last node?
+      if (!next)
+	{
+	  old_node = cas_ret(&tail->next_, 0, node);
+	  // Insertion success
+	  if (old_node == 0)
+	    break;
+	}
+      else
+	{
+	  // Tail was not pointing to the last node
+	  // Try to swing to the next node
+	  old_node = cas_ret(&os->tail_, tail, next);
+	}
+    } while (1);
+
+  // Enqueue done, try to swing tail to the inserted node.
+  cas_ret(&os->tail_, tail, node);
 
   return 0;
-
-  /* lf_queue_node_t* old_node; */
-  /* lf_queue_node_t* tmp; */
-  /* lf_queue_node_t* node = */
-  /*   (lf_queue_node_t*) malloc (sizeof(lf_queue_node_t)); */
-  /* node->data = (void*)data; */
-  /* node->next = 0; */
-
-  /* lf_queue_node_t* current = ((lf_queue_t)atomic_read(os)).head_; */
-
-  /* // The queue is empty! */
-  /* if (!current) */
-  /*   { */
-  /*     old_node = cas_ret(&os->head_, current, node); */
-  /*     if (old_node == current) */
-  /* 	return 0; */
-  /*     //current = old_node; */
-  /*     current = ((lf_queue_t)atomic_read(os)).head_; */
-  /*   } */
-
-  /* // Otherwise walk the whole queue to put element at the end. */
-  /* while (current) */
-  /*   { */
-  /*     tmp = ((lf_queue_node_t)atomic_read(current)).next; */
-
-  /*     // End of the queue we can try insert */
-  /*     if (tmp == 0) */
-  /* 	{ */
-  /* 	  old_node = cas_ret(&current->next, 0, node); */
-
-  /* 	  if (old_node == tmp) */
-  /* 	    return 0; */
-  /* 	  // We have to walk the list again */
-  /* 	  current = ((lf_queue_t)atomic_read(os)).head_; */
-  /* 	} */
-  /*     else */
-  /* 	{ */
-  /* 	// progress in the list */
-  /* 	  current = tmp; */
-  /* 	} */
-  /*   } */
-  /* return 0;// FIXME useful ? */
 }
 
 void* lf_queue_get_one(lf_queue_t* os)
 {
+  lf_queue_node_t* head;
+  lf_queue_node_t* tail;
+  lf_queue_node_t* next;
   lf_queue_node_t* old_node;
-  lf_queue_node_t* tmp;
-  //    lf_queue_node_t* tmp2;
-  lf_queue_node_t* current;
-  current = ((lf_queue_t)atomic_read(os)).head_;
-
-  // Empty queue
-  /* if (!current) */
-  /*   return 0; */
+  void *result;
 
 
-  /* // Here we know that the list contains at least 2 elts */
-  /* do */
-  /* { */
-  /*   tmp1 = ((lf_queue_node_t)atomic_read(current)).next; */
-  /*   if (!tmp1) */
-  /*     { */
-  /* 	old_node = cas_ret(&os->head_, current, 0); */
-  /* 	if (old_node == current) */
-  /* 	  { */
-  /* 	    void *result = current->data; */
-  /* 	    free (current); */
-  /* 	    return result; */
-  /* 	  } */
-  /* 	current = old_node; */
-  /* 	// A new elt has been pushed! */
-  /* 	continue; */
-  /*     } */
-
-  /*   tmp2 = ((lf_queue_node_t)atomic_read(tmp1)).next; */
-  /*   if (!tmp2) */
-  /*     { */
-  /* 	old_node = cas_ret(&current->next, tmp1, 0); */
-  /* 	if (old_node == tmp1) */
-  /* 	  { */
-  /* 	    void *result = tmp1->data; */
-  /* 	    free (tmp1); */
-  /* 	    return result; */
-  /* 	  } */
-  /* 	current = old_node; */
-  /* 	continue; */
-  /*     } */
-  /*   // progress */
-  /*   current = tmp1; */
-  /* } while(1); */
-
-
-
-
-  while (current)
+  do
     {
-      tmp = ((lf_queue_node_t)atomic_read(current)).next;
-      old_node = cas_ret(&os->head_, current, tmp);
+      head = ((lf_queue_t)atomic_read(os)).head_;
+      tail = ((lf_queue_t)atomic_read(os)).tail_;
+      next = ((lf_queue_node_t)atomic_read(head)).next_;
 
-      if (old_node == current)
-  	{
-  	  void *result = current->data;
-  	  free (current);
-  	  return result;
-  	}
+      if (head == tail)
+	{
+	  // Empty queue, could not dequeue
+	  if (!next)
+	    return 0;
 
-      current = old_node;
-    }
-  return 0;
+	  // Tail is falling behind, try to advance it.
+	  cas_ret(&os->tail_, tail, next);
+	}
+      else
+	{
+	  // FIXME: Should this be atomic for multi-consumer?
+	  result = next->data_;
+
+	  old_node = cas_ret(&os->head_, head, next);
+	  if (old_node == head)
+	    break;
+	}
+    } while (1);
+  free(head);
+  return result;
 }

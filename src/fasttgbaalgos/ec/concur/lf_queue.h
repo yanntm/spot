@@ -7,16 +7,21 @@
 
 //
 // This struture represents a lockfree queue
+// Adaptation of following  for single producer single consumer
+//
+// Simple, Fast, and Practical Non-Blocking and
+// Blocking Concurrent Queue Algorithms
 //
 typedef struct lf_queue_node_
 {
-  struct lf_queue_node_ *next;
-  void *                 data;
+  struct lf_queue_node_ *next_;
+  void *                 data_;
 } lf_queue_node_t;
 
 typedef struct lf_queue_
 {
   lf_queue_node_t  *head_;
+  lf_queue_node_t  *tail_;
 } lf_queue_t;
 
 

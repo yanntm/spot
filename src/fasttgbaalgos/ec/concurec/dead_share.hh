@@ -657,6 +657,7 @@ namespace spot
       stop_ = stop;
       inst = i->new_instance();
       counterexample = false;
+      nbunite_ = 0;
       (void) option;
       (void) stop_strong;
     }
@@ -671,32 +672,21 @@ namespace spot
       while (!*stop_)
 	{
 	  shared_op* op = queue_->get();
-	  assert(op);
 	  if (op->op_ == spot::op_type::end)
 	    {
 	      delete op;
 	      break;
 	    }
-	  // else if (op->op_ == spot::op_type::makeset)
-	  //   {
-	  //     assert(op->arg1_);
-	  //     uf_->make_set(op->arg1_, tn_);
-	  //   }
-	  // else
-	    if (op->op_ == spot::op_type::unite)
+	  else if (op->op_ == spot::op_type::unite)
 	    {
-	      //assert(op->arg1_ &&  op->arg2_ && op->acc_);
-	      uf_->make_set(op->arg1_, tn_);
-	      uf_->make_set(op->arg2_, tn_);
+	      ++nbunite_;
 	      bool tmp; /* useless in this special case*/
-	      auto m = uf_->unite (op->arg1_,
-	      			   op->arg2_,
-	      			   *op->acc_,
-	      			   &tmp);
-
+	      auto m = uf_->make_and_unite (op->arg1_,
+					    op->arg2_,
+					    *op->acc_,
+					    &tmp, tn_);
 	      if (m.all())
 	      	{
-
 	      	  delete op;
 	      	  counterexample = true;
 	      	  break;
@@ -704,12 +694,8 @@ namespace spot
 	    }
 	  else if (op->op_ == spot::op_type::makedead)
 	    {
-	      // assert(op->op_ == spot::op_type::makedead);
-	      // assert(op->arg1_);
-	      uf_->make_set(op->arg1_, tn_);
-	      uf_->make_dead(op->arg1_);
+	      uf_->make_and_makedead(op->arg1_, tn_);
 	    }
-	  assert(op->arg1_);
 	  delete op;
 	}
       *stop_ = 1;
@@ -725,7 +711,7 @@ namespace spot
 
     virtual std::string csv()
     {
-      return "xxx";
+      return std::to_string(nbunite_) + "," + "consumer";
     }
 
     virtual std::chrono::milliseconds::rep  get_elapsed_time()
@@ -749,6 +735,7 @@ namespace spot
     std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
     std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
     bool counterexample;
+    int nbunite_;
   };
 
 
@@ -792,9 +779,6 @@ namespace spot
       assert(H.find(s) == H.end());
       H.insert(std::make_pair(s, H.size()));
 
-      //s->clone();
-      //queue_->put(new shared_op(makeset, s, 0, 0), tn_);
-
       // Count!
       max_live_size_ = H.size() > max_live_size_ ?
 	H.size() : max_live_size_;
@@ -814,14 +798,12 @@ namespace spot
 
     }
 
-    int cpt_maybe = 0;
     virtual color get_color(const fasttgba_state* state)
     {
-      ++cpt_maybe;
       seen_map::const_iterator i = H.find(state);
       if (i != H.end())
 	return Alive;
-      else if (uf_->is_dead(state))
+      else if (deadstore_->contains(state) || uf_->is_maybe_dead(state))
       	return Dead;
       else
 	return Unknown;
@@ -878,6 +860,8 @@ namespace spot
 	  int trivial = 0;
 	  //uf_->make_dead(pair.state);
 	  pair.state->clone();
+	  assert(deadstore_);
+	  deadstore_->add(pair.state);
 	  queue_->put(new shared_op(makedead, pair.state, 0, 0), tn_);
 	  seen_map::const_iterator it1 = H.find(pair.state);
 	  H.erase(it1);
@@ -885,7 +869,7 @@ namespace spot
 	    {
 	      ++trivial;
 	      auto toerase = live.back();
-	      //deadstore_->add(toerase);
+	      deadstore_->add(toerase);
 	      seen_map::const_iterator it = H.find(toerase);
 	      H.erase(it);
 	      live.pop_back();

@@ -197,6 +197,60 @@ namespace spot
       return uf_maybe_dead(effective_uf, node);
     }
 
+
+    markset make_and_unite(const fasttgba_state* left,
+			   const fasttgba_state* right,
+			   const markset acc, bool *is_dead,
+			   int tn)
+    {
+      int inserted = 0;
+      uf_node_t* l =
+	uf_make_set(effective_uf, (map_key_t) left, &inserted, tn);
+      if (inserted)
+	++size_;
+      inserted = 0;
+      uf_node_t* r =
+	uf_make_set(effective_uf, (map_key_t) right, &inserted, tn);
+      if (inserted)
+	++size_;
+
+
+      unsigned long ret_acc = 0;
+      uf_node_t* fast_ret = uf_unite (effective_uf, l, r, &ret_acc);
+      *is_dead = fast_ret == effective_uf->dead_;
+
+      unsigned long tmp = acc.to_ulong();
+      // printf("%s %zu %zu\n", acc.dump().c_str(), tmp, ret_acc);
+      // The markset is empty don't need to go further
+
+      if (!tmp || *is_dead || ret_acc == tmp)
+	return acc;
+
+      // Grab the representative int.
+      unsigned long res = uf_add_acc(effective_uf, fast_ret, tmp);
+
+      // if res equal 0 the state is dead!
+      // The add doesn't change anything
+      if (!res || tmp == res)
+	return acc;
+      return acc | res;
+    }
+
+    /// \brief Mark an elemnent as dead
+    void make_and_makedead(const fasttgba_state* key, int tn)
+    {
+      // The Concurent Hash Map doesn't support key == 0 because
+      // it represent a special tag.
+      int inserted = 0;
+      uf_node_t* node =
+	uf_make_set(effective_uf, (map_key_t) key, &inserted, tn);
+      if (inserted)
+	++size_;
+
+      uf_make_dead(effective_uf, node);
+    }
+
+
     int size()
     {
       return size_;
