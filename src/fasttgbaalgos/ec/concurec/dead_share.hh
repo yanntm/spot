@@ -669,6 +669,7 @@ namespace spot
 
     virtual bool check()
     {
+      start = std::chrono::system_clock::now();
       while (!*stop_)
 	{
 	  shared_op* op = queue_->get();
@@ -698,14 +699,13 @@ namespace spot
 	    }
 	  delete op;
 	}
+      end = std::chrono::system_clock::now();
       *stop_ = 1;
       return counterexample;
     }
 
     virtual bool has_counterexample()
     {
-      start = std::chrono::system_clock::now();
-      end = std::chrono::system_clock::now();
       return counterexample;
     }
 
