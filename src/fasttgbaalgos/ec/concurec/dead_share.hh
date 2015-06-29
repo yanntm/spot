@@ -669,35 +669,39 @@ namespace spot
 
     virtual bool check()
     {
+      auto a_ = inst->get_automaton ();
+      markset m1(a_->get_acc());
       start = std::chrono::system_clock::now();
       while (!*stop_)
 	{
+	  // Do not destroy !
 	  shared_op* op = queue_->get();
-	  if (op->op_ == spot::op_type::end)
+	  if (op->op_ == op_type::the_end)
 	    {
-	      delete op;
+	      //	      delete op;
 	      break;
 	    }
-	  else if (op->op_ == spot::op_type::unite)
+	  else if (op->op_ == op_type::unite)
 	    {
 	      ++nbunite_;
 	      bool tmp; /* useless in this special case*/
-	      auto m = uf_->make_and_unite (op->arg1_,
-					    op->arg2_,
-					    *op->acc_,
-					    &tmp, tn_);
-	      if (m.all())
+	      m1 = (m1 & 0U) |
+		uf_->make_and_unite ((const fasttgba_state*)op->arg1_,
+				     (const fasttgba_state*)op->arg2_,
+				     op->acc_,
+				     &tmp, tn_);
+	      if (m1.all())
 	      	{
-	      	  delete op;
+		  //  delete op;
 	      	  counterexample = true;
 	      	  break;
 	      	}
 	    }
-	  else if (op->op_ == spot::op_type::makedead)
+	  else if (op->op_ == op_type::makedead)
 	    {
-	      uf_->make_and_makedead(op->arg1_, tn_);
+	      uf_->make_and_makedead((const fasttgba_state*)op->arg1_, tn_);
 	    }
-	  delete op;
+	  //	  delete op;
 	}
       end = std::chrono::system_clock::now();
       *stop_ = 1;
@@ -768,7 +772,7 @@ namespace spot
       main();
       *stop_strong_ = 1;
       end  = std::chrono::system_clock::now();
-      queue_->put(new shared_op(spot::end, 0, 0, 0), tn_);
+      queue_->put(the_end, 0, 0, 0, tn_);
       *stop_ = 1; // Ok since this algo is exact!
       return counterexample_found;
     }
@@ -839,8 +843,8 @@ namespace spot
 	  //uf_->unite (d, todo[r].state,  top.acc, &fast_backtrack);
 	  todo[r].state->clone();
 	  d->clone(); // FIXME
-	  queue_->put(new shared_op(unite, d, todo[r].state,
-				    new markset(top.acc)), tn_);
+	  queue_->put(unite, d, todo[r].state,
+		top.acc.to_ulong(), tn_);
 	  stack_->pop(oldr -1);
 	}
       stack_->push_non_transient(r, top.acc);
@@ -862,7 +866,7 @@ namespace spot
 	  pair.state->clone();
 	  assert(deadstore_);
 	  deadstore_->add(pair.state);
-	  queue_->put(new shared_op(makedead, pair.state, 0, 0), tn_);
+	  queue_->put(makedead, pair.state, 0, 0, tn_);
 	  seen_map::const_iterator it1 = H.find(pair.state);
 	  H.erase(it1);
 	  while (H.size() > pair.position)

@@ -198,9 +198,10 @@ namespace spot
     }
 
 
-    markset make_and_unite(const fasttgba_state* left,
+    unsigned long make_and_unite(const fasttgba_state* left,
 			   const fasttgba_state* right,
-			   const markset acc, bool *is_dead,
+			   //const markset acc,
+			   unsigned long tmp, bool *is_dead,
 			   int tn)
     {
       int inserted = 0;
@@ -219,21 +220,25 @@ namespace spot
       uf_node_t* fast_ret = uf_unite (effective_uf, l, r, &ret_acc);
       *is_dead = fast_ret == effective_uf->dead_;
 
-      unsigned long tmp = acc.to_ulong();
+      //      unsigned long tmp = acc.to_ulong();
       // printf("%s %zu %zu\n", acc.dump().c_str(), tmp, ret_acc);
       // The markset is empty don't need to go further
 
       if (!tmp || *is_dead || ret_acc == tmp)
-	return acc;
+	return tmp;
 
       // Grab the representative int.
       unsigned long res = uf_add_acc(effective_uf, fast_ret, tmp);
+      if (!res)
+	return 0;
+      return res;
 
-      // if res equal 0 the state is dead!
-      // The add doesn't change anything
-      if (!res || tmp == res)
-	return acc;
-      return acc | res;
+
+      // // if res equal 0 the state is dead!
+      // // The add doesn't change anything
+      // if (!res || tmp == res)
+      // 	return acc;
+      // return acc | res;
     }
 
     /// \brief Mark an elemnent as dead

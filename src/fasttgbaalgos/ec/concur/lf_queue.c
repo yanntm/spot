@@ -13,7 +13,6 @@ lf_queue_t* lf_queue_alloc()
   lf_queue_t* os_ = (lf_queue_t*) malloc(sizeof(lf_queue_t));
   lf_queue_node_t* sentinel =
     (lf_queue_node_t*) malloc (sizeof(lf_queue_node_t));
-  sentinel->data_ = 0;
   sentinel->next_ = 0;
   os_->head_ = sentinel;
   os_->tail_ = sentinel;
@@ -23,7 +22,6 @@ lf_queue_t* lf_queue_alloc()
   os_->prealloc_ = (lf_queue_node_t*)
     malloc (sizeof(lf_queue_node_t)*(os_->prealloc_size_+1));
   os_->prealloc_first_ =   os_->prealloc_;
-  os_->prealloc_[os_->prealloc_size_].data_ = 0;
   os_->prealloc_[os_->prealloc_size_].next_ = 0;
   return os_;
 }
@@ -42,13 +40,12 @@ void lf_queue_free(lf_queue_t* os)
 }
 
 
-int lf_queue_put(lf_queue_t* os, void* data)
+int lf_queue_put(lf_queue_t* os,  int op, void* arg1, void* arg2,
+		 unsigned long acc)
 {
   lf_queue_node_t* tail;
   lf_queue_node_t* next;
   lf_queue_node_t* old_node;
-  /* lf_queue_node_t* node = */
-  /*   (lf_queue_node_t*) malloc (sizeof(lf_queue_node_t)); */
 
   // Use preallocation
   lf_queue_node_t* node;
@@ -66,12 +63,16 @@ int lf_queue_put(lf_queue_t* os, void* data)
       os->prealloc_[os->prealloc_size_].next_ = node;
       os->prealloc_idx_ = 1; // since node refer prealloc_[0]
       os->prealloc_ = node;
-      os->prealloc_[os->prealloc_size_].data_ = 0;
       os->prealloc_[os->prealloc_size_].next_ = 0;
     }
 
-  node->data_ = (void*)data;
+  //  node->data_ = (void*)data;
   node->next_ = 0;
+  node->data_.op_ = op;
+  node->data_.arg1_ = arg1;
+  node->data_.arg2_ = arg2;
+  node->data_.acc_ = acc;
+
 
   do
     {
@@ -126,7 +127,7 @@ void* lf_queue_get_one(lf_queue_t* os)
       else
 	{
 	  // FIXME: Should this be atomic for multi-consumer?
-	  result = next->data_;
+	  result = &next->data_;
 
 	  old_node = cas_ret(&os->head_, head, next);
 	  if (old_node == head)
@@ -134,7 +135,7 @@ void* lf_queue_get_one(lf_queue_t* os)
 	}
     } while (1);
 
-  // Done in free since we use preallocation
-  //free(head);
+  // Not freeing since we use preallocation
+  // free(head);
   return result;
 }

@@ -37,95 +37,63 @@ extern "C" {
 
 namespace spot
 {
-  enum op_type
-    {
-      makeset = 2,			// Ask for creation
-      unite = 4,			// Ask for unite operation
-      makedead = 8,			// Ask for marking dead
-      end = 16			        // This thread is iddle
-    };
+// static int
+// opvalues_cmp_wrapper(void *hash1, void *hash2)
+// {
+//   spot::shared_op* left = (spot::shared_op*)hash1;
+//   spot::shared_op* right = (spot::shared_op*)hash2;
 
+//   if (left->op_ == right->op_ &&
+//       left->arg1_->compare(right->arg1_) == 0 &&
+//       left->arg2_->compare(right->arg2_) == 0)
+//     return 0;
 
+//   if (left->op_ == right->op_ &&
+//     left->arg2_->compare(right->arg1_) == 0 &&
+//     left->arg1_->compare(right->arg2_) == 0)
+//     return 0;
 
-  class shared_op
-  {
-  public:
-    shared_op(op_type op,
-	      const spot::fasttgba_state* arg1,
-	      const spot::fasttgba_state* arg2,
-	      const markset* acc):
-      op_(op), arg1_(arg1), arg2_(arg2), acc_(acc)
-    { }
+//   //really?
+//   return left->arg1_->compare(right->arg2_);
+// }
 
-    ~shared_op()
-    {
-      delete acc_;
-    }
+// uint32_t
+// opvalues_hash_wrapper(void *elt, void *ctx)
+// {
+//   spot::shared_op* e = (spot::shared_op*)elt;
+//   int hash1 = e->arg1_? e->arg1_->hash() : 0;
+//   int hash2 = e->arg2_? e->arg2_->hash() : 0;
+//   return hash1 + hash2;
+//   (void)ctx;
+// }
 
-    op_type op_;
-    const spot::fasttgba_state* arg1_;
-    const spot::fasttgba_state* arg2_;
-    const markset* acc_;
-  };
+// void *
+// opvalues_clone_wrapper(void *key, void *ctx)
+// {
+//   assert(key);
+//   return key;
+//   (void)ctx;
+// }
 
+// void
+// opvalues_free_wrapper(void *elt)
+// {
+//   assert(elt);
 
-static int
-opvalues_cmp_wrapper(void *hash1, void *hash2)
-{
-  spot::shared_op* left = (spot::shared_op*)hash1;
-  spot::shared_op* right = (spot::shared_op*)hash2;
+//   // Really?
+//   // delete (spot::shared_op*)elt;
+//   // elt = 0;
+//   (void) elt;
+// }
 
-  if (left->op_ == right->op_ &&
-      left->arg1_->compare(right->arg1_) == 0 &&
-      left->arg2_->compare(right->arg2_) == 0)
-    return 0;
-
-  if (left->op_ == right->op_ &&
-    left->arg2_->compare(right->arg1_) == 0 &&
-    left->arg1_->compare(right->arg2_) == 0)
-    return 0;
-
-  //really?
-  return left->arg1_->compare(right->arg2_);
-}
-
-uint32_t
-opvalues_hash_wrapper(void *elt, void *ctx)
-{
-  spot::shared_op* e = (spot::shared_op*)elt;
-  int hash1 = e->arg1_? e->arg1_->hash() : 0;
-  int hash2 = e->arg2_? e->arg2_->hash() : 0;
-  return hash1 + hash2;
-  (void)ctx;
-}
-
-void *
-opvalues_clone_wrapper(void *key, void *ctx)
-{
-  assert(key);
-  return key;
-  (void)ctx;
-}
-
-void
-opvalues_free_wrapper(void *elt)
-{
-  assert(elt);
-
-  // Really?
-  // delete (spot::shared_op*)elt;
-  // elt = 0;
-  (void) elt;
-}
-
-const size_t INIT_SCALE = 12;
-static const datatype_t DATATYPE_OPVALUES =
-  {
-    opvalues_cmp_wrapper,
-    opvalues_hash_wrapper,
-    opvalues_clone_wrapper,
-    opvalues_free_wrapper
-  };
+// const size_t INIT_SCALE = 12;
+// static const datatype_t DATATYPE_OPVALUES =
+//   {
+//     opvalues_cmp_wrapper,
+//     opvalues_hash_wrapper,
+//     opvalues_clone_wrapper,
+//     opvalues_free_wrapper
+//   };
 
 
   class queue
@@ -144,8 +112,16 @@ static const datatype_t DATATYPE_OPVALUES =
       //      table_ = ht_alloc(&DATATYPE_OPVALUES, INIT_SCALE);
     }
 
-    int put(shared_op* sop, int tn)
+    int put(//shared_op* sop,
+	    op_type op,
+	    const spot::fasttgba_state* arg1,
+	    const spot::fasttgba_state* arg2,
+	    unsigned long acc,
+	    int tn)
     {
+
+
+
       // map_key_t clone = 0;
       // map_val_t old =
       // 	ht_cas_empty (table_, (map_key_t)sop,
@@ -153,7 +129,9 @@ static const datatype_t DATATYPE_OPVALUES =
       // std::cout << "LA\n";
       // if (old == DOES_NOT_EXIST)
       // 	{
-      int res = lf_queue_put(effective_queue[tn], sop);
+      int res = lf_queue_put(effective_queue[tn],
+			     op, (void*)arg1, (void*)arg2, acc
+			     );
       return res;
       // 	}
       // return 1;
@@ -161,6 +139,9 @@ static const datatype_t DATATYPE_OPVALUES =
 
     // Warning ! this method is not thread safe. To be
     // thread safe, must modify  while condition
+    //
+    // Warning! do not delete the shared_op provided by
+    // this method
     shared_op* get()
     {
       shared_op* sop = 0;
@@ -183,7 +164,7 @@ static const datatype_t DATATYPE_OPVALUES =
       	  shared_op* sop;
       	  while ((sop = (shared_op*)lf_queue_get_one(effective_queue[i]))
       		 != 0)
-	    delete sop;
+	    ;
 	  lf_queue_free (effective_queue[i]);
       	  effective_queue[i] = 0;
       	}

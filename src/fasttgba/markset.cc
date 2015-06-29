@@ -156,6 +156,11 @@ namespace spot
     return markset(markset_ | boost::dynamic_bitset<>(accs_.size(), n), accs_);
   }
 
+  markset markset::operator&(const unsigned long n) const
+  {
+    return markset(markset_ & boost::dynamic_bitset<>(accs_.size(), n), accs_);
+  }
+
   std::string
   markset::dump() const
   {

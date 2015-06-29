@@ -119,6 +119,7 @@ namespace spot
 
     unsigned long to_ulong() const;
     markset operator|(const unsigned long) const;
+    markset operator&(const unsigned long) const;
 
     /// \brief Display the content of the marking
     virtual std::string dump() const;
