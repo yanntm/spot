@@ -22,6 +22,10 @@ typedef struct lf_queue_
 {
   lf_queue_node_t  *head_;
   lf_queue_node_t  *tail_;
+  lf_queue_node_t  *prealloc_;
+  int prealloc_idx_;
+  int prealloc_size_;
+  lf_queue_node_t  *prealloc_first_;
 } lf_queue_t;
 
 
