@@ -95,7 +95,7 @@ namespace spot
       stack_->push_non_transient(top.pos, top.acc/*empty*/);
 
     bool fast_backtrack = false;
-    uf_->unite (d, todo.back().state, top.acc, &fast_backtrack);
+    uf_->unite (d, todo.back().state, top.acc, &fast_backtrack, tn_);
     return false;
   }
 
@@ -127,7 +127,7 @@ namespace spot
 	int trivial = 0;
 
 	// Delete the root that is not inside of live Stack
-	uf_->make_dead(pair.state);
+	uf_->make_dead(pair.state, tn_);
 	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
 	while (H.size() > pair.position)
@@ -155,7 +155,7 @@ namespace spot
 	live.push_back(pair.state);
     	bool fast_backtrack = false;
     	uf_->unite (pair.state, todo.back().state, newtop.acc,
-    		    &fast_backtrack);
+    		    &fast_backtrack, tn_);
       }
   }
 
@@ -313,7 +313,7 @@ namespace spot
 	auto newtop = stack_->pop(r-1);
 	r = newtop.pos;
     	bool fast_backtrack = false;
-    	uf_->unite (d, todo[r].state, top.acc, &fast_backtrack);
+    	uf_->unite (d, todo[r].state, top.acc, &fast_backtrack, tn_);
       }
     stack_->push_non_transient(r, top.acc/*empty*/);
 
@@ -332,7 +332,7 @@ namespace spot
 	++roots_poped_cpt_;
 	stack_->pop(todo.size());
 	int trivial = 0;
-	uf_->make_dead(pair.state);
+	uf_->make_dead(pair.state, tn_);
 	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
 	while (H.size() > pair.position)
@@ -438,7 +438,7 @@ namespace spot
 	int trivial = 0;
 
 	// Delete the root that is not inside of live Stack
-	uf_->make_dead(pair.state);
+	uf_->make_dead(pair.state, tn_);
 	seen_map::const_iterator it1 = H.find(pair.state);
 	H.erase(it1);
 	while (H.size() > pair.position)
@@ -470,7 +470,7 @@ namespace spot
 
     	bool fast_backtrack = false;
     	uf_->unite (pair.state, todo.back().state, newtop.acc,
-    		    &fast_backtrack);
+    		    &fast_backtrack, tn_);
 
     	// if (fast_backtrack)
     	//   fastbacktrack();
@@ -489,7 +489,7 @@ namespace spot
       stack_->push_non_transient(top.pos, top.acc);
 
     bool fast_backtrack = false;
-    uf_->unite (d, todo.back().state, top.acc, &fast_backtrack);
+    uf_->unite (d, todo.back().state, top.acc, &fast_backtrack, tn_);
 
     bool rv = top.acc.all();
     // if (!rv && fast_backtrack)
@@ -582,7 +582,7 @@ namespace spot
 	//top.acc |= newtop.acc | todo[r].lasttr->current_acceptance_marks();
 
 	bool fast_backtrack = false;
-    	uf_->unite (d, todo[r].state, top.acc, &fast_backtrack);
+    	uf_->unite (d, todo[r].state, top.acc, &fast_backtrack, tn_);
 
     	// if (fast_backtrack)
     	//   {

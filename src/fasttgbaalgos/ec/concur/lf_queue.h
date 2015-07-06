@@ -14,19 +14,21 @@
 //
 enum op_type
   {
-    makeset = 2,			// Ask for creation
+    makeset = 2,		// Ask for creation
     unite = 4,			// Ask for unite operation
-    makedead = 8,			// Ask for marking dead
-    the_end = 16			        // This thread is iddle
+    makedead = 8,		// Ask for marking dead
+    the_end = 16		// This thread is iddle
   };
 
 typedef struct lf_sop_
 {
-  enum op_type       op_;
+  enum op_type  op_;
   void*         arg1_;
   void*         arg2_;
   unsigned long acc_;
 } shared_op;
+
+
 
 typedef struct lf_queue_node_
 {

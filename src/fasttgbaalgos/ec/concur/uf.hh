@@ -23,11 +23,14 @@
 #include <iosfwd>
 #include <atomic>
 
+#include <iostream>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "fasttgbaalgos/ec/concur/unionfind.h"
+#include "fasttgbaalgos/ec/concur/lf_queue.h"
 
 #ifdef __cplusplus
 } // extern "C"
@@ -84,6 +87,86 @@ static const datatype_t DATATYPE_INT_PTRINT =
     fasttgba_state_ptrint_free_wrapper
   };
 
+
+
+
+
+
+
+
+
+
+// ------------------------------------------------------------
+
+static int
+sharedop_cmp_wrapper(void *hash1, void *hash2)
+{
+  const shared_op* l = (const shared_op*)hash1;
+  const shared_op* r = (const shared_op*)hash2;
+  assert(l && r);
+
+  if (l->op_ != r->op_)
+    return l->op_ - r->op_;
+
+  if (l->acc_ != r->acc_)
+    return l->acc_ - r->acc_;
+
+  const spot::fasttgba_state* s11 = (const spot::fasttgba_state*)l->arg1_;
+  const spot::fasttgba_state* s12 = (const spot::fasttgba_state*)r->arg1_;
+  if (l->op_ == makedead)
+    return s11->compare(s12);
+
+  const spot::fasttgba_state* s21 = (const spot::fasttgba_state*)l->arg2_;
+  const spot::fasttgba_state* s22 = (const spot::fasttgba_state*)r->arg2_;
+
+  return (s11->compare(s12) && s21->compare(s22)
+	  && l->acc_ == r->acc_);
+}
+
+uint32_t
+sharedop_hash_wrapper(void *elt, void *ctx)
+{
+  const shared_op* e = (const shared_op*)elt;
+  const spot::fasttgba_state* l = (const spot::fasttgba_state*)e->arg1_;
+  int hash = l->hash();
+  assert(hash);
+  return hash;
+  (void)ctx;
+}
+
+void *
+sharedop_clone_wrapper(void *key, void *ctx)
+{
+  // FIXME?
+  assert(key);
+  return key;
+  (void)ctx;
+}
+
+void
+sharedop_free_wrapper(void *elt)
+{
+  assert(elt);
+  //const spot::fasttgba_state* l = (const spot::fasttgba_state*)elt;
+  //l->destroy();
+  (void) elt;
+}
+
+const size_t INIT_SCALE_SHAREDOP = 12;
+static const datatype_t DATATYPE_SHAREDOP =
+  {
+    sharedop_cmp_wrapper,
+    sharedop_hash_wrapper,
+    sharedop_clone_wrapper,
+    sharedop_free_wrapper
+  };
+
+// ------------------------------------------------------------
+
+
+
+
+
 /// \brief this class acts like a wrapper to the
 /// C code of the union find.
 ///
@@ -102,11 +185,31 @@ namespace spot
     uf(int thread_number) : thread_number_(thread_number), size_(0)
     {
       effective_uf = uf_alloc(&DATATYPE_INT_PTRINT, INIT_SCALE, thread_number);
+      mem_table_ = ht_alloc (&DATATYPE_SHAREDOP, INIT_SCALE_SHAREDOP);
+      prealloc_size_ = 1000;
+      prealloc_ = new shared_op*[thread_number_];
+      for (int i = 0; i < thread_number_; ++i)
+	{
+	  prealloc_ [i] = new shared_op[prealloc_size_+1];
+	  prealloc_first_.push_back(prealloc_[i]);
+	  prealloc_idx_.push_back(0);
+	}
     }
 
     virtual ~uf()
     {
       uf_free (effective_uf, size_, thread_number_);
+      for (int i = 0; i < thread_number_; ++i)
+      	{
+      	  shared_op* tmp =  prealloc_first_[i];
+      	  while (tmp)
+      	    {
+      	      shared_op* old = tmp;
+      	      tmp = (shared_op*)tmp[prealloc_size_].arg1_;
+	      delete[] old;
+      	    }
+      	}
+      delete[] prealloc_;
     }
 
     /// \brief insert a new element in the union find
@@ -125,12 +228,55 @@ namespace spot
       return inserted;
     }
 
+
+    inline bool try_insert(enum op_type op,
+		    const fasttgba_state* left,
+		    const fasttgba_state* right,
+		    unsigned long acc,
+		    int tn)
+    {
+      shared_op* node = 0;
+      if(prealloc_idx_[tn] < prealloc_size_)
+	{
+	  node = &prealloc_[tn][prealloc_idx_[tn]];
+	  ++prealloc_idx_[tn];
+	}
+      else
+	{
+	  // End of the prealloc, use the last room to
+	  // store pointer to a new prealloc range.
+	  node = new shared_op[prealloc_size_+1];
+	  prealloc_[tn][prealloc_size_].arg1_ = (void*) node;
+	  prealloc_idx_[tn] = 1; // since node refer prealloc_[0]
+	  prealloc_[tn] = node;
+	  prealloc_[tn][prealloc_size_].arg1_ = 0;
+	}
+      node->op_ = op;
+      node->arg1_ = (void*)left;
+      node->arg2_ = (void*)right;
+      node->acc_ = acc;
+
+      map_key_t clone = 0;
+      if ( ht_cas_empty (mem_table_, (map_key_t)node,
+			 (map_val_t)10, &clone, (void*)NULL)
+	   == DOES_NOT_EXIST)
+	return true;
+
+      // Insertion failed;
+      --prealloc_idx_[tn];
+      return false;
+    }
+
+
     /// \brief Mark an elemnent as dead
-    void make_dead(const fasttgba_state* key)
+    void make_dead(const fasttgba_state* key, int tn)
     {
       // The Concurent Hash Map doesn't support key == 0 because
       // it represent a special tag.
       assert(key);
+
+      if (!try_insert(makedead, key, 0, 0, tn))
+	return;
 
       uf_node_t* node = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) key);
@@ -146,8 +292,12 @@ namespace spot
     /// \return  the acceptance set to add to the parent of the two
     /// operands once merged.
     markset unite(const fasttgba_state* left, const fasttgba_state* right,
-		  const markset acc, bool *is_dead)
+		  const markset acc, bool *is_dead, int tn)
     {
+      unsigned long tmp = acc.to_ulong();
+      if (!try_insert(op_type::unite, left, right, tmp, tn))
+	return acc;
+
       uf_node_t* l = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) left);
       uf_node_t* r = (uf_node_t*)
@@ -157,7 +307,7 @@ namespace spot
       uf_node_t* fast_ret = uf_unite (effective_uf, l, r, &ret_acc);
       *is_dead = fast_ret == effective_uf->dead_;
 
-      unsigned long tmp = acc.to_ulong();
+
       // printf("%s %zu %zu\n", acc.dump().c_str(), tmp, ret_acc);
       // The markset is empty don't need to go further
 
@@ -263,6 +413,11 @@ namespace spot
 
   private:
     uf_t* effective_uf;		///< \brief the union find
+    hashtable_t *mem_table_;
+    shared_op  **prealloc_;
+    std::vector<int> prealloc_idx_;
+    std::vector<shared_op*> prealloc_first_;
+    int prealloc_size_;
     int thread_number_;
     std::atomic<int> size_;
   };
