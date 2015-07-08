@@ -152,7 +152,6 @@ namespace spot
 
   markset markset::operator|(const unsigned long n) const
   {
-    assert(n);			// Why doing this otherwise?
     return markset(markset_ | boost::dynamic_bitset<>(accs_.size(), n), accs_);
   }
 

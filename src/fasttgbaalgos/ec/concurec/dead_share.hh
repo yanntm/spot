@@ -660,27 +660,26 @@ namespace spot
       nbunite_ = 0;
       (void) option;
       (void) stop_strong;
+      a_  = inst->get_automaton ();
     }
 
     virtual ~async_worker()
     {
       delete inst;
     }
-
+    const fasttgba* a_;
     virtual bool check()
     {
-      auto a_ = inst->get_automaton ();
       markset m1(a_->get_acc());
       start = std::chrono::system_clock::now();
       while (!*stop_)
 	{
 	  // Do not destroy !
-	  shared_op* op = queue_->get();
+	  shared_op* op = queue_->get(stop_);
+	  if (!op)
+	    break;
 	  if (op->op_ == op_type::the_end)
-	    {
-	      //	      delete op;
-	      break;
-	    }
+	    break;
 	  else if (op->op_ == op_type::unite)
 	    {
 	      ++nbunite_;
@@ -692,16 +691,12 @@ namespace spot
 				     &tmp, tn_);
 	      if (m1.all())
 	      	{
-		  //  delete op;
-	      	  counterexample = true;
+		  counterexample = true;
 	      	  break;
 	      	}
 	    }
 	  else if (op->op_ == op_type::makedead)
-	    {
-	      uf_->make_and_makedead((const fasttgba_state*)op->arg1_, tn_);
-	    }
-	  //	  delete op;
+	    uf_->make_and_makedead((const fasttgba_state*)op->arg1_, tn_);
 	}
       end = std::chrono::system_clock::now();
       *stop_ = 1;
@@ -807,7 +802,8 @@ namespace spot
       seen_map::const_iterator i = H.find(state);
       if (i != H.end())
 	return Alive;
-      else if (deadstore_->contains(state) || uf_->is_maybe_dead(state))
+      else if (deadstore_->contains(state) ||
+	       uf_->is_maybe_dead(state))
       	return Dead;
       else
 	return Unknown;
@@ -1014,7 +1010,8 @@ namespace spot
 	DECOMP_TACAS13_NDFS = 11,
 	DECOMP_TACAS13_UC13 = 12,
 	DECOMP_TACAS13_TUC13 = 13,
-	ASYNC_DIJKSTRA = 14
+	ASYNC_DIJKSTRA = 14,
+	W2_ASYNC_DIJKSTRA = 15
       };
 
     /// \brief Constructor for the multithreaded emptiness check

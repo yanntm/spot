@@ -105,22 +105,25 @@ sharedop_cmp_wrapper(void *hash1, void *hash2)
   const shared_op* r = (const shared_op*)hash2;
   assert(l && r);
 
-  if (l->op_ != r->op_)
-    return l->op_ - r->op_;
+  // if (l->op_ != r->op_)
+  //   return l->op_ - r->op_;
 
   if (l->acc_ != r->acc_)
     return l->acc_ - r->acc_;
 
   const spot::fasttgba_state* s11 = (const spot::fasttgba_state*)l->arg1_;
   const spot::fasttgba_state* s12 = (const spot::fasttgba_state*)r->arg1_;
-  if (l->op_ == makedead)
-    return s11->compare(s12);
+  // if (l->op_ == makedead)
+  //   return s11->compare(s12);
 
   const spot::fasttgba_state* s21 = (const spot::fasttgba_state*)l->arg2_;
   const spot::fasttgba_state* s22 = (const spot::fasttgba_state*)r->arg2_;
 
-  return (s11->compare(s12) && s21->compare(s22)
-	  && l->acc_ == r->acc_);
+  int retval = s11->compare(s12);
+  int retval2 = s21->compare(s22);
+  return (l->acc_ - r->acc_) + retval + retval2;
+  // int retval = s11->compare(s12);
+  // return retval? s21->compare(s22) == 0 : retval;
 }
 
 uint32_t
@@ -191,6 +194,7 @@ namespace spot
       for (int i = 0; i < thread_number_; ++i)
 	{
 	  prealloc_ [i] = new shared_op[prealloc_size_+1];
+	  prealloc_ [i][prealloc_size_].arg1_ = 0;
 	  prealloc_first_.push_back(prealloc_[i]);
 	  prealloc_idx_.push_back(0);
 	}
@@ -235,6 +239,7 @@ namespace spot
 		    unsigned long acc,
 		    int tn)
     {
+
       shared_op* node = 0;
       if(prealloc_idx_[tn] < prealloc_size_)
 	{
@@ -257,9 +262,10 @@ namespace spot
       node->acc_ = acc;
 
       map_key_t clone = 0;
-      if ( ht_cas_empty (mem_table_, (map_key_t)node,
-			 (map_val_t)10, &clone, (void*)NULL)
-	   == DOES_NOT_EXIST)
+      if (//ht_get(mem_table_, (map_key_t)node) ==  DOES_NOT_EXIST &&
+	  ht_cas_empty (mem_table_, (map_key_t)node,
+	  		(map_val_t)1, &clone, (void*)NULL)
+	  == DOES_NOT_EXIST)
 	return true;
 
       // Insertion failed;
@@ -275,9 +281,9 @@ namespace spot
       // it represent a special tag.
       assert(key);
 
-      if (!try_insert(makedead, key, 0, 0, tn))
-	return;
-
+      // if (!try_insert(makedead, key, 0, 0, tn))
+      // 	return;
+      (void)tn;
       uf_node_t* node = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) key);
       uf_make_dead(effective_uf, node);
@@ -295,9 +301,9 @@ namespace spot
 		  const markset acc, bool *is_dead, int tn)
     {
       unsigned long tmp = acc.to_ulong();
-      if (!try_insert(op_type::unite, left, right, tmp, tn))
-	return acc;
-
+      // if (!try_insert(op_type::unite, left, right, tmp, tn))
+      // 	return acc;
+      (void)tn;
       uf_node_t* l = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) left);
       uf_node_t* r = (uf_node_t*)
