@@ -104,36 +104,29 @@ sharedop_cmp_wrapper(void *hash1, void *hash2)
   const shared_op* l = (const shared_op*)hash1;
   const shared_op* r = (const shared_op*)hash2;
   assert(l && r);
+  return 0 /*FIXME l->hash_ - r->hash_*/;
 
-  // if (l->op_ != r->op_)
-  //   return l->op_ - r->op_;
+  // if (l->acc_ != r->acc_)
+  //   return l->acc_ - r->acc_;
+  // const spot::fasttgba_state* s11 = (const spot::fasttgba_state*)l->arg1_;
+  // const spot::fasttgba_state* s12 = (const spot::fasttgba_state*)r->arg1_;
+  // // if (l->op_ == makedead)
+  // //   return s11->compare(s12);
 
-  if (l->acc_ != r->acc_)
-    return l->acc_ - r->acc_;
+  // const spot::fasttgba_state* s21 = (const spot::fasttgba_state*)l->arg2_;
+  // const spot::fasttgba_state* s22 = (const spot::fasttgba_state*)r->arg2_;
 
-  const spot::fasttgba_state* s11 = (const spot::fasttgba_state*)l->arg1_;
-  const spot::fasttgba_state* s12 = (const spot::fasttgba_state*)r->arg1_;
-  // if (l->op_ == makedead)
-  //   return s11->compare(s12);
-
-  const spot::fasttgba_state* s21 = (const spot::fasttgba_state*)l->arg2_;
-  const spot::fasttgba_state* s22 = (const spot::fasttgba_state*)r->arg2_;
-
-  int retval = s11->compare(s12);
-  int retval2 = s21->compare(s22);
-  return (l->acc_ - r->acc_) + retval + retval2;
   // int retval = s11->compare(s12);
-  // return retval? s21->compare(s22) == 0 : retval;
+  // int retval2 = s21->compare(s22);
+  // return  (l->acc_ - r->acc_) + retval + retval2 ? s21->compare(s12) + s11->compare(s22): 0;
 }
 
 uint32_t
 sharedop_hash_wrapper(void *elt, void *ctx)
 {
   const shared_op* e = (const shared_op*)elt;
-  const spot::fasttgba_state* l = (const spot::fasttgba_state*)e->arg1_;
-  int hash = l->hash();
-  assert(hash);
-  return hash;
+  (void) e;
+  return 0 /* FIXME e->hash_*/;
   (void)ctx;
 }
 
@@ -150,8 +143,6 @@ void
 sharedop_free_wrapper(void *elt)
 {
   assert(elt);
-  //const spot::fasttgba_state* l = (const spot::fasttgba_state*)elt;
-  //l->destroy();
   (void) elt;
 }
 
@@ -202,7 +193,7 @@ namespace spot
 
     virtual ~uf()
     {
-      uf_free (effective_uf, size_, thread_number_);
+      uf_free (effective_uf, size_ /*FIXME*/, thread_number_);
       for (int i = 0; i < thread_number_; ++i)
       	{
       	  shared_op* tmp =  prealloc_first_[i];
@@ -224,54 +215,53 @@ namespace spot
       assert(key);
 
       int inserted = 0;
-      // uf_node_t* node;
-      // node =
       uf_make_set(effective_uf, (map_key_t) key, &inserted, tn);
       if (inserted)
 	++size_;
       return inserted;
     }
 
+    // inline bool try_insert(enum op_type op,
+    // 		    const fasttgba_state* left,
+    // 		    const fasttgba_state* right,
+    // 		    unsigned long acc,
+    // 		    int tn)
+    // {
+    //   shared_op* node = 0;
+    //   if(prealloc_idx_[tn] < prealloc_size_)
+    // 	{
+    // 	  node = &prealloc_[tn][prealloc_idx_[tn]];
+    // 	  ++prealloc_idx_[tn];
+    // 	}
+    //   else
+    // 	{
+    // 	  // End of the prealloc, use the last room to
+    // 	  // store pointer to a new prealloc range.
+    // 	  node = new shared_op[prealloc_size_+1];
+    // 	  prealloc_[tn][prealloc_size_].arg1_ = (void*) node;
+    // 	  prealloc_idx_[tn] = 1; // since node refer prealloc_[0]
+    // 	  prealloc_[tn] = node;
+    // 	  prealloc_[tn][prealloc_size_].arg1_ = 0;
+    // 	}
+    //   node->op_ = op;
+    //   node->arg1_ = (void*)left;
+    //   node->arg2_ = (void*)right;
+    //   node->acc_ = acc;
+    //   if (node->op_ == makedead)
+    // 	node->hash_ = left->hash() + acc;
+    //   else
+    // 	node->hash_ = left->hash() + right->hash() + acc;
 
-    inline bool try_insert(enum op_type op,
-		    const fasttgba_state* left,
-		    const fasttgba_state* right,
-		    unsigned long acc,
-		    int tn)
-    {
+    //   map_key_t clone = 0;
+    //   if (ht_cas_empty (mem_table_, (map_key_t)node,
+    // 	  		(map_val_t)1, &clone, (void*)NULL)
+    // 	  == DOES_NOT_EXIST)
+    // 	return true;
 
-      shared_op* node = 0;
-      if(prealloc_idx_[tn] < prealloc_size_)
-	{
-	  node = &prealloc_[tn][prealloc_idx_[tn]];
-	  ++prealloc_idx_[tn];
-	}
-      else
-	{
-	  // End of the prealloc, use the last room to
-	  // store pointer to a new prealloc range.
-	  node = new shared_op[prealloc_size_+1];
-	  prealloc_[tn][prealloc_size_].arg1_ = (void*) node;
-	  prealloc_idx_[tn] = 1; // since node refer prealloc_[0]
-	  prealloc_[tn] = node;
-	  prealloc_[tn][prealloc_size_].arg1_ = 0;
-	}
-      node->op_ = op;
-      node->arg1_ = (void*)left;
-      node->arg2_ = (void*)right;
-      node->acc_ = acc;
-
-      map_key_t clone = 0;
-      if (//ht_get(mem_table_, (map_key_t)node) ==  DOES_NOT_EXIST &&
-	  ht_cas_empty (mem_table_, (map_key_t)node,
-	  		(map_val_t)1, &clone, (void*)NULL)
-	  == DOES_NOT_EXIST)
-	return true;
-
-      // Insertion failed;
-      --prealloc_idx_[tn];
-      return false;
-    }
+    //   // Insertion failed;
+    //   --prealloc_idx_[tn];
+    //   return false;
+    // }
 
 
     /// \brief Mark an elemnent as dead
@@ -301,7 +291,8 @@ namespace spot
 		  const markset acc, bool *is_dead, int tn)
     {
       unsigned long tmp = acc.to_ulong();
-      // if (!try_insert(op_type::unite, left, right, tmp, tn))
+
+      // if(!try_insert(op_type::unite, left, right, tmp, tn))
       // 	return acc;
       (void)tn;
       uf_node_t* l = (uf_node_t*)

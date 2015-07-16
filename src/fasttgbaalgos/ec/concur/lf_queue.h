@@ -26,6 +26,7 @@ typedef struct lf_sop_
   void*         arg1_;
   void*         arg2_;
   unsigned long acc_;
+  //  uint32_t      hash_;
 } shared_op;
 
 
