@@ -1954,6 +1954,10 @@ namespace spot
       queue_ = new spot::queue(tn_-1);
     else if (policy_ == W2_ASYNC_DIJKSTRA)
       queue_ = new spot::queue(tn_-2);
+    else if (policy_ == W3_ASYNC_DIJKSTRA)
+      queue_ = new spot::queue(tn_-3);
+    else if (policy_ == W4_ASYNC_DIJKSTRA)
+      queue_ = new spot::queue(tn_-4);
     else
       queue_ = new spot::queue(tn_);
     os_ = new spot::openset(tn_);
@@ -2048,6 +2052,32 @@ namespace spot
 						     &stop_strong,
 						     s_, option_));
 	  }
+	else if (policy_ == W3_ASYNC_DIJKSTRA)
+	  {
+	    if (tn_-3 <= i)
+	      chk.push_back(new spot::async_worker(itor_, uf_, queue_,
+						   i, &stop,
+						   &stop_strong,
+						   option_));
+	    else
+	      chk.push_back(new spot::dijkstra_async(itor_, uf_, queue_,
+						     i, &stop,
+						     &stop_strong,
+						     s_, option_));
+	  }
+	else if (policy_ == W4_ASYNC_DIJKSTRA)
+	  {
+	    if (tn_-4 <= i)
+	      chk.push_back(new spot::async_worker(itor_, uf_, queue_,
+						   i, &stop,
+						   &stop_strong,
+						   option_));
+	    else
+	      chk.push_back(new spot::dijkstra_async(itor_, uf_, queue_,
+						     i, &stop,
+						     &stop_strong,
+						     s_, option_));
+	  }
 	else
 	  {
 	    assert(policy_ == DECOMP_EC || policy_ == DECOMP_EC_SEQ ||
@@ -2076,15 +2106,9 @@ namespace spot
 		// Launch Strong
 		while (k++ != how_many_strong)
 		  {
-		    // It's the mixed algorithm!
-		    if (j%2)
-		      chk.push_back(new spot::concur_opt_tarjan_ec
-				    (itor_, uf_,
-				     j, &stop,
-				     &stop_strong,
-				     s_, option_));
-		    else
-		      chk.push_back(new spot::concur_opt_dijkstra_ec
+		    // We use Dijkstra algorithm wich is the best
+		    // (by experiments)
+		    chk.push_back(new spot::concur_opt_dijkstra_ec
 				    (itor_, uf_,
 				     j, &stop,
 				     &stop_strong,
@@ -2388,6 +2412,12 @@ namespace spot
 	break;
       case W2_ASYNC_DIJKSTRA:
 	res << "W2_ASYNC_DIJKSTRA,";
+	break;
+      case W3_ASYNC_DIJKSTRA:
+	res << "W3_ASYNC_DIJKSTRA,";
+	break;
+      case W4_ASYNC_DIJKSTRA:
+	res << "W4_ASYNC_DIJKSTRA,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;

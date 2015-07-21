@@ -64,7 +64,7 @@ namespace spot
 
       if (size_)
 	{
-	  ht_print(effective_table_, true);
+	  ht_print(effective_table_, false);
 	}
 
       ht_free(effective_table_);

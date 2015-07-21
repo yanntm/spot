@@ -1011,7 +1011,9 @@ namespace spot
 	DECOMP_TACAS13_UC13 = 12,
 	DECOMP_TACAS13_TUC13 = 13,
 	ASYNC_DIJKSTRA = 14,
-	W2_ASYNC_DIJKSTRA = 15
+	W2_ASYNC_DIJKSTRA = 15,
+	W3_ASYNC_DIJKSTRA = 16,
+	W4_ASYNC_DIJKSTRA = 17
       };
 
     /// \brief Constructor for the multithreaded emptiness check

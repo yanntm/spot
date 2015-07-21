@@ -133,6 +133,8 @@ main(int argc, char **argv)
   bool opt_concur_dead_mixed = false;
   bool opt_async_dijkstra = false;
   bool opt_w2_async_dijkstra = false;
+  bool opt_w3_async_dijkstra = false;
+  bool opt_w4_async_dijkstra = false;
   bool use_decomp = false;
   bool opt_tacas13_tarjan = false;
   bool opt_tacas13_dijkstra = false;
@@ -285,6 +287,24 @@ main(int argc, char **argv)
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
       assert(nb_threads >= 3);
+    }
+  else if (!strncmp("-w3_async_dijkstra", argv[3], 18))
+    {
+      opt_w3_async_dijkstra = true;
+      option_concur_ec_dead_dijkstra = "-cs";
+      std::string s = std::string(argv[3]+18);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+      assert(nb_threads >= 4);
+    }
+  else if (!strncmp("-w4_async_dijkstra", argv[3], 18))
+    {
+      opt_w4_async_dijkstra = true;
+      option_concur_ec_dead_dijkstra = "-cs";
+      std::string s = std::string(argv[3]+18);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+      assert(nb_threads >= 5);
     }
   else if (!strncmp("-concur_ec_dead_mixed-cs", argv[3], 24))
     {
@@ -526,9 +546,6 @@ main(int argc, char **argv)
 
 	      delete d;
 	      delete itor;
-
-
-
 	    }
 	  else if (term_a || weak_a)
 	    {
@@ -542,7 +559,7 @@ main(int argc, char **argv)
 
 	      spot::dead_share* d =
 	      	new spot::dead_share(itor, nb_threads,
-	      			     spot::dead_share::DECOMP_EC_SEQ);
+	      			     spot::dead_share::DECOMP_EC);
 
 	      mtimer.start("decomp_ec");
 	      if (d->check())
@@ -749,6 +766,53 @@ main(int argc, char **argv)
 	    mtimer.stop("w2_async_dijkstra");
 	    d->dump_threads();
 	    spot::timer t = mtimer.timer("w2_async_dijkstra");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << d->csv() << "," << input;
+	    std::cout << result.str() << std::endl;
+	    delete d;
+	  }
+
+
+	if (opt_w3_async_dijkstra)
+	  {
+	    result << "#w3_async_dijkstra"
+		   << option_concur_ec_dead_mixed
+		   << nb_threads << ",";
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+	    			   spot::dead_share::W3_ASYNC_DIJKSTRA,
+	    			   "");
+	    mtimer.start("w3_async_dijkstra");
+	    if (d->check())
+	      result << "VIOLATED,";
+	    else
+	      result << "VERIFIED,";
+	    mtimer.stop("w3_async_dijkstra");
+	    d->dump_threads();
+	    spot::timer t = mtimer.timer("w3_async_dijkstra");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << d->csv() << "," << input;
+	    std::cout << result.str() << std::endl;
+	    delete d;
+	  }
+
+	if (opt_w4_async_dijkstra)
+	  {
+	    result << "#w4_async_dijkstra"
+		   << option_concur_ec_dead_mixed
+		   << nb_threads << ",";
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+	    			   spot::dead_share::W4_ASYNC_DIJKSTRA,
+	    			   "");
+	    mtimer.start("w4_async_dijkstra");
+	    if (d->check())
+	      result << "VIOLATED,";
+	    else
+	      result << "VERIFIED,";
+	    mtimer.stop("w4_async_dijkstra");
+	    d->dump_threads();
+	    spot::timer t = mtimer.timer("w4_async_dijkstra");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << d->csv() << "," << input;
 	    std::cout << result.str() << std::endl;
