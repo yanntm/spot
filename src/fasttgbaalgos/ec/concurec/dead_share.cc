@@ -2112,7 +2112,7 @@ namespace spot
 				    (itor_, uf_,
 				     j, &stop,
 				     &stop_strong,
-				     s_, option_));
+				     j != 0, option_));
 		    j++;
 		  }
 
@@ -2152,19 +2152,19 @@ namespace spot
 		int j = 0;
 		while (k++ != tn_)
 		  {
-		    // It's the mixed algorithm!
-		    if (j%2)
-		      chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
-								   j, &stop,
-								   &stop_strong,
-								   s_,
-								   option_));
-		    else
+		    // // It's the mixed algorithm!
+		    // if (j%2)
+		    //   chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
+		    // 						   j, &stop,
+		    // 						   &stop_strong,
+		    // 						   s_,
+		    // 						   option_));
+		    //else
 		      chk.push_back(new spot::concur_opt_dijkstra_ec
 				    (itor_, uf_,
 				     j, &stop,
 				     &stop_strong,
-				     s_, option_));
+				     j != 0, option_));
 		    j++;
 		  }
 

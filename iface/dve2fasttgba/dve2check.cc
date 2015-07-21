@@ -136,6 +136,7 @@ main(int argc, char **argv)
   bool opt_w3_async_dijkstra = false;
   bool opt_w4_async_dijkstra = false;
   bool use_decomp = false;
+  bool use_decomp_seq = false;
   bool opt_tacas13_tarjan = false;
   bool opt_tacas13_dijkstra = false;
   bool opt_tacas13_ndfs = false;
@@ -186,6 +187,13 @@ main(int argc, char **argv)
     {
       use_decomp = true;
       std::string s = std::string(argv[3]+10);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-decomp_seq_ec", argv[3], 14))
+    {
+      use_decomp_seq = true;
+      std::string s = std::string(argv[3]+14);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
@@ -474,7 +482,8 @@ main(int argc, char **argv)
 		 << "ms "
 		 << input << std::endl;
 
-      if (use_decomp || opt_tacas13_tarjan || opt_tacas13_dijkstra
+      if (use_decomp  || use_decomp_seq ||
+	  opt_tacas13_tarjan || opt_tacas13_dijkstra
 	  || opt_tacas13_ndfs || opt_tacas13_uc13 || opt_tacas13_tuc13)
 	{
 	  spot::scc_decompose *sd = new spot::scc_decompose (af1,true);
@@ -558,8 +567,9 @@ main(int argc, char **argv)
 	      					   term_a);
 
 	      spot::dead_share* d =
-	      	new spot::dead_share(itor, nb_threads,
-	      			     spot::dead_share::DECOMP_EC);
+	      	new spot::dead_share(itor, nb_threads, use_decomp ?
+	      			     spot::dead_share::DECOMP_EC:
+				     spot::dead_share::DECOMP_EC_SEQ);
 
 	      mtimer.start("decomp_ec");
 	      if (d->check())
