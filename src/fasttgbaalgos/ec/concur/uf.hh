@@ -22,6 +22,7 @@
 #include "fasttgba/fasttgba.hh"
 #include <iosfwd>
 #include <atomic>
+#include <mutex>
 
 #include <iostream>
 
@@ -31,6 +32,7 @@ extern "C" {
 
 #include "fasttgbaalgos/ec/concur/unionfind.h"
 #include "fasttgbaalgos/ec/concur/lf_queue.h"
+#include "fasttgbaalgos/ec/concur/hashtable.h"
 
 #ifdef __cplusplus
 } // extern "C"
@@ -161,22 +163,49 @@ static const datatype_t DATATYPE_SHAREDOP =
 
 
 
-/// \brief this class acts like a wrapper to the
-/// C code of the union find.
-///
-/// The Union find has been built using a C++ version
-/// of the concurent_hash_map that can be downloaded
-/// at :
-///
-/// Therefore this version includes many adaptation
-/// that comes from the LTSmin tool that can be
-/// download here :
 namespace spot
 {
+
+
+  /// This class  export the interface of the union-find
+  /// data structure. This interface has been done after
+  /// first experiments and really need to be refreshed!
   class uf
   {
   public :
-    uf(int thread_number) : thread_number_(thread_number), size_(0)
+    virtual ~uf()
+    { } ;
+    virtual bool make_set(const fasttgba_state*, int) = 0;
+    virtual void make_dead(const fasttgba_state*, int) = 0;
+    virtual bool is_dead(const fasttgba_state*) = 0;
+    virtual markset unite(const fasttgba_state*,
+		  const fasttgba_state*,
+		  const markset,
+		  bool *, int) = 0;
+    virtual unsigned long make_and_unite(const fasttgba_state*,
+				 const fasttgba_state*,
+				 unsigned long,
+				 bool *,
+				 int) = 0;
+    virtual bool is_maybe_dead(const fasttgba_state*) = 0;
+    virtual int size() = 0;
+    virtual void make_and_makedead(const fasttgba_state*, int) = 0;
+  };
+
+  /// \brief this class acts like a wrapper to the
+  /// C code of the union find.
+  ///
+  /// The Union find has been built using a C++ version
+  /// of the concurent_hash_map that can be downloaded
+  /// at :
+  ///
+  /// Therefore this version includes many adaptation
+  /// that comes from the LTSmin tool that can be
+  /// download here :
+  class uf_lock_free : public uf
+  {
+  public :
+    uf_lock_free(int thread_number) : thread_number_(thread_number), size_(0)
     {
       effective_uf = uf_alloc(&DATATYPE_INT_PTRINT, INIT_SCALE, thread_number);
       mem_table_ = ht_alloc (&DATATYPE_SHAREDOP, INIT_SCALE_SHAREDOP);
@@ -191,7 +220,7 @@ namespace spot
 	}
     }
 
-    virtual ~uf()
+    virtual ~uf_lock_free()
     {
       uf_free (effective_uf, size_ /*FIXME*/, thread_number_);
       for (int i = 0; i < thread_number_; ++i)
@@ -208,7 +237,7 @@ namespace spot
     }
 
     /// \brief insert a new element in the union find
-    bool make_set(const fasttgba_state* key, int tn)
+    virtual bool make_set(const fasttgba_state* key, int tn)
     {
       // The Concurent Hash Map doesn't support key == 0 because
       // it represent a special tag.
@@ -265,7 +294,7 @@ namespace spot
 
 
     /// \brief Mark an elemnent as dead
-    void make_dead(const fasttgba_state* key, int tn)
+    virtual void make_dead(const fasttgba_state* key, int tn)
     {
       // The Concurent Hash Map doesn't support key == 0 because
       // it represent a special tag.
@@ -287,8 +316,9 @@ namespace spot
     /// \param right the right operand
     /// \return  the acceptance set to add to the parent of the two
     /// operands once merged.
-    markset unite(const fasttgba_state* left, const fasttgba_state* right,
-		  const markset acc, bool *is_dead, int tn)
+    virtual markset unite(const fasttgba_state* left,
+			  const fasttgba_state* right,
+			  const markset acc, bool *is_dead, int tn)
     {
       unsigned long tmp = acc.to_ulong();
 
@@ -322,7 +352,7 @@ namespace spot
     }
 
     /// \brief check wether an element is linked to dead
-    bool is_dead(const fasttgba_state* key)
+    virtual bool is_dead(const fasttgba_state* key)
     {
       uf_node_t* node = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) key);
@@ -334,7 +364,7 @@ namespace spot
 
     /// \brief check wether an element is possibly linked
     /// to dead
-    bool is_maybe_dead(const fasttgba_state* key)
+    virtual bool is_maybe_dead(const fasttgba_state* key)
     {
       uf_node_t* node = (uf_node_t*)
 	ht_get(effective_uf->table, (map_key_t) key);
@@ -344,8 +374,7 @@ namespace spot
       return uf_maybe_dead(effective_uf, node);
     }
 
-
-    unsigned long make_and_unite(const fasttgba_state* left,
+    virtual unsigned long make_and_unite(const fasttgba_state* left,
 			   const fasttgba_state* right,
 			   //const markset acc,
 			   unsigned long tmp, bool *is_dead,
@@ -389,7 +418,7 @@ namespace spot
     }
 
     /// \brief Mark an elemnent as dead
-    void make_and_makedead(const fasttgba_state* key, int tn)
+    virtual void make_and_makedead(const fasttgba_state* key, int tn)
     {
       // The Concurent Hash Map doesn't support key == 0 because
       // it represent a special tag.
@@ -403,6 +432,7 @@ namespace spot
     }
 
 
+    virtual
     int size()
     {
       return size_;
@@ -417,6 +447,199 @@ namespace spot
     int prealloc_size_;
     int thread_number_;
     std::atomic<int> size_;
+  };
+
+
+  class uf_fine_grain : public uf
+  {
+  public :
+    struct node
+    {
+      std::atomic<struct node*> parent;
+      std::mutex mutex;
+      int rank;
+      unsigned long markset;
+      std::atomic<bool> is_dead;
+    };
+
+    uf_fine_grain
+    (int thread_number) : thread_number_(thread_number), size_(0)
+    {
+      effective_uf = uf_alloc(&DATATYPE_INT_PTRINT, INIT_SCALE, thread_number);
+      visited_ = ht_alloc(&DATATYPE_INT_PTRINT, INIT_SCALE);
+      for (int i = 0 ; i < thread_number_; ++i)
+	{
+	  prealloc_.push_back(new node());
+	  prealloc_.back()->rank = 0;
+	  prealloc_.back()->is_dead = false;
+	  prealloc_.back()->parent = prealloc_.back();
+	}
+    }
+
+    static void destroy_fun (void* elt)
+    {
+      if (!elt)
+	return;
+      struct node *node = (struct node*) elt;
+      assert(node);
+      delete node;
+    }
+
+    virtual ~uf_fine_grain()
+    {
+      ht_iter_value(visited_, (process_fun_t) uf_fine_grain::destroy_fun);
+      ht_free(visited_);
+      for (auto* node: prealloc_)
+	delete node;
+    }
+
+    virtual bool make_set(const fasttgba_state* key, int tn)
+    {
+      assert(key);
+      map_val_t old = 0;
+      map_key_t clone = 0;
+      node *alloc = prealloc_[tn];
+
+      old = ht_cas_empty (visited_, (map_key_t)key,
+			  (map_val_t)alloc, &clone, (void*)NULL);
+
+      if (old == DOES_NOT_EXIST)
+      	{
+	  ++size_;
+      	  prealloc_[tn] = new node();
+	  prealloc_[tn]->rank = 0;
+	  prealloc_[tn]->is_dead = false;
+	  prealloc_[tn]->parent = prealloc_[tn];
+      	  return true;
+      	}
+      return false;
+    }
+
+    node* find(node* n)
+    {
+      assert(n);
+      node* p = n->parent;
+      while (p != n)
+	{
+	  p = p->parent;
+	}
+      return p;
+    }
+
+    virtual void make_dead(const fasttgba_state* key, int tn)
+    {
+      assert(key);
+      (void) tn;
+      struct node* node = (struct node*) ht_get(visited_, (map_key_t) key);
+      node = find(node);
+
+      while(true)
+	{
+	  node->is_dead = true;
+	  struct node* tmp = find(node);
+	  if (tmp == node)
+	    break;
+	  node = tmp;
+	}
+    }
+
+    virtual bool is_dead(const fasttgba_state* key)
+    {
+      struct node* node = (struct node*) ht_get(visited_, (map_key_t) key);
+      if (node == DOES_NOT_EXIST)
+	return false;
+      node = find(node);
+      return node->is_dead;
+    }
+
+    virtual markset unite(const fasttgba_state* left,
+		  const fasttgba_state* right,
+		  const markset acc,
+		  bool *is_dead, int tn)
+    {
+      (void) tn;
+      unsigned long tmp = acc.to_ulong();
+      struct node* l = (struct node*) ht_get(visited_, (map_key_t) left);
+      struct node* r = (struct node*) ht_get(visited_, (map_key_t) right);
+
+      struct node *xl, *xr;
+
+      while(true)
+	{
+	  xl = find(l);
+	  xr = find(r);
+ 	  xl->mutex.lock();
+	  xr->mutex.lock();
+	  if (xl->parent == xl && xr->parent == r)
+	    break;
+	  xr->mutex.unlock();
+	  xl->mutex.unlock();
+	}
+
+
+      // compress path
+      while (l->parent != xl)
+	l->parent = xl;
+      while (r->parent != xr)
+	r->parent = xr;
+
+      *is_dead = xl->is_dead || xr->is_dead;
+      tmp = tmp | xl->markset | xr->markset;
+      if (xl->rank < xr->rank)
+	{
+	  xl->parent = r;
+	  xr->is_dead = *is_dead;
+	}
+      else if (xr->rank < xl->rank)
+	{
+	  xr->parent = xl;
+	  xl->is_dead = *is_dead;
+	}
+      else
+	{
+	  xl->parent = xr;
+	  xr->rank = xr->rank + 1;
+	  xr->is_dead = *is_dead;
+	}
+
+      xr->mutex.unlock();
+      xl->mutex.unlock();
+      return acc | tmp;
+    }
+
+    virtual unsigned long make_and_unite(const fasttgba_state*,
+				 const fasttgba_state*,
+				 unsigned long,
+				 bool *,
+				 int)
+    {
+      assert(false);
+      return 0;
+    }
+
+    virtual bool is_maybe_dead(const fasttgba_state*)
+    {
+      assert(false);
+      return false;
+    }
+
+    virtual int size()
+    {
+      return size_;
+    }
+
+    virtual void make_and_makedead(const fasttgba_state*, int)
+    {
+      assert(false);
+      return;
+    }
+
+  private:
+    uf_t* effective_uf;		///< \brief the union find
+    hashtable_t *visited_;
+    int thread_number_;
+    std::atomic<int> size_;
+    std::vector<node*> prealloc_;
   };
 }
 #endif // SPOT_FASTTGBAALGOS_EC_CONCUR_UF_HH

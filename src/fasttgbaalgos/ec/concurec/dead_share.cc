@@ -1949,7 +1949,10 @@ namespace spot
     itor_(i), tn_(thread_number), policy_(policy), max_diff(0), option_(option)
   {
     assert(i && thread_number);
-    uf_ = new spot::uf(tn_);
+    if (policy_ == FINE_GRAIN_DIJKSTRA)
+      uf_ = new spot::uf_fine_grain(tn_);
+    else
+      uf_ = new spot::uf_lock_free(tn_);
     if (policy_ == ASYNC_DIJKSTRA)
       queue_ = new spot::queue(tn_-1);
     else if (policy_ == W2_ASYNC_DIJKSTRA)
@@ -1995,7 +1998,7 @@ namespace spot
 							  i, &stop,
 							  &stop_strong,
 							  s_, option_));
-	else if (policy_ == FULL_DIJKSTRA_EC)
+	else if (policy_ == FULL_DIJKSTRA_EC || FINE_GRAIN_DIJKSTRA)
 	  chk.push_back(new spot::concur_opt_dijkstra_ec(itor_, uf_,
 							 i, &stop,
 							 &stop_strong,
@@ -2418,6 +2421,9 @@ namespace spot
 	break;
       case W4_ASYNC_DIJKSTRA:
 	res << "W4_ASYNC_DIJKSTRA,";
+	break;
+      case FINE_GRAIN_DIJKSTRA:
+	res << "FINE_GRAIN_DIJKSTRA,";
 	break;
       default:
 	std::cout << "Error undefined thread policy" << std::endl;

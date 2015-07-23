@@ -128,6 +128,7 @@ main(int argc, char **argv)
   bool opt_concur_dead_tarjan = false;
   bool opt_concur_ec_dead_tarjan = false;
   bool opt_concur_ec_dead_dijkstra = false;
+  bool opt_fine_grain_dijkstra = false;
   bool opt_concur_ec_dead_mixed = false;
   bool opt_concur_dead_dijkstra = false;
   bool opt_concur_dead_mixed = false;
@@ -165,6 +166,7 @@ main(int argc, char **argv)
   std::string option_concur_ec_dead_tarjan = "";
   std::string option_concur_ec_dead_dijkstra = "";
   std::string option_concur_ec_dead_mixed = "";
+  std::string option_fine_grain_dijkstra = "";
 
   if (!strncmp("-lc13", argv[3], 5))
     {
@@ -277,6 +279,15 @@ main(int argc, char **argv)
       std::string s = std::string(argv[3]+27);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+    else if (!strncmp("-fine_grain_dijkstra", argv[3], 20))
+    {
+      opt_fine_grain_dijkstra = true;
+      option_fine_grain_dijkstra = "-cs";
+      std::string s = std::string(argv[3]+20);
+      nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+      std::cout << nb_threads << std::endl;
     }
   else if (!strncmp("-async_dijkstra", argv[3], 15))
     {
@@ -707,6 +718,28 @@ main(int argc, char **argv)
 	    mtimer.stop("concur_ec_dead_dijkstra");
 	    d->dump_threads();
 	    spot::timer t = mtimer.timer("concur_ec_dead_dijkstra");
+	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
+	    result << "," << d->csv() << "," << input;
+	    std::cout << result.str() << std::endl;
+	    delete d;
+	  }
+	if (opt_fine_grain_dijkstra)
+	  {
+	    result << "#fine_grain_dijkstra"
+		   << option_concur_ec_dead_dijkstra
+		   << nb_threads << ",";
+	    spot::dead_share* d =
+	      new spot::dead_share(itor, nb_threads,
+				   spot::dead_share::FINE_GRAIN_DIJKSTRA,
+				   option_fine_grain_dijkstra);
+	    mtimer.start("fine_grain_dijkstra");
+	    if (d->check())
+	      result << "VIOLATED,";
+	    else
+	      result << "VERIFIED,";
+	    mtimer.stop("fine_grain_dijkstra");
+	    d->dump_threads();
+	    spot::timer t = mtimer.timer("fine_grain_dijkstra");
 	    result << t.walltime() << "," << t.utime()  << "," << t.stime();
 	    result << "," << d->csv() << "," << input;
 	    std::cout << result.str() << std::endl;

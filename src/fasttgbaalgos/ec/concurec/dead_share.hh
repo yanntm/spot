@@ -1013,7 +1013,8 @@ namespace spot
 	ASYNC_DIJKSTRA = 14,
 	W2_ASYNC_DIJKSTRA = 15,
 	W3_ASYNC_DIJKSTRA = 16,
-	W4_ASYNC_DIJKSTRA = 17
+	W4_ASYNC_DIJKSTRA = 17,
+	FINE_GRAIN_DIJKSTRA = 18
       };
 
     /// \brief Constructor for the multithreaded emptiness check
