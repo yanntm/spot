@@ -2085,6 +2085,9 @@ namespace spot
 	else
 	  {
 	    assert(policy_ == DECOMP_EC || policy_ == DECOMP_EC_SEQ ||
+		   policy_ == ASYNC_DECOMP_EC_W1 ||
+		   policy_ == ASYNC_DECOMP_EC_W2 ||
+		   policy_ == ASYNC_DECOMP_EC_W3 ||
 		   policy_ == ASYNC_DECOMP_EC_SEQ_W1 ||
 		   policy_ == ASYNC_DECOMP_EC_SEQ_W2 ||
 		   policy_ == ASYNC_DECOMP_EC_SEQ_W3 ||
@@ -2094,9 +2097,9 @@ namespace spot
 		   policy_ == DECOMP_TACAS13_UC13 ||
 		   policy_ == DECOMP_TACAS13_TUC13);
 
-	    if (policy_ == DECOMP_EC || policy == ASYNC_DECOMP_EC_SEQ_W1
-		|| policy == ASYNC_DECOMP_EC_SEQ_W2 ||
-		policy == ASYNC_DECOMP_EC_SEQ_W3)
+	    if (policy_ == DECOMP_EC || policy == ASYNC_DECOMP_EC_W1
+		|| policy == ASYNC_DECOMP_EC_W2 ||
+		policy == ASYNC_DECOMP_EC_W3)
 	      {
 		int how_many = 1; // At least strong
 		if (itor_->have_weak())
@@ -2110,9 +2113,9 @@ namespace spot
 		  tn_ / how_many ;
 
 
-		if ((policy == ASYNC_DECOMP_EC_SEQ_W1 && how_many_strong < 2) ||
-		    (policy == ASYNC_DECOMP_EC_SEQ_W2 && how_many_strong < 3) ||
-		    (policy == ASYNC_DECOMP_EC_SEQ_W3 && how_many_strong < 4))
+		if ((policy == ASYNC_DECOMP_EC_W1 && how_many_strong < 2) ||
+		    (policy == ASYNC_DECOMP_EC_W2 && how_many_strong < 3) ||
+		    (policy == ASYNC_DECOMP_EC_W3 && how_many_strong < 4))
 		  {
 		    std::cerr << "Not enough threads for the strong"
 			      << " part : Abort" << std::endl;
@@ -2124,7 +2127,7 @@ namespace spot
 		// Launch Strong
 		while (k++ != how_many_strong)
 		  {
-		    if (policy == ASYNC_DECOMP_EC_SEQ_W1)
+		    if (policy == ASYNC_DECOMP_EC_W1)
 		      {
 			if (how_many_strong-1 <= j)
 			  chk.push_back(new spot::async_worker
@@ -2141,7 +2144,7 @@ namespace spot
 			j++;
 			continue;
 		      }
-		    if (policy == ASYNC_DECOMP_EC_SEQ_W2)
+		    if (policy == ASYNC_DECOMP_EC_W2)
 		      {
 			if (how_many_strong-2 <= j)
 			  chk.push_back(new spot::async_worker
@@ -2158,7 +2161,7 @@ namespace spot
 			j++;
 			continue;
 		      }
-		    if (policy == ASYNC_DECOMP_EC_SEQ_W3)
+		    if (policy == ASYNC_DECOMP_EC_W3)
 		      {
 			if (how_many_strong-3 <= j)
 			  chk.push_back(new spot::async_worker
@@ -2215,20 +2218,66 @@ namespace spot
 		// All threads have been set ! That's it!
 		break;
 	      }
-	    else if (policy_ == DECOMP_EC_SEQ)
+	    else if (policy_ == DECOMP_EC_SEQ ||
+		     policy_ == ASYNC_DECOMP_EC_SEQ_W1 ||
+		     policy_ == ASYNC_DECOMP_EC_SEQ_W2 ||
+		     policy_ == ASYNC_DECOMP_EC_SEQ_W3)
 	      {
 		int k = 0;
 		int j = 0;
 		while (k++ != tn_)
 		  {
-		    // // It's the mixed algorithm!
-		    // if (j%2)
-		    //   chk.push_back(new spot::concur_opt_tarjan_ec(itor_, uf_,
-		    // 						   j, &stop,
-		    // 						   &stop_strong,
-		    // 						   s_,
-		    // 						   option_));
-		    //else
+		    if (policy == ASYNC_DECOMP_EC_SEQ_W1)
+		      {
+			if (tn_-1 <= j)
+			  chk.push_back(new spot::async_worker
+					(itor_, uf_, queue_,
+					 j, &stop,
+					 &stop_strong,
+					 option_));
+			else
+			  chk.push_back(new spot::dijkstra_async
+					(itor_, uf_, queue_,
+					 j, &stop,
+					 &stop_strong,
+					 j != 0, option_));
+			j++;
+			continue;
+		      }
+		    if (policy == ASYNC_DECOMP_EC_SEQ_W2)
+		      {
+			if (tn_-2 <= j)
+			  chk.push_back(new spot::async_worker
+					(itor_, uf_, queue_,
+					 j, &stop,
+					 &stop_strong,
+					 option_));
+			else
+			  chk.push_back(new spot::dijkstra_async
+					(itor_, uf_, queue_,
+					 j, &stop,
+					 &stop_strong,
+					 j != 0, option_));
+			j++;
+			continue;
+		      }
+		    if (policy == ASYNC_DECOMP_EC_SEQ_W3)
+		      {
+			if (tn_-3 <= j)
+			  chk.push_back(new spot::async_worker
+					(itor_, uf_, queue_,
+					 j, &stop,
+					 &stop_strong,
+					 option_));
+			else
+			  chk.push_back(new spot::dijkstra_async
+					(itor_, uf_, queue_,
+					 j, &stop,
+					 &stop_strong,
+					 j != 0, option_));
+			j++;
+			continue;
+		      }
 		      chk.push_back(new spot::concur_opt_dijkstra_ec
 				    (itor_, uf_,
 				     j, &stop,
@@ -2490,6 +2539,15 @@ namespace spot
 	break;
       case FINE_GRAIN_DIJKSTRA:
 	res << "FINE_GRAIN_DIJKSTRA,";
+	break;
+      case ASYNC_DECOMP_EC_W1:
+	res << "ASYNC_DECOMP_EC_W1,";
+	break;
+      case ASYNC_DECOMP_EC_W2:
+	res << "ASYNC_DECOMP_EC_W2,";
+	break;
+      case ASYNC_DECOMP_EC_W3:
+	res << "ASYNC_DECOMP_EC_W3,";
 	break;
       case ASYNC_DECOMP_EC_SEQ_W1:
 	res << "ASYNC_DECOMP_EC_SEQ_W1,";

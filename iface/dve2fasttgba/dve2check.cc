@@ -171,7 +171,7 @@ main(int argc, char **argv)
 
   // FIXME Only used for for decomp async, must be generalized
   spot::dead_share::DeadSharePolicy decomp_async =
-    spot::dead_share::ASYNC_DECOMP_EC_SEQ_W1;
+    spot::dead_share::ASYNC_DECOMP_EC_W1;
 
   if (!strncmp("-lc13", argv[3], 5))
     {
@@ -213,6 +213,23 @@ main(int argc, char **argv)
       std::string s = std::string(argv[3]+19);
       nb_threads = std::stoi(s);
       int tmp = std::stoi(std::string(argv[3]).substr (15,1));
+      if (tmp == 1)
+	decomp_async = spot::dead_share::ASYNC_DECOMP_EC_W1;
+      else if (tmp == 2)
+	decomp_async = spot::dead_share::ASYNC_DECOMP_EC_W2;
+      else if (tmp == 3)
+	decomp_async = spot::dead_share::ASYNC_DECOMP_EC_W3;
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-decomp_async_seq_w1_ec", argv[3], 23)  ||
+	   !strncmp("-decomp_async_seq_w2_ec", argv[3], 19) ||
+	   !strncmp("-decomp_async_seq_w3_ec", argv[3], 19))
+    {
+
+      use_async_decomp = true;
+      std::string s = std::string(argv[3]+23);
+      nb_threads = std::stoi(s);
+      int tmp = std::stoi(std::string(argv[3]).substr (19,1));
       if (tmp == 1)
 	decomp_async = spot::dead_share::ASYNC_DECOMP_EC_SEQ_W1;
       else if (tmp == 2)
