@@ -655,6 +655,7 @@ namespace spot
       tn_ = thread_number;
       queue_ = queue;
       stop_ = stop;
+      stop_strong_ = stop_strong;
       inst = i->new_instance();
       counterexample = false;
       nbunite_ = 0;
@@ -672,10 +673,10 @@ namespace spot
     {
       markset m1(a_->get_acc());
       start = std::chrono::system_clock::now();
-      while (!*stop_)
+      while (!*stop_ && !*stop_strong_)
 	{
 	  // Do not destroy !
-	  shared_op* op = queue_->get(stop_);
+	  shared_op* op = queue_->get(stop_strong_);
 	  if (!op)
 	    break;
 	  if (op->op_ == op_type::the_end)
@@ -699,7 +700,7 @@ namespace spot
 	    uf_->make_and_makedead((const fasttgba_state*)op->arg1_, tn_);
 	}
       end = std::chrono::system_clock::now();
-      *stop_ = 1;
+      *stop_strong_ = 1;
       return counterexample;
     }
 
@@ -731,6 +732,7 @@ namespace spot
     const instance_automaton* inst; ///< The instanciator
     int tn_;			    /// \brief the thread identifier
     int * stop_;		    /// \brief stop the world variable
+    int * stop_strong_;		    /// \brief stop the world variable
     std::chrono::time_point<std::chrono::system_clock> start; /// \brief start!
     std::chrono::time_point<std::chrono::system_clock> end;   /// \brief stop!
     bool counterexample;
@@ -755,7 +757,7 @@ namespace spot
       queue_ = queue;
       tn_ = thread_number;
       stop_ = stop;
-      stop_strong_ = stop_strong; /* Useless? */
+      stop_strong_ = stop_strong;
       make_cpt_ = 0;
     }
 
@@ -768,7 +770,7 @@ namespace spot
       *stop_strong_ = 1;
       end  = std::chrono::system_clock::now();
       queue_->put(the_end, 0, 0, 0, tn_);
-      *stop_ = 1; // Ok since this algo is exact!
+      //*stop_ = 1; // Ok since this algo is exact!
       return counterexample_found;
     }
 
@@ -887,7 +889,7 @@ namespace spot
     virtual void main ()
     {
     opt_dijkstra_scc::color c;
-    while (!todo.empty() && !*stop_)
+    while (!todo.empty() && !*stop_ && !*stop_strong_)
       {
 	if (!todo.back().lasttr)
 	  {
@@ -921,7 +923,7 @@ namespace spot
     	      {
     	    	if (merge (d))
     	    	  {
-		    *stop_ = 1;
+		    *stop_strong_ = 1;
     	    	    counterexample_found = true;
     	    	    d->destroy();
     	    	    return;
@@ -1014,7 +1016,10 @@ namespace spot
 	W2_ASYNC_DIJKSTRA = 15,
 	W3_ASYNC_DIJKSTRA = 16,
 	W4_ASYNC_DIJKSTRA = 17,
-	FINE_GRAIN_DIJKSTRA = 18
+	FINE_GRAIN_DIJKSTRA = 18,
+	ASYNC_DECOMP_EC_SEQ_W1 = 19,
+	ASYNC_DECOMP_EC_SEQ_W2 = 20,
+	ASYNC_DECOMP_EC_SEQ_W3 = 21
       };
 
     /// \brief Constructor for the multithreaded emptiness check

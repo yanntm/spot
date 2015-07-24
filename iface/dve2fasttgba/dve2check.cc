@@ -137,6 +137,7 @@ main(int argc, char **argv)
   bool opt_w3_async_dijkstra = false;
   bool opt_w4_async_dijkstra = false;
   bool use_decomp = false;
+  bool use_async_decomp = false;
   bool use_decomp_seq = false;
   bool opt_tacas13_tarjan = false;
   bool opt_tacas13_dijkstra = false;
@@ -168,6 +169,10 @@ main(int argc, char **argv)
   std::string option_concur_ec_dead_mixed = "";
   std::string option_fine_grain_dijkstra = "";
 
+  // FIXME Only used for for decomp async, must be generalized
+  spot::dead_share::DeadSharePolicy decomp_async =
+    spot::dead_share::ASYNC_DECOMP_EC_SEQ_W1;
+
   if (!strncmp("-lc13", argv[3], 5))
     {
       opt_lc13 = true;
@@ -197,6 +202,23 @@ main(int argc, char **argv)
       use_decomp_seq = true;
       std::string s = std::string(argv[3]+14);
       nb_threads = std::stoi(s);
+      assert(nb_threads <= std::thread::hardware_concurrency());
+    }
+  else if (!strncmp("-decomp_async_w1_ec", argv[3], 19) ||
+	   !strncmp("-decomp_async_w2_ec", argv[3], 19) ||
+	   !strncmp("-decomp_async_w3_ec", argv[3], 19))
+    {
+
+      use_async_decomp = true;
+      std::string s = std::string(argv[3]+19);
+      nb_threads = std::stoi(s);
+      int tmp = std::stoi(std::string(argv[3]).substr (15,1));
+      if (tmp == 1)
+	decomp_async = spot::dead_share::ASYNC_DECOMP_EC_SEQ_W1;
+      else if (tmp == 2)
+	decomp_async = spot::dead_share::ASYNC_DECOMP_EC_SEQ_W2;
+      else if (tmp == 3)
+	decomp_async = spot::dead_share::ASYNC_DECOMP_EC_SEQ_W3;
       assert(nb_threads <= std::thread::hardware_concurrency());
     }
   else if (!strncmp("-tacas13tarjan", argv[3], 14))
@@ -493,7 +515,7 @@ main(int argc, char **argv)
 		 << "ms "
 		 << input << std::endl;
 
-      if (use_decomp  || use_decomp_seq ||
+      if (use_decomp  || use_decomp_seq || use_async_decomp ||
 	  opt_tacas13_tarjan || opt_tacas13_dijkstra
 	  || opt_tacas13_ndfs || opt_tacas13_uc13 || opt_tacas13_tuc13)
 	{
@@ -580,6 +602,8 @@ main(int argc, char **argv)
 	      spot::dead_share* d =
 	      	new spot::dead_share(itor, nb_threads, use_decomp ?
 	      			     spot::dead_share::DECOMP_EC:
+				     use_async_decomp?
+				     decomp_async:
 				     spot::dead_share::DECOMP_EC_SEQ);
 
 	      mtimer.start("decomp_ec");
