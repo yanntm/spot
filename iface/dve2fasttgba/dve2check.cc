@@ -326,7 +326,6 @@ main(int argc, char **argv)
       std::string s = std::string(argv[3]+20);
       nb_threads = std::stoi(s);
       assert(nb_threads <= std::thread::hardware_concurrency());
-      std::cout << nb_threads << std::endl;
     }
   else if (!strncmp("-async_dijkstra", argv[3], 15))
     {
@@ -615,6 +614,8 @@ main(int argc, char **argv)
 	      spot::instanciator* itor =
 	      	new spot::dve2product_instanciator(strong_a, file, weak_a,
 	      					   term_a);
+
+	      result << "#" << std::string(argv[3]+1) << ",";
 
 	      spot::dead_share* d =
 	      	new spot::dead_share(itor, nb_threads, use_decomp ?

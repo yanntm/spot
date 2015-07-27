@@ -410,33 +410,39 @@ namespace spot
 	      // update only markset;
 	      while (true)
 		{
-		  xl->mutex.lock();
-		  if (xl->parent == xl)
+		  if (xl->mutex.try_lock())
 		    {
-		      tmp = tmp | xl->markset;
-		      xl->markset = tmp;
-
-		      // Compress
-		      while (l->parent != xl)
+		      if (xl->parent == xl)
 			{
-			  xtmp = l->parent;
-			  l->parent = xl;
-			  l = xtmp;
+			  tmp = tmp | xl->markset;
+			  xl->markset = tmp;
+
+			  // Compress
+			  while (l->parent != xl)
+			    {
+			      xtmp = l->parent;
+			      l->parent = xl;
+			      l = xtmp;
+			    }
+			  xl->mutex.unlock();
+			  return acc | tmp;
 			}
 		      xl->mutex.unlock();
-		      return acc | tmp;
 		    }
-		  xl->mutex.unlock();
 		  xl = find(l);
 		}
 	    }
 
-	  xl->mutex.lock();
-	  xr->mutex.lock();
-	  if (xl->parent == xl && xr->parent == xr)
-	    break;
-	  xr->mutex.unlock();
-	  xl->mutex.unlock();
+	  if (xl->mutex.try_lock())
+	    {
+	      if (xr->mutex.try_lock())
+	      {
+		if (xl->parent == xl && xr->parent == xr)
+		  break;
+		xr->mutex.unlock();
+	      }
+	      xl->mutex.unlock();
+	    }
 	}
 
 
