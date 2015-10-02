@@ -58,4 +58,76 @@ namespace spot
       }
     return result;
   }
+
+  spot::twacube* twa_to_twacube(spot::twa_graph_ptr& aut,
+				std::unordered_map<int, int>& ap_binder,
+				std::vector<std::string>& aps)
+  {
+    // Declare the twa cube
+    spot::twacube* tg = new spot::twacube(aps);
+
+    // Fix acceptance
+    tg->acc() = aut->acc();
+
+    // This binder maps twagraph indexes to twacube ones.
+    std::unordered_map<int, int> st_binder;
+
+    // Fill binder and create corresponding states into twacube
+    for (unsigned n = 0; n < aut->num_states(); ++n)
+      st_binder.insert({n, tg->new_state()});
+
+    // Fix the initial state
+    tg->set_initial(st_binder[aut->get_init_state_number()]);
+
+    // Get the cubeset
+    auto cs = tg->get_cubeset();
+
+    // Now just build all transitions of this automaton
+    // spot::cube cube(aps);
+    for (unsigned n = 0; n < aut->num_states(); ++n)
+      for (auto& t: aut->out(n))
+    	{
+    	  bdd cond = t.cond;
+
+    	  // Special case for bddfalse
+    	  if (cond == bddfalse)
+    	    {
+	      spot::cube cube = tg->get_cubeset().alloc();
+	      for (unsigned int i = 0; i < cs.size(); ++i)
+		cs.set_false_var(cube, i); // FIXME ! use fill!
+    	      tg->create_transition(st_binder[n], cube,
+    				    t.acc, st_binder[t.dst]);
+    	    }
+    	  else
+    	    // Split the bdd into multiple transitions
+    	    while (cond != bddfalse)
+    	      {
+    		bdd one = bdd_satone(cond);
+    		cond -= one;
+		spot::cube cube =spot::satone_to_cube(one, cs, ap_binder);
+    		tg->create_transition(st_binder[n], cube, t.acc,
+    				      st_binder[t.dst]);
+    	      }
+    	}
+    // Must be contiguous to support swarming.
+    assert(tg->succ_contiguous());
+    return tg;
+  }
+
+  std::vector<std::string>*
+  extract_aps(spot::twa_graph_ptr& aut,
+	      std::unordered_map<int, int>& ap_binder)
+  {
+    std::vector<std::string>* aps = new std::vector<std::string>();
+    for (auto f: aut->ap())
+      {
+	int size = aps->size();
+	if (std::find(aps->begin(), aps->end(), f.ap_name()) == aps->end())
+	  {
+	    aps->push_back(f.ap_name());
+	    ap_binder.insert({aut->get_dict()->var_map[f], size});
+	  }
+      }
+    return aps;
+  }
 }

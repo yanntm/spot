@@ -24,6 +24,8 @@
 #include <unordered_map>
 #include <spot/misc/common.hh>
 #include <spot/twacube/cube.hh>
+#include <spot/twacube/twacube.hh>
+#include <spot/twa/twagraph.hh>
 
 namespace spot
 {
@@ -37,4 +39,15 @@ namespace spot
   /// that bind cube indexes to bdd indexes.
   SPOT_API bdd cube_to_bdd(spot::cube cube, const cubeset& cubeset,
   			   std::unordered_map<int, int>& reverse_binder);
+
+  /// \brief Extract the atomic propositions from the automaton
+  SPOT_API std::vector<std::string>*
+  extract_aps(spot::twa_graph_ptr& aut,
+	      std::unordered_map<int, int>& ap_binder);
+
+  /// \brief Convert a twa into a twacube
+  SPOT_API spot::twacube*
+  twa_to_twacube(spot::twa_graph_ptr& aut,
+		 std::unordered_map<int, int>& ap_binder,
+		 std::vector<std::string>& aps);
 }
