@@ -25,8 +25,9 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 twacubedir = $(pkgincludedir)/twacube
 
-twacube_HEADERS =  cube.hh
+twacube_HEADERS =  cube.hh twacube.hh
 
 noinst_LTLIBRARIES = libtwacube.la
 libtwacube_la_SOURCES = \
-   cube.cc
+   cube.cc \
+   twacube.cc
