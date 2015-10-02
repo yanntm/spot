@@ -97,7 +97,8 @@ check_PROGRAMS = \
   core/tgbagraph \
   core/tostring \
   core/tunabbrev \
-  core/tunenoform
+  core/tunenoform \
+  core/twacube
 
 # Keep this sorted alphabetically.
 core_acc_SOURCES = core/acc.cc
@@ -147,6 +148,7 @@ core_tunabbrev_SOURCES = core/equalsf.cc
 core_tunabbrev_CPPFLAGS = $(AM_CPPFLAGS) -DUNABBREV='"^ieFG"'
 core_tunenoform_SOURCES = core/equalsf.cc
 core_tunenoform_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM -DUNABBREV='"^ieFG"'
+core_twacube_SOURCES = core/twacube.cc
 
 
 TESTS_tl = \
@@ -312,7 +314,8 @@ TESTS_twa = \
   core/dca.test \
   core/dnfstreett.test \
   core/parity.test \
-  core/ltlsynt.test
+  core/ltlsynt.test \
+  core/twacube.test
 
 ############################## PYTHON ##############################
 
