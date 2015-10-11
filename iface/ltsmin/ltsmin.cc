@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <ltdl.h>
 #include <cstring>
 #include <cstdlib>
 #include <vector>
 #include <sstream>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <numeric>
 
 // MinGW does not define this.
 #ifndef WEXITSTATUS
@@ -31,44 +31,19 @@
 #endif
 
 #include "ltsmin.hh"
+#include "porinfos.hh"
+#include "spins.hh"
 #include "misc/hashfunc.hh"
 #include "misc/fixpool.hh"
 #include "misc/mspool.hh"
 #include "misc/intvcomp.hh"
 #include "misc/intvcmp2.hh"
+#include "misc/random.hh"
 
 namespace spot
 {
   namespace
   {
-
-    ////////////////////////////////////////////////////////////////////////
-    // spins interface
-
-    typedef struct transition_info {
-      int* labels; // edge labels, NULL, or pointer to the edge label(s)
-      int  group;  // holds transition group or -1 if unknown
-    } transition_info_t;
-
-    typedef void (*TransitionCB)(void *ctx,
-				 transition_info_t *transition_info,
-				 int *dst);
-
-    struct spins_interface
-    {
-      lt_dlhandle handle;	// handle to the dynamic library
-      void (*get_initial_state)(void *to);
-      int (*have_property)();
-      int (*get_successors)(void* m, int *in, TransitionCB, void *arg);
-      int (*get_state_size)();
-      const char* (*get_state_variable_name)(int var);
-      int (*get_state_variable_type)(int var);
-      int (*get_type_count)();
-      const char* (*get_type_name)(int type);
-      int (*get_type_value_count)(int type);
-      const char* (*get_type_value_name)(int type, int value);
-    };
-
     ////////////////////////////////////////////////////////////////////////
     // STATE
 
@@ -115,6 +90,11 @@ namespace spot
 	if (hash_value > o->hash_value)
 	  return 1;
 	return memcmp(vars, o->vars, size * sizeof(*vars));
+      }
+
+      int* raw_state()
+      {
+	return vars;
       }
 
     private:
@@ -202,8 +182,11 @@ namespace spot
 
     struct callback_context
     {
-      typedef std::list<state*> transitions_t;
+      typedef std::vector<state*> transitions_t;
+      typedef std::vector<int> trans_id_t;
       transitions_t transitions;
+      trans_id_t transitions_id;
+      const int* source;
       int state_size;
       void* pool;
       int* compressed;
@@ -214,9 +197,25 @@ namespace spot
 	for (auto t: transitions)
 	  t->destroy();
       }
+
+      void shuffle(unsigned seed)
+      {
+	if (!seed)
+	  return;
+
+	// First shuffle transitions (use spot shuffle for sake of
+	// portability)
+	srand(seed);
+	mrandom_shuffle(transitions.begin(), transitions.end());
+
+	// Then shuffle transitions-id in the same (that's the reason
+	// of the second call to srand)
+	srand(seed);
+	mrandom_shuffle(transitions_id.begin(), transitions_id.end());
+      }
     };
 
-    void transition_callback(void* arg, transition_info_t*, int *dst)
+    void transition_callback(void* arg, transition_info_t* t, int *dst)
     {
       callback_context* ctx = static_cast<callback_context*>(arg);
       fixed_size_pool* p = static_cast<fixed_size_pool*>(ctx->pool);
@@ -225,6 +224,7 @@ namespace spot
       memcpy(out->vars, dst, ctx->state_size * sizeof(int));
       out->compute_hash();
       ctx->transitions.push_back(out);
+      ctx->transitions_id.push_back(t->group);
     }
 
     void transition_callback_compress(void* arg, transition_info_t*, int *dst)
@@ -251,16 +251,22 @@ namespace spot
     public:
 
       spins_succ_iterator(const callback_context* cc,
-			 bdd cond)
-	: kripke_succ_iterator(cond), cc_(cc)
+			  bdd cond, porinfos* por = nullptr)
+	: kripke_succ_iterator(cond), cc_(cc),
+	  // The following variables are only used when POR
+	  // is activated.
+	  por_(por),   por_old_(por), idx_(0), all_enabled_(false)
       {
+	init_mask();
       }
 
       void recycle(const callback_context* cc, bdd cond)
       {
 	delete cc_;
 	cc_ = cc;
+	por_ = por_old_;
 	kripke_succ_iterator::recycle(cond);
+	init_mask();
       }
 
       ~spins_succ_iterator()
@@ -268,16 +274,38 @@ namespace spot
 	delete cc_;
       }
 
+      virtual void fire_all() const
+      {
+	assert(!expanded_);
+        all_enabled_ = true;
+	expanded_ = true;
+      }
+
+      virtual bool all_enabled() const
+      {
+	return expanded_ || !por_;
+      }
+
       virtual
       bool first()
       {
+	assert(!cc_->transitions.empty());
 	it_ = cc_->transitions.begin();
+	if (por_)
+	  {
+	    idx_ = 0;
+	    if (mask_[idx_])
+	      return it_ != cc_->transitions.end();
+	    return next_por();
+	  }
 	return it_ != cc_->transitions.end();
       }
 
       virtual
       bool next()
       {
+	if (por_)
+	  return next_por();
 	++it_;
 	return it_ != cc_->transitions.end();
       }
@@ -285,18 +313,87 @@ namespace spot
       virtual
       bool done() const
       {
+	if (por_)
+	  return done_por();
 	return it_ == cc_->transitions.end();
       }
 
       virtual
       state* current_state() const
       {
+	assert(it_ != cc_->transitions.end());
 	return (*it_)->clone();
       }
 
     private:
+      void init_mask()
+      {
+	expanded_ = false;
+	all_enabled_ = false;
+	mask_.clear();
+	idx_ = 0;
+	if (por_)
+	  {
+	    mask_ =
+	      por_->compute_reduced_set(cc_->transitions_id, cc_->source);
+
+	    if (mask_.empty())
+	      por_ = nullptr;
+
+	    unsigned cpt = 0;
+	    for (unsigned i = 0; i < mask_.size(); i++)
+	      if (mask_[i])
+		++cpt;
+
+	    // All transitions are enabled...
+	    if (cpt == mask_.size())
+	      por_ = nullptr;
+	  }
+      }
+
+      bool next_por()
+      {
+	do
+	  {
+	    ++idx_;
+	    ++it_;
+	  } while (idx_ < mask_.size() && !mask_[idx_]);
+
+	// Here we have reached the end of then mask.
+	if (idx_ >= mask_.size())
+	  {
+	    // The iterator has not been enable to fire all transitions
+	    // So it's the end we have explored all reduced successors.
+	    if (!all_enabled_)
+	      return true;
+
+	    // The iterator must fire all transitions.
+	    // Flip the mask to consider all ignored transitions.
+	    mask_.flip();
+
+	    // Avoid Infinite Computation
+	    all_enabled_ = false;
+	    return first();
+	  }
+	return false;
+      }
+
+      bool done_por() const
+      {
+	if (idx_ == mask_.size())
+	  return true;
+	return  false;
+      }
+
+    protected:
       const callback_context* cc_;
       callback_context::transitions_t::const_iterator it_;
+      porinfos* por_;
+      porinfos* por_old_;
+      std::vector<bool> mask_;
+      unsigned idx_;
+      mutable bool all_enabled_;
+      mutable bool expanded_;
     };
 
     ////////////////////////////////////////////////////////////////////////
@@ -603,7 +700,7 @@ namespace spot
 
       spins_kripke(const spins_interface* d, const bdd_dict_ptr& dict,
 		   const spot::prop_set* ps, formula dead,
-		   int compress)
+		   int compress, bool use_por, unsigned seed)
 	: kripke(dict),
 	  d_(d),
 	  state_size_(d_->get_state_size()),
@@ -619,7 +716,8 @@ namespace spot
 	  statepool_(compress ? sizeof(spins_compressed_state) :
 		     (sizeof(spins_state) + state_size_ * sizeof(int))),
 	  state_condition_last_state_(nullptr),
-	  state_condition_last_cc_(nullptr)
+	  state_condition_last_cc_(nullptr),
+	  use_por_(use_por), seed_(seed)
       {
 	vname_ = new const char*[state_size_];
 	format_filter_ = new bool[state_size_];
@@ -663,10 +761,15 @@ namespace spot
 	    dead_prop = bdd_ithvar(var);
 	    alive_prop = bdd_nithvar(var);
 	  }
+
+	// Initialize Partial Order Infos
+	// First allocate the POR object
+	por_ = new porinfos(d_);
       }
 
       ~spins_kripke()
       {
+	delete por_;
 	if (iter_cache_)
 	  {
 	    delete iter_cache_;
@@ -690,6 +793,11 @@ namespace spot
 	if (state_condition_last_state_)
 	  state_condition_last_state_->destroy();
 	delete state_condition_last_cc_; // Might be 0 already.
+      }
+
+      porinfos* get_porinfos() const
+      {
+	return por_;
       }
 
       virtual
@@ -764,6 +872,7 @@ namespace spot
       callback_context* build_cc(const int* vars, int& t) const
       {
 	callback_context* cc = new callback_context;
+	cc->source = vars;
 	cc->state_size = state_size_;
 	cc->pool =
 	  const_cast<void*>(compress_
@@ -866,6 +975,9 @@ namespace spot
 	      cc->transitions.push_back(st->clone());
 	  }
 
+	// Perform swarming on this the successors of this state
+	// according to the seed
+	cc->shuffle(seed_);
 	if (iter_cache_)
 	  {
 	    spins_succ_iterator* it =
@@ -874,7 +986,9 @@ namespace spot
 	    iter_cache_ = nullptr;
 	    return it;
 	  }
-	return new spins_succ_iterator(cc, scond);
+
+	return new spins_succ_iterator(cc, scond,
+				       use_por_? get_porinfos() : nullptr);
       }
 
       virtual
@@ -918,6 +1032,7 @@ namespace spot
       }
 
     private:
+      porinfos* por_;
       const spins_interface* d_;
       int state_size_;
       bdd_dict_ptr dict_;
@@ -941,8 +1056,10 @@ namespace spot
       mutable const state* state_condition_last_state_;
       mutable bdd state_condition_last_cond_;
       mutable callback_context* state_condition_last_cc_;
+      bool use_por_;
+      unsigned seed_;
     };
-
+  }
 
     //////////////////////////////////////////////////////////////////////////
     // LOADER
@@ -1012,12 +1129,14 @@ namespace spot
       return false;
     }
 
-  }
+  // }
 
   kripke_ptr
   load_ltsmin(const std::string& file_arg, const bdd_dict_ptr& dict,
 	      const atomic_prop_set* to_observe,
-	      const formula dead, int compress, bool verbose)
+	      const formula dead,
+	      int compress, bool use_por,
+	      bool verbose, unsigned seed)
   {
     std::string file;
     if (file_arg.find_first_of("/\\") != std::string::npos)
@@ -1101,6 +1220,23 @@ namespace spot
         lt_dlsym(h, "get_state_variable_type_value_count");
         d->get_type_value_name = (const char* (*)(int, int))
         lt_dlsym(h, "get_state_variable_type_value");
+
+        d->get_transition_count = (int (*)())
+        lt_dlsym(h, "get_transition_count");
+        d->get_transition_read_dependencies = (int* (*)(int))
+        lt_dlsym(h, "get_transition_read_dependencies");
+        d->get_transition_write_dependencies = (int* (*)(int))
+        lt_dlsym(h, "get_transition_write_dependencies");
+
+        d->get_guard_count = (int (*)())
+        lt_dlsym(h, "get_guard_count");
+        d->get_guards = (int* (*)(int))
+        lt_dlsym(h, "get_guards");
+        d->get_guard_nes_matrix = (int* (*)(int))
+        lt_dlsym(h, "get_guard_nes_matrix");
+        d->get_guard_may_be_coenabled_matrix = (int* (*)(int))
+        lt_dlsym(h, "get_guard_may_be_coenabled_matrix");
+
       }
 
     if (!(d->get_initial_state
@@ -1142,6 +1278,15 @@ namespace spot
 	return nullptr;
       }
 
-    return std::make_shared<spins_kripke>(d, dict, ps, dead, compress);
+    return std::make_shared<spins_kripke>(d, dict, ps, dead, compress,
+					  use_por, seed);
+  }
+
+  porinfos*
+  por_ltsmin(const_kripke_ptr model)
+  {
+    const spins_kripke* tmp = dynamic_cast<const spins_kripke*>(model.get());
+    assert(tmp);
+    return tmp->get_porinfos();
   }
 }

@@ -196,7 +196,8 @@ namespace spot
     while (!todo.empty())
       {
 	twa_succ_iterator* si = todo.back().it;
-	if (si->done())
+	if (si->done() &&
+	    will_pop_state(todo.back().src, todo.back().src_n, si))
 	  {
 	    pop();
 	    continue;
@@ -259,6 +260,14 @@ namespace spot
   tgba_reachable_iterator_depth_first::process_state(const state*, int,
 						     twa_succ_iterator*)
   {
+  }
+
+  bool
+  tgba_reachable_iterator_depth_first::will_pop_state(const state*,
+						      int,
+						      twa_succ_iterator*)
+  {
+    return true;
   }
 
   void

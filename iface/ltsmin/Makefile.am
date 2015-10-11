@@ -23,13 +23,13 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 ltsmindir = $(pkgincludedir)/iface/ltsmin
 
-ltsmin_HEADERS = ltsmin.hh
+ltsmin_HEADERS = spins.hh ltsmin.hh dfs_stats.hh proviso.hh porinfos.hh
 
 lib_LTLIBRARIES = libspotltsmin.la
 libspotltsmin_la_LIBADD = \
   $(top_builddir)/src/libspot.la \
   $(top_builddir)/ltdl/libltdlc.la -lpthread
-libspotltsmin_la_SOURCES = ltsmin.cc
+libspotltsmin_la_SOURCES = ltsmin.cc proviso.cc porinfos.cc
 
 noinst_PROGRAMS = modelcheck
 

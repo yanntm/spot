@@ -394,6 +394,18 @@ namespace spot
     /// to this successor.
     virtual acc_cond::mark_t current_acceptance_conditions() const = 0;
 
+    /// \brief this method is only usefull if partial order reductions are
+    /// enabled
+    virtual void fire_all() const
+    { }
+
+    /// \brief this method is only usefull if partial order reductions are
+    /// enabled to check wether all states have been emitted
+    virtual bool all_enabled() const
+    {
+      return true;
+    }
+
     //@}
   };
 

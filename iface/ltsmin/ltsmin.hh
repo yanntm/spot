@@ -21,6 +21,8 @@
 
 #include "kripke/kripke.hh"
 #include "tl/apcollect.hh"
+#include "porinfos.hh"
+#include "proviso.hh"
 
 namespace spot
 {
@@ -59,5 +61,9 @@ namespace spot
   load_ltsmin(const std::string& file, const bdd_dict_ptr& dict,
 	      const atomic_prop_set* to_observe,
 	      formula dead = formula::tt(),
-	      int compress = 0, bool verbose = true);
+	      int compress = 0,  bool use_por = false,
+	      bool verbose = true, unsigned seed = 0);
+
+  /// \brief return an object containing all informations for partial order.
+  SPOT_API porinfos* por_ltsmin(const_kripke_ptr model);
 }
