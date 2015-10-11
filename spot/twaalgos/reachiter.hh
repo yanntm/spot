@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2009, 2011, 2013, 2016 Laboratoire de Recherche
+// Copyright (C) 2008, 2009, 2011, 2013, 2016, 2017 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -139,6 +139,19 @@ namespace spot
     /// \param n A unique number assigned to \a s.
     /// \param si The spot::twa_succ_iterator for \a s.
     virtual void process_state(const state* s, int n, twa_succ_iterator* si);
+
+    /// Called by run() to process a state before it is popped.
+    /// It this method return true the state will be popped, otherwise
+    /// the state will not be popped. In this case the iterator must be
+    /// set to a valid position (other than end()). So if this method
+    /// return false, the iterator must be change. Typically this happen
+    /// during model checking with partial order reductions.
+    ///
+    /// \param s The current state.
+    /// \param n A unique number assigned to \a s.
+    /// \param si The spot::tgba_succ_iterator for \a s.
+    virtual bool will_pop_state(const state* s, int n, twa_succ_iterator* si);
+
     /// Called by run() to process a transition.
     ///
     /// \param in_s The source state

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011, 2013, 2014, 2015, 2016 Laboratoire de
+// Copyright (C) 2009, 2011, 2013, 2014, 2015, 2016, 2017 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -472,6 +472,18 @@ namespace spot
     /// \brief Get the acceptance mark of the edge leading to this
     /// successor.
     virtual acc_cond::mark_t acc() const = 0;
+
+    /// \brief this method is only usefull if partial order reductions are
+    /// enabled
+    virtual void fire_all() const
+    { }
+
+    /// \brief this method is only usefull if partial order reductions are
+    /// enabled to check wether all states have been emitted
+    virtual bool all_enabled() const
+    {
+      return true;
+    }
 
     ///@}
   };

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013, 2014, 2015, 2016 Laboratoire de Recherche et
+// Copyright (C) 2011, 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -21,6 +21,7 @@
 
 #include <spot/kripke/kripke.hh>
 #include <spot/tl/apcollect.hh>
+#include <spot/ltsmin/porinfos.hh>
 
 namespace spot
 {
@@ -66,10 +67,14 @@ namespace spot
     // \a compress whether to compress the states.  Use 0 to disable, 1
     // to enable compression, 2 to enable a faster compression that only
     // work if all variables are smaller than 2^28.
+    // \a wether we should use POR
+    // \a the seed we want to use to shuffle transitions
     kripke_ptr kripke(const atomic_prop_set* to_observe,
                       bdd_dict_ptr dict,
                       formula dead = formula::tt(),
-                      int compress = 0) const;
+                      int compress = 0,
+                      bool use_por = false,
+                      unsigned seed = 0) const;
 
     /// Number of variables in a state
     int state_size() const;
@@ -92,4 +97,7 @@ namespace spot
       }
     std::shared_ptr<const spins_interface> iface;
   };
+
+  /// \brief return an object containing all informations for partial order.
+  SPOT_API porinfos* por_ltsmin(const_kripke_ptr model);
 }

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire de
+// Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Laboratoire de
 // Recherche et Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -18,6 +18,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <spot/ltsmin/ltsmin.hh>
+#include <spot/ltsmin/proviso.hh>
+#include <spot/ltsmin/dfs_stats.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/tl/defaultenv.hh>
 #include <spot/tl/parse.hh>
@@ -52,6 +54,8 @@ Options:\n\
   -gm    output the model state-space in dot format\n\
   -gK    output the model state-space in Kripke format\n\
   -gp    output the product state-space in dot format\n\
+  -por=<none|stack|delayed|color>\n\
+         use partial order reduction\n\
   -T     time the different phases of the execution\n\
   -z     compress states to handle larger models\n\
   -Z     compress states (faster) assuming all values in [0 .. 2^28-1]\n\
@@ -66,13 +70,17 @@ checked_main(int argc, char **argv)
 
   bool use_timer = false;
 
-  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke }
+  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke,
+         Dependency, StatsModel }
   output = EmptinessCheck;
   bool accepting_run = false;
   bool expect_counter_example = false;
   bool deterministic = false;
   char *dead = nullptr;
   int compress_states = 0;
+  bool enable_por = false;
+  spot::proviso* m_proviso = new spot::fireall_proviso();
+  unsigned seed = 0;
 
   const char* echeck_algo = "Cou99";
 
@@ -123,6 +131,55 @@ checked_main(int argc, char **argv)
                 default:
                   goto error;
                 }
+              break;
+	    case 'm':
+	      output = Dependency;
+	      break;
+	    case 'p':
+	      enable_por = true;
+	      opt += 4;
+	      if (strcmp (opt, "color") == 0)
+		m_proviso = new spot::color_proviso();
+	      else if (strcmp (opt, "color+dead") == 0)
+		m_proviso = new spot::color_proviso_dead();
+	      else if (strcmp (opt, "delayed") == 0)
+		m_proviso = new spot::delayed_proviso();
+	      else if (strcmp (opt, "delayed+dead") == 0)
+		m_proviso = new spot::delayed_proviso_dead();
+	      else if (strcmp (opt, "destination") == 0)
+		m_proviso = new spot::destination_proviso();
+	      else if (strcmp (opt, "none") == 0)
+                m_proviso = new spot::no_proviso();
+	      else if (strcmp (opt, "stack") == 0)
+		m_proviso = new spot::stack_proviso();
+	      else if (strcmp (opt, "rnd_one") == 0)
+		m_proviso = new spot::rnd_one_proviso();
+	      else if (strcmp (opt, "rnd_sd") == 0)
+		m_proviso = new spot::rnd_sd_proviso();
+	      else if (strcmp (opt, "min_succ_sd") == 0)
+		m_proviso = new spot::min_succ_sd_proviso();
+	      else if (strcmp (opt, "max_succ_sd") == 0)
+		m_proviso = new spot::max_succ_sd_proviso();
+	      else if (strcmp (opt, "min_succ") == 0)
+		m_proviso = new spot::min_succ_proviso();
+	      else if (strcmp (opt, "min_succ_en") == 0)
+		m_proviso = new spot::min_succ_en_proviso();
+	      else if (strcmp (opt, "max_succ") == 0)
+		m_proviso = new spot::min_succ_proviso();
+	      else if (strcmp (opt, "max_succ_en") == 0)
+		m_proviso = new spot::max_succ_en_proviso();
+	      else
+		goto error;
+	      break;
+	    case 's':
+	      if (strcmp (opt, "sm") == 0)
+		output = StatsModel;
+	      else
+		{
+		  assert(strncmp (opt, "seed=", 5) == 0);
+		  opt+=5;
+		  seed = atoi(opt);
+		}
               break;
             case 'T':
               use_timer = true;
@@ -218,8 +275,8 @@ checked_main(int argc, char **argv)
       tm.start("loading ltsmin model");
       try
         {
-          model = spot::ltsmin_model::load(argv[1]).kripke(&ap, dict, deadf,
-                                                           compress_states);
+          model = spot::ltsmin_model::load(argv[1])
+            .kripke(&ap, dict, deadf, compress_states, enable_por, seed);
         }
       catch (std::runtime_error& e)
         {
@@ -235,10 +292,20 @@ checked_main(int argc, char **argv)
 
       if (output == DotModel)
         {
-          tm.start("dot output");
-          spot::print_dot(std::cout, model);
-          tm.stop("dot output");
-          goto safe_exit;
+	  if (enable_por)
+	    {
+	      std::cerr << "Warning: use DFS due to -por" << std::endl;
+	      spot::twa_statistics stats;
+	      spot::stats_dfs dfs(model, stats, *m_proviso, true);
+	      tm.start("dotty output");
+	      dfs.run();
+	      tm.stop("dotty output");
+	      goto safe_exit;
+	    }
+	  tm.start("dot output");
+	  spot::print_dot(std::cout, model);
+	  tm.stop("dot output");
+	  goto safe_exit;
         }
       if (output == Kripke)
       {
@@ -257,7 +324,36 @@ checked_main(int argc, char **argv)
       goto safe_exit;
     }
 
+  if (output == Dependency)
+    {
+      spot::porinfos* por = spot::por_ltsmin(model);
+      por->dump_read_dependency();
+      por->dump_write_dependency();
+      por->dump_nes_guards();
+      por->dump_mbc_guards();
+      goto safe_exit;
+    }
+
+  if (output == StatsModel)
+    {
+      spot::twa_statistics stats;
+      spot::stats_dfs dfs(model, stats, *m_proviso);
+      tm.start("Exploration");
+      dfs.run();
+      tm.stop("Exploration");
+      std::cout << "The" << (enable_por? " reduced " : " ") <<  "model has :"
+		<< std::endl;
+      stats.dump(std::cout);
+      dfs.dump();
+      spot::porinfos* por = spot::por_ltsmin(model);
+      por->stats().dump();
+      std::cout << "walltime(ms): " <<
+	tm.timer("Exploration").walltime() << std::endl;
+      goto safe_exit;
+    }
+
   product = spot::otf_product(model, prop);
+
 
   if (output == DotProduct)
     {
@@ -359,6 +455,7 @@ checked_main(int argc, char **argv)
   }
 
  safe_exit:
+  delete m_proviso;
   if (use_timer)
     tm.print(std::cout);
   tm.reset_all();                // This helps valgrind.

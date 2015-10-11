@@ -23,7 +23,8 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 ltsmindir = $(pkgincludedir)/ltsmin
 
-ltsmin_HEADERS = ltsmin.hh
+ltsmin_HEADERS = ltsmin.hh spins.hh dfs_stats.hh  \
+				 proviso.hh porinfos.hh
 
 lib_LTLIBRARIES = libspotltsmin.la
 libspotltsmin_la_DEPENDENCIES = \
@@ -33,7 +34,7 @@ libspotltsmin_la_LIBADD = \
   $(top_builddir)/spot/libspot.la \
   $(LIBLTDL) -lpthread
 libspotltsmin_la_LDFLAGS = -no-undefined $(SYMBOLIC_LDFLAGS)
-libspotltsmin_la_SOURCES = ltsmin.cc
+libspotltsmin_la_SOURCES = ltsmin.cc porinfos.cc proviso.cc
 
 
 EXTRA_DIST = $(srcdir)/libspotltsmin.pc.in
