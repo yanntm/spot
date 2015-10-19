@@ -20,9 +20,73 @@
 #pragma once
 
 #include <spot/kripke/fairkripke.hh>
+#include <spot/twacube/cube.hh>
 
 namespace spot
 {
+  /// \brief This class is a template representation of a Kripke
+  /// structure. It is composed of two template parameters: State
+  /// represents a state of the Kripke structure, SuccIterator is
+  /// an iterator over the (possible) successors of a state.
+  ///
+  /// Do not delete by hand any states and/or iterator that
+  /// are provided by this template class. Specialisations
+  /// will handle it.
+  template<typename State, typename SuccIterator>
+  class SPOT_API kripkecube
+  {
+  public:
+    /// \brief Returns the initial State of the System
+    State initial();
+
+    /// \brief Provides a string representation of the parameter state
+    std::string to_string(const State) const;
+
+    /// \brief Returns an iterator over the successors of the parameter state.
+    SuccIterator* succ(const State);
+
+    /// \brief Allocation and deallocation of iterator is costly. This
+    /// method allows to reuse old iterators.
+    void recycle(SuccIterator*);
+
+    /// \brief This method allow to deallocate a given state.
+    const std::vector<std::string> get_ap();
+  };
+
+  /// \brief This method allows to ensure (at compile time) if
+  /// a given parameter is of type kripkecube. It also check
+  /// if the iterator has the good interface.
+  template <typename State, typename SuccIter>
+  bool is_a_kripkecube(kripkecube<State, SuccIter>&)
+  {
+    // Hardly waiting C++17 concepts...
+    State (kripkecube<State, SuccIter>::*test_initial)() =
+      &kripkecube<State, SuccIter>::initial;
+    std::string (kripkecube<State, SuccIter>::*test_to_string)
+      (const State) const = &kripkecube<State, SuccIter>::to_string;
+    auto (kripkecube<State, SuccIter>::*test_recycle)(SuccIter*) =
+      &kripkecube<State, SuccIter>::recycle;
+    const std::vector<std::string>
+      (kripkecube<State, SuccIter>::*test_get_ap)() =
+      &kripkecube<State, SuccIter>::get_ap;
+    void (SuccIter::*test_next)() = &SuccIter::next;
+    State (SuccIter::*test_state)() const= &SuccIter::state;
+    bool (SuccIter::*test_done)() const= &SuccIter::done;
+    cube (SuccIter::*test_condition)() const = &SuccIter::condition;
+
+    // suppress warnings about unused variables
+    (void) test_initial;
+    (void) test_to_string;
+    (void) test_recycle;
+    (void) test_get_ap;
+    (void) test_next;
+    (void) test_state;
+    (void) test_done;
+    (void) test_condition;
+
+    // Always return true since otherwise a compile-time error will be raised.
+    return true;
+  };
 
   /// \ingroup kripke
   /// \brief Iterator code for Kripke structure
