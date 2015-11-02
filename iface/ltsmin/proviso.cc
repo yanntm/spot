@@ -70,33 +70,64 @@ namespace spot
   { }
 
   // -----------------------------------------------------------------
-  // STACK PROVISO
+  // SPIN PROVISO
   // -----------------------------------------------------------------
-  bool stack_proviso::expand_new_state(int n, bool expanded,
+  bool spin_proviso::expand_new_state(int n, bool expanded,
 				       twa_succ_iterator*, seen_map&,
 				       const state*, const const_twa_ptr&)
   {
-    on_dfs_.insert(n);
-    expanded_.push_back(expanded);
+    on_dfs_.insert({n, expanded});
     return false;
   }
 
-  bool stack_proviso::expand_src_closingedge(int, int dst)
+  bool spin_proviso::expand_src_closingedge(int src, int dst)
   {
-    if (expanded_.back() || on_dfs_.find(dst) == on_dfs_.end())
+    auto it_src = on_dfs_.find(src);
+    if (it_src->second || on_dfs_.find(dst) == on_dfs_.end())
       return false;
-    expanded_.back() = true;
+    it_src->second = true;
     return true;
   }
 
-  bool stack_proviso::expand_before_pop(int n, twa_succ_iterator*, seen_map&)
+  bool spin_proviso::expand_before_pop(int n, twa_succ_iterator*, seen_map&)
   {
     on_dfs_.erase(n);
-    expanded_.pop_back();
     return false;
   }
 
-  stack_proviso::~stack_proviso()
+  spin_proviso::~spin_proviso()
+  { }
+
+  // -----------------------------------------------------------------
+  // STACK PROVISO
+  // -----------------------------------------------------------------
+  bool source_proviso::expand_new_state(int n, bool expanded,
+				       twa_succ_iterator*, seen_map&,
+				       const state*, const const_twa_ptr&)
+  {
+    on_dfs_.insert({n, expanded});
+    return false;
+  }
+
+  bool source_proviso::expand_src_closingedge(int src, int dst)
+  {
+    // The destination is not on the DFS, or the source and/or the
+    // destination is already expanded.
+    auto it_dst = on_dfs_.find(dst);
+    auto it_src = on_dfs_.find(src);
+    if (it_src->second || it_dst == on_dfs_.end())
+      return false;
+    it_src->second = true;
+    return true;
+  }
+
+  bool source_proviso::expand_before_pop(int n, twa_succ_iterator*, seen_map&)
+  {
+    on_dfs_.erase(n);
+    return false;
+  }
+
+  source_proviso::~source_proviso()
   { }
 
   // -----------------------------------------------------------------
@@ -116,6 +147,7 @@ namespace spot
   // Here we detect backegdes to mark the destination as to be expanded
   bool destination_proviso::expand_src_closingedge(int, int dst)
   {
+    // The source is already expanded.
     if (expanded_.back())
       return false;
 
@@ -129,8 +161,8 @@ namespace spot
     return false;
   }
 
-  bool destination_proviso::expand_before_pop(int n,
-					      twa_succ_iterator*, seen_map&)
+  bool destination_proviso::expand_before_pop(int n, twa_succ_iterator*,
+					      seen_map&)
   {
     if (!expanded_.back() && on_dfs_[n])
       {
@@ -149,46 +181,48 @@ namespace spot
   // RND SD PROVISO
   // -----------------------------------------------------------------
   bool rnd_sd_proviso::expand_new_state(int n, bool expanded,
-					twa_succ_iterator*,
-					seen_map&,
+					twa_succ_iterator*, seen_map&,
 					const state*, const const_twa_ptr&)
   {
-    on_dfs_.insert({n, false});
-    expanded_.push_back(expanded);
+    on_dfs_.insert({n, {on_dfs_.size(), false, expanded}});
     return false;
   }
 
   // Here we detect backegdes to mark the rnd_sd as to be expanded
   bool rnd_sd_proviso::expand_src_closingedge(int src, int dst)
   {
-    if (expanded_.back())
+    // The source is already expanded.
+    auto idx_src =  on_dfs_.find(src);
+    if (idx_src->second.to_be_expanded || idx_src->second.expanded)
       return false;
 
-    // .. state is not on DFS
-    auto idx =  on_dfs_.find(dst);
-    if (idx == on_dfs_.end())
+    // .. state is not on DFS, or aleady marked as to be expanded
+    // or expanded.
+    auto idx_dst =  on_dfs_.find(dst);
+    if (idx_dst == on_dfs_.end() || idx_dst->second.to_be_expanded ||
+	idx_dst->second.expanded)
       return false;
 
     // Otherwise, randomly choose the state to expand.
     static std::mt19937 generator (0);
 
     if (generator()%2)
-      idx->second = true;
+      idx_dst->second.to_be_expanded = true;
     else
-      on_dfs_[src] = true;
+      idx_src->second.to_be_expanded = true;
     return false;
   }
 
-  bool rnd_sd_proviso::expand_before_pop(int n,
-					      twa_succ_iterator*, seen_map&)
+  bool rnd_sd_proviso::expand_before_pop(int n, twa_succ_iterator*, seen_map&)
   {
-    if (!expanded_.back() && on_dfs_[n])
+    // The state has been marked as to be extended but is not yet extended.
+    auto el = on_dfs_[n];
+    if (!el.expanded && el.to_be_expanded)
       {
-	expanded_.back() = true;
+	on_dfs_[n].expanded = true;
 	return true;
       }
     on_dfs_.erase(n);
-    expanded_.pop_back();
     return false;
   }
 
