@@ -27,6 +27,7 @@
 
 namespace spot
 {
+  // ----------------------------------------------------------------------
   // \brief Interface for proviso
   class SPOT_API proviso
   {
@@ -46,11 +47,11 @@ namespace spot
 				   // This part of the protoype is ugly but
 				   // needed by some proviso
 				   twa_succ_iterator*, seen_map&) = 0;
-
     virtual ~proviso()
     { }
   };
 
+  // ----------------------------------------------------------------------
   // \brief Implementation of an empty proviso : no states will be
   // expanded
   class SPOT_API no_proviso: public proviso
@@ -75,9 +76,10 @@ namespace spot
     virtual ~fireall_proviso();
   };
 
+  // ----------------------------------------------------------------------
   // \brief Implementation of the cycle proviso of SPIN. All states
   // with a backedge are expanded.
-  class SPOT_API stack_proviso: public proviso
+  class SPOT_API spin_proviso: public proviso
   {
   public:
     bool expand_new_state(int n, bool expanded,
@@ -88,12 +90,32 @@ namespace spot
 
     bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
 
-    virtual ~stack_proviso();
+    virtual ~spin_proviso();
   private:
-    std::unordered_set<int> on_dfs_;
-    std::vector<bool> expanded_;
+    std::unordered_map<int, bool> on_dfs_;
   };
 
+  // ----------------------------------------------------------------------
+  // \brief Implementation of the optimized cycle proviso of SPIN. All states
+  // with a backedge are expanded except one where destination is already
+  // expanded.
+  class SPOT_API source_proviso: public proviso
+  {
+  public:
+    bool expand_new_state(int n, bool expanded,
+			  twa_succ_iterator*, seen_map&,
+			  const state*, const const_twa_ptr&);
+
+    bool expand_src_closingedge(int, int dst);
+
+    bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
+
+    ~source_proviso();
+  private:
+    std::unordered_map<int, bool> on_dfs_;
+  };
+
+  // ----------------------------------------------------------------------
   // \brief This cycle proviso always expand the destination if the destination
   // is on the DFS. This proviso is the dual of the stack proviso. Note that
   // if the source is already expanded the destination is not marked as to
@@ -137,12 +159,15 @@ namespace spot
 
   private:
     // Store foreach state wether it must be expanded or not
-    std::unordered_map<int, bool> on_dfs_;
-    std::vector<bool> expanded_;
+    struct dfs_element{
+      unsigned long  pos;
+      bool to_be_expanded;
+      bool expanded;
+    };
+    std::unordered_map<int, dfs_element> on_dfs_;
   };
 
-
-
+  // ----------------------------------------------------------------------
   // \brief This proviso always expand the destination but uses color
   // to avoid useless firing.
   class SPOT_API delayed_proviso: public proviso
@@ -247,7 +272,7 @@ namespace spot
     std::vector<bool> st_expanded_;
   };
 
-
+  // ----------------------------------------------------------------------
   // This proviso is the one described by Evangelista (2007) in
   // "Some Solutions to the Ignoring Problem"
   class SPOT_API color_proviso_dead: public proviso
@@ -292,6 +317,7 @@ namespace spot
     std::vector<bool> st_expanded_;
   };
 
+  // ----------------------------------------------------------------------
   // \brief expand the state with the smallest number of reduced
   // successors.
   class SPOT_API min_succ_sd_proviso: public proviso

@@ -149,25 +149,17 @@ checked_main(int argc, char **argv)
 	      else if (strcmp (opt, "destination") == 0)
 		m_proviso = new spot::destination_proviso();
 	      else if (strcmp (opt, "none") == 0)
-                m_proviso = new spot::no_proviso();
-	      else if (strcmp (opt, "stack") == 0)
-		m_proviso = new spot::stack_proviso();
-	      // else if (strcmp (opt, "rnd_one") == 0)
-	      // 	m_proviso = new spot::rnd_one_proviso();
+		m_proviso = new spot::no_proviso();
+	      else if (strcmp (opt, "spin") == 0)
+		m_proviso = new spot::spin_proviso();
+	      else if (strcmp (opt, "source") == 0)
+		m_proviso = new spot::source_proviso();
 	      else if (strcmp (opt, "rnd_sd") == 0)
 		m_proviso = new spot::rnd_sd_proviso();
 	      else if (strcmp (opt, "min_succ_sd") == 0)
 		m_proviso = new spot::min_succ_sd_proviso();
 	      else if (strcmp (opt, "max_succ_sd") == 0)
 		m_proviso = new spot::max_succ_sd_proviso();
-	      // else if (strcmp (opt, "min_succ") == 0)
-	      // 	m_proviso = new spot::min_succ_proviso();
-	      // else if (strcmp (opt, "min_succ_en") == 0)
-	      // 	m_proviso = new spot::min_succ_en_proviso();
-	      // else if (strcmp (opt, "max_succ") == 0)
-	      // 	m_proviso = new spot::min_succ_proviso();
-	      // else if (strcmp (opt, "max_succ_en") == 0)
-	      // 	m_proviso = new spot::max_succ_en_proviso();
 	      else
 		goto error;
 	      break;
