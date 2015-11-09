@@ -267,7 +267,7 @@ checked_main(int argc, char **argv)
     {
       tm.start("loading ltsmin model");
       model = spot::load_ltsmin(argv[1], dict, &ap, deadf,
-				compress_states, enable_por, true, seed);
+				compress_states, enable_por, seed);
       tm.stop("loading ltsmin model");
 
       if (!model)
