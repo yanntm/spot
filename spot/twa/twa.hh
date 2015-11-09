@@ -485,6 +485,12 @@ namespace spot
       return true;
     }
 
+    /// \brief For Some Proviso, we want to reorder remaining transitions
+    /// according to some criteria. Successors such that the parameter
+    /// fonction returns true will be processed before other successors.
+    virtual void reorder_remaining(bool (*)(const state *))
+    { }
+
     ///@}
   };
 

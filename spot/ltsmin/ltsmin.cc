@@ -245,150 +245,158 @@ namespace spot
     ////////////////////////////////////////////////////////////////////////
     // SUCC_ITERATOR
 
-    class spins_succ_iterator final: public kripke_succ_iterator
+    class spins_succ_iterator: public kripke_succ_iterator
     {
     public:
 
       spins_succ_iterator(const callback_context* cc,
-                          bdd cond, porinfos* por = nullptr)
-        : kripke_succ_iterator(cond), cc_(cc),
-	  // The following variables are only used when POR
-	  // is activated.
-	  por_(por), por_old_(por), idx_(0), all_enabled_(false)
+			      bdd cond, porinfos* por = nullptr)
+	: kripke_succ_iterator(cond), cc_(cc),
+	  por_(por), idx_(0)
       {
-	init_mask();
+	setup();
       }
 
       void recycle(const callback_context* cc, bdd cond)
       {
-        delete cc_;
+	to_process_.clear();
+	delete cc_;
 	cc_ = cc;
-	por_ = por_old_;
 	kripke_succ_iterator::recycle(cond);
-	init_mask();
+	setup();
       }
 
       ~spins_succ_iterator()
       {
-        delete cc_;
+	delete cc_;
       }
 
-      virtual void fire_all() const override
+      virtual void fire_all() const
       {
-	assert(!expanded_);
-        all_enabled_ = true;
+	//	assert(!expanded_);
+	for (unsigned i = 0; i < cc_->transitions.size(); ++i)
+	  if (!mask_[i])
+	    to_process_.push_back(cc_->transitions[i]);
 	expanded_ = true;
       }
 
-      virtual bool all_enabled() const override
+      virtual bool all_enabled() const
       {
-	return expanded_ || !por_;
+	return expanded_;
       }
 
-      virtual bool first() override
+      virtual
+      bool first()
       {
-	assert(!cc_->transitions.empty());
-	it_ = cc_->transitions.begin();
-	if (por_)
+	idx_ = 0;
+	return idx_ != to_process_.size();
+      }
+
+      virtual
+      bool next()
+      {
+	++idx_;
+	return idx_ != to_process_.size();
+      }
+
+      virtual
+      bool done() const
+      {
+	return idx_ >= to_process_.size();
+      }
+
+      virtual
+      state* dst() const
+      {
+	assert(idx_ != to_process_.size());
+	return to_process_[idx_]->clone();
+      }
+
+      virtual void reorder_remaining(bool (*dealfirst)(const state *))
+      // More elegant but too costly.
+      //std::function<bool (const state*)> dealfirst)
+      {
+	std::vector<state*> res;
+	std::vector<bool> process_first;
+	unsigned i = 0;
+
+	// FIXME Useless by avoid complicated counts for
+	// the last loop of this function.
+	while (i < idx_)
 	  {
-	    idx_ = 0;
-	    if (mask_[idx_])
-	      return it_ != cc_->transitions.end();
-	    return next_por();
+	    res.push_back(to_process_[i]);
+	    process_first.push_back(true);
+	    ++i;
 	  }
-	return it_ != cc_->transitions.end();
-      }
 
-      virtual bool next() override
-      {
-	if (por_)
-	  return next_por();
-	++it_;
-	return it_ != cc_->transitions.end();
-      }
+	// Apply deal first to all remaining.
+	while (i < to_process_.size())
+	  {
+	    process_first.push_back(dealfirst(to_process_[i]));
+	    ++i;
+	  }
 
-      virtual bool done() const override
-      {
-	if (por_)
-	  return done_por();
-        return it_ == cc_->transitions.end();
-      }
+	// First states to be process quickly
+	for (i = idx_; i < to_process_.size(); ++i)
+	  {
+	    if (process_first[i])
+	      res.push_back(to_process_[i]);
+	  }
 
-      virtual state* dst() const override
-      {
-	assert(it_ != cc_->transitions.end());
-        return (*it_)->clone();
+	// Then all other states
+	for (i = idx_; i < to_process_.size(); ++i)
+	  {
+	    if (!process_first[i])
+	      res.push_back(to_process_[i]);
+	  }
+
+	// Finaly dump res into to_process_
+	for (i = idx_; i < to_process_.size(); ++i)
+	  to_process_[i] = res[i];
       }
 
     private:
-
-      void init_mask()
+      void setup()
       {
-	expanded_ = false;
-	all_enabled_ = false;
-	mask_.clear();
 	idx_ = 0;
+	expanded_ = true;
 	if (por_)
 	  {
+	    // Detect wich states are in Reduced(state)
 	    mask_ =
 	      por_->compute_reduced_set(cc_->transitions_id, cc_->source);
 
-	    if (mask_.empty())
-	      por_ = nullptr;
+	    // Fill vector to process with Reduced (states)
+	    unsigned nb_enabled = 0;
+	    for (unsigned i = 0; i < mask_.size(); ++i)
+	      {
+		if (mask_[i])
+		  {
+		    ++nb_enabled;
+		    to_process_.push_back(cc_->transitions[i]);
+		  }
+	      }
 
-	    unsigned cpt = 0;
-	    for (unsigned i = 0; i < mask_.size(); i++)
-	      if (mask_[i])
-		++cpt;
-
-	    // All transitions are enabled...
-	    if (cpt == mask_.size())
-	      por_ = nullptr;
+	    // some states are not in Reduced (state)
+	    if (nb_enabled != mask_.size())
+	      expanded_ = false;
+	  }
+	else
+	  {
+	    for (unsigned i = 0; i < cc_->transitions.size(); ++i)
+	      to_process_.push_back(cc_->transitions[i]);
 	  }
       }
 
-      bool next_por()
-      {
-	do
-	  {
-	    ++idx_;
-	    ++it_;
-	  } while (idx_ < mask_.size() && !mask_[idx_]);
-
-	// Here we have reached the end of then mask.
-	if (idx_ >= mask_.size())
-	  {
-	    // The iterator has not been enable to fire all transitions
-	    // So it's the end we have explored all reduced successors.
-	    if (!all_enabled_)
-	      return true;
-
-	    // The iterator must fire all transitions.
-	    // Flip the mask to consider all ignored transitions.
-	    mask_.flip();
-
-	    // Avoid Infinite Computation
-	    all_enabled_ = false;
-	    return first();
-	  }
-	return false;
-      }
-
-      bool done_por() const
-      {
-	if (idx_ == mask_.size())
-	  return true;
-	return  false;
-      }
-
-   protected:
+    protected:
       const callback_context* cc_;
+      mutable std::vector<state*> to_process_;
+      unsigned current_;
+
       callback_context::transitions_t::const_iterator it_;
       porinfos* por_;
-      porinfos* por_old_;
       std::vector<bool> mask_;
       unsigned idx_;
-      mutable bool all_enabled_;
       mutable bool expanded_;
     };
 

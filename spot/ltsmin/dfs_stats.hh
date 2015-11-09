@@ -61,12 +61,10 @@ namespace spot
       if (proviso_.expand_before_pop(n, it, seen))
 	{
 	  it->fire_all();
-	  it->next();
 	  ++expanded_;
 	  assert(!it->done());
 	  return false;
 	}
-
       return true;
     }
 
@@ -116,4 +114,5 @@ namespace spot
     proviso& proviso_;
     bool dotty_;
   };
+
 }
