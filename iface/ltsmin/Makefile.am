@@ -23,7 +23,8 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 ltsmindir = $(pkgincludedir)/iface/ltsmin
 
-ltsmin_HEADERS = spins.hh ltsmin.hh dfs_stats.hh proviso.hh porinfos.hh
+ltsmin_HEADERS = spins.hh ltsmin.hh dfs_inspector.hh \
+dfs_stats.hh proviso.hh porinfos.hh
 
 lib_LTLIBRARIES = libspotltsmin.la
 libspotltsmin_la_LIBADD = \

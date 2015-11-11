@@ -412,6 +412,22 @@ namespace spot
     virtual void reorder_remaining(bool (*)(const state *))
     { }
 
+    virtual void expand_will_generate(void (*)(const state *))
+    { }
+
+    virtual unsigned reduced()
+    {
+      assert(false);
+      return 0;
+    }
+
+    virtual unsigned enabled()
+    {
+      assert(false);
+      return 0;
+    }
+
+
     //@}
   };
 
