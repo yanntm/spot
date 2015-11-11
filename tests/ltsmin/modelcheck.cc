@@ -54,8 +54,13 @@ Options:\n\
   -gm    output the model state-space in dot format\n\
   -gK    output the model state-space in Kripke format\n\
   -gp    output the product state-space in dot format\n\
-  -por=<none|stack|delayed|color>\n\
+  -m     output the dependencies matrix of the model\n\
+  -por=<source|destination|random|min_en_red|min_new_states|none|all>\n\
          use partial order reduction\n\
+  -a     anticipated : only work with -por + -sm \n\
+  -b     basic check : only work with -por + -sm \n\
+  -f     fully anticipated : only work with -por + -sm \n\
+  -sm    statistics for the model\n\
   -T     time the different phases of the execution\n\
   -z     compress states to handle larger models\n\
   -Z     compress states (faster) assuming all values in [0 .. 2^28-1]\n\
@@ -63,26 +68,30 @@ Options:\n\
   exit(1);
 }
 
+
 static int
 checked_main(int argc, char **argv)
 {
   spot::timer_map tm;
 
   bool use_timer = false;
-
-  enum { DotFormula, DotModel, DotProduct, EmptinessCheck, Kripke,
-         Dependency, StatsModel }
-  output = EmptinessCheck;
+  enum { DotFormula, DotModel, DotProduct, EmptinessCheck,
+	 Kripke, Dependency, StatsModel
+  } output = EmptinessCheck;
+  spot::proviso* m_proviso = nullptr;
   bool accepting_run = false;
   bool expect_counter_example = false;
   bool deterministic = false;
   char *dead = nullptr;
   int compress_states = 0;
   bool enable_por = false;
-  spot::proviso* m_proviso = new spot::fireall_proviso();
   unsigned seed = 0;
 
   const char* echeck_algo = "Cou99";
+  bool anticipated = false;
+  bool fully_anticipated = false;
+  bool basic_check = false;
+  std::string proviso_name;
 
   int dest = 1;
   int n = argc;
@@ -90,41 +99,50 @@ checked_main(int argc, char **argv)
     {
       char* opt = argv[i];
       if (*opt == '-')
-        {
-          switch (*++opt)
-            {
-            case 'C':
-              accepting_run = true;
-              break;
-            case 'd':
-              dead = opt + 1;
-              break;
-            case 'D':
-              deterministic = true;
-              break;
-            case 'e':
-            case 'E':
-              {
-                echeck_algo = opt + 1;
-                if (!*echeck_algo)
-                  echeck_algo = "Cou99";
+	{
+	  switch (*++opt)
+	    {
+	    case 'a':
+	      anticipated = true;
+	      break;
+	    case 'b':
+	      basic_check = true;
+	      break;
+	    case 'f':
+	      fully_anticipated = true;
+	      break;
+	    case 'C':
+	      accepting_run = true;
+	      break;
+	    case 'd':
+	      dead = opt + 1;
+	      break;
+	    case 'D':
+	      deterministic = true;
+	      break;
+	    case 'e':
+	    case 'E':
+	      {
+		echeck_algo = opt + 1;
+		if (!*echeck_algo)
+		  echeck_algo = "Cou99";
 
-                expect_counter_example = (*opt == 'e');
-                output = EmptinessCheck;
-                break;
-              }
-            case 'g':
-              switch (opt[1])
-                {
-                case 'm':
-                  output = DotModel;
-                  break;
-                case 'p':
-                  output = DotProduct;
-                  break;
-                case 'f':
-                  output = DotFormula;
-                  break;
+		expect_counter_example = (*opt == 'e');
+		output = EmptinessCheck;
+		break;
+	      }
+	    case 'g':
+	      switch (opt[1])
+		{
+		case 'm':
+		  output = DotModel;
+		  break;
+		case 'p':
+		  output = DotProduct;
+		  break;
+		case 'f':
+		  output = DotFormula;
+		  break;
                 case 'K':
                   output = Kripke;
                   break;
@@ -138,30 +156,7 @@ checked_main(int argc, char **argv)
 	    case 'p':
 	      enable_por = true;
 	      opt += 4;
-	      if (strcmp (opt, "color") == 0)
-		m_proviso = new spot::color_proviso();
-	      else if (strcmp (opt, "color+dead") == 0)
-		m_proviso = new spot::color_proviso_dead();
-	      else if (strcmp (opt, "delayed") == 0)
-		m_proviso = new spot::delayed_proviso();
-	      else if (strcmp (opt, "delayed+dead") == 0)
-		m_proviso = new spot::delayed_proviso_dead();
-	      else if (strcmp (opt, "destination") == 0)
-		m_proviso = new spot::destination_proviso();
-	      else if (strcmp (opt, "none") == 0)
-		m_proviso = new spot::no_proviso();
-	      else if (strcmp (opt, "spin") == 0)
-		m_proviso = new spot::spin_proviso();
-	      else if (strcmp (opt, "source") == 0)
-		m_proviso = new spot::source_proviso();
-	      else if (strcmp (opt, "rnd_sd") == 0)
-		m_proviso = new spot::rnd_sd_proviso();
-	      else if (strcmp (opt, "min_succ_sd") == 0)
-		m_proviso = new spot::min_succ_sd_proviso();
-	      else if (strcmp (opt, "max_succ_sd") == 0)
-		m_proviso = new spot::max_succ_sd_proviso();
-	      else
-		goto error;
+	      proviso_name = std::string(opt);
 	      break;
 	    case 's':
 	      if (strcmp (opt, "sm") == 0)
@@ -197,6 +192,72 @@ checked_main(int argc, char **argv)
 
   if (argc != 3)
     syntax(argv[0]);
+
+    // Setup proviso
+  if (enable_por)
+    {
+
+      // FIXME How to bypass recopy?
+      if (!basic_check)
+      	{
+      	  if (strcmp (proviso_name.c_str(), "none") == 0)
+      	    m_proviso = new spot::src_dst_provisos<false>
+      	      (spot::src_dst_provisos<false>::strategy::None);
+      	  else if (strcmp (proviso_name.c_str(), "all") == 0)
+      	    m_proviso = new spot::src_dst_provisos<false>
+      	      (spot::src_dst_provisos<false>::strategy::All);
+      	  else if (strcmp (proviso_name.c_str(), "source") == 0)
+      	    m_proviso = new spot::src_dst_provisos<false>
+      	      (spot::src_dst_provisos<false>::strategy::Source);
+      	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
+      	    m_proviso = new spot::src_dst_provisos<false>
+      	      (spot::src_dst_provisos<false>::strategy::Destination);
+      	  else if (strcmp (proviso_name.c_str(), "random") == 0)
+      	    m_proviso = new spot::src_dst_provisos<false>
+      	      (spot::src_dst_provisos<false>::strategy::Random);
+      	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
+      	    m_proviso = new spot::src_dst_provisos<false>
+      	      (spot::src_dst_provisos<false>::strategy::MinEnMinusRed);
+      	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
+      	    m_proviso = new spot::src_dst_provisos<false>
+      	      (spot::src_dst_provisos<false>::strategy::MinNewStates);
+	  else
+	    syntax(argv[0]);
+      	}
+      else
+      	{
+      	  if (strcmp (proviso_name.c_str(), "none") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true>
+      	      (spot::src_dst_provisos<true>::strategy::None);
+      	  else if (strcmp (proviso_name.c_str(), "all") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true>
+      	      (spot::src_dst_provisos<true>::strategy::All);
+      	  else if (strcmp (proviso_name.c_str(), "source") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true>
+      	      (spot::src_dst_provisos<true>::strategy::Source);
+      	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true>
+      	      (spot::src_dst_provisos<true>::strategy::Destination);
+      	  else if (strcmp (proviso_name.c_str(), "random") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true>
+      	      (spot::src_dst_provisos<true>::strategy::Random);
+      	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true>
+      	      (spot::src_dst_provisos<true>::strategy::MinEnMinusRed);
+      	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true>
+      	      (spot::src_dst_provisos<true>::strategy::MinNewStates);
+	  else
+	    syntax(argv[0]);
+      	}
+
+    }
+  else if (output == StatsModel)
+    {
+      std::cerr << "\n => Warning. No Support For Stats without proviso\
+ for now... Exiting!\n";
+      exit(1);
+    }
 
   spot::default_environment& env =
     spot::default_environment::instance();
@@ -286,12 +347,8 @@ checked_main(int argc, char **argv)
         {
 	  if (enable_por)
 	    {
-	      std::cerr << "Warning: use DFS due to -por" << std::endl;
-	      spot::twa_statistics stats;
-	      spot::stats_dfs dfs(model, stats, *m_proviso, true);
-	      tm.start("dotty output");
-	      dfs.run();
-	      tm.stop("dotty output");
+              std::cerr << "Not implemented for  -por" << std::endl;
+	      assert(false);
 	      goto safe_exit;
 	    }
 	  tm.start("dot output");
@@ -328,19 +385,55 @@ checked_main(int argc, char **argv)
 
   if (output == StatsModel)
     {
-      spot::twa_statistics stats;
-      spot::stats_dfs dfs(model, stats, *m_proviso);
-      tm.start("Exploration");
-      dfs.run();
-      tm.stop("Exploration");
-      std::cout << "The" << (enable_por? " reduced " : " ") <<  "model has :"
-		<< std::endl;
-      stats.dump(std::cout);
-      dfs.dump();
-      spot::porinfos* por = spot::por_ltsmin(model);
-      por->stats().dump();
-      std::cout << "walltime(ms): " <<
-	tm.timer("Exploration").walltime() << std::endl;
+      assert(m_proviso != nullptr);
+      if (fully_anticipated)
+      	{
+	  spot::dfs_stats<true, true> dfs(model, *m_proviso);
+	  tm.start("Exploration");
+	  dfs.run();
+	  tm.stop("Exploration");
+	  std::cout << dfs.dump() << " walltime_ms      : "
+		    << tm.timer("Exploration").walltime()
+		    << std::endl << std::endl;
+	  std::cout << '#' << seed  << ','
+		    << "fullyanticipated_" + m_proviso->name() << ','
+		    << argv[1] << ','
+		    << dfs.dump_csv() << ','
+		    << tm.timer("Exploration").walltime()
+		    << std::endl << std::endl;
+	}
+      else if (anticipated)
+      	{
+	  spot::dfs_stats<true, false> dfs(model, *m_proviso);
+	  tm.start("Exploration");
+	  dfs.run();
+	  tm.stop("Exploration");
+	  std::cout << dfs.dump() << " walltime_ms      : "
+		    << tm.timer("Exploration").walltime()
+		    << std::endl << std::endl;
+	  std::cout << '#' << seed  << ','
+		    << "anticipated_" + m_proviso->name() << ','
+		    << argv[1] << ','
+		    << dfs.dump_csv() << ','
+		    << tm.timer("Exploration").walltime()
+		    << std::endl << std::endl;
+	}
+      else
+	{
+	  spot::dfs_stats<false, false> dfs(model, *m_proviso);
+	  tm.start("Exploration");
+	  dfs.run();
+	  tm.stop("Exploration");
+	  std::cout << dfs.dump() << " walltime_ms      : "
+		    << tm.timer("Exploration").walltime()
+		    << std::endl << std::endl;
+	  std::cout << '#' << seed  << ','
+		    << m_proviso->name() << ','
+		    << argv[1] << ','
+		    << dfs.dump_csv() << ','
+		    << tm.timer("Exploration").walltime()
+		    << std::endl << std::endl;
+	}
       goto safe_exit;
     }
 

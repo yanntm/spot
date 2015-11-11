@@ -273,7 +273,8 @@ namespace spot
 
       virtual void fire_all() const
       {
-	//	assert(!expanded_);
+        if (expanded_)
+	  return;
 	for (unsigned i = 0; i < cc_->transitions.size(); ++i)
 	  if (!mask_[i])
 	    to_process_.push_back(cc_->transitions[i]);
@@ -353,6 +354,24 @@ namespace spot
 	// Finaly dump res into to_process_
 	for (i = idx_; i < to_process_.size(); ++i)
 	  to_process_[i] = res[i];
+      }
+
+      virtual unsigned reduced()
+      {
+	return std::count(mask_.begin(), mask_.end(), true);
+      }
+
+      virtual unsigned enabled()
+      {
+	return mask_.size();
+      }
+      virtual void expand_will_generate(void (*callback)(const state *))
+      {
+        if (expanded_)
+          return;
+        for (unsigned i = 0; i < mask_.size(); ++i)
+          if (!mask_[i])
+            callback(cc_->transitions[i]);
       }
 
     private:
