@@ -30,6 +30,7 @@ namespace spot
     /// \brief Return -1 if the parameter state \a is unknown or
     /// not in the DFS. Otherwise return the position of this state.
     virtual int dfs_position(const state*) const = 0;
+    virtual const state* dfs_state(int position) const = 0;
 
     /// \brief Return true if the parameter state has already been
     /// visited by the DFS.

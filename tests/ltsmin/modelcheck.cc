@@ -59,6 +59,7 @@ Options:\n\
          use partial order reduction\n\
   -a     anticipated : only work with -por + -sm \n\
   -b     basic check : only work with -por + -sm \n\
+  -del   delayed : only work with -por + -sm , includes -b \n\
   -f     fully anticipated : only work with -por + -sm \n\
   -sm    statistics for the model\n\
   -T     time the different phases of the execution\n\
@@ -91,6 +92,7 @@ checked_main(int argc, char **argv)
   bool anticipated = false;
   bool fully_anticipated = false;
   bool basic_check = false;
+  bool delayed = false;
   std::string proviso_name;
 
   int dest = 1;
@@ -115,7 +117,12 @@ checked_main(int argc, char **argv)
 	      accepting_run = true;
 	      break;
 	    case 'd':
-	      dead = opt + 1;
+	      if (strcmp (opt, "del") == 0)
+		{
+		  delayed = true;
+		  break;
+		}
+		dead = opt + 1;
 	      break;
 	    case 'D':
 	      deterministic = true;
@@ -198,59 +205,84 @@ checked_main(int argc, char **argv)
     {
 
       // FIXME How to bypass recopy?
-      if (!basic_check)
+      if (!basic_check && !delayed)
       	{
       	  if (strcmp (proviso_name.c_str(), "none") == 0)
-      	    m_proviso = new spot::src_dst_provisos<false>
-      	      (spot::src_dst_provisos<false>::strategy::None);
+      	    m_proviso = new spot::src_dst_provisos<false, false>
+      	      (spot::src_dst_provisos<false, false>::strategy::None);
       	  else if (strcmp (proviso_name.c_str(), "all") == 0)
-      	    m_proviso = new spot::src_dst_provisos<false>
-      	      (spot::src_dst_provisos<false>::strategy::All);
+      	    m_proviso = new spot::src_dst_provisos<false, false>
+      	      (spot::src_dst_provisos<false, false>::strategy::All);
       	  else if (strcmp (proviso_name.c_str(), "source") == 0)
-      	    m_proviso = new spot::src_dst_provisos<false>
-      	      (spot::src_dst_provisos<false>::strategy::Source);
+      	    m_proviso = new spot::src_dst_provisos<false, false>
+      	      (spot::src_dst_provisos<false, false>::strategy::Source);
       	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
-      	    m_proviso = new spot::src_dst_provisos<false>
-      	      (spot::src_dst_provisos<false>::strategy::Destination);
+      	    m_proviso = new spot::src_dst_provisos<false, false>
+      	      (spot::src_dst_provisos<false, false>::strategy::Destination);
       	  else if (strcmp (proviso_name.c_str(), "random") == 0)
-      	    m_proviso = new spot::src_dst_provisos<false>
-      	      (spot::src_dst_provisos<false>::strategy::Random);
+      	    m_proviso = new spot::src_dst_provisos<false, false>
+      	      (spot::src_dst_provisos<false, false>::strategy::Random);
       	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
-      	    m_proviso = new spot::src_dst_provisos<false>
-      	      (spot::src_dst_provisos<false>::strategy::MinEnMinusRed);
+      	    m_proviso = new spot::src_dst_provisos<false, false>
+      	      (spot::src_dst_provisos<false, false>::strategy::MinEnMinusRed);
       	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
-      	    m_proviso = new spot::src_dst_provisos<false>
-      	      (spot::src_dst_provisos<false>::strategy::MinNewStates);
+      	    m_proviso = new spot::src_dst_provisos<false, false>
+      	      (spot::src_dst_provisos<false, false>::strategy::MinNewStates);
 	  else
 	    syntax(argv[0]);
       	}
-      else
+      else if (delayed)
       	{
       	  if (strcmp (proviso_name.c_str(), "none") == 0)
-      	    m_proviso = new spot::src_dst_provisos<true>
-      	      (spot::src_dst_provisos<true>::strategy::None);
+      	    m_proviso = new spot::src_dst_provisos<true, true>
+      	      (spot::src_dst_provisos<true, true>::strategy::None);
       	  else if (strcmp (proviso_name.c_str(), "all") == 0)
-      	    m_proviso = new spot::src_dst_provisos<true>
-      	      (spot::src_dst_provisos<true>::strategy::All);
+      	    m_proviso = new spot::src_dst_provisos<true, true>
+      	      (spot::src_dst_provisos<true, true>::strategy::All);
       	  else if (strcmp (proviso_name.c_str(), "source") == 0)
-      	    m_proviso = new spot::src_dst_provisos<true>
-      	      (spot::src_dst_provisos<true>::strategy::Source);
+      	    m_proviso = new spot::src_dst_provisos<true, true>
+      	      (spot::src_dst_provisos<true, true>::strategy::Source);
       	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
-      	    m_proviso = new spot::src_dst_provisos<true>
-      	      (spot::src_dst_provisos<true>::strategy::Destination);
+      	    m_proviso = new spot::src_dst_provisos<true, true>
+      	      (spot::src_dst_provisos<true, true>::strategy::Destination);
       	  else if (strcmp (proviso_name.c_str(), "random") == 0)
-      	    m_proviso = new spot::src_dst_provisos<true>
-      	      (spot::src_dst_provisos<true>::strategy::Random);
+      	    m_proviso = new spot::src_dst_provisos<true, true>
+      	      (spot::src_dst_provisos<true, true>::strategy::Random);
       	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
-      	    m_proviso = new spot::src_dst_provisos<true>
-      	      (spot::src_dst_provisos<true>::strategy::MinEnMinusRed);
+      	    m_proviso = new spot::src_dst_provisos<true, true>
+      	      (spot::src_dst_provisos<true, true>::strategy::MinEnMinusRed);
       	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
-      	    m_proviso = new spot::src_dst_provisos<true>
-      	      (spot::src_dst_provisos<true>::strategy::MinNewStates);
+      	    m_proviso = new spot::src_dst_provisos<true, true>
+      	      (spot::src_dst_provisos<true, true>::strategy::MinNewStates);
 	  else
 	    syntax(argv[0]);
       	}
-
+      else //if (basic_check)
+      	{
+      	  if (strcmp (proviso_name.c_str(), "none") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, false>
+      	      (spot::src_dst_provisos<true, false>::strategy::None);
+      	  else if (strcmp (proviso_name.c_str(), "all") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, false>
+      	      (spot::src_dst_provisos<true, false>::strategy::All);
+      	  else if (strcmp (proviso_name.c_str(), "source") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, false>
+      	      (spot::src_dst_provisos<true, false>::strategy::Source);
+      	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, false>
+      	      (spot::src_dst_provisos<true, false>::strategy::Destination);
+      	  else if (strcmp (proviso_name.c_str(), "random") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, false>
+      	      (spot::src_dst_provisos<true, false>::strategy::Random);
+      	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, false>
+      	      (spot::src_dst_provisos<true, false>::strategy::MinEnMinusRed);
+      	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, false>
+      	      (spot::src_dst_provisos<true, false>::strategy::MinNewStates);
+	  else
+	    syntax(argv[0]);
+      	}
     }
   else if (output == StatsModel)
     {

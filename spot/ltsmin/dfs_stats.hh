@@ -70,6 +70,9 @@ namespace spot
 
     void pop_state()
     {
+      if (!proviso_.before_pop(todo.back().src, *this))
+	return;
+
       seen[todo.back().src].dfs_position = -1;
       aut_->release_iter(todo.back().it);
       todo.pop_back();
@@ -172,6 +175,11 @@ namespace spot
       if (seen.find(st) != seen.end())
 	return seen[st].dfs_position;
       return -1;
+    }
+    virtual const state* dfs_state(int position) const
+    {
+      assert(position < (int)todo.size());
+      return todo[position].src;
     }
     virtual twa_succ_iterator* get_iterator(unsigned dfs_position) const
     {
