@@ -55,10 +55,11 @@ Options:\n\
   -gK    output the model state-space in Kripke format\n\
   -gp    output the product state-space in dot format\n\
   -m     output the dependencies matrix of the model\n\
-  -por=<source|destination|random|min_en_red|min_new_states|none|all>\n\
-         use partial order reduction\n\
+  -por=<source|destination|random|min_en_red|min_new_states|none|all|\n\
+        evangelista> :  use partial order reduction with specified proviso\n\
   -a     anticipated : only work with -por + -sm \n\
   -b     basic check : only work with -por + -sm \n\
+  -c     fully colored for evangelista \n\
   -del   delayed : only work with -por + -sm , includes -b \n\
   -f     fully anticipated : only work with -por + -sm \n\
   -sm    statistics for the model\n\
@@ -94,6 +95,7 @@ checked_main(int argc, char **argv)
   bool basic_check = false;
   bool delayed = false;
   std::string proviso_name;
+  bool fully_colored = false;
 
   int dest = 1;
   int n = argc;
@@ -115,6 +117,9 @@ checked_main(int argc, char **argv)
 	      break;
 	    case 'C':
 	      accepting_run = true;
+	      break;
+	    case 'c':
+	      fully_colored = true;
 	      break;
 	    case 'd':
 	      if (strcmp (opt, "del") == 0)
@@ -203,9 +208,21 @@ checked_main(int argc, char **argv)
     // Setup proviso
   if (enable_por)
     {
-
+      if (strcmp (proviso_name.c_str(), "evangelista") == 0)
+	{
+	  if (basic_check)
+	    std::cerr << "   No support for -b with -por=evangelista\n";
+	  if (delayed)
+	    std::cerr << "   No support for -del with -por=evangelista\n";
+	  if (!anticipated && !fully_anticipated)
+	    std::cerr << "   Should specify -a or -f for -por=evangelista\n";
+	  if (fully_colored)
+	    m_proviso = new spot::evangelista10sttt<true>();
+	  else
+	    m_proviso = new spot::evangelista10sttt<false>();
+	}
       // FIXME How to bypass recopy?
-      if (!basic_check && !delayed)
+      else if (!basic_check && !delayed)
       	{
       	  if (strcmp (proviso_name.c_str(), "none") == 0)
       	    m_proviso = new spot::src_dst_provisos<false, false>

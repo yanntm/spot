@@ -40,10 +40,12 @@ namespace spot
     /// Note that according to the cycle proviso, every cycle must
     /// contain an expanded state. If  the method return -1, no expansion
     /// is needed.
-    virtual unsigned maybe_closingedge(const state* src,
+    virtual int maybe_closingedge(const state* src,
 				       const state* dst,
 				       const dfs_inspector& i) = 0;
-    virtual void notify_push(const state* src, const dfs_inspector& i) = 0;
+   /// \brief Notify the proviso that a a new state has been pushed. This
+    /// method return true only if the src has been expanded.
+    virtual bool notify_push(const state* src, const dfs_inspector& i) = 0;
     virtual bool before_pop(const state* src, const dfs_inspector& i) = 0;
 
     virtual std::string name() = 0;
@@ -104,7 +106,7 @@ namespace spot
       return res;
     }
 
-    virtual unsigned maybe_closingedge(const state* src,
+    virtual int maybe_closingedge(const state* src,
 				       const state* dst,
 				       const dfs_inspector& i)
     {
@@ -140,12 +142,13 @@ namespace spot
       return choose(src_pos, dst_pos, src, dst, i);
     }
 
-    virtual void notify_push(const state* src, const dfs_inspector& i)
+    virtual bool notify_push(const state* src, const dfs_inspector& i)
     {
       int src_pos = i.dfs_position(src);
       if (strat_ == strategy::All)
 	{
 	  i.get_iterator(src_pos)->fire_all();
+          return true;
 	}
       if (Delayed)
 	{
@@ -156,7 +159,9 @@ namespace spot
 	  colors.push_back(false);
 	  colors.push_back(true);
 	}
+       return false;
     }
+
     virtual bool before_pop(const state* st,
 			    const dfs_inspector& i)
     {
@@ -305,10 +310,220 @@ namespace spot
 	}
     }
 
-
     strategy strat_;
     std::mt19937 generator_;
     unsigned source_;
     unsigned destination_;
   };
+
+
+  /// \brief Implementation of the evangelista family of
+  /// provisos.
+  template<bool FullyColored>
+    class SPOT_API evangelista10sttt: public proviso
+  {
+
+  public:
+    evangelista10sttt()
+      { }
+
+    virtual int maybe_closingedge(const state* src,
+				  const state* dst,
+				  const dfs_inspector& i)
+    {
+      auto& src_colors = i.get_colors(src);
+      auto& dst_colors = i.get_colors(dst);
+      bool src_is_orange = src_colors[0] && !src_colors[1];
+      bool dst_is_red = dst_colors[0] && dst_colors[1];
+
+      // src is orange and dst is red  an expansion is required.
+      if (src_is_orange && dst_is_red)
+	{
+	  ++expanded_;
+	  src_colors[0] = false;
+	  src_colors[1] = false;
+
+	  int src_pos = i.dfs_position(src);
+
+	  if (FullyColored)
+	    {
+	      // We can propagate the green color. Note that
+	      // here the source is not yet expanded but has
+	      // already the good color so we can propagate!
+	      int p = src_pos-1;
+	      while (0 <= p)
+		{
+		  const state* st = i.dfs_state(p);
+		  auto& colors = i.get_colors(st);
+		  bool is_orange = colors[0] && !colors[1];
+
+		  if (is_orange && i.get_iterator(p)->done())
+		    {
+		      // Propagate green
+		      colors[0] = false;
+		      colors[1] = false;
+		      --p;
+		    }
+		  else
+		    break;
+		}
+	    }
+
+	  // Require to expand the source of the edge.
+	  ++source_;
+	  return src_pos;
+	}
+
+      // This maybe closing-edge is safe.
+      return -1;
+    }
+
+    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    {
+      // Every state is associated to a color ORANGE, RED, and GREEN
+      // We need two boolean to encode this information.
+      // 10 -> ORANGE
+      // 11 -> RED
+      // 00 -> GREEN
+      auto& colors = i.get_colors(src);
+      colors.push_back(true);
+      colors.push_back(false);
+
+      // Actually Sami's algorithm do not have a weight but an expanded
+      // field foreach state. We use the weight of the generic dfs to
+      // store this information.
+      i.get_weight(src) = expanded_;
+
+      int src_pos = i.dfs_position(src);
+      bool res = false;
+      if (!is_c2cl(src, i))
+	{
+	  i.get_iterator(src_pos)->fire_all();
+	  ++source_;
+	  res = true;
+	}
+
+      // Set state to green
+      if (i.get_iterator(src_pos)->all_enabled())
+	{
+	  ++expanded_;
+	  colors[0] = false;
+	  colors[1] = false; // Useless since this bit must already be false.
+	}
+      return res;
+    }
+
+    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    {
+      int src_pos = i.dfs_position(src);
+      if (i.get_iterator(src_pos)->all_enabled())
+	--expanded_;
+
+      auto& colors = i.get_colors(src);
+      if (colors[0] && !colors[1]) // State is orange.
+	{
+	  auto* it = i.get_iterator(src_pos);
+
+	  it->first();
+	  bool isred = false;
+	  while (!it->done())
+	    {
+	      auto* dst = it->dst();
+	      auto& dst_colors = i.get_colors(dst);
+	      bool dst_is_green = !dst_colors[0] && !dst_colors[1];
+
+	      if (!dst_is_green) //dst is not green
+		isred = true;
+	      dst->destroy();
+	      it->next();
+	    }
+	  if (isred) // set color to red
+	    {
+	      colors[0] = true;
+	      colors[0] = true;
+	    }
+	  else // set color to green
+	    {
+	      colors[0] = false;
+	      colors[0] = false;
+	    }
+	}
+
+      // Never avoid a POP in Sami Evangelista and Pajault
+      return true;
+    }
+
+    virtual std::string name()
+    {
+      if (FullyColored)
+	return "fullycolored_evangelista10sttt";
+      else
+	return "evangelista10sttt";
+    }
+    virtual std::string dump()
+    {
+      return
+	" source_expanded  : " + std::to_string(source_)           + '\n' +
+	" dest_expanded    : " + std::to_string(destination_)      + '\n';
+    }
+    virtual std::string dump_csv()
+    {
+      return
+	std::to_string(source_)           + ',' +
+	std::to_string(destination_);
+    }
+
+    virtual ~evangelista10sttt()
+    { }
+
+
+  private:
+
+    // In the algorithm of Evangelista, the procedure c2cl check
+    // for every new state if an expansion is required according
+    // to its reducet set of successors.
+    bool is_c2cl(const state* st, const dfs_inspector& i)
+    {
+      // FIXME find another way to not use std::function
+      static const dfs_inspector* i_ptr;
+      static bool res;
+      static int st_weight;
+
+      // Initalize
+      i_ptr = &i;
+      res = true;
+      st_weight = i.get_weight(st);
+
+      // Grab the position of st.
+      int st_pos = i.dfs_position(st);
+      assert(st_pos != -1);
+
+      // Here reorder remaining will walk remaining transitions
+      // Since is_c2cl is only call during the PUSH remaining will
+      // consist of the Reduced set.
+      i.get_iterator(st_pos)->
+	reorder_remaining([](const state* sp)
+			  {
+			    if (i_ptr->visited(sp))
+			      {
+				auto& colors = i_ptr->get_colors(sp);
+				bool sp_is_red = colors[0] && colors[1];
+				bool sp_is_orange = colors[0] && !colors[1];
+				if (sp_is_red ||
+				    (sp_is_orange &&
+				     st_weight == i_ptr->get_weight(sp)))
+				  res = false;
+			      }
+
+			    // do not reorder.
+			    return false;
+			  });
+      return res;
+    }
+
+    int expanded_ = 0;
+    unsigned source_ = 0;
+    unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
+  };
+
 }

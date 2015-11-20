@@ -53,7 +53,9 @@ namespace spot
       cumul_red_ += todo.back().it->reduced();
       cumul_en_ += todo.back().it->enabled();
 
-      proviso_.notify_push(st, *this);
+      if (proviso_.notify_push(st, *this))
+	++expanded_;
+
 
       if (Anticipated || FullyAnticipated)
 	{
@@ -93,7 +95,7 @@ namespace spot
     void run()
     {
       const state* initial =  aut_->get_init_state();
-      seen[initial] = {++dfs_number, (int) todo.size(), {}};
+      seen[initial] = {++dfs_number, (int) todo.size(), {}, 0};
       push_state(initial);
 
       while (!todo.empty())
@@ -107,7 +109,7 @@ namespace spot
 	      ++transitions_;
 	      const state* dst = todo.back().it->dst();
 	      todo.back().it->next();
-	      state_info info = {dfs_number+1, (int)todo.size(), {}};
+	      state_info info = {dfs_number+1, (int)todo.size(), {}, 0};
 	      auto res = seen.emplace(dst, info);
 	      if (res.second)
 		{
@@ -196,6 +198,11 @@ namespace spot
       assert(seen.find(st) != seen.end());
       return seen[st].colors;
     }
+    virtual int& get_weight(const state* st) const
+    {
+      assert(seen.find(st) != seen.end());
+      return seen[st].weight;
+    }
 
   private:
     const_twa_ptr aut_;		///< The spot::tgba to explore.
@@ -214,7 +221,8 @@ namespace spot
     {
       unsigned live_number;
       int dfs_position;
-      std::vector<bool> colors;
+      std::vector<bool> colors; ///< set by proviso
+      int weight; 		///< set by proviso
     };
     typedef std::unordered_map<const state*, state_info,
 			       state_ptr_hash, state_ptr_equal> seen_map;

@@ -41,5 +41,8 @@ namespace spot
 
     /// \brief Return the colors (if exists) associated to a state
     virtual std::vector<bool>& get_colors(const state*) const = 0;
+
+    /// \brief Return the weight (if exists) associated to a state
+    virtual int& get_weight(const state*) const = 0;
   };
 }
