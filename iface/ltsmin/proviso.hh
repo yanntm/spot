@@ -40,10 +40,13 @@ namespace spot
     /// Note that according to the cycle proviso, every cycle must
     /// contain an expanded state. If  the method return -1, no expansion
     /// is needed.
-    virtual unsigned maybe_closingedge(const state* src,
-				       const state* dst,
-				       const dfs_inspector& i) = 0;
-    virtual void notify_push(const state* src, const dfs_inspector& i) = 0;
+    virtual int maybe_closingedge(const state* src,
+				  const state* dst,
+				  const dfs_inspector& i) = 0;
+
+    /// \brief Notify the proviso that a a new state has been pushed. This
+    /// method return true only if the src has been expanded.
+    virtual bool notify_push(const state* src, const dfs_inspector& i) = 0;
     virtual bool before_pop(const state* src, const dfs_inspector& i) = 0;
 
     virtual std::string name() = 0;
@@ -104,7 +107,7 @@ namespace spot
       return res;
     }
 
-    virtual unsigned maybe_closingedge(const state* src,
+    virtual int maybe_closingedge(const state* src,
 				       const state* dst,
 				       const dfs_inspector& i)
     {
@@ -140,12 +143,13 @@ namespace spot
       return choose(src_pos, dst_pos, src, dst, i);
     }
 
-    virtual void notify_push(const state* src, const dfs_inspector& i)
+    virtual bool notify_push(const state* src, const dfs_inspector& i)
     {
       int src_pos = i.dfs_position(src);
       if (strat_ == strategy::All)
 	{
 	  i.get_iterator(src_pos)->fire_all();
+	  return true;
 	}
       if (Delayed)
 	{
@@ -156,6 +160,7 @@ namespace spot
 	  colors.push_back(false);
 	  colors.push_back(true);
 	}
+      return false;
     }
     virtual bool before_pop(const state* st,
 			    const dfs_inspector& i)
@@ -305,7 +310,6 @@ namespace spot
 	}
     }
 
-
     strategy strat_;
     std::mt19937 generator_;
     unsigned source_;
@@ -313,377 +317,212 @@ namespace spot
   };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // // ----------------------------------------------------------------------
-  // // \brief Interface for proviso
-  // class SPOT_API proviso
-  // {
-  // public:
-  //   typedef std::unordered_map<const state*, int,
-  // 			       state_ptr_hash, state_ptr_equal> seen_map;
-
-  //   virtual bool expand_new_state(int n, bool expanded,
-  // 				  // This part of the protoype is ugly but
-  // 				  // needed by some proviso
-  // 				  twa_succ_iterator*, seen_map&,
-  // 				  const state*, const const_twa_ptr&) = 0;
-
-  //   virtual bool expand_src_closingedge(int src, int dst) = 0;
-
-  //   virtual bool expand_before_pop(int n,
-  // 				   // This part of the protoype is ugly but
-  // 				   // needed by some proviso
-  // 				   twa_succ_iterator*, seen_map&) = 0;
-  //   virtual ~proviso()
-  //   { }
-  // };
-
-  // // ----------------------------------------------------------------------
-  // // \brief Implementation of an empty proviso : no states will be
-  // // expanded
-  // class SPOT_API no_proviso: public proviso
-  // {
-  // public:
-  //   bool expand_new_state(int, bool, twa_succ_iterator*,
-  // 			  seen_map&, const state*, const const_twa_ptr&);
-  //   bool expand_src_closingedge(int, int);
-  //   bool expand_before_pop(int, twa_succ_iterator*, seen_map&);
-  //   ~no_proviso();
-  // };
-
-  // // \brief Implementation of an empty proviso : no states will be
-  // // expanded
-  // class SPOT_API fireall_proviso: public proviso
-  // {
-  // public:
-  //   bool expand_new_state(int, bool, twa_succ_iterator*,
-  // 			  seen_map&, const state*, const const_twa_ptr&);
-  //   bool expand_src_closingedge(int, int);
-  //   bool expand_before_pop(int, twa_succ_iterator*, seen_map&);
-  //   ~fireall_proviso();
-  // };
-
-  // // ----------------------------------------------------------------------
-  // // \brief Implementation of the cycle proviso of SPIN. All states
-  // // with a backedge are expanded.
-  // class SPOT_API spin_proviso: public proviso
-  // {
-  // public:
-  //   bool expand_new_state(int n, bool expanded,
-  // 			  twa_succ_iterator*, seen_map&,
-  // 			  const state*, const const_twa_ptr&);
-
-  //   bool expand_src_closingedge(int, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
-
-  //   ~spin_proviso();
-  // private:
-  //   std::unordered_map<int, bool> on_dfs_;
-  // };
-
-  // // ----------------------------------------------------------------------
-  // // \brief Implementation of the optimized cycle proviso of SPIN. All states
-  // // with a backedge are expanded except one where destination is already
-  // // expanded.
-  // class SPOT_API source_proviso: public proviso
-  // {
-  // public:
-  //   bool expand_new_state(int n, bool expanded,
-  // 			  twa_succ_iterator*, seen_map&,
-  // 			  const state*, const const_twa_ptr&);
-
-  //   bool expand_src_closingedge(int, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
-
-  //   ~source_proviso();
-  // private:
-  //   std::unordered_map<int, bool> on_dfs_;
-  // };
-
-  // // ----------------------------------------------------------------------
-  // \brief This cycle proviso always expand the destination if the destination
-  // // is on the DFS. This proviso is the dual of the stack proviso. Note that
-  // // if the source is already expanded the destination is not marked as to
-  // // be expanded.
-  // class SPOT_API destination_proviso: public proviso
-  // {
-  // public:
-  //   bool expand_new_state(int n, bool expanded,
-  // 			  twa_succ_iterator*, seen_map&,
-  // 			  const state*, const const_twa_ptr&);
-
-  //   // Here we detect backegdes to mark the destination as to be expanded
-  //   bool expand_src_closingedge(int, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
-
-  //   ~destination_proviso();
-
-  // private:
-  //   // Store foreach state wether it must be expanded or not
-  //   std::unordered_map<int, bool> on_dfs_;
-  //   std::vector<bool> expanded_;
-  // };
-
-
-  //  \brief this cycle proviso expand randomly one state between the source and
-  // // the destinationn iff they are both on DFS stack.
-  // class SPOT_API rnd_sd_proviso: public proviso
-  // {
-  // public:
-  //   bool expand_new_state(int n, bool expanded,
-  // 			  twa_succ_iterator*, seen_map&,
-  // 			  const state*, const const_twa_ptr&);
-
-  //   // Here we detect backegdes to mark the destination as to be expanded
-  //   bool expand_src_closingedge(int, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
-
-  //   ~rnd_sd_proviso();
-
-  // private:
-  //   // Store foreach state wether it must be expanded or not
-  //   struct dfs_element{
-  //     unsigned long  pos;
-  //     bool to_be_expanded;
-  //     bool expanded;
-  //   };
-  //   std::unordered_map<int, dfs_element> on_dfs_;
-  // };
-
-  // // ----------------------------------------------------------------------
-  // // \brief This proviso always expand the destination but uses color
-  // // to avoid useless firing.
-  // class SPOT_API delayed_proviso: public proviso
-  // {
-  // public:
-
-  //   bool expand_new_state(int n, bool expanded, twa_succ_iterator*,
-  // 			  seen_map&, const state*, const const_twa_ptr&);
-
-  //   bool expand_src_closingedge(int src, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
-
-  //   ~delayed_proviso();
-
-  // private:
-  //   // FIXME duplicated with dfs exploration, must be passed by reference?
-  //   std::vector<int> todo_;
-  //   std::unordered_map<int, bool> reach_;
-  //   struct dfs_element
-  //   {
-  //     bool expanded;
-  //     bool to_be_expanded;
-  //   };
-  //   std::unordered_map<int, dfs_element> on_dfs_;
-  // };
-
-  // // \brief the above delayed proviso but ignoring dead states.
-  // // This implies that we compute SCCs here
-  // class SPOT_API delayed_proviso_dead: public proviso
-  // {
-  // public:
-
-  //   bool expand_new_state(int n, bool expanded, twa_succ_iterator*,
-  // 			  seen_map&, const state*, const const_twa_ptr&);
-
-  //   bool expand_src_closingedge(int src, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
-
-  //   ~delayed_proviso_dead();
-
-  // private:
-  //   // FIXME duplicated with dfs exploration, must be passed by reference?
-  //   std::vector<int> todo_;
-
-  //   struct root_element
-  //   {
-  //     int n;
-  //     std::vector<int> same_scc;
-  //   };
-  //   std::vector<root_element> root_stack_;
-  //   struct reach_element
-  //   {
-  //     bool nongreen;
-  //     bool dead;
-  //   };
-  //   std::unordered_map<int, reach_element> reach_;
-  //   struct dfs_element
-  //   {
-  //     bool expanded;
-  //     bool to_be_expanded;
-  //   };
-  //   std::unordered_map<int, dfs_element> on_dfs_;
-  // };
-
-
-  // // This proviso is the one described by Evangelista (2007) in
-  // // "Some Solutions to the Ignoring Problem"
-  // class SPOT_API color_proviso: public proviso
-  // {
-  // public:
-
-  //   color_proviso();
-
-  //   bool is_cl2l_persistent_set(int n, twa_succ_iterator* it, seen_map& map);
-
-  //   bool expand_new_state(int n, bool expanded, twa_succ_iterator* it,
-  // 			  seen_map& map, const state*, const const_twa_ptr&);
-
-  //   bool expand_src_closingedge(int src, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator* it, seen_map& map);
-
-  //   ~color_proviso();
-
-  // private:
-  //   enum class color
-  //   {
-  //     Orange,
-  //     Green,
-  //     Red
-  //   };
-  //   struct element
-  //   {
-  //     bool in_stack;
-  //     spot::color_proviso::color color;
-  //     int  expanded;
-  //   };
-  //   int expanded_;
-  //   std::unordered_map<int, element> reach_;
-  //   std::vector<bool> st_expanded_;
-  // };
-
-  // // ----------------------------------------------------------------------
-  // // This proviso is the one described by Evangelista (2007) in
-  // // "Some Solutions to the Ignoring Problem"
-  // class SPOT_API color_proviso_dead: public proviso
-  // {
-  // public:
-
-  //   color_proviso_dead();
-
-  //   bool is_cl2l_persistent_set(int n, twa_succ_iterator* it, seen_map& map);
-
-  //   bool expand_new_state(int n, bool expanded, twa_succ_iterator* it,
-  // 			  seen_map& map, const state*, const const_twa_ptr&);
-
-  //   bool expand_src_closingedge(int src, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator* it, seen_map& map);
-
-  //   ~color_proviso_dead();
-
-  // private:
-  //   enum class color
-  //   {
-  //     Orange,
-  //     Green,
-  //     Red
-  //   };
-  //   struct element
-  //   {
-  //     bool in_stack;
-  //     spot::color_proviso_dead::color color;
-  //     int  expanded;
-  //     bool dead;
-  //   };
-  //   int expanded_;
-  //   std::unordered_map<int, element> reach_;
-  //   struct root_element
-  //   {
-  //     int n;
-  //     std::vector<int> same_scc;
-  //   };
-  //   std::vector<root_element> root_stack_;
-  //   std::vector<bool> st_expanded_;
-  // };
-
-  // // ----------------------------------------------------------------------
-  // // \brief expand the state with the smallest number of reduced
-  // // successors.
-  // class SPOT_API min_succ_sd_proviso: public proviso
-  // {
-  // public:
-
-  //   bool expand_new_state(int n, bool expanded, twa_succ_iterator* it,
-  // 			  seen_map&, const state*, const const_twa_ptr&);
-
-  //   bool expand_src_closingedge(int src, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
-
-  //   ~min_succ_sd_proviso();
-
-  // private:
-  //   struct dfs_element
-  //   {
-  //     int nb_succ;
-  //     bool expanded;
-  //     bool to_be_expanded;
-  //   };
-  //   std::unordered_map<int, dfs_element> on_dfs_;
-  // };
-
-  // // \brief expand the state with the smallest number of reduced
-  // // successors.
-  // class SPOT_API max_succ_sd_proviso: public proviso
-  // {
-  // public:
-
-  //   bool expand_new_state(int n, bool expanded, twa_succ_iterator* it,
-  // 			  seen_map&, const state*, const const_twa_ptr&);
-
-  //   bool expand_src_closingedge(int src, int dst);
-
-  //   bool expand_before_pop(int n, twa_succ_iterator*, seen_map&);
-
-  //   ~max_succ_sd_proviso();
-
-  // private:
-  //   struct dfs_element
-  //   {
-  //     int nb_succ;
-  //     bool expanded;
-  //     bool to_be_expanded;
-  //   };
-  //   std::unordered_map<int, dfs_element> on_dfs_;
-  // };
+  /// \brief Implementation of the evangelista family of
+  /// provisos.
+  template<bool FullyColored>
+  class SPOT_API evangelista10sttt: public proviso
+  {
+
+  public:
+    evangelista10sttt()
+      { }
+
+    virtual int maybe_closingedge(const state* src,
+				  const state* dst,
+				  const dfs_inspector& i)
+    {
+      auto& src_colors = i.get_colors(src);
+      auto& dst_colors = i.get_colors(dst);
+      bool src_is_orange = src_colors[0] && !src_colors[1];
+      bool dst_is_red = dst_colors[0] && dst_colors[1];
+
+      // src is orange and dst is red  an expansion is required.
+      if (src_is_orange && dst_is_red)
+	{
+	  ++expanded_;
+	  src_colors[0] = false;
+	  src_colors[1] = false;
+
+	  int src_pos = i.dfs_position(src);
+
+	  if (FullyColored)
+	    {
+	      // We can propagate the green color. Note that
+	      // here the source is not yet expanded but has
+	      // already the good color so we can propagate!
+	      int p = src_pos-1;
+	      while (0 <= p)
+		{
+		  const state* st = i.dfs_state(p);
+		  auto& colors = i.get_colors(st);
+		  bool is_orange = colors[0] && !colors[1];
+
+		  if (is_orange && i.get_iterator(p)->done())
+		    {
+		      // Propagate green
+		      colors[0] = false;
+		      colors[1] = false;
+		      --p;
+		    }
+		  else
+		    break;
+		}
+	    }
+
+	  // Require to expand the source of the edge.
+	  ++source_;
+	  return src_pos;
+	}
+
+      // This maybe closing-edge is safe.
+      return -1;
+    }
+
+    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    {
+      // Every state is associated to a color ORANGE, RED, and GREEN
+      // We need two boolean to encode this information.
+      // 10 -> ORANGE
+      // 11 -> RED
+      // 00 -> GREEN
+      auto& colors = i.get_colors(src);
+      colors.push_back(true);
+      colors.push_back(false);
+
+      // Actually Sami's algorithm do not have a weight but an expanded
+      // field foreach state. We use the weight of the generic dfs to
+      // store this information.
+      i.get_weight(src) = expanded_;
+
+      int src_pos = i.dfs_position(src);
+      bool res = false;
+      if (!is_c2cl(src, i))
+	{
+	  i.get_iterator(src_pos)->fire_all();
+	  ++source_;
+	  res = true;
+	}
+
+      // Set state to green
+      if (i.get_iterator(src_pos)->all_enabled())
+	{
+	  ++expanded_;
+	  colors[0] = false;
+	  colors[1] = false; // Useless since this bit must already be false.
+	}
+      return res;
+    }
+
+    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    {
+      int src_pos = i.dfs_position(src);
+      if (i.get_iterator(src_pos)->all_enabled())
+	--expanded_;
+
+      auto& colors = i.get_colors(src);
+      if (colors[0] && !colors[1]) // State is orange.
+	{
+	  auto* it = i.get_iterator(src_pos);
+
+	  it->first();
+	  bool isred = false;
+	  while (!it->done())
+	    {
+	      auto* dst = it->current_state();
+	      auto& dst_colors = i.get_colors(dst);
+	      bool dst_is_green = !dst_colors[0] && !dst_colors[1];
+
+	      if (!dst_is_green) //dst is not green
+		isred = true;
+	      dst->destroy();
+	      it->next();
+	    }
+	  if (isred) // set color to red
+	    {
+	      colors[0] = true;
+	      colors[0] = true;
+	    }
+	  else // set color to green
+	    {
+	      colors[0] = false;
+	      colors[0] = false;
+	    }
+	}
+
+      // Never avoid a POP in Sami Evangelista and Pajault
+      return true;
+    }
+
+    virtual std::string name()
+    {
+      if (FullyColored)
+	return "fullycolored_evangelista10sttt";
+      else
+	return "evangelista10sttt";
+    }
+    virtual std::string dump()
+    {
+      return
+	" source_expanded  : " + std::to_string(source_)           + '\n' +
+	" dest_expanded    : " + std::to_string(destination_)      + '\n';
+    }
+    virtual std::string dump_csv()
+    {
+      return
+	std::to_string(source_)           + ',' +
+	std::to_string(destination_);
+    }
+
+    virtual ~evangelista10sttt()
+    { }
+
+
+  private:
+
+    // In the algorithm of Evangelista, the procedure c2cl check
+    // for every new state if an expansion is required according
+    // to its reducet set of successors.
+    bool is_c2cl(const state* st, const dfs_inspector& i)
+    {
+      // FIXME find another way to not use std::function
+      static const dfs_inspector* i_ptr;
+      static bool res;
+      static int st_weight;
+
+      // Initalize
+      i_ptr = &i;
+      res = true;
+      st_weight = i.get_weight(st);
+
+      // Grab the position of st.
+      int st_pos = i.dfs_position(st);
+      assert(st_pos != -1);
+
+      // Here reorder remaining will walk remaining transitions
+      // Since is_c2cl is only call during the PUSH remaining will
+      // consist of the Reduced set.
+      i.get_iterator(st_pos)->
+	reorder_remaining([](const state* sp)
+			  {
+			    if (i_ptr->visited(sp))
+			      {
+				auto& colors = i_ptr->get_colors(sp);
+				bool sp_is_red = colors[0] && colors[1];
+				bool sp_is_orange = colors[0] && !colors[1];
+				if (sp_is_red ||
+				    (sp_is_orange &&
+				     st_weight == i_ptr->get_weight(sp)))
+				  res = false;
+			      }
+
+			    // do not reorder.
+			    return false;
+			  });
+      return res;
+    }
+
+    int expanded_ = 0;
+    unsigned source_ = 0;
+    unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
+  };
 }
