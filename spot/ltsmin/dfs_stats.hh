@@ -27,10 +27,96 @@
 
 namespace spot
 {
+
+  /// \brief This Union-Find data structure is dedicated for the dfs_stats class
+  /// below. The key of this union-find is int. Moreover, we suppose that only
+  /// consecutive int are inserted. This union-find includes most of the
+  /// classical optimisations.
+  class int_unionfind_IPC_LRPC_MS
+  {
+  private:
+    // Store the parent relation, i.e. -1 or x < id.size()
+    std::vector<int> id;
+
+    // id of a specially managed partition of "dead" elements
+    const int DEAD = 0;
+
+    int root(int i)
+    {
+      assert(i > 0);
+      int p = id[i];
+      if (p == DEAD)
+	return DEAD;
+      if (p < 0)
+	return i;
+      int gp = id[p];
+      if (gp == DEAD)
+	return DEAD;
+      if (gp < 0)
+	return p;
+      p = root(p);
+      id[i] = p;
+      return p;
+    }
+
+  public:
+    int_unionfind_IPC_LRPC_MS() : id()
+    {
+      id.push_back(DEAD);
+    }
+
+    void makeset(int e)
+    {
+      assert(e == (int) id.size());
+      id.push_back(-1);
+    }
+
+    bool unite(int e1, int e2)
+    {
+      // IPC - Immediate Parent Check
+      int p1 = id[e1];
+      int p2 = id[e2];
+      if ((p1 < 0 ? e1 : p1) == (p2 < 0 ? e2 : p2))
+	return false;
+      int root1 = root(e1);
+      int root2 = root(e2);
+      if (root1 == root2)
+	return false;
+      int rk1 = -id[root1];
+      int rk2 = -id[root2];
+      if (rk1 < rk2)
+	id[root1] = root2;
+      else {
+	id[root2] = root1;
+	if (rk1 == rk2)
+	  id[root1] = -(rk1 + 1);
+      }
+      return true;
+    }
+
+    void markdead(int e)
+    {
+      id[root(e)] = DEAD;
+    }
+
+    bool sameset(int e1, int e2)
+    {
+      assert(e1 < (int)id.size() && e2 < (int)id.size());
+      return root(e1) == root(e2);
+    }
+
+    bool isdead(int e)
+    {
+      assert(e < (int)id.size());
+      return root(e) == DEAD;
+    }
+  };
+
+
   /// \brief This class implements a simple DFS. This DFS is more complicated
   /// than the average since it allows to express many options that are useful
   /// for provisos.
-  template<bool Anticipated, bool FullyAnticipated>
+  template<bool Anticipated, bool FullyAnticipated, bool ComputeSCC>
   class SPOT_API dfs_stats: public dfs_inspector
   {
   public:
@@ -56,6 +142,15 @@ namespace spot
       if (proviso_.notify_push(st, *this))
 	++expanded_;
 
+      if (ComputeSCC)
+	{
+	  // The root stack contains the live number of each states.
+	  assert(seen[st].live_number == dfs_number);
+	  roots.push_back(dfs_number);
+
+	  // We can now update the union-find data structure
+	  uf.makeset(dfs_number);
+	}
 
       if (Anticipated || FullyAnticipated)
 	{
@@ -76,6 +171,17 @@ namespace spot
 	return;
 
       seen[todo.back().src].dfs_position = -1;
+
+      if (ComputeSCC)
+	{
+	  int l = seen[todo.back().src].live_number;
+	  if (l == roots.back())
+	    {
+	      roots.pop_back();
+	      uf.markdead(l);
+	    }
+	}
+
       aut_->release_iter(todo.back().it);
       todo.pop_back();
 
@@ -119,9 +225,36 @@ namespace spot
 		}
 	      else
 		{
+		  // Here we can detect dead edge, i.e. edge going to a
+		  // DEAD state. In this case, no expansion is required
+		  // so we can bypass all actions from the proviso.
+		  if (ComputeSCC)
+		    {
+		      if (uf.isdead(seen[dst].live_number))
+			{
+			  dst->destroy();
+			  continue;
+			}
+		    }
+
 		  // This may be a closing edge
 		  int toexpand = proviso_.maybe_closingedge(todo.back().src,
 							    dst, *this);
+
+		  // It's not a dead-edge, so we must update both the root
+		  // stack and the union-find data structure.
+		  // This block cannot be moved upward, i.e. before the call
+		  // to proviso.maybe_closingedge, since some proviso need to
+		  // work with a non-modified root stack.
+		  if (ComputeSCC)
+		    {
+		      int dst_ln = seen[dst].live_number;
+		      while (!uf.sameset(dst_ln, roots.back()))
+			{
+			  uf.unite(dst_ln, roots.back());
+			  roots.pop_back();
+			}
+		    }
 
 		  // Count the number of backedges
 		  if (dfs_position(dst) != -1)
@@ -219,7 +352,7 @@ namespace spot
 
     struct state_info
     {
-      unsigned live_number;
+      unsigned live_number;	///< Unique id
       int dfs_position;
       std::vector<bool> colors; ///< set by proviso
       int weight; 		///< set by proviso
@@ -233,5 +366,7 @@ namespace spot
       twa_succ_iterator* it;
     };
     std::deque<stack_item> todo; ///< the DFS stack
+    std::vector<int> roots;
+    int_unionfind_IPC_LRPC_MS uf;
   };
 }

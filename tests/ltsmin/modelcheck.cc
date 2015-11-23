@@ -62,6 +62,7 @@ Options:\n\
   -c     fully colored for evangelista \n\
   -del   delayed : only work with -por + -sm , includes -b \n\
   -f     fully anticipated : only work with -por + -sm \n\
+  -scc   compute (and use scc): only work with -por + -sm\n\
   -sm    statistics for the model\n\
   -T     time the different phases of the execution\n\
   -z     compress states to handle larger models\n\
@@ -94,6 +95,7 @@ checked_main(int argc, char **argv)
   bool fully_anticipated = false;
   bool basic_check = false;
   bool delayed = false;
+  bool compute_scc = false;
   std::string proviso_name;
   bool fully_colored = false;
 
@@ -173,9 +175,10 @@ checked_main(int argc, char **argv)
 	    case 's':
 	      if (strcmp (opt, "sm") == 0)
 		output = StatsModel;
-	      else
+	      else if (strcmp (opt, "scc") == 0)
+		compute_scc = true;
+	      else if (strncmp (opt, "seed=", 5) == 0)
 		{
-		  assert(strncmp (opt, "seed=", 5) == 0);
 		  opt+=5;
 		  seed = atoi(opt);
 		}
@@ -435,53 +438,109 @@ checked_main(int argc, char **argv)
   if (output == StatsModel)
     {
       assert(m_proviso != nullptr);
-      if (fully_anticipated)
-      	{
-	  spot::dfs_stats<true, true> dfs(model, *m_proviso);
-	  tm.start("Exploration");
-	  dfs.run();
-	  tm.stop("Exploration");
-	  std::cout << dfs.dump() << " walltime_ms      : "
-		    << tm.timer("Exploration").walltime()
-		    << std::endl << std::endl;
-	  std::cout << '#' << seed  << ','
-		    << "fullyanticipated_" + m_proviso->name() << ','
-		    << argv[1] << ','
-		    << dfs.dump_csv() << ','
-		    << tm.timer("Exploration").walltime()
-		    << std::endl << std::endl;
-	}
-      else if (anticipated)
-      	{
-	  spot::dfs_stats<true, false> dfs(model, *m_proviso);
-	  tm.start("Exploration");
-	  dfs.run();
-	  tm.stop("Exploration");
-	  std::cout << dfs.dump() << " walltime_ms      : "
-		    << tm.timer("Exploration").walltime()
-		    << std::endl << std::endl;
-	  std::cout << '#' << seed  << ','
-		    << "anticipated_" + m_proviso->name() << ','
-		    << argv[1] << ','
-		    << dfs.dump_csv() << ','
-		    << tm.timer("Exploration").walltime()
-		    << std::endl << std::endl;
+      if (!compute_scc)
+	{
+	  if (fully_anticipated)
+	    {
+	      spot::dfs_stats<true, true, false> dfs(model, *m_proviso);
+	      tm.start("Exploration");
+	      dfs.run();
+	      tm.stop("Exploration");
+	      std::cout << dfs.dump() << " walltime_ms      : "
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	      std::cout << '#' << seed  << ','
+			<< "fullyanticipated_" + m_proviso->name() << ','
+			<< argv[1] << ','
+			<< dfs.dump_csv() << ','
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	    }
+	  else if (anticipated)
+	    {
+	      spot::dfs_stats<true, false, false> dfs(model, *m_proviso);
+	      tm.start("Exploration");
+	      dfs.run();
+	      tm.stop("Exploration");
+	      std::cout << dfs.dump() << " walltime_ms      : "
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	      std::cout << '#' << seed  << ','
+			<< "anticipated_" + m_proviso->name() << ','
+			<< argv[1] << ','
+			<< dfs.dump_csv() << ','
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	    }
+	  else
+	    {
+	      spot::dfs_stats<false, false, false> dfs(model, *m_proviso);
+	      tm.start("Exploration");
+	      dfs.run();
+	      tm.stop("Exploration");
+	      std::cout << dfs.dump() << " walltime_ms      : "
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	      std::cout << '#' << seed  << ','
+			<< m_proviso->name() << ','
+			<< argv[1] << ','
+			<< dfs.dump_csv() << ','
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	    }
 	}
       else
 	{
-	  spot::dfs_stats<false, false> dfs(model, *m_proviso);
-	  tm.start("Exploration");
-	  dfs.run();
-	  tm.stop("Exploration");
-	  std::cout << dfs.dump() << " walltime_ms      : "
-		    << tm.timer("Exploration").walltime()
-		    << std::endl << std::endl;
-	  std::cout << '#' << seed  << ','
-		    << m_proviso->name() << ','
-		    << argv[1] << ','
-		    << dfs.dump_csv() << ','
-		    << tm.timer("Exploration").walltime()
-		    << std::endl << std::endl;
+	  if (fully_anticipated)
+	    {
+	      spot::dfs_stats<true, true, true> dfs(model, *m_proviso);
+	      tm.start("Exploration");
+	      dfs.run();
+	      tm.stop("Exploration");
+	      std::cout << dfs.dump() << " walltime_ms      : "
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	      std::cout << '#' << seed  << ','
+			<< "scc_fullyanticipated_" + m_proviso->name()
+			<< ','
+			<< argv[1] << ','
+			<< dfs.dump_csv() << ','
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	    }
+	  else if (anticipated)
+	    {
+	      spot::dfs_stats<true, false, true> dfs(model, *m_proviso);
+	      tm.start("Exploration");
+	      dfs.run();
+	      tm.stop("Exploration");
+	      std::cout << dfs.dump() << " walltime_ms      : "
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	      std::cout << '#' << seed  << ','
+			<< "scc_anticipated_" + m_proviso->name() << ','
+			<< argv[1] << ','
+			<< dfs.dump_csv() << ','
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	    }
+	  else
+	    {
+	      spot::dfs_stats<false, false, true> dfs(model, *m_proviso);
+	      tm.start("Exploration");
+	      dfs.run();
+	      tm.stop("Exploration");
+	      std::cout << dfs.dump() << " walltime_ms      : "
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	      std::cout << '#' << seed  << ','
+			<< "scc_" + m_proviso->name() << ','
+			<< argv[1] << ','
+			<< dfs.dump_csv() << ','
+			<< tm.timer("Exploration").walltime()
+			<< std::endl << std::endl;
+	    }
+
 	}
       goto safe_exit;
     }
