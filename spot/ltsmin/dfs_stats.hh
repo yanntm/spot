@@ -22,8 +22,8 @@
 #include <spot/twaalgos/reachiter.hh>
 #include <spot/twaalgos/stats.hh>
 #include <spot/ltsmin/proviso.hh>
+#include <spot/twaalgos/isweakscc.hh>
 #include <random>
-
 
 namespace spot
 {
@@ -116,9 +116,20 @@ namespace spot
   /// \brief This class implements a simple DFS. This DFS is more complicated
   /// than the average since it allows to express many options that are useful
   /// for provisos.
-  template<bool Anticipated, bool FullyAnticipated, bool ComputeSCC>
+  template<bool Anticipated, bool FullyAnticipated, bool ComputeSCC,
+	   // If Checker is activated, then the automaton representing
+	   // the state space is build and then we can check that
+	   // every cycle contains an expanded state.
+	   bool Checker>
   class SPOT_API dfs_stats: public dfs_inspector
   {
+    // The state space automaton, only available when Checker is activated. Note
+    // that is this automaton, we represent expanded states as accepting ones.
+    // Doing this allows to simplify the check about all cycles containing an
+    // expanded state: we can only check that every SCC is accepting and
+    // inherently weak.
+    twa_graph_ptr state_space_;
+
   public:
     dfs_stats(const const_twa_ptr& a, proviso& proviso):
       aut_(a), proviso_(proviso)
@@ -126,6 +137,15 @@ namespace spot
 
     void push_state(const state* st)
     {
+      if (SPOT_UNLIKELY(Checker))
+	{
+	  auto s1 =  state_space_->new_state();
+	  assert(s1+1 == dfs_number);
+	  if (!todo.empty())
+	    state_space_->new_edge(seen[todo.back().src].live_number-1,
+				   s1, bddtrue);
+	}
+
       ++states_;
       todo.push_back({st, aut_->succ_iter(st)});
       todo.back().it->first();
@@ -172,6 +192,20 @@ namespace spot
 
       seen[todo.back().src].dfs_position = -1;
 
+      if (SPOT_UNLIKELY(Checker))
+	{
+	  // We mark expanded states has "accepting" so we can
+	  // only check all SCC of  the state_space_ automaton are
+	  // weak accepting to be sure that every cycle contains at
+	  // least one  state fully expanded.
+	  if (todo.back().it->all_enabled())
+	    {
+	      for (auto& e: state_space_->
+		     out(seen[todo.back().src].live_number-1))
+		e.acc.set(0);
+	    }
+	}
+
       if (ComputeSCC)
 	{
 	  int l = seen[todo.back().src].live_number;
@@ -200,8 +234,15 @@ namespace spot
 
     void run()
     {
+      if (SPOT_UNLIKELY(Checker))
+	{
+	  state_space_ = make_twa_graph(aut_->get_dict());
+	  state_space_->prop_state_acc(true);
+	  state_space_->set_acceptance(1, state_space_->get_acceptance());
+	}
+
       const state* initial =  aut_->get_init_state();
-      seen[initial] = {++dfs_number, (int) todo.size(), {}, 0};
+      seen[initial] = {++dfs_number, (int) todo.size(), false, {}, 0};
       push_state(initial);
 
       while (!todo.empty())
@@ -215,7 +256,7 @@ namespace spot
 	      ++transitions_;
 	      const state* dst = todo.back().it->dst();
 	      todo.back().it->next();
-	      state_info info = {dfs_number+1, (int)todo.size(), {}, 0};
+	      state_info info = {dfs_number+1, (int)todo.size(), false, {}, 0};
 	      auto res = seen.emplace(dst, info);
 	      if (res.second)
 		{
@@ -225,6 +266,14 @@ namespace spot
 		}
 	      else
 		{
+		  if (SPOT_UNLIKELY(Checker))
+		    {
+		      // There is a difference of (+1)..
+		      auto s1 =  seen[todo.back().src].live_number-1;
+		      auto s2 =  seen[dst].live_number-1;
+		      state_space_->new_edge(s1, s2, bddtrue);
+		    }
+
 		  // Here we can detect dead edge, i.e. edge going to a
 		  // DEAD state. In this case, no expansion is required
 		  // so we can bypass all actions from the proviso.
@@ -271,6 +320,24 @@ namespace spot
 		  dst->destroy();
 		}
 	    }
+	}
+      if (SPOT_UNLIKELY(Checker))
+	{
+	  //print_dot(std::cout, state_space_);
+	  scc_info si(state_space_);
+	  bool all_cycles_expanded = true;
+	  for (unsigned int i = 0; i < si.scc_count(); ++i)
+	    if (!si.is_trivial(i))
+	      all_cycles_expanded =
+		all_cycles_expanded &&  si.acc(i)
+		&& is_inherently_weak_scc(si, i);
+
+	  if (!all_cycles_expanded)
+	    {
+	      std::cerr << "ERROR ! SOME CYCLES ARE NOT EXPANDED!\n";
+	      exit (1);
+	    }
+	  // dump_scc_info_dot(std::cout, state_space_, &si);
 	}
     }
 
@@ -354,6 +421,7 @@ namespace spot
     {
       unsigned live_number;	///< Unique id
       int dfs_position;
+      bool expanded_; 		/// Only used by the checker
       std::vector<bool> colors; ///< set by proviso
       int weight; 		///< set by proviso
     };
