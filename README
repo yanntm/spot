@@ -197,6 +197,7 @@ spot/             Sources for libspot.
    kripke/        Kripke Structure interface.
    tl/            Temporal Logic formulas and algorithms.
    misc/          Miscellaneous support files.
+   mc/            All algorithms useful for model checking
    parseaut/      Parser for automata in multiple formats.
    parsetl/       Parser for LTL/PSL formulas.
    priv/          Private algorithms, used internally but not exported.
