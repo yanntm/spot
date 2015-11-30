@@ -25,6 +25,6 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 mcdir = $(pkgincludedir)/mc
 
-mc_HEADERS = reachability.hh
+mc_HEADERS = reachability.hh intersect.hh
 
 noinst_LTLIBRARIES = libmc.la
