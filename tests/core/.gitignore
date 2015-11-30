@@ -8,6 +8,7 @@ checkpsl
 checkta
 complement
 consterm
+cube
 defs
 .deps
 *.dot
