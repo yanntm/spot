@@ -217,6 +217,7 @@ AC_CONFIG_FILES([
   spot/tl/Makefile
   spot/twaalgos/gtec/Makefile
   spot/twaalgos/Makefile
+  spot/twacube_algos/Makefile
   spot/twa/Makefile
   spot/twacube/Makefile
   python/ajax/Makefile
