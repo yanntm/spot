@@ -290,6 +290,7 @@ spot/             Sources for libspot.
    ta/            TA objects and cousins (TGTA).
    taalgos/       Algorithms on TA/TGTA.
    twa/           TωA objects and cousins (Transition-based ω-Automata).
+   twacube/       TωA objects based on cube (not-bdd).
    twaalgos/      Algorithms on TωA.
       gtec/       Couvreur's Emptiness-Check (old version).
    gen/           Sources for libspotgen.
