@@ -1,5 +1,4 @@
 ## -*- coding: utf-8 -*-
-
 ## Copyright (C) 2009-2019 Laboratoire de Recherche et Développement
 ## de l'Epita (LRDE).
 ## Copyright (C) 2003-2006 Laboratoire d'Informatique de Paris 6
@@ -68,6 +67,7 @@ check_PROGRAMS = \
   core/checkpsl \
   core/checkta \
   core/consterm \
+  core/cube \
   core/emptchk \
   core/equals \
   core/graph \
@@ -119,6 +119,7 @@ core_randtgba_SOURCES = core/randtgba.cc
 core_taatgba_SOURCES = core/taatgba.cc
 core_tgbagraph_SOURCES = core/twagraph.cc
 core_consterm_SOURCES = core/consterm.cc
+core_cube_SOURCES = core/cube.cc
 core_equals_SOURCES = core/equalsf.cc
 core_kind_SOURCES = core/kind.cc
 core_length_SOURCES = core/length.cc
@@ -153,6 +154,7 @@ core_tunenoform_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM -DUNABBREV='"^ieFG"'
 
 TESTS_tl = \
   core/bare.test \
+  core/cube.test \
   core/parse.test \
   core/parseerr.test \
   core/utf8.test \
