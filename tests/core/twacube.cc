@@ -68,6 +68,7 @@ int main()
 		<< std::endl;
     }
 
+  spot::print_dot(std::cout, spot::twacube_to_twa(aut));
   delete aps;
   delete aut;
 }

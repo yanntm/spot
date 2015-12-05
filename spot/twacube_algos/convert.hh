@@ -50,4 +50,8 @@ namespace spot
   twa_to_twacube(spot::twa_graph_ptr& aut,
 		 std::unordered_map<int, int>& ap_binder,
 		 std::vector<std::string>& aps);
+
+  /// \brief Convert a twacube into a twa
+  SPOT_API spot::twa_graph_ptr
+  twacube_to_twa(spot::twacube* twacube);
 }
