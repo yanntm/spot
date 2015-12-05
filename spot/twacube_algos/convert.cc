@@ -130,4 +130,54 @@ namespace spot
       }
     return aps;
   }
+
+  spot::twa_graph_ptr
+  twacube_to_twa(spot::twacube* twacube)
+  {
+    // Grab necessary variables
+    auto& theg = twacube->get_graph();
+    spot::cubeset cs = twacube->get_cubeset();
+
+    // Build the resulting graph
+    auto d = spot::make_bdd_dict();
+    auto res = make_twa_graph(d);
+
+    // Fix the acceptance of the resulting automaton
+    res->acc() = twacube->acc();
+
+    // Grep bdd id for each atomic propositions
+    std::vector<int> bdds_ref;
+    for (auto& ap : twacube->get_ap())
+      bdds_ref.push_back(res->register_ap(ap));
+
+    // Build all resulting states
+    for (unsigned int i = 0; i < theg.num_states(); ++i)
+      {
+	unsigned st = res->new_state();
+	(void) st;
+	assert(st == i);
+      }
+
+    // Build all resulting conditions.
+    for (unsigned int i = 1; i <= theg.num_edges(); ++i)
+      {
+	bdd cond = bddtrue;
+	for (unsigned j = 0; j < cs.size(); ++j)
+	  {
+	    if (cs.is_true_var(theg.edge_data(i).cube_, j))
+	      cond &= bdd_ithvar(bdds_ref[j]);
+	    else if (cs.is_false_var(theg.edge_data(i).cube_, j))
+	      cond &= bdd_nithvar(bdds_ref[j]);
+	    // otherwise it 's a free variable do nothing
+	  }
+
+	res->new_edge(theg.edge_storage(i).src, theg.edge_storage(i).dst,
+		      cond, theg.edge_data(i).acc_);
+      }
+
+    // Fix the initial state
+    res->set_init_state(twacube->get_initial());
+
+    return res;
+  }
 }
