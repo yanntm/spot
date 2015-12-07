@@ -168,7 +168,6 @@ namespace spot
       // Some work must be done when delayed is used.
       if (Delayed)
 	{
-
 	  int st_pos =  i.dfs_position(st);
 	  auto& colors = i.get_colors(st);
 	  if (colors[1] && !colors[2])
@@ -223,21 +222,37 @@ namespace spot
 	  return -1; // already expanded.
 	case strategy::Source:
 	  ++source_;
-	  update_delayed(src_st, src_st, i);
+	  if (Delayed)
+	    {
+	      update_delayed(src_st, src_st, i);
+	      return -1;
+	    }
 	  return src;
 	case strategy::Destination:
 	  ++destination_;
-	  update_delayed(src_st, dst_st, i);
+	  if (Delayed)
+	    {
+	      update_delayed(src_st, dst_st, i);
+	      return -1;
+	    }
 	  return dst;
 	case strategy::Random:
 	  if (generator_()%2)
 	    {
 	      ++destination_;
-	      update_delayed(src_st, dst_st, i);
+	      if (Delayed)
+		{
+		  update_delayed(src_st, dst_st, i);
+		  return -1;
+		}
 	      return dst;
 	    }
 	  ++source_;
-	  update_delayed(src_st, src_st, i);
+	  if (Delayed)
+	    {
+	      update_delayed(src_st, src_st, i);
+	      return -1;
+	    }
 	  return src;
 	case strategy::MinEnMinusRed:
 	  {
@@ -248,11 +263,19 @@ namespace spot
 	    if (enminred_src < enminred_dst)
 	      {
 		++source_;
-		update_delayed(src_st, src_st, i);
+		if (Delayed)
+		  {
+		    update_delayed(src_st, src_st, i);
+		    return -1;
+		  }
 		return src;
 	      }
 	    ++destination_;
-	    update_delayed(src_st, dst_st, i);
+	    if (Delayed)
+	      {
+		update_delayed(src_st, dst_st, i);
+		return -1;
+	      }
 	    return dst;
 	  }
 	case strategy::MinNewStates:
@@ -285,11 +308,19 @@ namespace spot
 	    if (new_src < new_dst)
 	      {
 		++source_;
-		update_delayed(src_st, src_st, i);
+		if (Delayed)
+		  {
+		    update_delayed(src_st, src_st, i);
+		    return -1;
+		  }
 		return src;
 	      }
 	    ++destination_;
-	    update_delayed(src_st, dst_st, i);
+	  if (Delayed)
+	    {
+	      update_delayed(src_st, dst_st, i);
+	      return -1;
+	    }
 	    return dst;
 	  }
 	default:
