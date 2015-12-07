@@ -427,7 +427,7 @@ namespace spot
 
       int src_pos = i.dfs_position(src);
       bool res = false;
-      if (!is_c2cl(src, i))
+      if (!i.get_iterator(src_pos)->all_enabled() && !is_c2cl(src, i))
 	{
 	  i.get_iterator(src_pos)->fire_all();
 	  ++source_;
@@ -471,12 +471,12 @@ namespace spot
 	  if (isred) // set color to red
 	    {
 	      colors[0] = true;
-	      colors[0] = true;
+	      colors[1] = true;
 	    }
 	  else // set color to green
 	    {
 	      colors[0] = false;
-	      colors[0] = false;
+	      colors[1] = false;
 	    }
 	}
 
