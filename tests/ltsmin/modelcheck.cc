@@ -63,6 +63,7 @@ Options:\n\
   -del   delayed : only work with -por + -sm , includes -b \n\
   -f     fully anticipated : only work with -por + -sm \n\
   -scc   compute (and use scc): only work with -por + -sm\n\
+  -l     use expanded list, only work with -por + -sm\n\
   -sm    statistics for the model\n\
   -v     verify that the proviso expand (at least) one state per cycle \n\
   -T     time the different phases of the execution\n\
@@ -100,6 +101,7 @@ checked_main(int argc, char **argv)
   std::string proviso_name;
   bool fully_colored = false;
   bool verify_proviso = false;
+  bool expanded_list = false;
 
   int dest = 1;
   int n = argc;
@@ -162,10 +164,13 @@ checked_main(int argc, char **argv)
                 case 'K':
                   output = Kripke;
                   break;
-                default:
-                  goto error;
-                }
-              break;
+		default:
+		  goto error;
+		}
+	      break;
+	    case 'l':
+	      expanded_list =  true;
+	      break;
 	    case 'm':
 	      output = Dependency;
 	      break;
@@ -228,6 +233,35 @@ checked_main(int argc, char **argv)
 	    m_proviso = new spot::evangelista10sttt<true>();
 	  else
 	    m_proviso = new spot::evangelista10sttt<false>();
+	}
+      else if (expanded_list)
+	{
+	  if (delayed)
+	    std::cerr << "   No support for -del with -l\n";
+
+      	  if (strcmp (proviso_name.c_str(), "none") == 0 ||
+	      strcmp (proviso_name.c_str(), "all") == 0)
+	    {
+	      std::cerr << "   No support for -del with none or all\n";
+	      exit(1);
+	    }
+      	  else if (strcmp (proviso_name.c_str(), "source") == 0)
+      	    m_proviso = new spot::expandedlist_provisos<false>
+	      (spot::expandedlist_provisos<false>::strategy::Source);
+      	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
+      	    m_proviso = new spot::expandedlist_provisos<false>
+	      (spot::expandedlist_provisos<false>::strategy::Destination);
+      	  else if (strcmp (proviso_name.c_str(), "random") == 0)
+      	    m_proviso = new spot::expandedlist_provisos<false>
+	      (spot::expandedlist_provisos<false>::strategy::Random);
+      	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
+      	    m_proviso = new spot::expandedlist_provisos<false>
+	      (spot::expandedlist_provisos<false>::strategy::MinEnMinusRed);
+      	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
+      	    m_proviso = new spot::expandedlist_provisos<false>
+	      (spot::expandedlist_provisos<false>::strategy::MinNewStates);
+	  else
+	    syntax(argv[0]);
 	}
       // FIXME How to bypass recopy?
       else if (!basic_check && !delayed)

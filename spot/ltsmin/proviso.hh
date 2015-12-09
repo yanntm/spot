@@ -107,8 +107,8 @@ namespace spot
     }
 
     virtual int maybe_closingedge(const state* src,
-				       const state* dst,
-				       const dfs_inspector& i)
+				  const state* dst,
+				  const dfs_inspector& i)
     {
       int src_pos = i.dfs_position(src);
       int dst_pos = i.dfs_position(dst);
@@ -557,4 +557,274 @@ namespace spot
     unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
   };
 
+  /// \brief This class implements the expanded list proviso.
+  /// This is an adaptation of the proviso of Evangelista and Pajault
+  /// but since we use an expanded list rather than weights we can adopt
+  /// different stratgies for the expansion. If we decide to always expand
+  /// the source then the algorithm is the one of Evangelista and Pajault
+  template<bool FullyColored>
+  class SPOT_API expandedlist_provisos: public proviso
+  {
+  public:
+    enum class strategy
+    {
+      Source,			// Source is expanded
+      Destination,		// Destination is expanded
+      Random,			// Choose randomly between source and dest.
+      MinEnMinusRed,		// Choose minimal overhead in transitions
+      MinNewStates		// Choose minimal overhead in new states
+    };
+
+    expandedlist_provisos(strategy strat): strat_(strat), generator_(0)
+      { }
+
+    virtual int maybe_closingedge(const state* src,
+				  const state* dst,
+				  const dfs_inspector& i)
+    {
+      auto& src_colors = i.get_colors(src);
+      auto& dst_colors = i.get_colors(dst);
+      bool src_is_orange = src_colors[0] && !src_colors[1];
+      bool dst_is_red = dst_colors[0] && dst_colors[1];
+      bool dst_is_orange = dst_colors[0] && !dst_colors[1];
+
+      // src is orange and dst is red  an expansion is required.
+      if (src_is_orange && dst_is_red)
+	{
+	  src_colors[0] = false;
+	  src_colors[1] = false;
+
+	  int src_pos = i.dfs_position(src);
+	  expanded_.push_back(src_pos);
+
+	  // HERE ENTRY POINTS
+
+	  // HERE FULLY COLORED
+
+	  // Require to expand the source of the edge.
+	  ++source_;
+	  return src_pos;
+	}
+      else if (dst_is_orange && src_is_orange)
+	{
+	  int src_pos = i.dfs_position(src);
+	  int dst_pos = i.dfs_position(dst);
+
+	  if (!expanded_.empty() &&
+	      ((int)expanded_.back()) >= dst_pos)
+	    return -1;
+
+
+	  // Choose one state to expand, insert it into
+	  // the expanded list, and finally change its
+	  // color
+	  int to_expand = choose (src_pos, dst_pos, i);
+	  if (to_expand == src_pos)
+	    {
+	      expanded_.push_back(src_pos);
+	      src_colors[0] = false;
+	      src_colors[1] = false;
+	      return src_pos;
+	    }
+	  else
+	    {
+	      expanded_.push_back(dst_pos);
+	      dst_colors[0] = false;
+	      dst_colors[1] = false;
+	      return dst_pos;
+	    }
+
+	}
+
+      // This maybe closing-edge is safe.
+      return -1;
+    }
+
+    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    {
+      // Every state is associated to a color ORANGE, RED, and GREEN
+      // We need two boolean to encode this information.
+      // 10 -> ORANGE
+      // 11 -> RED
+      // 00 -> GREEN
+      auto& colors = i.get_colors(src);
+      colors.push_back(true);
+      colors.push_back(false);
+
+      // Set state to green if needed.
+      int src_pos = i.dfs_position(src);
+      if (i.get_iterator(src_pos)->all_enabled())
+	{
+	  expanded_.push_back(src_pos);
+	  colors[0] = false;
+	  colors[1] = false; // Useless since this bit must already be false.
+	}
+
+      // Here we do not perform an expansion even when we always expand the
+      //  source (i.e. for evangelista). The trick to obtain evangelista's
+      // algorithm is to specify Anticipation in dfs_stat
+      return false;
+    }
+
+    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    {
+      int src_pos = i.dfs_position(src);
+      if (i.get_iterator(src_pos)->all_enabled()
+	  && (int)expanded_.back() == src_pos)
+	expanded_.pop_back();
+
+      auto& colors = i.get_colors(src);
+      if (colors[0] && !colors[1]) // State is orange.
+	{
+	  auto* it = i.get_iterator(src_pos);
+
+	  it->first();
+	  bool isred = false;
+	  while (!it->done())
+	    {
+	      auto* dst = it->dst();
+	      auto& dst_colors = i.get_colors(dst);
+	      bool dst_is_green = !dst_colors[0] && !dst_colors[1];
+
+	      if (!dst_is_green) //dst is not green
+		isred = true;
+	      dst->destroy();
+	      it->next();
+	    }
+	  if (isred) // set color to red
+	    {
+	      colors[0] = true;
+	      colors[1] = true;
+	    }
+	  else // set color to green
+	    {
+	      colors[0] = false;
+	      colors[1] = false;
+	    }
+	}
+
+      // Never avoid a POP in Sami Evangelista and Pajault
+      return true;
+    }
+
+    virtual std::string name()
+    {
+      std::string res  = "expandedlist_";
+      switch (strat_)
+	{
+	case strategy::Source:
+	  return res +  "source";
+	case strategy::Destination:
+	  return res +  "destination";
+	case strategy::Random:
+	  return res +  "random";
+	case strategy::MinEnMinusRed:
+	  return res +  "min_en_minus_red";
+	case strategy::MinNewStates:
+	  return res +  "min_new_states";
+	default:
+	  assert(false);
+	  break;
+	};
+      return res;
+    }
+
+    virtual std::string dump()
+    {
+      return
+	" source_expanded  : " + std::to_string(source_)           + '\n' +
+	" dest_expanded    : " + std::to_string(destination_)      + '\n';
+    }
+
+    virtual std::string dump_csv()
+    {
+      return
+	std::to_string(source_)           + ',' +
+	std::to_string(destination_);
+    }
+    virtual ~expandedlist_provisos()
+    { }
+  private:
+
+    int choose(int src, int dst,
+	       // const state* src_st, const state* dst_st,
+	       const dfs_inspector& i)
+    {
+      switch (strat_)
+	{
+	case strategy::Source:
+	  ++source_;
+	  return src;
+	case strategy::Destination:
+	  ++destination_;
+	  return dst;
+	case strategy::Random:
+	  if (generator_()%2)
+	    {
+	      ++destination_;
+	      return dst;
+	    }
+	  ++source_;
+	  return src;
+	case strategy::MinEnMinusRed:
+	  {
+	    unsigned enminred_src =
+	      i.get_iterator(src)->enabled() - i.get_iterator(src)->reduced();
+	    unsigned enminred_dst =
+	      i.get_iterator(dst)->enabled() - i.get_iterator(dst)->reduced();
+	    if (enminred_src < enminred_dst)
+	      {
+		++source_;
+		return src;
+	      }
+	    ++destination_;
+	    return dst;
+	  }
+	case strategy::MinNewStates:
+	  {
+	    // FIXME The use of static is an ugly hack but here we cannot
+	    //  use lamdba capture [&] in expand_will_generate.
+	    // I see two ways to resolve this hack:
+	    //  - use std::function but it's too costly.
+	    //  - replace expand_will_generate by a method ignored that
+	    //    return an (auto)-iterator over all ignored states.
+	    static unsigned new_src;
+	    static unsigned new_dst;
+	    static const dfs_inspector* i_ptr;
+	    new_src = 0;
+	    new_dst = 0;
+	    i_ptr = &i;
+
+	    i.get_iterator(src)->
+	      expand_will_generate([](const state* s)
+	    			{
+				  if (i_ptr->visited(s))
+	    			     ++new_src;
+	    			});
+	    i.get_iterator(dst)->
+	      expand_will_generate([](const state* s)
+	    			{
+	    			  if (i_ptr->visited(s))
+	    			    ++new_dst;
+	    			});
+	    if (new_src < new_dst)
+	      {
+		++source_;
+		return src;
+	      }
+	    ++destination_;
+	    return dst;
+	  }
+	default:
+	  assert(false);
+	  break;
+	};
+      return -1;
+    }
+    std::vector<unsigned> expanded_;
+    unsigned source_ = 0;
+    unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
+    strategy strat_;
+    std::mt19937 generator_;
+  };
 }
