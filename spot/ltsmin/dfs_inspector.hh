@@ -44,5 +44,9 @@ namespace spot
 
     /// \brief Return the weight (if exists) associated to a state
     virtual int& get_weight(const state*) const = 0;
+
+    /// \brief Retrun true if the state is dead, false otherwise.
+    /// If there is not SCC computation this method will return false.
+    virtual bool is_dead(const state*) const = 0;
   };
 }

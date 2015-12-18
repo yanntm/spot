@@ -403,6 +403,12 @@ namespace spot
       assert(seen.find(st) != seen.end());
       return seen[st].weight;
     }
+    virtual bool is_dead(const state* s) const
+    {
+      if (!ComputeSCC)
+	return false;
+      return uf.isdead(seen[s].live_number);
+    }
 
   private:
     const_twa_ptr aut_;		///< The spot::tgba to explore.
@@ -435,6 +441,6 @@ namespace spot
     };
     std::deque<stack_item> todo; ///< the DFS stack
     std::vector<int> roots;
-    int_unionfind_IPC_LRPC_MS uf;
+    mutable int_unionfind_IPC_LRPC_MS uf;
   };
 }

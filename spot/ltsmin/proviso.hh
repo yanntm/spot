@@ -463,6 +463,13 @@ namespace spot
 	      auto& dst_colors = i.get_colors(dst);
 	      bool dst_is_green = !dst_colors[0] && !dst_colors[1];
 
+	      if (i.is_dead(dst))
+		{
+		  dst->destroy();
+		  it->next();
+		  continue;
+		}
+
 	      if (!dst_is_green) //dst is not green
 		isred = true;
 	      dst->destroy();
@@ -685,6 +692,13 @@ namespace spot
 	      auto* dst = it->dst();
 	      auto& dst_colors = i.get_colors(dst);
 	      bool dst_is_green = !dst_colors[0] && !dst_colors[1];
+
+	      if (i.is_dead(dst))
+		{
+		  dst->destroy();
+		  it->next();
+		  continue;
+		}
 
 	      if (!dst_is_green) //dst is not green
 		isred = true;
