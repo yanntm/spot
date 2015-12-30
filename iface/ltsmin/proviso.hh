@@ -583,7 +583,8 @@ namespace spot
       MinNewStates		// Choose minimal overhead in new states
     };
 
-    expandedlist_provisos(strategy strat): strat_(strat), generator_(0)
+    expandedlist_provisos(strategy strat, unsigned power_of = 0):
+      strat_(strat), generator_(0), power_of_(power_of)
       { }
 
     virtual int maybe_closingedge(const state* src,
@@ -623,6 +624,94 @@ namespace spot
 	    return -1;
 
 
+	  // The power of X is activated, choose one among X in the
+	  // DFS stack.
+	  if (power_of_)
+	    {
+	      unsigned range = src_pos - dst_pos + 1;
+	      std::vector<unsigned> positions;
+	      for (unsigned j = 0; j < power_of_; ++j)
+		{
+		  unsigned pos = generator_()%range;
+
+		  // The selected position is expanded, no
+		  // expansion is required.
+		  if (i.get_iterator(pos)->all_enabled())
+		    return -1;
+
+		  positions.push_back(pos);
+		}
+
+
+	      switch (strat_)
+		{
+		case strategy::Random:
+		  {
+		    unsigned p  = generator_()%positions.size();
+		    auto& colors = i.get_colors(i.dfs_state(p));
+		    // Turn green the selected element
+		    colors[0] = false;
+		    colors[1] = false;
+		    return positions[p];
+		  }
+		case strategy::MinEnMinusRed:
+		  {
+		    unsigned sel = 0;
+		    for (unsigned j = 1; j < positions.size(); ++j)
+		      {
+			unsigned enminred_sel =
+			  i.get_iterator(positions[sel])->enabled() -
+			  i.get_iterator(positions[sel])->reduced();
+			unsigned enminred_curr =
+			  i.get_iterator(positions[j])->enabled() -
+			  i.get_iterator(positions[j])->reduced();
+			if (enminred_sel > enminred_curr)
+			  sel = j;
+		      }
+		    auto& colors = i.get_colors(i.dfs_state(sel));
+		    // Turn green the selected element
+		    colors[0] = false;
+		    colors[1] = false;
+		    return positions[sel];
+		  }
+		case strategy::MinNewStates:
+		  { unsigned sel = 0;
+		    static const dfs_inspector* i_ptr;
+		    i_ptr = &i;
+
+		    for (unsigned j = 1; j < positions.size(); ++j)
+		      {
+			static unsigned newstates_sel;
+			newstates_sel = 0;
+			i.get_iterator(sel)->
+			  expand_will_generate([](const state* s)
+					       {
+						 if (i_ptr->visited(s))
+						   ++newstates_sel;
+					       });
+			static unsigned newstates_curr;
+			newstates_sel = 0;
+			i.get_iterator(j)->
+			  expand_will_generate([](const state* s)
+					       {
+						 if (i_ptr->visited(s))
+						   ++newstates_curr;
+					       });
+			if (newstates_sel > newstates_curr)
+			  sel = j;
+		      }
+		    // Turn green the selected element
+		    auto& colors = i.get_colors(i.dfs_state(sel));
+		    colors[0] = false;
+		    colors[1] = false;
+		    return positions[sel];
+		}
+		default:
+		  std::cerr << "Not Compatible with Power Of \n";
+		  exit(1);
+		}
+	    }
+
 	  // Choose one state to expand, insert it into
 	  // the expanded list, and finally change its
 	  // color
@@ -641,7 +730,6 @@ namespace spot
 	      dst_colors[1] = false;
 	      return dst_pos;
 	    }
-
 	}
 
       // This maybe closing-edge is safe.
@@ -725,6 +813,9 @@ namespace spot
     virtual std::string name()
     {
       std::string res  = "expandedlist_";
+      if (power_of_)
+	res += "powerof" + std::to_string(power_of_) + "_";
+
       switch (strat_)
 	{
 	case strategy::Source:
@@ -841,9 +932,151 @@ namespace spot
     unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
     strategy strat_;
     std::mt19937 generator_;
+    unsigned power_of_;
   };
 
 
 
 
+
+
+
+  // /// \brief Implementation of the source/destination family of
+  // /// provisos.
+  // template<bool BasicCheck>
+  // class SPOT_API power_of_k: public proviso
+  // {
+  // public:
+  //   enum class strategy
+  //   {
+  //     Random,			// Choose randomly between source and dest.
+  //     MinEnMinusRed,		// Choose minimal overhead in transitions
+  //     MinNewStates		// Choose minimal overhead in new states
+  //   };
+
+  //   power_of_k(strategy strat): strat_(strat), generator_(0)
+  //   { }
+
+  //   virtual std::string name()
+  //   {
+  //     std::string res = BasicCheck? "basiccheck_" : "";
+
+  //     switch (strat_)
+  // 	{
+  // 	case strategy::Random:
+  // 	  return res +  "random";
+  // 	case strategy::MinEnMinusRed:
+  // 	  return res +  "min_en_minus_red";
+  // 	case strategy::MinNewStates:
+  // 	  return res +  "min_new_states";
+  // 	default:
+  // 	  assert(false);
+  // 	  break;
+  // 	};
+  //     return res;
+  //   }
+
+  //   virtual int maybe_closingedge(const state* src,
+  // 				  const state* dst,
+  // 				  const dfs_inspector& i)
+  //   {
+  //     int src_pos = i.dfs_position(src);
+  //     int dst_pos = i.dfs_position(dst);
+  //     assert(src_pos != -1);
+
+  //     // State not on the DFS
+  //     if (dst_pos == -1)
+  // 	return -1;
+
+  //     bool src_expanded = i.get_iterator(src_pos)->all_enabled();
+  //     bool dst_expanded = i.get_iterator(dst_pos)->all_enabled();
+
+  //     if (BasicCheck && (src_expanded || dst_expanded))
+  // 	return -1;
+
+  //     return choose(src_pos, dst_pos, src, dst, i);
+  //   }
+
+  //   virtual bool notify_push(const state*, const dfs_inspector&)
+  //   {
+  //     return false;
+  //   }
+  //   virtual bool before_pop(const state*,
+  // 			    const dfs_inspector&)
+  //   {
+  //     return true;
+  //   }
+
+  //   virtual std::string dump()
+  //   {
+  //     return
+  // 	" source_expanded  : 0\n dest_expanded    : 0\n";
+  //   }
+  //   virtual std::string dump_csv()
+  //   {
+  //     return "0,0"; /* FIXME */
+  //   }
+
+  // private:
+  //   int choose(int src, int dst,
+  // 	       const state*, const state*,
+  // 	       const dfs_inspector& i)
+  //   {
+  //     switch (strat_)
+  // 	{
+  // 	case strategy::Random:
+  // 	  if (generator_()%2)
+  // 	      return dst;
+  // 	  return src;
+  // 	case strategy::MinEnMinusRed:
+  // 	  {
+  // 	    unsigned enminred_src =
+  // 	      i.get_iterator(src)->enabled() - i.get_iterator(src)->reduced();
+  // 	    unsigned enminred_dst =
+  // 	      i.get_iterator(dst)->enabled() - i.get_iterator(dst)->reduced();
+  // 	    if (enminred_src < enminred_dst)
+  // 	      return src;
+  // 	    return dst;
+  // 	  }
+  // 	case strategy::MinNewStates:
+  // 	  {
+  // 	    // FIXME The use of static is an ugly hack but here we cannot
+  // 	    //  use lamdba capture [&] in expand_will_generate.
+  // 	    // I see two ways to resolve this hack:
+  // 	    //  - use std::function but it's too costly.
+  // 	    //  - replace expand_will_generate by a method ignored that
+  // 	    //    return an (auto)-iterator over all ignored states.
+  // 	    static unsigned new_src;
+  // 	    static unsigned new_dst;
+  // 	    static const dfs_inspector* i_ptr;
+  // 	    new_src = 0;
+  // 	    new_dst = 0;
+  // 	    i_ptr = &i;
+
+  // 	    i.get_iterator(src)->
+  // 	      expand_will_generate([](const state* s)
+  // 	    			{
+  // 				  if (i_ptr->visited(s))
+  // 	    			     ++new_src;
+  // 	    			});
+  // 	    i.get_iterator(dst)->
+  // 	      expand_will_generate([](const state* s)
+  // 	    			{
+  // 	    			  if (i_ptr->visited(s))
+  // 	    			    ++new_dst;
+  // 	    			});
+  // 	    if (new_src < new_dst)
+  // 		return src;
+  // 	    return dst;
+  // 	  }
+  // 	default:
+  // 	  assert(false);
+  // 	  break;
+  // 	};
+  //     return -1;
+  //   }
+
+  //   strategy strat_;
+  //   std::mt19937 generator_;
+  // };
 }
