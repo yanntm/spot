@@ -64,6 +64,7 @@ Options:\n\
   -f     fully anticipated : only work with -por + -sm \n\
   -scc   compute (and use scc): only work with -por + -sm\n\
   -l     use expanded list, only work with -por + -sm\n\
+  -power=X use power of X (only work with -l)\n\
   -sm    statistics for the model\n\
   -v     verify that the proviso expand (at least) one state per cycle \n\
   -T     time the different phases of the execution\n\
@@ -102,6 +103,7 @@ checked_main(int argc, char **argv)
   bool fully_colored = false;
   bool verify_proviso = false;
   bool expanded_list = false;
+  unsigned power_of = 0;
 
   int dest = 1;
   int n = argc;
@@ -175,9 +177,17 @@ checked_main(int argc, char **argv)
 	      output = Dependency;
 	      break;
 	    case 'p':
-	      enable_por = true;
-	      opt += 4;
-	      proviso_name = std::string(opt);
+	      if (opt[2] == 'r')
+		{
+		  enable_por = true;
+		  opt += 4;
+		  proviso_name = std::string(opt);
+		}
+	      else
+		{
+		  opt += 6;
+		  power_of = atoi(opt);
+		}
 	      break;
 	    case 's':
 	      if (strcmp (opt, "sm") == 0)
@@ -247,19 +257,23 @@ checked_main(int argc, char **argv)
 	    }
       	  else if (strcmp (proviso_name.c_str(), "source") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::Source);
+	      (spot::expandedlist_provisos<false>::strategy::Source,
+	       power_of);
       	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::Destination);
+	      (spot::expandedlist_provisos<false>::strategy::Destination,
+	       power_of);
       	  else if (strcmp (proviso_name.c_str(), "random") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::Random);
+	      (spot::expandedlist_provisos<false>::strategy::Random, power_of);
       	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::MinEnMinusRed);
+	      (spot::expandedlist_provisos<false>::strategy::MinEnMinusRed,
+	       power_of);
       	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::MinNewStates);
+	      (spot::expandedlist_provisos<false>::strategy::MinNewStates,
+	       power_of);
 	  else
 	    syntax(argv[0]);
 	}
