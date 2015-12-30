@@ -188,7 +188,11 @@ namespace spot
     void pop_state()
     {
       if (!proviso_.before_pop(todo.back().src, *this))
-	return;
+	{
+	  if (todo.back().it->all_enabled())
+	    ++expanded_;
+	  return;
+	}
 
       seen[todo.back().src].dfs_position = -1;
 
