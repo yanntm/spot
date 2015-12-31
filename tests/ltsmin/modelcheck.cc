@@ -104,6 +104,7 @@ checked_main(int argc, char **argv)
   bool verify_proviso = false;
   bool expanded_list = false;
   unsigned power_of = 0;
+  bool spin_like = false;
 
   int dest = 1;
   int n = argc;
@@ -194,6 +195,8 @@ checked_main(int argc, char **argv)
 		output = StatsModel;
 	      else if (strcmp (opt, "scc") == 0)
 		compute_scc = true;
+	      else if (strcmp (opt, "spin") == 0)
+		spin_like = true;
 	      else if (strncmp (opt, "seed=", 5) == 0)
 		{
 		  opt+=5;
@@ -447,6 +450,12 @@ checked_main(int argc, char **argv)
           exit_code = 1;
           goto safe_exit;
         }
+
+      if (spin_like)
+	{
+	  std::cout << " spin_fashion     : true\n";
+	  spot::por_ltsmin(model)->spin_fashion();
+	}
 
       if (output == DotModel)
         {

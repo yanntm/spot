@@ -239,6 +239,14 @@ namespace spot
       }
 
     stats_.cumul(hidden, enabled.size());
+
+    // Here we activate a SPIN-like persistent set, i.e.
+    // wheter a persistent set with one transition or all transitions
+    if (spin_ && (enabled.size() - hidden != 1))
+      {
+	for (unsigned i = 0; i < res_.size(); ++i)
+	  res_[i] = true;
+      }
     return res_;
   }
 
