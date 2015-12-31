@@ -75,6 +75,11 @@ namespace spot
 
     porinfos_stats& stats();
 
+    void spin_fashion()
+    {
+      spin_ = true;
+    }
+
   private:
     const spins_interface* d_;
     int transitions_;
@@ -90,5 +95,6 @@ namespace spot
     // Develop caches to reduce computation time
     std::vector<std::vector<bool>> m_dep_tr;
     std::vector<std::vector<bool>> non_mbc_tr;
+    bool spin_ = false;
   };
 }
