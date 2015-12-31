@@ -624,92 +624,10 @@ namespace spot
 
 
 	  // The power of X is activated, choose one among X in the
-	  // DFS stack.
+	  // DFS stack. choose_powerof also change color and insert
+	  // inside of the expanded list when needed.
 	  if (power_of_)
-	    {
-	      unsigned range = src_pos - dst_pos + 1;
-	      std::vector<unsigned> positions;
-	      for (unsigned j = 0; j < power_of_; ++j)
-		{
-		  unsigned pos = generator_()%range;
-
-		  // The selected position is expanded, no
-		  // expansion is required.
-		  if (i.get_iterator(pos)->all_enabled())
-		    return -1;
-
-		  positions.push_back(pos);
-		}
-
-
-	      switch (strat_)
-		{
-		case strategy::Random:
-		  {
-		    unsigned p  = generator_()%positions.size();
-		    auto& colors = i.get_colors(i.dfs_state(p));
-		    // Turn green the selected element
-		    colors[0] = false;
-		    colors[1] = false;
-		    return positions[p];
-		  }
-		case strategy::MinEnMinusRed:
-		  {
-		    unsigned sel = 0;
-		    for (unsigned j = 1; j < positions.size(); ++j)
-		      {
-			unsigned enminred_sel =
-			  i.get_iterator(positions[sel])->enabled() -
-			  i.get_iterator(positions[sel])->reduced();
-			unsigned enminred_curr =
-			  i.get_iterator(positions[j])->enabled() -
-			  i.get_iterator(positions[j])->reduced();
-			if (enminred_sel > enminred_curr)
-			  sel = j;
-		      }
-		    auto& colors = i.get_colors(i.dfs_state(sel));
-		    // Turn green the selected element
-		    colors[0] = false;
-		    colors[1] = false;
-		    return positions[sel];
-		  }
-		case strategy::MinNewStates:
-		  { unsigned sel = 0;
-		    static const dfs_inspector* i_ptr;
-		    i_ptr = &i;
-
-		    for (unsigned j = 1; j < positions.size(); ++j)
-		      {
-			static unsigned newstates_sel;
-			newstates_sel = 0;
-			i.get_iterator(sel)->
-			  expand_will_generate([](const state* s)
-					       {
-						 if (i_ptr->visited(s))
-						   ++newstates_sel;
-					       });
-			static unsigned newstates_curr;
-			newstates_sel = 0;
-			i.get_iterator(j)->
-			  expand_will_generate([](const state* s)
-					       {
-						 if (i_ptr->visited(s))
-						   ++newstates_curr;
-					       });
-			if (newstates_sel > newstates_curr)
-			  sel = j;
-		      }
-		    // Turn green the selected element
-		    auto& colors = i.get_colors(i.dfs_state(sel));
-		    colors[0] = false;
-		    colors[1] = false;
-		    return positions[sel];
-		}
-		default:
-		  std::cerr << "Not Compatible with Power Of \n";
-		  exit(1);
-		}
-	    }
+	    return choose_powerof(src_pos, dst_pos, i);
 
 	  // Choose one state to expand, insert it into
 	  // the expanded list, and finally change its
@@ -926,6 +844,97 @@ namespace spot
 	};
       return -1;
     }
+
+    int choose_powerof(int src_pos, int dst_pos,
+		       const dfs_inspector& i)
+    {
+      unsigned range = src_pos - dst_pos + 1;
+      std::vector<unsigned> positions;
+      for (unsigned j = 0; j < power_of_; ++j)
+	{
+	  unsigned pos = generator_()%range;
+
+	  // The selected position is expanded, no
+	  // expansion is required.
+	  if (i.get_iterator(pos)->all_enabled())
+	    return -1;
+
+	  positions.push_back(pos);
+	}
+
+
+      switch (strat_)
+	{
+	case strategy::Random:
+	  {
+	    unsigned p  = generator_()%positions.size();
+	    expanded_.push_back(p);
+	    auto& colors = i.get_colors(i.dfs_state(p));
+	    // Turn green the selected element
+	    colors[0] = false;
+	    colors[1] = false;
+	    return positions[p];
+	  }
+	case strategy::MinEnMinusRed:
+	  {
+	    unsigned sel = 0;
+	    for (unsigned j = 1; j < positions.size(); ++j)
+	      {
+		unsigned enminred_sel =
+		  i.get_iterator(positions[sel])->enabled() -
+		  i.get_iterator(positions[sel])->reduced();
+		unsigned enminred_curr =
+		  i.get_iterator(positions[j])->enabled() -
+		  i.get_iterator(positions[j])->reduced();
+		if (enminred_sel > enminred_curr)
+		  sel = j;
+	      }
+	    expanded_.push_back(sel);
+	    auto& colors = i.get_colors(i.dfs_state(sel));
+	    // Turn green the selected element
+	    colors[0] = false;
+	    colors[1] = false;
+	    return positions[sel];
+	  }
+	case strategy::MinNewStates:
+	  { unsigned sel = 0;
+	    static const dfs_inspector* i_ptr;
+	    i_ptr = &i;
+
+	    for (unsigned j = 1; j < positions.size(); ++j)
+	      {
+		static unsigned newstates_sel;
+		newstates_sel = 0;
+		i.get_iterator(sel)->
+		  expand_will_generate([](const state* s)
+				       {
+					 if (i_ptr->visited(s))
+					   ++newstates_sel;
+				       });
+		static unsigned newstates_curr;
+		newstates_sel = 0;
+		i.get_iterator(j)->
+		  expand_will_generate([](const state* s)
+				       {
+					 if (i_ptr->visited(s))
+					   ++newstates_curr;
+				       });
+		if (newstates_sel > newstates_curr)
+		  sel = j;
+	      }
+	    // Turn green the selected element
+	    expanded_.push_back(sel);
+	    auto& colors = i.get_colors(i.dfs_state(sel));
+	    colors[0] = false;
+	    colors[1] = false;
+	    return positions[sel];
+	  }
+	default:
+	  std::cerr << "Not Compatible with Power Of \n";
+	  exit(1);
+	}
+    }
+
     std::vector<unsigned> expanded_;
     unsigned source_ = 0;
     unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
