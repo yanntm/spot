@@ -848,28 +848,28 @@ namespace spot
     int choose_powerof(int src_pos, int dst_pos,
 		       const dfs_inspector& i)
     {
-      unsigned range = src_pos - dst_pos + 1;
+      unsigned range = src_pos - dst_pos+ 1;
+      assert(range);
       std::vector<unsigned> positions;
       for (unsigned j = 0; j < power_of_; ++j)
 	{
-	  unsigned pos = generator_()%range;
+	  unsigned pos = dst_pos + generator_()%range;
 
 	  // The selected position is expanded, no
 	  // expansion is required.
 	  if (i.get_iterator(pos)->all_enabled())
-	    return -1;
+	    return -1;		// Should never happen
 
 	  positions.push_back(pos);
 	}
-
 
       switch (strat_)
 	{
 	case strategy::Random:
 	  {
 	    unsigned p  = generator_()%positions.size();
-	    expanded_.push_back(p);
-	    auto& colors = i.get_colors(i.dfs_state(p));
+	    expanded_.push_back(positions[p]);
+	    auto& colors = i.get_colors(i.dfs_state(positions[p]));
 	    // Turn green the selected element
 	    colors[0] = false;
 	    colors[1] = false;
@@ -889,15 +889,16 @@ namespace spot
 		if (enminred_sel > enminred_curr)
 		  sel = j;
 	      }
-	    expanded_.push_back(sel);
-	    auto& colors = i.get_colors(i.dfs_state(sel));
+	    expanded_.push_back(positions[sel]);
+	    auto& colors = i.get_colors(i.dfs_state(positions[sel]));
 	    // Turn green the selected element
 	    colors[0] = false;
 	    colors[1] = false;
 	    return positions[sel];
 	  }
 	case strategy::MinNewStates:
-	  { unsigned sel = 0;
+	  {
+	    unsigned sel = 0;
 	    static const dfs_inspector* i_ptr;
 	    i_ptr = &i;
 
@@ -905,7 +906,7 @@ namespace spot
 	      {
 		static unsigned newstates_sel;
 		newstates_sel = 0;
-		i.get_iterator(sel)->
+		i.get_iterator(positions[sel])->
 		  expand_will_generate([](const state* s)
 				       {
 					 if (i_ptr->visited(s))
@@ -913,7 +914,7 @@ namespace spot
 				       });
 		static unsigned newstates_curr;
 		newstates_sel = 0;
-		i.get_iterator(j)->
+		i.get_iterator(positions[j])->
 		  expand_will_generate([](const state* s)
 				       {
 					 if (i_ptr->visited(s))
@@ -923,8 +924,8 @@ namespace spot
 		  sel = j;
 	      }
 	    // Turn green the selected element
-	    expanded_.push_back(sel);
-	    auto& colors = i.get_colors(i.dfs_state(sel));
+	    expanded_.push_back(positions[sel]);
+	    auto& colors = i.get_colors(i.dfs_state(positions[sel]));
 	    colors[0] = false;
 	    colors[1] = false;
 	    return positions[sel];
