@@ -152,7 +152,10 @@ namespace spot
 	}
       if (Delayed)
 	{
-	  //vector of bool : d, e, g.
+	  // vector of bool : d, e, g.
+	  // d : is state is not expanded and on the DFS stack?
+	  // e : is an extension required for state?
+	  // g : state is not dangerous (i.e. green)
 	  auto& colors = i.get_colors(src);
 	  auto* it = i.get_iterator(src_pos);
 	  colors.push_back(it->enabled() != it->reduced());
@@ -170,6 +173,7 @@ namespace spot
 	{
 	  int st_pos =  i.dfs_position(st);
 	  auto& colors = i.get_colors(st);
+	  // An extension is required.
 	  if (colors[1] && !colors[2])
 	    {
 	      i.get_iterator(st_pos)->fire_all();
@@ -186,6 +190,12 @@ namespace spot
 		{
 		  const state* newtop = i.dfs_state(st_pos-1);
 		  auto& colors_newtop = i.get_colors(newtop);
+
+		  // We are popping an SCC: we do not need to propagate
+		  // dangerousness
+		  if (i.is_root(st))
+		    return true;
+
 		  colors_newtop[2] = colors_newtop[2] && colors[2];
 		}
 	      return true;

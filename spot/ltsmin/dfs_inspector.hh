@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C)  2015, 2017 Laboratoire de Recherche et
+// Copyright (C)  2015, 2016, 2017 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -48,5 +48,10 @@ namespace spot
     /// \brief Retrun true if the state is dead, false otherwise.
     /// If there is not SCC computation this method will return false.
     virtual bool is_dead(const state*) const = 0;
+
+    /// \brief Retrun true if the state is the current root of an SCC.
+    /// If the state is not the current root of if there is no SCC computation
+    /// this method will return false.
+    virtual bool is_root(const state*) const = 0;
   };
 }

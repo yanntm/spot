@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C)  2015, 2017 Laboratoire de Recherche et
+// Copyright (C)  2015, 2016, 2017 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -412,6 +412,13 @@ namespace spot
       if (!ComputeSCC)
 	return false;
       return uf.isdead(seen[s].live_number);
+    }
+
+    virtual bool is_root(const state* s) const
+    {
+      if (!ComputeSCC)
+	return false;
+      return ((int) seen[s].live_number) == roots.back();
     }
 
   private:
