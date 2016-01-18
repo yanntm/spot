@@ -246,7 +246,7 @@ namespace spot
 	}
 
       const state* initial =  aut_->get_init_state();
-      seen[initial] = {++dfs_number, (int) todo.size(), false, {}, 0};
+      seen[initial] = {++dfs_number, (int) todo.size(), false, {}, 0, nullptr};
       push_state(initial);
 
       while (!todo.empty())
@@ -260,7 +260,8 @@ namespace spot
 	      ++transitions_;
 	      const state* dst = todo.back().it->dst();
 	      todo.back().it->next();
-	      state_info info = {dfs_number+1, (int)todo.size(), false, {}, 0};
+	      state_info info = {dfs_number+1, (int)todo.size(), false, {}, 0,
+				 nullptr};
 	      auto res = seen.emplace(dst, info);
 	      if (res.second)
 		{
@@ -420,6 +421,18 @@ namespace spot
 	return false;
       return ((int) seen[s].live_number) == roots.back();
     }
+    virtual const state* get_highlink(const state* st) const
+    {
+      assert(seen.find(st) != seen.end());
+      return seen[st].highlink;
+    }
+    virtual void set_highlink(const state* st, const state* highlink) const
+    {
+      assert(seen.find(st) != seen.end());
+      highlink->clone();
+      seen[st].highlink = highlink;
+      assert(get_highlink(st)->compare(highlink) == 0);
+    }
 
   private:
     const_twa_ptr aut_;		///< The spot::tgba to explore.
@@ -441,6 +454,7 @@ namespace spot
       bool expanded_; 		/// Only used by the checker
       std::vector<bool> colors; ///< set by proviso
       int weight; 		///< set by proviso
+      const state* highlink; 	///< set by proviso
     };
     typedef std::unordered_map<const state*, state_info,
 			       state_ptr_hash, state_ptr_equal> seen_map;

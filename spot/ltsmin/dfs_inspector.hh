@@ -53,5 +53,13 @@ namespace spot
     /// If the state is not the current root of if there is no SCC computation
     /// this method will return false.
     virtual bool is_root(const state*) const = 0;
+
+    /// \brief Return the highlink of a state or nullptr if this
+    /// hoighlink is not yet known.
+    virtual const state* get_highlink(const state*) const = 0;
+
+    /// \brief Set the highlink of a state
+    virtual void set_highlink(const state* source,
+			      const state* highlink) const = 0;
   };
 }

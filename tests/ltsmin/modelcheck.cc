@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Laboratoire de
-// Recherche et Developpement de l'Epita (LRDE)
+// Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Laboratoire
+// de Recherche et Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
 //
@@ -64,6 +64,7 @@ Options:\n\
   -f     fully anticipated : only work with -por + -sm \n\
   -scc   compute (and use scc): only work with -por + -sm\n\
   -l     use expanded list, only work with -por + -sm\n\
+  -h     use highlinks (work only with at least -l -scc\n\
   -power=X use power of X (only work with -l)\n\
   -sm    statistics for the model\n\
   -v     verify that the proviso expand (at least) one state per cycle \n\
@@ -105,6 +106,7 @@ checked_main(int argc, char **argv)
   bool expanded_list = false;
   unsigned power_of = 0;
   bool spin_like = false;
+  bool highlinks = false;
 
   int dest = 1;
   int n = argc;
@@ -170,6 +172,9 @@ checked_main(int argc, char **argv)
 		default:
 		  goto error;
 		}
+	      break;
+	    case 'h':
+	      highlinks =  true;
 	      break;
 	    case 'l':
 	      expanded_list =  true;
@@ -261,22 +266,23 @@ checked_main(int argc, char **argv)
       	  else if (strcmp (proviso_name.c_str(), "source") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
 	      (spot::expandedlist_provisos<false>::strategy::Source,
-	       power_of);
+	       power_of, highlinks);
       	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
 	      (spot::expandedlist_provisos<false>::strategy::Destination,
-	       power_of);
+	       power_of, highlinks);
       	  else if (strcmp (proviso_name.c_str(), "random") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::Random, power_of);
+	      (spot::expandedlist_provisos<false>::strategy::Random,
+	       power_of, highlinks);
       	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
 	      (spot::expandedlist_provisos<false>::strategy::MinEnMinusRed,
-	       power_of);
+	       power_of, highlinks);
       	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
       	    m_proviso = new spot::expandedlist_provisos<false>
 	      (spot::expandedlist_provisos<false>::strategy::MinNewStates,
-	       power_of);
+	       power_of, highlinks);
 	  else
 	    syntax(argv[0]);
 	}

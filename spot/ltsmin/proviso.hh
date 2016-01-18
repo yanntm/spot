@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C)  2015, 2017 Laboratoire de Recherche et
+// Copyright (C)  2015, 2016, 2017 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -592,8 +592,10 @@ namespace spot
       MinNewStates		// Choose minimal overhead in new states
     };
 
-    expandedlist_provisos(strategy strat, unsigned power_of = 0):
-      strat_(strat), generator_(0), power_of_(power_of)
+    expandedlist_provisos(strategy strat, unsigned power_of = 0,
+			  bool highlinks = false):
+      strat_(strat), generator_(0),
+      Highlinks(highlinks), power_of_(power_of)
       { }
 
     virtual int maybe_closingedge(const state* src,
@@ -606,18 +608,92 @@ namespace spot
       bool dst_is_red = dst_colors[0] && dst_colors[1];
       bool dst_is_orange = dst_colors[0] && !dst_colors[1];
 
+      if (Highlinks)
+	{
+	  // The destination is on the DFS stack, just update
+	  // highlink if needed.
+	  if (i.dfs_position(dst) != -1)
+	    {
+	      const state* src_highlink = i.get_highlink(src);
+	      if (src_highlink == nullptr ||
+	  	  i.dfs_position(src_highlink) < i.dfs_position(dst))
+	  	{
+	  	  i.set_highlink(src,  dst);
+	  	  assert(dst->compare(i.get_highlink(src)) == 0);
+	  	}
+	    }
+	  // Otherwise we have to compute the actual highlink of the
+	  // destination and compare it to the highlink of the source.
+	  else
+	    {
+	      const state* dst_highlink = i.get_highlink(dst);
+
+	      // if the highlink is not set, it means that we are not
+	      // computing SCC but highlinks correctness rely on SCC
+	      // computation.
+	      assert(dst_highlink != nullptr);
+	      assert(dst_highlink->compare(i.get_highlink(dst)) == 0);
+
+	      std::vector<const state*> v;
+	      v.push_back(dst);
+	      while (i.dfs_position(dst_highlink) == -1)
+	      	{
+	      	  v.push_back(dst_highlink);
+	      	  dst_highlink = i.get_highlink(dst_highlink);
+	      	  assert(dst_highlink != nullptr);
+	      	}
+	      for (auto q: v)
+	      	{
+	      	  i.set_highlink(q, dst_highlink);
+	      	  assert(dst_highlink->compare(i.get_highlink(q)) == 0);
+	      	}
+	    }
+	}
+
+
+
       // src is orange and dst is red  an expansion is required.
       if (src_is_orange && dst_is_red)
 	{
+	  // HERE we use entry points (aka highlinks)
+	  // to detect the portion of the DFS stack in which
+	  // an extension is required.
+	  if (Highlinks)
+	  {
+	    assert(!i.is_dead(dst));
+	    const state* high = i.get_highlink(dst);
+	    assert(high != nullptr);
+	    int src_pos = i.dfs_position(src);
+	    int high_pos = i.dfs_position(high);
+	    assert(high_pos != -1);
+
+	    // Check is expansions are required.
+	    if (!expanded_.empty() &&
+		((int)expanded_.back()) >= high_pos)
+	      return -1;
+
+	    // The power of X is activated, choose one among X in the
+	    // DFS stack. choose_powerof also change color and insert
+	    // inside of the expanded list when needed.
+	    if (power_of_)
+	      return choose_powerof(src_pos, high_pos, i);
+
+	    high_pos = choose (src_pos, high_pos, i);
+	    auto& high_colors = i.get_colors(high);
+	    high_colors[0] = false;
+	    high_colors[1] = false;
+	    expanded_.push_back(high_pos);
+	    return high_pos;
+	  }
+
+
+	  // HERE FULLY COLORED
+
 	  src_colors[0] = false;
 	  src_colors[1] = false;
 
 	  int src_pos = i.dfs_position(src);
 	  expanded_.push_back(src_pos);
-
-	  // HERE ENTRY POINTS
-
-	  // HERE FULLY COLORED
 
 	  // Require to expand the source of the edge.
 	  ++source_;
@@ -692,6 +768,31 @@ namespace spot
     virtual bool before_pop(const state* src, const dfs_inspector& i)
     {
       int src_pos = i.dfs_position(src);
+
+      if (Highlinks && !i.is_root(src) && src_pos)
+	{
+	  // We have to propagate highlinks. We must consider
+	  // two cases:
+	  //   (i)  highlink(src) == src, just set highlink(src) to
+	  //        the predecessor of src in the DFS stack.
+	  //   (ii) highlink(src) != src, just progate highlink(src)
+	  //        w.r.t. highlink mecanism.
+
+	  const state* newtop = i.dfs_state(src_pos-1);
+	  const state* src_highlink = i.get_highlink(src);
+	  if (src_highlink == nullptr ||
+	      i.dfs_position(src_highlink) == src_pos)
+	    {
+	      i.set_highlink(src, newtop);
+	    }
+	  else
+	    {
+	      const state* newtop_highlink = i.get_highlink(newtop);
+	      if (newtop_highlink == nullptr)
+	      	i.set_highlink(newtop, src_highlink);
+	    }
+	}
+
       if (i.get_iterator(src_pos)->all_enabled()
 	  && (int)expanded_.back() == src_pos)
 	expanded_.pop_back();
@@ -740,6 +841,8 @@ namespace spot
     virtual std::string name()
     {
       std::string res  = "expandedlist_";
+      if (Highlinks)
+	res += "highlink_";
       if (power_of_)
 	res += "powerof" + std::to_string(power_of_) + "_";
 
@@ -951,6 +1054,7 @@ namespace spot
     unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
     strategy strat_;
     std::mt19937 generator_;
+    bool Highlinks;
     unsigned power_of_;
   };
 }
