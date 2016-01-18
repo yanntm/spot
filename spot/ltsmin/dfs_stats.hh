@@ -433,6 +433,10 @@ namespace spot
       seen[st].highlink = highlink;
       assert(get_highlink(st)->compare(highlink) == 0);
     }
+    virtual unsigned dfs_size() const
+    {
+      return todo.size();
+    }
 
   private:
     const_twa_ptr aut_;		///< The spot::tgba to explore.

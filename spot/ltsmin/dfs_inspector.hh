@@ -61,5 +61,8 @@ namespace spot
     /// \brief Set the highlink of a state
     virtual void set_highlink(const state* source,
 			      const state* highlink) const = 0;
+
+    /// \brief Return the size of the DFS stack.
+    virtual unsigned dfs_size() const = 0;
   };
 }

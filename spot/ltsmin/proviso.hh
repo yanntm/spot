@@ -675,6 +675,7 @@ namespace spot
 	    // The power of X is activated, choose one among X in the
 	    // DFS stack. choose_powerof also change color and insert
 	    // inside of the expanded list when needed.
+	    // powerof can also propagate green
 	    if (power_of_)
 	      return choose_powerof(src_pos, high_pos, i);
 
@@ -683,6 +684,9 @@ namespace spot
 	    high_colors[0] = false;
 	    high_colors[1] = false;
 	    expanded_.push_back(high_pos);
+
+	    // Do something only if FullyColored is activated.
+	    propagate_green(high_pos, i);
 	    return high_pos;
 	  }
 
@@ -697,6 +701,8 @@ namespace spot
 
 	  // Require to expand the source of the edge.
 	  ++source_;
+	  // Do something only if FullyColored is activated.
+	  propagate_green(src_pos, i);
 	  return src_pos;
 	}
       else if (dst_is_orange && src_is_orange)
@@ -724,6 +730,7 @@ namespace spot
 	      expanded_.push_back(src_pos);
 	      src_colors[0] = false;
 	      src_colors[1] = false;
+	      propagate_green(src_pos, i);
 	      return src_pos;
 	    }
 	  else
@@ -731,6 +738,7 @@ namespace spot
 	      expanded_.push_back(dst_pos);
 	      dst_colors[0] = false;
 	      dst_colors[1] = false;
+	      propagate_green(dst_pos, i);
 	      return dst_pos;
 	    }
 	}
@@ -757,6 +765,7 @@ namespace spot
 	  expanded_.push_back(src_pos);
 	  colors[0] = false;
 	  colors[1] = false; // Useless since this bit must already be false.
+	  propagate_green(src_pos, i);
 	}
 
       // Here we do not perform an expansion even when we always expand the
@@ -831,6 +840,7 @@ namespace spot
 	    {
 	      colors[0] = false;
 	      colors[1] = false;
+	      propagate_green(src_pos, i);
 	    }
 	}
 
@@ -843,6 +853,8 @@ namespace spot
       std::string res  = "expandedlist_";
       if (Highlinks)
 	res += "highlink_";
+      if (FullyColored)
+	res += "fullycolored_";
       if (power_of_)
 	res += "powerof" + std::to_string(power_of_) + "_";
 
@@ -986,6 +998,7 @@ namespace spot
 	    // Turn green the selected element
 	    colors[0] = false;
 	    colors[1] = false;
+	    propagate_green(positions[p], i);
 	    return positions[p];
 	  }
 	case strategy::MinEnMinusRed:
@@ -1007,6 +1020,7 @@ namespace spot
 	    // Turn green the selected element
 	    colors[0] = false;
 	    colors[1] = false;
+	    propagate_green(positions[sel], i);
 	    return positions[sel];
 	  }
 	case strategy::MinNewStates:
@@ -1041,11 +1055,62 @@ namespace spot
 	    auto& colors = i.get_colors(i.dfs_state(positions[sel]));
 	    colors[0] = false;
 	    colors[1] = false;
+	    propagate_green(positions[sel], i);
 	    return positions[sel];
 	  }
 	default:
 	  std::cerr << "Not Compatible with Power Of \n";
 	  exit(1);
+	}
+    }
+
+
+    void propagate_green(int expanded_pos, const dfs_inspector& i)
+    {
+      if (FullyColored)
+	{
+	  assert(expanded_pos != -1);
+	  // We can propagate the green color. Note that
+	  // here the source is not yet expanded but has
+	  // already the good color so we can propagate!
+	  int p = expanded_pos-1;
+	  while (0 <= p)
+	    {
+	      const state* st = i.dfs_state(p);
+	      auto& colors = i.get_colors(st);
+	      bool is_orange = colors[0] && !colors[1];
+
+	      if (is_orange && i.get_iterator(p)->done())
+		{
+		  // Propagate green
+		  colors[0] = false;
+		  colors[1] = false;
+		  --p;
+		}
+	      else
+		break;
+	    }
+	  int dfs_size = i.dfs_size();
+	  if (expanded_pos != dfs_size-1)
+	    {
+	      int p = dfs_size-1;
+	      while (expanded_pos <= p)
+		{
+		  const state* st = i.dfs_state(p);
+		  auto& colors = i.get_colors(st);
+		  bool is_orange = colors[0] && !colors[1];
+
+		  if (is_orange && i.get_iterator(p)->done())
+		    {
+		      // Propagate green
+		      colors[0] = false;
+		      colors[1] = false;
+		      --p;
+		    }
+		  else
+		    break;
+		}
+	    }
 	}
     }
 

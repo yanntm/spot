@@ -263,28 +263,56 @@ checked_main(int argc, char **argv)
 	      std::cerr << "   No support for -del with none or all\n";
 	      exit(1);
 	    }
-      	  else if (strcmp (proviso_name.c_str(), "source") == 0)
-      	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::Source,
-	       power_of, highlinks);
-      	  else if (strcmp (proviso_name.c_str(), "destination") == 0)
-      	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::Destination,
-	       power_of, highlinks);
-      	  else if (strcmp (proviso_name.c_str(), "random") == 0)
-      	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::Random,
-	       power_of, highlinks);
-      	  else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
-      	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::MinEnMinusRed,
-	       power_of, highlinks);
-      	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
-      	    m_proviso = new spot::expandedlist_provisos<false>
-	      (spot::expandedlist_provisos<false>::strategy::MinNewStates,
-	       power_of, highlinks);
+	  if (fully_colored)
+	    {
+	      if (strcmp (proviso_name.c_str(), "source") == 0)
+		m_proviso = new spot::expandedlist_provisos<true>
+		  (spot::expandedlist_provisos<true>::strategy::Source,
+		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "destination") == 0)
+		m_proviso = new spot::expandedlist_provisos<true>
+		  (spot::expandedlist_provisos<true>::strategy::Destination,
+		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "random") == 0)
+		m_proviso = new spot::expandedlist_provisos<true>
+		  (spot::expandedlist_provisos<true>::strategy::Random,
+		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
+		m_proviso = new spot::expandedlist_provisos<true>
+		  (spot::expandedlist_provisos<true>::strategy::MinEnMinusRed,
+		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
+		m_proviso = new spot::expandedlist_provisos<true>
+		  (spot::expandedlist_provisos<true>::strategy::MinNewStates,
+		   power_of, highlinks);
+	      else
+		syntax(argv[0]);
+	    }
 	  else
-	    syntax(argv[0]);
+	    {
+	      if (strcmp (proviso_name.c_str(), "source") == 0)
+		m_proviso = new spot::expandedlist_provisos<false>
+		  (spot::expandedlist_provisos<false>::strategy::Source,
+		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "destination") == 0)
+		m_proviso = new spot::expandedlist_provisos<false>
+		  (spot::expandedlist_provisos<false>::strategy::Destination,
+		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "random") == 0)
+		m_proviso = new spot::expandedlist_provisos<false>
+		  (spot::expandedlist_provisos<false>::strategy::Random,
+		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "min_en_red") == 0)
+		m_proviso = new spot::expandedlist_provisos<false>
+		  (spot::expandedlist_provisos<false>::strategy::MinEnMinusRed,
+		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
+		m_proviso = new spot::expandedlist_provisos<false>
+		  (spot::expandedlist_provisos<false>::strategy::MinNewStates,
+		   power_of, highlinks);
+	      else
+		syntax(argv[0]);
+	    }
 	}
       // FIXME How to bypass recopy?
       else if (!basic_check && !delayed)
@@ -361,7 +389,7 @@ checked_main(int argc, char **argv)
       	      (spot::src_dst_provisos<true, false>::strategy::MinEnMinusRed);
       	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
       	    m_proviso = new spot::src_dst_provisos<true, false>
-      	      (spot::src_dst_provisos<true, false>::strategy::MinNewStates);
+      	     (spot::src_dst_provisos<true, false>::strategy::MinNewStates);
 	  else
 	    syntax(argv[0]);
       	}
