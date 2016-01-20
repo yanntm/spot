@@ -690,9 +690,6 @@ namespace spot
 	    return high_pos;
 	  }
 
-
-	  // HERE FULLY COLORED
-
 	  src_colors[0] = false;
 	  src_colors[1] = false;
 
@@ -840,7 +837,6 @@ namespace spot
 	    {
 	      colors[0] = false;
 	      colors[1] = false;
-	      propagate_green(src_pos, i);
 	    }
 	}
 
@@ -1089,27 +1085,6 @@ namespace spot
 		}
 	      else
 		break;
-	    }
-	  int dfs_size = i.dfs_size();
-	  if (expanded_pos != dfs_size-1)
-	    {
-	      int p = dfs_size-1;
-	      while (expanded_pos <= p)
-		{
-		  const state* st = i.dfs_state(p);
-		  auto& colors = i.get_colors(st);
-		  bool is_orange = colors[0] && !colors[1];
-
-		  if (is_orange && i.get_iterator(p)->done())
-		    {
-		      // Propagate green
-		      colors[0] = false;
-		      colors[1] = false;
-		      --p;
-		    }
-		  else
-		    break;
-		}
 	    }
 	}
     }
