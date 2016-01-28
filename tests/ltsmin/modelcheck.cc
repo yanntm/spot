@@ -68,6 +68,7 @@ Options:\n\
   -power=X use power of X (only work with -l)\n\
   -sm    statistics for the model\n\
   -v     verify that the proviso expand (at least) one state per cycle \n\
+  -r     reverse anticipated : only work with -por + -sm \n\
   -T     time the different phases of the execution\n\
   -z     compress states to handle larger models\n\
   -Z     compress states (faster) assuming all values in [0 .. 2^28-1]\n\
@@ -107,6 +108,7 @@ checked_main(int argc, char **argv)
   unsigned power_of = 0;
   bool spin_like = false;
   bool highlinks = false;
+  bool reverse_anticipated = false;
 
   int dest = 1;
   int n = argc;
@@ -194,6 +196,9 @@ checked_main(int argc, char **argv)
 		  opt += 6;
 		  power_of = atoi(opt);
 		}
+	      break;
+	    case 'r':
+	      reverse_anticipated = true;
 	      break;
 	    case 's':
 	      if (strcmp (opt, "sm") == 0)
@@ -541,7 +546,7 @@ checked_main(int argc, char **argv)
 	      if (fully_anticipated)
 		{
 		  spot::dfs_stats<true, true,
-				  false, false> dfs(model, *m_proviso);
+				  false, false, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -558,7 +563,7 @@ checked_main(int argc, char **argv)
 	      else if (anticipated)
 		{
 		  spot::dfs_stats<true, false,
-				  false, false> dfs(model, *m_proviso);
+				  false, false, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -572,10 +577,27 @@ checked_main(int argc, char **argv)
 			    << tm.timer("Exploration").walltime()
 			    << std::endl << std::endl;
 		}
+	      else if (reverse_anticipated)
+		{
+		  spot::dfs_stats<false, false,
+				  false, false, true> dfs(model, *m_proviso);
+		  tm.start("Exploration");
+		  dfs.run();
+		  tm.stop("Exploration");
+		  std::cout << dfs.dump() << " walltime_ms      : "
+			    << tm.timer("Exploration").walltime()
+			    << std::endl << std::endl;
+		  std::cout << '#' << seed  << ','
+			    << "reverseanticipated_" + m_proviso->name() << ','
+			    << argv[1] << ','
+			    << dfs.dump_csv() << ','
+			    << tm.timer("Exploration").walltime()
+			    << std::endl << std::endl;
+		}
 	      else
 		{
 		  spot::dfs_stats<false, false,
-				  false, false> dfs(model, *m_proviso);
+				  false, false, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -596,7 +618,7 @@ checked_main(int argc, char **argv)
 	      if (fully_anticipated)
 		{
 		  spot::dfs_stats<true, true,
-				  true, false> dfs(model, *m_proviso);
+				  true, false, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -614,7 +636,7 @@ checked_main(int argc, char **argv)
 	      else if (anticipated)
 		{
 		  spot::dfs_stats<true, false,
-				  true, false> dfs(model, *m_proviso);
+				  true, false, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -628,10 +650,28 @@ checked_main(int argc, char **argv)
 			    << tm.timer("Exploration").walltime()
 			    << std::endl << std::endl;
 		}
+	      else if (reverse_anticipated)
+		{
+		  spot::dfs_stats<false, false,
+				  true, false, true> dfs(model, *m_proviso);
+		  tm.start("Exploration");
+		  dfs.run();
+		  tm.stop("Exploration");
+		  std::cout << dfs.dump() << " walltime_ms      : "
+			    << tm.timer("Exploration").walltime()
+			    << std::endl << std::endl;
+		  std::cout << '#' << seed  << ','
+			    << "scc_reverseanticipated_"
+		               + m_proviso->name() << ','
+			    << argv[1] << ','
+			    << dfs.dump_csv() << ','
+			    << tm.timer("Exploration").walltime()
+			    << std::endl << std::endl;
+		}
 	      else
 		{
 		  spot::dfs_stats<false, false,
-				  true, false> dfs(model, *m_proviso);
+				  true, false, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -648,13 +688,13 @@ checked_main(int argc, char **argv)
 	    }
 	}
       else
-        {
+	{
 	  if (!compute_scc)
 	    {
 	      if (fully_anticipated)
 		{
 		  spot::dfs_stats<true, true,
-				  false, true> dfs(model, *m_proviso);
+				  false, true, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -671,7 +711,7 @@ checked_main(int argc, char **argv)
 	      else if (anticipated)
 		{
 		  spot::dfs_stats<true, false,
-				  false, true> dfs(model, *m_proviso);
+				  false, true, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -685,10 +725,27 @@ checked_main(int argc, char **argv)
 			    << tm.timer("Exploration").walltime()
 			    << std::endl << std::endl;
 		}
+	      else if (reverse_anticipated)
+		{
+		  spot::dfs_stats<false, false,
+				  false, true, true> dfs(model, *m_proviso);
+		  tm.start("Exploration");
+		  dfs.run();
+		  tm.stop("Exploration");
+		  std::cout << dfs.dump() << " walltime_ms      : "
+			    << tm.timer("Exploration").walltime()
+			    << std::endl << std::endl;
+		  std::cout << '#' << seed  << ','
+			    << "reverseanticipated_" + m_proviso->name() << ','
+			    << argv[1] << ','
+			    << dfs.dump_csv() << ','
+			    << tm.timer("Exploration").walltime()
+			    << std::endl << std::endl;
+		}
 	      else
 		{
 		  spot::dfs_stats<false, false,
-				  false, true> dfs(model, *m_proviso);
+				  false, true, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -709,7 +766,7 @@ checked_main(int argc, char **argv)
 	      if (fully_anticipated)
 		{
 		  spot::dfs_stats<true, true,
-				  true, true> dfs(model, *m_proviso);
+				  true, true, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -727,7 +784,7 @@ checked_main(int argc, char **argv)
 	      else if (anticipated)
 		{
 		  spot::dfs_stats<true, false,
-				  true, true> dfs(model, *m_proviso);
+				  true, true, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");
@@ -741,10 +798,28 @@ checked_main(int argc, char **argv)
 			    << tm.timer("Exploration").walltime()
 			    << std::endl << std::endl;
 		}
+	      else if (reverse_anticipated)
+		{
+		  spot::dfs_stats<false, false,
+				  true, true, true> dfs(model, *m_proviso);
+		  tm.start("Exploration");
+		  dfs.run();
+		  tm.stop("Exploration");
+		  std::cout << dfs.dump() << " walltime_ms      : "
+			    << tm.timer("Exploration").walltime()
+			    << std::endl << std::endl;
+		  std::cout << '#' << seed  << ','
+			    << "scc_reverseanticipated_"
+		               + m_proviso->name() << ','
+			    << argv[1] << ','
+			    << dfs.dump_csv() << ','
+			    << tm.timer("Exploration").walltime()
+			    << std::endl << std::endl;
+		}
 	      else
 		{
 		  spot::dfs_stats<false, false,
-				  true, true> dfs(model, *m_proviso);
+				  true, true, false> dfs(model, *m_proviso);
 		  tm.start("Exploration");
 		  dfs.run();
 		  tm.stop("Exploration");

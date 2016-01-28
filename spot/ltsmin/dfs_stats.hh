@@ -120,7 +120,7 @@ namespace spot
 	   // If Checker is activated, then the automaton representing
 	   // the state space is build and then we can check that
 	   // every cycle contains an expanded state.
-	   bool Checker>
+	   bool Checker, bool ReverseAnticipated>
   class SPOT_API dfs_stats: public dfs_inspector
   {
     // The state space automaton, only available when Checker is activated. Note
@@ -174,6 +174,7 @@ namespace spot
 
       if (Anticipated || FullyAnticipated)
 	{
+	  assert(!ReverseAnticipated);
 	  // FIXME bypass static by something faster than std::function
 	  static seen_map* seen_ptr;
 	  seen_ptr = &seen;
@@ -181,6 +182,17 @@ namespace spot
 	    reorder_remaining([](const state* s)
 			      {
 				return seen_ptr->find(s) != seen_ptr->end();
+			      });
+	}
+      if (ReverseAnticipated)
+	{
+	  assert(!Anticipated && !FullyAnticipated);
+	  static seen_map* seen_ptr;
+	  seen_ptr = &seen;
+	  todo.back().it->
+	    reorder_remaining([](const state* s)
+			      {
+				return seen_ptr->find(s) == seen_ptr->end();
 			      });
 	}
     }
