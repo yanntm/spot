@@ -1078,6 +1078,24 @@ namespace spot
 
 	      if (is_orange && i.get_iterator(p)->done())
 		{
+		  auto* itp = i.get_iterator(p);
+		  itp->first();
+		  bool isgreen = true;
+		  while (!itp->done())
+		    {
+		      auto* dst = itp->dst();
+		      auto& dst_colors = i.get_colors(dst);
+		      bool dst_is_green = !dst_colors[0] && !dst_colors[1];
+		      assert(i.visited(dst));
+		      if (!dst_is_green) //dst is not green
+			isgreen = false;
+		      dst->destroy();
+		      itp->next();
+		    }
+
+		  if (!isgreen)
+		    break;
+
 		  // Propagate green
 		  colors[0] = false;
 		  colors[1] = false;
