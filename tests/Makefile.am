@@ -305,6 +305,7 @@ TESTS_python = \
   python/piperead.ipynb \
   python/prodexpt.py \
   python/product.ipynb \
+  python/product_n.py \
   python/randaut.ipynb \
   python/randgen.py \
   python/randltl.ipynb \

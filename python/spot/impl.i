@@ -404,6 +404,7 @@ namespace std {
 %template(twa_graph_state_out) spot::internal::state_out<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>>;
 %template(twa_graph_edge_boxed_data) spot::internal::boxed_label<spot::twa_graph_edge_data, false>;
 %template(twa_graph_edge_storage) spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<spot::twa_graph_edge_data, false> >;
+%template(vectortwagraph) std::vector<spot::twa_graph_ptr>;
 
 // Should come after the definition of twa_graph
 
