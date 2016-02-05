@@ -186,8 +186,8 @@ namespace spot
     {
       typedef std::vector<state*> transitions_t;
       typedef std::vector<int> trans_id_t;
-      transitions_t transitions;
-      trans_id_t transitions_id;
+      mutable transitions_t transitions;
+      mutable trans_id_t transitions_id;
       const int* source;
       int state_size;
       void* pool;
@@ -200,7 +200,7 @@ namespace spot
 	  t->destroy();
       }
 
-      void shuffle(unsigned seed)
+      void shuffle(unsigned seed) const
       {
 	if (!seed)
 	  return;
@@ -250,19 +250,21 @@ namespace spot
     public:
 
       spins_succ_iterator(const callback_context* cc,
-			      bdd cond, porinfos* por = nullptr)
+			  bdd cond, porinfos* por = nullptr,
+			  unsigned stab_seed = 0)
 	: kripke_succ_iterator(cond), cc_(cc),
-	  por_(por), idx_(0)
+	  por_(por), idx_(0), stab_seed_(stab_seed)
       {
 	setup();
       }
 
-      void recycle(const callback_context* cc, bdd cond)
+      void recycle(const callback_context* cc, bdd cond, unsigned seed)
       {
 	to_process_.clear();
 	delete cc_;
 	cc_ = cc;
 	kripke_succ_iterator::recycle(cond);
+	stab_seed_ = seed;
 	setup();
       }
 
@@ -385,6 +387,16 @@ namespace spot
 	    mask_ =
 	      por_->compute_reduced_set(cc_->transitions_id, cc_->source);
 
+	    if (stab_seed_)
+	      {
+		cc_->shuffle(stab_seed_);
+		srand(stab_seed_);
+		mrandom_shuffle(mask_.begin(), mask_.end());
+	      }
+
+
+
+
 	    // Fill vector to process with Reduced (states)
 	    unsigned nb_enabled = 0;
 	    for (unsigned i = 0; i < mask_.size(); ++i)
@@ -417,6 +429,7 @@ namespace spot
       std::vector<bool> mask_;
       unsigned idx_;
       mutable bool expanded_;
+      unsigned stab_seed_;
     };
 
     ////////////////////////////////////////////////////////////////////////
@@ -723,7 +736,7 @@ namespace spot
 
       spins_kripke(const spins_interface* d, const bdd_dict_ptr& dict,
 		   const spot::prop_set* ps, formula dead,
-		   int compress, unsigned seed)
+		   int compress, unsigned seed, unsigned stab_seed)
 	: kripke(dict),
 	  d_(d),
 	  state_size_(d_->get_state_size()),
@@ -740,7 +753,7 @@ namespace spot
 		     (sizeof(spins_state) + state_size_ * sizeof(int))),
 	  state_condition_last_state_(nullptr),
 	  state_condition_last_cc_(nullptr),
-	  seed_(seed)
+	  seed_(seed), stab_seed_(stab_seed)
       {
 	vname_ = new const char*[state_size_];
 	format_filter_ = new bool[state_size_];
@@ -1005,12 +1018,12 @@ namespace spot
 	  {
 	    spins_succ_iterator* it =
 	      down_cast<spins_succ_iterator*>(iter_cache_);
-	    it->recycle(cc, scond);
+	    it->recycle(cc, scond, stab_seed_);
 	    iter_cache_ = nullptr;
 	    return it;
 	  }
 
-	return new spins_succ_iterator(cc, scond, get_porinfos());
+	return new spins_succ_iterator(cc, scond, get_porinfos(), stab_seed_);
       }
 
       virtual
@@ -1079,6 +1092,7 @@ namespace spot
       mutable bdd state_condition_last_cond_;
       mutable callback_context* state_condition_last_cc_;
       unsigned seed_;
+      unsigned stab_seed_;
     };
   }
 
@@ -1156,7 +1170,7 @@ namespace spot
   load_ltsmin(const std::string& file_arg, const bdd_dict_ptr& dict,
 	      const atomic_prop_set* to_observe,
 	      const formula dead,
-	      int compress, bool verbose, unsigned seed)
+	      int compress, bool verbose, unsigned seed, unsigned stab_seed)
   {
     std::string file;
     if (file_arg.find_first_of("/\\") != std::string::npos)
@@ -1298,7 +1312,8 @@ namespace spot
 	return nullptr;
       }
 
-    return std::make_shared<spins_kripke>(d, dict, ps, dead, compress, seed);
+    return std::make_shared<spins_kripke>(d, dict, ps, dead, compress, seed,
+					  stab_seed);
   }
 
   porinfos*

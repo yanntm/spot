@@ -95,6 +95,7 @@ checked_main(int argc, char **argv)
   bool enable_por = false;
   int compress_states = 0;
   unsigned seed = 0;
+  unsigned stab_seed = 0;
   const char* echeck_algo = "Cou99";
   bool anticipated = false;
   bool fully_anticipated = false;
@@ -211,6 +212,11 @@ checked_main(int argc, char **argv)
 		{
 		  opt+=5;
 		  seed = atoi(opt);
+		}
+	      else if (strncmp (opt, "stab_seed=", 10) == 0)
+		{
+		  opt+=10;
+		  stab_seed = atoi(opt);
 		}
 	      break;
 	    case 'T':
@@ -474,8 +480,15 @@ checked_main(int argc, char **argv)
     {
       tm.start("loading ltsmin model");
       model = spot::load_ltsmin(argv[1], dict, &ap, deadf,
-				compress_states, enable_por, seed);
+				compress_states, enable_por, seed, stab_seed);
       tm.stop("loading ltsmin model");
+
+      /// WARNING !! Ugly : above this line seed is no more in
+      /// use except for printing
+      if (stab_seed)
+	{
+	  seed = stab_seed;
+	}
 
       if (!model)
 	{

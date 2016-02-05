@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2011, 2013, 2014, 2015, 2016 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -61,7 +61,8 @@ namespace spot
   load_ltsmin(const std::string& file, const bdd_dict_ptr& dict,
 	      const atomic_prop_set* to_observe,
 	      formula dead = formula::tt(),
-	      int compress = 0, bool verbose = true, unsigned seed = 0);
+	      int compress = 0, bool verbose = true, unsigned seed = 0,
+	       unsigned stab_seed = 0);
 
   /// \brief return an object containing all informations for partial order.
   SPOT_API porinfos* por_ltsmin(const_kripke_ptr model);
