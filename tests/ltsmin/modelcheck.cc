@@ -94,7 +94,7 @@ checked_main(int argc, char **argv)
   int compress_states = 0;
   bool enable_por = false;
   unsigned seed = 0;
-
+  unsigned stab_seed = 0;
   const char* echeck_algo = "Cou99";
   bool anticipated = false;
   bool fully_anticipated = false;
@@ -211,6 +211,11 @@ checked_main(int argc, char **argv)
 		{
 		  opt+=5;
 		  seed = atoi(opt);
+		}
+	      else if (strncmp (opt, "stab_seed=", 10) == 0)
+		{
+		  opt+=10;
+		  stab_seed = atoi(opt);
 		}
 	      break;
 	    case 'T':
@@ -476,13 +481,21 @@ checked_main(int argc, char **argv)
       try
         {
           model = spot::ltsmin_model::load(argv[1])
-            .kripke(&ap, dict, deadf, compress_states, enable_por, seed);
+            .kripke(&ap, dict, deadf, compress_states, enable_por,
+                    seed, stab_seed);
         }
       catch (std::runtime_error& e)
         {
           std::cerr << e.what() << '\n';
         }
       tm.stop("loading ltsmin model");
+
+      /// WARNING !! Ugly : above this line seed is no more in
+      /// use except for printing
+      if (stab_seed)
+	{
+	  seed = stab_seed;
+	}
 
       if (!model)
         {

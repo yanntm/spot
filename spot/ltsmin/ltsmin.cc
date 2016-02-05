@@ -184,8 +184,8 @@ namespace spot
     {
       typedef std::vector<state*> transitions_t;
       typedef std::vector<int> trans_id_t;
-      transitions_t transitions;
-      trans_id_t transitions_id;
+      mutable transitions_t transitions;
+      mutable trans_id_t transitions_id;
       const int* source;
       int state_size;
       void* pool;
@@ -198,7 +198,7 @@ namespace spot
           t->destroy();
       }
 
-      void shuffle(unsigned seed)
+      void shuffle(unsigned seed) const
       {
 	if (!seed)
 	  return;
@@ -252,19 +252,21 @@ namespace spot
     public:
 
       spins_succ_iterator(const callback_context* cc,
-                          bdd cond, porinfos* por = nullptr)
+                          bdd cond, porinfos* por = nullptr,
+                          unsigned stab_seed = 0)
 	: kripke_succ_iterator(cond), cc_(cc),
-	  por_(por), idx_(0)
+	  por_(por), idx_(0), stab_seed_(stab_seed)
       {
 	setup();
       }
 
-      void recycle(const callback_context* cc, bdd cond)
+      void recycle(const callback_context* cc, bdd cond, unsigned seed)
       {
 	to_process_.clear();
 	delete cc_;
 	cc_ = cc;
 	kripke_succ_iterator::recycle(cond);
+        stab_seed_ = seed;
 	setup();
       }
 
@@ -387,6 +389,13 @@ namespace spot
 	    mask_ =
 	      por_->compute_reduced_set(cc_->transitions_id, cc_->source);
 
+            if (stab_seed_)
+	      {
+		cc_->shuffle(stab_seed_);
+		srand(stab_seed_);
+		mrandom_shuffle(mask_.begin(), mask_.end());
+	      }
+
 	    // Fill vector to process with Reduced (states)
 	    unsigned nb_enabled = 0;
 	    for (unsigned i = 0; i < mask_.size(); ++i)
@@ -419,6 +428,7 @@ namespace spot
       std::vector<bool> mask_;
       unsigned idx_;
       mutable bool expanded_;
+      unsigned stab_seed_;
     };
 
     ////////////////////////////////////////////////////////////////////////
@@ -721,7 +731,8 @@ namespace spot
 
       spins_kripke(spins_interface_ptr d, const bdd_dict_ptr& dict,
                    const spot::prop_set* ps, formula dead,
-                   int compress, bool use_por, unsigned seed)
+                   int compress, bool use_por, unsigned seed,
+                   unsigned stab_seed)
         : kripke(dict),
           d_(d),
           state_size_(d_->get_state_size()),
@@ -741,7 +752,7 @@ namespace spot
                       + (state_size_ * sizeof(int)))),
           state_condition_last_state_(nullptr),
           state_condition_last_cc_(nullptr),
-          use_por_(use_por), seed_(seed)
+          use_por_(use_por), seed_(seed), stab_seed_(stab_seed)
       {
         vname_ = new const char*[state_size_];
         format_filter_ = new bool[state_size_];
@@ -999,7 +1010,7 @@ namespace spot
           {
             spins_succ_iterator* it =
               down_cast<spins_succ_iterator*>(iter_cache_);
-            it->recycle(cc, scond);
+            it->recycle(cc, scond, stab_seed_);
             iter_cache_ = nullptr;
             return it;
           }
@@ -1068,6 +1079,7 @@ namespace spot
       mutable callback_context* state_condition_last_cc_;
       bool use_por_;
       unsigned seed_;
+      unsigned stab_seed_;
     };
 
 
@@ -1254,7 +1266,8 @@ namespace spot
   ltsmin_model::kripke(const atomic_prop_set* to_observe,
                        bdd_dict_ptr dict,
                        const formula dead, int compress,
-                       bool use_por, unsigned seed) const
+                       bool use_por, unsigned seed,
+                       unsigned stab_seed) const
   {
     spot::prop_set* ps = new spot::prop_set;
     try
@@ -1268,7 +1281,7 @@ namespace spot
         throw;
       }
     auto res = std::make_shared<spins_kripke>(iface, dict, ps, dead, compress,
-                                              use_por, seed);
+                                              use_por, seed, stab_seed);
     // All atomic propositions have been registered to the bdd_dict
     // for iface, but we also need to add them to the automaton so
     // twa::ap() works.

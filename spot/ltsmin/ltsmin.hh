@@ -69,12 +69,14 @@ namespace spot
     // work if all variables are smaller than 2^28.
     // \a wether we should use POR
     // \a the seed we want to use to shuffle transitions
+    // \a the seed we want to use to shuffle transitions with stability
     kripke_ptr kripke(const atomic_prop_set* to_observe,
                       bdd_dict_ptr dict,
                       formula dead = formula::tt(),
                       int compress = 0,
                       bool use_por = false,
-                      unsigned seed = 0) const;
+                      unsigned seed = 0,
+                      unsigned stab_seed = 0) const;
 
     /// Number of variables in a state
     int state_size() const;
