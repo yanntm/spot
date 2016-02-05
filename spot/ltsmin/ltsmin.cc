@@ -24,6 +24,8 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <numeric>
+#include <functional>
 
 // MinGW does not define this.
 #ifndef WEXITSTATUS
@@ -250,7 +252,7 @@ namespace spot
     public:
 
       spins_succ_iterator(const callback_context* cc,
-			      bdd cond, porinfos* por = nullptr)
+                          bdd cond, porinfos* por = nullptr)
 	: kripke_succ_iterator(cond), cc_(cc),
 	  por_(por), idx_(0)
       {
@@ -1224,12 +1226,12 @@ namespace spot
         d->get_type_value_name = (const char* (*)(int, int))
           sym("get_state_variable_type_value");
 
-                d->get_transition_count = (int (*)())
-        lt_dlsym(h, "get_transition_count");
+        d->get_transition_count = (int (*)())
+          lt_dlsym(h, "get_transition_count");
         d->get_transition_read_dependencies = (int* (*)(int))
-        lt_dlsym(h, "get_transition_read_dependencies");
+          lt_dlsym(h, "get_transition_read_dependencies");
         d->get_transition_write_dependencies = (int* (*)(int))
-        lt_dlsym(h, "get_transition_write_dependencies");
+          lt_dlsym(h, "get_transition_write_dependencies");
 
         // Support for Partial Order Reductions
         d->get_guard_count = (int (*)()) lt_dlsym(h, "get_guard_count");
