@@ -449,6 +449,10 @@ namespace spot
     {
       return todo.size();
     }
+    const const_twa_ptr& automaton() const
+    {
+      return aut_;
+    }
 
   private:
     const_twa_ptr aut_;		///< The spot::tgba to explore.

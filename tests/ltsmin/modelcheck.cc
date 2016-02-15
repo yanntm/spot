@@ -56,7 +56,7 @@ Options:\n\
   -gp    output the product state-space in dot format\n\
   -m     output the dependencies matrix of the model\n\
   -por=<source|destination|random|min_en_red|min_new_states|none|all|\n\
-        evangelista> :  use partial order reduction with specified proviso\n\
+        evangelista|one_then_dst_else_src> :  use por with specified proviso\n\
   -a     anticipated : only work with -por + -sm \n\
   -b     basic check : only work with -por + -sm \n\
   -c     fully colored for evangelista \n\
@@ -295,6 +295,11 @@ checked_main(int argc, char **argv)
 		m_proviso = new spot::expandedlist_provisos<true>
 		  (spot::expandedlist_provisos<true>::strategy::MinNewStates,
 		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "one_then_dst_else_src")
+		       == 0)
+		m_proviso = new spot::expandedlist_provisos<true>
+		  (spot::expandedlist_provisos<true>::strategy
+		   ::OneThenDstElseSrc, power_of, highlinks);
 	      else
 		syntax(argv[0]);
 	    }
@@ -320,6 +325,11 @@ checked_main(int argc, char **argv)
 		m_proviso = new spot::expandedlist_provisos<false>
 		  (spot::expandedlist_provisos<false>::strategy::MinNewStates,
 		   power_of, highlinks);
+	      else if (strcmp (proviso_name.c_str(), "one_then_dst_else_src")
+		       == 0)
+		m_proviso = new spot::expandedlist_provisos<false>
+		  (spot::expandedlist_provisos<false>::strategy
+		   ::OneThenDstElseSrc, power_of, highlinks);
 	      else
 		syntax(argv[0]);
 	    }
@@ -348,6 +358,10 @@ checked_main(int argc, char **argv)
       	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
       	    m_proviso = new spot::src_dst_provisos<false, false>
       	      (spot::src_dst_provisos<false, false>::strategy::MinNewStates);
+      	  else if (strcmp (proviso_name.c_str(), "one_then_dst_else_src") == 0)
+      	    m_proviso = new spot::src_dst_provisos<false, false>
+      	      (spot::src_dst_provisos<false, false>
+	       ::strategy::OneThenDstElseSrc);
 	  else
 	    syntax(argv[0]);
       	}
@@ -374,6 +388,10 @@ checked_main(int argc, char **argv)
       	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
       	    m_proviso = new spot::src_dst_provisos<true, true>
       	      (spot::src_dst_provisos<true, true>::strategy::MinNewStates);
+      	  else if (strcmp (proviso_name.c_str(), "one_then_dst_else_src") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, true>
+      	      (spot::src_dst_provisos<true, true>::strategy::OneThenDstElseSrc);
+
 	  else
 	    syntax(argv[0]);
       	}
@@ -400,6 +418,9 @@ checked_main(int argc, char **argv)
       	  else if (strcmp (proviso_name.c_str(), "min_new_states") == 0)
       	    m_proviso = new spot::src_dst_provisos<true, false>
       	     (spot::src_dst_provisos<true, false>::strategy::MinNewStates);
+      	  else if (strcmp (proviso_name.c_str(), "one_then_dst_else_src") == 0)
+      	    m_proviso = new spot::src_dst_provisos<true, false>
+      	     (spot::src_dst_provisos<true, false>::strategy::OneThenDstElseSrc);
 	  else
 	    syntax(argv[0]);
       	}

@@ -64,5 +64,8 @@ namespace spot
 
     /// \brief Return the size of the DFS stack.
     virtual unsigned dfs_size() const = 0;
+
+    // \brief Return the reference over the automaton to check
+    virtual const const_twa_ptr& automaton() const =  0;
   };
 }

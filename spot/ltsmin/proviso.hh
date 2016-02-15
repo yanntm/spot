@@ -70,7 +70,8 @@ namespace spot
       Destination,		// Destination is expanded
       Random,			// Choose randomly between source and dest.
       MinEnMinusRed,		// Choose minimal overhead in transitions
-      MinNewStates		// Choose minimal overhead in new states
+      MinNewStates,		// Choose minimal overhead in new states
+      OneThenDstElseSrc 	// Destination iff one
     };
 
     src_dst_provisos(strategy strat): strat_(strat), generator_(0),
@@ -99,6 +100,8 @@ namespace spot
 	  return res +  "min_en_minus_red";
 	case strategy::MinNewStates:
 	  return res +  "min_new_states";
+	case strategy::OneThenDstElseSrc:
+	  return res + "one_then_dst_else_src";
 	default:
 	  assert(false);
 	  break;
@@ -333,6 +336,44 @@ namespace spot
 	    }
 	    return dst;
 	  }
+	case strategy::OneThenDstElseSrc:
+	  {
+	    // In this proviso the source is expanded only iff it has more
+	    // than one backedge. We just have to walk successors of src
+	    // and stop as soon 2 backedges have been detected
+	    int nb_backedges = 0;
+	    auto* itp = i.automaton()->succ_iter(src_st);
+	    itp->first();
+	    while (!itp->done())
+	      {
+		auto* target = itp->dst();
+		int target_pos = i.dfs_position(target);
+		if (target_pos != -1)
+		  ++nb_backedges;
+		target->destroy();
+		itp->next();
+		if (nb_backedges == 2)
+		  break;
+	      }
+	    i.automaton()->release_iter(itp);
+	    if (nb_backedges == 2)
+	      {
+		++source_;
+		if (Delayed)
+		  {
+		    update_delayed(src_st, src_st, i);
+		    return -1;
+		  }
+		return src;
+	      }
+	    ++destination_;
+	    if (Delayed)
+	      {
+		update_delayed(src_st, dst_st, i);
+		return -1;
+	      }
+	    return dst;
+	  }
 	default:
 	  assert(false);
 	  break;
@@ -346,8 +387,8 @@ namespace spot
     {
       if (Delayed)
 	{
-	  i.get_colors(chosen)[1] = true;
-	  i.get_colors(dfstop)[2] = false;
+	  i.get_colors(chosen)[1] = true; // Expansion required
+	  i.get_colors(dfstop)[2] = false; // top become dangerous
 	}
     }
 
@@ -589,7 +630,8 @@ namespace spot
       Destination,		// Destination is expanded
       Random,			// Choose randomly between source and dest.
       MinEnMinusRed,		// Choose minimal overhead in transitions
-      MinNewStates		// Choose minimal overhead in new states
+      MinNewStates,		// Choose minimal overhead in new states
+      OneThenDstElseSrc
     };
 
     expandedlist_provisos(strategy strat, unsigned power_of = 0,
@@ -866,6 +908,8 @@ namespace spot
 	  return res +  "min_en_minus_red";
 	case strategy::MinNewStates:
 	  return res +  "min_new_states";
+	case strategy::OneThenDstElseSrc:
+	  return res +  "one_then_dst_else_src";
 	default:
 	  assert(false);
 	  break;
@@ -952,6 +996,34 @@ namespace spot
 	    			    ++new_dst;
 	    			});
 	    if (new_src < new_dst)
+	      {
+		++source_;
+		return src;
+	      }
+	    ++destination_;
+	    return dst;
+	  }
+	case strategy::OneThenDstElseSrc:
+	  {
+	    // In this proviso the source is expanded only iff it has more
+	    // than one backedge. We just have to walk successors of src
+	    // and stop as soon 2 backedges have been detected
+	    int nb_backedges = 0;
+	    auto* itp = i.automaton()->succ_iter(i.dfs_state(src));
+	    itp->first();
+	    while (!itp->done())
+	      {
+		auto* target = itp->dst();
+		int target_pos = i.dfs_position(target);
+		if (target_pos != -1)
+		  ++nb_backedges;
+		target->destroy();
+		itp->next();
+		if (nb_backedges == 2)
+		  break;
+	      }
+	    i.automaton()->release_iter(itp);
+	    if (nb_backedges == 2)
 	      {
 		++source_;
 		return src;
