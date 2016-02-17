@@ -440,6 +440,7 @@ namespace spot
     }
     virtual void set_highlink(const state* st, const state* highlink) const
     {
+      assert(highlink != nullptr);
       assert(seen.find(st) != seen.end());
       highlink->clone();
       seen[st].highlink = highlink;

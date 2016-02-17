@@ -339,8 +339,9 @@ namespace spot
 	case strategy::OneThenDstElseSrc:
 	  {
 	    // In this proviso the source is expanded only iff it has more
-	    // than one backedge. We just have to walk successors of src
-	    // and stop as soon 2 backedges have been detected
+	    // than one (dangerous, when basickcheck) backedge. We just
+	    // have to walk successors of src and stop as soon 2
+	    // backedges have been detected
 	    int nb_backedges = 0;
 	    auto* itp = i.automaton()->succ_iter(src_st);
 	    itp->first();
@@ -349,7 +350,12 @@ namespace spot
 		auto* target = itp->dst();
 		int target_pos = i.dfs_position(target);
 		if (target_pos != -1)
-		  ++nb_backedges;
+		  {
+		    if (!BasicCheck)
+		      ++nb_backedges;
+		    else if (!i.get_iterator(target_pos)->enabled())
+		      ++nb_backedges;
+		  }
 		target->destroy();
 		itp->next();
 		if (nb_backedges == 2)
@@ -689,6 +695,14 @@ namespace spot
 	      	  i.set_highlink(q, dst_highlink);
 	      	  assert(dst_highlink->compare(i.get_highlink(q)) == 0);
 	      	}
+
+	      const state* src_highlink = i.get_highlink(src);
+	      if (src_highlink == nullptr ||
+	  	  i.dfs_position(src_highlink) < i.dfs_position(dst_highlink))
+	  	{
+	  	  i.set_highlink(src,  dst_highlink);
+	  	}
+
 	    }
 	}
 
@@ -808,7 +822,7 @@ namespace spot
 	}
 
       // Here we do not perform an expansion even when we always expand the
-      //  source (i.e. for evangelista). The trick to obtain evangelista's
+      // source (i.e. for evangelista). The trick to obtain evangelista's
       // algorithm is to specify Anticipation in dfs_stat
       return false;
     }
@@ -838,6 +852,14 @@ namespace spot
 	      const state* newtop_highlink = i.get_highlink(newtop);
 	      if (newtop_highlink == nullptr)
 	      	i.set_highlink(newtop, src_highlink);
+
+	      // Otherwise we must compare the highlink of src and pred
+	      else if (i.dfs_position(src_highlink) <
+		  i.dfs_position(newtop_highlink))
+	  	{
+	  	  i.set_highlink(newtop_highlink,  src_highlink);
+	  	}
+
 	    }
 	}
 
@@ -1006,8 +1028,9 @@ namespace spot
 	case strategy::OneThenDstElseSrc:
 	  {
 	    // In this proviso the source is expanded only iff it has more
-	    // than one backedge. We just have to walk successors of src
-	    // and stop as soon 2 backedges have been detected
+	    // than one dangerous backedge. We just have to walk
+	    // successors of src and stop as soon 2 backedges have
+	    // been detected
 	    int nb_backedges = 0;
 	    auto* itp = i.automaton()->succ_iter(i.dfs_state(src));
 	    itp->first();
