@@ -1032,6 +1032,7 @@ namespace spot
 	    // successors of src and stop as soon 2 backedges have
 	    // been detected
 	    int nb_backedges = 0;
+	    bool one_succ_is_red = false;
 	    auto* itp = i.automaton()->succ_iter(i.dfs_state(src));
 	    itp->first();
 	    while (!itp->done())
@@ -1039,14 +1040,28 @@ namespace spot
 		auto* target = itp->dst();
 		int target_pos = i.dfs_position(target);
 		if (target_pos != -1)
-		  ++nb_backedges;
+		  {
+		    // This is a dangerous backedge
+		    if (expanded_.empty() ||
+			((int)expanded_.back()) < target_pos)
+		      ++nb_backedges;
+		  }
+		// State is not on the DFS but already visited, so
+		// it has some color.
+		else if (i.visited(target))
+		  {
+		    auto& colors = i.get_colors(target);
+		    // State is RED
+		    if (colors[0]  && colors[1])
+		      one_succ_is_red = true;
+		  }
 		target->destroy();
 		itp->next();
-		if (nb_backedges == 2)
+		if (nb_backedges == 2 || one_succ_is_red)
 		  break;
 	      }
 	    i.automaton()->release_iter(itp);
-	    if (nb_backedges == 2)
+	    if (one_succ_is_red || nb_backedges == 2)
 	      {
 		++source_;
 		return src;
