@@ -319,6 +319,7 @@ TESTS_python = \
   python/otfcrash.py \
   python/parsetgba.py \
   python/prodexpt.py \
+  python/product_n.py \
   python/randgen.py \
   python/relabel.py \
   python/remfin.py \

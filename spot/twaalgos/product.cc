@@ -121,6 +121,20 @@ namespace spot
 			  && right->prop_state_acc());
       return res;
     }
+
+    template <class I>
+    static twa_graph_ptr product_n_aux(I begin, I end)
+    {
+      if (begin == end)
+        throw std::invalid_argument("product_n(): cannot compute an empty "
+                                    "product");
+      if (std::next(begin) == end)
+        return copy(*begin, twa::prop_set::all());
+      auto res = *begin;
+      while (++begin != end)
+        res = product(res, *begin);
+      return res;
+    }
   }
 
   twa_graph_ptr product(const const_twa_graph_ptr& left,
@@ -149,6 +163,16 @@ namespace spot
 		       left_state, right_state, false);
   }
 
+  twa_graph_ptr product_n(std::initializer_list<twa_graph_ptr> automata)
+  {
+    return product_n_aux(automata.begin(), automata.end());
+  }
+
+  twa_graph_ptr product_n(const std::vector<twa_graph_ptr>& automata)
+  {
+    return product_n_aux(automata.begin(), automata.end());
+  }
+
   twa_graph_ptr product_or(const const_twa_graph_ptr& left,
 			   const const_twa_graph_ptr& right)
   {
@@ -156,5 +180,4 @@ namespace spot
 		      left->get_init_state_number(),
 		      right->get_init_state_number());
   }
-
 }

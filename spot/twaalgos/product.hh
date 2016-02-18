@@ -41,6 +41,12 @@ namespace spot
 			unsigned right_state);
 
   SPOT_API
+  twa_graph_ptr product_n(std::initializer_list<twa_graph_ptr> automata);
+
+  SPOT_API
+  twa_graph_ptr product_n(const std::vector<twa_graph_ptr>& automata);
+
+  SPOT_API
   twa_graph_ptr product_or(const const_twa_graph_ptr& left,
 			   const const_twa_graph_ptr& right);
 
