@@ -358,6 +358,18 @@ namespace spot
 	  to_process_[i] = res[i];
       }
 
+
+      // Reorder states in such a way that it does not affect the order of the
+      // remaining successors.
+      void consider_first(unsigned pos)
+      {
+	assert(pos < to_process_.size());
+	state* el = to_process_[pos];
+	to_process_.erase (to_process_.begin()+pos);
+	to_process_.insert(to_process_.begin(), el);
+      }
+
+
       virtual unsigned reduced()
       {
 	return std::count(mask_.begin(), mask_.end(), true);
@@ -393,9 +405,6 @@ namespace spot
 		srand(stab_seed_);
 		mrandom_shuffle(mask_.begin(), mask_.end());
 	      }
-
-
-
 
 	    // Fill vector to process with Reduced (states)
 	    unsigned nb_enabled = 0;

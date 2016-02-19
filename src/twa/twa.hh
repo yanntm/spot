@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011, 2013, 2014, 2015 Laboratoire de Recherche
+// Copyright (C) 2009, 2011, 2013, 2014, 2015, 2016 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -414,6 +414,11 @@ namespace spot
 
     virtual void expand_will_generate(void (*)(const state *))
     { }
+
+    virtual void consider_first(unsigned)
+    {
+      assert(false);
+    }
 
     virtual unsigned reduced()
     {
