@@ -1,0 +1,36 @@
+These benchmarks are used to compare several n-ary product implementation
+against the binary product.
+
+Follow these instructions to produce the benchmarks:
+
+1) Install git and python3 if it not already done.
+
+2) Compile Spot and install if it is not already done.
+
+3) Run the benchmarks
+
+   % ./run
+
+   This will build a CSV file called "result" respecting the following format:
+        "datetime,version,nb_automata,nb_states,nb_densities,nb_ap,time"
+
+   You can run the benchmarks using the following options:
+
+       % ./run [--binary|--no-binary] [--states Q] [--automata N] [--density D]
+               [--ap A] [--iterations I]
+
+       --binary|--no-binary: Run or not the benchmarks for the binary product
+           Default value: no-binary
+       --states Q: Set the maximum number Q of states for an automaton
+           Default value: Q=100
+       --automata N: Set the maximum number N of automata in an n-ary product
+           Default value: N=10
+       --density D: Set the maximum number D of densities benchmarkes.
+           Default value: D=10
+       --ap A: Set the maximum number N of atomic propositions in an automaton.
+           Default value: A=10
+       --iterations I: Set the maximum I of iterations used by the Python module
+           timeit. Default value: I=10
+
+4) If you have ipython and pandas you can pretty print the results using:
+   % ./plot
