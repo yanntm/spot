@@ -122,17 +122,165 @@ namespace spot
       return res;
     }
 
+    typedef std::vector<unsigned> product_n_state;
+
+    struct product_n_state_hash
+    {
+      size_t
+      operator()(const product_n_state& s) const
+      {
+        size_t result = 0;
+        for (auto i: s)
+          result = wang32_hash(result ^ wang32_hash(i));
+        return result;
+      }
+    };
+
     template <class I>
     static twa_graph_ptr product_n_aux(I begin, I end)
     {
       if (begin == end)
+        // Empty product
         throw std::invalid_argument("product_n(): cannot compute an empty "
                                     "product");
       if (std::next(begin) == end)
+        // One factor in the product
         return copy(*begin, twa::prop_set::all());
-      auto res = *begin;
-      while (++begin != end)
-        res = product(res, *begin);
+
+      std::unordered_map<product_n_state, unsigned, product_n_state_hash> s2n;
+      std::queue<std::pair<product_n_state, unsigned>> todo;
+
+      // Count he numebr of automata
+      unsigned num_automata = 0;
+      for (auto i = begin; i != end; i++)
+        num_automata++;
+
+      // Create the resulting automaton and initialize its AP
+      auto res = make_twa_graph((*begin)->get_dict());
+      for (auto i = std::next(begin); i != end; i++)
+        {
+          if (res->get_dict() != (*i)->get_dict())
+            throw std::runtime_error("product_n: automata should share "
+                                     "their bdd_dict");
+          res->copy_ap_of(*i);
+        }
+
+      // Number to shift for each acceptation condition
+      // Compute the resulting acceptation condition
+      std::vector<unsigned> acc_shift;
+      acc_shift.reserve(num_automata - 1);
+      auto right_acc = (*begin)->get_acceptance();
+      auto j = begin;
+      unsigned prev = 0;
+      for (auto i = std::next(begin); i != end; i++)
+      {
+        prev += (*j)->num_sets();
+        acc_shift.push_back(prev);
+        j++;
+        right_acc &= (*j)->get_acceptance() << acc_shift.back();
+      }
+      res->set_acceptance(acc_shift.back() + (*j)->num_sets(), right_acc);
+
+      // Create a new state if it doesn't exist yet
+      auto new_state =
+        [&](const product_n_state& states) -> unsigned
+        {
+          auto p = s2n.emplace(states, 0);
+          if (p.second)
+            {
+              p.first->second = res->new_state();
+              todo.emplace(states, p.first->second);
+            }
+          return p.first->second;
+        };
+
+      // Compute the new initial state
+      product_n_state init_state;
+      init_state.reserve(num_automata);
+      for (auto i = begin; i != end; i++)
+        init_state.push_back((*i)->get_init_state_number());
+      res->set_init_state(new_state(init_state));
+
+      if (right_acc.is_f())
+        // Do not bother doing any work if the resulting acceptance is
+        // false.
+        return res;
+
+      while (!todo.empty())
+        {
+          auto top = todo.front();
+          todo.pop();
+          for (auto& first_edge: (*begin)->out(*top.first.begin()))
+            {
+              auto cond = first_edge.cond;
+              auto acc = first_edge.acc;
+              product_n_state dst;
+              dst.reserve(num_automata);
+              dst.push_back(first_edge.dst);
+              std::function<void(bdd, acc_cond::mark_t,
+                                 std::vector<unsigned>::iterator,
+                                 product_n_state, I,
+                                 std::vector<unsigned>::iterator)> traversal =
+                [&](bdd cond, acc_cond::mark_t acc,
+                    std::vector<unsigned>::iterator current_state,
+                    product_n_state dst, I current_automaton,
+                    std::vector<unsigned>::iterator current_acc_shift) -> void
+                {
+                  auto cur_edges = (*current_automaton)->out(*current_state);
+                  for (auto& edge: cur_edges)
+                    {
+                      auto current_cond = cond & edge.cond;
+                      if (current_cond == bddfalse)
+                        continue;
+                      auto current_acc = acc | (edge.acc << *current_acc_shift);
+                      dst.push_back(edge.dst);
+                      if (std::next(current_automaton) == end)
+                      {
+                        auto dst_state = new_state(dst);
+                        res->new_edge(top.second, dst_state,
+                                      current_cond, current_acc);
+                      }
+                      else
+                        traversal(current_cond, current_acc,
+                                  std::next(current_state), dst,
+                                  std::next(current_automaton),
+                                  std::next(current_acc_shift));
+                      dst.pop_back();
+                    }
+                };
+              traversal(cond, acc, std::next(top.first.begin()), dst,
+                        std::next(begin), acc_shift.begin());
+            }
+        }
+      res->prop_deterministic(std::all_of(begin, end, [](twa_graph_ptr i)
+                              {
+                                return i->prop_deterministic();
+                              }));
+
+      res->prop_stutter_invariant(std::all_of(begin, end, [](twa_graph_ptr i)
+                                  {
+                                    return i->prop_stutter_invariant();
+                                  }));
+
+      res->prop_inherently_weak(std::all_of(begin, end, [](twa_graph_ptr i)
+                                {
+                                  return i->prop_inherently_weak();
+                                }));
+
+      res->prop_weak(std::all_of(begin, end, [](twa_graph_ptr i)
+                     {
+                       return i->prop_weak();
+                     }));
+
+      res->prop_terminal(std::all_of(begin, end, [](twa_graph_ptr i)
+                         {
+                           return i->prop_terminal();
+                         }));
+
+      res->prop_state_acc(std::all_of(begin, end, [](twa_graph_ptr i)
+                          {
+                            return i->prop_state_acc();
+                          }));
       return res;
     }
   }
