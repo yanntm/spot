@@ -510,6 +510,13 @@ namespace spot
       return 0;
     }
 
+    /// \brief Reorder states in such a way that it does not affect
+    /// the order of the remaining successors.
+    virtual void consider_first(unsigned)
+    {
+      assert(false);
+    }
+
     ///@}
   };
 

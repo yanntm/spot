@@ -369,6 +369,7 @@ namespace spot
       {
 	return mask_.size();
       }
+
       virtual void expand_will_generate(void (*callback)(const state *))
       {
         if (expanded_)
@@ -376,6 +377,16 @@ namespace spot
         for (unsigned i = 0; i < mask_.size(); ++i)
           if (!mask_[i])
             callback(cc_->transitions[i]);
+      }
+
+      // Reorder states in such a way that it does not affect the order of the
+      // remaining successors.
+      void consider_first(unsigned pos)
+      {
+	assert(pos < to_process_.size());
+	state* el = to_process_[pos];
+	to_process_.erase (to_process_.begin()+pos);
+	to_process_.insert(to_process_.begin(), el);
       }
 
     private:

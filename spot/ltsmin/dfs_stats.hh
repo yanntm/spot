@@ -188,12 +188,28 @@ namespace spot
 	{
 	  assert(!Anticipated && !FullyAnticipated);
 	  static seen_map* seen_ptr;
+	  static const state* current;
+	  static int pos;
+	  static int switch_pos;
 	  seen_ptr = &seen;
+	  current = todo.back().src;
+	  pos = -1;
+	  switch_pos = -1;
 	  todo.back().it->
 	    reorder_remaining([](const state* s)
 			      {
+				++pos;
+				if (switch_pos == -1 &&
+				    current->compare(s) == 0)
+				  // this is the first self-loop
+				  switch_pos = pos;
 				return seen_ptr->find(s) == seen_ptr->end();
 			      });
+
+	  // For reverse anticipation, we must process first at least one
+	  // backedge.
+	  if (switch_pos != -1)
+	    todo.back().it->consider_first((unsigned)switch_pos);
 	}
     }
 
