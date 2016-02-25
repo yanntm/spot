@@ -21,6 +21,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/complete.hh>
 #include <deque>
+#include <queue>
 #include <unordered_map>
 #include <spot/misc/hash.hh>
 
@@ -153,11 +154,11 @@ namespace spot
       // Count he numebr of automata
       unsigned num_automata = 0;
       for (auto i = begin; i != end; i++)
-        num_automata++;
+        ++num_automata;
 
       // Create the resulting automaton and initialize its AP
       auto res = make_twa_graph((*begin)->get_dict());
-      for (auto i = std::next(begin); i != end; i++)
+      for (auto i = std::next(begin); i != end; ++i)
         {
           if (res->get_dict() != (*i)->get_dict())
             throw std::runtime_error("product_n: automata should share "
