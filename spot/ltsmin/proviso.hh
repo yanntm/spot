@@ -51,6 +51,8 @@ namespace spot
     virtual std::string name() = 0;
     virtual std::string dump() = 0;
     virtual std::string dump_csv() = 0;
+    virtual void delete_extra(void*)
+    { }
     virtual ~proviso()
     { }
   };
@@ -1225,4 +1227,327 @@ namespace spot
     bool Highlinks;
     unsigned power_of_;
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //template<bool FullyColored>
+  class SPOT_API summary_provisos: public proviso
+  {
+
+    enum class color{ ORANGE, GREEN, PURPLE, RED };
+    struct data
+    {
+      color c;
+      bool mark;
+      int depth;
+      int mx_d;
+      const state* mx_s;
+    };
+    bool anticipated_;
+  public:
+    summary_provisos(bool anticipated = false): anticipated_(anticipated)
+      { }
+
+    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    {
+      ++d_;
+      data* edata = new data({
+	  i.get_iterator(d_)->all_enabled() ? color::GREEN : color::ORANGE,
+	  false, d_, -1, nullptr});
+      i.set_extra_data(src, edata);
+      if (i.get_iterator(d_)->all_enabled())
+	expanded_.push_back(d_);
+
+
+      // During anticipation we first process all transitions
+      // leading to already visited states
+      if (anticipated_)
+	{
+	  data* data_src = (data*) i.get_extra_data(src);
+	  twa_succ_iterator* it = i.get_iterator(d_);
+	  while (!it->done())
+	    {
+	      const state* dst = it->dst();
+	      if (i.visited(dst))
+		{
+		  data* data_dst = (data*) i.get_extra_data(dst);
+
+		  if (data_src->c == color::ORANGE ||
+		      data_src->c == color::PURPLE) // state is brown
+		    {
+		      if (data_dst->c != color::GREEN)
+			{
+			  data_src->c = color::PURPLE;
+			  if (data_dst->c == color::RED)
+			    {
+			      data_src->mx_d = d_;
+			      data_src->mx_s = src;
+			    }
+			  else if (data_dst->c == color::ORANGE ||
+				   data_dst->c == color::PURPLE)
+			    // state is brown
+			    {
+			      if (expanded_.empty() ||
+				  data_dst->depth > (int)expanded_.back())
+				{
+				  if (data_src->mx_d < data_dst->depth)
+				    {
+				      data_src->mx_d = data_dst->depth;
+				      data_src->mx_s = dst;
+				    }
+				}
+			    }
+			}
+		    }
+		}
+	      dst->destroy();
+	      it->next();
+	    }
+	  it->first();		// Reset the iterator for the main DFS procedure
+	  if (data_src->mx_d != -1)
+	    {
+ 	      unsigned enminred_src =
+		i.get_iterator(d_)->enabled() -
+		i.get_iterator(d_)->reduced();
+	      unsigned enminred_mxs =
+		i.get_iterator(data_src->mx_d)->enabled() -
+		i.get_iterator(data_src->mx_d)->reduced();
+
+	      if (data_src->mx_d == d_ || enminred_src < enminred_mxs)
+		{
+		  expand(src, i);
+		  return true;
+		}
+	    }
+	}
+      return false;
+    }
+
+    virtual int maybe_closingedge(const state* src,
+				  const state* dst,
+				  const dfs_inspector& i)
+    {
+      // If anticipated two cases are of interrest:
+      //    - state has been expanded so it's green and we don't care
+      //      about any transitions
+      //    - state has not been expanded. In this case we already have
+      //      visited all transitions during notify_push so we can skip
+      //      all transitions.
+      if (anticipated_)
+	return -1;
+
+      data* data_src = (data*) i.get_extra_data(src);
+      data* data_dst = (data*) i.get_extra_data(dst);
+
+      if (data_src->c == color::ORANGE ||
+	  data_src->c == color::PURPLE) // state is brown
+	{
+	  if (data_dst->c != color::GREEN)
+	    {
+	      data_src->c = color::PURPLE;
+	      if (data_dst->c == color::RED)
+		{
+		  data_src->mx_d = d_;
+		  data_src->mx_s = src;
+		}
+	      else if (data_dst->c == color::ORANGE ||
+		       data_dst->c == color::PURPLE) // state is brown
+		{
+		  if (expanded_.empty() ||
+		      data_dst->depth > (int)expanded_.back())
+		    {
+		      if (data_src->mx_d < data_dst->depth)
+			{
+			  data_src->mx_d = data_dst->depth;
+			  data_src->mx_s = dst;
+			}
+		    }
+		}
+	    }
+	}
+
+      // This maybe closing-edge is "safe", i.e. expansions are not
+      // performed here
+      return -1;
+    }
+
+    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    {
+      data* data_src = (data*) i.get_extra_data(src);
+
+      if (anticipated_)
+	{
+	  if (data_src->c == color::PURPLE)
+	    {
+	      if (data_src->mark)
+		{
+		  expand (src, i);
+		  return false;
+		}
+	      else if (data_src->mx_d != -1)
+		{
+		  data* data_mxs = (data*) i.get_extra_data(data_src->mx_s);
+		  data_mxs->mark = true;
+		  data_src->c = color::RED;
+		}
+	    }
+	  switch (data_src->c)
+	    {
+	    case color::GREEN:
+	      expanded_.pop_back();
+	      --d_;
+	      return true;		// Do not avoid pop
+	    case color::ORANGE:
+	      data_src->c = color::GREEN;
+	      --d_;
+	      return true;		// Do not avoid pop
+	    case color::PURPLE:
+	      data_src->c = color::RED;
+              SPOT_FALLTHROUGH;
+              // Do not return now, some work todo at the end
+	      // this function.
+	    default:
+	      ;
+	    }
+	}
+      else
+	{
+	  switch (data_src->c)
+	    {
+	    case color::GREEN:
+	      expanded_.pop_back();
+	      --d_;
+	      return true;		// Do not avoid pop
+	    case color::ORANGE:
+	      data_src->c = color::GREEN;
+	      --d_;
+	      return true;		// Do not avoid pop
+	    case color::PURPLE:
+	      {
+		if (data_src->mark || data_src->mx_d == d_)
+		  {
+		    expand(src, i);
+		    return false;
+		  }
+		else if (data_src->mx_d != -1)
+		  {
+		    unsigned enminred_src =
+		      i.get_iterator(d_)->enabled() -
+		      i.get_iterator(d_)->reduced();
+		    unsigned enminred_mxs =
+		      i.get_iterator(data_src->mx_d)->enabled() -
+		      i.get_iterator(data_src->mx_d)->reduced();
+
+		    if (enminred_src < enminred_mxs)
+		      {
+			expand(src, i);
+			return false;
+		      }
+		    else
+		      {
+			data* data_mxs =
+			  (data*) i.get_extra_data(data_src->mx_s);
+			data_mxs->mark = true;
+			data_src->c = color::RED;
+		      }
+		  }
+		else
+		  {
+		    data_src->c = color::RED;
+		  }
+	      }
+              SPOT_FALLTHROUGH;
+	    default: // state is red
+	      ;
+	    }
+	}
+
+      if (d_ > 0)
+	{
+	  data* data_pred = (data*)i.get_extra_data(i.dfs_state(d_-1));
+	  if (data_src->c == color::RED  && data_pred->c == color::ORANGE)
+	    data_pred->c = color::PURPLE;
+	}
+
+      --d_;
+
+      // We are in the middle of a pop do not avoid it !
+      return true;
+    }
+
+
+    void expand (const state* src, const dfs_inspector& i)
+    {
+      data* data_src = (data*) i.get_extra_data(src);
+      data_src->c = color::GREEN;
+      i.get_iterator(d_)->fire_all();
+      expanded_.push_back(d_);
+    }
+
+    virtual std::string name()
+    {
+      std::string res  = "summary_";
+      return res;
+    }
+
+    virtual std::string dump()
+    {
+      return
+	" source_expanded  : " + std::to_string(source_)           + '\n' +
+	" dest_expanded    : " + std::to_string(destination_)      + '\n';
+    }
+
+    virtual std::string dump_csv()
+    {
+      return
+	std::to_string(source_)           + ',' +
+	std::to_string(destination_);
+    }
+    virtual ~summary_provisos()
+    { }
+
+    virtual void delete_extra(void* edata)
+    {
+      data* d = (data*) edata;
+      delete d;
+    }
+  private:
+    std::vector<unsigned> expanded_;
+    int d_ = -1;
+    unsigned source_ = 0;
+    unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
+    std::mt19937 generator_;
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

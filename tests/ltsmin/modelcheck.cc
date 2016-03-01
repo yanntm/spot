@@ -56,7 +56,8 @@ Options:\n\
   -gp    output the product state-space in dot format\n\
   -m     output the dependencies matrix of the model\n\
   -por=<source|destination|random|min_en_red|min_new_states|none|all|\n\
-        evangelista|one_then_dst_else_src> :  use por with specified proviso\n\
+        evangelista|one_then_dst_else_src|summary> : \n\
+        use por with specified proviso\n\
   -a     anticipated : only work with -por + -sm \n\
   -b     basic check : only work with -por + -sm \n\
   -c     fully colored for evangelista \n\
@@ -249,7 +250,12 @@ checked_main(int argc, char **argv)
     // Setup proviso
   if (enable_por)
     {
-      if (strcmp (proviso_name.c_str(), "evangelista") == 0)
+      if (strcmp (proviso_name.c_str(), "summary") == 0)
+	{
+	  m_proviso = new spot::summary_provisos(anticipated);
+	  anticipated = false; // Hack!
+	}
+      else if (strcmp (proviso_name.c_str(), "evangelista") == 0)
 	{
 	  if (basic_check)
 	    std::cerr << "   No support for -b with -por=evangelista\n";

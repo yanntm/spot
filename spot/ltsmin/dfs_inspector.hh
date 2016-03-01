@@ -67,5 +67,9 @@ namespace spot
 
     // \brief Return the reference over the automaton to check
     virtual const const_twa_ptr& automaton() const =  0;
+
+
+    virtual void* get_extra_data(const state* st) const = 0;
+    virtual void set_extra_data(const state* st, void* extra) const = 0;
   };
 }
