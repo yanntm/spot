@@ -275,7 +275,8 @@ namespace spot
 	}
 
       state* initial =  aut_->get_init_state();
-      seen[initial] = {++dfs_number, (int) todo.size(), false, {}, 0, nullptr};
+      seen[initial] = {++dfs_number, (int) todo.size(), false, {}, 0,
+		       nullptr, nullptr};
       push_state(initial);
 
       while (!todo.empty())
@@ -290,7 +291,7 @@ namespace spot
 	      state* dst = todo.back().it->current_state();
 	      todo.back().it->next();
 	      state_info info = {dfs_number+1, (int)todo.size(), false, {}, 0,
-				 nullptr};
+				 nullptr, nullptr};
 	      auto res = seen.emplace(dst, info);
 	      if (res.second)
 		{
@@ -471,7 +472,15 @@ namespace spot
     {
       return aut_;
     }
-
+    virtual void* get_extra_data(const state* st) const
+    {
+      assert(seen.find(st) != seen.end());
+      return seen[st].extra;
+    }
+    virtual void set_extra_data(const state* st, void* extra) const
+    {
+      seen[st].extra = extra;
+    }
   private:
     const_twa_ptr aut_;		///< The spot::tgba to explore.
     proviso& proviso_;
@@ -493,6 +502,7 @@ namespace spot
       std::vector<bool> colors; ///< set by proviso
       int weight; 		///< set by proviso
       const state* highlink; 	///< set by proviso
+      void* extra;
     };
     typedef std::unordered_map<const state*, state_info,
 			       state_ptr_hash, state_ptr_equal> seen_map;
