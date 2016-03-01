@@ -177,7 +177,7 @@ namespace spot
       {
         prev += (*j)->num_sets();
         acc_shift.push_back(prev);
-        j++;
+        ++j;
         right_acc &= (*j)->get_acceptance() << acc_shift.back();
       }
       res->set_acceptance(acc_shift.back() + (*j)->num_sets(), right_acc);
