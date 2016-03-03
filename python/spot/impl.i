@@ -133,6 +133,7 @@
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/isunamb.hh>
 #include <spot/twaalgos/simulation.hh>
+#include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/postproc.hh>
 #include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/stutter.hh>
@@ -430,6 +431,7 @@ namespace std {
 %include <spot/twaalgos/isdet.hh>
 %include <spot/twaalgos/isunamb.hh>
 %include <spot/twaalgos/simulation.hh>
+%include <spot/twaalgos/parity.hh>
 %include <spot/twaalgos/postproc.hh>
 %include <spot/twaalgos/product.hh>
 %include <spot/twaalgos/stutter.hh>

@@ -287,4 +287,130 @@ namespace spot
       }
     g_.defrag_states(std::move(newst), used_states);
   }
+#if 0
+  void twa_graph::set_parity_prop(bool max, bool odd)
+  {
+    bool current_max;
+    bool current_odd;
+    if (!acc().is_parity(current_max, current_odd))
+      throw new std::runtime_error("set_parity_prop: This must be called on a "
+                                   "parity automaton.");
+    std::function<void(acc_cond::mark_t&)> change_acc;
+    unsigned new_num_sets = num_sets();
+    if (current_max == max)
+    {
+      if (odd == current_odd)
+        return;
+      ++new_num_sets;
+      change_acc = [max] (acc_cond::mark_t& x) {
+                                                 x <<= 1;
+                                                 if (max && x)
+                                                   x.set(0);
+                                               };
+    }
+    else
+    {
+      if (new_num_sets % 2 == 0)
+        current_odd = !current_odd;
+      if (current_odd != odd)
+        ++new_num_sets;
+      bool fill_empty = current_odd != odd && max;
+      change_acc =
+        [fill_empty, new_num_sets] (acc_cond::mark_t & x) -> void
+        {
+          acc_cond::mark_t new_mark(0U);
+          for (auto i = 0U; i < new_num_sets; ++i)
+            if (x.has(i))
+              new_mark.set(new_num_sets - i - 1);
+          if (fill_empty && !new_mark)
+            new_mark.set(0);
+          x = new_mark;
+        };
+    }
+    auto new_acc = acc_cond::acc_code::parity(max, odd, new_num_sets);
+    set_acceptance(new_num_sets, new_acc);
+    for (auto& i: edge_vector())
+      change_acc(i.acc);
+  }
+
+  void twa_graph::parity_colorate()
+  {
+    bool max;
+    bool odd;
+    if (!acc().is_parity(max, odd))
+      throw new std::runtime_error("parity_colorate: This must be called on a "
+                                   "parity automaton.");
+    bool has_empty = false;
+    for (auto& i: edge_vector())
+      if (!i.acc)
+      {
+        has_empty = true;
+        break;
+      }
+    std::function<void(acc_cond::mark_t&)> change_acc;
+    unsigned new_num_sets = num_sets();
+    if (has_empty)
+    {
+      new_num_sets += 2;
+      auto new_acc = acc_cond::acc_code::parity(max, odd, new_num_sets);
+      set_acceptance(new_num_sets, new_acc);
+      if (max)
+        change_acc =
+          [ new_num_sets ] (acc_cond::mark_t & x) -> void
+          {
+            if (!x)
+              x.set(1);
+            else
+              for (auto i = new_num_sets; i > 0U; --i)
+                if (x.has(i - 1))
+                {
+                  x = acc_cond::mark_t(0U);
+                  x.set(i + 1);
+                  break;
+                }
+          };
+      else
+        change_acc =
+          [ new_num_sets ] (acc_cond::mark_t & x) -> void
+          {
+            if (!x)
+              x.set(new_num_sets - 2);
+            else
+              for (auto i = 0U; i < new_num_sets; ++i)
+                if (x.has(i))
+                {
+                  x = acc_cond::mark_t(0U);
+                  x.set(i);
+                  break;
+                }
+          };
+    }
+    else if (max)
+      change_acc =
+        [ new_num_sets ] (acc_cond::mark_t & x) -> void
+        {
+          for (auto i = new_num_sets; i > 0U; --i)
+            if (x.has(i - 1))
+            {
+              x = acc_cond::mark_t(0U);
+              x.set(i - 1);
+              break;
+            }
+        };
+    else
+      change_acc =
+      [ new_num_sets ] (acc_cond::mark_t & x) -> void
+      {
+          for (auto i = 0U; i < new_num_sets; ++i)
+            if (x.has(i))
+            {
+              x = acc_cond::mark_t(0U);
+              x.set(i);
+              break;
+            }
+      };
+    for (auto& i: edge_vector())
+      change_acc(i.acc);
+  }
+#endif
 }
