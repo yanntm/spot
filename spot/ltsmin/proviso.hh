@@ -1280,6 +1280,13 @@ namespace spot
 	      const state* dst = it->dst();
 	      if (i.visited(dst))
 		{
+		  if (i.is_dead(dst))
+		    {
+		      dst->destroy();
+		      it->next();
+		      continue;
+		    }
+
 		  data* data_dst = (data*) i.get_extra_data(dst);
 
 		  if (data_src->c == color::ORANGE ||
@@ -1337,17 +1344,29 @@ namespace spot
 				  const state* dst,
 				  const dfs_inspector& i)
     {
-      // If anticipated two cases are of interrest:
-      //    - state has been expanded so it's green and we don't care
-      //      about any transitions
-      //    - state has not been expanded. In this case we already have
-      //      visited all transitions during notify_push so we can skip
-      //      all transitions.
-      if (anticipated_)
+      if (i.is_dead(dst))
 	return -1;
 
       data* data_src = (data*) i.get_extra_data(src);
       data* data_dst = (data*) i.get_extra_data(dst);
+
+
+      // If anticipated two cases are of interrest:
+      //    - state has been expanded so it's green and we don't care
+      //      about any transitions
+      //    - state has not been expanded. In this case, if the destination
+      //      is red an expansion is required. Otherwise since,  we already have
+      //      visited this transitions during notify_push, we can skip it.
+      if (anticipated_)
+	{
+	  if (data_src->c == color::ORANGE && data_dst->c == color::RED)
+	    {
+	      expand (src, i);
+	      return d_;
+	    }
+	  return -1;
+	}
+
 
       if (data_src->c == color::ORANGE ||
 	  data_src->c == color::PURPLE) // state is brown
