@@ -23,6 +23,44 @@
 
 namespace spot
 {
+  namespace
+  {
+    unsigned change_set(unsigned x,
+                        const unsigned num_sets,
+                        const bool change_max,
+                        const bool change_odd)
+    {
+      if (change_max)
+        x = num_sets - x - 1;
+      if (change_odd)
+        ++x;
+      return x;
+    }
+
+    void change_acc(twa_graph_ptr& aut,
+                    unsigned num_sets,
+                    const bool change_max,
+                    const bool change_odd,
+                    const bool max)
+    {
+      for (auto& i: aut->edge_vector())
+        if (max)
+        {
+          auto maxset = i.acc.max_set();
+          // If the parity is changed, a new set is introduced.
+          // In max parity the transitions which do not belong to any set will
+          // belong to this new set.
+          i.acc &= 0;
+          if (change_odd && maxset == 0)
+            i.acc.set(0);
+          else
+            i.acc.set(change_set(maxset - 1, num_sets, change_max, change_odd));
+        }
+        else if (i.acc)
+          i.acc = change_set(i.acc.lowest(), num_sets, change_max, change_odd);
+    }
+  }
+
   twa_graph_ptr change_parity_acceptance(const const_twa_graph_ptr& aut,
                                          bool max,
                                          bool odd)
@@ -35,68 +73,31 @@ namespace spot
     auto result = copy(aut, twa::prop_set::all());
 
     unsigned num_sets = result->num_sets();
+    bool change_max = false;
+    bool change_odd = false;
 
-    std::function<unsigned(unsigned)> change_set;
     if (current_max != max)
     {
-      // Reverse a bit position
-      change_set =
-        [ num_sets ] (unsigned x) { return num_sets - x - 1; };
-
+      change_max = true;
       // If the number of acceptance sets is even, the parity is toggled.
       current_odd = current_odd != (num_sets % 2 == 0);
     }
-    else
-      change_set =
-        [] (unsigned x) { return x; };
 
     // If the parity neeeds to be changed, then a new acceptance set is created.
     // The old acceptance sets are shifted
     if (odd != current_odd)
     {
+      change_odd = true;
       ++num_sets;
-      change_set =
-        [ change_set ] (unsigned x) { return change_set(x) + 1; };
     }
+
     if (max != current_max || current_odd != odd)
     {
       auto new_acc = acc_cond::acc_code::parity(max, odd, num_sets);
       result->set_acceptance(num_sets, new_acc);
     }
 
-    std::function<void(acc_cond::mark_t&)> change_acc;
-    if (max)
-      change_acc =
-        [ odd, current_odd, change_set ] (acc_cond::mark_t& acc)
-        {
-          acc_cond::mark_t new_mark(0U);
-          auto max_set = acc.max_set();
-          // If the parity is changed, a new set is introduced.
-          // In max parity the transitions which do not belong to any set will
-          // belong to this new set.
-          if (odd != current_odd && max_set == 0)
-            new_mark.set(0);
-          else
-            new_mark.set(change_set(max_set - 1));
-          acc = new_mark;
-        };
-    else
-      change_acc =
-        [ num_sets, change_set ] (acc_cond::mark_t& acc)
-        {
-          if (acc)
-            for (auto i = 0U; i < num_sets; ++i)
-              if (acc.has(i))
-              {
-                acc_cond::mark_t new_mark(0U);
-                new_mark.set(change_set(i));
-                acc = new_mark;
-                break;
-              }
-        };
-
-    for (auto& i: result->edge_vector())
-      change_acc(i.acc);
+    change_acc(result, num_sets, change_max, change_odd, max);
     return result;
   }
 }
