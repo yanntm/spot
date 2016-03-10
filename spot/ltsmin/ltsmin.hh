@@ -25,6 +25,8 @@
 namespace spot
 {
   struct spins_interface;
+  class cspins_iterator;
+  using cspins_state = int*;
 
   class SPOT_API ltsmin_model final
   {
@@ -70,6 +72,14 @@ namespace spot
                       bdd_dict_ptr dict,
                       formula dead = formula::tt(),
                       int compress = 0) const;
+
+    // \brief The same as above but returns a kripkecube, i.e. a kripke
+    // that can be use in parallel. Moreover, it support more ellaborated
+    // atomic propositions such as "P.a == P.c"
+    spot::kripkecube<spot::cspins_state, spot::cspins_iterator>*
+    kripkecube(const atomic_prop_set* to_observe,
+               formula dead = formula::tt(),
+               int compress = 0) const;
 
     /// Number of variables in a state
     int state_size() const;
