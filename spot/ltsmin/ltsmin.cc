@@ -38,11 +38,15 @@
 #include <spot/misc/intvcomp.hh>
 #include <spot/misc/intvcmp2.hh>
 
+#include <spot/twaalgos/reachiter.hh>
+#include <string.h>
+#include <spot/twacube/cube.hh>
+#include <spot/mc/utils.hh>
+
 namespace spot
 {
   namespace
   {
-
     ////////////////////////////////////////////////////////////////////////
     // spins interface
 
@@ -946,7 +950,6 @@ namespace spot
     //////////////////////////////////////////////////////////////////////////
     // LOADER
 
-
     // Call spins to compile "foo.prom" as "foo.prom.spins" if the latter
     // does not exist already or is older.
     static void
@@ -968,6 +971,7 @@ namespace spot
       else if (ext == ".dve")
         {
           command = "divine compile --ltsmin " + filename;
+          command += " 2> /dev/null"; // FIXME needed for Clang on MacOSX
           compiled_ext = "2C";
         }
       else
@@ -1002,7 +1006,6 @@ namespace spot
                                  + command.c_str() + "' returned exit code "
                                  + std::to_string(WEXITSTATUS(res)));
     }
-
   }
 
   ltsmin_model
@@ -1087,6 +1090,875 @@ namespace spot
     return { d };
   }
 
+  ////////////////////////////////////////////////////////////////////////
+  // CSpins comparison functions & definitions
+
+
+  struct cspins_state_equal
+  {
+    bool
+    operator()(const cspins_state lhs,
+               const cspins_state rhs) const
+    {
+      return 0 == memcmp(lhs, rhs, (2+rhs[1])* sizeof(int));
+    }
+  };
+
+  struct cspins_state_hash
+  {
+    size_t
+    operator()(const cspins_state that) const
+    {
+      return that[0];
+    }
+  };
+
+  typedef std::unordered_map<const cspins_state, int, cspins_state_hash,
+			     cspins_state_equal> cspins_state_map;
+
+  typedef std::unordered_set<cspins_state, cspins_state_hash,
+  			     cspins_state_equal> cspins_state_set;
+
+
+  ////////////////////////////////////////////////////////////////////////
+  // A manager for Cspins states.
+
+  class cspins_state_manager final
+  {
+  public:
+    cspins_state_manager(unsigned int state_size,
+                        int compress)
+      : p_((state_size+2)*sizeof(int)), compress_(compress),
+      /* reserve one integer for the hash value and size */
+      state_size_(state_size),
+      fn_compress_(compress == 0 ? nullptr
+                   : compress == 1 ? int_array_array_compress
+                   : int_array_array_compress2),
+      fn_decompress_(compress == 0 ? nullptr
+                     : compress == 1 ? int_array_array_decompress
+                     : int_array_array_decompress2)
+        { }
+
+    int* unbox_state(cspins_state s) const
+    {
+      return s+2;
+    }
+
+    // cmp is the area we can use to compute the compressed rep of dst.
+    cspins_state alloc_setup(int *dst, int* cmp, size_t cmpsize)
+    {
+      cspins_state out = nullptr;
+      size_t size = state_size_;
+      int* ref = dst;
+      if (compress_)
+        {
+          size_t csize = cmpsize;
+          fn_compress_(dst, state_size_, cmp, csize);
+          ref = cmp;
+          size = csize;
+          out = (cspins_state) msp_.allocate((size+2)*sizeof(int));
+        }
+      else
+        out = (cspins_state) p_.allocate();
+      int hash_value = 0;
+      memcpy(unbox_state(out), ref, size * sizeof(int));
+      for (unsigned int i = 0; i < state_size_; ++i)
+        hash_value = wang32_hash(hash_value ^ dst[i]);
+      out[0] = hash_value;
+      out[1] = size;
+      return out;
+    }
+
+    void decompress(cspins_state s, int* uncompressed, unsigned size) const
+    {
+      fn_decompress_(s+2, s[1], uncompressed, size);
+    }
+
+    void  dealloc(cspins_state s)
+    {
+      if (compress_)
+  	msp_.deallocate(s, (s[1]+2)*sizeof(int));
+      else
+	p_.deallocate(s);
+    }
+
+    unsigned int size() const
+    {
+      return state_size_;
+    }
+
+  private:
+    fixed_size_pool p_;
+    multiple_size_pool msp_;
+    bool compress_;
+    const unsigned int state_size_;
+    void (*fn_compress_)(const int*, size_t, int*, size_t&);
+    void (*fn_decompress_)(const int*, size_t, int*, size_t);
+  };
+
+
+  ////////////////////////////////////////////////////////////////////////
+  // Iterator over Cspins states
+
+  // This structure is used as a parameter during callback when
+  // generating states from the shared librarie produced by LTSmin
+  struct inner_callback_parameters
+  {
+    cspins_state_manager* manager;   // The state manager
+    std::vector<cspins_state>* succ; // The successors of a state
+    cspins_state_map* map;
+    int* compressed_;
+    int* uncompressed_;
+    int default_value_;
+    bool compress;
+    bool selfloopize;
+  };
+
+  // This class provides an iterator over the successors of a state.
+  // All successors are computed once when an iterator is recycled or
+  // created.
+  class cspins_iterator final
+  {
+  public:
+    cspins_iterator(cspins_state s,
+		   const spot::spins_interface* d,
+		   cspins_state_manager& manager,
+		   cspins_state_map& map,
+		   inner_callback_parameters& inner,
+		   int defvalue,
+		   cube cond,
+		   bool compress,
+		   bool selfloopize,
+		   cubeset& cubeset, int dead_idx)
+      :  current_(0), cond_(cond)
+    {
+      successors_.reserve(10);
+      inner.manager = &manager;
+      inner.map = &map;
+      inner.succ = &successors_;
+      inner.default_value_ = defvalue;
+      inner.compress = compress;
+      inner.selfloopize = selfloopize;
+      int* ref = s;
+
+      if (compress)
+	// already filled by compute_condition
+	ref = inner.uncompressed_;
+
+      int n = d->get_successors
+	(nullptr, manager.unbox_state(ref),
+	 [](void* arg, transition_info_t*, int *dst){
+	  inner_callback_parameters* inner =
+	  static_cast<inner_callback_parameters*>(arg);
+	  cspins_state s =
+	  inner->manager->alloc_setup(dst, inner->compressed_,
+				      inner->manager->size() * 2);
+	  auto it = inner->map->insert({s, inner->default_value_});
+	  inner->succ->push_back((*(it.first)).first);
+	  if (!it.second)
+	    {
+	      inner->manager->dealloc(s);
+	    }
+	},
+	 &inner);
+      if (!n && selfloopize)
+	{
+	  successors_.push_back(s);
+	  if (dead_idx != -1)
+	    cubeset.set_true_var(cond, dead_idx);
+	}
+    }
+
+    void recycle(cspins_state s,
+  		 const spot::spins_interface* d,
+  		 cspins_state_manager& manager,
+  		 cspins_state_map& map,
+		 inner_callback_parameters& inner,
+		 int defvalue,
+		 cube cond,
+		 bool compress,
+		 bool selfloopize,
+		 cubeset& cubeset, int dead_idx)
+    {
+      cond_ = cond;
+      current_ = 0;
+      // Constant time since int* is is_trivially_destructible
+      successors_.clear();
+      inner.manager = &manager;
+      inner.succ = &successors_;
+      inner.map = &map;
+      inner.default_value_ = defvalue;
+      inner.compress = compress;
+      inner.selfloopize = selfloopize;
+      int* ref  = s;
+
+      if (compress)
+	// Already filled by compute_condition
+	ref = inner.uncompressed_;
+
+      int n = d->get_successors
+	(nullptr, manager.unbox_state(ref),
+	 [](void* arg, transition_info_t*, int *dst){
+	  inner_callback_parameters* inner =
+	  static_cast<inner_callback_parameters*>(arg);
+	  cspins_state s =
+	  inner->manager->alloc_setup(dst, inner->compressed_,
+				      inner->manager->size() * 2);
+	  auto it = inner->map->insert({s, inner->default_value_});
+	  inner->succ->push_back((*(it.first)).first);
+	  if (!it.second)
+	    inner->manager->dealloc(s);
+	},
+	 &inner);
+      if (!n && selfloopize)
+	{
+	  successors_.push_back(s);
+	  if (dead_idx != -1)
+	    cubeset.set_true_var(cond, dead_idx);
+	}
+    }
+
+    ~cspins_iterator()
+      {
+	// Do not release successors states, the manager
+	// will do it on time.
+      }
+
+    void next()
+    {
+      ++current_;
+    }
+
+    bool done() const
+    {
+      return current_ >= successors_.size();
+    }
+
+    cspins_state state() const
+    {
+      return successors_[current_];
+    }
+
+    cube condition() const
+    {
+      return cond_;
+    }
+
+  private:
+    std::vector<cspins_state> successors_;
+    unsigned int current_;
+    cube cond_;
+  };
+
+  ////////////////////////////////////////////////////////////////////////
+  // Concrete definition of the system
+
+  // A specialisation of the template class kripke
+  template<>
+  class kripkecube<cspins_state, cspins_iterator> final
+  {
+
+    typedef enum {
+      OP_EQ_VAR, OP_NE_VAR, OP_LT_VAR, OP_GT_VAR, OP_LE_VAR, OP_GE_VAR,
+      VAR_OP_EQ, VAR_OP_NE, VAR_OP_LT, VAR_OP_GT, VAR_OP_LE, VAR_OP_GE,
+      VAR_OP_EQ_VAR, VAR_OP_NE_VAR, VAR_OP_LT_VAR,
+      VAR_OP_GT_VAR, VAR_OP_LE_VAR, VAR_OP_GE_VAR, VAR_DEAD
+    } relop;
+
+    // Structure for complex atomic proposition
+    struct one_prop
+    {
+      int lval;
+      relop op;
+      int rval;
+    };
+
+    // Data structure to store complex atomic propositions
+    typedef std::vector<one_prop> prop_set;
+    prop_set pset_;
+
+  public:
+    kripkecube(spins_interface_ptr sip, bool compress,
+               std::vector<std::string> visible_aps,
+               bool selfloopize, std::string dead_prop)
+      : sip_(sip), d_(sip.get()), manager_(d_->get_state_size(), compress),
+      compress_(compress), cubeset_(visible_aps.size()),
+      selfloopize_(selfloopize), aps_(visible_aps)
+    {
+      map_.reserve(2000000);
+      recycle_.reserve(2000000);
+      inner_.compressed_ = new int[d_->get_state_size() * 2];
+      inner_.uncompressed_ = new int[d_->get_state_size()+30];
+      dead_idx_ = -1;
+      match_aps(visible_aps, dead_prop);
+    }
+    ~kripkecube()
+      {
+	typename cspins_state_map::const_iterator s = map_.begin();
+	while (s != map_.end())
+	  {
+	    manager_.dealloc(s->first);
+	    ++s;
+	  }
+	map_.clear();
+	for (auto i: recycle_)
+	  {
+	    cubeset_.release(i->condition());
+	    delete i;
+	  }
+	delete inner_.compressed_;
+	delete inner_.uncompressed_;
+      }
+
+    cspins_state initial()
+    {
+      d_->get_initial_state(inner_.uncompressed_);
+      return manager_.alloc_setup(inner_.uncompressed_, inner_.compressed_,
+				  manager_.size() * 2);
+    }
+
+    std::string to_string(const cspins_state s) const
+    {
+      std::string res = "";
+      cspins_state out = manager_.unbox_state(s);
+      cspins_state ref = out;
+      if (compress_)
+	{
+	  manager_.decompress(s, inner_.uncompressed_, manager_.size());
+	  ref = inner_.uncompressed_;
+	}
+      for (int i = 0; i < d_->get_state_size(); ++i)
+	res += (d_->get_state_variable_name(i)) +
+	  ("=" + std::to_string(ref[i])) + ",";
+      res.pop_back();
+      return res;
+    }
+
+    cspins_iterator* succ(const cspins_state s)
+    {
+      if (SPOT_LIKELY(!recycle_.empty()))
+	{
+	  auto tmp  = recycle_.back();
+	  recycle_.pop_back();
+	  compute_condition(tmp->condition(), s);
+	  tmp->recycle(s, d_, manager_, map_, inner_, -1,
+		       tmp->condition(), compress_, selfloopize_,
+		       cubeset_, dead_idx_);
+	  return tmp;
+	}
+      cube cond = cubeset_.alloc();
+      compute_condition(cond, s);
+      return new cspins_iterator(s, d_, manager_, map_, inner_,
+				-1, cond, compress_, selfloopize_,
+				cubeset_, dead_idx_);
+    }
+
+    void recycle(cspins_iterator* it)
+    {
+      recycle_.push_back(it);
+    }
+
+    const std::vector<std::string> get_ap()
+    {
+      return aps_;
+    }
+
+  private:
+    // The two followings functions are too big  to be inlined in
+    // this class. See below for more details
+
+    /// Parse the set of atomic proposition to have a more
+    /// efficient data strucure for computation
+    void match_aps(std::vector<std::string>& aps, std::string dead_prop);
+
+    /// Compute the cube associated to each state. The cube
+    /// will then be given to all iterators.
+    void compute_condition(cube c, cspins_state s);
+
+
+    spins_interface_ptr sip_;
+    const spot::spins_interface* d_; // To avoid numerous sip_.get()
+    cspins_state_manager manager_; // FIXME One per thread!
+    bool compress_;
+    std::vector<cspins_iterator*> recycle_;
+    inner_callback_parameters inner_; // FIXME Should be an array for threads.
+    cubeset cubeset_;
+    bool selfloopize_;
+    int dead_idx_;
+    std::vector<std::string> aps_;
+    cspins_state_map map_;
+  };
+
+  void
+  kripkecube<cspins_state,
+             cspins_iterator>::compute_condition(cube c, cspins_state s)
+  {
+    int i = -1;
+    int *vars = manager_.unbox_state(s);
+
+    // State is compressed, uncompress it
+    if (compress_)
+      {
+	manager_.decompress(s, inner_.uncompressed_+2, manager_.size());
+	vars = inner_.uncompressed_ + 2;
+      }
+
+    for (auto& ap: pset_)
+      {
+	++i;
+	bool cond = false;
+	switch (ap.op)
+	  {
+	  case OP_EQ_VAR:
+	    cond = (ap.lval == vars[ap.rval]);
+	    break;
+	  case OP_NE_VAR:
+	    cond = (ap.lval != vars[ap.rval]);
+	    break;
+	  case OP_LT_VAR:
+	    cond = (ap.lval < vars[ap.rval]);
+	    break;
+	  case OP_GT_VAR:
+	    cond = (ap.lval > vars[ap.rval]);
+	    break;
+	  case OP_LE_VAR:
+	    cond = (ap.lval <= vars[ap.rval]);
+	    break;
+	  case OP_GE_VAR:
+	    cond = (ap.lval >= vars[ap.rval]);
+	    break;
+	  case VAR_OP_EQ:
+	    cond = (vars[ap.lval] == ap.rval);
+	    break;
+	  case VAR_OP_NE:
+	    cond = (vars[ap.lval] != ap.rval);
+	    break;
+	  case VAR_OP_LT:
+	    cond = (vars[ap.lval] < ap.rval);
+	    break;
+	  case VAR_OP_GT:
+	    cond = (vars[ap.lval] > ap.rval);
+	    break;
+	  case VAR_OP_LE:
+	    cond = (vars[ap.lval] <= ap.rval);
+	    break;
+	  case VAR_OP_GE:
+	    cond = (vars[ap.lval] >= ap.rval);
+	    break;
+	  case VAR_OP_EQ_VAR:
+	    cond = (vars[ap.lval] == vars[ap.rval]);
+	    break;
+	  case VAR_OP_NE_VAR:
+	    cond = (vars[ap.lval] != vars[ap.rval]);
+	    break;
+	  case VAR_OP_LT_VAR:
+	    cond = (vars[ap.lval] < vars[ap.rval]);
+	    break;
+	  case VAR_OP_GT_VAR:
+	    cond = (vars[ap.lval] > vars[ap.rval]);
+	    break;
+	  case VAR_OP_LE_VAR:
+	    cond = (vars[ap.lval] <= vars[ap.rval]);
+	    break;
+	  case VAR_OP_GE_VAR:
+	    cond = (vars[ap.lval] >= vars[ap.rval]);
+	    break;
+	  case VAR_DEAD:
+	    break;
+	  default:
+	    assert(false);
+	  }
+
+	if (cond)
+	  cubeset_.set_true_var(c, i);
+	else
+	  cubeset_.set_false_var(c, i);
+      }
+  }
+
+  // FIXME I think we only need visbles aps, i.e. if the system has
+  // following variables, i.e. P_0.var1 and P_0.var2 but the property
+  // automaton only mention P_0.var2, we do not need to capture (in
+  // the resulting cube) any atomic proposition for P_0.var1
+  void
+  kripkecube<cspins_state,
+             cspins_iterator>::match_aps(std::vector<std::string>& aps,
+                                         std::string dead_prop)
+  {
+    // Keep trace of errors
+    int errors = 0;
+    std::ostringstream err;
+
+    // First we capture state name of each processes.
+    int type_count = d_->get_type_count();
+    typedef std::map<std::string, int> enum_map_t;
+    std::vector<enum_map_t> enum_map(type_count);
+    std::unordered_map<std::string, int> matcher;
+    for (int i = 0; i < type_count; ++i)
+      {
+	matcher[d_->get_type_name(i)] = i;
+	int enum_count = d_->get_type_value_count(i);
+	for (int j = 0; j < enum_count; ++j)
+	  enum_map[i].emplace(d_->get_type_value_name(i, j), j);
+      }
+
+    // Then we extract the basic atomics propositions from the Kripke
+    std::vector<std::string> k_aps;
+    int state_size = d_->get_state_size();
+    for (int i = 0; i < state_size; ++i)
+      k_aps.push_back(d_->get_state_variable_name(i));
+
+    int i  = -1;
+    for (auto ap: aps)
+      {
+	++i;
+
+	// Grab dead property
+	if (ap.compare(dead_prop) == 0)
+	  {
+	    dead_idx_ = i;
+	    pset_.push_back({i , VAR_DEAD, 0});
+	    continue;
+	  }
+
+	// Get ap name and remove all extra whitespace
+	ap.erase(std::remove_if(ap.begin(), ap.end(),
+				[](char x){
+				  return std::isspace(x);
+				}),
+		 ap.end());
+
+	// Look if it is a well known atomic proposition
+	auto it = std::find(k_aps.begin(), k_aps.end(), ap);
+	if (it != k_aps.end())
+	  {
+	    // The aps is directly an AP of the system, we will just
+	    // have to detect if the variable is 0 or not.
+	    pset_.push_back({(int)std::distance(k_aps.begin(), it),
+		  VAR_OP_NE, 0});
+	    continue;
+	  }
+
+	// The ap is not known. We distinguish many cases:
+	//     - It is a State name, i.e P_0.S or P_0 == S
+	//     - It refers a specific variable value, i.e. P_0.var == 2,
+	//       P_0.var < 2, P_0.var != 2, ...
+	//     - It's an unknown variable
+	// Note that we do not support P_0.state1 == 12 since we do not
+	// know how to interpret such atomic proposition.
+
+	// We split the formula according to operators
+	std::size_t found_op_first = ap.find_first_of("=<>!");
+	std::size_t found_op_last = ap.find_last_of("=<>!");
+	std::string left;
+	std::string right;
+	std::string ap_error;
+	std::string op;
+
+	if (found_op_first == 0 || found_op_last == ap.size()-1)
+	  {
+	    err << "Invalid operator use in " << ap << '\n';
+	    ++errors;
+	    continue;
+	  }
+
+	if (std::string::npos == found_op_first)
+	  {
+	    left = ap;
+	    right = "";
+	    op = "";
+	  }
+	else
+	  {
+	    left = ap.substr(0, found_op_first);
+	    right = ap.substr(found_op_last+1, ap.size()-found_op_last);
+	    op  = ap.substr(found_op_first, found_op_last+1-found_op_first);
+	  }
+
+	// Variables to store the left part of the atomic proposition
+	bool left_is_digit = false;
+	int lval;
+
+	// Variables to store the right part of the atomic proposition
+	bool right_is_digit = false;
+	int rval;
+
+	// And finally the operator
+	relop oper;
+
+
+	// Now, left and (possibly) right are should refer atomic
+	// propositions or specific state inside of a process.
+	// First check if it is a known atomic proposition
+	it = std::find(k_aps.begin(), k_aps.end(), left);
+	if (it != k_aps.end())
+	  {
+	    // The aps is directly an AP of the system, we will just
+	    // have to detect if the variable is 0 or not.
+	    lval = std::distance(k_aps.begin(), it);
+	  }
+	else
+	  {
+	    // Detect if it is a process state
+	    std::size_t found_dot = left.find_first_of('.');
+	    if (std::string::npos != found_dot)
+	      {
+		std::string proc_name = left.substr(0, found_dot);
+		std::string st_name = left.substr(found_dot+1,
+						  left.size()-found_dot);
+
+		auto ni = matcher.find(proc_name);
+		if (ni == matcher.end())
+		  {
+		    ap_error = left;
+		    goto error_ap_unknown;
+		  }
+		int type_num = ni->second;
+		enum_map_t::const_iterator ei =
+		  enum_map[type_num].find(st_name);
+		if (ei == enum_map[type_num].end())
+		  {
+		    ap_error = left;
+		    goto error_ap_unknown;
+		  }
+
+		if (right.compare("") != 0)
+		  {
+		    // We are in the case P.state1 == something.. We don't
+		    // know how to interpret this.
+		    ap_error = op + right;
+		    err << "\nOperation " << op  << " in \"" << ap_error
+			<< "\" is not available for process's state"
+			<< " (i.e. " <<  left << ")\n";
+		    ++errors;
+		    continue;
+		  }
+
+		pset_.push_back({
+		    (int) std::distance(k_aps.begin(),
+					std::find(k_aps.begin(),
+						  k_aps.end(), proc_name)),
+		      VAR_OP_EQ,  ei->second});
+		continue;
+	      }
+	    else
+	      {
+		// Finally, it's a number...
+		left_is_digit = true;
+		for (auto c: left)
+		  if (!isdigit(c))
+		    left_is_digit = false;
+
+		if (left_is_digit)
+		  lval = std::strtol (left.c_str(), nullptr, 10);
+		else
+		  {
+		    // ... or something like: State1 == P_0
+		    // so it doesn't contains '.'
+		    if (std::string::npos != right.find_first_of('.'))
+		      {
+			err << "\nOperation \"" << right
+			    << "\" does not refer a process"
+			    << " (i.e. " << left << " is not valid)\n";
+			++errors;
+			continue;
+		      }
+
+		    // or something like: P_0 == State1
+		    auto ni = matcher.find(right);
+		    if (ni == matcher.end())
+		      {
+			ap_error = ap;
+			goto error_ap_unknown;
+		      }
+		    int type_num = ni->second;
+		    enum_map_t::const_iterator ei =
+		      enum_map[type_num].find(left);
+		    if (ei == enum_map[type_num].end())
+		      {
+			ap_error = left;
+			goto error_ap_unknown;
+		      }
+		    pset_.push_back({
+			(int) std::distance(k_aps.begin(),
+					    std::find(k_aps.begin(),
+						      k_aps.end(), right)),
+			  VAR_OP_EQ,  ei->second});
+		    continue;
+		  }
+	      }
+	  }
+
+	// Here Left is known. Just detect cases where left is digit there is
+	// no right part.
+	if (left_is_digit && right.empty())
+	  {
+	    ap_error = ap;
+	    goto error_ap_unknown;
+	  }
+
+	assert(!right.empty() && !op.empty());
+
+	// Parse right part of the atomic proposition
+	// Check if it is a known atomic proposition
+	it = std::find(k_aps.begin(), k_aps.end(), right);
+	if (it != k_aps.end())
+	  {
+	    // The aps is directly an AP of the system, we will just
+	    // have to detect if the variable is 0 or not.
+	    rval = std::distance(k_aps.begin(), it);
+	  }
+	else
+	  {
+	    // We are is the right part, so  if it is a process state
+	    // we do not know how to interpret (xxx == P.state1). Abort
+	    std::size_t found_dot = right.find_first_of('.');
+	    if (std::string::npos != found_dot)
+	      {
+		ap_error = left + op;
+		err << "\nOperation " << op  << " in \"" << ap_error
+		    << "\" is not available for process's state"
+		    << " (i.e. " <<  right << ")\n";
+		++errors;
+		continue;
+	      }
+	    else
+	      {
+		// Finally, it's a number
+		right_is_digit = true;
+		for (auto c: right)
+		  if (!isdigit(c))
+		    right_is_digit = false;
+
+		if (right_is_digit)
+		  rval = std::strtol (right.c_str(), nullptr, 10);
+		else
+		  {
+		    if (std::string::npos != left.find_first_of('.'))
+		      {
+			err << "\nProposition \"" << ap
+			    << "\" cannot be interpreted"
+			    << " (i.e. " << op + right << " is not valid)\n";
+			++errors;
+			continue;
+		      }
+
+		    // or something like: P_0 == State1
+		    auto ni = matcher.find(left);
+		    if (ni == matcher.end())
+		      {
+
+			ap_error = left;
+			goto error_ap_unknown;
+		      }
+		    int type_num = ni->second;
+		    enum_map_t::const_iterator ei =
+		      enum_map[type_num].find(right);
+		    if (ei == enum_map[type_num].end())
+		      {
+			ap_error = right;
+			goto error_ap_unknown;
+		      }
+		    pset_.push_back({
+			(int) std::distance(k_aps.begin(),
+					    std::find(k_aps.begin(),
+						      k_aps.end(), left)),
+			  VAR_OP_EQ,  ei->second});
+		    continue;
+		  }
+	      }
+	  }
+
+	if (left_is_digit && right_is_digit)
+	  {
+	    err << "\nOperation \"" << op
+		<< "\" between two numbers not available"
+		<< " (i.e. " << right << " and, "
+		<< left << ")\n";
+	    ++errors;
+	    continue;
+	  }
+
+	// Left and Right are know, just analyse the operator.
+	if (op.compare("==") == 0)
+	  oper = !left_is_digit && !right_is_digit? VAR_OP_EQ_VAR :
+	    (left_is_digit? OP_EQ_VAR : VAR_OP_EQ);
+	else if (op.compare("!=") == 0)
+	  oper = !left_is_digit && !right_is_digit? VAR_OP_NE_VAR :
+	    (left_is_digit? OP_NE_VAR : VAR_OP_NE);
+	else if (op.compare("<") == 0)
+	  oper = !left_is_digit && !right_is_digit? VAR_OP_LT_VAR :
+	    (left_is_digit? OP_LT_VAR : VAR_OP_LT);
+	else if (op.compare(">") == 0)
+	  oper = !left_is_digit && !right_is_digit? VAR_OP_GT_VAR :
+	    (left_is_digit? OP_GT_VAR : VAR_OP_GT);
+	else if (op.compare("<=") == 0)
+	  oper = !left_is_digit && !right_is_digit? VAR_OP_LE_VAR :
+	    (left_is_digit? OP_LE_VAR : VAR_OP_LE);
+	else if (op.compare(">=") == 0)
+	  oper = !left_is_digit && !right_is_digit? VAR_OP_GE_VAR :
+	    (left_is_digit? OP_GE_VAR : VAR_OP_GE);
+	else
+	  {
+	    err << "\nOperation \"" << op
+		<< "\" is unknown\n";
+	    ++errors;
+	    continue;
+	  }
+
+	pset_.push_back({lval, oper, rval});
+	continue;
+
+      error_ap_unknown:
+	err << "\nProposition \"" << ap_error << "\" does not exist\n";
+	++errors;
+	continue;
+      }
+
+    if (errors)
+      throw std::runtime_error(err.str());
+  }
+
+  spot::kripkecube<spot::cspins_state, spot::cspins_iterator>*
+  ltsmin_model::kripkecube(const atomic_prop_set* to_observe,
+                           const formula dead, int compress) const
+  {
+    // Register the "dead" proposition.  There are three cases to
+    // consider:
+    //  * If DEAD is "false", it means we are not interested in finite
+    //    sequences of the system.
+    //  * If DEAD is "true", we want to check finite sequences as well
+    //    as infinite sequences, but do not need to distinguish them.
+    //  * If DEAD is any other string, this is the name a property
+    //    that should be true when looping on a dead state, and false
+    //    otherwise.
+    std::string dead_ap = "";
+    bool selfloopize = true;
+    if (dead == spot::formula::ff())
+      selfloopize = false;
+    else if (dead != spot::formula::tt())
+      dead_ap = dead.ap_name();
+
+    // Build the set of observed propositons, i.e. those in the
+    // formula
+    std::vector<std::string> observed;
+    bool add_dead = true;
+    for (auto it: *to_observe)
+      {
+        observed.push_back(it.ap_name());
+
+        // Dead proposition is already in observed prop
+        if (it.ap_name().compare(dead_ap))
+          add_dead = false;
+      }
+
+    if (dead_ap.compare("") != 0 && add_dead)
+      observed.push_back(dead_ap);
+
+    // Finally build the system.
+    return new spot::kripkecube<spot::cspins_state, spot::cspins_iterator>
+      (iface, compress, observed, selfloopize, dead_ap);
+  }
 
   kripke_ptr
   ltsmin_model::kripke(const atomic_prop_set* to_observe,
@@ -1118,7 +1990,6 @@ namespace spot
   ltsmin_model::~ltsmin_model()
   {
   }
-
 
   int ltsmin_model::state_size() const
   {
@@ -1154,5 +2025,4 @@ namespace spot
   {
     return iface->get_type_value_name(type, val);
   }
-
 }
