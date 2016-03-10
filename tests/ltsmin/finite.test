@@ -31,28 +31,33 @@ else
 fi
 
 set -e
-run 0 ../modelcheck -gm $srcdir/finite.dve '"P.a < 10"' > stdout
+run 0 ../modelcheck --dot=model --model $srcdir/finite.dve \
+    --formula '"P.a < 10"' > stdout
 test `grep ' -> ' stdout | wc -l` = 25
 test `grep 'P.a=' stdout | wc -l` = 15
 
-run 0 ../modelcheck -dtrue -gm $srcdir/finite.dve '"P.a < 10"' > stdout2
+run 0 ../modelcheck --selfloopize true --dot=model --model $srcdir/finite.dve \
+    --formula '"P.a < 10"' > stdout2
 cmp stdout stdout2
 
-run 0 ../modelcheck -dfalse -gm $srcdir/finite.dve '"P.a < 10"' > stdout
+run 0 ../modelcheck --selfloopize false --dot model --model $srcdir/finite.dve \
+    --formula '"P.a < 10"' > stdout
 test `grep ' -> ' stdout | wc -l` = 19
 test `grep 'P.a=' stdout | wc -l` = 15
 
 # the same with compressed states
-run 0 ../modelcheck -z -dfalse -gm $srcdir/finite.dve '"P.a < 10"' > stdout
+run 0 ../modelcheck --compress 1 --selfloopize false \
+    --dot model --model $srcdir/finite.dve --formula '"P.a < 10"' > stdout
 test `grep ' -> ' stdout | wc -l` = 19
 test `grep 'P.a=' stdout | wc -l` = 15
 
-run 0 ../modelcheck -ddead -E $srcdir/finite.dve \
-  '!(G(dead -> ("P.a==3" | "P.b==3")))'
+run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula '!(G(dead -> ("P.a==3" | "P.b==3")))'
 
-run 0 ../modelcheck -ddead -e $srcdir/finite.dve \
-  '!(G(dead -> ("P.a==2" | "P.b==3")))'
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula '!(G(dead -> ("P.a==2" | "P.b==3")))'
 
 # This used to segfault because of a bug in a
 # function that do not exist anymore.
-run 0 ../modelcheck -gp $srcdir/finite.dve true
+run 0 ../modelcheck --dot product --model $srcdir/finite.dve \
+    --formula true
