@@ -1254,8 +1254,11 @@ namespace spot
       const state* mx_s;
     };
     bool anticipated_;
+    bool highlink_;
   public:
-    summary_provisos(bool anticipated = false): anticipated_(anticipated)
+    summary_provisos(bool anticipated = false,
+		     bool highlink = false): anticipated_(anticipated),
+      highlink_(highlink)
       { }
 
     virtual bool notify_push(const state* src, const dfs_inspector& i)
@@ -1297,6 +1300,23 @@ namespace spot
 			  data_src->c = color::PURPLE;
 			  if (data_dst->c == color::RED)
 			    {
+
+			      if (highlink_)
+				{
+				  data* data_hi = (data*)
+				    i.get_extra_data(i.get_highlink(dst));
+
+				  if (expanded_.empty() ||
+				      data_hi->depth > (int) expanded_.back())
+				    {
+				      data_src->mx_d = d_;
+				      data_src->mx_s = src;
+				    }
+				  dst->destroy();
+				  it->next();
+				  continue;
+				}
+
 			      data_src->mx_d = d_;
 			      data_src->mx_s = src;
 			    }
@@ -1347,6 +1367,58 @@ namespace spot
       if (i.is_dead(dst))
 	return -1;
 
+
+      if (highlink_)
+	{
+	  // The destination is on the DFS stack, just update
+	  // highlink if needed.
+	  if (i.dfs_position(dst) != -1)
+	    {
+	      const state* src_highlink = i.get_highlink(src);
+	      if (src_highlink == nullptr ||
+	  	  i.dfs_position(src_highlink) < i.dfs_position(dst))
+	  	{
+	  	  i.set_highlink(src,  dst);
+	  	  assert(dst->compare(i.get_highlink(src)) == 0);
+	  	}
+	    }
+	  // Otherwise we have to compute the actual highlink of the
+	  // destination and compare it to the highlink of the source.
+	  else
+	    {
+	      const state* dst_highlink = i.get_highlink(dst);
+
+	      // if the highlink is not set, it means that we are not
+	      // computing SCC but highlinks correctness rely on SCC
+	      // computation.
+	      assert(dst_highlink != nullptr);
+	      assert(dst_highlink->compare(i.get_highlink(dst)) == 0);
+
+	      std::vector<const state*> v;
+	      v.push_back(dst);
+	      while (i.dfs_position(dst_highlink) == -1)
+	      	{
+	      	  v.push_back(dst_highlink);
+	      	  dst_highlink = i.get_highlink(dst_highlink);
+	      	  assert(dst_highlink != nullptr);
+	      	}
+	      for (auto q: v)
+	      	{
+	      	  i.set_highlink(q, dst_highlink);
+	      	  assert(dst_highlink->compare(i.get_highlink(q)) == 0);
+	      	}
+
+	      const state* src_highlink = i.get_highlink(src);
+	      if (src_highlink == nullptr ||
+	  	  i.dfs_position(src_highlink) < i.dfs_position(dst_highlink))
+	  	{
+	  	  i.set_highlink(src,  dst_highlink);
+	  	}
+	    }
+	}
+
+
+
       data* data_src = (data*) i.get_extra_data(src);
       data* data_dst = (data*) i.get_extra_data(dst);
 
@@ -1361,6 +1433,19 @@ namespace spot
 	{
 	  if (data_src->c == color::ORANGE && data_dst->c == color::RED)
 	    {
+	      if (highlink_)
+		{
+		  data* data_hi = (data*)
+		    i.get_extra_data(i.get_highlink(dst));
+
+		  if (expanded_.empty() ||
+		      data_hi->depth > (int) expanded_.back())
+		    {
+		      expand (src, i);
+		      return d_;
+		    }
+		  return -1;
+		}
 	      expand (src, i);
 	      return d_;
 	    }
@@ -1376,6 +1461,20 @@ namespace spot
 	      data_src->c = color::PURPLE;
 	      if (data_dst->c == color::RED)
 		{
+		  if (highlink_)
+		    {
+		      data* data_hi =
+			(data*) i.get_extra_data(i.get_highlink(dst));
+
+		      if (expanded_.empty() ||
+			  data_hi->depth > (int) expanded_.back())
+			{
+			  data_src->mx_d = d_;
+			  data_src->mx_s = src;
+			}
+		      return -1;
+		    }
+
 		  data_src->mx_d = d_;
 		  data_src->mx_s = src;
 		}
@@ -1402,6 +1501,44 @@ namespace spot
 
     virtual bool before_pop(const state* src, const dfs_inspector& i)
     {
+      if (highlink_)
+	{
+	  int src_pos = i.dfs_position(src);
+	  if (!i.is_root(src) && src_pos)
+	    {
+	      // We have to propagate highlinks. We must consider
+	      // two cases:
+	      //   (i)  highlink(src) == src, just set highlink(src) to
+	      //        the predecessor of src in the DFS stack.
+	      //   (ii) highlink(src) != src, just progate highlink(src)
+	      //        w.r.t. highlink mecanism.
+
+	      const state* newtop = i.dfs_state(src_pos-1);
+	      const state* src_highlink = i.get_highlink(src);
+	      if (src_highlink == nullptr ||
+		  i.dfs_position(src_highlink) == src_pos)
+		{
+		  i.set_highlink(src, newtop);
+		}
+	      else
+		{
+		  const state* newtop_highlink = i.get_highlink(newtop);
+		  if (newtop_highlink == nullptr)
+		    i.set_highlink(newtop, src_highlink);
+
+		  // Otherwise we must compare the highlink of src and pred
+		  else if (i.dfs_position(src_highlink) <
+			   i.dfs_position(newtop_highlink))
+		    {
+		      i.set_highlink(newtop_highlink,  src_highlink);
+		    }
+
+		}
+	    }
+	}
+
+
+
       data* data_src = (data*) i.get_extra_data(src);
 
       if (anticipated_)
@@ -1515,7 +1652,12 @@ namespace spot
 
     virtual std::string name()
     {
-      std::string res  = "summary_";
+      std::string res = "";
+      if (highlink_)
+	res += "highlink_";
+      if (anticipated_)
+	res += "anticipated_";
+      res += "summary_";
       return res;
     }
 

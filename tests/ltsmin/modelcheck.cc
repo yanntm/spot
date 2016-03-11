@@ -252,7 +252,7 @@ checked_main(int argc, char **argv)
     {
       if (strcmp (proviso_name.c_str(), "summary") == 0)
 	{
-	  m_proviso = new spot::summary_provisos(anticipated);
+	  m_proviso = new spot::summary_provisos(anticipated, highlinks);
 	  anticipated = false; // Hack!
 	}
       else if (strcmp (proviso_name.c_str(), "evangelista") == 0)
