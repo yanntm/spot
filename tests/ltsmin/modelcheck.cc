@@ -32,6 +32,7 @@
 #include <cstring>
 #include <spot/kripke/kripkegraph.hh>
 #include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/randomgraph.hh>
 
 static void
 syntax(char* prog)
@@ -77,7 +78,6 @@ Options:\n\
   exit(1);
 }
 
-
 static int
 checked_main(int argc, char **argv)
 {
@@ -110,6 +110,7 @@ checked_main(int argc, char **argv)
   bool spin_like = false;
   bool highlinks = false;
   bool reverse_anticipated = false;
+  bool randomgraph = false;
 
   int dest = 1;
   int n = argc;
@@ -120,6 +121,9 @@ checked_main(int argc, char **argv)
 	{
 	  switch (*++opt)
 	    {
+	    case '@': 		// Not showed to user
+	      randomgraph = true;
+	      break;
 	    case 'a':
 	      anticipated = true;
 	      break;
@@ -579,6 +583,13 @@ checked_main(int argc, char **argv)
   if (output == StatsModel)
     {
       assert(m_proviso != nullptr);
+
+      if (randomgraph)
+	{
+	  model = std::make_shared<spot::random_wrapper>
+	    (spot::random_graph(seed, 0.1, &ap, dict));
+	}
+
       if (!verify_proviso)
 	{
 	  if (!compute_scc)

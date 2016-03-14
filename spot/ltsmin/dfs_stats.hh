@@ -27,6 +27,138 @@
 
 namespace spot
 {
+  // FIXME Add support for seeds
+  class SPOT_API rnd_succ_iterator: public spot::twa_succ_iterator
+  {
+  public:
+    rnd_succ_iterator(std::vector<const state*>* succ): succ_(succ)
+      {
+	idx_ = 0;
+	assert(succ_->size());
+	reduced_ = succ_->size() == 1? 1 : (int) succ_->size() / 2;
+	expanded_ = succ_->size() == reduced_;
+	current_ = reduced_;
+      }
+    virtual bool first()
+    {
+      idx_ = 0;
+      return true;
+    }
+    virtual bool next()
+    {
+      ++idx_;
+      return idx_ != current_;
+    }
+    virtual bool done() const
+    {
+      return idx_ >= current_;
+    }
+    virtual state* dst() const
+    {
+      return (*succ_)[idx_]->clone();
+    }
+
+    virtual void fire_all() const
+    {
+      current_ = succ_->size();
+      expanded_ = true;
+    }
+    virtual acc_cond::mark_t current_acceptance_conditions() const
+    {
+      assert(false);
+    }
+    virtual acc_cond::mark_t acc() const
+    {
+      assert(false);
+    }
+    virtual bdd cond() const
+    {
+      assert(false);
+    }
+
+    virtual bool all_enabled() const
+    {
+      return expanded_;
+    }
+
+    virtual bdd current_condition() const
+    {
+      return bddfalse;
+    }
+    virtual void reorder_remaining(bool (*)(const state *))
+    {
+      assert(false);
+    }
+
+    virtual void expand_will_generate(void (*)(const state *))
+    {
+      assert(false);
+    }
+
+    virtual void consider_first(unsigned)
+    {
+      assert(false);
+    }
+
+    virtual unsigned reduced()
+    {
+      return reduced_;
+    }
+
+    virtual unsigned enabled()
+    {
+      return succ_->size();
+    }
+  private:
+    std::vector<const state*>* succ_;
+    mutable unsigned idx_;
+    mutable bool expanded_;
+    mutable unsigned int reduced_;
+    mutable unsigned int current_;
+  };
+
+
+  class random_wrapper: public kripke
+  {
+  public:
+    random_wrapper(const_twa_ptr twa):
+      kripke(twa->get_dict()), twa_(twa)
+    {
+    }
+
+    virtual const state* get_init_state() const override
+    {
+      return twa_->get_init_state();
+    }
+
+    virtual twa_succ_iterator*
+    succ_iter(const state* local_state) const override
+    {
+      std::vector<const state*>* succ = new std::vector<const state*>();
+      auto* it = twa_->succ_iter(local_state);
+      it->first();
+      while (!it->done())
+      	{
+      	  succ->push_back(it->dst());
+      	  it->next();
+      	}
+      return new rnd_succ_iterator(succ);
+    }
+    virtual bdd state_condition(const state*) const override
+    {
+      assert(false);
+      return bddtrue;
+    }
+
+    virtual std::string format_state(const state* s) const override
+    {
+      return twa_->format_state(s);
+    }
+
+  private:
+    const_twa_ptr twa_;
+  };
+
 
   /// \brief This Union-Find data structure is dedicated for the dfs_stats class
   /// below. The key of this union-find is int. Moreover, we suppose that only
@@ -357,6 +489,7 @@ namespace spot
 	}
       if (SPOT_UNLIKELY(Checker))
 	{
+	  std::cout << "Check...\n";
 	  //print_dot(std::cout, state_space_);
 	  scc_info si(state_space_);
 	  bool all_cycles_expanded = true;
@@ -442,6 +575,7 @@ namespace spot
       if (!ComputeSCC)
 	return false;
       assert(seen.find(s) != seen.end());
+      std::cout << seen[s].live_number << std::endl;
       return uf.isdead(seen[s].live_number);
     }
 
