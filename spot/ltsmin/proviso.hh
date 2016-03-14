@@ -1243,7 +1243,6 @@ namespace spot
   //template<bool FullyColored>
   class SPOT_API summary_provisos: public proviso
   {
-
     enum class color{ ORANGE, GREEN, PURPLE, RED };
     struct data
     {
@@ -1283,7 +1282,9 @@ namespace spot
 	      const state* dst = it->dst();
 	      if (i.visited(dst))
 		{
-		  if (i.is_dead(dst))
+		  // check if dst == src since src not yet inserted
+		  // into the union find.
+		  if (dst->compare(src) != 0 && i.is_dead(dst))
 		    {
 		      dst->destroy();
 		      it->next();
@@ -1662,7 +1663,7 @@ namespace spot
 	res += "highlink_";
       if (anticipated_)
 	res += "anticipated_";
-      res += "summary_";
+      res += "summary";
       return res;
     }
 
