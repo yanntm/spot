@@ -1301,17 +1301,15 @@ namespace spot
 			  data_src->c = color::PURPLE;
 			  if (data_dst->c == color::RED)
 			    {
-
 			      if (highlink_)
 				{
 				  data* data_hi = (data*)
 				    i.get_extra_data(i.get_highlink(dst));
 
-				  if (expanded_.empty() ||
-				      data_hi->depth > (int) expanded_.back())
+				  if (data_src->mx_d < data_hi->depth)
 				    {
 				      data_src->mx_d = d_;
-				      data_src->mx_s = src;
+				      data_src->mx_s = i.get_highlink(dst);
 				    }
 				  dst->destroy();
 				  it->next();
@@ -1436,16 +1434,24 @@ namespace spot
 	    {
 	      if (highlink_)
 		{
-		  data* data_hi = (data*)
-		    i.get_extra_data(i.get_highlink(dst));
+		  const state* hi = i.get_highlink(dst);
+		  data* data_hi = (data*) i.get_extra_data(hi);
 
-		  if (expanded_.empty() ||
-		      data_hi->depth > (int) expanded_.back())
-		    {
+		 if (data_hi->depth != d_)
+		   {
+		     data_src->c = color::PURPLE;
+		     if (data_src->mx_d < data_hi->depth)
+		       {
+			 data_src->mx_d = d_;
+			 data_src->mx_s = i.get_highlink(dst);
+		       }
+		     return -1;
+		   }
+		 else
+		   {
 		      expand (src, i);
 		      return d_;
-		    }
-		  return -1;
+		   }
 		}
 	      expand (src, i);
 	      return d_;
@@ -1467,11 +1473,10 @@ namespace spot
 		      data* data_hi =
 			(data*) i.get_extra_data(i.get_highlink(dst));
 
-		      if (expanded_.empty() ||
-			  data_hi->depth > (int) expanded_.back())
+		      if (data_src->mx_d < data_hi->depth)
 			{
 			  data_src->mx_d = d_;
-			  data_src->mx_s = src;
+			  data_src->mx_s = i.get_highlink(dst);
 			}
 		      return -1;
 		    }
