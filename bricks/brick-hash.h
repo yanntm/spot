@@ -800,7 +800,7 @@ struct Jenkins {
             saw[i] = SpookyHash::Hash32(buf, i, 0);
             if (saw[i] != expected[i])
             {
-                printf("%3d: saw 0x%.8x, expected 0x%.8lx\n", i, saw[i], expected[i]);
+                printf("%3d: saw 0x%.8x, expected 0x%.8lx\n", i, saw[i], (unsigned long) expected[i]);
                 ASSERT( false );
             }
         }
