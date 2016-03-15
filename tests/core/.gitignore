@@ -11,6 +11,7 @@ cube
 defs
 .deps
 *.dot
+bricks
 eltl2tgba
 emptchk
 defs
