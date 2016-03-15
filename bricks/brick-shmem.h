@@ -369,7 +369,7 @@ protected:
         Node *next;
         Node() {
             read = write = buffer;
-            next = 0;
+            next = nullptr;
         }
     };
 
@@ -393,7 +393,7 @@ public:
     ~Fifo() {
         while ( head != tail ) {
             Node *next = head->next;
-            ASSERT( next != 0 );
+            ASSERT( next != nullptr );
             delete head;
             head = next;
         }
