@@ -77,6 +77,8 @@ fi
 # Activate C11 for gnulib tests
 AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
 
+AX_CHECK_COMPILE_FLAG([-lpthread], [CFLAGS="$CFLAGS -lpthread"])
+
 gl_INIT
 
 # Use -Werror since using -fvisibility under MinGW is only a warning.
@@ -142,6 +144,7 @@ fi
 AX_CHECK_BUDDY
 
 AC_CHECK_HEADERS([sys/times.h valgrind/memcheck.h])
+AX_CHECK_DIVINE
 AC_CHECK_FUNCS([times kill alarm sigaction])
 
 LT_CONFIG_LTDL_DIR([ltdl])

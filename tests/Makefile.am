@@ -22,7 +22,7 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS) \
-              -I$(top_builddir)/lib -I$(top_srcdir)/lib
+              $(BRICKS_CPPFLAGS) -I$(top_builddir)/lib -I$(top_srcdir)/lib
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 LDADD = $(top_builddir)/spot/libspot.la $(top_builddir)/buddy/src/libbddx.la
 
@@ -68,6 +68,7 @@ check_PROGRAMS = \
   core/checkta \
   core/consterm \
   core/cube \
+  core/bricks \
   core/emptchk \
   core/equals \
   core/graph \
@@ -121,6 +122,7 @@ core_taatgba_SOURCES = core/taatgba.cc
 core_tgbagraph_SOURCES = core/twagraph.cc
 core_consterm_SOURCES = core/consterm.cc
 core_cube_SOURCES = core/cube.cc
+core_bricks_SOURCES = core/bricks.cc
 core_equals_SOURCES = core/equalsf.cc
 core_kind_SOURCES = core/kind.cc
 core_length_SOURCES = core/length.cc
