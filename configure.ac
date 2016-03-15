@@ -60,6 +60,8 @@ else
   AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
 fi
 
+AX_CHECK_COMPILE_FLAG([-lpthread], [CFLAGS="$CFLAGS -lpthread"])
+
 gl_INIT
 
 # Use -Werror since using -fvisibility under MinGW is only a warning.
@@ -164,6 +166,8 @@ else
 fi
 
 AX_CHECK_BUDDY
+
+AX_CHECK_DIVINE
 
 AC_CHECK_HEADERS([sys/times.h])
 AC_CHECK_FUNCS([times kill alarm sigaction])
