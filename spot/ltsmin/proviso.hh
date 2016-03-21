@@ -1340,20 +1340,20 @@ namespace spot
 	      it->next();
 	    }
 	  it->first();		// Reset the iterator for the main DFS procedure
-	  if (data_src->mx_d != -1)
+	  if (data_src->mx_d == d_)//-1)
 	    {
- 	      unsigned enminred_src =
-		i.get_iterator(d_)->enabled() -
-		i.get_iterator(d_)->reduced();
-	      unsigned enminred_mxs =
-		i.get_iterator(data_src->mx_d)->enabled() -
-		i.get_iterator(data_src->mx_d)->reduced();
+ 	      // unsigned enminred_src =
+	      // 	i.get_iterator(d_)->enabled() -
+	      // 	i.get_iterator(d_)->reduced();
+	      // unsigned enminred_mxs =
+	      // 	i.get_iterator(data_src->mx_d)->enabled() -
+	      // 	i.get_iterator(data_src->mx_d)->reduced();
 
-	      if (data_src->mx_d == d_ || enminred_src < enminred_mxs)
-		{
+	      // if (data_src->mx_d == d_ || enminred_src < enminred_mxs)
+	      // 	{
 		  expand(src, i);
 		  return true;
-		}
+		// }
 	    }
 	}
       return false;
@@ -1603,14 +1603,14 @@ namespace spot
 		  }
 		else if (data_src->mx_d != -1)
 		  {
-		    unsigned enminred_src =
-		      i.get_iterator(d_)->enabled() -
-		      i.get_iterator(d_)->reduced();
-		    unsigned enminred_mxs =
-		      i.get_iterator(data_src->mx_d)->enabled() -
-		      i.get_iterator(data_src->mx_d)->reduced();
+		    // unsigned enminred_src =
+		    //   i.get_iterator(d_)->enabled() -
+		    //   i.get_iterator(d_)->reduced();
+		    // unsigned enminred_mxs =
+		    //   i.get_iterator(data_src->mx_d)->enabled() -
+		    //   i.get_iterator(data_src->mx_d)->reduced();
 
-		    if (enminred_src < enminred_mxs)
+		    if (data_src->mx_d == d_) //enminred_src < enminred_mxs)
 		      {
 			expand(src, i);
 			return false;

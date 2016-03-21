@@ -575,7 +575,6 @@ namespace spot
       if (!ComputeSCC)
 	return false;
       assert(seen.find(s) != seen.end());
-      std::cout << seen[s].live_number << std::endl;
       return uf.isdead(seen[s].live_number);
     }
 
