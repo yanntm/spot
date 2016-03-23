@@ -254,7 +254,12 @@ checked_main(int argc, char **argv)
     // Setup proviso
   if (enable_por)
     {
-      if (strcmp (proviso_name.c_str(), "summary") == 0)
+      if (strcmp (proviso_name.c_str(), "delexp") == 0)
+	{
+	  m_proviso = new spot::delayed_expandedlist_provisos(anticipated,
+							      highlinks);
+	}
+      else if (strcmp (proviso_name.c_str(), "summary") == 0)
 	{
 	  m_proviso = new spot::summary_provisos(anticipated, highlinks);
 	  anticipated = false; // Hack!

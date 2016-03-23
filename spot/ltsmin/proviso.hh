@@ -1717,4 +1717,155 @@ namespace spot
 
 
 
+
+
+  //template<bool FullyColored>
+  class SPOT_API delayed_expandedlist_provisos: public proviso
+  {
+    enum class color{ ORANGE, GREEN, PURPLE, RED };
+    struct data
+    {
+      color c;
+      bool mark;
+      int depth;
+    };
+    bool anticipated_;
+    bool highlink_;
+  public:
+    delayed_expandedlist_provisos(bool anticipated = false,
+		     bool highlink = false): anticipated_(anticipated),
+      highlink_(highlink)
+      {
+	// FIXME
+	(void) anticipated_;
+	(void) highlink_;
+      }
+
+    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    {
+      ++d_;
+      data* edata = new data({
+	  i.get_iterator(d_)->all_enabled() ? color::GREEN : color::ORANGE,
+	    false, d_});
+      i.set_extra_data(src, edata);
+      if (i.get_iterator(d_)->all_enabled())
+	expanded_.push_back(d_);
+
+      return false;
+    }
+
+    virtual int maybe_closingedge(const state* src,
+				  const state* dst,
+				  const dfs_inspector& i)
+    {
+      data* data_src = (data*) i.get_extra_data(src);
+      data* data_dst = (data*) i.get_extra_data(dst);
+
+      if ((data_src->c == color::ORANGE || data_src->c == color::PURPLE) &&
+	  data_dst->c != color::GREEN)
+	{
+	  data_src->c = color::PURPLE;
+	  if (data_dst->c == color::ORANGE || data_dst->c == color::PURPLE)
+	    {
+	      // This is the main (only?) improvment of delayed + expandedlist
+	      if (expanded_.empty() || data_dst->depth > (int)expanded_.back())
+		data_dst->mark = true;
+	    }
+	  // FIXME else dst is red and we should use highlinks
+	}
+
+      // This maybe closing-edge is "safe", i.e. expansions are not
+      // performed here
+      return -1;
+    }
+
+    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    {
+      data* data_src = (data*) i.get_extra_data(src);
+      switch (data_src->c)
+	{
+	case color::GREEN:
+	  expanded_.pop_back();
+	  --d_;
+	  return true;		// Do not avoid pop
+	case color::ORANGE:
+	  data_src->c = color::GREEN;
+	  --d_;
+	  return true;		// Do not avoid pop
+	case color::PURPLE:
+	  {
+	    if (data_src->mark)
+	      {
+	    	expand(src, i);
+	    	return false; // avoid pop
+	      }
+	    else
+	      data_src->c = color::RED;
+	  }
+          SPOT_FALLTHROUGH;
+	default:
+	  ;
+	}
+
+      if (d_ > 0 && data_src->c == color::RED)
+	{
+	  data* data_pred = (data*)i.get_extra_data(i.dfs_state(d_-1));
+	  if (data_pred->c == color::ORANGE)
+	    data_pred->c = color::PURPLE;
+	}
+
+      --d_;
+
+      // We are in the middle of a pop do not avoid it !
+      return true;
+    }
+
+    void expand (const state* src, const dfs_inspector& i)
+    {
+      data* data_src = (data*) i.get_extra_data(src);
+      data_src->c = color::GREEN;
+      i.get_iterator(d_)->fire_all();
+      expanded_.push_back(d_);
+    }
+
+    virtual std::string name()
+    {
+      std::string res = "";
+      if (highlink_)
+	res += "highlink_";
+      if (anticipated_)
+	res += "anticipated_";
+      res += "delayed_expandedlist";
+      return res;
+    }
+
+    virtual std::string dump()
+    {
+      return
+	" source_expanded  : " + std::to_string(source_)           + '\n' +
+	" dest_expanded    : " + std::to_string(destination_)      + '\n';
+    }
+
+    virtual std::string dump_csv()
+    {
+      return
+	std::to_string(source_)           + ',' +
+	std::to_string(destination_);
+    }
+    virtual ~delayed_expandedlist_provisos()
+    { }
+
+    virtual void delete_extra(void* edata)
+    {
+      data* d = (data*) edata;
+      delete d;
+    }
+  private:
+    std::vector<unsigned> expanded_;
+    int d_ = -1;
+    unsigned source_ = 0;
+    unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
+    std::mt19937 generator_;
+  };
+
 }
