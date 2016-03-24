@@ -1771,7 +1771,12 @@ namespace spot
 	      if (expanded_.empty() || data_dst->depth > (int)expanded_.back())
 		data_dst->mark = true;
 	    }
-	  // FIXME else dst is red and we should use highlinks
+	  else if (data_dst->c == color::RED)
+	    {
+	      // FIXME dst is red and we should use highlinks
+	      expand(src, i);
+	      return d_;
+	    }
 	}
 
       // This maybe closing-edge is "safe", i.e. expansions are not
