@@ -1728,28 +1728,67 @@ namespace spot
       color c;
       bool mark;
       int depth;
+
+      int mx_d;
+      const state* mx_s;
     };
     bool anticipated_;
     bool highlink_;
+    bool summary_;
   public:
     delayed_expandedlist_provisos(bool anticipated = false,
-		     bool highlink = false): anticipated_(anticipated),
-      highlink_(highlink)
-      {
-	// FIXME
-	(void) anticipated_;
-	(void) highlink_;
-      }
+				  bool highlink = false,
+				  bool summary = false):
+      anticipated_(anticipated),
+      highlink_(highlink),
+      summary_(summary)
+      { }
 
     virtual bool notify_push(const state* src, const dfs_inspector& i)
     {
       ++d_;
       data* edata = new data({
 	  i.get_iterator(d_)->all_enabled() ? color::GREEN : color::ORANGE,
-	    false, d_});
+	    false, d_, -1, nullptr});
       i.set_extra_data(src, edata);
       if (i.get_iterator(d_)->all_enabled())
 	expanded_.push_back(d_);
+
+
+      // Track the highest state (in the DFS stack) among all successors
+      if (summary_ && edata->c != color::GREEN)
+	{
+	  twa_succ_iterator* it = i.get_iterator(d_);
+	  while (!it->done())
+	    {
+	      const state* dst = it->dst();
+	      if (i.visited(dst))
+		{
+		  // check if dst == src since src not yet inserted
+		  // into the union find.
+		  if (dst->compare(src) != 0 && i.is_dead(dst))
+		    {
+		      dst->destroy();
+		      it->next();
+		      continue;
+		    }
+
+		  data* data_dst = (data*) i.get_extra_data(dst);
+		  if (data_dst->c == color::ORANGE ||
+		      data_dst->c == color::PURPLE)
+		    {
+		      if (data_dst->depth > edata->mx_d)
+			{
+			  edata->mx_d = data_dst->depth;
+			  edata->mx_s = dst;
+			}
+		    }
+		}
+	      dst->destroy();
+	      it->next();
+	    }
+	  it->first();		// Reset the iterator for the main DFS procedure
+	}
 
       return false;
     }
@@ -1760,8 +1799,6 @@ namespace spot
     {
       if (i.is_dead(dst))
 	return -1;
-
-
 
       if (highlink_)
 	{
@@ -1834,7 +1871,19 @@ namespace spot
 		    (data*) i.get_extra_data(i.get_highlink(dst));
 		  if (expanded_.empty() ||
 		      data_hi->depth > (int)expanded_.back())
-		    data_hi->mark = true;
+		    {
+		      // If summary , then compares the highlink to the
+		      // successor of src with the highest position in the
+		      // DFS stack.
+		      if (summary_ && (data_src->mx_d > data_hi->depth))
+		      	{
+			  data* data_mxs =
+			    (data*) i.get_extra_data(data_src->mx_s);
+			  data_mxs->mark = true;
+		      	  return -1;
+		      	}
+		      data_hi->mark = true;
+		    }
 		  return -1;
 		}
 
@@ -1940,6 +1989,8 @@ namespace spot
 	res += "highlink_";
       if (anticipated_)
 	res += "anticipated_";
+      if (summary_)
+	res += "summary_";
       res += "delayed_expandedlist";
       return res;
     }

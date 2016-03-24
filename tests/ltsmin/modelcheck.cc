@@ -257,7 +257,12 @@ checked_main(int argc, char **argv)
       if (strcmp (proviso_name.c_str(), "delexp") == 0)
 	{
 	  m_proviso = new spot::delayed_expandedlist_provisos(anticipated,
-							      highlinks);
+							      highlinks, false);
+	}
+      else if (strcmp (proviso_name.c_str(), "delexp-sum") == 0)
+	{
+	  m_proviso = new spot::delayed_expandedlist_provisos(anticipated,
+							      highlinks, true);
 	}
       else if (strcmp (proviso_name.c_str(), "summary") == 0)
 	{
