@@ -1735,13 +1735,16 @@ namespace spot
     bool anticipated_;
     bool highlink_;
     bool summary_;
+    bool FullyColored_;
   public:
     delayed_expandedlist_provisos(bool anticipated = false,
 				  bool highlink = false,
-				  bool summary = false):
+				  bool summary = false,
+				  bool fullycolored = false):
       anticipated_(anticipated),
       highlink_(highlink),
-      summary_(summary)
+      summary_(summary),
+      FullyColored_(fullycolored)
       { }
 
     virtual bool notify_push(const state* src, const dfs_inspector& i)
@@ -1753,43 +1756,6 @@ namespace spot
       i.set_extra_data(src, edata);
       if (i.get_iterator(d_)->all_enabled())
 	expanded_.push_back(d_);
-
-
-      // Track the highest state (in the DFS stack) among all successors
-      if (summary_ && edata->c != color::GREEN)
-	{
-	  twa_succ_iterator* it = i.get_iterator(d_);
-	  while (!it->done())
-	    {
-	      const state* dst = it->dst();
-	      if (i.visited(dst))
-		{
-		  // check if dst == src since src not yet inserted
-		  // into the union find.
-		  if (dst->compare(src) != 0 && i.is_dead(dst))
-		    {
-		      dst->destroy();
-		      it->next();
-		      continue;
-		    }
-
-		  data* data_dst = (data*) i.get_extra_data(dst);
-		  if (data_dst->c == color::ORANGE ||
-		      data_dst->c == color::PURPLE)
-		    {
-		      if (data_dst->depth > edata->mx_d)
-			{
-			  edata->mx_d = data_dst->depth;
-			  edata->mx_s = dst;
-			}
-		    }
-		}
-	      dst->destroy();
-	      it->next();
-	    }
-	  it->first();		// Reset the iterator for the main DFS procedure
-	}
-
       return false;
     }
 
@@ -1852,35 +1818,58 @@ namespace spot
       data* data_src = (data*) i.get_extra_data(src);
       data* data_dst = (data*) i.get_extra_data(dst);
 
+
       if ((data_src->c == color::ORANGE || data_src->c == color::PURPLE) &&
 	  data_dst->c != color::GREEN)
 	{
 	  data_src->c = color::PURPLE;
-	  if (data_dst->c == color::ORANGE || data_dst->c == color::PURPLE)
+
+	  // Consider first self-loops
+	  if (data_src->mx_d == data_dst->depth)
 	    {
-	      // This is the main (only?) improvment of delayed + expandedlist
+	      expand(src, i);
+	      return d_;
+	    }
+	  else if (data_dst->c == color::ORANGE || data_dst->c == color::PURPLE)
+	    {
+	      // A marking is required
 	      if (expanded_.empty() || data_dst->depth > (int)expanded_.back())
-		data_dst->mark = true;
+		{
+		  if (summary_)
+		    {
+		      // With summary only track the highest.
+		      if(data_src->mx_d < data_dst->depth)
+			{
+			  data_src->mx_d = data_dst->depth;
+			  data_src->mx_s = dst;
+			}
+		    }
+		  else
+		    data_dst->mark = true;
+		}
 	    }
 	  else if (data_dst->c == color::RED)
 	    {
 	      // FIXME dst is red and we should use highlinks
 	      if (highlink_)
 		{
+		  const state* hi = i.get_highlink(dst);
 		  data* data_hi =
-		    (data*) i.get_extra_data(i.get_highlink(dst));
+		    (data*) i.get_extra_data(hi);
 		  if (expanded_.empty() ||
 		      data_hi->depth > (int)expanded_.back())
 		    {
 		      // If summary , then compares the highlink to the
 		      // successor of src with the highest position in the
 		      // DFS stack.
-		      if (summary_ && (data_src->mx_d > data_hi->depth))
+		      if (summary_)
 		      	{
-			  data* data_mxs =
-			    (data*) i.get_extra_data(data_src->mx_s);
-			  data_mxs->mark = true;
-		      	  return -1;
+			  if (data_src->mx_d < data_hi->depth)
+			    {
+			      data_src->mx_d = data_hi->depth;
+			      data_src->mx_s = hi;
+			    }
+			  return -1;
 		      	}
 		      data_hi->mark = true;
 		    }
@@ -1939,6 +1928,14 @@ namespace spot
       switch (data_src->c)
 	{
 	case color::GREEN:
+	  if (FullyColored_) // Now some state are green but not expanded
+	    {
+	      if (i.get_iterator(d_)->all_enabled())
+		expanded_.pop_back();
+	      --d_;
+	      return true;
+	    }
+
 	  expanded_.pop_back();
 	  --d_;
 	  return true;		// Do not avoid pop
@@ -1954,7 +1951,16 @@ namespace spot
 	    	return false; // avoid pop
 	      }
 	    else
-	      data_src->c = color::RED;
+	      {
+		data_src->c = color::RED;
+
+		// Remember to tag the "deepest" state.
+		if (summary_ && data_src->mx_d != -1)
+		  {
+		    data* data_dst = (data*) i.get_extra_data(data_src->mx_s);
+		    data_dst->mark = true;
+		  }
+	      }
 	  }
           SPOT_FALLTHROUGH;
 	default:
@@ -1980,11 +1986,34 @@ namespace spot
       data_src->c = color::GREEN;
       i.get_iterator(data_src->depth)->fire_all();
       expanded_.push_back(data_src->depth);
+
+
+
+      if (FullyColored_ && d_ > 0)
+	{
+	  int p = d_ -1;
+	  while (0 <= p)
+	    {
+	      const state* st = i.dfs_state(p);
+	      data* data_st = (data*)i.get_extra_data(st);
+	      if(i.get_iterator(p)->done())
+		{
+		  if (data_st->c == color::ORANGE)
+		    data_st->c = color::GREEN;
+		  --p;
+		}
+	      else
+		break;
+	    }
+	}
     }
+
 
     virtual std::string name()
     {
       std::string res = "";
+      if (FullyColored_)
+	res += "fullycolored_";
       if (highlink_)
 	res += "highlink_";
       if (anticipated_)
