@@ -1139,9 +1139,8 @@ namespace spot
     }
   };
 
-  //brick::hashset::FastConcurrent<both , both_hasher> ht2;
   typedef brick::hashset::FastConcurrent<cspins_state,
-					 cspins_state_hasher>  cspins_state_map;
+                                         cspins_state_hasher>  cspins_state_map;
 
   ////////////////////////////////////////////////////////////////////////
   // A manager for Cspins states.
@@ -1200,9 +1199,9 @@ namespace spot
     void  dealloc(cspins_state s)
     {
       if (compress_)
-  	msp_.deallocate(s, (s[1]+2)*sizeof(int));
+        msp_.deallocate(s, (s[1]+2)*sizeof(int));
       else
-	p_.deallocate(s);
+        p_.deallocate(s);
     }
 
     unsigned int size() const
@@ -1244,15 +1243,15 @@ namespace spot
   {
   public:
     cspins_iterator(cspins_state s,
-		   const spot::spins_interface* d,
-		   cspins_state_manager& manager,
-		   cspins_state_map& map,
-		   inner_callback_parameters& inner,
-		   int defvalue,
-		   cube cond,
-		   bool compress,
-		   bool selfloopize,
-		   cubeset& cubeset, int dead_idx)
+                    const spot::spins_interface* d,
+                    cspins_state_manager& manager,
+                    cspins_state_map& map,
+                    inner_callback_parameters& inner,
+                    int defvalue,
+                    cube cond,
+                    bool compress,
+                    bool selfloopize,
+                    cubeset& cubeset, int dead_idx)
       :  current_(0), cond_(cond)
     {
       successors_.reserve(10);
@@ -1265,41 +1264,41 @@ namespace spot
       int* ref = s;
 
       if (compress)
-	// already filled by compute_condition
-	ref = inner.uncompressed_;
+        // already filled by compute_condition
+        ref = inner.uncompressed_;
 
       int n = d->get_successors
-	(nullptr, manager.unbox_state(ref),
-	 [](void* arg, transition_info_t*, int *dst){
-	  inner_callback_parameters* inner =
-	  static_cast<inner_callback_parameters*>(arg);
-	  cspins_state s =
-	  inner->manager->alloc_setup(dst, inner->compressed_,
-				      inner->manager->size() * 2);
-	  auto it = inner->map->insert({s});
-	  inner->succ->push_back(*it);
-	  if (!it.isnew())
-	    inner->manager->dealloc(s);
-	},
-	 &inner);
+        (nullptr, manager.unbox_state(ref),
+         [](void* arg, transition_info_t*, int *dst){
+          inner_callback_parameters* inner =
+          static_cast<inner_callback_parameters*>(arg);
+          cspins_state s =
+          inner->manager->alloc_setup(dst, inner->compressed_,
+                                      inner->manager->size() * 2);
+          auto it = inner->map->insert({s});
+          inner->succ->push_back(*it);
+          if (!it.isnew())
+            inner->manager->dealloc(s);
+        },
+         &inner);
       if (!n && selfloopize)
-	{
-	  successors_.push_back(s);
-	  if (dead_idx != -1)
-	    cubeset.set_true_var(cond, dead_idx);
-	}
+        {
+          successors_.push_back(s);
+          if (dead_idx != -1)
+            cubeset.set_true_var(cond, dead_idx);
+        }
     }
 
     void recycle(cspins_state s,
-  		 const spot::spins_interface* d,
-  		 cspins_state_manager& manager,
-  		 cspins_state_map& map,
-		 inner_callback_parameters& inner,
-		 int defvalue,
-		 cube cond,
-		 bool compress,
-		 bool selfloopize,
-		 cubeset& cubeset, int dead_idx)
+                 const spot::spins_interface* d,
+                 cspins_state_manager& manager,
+                 cspins_state_map& map,
+                 inner_callback_parameters& inner,
+                 int defvalue,
+                 cube cond,
+                 bool compress,
+                 bool selfloopize,
+                 cubeset& cubeset, int dead_idx)
     {
       cond_ = cond;
       current_ = 0;
@@ -1314,35 +1313,35 @@ namespace spot
       int* ref  = s;
 
       if (compress)
-	// Already filled by compute_condition
-	ref = inner.uncompressed_;
+        // Already filled by compute_condition
+        ref = inner.uncompressed_;
 
       int n = d->get_successors
-	(nullptr, manager.unbox_state(ref),
-	 [](void* arg, transition_info_t*, int *dst){
-	  inner_callback_parameters* inner =
-	  static_cast<inner_callback_parameters*>(arg);
-	  cspins_state s =
-	  inner->manager->alloc_setup(dst, inner->compressed_,
-				      inner->manager->size() * 2);
-	  auto it = inner->map->insert({s});
-	  inner->succ->push_back(*it);
-	  if (!it.isnew())
-	    inner->manager->dealloc(s);
-	},
-	 &inner);
+        (nullptr, manager.unbox_state(ref),
+         [](void* arg, transition_info_t*, int *dst){
+          inner_callback_parameters* inner =
+          static_cast<inner_callback_parameters*>(arg);
+          cspins_state s =
+          inner->manager->alloc_setup(dst, inner->compressed_,
+                                      inner->manager->size() * 2);
+          auto it = inner->map->insert({s});
+          inner->succ->push_back(*it);
+          if (!it.isnew())
+            inner->manager->dealloc(s);
+        },
+         &inner);
       if (!n && selfloopize)
-	{
-	  successors_.push_back(s);
-	  if (dead_idx != -1)
-	    cubeset.set_true_var(cond, dead_idx);
-	}
+        {
+          successors_.push_back(s);
+          if (dead_idx != -1)
+            cubeset.set_true_var(cond, dead_idx);
+        }
     }
 
     ~cspins_iterator()
       {
-	// Do not release successors states, the manager
-	// will do it on time.
+        // Do not release successors states, the manager
+        // will do it on time.
       }
 
     void next()
@@ -1415,20 +1414,20 @@ namespace spot
     }
     ~kripkecube()
       {
-	for (auto i: recycle_)
-	  {
-	    cubeset_.release(i->condition());
-	    delete i;
-	  }
-	delete inner_.compressed_;
-	delete inner_.uncompressed_;
+        for (auto i: recycle_)
+          {
+            cubeset_.release(i->condition());
+            delete i;
+          }
+        delete inner_.compressed_;
+        delete inner_.uncompressed_;
       }
 
     cspins_state initial()
     {
       d_->get_initial_state(inner_.uncompressed_);
       return manager_.alloc_setup(inner_.uncompressed_, inner_.compressed_,
-				  manager_.size() * 2);
+                                  manager_.size() * 2);
     }
 
     std::string to_string(const cspins_state s) const
@@ -1437,13 +1436,13 @@ namespace spot
       cspins_state out = manager_.unbox_state(s);
       cspins_state ref = out;
       if (compress_)
-	{
-	  manager_.decompress(s, inner_.uncompressed_, manager_.size());
-	  ref = inner_.uncompressed_;
-	}
+        {
+          manager_.decompress(s, inner_.uncompressed_, manager_.size());
+          ref = inner_.uncompressed_;
+        }
       for (int i = 0; i < d_->get_state_size(); ++i)
-	res += (d_->get_state_variable_name(i)) +
-	  ("=" + std::to_string(ref[i])) + ",";
+        res += (d_->get_state_variable_name(i)) +
+          ("=" + std::to_string(ref[i])) + ",";
       res.pop_back();
       return res;
     }
@@ -1451,20 +1450,20 @@ namespace spot
     cspins_iterator* succ(const cspins_state s)
     {
       if (SPOT_LIKELY(!recycle_.empty()))
-	{
-	  auto tmp  = recycle_.back();
-	  recycle_.pop_back();
-	  compute_condition(tmp->condition(), s);
-	  tmp->recycle(s, d_, manager_, map_, inner_, -1,
-		       tmp->condition(), compress_, selfloopize_,
-		       cubeset_, dead_idx_);
-	  return tmp;
-	}
+        {
+          auto tmp  = recycle_.back();
+          recycle_.pop_back();
+          compute_condition(tmp->condition(), s);
+          tmp->recycle(s, d_, manager_, map_, inner_, -1,
+                       tmp->condition(), compress_, selfloopize_,
+                       cubeset_, dead_idx_);
+          return tmp;
+        }
       cube cond = cubeset_.alloc();
       compute_condition(cond, s);
       return new cspins_iterator(s, d_, manager_, map_, inner_,
-				-1, cond, compress_, selfloopize_,
-				cubeset_, dead_idx_);
+                                 -1, cond, compress_, selfloopize_,
+                                 cubeset_, dead_idx_);
     }
 
     void recycle(cspins_iterator* it)
@@ -1513,80 +1512,80 @@ namespace spot
     // State is compressed, uncompress it
     if (compress_)
       {
-	manager_.decompress(s, inner_.uncompressed_+2, manager_.size());
-	vars = inner_.uncompressed_ + 2;
+        manager_.decompress(s, inner_.uncompressed_+2, manager_.size());
+        vars = inner_.uncompressed_ + 2;
       }
 
     for (auto& ap: pset_)
       {
-	++i;
-	bool cond = false;
-	switch (ap.op)
-	  {
-	  case OP_EQ_VAR:
-	    cond = (ap.lval == vars[ap.rval]);
-	    break;
-	  case OP_NE_VAR:
-	    cond = (ap.lval != vars[ap.rval]);
-	    break;
-	  case OP_LT_VAR:
-	    cond = (ap.lval < vars[ap.rval]);
-	    break;
-	  case OP_GT_VAR:
-	    cond = (ap.lval > vars[ap.rval]);
-	    break;
-	  case OP_LE_VAR:
-	    cond = (ap.lval <= vars[ap.rval]);
-	    break;
-	  case OP_GE_VAR:
-	    cond = (ap.lval >= vars[ap.rval]);
-	    break;
-	  case VAR_OP_EQ:
-	    cond = (vars[ap.lval] == ap.rval);
-	    break;
-	  case VAR_OP_NE:
-	    cond = (vars[ap.lval] != ap.rval);
-	    break;
-	  case VAR_OP_LT:
-	    cond = (vars[ap.lval] < ap.rval);
-	    break;
-	  case VAR_OP_GT:
-	    cond = (vars[ap.lval] > ap.rval);
-	    break;
-	  case VAR_OP_LE:
-	    cond = (vars[ap.lval] <= ap.rval);
-	    break;
-	  case VAR_OP_GE:
-	    cond = (vars[ap.lval] >= ap.rval);
-	    break;
-	  case VAR_OP_EQ_VAR:
-	    cond = (vars[ap.lval] == vars[ap.rval]);
-	    break;
-	  case VAR_OP_NE_VAR:
-	    cond = (vars[ap.lval] != vars[ap.rval]);
-	    break;
-	  case VAR_OP_LT_VAR:
-	    cond = (vars[ap.lval] < vars[ap.rval]);
-	    break;
-	  case VAR_OP_GT_VAR:
-	    cond = (vars[ap.lval] > vars[ap.rval]);
-	    break;
-	  case VAR_OP_LE_VAR:
-	    cond = (vars[ap.lval] <= vars[ap.rval]);
-	    break;
-	  case VAR_OP_GE_VAR:
-	    cond = (vars[ap.lval] >= vars[ap.rval]);
-	    break;
-	  case VAR_DEAD:
-	    break;
-	  default:
-	    assert(false);
-	  }
+        ++i;
+        bool cond = false;
+        switch (ap.op)
+          {
+          case OP_EQ_VAR:
+            cond = (ap.lval == vars[ap.rval]);
+            break;
+          case OP_NE_VAR:
+            cond = (ap.lval != vars[ap.rval]);
+            break;
+          case OP_LT_VAR:
+            cond = (ap.lval < vars[ap.rval]);
+            break;
+          case OP_GT_VAR:
+            cond = (ap.lval > vars[ap.rval]);
+            break;
+          case OP_LE_VAR:
+            cond = (ap.lval <= vars[ap.rval]);
+            break;
+          case OP_GE_VAR:
+            cond = (ap.lval >= vars[ap.rval]);
+            break;
+          case VAR_OP_EQ:
+            cond = (vars[ap.lval] == ap.rval);
+            break;
+          case VAR_OP_NE:
+            cond = (vars[ap.lval] != ap.rval);
+            break;
+          case VAR_OP_LT:
+            cond = (vars[ap.lval] < ap.rval);
+            break;
+          case VAR_OP_GT:
+            cond = (vars[ap.lval] > ap.rval);
+            break;
+          case VAR_OP_LE:
+            cond = (vars[ap.lval] <= ap.rval);
+            break;
+          case VAR_OP_GE:
+            cond = (vars[ap.lval] >= ap.rval);
+            break;
+          case VAR_OP_EQ_VAR:
+            cond = (vars[ap.lval] == vars[ap.rval]);
+            break;
+          case VAR_OP_NE_VAR:
+            cond = (vars[ap.lval] != vars[ap.rval]);
+            break;
+          case VAR_OP_LT_VAR:
+            cond = (vars[ap.lval] < vars[ap.rval]);
+            break;
+          case VAR_OP_GT_VAR:
+            cond = (vars[ap.lval] > vars[ap.rval]);
+            break;
+          case VAR_OP_LE_VAR:
+            cond = (vars[ap.lval] <= vars[ap.rval]);
+            break;
+          case VAR_OP_GE_VAR:
+            cond = (vars[ap.lval] >= vars[ap.rval]);
+            break;
+          case VAR_DEAD:
+            break;
+          default:
+            assert(false);
+          }
 
-	if (cond)
-	  cubeset_.set_true_var(c, i);
-	else
-	  cubeset_.set_false_var(c, i);
+        if (cond)
+          cubeset_.set_true_var(c, i);
+        else
+          cubeset_.set_false_var(c, i);
       }
   }
 
@@ -1610,10 +1609,10 @@ namespace spot
     std::unordered_map<std::string, int> matcher;
     for (int i = 0; i < type_count; ++i)
       {
-	matcher[d_->get_type_name(i)] = i;
-	int enum_count = d_->get_type_value_count(i);
-	for (int j = 0; j < enum_count; ++j)
-	  enum_map[i].emplace(d_->get_type_value_name(i, j), j);
+        matcher[d_->get_type_name(i)] = i;
+        int enum_count = d_->get_type_value_count(i);
+        for (int j = 0; j < enum_count; ++j)
+          enum_map[i].emplace(d_->get_type_value_name(i, j), j);
       }
 
     // Then we extract the basic atomics propositions from the Kripke
@@ -1625,308 +1624,308 @@ namespace spot
     int i  = -1;
     for (auto ap: aps)
       {
-	++i;
+        ++i;
 
-	// Grab dead property
-	if (ap.compare(dead_prop) == 0)
-	  {
-	    dead_idx_ = i;
-	    pset_.push_back({i , VAR_DEAD, 0});
-	    continue;
-	  }
+        // Grab dead property
+        if (ap.compare(dead_prop) == 0)
+          {
+            dead_idx_ = i;
+            pset_.push_back({i , VAR_DEAD, 0});
+            continue;
+          }
 
-	// Get ap name and remove all extra whitespace
-	ap.erase(std::remove_if(ap.begin(), ap.end(),
-				[](char x){
-				  return std::isspace(x);
-				}),
-		 ap.end());
+        // Get ap name and remove all extra whitespace
+        ap.erase(std::remove_if(ap.begin(), ap.end(),
+                                [](char x){
+                                  return std::isspace(x);
+                                }),
+                 ap.end());
 
-	// Look if it is a well known atomic proposition
-	auto it = std::find(k_aps.begin(), k_aps.end(), ap);
-	if (it != k_aps.end())
-	  {
-	    // The aps is directly an AP of the system, we will just
-	    // have to detect if the variable is 0 or not.
-	    pset_.push_back({(int)std::distance(k_aps.begin(), it),
-		  VAR_OP_NE, 0});
-	    continue;
-	  }
+        // Look if it is a well known atomic proposition
+        auto it = std::find(k_aps.begin(), k_aps.end(), ap);
+        if (it != k_aps.end())
+          {
+            // The aps is directly an AP of the system, we will just
+            // have to detect if the variable is 0 or not.
+            pset_.push_back({(int)std::distance(k_aps.begin(), it),
+                  VAR_OP_NE, 0});
+            continue;
+          }
 
-	// The ap is not known. We distinguish many cases:
-	//     - It is a State name, i.e P_0.S or P_0 == S
-	//     - It refers a specific variable value, i.e. P_0.var == 2,
-	//       P_0.var < 2, P_0.var != 2, ...
-	//     - It's an unknown variable
-	// Note that we do not support P_0.state1 == 12 since we do not
-	// know how to interpret such atomic proposition.
+        // The ap is not known. We distinguish many cases:
+        //     - It is a State name, i.e P_0.S or P_0 == S
+        //     - It refers a specific variable value, i.e. P_0.var == 2,
+        //       P_0.var < 2, P_0.var != 2, ...
+        //     - It's an unknown variable
+        // Note that we do not support P_0.state1 == 12 since we do not
+        // know how to interpret such atomic proposition.
 
-	// We split the formula according to operators
-	std::size_t found_op_first = ap.find_first_of("=<>!");
-	std::size_t found_op_last = ap.find_last_of("=<>!");
-	std::string left;
-	std::string right;
-	std::string ap_error;
-	std::string op;
+        // We split the formula according to operators
+        std::size_t found_op_first = ap.find_first_of("=<>!");
+        std::size_t found_op_last = ap.find_last_of("=<>!");
+        std::string left;
+        std::string right;
+        std::string ap_error;
+        std::string op;
 
-	if (found_op_first == 0 || found_op_last == ap.size()-1)
-	  {
-	    err << "Invalid operator use in " << ap << '\n';
-	    ++errors;
-	    continue;
-	  }
+        if (found_op_first == 0 || found_op_last == ap.size()-1)
+          {
+            err << "Invalid operator use in " << ap << '\n';
+            ++errors;
+            continue;
+          }
 
-	if (std::string::npos == found_op_first)
-	  {
-	    left = ap;
-	    right = "";
-	    op = "";
-	  }
-	else
-	  {
-	    left = ap.substr(0, found_op_first);
-	    right = ap.substr(found_op_last+1, ap.size()-found_op_last);
-	    op  = ap.substr(found_op_first, found_op_last+1-found_op_first);
-	  }
+        if (std::string::npos == found_op_first)
+          {
+            left = ap;
+            right = "";
+            op = "";
+          }
+        else
+          {
+            left = ap.substr(0, found_op_first);
+            right = ap.substr(found_op_last+1, ap.size()-found_op_last);
+            op  = ap.substr(found_op_first, found_op_last+1-found_op_first);
+          }
 
-	// Variables to store the left part of the atomic proposition
-	bool left_is_digit = false;
-	int lval;
+        // Variables to store the left part of the atomic proposition
+        bool left_is_digit = false;
+        int lval;
 
-	// Variables to store the right part of the atomic proposition
-	bool right_is_digit = false;
-	int rval;
+        // Variables to store the right part of the atomic proposition
+        bool right_is_digit = false;
+        int rval;
 
-	// And finally the operator
-	relop oper;
+        // And finally the operator
+        relop oper;
 
 
-	// Now, left and (possibly) right are should refer atomic
-	// propositions or specific state inside of a process.
-	// First check if it is a known atomic proposition
-	it = std::find(k_aps.begin(), k_aps.end(), left);
-	if (it != k_aps.end())
-	  {
-	    // The aps is directly an AP of the system, we will just
-	    // have to detect if the variable is 0 or not.
-	    lval = std::distance(k_aps.begin(), it);
-	  }
-	else
-	  {
-	    // Detect if it is a process state
-	    std::size_t found_dot = left.find_first_of('.');
-	    if (std::string::npos != found_dot)
-	      {
-		std::string proc_name = left.substr(0, found_dot);
-		std::string st_name = left.substr(found_dot+1,
-						  left.size()-found_dot);
+        // Now, left and (possibly) right are should refer atomic
+        // propositions or specific state inside of a process.
+        // First check if it is a known atomic proposition
+        it = std::find(k_aps.begin(), k_aps.end(), left);
+        if (it != k_aps.end())
+          {
+            // The aps is directly an AP of the system, we will just
+            // have to detect if the variable is 0 or not.
+            lval = std::distance(k_aps.begin(), it);
+          }
+        else
+          {
+            // Detect if it is a process state
+            std::size_t found_dot = left.find_first_of('.');
+            if (std::string::npos != found_dot)
+              {
+                std::string proc_name = left.substr(0, found_dot);
+                std::string st_name = left.substr(found_dot+1,
+                                                  left.size()-found_dot);
 
-		auto ni = matcher.find(proc_name);
-		if (ni == matcher.end())
-		  {
-		    ap_error = left;
-		    goto error_ap_unknown;
-		  }
-		int type_num = ni->second;
-		enum_map_t::const_iterator ei =
-		  enum_map[type_num].find(st_name);
-		if (ei == enum_map[type_num].end())
-		  {
-		    ap_error = left;
-		    goto error_ap_unknown;
-		  }
+                auto ni = matcher.find(proc_name);
+                if (ni == matcher.end())
+                  {
+                    ap_error = left;
+                    goto error_ap_unknown;
+                  }
+                int type_num = ni->second;
+                enum_map_t::const_iterator ei =
+                  enum_map[type_num].find(st_name);
+                if (ei == enum_map[type_num].end())
+                  {
+                    ap_error = left;
+                    goto error_ap_unknown;
+                  }
 
-		if (right.compare("") != 0)
-		  {
-		    // We are in the case P.state1 == something.. We don't
-		    // know how to interpret this.
-		    ap_error = op + right;
-		    err << "\nOperation " << op  << " in \"" << ap_error
-			<< "\" is not available for process's state"
-			<< " (i.e. " <<  left << ")\n";
-		    ++errors;
-		    continue;
-		  }
+                if (right.compare("") != 0)
+                  {
+                    // We are in the case P.state1 == something.. We don't
+                    // know how to interpret this.
+                    ap_error = op + right;
+                    err << "\nOperation " << op  << " in \"" << ap_error
+                        << "\" is not available for process's state"
+                        << " (i.e. " <<  left << ")\n";
+                    ++errors;
+                    continue;
+                  }
 
-		pset_.push_back({
-		    (int) std::distance(k_aps.begin(),
-					std::find(k_aps.begin(),
-						  k_aps.end(), proc_name)),
-		      VAR_OP_EQ,  ei->second});
-		continue;
-	      }
-	    else
-	      {
-		// Finally, it's a number...
-		left_is_digit = true;
-		for (auto c: left)
-		  if (!isdigit(c))
-		    left_is_digit = false;
+                pset_.push_back({
+                    (int) std::distance(k_aps.begin(),
+                                        std::find(k_aps.begin(),
+                                                  k_aps.end(), proc_name)),
+                      VAR_OP_EQ,  ei->second});
+                continue;
+              }
+            else
+              {
+                // Finally, it's a number...
+                left_is_digit = true;
+                for (auto c: left)
+                  if (!isdigit(c))
+                    left_is_digit = false;
 
-		if (left_is_digit)
-		  lval = std::strtol (left.c_str(), nullptr, 10);
-		else
-		  {
-		    // ... or something like: State1 == P_0
-		    // so it doesn't contains '.'
-		    if (std::string::npos != right.find_first_of('.'))
-		      {
-			err << "\nOperation \"" << right
-			    << "\" does not refer a process"
-			    << " (i.e. " << left << " is not valid)\n";
-			++errors;
-			continue;
-		      }
+                if (left_is_digit)
+                  lval = std::strtol (left.c_str(), nullptr, 10);
+                else
+                  {
+                    // ... or something like: State1 == P_0
+                    // so it doesn't contains '.'
+                    if (std::string::npos != right.find_first_of('.'))
+                      {
+                        err << "\nOperation \"" << right
+                            << "\" does not refer a process"
+                            << " (i.e. " << left << " is not valid)\n";
+                        ++errors;
+                        continue;
+                      }
 
-		    // or something like: P_0 == State1
-		    auto ni = matcher.find(right);
-		    if (ni == matcher.end())
-		      {
-			ap_error = ap;
-			goto error_ap_unknown;
-		      }
-		    int type_num = ni->second;
-		    enum_map_t::const_iterator ei =
-		      enum_map[type_num].find(left);
-		    if (ei == enum_map[type_num].end())
-		      {
-			ap_error = left;
-			goto error_ap_unknown;
-		      }
-		    pset_.push_back({
-			(int) std::distance(k_aps.begin(),
-					    std::find(k_aps.begin(),
-						      k_aps.end(), right)),
-			  VAR_OP_EQ,  ei->second});
-		    continue;
-		  }
-	      }
-	  }
+                    // or something like: P_0 == State1
+                    auto ni = matcher.find(right);
+                    if (ni == matcher.end())
+                      {
+                        ap_error = ap;
+                        goto error_ap_unknown;
+                      }
+                    int type_num = ni->second;
+                    enum_map_t::const_iterator ei =
+                      enum_map[type_num].find(left);
+                    if (ei == enum_map[type_num].end())
+                      {
+                        ap_error = left;
+                        goto error_ap_unknown;
+                      }
+                    pset_.push_back({
+                        (int) std::distance(k_aps.begin(),
+                                            std::find(k_aps.begin(),
+                                                      k_aps.end(), right)),
+                          VAR_OP_EQ,  ei->second});
+                    continue;
+                  }
+              }
+          }
 
-	// Here Left is known. Just detect cases where left is digit there is
-	// no right part.
-	if (left_is_digit && right.empty())
-	  {
-	    ap_error = ap;
-	    goto error_ap_unknown;
-	  }
+        // Here Left is known. Just detect cases where left is digit there is
+        // no right part.
+        if (left_is_digit && right.empty())
+          {
+            ap_error = ap;
+            goto error_ap_unknown;
+          }
 
-	assert(!right.empty() && !op.empty());
+        assert(!right.empty() && !op.empty());
 
-	// Parse right part of the atomic proposition
-	// Check if it is a known atomic proposition
-	it = std::find(k_aps.begin(), k_aps.end(), right);
-	if (it != k_aps.end())
-	  {
-	    // The aps is directly an AP of the system, we will just
-	    // have to detect if the variable is 0 or not.
-	    rval = std::distance(k_aps.begin(), it);
-	  }
-	else
-	  {
-	    // We are is the right part, so  if it is a process state
-	    // we do not know how to interpret (xxx == P.state1). Abort
-	    std::size_t found_dot = right.find_first_of('.');
-	    if (std::string::npos != found_dot)
-	      {
-		ap_error = left + op;
-		err << "\nOperation " << op  << " in \"" << ap_error
-		    << "\" is not available for process's state"
-		    << " (i.e. " <<  right << ")\n";
-		++errors;
-		continue;
-	      }
-	    else
-	      {
-		// Finally, it's a number
-		right_is_digit = true;
-		for (auto c: right)
-		  if (!isdigit(c))
-		    right_is_digit = false;
+        // Parse right part of the atomic proposition
+        // Check if it is a known atomic proposition
+        it = std::find(k_aps.begin(), k_aps.end(), right);
+        if (it != k_aps.end())
+          {
+            // The aps is directly an AP of the system, we will just
+            // have to detect if the variable is 0 or not.
+            rval = std::distance(k_aps.begin(), it);
+          }
+        else
+          {
+            // We are is the right part, so  if it is a process state
+            // we do not know how to interpret (xxx == P.state1). Abort
+            std::size_t found_dot = right.find_first_of('.');
+            if (std::string::npos != found_dot)
+              {
+                ap_error = left + op;
+                err << "\nOperation " << op  << " in \"" << ap_error
+                    << "\" is not available for process's state"
+                    << " (i.e. " <<  right << ")\n";
+                ++errors;
+                continue;
+              }
+            else
+              {
+                // Finally, it's a number
+                right_is_digit = true;
+                for (auto c: right)
+                  if (!isdigit(c))
+                    right_is_digit = false;
 
-		if (right_is_digit)
-		  rval = std::strtol (right.c_str(), nullptr, 10);
-		else
-		  {
-		    if (std::string::npos != left.find_first_of('.'))
-		      {
-			err << "\nProposition \"" << ap
-			    << "\" cannot be interpreted"
-			    << " (i.e. " << op + right << " is not valid)\n";
-			++errors;
-			continue;
-		      }
+                if (right_is_digit)
+                  rval = std::strtol (right.c_str(), nullptr, 10);
+                else
+                  {
+                    if (std::string::npos != left.find_first_of('.'))
+                      {
+                        err << "\nProposition \"" << ap
+                            << "\" cannot be interpreted"
+                            << " (i.e. " << op + right << " is not valid)\n";
+                        ++errors;
+                        continue;
+                      }
 
-		    // or something like: P_0 == State1
-		    auto ni = matcher.find(left);
-		    if (ni == matcher.end())
-		      {
+                    // or something like: P_0 == State1
+                    auto ni = matcher.find(left);
+                    if (ni == matcher.end())
+                      {
 
-			ap_error = left;
-			goto error_ap_unknown;
-		      }
-		    int type_num = ni->second;
-		    enum_map_t::const_iterator ei =
-		      enum_map[type_num].find(right);
-		    if (ei == enum_map[type_num].end())
-		      {
-			ap_error = right;
-			goto error_ap_unknown;
-		      }
-		    pset_.push_back({
-			(int) std::distance(k_aps.begin(),
-					    std::find(k_aps.begin(),
-						      k_aps.end(), left)),
-			  VAR_OP_EQ,  ei->second});
-		    continue;
-		  }
-	      }
-	  }
+                        ap_error = left;
+                        goto error_ap_unknown;
+                      }
+                    int type_num = ni->second;
+                    enum_map_t::const_iterator ei =
+                      enum_map[type_num].find(right);
+                    if (ei == enum_map[type_num].end())
+                      {
+                        ap_error = right;
+                        goto error_ap_unknown;
+                      }
+                    pset_.push_back({
+                        (int) std::distance(k_aps.begin(),
+                                            std::find(k_aps.begin(),
+                                                      k_aps.end(), left)),
+                          VAR_OP_EQ,  ei->second});
+                    continue;
+                  }
+              }
+          }
 
-	if (left_is_digit && right_is_digit)
-	  {
-	    err << "\nOperation \"" << op
-		<< "\" between two numbers not available"
-		<< " (i.e. " << right << " and, "
-		<< left << ")\n";
-	    ++errors;
-	    continue;
-	  }
+        if (left_is_digit && right_is_digit)
+          {
+            err << "\nOperation \"" << op
+                << "\" between two numbers not available"
+                << " (i.e. " << right << " and, "
+                << left << ")\n";
+            ++errors;
+            continue;
+          }
 
-	// Left and Right are know, just analyse the operator.
-	if (op.compare("==") == 0)
-	  oper = !left_is_digit && !right_is_digit? VAR_OP_EQ_VAR :
-	    (left_is_digit? OP_EQ_VAR : VAR_OP_EQ);
-	else if (op.compare("!=") == 0)
-	  oper = !left_is_digit && !right_is_digit? VAR_OP_NE_VAR :
-	    (left_is_digit? OP_NE_VAR : VAR_OP_NE);
-	else if (op.compare("<") == 0)
-	  oper = !left_is_digit && !right_is_digit? VAR_OP_LT_VAR :
-	    (left_is_digit? OP_LT_VAR : VAR_OP_LT);
-	else if (op.compare(">") == 0)
-	  oper = !left_is_digit && !right_is_digit? VAR_OP_GT_VAR :
-	    (left_is_digit? OP_GT_VAR : VAR_OP_GT);
-	else if (op.compare("<=") == 0)
-	  oper = !left_is_digit && !right_is_digit? VAR_OP_LE_VAR :
-	    (left_is_digit? OP_LE_VAR : VAR_OP_LE);
-	else if (op.compare(">=") == 0)
-	  oper = !left_is_digit && !right_is_digit? VAR_OP_GE_VAR :
-	    (left_is_digit? OP_GE_VAR : VAR_OP_GE);
-	else
-	  {
-	    err << "\nOperation \"" << op
-		<< "\" is unknown\n";
-	    ++errors;
-	    continue;
-	  }
+        // Left and Right are know, just analyse the operator.
+        if (op.compare("==") == 0)
+          oper = !left_is_digit && !right_is_digit? VAR_OP_EQ_VAR :
+            (left_is_digit? OP_EQ_VAR : VAR_OP_EQ);
+        else if (op.compare("!=") == 0)
+          oper = !left_is_digit && !right_is_digit? VAR_OP_NE_VAR :
+            (left_is_digit? OP_NE_VAR : VAR_OP_NE);
+        else if (op.compare("<") == 0)
+          oper = !left_is_digit && !right_is_digit? VAR_OP_LT_VAR :
+            (left_is_digit? OP_LT_VAR : VAR_OP_LT);
+        else if (op.compare(">") == 0)
+          oper = !left_is_digit && !right_is_digit? VAR_OP_GT_VAR :
+            (left_is_digit? OP_GT_VAR : VAR_OP_GT);
+        else if (op.compare("<=") == 0)
+          oper = !left_is_digit && !right_is_digit? VAR_OP_LE_VAR :
+            (left_is_digit? OP_LE_VAR : VAR_OP_LE);
+        else if (op.compare(">=") == 0)
+          oper = !left_is_digit && !right_is_digit? VAR_OP_GE_VAR :
+            (left_is_digit? OP_GE_VAR : VAR_OP_GE);
+        else
+          {
+            err << "\nOperation \"" << op
+                << "\" is unknown\n";
+            ++errors;
+            continue;
+          }
 
-	pset_.push_back({lval, oper, rval});
-	continue;
+        pset_.push_back({lval, oper, rval});
+        continue;
 
       error_ap_unknown:
-	err << "\nProposition \"" << ap_error << "\" does not exist\n";
-	++errors;
-	continue;
+        err << "\nProposition \"" << ap_error << "\" does not exist\n";
+        ++errors;
+        continue;
       }
 
     if (errors)
