@@ -42,6 +42,9 @@
 #include <spot/twacube/cube.hh>
 #include <spot/mc/utils.hh>
 
+#include <bricks/brick-hashset.h>
+#include <bricks/brick-hash.h>
+
 namespace spot
 {
   namespace
@@ -1127,12 +1130,36 @@ namespace spot
     }
   };
 
-  typedef std::unordered_map<const cspins_state, int, cspins_state_hash,
-			     cspins_state_equal> cspins_state_map;
+  struct both
+  {
+    cspins_state first;
+    int second;
+  };
 
-  typedef std::unordered_set<cspins_state, cspins_state_hash,
-  			     cspins_state_equal> cspins_state_set;
+  struct cspins_state_hasher
+  {
+    cspins_state_hasher(cspins_state&)
+    { }
 
+    cspins_state_hasher() = default;
+
+    brick::hash::hash128_t
+    hash(cspins_state t) const
+    {
+      // FIXME we should compute a better hash value for this particular
+      // case. Shall we use two differents hash functions?
+      return std::make_pair(t[0], t[0]);
+    }
+
+    bool equal(cspins_state lhs, cspins_state rhs) const
+    {
+      return 0 == memcmp(lhs, rhs, (2+rhs[1])* sizeof(int));
+    }
+  };
+
+  //brick::hashset::FastConcurrent<both , both_hasher> ht2;
+  typedef brick::hashset::FastConcurrent<cspins_state,
+					 cspins_state_hasher>  cspins_state_map;
 
   ////////////////////////////////////////////////////////////////////////
   // A manager for Cspins states.
@@ -1267,12 +1294,10 @@ namespace spot
 	  cspins_state s =
 	  inner->manager->alloc_setup(dst, inner->compressed_,
 				      inner->manager->size() * 2);
-	  auto it = inner->map->insert({s, inner->default_value_});
-	  inner->succ->push_back((*(it.first)).first);
-	  if (!it.second)
-	    {
-	      inner->manager->dealloc(s);
-	    }
+	  auto it = inner->map->insert({s});
+	  inner->succ->push_back(*it);
+	  if (!it.isnew())
+	    inner->manager->dealloc(s);
 	},
 	 &inner);
       if (!n && selfloopize)
@@ -1318,9 +1343,9 @@ namespace spot
 	  cspins_state s =
 	  inner->manager->alloc_setup(dst, inner->compressed_,
 				      inner->manager->size() * 2);
-	  auto it = inner->map->insert({s, inner->default_value_});
-	  inner->succ->push_back((*(it.first)).first);
-	  if (!it.second)
+	  auto it = inner->map->insert({s});
+	  inner->succ->push_back(*it);
+	  if (!it.isnew())
 	    inner->manager->dealloc(s);
 	},
 	 &inner);
@@ -1399,7 +1424,7 @@ namespace spot
       compress_(compress), cubeset_(visible_aps.size()),
       selfloopize_(selfloopize), aps_(visible_aps)
     {
-      map_.reserve(2000000);
+      map_.setSize(2000000);
       recycle_.reserve(2000000);
       inner_.compressed_ = new int[d_->get_state_size() * 2];
       inner_.uncompressed_ = new int[d_->get_state_size()+30];
@@ -1408,13 +1433,6 @@ namespace spot
     }
     ~kripkecube()
       {
-	typename cspins_state_map::const_iterator s = map_.begin();
-	while (s != map_.end())
-	  {
-	    manager_.dealloc(s->first);
-	    ++s;
-	  }
-	map_.clear();
 	for (auto i: recycle_)
 	  {
 	    cubeset_.release(i->condition());
