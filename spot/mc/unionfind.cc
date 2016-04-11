@@ -69,7 +69,7 @@ namespace spot
     else {
       id[root2] = root1;
       if (rk1 == rk2)
-	id[root1] = -(rk1 + 1);
+        id[root1] = -(rk1 + 1);
     }
     return true;
   }
