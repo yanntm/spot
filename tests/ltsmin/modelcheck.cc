@@ -75,17 +75,17 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case 'd':
       if (strcmp(arg, "model") == 0)
-	mc_options.dot_output |= DOT_MODEL;
+        mc_options.dot_output |= DOT_MODEL;
       else if (strcmp(arg, "product") == 0)
-	mc_options.dot_output |= DOT_PRODUCT;
+        mc_options.dot_output |= DOT_PRODUCT;
       else if (strcmp(arg, "formula") == 0)
-	mc_options.dot_output |= DOT_FORMULA;
+        mc_options.dot_output |= DOT_FORMULA;
       else
-	{
-	  std::cerr << "Unknown argument: '" << arg
-		    << "' for option --dot\n";
-	  return ARGP_ERR_UNKNOWN;
-	}
+        {
+          std::cerr << "Unknown argument: '" << arg
+                    << "' for option --dot\n";
+          return ARGP_ERR_UNKNOWN;
+        }
       break;
     case 'e':
       mc_options.is_empty = true;
@@ -154,8 +154,8 @@ static const argp_option options[] =
   };
 
 const struct argp finput_argp = { options, parse_opt_finput,
-				  nullptr, nullptr, nullptr,
-				  nullptr, nullptr };
+                                  nullptr, nullptr, nullptr,
+                                  nullptr, nullptr };
 
 const struct argp_child children[] =
   {
@@ -184,12 +184,12 @@ static int checked_main()
   if (mc_options.selfloopize)
     {
       if (mc_options.dead_ap == nullptr ||
-	  !strcasecmp(mc_options.dead_ap, "true"))
-	deadf = spot::formula::tt();
+          !strcasecmp(mc_options.dead_ap, "true"))
+        deadf = spot::formula::tt();
       else if (!strcasecmp(mc_options.dead_ap, "false"))
-	deadf = spot::formula::ff();
+        deadf = spot::formula::ff();
       else
-	deadf = env.require(mc_options.dead_ap);
+        deadf = env.require(mc_options.dead_ap);
     }
 
 
@@ -197,39 +197,39 @@ static int checked_main()
     {
       tm.start("parsing formula");
       {
-	auto pf = spot::parse_infix_psl(mc_options.formula, env, false);
-	exit_code = pf.format_errors(std::cerr);
-	f = pf.f;
+        auto pf = spot::parse_infix_psl(mc_options.formula, env, false);
+        exit_code = pf.format_errors(std::cerr);
+        f = pf.f;
       }
       tm.stop("parsing formula");
 
       tm.start("translating formula");
       {
-	spot::translator trans(dict);
-	// if (deterministic) FIXME
-	//   trans.set_pref(spot::postprocessor::Deterministic);
-	prop = trans.run(&f);
+        spot::translator trans(dict);
+        // if (deterministic) FIXME
+        //   trans.set_pref(spot::postprocessor::Deterministic);
+        prop = trans.run(&f);
       }
       tm.stop("translating formula");
 
       atomic_prop_collect(f, &ap);
 
       if (mc_options.dot_output & DOT_FORMULA)
-	{
-	  tm.start("dot output");
-	  spot::print_dot(std::cout, prop);
-	  tm.stop("dot output");
-	}
+        {
+          tm.start("dot output");
+          spot::print_dot(std::cout, prop);
+          tm.stop("dot output");
+        }
     }
 
   if (mc_options.model != nullptr)
     {
       tm.start("loading ltsmin model");
       try
-	{
-	  model = spot::ltsmin_model::load(mc_options.model)
-	    .kripke(&ap, dict, deadf, mc_options.compress);
-	}
+        {
+          model = spot::ltsmin_model::load(mc_options.model)
+            .kripke(&ap, dict, deadf, mc_options.compress);
+        }
       catch (std::runtime_error& e)
         {
           std::cerr << e.what() << '\n';
@@ -237,23 +237,23 @@ static int checked_main()
       tm.stop("loading ltsmin model");
 
       if (!model)
-	{
-	  exit_code = 2;
-	  goto safe_exit;
-	}
+        {
+          exit_code = 2;
+          goto safe_exit;
+        }
 
       if (mc_options.dot_output & DOT_MODEL)
-	{
-	  tm.start("dot output");
-	  spot::print_dot(std::cout, model);
-	  tm.stop("dot output");
-	}
+        {
+          tm.start("dot output");
+          spot::print_dot(std::cout, model);
+          tm.stop("dot output");
+        }
       if (mc_options.kripke_output)
-	{
-	  tm.start("kripke output");
-	  spot::print_hoa(std::cout, model);
-	  tm.stop("kripke output");
-	}
+        {
+          tm.start("kripke output");
+          spot::print_hoa(std::cout, model);
+          tm.stop("kripke output");
+        }
     }
 
   if (mc_options.formula != nullptr &&
@@ -262,92 +262,92 @@ static int checked_main()
       product = spot::otf_product(model, prop);
 
       if (mc_options.is_empty)
-	{
-	  const char* err;
-	  echeck_inst = spot::make_emptiness_check_instantiator("Cou99", &err);
-	  if (!echeck_inst)
-	    {
-	      std::cerr << "Unknown emptiness check algorihm `"
-			<< err <<  "'\n";
-	      exit_code = 1;
-	      goto safe_exit;
-	    }
+        {
+          const char* err;
+          echeck_inst = spot::make_emptiness_check_instantiator("Cou99", &err);
+          if (!echeck_inst)
+            {
+              std::cerr << "Unknown emptiness check algorihm `"
+                        << err <<  "'\n";
+              exit_code = 1;
+              goto safe_exit;
+            }
 
-	  auto ec = echeck_inst->instantiate(product);
-	  assert(ec);
-	  int memused = spot::memusage();
-	  tm.start("running emptiness check");
-	  spot::emptiness_check_result_ptr res;
-	  try
-	    {
-	      res = ec->check();
-	    }
-	  catch (std::bad_alloc)
-	  {
-	    std::cerr << "Out of memory during emptiness check."
-		      << std::endl;
-	    if (!mc_options.compress)
-	      std::cerr << "Try option -z for state compression." << std::endl;
-	    exit_code = 2;
-	    exit(exit_code);
-	  }
-	tm.stop("running emptiness check");
-	memused = spot::memusage() - memused;
+          auto ec = echeck_inst->instantiate(product);
+          assert(ec);
+          int memused = spot::memusage();
+          tm.start("running emptiness check");
+          spot::emptiness_check_result_ptr res;
+          try
+            {
+              res = ec->check();
+            }
+          catch (std::bad_alloc)
+          {
+            std::cerr << "Out of memory during emptiness check."
+                      << std::endl;
+            if (!mc_options.compress)
+              std::cerr << "Try option -z for state compression." << std::endl;
+            exit_code = 2;
+            exit(exit_code);
+          }
+        tm.stop("running emptiness check");
+        memused = spot::memusage() - memused;
 
-	ec->print_stats(std::cout);
-	std::cout << memused << " pages allocated for emptiness check"
-		  << std::endl;
+        ec->print_stats(std::cout);
+        std::cout << memused << " pages allocated for emptiness check"
+                  << std::endl;
 
-	if (!res)
-	  {
-	    std::cout << "no accepting run found";
-	  }
-	else if (!mc_options.compute_counterexample)
-	  {
-	    std::cout << "an accepting run exists "
-		      << "(use -c to print it)" << std::endl;
-	    exit_code = 1;
-	  }
-	else
-	  {
-	    exit_code = 1;
-	    spot::twa_run_ptr run;
-	    tm.start("computing accepting run");
-	    try
-	      {
-		run = res->accepting_run();
-	      }
-	    catch (std::bad_alloc)
-	      {
-		std::cerr << "Out of memory while looking for counterexample."
-			  << std::endl;
-		exit_code = 2;
-		exit(exit_code);
-	      }
-	    tm.stop("computing accepting run");
+        if (!res)
+          {
+            std::cout << "no accepting run found";
+          }
+        else if (!mc_options.compute_counterexample)
+          {
+            std::cout << "an accepting run exists "
+                      << "(use -c to print it)" << std::endl;
+            exit_code = 1;
+          }
+        else
+          {
+            exit_code = 1;
+            spot::twa_run_ptr run;
+            tm.start("computing accepting run");
+            try
+              {
+                run = res->accepting_run();
+              }
+            catch (std::bad_alloc)
+              {
+                std::cerr << "Out of memory while looking for counterexample."
+                          << std::endl;
+                exit_code = 2;
+                exit(exit_code);
+              }
+            tm.stop("computing accepting run");
 
-	    if (!run)
-	      {
-		std::cout << "an accepting run exists" << std::endl;
-	      }
-	    else
-	      {
-		tm.start("reducing accepting run");
-		run = run->reduce();
-		tm.stop("reducing accepting run");
-		tm.start("printing accepting run");
-		std::cout << *run;
-		tm.stop("printing accepting run");
-	      }
-	  }
-	}
+            if (!run)
+              {
+                std::cout << "an accepting run exists" << std::endl;
+              }
+            else
+              {
+                tm.start("reducing accepting run");
+                run = run->reduce();
+                tm.stop("reducing accepting run");
+                tm.start("printing accepting run");
+                std::cout << *run;
+                tm.stop("printing accepting run");
+              }
+          }
+        }
 
       if (mc_options.dot_output & DOT_PRODUCT)
-	{
-	  tm.start("dot output");
-	  spot::print_dot(std::cout, product);
-	  tm.stop("dot output");
-	}
+        {
+          tm.start("dot output");
+          spot::print_dot(std::cout, product);
+          tm.stop("dot output");
+        }
     }
 
  safe_exit:
@@ -363,7 +363,7 @@ main(int argc, char** argv)
 {
   setup(argv);
   const argp ap = { nullptr, nullptr, nullptr,
-		    argp_program_doc, children, nullptr, nullptr };
+                    argp_program_doc, children, nullptr, nullptr };
 
   if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
     exit(err);

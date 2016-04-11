@@ -42,7 +42,7 @@ namespace spot
   {  }
 
   transition::transition(const cube& cube,
-			 acc_cond::mark_t acc):
+                         acc_cond::mark_t acc):
     cube_(cube),  acc_(acc)
   { }
 
@@ -104,7 +104,7 @@ namespace spot
 
   void
   twacube::create_transition(unsigned int src, const cube& cube,
-			     const acc_cond::mark_t& mark, unsigned int dst)
+                             const acc_cond::mark_t& mark, unsigned int dst)
   {
     theg_.new_edge(src, dst, cube, mark);
   }
@@ -121,24 +121,24 @@ namespace spot
     unsigned int i = 1;
     while (i <= theg_.num_edges())
       {
-	unsigned int j = i;
+        unsigned int j = i;
 
-	// Walk first bucket of successors
-	while (j <= theg_.num_edges() &&
-	       theg_.edge_storage(i).src == theg_.edge_storage(j).src)
-	  ++j;
+        // Walk first bucket of successors
+        while (j <= theg_.num_edges() &&
+               theg_.edge_storage(i).src == theg_.edge_storage(j).src)
+          ++j;
 
-	// Remove the next bucket
-	unsigned int itmp = j;
+        // Remove the next bucket
+        unsigned int itmp = j;
 
-	// Look if there are some transitions missing in this bucket.
-	while (j <= theg_.num_edges())
-	  {
-	    if (theg_.edge_storage(i).src == theg_.edge_storage(j).src)
-	      return false;
-	    ++j;
-	  }
-	i = itmp;
+        // Look if there are some transitions missing in this bucket.
+        while (j <= theg_.num_edges())
+          {
+            if (theg_.edge_storage(i).src == theg_.edge_storage(j).src)
+              return false;
+            ++j;
+          }
+        i = itmp;
       }
     return true;
   }
@@ -150,10 +150,10 @@ namespace spot
     os << "init : " << twa.init_ << '\n';
      for (unsigned int i = 1; i <= twa.theg_.num_edges(); ++i)
        os << twa.theg_.edge_storage(i).src << "->"
-	  << twa.theg_.edge_storage(i).dst <<  " : "
-	  << cs.dump(twa.theg_.edge_data(i).cube_, twa.aps_)
-	  << ' ' << twa.theg_.edge_data(i).acc_
-	  << '\n';
+          << twa.theg_.edge_storage(i).dst <<  " : "
+          << cs.dump(twa.theg_.edge_data(i).cube_, twa.aps_)
+          << ' ' << twa.theg_.edge_data(i).acc_
+          << '\n';
     return os;
   }
 }

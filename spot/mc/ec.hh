@@ -31,24 +31,24 @@ namespace spot
   /// emptiness check that has been proposed we opted to implement
   /// the Gabow's one.
   template<typename State, typename SuccIterator,
-	   typename StateHash, typename StateEqual>
+           typename StateHash, typename StateEqual>
   class ec_renault13lpar  : public intersect<State, SuccIterator,
-				       StateHash, StateEqual,
-				       ec_renault13lpar<State, SuccIterator,
-							StateHash, StateEqual>>
+                                       StateHash, StateEqual,
+                                       ec_renault13lpar<State, SuccIterator,
+                                                        StateHash, StateEqual>>
   {
     // Ease the manipulation
     using typename intersect<State, SuccIterator, StateHash, StateEqual,
-			     ec_renault13lpar<State, SuccIterator,
-					      StateHash,
-					      StateEqual>>::product_state;
+                             ec_renault13lpar<State, SuccIterator,
+                                              StateHash,
+                                              StateEqual>>::product_state;
 
   public:
     ec_renault13lpar(kripkecube<State, SuccIterator>& sys,
                      twacube* twa)
       : intersect<State, SuccIterator, StateHash, StateEqual,
-		  ec_renault13lpar<State, SuccIterator,
-				   StateHash, StateEqual>>(sys, twa),
+                  ec_renault13lpar<State, SuccIterator,
+                                   StateHash, StateEqual>>(sys, twa),
       acc_(twa->acc())
       {
       }
@@ -84,13 +84,13 @@ namespace spot
     /// to true and both \a newtop and \a  newtop_dfsnum have inconsistency
     /// values.
     bool pop_state(product_state, unsigned top_dfsnum, bool,
-  		   product_state, unsigned)
+                   product_state, unsigned)
     {
       if (top_dfsnum == roots_.back().dfsnum)
-  	{
-  	  roots_.pop_back();
-  	  uf_.markdead(top_dfsnum);
-  	}
+        {
+          roots_.pop_back();
+          uf_.markdead(top_dfsnum);
+        }
       return true;
     }
 
@@ -101,7 +101,7 @@ namespace spot
                 acc_cond::mark_t cond)
     {
       if (uf_.isdead(dst_dfsnum))
-  	return false;
+        return false;
 
       while (!uf_.sameset(dst_dfsnum, roots_.back().dfsnum))
         {
@@ -127,18 +127,18 @@ namespace spot
 
        // Compute the prefix of the accepting run
       for (auto& s : this->todo)
-      	res += "  " + std::to_string(s.st.st_prop) +
-      	  + "*" + this->sys_.to_string(s.st.st_kripke) + "\n";
+        res += "  " + std::to_string(s.st.st_prop) +
+          + "*" + this->sys_.to_string(s.st.st_kripke) + "\n";
 
       // Compute the accepting cycle
       res += "Cycle:\n";
 
       struct ctrx_element
       {
-	const product_state* prod_st;
-	ctrx_element* parent_st;
-	SuccIterator* it_kripke;
-	std::shared_ptr<trans_index> it_prop;
+        const product_state* prod_st;
+        ctrx_element* parent_st;
+        SuccIterator* it_kripke;
+        std::shared_ptr<trans_index> it_prop;
       };
       std::queue<ctrx_element*> bfs;
 
@@ -148,65 +148,65 @@ namespace spot
               this->sys_.succ(this->todo.back().st.st_kripke),
               this->twa_->succ(this->todo.back().st.st_prop)}));
       while (true)
-	{
-	here:
-	  auto* front = bfs.front();
-	  bfs.pop();
-	  // PUSH all successors of the state.
-	  while (!front->it_kripke->done())
-	    {
-	      while (!front->it_prop->done())
-		{
-		  if (this->twa_->get_cubeset().intersect
-		      (this->twa_->trans_data(front->it_prop).cube_,
-		       front->it_kripke->condition()))
-		    {
-		      const product_state dst = {
-			front->it_kripke->state(),
-			this->twa_->trans_storage(front->it_prop).dst
-		      };
+        {
+        here:
+          auto* front = bfs.front();
+          bfs.pop();
+          // PUSH all successors of the state.
+          while (!front->it_kripke->done())
+            {
+              while (!front->it_prop->done())
+                {
+                  if (this->twa_->get_cubeset().intersect
+                      (this->twa_->trans_data(front->it_prop).cube_,
+                       front->it_kripke->condition()))
+                    {
+                      const product_state dst = {
+                        front->it_kripke->state(),
+                        this->twa_->trans_storage(front->it_prop).dst
+                      };
 
-		      // Skip Unknown states or not same SCC
-		      auto it  = this->map.find(dst);
-		      if (it == this->map.end() ||
-			  !uf_.sameset(it->second,
-				       this->map[this->todo.back().st]))
-			{
-			  front->it_prop->next();
-			  continue;
-			}
+                      // Skip Unknown states or not same SCC
+                      auto it  = this->map.find(dst);
+                      if (it == this->map.end() ||
+                          !uf_.sameset(it->second,
+                                       this->map[this->todo.back().st]))
+                        {
+                          front->it_prop->next();
+                          continue;
+                        }
 
-		      // This is a valid transition. If this transition
-		      // is the one we are looking for, update the counter-
-		      // -example and flush the bfs queue.
-		      auto mark = this->twa_->trans_data(front->it_prop).acc_;
-		      if (!acc.has(mark))
-			{
-			  ctrx_element* current = front;
-			  while (current != nullptr)
-			    {
-			      // FIXME also display acc?
-			      res = res + "  " +
-				std::to_string(current->prod_st->st_prop) +
-				+ "*" +
-				this->sys_. to_string(current->prod_st
-						      ->st_kripke) +
-				"\n";
-			      current = current->parent_st;
-			    }
+                      // This is a valid transition. If this transition
+                      // is the one we are looking for, update the counter-
+                      // -example and flush the bfs queue.
+                      auto mark = this->twa_->trans_data(front->it_prop).acc_;
+                      if (!acc.has(mark))
+                        {
+                          ctrx_element* current = front;
+                          while (current != nullptr)
+                            {
+                              // FIXME also display acc?
+                              res = res + "  " +
+                                std::to_string(current->prod_st->st_prop) +
+                                + "*" +
+                                this->sys_. to_string(current->prod_st
+                                                      ->st_kripke) +
+                                "\n";
+                              current = current->parent_st;
+                            }
 
-			  // empty the queue
-			  while (!bfs.empty())
-			    {
-			      auto* e = bfs.front();
-			      bfs.pop();
-			      delete e;
-			    }
+                          // empty the queue
+                          while (!bfs.empty())
+                            {
+                              auto* e = bfs.front();
+                              bfs.pop();
+                              delete e;
+                            }
 
-			  // update acceptance
-			  acc |= mark;
-			  if (this->twa_->acc().accepting(acc))
-			    return res;
+                          // update acceptance
+                          acc |= mark;
+                          if (this->twa_->acc().accepting(acc))
+                            return res;
 
                           const product_state* q = &(it->first);
                           ctrx_element* root = new ctrx_element({
@@ -242,15 +242,15 @@ namespace spot
     virtual std::string stats() override
     {
       return
-	std::to_string(this->dfs_number) + " unique states visited\n" +
-	std::to_string(roots_.size()) +
-	" strongly connected components in search stack\n" +
-	std::to_string(this->transitions) + " transitions explored\n";
+        std::to_string(this->dfs_number) + " unique states visited\n" +
+        std::to_string(roots_.size()) +
+        " strongly connected components in search stack\n" +
+        std::to_string(this->transitions) + " transitions explored\n";
     }
 
   private:
 
-    bool found_ = false;	///< \brief A counterexample is detected?
+    bool found_ = false;        ///< \brief A counterexample is detected?
 
     struct root_element {
       unsigned dfsnum;

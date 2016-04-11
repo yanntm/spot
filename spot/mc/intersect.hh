@@ -42,8 +42,8 @@ namespace spot
   /// The other template parameters allows to consider any kind
   /// of state (and so any kind of kripke structures).
   template<typename State, typename SuccIterator,
-	   typename StateHash, typename StateEqual,
-	   typename EmptinessCheck>
+           typename StateHash, typename StateEqual,
+           typename EmptinessCheck>
   class SPOT_API intersect
   {
   public:
@@ -78,64 +78,64 @@ namespace spot
       self().setup();
       product_state initial = {sys_.initial(), twa_->get_initial()};
       if (SPOT_LIKELY(self().push_state(initial, dfs_number+1, 0U)))
-	{
-	  todo.push_back({initial, sys_.succ(initial.st_kripke),
-		twa_->succ(initial.st_prop)});
+        {
+          todo.push_back({initial, sys_.succ(initial.st_kripke),
+                twa_->succ(initial.st_prop)});
 
-	  // Not going further! It's a product with a single state.
-	  if (todo.back().it_prop->done())
-	    return false;
+          // Not going further! It's a product with a single state.
+          if (todo.back().it_prop->done())
+            return false;
 
-	  forward_iterators(true);
-	  map[initial] = ++dfs_number;
-	}
+          forward_iterators(true);
+          map[initial] = ++dfs_number;
+        }
       while (!todo.empty())
-      	{
-	  // Check the kripke is enough since it's the outer loop. More
-	  // details in forward_iterators.
-      	  if (todo.back().it_kripke->done())
-      	    {
-	      bool is_init = todo.size() == 1;
-	      auto newtop = is_init? todo.back().st: todo[todo.size() -2].st;
-      	      if (SPOT_LIKELY(self().pop_state(todo.back().st,
-	      				     map[todo.back().st],
-	      				     is_init,
-	      				     newtop,
-	      				     map[newtop])))
-	      {
-		  sys_.recycle(todo.back().it_kripke);
-		  // FIXME a local storage for twacube iterator?
-		  todo.pop_back();
-		  if (SPOT_UNLIKELY(self().counterexample_found()))
-		    return true;
-		}
-      	    }
-      	  else
-      	    {
-      	      ++transitions;
-	      product_state dst = {
-		todo.back().it_kripke->state(),
-		twa_->trans_storage(todo.back().it_prop).dst
-	      };
-	      auto acc = twa_->trans_data(todo.back().it_prop).acc_;
-	      forward_iterators(false);
-	      auto it  = map.find(dst);
-	      if (it == map.end())
-		{
-		  if (SPOT_LIKELY(self().push_state(dst, dfs_number+1, acc)))
-		    {
-		      map[dst] = ++dfs_number;
-		      todo.push_back({dst, sys_.succ(dst.st_kripke),
-			    twa_->succ(dst.st_prop)});
-		      forward_iterators(true);
-		    }
-		}
-	      else if (SPOT_UNLIKELY(self().update(todo.back().st,
-						 dfs_number,
-						 dst, map[dst], acc)))
-		return true;
-	    }
-      	}
+        {
+          // Check the kripke is enough since it's the outer loop. More
+          // details in forward_iterators.
+          if (todo.back().it_kripke->done())
+            {
+              bool is_init = todo.size() == 1;
+              auto newtop = is_init? todo.back().st: todo[todo.size() -2].st;
+              if (SPOT_LIKELY(self().pop_state(todo.back().st,
+                                             map[todo.back().st],
+                                             is_init,
+                                             newtop,
+                                             map[newtop])))
+              {
+                  sys_.recycle(todo.back().it_kripke);
+                  // FIXME a local storage for twacube iterator?
+                  todo.pop_back();
+                  if (SPOT_UNLIKELY(self().counterexample_found()))
+                    return true;
+                }
+            }
+          else
+            {
+              ++transitions;
+              product_state dst = {
+                todo.back().it_kripke->state(),
+                twa_->trans_storage(todo.back().it_prop).dst
+              };
+              auto acc = twa_->trans_data(todo.back().it_prop).acc_;
+              forward_iterators(false);
+              auto it  = map.find(dst);
+              if (it == map.end())
+                {
+                  if (SPOT_LIKELY(self().push_state(dst, dfs_number+1, acc)))
+                    {
+                      map[dst] = ++dfs_number;
+                      todo.push_back({dst, sys_.succ(dst.st_kripke),
+                            twa_->succ(dst.st_prop)});
+                      forward_iterators(true);
+                    }
+                }
+              else if (SPOT_UNLIKELY(self().update(todo.back().st,
+                                                 dfs_number,
+                                                 dst, map[dst], acc)))
+                return true;
+            }
+        }
       return false;
     }
 
@@ -158,8 +158,8 @@ namespace spot
     virtual std::string stats()
     {
       return
-	std::to_string(dfs_number) + " unique states visited\n" +
-	std::to_string(transitions) + " transitions explored\n";
+        std::to_string(dfs_number) + " unique states visited\n" +
+        std::to_string(transitions) + " transitions explored\n";
     }
 
   protected:
@@ -175,37 +175,37 @@ namespace spot
 
       // Sometimes kripke state may have no successors.
       if (todo.back().it_kripke->done())
-	return;
+        return;
 
       // The state has just been push and the 2 iterators intersect.
       // There is no need to move iterators forward.
       assert(!(todo.back().it_prop->done()));
       if (just_pushed && twa_->get_cubeset()
-      	  .intersect(twa_->trans_data(todo.back().it_prop).cube_,
-      		     todo.back().it_kripke->condition()))
-	  return;
+          .intersect(twa_->trans_data(todo.back().it_prop).cube_,
+                     todo.back().it_kripke->condition()))
+          return;
 
       // Otherwise we have to compute the next valid successor (if it exits).
       // This requires two loops. The most inner one is for the twacube since
       // its costless
       if (todo.back().it_prop->done())
-	todo.back().it_prop->reset();
+        todo.back().it_prop->reset();
       else
-	todo.back().it_prop->next();
+        todo.back().it_prop->next();
 
       while (!todo.back().it_kripke->done())
-	{
-	  while (!todo.back().it_prop->done())
-	    {
-	      if (SPOT_UNLIKELY(twa_->get_cubeset()
-	  	.intersect(twa_->trans_data(todo.back().it_prop).cube_,
-	  		   todo.back().it_kripke->condition())))
-		return;
-	      todo.back().it_prop->next();
-	    }
-	  todo.back().it_prop->reset();
-	  todo.back().it_kripke->next();
-	}
+        {
+          while (!todo.back().it_prop->done())
+            {
+              if (SPOT_UNLIKELY(twa_->get_cubeset()
+                .intersect(twa_->trans_data(todo.back().it_prop).cube_,
+                           todo.back().it_kripke->condition())))
+                return;
+              todo.back().it_prop->next();
+            }
+          todo.back().it_prop->reset();
+          todo.back().it_kripke->next();
+        }
     }
 
   public:
@@ -219,11 +219,11 @@ namespace spot
     {
       bool
       operator()(const product_state lhs,
-		 const product_state rhs) const
+                 const product_state rhs) const
       {
-	StateEqual equal;
-	return (lhs.st_prop == rhs.st_prop) &&
-	  equal(lhs.st_kripke, rhs.st_kripke);
+        StateEqual equal;
+        return (lhs.st_prop == rhs.st_prop) &&
+          equal(lhs.st_kripke, rhs.st_kripke);
       }
     };
 
@@ -232,10 +232,10 @@ namespace spot
       size_t
       operator()(const product_state that) const
       {
-	// FIXME! wang32_hash(that.st_prop) could have
-	// been pre-calculated!
-	StateHash hasher;
-	return  wang32_hash(that.st_prop) ^ hasher(that.st_kripke);
+        // FIXME! wang32_hash(that.st_prop) could have
+        // been pre-calculated!
+        StateHash hasher;
+        return  wang32_hash(that.st_prop) ^ hasher(that.st_kripke);
       }
     };
 
@@ -249,8 +249,8 @@ namespace spot
     twacube* twa_;
     std::vector<todo_element> todo;
     typedef std::unordered_map<const product_state, int,
-			       product_state_hash,
-			       product_state_equal> visited_map;
+                               product_state_hash,
+                               product_state_equal> visited_map;
     visited_map map;
     unsigned int dfs_number = 0;
     unsigned int transitions = 0;

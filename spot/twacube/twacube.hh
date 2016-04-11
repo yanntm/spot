@@ -91,7 +91,7 @@ namespace spot
       // no-swarming : since twacube are dedicated for parallelism, i.e.
       // swarming, we expect swarming is activated.
       if (SPOT_UNLIKELY(!seed))
-	return idx_;
+        return idx_;
       // swarming.
       return (((idx_-st_.succ+1)*seed) % (st_.succ_tail-st_.succ+1)) + st_.succ;
     }
@@ -115,7 +115,7 @@ namespace spot
     unsigned int get_initial();
     cstate* state_from_int(unsigned int i);
     void create_transition(unsigned int src, const cube& cube,
-			   const acc_cond::mark_t& mark, unsigned int dst);
+                           const acc_cond::mark_t& mark, unsigned int dst);
     const cubeset& get_cubeset() const;
     bool succ_contiguous() const;
     typedef digraph<cstate, transition> graph_t;
@@ -126,12 +126,12 @@ namespace spot
     typedef graph_t::edge_storage_t edge_storage_t;
     const graph_t::edge_storage_t&
       trans_storage(std::shared_ptr<trans_index> ci,
-		    unsigned int seed = 0) const
+                    unsigned int seed = 0) const
     {
       return theg_.edge_storage(ci->current(seed));
     }
     const transition& trans_data(std::shared_ptr<trans_index> ci,
-				 unsigned int seed = 0) const
+                                 unsigned int seed = 0) const
     {
       return theg_.edge_data(ci->current(seed));
     }
@@ -142,7 +142,7 @@ namespace spot
     }
 
     friend SPOT_API std::ostream& operator<<(std::ostream& os,
-    					     const twacube& twa);
+                                             const twacube& twa);
   private:
     unsigned int init_;
     acc_cond acc_;
