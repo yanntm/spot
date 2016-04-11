@@ -159,9 +159,9 @@ struct Thread {
  * One has to wonder why this is missing from the C++0x stdlib.
  */
 struct SpinLock {
-    std::atomic_flag b;
+    std::atomic_flag b = ATOMIC_FLAG_INIT;;
 
-    SpinLock() : b( ATOMIC_FLAG_INIT ) {}
+    SpinLock() {}
 
     void lock() {
         while( b.test_and_set() );
