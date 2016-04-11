@@ -79,9 +79,9 @@ namespace spot
     bool incompatible = false;
     for (unsigned int i = 0; i < uint_size_ && !incompatible; ++i)
       {
-	true_elt = *(lhs+i) | *(rhs+i);
-	false_elt = *(lhs+i+uint_size_) | *(rhs+i+uint_size_);
-	incompatible |=  (true_elt & false_elt);
+        true_elt = *(lhs+i) | *(rhs+i);
+        false_elt = *(lhs+i+uint_size_) | *(rhs+i+uint_size_);
+        incompatible |=  (true_elt & false_elt);
       }
     return !incompatible;
   }
@@ -91,8 +91,8 @@ namespace spot
     auto* res = new unsigned int[2*uint_size_];
     for (unsigned int i = 0; i < uint_size_; ++i)
       {
-	res[i] = *(lhs+i) | *(rhs+i);
-	res[i+uint_size_] = *(lhs+i+uint_size_) | *(rhs+i+uint_size_);
+        res[i] = *(lhs+i) | *(rhs+i);
+        res[i+uint_size_] = *(lhs+i+uint_size_) | *(rhs+i+uint_size_);
       }
     return res;
   }
@@ -119,11 +119,11 @@ namespace spot
   {
     for (unsigned int i = 0; i < 2*uint_size_; ++i)
       {
-	if (i == uint_size_)
-	  std::cout << '\n';
+        if (i == uint_size_)
+          std::cout << '\n';
 
-	for (unsigned x = 0; x < nb_bits_; ++x)
-	  std::cout << ((*(c+i) >> x) & 1);
+        for (unsigned x = 0; x < nb_bits_; ++x)
+          std::cout << ((*(c+i) >> x) & 1);
       }
     std::cout << '\n';
   }
@@ -135,24 +135,24 @@ namespace spot
     unsigned int cpt = 0;
     for (unsigned int i = 0; i < uint_size_; ++i)
       {
-	for (unsigned x = 0; x < nb_bits_ && cpt != size_; ++x)
-	  {
-	    bool true_var = (*(c+i) >> x) & 1;
-	    bool false_var = (*(c+i+uint_size_) >> x) & 1;
-	    if (true_var)
-	      {
-		oss << aps[cpt]
-		    << (cpt != (size_ - 1) ? "&": "");
-		all_free = false;
-	      }
-	    else if (false_var)
-	      {
-		oss << '!' << aps[cpt]
-		    << (cpt != (size_ - 1) ? "&": "");
-		all_free = false;
-	      }
-	    ++cpt;
-	  }
+        for (unsigned x = 0; x < nb_bits_ && cpt != size_; ++x)
+          {
+            bool true_var = (*(c+i) >> x) & 1;
+            bool false_var = (*(c+i+uint_size_) >> x) & 1;
+            if (true_var)
+              {
+                oss << aps[cpt]
+                    << (cpt != (size_ - 1) ? "&": "");
+                all_free = false;
+              }
+            else if (false_var)
+              {
+                oss << '!' << aps[cpt]
+                    << (cpt != (size_ - 1) ? "&": "");
+                all_free = false;
+              }
+            ++cpt;
+          }
       }
     if (all_free)
       oss << '1';

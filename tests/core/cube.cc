@@ -31,9 +31,9 @@
 
 
 static bool test_translation(bdd& input,  spot::cubeset& cubeset,
-			     std::unordered_map<int, int>& binder,
-			     std::unordered_map<int, int>& reverse_binder,
-			     std::vector<std::string>& aps)
+                             std::unordered_map<int, int>& binder,
+                             std::unordered_map<int, int>& reverse_binder,
+                             std::vector<std::string>& aps)
 {
   // The BDD used to detect if the convertion works
   bdd res = bddfalse;

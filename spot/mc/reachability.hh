@@ -27,8 +27,8 @@ namespace spot
   /// of a kripkecube. The algorithm uses a single DFS since it
   /// is the most efficient in a sequential setting
   template<typename State, typename SuccIterator,
-	   typename StateHash, typename StateEqual,
-	   typename Visitor>
+           typename StateHash, typename StateEqual,
+           typename Visitor>
   class SPOT_API seq_reach_kripke
   {
   public:
@@ -59,32 +59,32 @@ namespace spot
       visited[initial] = ++dfs_number;
       self().push(initial, dfs_number);
       while (!todo.empty())
-      	{
-      	  if (todo.back().it->done())
-      	    {
-      	      sys_.recycle(todo.back().it);
-      	      todo.pop_back();
-      	    }
-      	  else
-      	    {
-      	      ++transitions;
-      	      State dst = todo.back().it->state();
-      	      auto it  = visited.insert({dst, dfs_number+1});
-	      if (it.second)
-      		{
-		  ++dfs_number;
-      		  self().push(dst, dfs_number);
-      		  self().edge(visited[todo.back().s], dfs_number);
-      		  todo.back().it->next();
-      		  todo.push_back({dst, sys_.succ(dst)});
-      		}
-      	      else
-      		{
-      		  self().edge(visited[todo.back().s], visited[dst]);
-      		  todo.back().it->next();
-      		}
-      	    }
-      	}
+        {
+          if (todo.back().it->done())
+            {
+              sys_.recycle(todo.back().it);
+              todo.pop_back();
+            }
+          else
+            {
+              ++transitions;
+              State dst = todo.back().it->state();
+              auto it  = visited.insert({dst, dfs_number+1});
+              if (it.second)
+                {
+                  ++dfs_number;
+                  self().push(dst, dfs_number);
+                  self().edge(visited[todo.back().s], dfs_number);
+                  todo.back().it->next();
+                  todo.push_back({dst, sys_.succ(dst)});
+                }
+              else
+                {
+                  self().edge(visited[todo.back().s], visited[dst]);
+                  todo.back().it->next();
+                }
+            }
+        }
       self().finalize();
     }
 
@@ -109,7 +109,7 @@ namespace spot
     // FIXME: The system already handle a set of visited states so
     // this map is redundant: an we avoid this new map?
     typedef std::unordered_map<const State, int,
-    			       StateHash, StateEqual> visited_map;
+                               StateHash, StateEqual> visited_map;
     visited_map visited;
     unsigned int dfs_number = 0;
     unsigned int transitions = 0;
