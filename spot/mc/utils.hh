@@ -27,18 +27,18 @@
 namespace spot
 {
   template<typename State, typename SuccIterator,
-	   typename StateHash, typename StateEqual>
+           typename StateHash, typename StateEqual>
   class SPOT_API kripke_to_twa :
     public seq_reach_kripke<State, SuccIterator,
-			    StateHash, StateEqual,
-			    kripke_to_twa<State, SuccIterator,
-					  StateHash, StateEqual>>
+                            StateHash, StateEqual,
+                            kripke_to_twa<State, SuccIterator,
+                                          StateHash, StateEqual>>
   {
   public:
     kripke_to_twa(kripkecube<State, SuccIterator>& sys, bdd_dict_ptr dict)
       : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
-			 kripke_to_twa<State, SuccIterator,
-				       StateHash, StateEqual>>(sys),
+                         kripke_to_twa<State, SuccIterator,
+                                       StateHash, StateEqual>>(sys),
       dict_(dict)
       {}
 
@@ -57,10 +57,10 @@ namespace spot
       // Compute the reverse binder.
       auto aps = this->sys_.get_ap();
       for (unsigned i = 0; i < aps.size(); ++i)
-	{
-	  auto k = res_->register_ap(aps[i]);
-	  reverse_binder_.insert({i, k});
-	}
+        {
+          auto k = res_->register_ap(aps[i]);
+          reverse_binder_.insert({i, k});
+        }
     }
 
     void push(State s, unsigned i)
@@ -74,7 +74,7 @@ namespace spot
     {
       cubeset cs(this->sys_.get_ap().size());
       bdd cond = cube_to_bdd(this->todo.back().it->condition(),
-			     cs, reverse_binder_);
+                             cs, reverse_binder_);
       res_->new_edge(src, dst, cond);
     }
 
@@ -101,25 +101,25 @@ namespace spot
 
 
   template<typename State, typename SuccIterator,
-	   typename StateHash, typename StateEqual>
+           typename StateHash, typename StateEqual>
   class SPOT_API product_to_twa :
     public intersect<State, SuccIterator,
-		     StateHash, StateEqual,
-		     product_to_twa<State, SuccIterator,
-				    StateHash, StateEqual>>
+                     StateHash, StateEqual,
+                     product_to_twa<State, SuccIterator,
+                                    StateHash, StateEqual>>
   {
     // Ease the manipulation
     using typename intersect<State, SuccIterator, StateHash, StateEqual,
-			     product_to_twa<State, SuccIterator,
-					    StateHash,
-					    StateEqual>>::product_state;
+                             product_to_twa<State, SuccIterator,
+                                            StateHash,
+                                            StateEqual>>::product_state;
 
   public:
     product_to_twa(kripkecube<State, SuccIterator>& sys,
                    twacube* twa)
       : intersect<State, SuccIterator, StateHash, StateEqual,
-		  product_to_twa<State, SuccIterator,
-				 StateHash, StateEqual>>(sys, twa)
+                  product_to_twa<State, SuccIterator,
+                                 StateHash, StateEqual>>(sys, twa)
       {
       }
 
@@ -141,50 +141,50 @@ namespace spot
 
       int i = 0;
       for (auto ap : this->twa_->get_ap())
-	{
-	  auto idx = res_->register_ap(ap);
-	  std::cout << ap << idx << std::endl;
-	  reverse_binder_[i++] = idx;
-	}
+        {
+          auto idx = res_->register_ap(ap);
+          std::cout << ap << idx << std::endl;
+          reverse_binder_[i++] = idx;
+        }
     }
 
     bool push_state(product_state s, unsigned i, acc_cond::mark_t)
     {
       // push also implies edge (when it's not the initial state)
       if (this->todo.size())
-	{
-	  auto c = this->twa_->get_cubeset()
-	    .intersection(this->twa_->trans_data
-			  (this->todo.back().it_prop).cube_,
-			  this->todo.back().it_kripke->condition());
+        {
+          auto c = this->twa_->get_cubeset()
+            .intersection(this->twa_->trans_data
+                          (this->todo.back().it_prop).cube_,
+                          this->todo.back().it_kripke->condition());
 
-	  bdd x = spot::cube_to_bdd(c, this->twa_->get_cubeset(),
-				    reverse_binder_);
-	  this->twa_->get_cubeset().release(c);
-	  res_->new_edge(this->map[this->todo.back().st]-1, i-1, x,
-			 this->twa_->trans_data
-			 (this->todo.back().it_prop).acc_);
-	}
+          bdd x = spot::cube_to_bdd(c, this->twa_->get_cubeset(),
+                                    reverse_binder_);
+          this->twa_->get_cubeset().release(c);
+          res_->new_edge(this->map[this->todo.back().st]-1, i-1, x,
+                         this->twa_->trans_data
+                         (this->todo.back().it_prop).acc_);
+        }
 
       unsigned st = res_->new_state();
       names_->push_back(this->sys_.to_string(s.st_kripke) +
-			('*' + std::to_string(s.st_prop)));
+                        ('*' + std::to_string(s.st_prop)));
       assert(st+1 == i);
       return true;
     }
 
 
     bool update(product_state, unsigned src,
-		product_state, unsigned dst,
-  		acc_cond::mark_t cond)
+                product_state, unsigned dst,
+                acc_cond::mark_t cond)
     {
       auto c = this->twa_->get_cubeset()
-	.intersection(this->twa_->trans_data
-		      (this->todo.back().it_prop).cube_,
-		      this->todo.back().it_kripke->condition());
+        .intersection(this->twa_->trans_data
+                      (this->todo.back().it_prop).cube_,
+                      this->todo.back().it_kripke->condition());
 
       bdd x = spot::cube_to_bdd(c, this->twa_->get_cubeset(),
-				reverse_binder_);
+                                reverse_binder_);
       this->twa_->get_cubeset().release(c);
       res_->new_edge(src-1, dst-1, x, cond);
       return false;

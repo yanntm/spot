@@ -33,23 +33,23 @@ namespace spot
   /// into a \a cube cube passed in parameter. The parameter
   /// \a binder map bdd indexes to cube indexes.
   SPOT_API spot::cube satone_to_cube(bdd one, cubeset& cubeset,
-				     std::unordered_map<int, int>& binder);
+                                     std::unordered_map<int, int>& binder);
 
   /// \brief Transform a \a cube cube into bdd using the map
   /// that bind cube indexes to bdd indexes.
   SPOT_API bdd cube_to_bdd(spot::cube cube, const cubeset& cubeset,
-  			   std::unordered_map<int, int>& reverse_binder);
+                           std::unordered_map<int, int>& reverse_binder);
 
   /// \brief Extract the atomic propositions from the automaton
   SPOT_API std::vector<std::string>*
   extract_aps(spot::twa_graph_ptr& aut,
-	      std::unordered_map<int, int>& ap_binder);
+              std::unordered_map<int, int>& ap_binder);
 
   /// \brief Convert a twa into a twacube
   SPOT_API spot::twacube*
   twa_to_twacube(spot::twa_graph_ptr& aut,
-		 std::unordered_map<int, int>& ap_binder,
-		 std::vector<std::string>& aps);
+                 std::unordered_map<int, int>& ap_binder,
+                 std::vector<std::string>& aps);
 
   /// \brief Convert a twacube into a twa
   SPOT_API spot::twa_graph_ptr
