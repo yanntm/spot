@@ -62,10 +62,10 @@ int main()
   for (int i = 0; i < 6; i++)
     workers.
       push_back(std::thread([&ht2](int tid)
-			    {
-			      for (int i = 0; i< 2000; ++i)
-				ht2.insert({i, tid});
-			    }, i));
+                            {
+                              for (int i = 0; i< 2000; ++i)
+                                ht2.insert({i, tid});
+                            }, i));
 
   // Wait the end of all threads.
   for (auto& t: workers)
@@ -75,6 +75,6 @@ int main()
   for (unsigned i = 0; i < ht2.size(); ++ i)
     if (ht2.valid(i))
       std::cout << i << ": {"
-		<< ht2[i].x << ',' << ht2[i].y  << "}\n";
+                << ht2[i].x << ',' << ht2[i].y  << "}\n";
   return 0;
 }
