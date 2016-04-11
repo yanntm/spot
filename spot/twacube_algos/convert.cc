@@ -23,45 +23,45 @@
 namespace spot
 {
   spot::cube satone_to_cube(bdd one, cubeset& cubeset,
-			    std::unordered_map<int, int>& binder)
+                            std::unordered_map<int, int>& binder)
   {
     auto cube = cubeset.alloc();
     while (one != bddtrue)
       {
-	if (bdd_high(one) == bddfalse)
-	  {
-	    assert(binder.find(bdd_var(one)) != binder.end());
-	    cubeset.set_false_var(cube, binder[bdd_var(one)]);
-	    one = bdd_low(one);
-	  }
-	else
-	  {
-	    assert(binder.find(bdd_var(one)) != binder.end());
-	    cubeset.set_true_var(cube, binder[bdd_var(one)]);
-	    one = bdd_high(one);
-	  }
+        if (bdd_high(one) == bddfalse)
+          {
+            assert(binder.find(bdd_var(one)) != binder.end());
+            cubeset.set_false_var(cube, binder[bdd_var(one)]);
+            one = bdd_low(one);
+          }
+        else
+          {
+            assert(binder.find(bdd_var(one)) != binder.end());
+            cubeset.set_true_var(cube, binder[bdd_var(one)]);
+            one = bdd_high(one);
+          }
       }
     return cube;
   }
 
   bdd cube_to_bdd(spot::cube cube, const cubeset& cubeset,
-		  std::unordered_map<int, int>& reverse_binder)
+                  std::unordered_map<int, int>& reverse_binder)
   {
     bdd result = bddtrue;
     for (unsigned int i = 0; i < cubeset.size(); ++i)
       {
-    	assert(reverse_binder.find(i) != reverse_binder.end());
-	if (cubeset.is_false_var(cube, i))
-    	  result &= bdd_nithvar(reverse_binder[i]);
-	if (cubeset.is_true_var(cube, i))
-    	  result &= bdd_ithvar(reverse_binder[i]);
+        assert(reverse_binder.find(i) != reverse_binder.end());
+        if (cubeset.is_false_var(cube, i))
+          result &= bdd_nithvar(reverse_binder[i]);
+        if (cubeset.is_true_var(cube, i))
+          result &= bdd_ithvar(reverse_binder[i]);
       }
     return result;
   }
 
   spot::twacube* twa_to_twacube(spot::twa_graph_ptr& aut,
-				std::unordered_map<int, int>& ap_binder,
-				std::vector<std::string>& aps)
+                                std::unordered_map<int, int>& ap_binder,
+                                std::vector<std::string>& aps)
   {
     // Declare the twa cube
     spot::twacube* tg = new spot::twacube(aps);
@@ -86,29 +86,29 @@ namespace spot
     // spot::cube cube(aps);
     for (unsigned n = 0; n < aut->num_states(); ++n)
       for (auto& t: aut->out(n))
-    	{
-    	  bdd cond = t.cond;
+        {
+          bdd cond = t.cond;
 
-    	  // Special case for bddfalse
-    	  if (cond == bddfalse)
-    	    {
-	      spot::cube cube = tg->get_cubeset().alloc();
-	      for (unsigned int i = 0; i < cs.size(); ++i)
-		cs.set_false_var(cube, i); // FIXME ! use fill!
-    	      tg->create_transition(st_binder[n], cube,
-    				    t.acc, st_binder[t.dst]);
-    	    }
-    	  else
-    	    // Split the bdd into multiple transitions
-    	    while (cond != bddfalse)
-    	      {
-    		bdd one = bdd_satone(cond);
-    		cond -= one;
-		spot::cube cube =spot::satone_to_cube(one, cs, ap_binder);
-    		tg->create_transition(st_binder[n], cube, t.acc,
-    				      st_binder[t.dst]);
-    	      }
-    	}
+          // Special case for bddfalse
+          if (cond == bddfalse)
+            {
+              spot::cube cube = tg->get_cubeset().alloc();
+              for (unsigned int i = 0; i < cs.size(); ++i)
+                cs.set_false_var(cube, i); // FIXME ! use fill!
+              tg->create_transition(st_binder[n], cube,
+                                    t.acc, st_binder[t.dst]);
+            }
+          else
+            // Split the bdd into multiple transitions
+            while (cond != bddfalse)
+              {
+                bdd one = bdd_satone(cond);
+                cond -= one;
+                spot::cube cube =spot::satone_to_cube(one, cs, ap_binder);
+                tg->create_transition(st_binder[n], cube, t.acc,
+                                      st_binder[t.dst]);
+              }
+        }
     // Must be contiguous to support swarming.
     assert(tg->succ_contiguous());
     return tg;
@@ -116,17 +116,17 @@ namespace spot
 
   std::vector<std::string>*
   extract_aps(spot::twa_graph_ptr& aut,
-	      std::unordered_map<int, int>& ap_binder)
+              std::unordered_map<int, int>& ap_binder)
   {
     std::vector<std::string>* aps = new std::vector<std::string>();
     for (auto f: aut->ap())
       {
-	int size = aps->size();
-	if (std::find(aps->begin(), aps->end(), f.ap_name()) == aps->end())
-	  {
-	    aps->push_back(f.ap_name());
-	    ap_binder.insert({aut->get_dict()->var_map[f], size});
-	  }
+        int size = aps->size();
+        if (std::find(aps->begin(), aps->end(), f.ap_name()) == aps->end())
+          {
+            aps->push_back(f.ap_name());
+            ap_binder.insert({aut->get_dict()->var_map[f], size});
+          }
       }
     return aps;
   }
@@ -153,26 +153,26 @@ namespace spot
     // Build all resulting states
     for (unsigned int i = 0; i < theg.num_states(); ++i)
       {
-	unsigned st = res->new_state();
-	(void) st;
-	assert(st == i);
+        unsigned st = res->new_state();
+        (void) st;
+        assert(st == i);
       }
 
     // Build all resulting conditions.
     for (unsigned int i = 1; i <= theg.num_edges(); ++i)
       {
-	bdd cond = bddtrue;
-	for (unsigned j = 0; j < cs.size(); ++j)
-	  {
-	    if (cs.is_true_var(theg.edge_data(i).cube_, j))
-	      cond &= bdd_ithvar(bdds_ref[j]);
-	    else if (cs.is_false_var(theg.edge_data(i).cube_, j))
-	      cond &= bdd_nithvar(bdds_ref[j]);
-	    // otherwise it 's a free variable do nothing
-	  }
+        bdd cond = bddtrue;
+        for (unsigned j = 0; j < cs.size(); ++j)
+          {
+            if (cs.is_true_var(theg.edge_data(i).cube_, j))
+              cond &= bdd_ithvar(bdds_ref[j]);
+            else if (cs.is_false_var(theg.edge_data(i).cube_, j))
+              cond &= bdd_nithvar(bdds_ref[j]);
+            // otherwise it 's a free variable do nothing
+          }
 
-	res->new_edge(theg.edge_storage(i).src, theg.edge_storage(i).dst,
-		      cond, theg.edge_data(i).acc_);
+        res->new_edge(theg.edge_storage(i).src, theg.edge_storage(i).dst,
+                      cond, theg.edge_data(i).acc_);
       }
 
     // Fix the initial state
