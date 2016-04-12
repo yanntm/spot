@@ -71,5 +71,8 @@ namespace spot
 
     virtual void* get_extra_data(const state* st) const = 0;
     virtual void set_extra_data(const state* st, void* extra) const = 0;
+    virtual bool is_unknown() const = 0;
+
+
   };
 }

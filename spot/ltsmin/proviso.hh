@@ -144,6 +144,13 @@ namespace spot
       if (BasicCheck && (src_expanded || dst_expanded))
 	return -1;
 
+      if (i.is_unknown() && Delayed &&
+          i.get_colors(src)[1]) // Sate is marked for expansion
+        {
+          i.get_colors(src)[2] = false; // top become dangerous
+          return -1;
+        }
+
       return choose(src_pos, dst_pos, src, dst, i);
     }
 

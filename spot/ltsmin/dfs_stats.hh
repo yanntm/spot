@@ -339,7 +339,7 @@ namespace spot
 			      });
 
 	  // For reverse anticipation, we must process first at least one
-	  // backedge.
+	  // selfloop.
 	  if (switch_pos != -1)
 	    todo.back().it->consider_first((unsigned)switch_pos);
 	}
@@ -613,6 +613,10 @@ namespace spot
     virtual void set_extra_data(const state* st, void* extra) const
     {
       seen[st].extra = extra;
+    }
+    virtual bool is_unknown() const
+    {
+      return ReverseAnticipated;
     }
   private:
     const_twa_ptr aut_;		///< The spot::tgba to explore.
