@@ -105,11 +105,11 @@ namespace spot
   {
   public:
     twacube() = delete;
-    twacube(const std::vector<std::string>& aps);
+    twacube(const std::vector<std::string> aps);
     virtual ~twacube();
     const acc_cond& acc() const;
     acc_cond& acc();
-    const std::vector<std::string>& get_ap();
+    std::vector<std::string> get_ap();
     unsigned int new_state();
     void set_initial(unsigned int init);
     unsigned int get_initial();
@@ -146,7 +146,7 @@ namespace spot
   private:
     unsigned int init_;
     acc_cond acc_;
-    const std::vector<std::string>& aps_;
+    const std::vector<std::string> aps_;
     graph_t theg_;
     cubeset cubeset_;
   };
