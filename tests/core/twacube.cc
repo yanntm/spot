@@ -46,29 +46,23 @@ int main()
   tg->new_edge(s3, s2, p1 >> p2, 0U);
   tg->new_edge(s3, s3, bddtrue, spot::acc_cond::mark_t({0, 1}));
 
-  // Map Bdd indexes to cube indexes
-  std::unordered_map<int, int> ap_binder;
-
-  // Get the set of propositions used by this automaton
-  std::vector<std::string>* aps = extract_aps(tg, ap_binder);
-
   // Test translation
-  auto* aut = twa_to_twacube(tg, ap_binder, *aps);
+  auto* aut = twa_to_twacube(tg);
   spot::print_dot(std::cout, tg);
   std::cout << "-----------\n" << *aut << "-----------\n";
 
+  const std::vector<std::string>& aps = aut->get_ap();
   unsigned int seed = 17;
   for (auto it = aut->succ(2); !it->done(); it->next())
     {
       auto& t = aut->trans_storage(it, seed);
       auto& d = aut->trans_data(it, seed);
       std::cout << t.src << ' ' << t.dst << ' '
-                << ' ' << aut->get_cubeset().dump(d.cube_, *aps)
+                << ' ' << aut->get_cubeset().dump(d.cube_, aps)
                 << ' ' << d.acc_
                 << std::endl;
     }
 
   spot::print_dot(std::cout, spot::twacube_to_twa(aut));
-  delete aps;
   delete aut;
 }
