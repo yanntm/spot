@@ -59,12 +59,14 @@ namespace spot
     return result;
   }
 
-  spot::twacube* twa_to_twacube(spot::twa_graph_ptr& aut,
-                                std::unordered_map<int, int>& ap_binder,
-                                std::vector<std::string>& aps)
+  spot::twacube* twa_to_twacube(const spot::const_twa_graph_ptr aut)
   {
+    // Compute the necessary binder and extract atomic propositions
+    std::unordered_map<int, int> ap_binder;
+    std::vector<std::string>* aps = extract_aps(aut, ap_binder);
+
     // Declare the twa cube
-    spot::twacube* tg = new spot::twacube(aps);
+    spot::twacube* tg = new spot::twacube(*aps);
 
     // Fix acceptance
     tg->acc() = aut->acc();
@@ -111,11 +113,12 @@ namespace spot
         }
     // Must be contiguous to support swarming.
     assert(tg->succ_contiguous());
+    delete aps;
     return tg;
   }
 
   std::vector<std::string>*
-  extract_aps(spot::twa_graph_ptr& aut,
+  extract_aps(const spot::const_twa_graph_ptr aut,
               std::unordered_map<int, int>& ap_binder)
   {
     std::vector<std::string>* aps = new std::vector<std::string>();
