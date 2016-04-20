@@ -40,16 +40,15 @@ namespace spot
   SPOT_API bdd cube_to_bdd(spot::cube cube, const cubeset& cubeset,
                            std::unordered_map<int, int>& reverse_binder);
 
-  /// \brief Extract the atomic propositions from the automaton
+  /// \brief Extract the atomic propositions from the automaton. This method
+  /// also fill the binder, i.e. the mapping between BDD indexes to cube indexes
   SPOT_API std::vector<std::string>*
-  extract_aps(spot::twa_graph_ptr& aut,
+  extract_aps(spot::const_twa_graph_ptr aut,
               std::unordered_map<int, int>& ap_binder);
 
   /// \brief Convert a twa into a twacube
   SPOT_API spot::twacube*
-  twa_to_twacube(spot::twa_graph_ptr& aut,
-                 std::unordered_map<int, int>& ap_binder,
-                 std::vector<std::string>& aps);
+  twa_to_twacube(spot::const_twa_graph_ptr aut);
 
   /// \brief Convert a twacube into a twa
   SPOT_API spot::twa_graph_ptr
