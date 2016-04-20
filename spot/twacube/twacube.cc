@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015 Laboratoire de Recherche et Developpement de
+// Copyright (C) 2015, 2016 Laboratoire de Recherche et Developpement de
 // l'EPITA (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -52,7 +52,7 @@ namespace spot
   transition::transition()
   { }
 
-  twacube::twacube(const std::vector<std::string>& aps):
+  twacube::twacube(const std::vector<std::string> aps):
     init_(0U), aps_(aps), cubeset_(aps.size())
   {
   }
@@ -74,7 +74,7 @@ namespace spot
     return acc_;
   }
 
-  const std::vector<std::string>&  twacube::get_ap()
+  std::vector<std::string> twacube::get_ap()
   {
     return aps_;
   }
