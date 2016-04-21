@@ -36,6 +36,11 @@
 #include <spot/kripke/kripkegraph.hh>
 #include <spot/twaalgos/hoa.hh>
 
+#include <thread>
+#include <spot/twacube/twacube.hh>
+#include <spot/twacube_algos/convert.hh>
+#include <spot/mc/ec.hh>
+
 const char argp_program_doc[] =
 "Process model and formula to check wether a "
 "model meets a specification.\v\
@@ -61,6 +66,7 @@ struct mc_options_
   bool use_timer = false;
   unsigned compress = 0;
   bool kripke_output = false;
+  unsigned nb_threads = 1;
 } mc_options;
 
 
@@ -99,6 +105,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 'm':
       mc_options.model = arg;
       break;
+    case 'p':
+      mc_options.nb_threads = to_unsigned(arg);
+      break;
     case 's':
       mc_options.dead_ap = arg;
       break;
@@ -127,11 +136,10 @@ static const argp_option options[] =
     { "counterexample", 'c', nullptr, 0,
       "compute an accepting counterexample (if it exists)", 0 },
     { "is-empty", 'e', nullptr, 0,
-      "check if the model meets its specification using "
-      "the (sequential) algorithm as described "
-      "in [Renault et al, LPAR'13]. Return 1 if a counterexample "
-      "is found."
+      "check if the model meets its specification. "
+      "Return 1 if a counterexample is found."
       , 0 },
+    { "parallel", 'p', "INT", 0, "use INT threads (when possible)", 0 },
     { "selfloopize", 's', "STRING", 0,
       "use STRING as property for marking deadlock "
       "states (by default selfloopize is activated with STRING='true')", 0 },
@@ -172,7 +180,7 @@ static int checked_main()
   spot::atomic_prop_set ap;
   auto dict = spot::make_bdd_dict();
   spot::const_kripke_ptr model = nullptr;
-  spot::const_twa_ptr prop = nullptr;
+  spot::const_twa_graph_ptr prop = nullptr;
   spot::const_twa_ptr product = nullptr;
   spot::emptiness_check_instantiator_ptr echeck_inst = nullptr;
   int exit_code = 0;
@@ -256,7 +264,9 @@ static int checked_main()
         }
     }
 
-  if (mc_options.formula != nullptr &&
+
+  if (mc_options.nb_threads == 1 &&
+      mc_options.formula != nullptr &&
       mc_options.model != nullptr)
     {
       product = spot::otf_product(model, prop);
@@ -348,6 +358,73 @@ static int checked_main()
           spot::print_dot(std::cout, product);
           tm.stop("dot output");
         }
+    }
+
+    if (mc_options.nb_threads != 1 &&
+        mc_options.formula != nullptr &&
+        mc_options.model != nullptr)
+    {
+      unsigned int hc = std::thread::hardware_concurrency();
+      if (mc_options.nb_threads > hc)
+        std::cerr << "Warning: you require " << mc_options.nb_threads
+                  << " threads, but your computer only support " << hc
+                  << ". This could slow down parallel algorithms.\n";
+
+      tm.start("twa to twacube");
+      auto* propcube = spot::twa_to_twacube(prop);
+      tm.stop("twa to twacube");
+
+      tm.start("load kripkecube");
+      spot::kripkecube<spot::cspins_state,
+                       spot::cspins_iterator>* modelcube = nullptr;
+      try
+        {
+          modelcube = spot::ltsmin_model::load(mc_options.model)
+            .kripkecube(&ap, deadf, mc_options.compress);
+        }
+      catch (std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      int memused = spot::memusage();
+      tm.start("emptiness check");
+      auto res = spot::ltsmin_model::modelcheck
+        (modelcube, propcube, mc_options.compute_counterexample);
+      tm.stop("emptiness check");
+      memused = spot::memusage() - memused;
+
+      if (!modelcube)
+        {
+          delete propcube;
+          exit_code = 2;
+          goto safe_exit;
+        }
+
+      // Display statistics
+      std::cout << std::get<2>(res).states << " unique states visited\n";
+      std::cout << std::get<2>(res).instack_sccs
+                << " strongly connected components in search stack\n";
+      std::cout << std::get<2>(res).transitions
+                << " transitions explored\n";
+      std::cout << std::get<2>(res).instack_item
+                << " items max in DFS search stack\n";
+      std::cout << memused << " pages allocated for emptiness check\n";
+
+      if (!std::get<0>(res))
+        std::cout << "no accepting run found";
+      else if (!mc_options.compute_counterexample)
+        {
+          std::cout << "an accepting run exists "
+                    << "(use -c to print it)" << std::endl;
+          exit_code = 1;
+        }
+      else
+        std::cout << "an accepting run exists!\n" << std::get<1>(res)
+                  << std::endl;
+      delete modelcube;
+      delete propcube;
     }
 
  safe_exit:
