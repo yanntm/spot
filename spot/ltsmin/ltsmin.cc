@@ -42,6 +42,7 @@
 #include <string.h>
 #include <spot/twacube/cube.hh>
 #include <spot/mc/utils.hh>
+#include <spot/mc/ec.hh>
 
 #include <bricks/brick-hashset.h>
 #include <bricks/brick-hash.h>
@@ -2006,6 +2007,20 @@ namespace spot
 
   ltsmin_model::~ltsmin_model()
   {
+  }
+
+  std::tuple<bool, std::string, istats>
+  ltsmin_model::modelcheck(spot::kripkecube<spot::cspins_state,
+                                            spot::cspins_iterator>* sys,
+                           spot::twacube* twa, bool compute_ctrx)
+  {
+    ec_renault13lpar<cspins_state, cspins_iterator,
+                     cspins_state_hash, cspins_state_equal> ec(*sys, twa);
+    bool has_ctrx = ec.run();
+    std::string trace = "";
+    if (has_ctrx && compute_ctrx)
+      trace = ec.trace();
+    return std::make_tuple(has_ctrx, trace, ec.stats());
   }
 
   int ltsmin_model::state_size() const

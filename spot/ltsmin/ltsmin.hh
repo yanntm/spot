@@ -20,7 +20,10 @@
 #pragma once
 
 #include <spot/kripke/kripke.hh>
+#include <spot/twacube/twacube.hh>
 #include <spot/tl/apcollect.hh>
+#include <tuple>
+#include <spot/mc/intersect.hh>
 
 namespace spot
 {
@@ -80,6 +83,14 @@ namespace spot
     kripkecube(const atomic_prop_set* to_observe,
                formula dead = formula::tt(),
                int compress = 0) const;
+
+    /// \brief Check for the emptiness between a system and a twa.
+    /// Return a pair containing a boolean indicating wether a counterexample
+    /// has been found and a string representing the counterexample if the
+    /// computation have been required
+    static std::tuple<bool, std::string, istats>
+    modelcheck(spot::kripkecube<spot::cspins_state, spot::cspins_iterator>* sys,
+               spot::twacube* twa, bool compute_ctrx = false);
 
     /// Number of variables in a state
     int state_size() const;
