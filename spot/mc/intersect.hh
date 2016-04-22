@@ -25,6 +25,17 @@
 
 namespace spot
 {
+  /// \brief Wrapper to accumulate results from intersection
+  /// and emptiness checks
+  struct SPOT_API istats
+  {
+    unsigned states;
+    unsigned transitions;
+    unsigned sccs;
+    unsigned instack_sccs;
+    unsigned instack_item;
+  };
+
   /// \brief This class explores (with a DFS) a product between a
   /// system and a twa. This exploration is performed on-the-fly.
   /// Since this exploration aims to be a generic we need to define
@@ -154,12 +165,9 @@ namespace spot
       return self().trace();
     }
 
-
-    virtual std::string stats()
+    virtual istats stats()
     {
-      return
-        std::to_string(dfs_number) + " unique states visited\n" +
-        std::to_string(transitions) + " transitions explored\n";
+      return {dfs_number, transitions, 0U, 0U, 0U};
     }
 
   protected:
