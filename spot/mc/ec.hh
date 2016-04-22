@@ -49,7 +49,7 @@ namespace spot
       : intersect<State, SuccIterator, StateHash, StateEqual,
                   ec_renault13lpar<State, SuccIterator,
                                    StateHash, StateEqual>>(sys, twa),
-      acc_(twa->acc())
+      acc_(twa->acc()), sccs_(0U)
       {
       }
 
@@ -89,8 +89,10 @@ namespace spot
       if (top_dfsnum == roots_.back().dfsnum)
         {
           roots_.pop_back();
+          ++sccs_;
           uf_.markdead(top_dfsnum);
         }
+      dfs_ = this->todo.size()  > dfs_ ? this->todo.size() : dfs_;
       return true;
     }
 
@@ -238,14 +240,10 @@ namespace spot
       return res;
     }
 
-    // Refine stats to display
-    virtual std::string stats() override
+    virtual istats stats() override
     {
-      return
-        std::to_string(this->dfs_number) + " unique states visited\n" +
-        std::to_string(roots_.size()) +
-        " strongly connected components in search stack\n" +
-        std::to_string(this->transitions) + " transitions explored\n";
+      return {this->states(), this->trans(), sccs_,
+              (unsigned)roots_.size(), dfs_};
     }
 
   private:
@@ -262,5 +260,7 @@ namespace spot
     std::vector<root_element> roots_;
     int_unionfind uf_;
     acc_cond acc_;
+    unsigned sccs_;
+    unsigned dfs_;
   };
 }
