@@ -29,7 +29,7 @@ namespace spot
 {
   struct spins_interface;
   class cspins_iterator;
-  using cspins_state = int*;
+  typedef int* cspins_state;
 
   class SPOT_API ltsmin_model final
   {
