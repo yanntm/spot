@@ -371,12 +371,11 @@ static int checked_main()
                   << ". This could slow down parallel algorithms.\n";
 
       tm.start("twa to twacube");
-      auto* propcube = spot::twa_to_twacube(prop);
+      auto propcube = spot::twa_to_twacube(prop);
       tm.stop("twa to twacube");
 
       tm.start("load kripkecube");
-      spot::kripkecube<spot::cspins_state,
-                       spot::cspins_iterator>* modelcube = nullptr;
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
       try
         {
           modelcube = spot::ltsmin_model::load(mc_options.model)
@@ -397,7 +396,6 @@ static int checked_main()
 
       if (!modelcube)
         {
-          delete propcube;
           exit_code = 2;
           goto safe_exit;
         }
@@ -423,8 +421,6 @@ static int checked_main()
       else
         std::cout << "an accepting run exists!\n" << std::get<1>(res)
                   << std::endl;
-      delete modelcube;
-      delete propcube;
     }
 
  safe_exit:
