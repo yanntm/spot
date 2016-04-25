@@ -254,7 +254,13 @@ checked_main(int argc, char **argv)
     // Setup proviso
   if (enable_por)
     {
-      if (strcmp (proviso_name.c_str(), "delexp") == 0)
+      if (strcmp (proviso_name.c_str(), "last") == 0)
+	{
+	  m_proviso = new spot::last_forever_provisos(anticipated,
+                                                      highlinks,
+                                                      fully_colored);
+	}
+      else if (strcmp (proviso_name.c_str(), "delexp") == 0)
 	{
 	  m_proviso = new spot::delayed_expandedlist_provisos(anticipated,
 							      highlinks, false,

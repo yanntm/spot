@@ -2060,4 +2060,319 @@ namespace spot
     std::mt19937 generator_;
   };
 
+
+
+
+
+
+
+
+
+
+  // LAST FOREVER? Special delayed summary (with / without) highlinks
+  class SPOT_API last_forever_provisos: public proviso
+  {
+    enum class color{ ORANGE, GREEN, PURPLE, RED };
+    struct data
+    {
+      color c;
+      bool mark;
+      int depth;
+      int mx_d;
+      const state* mx_s;
+    };
+    bool anticipated_;
+    bool highlink_;
+    bool FullyColored_;
+  public:
+    last_forever_provisos(bool anticipated = false,
+                          bool highlink = false,
+                          bool fullycolored = false):
+      anticipated_(anticipated),
+      highlink_(highlink),
+      FullyColored_(fullycolored)
+      { }
+
+    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    {
+      ++d_;
+      data* edata = new data({
+	  i.get_iterator(d_)->all_enabled() ? color::GREEN : color::ORANGE,
+	    false, d_, -1, nullptr});
+      i.set_extra_data(src, edata);
+      return false;
+    }
+
+    virtual int maybe_closingedge(const state* src,
+				  const state* dst,
+				  const dfs_inspector& i)
+    {
+      if (i.is_dead(dst))
+	return -1;
+
+      if (highlink_)
+	{
+	  // The destination is on the DFS stack, just update
+	  // highlink if needed.
+	  if (i.dfs_position(dst) != -1)
+	    {
+	      const state* src_highlink = i.get_highlink(src);
+	      if (src_highlink == nullptr ||
+	  	  i.dfs_position(src_highlink) < i.dfs_position(dst))
+	  	{
+	  	  i.set_highlink(src,  dst);
+	  	  assert(dst->compare(i.get_highlink(src)) == 0);
+	  	}
+	    }
+	  // Otherwise we have to compute the actual highlink of the
+	  // destination and compare it to the highlink of the source.
+	  else
+	    {
+	      const state* dst_highlink = i.get_highlink(dst);
+
+	      // if the highlink is not set, it means that we are not
+	      // computing SCC but highlinks correctness rely on SCC
+	      // computation.
+	      assert(dst_highlink != nullptr);
+	      assert(dst_highlink->compare(i.get_highlink(dst)) == 0);
+
+	      std::vector<const state*> v;
+	      v.push_back(dst);
+	      while (i.dfs_position(dst_highlink) == -1)
+	      	{
+	      	  v.push_back(dst_highlink);
+	      	  dst_highlink = i.get_highlink(dst_highlink);
+	      	  assert(dst_highlink != nullptr);
+	      	}
+	      for (auto q: v)
+	      	{
+	      	  i.set_highlink(q, dst_highlink);
+	      	  assert(dst_highlink->compare(i.get_highlink(q)) == 0);
+	      	}
+
+	      const state* src_highlink = i.get_highlink(src);
+	      if (src_highlink == nullptr ||
+	  	  i.dfs_position(src_highlink) < i.dfs_position(dst_highlink))
+	  	{
+	  	  i.set_highlink(src,  dst_highlink);
+	  	}
+	    }
+	}
+
+      data* data_src = (data*) i.get_extra_data(src);
+      data* data_dst = (data*) i.get_extra_data(dst);
+
+      if ((data_src->c == color::ORANGE || data_src->c == color::PURPLE) &&
+	  data_dst->c != color::GREEN)
+	{
+	  data_src->c = color::PURPLE;
+
+	  // Consider first self-loops
+	  if (data_src->mx_d == data_dst->depth)
+	    {
+	      expand(src, i);
+	      return d_;
+	    }
+	  else if (data_dst->c == color::ORANGE || data_dst->c == color::PURPLE)
+	    {
+              // With summary only track the highest.
+              if(data_src->mx_d < data_dst->depth)
+                {
+                  data_src->mx_d = data_dst->depth;
+                  data_src->mx_s = dst;
+                }
+	    }
+	  else if (data_dst->c == color::RED)
+	    {
+	      // FIXME dst is red and we should use highlinks
+	      if (highlink_)
+		{
+		  const state* hi = i.get_highlink(dst);
+		  data* data_hi =
+		    (data*) i.get_extra_data(hi);
+
+                  // If summary , then compares the highlink to the
+                  // successor of src with the highest position in the
+                  // DFS stack.
+                  if (data_src->mx_d < data_hi->depth)
+                    {
+                      data_src->mx_d = data_hi->depth;
+                      data_src->mx_s = hi;
+                    }
+                  return -1;
+		}
+	      expand(src, i);
+	      return d_;
+	    }
+	}
+
+      // This maybe closing-edge is "safe", i.e. expansions are not
+      // performed here
+      return -1;
+    }
+
+    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    {
+      if (highlink_)
+	{
+	  int src_pos = i.dfs_position(src);
+	  if (!i.is_root(src) && src_pos)
+	    {
+	      // We have to propagate highlinks. We must consider
+	      // two cases:
+	      //   (i)  highlink(src) == src, just set highlink(src) to
+	      //        the predecessor of src in the DFS stack.
+	      //   (ii) highlink(src) != src, just progate highlink(src)
+	      //        w.r.t. highlink mecanism.
+
+	      const state* newtop = i.dfs_state(src_pos-1);
+	      const state* src_highlink = i.get_highlink(src);
+	      if (src_highlink == nullptr ||
+		  i.dfs_position(src_highlink) == src_pos)
+		{
+		  i.set_highlink(src, newtop);
+		}
+	      else
+		{
+		  const state* newtop_highlink = i.get_highlink(newtop);
+		  if (newtop_highlink == nullptr)
+		    i.set_highlink(newtop, src_highlink);
+
+		  // Otherwise we must compare the highlink of src and pred
+		  else if (i.dfs_position(src_highlink) <
+			   i.dfs_position(newtop_highlink))
+		    {
+		      i.set_highlink(newtop_highlink,  src_highlink);
+		    }
+
+		}
+	    }
+	}
+
+      data* data_src = (data*) i.get_extra_data(src);
+      switch (data_src->c)
+	{
+	case color::GREEN:
+	  --d_;
+	  return true;		// Do not avoid pop
+	case color::ORANGE:
+	  data_src->c = color::GREEN;
+	  --d_;
+	  return true;		// Do not avoid pop
+	case color::PURPLE:
+	  {
+	    if (data_src->mark)
+	      {
+	    	expand(src, i);
+	    	return false; // avoid pop
+	      }
+	    else
+	      {
+		data_src->c = color::RED;
+
+		// Remember to tag the "deepest" state.
+		if (data_src->mx_d != -1)
+		  {
+		    data* data_dst = (data*) i.get_extra_data(data_src->mx_s);
+		    data_dst->mark = true;
+		  }
+	      }
+	  }
+          SPOT_FALLTHROUGH;
+	default:
+	  ;
+	}
+
+      if (d_ > 0 && data_src->c == color::RED)
+	{
+	  data* data_pred = (data*)i.get_extra_data(i.dfs_state(d_-1));
+	  if (data_pred->c == color::ORANGE)
+	    data_pred->c = color::PURPLE;
+	}
+
+      --d_;
+
+      // We are in the middle of a pop do not avoid it !
+      return true;
+    }
+
+    void expand (const state* src, const dfs_inspector& i)
+    {
+      data* data_src = (data*) i.get_extra_data(src);
+      data_src->c = color::GREEN;
+      i.get_iterator(data_src->depth)->fire_all();
+
+      if (FullyColored_ && d_ > 0)
+	{
+	  int p = d_ -1;
+	  while (0 <= p)
+	    {
+	      const state* st = i.dfs_state(p);
+	      data* data_st = (data*)i.get_extra_data(st);
+	      if(i.get_iterator(p)->done())
+		{
+		  if (data_st->c == color::ORANGE)
+		    data_st->c = color::GREEN;
+		  --p;
+		}
+	      else
+		break;
+	    }
+	}
+    }
+
+
+    virtual std::string name()
+    {
+      std::string res = "";
+      if (FullyColored_)
+	res += "fullycolored_";
+      if (highlink_)
+	res += "highlink_";
+      if (anticipated_)
+	res += "anticipated_";
+      res += "last_forever";
+      return res;
+    }
+
+    virtual std::string dump()
+    {
+      return
+	" source_expanded  : " + std::to_string(source_)           + '\n' +
+	" dest_expanded    : " + std::to_string(destination_)      + '\n';
+    }
+
+    virtual std::string dump_csv()
+    {
+      return
+	std::to_string(source_)           + ',' +
+	std::to_string(destination_);
+    }
+    virtual ~last_forever_provisos()
+    { }
+
+    virtual void delete_extra(void* edata)
+    {
+      data* d = (data*) edata;
+      delete d;
+    }
+  private:
+    int d_ = -1;
+    unsigned source_ = 0;
+    unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
+    std::mt19937 generator_;
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
