@@ -47,7 +47,7 @@ int main()
   tg->new_edge(s3, s3, bddtrue, spot::acc_cond::mark_t({0, 1}));
 
   // Test translation
-  auto* aut = twa_to_twacube(tg);
+  auto aut = twa_to_twacube(tg);
   spot::print_dot(std::cout, tg);
   std::cout << "-----------\n" << *aut << "-----------\n";
 
@@ -62,7 +62,5 @@ int main()
                 << ' ' << d.acc_
                 << std::endl;
     }
-
   spot::print_dot(std::cout, spot::twacube_to_twa(aut));
-  delete aut;
 }
