@@ -1951,7 +1951,7 @@ namespace spot
       throw std::runtime_error(err.str());
   }
 
-  spot::kripkecube<spot::cspins_state, spot::cspins_iterator>*
+  ltsmin_kripkecube_ptr
   ltsmin_model::kripkecube(const atomic_prop_set* to_observe,
                            const formula dead, int compress) const
   {
@@ -1988,7 +1988,8 @@ namespace spot
       observed.push_back(dead_ap);
 
     // Finally build the system.
-    return new spot::kripkecube<spot::cspins_state, spot::cspins_iterator>
+    return std::make_shared<spot::kripkecube<spot::cspins_state,
+                                             spot::cspins_iterator>>
       (iface, compress, observed, selfloopize, dead_ap);
   }
 
@@ -2024,9 +2025,8 @@ namespace spot
   }
 
   std::tuple<bool, std::string, istats>
-  ltsmin_model::modelcheck(spot::kripkecube<spot::cspins_state,
-                                            spot::cspins_iterator>* sys,
-                           spot::twacube* twa, bool compute_ctrx)
+  ltsmin_model::modelcheck(ltsmin_kripkecube_ptr sys,
+                           spot::twacube_ptr twa, bool compute_ctrx)
   {
     ec_renault13lpar<cspins_state, cspins_iterator,
                      cspins_state_hash, cspins_state_equal> ec(*sys, twa);
