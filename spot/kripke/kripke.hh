@@ -21,6 +21,7 @@
 
 #include <spot/kripke/fairkripke.hh>
 #include <spot/twacube/cube.hh>
+#include <memory>
 
 namespace spot
 {
@@ -33,7 +34,8 @@ namespace spot
   /// are provided by this template class. Specialisations
   /// will handle it.
   template<typename State, typename SuccIterator>
-  class SPOT_API kripkecube
+  class SPOT_API kripkecube:
+    public std::enable_shared_from_this<kripkecube<State, SuccIterator>>
   {
   public:
     /// \brief Returns the initial State of the System
