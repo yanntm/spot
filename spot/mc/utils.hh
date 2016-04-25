@@ -95,7 +95,6 @@ namespace spot
     std::vector<std::string>* names_;
     bdd_dict_ptr dict_;
     std::unordered_map<int, int> reverse_binder_;
-
   };
 
 
@@ -116,7 +115,7 @@ namespace spot
 
   public:
     product_to_twa(kripkecube<State, SuccIterator>& sys,
-                   twacube* twa)
+                   twacube_ptr twa)
       : intersect<State, SuccIterator, StateHash, StateEqual,
                   product_to_twa<State, SuccIterator,
                                  StateHash, StateEqual>>(sys, twa)
@@ -143,7 +142,6 @@ namespace spot
       for (auto ap : this->twa_->get_ap())
         {
           auto idx = res_->register_ap(ap);
-          std::cout << ap << idx << std::endl;
           reverse_binder_[i++] = idx;
         }
     }

@@ -24,6 +24,7 @@
 #include <spot/graph/graph.hh>
 #include <spot/twa/acc.hh>
 #include <spot/twacube/cube.hh>
+#include <spot/twacube/fwd.hh>
 
 namespace spot
 {
@@ -101,7 +102,7 @@ namespace spot
     const graph_t::state_storage_t& st_;
   };
 
-  class SPOT_API twacube final
+  class SPOT_API twacube final: public std::enable_shared_from_this<twacube>
   {
   public:
     twacube() = delete;
@@ -150,4 +151,9 @@ namespace spot
     graph_t theg_;
     cubeset cubeset_;
   };
+
+  inline twacube_ptr make_twacube(const std::vector<std::string> aps)
+  {
+    return std::make_shared<twacube>(aps);
+  }
 }
