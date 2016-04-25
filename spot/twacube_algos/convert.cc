@@ -59,14 +59,14 @@ namespace spot
     return result;
   }
 
-  spot::twacube* twa_to_twacube(const spot::const_twa_graph_ptr aut)
+  spot::twacube_ptr twa_to_twacube(const spot::const_twa_graph_ptr aut)
   {
     // Compute the necessary binder and extract atomic propositions
     std::unordered_map<int, int> ap_binder;
     std::vector<std::string>* aps = extract_aps(aut, ap_binder);
 
     // Declare the twa cube
-    spot::twacube* tg = new spot::twacube(*aps);
+    auto tg =  spot::make_twacube(*aps);
 
     // Fix acceptance
     tg->acc() = aut->acc();
@@ -135,7 +135,7 @@ namespace spot
   }
 
   spot::twa_graph_ptr
-  twacube_to_twa(spot::twacube* twacube)
+  twacube_to_twa(spot::twacube_ptr twacube)
   {
     // Grab necessary variables
     auto& theg = twacube->get_graph();

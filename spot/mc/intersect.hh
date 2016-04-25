@@ -59,7 +59,7 @@ namespace spot
   {
   public:
     intersect(kripkecube<State, SuccIterator>& sys,
-              twacube* twa):
+              twacube_ptr twa):
       sys_(sys), twa_(twa)
     {
       assert(is_a_kripkecube(sys));
@@ -254,7 +254,7 @@ namespace spot
       std::shared_ptr<trans_index> it_prop;
     };
     kripkecube<State, SuccIterator>& sys_;
-    twacube* twa_;
+    twacube_ptr twa_;
     std::vector<todo_element> todo;
     typedef std::unordered_map<const product_state, int,
                                product_state_hash,
