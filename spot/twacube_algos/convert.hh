@@ -47,10 +47,10 @@ namespace spot
               std::unordered_map<int, int>& ap_binder);
 
   /// \brief Convert a twa into a twacube
-  SPOT_API spot::twacube*
+  SPOT_API twacube_ptr
   twa_to_twacube(spot::const_twa_graph_ptr aut);
 
   /// \brief Convert a twacube into a twa
   SPOT_API spot::twa_graph_ptr
-  twacube_to_twa(spot::twacube* twacube);
+  twacube_to_twa(spot::twacube_ptr twacube);
 }

@@ -31,6 +31,10 @@ namespace spot
   class cspins_iterator;
   typedef int* cspins_state;
 
+  typedef std::shared_ptr<spot::kripkecube<spot::cspins_state,
+                                           spot::cspins_iterator>>
+    ltsmin_kripkecube_ptr;
+
   class SPOT_API ltsmin_model final
   {
   public:
@@ -79,7 +83,7 @@ namespace spot
     // \brief The same as above but returns a kripkecube, i.e. a kripke
     // that can be use in parallel. Moreover, it support more ellaborated
     // atomic propositions such as "P.a == P.c"
-    spot::kripkecube<spot::cspins_state, spot::cspins_iterator>*
+    ltsmin_kripkecube_ptr
     kripkecube(const atomic_prop_set* to_observe,
                formula dead = formula::tt(),
                int compress = 0) const;
@@ -89,8 +93,8 @@ namespace spot
     /// has been found and a string representing the counterexample if the
     /// computation have been required
     static std::tuple<bool, std::string, istats>
-    modelcheck(spot::kripkecube<spot::cspins_state, spot::cspins_iterator>* sys,
-               spot::twacube* twa, bool compute_ctrx = false);
+    modelcheck(ltsmin_kripkecube_ptr sys,
+               spot::twacube_ptr twa, bool compute_ctrx = false);
 
     /// Number of variables in a state
     int state_size() const;

@@ -45,7 +45,7 @@ namespace spot
 
   public:
     ec_renault13lpar(kripkecube<State, SuccIterator>& sys,
-                     twacube* twa)
+                     twacube_ptr twa)
       : intersect<State, SuccIterator, StateHash, StateEqual,
                   ec_renault13lpar<State, SuccIterator,
                                    StateHash, StateEqual>>(sys, twa),
