@@ -49,9 +49,10 @@ Exit status:\n\
   1  A counterexample has been found\n\
   2  Errors occurs during processing";
 
-unsigned DOT_MODEL = 1;
-unsigned DOT_PRODUCT = 2;
-unsigned DOT_FORMULA = 4;
+const unsigned DOT_MODEL = 1;
+const unsigned DOT_PRODUCT = 2;
+const unsigned DOT_FORMULA = 4;
+const unsigned CSV = 8;
 
 // Handle all options specified in the command line
 struct mc_options_
@@ -67,6 +68,7 @@ struct mc_options_
   unsigned compress = 0;
   bool kripke_output = false;
   unsigned nb_threads = 1;
+  bool csv = false;
 } mc_options;
 
 
@@ -76,6 +78,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
   // This switch is alphabetically-ordered.
   switch (key)
     {
+    case CSV:
+      mc_options.csv = true;
+      break;
     case 'c':
       mc_options.compute_counterexample = true;
       break;
@@ -151,6 +156,8 @@ static const argp_option options[] =
       "output the associated automaton in dot format", 0 },
     { "kripke", 'k', nullptr, 0,
       "output the associated automaton in (internal) kripke format", 0 },
+    { "csv", CSV, nullptr, 0,
+      "output a CSV containing interesting values", 0 },
     // ------------------------------------------------------------
     { nullptr, 0, nullptr, 0, "Optimization options:", 4 },
     { "compress", 'z', "INT", 0, "specify the level of compression\n"
@@ -171,6 +178,12 @@ const struct argp_child children[] =
     { &misc_argp, 0, nullptr, -1 },
     { nullptr, 0, nullptr, 0 }
   };
+
+static std::string  split_filename(const std::string& str) {
+  unsigned found = str.find_last_of("/");
+  return str.substr(found+1);
+}
+
 
 static int checked_main()
 {
@@ -350,6 +363,23 @@ static int checked_main()
                 tm.stop("printing accepting run");
               }
           }
+
+        if (mc_options.csv)
+          {
+            std::cout << "\nFind following the csv: "
+                      << "model,formula,walltimems,memused,type,"
+                      << "states,transitions\n";
+            std::cout << '#'
+                      << split_filename(mc_options.model)
+                      << ','
+                      << mc_options.formula << ','
+                      << tm.timer("running emptiness check").walltime() << ','
+                      << memused << ','
+                      << (!res ? "EMPTY," : "NONEMPTY,")
+                      << ec->statistics()->get("states") << ','
+                      << ec->statistics()->get("transitions")
+                      << std::endl;
+          }
         }
 
       if (mc_options.dot_output & DOT_PRODUCT)
@@ -421,6 +451,23 @@ static int checked_main()
       else
         std::cout << "an accepting run exists!\n" << std::get<1>(res)
                   << std::endl;
+
+      if (mc_options.csv)
+        {
+          std::cout << "\nFind following the csv: "
+                    << "model,formula,walltimems,memused,type,"
+                    << "states,transitions\n";
+          std::cout << '#'
+                    << split_filename(mc_options.model)
+                    << ','
+                    << mc_options.formula << ','
+                    << tm.timer("emptiness check").walltime() << ','
+                    << memused << ','
+                    << (!std::get<0>(res) ? "EMPTY," : "NONEMPTY,")
+                    << std::get<2>(res).states << ','
+                    << std::get<2>(res).transitions
+                    << std::endl;
+        }
     }
 
  safe_exit:
