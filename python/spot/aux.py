@@ -45,12 +45,14 @@ def extend(*classes):
 # Add a small LRU cache so that when we display automata into a
 # interactive widget, we avoid some repeated calls to dot for
 # identical inputs.
+render_count = 1
+
 @lru_cache(maxsize=64)
 def str_to_svg(str):
     """
     Send some text to dot for conversion to SVG.
     """
-    dot = subprocess.Popen(['dot', '-Tsvg'],
+    dot = subprocess.Popen(['dot', '-Tsvg:cairo'],
                            stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
@@ -61,7 +63,19 @@ def str_to_svg(str):
     ret = dot.wait()
     if ret:
         raise subprocess.CalledProcessError(ret, 'dot')
-    return stdout.decode('utf-8')
+    s = stdout.decode('utf-8')
+
+    # We use svg:cairo to workaround the issue where the font used by
+    # the server to render the dot file is not available on the
+    # client.  This way glyphs are encoded into the SVG.  But suddenly
+    # the problem is that multiple SVGs in the same notebook use the
+    # same glyph numbers, breaking the display.  We therefore rename
+    # all glyphs using a number incremented with each display.
+    global render_count
+    name = "glyph{}-".format(render_count)
+    s = s.replace('"glyph', '"' + name).replace('#glyph', '#' + name)
+    render_count += 1
+    return s
 
 
 def ostream_to_svg(ostr):
