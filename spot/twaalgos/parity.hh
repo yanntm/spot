@@ -106,4 +106,15 @@ namespace spot
   SPOT_API twa_graph_ptr
   colorize_parity_here(twa_graph_ptr aut, bool keep_style = false);
   /// @}
+
+  /// \brief Construct a product keeping the parity of two parity automata
+  ///
+  /// \param left the first automaton
+  ///
+  /// \param right the second automaton
+  ///
+  /// \result the product, which is a parity automaton
+  SPOT_API twa_graph_ptr
+  parity_product(const const_twa_graph_ptr& left,
+                 const const_twa_graph_ptr& right);
 }
