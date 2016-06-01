@@ -72,4 +72,19 @@ namespace spot
   SPOT_API twa_graph_ptr
   change_parity(const const_twa_graph_ptr& aut,
                 parity_order order, parity_style style);
+
+  /// \brief Colorize automaton
+  ///
+  /// \param aut the input automaton
+  ///
+  /// \param keep_style whether the style of the parity acc is kept.
+  ///
+  /// \return the colorized automaton
+  /// @{
+  SPOT_API twa_graph_ptr
+  colorize_parity(const const_twa_graph_ptr& aut, bool keep_style = false);
+
+  SPOT_API twa_graph_ptr
+  colorize_parity_here(twa_graph_ptr aut, bool keep_style = false);
+  /// @}
 }

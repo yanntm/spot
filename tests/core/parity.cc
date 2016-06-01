@@ -304,6 +304,20 @@ static bool is_colorized(spot::const_twa_graph_ptr aut, bool hard)
   return true;
 }
 
+static spot::parity_order to_parity_order(bool is_max)
+{
+  if (is_max)
+    return spot::parity_order_max;
+  return spot::parity_order_min;
+}
+
+static spot::parity_style to_parity_style(bool is_odd)
+{
+  if (is_odd)
+    return spot::parity_style_odd;
+  return spot::parity_style_even;
+}
+
 int main()
 {
   auto current_bdd = spot::make_bdd_dict();
@@ -358,6 +372,21 @@ int main()
                   assert(is_colorized(output, false)
                          && "change_parity: too many acc on a transition");
                 }
+            // Check colorize_parity
+            for (auto keep_style: { true, false })
+              {
+                auto output = spot::colorize_parity(aut, keep_style);
+                assert(is_colorized(output, true)
+                       && "colorize_parity: not colorized.");
+                assert(are_equiv(aut, output)
+                       && "colorize_parity: not equivalent.");
+                auto target_order = to_parity_order(is_max);
+                auto target_style = keep_style ? to_parity_style(is_odd)
+                                    : spot::parity_style_dontcare;
+                assert(is_right_parity(output, target_order, target_style,
+                                       is_max, is_odd, acc_num_sets)
+                       && "change_parity: wrong acceptance.");
+              }
           }
         }
   return 0;
