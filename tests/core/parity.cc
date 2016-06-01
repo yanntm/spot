@@ -387,6 +387,22 @@ int main()
                                        is_max, is_odd, acc_num_sets)
                        && "change_parity: wrong acceptance.");
               }
+            // Check cleanup_parity_acceptance
+            for (auto keep_style: { true, false })
+              {
+                auto output = spot::cleanup_parity_acceptance(aut, keep_style);
+                assert(is_colorized(output, false) &&
+                       "cleanup_parity_acceptance: too many "
+                       "acc on a transition.");
+                assert(are_equiv(aut, output)
+                       && "cleanup_parity_acceptance: not equivalent.");
+                auto target_order = to_parity_order(is_max);
+                auto target_style = keep_style ? to_parity_style(is_odd)
+                                    : spot::parity_style_dontcare;
+                assert(is_right_parity(output, target_order, target_style,
+                                       is_max, is_odd, acc_num_sets)
+                       && "cleanup_parity_acceptance: wrong acceptance.");
+              }
           }
         }
   return 0;
