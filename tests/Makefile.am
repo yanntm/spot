@@ -80,6 +80,7 @@ check_PROGRAMS = \
   core/nequals \
   core/nenoform \
   core/ngraph \
+  core/parity \
   core/randtgba \
   core/readsat \
   core/reduc \
@@ -126,6 +127,7 @@ core_nenoform_SOURCES = core/equalsf.cc
 core_nenoform_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM
 core_nequals_SOURCES = core/equalsf.cc
 core_nequals_CPPFLAGS = $(AM_CPPFLAGS) -DNEGATE
+core_parity_SOURCES = core/parity.cc
 core_reduc_SOURCES = core/reduc.cc
 core_reduccmp_SOURCES = core/equalsf.cc
 core_reduccmp_CPPFLAGS = $(AM_CPPFLAGS) -DREDUC
@@ -278,7 +280,8 @@ TESTS_twa = \
   core/complementation.test \
   core/randpsl.test \
   core/cycles.test \
-  core/acc_word.test
+  core/acc_word.test \
+  core/parity.test
 
 
 ############################## PYTHON ##############################
@@ -297,6 +300,7 @@ TESTS_ipython = \
   python/highlighting.ipynb \
   python/ltsmin.ipynb \
   python/piperead.ipynb \
+  python/parity.ipynb \
   python/product.ipynb \
   python/randaut.ipynb \
   python/randltl.ipynb \

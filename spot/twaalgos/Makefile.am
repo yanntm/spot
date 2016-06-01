@@ -56,6 +56,7 @@ twaalgos_HEADERS = \
   mask.hh \
   minimize.hh \
   neverclaim.hh \
+  parity.hh \
   postproc.hh \
   powerset.hh \
   product.hh \
@@ -112,6 +113,7 @@ libtwaalgos_la_SOURCES = \
   minimize.cc \
   ndfs_result.hxx \
   neverclaim.cc \
+  parity.cc \
   postproc.cc \
   powerset.cc \
   product.cc \
