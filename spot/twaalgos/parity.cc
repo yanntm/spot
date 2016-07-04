@@ -389,20 +389,32 @@ namespace spot
         return 0;
       }
 
-      state_history make_succ(value_t left_acc_set, value_t right_acc_set) const
+      state_history make_succ(value_t left_acc_set,
+                              value_t right_acc_set,
+                              const bool optim) const
       {
-        auto mat = state_history(*this);
-        mat.clean_here();
+        auto mat = state_history(left_num_sets_, right_num_sets_);
+        const state_history* old_mat = nullptr;
+        if (optim)
+          old_mat = this;
+        else
+          {
+            auto tmp_mat = new state_history(mat);
+            tmp_mat->clean_here();
+            old_mat = tmp_mat;
+          }
         for (unsigned i = 0; i < right_num_sets_; ++i)
           {
-            auto old = mat.get_left(i);
+            auto old = old_mat->get_left(i);
             mat.set_left(i, std::max(left_acc_set, old));
           }
         for (unsigned i = 0; i < left_num_sets_; ++i)
           {
-            auto old = mat.get_right(i);
+            auto old = old_mat->get_right(i);
             mat.set_right(i, std::max(right_acc_set, old));
           }
+        if (!optim)
+          delete old_mat;
         return mat;
       }
 
@@ -484,24 +496,28 @@ namespace spot
 
       std::pair<sh_label_t, value_t>
       push_state_history(sh_label_t label,
-                         value_t left_acc_set, value_t right_acc_set)
+                         value_t left_acc_set, value_t right_acc_set,
+                         const bool optim)
       {
         state_history new_sh = l2sh_[label]->first;
-        auto succ = new_sh.make_succ(left_acc_set, right_acc_set);
+        auto succ = new_sh.make_succ(left_acc_set, right_acc_set, optim);
         auto max_acc_set = succ.get_max_acc_set();
+        if (optim)
+          succ.clean_here();
         return std::make_pair(push_state_history(succ), max_acc_set);
       }
 
       std::pair<sh_label_t, value_t>
       get_succ(sh_label_t current_sh,
-               value_t left_acc_set, value_t right_acc_set)
+               value_t left_acc_set, value_t right_acc_set, const bool optim)
       {
         auto f_args = std::make_tuple(current_sh, left_acc_set, right_acc_set);
         auto p = succ_.emplace(f_args, std::make_pair(0, 0));
         if (p.second)
           {
             p.first->second =
-              push_state_history(current_sh, left_acc_set, right_acc_set);
+              push_state_history(current_sh, left_acc_set,
+                                 right_acc_set, optim);
           }
         return p.first->second;
       }
@@ -541,7 +557,8 @@ namespace spot
 
 
     twa_graph_ptr
-    parity_product_aux(twa_graph_ptr& left, twa_graph_ptr& right)
+    parity_product_aux(twa_graph_ptr& left, twa_graph_ptr& right,
+                       const bool optim)
     {
       std::unordered_map<product_state_t, unsigned, product_state_hash> s2n;
       state_history_set sh_set;
@@ -564,7 +581,8 @@ namespace spot
             unsigned left_acc_set, unsigned right_acc_set)
         -> std::pair<unsigned, unsigned>
         {
-          auto succ = sh_set.get_succ(sh_label, left_acc_set, right_acc_set);
+          auto succ = sh_set.get_succ(sh_label, left_acc_set, right_acc_set,
+                                      optim);
           product_state_t x(left_state, right_state, succ.first);
           auto p = s2n.emplace(x, 0);
           if (p.second)                 // This is a new state
@@ -629,7 +647,8 @@ namespace spot
 
   twa_graph_ptr
   parity_product(const const_twa_graph_ptr& left,
-                 const const_twa_graph_ptr& right)
+                 const const_twa_graph_ptr& right,
+                 const bool optim)
   {
     if (left->get_dict() != right->get_dict())
       throw std::runtime_error("parity_product: left and right automata "
@@ -640,6 +659,6 @@ namespace spot
     cleanup_parity_acceptance_here(second, true);
     colorize_parity_here(first, true);
     colorize_parity_here(second, true);
-    return parity_product_aux(first, second);
+    return parity_product_aux(first, second, optim);
   }
 }

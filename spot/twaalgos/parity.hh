@@ -116,5 +116,6 @@ namespace spot
   /// \result the product, which is a parity automaton
   SPOT_API twa_graph_ptr
   parity_product(const const_twa_graph_ptr& left,
-                 const const_twa_graph_ptr& right);
+                 const const_twa_graph_ptr& right,
+                 const bool optim = true);
 }
