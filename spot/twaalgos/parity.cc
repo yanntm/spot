@@ -21,6 +21,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/copy.hh>
 #include <spot/twaalgos/product.hh>
+#include <spot/twaalgos/complete.hh>
 #include <vector>
 #include <utility>
 #include <functional>
@@ -363,7 +364,7 @@ namespace spot
         return right_num_sets_;
       }
 
-      value_t get_max_acc_set() const
+      value_t get_max_acc_set(const bool and_cond) const
       {
         // i is the index of the resulting automaton acceptance set
         // If i is even, it means that the according set is a set with
@@ -375,11 +376,13 @@ namespace spot
           {
             auto k = get_left(l);
             bool can_jump = true;
-            if ((k & 1 & l) == 1)
-              {
+            if (and_cond)
+              can_jump = (k & l & 1) != 1;
+            else
+              can_jump = ((k | l) & 1) != 0;
+            if (!can_jump)
                 --k;
-                can_jump = false;
-              }
+
             auto new_l = get_right(k);
             if (new_l >= l)
               return k + l;
@@ -497,11 +500,11 @@ namespace spot
       std::pair<sh_label_t, value_t>
       push_state_history(sh_label_t label,
                          value_t left_acc_set, value_t right_acc_set,
-                         const bool optim)
+                         const bool and_cond, const bool optim)
       {
         state_history new_sh = l2sh_[label]->first;
         auto succ = new_sh.make_succ(left_acc_set, right_acc_set, optim);
-        auto max_acc_set = succ.get_max_acc_set();
+        auto max_acc_set = succ.get_max_acc_set(and_cond);
         if (optim)
           succ.clean_here();
         return std::make_pair(push_state_history(succ), max_acc_set);
@@ -509,7 +512,8 @@ namespace spot
 
       std::pair<sh_label_t, value_t>
       get_succ(sh_label_t current_sh,
-               value_t left_acc_set, value_t right_acc_set, const bool optim)
+               value_t left_acc_set, value_t right_acc_set,
+               const bool and_cond, const bool optim)
       {
         auto f_args = std::make_tuple(current_sh, left_acc_set, right_acc_set);
         auto p = succ_.emplace(f_args, std::make_pair(0, 0));
@@ -517,7 +521,7 @@ namespace spot
           {
             p.first->second =
               push_state_history(current_sh, left_acc_set,
-                                 right_acc_set, optim);
+                                 right_acc_set, and_cond, optim);
           }
         return p.first->second;
       }
@@ -557,9 +561,21 @@ namespace spot
 
 
     twa_graph_ptr
-    parity_product_aux(twa_graph_ptr& left, twa_graph_ptr& right,
-                       const bool optim)
+    parity_product_aux(const const_twa_graph_ptr& first,
+                       const const_twa_graph_ptr& second,
+                       const bool and_cond, const bool optim)
     {
+      auto left = change_parity(first, parity_order_max, parity_style_even);
+      auto right = change_parity(second, parity_order_max, parity_style_even);
+      if (!and_cond)
+        {
+          complete_here(left);
+          complete_here(right);
+        }
+      cleanup_parity_acceptance_here(left, true);
+      cleanup_parity_acceptance_here(right, true);
+      colorize_parity_here(left, true);
+      colorize_parity_here(right, true);
       std::unordered_map<product_state_t, unsigned, product_state_hash> s2n;
       state_history_set sh_set;
       std::queue<std::pair<product_state_t, unsigned>> todo;
@@ -569,7 +585,7 @@ namespace spot
       unsigned left_num_sets = left->num_sets();
       unsigned right_num_sets = right->num_sets();
       unsigned z_size = left_num_sets + right_num_sets - 1;
-      auto z = acc_cond::acc_code::parity(true, false, z_size);
+      auto z = acc_cond::acc_code::parity(true, !and_cond, z_size);
       res->set_acceptance(z_size, z);
 
       auto v = new product_states;
@@ -582,7 +598,7 @@ namespace spot
         -> std::pair<unsigned, unsigned>
         {
           auto succ = sh_set.get_succ(sh_label, left_acc_set, right_acc_set,
-                                      optim);
+                                      and_cond, optim);
           product_state_t x(left_state, right_state, succ.first);
           auto p = s2n.emplace(x, 0);
           if (p.second)                 // This is a new state
@@ -653,12 +669,17 @@ namespace spot
     if (left->get_dict() != right->get_dict())
       throw std::runtime_error("parity_product: left and right automata "
                                "should share their bdd_dict");
-    auto first = change_parity(left, parity_order_max, parity_style_even);
-    auto second = change_parity(right, parity_order_max, parity_style_even);
-    cleanup_parity_acceptance_here(first, true);
-    cleanup_parity_acceptance_here(second, true);
-    colorize_parity_here(first, true);
-    colorize_parity_here(second, true);
-    return parity_product_aux(first, second, optim);
+    return parity_product_aux(left, right, true, optim);
+  }
+
+  twa_graph_ptr
+  parity_product_or(const const_twa_graph_ptr& left,
+                    const const_twa_graph_ptr& right,
+                    const bool optim)
+  {
+    if (left->get_dict() != right->get_dict())
+      throw std::runtime_error("parity_product_or: left and right automata "
+                               "should share their bdd_dict");
+    return parity_product_aux(left, right, false, optim);
   }
 }

@@ -25,6 +25,7 @@
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/randomgraph.hh>
+#include <spot/twaalgos/complete.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twa/fwd.hh>
 #include <spot/twa/acc.hh>
@@ -36,7 +37,7 @@
 #define LAST_AUT result.back().first
 #define LAST_NUM_SETS result.back().second
 #define NEW_AUT() do {                                        \
-   result.emplace_back(spot::random_graph(7, 0.5, &apf,       \
+   result.emplace_back(spot::random_graph(3, 0.5, &apf,       \
                        current_bdd, 0, 0, 0.5, true), 0);     \
   LAST_AUT->prop_state_acc(false);                            \
   LAST_AUT->prop_weak(false);                                 \
@@ -412,7 +413,7 @@ int main()
   unsigned acc_index = 0;
 
   unsigned nb = 0;
-  // Parity product
+  // Parity product and sum
   for (unsigned left_index = 0; left_index < num_left; ++left_index)
     {
       auto& aut_tuple_first = automata_tuples[left_index % num_automata];
@@ -438,9 +439,9 @@ int main()
           auto acc_second = std::get<0>(acc_tuple_second);
           auto acc_num_sets_second = std::get<3>(acc_tuple_second);
           right->set_acceptance(acc_num_sets_second, acc_second);
-          auto result = spot::parity_product(left, right);
-          auto ref = spot::product(left, right);
-          if (!are_equiv(result, ref))
+          auto result_prod = spot::parity_product(left, right);
+          auto ref_prod = spot::product(left, right);
+          if (!are_equiv(result_prod, ref_prod))
             {
               std::cerr << nb << ": parity_product: Not equivalent.\n"
                         << "=====First Automaton=====\n";
@@ -449,12 +450,30 @@ int main()
               spot::print_hoa(std::cerr, right);
               assert(false && "parity_product: Not equivalent.\n");
             }
-          assert(is_colorized(result, true)
+          assert(is_colorized(result_prod, true)
                  && "parity_product: not colorized.");
-          assert(is_right_parity(result, spot::parity_order_dontcare,
+          assert(is_right_parity(result_prod, spot::parity_order_dontcare,
                                  spot::parity_style_dontcare,
                                  true, true, 2)
                  && "parity_product: not a parity acceptance condition");
+
+          auto result_sum = spot::parity_product_or(left, right);
+          auto ref_sum = spot::product_or(left, right);
+          if (!are_equiv(result_sum, ref_sum))
+            {
+              std::cerr << nb << ": parity_product_or: Not equivalent.\n"
+                        << "=====First Automaton=====\n";
+              spot::print_hoa(std::cerr, left);
+              std::cerr << "=====Second Automaton=====\n";
+              spot::print_hoa(std::cerr, right);
+              assert(false && "parity_product_or: Not equivalent.\n");
+            }
+          assert(is_colorized(result_sum, true)
+                 && "parity_product_or: not colorized.");
+          assert(is_right_parity(result_sum, spot::parity_order_dontcare,
+                                 spot::parity_style_dontcare,
+                                 true, true, 2)
+                 && "parity_product_or: not a parity acceptance condition");
           ++nb;
         }
     }
