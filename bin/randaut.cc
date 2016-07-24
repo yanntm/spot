@@ -57,8 +57,9 @@ atomic propositions \"a\" and \"b\":\n\
   % randaut --spin -Q4 a b\n\
 \n\
 This builds three random, complete, and deterministic TGBA with 5 to 10\n\
-states, 1 to 3 acceptance sets, and three atomic propositions:\n\
-  % randaut -n3 -D -H -Q5..10 -A1..3 3\n\
+states, 1 to 3 acceptance sets, and three atomic propositions, an average\n\
+degree of the states of 2.5:\n\
+  % randaut -n3 -D -H -Q5..10 -A1..3 -E2.5 3\n\
 \n\
 Build 3 random, complete, and deterministic Rabin automata\n\
 with 2 to 3 acceptance pairs, state-based acceptance, 8 states, \n\
@@ -81,6 +82,7 @@ static const argp_option options[] =
       "probability that an edge belongs to one acceptance set (0.2)", 0 },
     { "automata", 'n', "INT", 0, "number of automata to output (1)\n"\
       "use a negative value for unbounded generation", 0 },
+    { "average-edges", 'E', "FLOAT", 0, "average degree of the states", 0 },
     { "ba", 'B', nullptr, 0,
       "build a Buchi automaton (implies --acceptance=Buchi --state-acc)", 0 },
     { "colored", OPT_COLORED, nullptr, 0,
@@ -150,6 +152,7 @@ static const char* opt_seed_str = "0";
 static int opt_automata = 1;
 static range opt_states = { 10, 10 };
 static float opt_density = 0.2;
+static float opt_average_edges = 0;
 static range opt_acc_sets = { -1, 0 };
 static float opt_acc_prob = 0.2;
 static bool opt_deterministic = false;
@@ -158,6 +161,7 @@ static bool opt_colored = false;
 static bool ba_wanted = false;
 static bool generic_wanted = false;
 static bool gba_wanted = false;
+static bool is_average_edges = false;
 static std::unique_ptr<unique_aut_t> opt_uniq = nullptr;
 
 static void
@@ -216,8 +220,15 @@ parse_opt(int key, char* arg, struct argp_state* as)
       break;
     case 'e':
       opt_density = to_float(arg);
+      is_average_edges = false;
       if (opt_density < 0.0 || opt_density > 1.0)
         error(2, 0, "density should be between 0.0 and 1.0");
+      break;
+    case 'E':
+      opt_average_edges = to_float(arg);
+      is_average_edges = true;
+      if (opt_average_edges < 1)
+        error(2, 0, "average edges should be greater than 1.0");
       break;
     case 'D':
       opt_deterministic = true;
@@ -367,6 +378,14 @@ main(int argc, char** argv)
               if (opt_colored && accs == 0)
                 error(2, 0, "--colored requires at least one acceptance set; "
                       "fix the range of --acceptance");
+            }
+
+          if (is_average_edges)
+            {
+              if (opt_average_edges > size)
+                error(2, 0, "average edges should be lower "
+                      "than the number of states");
+              opt_density = size / opt_average_edges;
             }
 
           auto aut =
