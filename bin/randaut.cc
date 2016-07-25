@@ -385,7 +385,7 @@ main(int argc, char** argv)
               if (opt_average_edges > size)
                 error(2, 0, "average edges should be lower "
                       "than the number of states");
-              opt_density = size / opt_average_edges;
+              opt_density = opt_average_edges / size;
             }
 
           auto aut =

@@ -682,4 +682,19 @@ namespace spot
                                "should share their bdd_dict");
     return parity_product_aux(left, right, false, optim);
   }
+
+  twa_graph_ptr
+  rand_parity(const const_twa_graph_ptr& aut, unsigned num_sets)
+  {
+      auto res = copy(aut, twa::prop_set::all());
+      auto z = acc_cond::acc_code::parity(true, false, num_sets);
+      res->set_acceptance(num_sets, z);
+      unsigned n = 0;
+      for (auto& e: res->edges())
+        {
+          e.acc = acc_cond::mark_t();
+          e.acc.set(n++ % num_sets);
+        }
+      return res;
+  }
 }

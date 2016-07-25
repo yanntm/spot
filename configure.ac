@@ -191,6 +191,9 @@ AC_CONFIG_FILES([
   bench/ltlclasses/Makefile
   bench/ltl2tgba/Makefile
   bench/ltl2tgba/defs
+  bench/parity_prod/plot_result
+  bench/parity_prod/init_python
+  bench/parity_prod/Makefile
   bench/spin13/Makefile
   bench/wdba/Makefile
   bench/stutter/Makefile
@@ -225,6 +228,7 @@ AC_CONFIG_FILES([
 AC_CONFIG_FILES([doc/org/g++wrap], [chmod +x doc/org/g++wrap])
 AC_CONFIG_FILES([doc/dot], [chmod +x doc/dot])
 AC_CONFIG_FILES([tests/run], [chmod +x tests/run])
+AC_CONFIG_FILES([bench/parity_prod/run], [chmod +x bench/parity_prod/run])
 AC_OUTPUT
 
 case $VERSION:$enable_devel in

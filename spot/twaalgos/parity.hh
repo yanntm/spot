@@ -130,4 +130,15 @@ namespace spot
   parity_product_or(const const_twa_graph_ptr& left,
                     const const_twa_graph_ptr& right,
                     const bool optim = true);
+
+  /// \brief Colorize automaton
+  ///
+  /// \param aut the input automaton
+  ///
+  /// \param keep_style whether the style of the parity acc is kept.
+  ///
+  /// \return the colorized automaton
+  /// @{
+  SPOT_API twa_graph_ptr
+  rand_parity(const const_twa_graph_ptr& aut, unsigned num_sets);
 }
