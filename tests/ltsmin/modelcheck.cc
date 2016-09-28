@@ -29,6 +29,7 @@
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/emptiness.hh>
 #include <spot/twaalgos/postproc.hh>
+#include <spot/twaalgos/are_isomorphic.hh>
 #include <spot/twa/twaproduct.hh>
 #include <spot/misc/timer.hh>
 #include <spot/misc/memusage.hh>
@@ -408,8 +409,8 @@ static int checked_main()
       spot::ltsmin_kripkecube_ptr modelcube = nullptr;
       try
         {
-          modelcube = spot::ltsmin_model::load(mc_options.model)
-            .kripkecube(&ap, deadf, mc_options.compress);
+           modelcube = spot::ltsmin_model::load(mc_options.model)
+            .kripkecube(propcube->get_ap(), deadf, mc_options.compress);
         }
       catch (std::runtime_error& e)
         {
