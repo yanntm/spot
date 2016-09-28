@@ -47,6 +47,10 @@
 #include <bricks/brick-hashset.h>
 #include <bricks/brick-hash.h>
 
+#include <spot/twaalgos/dot.hh>
+#include <spot/twa/twaproduct.hh>
+#include <spot/twaalgos/emptiness.hh>
+
 namespace spot
 {
   namespace
@@ -1701,13 +1705,13 @@ namespace spot
         relop oper;
 
 
-        // Now, left and (possibly) right are should refer atomic
+        // Now, left and (possibly) right may refer atomic
         // propositions or specific state inside of a process.
         // First check if it is a known atomic proposition
         it = std::find(k_aps.begin(), k_aps.end(), left);
         if (it != k_aps.end())
           {
-            // The aps is directly an AP of the system, we will just
+            // The ap is directly an AP of the system, we will just
             // have to detect if the variable is 0 or not.
             lval = std::distance(k_aps.begin(), it);
           }
@@ -1934,7 +1938,7 @@ namespace spot
   }
 
   ltsmin_kripkecube_ptr
-  ltsmin_model::kripkecube(const atomic_prop_set* to_observe,
+  ltsmin_model::kripkecube(std::vector<std::string> to_observe,
                            const formula dead, int compress) const
   {
     // Register the "dead" proposition.  There are three cases to
@@ -1953,26 +1957,19 @@ namespace spot
     else if (dead != spot::formula::tt())
       dead_ap = dead.ap_name();
 
-    // Build the set of observed propositons, i.e. those in the
-    // formula
-    std::vector<std::string> observed;
+    // Is dead proposition is already in to_observe?
     bool add_dead = true;
-    for (auto it: *to_observe)
-      {
-        observed.push_back(it.ap_name());
-
-        // Dead proposition is already in observed prop
-        if (it.ap_name().compare(dead_ap))
-          add_dead = false;
-      }
+    for (auto it: to_observe)
+      if (it.compare(dead_ap))
+        add_dead = false;
 
     if (dead_ap.compare("") != 0 && add_dead)
-      observed.push_back(dead_ap);
+      to_observe.push_back(dead_ap);
 
     // Finally build the system.
     return std::make_shared<spot::kripkecube<spot::cspins_state,
                                              spot::cspins_iterator>>
-      (iface, compress, observed, selfloopize, dead_ap);
+      (iface, compress, to_observe, selfloopize, dead_ap);
   }
 
   kripke_ptr
@@ -2010,6 +2007,12 @@ namespace spot
   ltsmin_model::modelcheck(ltsmin_kripkecube_ptr sys,
                            spot::twacube_ptr twa, bool compute_ctrx)
   {
+    // Must ensure that the two automata are working on the same
+    // set of atomic propositions.
+    assert(sys->get_ap().size() == twa->get_ap().size());
+    for (unsigned int i = 0; i < sys->get_ap().size(); ++i)
+      assert(sys->get_ap()[i].compare(twa->get_ap()[i]) == 0);
+
     ec_renault13lpar<cspins_state, cspins_iterator,
                      cspins_state_hash, cspins_state_equal> ec(*sys, twa);
     bool has_ctrx = ec.run();
