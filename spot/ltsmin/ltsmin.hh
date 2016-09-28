@@ -83,10 +83,9 @@ namespace spot
     // \brief The same as above but returns a kripkecube, i.e. a kripke
     // that can be use in parallel. Moreover, it support more ellaborated
     // atomic propositions such as "P.a == P.c"
-    ltsmin_kripkecube_ptr
-    kripkecube(const atomic_prop_set* to_observe,
-               formula dead = formula::tt(),
-               int compress = 0) const;
+    ltsmin_kripkecube_ptr kripkecube(std::vector<std::string> to_observe,
+                                     formula dead = formula::tt(),
+                                     int compress = 0) const;
 
     /// \brief Check for the emptiness between a system and a twa.
     /// Return a pair containing a boolean indicating wether a counterexample
