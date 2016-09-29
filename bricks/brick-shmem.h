@@ -551,7 +551,7 @@ struct FifoTest {
         int terminate;
         int n;
 
-        void main()
+        void main() override
         {
             std::vector< int > x;
             x.resize( n );
@@ -603,7 +603,7 @@ struct Utils {
             rep( repeat )
         {}
 
-        void main() {
+        void main() override {
             for ( int i = 0; i < rep; ++i )
                 detector.waitForAll( peers );
         }
@@ -648,7 +648,7 @@ struct Utils {
             consume( 0 )
         {}
 
-        void main() {
+        void main() override {
             detector.waitForAll( peers );
 
             while ( produce-- )
