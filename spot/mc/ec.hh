@@ -124,7 +124,7 @@ namespace spot
 
     std::string trace()
     {
-      assert(counterexample_found());
+      SPOT_ASSERT(counterexample_found());
       std::string res = "Prefix:\n";
 
        // Compute the prefix of the accepting run
