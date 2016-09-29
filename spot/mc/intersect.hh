@@ -62,7 +62,7 @@ namespace spot
               twacube_ptr twa):
       sys_(sys), twa_(twa)
     {
-      assert(is_a_kripkecube(sys));
+      SPOT_ASSERT(is_a_kripkecube(sys));
       map.reserve(2000000);
       todo.reserve(100000);
     }
@@ -178,8 +178,9 @@ namespace spot
     /// is slightly different.
     void forward_iterators(bool just_pushed)
     {
-      assert(!todo.empty());
-      assert(!(todo.back().it_prop->done() &&  todo.back().it_kripke->done()));
+      SPOT_ASSERT(!todo.empty());
+      SPOT_ASSERT(!(todo.back().it_prop->done() &&
+                    todo.back().it_kripke->done()));
 
       // Sometimes kripke state may have no successors.
       if (todo.back().it_kripke->done())
@@ -187,7 +188,7 @@ namespace spot
 
       // The state has just been push and the 2 iterators intersect.
       // There is no need to move iterators forward.
-      assert(!(todo.back().it_prop->done()));
+      SPOT_ASSERT(!(todo.back().it_prop->done()));
       if (just_pushed && twa_->get_cubeset()
           .intersect(twa_->trans_data(todo.back().it_prop).cube_,
                      todo.back().it_kripke->condition()))
