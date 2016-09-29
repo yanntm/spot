@@ -995,7 +995,7 @@ struct Parallel
         int from, to;
         bool overlap;
 
-        void main() {
+        void main() override {
             auto set = _set->withTD( td );
             for ( int i = from; i < to; ++i ) {
                 set.insert( i );
