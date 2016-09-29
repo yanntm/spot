@@ -132,7 +132,7 @@ struct AssertFailed : std::exception {
         (*this) << ": assertion `" << l.stmt << "' failed;";
     }
 
-    const char *what() const noexcept { return str.c_str(); }
+    const char *what() const noexcept override { return str.c_str(); }
 };
 
 template< typename Location, typename X >
