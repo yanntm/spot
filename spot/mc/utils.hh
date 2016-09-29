@@ -67,7 +67,7 @@ namespace spot
     {
       unsigned st = res_->new_state();
       names_->push_back(this->sys_.to_string(s));
-      assert(st == i);
+      SPOT_ASSERT(st == i);
     }
 
     void edge(unsigned src, unsigned dst)
@@ -167,7 +167,7 @@ namespace spot
       unsigned st = res_->new_state();
       names_->push_back(this->sys_.to_string(s.st_kripke) +
                         ('*' + std::to_string(s.st_prop)));
-      assert(st+1 == i);
+      SPOT_ASSERT(st+1 == i);
       return true;
     }
 
