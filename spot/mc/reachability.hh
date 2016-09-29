@@ -35,7 +35,7 @@ namespace spot
     seq_reach_kripke(kripkecube<State, SuccIterator>& sys):
       sys_(sys)
     {
-      assert(is_a_kripkecube(sys));
+      SPOT_ASSERT(is_a_kripkecube(sys));
       visited.reserve(2000000);
       todo.reserve(100000);
     }
