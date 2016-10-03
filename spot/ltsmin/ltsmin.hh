@@ -90,6 +90,9 @@ namespace spot
     modelcheck(ltsmin_kripkecube_ptr sys,
                spot::twacube_ptr twa, bool compute_ctrx = false);
 
+    // \brief Display the kripke as a CSV.
+    static std::string csv(ltsmin_kripkecube_ptr sys);
+
     /// Number of variables in a state
     int state_size() const;
     /// Name of each variable

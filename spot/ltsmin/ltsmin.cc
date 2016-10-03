@@ -23,7 +23,9 @@
 #include <vector>
 #include <sstream>
 #include <sys/stat.h>
+#include <random>
 #include <unistd.h>
+#include <cmath>
 
 // MinGW does not define this.
 #ifndef WEXITSTATUS
@@ -41,6 +43,7 @@
 #include <string.h>
 #include <spot/mc/utils.hh>
 #include <spot/mc/ec.hh>
+#include <spot/mc/interpolate.hh>
 
 namespace spot
 {
@@ -1065,7 +1068,6 @@ namespace spot
     return { d };
   }
 
-
   ltsmin_kripkecube_ptr
   ltsmin_model::kripkecube(std::vector<std::string> to_observe,
                            const formula dead, int compress,
@@ -1170,6 +1172,198 @@ namespace spot
         stats.push_back(ecs[i].stats());
       }
     return std::make_tuple(has_ctrx, trace, stats);
+  }
+
+
+  static std::vector<cspins_state>*
+  interpolate_states (std::vector<cspins_state>& cs,
+                      cspins_state_manager& manager,
+                      ltsmin_kripkecube_ptr sys,
+                      const spins_interface* d,
+                      std::vector<int> splitter_)
+  {
+    // FIXME compress!
+    if (sys->compress())
+      assert(false);
+
+    // Fill the initial population
+    std::vector<cspins_state>* population = new std::vector<cspins_state>();
+    std::vector<cspins_state>* next_gen = new std::vector<cspins_state>();
+    for (auto st: cs)
+      population->push_back(st);
+
+
+    // compute the fitness
+    unsigned fitness = 0;
+    for (auto foo : *population)
+      {
+        int n = d->get_successors
+          (nullptr, manager.unbox_state(foo),
+           [](void* , transition_info_t*, int *){
+           },
+           nullptr);
+        fitness += n;
+      }
+    fitness /= population->size();
+
+
+    unsigned pop_size = 50;     // FIXME
+    std::mt19937 gen;
+    gen.seed(0); // FIXME
+    float THRESHOLD = 0.999;        //  FIXME
+    int *tab = new int [d->get_state_size()+30]; // FIXME
+
+    // Genetic mutations: 3 generations of 25 elements
+    for (unsigned nbgen = 0; nbgen < 3; ++nbgen)
+       {
+         for (unsigned k = 0; k < pop_size; ++k)
+           {
+             std::vector<int> rnd;
+             for (unsigned int i = 0; i < splitter_.size(); ++i)
+               rnd.push_back(gen() % population->size());
+
+             int curr = 0;
+             {
+               int i = 0;
+               while (i < d->get_state_size())
+                 {
+                   int alea = gen();
+                   int idx = alea % rnd.size();
+                   while (i < splitter_[curr])
+                     {
+                       // UGLY +2 to satisfy the structure of
+                       // cspins_state, i.e. [hash, size, ...]
+                       // ... Apply crossover
+                       tab[i] = (*population)[rnd[idx]][i+2];
+
+                       // ... Apply mutation
+                       {
+                         float proba = (float) gen();
+                         if ((proba / (float) gen.max()) >= THRESHOLD)
+                           {
+                             // Here really perform the mutation:
+                             // Be more efficient using bounds
+                             int bounds = d->get_type_value_count
+                               (d->get_state_variable_type(i));
+                             bounds = bounds? bounds : 256;
+                             int e =  std::abs((int) gen() % 9);
+                             tab[i] = tab[i] ^ (1 << e);
+                             tab[i] = tab[i] % bounds;
+                           }
+                       }
+                       (void)THRESHOLD;
+                       ++i;
+                     }
+                   ++curr;
+                 }
+             }
+             cspins_state res = manager.alloc_setup(tab, nullptr, 0); // FIXME
+             next_gen->push_back(res);
+           }
+
+         // Generate the next generation of states according to the fitness
+         population->clear();
+         for (auto st : *next_gen)
+           {
+             unsigned n = d->get_successors
+               (nullptr, manager.unbox_state(st),
+                [](void* , transition_info_t*, int *){
+                },
+                nullptr);
+             if (n == fitness)
+               population->push_back(st);
+           }
+         if (population->size() == 0)
+           {
+
+             // Swap the two vectors
+             std::vector<cspins_state>* tmp = population;
+             population = next_gen;
+             next_gen = tmp;
+           }
+
+         next_gen->clear();
+       }
+
+    return population;
+  }
+
+  std::string ltsmin_model::csv(ltsmin_kripkecube_ptr sys)
+  {
+    std::string res = "";
+    auto d_ = sys->spins_interface();
+    {
+      res = "#id,";
+      for (int i = 0; i < d_->get_state_size(); ++i)
+        {
+          res += d_->get_state_variable_name(i);
+          res += ',';
+        }
+      res.pop_back();
+      res += '\n';
+    }
+
+
+
+    std::vector<int> splitter_;
+    {
+      for (int i = 0; i < d_->get_type_count(); ++i)
+        {
+          std::string name(d_->get_type_name(i));
+          if (name.compare("int") == 0 || name.compare("byte") == 0)
+            continue;
+          for (int j = 0; j < d_->get_state_size(); ++j)
+            if (name.compare(d_->get_state_variable_name(j)) == 0 && j != 0)
+              {
+
+
+// --------------------------------> FIXME
+                if (splitter_.empty())
+                  {
+                    for (int k = 1; k <= j; ++k)
+                      splitter_.push_back(k);
+                  }
+                else
+                  splitter_.push_back(j);
+              }
+        }
+    }
+    splitter_.push_back(d_->get_state_size()); // FIXME
+
+    bool stop = false;
+    auto& manager_ = sys->manager( 0 /*FIXME for multithread*/);
+    // FIXME when multiple threads
+    int* uncompressed_ = new int[d_->get_state_size()+30];
+    interpolate<cspins_state, cspins_iterator,
+                cspins_state_hash, cspins_state_equal>
+      interpolate(*sys, [&sys, &res,  &d_, &manager_, &uncompressed_]
+                  (cspins_state cs, unsigned int dfsnum)
+                  {
+                    res += std::to_string(dfsnum) + ',';
+                    cspins_state out = manager_.unbox_state(cs);
+                    int* ref = out;
+                    if (sys->compress())
+                      {
+                        manager_.decompress(cs, uncompressed_, manager_.size());
+                        ref = uncompressed_;
+                      }
+
+                    for (int i = 0; i < d_->get_state_size(); ++i)
+                      res += std::to_string(ref[i]) + ",";
+                    res.pop_back();
+                    res += '\n';
+                  },
+                  [&manager_, &sys, &d_, splitter_]
+                  (std::vector<cspins_state> cs) ->std::vector<cspins_state>*
+                  {
+                    return  interpolate_states(cs, manager_, sys, d_,
+                                               splitter_);
+                  },
+                  0, /* FIXME tid */
+                  stop);
+    interpolate.run();
+    delete[] uncompressed_;
+    return res;
   }
 
   int ltsmin_model::state_size() const

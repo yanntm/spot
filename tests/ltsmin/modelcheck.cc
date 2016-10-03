@@ -54,6 +54,7 @@ const unsigned DOT_MODEL = 1;
 const unsigned DOT_PRODUCT = 2;
 const unsigned DOT_FORMULA = 4;
 const unsigned CSV = 8;
+const unsigned INTERPOLATE_CSV = 16;
 
 // Handle all options specified in the command line
 struct mc_options_
@@ -70,6 +71,7 @@ struct mc_options_
   bool kripke_output = false;
   unsigned nb_threads = 1;
   bool csv = false;
+  bool interpolate_csv = false;
 } mc_options;
 
 
@@ -81,6 +83,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     {
     case CSV:
       mc_options.csv = true;
+      break;
+    case INTERPOLATE_CSV:
+      mc_options.interpolate_csv = true;
       break;
     case 'c':
       mc_options.compute_counterexample = true;
@@ -157,6 +162,8 @@ static const argp_option options[] =
       "output the associated automaton in dot format", 0 },
     { "kripke", 'k', nullptr, 0,
       "output the associated automaton in (internal) kripke format", 0 },
+    { "interpolate-csv", INTERPOLATE_CSV, nullptr, 0,
+      "output the associated automaton in csv format", 0 },
     { "csv", CSV, nullptr, 0,
       "output a CSV containing interesting values", 0 },
     // ------------------------------------------------------------
@@ -213,7 +220,6 @@ static int checked_main()
       else
         deadf = env.require(mc_options.dead_ap);
     }
-
 
   if (mc_options.formula != nullptr)
     {
@@ -389,6 +395,24 @@ static int checked_main()
           spot::print_dot(std::cout, product);
           tm.stop("dot output");
         }
+    }
+
+  if (mc_options.interpolate_csv)
+    {
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      tm.start("load kripkecube");
+      try
+        {
+          modelcube = spot::ltsmin_model::load(mc_options.model)
+            .kripkecube({}, deadf, mc_options.compress);
+        }
+      catch (std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      std::cout << spot::ltsmin_model::csv(modelcube);
     }
 
     if (mc_options.nb_threads != 1 &&

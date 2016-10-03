@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <functional>
 #include <spot/kripke/kripke.hh>
 
 namespace spot
@@ -32,8 +33,9 @@ namespace spot
   class SPOT_API seq_reach_kripke
   {
   public:
-    seq_reach_kripke(kripkecube<State, SuccIterator>& sys, unsigned tid):
-      sys_(sys), tid_(tid)
+    seq_reach_kripke(kripkecube<State, SuccIterator>& sys, unsigned tid,
+                     bool& stop):
+      sys_(sys), tid_(tid), stop_(stop)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
       visited.reserve(2000000);
@@ -60,7 +62,7 @@ namespace spot
           todo.push_back({initial, sys_.succ(initial, tid_)});
           visited[initial] = ++dfs_number;
         }
-      while (!todo.empty())
+      while (!todo.empty() && !stop_)
         {
           if (todo.back().it->done())
             {
@@ -120,5 +122,6 @@ namespace spot
     unsigned int dfs_number = 0;
     unsigned int transitions = 0;
     unsigned int tid_;
+    bool& stop_; // Do not need to be atomic.
   };
 }

@@ -162,7 +162,6 @@ namespace spot
     inner.compress = compress;
     inner.selfloopize = selfloopize;
     int* ref  = s;
-
     if (compress)
       // Already filled by compute_condition
       ref = inner.uncompressed_;
@@ -336,6 +335,24 @@ namespace spot
   {
     return nb_threads_;
   }
+
+  bool kripkecube<cspins_state, cspins_iterator>::compress()
+  {
+    return compress_;
+  }
+
+  const spot::spins_interface*
+  kripkecube<cspins_state, cspins_iterator>::spins_interface()
+  {
+    return d_;
+  }
+
+  cspins_state_manager&
+  kripkecube<cspins_state, cspins_iterator>::manager(unsigned i)
+  {
+    return manager_[i];
+  }
+
 
   void
   kripkecube<cspins_state, cspins_iterator>::compute_condition

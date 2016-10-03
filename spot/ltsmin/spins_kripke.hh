@@ -195,6 +195,9 @@ namespace spot
     void recycle(cspins_iterator* it, unsigned tid);
     const std::vector<std::string> get_ap();
     unsigned get_threads();
+    bool compress();
+    const spot::spins_interface* spins_interface();
+    cspins_state_manager& manager(unsigned i = 0);
 
   private:
     /// Parse the set of atomic proposition to have a more
