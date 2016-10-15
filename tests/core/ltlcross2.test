@@ -48,4 +48,10 @@ ltlcross --products=3 --timeout=60 \
 "$ltl2tgba --parity %f > %T" \
 "$ltl2tgba --parity=c %f > %T" \
 "$ltl2tgba --dpa %f > %T" \
+"$ltl2tgba -x split %f > %T" \
+"$ltl2tgba --dpa -x split %f > %T" \
+"$ltl2tgba --parity -x split %f > %T" \
+"$ltl2tgba -x always-split %f > %T" \
+"$ltl2tgba --dpa -x always-split %f > %T" \
+"$ltl2tgba --parity -x always-split %f > %T" \
 --json=output.json --csv=output.csv

@@ -146,6 +146,8 @@ namespace spot
     int early_susp_;
     int skel_wdba_;
     int skel_simul_;
+    int split_;
+    int always_split_;
   };
   /// @}
 }

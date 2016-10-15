@@ -20,14 +20,46 @@
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twaalgos/compsusp.hh>
+#include <spot/twaalgos/product.hh>
+#include <spot/twaalgos/parity.hh>
 #include <spot/misc/optionmap.hh>
 
 namespace spot
 {
+  namespace
+  {
+    static inline twa_graph_ptr product_aux(const const_twa_graph_ptr& left,
+                                            const const_twa_graph_ptr& right)
+    {
+      return product(left, right);
+    }
+
+    static inline twa_graph_ptr product_or_aux(const const_twa_graph_ptr& left,
+                                               const const_twa_graph_ptr& right)
+    {
+      return product_or(left, right);
+    }
+
+    template<typename T>
+    twa_graph_ptr make_product(translator& translator, formula* f, T product)
+    {
+      twa_graph_ptr r = translator.run(formula(*f->begin()));
+      for (size_t i = 1; i < f->size(); ++i)
+        {
+          auto translation = translator.run(formula((*f)[i]));
+          if (r)
+            r = product(r, translation);
+          else
+            r = translation;
+        }
+      return r;
+    }
+  }
 
   void translator::setup_opt(const option_map* opt)
   {
-    comp_susp_ = early_susp_ = skel_wdba_ = skel_simul_ = 0;
+    comp_susp_ = early_susp_ = skel_wdba_ = skel_simul_ = split_
+               = always_split_ = 0;
 
     if (!opt)
       return;
@@ -39,6 +71,9 @@ namespace spot
         skel_wdba_ = opt->get("skel-wdba", -1);
         skel_simul_ = opt->get("skel-simul", 1);
       }
+    split_ = opt->get("split", 0);
+    always_split_ = opt->get("always-split", 0);
+
   }
 
   void translator::build_simplifier(const bdd_dict_ptr& dict)
@@ -62,6 +97,33 @@ namespace spot
 
   twa_graph_ptr translator::run(formula* f)
   {
+    formula r = simpl_->simplify(*f);
+    *f = r;
+
+    twa_graph_ptr product_aut = nullptr;
+    if (!f->is_syntactic_obligation() && (split_ > 0 || always_split_ > 0))
+      {
+        if (f->is(op::Or))
+          {
+            if (this->postprocessor::type_ == Parity)
+              product_aut = make_product(*this, f, parity_product_or);
+            else
+              product_aut = make_product(*this, f, product_or_aux);
+          }
+        else if (f->is(op::And))
+          {
+            if (this->postprocessor::type_ == Parity)
+              product_aut = make_product(*this, f, parity_product);
+            else
+              product_aut = make_product(*this, f, product_aux);
+          }
+        if (product_aut)
+        {
+          product_aut = this->postprocessor::run(product_aut, r);
+          if (always_split_ > 0)
+            return product_aut;
+        }
+      }
     bool unambiguous = (pref_ & postprocessor::Unambiguous);
     if (unambiguous && type_ == postprocessor::Monitor)
       {
@@ -70,9 +132,6 @@ namespace spot
         unambiguous = false;
         set_pref(pref_ | postprocessor::Deterministic);
       }
-
-    formula r = simpl_->simplify(*f);
-    *f = r;
 
     // This helps ltl_to_tgba_fm() to order BDD variables in a more
     // natural way (improving the degeneralization).
@@ -98,6 +157,8 @@ namespace spot
                              unambiguous);
       }
     aut = this->postprocessor::run(aut, r);
+    if (product_aut && product_aut->num_states() < aut->num_states())
+      return product_aut;
     return aut;
   }
 
