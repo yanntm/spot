@@ -18,6 +18,11 @@ New in spot 2.1.2.dev (not yet released)
     this halves the run time of
        genltl --rv-counter=10 | ltl2tgba
 
+  Bugs fixed:
+
+  * Compression could encode '6' and '22' in the same way. This issue
+    only appears when using the compression from intvcomp.hh.
+
 New in spot 2.1.2 (2016-10-14)
 
   Command-line tools:
