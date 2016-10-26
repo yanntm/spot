@@ -32,6 +32,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE. */
 
+#include <spot/misc/common.hh>
+
 #include <bricks/brick-hash.h>
 #include <bricks/brick-shmem.h>
 #include <bricks/brick-bitlevel.h>
@@ -636,6 +638,7 @@ struct _ConcurrentHashSet : HashSetBase< Cell >
                             ++_td.currentRow;
                             break;
                         }
+                        SPOT_FALLTHROUGH;
                     case Resolution::Growing:
                         helpWithRehashing();
                         updateIndex( _td.currentRow );
