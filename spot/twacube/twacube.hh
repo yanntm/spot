@@ -22,6 +22,7 @@
 #include <vector>
 #include <iosfwd>
 #include <spot/graph/graph.hh>
+#include <spot/misc/hash.hh>
 #include <spot/twa/acc.hh>
 #include <spot/twacube/cube.hh>
 #include <spot/twacube/fwd.hh>
@@ -93,8 +94,14 @@ namespace spot
       // swarming, we expect swarming is activated.
       if (SPOT_UNLIKELY(!seed))
         return idx_;
-      // swarming.
-      return (((idx_-st_.succ+1)*seed) % (st_.succ_tail-st_.succ+1)) + st_.succ;
+      // Here swarming performs a technique called "primitive
+      // root modulo n", i. e.  for i in [1..n]: i*seed (mod n). We
+      // also must have seed prime with n: to solve this, we use
+      // precomputed primes and seed access one of this primes. Note
+      // that the chosen prime must be greater than n.
+      SPOT_ASSERT(primes[seed] > (st_.succ_tail-st_.succ+1));
+      return (((idx_-st_.succ+1)*primes[seed]) % (st_.succ_tail-st_.succ+1))
+        + st_.succ;
     }
 
   private:

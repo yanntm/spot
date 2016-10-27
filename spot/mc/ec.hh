@@ -45,10 +45,10 @@ namespace spot
 
   public:
     ec_renault13lpar(kripkecube<State, SuccIterator>& sys,
-                     twacube_ptr twa)
+                     twacube_ptr twa, unsigned tid, bool stop)
       : intersect<State, SuccIterator, StateHash, StateEqual,
                   ec_renault13lpar<State, SuccIterator,
-                                   StateHash, StateEqual>>(sys, twa),
+                                   StateHash, StateEqual>>(sys, twa, tid, stop),
       acc_(twa->acc()), sccs_(0U)
       {
       }
@@ -114,6 +114,8 @@ namespace spot
         }
       roots_.back().acc |= cond;
       found_ = acc_.accepting(roots_.back().acc);
+      if (SPOT_UNLIKELY(found_))
+        this->stop_ = true;
       return found_;
     }
 
@@ -147,7 +149,7 @@ namespace spot
       acc_cond::mark_t acc = 0U;
 
       bfs.push(new ctrx_element({&this->todo.back().st, nullptr,
-              this->sys_.succ(this->todo.back().st.st_kripke),
+              this->sys_.succ(this->todo.back().st.st_kripke, this->tid_),
               this->twa_->succ(this->todo.back().st.st_prop)}));
       while (true)
         {
@@ -160,7 +162,7 @@ namespace spot
               while (!front->it_prop->done())
                 {
                   if (this->twa_->get_cubeset().intersect
-                      (this->twa_->trans_data(front->it_prop).cube_,
+                      (this->twa_->trans_data(front->it_prop, this->tid_).cube_,
                        front->it_kripke->condition()))
                     {
                       const product_state dst = {
@@ -181,7 +183,8 @@ namespace spot
                       // This is a valid transition. If this transition
                       // is the one we are looking for, update the counter-
                       // -example and flush the bfs queue.
-                      auto mark = this->twa_->trans_data(front->it_prop).acc_;
+                      auto mark = this->twa_->trans_data(front->it_prop,
+                                                         this->tid_).acc_;
                       if (!acc.has(mark))
                         {
                           ctrx_element* current = front;
@@ -213,7 +216,7 @@ namespace spot
                           const product_state* q = &(it->first);
                           ctrx_element* root = new ctrx_element({
                               q , nullptr,
-                              this->sys_.succ(q->st_kripke),
+                              this->sys_.succ(q->st_kripke, this->tid_),
                               this->twa_->succ(q->st_prop)
                           });
                           bfs.push(root);
@@ -224,7 +227,7 @@ namespace spot
                       const product_state* q = &(it->first);
                       ctrx_element* root = new ctrx_element({
                           q , nullptr,
-                          this->sys_.succ(q->st_kripke),
+                          this->sys_.succ(q->st_kripke, this->tid_),
                           this->twa_->succ(q->st_prop)
                       });
                       bfs.push(root);
@@ -243,7 +246,7 @@ namespace spot
     virtual istats stats() override
     {
       return {this->states(), this->trans(), sccs_,
-              (unsigned)roots_.size(), dfs_};
+          (unsigned) roots_.size(), dfs_, found_};
     }
 
   private:
