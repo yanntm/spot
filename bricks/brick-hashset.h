@@ -340,7 +340,7 @@ struct HashSetBase
 template< typename Cell >
 struct _HashSet : HashSetBase< Cell >
 {
-    using Base = HashSetBase< Cell >;
+    typedef HashSetBase< Cell > Base;
     typedef std::vector< Cell > Table;
     _HashSet< Cell > &withTD( typename Base::ThreadData & ) { return *this; }
 
@@ -484,7 +484,8 @@ using Compact = _HashSet< CompactCell< T, Hasher > >;
 template< typename Cell >
 struct _ConcurrentHashSet : HashSetBase< Cell >
 {
-    using Base = HashSetBase< Cell >;
+    //using Base = HashSetBase< Cell >;
+    typedef HashSetBase< Cell > Base;
     using typename Base::Hasher;
     using typename Base::value_type;
     using typename Base::iterator;

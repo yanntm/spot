@@ -67,11 +67,12 @@ namespace spot
       reset();
     }
 
-    trans_index(trans_index&& ci):
-      idx_(ci.idx_),
-      st_(ci.st_)
-    {
-    }
+    trans_index(trans_index&& ci) = delete;
+    // trans_index(trans_index&& ci):
+    //   idx_(ci.idx_),
+    //   st_(ci.st_)
+    // {
+    // }
 
     inline void reset()
     {

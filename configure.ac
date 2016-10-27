@@ -105,6 +105,9 @@ if ! "${stdpass-false}"; then
   AC_ERROR([unable to turn on C++11 mode with this compiler])
 fi
 
+AX_CHECK_COMPILE_FLAG([-faligned-new], [CXXFLAGS="$CXXFLAGS -faligned-new"])
+
+
 AX_CHECK_BUDDY
 
 AX_CHECK_DIVINE
