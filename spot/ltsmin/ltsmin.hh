@@ -85,13 +85,14 @@ namespace spot
     // atomic propositions such as "P.a == P.c"
     ltsmin_kripkecube_ptr kripkecube(std::vector<std::string> to_observe,
                                      formula dead = formula::tt(),
-                                     int compress = 0) const;
+                                     int compress = 0,
+                                     unsigned int nb_threads = 1) const;
 
     /// \brief Check for the emptiness between a system and a twa.
     /// Return a pair containing a boolean indicating wether a counterexample
     /// has been found and a string representing the counterexample if the
     /// computation have been required
-    static std::tuple<bool, std::string, istats>
+    static std::tuple<bool, std::string, std::vector<istats>>
     modelcheck(ltsmin_kripkecube_ptr sys,
                spot::twacube_ptr twa, bool compute_ctrx = false);
 
