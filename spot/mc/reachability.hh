@@ -32,8 +32,8 @@ namespace spot
   class SPOT_API seq_reach_kripke
   {
   public:
-    seq_reach_kripke(kripkecube<State, SuccIterator>& sys):
-      sys_(sys)
+    seq_reach_kripke(kripkecube<State, SuccIterator>& sys, unsigned tid):
+      sys_(sys), tid_(tid)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
       visited.reserve(2000000);
@@ -54,15 +54,15 @@ namespace spot
     void run()
     {
       self().setup();
-      State initial = sys_.initial();
-      todo.push_back({initial, sys_.succ(initial)});
+      State initial = sys_.initial(tid_);
+      todo.push_back({initial, sys_.succ(initial, tid_)});
       visited[initial] = ++dfs_number;
       self().push(initial, dfs_number);
       while (!todo.empty())
         {
           if (todo.back().it->done())
             {
-              sys_.recycle(todo.back().it);
+              sys_.recycle(todo.back().it, tid_);
               todo.pop_back();
             }
           else
@@ -76,7 +76,7 @@ namespace spot
                   self().push(dst, dfs_number);
                   self().edge(visited[todo.back().s], dfs_number);
                   todo.back().it->next();
-                  todo.push_back({dst, sys_.succ(dst)});
+                  todo.push_back({dst, sys_.succ(dst, tid_)});
                 }
               else
                 {
@@ -113,5 +113,6 @@ namespace spot
     visited_map visited;
     unsigned int dfs_number = 0;
     unsigned int transitions = 0;
+    unsigned int tid_;
   };
 }
