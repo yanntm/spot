@@ -410,7 +410,8 @@ static int checked_main()
       try
         {
            modelcube = spot::ltsmin_model::load(mc_options.model)
-            .kripkecube(propcube->get_ap(), deadf, mc_options.compress);
+             .kripkecube(propcube->get_ap(), deadf, mc_options.compress,
+                         mc_options.nb_threads);
         }
       catch (std::runtime_error& e)
         {
@@ -432,32 +433,57 @@ static int checked_main()
         }
 
       // Display statistics
-      std::cout << std::get<2>(res).states << " unique states visited\n";
-      std::cout << std::get<2>(res).instack_sccs
-                << " strongly connected components in search stack\n";
-      std::cout << std::get<2>(res).transitions
-                << " transitions explored\n";
-      std::cout << std::get<2>(res).instack_item
-                << " items max in DFS search stack\n";
-      std::cout << memused << " pages allocated for emptiness check\n";
-
-      if (!std::get<0>(res))
-        std::cout << "no accepting run found";
-      else if (!mc_options.compute_counterexample)
+      unsigned smallest = 0;
+      for (unsigned i = 0; i < std::get<2>(res).size(); ++i)
         {
-          std::cout << "an accepting run exists "
-                    << "(use -c to print it)" << std::endl;
-          exit_code = 1;
+          if (std::get<2>(res)[i].states < std::get<2>(res)[smallest].states)
+            smallest = i;
+
+          std::cout << "\n---- Thread number : " << i << '\n';
+          std::cout << std::get<2>(res)[i].states << " unique states visited\n";
+          std::cout << std::get<2>(res)[i].instack_sccs
+                    << " strongly connected components in search stack\n";
+          std::cout << std::get<2>(res)[i].transitions
+                    << " transitions explored\n";
+          std::cout << std::get<2>(res)[i].instack_item
+                    << " items max in DFS search stack\n";
+
+          // FIXME: produce walltime for each threads.
+          if (mc_options.csv)
+            {
+              std::cout << "Find following the csv: "
+                        << "thread_id,walltimems,type,"
+                        << "states,transitions\n";
+              std::cout << "@th_" << i << ','
+                        << tm.timer("emptiness check").walltime() << ','
+                        << (!std::get<2>(res)[i].is_empty ?
+                            "EMPTY," : "NONEMPTY,")
+                        << std::get<2>(res)[i].states << ','
+                        << std::get<2>(res)[i].transitions
+                        << std::endl;
+            }
         }
-      else
-        std::cout << "an accepting run exists!\n" << std::get<1>(res)
-                  << std::endl;
+
 
       if (mc_options.csv)
         {
-          std::cout << "\nFind following the csv: "
-                    << "model,formula,walltimems,memused,type,"
+          std::cout << "\nSummary :\n";
+          if (!std::get<0>(res))
+            std::cout << "no accepting run found\n";
+          else if (!mc_options.compute_counterexample)
+            {
+              std::cout << "an accepting run exists "
+                        << "(use -c to print it)" << std::endl;
+              exit_code = 1;
+            }
+          else
+            std::cout << "an accepting run exists!\n" << std::get<1>(res)
+                      << '\n';
+
+          std::cout << "Find following the csv: "
+                    << "model,formula,walltimems,memused,type"
                     << "states,transitions\n";
+
           std::cout << '#'
                     << split_filename(mc_options.model)
                     << ','
@@ -465,9 +491,9 @@ static int checked_main()
                     << tm.timer("emptiness check").walltime() << ','
                     << memused << ','
                     << (!std::get<0>(res) ? "EMPTY," : "NONEMPTY,")
-                    << std::get<2>(res).states << ','
-                    << std::get<2>(res).transitions
-                    << std::endl;
+                    << std::get<2>(res)[smallest].states << ','
+                    << std::get<2>(res)[smallest].transitions
+                    << '\n';
         }
     }
 

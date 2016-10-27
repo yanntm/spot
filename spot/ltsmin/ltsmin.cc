@@ -1274,8 +1274,9 @@ namespace spot
                     cube cond,
                     bool compress,
                     bool selfloopize,
-                    cubeset& cubeset, int dead_idx)
-      :  current_(0), cond_(cond)
+                    cubeset& cubeset,
+                    int dead_idx, unsigned tid)
+      :  current_(0), cond_(cond), tid_(tid)
     {
       successors_.reserve(10);
       inner.manager = &manager;
@@ -1321,8 +1322,9 @@ namespace spot
                  cube cond,
                  bool compress,
                  bool selfloopize,
-                 cubeset& cubeset, int dead_idx)
+                 cubeset& cubeset, int dead_idx, unsigned tid)
     {
+      tid_ = tid;
       cond_ = cond;
       current_ = 0;
       // Constant time since int* is is_trivially_destructible
@@ -1379,7 +1381,10 @@ namespace spot
 
     cspins_state state() const
     {
-      return successors_[current_];
+      if (SPOT_UNLIKELY(!tid_))
+        return successors_[current_];
+      return  successors_[(((current_+1)*primes[tid_])
+                           % ((int)successors_.size()))];
     }
 
     cube condition() const
@@ -1391,6 +1396,7 @@ namespace spot
     std::vector<cspins_state> successors_;
     unsigned int current_;
     cube cond_;
+    unsigned tid_;
   };
 
   ////////////////////////////////////////////////////////////////////////
@@ -1423,45 +1429,68 @@ namespace spot
   public:
     kripkecube(spins_interface_ptr sip, bool compress,
                std::vector<std::string> visible_aps,
-               bool selfloopize, std::string dead_prop)
-      : sip_(sip), d_(sip.get()), manager_(d_->get_state_size(), compress),
-      compress_(compress), cubeset_(visible_aps.size()),
-      selfloopize_(selfloopize), aps_(visible_aps)
+               bool selfloopize, std::string dead_prop,
+               unsigned int nb_threads)
+      : sip_(sip), d_(sip.get()),
+        compress_(compress), cubeset_(visible_aps.size()),
+        selfloopize_(selfloopize), aps_(visible_aps), nb_threads_(nb_threads)
     {
       map_.setSize(2000000);
-      recycle_.reserve(2000000);
-      inner_.compressed_ = new int[d_->get_state_size() * 2];
-      inner_.uncompressed_ = new int[d_->get_state_size()+30];
+      manager_ = static_cast<cspins_state_manager*>
+        (::operator new(sizeof(cspins_state_manager) * nb_threads));
+      inner_ = new inner_callback_parameters[nb_threads_];
+      for (unsigned i = 0; i < nb_threads_; ++i)
+        {
+          recycle_.push_back(std::vector<cspins_iterator*>());
+          recycle_.back().reserve(2000000);
+          new (&manager_[i])
+            cspins_state_manager(d_->get_state_size(), compress);
+          inner_[i].compressed_ = new int[d_->get_state_size() * 2];
+          inner_[i].uncompressed_ = new int[d_->get_state_size()+30];
+        }
       dead_idx_ = -1;
       match_aps(visible_aps, dead_prop);
+
     }
+
     ~kripkecube()
       {
         for (auto i: recycle_)
           {
-            cubeset_.release(i->condition());
-            delete i;
+            for (auto j: i)
+              {
+                cubeset_.release(j->condition());
+                delete j;
+              }
           }
-        delete inner_.compressed_;
-        delete inner_.uncompressed_;
+
+        for (unsigned i = 0; i < nb_threads_; ++i)
+          {
+            manager_[i].~cspins_state_manager();
+            delete inner_[i].compressed_;
+            delete inner_[i].uncompressed_;
+          }
+        delete[] inner_;
       }
 
-    cspins_state initial()
+    cspins_state initial(unsigned tid)
     {
-      d_->get_initial_state(inner_.uncompressed_);
-      return manager_.alloc_setup(inner_.uncompressed_, inner_.compressed_,
-                                  manager_.size() * 2);
+      d_->get_initial_state(inner_[tid].uncompressed_);
+      return manager_[tid].alloc_setup(inner_[tid].uncompressed_,
+                                  inner_[tid].compressed_,
+                                  manager_[tid].size() * 2);
     }
 
-    std::string to_string(const cspins_state s) const
+    std::string to_string(const cspins_state s, unsigned tid = 0) const
     {
       std::string res = "";
-      cspins_state out = manager_.unbox_state(s);
+      cspins_state out = manager_[tid].unbox_state(s);
       cspins_state ref = out;
       if (compress_)
         {
-          manager_.decompress(s, inner_.uncompressed_, manager_.size());
-          ref = inner_.uncompressed_;
+          manager_[tid].decompress(s, inner_[tid].uncompressed_,
+                                   manager_[tid].size());
+          ref = inner_[tid].uncompressed_;
         }
       for (int i = 0; i < d_->get_state_size(); ++i)
         res += (d_->get_state_variable_name(i)) +
@@ -1470,33 +1499,38 @@ namespace spot
       return res;
     }
 
-    cspins_iterator* succ(const cspins_state s)
+    cspins_iterator* succ(const cspins_state s, unsigned tid)
     {
-      if (SPOT_LIKELY(!recycle_.empty()))
+      if (SPOT_LIKELY(!recycle_[tid].empty()))
         {
-          auto tmp  = recycle_.back();
-          recycle_.pop_back();
-          compute_condition(tmp->condition(), s);
-          tmp->recycle(s, d_, manager_, map_, inner_, -1,
+          auto tmp  = recycle_[tid].back();
+          recycle_[tid].pop_back();
+          compute_condition(tmp->condition(), s, tid);
+          tmp->recycle(s, d_, manager_[tid], map_, inner_[tid], -1,
                        tmp->condition(), compress_, selfloopize_,
-                       cubeset_, dead_idx_);
+                       cubeset_, dead_idx_, tid);
           return tmp;
         }
       cube cond = cubeset_.alloc();
-      compute_condition(cond, s);
-      return new cspins_iterator(s, d_, manager_, map_, inner_,
+      compute_condition(cond, s, tid);
+      return new cspins_iterator(s, d_, manager_[tid], map_, inner_[tid],
                                  -1, cond, compress_, selfloopize_,
-                                 cubeset_, dead_idx_);
+                                 cubeset_, dead_idx_, tid);
     }
 
-    void recycle(cspins_iterator* it)
+    void recycle(cspins_iterator* it, unsigned tid)
     {
-      recycle_.push_back(it);
+      recycle_[tid].push_back(it);
     }
 
     const std::vector<std::string> get_ap()
     {
       return aps_;
+    }
+
+    unsigned get_threads()
+    {
+      return nb_threads_;
     }
 
   private:
@@ -1509,34 +1543,36 @@ namespace spot
 
     /// Compute the cube associated to each state. The cube
     /// will then be given to all iterators.
-    void compute_condition(cube c, cspins_state s);
+    void compute_condition(cube c, cspins_state s, unsigned tid = 0);
 
 
     spins_interface_ptr sip_;
     const spot::spins_interface* d_; // To avoid numerous sip_.get()
-    cspins_state_manager manager_; // FIXME One per thread!
+    cspins_state_manager* manager_;
     bool compress_;
-    std::vector<cspins_iterator*> recycle_;
-    inner_callback_parameters inner_; // FIXME Should be an array for threads.
+    std::vector<std::vector<cspins_iterator*>> recycle_;
+    inner_callback_parameters* inner_;
     cubeset cubeset_;
     bool selfloopize_;
     int dead_idx_;
     std::vector<std::string> aps_;
     cspins_state_map map_;
+    unsigned int nb_threads_;
   };
 
   void
-  kripkecube<cspins_state,
-             cspins_iterator>::compute_condition(cube c, cspins_state s)
+  kripkecube<cspins_state, cspins_iterator>::compute_condition
+  (cube c, cspins_state s, unsigned tid)
   {
     int i = -1;
-    int *vars = manager_.unbox_state(s);
+    int *vars = manager_[tid].unbox_state(s);
 
     // State is compressed, uncompress it
     if (compress_)
       {
-        manager_.decompress(s, inner_.uncompressed_+2, manager_.size());
-        vars = inner_.uncompressed_ + 2;
+        manager_[tid].decompress(s, inner_[tid].uncompressed_+2,
+                                 manager_[tid].size());
+        vars = inner_[tid].uncompressed_ + 2;
       }
 
     for (auto& ap: pset_)
@@ -1957,7 +1993,8 @@ namespace spot
 
   ltsmin_kripkecube_ptr
   ltsmin_model::kripkecube(std::vector<std::string> to_observe,
-                           const formula dead, int compress) const
+                           const formula dead, int compress,
+                           unsigned int nb_threads) const
   {
     // Register the "dead" proposition.  There are three cases to
     // consider:
@@ -1987,7 +2024,7 @@ namespace spot
     // Finally build the system.
     return std::make_shared<spot::kripkecube<spot::cspins_state,
                                              spot::cspins_iterator>>
-      (iface, compress, to_observe, selfloopize, dead_ap);
+      (iface, compress, to_observe, selfloopize, dead_ap, nb_threads);
   }
 
   kripke_ptr
@@ -2021,7 +2058,7 @@ namespace spot
   {
   }
 
-  std::tuple<bool, std::string, istats>
+  std::tuple<bool, std::string, std::vector<istats>>
   ltsmin_model::modelcheck(ltsmin_kripkecube_ptr sys,
                            spot::twacube_ptr twa, bool compute_ctrx)
   {
@@ -2031,13 +2068,33 @@ namespace spot
     for (unsigned int i = 0; i < sys->get_ap().size(); ++i)
       assert(sys->get_ap()[i].compare(twa->get_ap()[i]) == 0);
 
-    ec_renault13lpar<cspins_state, cspins_iterator,
-                     cspins_state_hash, cspins_state_equal> ec(*sys, twa);
-    bool has_ctrx = ec.run();
+    bool stop = false;
+    std::vector<ec_renault13lpar<cspins_state, cspins_iterator,
+                                 cspins_state_hash, cspins_state_equal>> ecs;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      ecs.push_back({*sys, twa, i, stop});
+
+    std::vector<std::thread> threads;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      threads.push_back
+        (std::thread(&ec_renault13lpar<cspins_state, cspins_iterator,
+                     cspins_state_hash, cspins_state_equal>::run, &ecs[i]));
+
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      threads[i].join();
+
+    bool has_ctrx = false;
     std::string trace = "";
-    if (has_ctrx && compute_ctrx)
-      trace = ec.trace();
-    return std::make_tuple(has_ctrx, trace, ec.stats());
+    std::vector<istats> stats;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      {
+        has_ctrx |= ecs[i].counterexample_found();
+        if (compute_ctrx && ecs[i].counterexample_found()
+            && trace.compare("") == 0)
+          trace = ecs[i].trace(); // Pick randomly one !
+        stats.push_back(ecs[i].stats());
+      }
+    return std::make_tuple(has_ctrx, trace, stats);
   }
 
   int ltsmin_model::state_size() const
