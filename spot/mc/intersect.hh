@@ -34,6 +34,7 @@ namespace spot
     unsigned sccs;
     unsigned instack_sccs;
     unsigned instack_item;
+    bool is_empty;
   };
 
   /// \brief This class explores (with a DFS) a product between a
@@ -59,8 +60,8 @@ namespace spot
   {
   public:
     intersect(kripkecube<State, SuccIterator>& sys,
-              twacube_ptr twa):
-      sys_(sys), twa_(twa)
+              twacube_ptr twa, unsigned tid, bool& stop):
+      sys_(sys), twa_(twa), tid_(tid), stop_(stop)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
       map.reserve(2000000);
@@ -87,10 +88,10 @@ namespace spot
     bool run()
     {
       self().setup();
-      product_state initial = {sys_.initial(), twa_->get_initial()};
+      product_state initial = {sys_.initial(tid_), twa_->get_initial()};
       if (SPOT_LIKELY(self().push_state(initial, dfs_number+1, 0U)))
         {
-          todo.push_back({initial, sys_.succ(initial.st_kripke),
+          todo.push_back({initial, sys_.succ(initial.st_kripke, tid_),
                 twa_->succ(initial.st_prop)});
 
           // Not going further! It's a product with a single state.
@@ -100,7 +101,7 @@ namespace spot
           forward_iterators(true);
           map[initial] = ++dfs_number;
         }
-      while (!todo.empty())
+      while (!todo.empty() && !stop_)
         {
           // Check the kripke is enough since it's the outer loop. More
           // details in forward_iterators.
@@ -113,8 +114,8 @@ namespace spot
                                              is_init,
                                              newtop,
                                              map[newtop])))
-              {
-                  sys_.recycle(todo.back().it_kripke);
+                {
+                  sys_.recycle(todo.back().it_kripke, tid_);
                   // FIXME a local storage for twacube iterator?
                   todo.pop_back();
                   if (SPOT_UNLIKELY(self().counterexample_found()))
@@ -126,9 +127,9 @@ namespace spot
               ++transitions;
               product_state dst = {
                 todo.back().it_kripke->state(),
-                twa_->trans_storage(todo.back().it_prop).dst
+                twa_->trans_storage(todo.back().it_prop, tid_).dst
               };
-              auto acc = twa_->trans_data(todo.back().it_prop).acc_;
+              auto acc = twa_->trans_data(todo.back().it_prop, tid_).acc_;
               forward_iterators(false);
               auto it  = map.find(dst);
               if (it == map.end())
@@ -136,7 +137,7 @@ namespace spot
                   if (SPOT_LIKELY(self().push_state(dst, dfs_number+1, acc)))
                     {
                       map[dst] = ++dfs_number;
-                      todo.push_back({dst, sys_.succ(dst.st_kripke),
+                      todo.push_back({dst, sys_.succ(dst.st_kripke, tid_),
                             twa_->succ(dst.st_prop)});
                       forward_iterators(true);
                     }
@@ -167,7 +168,7 @@ namespace spot
 
     virtual istats stats()
     {
-      return {dfs_number, transitions, 0U, 0U, 0U};
+      return {dfs_number, transitions, 0U, 0U, 0U, false};
     }
 
   protected:
@@ -190,7 +191,7 @@ namespace spot
       // There is no need to move iterators forward.
       SPOT_ASSERT(!(todo.back().it_prop->done()));
       if (just_pushed && twa_->get_cubeset()
-          .intersect(twa_->trans_data(todo.back().it_prop).cube_,
+          .intersect(twa_->trans_data(todo.back().it_prop, tid_).cube_,
                      todo.back().it_kripke->condition()))
           return;
 
@@ -207,7 +208,7 @@ namespace spot
           while (!todo.back().it_prop->done())
             {
               if (SPOT_UNLIKELY(twa_->get_cubeset()
-                .intersect(twa_->trans_data(todo.back().it_prop).cube_,
+                .intersect(twa_->trans_data(todo.back().it_prop, tid_).cube_,
                            todo.back().it_kripke->condition())))
                 return;
               todo.back().it_prop->next();
@@ -263,5 +264,7 @@ namespace spot
     visited_map map;
     unsigned int dfs_number = 0;
     unsigned int transitions = 0;
+    unsigned tid_;
+    bool& stop_; // Do not need to be atomic.
   };
 }
