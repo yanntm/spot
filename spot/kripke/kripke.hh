@@ -38,18 +38,19 @@ namespace spot
     public std::enable_shared_from_this<kripkecube<State, SuccIterator>>
   {
   public:
-    /// \brief Returns the initial State of the System
-    State initial();
+    /// \brief Returns the initial State of the System. The \a tid parameter
+    /// is used internally for sharing this structure among threads.
+    State initial(unsigned tid);
 
     /// \brief Provides a string representation of the parameter state
-    std::string to_string(const State) const;
+    std::string to_string(const State, unsigned tid) const;
 
     /// \brief Returns an iterator over the successors of the parameter state.
-    SuccIterator* succ(const State);
+    SuccIterator* succ(const State, unsigned tid);
 
     /// \brief Allocation and deallocation of iterator is costly. This
     /// method allows to reuse old iterators.
-    void recycle(SuccIterator*);
+    void recycle(SuccIterator*, unsigned tid);
 
     /// \brief This method allow to deallocate a given state.
     const std::vector<std::string> get_ap();
@@ -62,11 +63,11 @@ namespace spot
   bool is_a_kripkecube(kripkecube<State, SuccIter>&)
   {
     // Hardly waiting C++17 concepts...
-    State (kripkecube<State, SuccIter>::*test_initial)() =
+    State (kripkecube<State, SuccIter>::*test_initial)(unsigned) =
       &kripkecube<State, SuccIter>::initial;
     std::string (kripkecube<State, SuccIter>::*test_to_string)
-      (const State) const = &kripkecube<State, SuccIter>::to_string;
-    auto (kripkecube<State, SuccIter>::*test_recycle)(SuccIter*) =
+      (const State, unsigned) const = &kripkecube<State, SuccIter>::to_string;
+    auto (kripkecube<State, SuccIter>::*test_recycle)(SuccIter*, unsigned) =
       &kripkecube<State, SuccIter>::recycle;
     const std::vector<std::string>
       (kripkecube<State, SuccIter>::*test_get_ap)() =
