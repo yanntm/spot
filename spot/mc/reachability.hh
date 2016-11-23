@@ -41,10 +41,10 @@ namespace spot
     }
 
     ~seq_reach_kripke()
-    {
-      // States will be destroyed by the system, so just clear map
-      visited.clear();
-    }
+      {
+        // States will be destroyed by the system, so just clear map
+        visited.clear();
+      }
 
     Visitor& self()
     {
@@ -55,15 +55,20 @@ namespace spot
     {
       self().setup();
       State initial = sys_.initial(tid_);
-      todo.push_back({initial, sys_.succ(initial, tid_)});
-      visited[initial] = ++dfs_number;
-      self().push(initial, dfs_number);
+      if (SPOT_LIKELY(self().push(initial, dfs_number)))
+        {
+          todo.push_back({initial, sys_.succ(initial, tid_)});
+          visited[initial] = ++dfs_number;
+        }
       while (!todo.empty())
         {
           if (todo.back().it->done())
             {
-              sys_.recycle(todo.back().it, tid_);
-              todo.pop_back();
+              if (SPOT_LIKELY(self().pop(todo.back().s)))
+                {
+                  sys_.recycle(todo.back().it, tid_);
+                  todo.pop_back();
+                }
             }
           else
             {
@@ -73,10 +78,11 @@ namespace spot
               if (it.second)
                 {
                   ++dfs_number;
-                  self().push(dst, dfs_number);
-                  self().edge(visited[todo.back().s], dfs_number);
-                  todo.back().it->next();
-                  todo.push_back({dst, sys_.succ(dst, tid_)});
+                  if (SPOT_LIKELY(self().push(dst, dfs_number)))
+                    {
+                      todo.back().it->next();
+                      todo.push_back({dst, sys_.succ(dst, tid_)});
+                    }
                 }
               else
                 {
