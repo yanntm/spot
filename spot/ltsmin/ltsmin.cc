@@ -1174,13 +1174,12 @@ namespace spot
     return std::make_tuple(has_ctrx, trace, stats);
   }
 
-
   static std::vector<cspins_state>*
   interpolate_states (std::vector<cspins_state>& cs,
                       cspins_state_manager& manager,
                       ltsmin_kripkecube_ptr sys,
                       const spins_interface* d,
-                      std::vector<int> splitter_)
+                      std::vector<int> splitter_, unsigned tid)
   {
     // FIXME compress!
     if (sys->compress())
@@ -1209,7 +1208,7 @@ namespace spot
 
     unsigned pop_size = 50;     // FIXME
     std::mt19937 gen;
-    gen.seed(0); // FIXME
+    gen.seed(tid);
     float THRESHOLD = 0.999;        //  FIXME
     int *tab = new int [d->get_state_size()+30]; // FIXME
 
@@ -1273,7 +1272,7 @@ namespace spot
              if (n == fitness)
                population->push_back(st);
            }
-         if (population->size() == 0)
+         if (population->empty())
            {
 
              // Swap the two vectors
@@ -1357,7 +1356,7 @@ namespace spot
                   (std::vector<cspins_state> cs) ->std::vector<cspins_state>*
                   {
                     return  interpolate_states(cs, manager_, sys, d_,
-                                               splitter_);
+                                               splitter_, 0);
                   },
                   0, /* FIXME tid */
                   stop);
@@ -1365,6 +1364,98 @@ namespace spot
     delete[] uncompressed_;
     return res;
   }
+
+
+
+
+  void
+  ltsmin_model::swarmed_dfs(ltsmin_kripkecube_ptr sys)
+  {
+    // The shared map among all threads
+    spot::swarmed_dfs<cspins_state, cspins_iterator,
+                      cspins_state_hash, cspins_state_equal>::shared_map map;
+
+    bool stop = false;
+    using algo_name = spot::swarmed_dfs<cspins_state, cspins_iterator,
+                                        cspins_state_hash, cspins_state_equal>;
+
+    std::vector<algo_name>  swarmed;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      swarmed.push_back({*sys, map, i, stop});
+
+    std::vector<std::thread> threads;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
+
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      threads[i].join();
+
+    return;
+  }
+
+    void
+  ltsmin_model::swarmed_gp_dfs(ltsmin_kripkecube_ptr sys)
+  {
+    // FIXME redundant code
+    auto d_ = sys->spins_interface();
+    std::vector<int> splitter_;
+    {
+      for (int i = 0; i < d_->get_type_count(); ++i)
+        {
+          std::string name(d_->get_type_name(i));
+          if (name.compare("int") == 0 || name.compare("byte") == 0)
+            continue;
+          for (int j = 0; j < d_->get_state_size(); ++j)
+            if (name.compare(d_->get_state_variable_name(j)) == 0 && j != 0)
+              {
+                if (splitter_.empty())
+                  {
+                    for (int k = 1; k <= j; ++k)
+                      splitter_.push_back(k);
+                  }
+                else
+                  splitter_.push_back(j);
+              }
+        }
+    }
+    splitter_.push_back(d_->get_state_size());
+
+
+
+    bool stop = false;
+    using algo_name =
+      spot::swarmed_gp<cspins_state, cspins_iterator,
+                           cspins_state_hash, cspins_state_equal>;
+    algo_name::shared_map map;
+
+    std::vector<algo_name>  swarmed;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      {
+        auto& manager = sys->manager(i);
+        swarmed.push_back({
+          *sys,
+            [&manager, &sys, &d_, splitter_, i]
+            (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
+              {
+                return  interpolate_states(cs, manager, sys, d_,
+                                           splitter_, i);
+              },
+            map, i, stop});
+      }
+
+    std::vector<std::thread> threads;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
+
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      threads[i].join();
+
+    return;
+  }
+
+
+
+
 
   int ltsmin_model::state_size() const
   {

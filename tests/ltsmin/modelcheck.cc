@@ -41,6 +41,7 @@
 #include <spot/twacube/twacube.hh>
 #include <spot/twacube_algos/convert.hh>
 #include <spot/mc/ec.hh>
+#include <spot/mc/interpolate.hh>
 
 const char argp_program_doc[] =
 "Process model and formula to check wether a "
@@ -55,6 +56,8 @@ const unsigned DOT_PRODUCT = 2;
 const unsigned DOT_FORMULA = 4;
 const unsigned CSV = 8;
 const unsigned INTERPOLATE_CSV = 16;
+const unsigned SWARMED_DFS = 32;
+const unsigned SWARMED_GP_DFS = 33;
 
 // Handle all options specified in the command line
 struct mc_options_
@@ -72,6 +75,8 @@ struct mc_options_
   unsigned nb_threads = 1;
   bool csv = false;
   bool interpolate_csv = false;
+  bool swarmed_dfs = false;
+  bool swarmed_gp_dfs = false;
 } mc_options;
 
 
@@ -86,6 +91,12 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case INTERPOLATE_CSV:
       mc_options.interpolate_csv = true;
+      break;
+    case SWARMED_DFS:
+      mc_options.swarmed_dfs = true;
+      break;
+    case SWARMED_GP_DFS:
+      mc_options.swarmed_gp_dfs = true;
       break;
     case 'c':
       mc_options.compute_counterexample = true;
@@ -164,6 +175,10 @@ static const argp_option options[] =
       "output the associated automaton in (internal) kripke format", 0 },
     { "interpolate-csv", INTERPOLATE_CSV, nullptr, 0,
       "output the associated automaton in csv format", 0 },
+    { "swarmed-dfs", SWARMED_DFS, nullptr, 0,
+      "walk the automaton using a swarmed DFS", 0 },
+    { "swarmed-gp-dfs", SWARMED_GP_DFS, nullptr, 0,
+      "walk the automaton using a swarmed GP DFS", 0 },
     { "csv", CSV, nullptr, 0,
       "output a CSV containing interesting values", 0 },
     // ------------------------------------------------------------
@@ -414,6 +429,35 @@ static int checked_main()
 
       std::cout << spot::ltsmin_model::csv(modelcube);
     }
+
+
+  if (mc_options.swarmed_dfs || mc_options.swarmed_gp_dfs)
+    {
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      tm.start("load kripkecube");
+      try
+        {
+          modelcube = spot::ltsmin_model::load(mc_options.model)
+            .kripkecube({}, deadf, mc_options.compress,
+                        mc_options.nb_threads);
+        }
+      catch (std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      tm.start("swarming");
+      if (mc_options.swarmed_gp_dfs)
+        spot::ltsmin_model::swarmed_gp_dfs(modelcube);
+      else
+        spot::ltsmin_model::swarmed_dfs(modelcube);
+      tm.stop("swarming");
+      std::cout << tm.timer("swarming").walltime() << '\n';
+
+      //std::cout << "\nxxxx" << spot::ltsmin_model::csv(modelcube);
+    }
+
 
     if (mc_options.nb_threads != 1 &&
         mc_options.formula != nullptr &&
