@@ -26,6 +26,8 @@
 #include <spot/twa/twa.hh>
 #include <spot/twaalgos/copy.hh>
 #include <spot/tl/formula.hh>
+#include <spot/misc/fixpool.hh>
+#include <spot/misc/defaultalloc.hh>
 #include <sstream>
 
 namespace spot
@@ -103,7 +105,6 @@ namespace spot
     }
   };
 
-
   template<class Graph>
   class SPOT_API twa_graph_succ_iterator final:
     public twa_succ_iterator
@@ -115,10 +116,31 @@ namespace spot
     edge t_;
     edge p_;
 
+    using allocator_t = fixed_default_allocator;
+
+    static
+    allocator_t&
+    allocator()
+    {
+      static allocator_t res = allocator_t(sizeof(twa_graph_succ_iterator));
+      return res;
+    }
+
   public:
     twa_graph_succ_iterator(const Graph* g, edge t)
       : g_(g), t_(t)
     {
+    }
+
+    void*
+    operator new(std::size_t)
+    {
+      return allocator().allocate();
+    }
+    void
+    operator delete(void* ptr)
+    {
+      allocator().deallocate(ptr);
     }
 
     void recycle(edge t)

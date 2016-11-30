@@ -35,6 +35,7 @@ misc_HEADERS = \
   bitvect.hh \
   casts.hh \
   common.hh \
+  defaultalloc.hh \
   escape.hh \
   fixpool.hh \
   formater.hh \
