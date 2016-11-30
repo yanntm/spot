@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
+# Copyright (C) 2005, 2016  Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
 # et Marie Curie.
 #
@@ -21,18 +21,18 @@
 . ./defs
 set -e
 
-opts="-1 -D -e 15 -n 1024 -t 0.5 -f 5 -F 200 -l 5 -u -r -z a b c d"
+opts="-D -e 10 -n 16384 -t 0.5 -f 5 -F 200 -l 5 -u -r -z a b c d"
 
 echo "WITHOUT ADDITIONAL ACCEPTANCE CONDITIONS"
 
-for d in 0.001 0.002 0.01; do
+for d in 0.00001 0.00002 0.0005; do
   echo "density: $d"
   $RANDTGBA -A "$ALGORITHMS" -d $d $opts
 done
 
 echo "WITH 3 ADDITIONAL ACCEPTANCE CONDITIONS"
 
-for d in 0.001 0.002 0.01; do
+for d in 0.00001 0.00002 0.0005; do
   echo "density: $d"
   $RANDTGBA -A "$ALGORITHMS" -a 3 0.0133333 -d $d $opts
 done
