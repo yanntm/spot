@@ -449,9 +449,9 @@ static int checked_main()
 
       tm.start("swarming");
       if (mc_options.swarmed_gp_dfs)
-        spot::ltsmin_model::swarmed_gp_dfs(modelcube);
+        spot::ltsmin_model::swarmed_gp_dfs(modelcube, mc_options.model);
       else
-        spot::ltsmin_model::swarmed_dfs(modelcube);
+        spot::ltsmin_model::swarmed_dfs(modelcube, mc_options.model);
       tm.stop("swarming");
       std::cout << tm.timer("swarming").walltime() << '\n';
 

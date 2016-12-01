@@ -307,10 +307,12 @@ namespace spot
 
     bool push(State s, unsigned int)
     {
+      ++states_;
       auto it = map_.insert({s, OPEN});
 
       // State has been marked as dead by another thread
       // just skip the insertion
+      inserted_ += it.isnew();
       if (!it.isnew() && it->color.load() == CLOSED)
         {
           return false;
@@ -329,16 +331,48 @@ namespace spot
 
     void edge(unsigned int, unsigned int)
     {
+      ++edges_;
     }
 
     void finalize()
     {
+      this->stop_ = true;
       tm_.stop("DFS thread " + std::to_string(this->tid_));
+    }
+
+    unsigned walltime()
+    {
+      return tm_.timer("DFS thread " + std::to_string(this->tid_))
+        .walltime();
+    }
+
+    unsigned inserted()
+    {
+      return inserted_;
+    }
+
+    unsigned states()
+    {
+      return states_;
+    }
+
+    unsigned edges()
+    {
+      return edges_;
+    }
+
+    unsigned how_many_generations()
+    {
+      return nb_gens_;
     }
 
   private:
     spot::timer_map tm_;
     shared_map map_;
+    unsigned inserted_ = 0;
+    unsigned nb_gens_ = 0;
+    unsigned states_ = 0;
+    unsigned edges_ = 0;
   };
 
 
@@ -428,6 +462,7 @@ namespace spot
 
     bool push(State s, unsigned int dfsnum)
     {
+      ++states_;
       if (SPOT_UNLIKELY(dfsnum <= 150 && phase1)) // FIXME threshold
         {
           sample_.push_back(s);
@@ -464,6 +499,7 @@ namespace spot
       // State has been marked as dead by another thread
       // just skip the insertion
       int status = (st_status) it->color.load();
+      inserted_ += it.isnew();
       if (!it.isnew() && (status == CLOSED || status == UNKNOWN_CLOSED))
         return false;
       return true;
@@ -484,8 +520,9 @@ namespace spot
       // Go ahead with another state iff popping the "initial" state
       // Do not worry about terminaison: the thread with tid = 0 will
       // stop the world as soon as it finishes
-      if (SPOT_UNLIKELY(!phase1 && this->tid_ && this->todo.size() == 1))
+      if (SPOT_UNLIKELY(insert_status_ != OPEN  && this->todo.size() == 1))
         {
+          ++nb_gens_;
           for (auto e: this->todo)
             this->sys_.recycle(e.it, this->tid_);
 
@@ -522,6 +559,7 @@ namespace spot
 
     void edge(unsigned int, unsigned int)
     {
+      ++edges_;
     }
 
     void finalize()
@@ -529,6 +567,32 @@ namespace spot
       if (insert_status_ == OPEN)
         this->stop_ = true;
       tm_.stop("DFS GP thread " + std::to_string(this->tid_));
+    }
+
+    unsigned walltime()
+    {
+      return tm_.timer("DFS GP thread " + std::to_string(this->tid_))
+        .walltime();
+    }
+
+    unsigned inserted()
+    {
+      return inserted_;
+    }
+
+    unsigned states()
+    {
+      return states_;
+    }
+
+    unsigned edges()
+    {
+      return edges_;
+    }
+
+    unsigned how_many_generations()
+    {
+      return nb_gens_;
     }
 
   private:
@@ -540,5 +604,9 @@ namespace spot
     std::vector<State>* new_gen = nullptr;
     unsigned new_gen_idx = 0;
     st_status insert_status_ = OPEN;
+    unsigned inserted_ = 0;
+    unsigned nb_gens_ = 0;
+    unsigned states_ = 0;
+    unsigned edges_ = 0;
   };
 }

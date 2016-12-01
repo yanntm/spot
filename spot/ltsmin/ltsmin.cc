@@ -1369,8 +1369,12 @@ namespace spot
 
 
   void
-  ltsmin_model::swarmed_dfs(ltsmin_kripkecube_ptr sys)
+  ltsmin_model::swarmed_dfs(ltsmin_kripkecube_ptr sys,
+                            std::string name)
   {
+    name = name.substr(name.find_last_of("/")+1);
+    spot::timer_map tm;
+
     // The shared map among all threads
     spot::swarmed_dfs<cspins_state, cspins_iterator,
                       cspins_state_hash, cspins_state_equal>::shared_map map;
@@ -1379,25 +1383,66 @@ namespace spot
     using algo_name = spot::swarmed_dfs<cspins_state, cspins_iterator,
                                         cspins_state_hash, cspins_state_equal>;
 
-    std::vector<algo_name>  swarmed;
+    tm.start("Initialisation");
+    std::vector<algo_name> swarmed;
     for (unsigned i = 0; i < sys->get_threads(); ++i)
-      swarmed.push_back({*sys, map, i, stop});
+      swarmed.emplace_back(*sys, map, i, stop);
+    tm.stop("Initialisation");
 
+    tm.start("Run");
     std::vector<std::thread> threads;
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
 
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       threads[i].join();
+    tm.stop("Run");
+
+
+    std::cout << "Following csv describe for each threads:\n"
+              << "tid,walltime,uniq-inserted,visited-states,visited-edge,"
+              << "number-fake-initial-used\n";
+    unsigned cumul_states = 0;
+    for (unsigned i = 0; i < swarmed.size(); ++i)
+      {
+        cumul_states += swarmed[i].inserted();
+        std::cout << '@' << i << ','
+                  << swarmed[i].walltime() << ','
+                  << swarmed[i].inserted() << ','
+                  << swarmed[i].states() << ','
+                  << swarmed[i].edges() << ','
+                  << swarmed[i].how_many_generations()
+                  << std::endl;
+
+      }
+    std::cout << "\nFollowing csv describe the global computation:\n"
+              << "algoname,walltime,preprocessing,uniq-visited-states"
+              << "number-fake-initial-used,model\n";
+    std::cout << '#' << "dfs" << sys->get_threads() << ','
+              << tm.timer("Run").walltime() << ','
+              << 0 /* No processing here*/ << ','
+              << cumul_states << ','
+              << name
+              << std::endl;
+
+
+
+    tm.print(std::cout);
 
     return;
   }
 
-    void
-  ltsmin_model::swarmed_gp_dfs(ltsmin_kripkecube_ptr sys)
+  void
+  ltsmin_model::swarmed_gp_dfs(ltsmin_kripkecube_ptr sys,
+                               std::string name)
   {
+    name = name.substr(name.find_last_of("/")+1);
+    spot::timer_map tm;
+
     // FIXME redundant code
     auto d_ = sys->spins_interface();
+
+    tm.start("Preprocessing");
     std::vector<int> splitter_;
     {
       for (int i = 0; i < d_->get_type_count(); ++i)
@@ -1419,7 +1464,7 @@ namespace spot
         }
     }
     splitter_.push_back(d_->get_state_size());
-
+    tm.stop("Preprocessing");
 
 
     bool stop = false;
@@ -1428,11 +1473,12 @@ namespace spot
                            cspins_state_hash, cspins_state_equal>;
     algo_name::shared_map map;
 
-    std::vector<algo_name>  swarmed;
+    std::vector<algo_name> swarmed;
+    tm.start("Initialisation");
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       {
         auto& manager = sys->manager(i);
-        swarmed.push_back({
+        swarmed.emplace_back(
           *sys,
             [&manager, &sys, &d_, splitter_, i]
             (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
@@ -1440,15 +1486,49 @@ namespace spot
                 return  interpolate_states(cs, manager, sys, d_,
                                            splitter_, i);
               },
-            map, i, stop});
+            map, i, stop);
       }
+    tm.stop("Initialisation");
 
+    tm.start("Run");
     std::vector<std::thread> threads;
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
 
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       threads[i].join();
+    tm.stop("Run");
+
+
+    std::cout << "Following csv describe for each threads:\n"
+              << "tid,walltime,uniq-inserted,visited-states,visited-edge,"
+              << "number-fake-initial-used\n";
+    unsigned cumul_states = 0;
+    for (unsigned i = 0; i < swarmed.size(); ++i)
+      {
+        cumul_states += swarmed[i].inserted();
+        std::cout << '@' << i << ','
+                  << swarmed[i].walltime() << ','
+                  << swarmed[i].inserted() << ','
+                  << swarmed[i].states() << ','
+                  << swarmed[i].edges() << ','
+                  << swarmed[i].how_many_generations()
+                  << std::endl;
+
+      }
+    std::cout << "\nFollowing csv describe the global computation:\n"
+              << "algoname,walltime,preprocessing,uniq-visited-states"
+              << "number-fake-initial-used,model\n";
+    std::cout << '#' << "gp" << sys->get_threads() << ','
+              << tm.timer("Run").walltime() << ','
+              << tm.timer("Preprocessing").walltime() << ','
+              << cumul_states << ','
+              << name
+              << std::endl;
+
+
+
+    tm.print(std::cout);
 
     return;
   }

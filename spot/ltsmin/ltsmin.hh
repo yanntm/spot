@@ -90,8 +90,8 @@ namespace spot
     modelcheck(ltsmin_kripkecube_ptr sys,
                spot::twacube_ptr twa, bool compute_ctrx = false);
 
-    static void swarmed_dfs(ltsmin_kripkecube_ptr sys);
-    static void swarmed_gp_dfs(ltsmin_kripkecube_ptr sys);
+    static void swarmed_dfs(ltsmin_kripkecube_ptr sys, std::string name);
+    static void swarmed_gp_dfs(ltsmin_kripkecube_ptr sys, std::string name);
 
     // \brief Display the kripke as a CSV.
     static std::string csv(ltsmin_kripkecube_ptr sys);
