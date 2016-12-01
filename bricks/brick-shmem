@@ -37,18 +37,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE. */
 
-#include <bricks/brick-assert.h>
+#include "brick-assert"
 #include <deque>
 #include <iostream>
 #include <typeinfo>
 
-#if __cplusplus >= 201103L
 #include <mutex>
 #include <atomic>
 #include <thread>
-#include <stdexcept>
 #include <mutex>
-#endif
+
+#include <unistd.h> // alarm
+#include <vector>
 
 #ifndef BRICK_SHMEM_H
 #define BRICK_SHMEM_H
@@ -60,97 +60,157 @@
 namespace brick {
 namespace shmem {
 
-#if __cplusplus >= 201103L
-
-struct Thread {
+template< typename T >
+struct Thread : T
+{
     std::unique_ptr< std::thread > _thread;
-    std::atomic< bool > _interrupted;
-    virtual void main() = 0;
-    virtual void exception( std::exception_ptr ep ) {
-        try {
-            std::rethrow_exception( ep );
-        } catch ( std::exception &ex ) {
-            std::cerr << "Uncaught exception"
-                      << " of type " << typeid( ex ).name()
-                      << ":" << std::endl;
-            std::cerr << ex.what() << std::endl;
-            std::terminate();
-        }
-    }
+    bool _start_on_move; // :-(
 
-    Thread() : _interrupted( false ) {}
-    Thread( const Thread &other ) : _interrupted( false ) {
-        if( other._thread )
-            throw std::logic_error( "cannot copy running thread" );
-    }
-    Thread( Thread &&other ) :
-        _thread( std::move( other._thread ) ),
-        _interrupted( other.interrupted() )
-    {}
+    template< typename... Args >
+    Thread( Args&&... args ) : T( std::forward< Args >( args )... ), _start_on_move( false ) {}
+    virtual ~Thread() { stop(); }
 
-    ~Thread() { stop(); }
-
-    Thread &operator=( const Thread &other ) {
-        if ( _thread )
-            throw std::logic_error( "cannot overwrite running thread" );
+    Thread( const Thread &other ) : T( other )
+    {
         if ( other._thread )
             throw std::logic_error( "cannot copy running thread" );
-        _interrupted.store( other.interrupted(), std::memory_order_relaxed );
-        return *this;
     }
 
-    Thread &operator=( Thread &&other ) {
-        if ( _thread )
-            throw std::logic_error( "cannot overwrite running thread" );
-        _thread.swap( other._thread );
-        _interrupted.store( other.interrupted(), std::memory_order_relaxed );
-        return *this;
+    Thread( Thread &&other )
+        : T( other._thread ? throw std::logic_error( "cannot move a running thread" ) : other ),
+          _thread( std::move( other._thread ) ),
+          _start_on_move( false )
+    {
+        if ( other._start_on_move )
+            start();
     }
 
-#ifdef __divine__
-    void start() __attribute__((noinline)) {
-        __divine_interrupt_mask();
-#else
-    void start() {
-#endif
-        _interrupted.store( false, std::memory_order_relaxed );
-        _thread.reset( new std::thread( [this]() {
-                    try {
-                        this->main();
-                    } catch (...) {
-                        this->exception( std::current_exception() );
-                    }
-        } ) );
+    virtual void start()
+    {
+        _thread.reset( new std::thread( [this]() { this->main(); } ) );
     }
 
-    // stop must be idempotent
-    void stop() {
-        interrupt();
+    virtual void stop()
+    {
         if ( _thread && _thread->joinable() )
             join();
     }
 
-    void join() {
-        if ( _thread ) {
+    void join()
+    {
+        if ( _thread )
+        {
             _thread->join();
             _thread.reset();
         }
     }
 
-    void detach() {
-        if ( _thread ) {
+    void detach()
+    {
+        if ( _thread )
+        {
             _thread->detach();
             _thread.reset();
         }
     }
 
-    bool interrupted() const {
+    const Thread& operator=(const Thread& other)
+    {
+        std::cerr << "FIXME Added by us (Spot) to avoid compilation warnings\n";
+        std::cerr << "      Should not pass here.\n";
+        return other;
+    }
+};
+
+template< typename T >
+struct LoopWrapper : T
+{
+    std::atomic< bool > _interrupted;
+
+    template< typename... Args >
+    LoopWrapper( Args&&... args ) : T( std::forward< Args >( args )... ), _interrupted( false ) {}
+
+    LoopWrapper( const LoopWrapper & ) = default;
+    LoopWrapper( LoopWrapper && ) = default;
+
+    void main()
+    {
+        while ( !_interrupted ) this->loop();
+    }
+
+    bool interrupted() const
+    {
         return _interrupted.load( std::memory_order_relaxed );
     }
 
-    void interrupt() {
+    void interrupt()
+    {
         _interrupted.store( true, std::memory_order_relaxed );
     }
+};
+
+template< typename L >
+struct LambdaWrapper
+{
+    L lambda;
+    LambdaWrapper( L l ) : lambda( l ) {}
+    void loop() { lambda(); }
+    void main() { lambda(); }
+};
+
+template< typename T >
+struct AsyncLoop : Thread< LoopWrapper< T > >
+{
+    using Super = Thread< LoopWrapper< T > >;
+
+    template< typename... Args >
+    AsyncLoop( Args&&... args ) : Super( std::forward< Args >( args )... ) {}
+
+    AsyncLoop( const AsyncLoop & ) = default;
+    AsyncLoop( AsyncLoop && ) = default;
+
+    virtual ~AsyncLoop()
+    {
+        stop(); /* call the correct stop(), with interrupt() */
+    }
+
+    void start() override
+    {
+        this->_interrupted.store( false, std::memory_order_relaxed );
+        Super::start();
+    }
+
+    void stop() override
+    {
+        this->interrupt();
+        Super::stop();
+    }
+};
+
+template< typename L >
+auto async_loop( L &&l )
+{
+    AsyncLoop< LambdaWrapper< L > > al( std::forward< L >( l ) );
+    al._start_on_move = true;
+    return std::move( al );
+}
+
+template< typename L >
+auto thread( L &&l )
+{
+    Thread< LambdaWrapper< L > > thr( std::forward< L >( l ) );
+    thr._start_on_move = true;
+    return thr;
+}
+
+template< typename T >
+struct ThreadSet : std::vector< Thread< T > >
+{
+    template< typename... Args >
+    ThreadSet( Args&&... args ) : std::vector< Thread< T > >( std::forward< Args >( args )... ) {}
+
+    void start() { for ( auto &t : *this ) t.start(); }
+    void join() { for ( auto &t : *this ) t.join(); }
 };
 
 /**
@@ -159,9 +219,9 @@ struct Thread {
  * One has to wonder why this is missing from the C++0x stdlib.
  */
 struct SpinLock {
-    std::atomic_flag b = ATOMIC_FLAG_INIT;;
+    std::atomic_flag b;
 
-    SpinLock() {}
+    SpinLock() : b( 0 ) {}
 
     void lock() {
         while( b.test_and_set() );
@@ -198,53 +258,49 @@ struct ApproximateCounter {
         Shared( const Shared& ) = delete;
     };
 
-    Shared &shared;
-    intptr_t local;
+    std::shared_ptr< Shared > _s;
+    intptr_t _l;
 
-    ApproximateCounter( Shared &s ) : shared( s ), local( 0 ) {}
+    ApproximateCounter() : _s( new Shared ), _l( 0 ) {}
+    ApproximateCounter( const ApproximateCounter &other ) : _s( other._s ), _l( 0 ) {}
+    ApproximateCounter operator=( const ApproximateCounter & ) = delete;
     ~ApproximateCounter() { sync(); }
 
     void sync() {
-        intptr_t value = shared.counter;
+        intptr_t value = _s->counter;
 
-        while ( local > 0 ) {
-            if ( value >= local ) {
-                if ( shared.counter.compare_exchange_weak( value, value - local ) )
-                    local = 0;
+        while ( _l > 0 ) {
+            if ( value >= _l ) {
+                if ( _s->counter.compare_exchange_weak( value, value - _l ) )
+                    _l = 0;
             } else {
-                if ( shared.counter.compare_exchange_weak( value, 0 ) )
-                    local = 0;
+                if ( _s->counter.compare_exchange_weak( value, 0 ) )
+                    _l = 0;
             }
         }
     }
 
     ApproximateCounter& operator++() {
-        if ( local == 0 ) {
-            shared.counter += step;
-            local = step;
+        if ( _l == 0 ) {
+            _s->counter += step;
+            _l = step;
         }
 
-        --local;
+        -- _l;
 
         return *this;
     }
 
     ApproximateCounter &operator--() {
-        ++local;
+        ++ _l;
         return *this;
     }
 
-    // NB. sync() must be called manually as this method is called too often
-    bool isZero() {
-        return shared.counter == 0;
-    }
+    // NB. may return false spuriously; call sync() to ensure a correct result
+    operator bool() { return _s->counter; }
+    bool operator!() { return _s->counter == 0; }
 
-    void reset() { shared.counter = 0; }
-
-    ApproximateCounter( const ApproximateCounter &a )
-        : shared( a.shared ), local( a.local )
-    {}
-    ApproximateCounter operator=( const ApproximateCounter & ) = delete;
+    void reset() { _s->counter = 0; } /* fixme misleading? */
 };
 
 struct StartDetector {
@@ -264,22 +320,21 @@ struct StartDetector {
         Shared( Shared & ) = delete;
     };
 
-    Shared &shared;
+    std::shared_ptr< Shared > _s;
 
-    StartDetector( Shared &s ) : shared( s ) {}
-    StartDetector( const StartDetector &s ) : shared( s.shared ) {}
+    StartDetector() : _s( new Shared() ) {}
 
-    void waitForAll( unsigned short peers ) {
+    void waitForAll( unsigned short peers )
+    {
+        while ( _s->leaveGuard );
 
-        while ( shared.leaveGuard );
-
-        if ( ++shared.counter == peers ) {
-            shared.leaveGuard = peers;
-            shared.counter = 0;
+        if ( ++ _s->counter == peers ) {
+            _s->leaveGuard = peers;
+            _s->counter = 0;
         }
 
-        while ( shared.counter );
-        --shared.leaveGuard;
+        while ( _s->counter );
+        -- _s->leaveGuard;
     }
 
 };
@@ -332,8 +387,6 @@ struct WeakAtomic : std::conditional< std::is_integral< T >::value && !std::is_s
     std::atomic< T > _data;
     friend struct _impl::WeakAtomicIntegral< WeakAtomic< T >, T >;
 };
-
-#endif
 
 #ifndef __divine__
 template< typename T >
@@ -530,28 +583,106 @@ struct LockedQueue {
     LockedQueue &operator=( const LockedQueue & ) = delete;
 };
 
+template< template< typename > class Q, typename T >
+struct Chunked
+{
+    using Chunk = std::deque< T >;
+    using ChQ = Q< Chunk >;
+    std::shared_ptr< ChQ > q;
+    unsigned chunkSize;
+
+    Chunk outgoing;
+    Chunk incoming;
+
+    void push( T t ) {
+        outgoing.push_back( t );
+        if ( outgoing.size() >= chunkSize )
+            flush();
+    }
+
+    T pop() {
+        if ( incoming.empty() )
+            incoming = q->pop();
+        if ( incoming.empty() )
+            UNREACHABLE( "attempted to pop an empty queue" );
+        auto x = incoming.front();
+        incoming.pop_front();
+        return x;
+    }
+
+    void flush() {
+        if ( !outgoing.empty() ) {
+            Chunk tmp;
+            std::swap( outgoing, tmp );
+            q->push( std::move( tmp ) );
+
+            /* A quickstart trick -- make first few chunks smaller. */
+            if ( chunkSize < 64 )
+                chunkSize = std::min( 2 * chunkSize, 64u );
+        }
+    }
+
+    bool empty() {
+        if ( incoming.empty() ) /* try to get a fresh one */
+            incoming = q->pop();
+        return incoming.empty();
+    }
+
+    Chunked() : q( new ChQ() ), chunkSize( 2 ) {}
+};
+
+template< typename T >
+using SharedQueue = Chunked< LockedQueue, T >;
+
 }
-}
 
-#if __cplusplus >= 201103L
-
-#include <unistd.h> // alarm
-#include <vector>
-
-namespace brick_test {
-namespace shmem {
+namespace t_shmem {
 
 using namespace ::brick::shmem;
 
+#ifdef __divine__
+static constexpr int size = 16;
+static void timeout() {}
+#else
+static constexpr int size = 128 * 1024;
+#endif
+
+#if defined( __unix ) || defined( POSIX )
+static void timeout() { alarm( 5 ); }
+#else
+static void timeout() {  }
+#endif
+
+struct ThreadTest
+{
+    TEST(async_loop)
+    {
+        timeout();
+        std::atomic< int > x( 0 );
+        auto t = shmem::async_loop( [&]() { x = 1; } );
+        while ( !x );
+        t.stop();
+    }
+
+    TEST(thread)
+    {
+        timeout();
+        std::atomic< int > x( 0 );
+        auto t = shmem::thread( [&]() { x = 1; } );
+        while ( !x );
+        t.join();
+    }
+};
+
 struct FifoTest {
     template< typename T >
-    struct Checker : Thread
+    struct Checker
     {
         Fifo< T > fifo;
         int terminate;
         int n;
 
-        void main() override
+        void main()
         {
             std::vector< int > x;
             x.resize( n );
@@ -572,17 +703,17 @@ struct FifoTest {
             }
             terminate = 0;
             for ( int i = 0; i < n; ++i )
-                ASSERT_EQ( x[ i ], 128*1024 );
+                ASSERT_EQ( x[ i ], size );
         }
 
         Checker( int _n = 1 ) : terminate( 0 ), n( _n ) {}
     };
 
     TEST(stress) {
-        Checker< int > c;
+        Thread< Checker< int > > c;
         for ( int j = 0; j < 5; ++j ) {
             c.start();
-            for( int i = 0; i < 128 * 1024; ++i )
+            for( int i = 0; i < size; ++i )
                 c.fifo.push( i );
             c.terminate = true;
             c.join();
@@ -590,39 +721,38 @@ struct FifoTest {
     }
 };
 
+namespace { const int peers = 12; }
+
 struct Utils {
-    static const int peers = 12;
 
-    struct DetectorWorker : Thread {
-
+    struct DetectorWorker
+    {
         StartDetector detector;
         int rep;
 
-        DetectorWorker( StartDetector::Shared &sh, int repeat ) :
+        DetectorWorker( StartDetector sh, int repeat ) :
             detector( sh ),
             rep( repeat )
         {}
 
-        void main() override {
+        void main() {
             for ( int i = 0; i < rep; ++i )
                 detector.waitForAll( peers );
         }
     };
 
-    void processDetector( int repeat ) {
-        StartDetector::Shared sh;
-        std::vector< DetectorWorker > threads{ peers, DetectorWorker{ sh, repeat } };
+    void processDetector( int repeat )
+    {
+        StartDetector sh;
+        ThreadSet< DetectorWorker > threads( peers, DetectorWorker{ sh, repeat } );
 
-#if (defined( __unix ) || defined( POSIX )) && !defined( __divine__ ) // hm
-        alarm( 5 );
-#endif
+        timeout();
 
-        for ( int i = 0; i != 4; ++i ) {
-            for ( auto &w : threads )
-                w.start();
-            for ( auto &w : threads )
-                w.join();
-            ASSERT_EQ( sh.counter.load(), 0 );
+        for ( int i = 0; i != 4; ++i )
+        {
+            threads.start();
+            threads.join();
+            ASSERT_EQ( sh._s->counter.load(), 0 );
         }
     }
 
@@ -634,21 +764,21 @@ struct Utils {
         processDetector( 4 );
     }
 
-    struct CounterWorker : Thread {
+    struct CounterWorker
+    {
         StartDetector detector;
         ApproximateCounter counter;
         int produce;
         int consume;
 
-        template< typename D, typename C >
-        CounterWorker( D &d, C &c ) :
-            detector( d ),
-            counter( c ),
+        CounterWorker( StartDetector det, ApproximateCounter ctr ) :
+            detector( det ),
+            counter( ctr ),
             produce( 0 ),
             consume( 0 )
         {}
 
-        void main() override {
+        void main() {
             detector.waitForAll( peers );
 
             while ( produce-- )
@@ -664,15 +794,14 @@ struct Utils {
         }
     };
 
-    void processCounter() {
-        StartDetector::Shared detectorShared;
-        ApproximateCounter::Shared counterShared;
-        std::vector< CounterWorker > threads{ peers,
-            CounterWorker{ detectorShared, counterShared } };
+    TEST(approximateCounter)
+    {
+        StartDetector det;
+        ApproximateCounter ctr;
 
-#if (defined( __unix ) || defined( POSIX )) && !defined( __divine__ ) // hm
-        alarm( 5 );
-#endif
+        ThreadSet< CounterWorker > threads( peers, CounterWorker{ det, ctr } );
+
+        timeout();
 
         // set consume and produce limits to each worker
         int i = 1;
@@ -685,20 +814,15 @@ struct Utils {
             ++i;
         }
 
-        for ( auto &w : threads )
-            w.start();
-
-        for ( auto &w : threads )
-            w.join();
-        ASSERT_EQ( counterShared.counter.load(), 0 );
+        threads.start();
+        threads.join();
+        ASSERT_EQ( ctr._s->counter.load(), 0 );
     }
 
-    TEST(approximateCounter) {
-        processCounter();
-    };
 };
 
 }
+
 }
 
 #ifdef BRICK_BENCHMARK_REG
@@ -708,7 +832,7 @@ struct Utils {
 #endif
 
 #include <random>
-#include <brick-benchmark.h>
+#include <brick-benchmark>
 
 namespace brick_test {
 namespace shmem {
@@ -841,7 +965,7 @@ struct Linked {
 
     Linked() {
         reader = writer = new Node();
-        reader->next = 0;
+        reader->next = nullptr;
     }
 };
 
@@ -882,59 +1006,6 @@ struct Shared {
     Shared() : q( new Q() ) {}
 };
 
-template< template< typename > class Q, typename T >
-struct Chunked {
-    using Chunk = std::deque< T >;
-    using ChQ = Q< Chunk >;
-    std::shared_ptr< ChQ > q;
-    unsigned chunkSize;
-
-    Chunk outgoing;
-    Chunk incoming;
-
-    void push( T t ) {
-        outgoing.push_back( t );
-        // std::cerr << "pushed " << outgoing.back() << std::endl;
-        if ( outgoing.size() >= chunkSize )
-            flush();
-    }
-
-    T pop() {
-        // std::cerr << "pop: empty = " << incoming.empty() << std::endl;
-        if ( incoming.empty() )
-            incoming = q->pop();
-        if ( incoming.empty() )
-            return T();
-        // std::cerr << "pop: found " << incoming.front() << std::endl;
-        auto x = incoming.front();
-        incoming.pop_front();
-        return x;
-    }
-
-    void flush() {
-        if ( !outgoing.empty() ) {
-            // std::cerr << "flushing " << outgoing.size() << " items" << std::endl;
-            Chunk tmp;
-            std::swap( outgoing, tmp );
-            q->push( std::move( tmp ) );
-
-            /* A quickstart trick -- make first few chunks smaller. */
-            if ( chunkSize < 64 )
-                chunkSize = std::min( 2 * chunkSize, 64u );
-        }
-    }
-
-    bool empty() {
-        if ( incoming.empty() ) { /* try to get a fresh one */
-            incoming = q->pop();
-            // std::cerr << "pulled in " << incoming.size() << " items" << std::endl;
-        }
-        return incoming.empty();
-    }
-
-    Chunked() : q( new ChQ() ), chunkSize( 2 ) {}
-};
-
 template< typename Q >
 struct InsertThread : Thread {
     Q *q;
@@ -952,7 +1023,7 @@ struct InsertThread : Thread {
 };
 
 template< typename Q >
-struct WorkThread : Thread {
+struct WorkThread {
     Q q;
     std::atomic< bool > *stop;
     int items;
@@ -1027,7 +1098,7 @@ struct ShQueue : BenchmarkGroup
     template< typename Q >
     void scale() {
         Q fifo;
-        auto *t = new WorkThread< Q >[ p ];
+        auto *t = new Thread< WorkThread< Q > >[ p ];
         std::atomic< bool > stop( false );
 
         for ( int i = 0; i < p; ++i ) {
@@ -1135,7 +1206,6 @@ struct FIFO : BenchmarkGroup
 }
 }
 
-#endif
 #endif
 #endif
 
