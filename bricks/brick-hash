@@ -29,9 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE. */
 
-#include <spot/misc/common.hh>
-
-#include <bricks/brick-assert.h>
+#include "brick-assert"
 
 #include <cstddef>
 #include <utility> // pair
@@ -51,7 +49,8 @@
   typedef  uint16_t  uint16;
   typedef  uint8_t   uint8;
 #endif
-#include <memory.h>
+#include <cstring>
+#include <cinttypes>
 
 #define ALLOW_UNALIGNED_READS 1
 
@@ -61,6 +60,7 @@
 namespace brick {
 namespace hash {
 
+typedef uint32_t hash32_t;
 typedef uint64_t hash64_t;
 typedef std::pair< hash64_t, hash64_t > hash128_t;
 
@@ -220,6 +220,9 @@ public:
         // Is this message fragment too short?  If it is, stuff it away.
         if (newLength < sc_bufSize)
         {
+#ifndef NDEBUG
+            if ( length > sc_bufSize ) abort();
+#endif
             memcpy(&reinterpret_cast< uint8 * >( m_data )[m_remainder], message, length);
             m_length = length + m_length;
             m_remainder = uint8( newLength );
@@ -677,19 +680,17 @@ struct SpookyState {
 
 namespace {
 
-inline hash128_t spooky( const void *message, size_t length, uint64_t seed1, uint64_t seed2 ) {
+inline hash128_t spooky( const void *message, size_t length, uint64_t seed1 = 0, uint64_t seed2 = 0 ) {
     return jenkins::SpookyHash::Hash128( message, length, seed1, seed2 );
 }
 
 }
 
 }
-}
 
-namespace brick_test {
-namespace hash {
+namespace t_hash {
 
-using namespace ::brick::hash;
+using namespace hash;
 
 class Random
 {
@@ -813,7 +814,7 @@ struct Jenkins {
             saw[i] = SpookyHash::Hash32(buf, i, 0);
             if (saw[i] != expected[i])
             {
-                printf("%3d: saw 0x%.8x, expected 0x%.8lx\n", i, saw[i], (unsigned long) expected[i]);
+                printf("%3d: saw 0x%.8x, expected 0x%.8" PRIx64 "\n", i, saw[i], expected[i]);
                 ASSERT( false );
             }
         }

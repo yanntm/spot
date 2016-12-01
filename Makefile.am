@@ -38,9 +38,9 @@ SUBDIRS = picosat buddy lib ltdl spot bin tests $(PYTHON_SUBDIR) doc \
 UTF8 = utf8/README.md utf8/utf8.h	\
   utf8/utf8/checked.h utf8/utf8/core.h utf8/utf8/unchecked.h
 
-nobase_include_HEADERS= bricks/brick-assert.h bricks/brick-bitlevel.h \
-	bricks/brick-hash.h bricks/brick-hashset.h  bricks/brick-shmem.h \
-	bricks/brick-types.h
+nobase_include_HEADERS= bricks/brick-assert bricks/brick-bitlevel \
+	bricks/brick-hash bricks/brick-hashset  bricks/brick-shmem \
+	bricks/brick-types
 
 DEBIAN =					\
   debian/changelog				\
