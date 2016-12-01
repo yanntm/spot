@@ -43,8 +43,8 @@
 #include <spot/twacube/cube.hh>
 #include <spot/mc/utils.hh>
 #include <spot/mc/ec.hh>
-#include <bricks/brick-hashset.h>
-#include <bricks/brick-hash.h>
+#include <bricks/brick-hashset>
+#include <bricks/brick-hash>
 #include <spot/twaalgos/dot.hh>
 #include <spot/twa/twaproduct.hh>
 #include <spot/twaalgos/emptiness.hh>
@@ -1285,7 +1285,7 @@ namespace spot
           cspins_state s =
           inner->manager->alloc_setup(dst, inner->compressed_,
                                       inner->manager->size() * 2);
-          auto it = inner->map->insert({s});
+          auto it = inner->map->insert(s);
           inner->succ->push_back(*it);
           if (!it.isnew())
             inner->manager->dealloc(s);
@@ -1335,7 +1335,7 @@ namespace spot
           cspins_state s =
           inner->manager->alloc_setup(dst, inner->compressed_,
                                       inner->manager->size() * 2);
-          auto it = inner->map->insert({s});
+          auto it = inner->map->insert(s);
           inner->succ->push_back(*it);
           if (!it.isnew())
             inner->manager->dealloc(s);
@@ -1421,7 +1421,7 @@ namespace spot
         compress_(compress), cubeset_(visible_aps.size()),
         selfloopize_(selfloopize), aps_(visible_aps), nb_threads_(nb_threads)
     {
-      map_.setSize(2000000);
+      map_.initialSize(2000000);
       manager_ = static_cast<cspins_state_manager*>
         (::operator new(sizeof(cspins_state_manager) * nb_threads));
       inner_ = new inner_callback_parameters[nb_threads_];

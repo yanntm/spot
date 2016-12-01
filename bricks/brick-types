@@ -10,32 +10,22 @@
 
 /*
  * (c) 2006, 2014 Petr Ročkai <me@mornfall.net>
- * (c) 2013-2014 Vladimír Štill <xstill@fi.muni.cz>
+ * (c) 2013-2015 Vladimír Štill <xstill@fi.muni.cz>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE. */
-
-#include <bricks/brick-assert.h>
+#include "brick-assert"
 
 #include <memory>
 #include <cstring>
@@ -51,7 +41,7 @@
 #define CONSTEXPR
 #endif
 
-#if __cplusplus > 201103L
+#if __cplusplus > 201103L && __GNUC__ != 4 && __GNUC_MINOR__ != 9
 #define CPP1Y_CONSTEXPR constexpr // C++1y
 #else
 #define CPP1Y_CONSTEXPR // C++11
@@ -68,34 +58,30 @@ struct Unit {
 struct Preferred { CONSTEXPR Preferred() { } };
 struct NotPreferred { CONSTEXPR NotPreferred( Preferred ) {} };
 
-struct Comparable {
-    typedef bool IsComparable;
-};
+template< typename _T >
+struct Witness { using T = _T; };
+
+struct Eq { typedef bool IsEq; };
 
 template< typename T >
-typename T::IsComparable operator!=( const T &a, const T &b ) {
-    return not( a == b );
-}
+typename T::IsEq operator!=( const T &a, const T &b ) { return !(a == b); }
+
+struct Ord : Eq { typedef bool IsOrd; };
 
 template< typename T >
-typename T::IsComparable operator==( const T &a, const T &b ) {
+typename T::IsOrd operator<( const T &a, const T &b ) { return !(b <= a); }
+
+template< typename T >
+typename T::IsOrd operator>( const T &a, const T &b ) { return !(a <= b); }
+
+template< typename T >
+typename T::IsOrd operator>=( const T &a, const T &b ) { return b <= a; }
+
+template< typename T >
+typename T::IsOrd operator==( const T &a, const T &b ) {
     return a <= b && b <= a;
 }
-
-template< typename T >
-typename T::IsComparable operator<( const T &a, const T &b ) {
-    return a <= b && a != b;
-}
-
-template< typename T >
-typename T::IsComparable operator>( const T &a, const T &b ) {
-    return b <= a && a != b;
-}
-
-template< typename T >
-typename T::IsComparable operator>=( const T &a, const T &b ) {
-    return b <= a;
-}
+using Comparable = Ord;
 
 struct Defer {
     template< typename F >
@@ -234,7 +220,7 @@ struct Maybe : Comparable
 
     T fromMaybe( T x ) const { return isJust() ? value() : x; }
 
-    explicit operator bool() const { return isJust(); }
+    explicit operator bool() const { return isJust() && bool( value() ); }
 
     static Maybe Just( const T &t ) { return Maybe( t ); }
     static Maybe Nothing() { return Maybe(); }
@@ -365,21 +351,6 @@ struct StrongEnumFlags {
     UnderlyingType store;
 };
 
-// don't catch integral types and classical enum!
-template< typename Self, typename = typename
-          std::enable_if< is_enum_class< Self >::value >::type >
-constexpr StrongEnumFlags< Self > operator|( Self a, Self b ) noexcept {
-    using Ret = StrongEnumFlags< Self >;
-    return Ret( a ) | Ret( b );
-}
-
-template< typename Self, typename = typename
-          std::enable_if< is_enum_class< Self >::value >::type >
-constexpr StrongEnumFlags< Self > operator&( Self a, Self b ) noexcept {
-    using Ret = StrongEnumFlags< Self >;
-    return Ret( a ) & Ret( b );
-}
-
 /* implementation of Union */
 
 namespace _impl {
@@ -410,9 +381,6 @@ namespace _impl {
     struct In< Needle, T, Ts... > : std::integral_constant< bool,
         std::is_same< Needle, T >::value || In< Needle, Ts... >::value >
     { };
-
-    template< typename _T >
-    struct Witness { using T = _T; };
 
     template< typename, typename... >
     struct _OneConversion { };
@@ -454,10 +422,10 @@ template< typename F, typename T, typename Fallback, typename Check = bool >
 struct _ApplyResult : Fallback {};
 
 template< typename F, typename T, typename Fallback >
-struct _ApplyResult< F, T, Fallback, decltype( std::declval< F >()( std::declval< T >() ), true ) >
+struct _ApplyResult< F, T, Fallback, decltype( std::declval< F >()( std::declval< T& >() ), true ) >
 {
     using Parameter = T;
-    using Result = decltype( std::declval< F >()( std::declval< T >() ) );
+    using Result = decltype( std::declval< F >()( std::declval< T& >() ) );
 };
 
 template< typename F, typename... Ts > struct ApplyResult;
@@ -524,6 +492,11 @@ struct Union : Comparable {
         return *this;
     }
 
+    ~Union() {
+        if ( _discriminator )
+            _destruct< 1, Types... >( _discriminator );
+    }
+
     template< typename T >
     auto operator=( const T &other ) -> typename
         std::enable_if< std::is_lvalue_reference< T & >::value, Union & >::type
@@ -546,26 +519,26 @@ struct Union : Comparable {
         return *this;
     }
 
-    void swap( Union other ) {
-        typename std::aligned_storage< size, algignment >::type tmpStor;
-        unsigned char tmpDis;
+    void swap( Union &other ) {
+        if ( _discriminator == 0 && other._discriminator == 0 )
+            return;
 
-        std::memcpy( &tmpStor, &other.storage, size );
-        tmpDis = other._discriminator;
-        other._discriminator = 0;
-        std::memcpy( &other.storage, &storage, size );
-        other._discriminator = _discriminator;
-        _discriminator = 0;
-        std::memcpy( &storage, &tmpStor, size );
-        _discriminator = tmpDis;
+        if ( _discriminator == other._discriminator )
+            _swapSame< 1, Types... >( other );
+        else
+            _swapDifferent< 0, void, Types... >( other );
     }
 
-    bool empty() {
+    bool empty() const {
         return _discriminator == 0;
     }
 
-    explicit operator bool() {
-        return !empty();
+    explicit operator bool() const
+    {
+        auto rv = const_cast< Union* >( this )->apply( []( const auto & x ) -> bool { return !!x; } );
+        if ( rv.isNothing() )
+            return false;
+        return true;
     }
 
     template< typename T >
@@ -594,6 +567,12 @@ struct Union : Comparable {
         ASSERT( is< T >() );
         return unsafeGet< T >();
     }
+
+    template< typename T >
+    T *asptr() { return is< T >() ? &get< T >() : nullptr; }
+
+    template< typename T >
+    const T *asptr() const { return is< T >() ? &get< T >() : nullptr; }
 
     template< typename T >
     const T &getOr( const T &val ) const {
@@ -642,7 +621,7 @@ struct Union : Comparable {
     // invoke the first function that can handle the currently stored value
     // (type-based pattern matching)
     template< typename R, typename F, typename... Args >
-    R _match( F f, Args... args ) {
+    R _match( F f, Args&&... args ) {
         auto x = apply( f );
         if ( x.isNothing() )
             return _match< R >( args... );
@@ -650,25 +629,24 @@ struct Union : Comparable {
             return x;
     }
 
+    // invoke the first function that can handle the currently stored value
+    // (type-based pattern matching)
+    // * return value can be extracted from resuling Maybe value
+    // * auto lambdas are supported an can be called on any value!
     template< typename F, typename... Args >
-    Applied< F > match( F f, Args... args ) {
+    Applied< F > match( F f, Args&&... args ) {
         return _match< Applied< F > >( f, args... );
     }
 
     bool operator==( const Union &other ) const {
         return _discriminator == other._discriminator
-            && _compare< std::equal_to >( other );
-    }
-
-    bool operator!=( const Union &other ) const {
-        return _discriminator != other._discriminator
-            || _compare< std::not_equal_to >( other );
+            && (_discriminator == 0 || _compare< std::equal_to >( other ));
     }
 
     bool operator<( const Union &other ) const {
         return _discriminator < other._discriminator
             || (_discriminator == other._discriminator
-                    && _compare< std::less >( other ) );
+                    && (_discriminator == 0 || _compare< std::less >( other )) );
     }
 
     unsigned char discriminator() const { return _discriminator; }
@@ -682,10 +660,9 @@ struct Union : Comparable {
 
   private:
     static constexpr size_t size = _impl::MaxSizeof< 1, Types... >::value;
-    static constexpr size_t algignment = _impl::MaxAlign< 1, Types... >::value;
-    typename std::aligned_storage< size, algignment >::type storage;
+    static constexpr size_t alignment = _impl::MaxAlign< 1, Types... >::value;
+    typename std::aligned_storage< size, alignment >::type storage;
     unsigned char _discriminator;
-
 
     template< unsigned char i, typename Needle, typename T, typename... Ts >
     constexpr unsigned char _discriminatorF() const {
@@ -706,7 +683,7 @@ struct Union : Comparable {
 
     template< unsigned char >
     unsigned char _copyConstruct( unsigned char, const Union & )
-    { ASSERT_UNREACHABLE( "invalid _copyConstruct" ); }
+    { UNREACHABLE( "invalid _copyConstruct" ); return 0; }
 
     template< unsigned char i, typename T, typename... Ts >
     void _moveConstruct( unsigned char d, Union &&other ) {
@@ -718,7 +695,7 @@ struct Union : Comparable {
 
     template< unsigned char >
     unsigned char _moveConstruct( unsigned char, Union && )
-    { ASSERT_UNREACHABLE( "invalid _moveConstruct" ); }
+    { UNREACHABLE( "invalid _moveConstruct" ); return 0; }
 
     void _copyAssignDifferent( const Union &other ) {
         auto tmp = _discriminator;
@@ -746,7 +723,7 @@ struct Union : Comparable {
     }
 
     template< unsigned char >
-    void _copyAssignSame( const Union & ) { ASSERT_UNREACHABLE( "invalid _copyAssignSame" ); }
+    void _copyAssignSame( const Union & ) { UNREACHABLE( "invalid _copyAssignSame" ); }
 
     template< unsigned char i, typename T, typename... Ts >
     void _destruct( unsigned char d ) {
@@ -757,7 +734,7 @@ struct Union : Comparable {
     }
 
     template< unsigned char >
-    void _destruct( unsigned char ) { ASSERT_UNREACHABLE( "invalid _destruct" ); }
+    void _destruct( unsigned char ) { UNREACHABLE( "invalid _destruct" ); }
 
     void _moveAssignSame( Union &&other ) {
         ASSERT_EQ( _discriminator, other._discriminator );
@@ -775,7 +752,7 @@ struct Union : Comparable {
     }
 
     template< unsigned char >
-    void _moveAssignSame( Union && ) { ASSERT_UNREACHABLE( "invalid _moveAssignSame" ); }
+    void _moveAssignSame( Union && ) { UNREACHABLE( "invalid _moveAssignSame" ); }
 
     void _moveAssignDifferent( Union &&other ) {
         auto tmp = _discriminator;
@@ -821,7 +798,7 @@ struct Union : Comparable {
     }
 
     template< template< typename > class Compare, int d >
-    bool _compare2( const Union & ) const { ASSERT_UNREACHABLE( "invalid discriminator" ); }
+    bool _compare2( const Union & ) const { UNREACHABLE( "invalid discriminator" ); return false;}
 
     template< template< typename > class Compare, int d, typename T, typename... Ts >
     bool _compare2( const Union &other ) const {
@@ -838,7 +815,7 @@ struct Union : Comparable {
     template< typename Target, bool anyCastPossible, int >
     Target _convert2( Preferred ) const {
         static_assert( anyCastPossible, "Cast of Union can never succeed" );
-        ASSERT_UNREACHABLE( "wrong _convert2 in Union" );
+        UNREACHABLE( "wrong _convert2 in Union" );
     }
 
     template< typename Target, bool any, int d, typename, typename... Ts >
@@ -859,7 +836,154 @@ struct Union : Comparable {
         return _convert2< Target, false, 1, Types... >( Preferred() );
     }
 
+    template< unsigned char i, typename T, typename... Ts >
+    void _swapSame( Union &other ) {
+        if ( _discriminator == i )
+            _doSwap< T >( unsafeGet< T >(), other.unsafeGet< T >(), Preferred() );
+        else
+            _swapSame< i + 1, Ts... >( other );
+    }
+
+    template< unsigned char i >
+    void _swapSame( Union & ) { UNREACHABLE( "Invalid _swapSame" ); }
+
+    template< typename T >
+    auto _doSwap( T &a, T &b, Preferred ) -> decltype( a.swap( b ) ) {
+        a.swap( b );
+    }
+
+    template< typename T >
+    auto _doSwap( T &a, T &b, NotPreferred ) -> decltype( std::swap( a, b ) ) {
+        std::swap( a, b );
+    }
+
+    template< unsigned char i, typename T, typename... Ts >
+    void _swapDifferent( Union &other ) {
+        if ( i == _discriminator )
+            _swapDifferent2< i, T, 0, void, Types... >( other );
+        else
+            _swapDifferent< i + 1, Ts... >( other );
+    }
+
+    template< unsigned char i >
+    void _swapDifferent( Union & ) { UNREACHABLE( "Invalid _swapDifferent" ); }
+
+    template< unsigned char local, typename Local, unsigned char i, typename T, typename... Ts >
+    void _swapDifferent2( Union &other ) {
+        if ( i == other._discriminator )
+            _doSwapDifferent< local, i, Local, T >( other );
+        else
+            _swapDifferent2< local, Local, i + 1, Ts... >( other );
+    }
+
+    template< unsigned char local, typename Local, unsigned char i >
+    void _swapDifferent2( Union & ) { UNREACHABLE( "Invalid _swapDifferent2" ); }
+
+    template< unsigned char l, unsigned char r, typename L, typename R >
+    auto _doSwapDifferent( Union &other ) -> typename std::enable_if< l != 0 && r != 0 >::type {
+        L lval( unsafeMoveOut< L >() );
+        unsafeGet< L >().~L();
+
+        new ( &unsafeGet< R >() ) R( other.unsafeMoveOut< R >() );
+        other.unsafeGet< R >().~R();
+
+        new ( &other.unsafeGet< L >() ) L( std::move( lval ) );
+        std::swap( _discriminator, other._discriminator );
+    }
+
+    template< unsigned char l, unsigned char r, typename L, typename R >
+    auto _doSwapDifferent( Union &other ) -> typename std::enable_if< l == 0 && r != 0 >::type {
+        new ( &unsafeGet< R >() ) R( other.unsafeMoveOut< R >() );
+        other.unsafeGet< R >().~R();
+        std::swap( _discriminator, other._discriminator );
+    }
+
+    template< unsigned char l, unsigned char r, typename L, typename R >
+    auto _doSwapDifferent( Union &other ) -> typename std::enable_if< l != 0 && r == 0 >::type {
+        new ( &other.unsafeGet< L >() ) L( unsafeMoveOut< L >() );
+        unsafeGet< L >().~L();
+        std::swap( _discriminator, other._discriminator );
+    }
+
+    template< unsigned char l, unsigned char r, typename L, typename R >
+    auto _doSwapDifferent( Union & ) -> typename std::enable_if< l == 0 && r == 0 >::type {
+        UNREACHABLE( "Invalid _doSwapDifferent" );
+    }
 };
+
+template< typename Left, typename Right >
+struct Either : Union< Left, Right > {
+
+    using Union< Left, Right >::Union;
+
+    bool isLeft() const { return this->template is< Left >(); }
+    bool isRight() const { return this->template is< Right >(); }
+
+    Left &left() { return this->template get< Left >(); }
+    Right &right() { return this->template get< Right >(); }
+
+    const Left &left() const { return this->template get< Left >(); }
+    const Right &right() const { return this->template get< Right >(); }
+};
+
+// a pointer-like structure which can, however store values a value or a
+// referrence to type T
+template< typename T >
+struct RefOrVal {
+    static_assert( !std::is_reference< T >::value, "T must not be a reference type" );
+
+    RefOrVal() : _store( InPlace< T >() ) { }
+    RefOrVal( T &&val ) : _store( std::forward< T >( val ) ) { }
+    RefOrVal( T *ref ) : _store( ref ) { }
+    RefOrVal( T &ref ) : _store( &ref ) { }
+
+    RefOrVal &operator=( const RefOrVal & ) = default;
+    RefOrVal &operator=( RefOrVal && ) = default;
+    RefOrVal &operator=( T &v ) { _store = v; return *this; }
+    RefOrVal &operator=( T &&v ) { _store = std::move( v ); return *this; }
+    RefOrVal &operator=( T *ptr ) { _store = ptr; return *this; }
+
+    T *ptr() {
+        ASSERT( !_store.empty() );
+        auto *val = _store.template asptr< T >();
+        return val ? val : _store.template get< T * >();
+    }
+    const T *ptr() const {
+        ASSERT( !_store.empty() );
+        const auto *val = _store.template asptr< T >();
+        return val ? val : _store.template get< T * >();
+    }
+
+    T *operator->() { return ptr(); }
+    T &operator*() { return *ptr(); }
+    const T *operator->() const { return ptr(); }
+    const T &operator*() const { return *ptr(); }
+
+  private:
+    Union< T, T * > _store;
+};
+
+template< typename Fn, typename R = typename std::result_of< Fn() >::type >
+struct Lazy {
+
+    Lazy( Fn &&fn ) : _fn( std::forward< Fn >( fn ) ), _val() { }
+
+    R &get() {
+        if ( _val.empty() )
+            _val = _fn();
+        return _val.template get< R >();
+    }
+
+    R &operator*() { return get(); }
+    R *operator->() { return &get(); }
+
+  private:
+    Fn _fn;
+    Union< R > _val;
+};
+
+template< typename Fn, typename R = typename std::result_of< Fn() >::type >
+Lazy< Fn, R > lazy( Fn &&fn ) { return Lazy< Fn, R >( std::forward< Fn >( fn ) ); }
 
 template< template< typename > class C, typename T, typename F >
 using FMap = C< typename std::result_of< F( T ) >::type >;
@@ -955,10 +1079,25 @@ auto operator>=( const A &a, const B &b ) -> typename _OneUnion< A, B >::type
 }
 }
 
-namespace brick_test {
-namespace types {
+// don't catch integral types and classical enum!
+template< typename Self, typename = typename
+          std::enable_if< brick::types::is_enum_class< Self >::value >::type >
+constexpr brick::types::StrongEnumFlags< Self > operator|( Self a, Self b ) noexcept {
+    using Ret = brick::types::StrongEnumFlags< Self >;
+    return Ret( a ) | Ret( b );
+}
 
-using namespace ::brick::types;
+template< typename Self, typename = typename
+          std::enable_if< brick::types::is_enum_class< Self >::value >::type >
+constexpr brick::types::StrongEnumFlags< Self > operator&( Self a, Self b ) noexcept {
+    using Ret = brick::types::StrongEnumFlags< Self >;
+    return Ret( a ) & Ret( b );
+}
+
+namespace brick {
+namespace t_types {
+
+using namespace types;
 
 struct Integer : Comparable
 {
@@ -968,23 +1107,53 @@ public:
     bool operator<=( const Integer& o ) const { return val <= o.val; }
 };
 
+struct IntegerEq : Eq {
+    int val;
+public:
+    IntegerEq(int val) : val(val) {}
+    bool operator==( const IntegerEq& o ) const { return val == o.val; }
+};
+
+struct IntegerEqOrd : Ord {
+    int val;
+public:
+    IntegerEqOrd(int val) : val(val) {}
+    bool operator==( const IntegerEqOrd& o ) const { return val == o.val; }
+    bool operator<=( const IntegerEqOrd& o ) const { return val <= o.val; }
+};
+
+struct IntegerOrd : Ord {
+    int val;
+public:
+    IntegerOrd(int val) : val(val) {}
+    bool operator<=( const IntegerOrd& o ) const { return val <= o.val; }
+};
+
 struct Mixins {
 
-    TEST(comparable) {
-        Integer i10(10);
-        Integer i10a(10);
-        Integer i20(20);
-
-        ASSERT(i10 <= i10a);
-        ASSERT(i10a <= i10);
-        ASSERT(i10 <= i20);
-        ASSERT(! (i20 <= i10));
+    template< typename T >
+    void eq() {
+        T i10(10);
+        T i10a(10);
+        T i20(20);
 
         ASSERT(i10 != i20);
         ASSERT(!(i10 != i10a));
 
         ASSERT(i10 == i10a);
         ASSERT(!(i10 == i20));
+    }
+
+    template< typename T >
+    void ord() {
+        T i10(10);
+        T i10a(10);
+        T i20(20);
+
+        ASSERT(i10 <= i10a);
+        ASSERT(i10a <= i10);
+        ASSERT(i10 <= i20);
+        ASSERT(! (i20 <= i10));
 
         ASSERT(i10 < i20);
         ASSERT(!(i20 < i10));
@@ -998,6 +1167,25 @@ struct Mixins {
         ASSERT(i10a >= i10);
         ASSERT(i20 >= i10);
         ASSERT(! (i10 >= i20));
+    }
+
+    TEST(comparable) {
+        eq< Integer >();
+        ord< Integer >();
+    }
+
+    TEST(eq) {
+        eq< IntegerEq >();
+    }
+
+    TEST(ord) {
+        eq< IntegerOrd >();
+        ord< IntegerOrd >();
+    }
+
+    TEST(eqord) {
+        eq< IntegerEqOrd >();
+        ord< IntegerEqOrd >();
     }
 
 };
@@ -1024,25 +1212,24 @@ struct UnionInstances {
 struct UnionTest {
     TEST(basic) {
         Union< int > u( 1 );
-        ASSERT( !!u );
         ASSERT( !u.empty() );
         ASSERT( u.is< int >() );
         ASSERT_EQ( u.get< int >(), 1 );
         u = 2; // move
-        ASSERT( !!u );
+        ASSERT( !u.empty() );
         ASSERT_EQ( u.get< int >(), 2 );
         int i = 3;
         u = i; // copy
-        ASSERT( !!u );
+        ASSERT( !u.empty() );
         ASSERT_EQ( u.get< int >(), 3 );
         u = types::Union< int >( 4 );
         ASSERT( u.is< int >() );
         ASSERT_EQ( u.get< int >(), 4 );
         u = types::Union< int >();
-        ASSERT( !u );
+        ASSERT( u.empty() );
         ASSERT( !u.is< int >() );
         u = 5;
-        ASSERT( u );
+        ASSERT( !u.empty() );
         ASSERT( u.is< int >() );
         ASSERT_EQ( u.get< int >(), 5 );
     }
@@ -1061,12 +1248,12 @@ struct UnionTest {
         ASSERT( wierd.empty() );
 
         wierd = 2L;
-        ASSERT( !!wierd );
+        ASSERT( !wierd.empty() );
         ASSERT( wierd.is< long >() );
         ASSERT_EQ( wierd.get< long >(), 2L );
 
         wierd = Move();
-        ASSERT( !!wierd );
+        ASSERT( !wierd.empty() );
         ASSERT( wierd.is< Move >() );
     }
 
@@ -1086,8 +1273,9 @@ struct UnionTest {
         ASSERT( ( Union< B, std::string >{ 1 }.is< B >() ) );
     }
 
-    static C idC( C c ) { return c; };
-    static C constC( B ) { return C( 32 ); };
+    static C idC( C c ) { return c; }
+    static C constC( B ) { return C( 32 ); }
+    static C refC( C &c ) { return c; }
 
     TEST(apply) {
         Union< B, C > u;
@@ -1104,6 +1292,9 @@ struct UnionTest {
 
         result = u.match( constC );
         ASSERT( result.isNothing() );
+
+        result = u.match( refC );
+        ASSERT_EQ( result.value().x, 12 );
     }
 
     TEST(eq) {
@@ -1153,6 +1344,31 @@ struct UnionTest {
         ASSERT( v < 2l );
         ASSERT( w <= 2l );
     }
+
+    struct TrackDtor {
+        TrackDtor( int *cnt ) : cnt( cnt ) { }
+        ~TrackDtor() { ++*cnt; }
+        int *cnt;
+    };
+
+    TEST(dtor) {
+        int cnt = 0;
+        {
+            Union< int, TrackDtor > u;
+            u = TrackDtor( &cnt );
+            cnt = 0;
+        }
+        ASSERT_EQ( cnt, 1 );
+    }
+
+    TEST(assing_dtor) {
+        int cnt = 0;
+        Union< int, TrackDtor > u;
+        u = TrackDtor( &cnt );
+        cnt = 0;
+        u = 1;
+        ASSERT_EQ( cnt, 1 );
+    }
 };
 
 enum class FA : unsigned char  { X = 1, Y = 2, Z = 4 };
@@ -1201,6 +1417,7 @@ struct StrongEnumFlagsTest {
 
 }
 }
+
 
 #endif
 // vim: syntax=cpp tabstop=4 shiftwidth=4 expandtab
