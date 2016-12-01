@@ -44,7 +44,7 @@ AC_PROG_CXX
 AM_PROG_LEX
 adl_CHECK_BISON
 
-# Activate at C11 for gnulib tests
+# Activate at C14 for gnulib tests
 AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
 
 AX_CHECK_COMPILE_FLAG([-lpthread], [CFLAGS="$CFLAGS -lpthread"])
@@ -62,8 +62,8 @@ AX_CHECK_COMPILE_FLAG([-Werror -fvisibility=hidden],
     [CXXFLAGS="$CXXFLAGS -fvisibility-inlines-hidden"])])
 CXXFLAGS="$CXXFLAGS -DSPOT_BUILD"
 
-# Turn on C++11 support
-m4_define([_AX_CXX_COMPILE_STDCXX_11_testbody],
+# Turn on C++15 support
+m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody],
 [AC_LANG_SOURCE([#include <memory>
 #include <string>
 #include <chrono>  // fails with some installation of clang
@@ -93,16 +93,21 @@ m4_define([_AX_CXX_COMPILE_STDCXX_11_testbody],
        std::map<int, int> m;
        m.emplace(1, 2); // fails with g++ 4.6
     }
+
+    auto foo()
+    {
+       return 5;
+    }
 ])])
 
-for f in -std=c++11 '-std=c++11 -stdlib=libc++' -std=c++0x
+for f in -std=c++14 '-std=c++1y -stdlib=libc++' -std=c++0x
 do
   AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
-                        [_AX_CXX_COMPILE_STDCXX_11_testbody])
+                        [_AX_CXX_COMPILE_STDCXX_14_testbody])
   ${stdpass-false} && break
 done
 if ! "${stdpass-false}"; then
-  AC_ERROR([unable to turn on C++11 mode with this compiler])
+  AC_ERROR([unable to turn on C++14 mode with this compiler])
 fi
 
 AX_CHECK_BUDDY
