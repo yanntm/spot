@@ -52,6 +52,8 @@
 #include <spot/twaalgos/emptiness.hh>
 #include <spot/twaalgos/emptiness_stats.hh>
 
+#include <valgrind/callgrind.h>
+
 struct ec_algo
 {
   std::string name;
@@ -941,6 +943,7 @@ main(int argc, char** argv)
                         }
                       tm_ec.start(algo);
                       spot::emptiness_check_result_ptr res;
+                      CALLGRIND_TOGGLE_COLLECT;
                       for (int count = opt_R;;)
                         {
                           res = ec->check();
@@ -948,6 +951,7 @@ main(int argc, char** argv)
                             break;
                           ec = cons_emptiness_check(i, a, degen, real_n_acc);
                         }
+                      CALLGRIND_TOGGLE_COLLECT;
                       tm_ec.stop(algo);
                       auto ecs = ec->statistics();
                       if (opt_z && res)

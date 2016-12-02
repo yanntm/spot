@@ -116,7 +116,7 @@ namespace spot
     edge t_;
     edge p_;
 
-    using allocator_t = fixed_default_allocator;
+    using allocator_t = fixed_size_pool;
 
     static
     allocator_t&
