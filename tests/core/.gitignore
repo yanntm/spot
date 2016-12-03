@@ -40,6 +40,7 @@ lunabbrev
 Makefile
 Makefile.in
 maskacc
+mempool
 mixprod
 nequals
 nenoform
