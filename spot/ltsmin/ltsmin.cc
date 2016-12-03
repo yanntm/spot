@@ -1299,7 +1299,7 @@ namespace spot
           cspins_state s =
           inner->manager->alloc_setup(dst, inner->compressed_,
                                       inner->manager->size() * 2);
-          auto it = inner->map->insert({s});
+          auto it = inner->map->insert(s);
           inner->succ->push_back(*it);
           if (!it.isnew())
             inner->manager->dealloc(s);
@@ -1349,7 +1349,7 @@ namespace spot
           cspins_state s =
           inner->manager->alloc_setup(dst, inner->compressed_,
                                       inner->manager->size() * 2);
-          auto it = inner->map->insert({s});
+          auto it = inner->map->insert(s);
           inner->succ->push_back(*it);
           if (!it.isnew())
             inner->manager->dealloc(s);
