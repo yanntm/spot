@@ -30,6 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE. */
 
 #include "brick-assert"
+#include <spot/misc/common.hh>
 
 #include <cstddef>
 #include <utility> // pair
