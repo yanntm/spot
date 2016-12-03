@@ -17,8 +17,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <bricks/brick-hashset.h>
-#include <bricks/brick-hash.h>
+#include <bricks/brick-hashset>
+#include <bricks/brick-hash>
 
 struct both
 {
@@ -54,9 +54,6 @@ int main()
   // Declare concurrent hash table
   brick::hashset::FastConcurrent<both , mytest_hasher_both<both>> ht2;
 
-  // Set initial size
-  ht2.setSize(1024);
-
   // Declare workers and provide them some jobs.
   std::vector<std::thread> workers;
   for (int i = 0; i < 6; i++)
@@ -75,6 +72,7 @@ int main()
   for (unsigned i = 0; i < ht2.size(); ++ i)
     if (ht2.valid(i))
       std::cout << i << ": {"
-                << ht2[i].x << ',' << ht2[i].y  << "}\n";
+                << ht2.valueAt(i).x << ','
+                << ht2.valueAt(i).y  << "}\n";
   return 0;
 }
