@@ -43,7 +43,7 @@ using hash::hash128_t;
 
 struct DefaultHasher
 {
-    auto hash( int64_t v ) const
+    auto hash( int64_t v ) const -> std::pair<int64_t, int64_t>
     {
         return std::make_pair( v, ~v );
     }

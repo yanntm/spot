@@ -88,7 +88,10 @@ struct bvpair
     constexpr bvpair( L l, H h = 0 ) : low( l ), high( h ) {}
     constexpr bvpair() = default;
     explicit constexpr operator bool() const { return low || high; }
-    constexpr bvpair operator<<( int s ) const
+#if ((__GNUC__ >= 4 && __GNUC_MINOR__ > 9) || (__clang_major__ == 3 && __clang_minor__ >= 6))
+    constexpr
+#endif
+    bvpair operator<<( int s ) const
     {
         int rem = 8 * sizeof( low ) - s;
         int unshift = std::max( rem, 0 );
@@ -96,7 +99,10 @@ struct bvpair
         H carry = ( low & ~ones< L >( unshift ) ) >> unshift;
         return bvpair( low << s, ( high << s ) | ( carry << shift ) );
     }
-    constexpr bvpair operator>>( int s ) const
+#if ((__GNUC__ >= 4 && __GNUC_MINOR__ > 9) || (__clang_major__ == 3 && __clang_minor__ >= 6))
+    constexpr
+#endif
+    bvpair operator>>( int s ) const
     {
         int rem = 8 * sizeof( low ) - s;
         int unshift = std::max( rem, 0 );
