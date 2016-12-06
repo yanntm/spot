@@ -533,9 +533,10 @@ struct Union : Comparable {
         return _discriminator == 0;
     }
 
+    template< typename T >
     explicit operator bool() const
     {
-        auto rv = const_cast< Union* >( this )->apply( []( const auto & x ) -> bool { return !!x; } );
+        auto rv = const_cast< Union* >( this )->apply( []( const T & x ) -> bool { return !!x; } );
         if ( rv.isNothing() )
             return false;
         return true;
@@ -1385,6 +1386,7 @@ struct StrongEnumFlagsTest {
         ASSERT( !e1 );
         ASSERT( e2 );
 
+#if ((__GNUC__ >= 4 && __GNUC_MINOR__ > 9) || (__clang_major__ == 3 && __clang_minor__ >= 6))
         ASSERT( e1 | e2 );
         ASSERT( Enum::X | Enum::Y );
         ASSERT( e2 | Enum::Z );
@@ -1396,6 +1398,7 @@ struct StrongEnumFlagsTest {
         ASSERT( Enum::X | Enum::Y | Enum::Z );
         ASSERT( !( Enum::X & Enum::Y & Enum::Z ) );
         ASSERT( ( Enum::X | Enum::Y | Enum::Z ) & Enum::X );
+#endif
     }
 
     // we don't want to break classical enums and ints by out operators
