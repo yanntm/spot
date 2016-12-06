@@ -188,7 +188,7 @@ struct AsyncLoop : Thread< LoopWrapper< T > >
 };
 
 template< typename L >
-auto async_loop( L &&l )
+auto async_loop( L &&l ) -> AsyncLoop< LambdaWrapper< L > >&&
 {
     AsyncLoop< LambdaWrapper< L > > al( std::forward< L >( l ) );
     al._start_on_move = true;
@@ -196,7 +196,7 @@ auto async_loop( L &&l )
 }
 
 template< typename L >
-auto thread( L &&l )
+auto thread( L &&l ) -> Thread< LambdaWrapper< L > >
 {
     Thread< LambdaWrapper< L > > thr( std::forward< L >( l ) );
     thr._start_on_move = true;
