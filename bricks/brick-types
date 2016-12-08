@@ -1386,7 +1386,7 @@ struct StrongEnumFlagsTest {
         ASSERT( !e1 );
         ASSERT( e2 );
 
-#if (__GNUC__ >= 5 || (__clang_major__ == 3 && __clang_minor__ >= 6))
+#if ((__GNUC__ >= 4 && __GNUC_MINOR__ > 9) || (__clang_major__ == 3 && __clang_minor__ >= 6))
         ASSERT( e1 | e2 );
         ASSERT( Enum::X | Enum::Y );
         ASSERT( e2 | Enum::Z );
