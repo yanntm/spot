@@ -75,6 +75,7 @@ struct mc_options_
   unsigned nb_threads = 1;
   bool csv = false;
   bool interpolate_csv = false;
+  std::string interpolate_fitness = "";
   bool swarmed_dfs = false;
   bool swarmed_gp_dfs = false;
 } mc_options;
@@ -91,6 +92,7 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case INTERPOLATE_CSV:
       mc_options.interpolate_csv = true;
+      mc_options.interpolate_fitness = arg;
       break;
     case SWARMED_DFS:
       mc_options.swarmed_dfs = true;
@@ -173,7 +175,7 @@ static const argp_option options[] =
       "output the associated automaton in dot format", 0 },
     { "kripke", 'k', nullptr, 0,
       "output the associated automaton in (internal) kripke format", 0 },
-    { "interpolate-csv", INTERPOLATE_CSV, nullptr, 0,
+    { "interpolate-csv", INTERPOLATE_CSV, "[equal|lessthan|greaterthan]", 0,
       "output the associated automaton in csv format", 0 },
     { "swarmed-dfs", SWARMED_DFS, nullptr, 0,
       "walk the automaton using a swarmed DFS", 0 },
@@ -427,7 +429,24 @@ static int checked_main()
         }
       tm.stop("load kripkecube");
 
-      std::cout << spot::ltsmin_model::csv(modelcube);
+      std::function<bool(unsigned,unsigned)> fitness;
+      if (mc_options.interpolate_fitness.compare("equal") == 0)
+        fitness = [](unsigned succ, unsigned fitness)
+          {
+            return succ == fitness;
+          };
+      else if (mc_options.interpolate_fitness.compare("lessthan") == 0)
+        fitness = [](unsigned succ, unsigned fitness)
+          {
+            return succ <= fitness;
+          };
+      else
+        fitness = [](unsigned succ, unsigned fitness)
+          {
+            return succ >= fitness;
+          };
+
+      std::cout << spot::ltsmin_model::interpolate_csv (modelcube, fitness);
     }
 
 

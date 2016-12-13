@@ -93,8 +93,10 @@ namespace spot
     static void swarmed_dfs(ltsmin_kripkecube_ptr sys, std::string name);
     static void swarmed_gp_dfs(ltsmin_kripkecube_ptr sys, std::string name);
 
-    // \brief Display the kripke as a CSV.
-    static std::string csv(ltsmin_kripkecube_ptr sys);
+    // \brief
+    static std::string
+      interpolate_csv(ltsmin_kripkecube_ptr sys,
+                      std::function<bool(unsigned,unsigned)> fitness);
 
     /// Number of variables in a state
     int state_size() const;
