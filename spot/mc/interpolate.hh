@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <spot/mc/reachability.hh>
 #include <spot/misc/timer.hh>
+#include <chrono>
 
 #include <bricks/brick-hashset>
 #include <atomic>
@@ -106,7 +107,11 @@ namespace spot
                 << ',' << first_depth_
                 << ',' << first_pos_
                 << ',' << x
-                << ',' << this->states();
+                << ',' << this->states()
+                << ',' << this->trans()
+                << ',' << counter_
+                << (this->stop_? ",ABORTED" : ",FINISHED");
+      this->stop_ = true;
     }
 
   private:
@@ -172,10 +177,12 @@ namespace spot
 
     void finalize()
     {
+      using namespace std::chrono_literals;
       tm_.stop("original DFS");
 
-      std::cout << "TOTAL : " << this->states() << std::endl;
-      std::cout << "TIME  : " << tm_.timer("original DFS").walltime()
+      std::cout << "STATES      : " << this->states() << std::endl;
+      std::cout << "TRANSITIONS : " << this->trans() << std::endl;
+      std::cout << "TIME        : " << tm_.timer("original DFS").walltime()
                 << std::endl;
       tm_.start("Generation of states");
       auto* gen = interpolate_fun_(sample_);
@@ -204,14 +211,16 @@ namespace spot
                i,
                0, /* FIXME tid */
                stop);
-          tm_.start("Element " + std::to_string(i));
-          cv.run();
-          tm_.stop("Element " + std::to_string(i));
-          std::cout << ','
-                    << abs((int) cv.states() - (int)this->states())
-                    << ','
-                    << tm_.timer("Element " + std::to_string(i)).walltime()
-                    << '\n';
+          std::thread th
+            (&count_valid<State, SuccIterator, StateHash, StateEqual>::run,
+             cv);
+
+          // Sleep for 10 minutes
+          for (unsigned t = 0; t < 600 && !stop; ++t)
+            std::this_thread::sleep_for(1s);
+          stop = true;
+          th.join();
+          std::cout << std::endl;
         }
       delete gen;
     }
