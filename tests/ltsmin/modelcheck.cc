@@ -440,10 +440,20 @@ static int checked_main()
           {
             return succ <= fitness;
           };
-      else
+      else if (mc_options.interpolate_fitness.compare("greaterthan") == 0)
         fitness = [](unsigned succ, unsigned fitness)
           {
             return succ >= fitness;
+          };
+      else if (mc_options.interpolate_fitness.compare("greaterstrict") == 0)
+        fitness = [](unsigned succ, unsigned fitness)
+          {
+            return succ > fitness;
+          };
+      else if (mc_options.interpolate_fitness.compare("greaterbounded") == 0)
+        fitness = [](unsigned succ, unsigned fitness)
+          {
+            return succ >= fitness && succ <= 2 * fitness;
           };
 
       std::cout << spot::ltsmin_model::interpolate_csv (modelcube, fitness);
