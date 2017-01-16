@@ -1281,10 +1281,10 @@ namespace spot
              population = next_gen;
              next_gen = tmp;
            }
-
          next_gen->clear();
        }
-
+    delete[] tab;
+    delete next_gen;
     return population;
   }
 

@@ -220,6 +220,7 @@ namespace spot
             std::this_thread::sleep_for(1s);
           stop = true;
           th.join();
+	  stop = true;
           std::cout << std::endl;
         }
       delete gen;

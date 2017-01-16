@@ -38,7 +38,7 @@ namespace spot
 
   cube cubeset::alloc() const
   {
-    auto* res = new unsigned int[2*uint_size_];
+    auto* res = new unsigned[2*uint_size_];
     for (unsigned int i = 0; i < 2*uint_size_; ++i)
       res[i] = 0;
     return res;
