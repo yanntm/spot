@@ -410,7 +410,9 @@ Formating
       static int get_mumble();
     };
 
-  * The above corresponds to the `gnu' indentation style under Emacs.
+  * The above corresponds to the `gnu' indentation style under Emacs,
+    and can be achieved with `set sw=2 et cino=g0,{2,>4,n-2,^-2'
+    under Vim.
 
   * Put a space before the opening parenthesis in control statements
 
