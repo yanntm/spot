@@ -34,7 +34,7 @@ libspotltsmin_la_LIBADD = \
   $(top_builddir)/spot/libspot.la \
   $(LIBLTDL) -lpthread
 libspotltsmin_la_LDFLAGS = -no-undefined $(SYMBOLIC_LDFLAGS)
-libspotltsmin_la_SOURCES = ltsmin.cc porinfos.cc proviso.cc
+libspotltsmin_la_SOURCES = ltsmin.cc porinfos.cc
 
 
 EXTRA_DIST = $(srcdir)/libspotltsmin.pc.in
