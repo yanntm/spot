@@ -40,73 +40,58 @@ namespace spot
         expanded_ = succ_->size() == reduced_;
         current_ = reduced_;
       }
-    virtual bool first()
+    bool first() override
     {
       idx_ = 0;
       return true;
     }
-    virtual bool next()
+    bool next() override
     {
       ++idx_;
       return idx_ != current_;
     }
-    virtual bool done() const
+    bool done() const override
     {
       return idx_ >= current_;
     }
-    virtual state* dst() const
+    state* dst() const override
     {
       return (*succ_)[idx_]->clone();
     }
-
-    virtual void fire_all() const
+    void fire_all() const override
     {
       current_ = succ_->size();
       expanded_ = true;
     }
-    virtual acc_cond::mark_t current_acceptance_conditions() const
+    acc_cond::mark_t acc() const override
     {
       SPOT_ASSERT(false);
     }
-    virtual acc_cond::mark_t acc() const
+    bdd cond() const override
     {
       SPOT_ASSERT(false);
     }
-    virtual bdd cond() const
-    {
-      SPOT_ASSERT(false);
-    }
-
-    virtual bool all_enabled() const
+    bool all_enabled() const override
     {
       return expanded_;
     }
-
-    virtual bdd current_condition() const
-    {
-      return bddfalse;
-    }
-    virtual void reorder_remaining(bool (*)(const state *))
+    void reorder_remaining(bool (*)(const state *)) override
     {
       SPOT_ASSERT(false);
     }
-
-    virtual void expand_will_generate(void (*)(const state *))
+    void expand_will_generate(void (*)(const state *)) override
     {
       SPOT_ASSERT(false);
     }
-
-    virtual void consider_first(unsigned)
+    void consider_first(unsigned) override
     {
       SPOT_ASSERT(false);
     }
-
-    virtual unsigned reduced()
+    unsigned reduced() override
     {
       return reduced_;
     }
-
-    virtual unsigned enabled()
+    unsigned enabled() override
     {
       return succ_->size();
     }
@@ -540,57 +525,55 @@ namespace spot
     // ----------------------------------------------------------
     // Implement the dfs_inspector
 
-    virtual int dfs_position(const state* st) const
+    int dfs_position(const state* st) const override
     {
       if (seen.find(st) != seen.end())
         return seen[st].dfs_position;
       return -1;
     }
-    virtual const state* dfs_state(int position) const
+    const state* dfs_state(int position) const override
     {
       SPOT_ASSERT(position < (int)todo.size());
       return todo[position].src;
     }
-    virtual twa_succ_iterator* get_iterator(unsigned dfs_position) const
+    twa_succ_iterator* get_iterator(unsigned dfs_position) const override
     {
       SPOT_ASSERT(dfs_position < todo.size());
       return todo[dfs_position].it;
     }
-    virtual bool visited(const state* s) const
+    bool visited(const state* s) const override
     {
       return seen.find(s) != seen.end();
     }
-
-    virtual std::vector<bool>& get_colors(const state* st) const
+    std::vector<bool>& get_colors(const state* st) const override
     {
       SPOT_ASSERT(seen.find(st) != seen.end());
       return seen[st].colors;
     }
-    virtual int& get_weight(const state* st) const
+    int& get_weight(const state* st) const override
     {
       SPOT_ASSERT(seen.find(st) != seen.end());
       return seen[st].weight;
     }
-    virtual bool is_dead(const state* s) const
+    bool is_dead(const state* s) const override
     {
       if (!ComputeSCC)
         return false;
       SPOT_ASSERT(seen.find(s) != seen.end());
       return uf.isdead(seen[s].live_number);
     }
-
-    virtual bool is_root(const state* s) const
+    bool is_root(const state* s) const override
     {
       if (!ComputeSCC)
         return false;
       return ((int) seen[s].live_number) == roots.back();
     }
-    virtual const state* get_highlink(const state* st) const
+    const state* get_highlink(const state* st) const override
     {
       SPOT_ASSERT(seen.find(st) != seen.end());
       return seen[st].highlink;
     }
-    virtual void set_highlink(const state* st, const state* highlink) const
+    void set_highlink(const state* st, const state* highlink) const override
     {
       SPOT_ASSERT(highlink != nullptr);
       SPOT_ASSERT(seen.find(st) != seen.end());
@@ -598,24 +581,24 @@ namespace spot
       seen[st].highlink = highlink;
       SPOT_ASSERT(get_highlink(st)->compare(highlink) == 0);
     }
-    virtual unsigned dfs_size() const
+    unsigned dfs_size() const override
     {
       return todo.size();
     }
-    const const_twa_ptr& automaton() const
+    const const_twa_ptr& automaton() const override
     {
       return aut_;
     }
-    virtual void* get_extra_data(const state* st) const
+    void* get_extra_data(const state* st) const override
     {
       SPOT_ASSERT(seen.find(st) != seen.end());
       return seen[st].extra;
     }
-    virtual void set_extra_data(const state* st, void* extra) const
+    void set_extra_data(const state* st, void* extra) const override
     {
       seen[st].extra = extra;
     }
-    virtual bool is_unknown() const
+    bool is_unknown() const override
     {
       return ReverseAnticipated;
     }

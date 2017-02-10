@@ -80,7 +80,7 @@ namespace spot
       source_(0), destination_(0)
     { }
 
-    virtual std::string name()
+    std::string name() override
     {
       std::string res = BasicCheck? "basiccheck_" : "";
       if (Delayed)
@@ -111,9 +111,9 @@ namespace spot
       return res;
     }
 
-    virtual int maybe_closingedge(const state* src,
-                                  const state* dst,
-                                  const dfs_inspector& i)
+    int maybe_closingedge(const state* src,
+                          const state* dst,
+                          const dfs_inspector& i) override
     {
       int src_pos = i.dfs_position(src);
       int dst_pos = i.dfs_position(dst);
@@ -154,7 +154,7 @@ namespace spot
       return choose(src_pos, dst_pos, src, dst, i);
     }
 
-    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    bool notify_push(const state* src, const dfs_inspector& i) override
     {
       int src_pos = i.dfs_position(src);
       if (strat_ == strategy::All)
@@ -177,8 +177,7 @@ namespace spot
        return false;
     }
 
-    virtual bool before_pop(const state* st,
-                            const dfs_inspector& i)
+    bool before_pop(const state* st, const dfs_inspector& i) override
     {
       // Some work must be done when delayed is used.
       if (Delayed)
@@ -218,13 +217,13 @@ namespace spot
       return true;
     }
 
-    virtual std::string dump()
+    std::string dump() override
     {
       return
         " source_expanded  : " + std::to_string(source_)           + '\n' +
         " dest_expanded    : " + std::to_string(destination_)      + '\n';
     }
-    virtual std::string dump_csv()
+    std::string dump_csv() override
     {
       return
         std::to_string(source_)           + ',' +
@@ -424,9 +423,9 @@ namespace spot
     evangelista10sttt()
       { }
 
-    virtual int maybe_closingedge(const state* src,
-                                  const state* dst,
-                                  const dfs_inspector& i)
+    int maybe_closingedge(const state* src,
+                          const state* dst,
+                          const dfs_inspector& i) override
     {
       auto& src_colors = i.get_colors(src);
       auto& dst_colors = i.get_colors(dst);
@@ -475,7 +474,7 @@ namespace spot
       return -1;
     }
 
-    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    bool notify_push(const state* src, const dfs_inspector& i) override
     {
       // Every state is associated to a color ORANGE, RED, and GREEN
       // We need two boolean to encode this information.
@@ -510,7 +509,7 @@ namespace spot
       return res;
     }
 
-    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    bool before_pop(const state* src, const dfs_inspector& i) override
     {
       int src_pos = i.dfs_position(src);
       if (i.get_iterator(src_pos)->all_enabled())
@@ -557,20 +556,20 @@ namespace spot
       return true;
     }
 
-    virtual std::string name()
+    std::string name() override
     {
       if (FullyColored)
         return "fullycolored_evangelista10sttt";
       else
         return "evangelista10sttt";
     }
-    virtual std::string dump()
+    std::string dump() override
     {
       return
         " source_expanded  : " + std::to_string(source_)           + '\n' +
         " dest_expanded    : " + std::to_string(destination_)      + '\n';
     }
-    virtual std::string dump_csv()
+    std::string dump_csv() override
     {
       return
         std::to_string(source_)           + ',' +
@@ -655,9 +654,9 @@ namespace spot
       Highlinks(highlinks), power_of_(power_of)
       { }
 
-    virtual int maybe_closingedge(const state* src,
-                                  const state* dst,
-                                  const dfs_inspector& i)
+    int maybe_closingedge(const state* src,
+                          const state* dst,
+                          const dfs_inspector& i) override
     {
       auto& src_colors = i.get_colors(src);
       auto& dst_colors = i.get_colors(dst);
@@ -809,7 +808,7 @@ namespace spot
       return -1;
     }
 
-    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    bool notify_push(const state* src, const dfs_inspector& i) override
     {
       // Every state is associated to a color ORANGE, RED, and GREEN
       // We need two boolean to encode this information.
@@ -836,7 +835,7 @@ namespace spot
       return false;
     }
 
-    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    bool before_pop(const state* src, const dfs_inspector& i) override
     {
       int src_pos = i.dfs_position(src);
 
@@ -917,7 +916,7 @@ namespace spot
       return true;
     }
 
-    virtual std::string name()
+    std::string name() override
     {
       std::string res  = "expandedlist_";
       if (Highlinks)
@@ -948,14 +947,14 @@ namespace spot
       return res;
     }
 
-    virtual std::string dump()
+    std::string dump() override
     {
       return
         " source_expanded  : " + std::to_string(source_)           + '\n' +
         " dest_expanded    : " + std::to_string(destination_)      + '\n';
     }
 
-    virtual std::string dump_csv()
+    std::string dump_csv() override
     {
       return
         std::to_string(source_)           + ',' +
@@ -1235,19 +1234,6 @@ namespace spot
     unsigned power_of_;
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-  //template<bool FullyColored>
   class SPOT_API summary_provisos: public proviso
   {
     enum class color{ ORANGE, GREEN, PURPLE, RED };
@@ -1267,7 +1253,7 @@ namespace spot
       highlink_(highlink)
       { }
 
-    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    bool notify_push(const state* src, const dfs_inspector& i) override
     {
       ++d_;
       data* edata = new data({
@@ -1366,9 +1352,9 @@ namespace spot
       return false;
     }
 
-    virtual int maybe_closingedge(const state* src,
-                                  const state* dst,
-                                  const dfs_inspector& i)
+    int maybe_closingedge(const state* src,
+                          const state* dst,
+                          const dfs_inspector& i) override
     {
       if (i.is_dead(dst))
         return -1;
@@ -1512,7 +1498,7 @@ namespace spot
       return -1;
     }
 
-    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    bool before_pop(const state* src, const dfs_inspector& i) override
     {
       if (highlink_)
         {
@@ -1663,7 +1649,7 @@ namespace spot
       expanded_.push_back(d_);
     }
 
-    virtual std::string name()
+    std::string name() override
     {
       std::string res = "";
       if (highlink_)
@@ -1674,14 +1660,14 @@ namespace spot
       return res;
     }
 
-    virtual std::string dump()
+    std::string dump() override
     {
       return
         " source_expanded  : " + std::to_string(source_)           + '\n' +
         " dest_expanded    : " + std::to_string(destination_)      + '\n';
     }
 
-    virtual std::string dump_csv()
+    std::string dump_csv() override
     {
       return
         std::to_string(source_)           + ',' +
@@ -1690,7 +1676,7 @@ namespace spot
     virtual ~summary_provisos()
     { }
 
-    virtual void delete_extra(void* edata)
+    void delete_extra(void* edata) override
     {
       data* d = (data*) edata;
       delete d;
@@ -1753,7 +1739,7 @@ namespace spot
       FullyColored_(fullycolored)
       { }
 
-    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    bool notify_push(const state* src, const dfs_inspector& i) override
     {
       ++d_;
       data* edata = new data({
@@ -1765,9 +1751,9 @@ namespace spot
       return false;
     }
 
-    virtual int maybe_closingedge(const state* src,
-                                  const state* dst,
-                                  const dfs_inspector& i)
+    int maybe_closingedge(const state* src,
+                          const state* dst,
+                          const dfs_inspector& i) override
     {
       if (i.is_dead(dst))
         return -1;
@@ -1892,7 +1878,7 @@ namespace spot
       return -1;
     }
 
-    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    bool before_pop(const state* src, const dfs_inspector& i) override
     {
       if (highlink_)
         {
@@ -2014,7 +2000,7 @@ namespace spot
     }
 
 
-    virtual std::string name()
+    std::string name() override
     {
       std::string res = "";
       if (FullyColored_)
@@ -2029,14 +2015,14 @@ namespace spot
       return res;
     }
 
-    virtual std::string dump()
+    std::string dump() override
     {
       return
         " source_expanded  : " + std::to_string(source_)           + '\n' +
         " dest_expanded    : " + std::to_string(destination_)      + '\n';
     }
 
-    virtual std::string dump_csv()
+    std::string dump_csv() override
     {
       return
         std::to_string(source_)           + ',' +
@@ -2045,7 +2031,7 @@ namespace spot
     virtual ~delayed_expandedlist_provisos()
     { }
 
-    virtual void delete_extra(void* edata)
+    void delete_extra(void* edata) override
     {
       data* d = (data*) edata;
       delete d;
@@ -2057,15 +2043,6 @@ namespace spot
     unsigned destination_ = 0; ///< stay to zero but to have homogeneous csv.
     std::mt19937 generator_;
   };
-
-
-
-
-
-
-
-
-
 
   // LAST FOREVER? Special delayed summary (with / without) highlinks
   class SPOT_API last_forever_provisos: public proviso
@@ -2091,7 +2068,7 @@ namespace spot
       FullyColored_(fullycolored)
       { }
 
-    virtual bool notify_push(const state* src, const dfs_inspector& i)
+    bool notify_push(const state* src, const dfs_inspector& i) override
     {
       ++d_;
       data* edata = new data({
@@ -2101,9 +2078,9 @@ namespace spot
       return false;
     }
 
-    virtual int maybe_closingedge(const state* src,
-                                  const state* dst,
-                                  const dfs_inspector& i)
+    int maybe_closingedge(const state* src,
+                          const state* dst,
+                          const dfs_inspector& i) override
     {
       if (i.is_dead(dst))
         return -1;
@@ -2209,7 +2186,7 @@ namespace spot
       return -1;
     }
 
-    virtual bool before_pop(const state* src, const dfs_inspector& i)
+    bool before_pop(const state* src, const dfs_inspector& i) override
     {
       if (highlink_)
         {
@@ -2319,8 +2296,7 @@ namespace spot
         }
     }
 
-
-    virtual std::string name()
+    std::string name() override
     {
       std::string res = "";
       if (FullyColored_)
@@ -2333,14 +2309,14 @@ namespace spot
       return res;
     }
 
-    virtual std::string dump()
+    std::string dump() override
     {
       return
         " source_expanded  : " + std::to_string(source_)           + '\n' +
         " dest_expanded    : " + std::to_string(destination_)      + '\n';
     }
 
-    virtual std::string dump_csv()
+    std::string dump_csv() override
     {
       return
         std::to_string(source_)           + ',' +
@@ -2348,8 +2324,7 @@ namespace spot
     }
     virtual ~last_forever_provisos()
     { }
-
-    virtual void delete_extra(void* edata)
+    void delete_extra(void* edata) override
     {
       data* d = (data*) edata;
       delete d;

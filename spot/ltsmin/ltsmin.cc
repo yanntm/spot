@@ -275,7 +275,7 @@ namespace spot
         delete cc_;
       }
 
-      virtual void fire_all() const
+      void fire_all() const override
       {
         if (expanded_)
           return;
@@ -285,39 +285,35 @@ namespace spot
         expanded_ = true;
       }
 
-      virtual bool all_enabled() const
+      bool all_enabled() const override
       {
         return expanded_;
       }
 
-      virtual
-      bool first()
+      bool first() override
       {
         idx_ = 0;
         return idx_ != to_process_.size();
       }
 
-      virtual
-      bool next()
+      bool next() override
       {
         ++idx_;
         return idx_ != to_process_.size();
       }
 
-      virtual
-      bool done() const
+      bool done() const override
       {
         return idx_ >= to_process_.size();
       }
 
-      virtual
-      state* dst() const
+      state* dst() const override
       {
         assert(idx_ != to_process_.size());
         return to_process_[idx_]->clone();
       }
 
-      virtual void reorder_remaining(bool (*dealfirst)(const state *))
+      void reorder_remaining(bool (*dealfirst)(const state *)) override
       // More elegant but too costly.
       //std::function<bool (const state*)> dealfirst)
       {
@@ -360,17 +356,17 @@ namespace spot
           to_process_[i] = res[i];
       }
 
-      virtual unsigned reduced()
+      unsigned reduced() override
       {
         return std::count(mask_.begin(), mask_.end(), true);
       }
 
-      virtual unsigned enabled()
+      unsigned enabled() override
       {
         return mask_.size();
       }
 
-      virtual void expand_will_generate(void (*callback)(const state *))
+      void expand_will_generate(void (*callback)(const state *)) override
       {
         if (expanded_)
           return;
@@ -381,7 +377,7 @@ namespace spot
 
       // Reorder states in such a way that it does not affect the order of the
       // remaining successors.
-      void consider_first(unsigned pos)
+      void consider_first(unsigned pos) override
       {
         assert(pos < to_process_.size());
         state* el = to_process_[pos];
