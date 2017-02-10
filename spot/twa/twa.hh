@@ -499,14 +499,14 @@ namespace spot
     /// \brief The number of states that are in the reduced set (if some)
     virtual unsigned reduced()
     {
-      assert(false);
+      SPOT_ASSERT(false);
       return 0;
     }
 
     /// \brief The number of states that are in the enable set
     virtual unsigned enabled()
     {
-      assert(false);
+      SPOT_ASSERT(false);
       return 0;
     }
 
@@ -514,7 +514,7 @@ namespace spot
     /// the order of the remaining successors.
     virtual void consider_first(unsigned)
     {
-      assert(false);
+      SPOT_ASSERT(false);
     }
 
     ///@}

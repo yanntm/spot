@@ -20,6 +20,7 @@
 #pragma once
 
 #include <ltdl.h>
+#include <memory>
 
 namespace spot
 {

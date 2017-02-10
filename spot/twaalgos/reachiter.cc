@@ -1,5 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011, 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche
+// Copyright (C) 2009, 2011, 2013, 2014, 2015, 2016, 2017 Laboratoire
+// de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -242,8 +243,8 @@ namespace spot
 
   bool
   twa_reachable_iterator_depth_first::will_pop_state(const state*,
-						      int,
-						      twa_succ_iterator*)
+                                                      int,
+                                                      twa_succ_iterator*)
   {
     return true;
   }
@@ -306,6 +307,4 @@ namespace spot
   {
     return stack_.find(sn) != stack_.end();
   }
-
-
 }

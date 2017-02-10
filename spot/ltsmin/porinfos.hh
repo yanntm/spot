@@ -57,7 +57,7 @@ namespace spot
     porinfos(const spins_interface* si);
 
     std::vector<bool> compute_reduced_set(const std::vector<int>& enabled,
-					  const int* for_spins_state);
+                                          const int* for_spins_state);
 
     inline bool non_maybecoenabled(int t1, int t2);
 

@@ -94,7 +94,7 @@ namespace spot
 
       int* raw_state()
       {
-	return vars;
+        return vars;
       }
 
     private:
@@ -200,18 +200,18 @@ namespace spot
 
       void shuffle(unsigned seed) const
       {
-	if (!seed)
-	  return;
+        if (!seed)
+          return;
 
-	// First shuffle transitions (use spot shuffle for sake of
-	// portability)
-	srand(seed);
-	mrandom_shuffle(transitions.begin(), transitions.end());
+        // First shuffle transitions (use spot shuffle for sake of
+        // portability)
+        srand(seed);
+        mrandom_shuffle(transitions.begin(), transitions.end());
 
-	// Then shuffle transitions-id in the same (that's the reason
-	// of the second call to srand)
-	srand(seed);
-	mrandom_shuffle(transitions_id.begin(), transitions_id.end());
+        // Then shuffle transitions-id in the same (that's the reason
+        // of the second call to srand)
+        srand(seed);
+        mrandom_shuffle(transitions_id.begin(), transitions_id.end());
       }
     };
 
@@ -254,120 +254,120 @@ namespace spot
       spins_succ_iterator(const callback_context* cc,
                           bdd cond, porinfos* por = nullptr,
                           unsigned stab_seed = 0)
-	: kripke_succ_iterator(cond), cc_(cc),
-	  por_(por), idx_(0), stab_seed_(stab_seed)
+        : kripke_succ_iterator(cond), cc_(cc),
+          por_(por), idx_(0), stab_seed_(stab_seed)
       {
-	setup();
+        setup();
       }
 
       void recycle(const callback_context* cc, bdd cond, unsigned seed)
       {
-	to_process_.clear();
-	delete cc_;
-	cc_ = cc;
-	kripke_succ_iterator::recycle(cond);
+        to_process_.clear();
+        delete cc_;
+        cc_ = cc;
+        kripke_succ_iterator::recycle(cond);
         stab_seed_ = seed;
-	setup();
+        setup();
       }
 
       ~spins_succ_iterator()
       {
-	delete cc_;
+        delete cc_;
       }
 
       virtual void fire_all() const
       {
         if (expanded_)
-	  return;
-	for (unsigned i = 0; i < cc_->transitions.size(); ++i)
-	  if (!mask_[i])
-	    to_process_.push_back(cc_->transitions[i]);
-	expanded_ = true;
+          return;
+        for (unsigned i = 0; i < cc_->transitions.size(); ++i)
+          if (!mask_[i])
+            to_process_.push_back(cc_->transitions[i]);
+        expanded_ = true;
       }
 
       virtual bool all_enabled() const
       {
-	return expanded_;
+        return expanded_;
       }
 
       virtual
       bool first()
       {
-	idx_ = 0;
-	return idx_ != to_process_.size();
+        idx_ = 0;
+        return idx_ != to_process_.size();
       }
 
       virtual
       bool next()
       {
-	++idx_;
-	return idx_ != to_process_.size();
+        ++idx_;
+        return idx_ != to_process_.size();
       }
 
       virtual
       bool done() const
       {
-	return idx_ >= to_process_.size();
+        return idx_ >= to_process_.size();
       }
 
       virtual
       state* dst() const
       {
-	assert(idx_ != to_process_.size());
-	return to_process_[idx_]->clone();
+        assert(idx_ != to_process_.size());
+        return to_process_[idx_]->clone();
       }
 
       virtual void reorder_remaining(bool (*dealfirst)(const state *))
       // More elegant but too costly.
       //std::function<bool (const state*)> dealfirst)
       {
-	std::vector<state*> res;
-	std::vector<bool> process_first;
-	unsigned i = 0;
+        std::vector<state*> res;
+        std::vector<bool> process_first;
+        unsigned i = 0;
 
-	// FIXME Useless by avoid complicated counts for
-	// the last loop of this function.
-	while (i < idx_)
-	  {
-	    res.push_back(to_process_[i]);
-	    process_first.push_back(true);
-	    ++i;
-	  }
+        // FIXME Useless by avoid complicated counts for
+        // the last loop of this function.
+        while (i < idx_)
+          {
+            res.push_back(to_process_[i]);
+            process_first.push_back(true);
+            ++i;
+          }
 
-	// Apply deal first to all remaining.
-	while (i < to_process_.size())
-	  {
-	    process_first.push_back(dealfirst(to_process_[i]));
-	    ++i;
-	  }
+        // Apply deal first to all remaining.
+        while (i < to_process_.size())
+          {
+            process_first.push_back(dealfirst(to_process_[i]));
+            ++i;
+          }
 
-	// First states to be process quickly
-	for (i = idx_; i < to_process_.size(); ++i)
-	  {
-	    if (process_first[i])
-	      res.push_back(to_process_[i]);
-	  }
+        // First states to be process quickly
+        for (i = idx_; i < to_process_.size(); ++i)
+          {
+            if (process_first[i])
+              res.push_back(to_process_[i]);
+          }
 
-	// Then all other states
-	for (i = idx_; i < to_process_.size(); ++i)
-	  {
-	    if (!process_first[i])
-	      res.push_back(to_process_[i]);
-	  }
+        // Then all other states
+        for (i = idx_; i < to_process_.size(); ++i)
+          {
+            if (!process_first[i])
+              res.push_back(to_process_[i]);
+          }
 
-	// Finaly dump res into to_process_
-	for (i = idx_; i < to_process_.size(); ++i)
-	  to_process_[i] = res[i];
+        // Finaly dump res into to_process_
+        for (i = idx_; i < to_process_.size(); ++i)
+          to_process_[i] = res[i];
       }
 
       virtual unsigned reduced()
       {
-	return std::count(mask_.begin(), mask_.end(), true);
+        return std::count(mask_.begin(), mask_.end(), true);
       }
 
       virtual unsigned enabled()
       {
-	return mask_.size();
+        return mask_.size();
       }
 
       virtual void expand_will_generate(void (*callback)(const state *))
@@ -383,50 +383,50 @@ namespace spot
       // remaining successors.
       void consider_first(unsigned pos)
       {
-	assert(pos < to_process_.size());
-	state* el = to_process_[pos];
-	to_process_.erase (to_process_.begin()+pos);
-	to_process_.insert(to_process_.begin(), el);
+        assert(pos < to_process_.size());
+        state* el = to_process_[pos];
+        to_process_.erase (to_process_.begin()+pos);
+        to_process_.insert(to_process_.begin(), el);
       }
 
     private:
       void setup()
       {
-	idx_ = 0;
-	expanded_ = true;
-	if (por_)
-	  {
-	    // Detect wich states are in Reduced(state)
-	    mask_ =
-	      por_->compute_reduced_set(cc_->transitions_id, cc_->source);
+        idx_ = 0;
+        expanded_ = true;
+        if (por_)
+          {
+            // Detect wich states are in Reduced(state)
+            mask_ =
+              por_->compute_reduced_set(cc_->transitions_id, cc_->source);
 
             if (stab_seed_)
-	      {
-		cc_->shuffle(stab_seed_);
-		srand(stab_seed_);
-		mrandom_shuffle(mask_.begin(), mask_.end());
-	      }
+              {
+                cc_->shuffle(stab_seed_);
+                srand(stab_seed_);
+                mrandom_shuffle(mask_.begin(), mask_.end());
+              }
 
-	    // Fill vector to process with Reduced (states)
-	    unsigned nb_enabled = 0;
-	    for (unsigned i = 0; i < mask_.size(); ++i)
-	      {
-		if (mask_[i])
-		  {
-		    ++nb_enabled;
-		    to_process_.push_back(cc_->transitions[i]);
-		  }
-	      }
+            // Fill vector to process with Reduced (states)
+            unsigned nb_enabled = 0;
+            for (unsigned i = 0; i < mask_.size(); ++i)
+              {
+                if (mask_[i])
+                  {
+                    ++nb_enabled;
+                    to_process_.push_back(cc_->transitions[i]);
+                  }
+              }
 
-	    // some states are not in Reduced (state)
-	    if (nb_enabled != mask_.size())
-	      expanded_ = false;
-	  }
-	else
-	  {
-	    for (unsigned i = 0; i < cc_->transitions.size(); ++i)
-	      to_process_.push_back(cc_->transitions[i]);
-	  }
+            // some states are not in Reduced (state)
+            if (nb_enabled != mask_.size())
+              expanded_ = false;
+          }
+        else
+          {
+            for (unsigned i = 0; i < cc_->transitions.size(); ++i)
+              to_process_.push_back(cc_->transitions[i]);
+          }
       }
 
     protected:
@@ -808,14 +808,14 @@ namespace spot
             alive_prop = bdd_nithvar(var);
           }
 
-	// Initialize Partial Order Infos
-	// First allocate the POR object
-	por_ = new porinfos(d_.get());
+        // Initialize Partial Order Infos
+        // First allocate the POR object
+        por_ = new porinfos(d_.get());
       }
 
       ~spins_kripke()
       {
-	delete por_;
+        delete por_;
         if (iter_cache_)
           {
             delete iter_cache_;
@@ -839,7 +839,7 @@ namespace spot
 
       porinfos* get_porinfos() const
       {
-	return por_;
+        return por_;
       }
 
       virtual state* get_init_state() const override
@@ -1014,8 +1014,8 @@ namespace spot
           }
 
         // Perform swarming on this the successors of this state
-	// according to the seed
-	cc->shuffle(seed_);
+        // according to the seed
+        cc->shuffle(seed_);
 
         if (iter_cache_)
           {
