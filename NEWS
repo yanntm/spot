@@ -67,6 +67,10 @@ New in spot 2.4.0.dev (not yet released)
     will work either on f or its negation.
     (see https://spot.lrde.epita.fr/hierarchy.html for details).
 
+  - The new function spot::remove_univ_otf() removes universal
+    transitions on the fly from an alternating Büchi automaton
+    using Miyano and Hayashi's breakpoint algorithm.
+
   Deprecation notices:
 
   (These functions still work but compilers emit warnings.)
