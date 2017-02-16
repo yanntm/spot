@@ -38,6 +38,7 @@
 #include <spot/twaalgos/strength.hh>
 #include <spot/twaalgos/stutter.hh>
 #include <spot/twaalgos/isdet.hh>
+#include <spot/algebra/autalgebra.hh>
 
 automaton_format_t automaton_format = Hoa;
 static const char* automaton_format_opt = nullptr;
@@ -87,6 +88,7 @@ static const argp_option options[] =
   {
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output format:", 3 },
+    { "algebra", 'A', nullptr, 0, "Print the monoid of the automaton", 0 },
     { "dot", 'd',
       "1|a|b|B|c|C(COLOR)|e|f(FONT)|h|k|n|N|o|r|R|s|t|v|y|+INT|<INT|#",
       OPTION_ARG_OPTIONAL,
@@ -277,6 +279,10 @@ int parse_opt_aoutput(int key, char* arg, struct argp_state*)
     {
     case '8':
       spot::enable_utf8();
+      break;
+    case 'A':
+      automaton_format = Algebra;
+      automaton_format_opt = arg;
       break;
     case 'd':
       automaton_format = Dot;
@@ -580,6 +586,9 @@ automaton_printer::print(const spot::twa_graph_ptr& aut,
     case Count:
     case Quiet:
       // Do not output anything.
+      break;
+    case Algebra:
+      spot::print_monoid(*out, aut, automaton_format_opt);
       break;
     case Dot:
       spot::print_dot(*out, aut, automaton_format_opt);

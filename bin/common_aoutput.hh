@@ -43,6 +43,7 @@ enum automaton_format_t {
   Hoa,
   Quiet,
   Count,
+  Algebra
 };
 
 // The format to use in output_automaton()
