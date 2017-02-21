@@ -45,4 +45,7 @@ ltlcross --products=3 --timeout=60 \
 "$ltl2tgba --lbtt -BC %f > %T" \
 "$ltl2tgba --lbtt --unambiguous --low %f > %T" \
 "$ltl2tgba --lbtt --unambiguous --high %f > %T" \
+"$ltl2tgba --parity %f > %T" \
+"$ltl2tgba --parity=c %f > %T" \
+"$ltl2tgba --dpa %f > %T" \
 --json=output.json --csv=output.csv

@@ -72,7 +72,7 @@ namespace spot
     /// options used for debugging or benchmarking.
     postprocessor(const option_map* opt = nullptr);
 
-    enum output_type { TGBA, BA, Monitor, Generic };
+    enum output_type { TGBA, BA, Monitor, Generic, Parity, ParityColor };
 
     /// \brief Select the desired output type.
     ///
@@ -195,6 +195,7 @@ namespace spot
     twa_graph_ptr do_simul(const twa_graph_ptr& input, int opt);
     twa_graph_ptr do_sba_simul(const twa_graph_ptr& input, int opt);
     twa_graph_ptr do_degen(const twa_graph_ptr& input);
+    twa_graph_ptr do_tba_degen(const twa_graph_ptr& input);
     twa_graph_ptr do_scc_filter(const twa_graph_ptr& a, bool arg);
     twa_graph_ptr do_scc_filter(const twa_graph_ptr& a);
 

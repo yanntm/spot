@@ -37,6 +37,8 @@ enum {
   OPT_MEDIUM,
   OPT_SMALL,
   OPT_TGBA,
+  OPT_PA,
+  OPT_DPA,
 };
 
 static constexpr const argp_option options[] =
@@ -55,6 +57,11 @@ static constexpr const argp_option options[] =
     { "state-based-acceptance", 'S', nullptr, 0,
       "define the acceptance using states", 0 },
     { "sbacc", 0, nullptr, OPTION_ALIAS, nullptr, 0 },
+    { "parity", OPT_PA, "[c]", OPTION_ARG_OPTIONAL,
+      "output an automaton with parity acceptance; (add =c to force the output "
+      "to be colored)", 0 },
+    { "dpa", OPT_DPA, nullptr, 0, "output a deterministic parity "
+      "automaton", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Simplification goal:", 20 },
     { "small", OPT_SMALL, nullptr, 0, "prefer small automata (default)", 0 },
@@ -123,7 +130,7 @@ static const argp_option options_disabled[] =
   };
 
 static int
-parse_opt_post(int key, char*, struct argp_state*)
+parse_opt_post(int key, char* arg, struct argp_state*)
 {
   // This switch is alphabetically-ordered.
   switch (key)
@@ -151,6 +158,11 @@ parse_opt_post(int key, char*, struct argp_state*)
     case 'S':
       sbacc = spot::postprocessor::SBAcc;
       break;
+    case OPT_DPA:
+      pref = spot::postprocessor::Deterministic;
+      type = spot::postprocessor::ParityColor;
+      pref_set = true;
+      break;
     case OPT_HIGH:
       level = spot::postprocessor::High;
       simplification_level = 3;
@@ -165,6 +177,16 @@ parse_opt_post(int key, char*, struct argp_state*)
       level = spot::postprocessor::Medium;
       simplification_level = 2;
       level_set = true;
+      break;
+    case OPT_PA:
+      if (arg)
+      {
+        if (arg[0] != 'c' || arg[1] != 0)
+          error(2, 0, "unknown argument for --parity: '%s'", arg);
+        type = spot::postprocessor::ParityColor;
+      }
+      else
+        type = spot::postprocessor::Parity;
       break;
     case OPT_SMALL:
       pref = spot::postprocessor::Small;

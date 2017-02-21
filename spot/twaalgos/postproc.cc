@@ -35,6 +35,7 @@
 #include <spot/twaalgos/sepsets.hh>
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/alternation.hh>
+#include <spot/twaalgos/parity.hh>
 
 namespace spot
 {
@@ -137,6 +138,15 @@ namespace spot
   }
 
   twa_graph_ptr
+  postprocessor::do_tba_degen(const twa_graph_ptr& a)
+  {
+    return degeneralize_tba(a,
+                            degen_reset_, degen_order_,
+                            degen_cache_, degen_lskip_,
+                            degen_lowinit_);
+  }
+
+  twa_graph_ptr
   postprocessor::do_degen(const twa_graph_ptr& a)
   {
     auto d = degeneralize(a,
@@ -199,6 +209,8 @@ namespace spot
 
     if (PREF_ == Any && level_ == Low
         && (type_ == Generic
+            || type_ == Parity
+            || type_ == ParityColor
             || type_ == TGBA
             || (type_ == BA && a->is_sba())
             || (type_ == Monitor && a->num_sets() == 0)))
@@ -381,7 +393,8 @@ namespace spot
           }
       }
 
-    if (PREF_ == Deterministic && type_ == Generic && !dba)
+    if (PREF_ == Deterministic && (type_ == Generic || type_ == Parity
+                                   || type_ == ParityColor) && !dba)
       {
         dba = tgba_determinize(to_generalized_buchi(sim),
                                false, det_scc_, det_simul_, det_stutter_);
@@ -402,6 +415,9 @@ namespace spot
         if (type_ == Generic)
           throw std::runtime_error
             ("postproc() not yet updated to mix sat-minimize and Generic");
+        if (type_ == Parity || type_ == ParityColor)
+          throw std::runtime_error
+            ("postproc() not yet updated to mix sat-minimize and Parity");
         unsigned target_acc;
         if (type_ == BA)
           target_acc = 1;
@@ -517,6 +533,16 @@ namespace spot
 
     sim->remove_unused_ap();
 
+    if ((type_ == Parity || type_ == ParityColor) && !sim->acc().is_parity())
+    {
+      if (SBACC_)
+        sim = do_degen(a);
+      else
+        sim = do_tba_degen(a);
+
+      if (type_ == ParityColor)
+        colorize_parity_here(sim);
+    }
     if (COMP_)
       sim = complete(sim);
     if (SBACC_)

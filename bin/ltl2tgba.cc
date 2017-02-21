@@ -102,7 +102,6 @@ parse_opt(int key, char* arg, struct argp_state*)
       else
         jobs.emplace_back(arg, false);
       break;
-
     default:
       return ARGP_ERR_UNKNOWN;
     }
