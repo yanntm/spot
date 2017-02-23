@@ -20,13 +20,17 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if USE_TCHECKER
+  TCHECKER_SUBDIR = zgastwa
+endif
+
 AUTOMAKE_OPTIONS = subdir-objects
 
 # List directories in the order they must be built.  Keep tests at the
 # end, after building '.' (since the current directory contains
 # libspot.la needed by the tests)
-SUBDIRS = misc priv tl graph twa twaalgos ta taalgos kripke \
-          parseaut parsetl . ltsmin gen
+SUBDIRS = misc priv tl graph twa twaalgos ta taalgos kripke	\
+          parseaut parsetl $(TCHECKER_SUBDIR) . ltsmin gen
 
 lib_LTLIBRARIES = libspot.la
 libspot_la_SOURCES =

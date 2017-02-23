@@ -229,6 +229,33 @@ AC_CHECK_PROG([WRING2LBTT], [wring2lbtt], [wring2lbtt])
 # an alias for swig-2.0.  Let's use the former when available.
 AC_CHECK_PROGS([SWIG], [swig3.0 swig], [swig])
 
+# Option to add udbm needed by tchecker
+AC_ARG_WITH([udbm],
+            [AC_HELP_STRING([--with-udbm=/path/to/udbm],
+                            [specify the path where udbm is installed])])
+if test x"${with_udbm}" = x; then
+  AC_CHECK_PROG([udbm_config], [udbm-config], [yes], [no])
+  if test x"${udbm_config}" = xyes; then
+    with_udbm=`udbm-config --dir`
+  fi
+fi
+AC_SUBST([UDBM_PREFIX], [${with_udbm}])
+
+# Option to add tchecker
+AC_ARG_WITH([tchecker],
+            [AC_HELP_STRING([--with-tchecker=/path/to/tchecker],
+                            [specify the path where tchecker is installed])],
+            [], [])
+if test x"${with_tchecker}" != x; then
+  if test x"${with_udbm}" = x; then
+    AC_ERROR([Unable to find udbm library needed by TChecker. Use option
+ "--with-udbm" to tell configure where it is installed.])
+  else
+    AC_SUBST([TCHECKER_PREFIX], [${with_tchecker}])
+  fi
+fi
+AM_CONDITIONAL([USE_TCHECKER], [test x"${with_tchecker}" != x])
+
 AC_SUBST([CROSS_COMPILING], [$cross_compiling])
 
 AC_SUBST([GITPATCH], [$(if (git rev-parse) >/dev/null 2>&1; then
@@ -274,6 +301,7 @@ AC_CONFIG_FILES([
   spot/twaalgos/Makefile
   spot/twa/Makefile
   spot/gen/Makefile
+  spot/zgastwa/Makefile
   python/ajax/Makefile
   python/Makefile
   tests/core/defs

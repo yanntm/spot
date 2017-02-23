@@ -17,11 +17,22 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if USE_TCHECKER
+  TCHECKER_CPPFLAGS = -I@TCHECKER_PREFIX@/src/include        \
+                      -I@TCHECKER_PREFIX@/contrib/utap2tchk  \
+                      -I@UDBM_PREFIX@/include
+
+  TA_BIN = ta
+endif
+
 SUBDIRS = . man
 
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS) \
-              -I$(top_builddir)/lib -I$(top_srcdir)/lib
-AM_CXXFLAGS = $(WARNING_CXXFLAGS)
+              -I$(top_builddir)/lib -I$(top_srcdir)/lib           \
+              $(TCHECKER_CPPFLAGS)
+
+##AM_CXXFLAGS = $(WARNING_CXXFLAGS)
+##ta_CXXFLAGS = $(WARNING_CXXFLAGS) +Werror
 LDADD =						\
   libcommon.a					\
   $(top_builddir)/lib/libgnu.la			\
@@ -68,7 +79,8 @@ bin_PROGRAMS = \
   ltlfilt \
   ltlgrind \
   randaut \
-  randltl
+  randltl \
+  $(TA_BIN)
 
 # Dummy programs used just to generate man/spot-x.7 and man/spot.7 in
 # a way that is consistent with the other man pages (e.g., with a
@@ -92,5 +104,17 @@ dstar2tgba_SOURCES = dstar2tgba.cc
 spot_x_SOURCES = spot-x.cc
 spot_SOURCES = spot.cc
 ltlcross_LDADD = $(LDADD) $(LIB_GETHRXTIME)
+if USE_TCHECKER
+  ta_SOURCES = test_ta.cc ta.cc
+  ta_LDADD = \
+             $(top_builddir)/spot/zgastwa/libzgastwa.la          \
+             -L@TCHECKER_PREFIX@/src                \
+             -L@UDBM_PREFIX@/lib                    \
+             -L@TCHECKER_PREFIX@/contrib/utap2tchk  \
+             -lutap2tchk                            \
+             -ltchecker                             \
+             -ludbm                                 \
+             $(LDADD)
+endif
 
 EXTRA_DIST = options.py
