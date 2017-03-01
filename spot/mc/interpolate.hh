@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016 Laboratoire de Recherche et
+// Copyright (C) 2016, 2017 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -177,7 +177,7 @@ namespace spot
 
     void finalize()
     {
-      using namespace std::chrono_literals;
+      using namespace std::literals::chrono_literals;
       tm_.stop("original DFS");
 
       std::cout << "STATES      : " << this->states() << std::endl;
