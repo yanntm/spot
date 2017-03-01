@@ -1265,12 +1265,12 @@ namespace spot
          population->clear();
          for (auto st : *next_gen)
            {
-             unsigned n = d->get_successors
+             int n = d->get_successors
                (nullptr, manager.unbox_state(st),
                 [](void* , transition_info_t*, int *){
                 },
                 nullptr);
-             if (cmp(n, fitness))
+             if (n != -1 && cmp(n, fitness))
                population->push_back(st);
            }
          if (population->empty())
