@@ -1290,7 +1290,8 @@ namespace spot
 
   std::string
   ltsmin_model::interpolate_csv(ltsmin_kripkecube_ptr sys,
-                                std::function<bool(unsigned,unsigned)> fitness)
+                                std::function<bool(unsigned,unsigned)> fitness,
+                                std::string algoname)
   {
     std::string res = "";
     auto d_ = sys->spins_interface();
@@ -1361,7 +1362,7 @@ namespace spot
                        splitter_, 0, fitness);
                   },
                   0, /* FIXME tid */
-                  stop);
+                  stop, algoname);
     interpolate.run();
     delete[] uncompressed_;
     return res;

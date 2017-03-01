@@ -44,12 +44,12 @@ namespace spot
                 std::function<int(State)>  get_depth,
                 std::function<int(State)>  get_pos,
                 unsigned id,
-                unsigned tid, bool& stop)
+                unsigned tid, bool& stop, std::string algoname)
       : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
                          count_valid<State, SuccIterator,
                                      StateHash, StateEqual>>(sys, tid, stop),
       new_initial_(new_initial), count_valid_fun_(count_valid_fun),
-      get_depth_(get_depth), get_pos_(get_pos), id_(id)
+      get_depth_(get_depth), get_pos_(get_pos), id_(id), algoname_(algoname)
       {
       }
 
@@ -104,6 +104,7 @@ namespace spot
     {
       float x = (float) counter_ / this->states();
       std::cout << '@' << id_
+                << ',' << algoname_
                 << ',' << first_depth_
                 << ',' << first_pos_
                 << ',' << x
@@ -123,6 +124,7 @@ namespace spot
     int first_depth_ = -1;
     int first_pos_ = -1;
     unsigned id_ = 0;
+    std::string algoname_;
   };
 
   template<typename State, typename SuccIterator,
@@ -136,11 +138,11 @@ namespace spot
     interpolate(kripkecube<State, SuccIterator>& sys,
         std::function<void(State, unsigned int)> display,
         std::function<std::vector<State>*(std::vector<State>&)> interpolate_fun,
-                unsigned tid, bool& stop)
+                unsigned tid, bool& stop, std::string algoname)
       : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
                          interpolate<State, SuccIterator,
                                      StateHash, StateEqual>>(sys, tid, stop),
-      display_(display), interpolate_fun_(interpolate_fun)
+      display_(display), interpolate_fun_(interpolate_fun), algoname_(algoname)
       {
         (void) display;
         depth.reserve(1000);
@@ -210,7 +212,7 @@ namespace spot
                },
                i,
                0, /* FIXME tid */
-               stop);
+               stop, algoname_);
           std::thread th
             (&count_valid<State, SuccIterator, StateHash, StateEqual>::run,
              cv);
@@ -235,6 +237,7 @@ namespace spot
                                StateHash, StateEqual> visited_map;
     visited_map depth;
     visited_map dfspos;
+    std::string algoname_;
   };
 
 

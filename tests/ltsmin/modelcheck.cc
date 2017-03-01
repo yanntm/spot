@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire de
+// Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Laboratoire de
 // Recherche et Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -456,7 +456,8 @@ static int checked_main()
             return succ >= fitness && succ <= 2 * fitness;
           };
 
-      std::cout << spot::ltsmin_model::interpolate_csv (modelcube, fitness);
+      std::cout << spot::ltsmin_model::interpolate_csv
+        (modelcube, fitness, mc_options.interpolate_fitness);
     }
 
 
