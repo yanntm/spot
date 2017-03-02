@@ -175,7 +175,8 @@ static const argp_option options[] =
       "output the associated automaton in dot format", 0 },
     { "kripke", 'k', nullptr, 0,
       "output the associated automaton in (internal) kripke format", 0 },
-    { "interpolate-csv", INTERPOLATE_CSV, "[equal|lessthan|greaterthan]", 0,
+    { "interpolate-csv", INTERPOLATE_CSV,
+      "[equal|lessthan|greaterthan|lessstrict|greaterstrict|greaterbounded]", 0,
       "output the associated automaton in csv format", 0 },
     { "swarmed-dfs", SWARMED_DFS, nullptr, 0,
       "walk the automaton using a swarmed DFS", 0 },
@@ -439,6 +440,11 @@ static int checked_main()
         fitness = [](unsigned succ, unsigned fitness)
           {
             return succ <= fitness;
+          };
+      else if (mc_options.interpolate_fitness.compare("lessstrict") == 0)
+        fitness = [](unsigned succ, unsigned fitness)
+          {
+            return succ < fitness;
           };
       else if (mc_options.interpolate_fitness.compare("greaterthan") == 0)
         fitness = [](unsigned succ, unsigned fitness)
