@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2013, 2014, 2016 Laboratoire de Recherche
+// Copyright (C) 2009, 2010, 2013, 2014, 2016, 2017 Laboratoire de Recherche
 // et Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -89,7 +89,7 @@ namespace spot
 
     // Always return true since otherwise a compile-time error will be raised.
     return true;
-  };
+  }
 
   /// \ingroup kripke
   /// \brief Iterator code for Kripke structure
