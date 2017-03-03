@@ -366,13 +366,13 @@ struct BitField
             return *this; \
         }
 
-        OP(+=);
-        OP(-=);
-        OP(*=);
-        OP(/=);
-        OP(%=);
-        OP(|=);
-        OP(&=);
+        OP(+=)
+        OP(-=)
+        OP(*=)
+        OP(/=)
+        OP(%=)
+        OP(|=)
+        OP(&=)
 #undef OP
     };
 };
