@@ -466,7 +466,6 @@ static int checked_main()
         (modelcube, fitness, mc_options.interpolate_fitness);
     }
 
-
   if (mc_options.swarmed_dfs || mc_options.swarmed_gp_dfs)
     {
       spot::ltsmin_kripkecube_ptr modelcube = nullptr;

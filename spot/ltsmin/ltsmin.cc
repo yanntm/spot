@@ -1400,7 +1400,6 @@ namespace spot
       threads[i].join();
     tm.stop("Run");
 
-
     std::cout << "Following csv describe for each threads:\n"
               << "tid,walltime,uniq-inserted,visited-states,visited-edge,"
               << "number-fake-initial-used\n";

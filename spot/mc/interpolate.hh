@@ -159,7 +159,7 @@ namespace spot
 
     bool push(State st, unsigned int dfsnum)
     {
-      if (dfsnum <= 150) // FIXME threshold
+      if (dfsnum <= 1000) // FIXME threshold
         sample_.push_back(st);
 
       depth.insert({st, (int) this->todo.size()});
