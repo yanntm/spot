@@ -1246,11 +1246,11 @@ namespace spot
           sym("get_state_variable_type_value");
 
         d->get_transition_count = (int (*)())
-          lt_dlsym(h, "get_transition_count");
+          sym("get_transition_count");
         d->get_transition_read_dependencies = (int* (*)(int))
-          lt_dlsym(h, "get_transition_read_dependencies");
+          sym("get_transition_read_dependencies");
         d->get_transition_write_dependencies = (int* (*)(int))
-          lt_dlsym(h, "get_transition_write_dependencies");
+          sym("get_transition_write_dependencies");
 
         // Support for Partial Order Reductions
         d->get_guard_count = (int (*)()) lt_dlsym(h, "get_guard_count");
