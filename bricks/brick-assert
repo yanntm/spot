@@ -196,9 +196,9 @@ inline void assert_die_fn( Location l )
         }                                                           \
     }
 
-ASSERT_FN(eq, ==, !=);
-ASSERT_FN(leq, <=, >);
-ASSERT_FN(lt, <, >=);
+ASSERT_FN(eq, ==, !=)
+ASSERT_FN(leq, <=, >)
+ASSERT_FN(lt, <, >=)
 
 template< typename Location, typename X >
 void assert_pred_fn( Location l, X x, bool p )
