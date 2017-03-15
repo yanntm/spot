@@ -185,7 +185,7 @@ namespace spot
                       // -example and flush the bfs queue.
                       auto mark = this->twa_->trans_data(front->it_prop,
                                                          this->tid_).acc_;
-                      if (!acc.has(mark))
+                      if (!(acc & mark))
                         {
                           ctrx_element* current = front;
                           while (current != nullptr)
