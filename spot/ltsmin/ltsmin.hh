@@ -20,6 +20,7 @@
 #pragma once
 
 #include <spot/ltsmin/spins_interface.hh>
+#include <spot/ltsmin/spins_kripke.hh>
 #include <spot/kripke/kripke.hh>
 #include <spot/twacube/twacube.hh>
 #include <spot/tl/apcollect.hh>
@@ -28,13 +29,6 @@
 
 namespace spot
 {
-  class cspins_iterator;
-  typedef int* cspins_state;
-
-  typedef std::shared_ptr<spot::kripkecube<spot::cspins_state,
-                                           spot::cspins_iterator>>
-    ltsmin_kripkecube_ptr;
-
   class SPOT_API ltsmin_model final
   {
   public:
