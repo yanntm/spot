@@ -1251,10 +1251,9 @@ namespace spot
   {
     cspins_state_manager* manager;   // The state manager
     std::vector<cspins_state>* succ; // The successors of a state
-    cspins_state_map map;            // Must be a copy!
+    cspins_state_map map;            // Must be a copy and only one copy/thread
     int* compressed_;
     int* uncompressed_;
-    int default_value_;
     bool compress;
     bool selfloopize;
   };
@@ -1268,9 +1267,7 @@ namespace spot
     cspins_iterator(cspins_state s,
                     const spot::spins_interface* d,
                     cspins_state_manager& manager,
-                    cspins_state_map& map,
                     inner_callback_parameters& inner,
-                    int defvalue,
                     cube cond,
                     bool compress,
                     bool selfloopize,
@@ -1280,9 +1277,7 @@ namespace spot
     {
       successors_.reserve(10);
       inner.manager = &manager;
-      inner.map = map;
       inner.succ = &successors_;
-      inner.default_value_ = defvalue;
       inner.compress = compress;
       inner.selfloopize = selfloopize;
       int* ref = s;
@@ -1316,9 +1311,7 @@ namespace spot
     void recycle(cspins_state s,
                  const spot::spins_interface* d,
                  cspins_state_manager& manager,
-                 cspins_state_map& map,
                  inner_callback_parameters& inner,
-                 int defvalue,
                  cube cond,
                  bool compress,
                  bool selfloopize,
@@ -1331,8 +1324,6 @@ namespace spot
       successors_.clear();
       inner.manager = &manager;
       inner.succ = &successors_;
-      inner.map = map;
-      inner.default_value_ = defvalue;
       inner.compress = compress;
       inner.selfloopize = selfloopize;
       int* ref  = s;
@@ -1447,6 +1438,7 @@ namespace spot
             cspins_state_manager(d_->get_state_size(), compress);
           inner_[i].compressed_ = new int[d_->get_state_size() * 2];
           inner_[i].uncompressed_ = new int[d_->get_state_size()+30];
+          inner_[i].map = map_; // Must be a copy per thread
         }
       dead_idx_ = -1;
       match_aps(visible_aps, dead_prop);
@@ -1506,15 +1498,15 @@ namespace spot
           auto tmp  = recycle_[tid].back();
           recycle_[tid].pop_back();
           compute_condition(tmp->condition(), s, tid);
-          tmp->recycle(s, d_, manager_[tid], map_, inner_[tid], -1,
+          tmp->recycle(s, d_, manager_[tid], inner_[tid],
                        tmp->condition(), compress_, selfloopize_,
                        cubeset_, dead_idx_, tid);
           return tmp;
         }
       cube cond = cubeset_.alloc();
       compute_condition(cond, s, tid);
-      return new cspins_iterator(s, d_, manager_[tid], map_, inner_[tid],
-                                 -1, cond, compress_, selfloopize_,
+      return new cspins_iterator(s, d_, manager_[tid], inner_[tid],
+                                 cond, compress_, selfloopize_,
                                  cubeset_, dead_idx_, tid);
     }
 
