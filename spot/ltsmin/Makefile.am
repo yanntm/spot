@@ -23,7 +23,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 ltsmindir = $(pkgincludedir)/ltsmin
 
-ltsmin_HEADERS = ltsmin.hh
+ltsmin_HEADERS = ltsmin.hh spins_interface.hh
 
 lib_LTLIBRARIES = libspotltsmin.la
 libspotltsmin_la_DEPENDENCIES = \
