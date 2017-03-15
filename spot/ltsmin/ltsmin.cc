@@ -56,45 +56,6 @@ namespace spot
   namespace
   {
     ////////////////////////////////////////////////////////////////////////
-    // spins interface
-
-    typedef struct transition_info {
-      int* labels; // edge labels, NULL, or pointer to the edge label(s)
-      int  group;  // holds transition group or -1 if unknown
-    } transition_info_t;
-
-    typedef void (*TransitionCB)(void *ctx,
-                                 transition_info_t *transition_info,
-                                 int *dst);
-  }
-
-  struct spins_interface
-  {
-    lt_dlhandle handle;        // handle to the dynamic library
-    void (*get_initial_state)(void *to);
-    int (*have_property)();
-    int (*get_successors)(void* m, int *in, TransitionCB, void *arg);
-    int (*get_state_size)();
-    const char* (*get_state_variable_name)(int var);
-    int (*get_state_variable_type)(int var);
-    int (*get_type_count)();
-    const char* (*get_type_name)(int type);
-    int (*get_type_value_count)(int type);
-    const char* (*get_type_value_name)(int type, int value);
-
-    ~spins_interface()
-    {
-      if (handle)
-        lt_dlclose(handle);
-      lt_dlexit();
-    }
-  };
-
-  namespace
-  {
-    typedef std::shared_ptr<const spins_interface> spins_interface_ptr;
-
-    ////////////////////////////////////////////////////////////////////////
     // STATE
 
     struct spins_state final: public state
