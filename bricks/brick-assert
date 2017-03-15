@@ -69,10 +69,10 @@
         BRICK_LOCWRAP( BRICK_LOCATION( "a missing implementation" ) ) )
 
 #ifdef _MSC_VER
-#define UNUSED
+#define DIVINE_UNUSED
 #define noexcept
 #else
-#define UNUSED __attribute__((unused))
+#define DIVINE_UNUSED __attribute__((unused))
 #endif
 
 #ifndef BRICK_ASSERT_H
