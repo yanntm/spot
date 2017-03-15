@@ -1251,7 +1251,7 @@ namespace spot
   {
     cspins_state_manager* manager;   // The state manager
     std::vector<cspins_state>* succ; // The successors of a state
-    cspins_state_map* map;
+    cspins_state_map map;            // Must be a copy!
     int* compressed_;
     int* uncompressed_;
     int default_value_;
@@ -1280,7 +1280,7 @@ namespace spot
     {
       successors_.reserve(10);
       inner.manager = &manager;
-      inner.map = &map;
+      inner.map = map;
       inner.succ = &successors_;
       inner.default_value_ = defvalue;
       inner.compress = compress;
@@ -1299,7 +1299,7 @@ namespace spot
           cspins_state s =
           inner->manager->alloc_setup(dst, inner->compressed_,
                                       inner->manager->size() * 2);
-          auto it = inner->map->insert(s);
+          auto it = inner->map.insert(s);
           inner->succ->push_back(*it);
           if (!it.isnew())
             inner->manager->dealloc(s);
@@ -1331,7 +1331,7 @@ namespace spot
       successors_.clear();
       inner.manager = &manager;
       inner.succ = &successors_;
-      inner.map = &map;
+      inner.map = map;
       inner.default_value_ = defvalue;
       inner.compress = compress;
       inner.selfloopize = selfloopize;
@@ -1349,7 +1349,7 @@ namespace spot
           cspins_state s =
           inner->manager->alloc_setup(dst, inner->compressed_,
                                       inner->manager->size() * 2);
-          auto it = inner->map->insert(s);
+          auto it = inner->map.insert(s);
           inner->succ->push_back(*it);
           if (!it.isnew())
             inner->manager->dealloc(s);
