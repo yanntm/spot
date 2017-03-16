@@ -85,7 +85,7 @@ struct Thread : T
             start();
     }
 
-    virtual void start()
+    virtual void start() noexcept
     {
         _thread.reset( new std::thread( [this]() { this->main(); } ) );
     }
@@ -174,7 +174,7 @@ struct AsyncLoop : Thread< LoopWrapper< T > >
         stop(); /* call the correct stop(), with interrupt() */
     }
 
-    void start() override
+    void start() noexcept override
     {
         this->_interrupted.store( false, std::memory_order_relaxed );
         Super::start();
@@ -209,7 +209,7 @@ struct ThreadSet : std::vector< Thread< T > >
     template< typename... Args >
     ThreadSet( Args&&... args ) : std::vector< Thread< T > >( std::forward< Args >( args )... ) {}
 
-    void start() { for ( auto &t : *this ) t.start(); }
+    void start() noexcept { for ( auto &t : *this ) t.start(); }
     void join() { for ( auto &t : *this ) t.join(); }
 };
 
