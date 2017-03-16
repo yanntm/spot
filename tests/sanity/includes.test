@@ -1,7 +1,7 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2008, 2011, 2012, 2016, 2018 Laboratoire de Recherche et
-# Développement de l'Epita (LRDE).
+# Copyright (C) 2008, 2011, 2012, 2016, 2017, 2018 Laboratoire de
+# Recherche et Développement de l'Epita (LRDE).
 # Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6
 # (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
 # Pierre et Marie Curie.
@@ -44,6 +44,9 @@ for file in `find "$INCDIR" \( -name "${1-*}.hh" \
      echo "  $file (missing #pragma once)" >> failures.inc
      continue
    fi
+
+   # If it is an hxx file the file may not be autocontaining
+   case $file in *.hxx ) continue ;; esac
 
    echo "#include <spot/$file>" >incltest.cc
    if $CXX $CPPFLAGS -DSKIP_DEPRECATED_WARNING $CXXFLAGS \
