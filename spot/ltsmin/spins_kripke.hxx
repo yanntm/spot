@@ -266,6 +266,7 @@ namespace spot
         delete inner_[i].compressed_;
         delete inner_[i].uncompressed_;
       }
+    ::operator delete(manager_);
     delete[] inner_;
   }
 
