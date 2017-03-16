@@ -251,9 +251,9 @@ namespace spot
 
   kripkecube<cspins_state, cspins_iterator>::~kripkecube()
   {
-    for (auto i: recycle_)
+    for (auto& i: recycle_)
       {
-        for (auto j: i)
+        for (auto& j: i)
           {
             cubeset_.release(j->condition());
             delete j;
