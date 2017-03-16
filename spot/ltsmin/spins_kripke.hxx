@@ -263,8 +263,8 @@ namespace spot
     for (unsigned i = 0; i < nb_threads_; ++i)
       {
         manager_[i].~cspins_state_manager();
-        delete inner_[i].compressed_;
-        delete inner_[i].uncompressed_;
+        delete[] inner_[i].compressed_;
+        delete[] inner_[i].uncompressed_;
       }
     ::operator delete(manager_);
     delete[] inner_;
