@@ -91,7 +91,7 @@ struct Thread : T
 
     virtual void start() noexcept
     {
-        _thread.reset( new std::thread( [this]() { this->main(); } ) );
+        _thread.reset( new std::thread( [this]() noexcept { this->main(); } ) );
     }
 
     virtual void stop()
