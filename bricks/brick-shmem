@@ -54,7 +54,11 @@
 #define BRICK_SHMEM_H
 
 #ifndef BRICKS_CACHELINE
+#if (__GNUC__ >= 7) // Please new Versions of GCC
+#define	BRICKS_CACHELINE 16
+#else
 #define BRICKS_CACHELINE 64
+#endif
 #endif
 
 namespace brick {
