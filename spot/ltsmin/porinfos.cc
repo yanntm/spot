@@ -118,25 +118,90 @@ namespace spot
           m_guards[i][j] = array_guards[j+1];
       }
 
-    // Setup dependency between transitions This
+    // Setup dependency between transitions. This
     // is a cache for speeding up dependancy computation.
     m_dep_tr.resize(transitions_);
     for (int t1 = 0; t1 < transitions_; ++t1)
       m_dep_tr[t1].resize(transitions_);
+
     for (int t1 = 0; t1 < transitions_; ++t1)
       {
         for (int t2 = t1; t2 < transitions_; ++t2)
           {
+            bool res = false;
             for (int i = 0; i < variables_; ++i)
-              {
-                if ((m_read[t1][i] && m_read[t2][i]) ||
-                    (m_write[t1][i] && m_write[t2][i]))
-                  {
-                    m_dep_tr[t1][t2] = true;
-                    m_dep_tr[t2][t1] = true;
-                  }
-              }
+              if ((m_read[t1][i] && m_read[t2][i])
+                || (m_write[t1][i] && m_write[t2][i]))
+                {
+                  res = true;
+                  break;
+                }
+            m_dep_tr[t1][t2] = res;
+            m_dep_tr[t2][t1] = res;
           }
+      }
+
+    m_dep_guards.resize(transitions_);
+    for (int t1 = 0; t1 < transitions_; ++t1)
+      m_dep_guards[t1].resize(transitions_);
+    for (int t1 = 0; t1 < transitions_; ++t1)
+      {
+        for (int t2 = t1; t2 < transitions_; ++t2)
+          {
+            bool res = false;
+            for (unsigned i = 0; !res && i < m_guards[t1].size(); i++)
+              for (unsigned j = 0; !res && j < m_guards[t2].size(); j++)
+                if (m_guards[t1][i] == m_guards[t2][j])
+                  res = true;
+
+            m_dep_guards[t1][t2] = res;
+            m_dep_guards[t2][t1] = res;
+          }
+      }
+
+    // Compute the list of processes with their id.
+    // Primitives types and processes are stored in the same place, so
+    // we just have to keep only entries which are not a type.
+    const std::vector<std::string> primitive_types = { "int", "byte" };
+    std::vector<std::pair<std::string, int>> processes;
+    unsigned type_count = d_->get_type_count();
+    for (unsigned i = 0; i < type_count; ++i)
+      {
+        auto type = std::string(d_->get_type_name(i));
+        if (std::find(primitive_types.begin(), primitive_types.end(), type)
+           == primitive_types.end())
+          processes.emplace_back(type, i);
+      }
+
+    // Compute the processus of each variable.
+    // -1 means that the variable is global.
+    std::vector<int> variable_proc(d_->get_state_size());
+    int proc = -1;
+    unsigned state_size = d_->get_state_size();
+    for (unsigned i = 0; i < state_size; ++i)
+      {
+        auto var = std::string(d_->get_state_variable_name(i));
+        auto pred = [&var](std::pair<std::string, int> p)
+          { return p.first == var; };
+        auto res = std::find_if(processes.begin(), processes.end(), pred);
+
+        if (!(res == processes.end()))
+          proc = res->second;
+        variable_proc[i] = proc;
+      }
+
+    // Compute the processus of each transition, based on the modified
+    // variables. -1 means that we don't know with this method.
+    t_processes.resize(transitions_);
+    for (int t = 0; t < transitions_; ++t)
+      {
+        t_processes[t] = -1;
+        for (int v = 0; v < variables_; ++v)
+          if (m_read[t][v] || m_write[t][v])
+            {
+              t_processes[t] = variable_proc[v];
+              break;
+            }
       }
 
     // Setup non maybe coenabled
@@ -153,7 +218,70 @@ namespace spot
   }
 
   std::vector<bool>
-  porinfos::compute_reduced_set(const std::vector<int>& enabled,
+  porinfos::compute_reduced_set_ct(const std::vector<int>& enabled,
+                                const int* for_spins_state)
+  {
+    (void) for_spins_state;
+    std::vector<bool> res(enabled.size(), true);
+
+    // State without succesors
+    if (enabled.empty())
+      {
+        stats_.cumul(0, enabled.size());
+        return res;
+      }
+
+    std::vector<int> t_work;
+    std::vector<int> t;
+
+    // Randomly take one enabled transition
+    {
+      int alpha = enabled[0];
+      t_work.push_back(alpha);
+      t.push_back(alpha);
+    }
+
+    auto are_conflicting = [&](int t1, int t2)
+      {
+        return ((t_processes[t1] != -1 && t_processes[t2] != -1
+                 && t_processes[t1] != t_processes[t2]) && m_dep_tr[t1][t2])
+                 || m_dep_guards[t1][t2];
+      };
+
+    // Compute the conflicting transitions algorithm as described by
+    // Elwin Pater in Partial Order Reduction for PINS [2011] (page 15)
+
+    while (!t_work.empty())
+      {
+        int alpha = t_work.back();
+        t_work.pop_back();
+
+        for (int beta = 0; beta < transitions_; ++beta)
+          {
+            if (alpha != beta && are_conflicting(alpha, beta))
+              {
+                if (std::find(enabled.begin(), enabled.end(), beta) ==
+                    enabled.end())
+                  return res;
+                if (std::find(t.begin(), t.end(), beta) == t.end())
+                  {
+                    t.push_back(beta);
+                    t_work.push_back(beta);
+                  }
+              }
+          }
+      }
+
+    // Compute intersection between t and enabled
+    for (unsigned i = 0; i < enabled.size(); ++i)
+      if (std::find(t.begin(), t.end(), enabled[i]) == t.end())
+        res[i] = false;
+
+    return res;
+  }
+
+  std::vector<bool>
+  porinfos::compute_reduced_set_ss(const std::vector<int>& enabled,
                                 const int* for_spins_state)
   {
     (void) for_spins_state;
@@ -260,6 +388,96 @@ namespace spot
         for (unsigned i = 0; i < res_.size(); ++i)
           res_[i] = true;
       }
+    return res_;
+  }
+
+  std::vector<bool>
+  porinfos::compute_reduced_set_ss_ns(const std::vector<int>& enabled,
+                                  const int* for_spins_state)
+  {
+    (void) for_spins_state;
+    std::vector<bool> res_(enabled.size(), false);
+
+    if (enabled.empty())
+      {
+        //std::cerr << "Warning, state without successors\n" << std::endl;
+        stats_.cumul(0, enabled.size());
+        return res_;
+      }
+
+    // Compute the stubborn set algorithm as described by Elwin Pater
+    // in Partial Order Reduction for PINS [2011] (page 21)
+
+    // Declare usefull variables
+    std::vector<int> t_work;
+    std::vector<int> t_s;
+
+    std::unordered_set<int> cache;
+
+    // Randomly take one enabled transition
+    // FIXME here we choose the first enabled transition (as described
+    // in the previous report) but better heuristics may exist
+    {
+      int alpha = enabled[0];
+      t_work.push_back(alpha);
+    }
+
+    while (!t_work.empty())
+      {
+        int beta = t_work.back();
+        t_work.pop_back();
+        t_s.push_back(beta);
+        cache.insert(beta);
+
+        // Computes guards used by beta
+        // int beta_guards_size = m_guards[beta].size();
+
+        if (std::find(enabled.begin(), enabled.end(), beta) != enabled.end())
+          {
+            // Beta is an enabled transition.
+            // Iterate over all transitions
+            for (int i = 0; i < transitions_; ++i)
+              {
+                // Beta is already in t_s or transitions are independants ...
+                // ... so we avoid extra computation.
+                if (i == beta || !m_dep_tr[i][beta])
+                  continue;
+
+                // The transition must be processed!
+                if (non_mbc_tr[beta][i] && cache.find(i) == cache.end())
+                  {
+                    t_work.push_back(i);
+                    cache.insert(i);
+                  }
+              }
+          }
+        else
+          {
+            // FIXME best nes
+          }
+      }
+
+    // Compute the intersection between T_S and enabled
+    unsigned hidden = 0;
+    for (unsigned i = 0; i < enabled.size(); ++i)
+      {
+        const auto idx = std::find(t_s.begin(), t_s.end(), enabled[i]);
+        if (idx != t_s.end())
+          res_[i] = true;
+        else
+          ++hidden;
+      }
+
+    stats_.cumul(hidden, enabled.size());
+
+    // Here we activate a SPIN-like persistent set, i.e.
+    // wheter a persistent set with one transition or all transitions
+    if (spin_ && (enabled.size() - hidden != 1))
+      {
+        for (unsigned i = 0; i < res_.size(); ++i)
+          res_[i] = true;
+      }
+
     return res_;
   }
 

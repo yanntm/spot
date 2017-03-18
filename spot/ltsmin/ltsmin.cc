@@ -394,7 +394,7 @@ namespace spot
           {
             // Detect wich states are in Reduced(state)
             mask_ =
-              por_->compute_reduced_set(cc_->transitions_id, cc_->source);
+              por_->compute_reduced_set_ct(cc_->transitions_id, cc_->source);
 
             if (stab_seed_)
               {

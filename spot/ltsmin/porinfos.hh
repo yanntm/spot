@@ -56,8 +56,14 @@ namespace spot
   public:
     porinfos(const spins_interface* si);
 
-    std::vector<bool> compute_reduced_set(const std::vector<int>& enabled,
-                                          const int* for_spins_state);
+    std::vector<bool> compute_reduced_set_ct(const std::vector<int>& enabled,
+                                             const int* for_spins_state);
+
+    std::vector<bool> compute_reduced_set_ss(const std::vector<int>& enabled,
+                                             const int* for_spins_state);
+
+    std::vector<bool> compute_reduced_set_ss_ns(const std::vector<int>& enabled,
+                                                const int* for_spins_state);
 
     inline bool non_maybecoenabled(int t1, int t2);
 
@@ -94,7 +100,9 @@ namespace spot
 
     // Develop caches to reduce computation time
     std::vector<std::vector<bool>> m_dep_tr;
+    std::vector<std::vector<bool>> m_dep_guards;
     std::vector<std::vector<bool>> non_mbc_tr;
+    std::vector<int> t_processes;
     bool spin_ = false;
   };
 }
