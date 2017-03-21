@@ -430,7 +430,7 @@ static int checked_main()
         }
       tm.stop("load kripkecube");
 
-      std::function<bool(unsigned,unsigned)> fitness;
+      std::function<bool(unsigned, unsigned)> fitness;
       if (mc_options.interpolate_fitness.compare("equal") == 0)
         fitness = [](unsigned succ, unsigned fitness)
           {

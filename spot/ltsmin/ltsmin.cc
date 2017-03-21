@@ -1180,7 +1180,7 @@ namespace spot
                       ltsmin_kripkecube_ptr sys,
                       const spins_interface* d,
                       std::vector<int> splitter_, unsigned tid,
-                      std::function<bool(unsigned,unsigned)> cmp)
+                      std::function<bool(unsigned, unsigned)> cmp)
   {
     // FIXME compress!
     if (sys->compress())
@@ -1290,7 +1290,7 @@ namespace spot
 
   std::string
   ltsmin_model::interpolate_csv(ltsmin_kripkecube_ptr sys,
-                                std::function<bool(unsigned,unsigned)> fitness,
+                                std::function<bool(unsigned, unsigned)> fitness,
                                 std::string algoname)
   {
     std::string res = "";
@@ -1332,7 +1332,7 @@ namespace spot
     splitter_.push_back(d_->get_state_size()); // FIXME
 
     bool stop = false;
-    auto& manager_ = sys->manager( 0 /*FIXME for multithread*/);
+    auto& manager_ = sys->manager(0);  /*FIXME for multithread*/
     // FIXME when multiple threads
     int* uncompressed_ = new int[d_->get_state_size()+30];
     interpolate<cspins_state, cspins_iterator,
@@ -1487,7 +1487,7 @@ namespace spot
                 return  interpolate_states(cs, manager, sys, d_,
                                            splitter_, i,
                                            [](unsigned succ, unsigned fitness)
-                                              { return succ == fitness;});
+                                              { return succ == fitness; });
               },
             map, i, stop);
       }
