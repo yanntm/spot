@@ -476,13 +476,13 @@ namespace spot
     bool push(State s, unsigned int dfsnum)
     {
       ++states_;
-      if (SPOT_UNLIKELY(dfsnum <= 150 && phase1)) // FIXME threshold
+      if (SPOT_UNLIKELY(dfsnum <= 1000 && phase1)) // FIXME threshold
         {
           sample_.push_back(s);
 
           // Here we decide to reset the current DFS using states
           // that have been mutated from GP.
-          if (dfsnum == 150)
+          if (dfsnum == 1000)
             {
               phase1 = false;
               insert_status_ = UNKNOWN;
