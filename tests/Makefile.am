@@ -39,7 +39,7 @@ check_SCRIPTS = run
 # TESTS_twa they can easily fail due to some timeout in the Jupyter
 # communications.
 TESTS = $(TESTS_sanity) $(TESTS_python) $(TESTS_misc) $(TESTS_tl) \
-  $(TESTS_graph) $(TESTS_kripke) $(TESTS_twa) $(TESTS_ltsmin)
+  $(TESTS_graph) $(TESTS_kripke) $(TESTS_twa) $(TESTS_algebra) $(TESTS_ltsmin)
 
 distclean-local:
 	find . -name '*.dir' -type d -print | xargs rm -rf
@@ -61,6 +61,7 @@ core/defs: $(top_builddir)/config.status $(srcdir)/core/defs.in
 # Keep this sorted alphabetically.
 check_PROGRAMS = \
   core/acc \
+  core/algebracross \
   core/bitvect \
   core/checkpsl \
   core/checkta \
@@ -98,6 +99,7 @@ check_PROGRAMS = \
 
 # Keep this sorted alphabetically.
 core_acc_SOURCES = core/acc.cc
+core_algebracross_SOURCES = core/algebracross.cc
 core_bitvect_SOURCES  = core/bitvect.cc
 core_checkpsl_SOURCES = core/checkpsl.cc
 core_checkta_SOURCES = core/checkta.cc
@@ -291,6 +293,8 @@ TESTS_twa = \
   core/cycles.test \
   core/acc_word.test
 
+TESTS_algebra = \
+  core/syntactic-wilke.test
 
 ############################## PYTHON ##############################
 
