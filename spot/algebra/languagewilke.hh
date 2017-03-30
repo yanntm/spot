@@ -23,6 +23,8 @@
 
 #include <spot/algebra/wilke.hh>
 
+#define trace while (0) std::cerr
+
 namespace spot
 {
 
@@ -108,6 +110,14 @@ namespace spot
       os << '}';
     }
   };
+
+  template<class T>
+  std::ostream&
+  operator<<(std::ostream& os, const partition<T>& p)
+  {
+    p.print(os);
+    return os;
+  }
 
   template<class Wilke>
   class smart_language : public Wilke
@@ -208,9 +218,7 @@ namespace spot
       while (old_part != opart)
         {
           // debug
-          std::cerr << "opart is ";
-          opart.print(std::cerr);
-          std::cerr << std::endl;
+          trace << "opart is " << opart << std::endl;
 
           old_part = opart;
           opart.clear();
@@ -293,9 +301,7 @@ namespace spot
       while (old_fpart != fpart)
         {
           // debug
-          std::cerr << "fpart is ";
-          fpart.print(std::cerr);
-          std::cerr << std::endl;
+          trace << "fpart is " << fpart << std::endl;
 
           old_fpart = fpart;
           fpart.clear();
@@ -370,9 +376,7 @@ namespace spot
             fpart.push_back(old_fpart[i]);
         }
       // debug
-      std::cerr << "reordered fpart is ";
-      fpart.print(std::cerr);
-      std::cerr << std::endl;
+      trace << "reordered fpart is " << fpart << std::endl;
 
       // Build the quotient Wilke algebra.
       auto prod = [&fpart, this](const unsigned i, const unsigned j)
