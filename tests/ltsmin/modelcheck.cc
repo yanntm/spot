@@ -99,6 +99,8 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case SWARMED_GP_DFS:
       mc_options.swarmed_gp_dfs = true;
+      std::cout << arg << std::endl;
+      mc_options.interpolate_fitness = arg;
       break;
     case 'c':
       mc_options.compute_counterexample = true;
@@ -180,7 +182,8 @@ static const argp_option options[] =
       "output the associated automaton in csv format", 0 },
     { "swarmed-dfs", SWARMED_DFS, nullptr, 0,
       "walk the automaton using a swarmed DFS", 0 },
-    { "swarmed-gp-dfs", SWARMED_GP_DFS, nullptr, 0,
+    { "swarmed-gp-dfs", SWARMED_GP_DFS,
+      "[equal|lessthan|greaterthan|lessstrict|greaterstrict|greaterbounded]", 0,
       "walk the automaton using a swarmed GP DFS", 0 },
     { "csv", CSV, nullptr, 0,
       "output a CSV containing interesting values", 0 },
@@ -484,7 +487,44 @@ static int checked_main()
 
       tm.start("swarming");
       if (mc_options.swarmed_gp_dfs)
-        spot::ltsmin_model::swarmed_gp_dfs(modelcube, mc_options.model);
+        {
+          std::function<bool(unsigned, unsigned)> fitness;
+          if (mc_options.interpolate_fitness.compare("equal") == 0)
+            fitness = [](unsigned succ, unsigned fitness)
+              {
+                return succ == fitness;
+              };
+          else if (mc_options.interpolate_fitness.compare("lessthan") == 0)
+            fitness = [](unsigned succ, unsigned fitness)
+              {
+                return succ <= fitness;
+              };
+          else if (mc_options.interpolate_fitness.compare("lessstrict") == 0)
+            fitness = [](unsigned succ, unsigned fitness)
+              {
+                return succ < fitness;
+              };
+          else if (mc_options.interpolate_fitness.compare("greaterthan") == 0)
+            fitness = [](unsigned succ, unsigned fitness)
+              {
+                return succ >= fitness;
+              };
+          else if (mc_options.interpolate_fitness.compare("greaterstrict") == 0)
+            fitness = [](unsigned succ, unsigned fitness)
+              {
+                return succ > fitness;
+              };
+          else if (mc_options.interpolate_fitness.compare("greaterbounded") == 0)
+            fitness = [](unsigned succ, unsigned fitness)
+              {
+                return succ >= fitness && succ <= 2 * fitness;
+              };
+          else
+              assert(false);
+          spot::ltsmin_model::swarmed_gp_dfs(modelcube, fitness,
+                                             mc_options.model);
+
+        }
       else
         spot::ltsmin_model::swarmed_dfs(modelcube, mc_options.model);
       tm.stop("swarming");

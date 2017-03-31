@@ -1435,6 +1435,7 @@ namespace spot
 
   void
   ltsmin_model::swarmed_gp_dfs(ltsmin_kripkecube_ptr sys,
+                               std::function<bool(unsigned, unsigned)> fitness,
                                std::string name)
   {
     name = name.substr(name.find_last_of("/")+1);
@@ -1481,13 +1482,11 @@ namespace spot
         auto& manager = sys->manager(i);
         swarmed.emplace_back(
           *sys,
-            [&manager, &sys, &d_, splitter_, i]
+          [&manager, &sys, &d_, splitter_, i, fitness]
             (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
               {
                 return  interpolate_states(cs, manager, sys, d_,
-                                           splitter_, i,
-                                           [](unsigned succ, unsigned fitness)
-                                              { return succ == fitness; });
+                                           splitter_, i, fitness);
               },
             map, i, stop);
       }
