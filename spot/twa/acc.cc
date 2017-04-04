@@ -2121,4 +2121,62 @@ namespace spot
 
     std::swap(c, *this);
   }
+  int acc_cond::acc_code::fin_one() const
+  {
+    if (empty() || is_f())
+      return -1;
+    const acc_cond::acc_word* pos = &back();
+    do
+      {
+        switch (pos->sub.op)
+          {
+          case acc_cond::acc_op::And:
+          case acc_cond::acc_op::Or:
+            --pos;
+            break;
+          case acc_cond::acc_op::Inf:
+          case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::FinNeg:
+            pos -= 2;
+            break;
+          case acc_cond::acc_op::Fin:
+            return pos[-1].mark.min_set() - 1;
+          }
+      }
+    while (pos >= &front());
+    return -1;
+  }
+
+  acc_cond::mark_t acc_cond::acc_code::fin_unit() const
+  {
+    mark_t res = {};
+    if (empty() || is_f())
+      return res;
+    const acc_cond::acc_word* pos = &back();
+    do
+      {
+        switch (pos->sub.op)
+          {
+          case acc_cond::acc_op::And:
+            --pos;
+            break;
+          case acc_cond::acc_op::Or:
+            pos -= pos->sub.size + 1;
+            break;
+          case acc_cond::acc_op::Inf:
+          case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::FinNeg:
+            pos -= 2;
+            break;
+          case acc_cond::acc_op::Fin:
+            auto m = pos[-1].mark;
+            if (m.count() == 1)
+              res |= m;
+            pos -= 2;
+            break;
+          }
+      }
+    while (pos >= &front());
+    return res;
+  }
 }
