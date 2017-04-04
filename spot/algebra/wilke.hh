@@ -101,6 +101,12 @@ namespace spot
     omega_t
     _omega(const word<base_t>& e) const override
     {
+      auto re = this->_reduce(e);
+      if (re != e)
+        {
+          std::cerr << "unreduced word given, is it normal?" << std::endl;
+          return _omega(re);
+        }
       return omega_powers_.at(e);
     }
 

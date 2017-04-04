@@ -202,6 +202,13 @@ namespace spot
         res = cayley_.at(res).at(l);
       return res;
     }
+
+    /// A helper function to reduce unreduced words.
+    word<Elem>
+    _reduce(const word<Elem>& w) const
+    {
+      return _product(w, word<Elem>{});
+    }
   public:
     /// a default constructor
     explicit smart_fsg(): fsg<word<Elem>>({}) {}
