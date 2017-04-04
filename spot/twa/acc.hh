@@ -886,6 +886,9 @@ namespace spot
 
       acc_code complement() const;
 
+      mark_t fin_unit() const;
+      int fin_one() const;
+
       // Return a list of acceptance marks needed to close a cycle
       // that already visit INF infinitely often, so that the cycle is
       // accepting (ACCEPTING=true) or rejecting (ACCEPTING=false).
@@ -974,6 +977,12 @@ namespace spot
       ///
       /// This is the same as t().
       acc_code()
+      {
+      }
+
+      /// \brief Copy a part of another acceptance condition
+      acc_code(const acc_word* other)
+        : std::vector<acc_word>(other - other->sub.size, other + 1)
       {
       }
 
@@ -1398,6 +1407,16 @@ namespace spot
     /// (p) no parity parameter, (o) name unknown acceptance as
     /// 'other', (s) shorthand for 'lo0'.
     std::string name(const char* fmt = "alo") const;
+
+    mark_t fin_unit() const
+    {
+      return code_.fin_unit();
+    }
+
+    int fin_one() const
+    {
+      return code_.fin_one();
+    }
 
   protected:
     mark_t all_sets_() const

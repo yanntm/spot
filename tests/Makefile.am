@@ -375,6 +375,7 @@ TESTS_python = \
   python/dualize.py \
   python/except.py \
   python/gen.py \
+  python/genem.py \
   python/implies.py \
   python/interdep.py \
   python/ltl2tgba.test \
