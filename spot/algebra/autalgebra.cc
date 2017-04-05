@@ -64,6 +64,20 @@ namespace spot
     return matrix_[i + j*size_];
   }
 
+  void
+  acc_matrix::print(std::ostream& os) const
+  {
+    os << '[';
+    for (const auto& e : matrix_)
+      {
+        os << '{';
+        for (const auto& m : e)
+          os << m << ',';
+        os << '}' << ',';
+      }
+    os << ']';
+  }
+
   // The product of two sets of acceptance conditions is the set of the
   // pair-wise union of its components.
   // E * F = { e \cup f | e \in E, f \in F }

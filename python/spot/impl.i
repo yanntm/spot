@@ -168,6 +168,8 @@
 #include <spot/taalgos/stats.hh>
 #include <spot/taalgos/minimize.hh>
 
+#include <spot/algebra/autalgebra.hh>
+
 using namespace spot;
 %}
 
@@ -583,6 +585,34 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/taalgos/stats.hh>
 %include <spot/taalgos/minimize.hh>
 
+%include <spot/algebra/autalgebra.hh>
+%template(morphism_type) std::map<std::string, spot::acc_matrix>;
+
+%inline
+%{
+  std::map<std::string, spot::acc_matrix>
+  automaton_semigroup_morphism(const spot::const_twa_graph_ptr& aut)
+  {
+    std::map<std::string, spot::acc_matrix> res;
+    for (const auto& it : aut_morphism(aut))
+      res[bdd_format_formula(aut->get_dict(), it.first)] = it.second;
+    return res;
+  }
+%}
+
+%extend spot::acc_matrix {
+  std::string __repr__()
+  {
+    std::ostringstream os;
+    self->print(os);
+    return os.str();
+  }
+
+  acc_matrix __mul__(const acc_matrix& o)
+  {
+    return acc_matrix::product(*self, o);
+  }
+}
 
 %extend spot::trival {
   std::string __repr__()

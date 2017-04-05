@@ -27,12 +27,13 @@
 namespace spot
 {
 
-  class acc_matrix
+  class SPOT_API acc_matrix
   {
   public:
     /// a helper typedef
     // TODO this is probably not the most efficient data structure to use...
-    using mark_set = std::set<acc_cond::mark_t>;
+    //using mark_set = std::set<acc_cond::mark_t>;
+    typedef std::set<acc_cond::mark_t> mark_set;
 
     /// constructor
     explicit acc_matrix(unsigned n);
@@ -52,6 +53,8 @@ namespace spot
     bool operator==(const acc_matrix&) const;
     bool operator!=(const acc_matrix& o) const { return !operator==(o); }
     bool operator<(const acc_matrix& o) const { return matrix_ < o.matrix_; }
+
+    void print(std::ostream& os) const;
 
   private:
     // for each pair of states of the automaton, indicate the sets of acceptance
@@ -74,6 +77,8 @@ namespace spot
     const_twa_graph_ptr aut_;
 
   public:
+    /// Explicitly delete default constructor to help SWIG.
+    twa_wilke() = delete;
     /// forwarding constructor
     /// users should use the factory method below rather than this constructor.
     template<class ... Args>
@@ -94,9 +99,9 @@ namespace spot
   /// \brief Computes the TGBA associated to a semigroup.
   ///
   /// Currently not implemented.
-  SPOT_API
-  twa_ptr
-  semigroup_to_aut(const std::shared_ptr<const twa_wilke>&);
+  //SPOT_API
+  //twa_ptr
+  //semigroup_to_aut(const std::shared_ptr<const twa_wilke>&);
 
   /// \brief Computes the Wilke algebra of an automaton.
   ///
