@@ -314,10 +314,12 @@ namespace spot
 
     struct one_prop
     {
-      int var_num;
       relop op;
-      int val;
-      int bddvar;  // if "var_num op val" is true, output bddvar,
+      bool is_lhs_var; // whether lhs is a var or a val
+      int lhs;
+      bool is_rhs_var; // whether rhs is a var or a val
+      int rhs;
+      int bddvar;  // if "lhs op rhs" is true, output bddvar,
                    // else its negation
     };
     typedef std::vector<one_prop> prop_set;
@@ -381,98 +383,119 @@ namespace spot
               continue;
             }
 
-
-          char* name = (char*) malloc(str.size() + 1);
-          char* name_p = name;
-          char* lastdot = nullptr;
-          while (*s && (*s != '=') && *s != '<' && *s != '!'  && *s != '>')
+          int type_num = -1;
+          int lhs;
+          bool lhs_var = false;
+          char* name = nullptr;
+          // ap starts with an integer
+          if ((*s >= '0' && *s <= '9') || *s == '-')
             {
-
-              if (*s == ' ' || *s == '\t')
-                ++s;
-              else
+              char* s_end;
+              lhs = strtol(s, &s_end, 10);
+              if (s == s_end)
                 {
-                  if (*s == '.')
-                    lastdot = name_p;
-                  *name_p++ = *s++;
+                  err << "Failed to parse `" << s << "' as an integer.\n";
+                  ++errors;
+                  continue;
                 }
+              s = s_end;
             }
-          *name_p = 0;
-
-          if (name == name_p)
+          else
             {
-              err << "Proposition `" << str << "' cannot be parsed.\n";
-              free(name);
-              ++errors;
-              continue;
-            }
-
-          // Lookup the name
-          val_map_t::const_iterator ni = val_map.find(name);
-          if (ni == val_map.end())
-            {
-              // We may have a name such as X.Y.Z
-              // If it is not a known variable, it might mean
-              // an enumerated variable X.Y with value Z.
-              if (lastdot)
+              lhs_var = true;
+              name = (char*) malloc(str.size() + 1);
+              char* name_p = name;
+              char* lastdot = nullptr;
+              while (*s && (*s != '=') && *s != '<' && *s != '!'  && *s != '>')
                 {
-                  *lastdot++ = 0;
-                  ni = val_map.find(name);
+                  if (*s == ' ' || *s == '\t')
+                    ++s;
+                  else
+                    {
+                      if (*s == '.')
+                        lastdot = name_p;
+                      *name_p++ = *s++;
+                    }
+                }
+              *name_p = 0;
+
+              if (name == name_p)
+                {
+                  err << "Proposition `" << str << "' cannot be parsed.\n";
+                  free(name);
+                  ++errors;
+                  continue;
                 }
 
+              // Lookup the name
+              val_map_t::const_iterator ni = val_map.find(name);
               if (ni == val_map.end())
                 {
-                  err << "No variable `" << name
-                      << "' found in model (for proposition `"
-                      << str << "').\n";
+                  // We may have a name such as X.Y.Z
+                  // If it is not a known variable, it might mean
+                  // an enumerated variable X.Y with value Z.
+                  if (lastdot)
+                    {
+                      *lastdot++ = 0;
+                      ni = val_map.find(name);
+                    }
+
+                  if (ni == val_map.end())
+                    {
+                      err << "No variable `" << name
+                          << "' found in model (for proposition `"
+                          << str << "').\n";
+                      free(name);
+                      ++errors;
+                      continue;
+                    }
+
+                  // We have found the enumerated variable, and lastdot is
+                  // pointing to its expected value.
+                  type_num = ni->second.type;
+                  enum_map_t::const_iterator ei =
+                    enum_map[type_num].find(lastdot);
+                  if (ei == enum_map[type_num].end())
+                    {
+                      err << "No state `" << lastdot << "' known for variable `"
+                          << name << "'.\n";
+                      err << "Possible states are:";
+                      for (auto& ej: enum_map[type_num])
+                        err << ' ' << ej.first;
+                      err << '\n';
+
+                      free(name);
+                      ++errors;
+                      continue;
+                    }
+
+                  // At this point, *s should be 0.
+                  if (*s)
+                    {
+                      err << "Trailing garbage `" << s
+                          << "' at end of proposition `"
+                          << str << "'.\n";
+                      free(name);
+                      ++errors;
+                      continue;
+                    }
+
+                  // Record that X.Y must be equal to Z.
+                  int v = dict->register_proposition(*ap, d.get());
+                  one_prop p =
+                    { OP_EQ, true, ni->second.num, false, ei->second, v };
+                  out.emplace_back(p);
                   free(name);
-                  ++errors;
                   continue;
                 }
-
-              // We have found the enumerated variable, and lastdot is
-              // pointing to its expected value.
-              int type_num = ni->second.type;
-              enum_map_t::const_iterator ei = enum_map[type_num].find(lastdot);
-              if (ei == enum_map[type_num].end())
-                {
-                  err << "No state `" << lastdot << "' known for variable `"
-                      << name << "'.\n";
-                  err << "Possible states are:";
-                  for (auto& ej: enum_map[type_num])
-                    err << ' ' << ej.first;
-                  err << '\n';
-
-                  free(name);
-                  ++errors;
-                  continue;
-                }
-
-              // At this point, *s should be 0.
-              if (*s)
-                {
-                  err << "Trailing garbage `" << s
-                      << "' at end of proposition `"
-                      << str << "'.\n";
-                  free(name);
-                  ++errors;
-                  continue;
-                }
-
-              // Record that X.Y must be equal to Z.
-              int v = dict->register_proposition(*ap, d.get());
-              one_prop p = { ni->second.num, OP_EQ, ei->second, v };
-              out.emplace_back(p);
-              free(name);
-              continue;
+              lhs = ni->second.num;
+              type_num = ni->second.type;
             }
-
-          int var_num = ni->second.num;
 
           if (!*s)                // No operator?  Assume "!= 0".
             {
               int v = dict->register_proposition(*ap, d);
-              one_prop p = { var_num, OP_NE, 0, v };
+              one_prop p = { OP_NE, lhs_var, lhs, false, 0, v };
               out.emplace_back(p);
               free(name);
               continue;
@@ -531,12 +554,12 @@ namespace spot
           while (*s && (*s == ' ' || *s == '\t'))
             ++s;
 
-          int val = 0; // Initialize to kill a warning from old compilers.
-          int type_num = ni->second.type;
-          if (type_num == 0 || (*s >= '0' && *s <= '9') || *s == '-')
+          bool rhs_var = false;
+          int rhs;
+          if ((*s >= '0' && *s <= '9') || *s == '-')
             {
               char* s_end;
-              val = strtol(s, &s_end, 10);
+              rhs = strtol(s, &s_end, 10);
               if (s == s_end)
                 {
                   err << "Failed to parse `" << s << "' as an integer.\n";
@@ -548,6 +571,7 @@ namespace spot
             }
           else
             {
+              // it could also be the case that rhs is a variable
               // We are in a case such as P_0 == S, trying to convert
               // the string S into an integer.
               const char* end = s;
@@ -555,24 +579,35 @@ namespace spot
                 ++end;
               std::string st(s, end);
 
-              // Lookup the string.
-              enum_map_t::const_iterator ei = enum_map[type_num].find(st);
-              if (ei == enum_map[type_num].end())
-                {
-                  err << "No state `" << st << "' known for variable `"
-                      << name << "'.\n";
-                  err << "Possible states are:";
-                  for (ei = enum_map[type_num].begin();
-                       ei != enum_map[type_num].end(); ++ei)
-                    err << ' ' << ei->first;
-                  err << '\n';
+              // Lookup the name
+              val_map_t::const_iterator ni = val_map.find(st);
 
-                  free(name);
-                  ++errors;
-                  continue;
+              if (ni == val_map.end())
+                {
+                  // Lookup the string.
+                  enum_map_t::const_iterator ei = enum_map[type_num].find(st);
+                  if (ei == enum_map[type_num].end())
+                    {
+                      err << "No state `" << st << "' known for variable `"
+                          << name << "'.\n";
+                      err << "Possible states are:";
+                      for (ei = enum_map[type_num].begin();
+                           ei != enum_map[type_num].end(); ++ei)
+                        err << ' ' << ei->first;
+                      err << '\n';
+
+                      free(name);
+                      ++errors;
+                      continue;
+                    }
+                  rhs = ei->second;
+                }
+              else
+                {
+                  rhs_var = true;
+                  rhs = ni->second.num;
                 }
               s = end;
-              val = ei->second;
             }
 
           free(name);
@@ -590,7 +625,7 @@ namespace spot
 
 
           int v = dict->register_proposition(*ap, d);
-          one_prop p = { var_num, op, val, v };
+          one_prop p = { op, lhs_var, lhs, rhs_var, rhs, v };
           out.emplace_back(p);
         }
 
@@ -730,8 +765,8 @@ namespace spot
         bdd res = bddtrue;
         for (auto& i: *ps_)
           {
-            int l = vars[i.var_num];
-            int r = i.val;
+            int l = i.is_lhs_var ? vars[i.lhs] : i.lhs;
+            int r = i.is_rhs_var ? vars[i.rhs] : i.rhs;
 
             bool cond = false;
             switch (i.op)
