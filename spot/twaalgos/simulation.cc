@@ -128,7 +128,12 @@ namespace spot
     protected:
       typedef std::map<bdd, bdd, bdd_less_than> map_bdd_bdd;
       int acc_vars;
+      int label_vars;
+      int class_vars;
+      std::vector<bddPair*> class_label_pairs;
+
       acc_cond::mark_t all_inf_;
+      size_t depth_;
     public:
 
       bdd mark_to_bdd(acc_cond::mark_t m)
@@ -152,8 +157,9 @@ namespace spot
         return acc_cond::mark_t(res.begin(), res.end());
       }
 
-      direct_simulation(const const_twa_graph_ptr& in)
-        : po_size_(0),
+      direct_simulation(const const_twa_graph_ptr& in, size_t depth = 3)
+        : depth_(depth),
+          po_size_(0),
           all_class_var_(bddtrue),
           original_(in)
       {
@@ -231,6 +237,46 @@ namespace spot
         acc_vars = a_->get_dict()
           ->register_anonymous_variables(n_acc, this);
 
+        // We have to get bdd which will represent labels and class at
+        // different depths.
+        if (depth_ > 0)
+          {
+            for (size_t d = 0; d < depth_; ++d)
+              {
+                auto pair = bdd_newpair();
+                class_label_pairs.push_back(pair);
+              }
+
+            /*
+            auto extra_class_size = size_a_ * depth_;
+            class_vars = a_->get_dict()
+              ->register_anonymous_variables(extra_class_size, this);
+            for (size_t i = 0; i < size_a_; ++i)
+            {
+              int old_class = set_num + i;
+              for (size_t d = 0; d < depth_; ++d)
+                {
+                  int new_class = class_vars + d * size_a_ + i;
+                  bdd_setpair(class_label_pairs[d], old_class, new_class);
+                }
+            }
+            */
+
+            auto ap = a_->ap();
+            auto extra_ap_size = ap.size() * depth_;
+            label_vars = a_->get_dict()
+              ->register_anonymous_variables(extra_ap_size, this);
+            for (size_t i = 0; i < ap.size(); ++i)
+              {
+                auto old_ap = a_->register_ap(ap[i]);
+                for (size_t d = 0; d < depth_; ++d)
+                  {
+                    int new_ap = label_vars + d * ap.size() + i;
+                    bdd_setpair(class_label_pairs[d], old_ap, new_ap);
+                  }
+              }
+          }
+
         all_proms_ = bddtrue;
         for (unsigned v = acc_vars; v < acc_vars + n_acc; ++v)
           all_proms_ &= bdd_ithvar(v);
@@ -245,6 +291,7 @@ namespace spot
         for (unsigned s = 0; s < size_a_; ++s)
           previous_class_[s] = init;
 
+
         // Put all the anonymous variable in a queue, and record all
         // of these in a variable all_class_var_ which will be used
         // to understand the destination part in the signature when
@@ -257,6 +304,7 @@ namespace spot
           }
 
         relation_[init] = init;
+
       }
 
 
@@ -265,6 +313,8 @@ namespace spot
       // function simulation.
       virtual ~direct_simulation()
       {
+        for (auto& p: class_label_pairs)
+          bdd_freepair(p);
         a_->get_dict()->unregister_all_my_variables(this);
       }
 
@@ -307,6 +357,7 @@ namespace spot
             po_size_ = 0;
             update_sig();
             go_to_next_it();
+            print_partition();
           }
 
         update_previous_class();
@@ -320,7 +371,8 @@ namespace spot
       }
 
       // Take a state and compute its signature.
-      bdd compute_sig(unsigned src)
+      bdd compute_sig(unsigned src,
+                      size_t max_depth = 0, size_t current_depth = 0)
       {
         bdd res = bddfalse;
 
@@ -331,10 +383,22 @@ namespace spot
             // to_add is a conjunction of the acceptance condition,
             // the label of the edge and the class of the
             // destination and all the class it implies.
-            bdd to_add = acc & t.cond & relation_[previous_class_[t.dst]];
+            bdd to_add = acc & t.cond;
+            if (current_depth == max_depth)
+              to_add &= relation_[previous_class_[t.dst]];
+            std::cerr << std::endl << std::endl
+                      << "src " << src <<  "; depth" << current_depth << "; acc " << bdd_format_isop(a_->get_dict(), acc) << std::endl
+                      << "cond " << bdd_format_isop(a_->get_dict(), t.cond) << "; class " << bdd_format_isop(a_->get_dict(), relation_[previous_class_[t.dst]]) << std::endl;
+            std::cerr << "Before replace " <<  bdd_format_isop(a_->get_dict(), to_add);
+            if (current_depth > 0)
+              to_add = bdd_replace(to_add, class_label_pairs[current_depth - 1]);
+            std::cerr << "; Replace " << bdd_format_isop(a_->get_dict(), to_add) << std::endl;
+            if (current_depth < max_depth)
+              to_add &= compute_sig(t.dst, max_depth, current_depth + 1);
 
             res |= to_add;
           }
+          std::cerr << "Final " << bdd_format_isop(a_->get_dict(), res) << std::endl;
 
         // When we Cosimulate, we add a special flag to differentiate
         // the initial state from the other.
@@ -344,11 +408,53 @@ namespace spot
         return res;
       }
 
+      bdd compute_sig(const std::list<unsigned>& src_list)
+      {
+        bdd res = bddfalse;
+        auto first = src_list.begin();
+        std::cerr << "BEGIN SECOND SIG" << std::endl;
+        for (auto& t_first: a_->out(*first))
+        {
+          bdd acc_first = mark_to_bdd(t_first.acc);
+
+          auto prev_class = relation_[previous_class_[t_first.dst]];
+          bdd to_add = bddtrue;
+          for (auto other = std::next(first); other != src_list.end(); ++other)
+            {
+              bdd acc_to_add = bddtrue;
+              for (auto& t_other: a_->out(*other))
+                {
+                  if (t_first.cond == t_other.cond
+                      && prev_class == relation_[previous_class_[t_other.dst]])
+                    {
+                      bdd acc_other = mark_to_bdd(t_other.acc);
+                      acc_to_add &= acc_other;
+                    }
+                }
+              to_add &= acc_to_add;
+              std::cerr << "src_other " << *other << "; acc " 
+                        << bdd_format_isop(a_->get_dict(), acc_to_add)
+                        << "; result "
+                        << bdd_format_isop(a_->get_dict(), to_add)
+                        << std::endl;
+            }
+          to_add &= t_first.cond & acc_first & prev_class;
+          std::cerr << "src fist " << *first << "; acc "
+                    << bdd_format_isop(a_->get_dict(), acc_first)
+                    << "; label "
+                    << bdd_format_isop(a_->get_dict(), t_first.cond)
+                    << "; class "
+                    << bdd_format_isop(a_->get_dict(), prev_class) << std::endl;
+          res |= to_add;
+        }
+        std::cerr << "FINAL RESULT SECOND SIG " << bdd_format_isop(a_->get_dict(), res) << std::endl;
+        return res;
+      }
 
       void update_sig()
       {
         for (unsigned s = 0; s < size_a_; ++s)
-          bdd_lstate_[compute_sig(s)].emplace_back(s);
+          bdd_lstate_[compute_sig(s, depth_, 0)].emplace_back(s);
       }
 
 
@@ -479,7 +585,7 @@ namespace spot
             bdd src = previous_class_[p.second.front()];
 
             // Get the signature to derive successors.
-            bdd sig = compute_sig(p.second.front());
+            bdd sig = compute_sig(p.second);
 
             if (Cosimulation)
               sig = bdd_compose(sig, bddfalse, bdd_var(bdd_initial));

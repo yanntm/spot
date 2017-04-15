@@ -101,6 +101,8 @@ namespace spot
   twa_graph_ptr
   postprocessor::do_simul(const twa_graph_ptr& a, int opt)
   {
+    if (level_ == Low)
+      return a;
     if (!has_separate_sets(a))
       return a;
     switch (opt)
