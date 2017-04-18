@@ -324,8 +324,9 @@ namespace spot
 
       // State has been marked as dead by another thread
       // just skip the insertion
-      inserted_ += it.isnew();
-      if (!it.isnew() && it->color.load() == CLOSED)
+      bool b = it.isnew();
+      inserted_ += b;
+      if (!b && it->color.load(std::memory_order_relaxed) == CLOSED)
         {
           return false;
         }
@@ -337,7 +338,7 @@ namespace spot
       // Don't avoid pop but modify the status of the state
       // during backtrack
       auto it = map_.insert({s, CLOSED}); // FIXME Find is enough
-      it->color = CLOSED;
+      it->color.store(CLOSED, std::memory_order_relaxed);
       return true;
     }
 
@@ -488,7 +489,7 @@ namespace spot
               new_gen = interpolate_fun_(sample_);
 
               // Recycle iterators
-              for (auto e: this->todo)
+              for (auto& e: this->todo)
                 this->sys_.recycle(e.it, this->tid_);
 
               // Clear structures.
@@ -501,8 +502,8 @@ namespace spot
                     this->sys_.succ(new_gen->at(new_gen_idx), this->tid_)});
               this->visited[new_gen->at(new_gen_idx)] = this->dfs_number;
               this->dfs_number = 1;
+              s = new_gen->at(new_gen_idx);
               ++new_gen_idx;
-              s = new_gen->at(0);
             }
         }
 
@@ -510,9 +511,11 @@ namespace spot
 
       // State has been marked as dead by another thread
       // just skip the insertion
-      int status = (st_status) it->color.load();
-      inserted_ += it.isnew();
-      if (!it.isnew() && (status == CLOSED || status == UNKNOWN_CLOSED))
+      st_status status = (st_status) it->color.load(std::memory_order_relaxed);
+      bool b = it.isnew();
+      inserted_ += b;
+      if (!b && status == CLOSED)
+          //(status == CLOSED || status == UNKNOWN_CLOSED))
         return false;
       return true;
     }
@@ -523,11 +526,11 @@ namespace spot
       // during backtrack
       auto it = map_.insert({s, CLOSED}); // FIXME Find is enough
 
-      st_status status = (st_status) it->color.load();
-      if (status == OPEN)
-        it->color = CLOSED;
-      else
-        it->color = UNKNOWN_CLOSED;
+      // st_status status = (st_status) it->color.load(std::memory_order_relaxed);
+      // if (status == OPEN)
+        it->color.store(CLOSED, std::memory_order_relaxed);
+      // else
+      //   it->color.store(UNKNOWN_CLOSED, std::memory_order_relaxed);
 
       // Go ahead with another state iff popping the "initial" state
       // Do not worry about terminaison: the thread with tid = 0 will
@@ -535,7 +538,7 @@ namespace spot
       if (SPOT_UNLIKELY(insert_status_ != OPEN  && this->todo.size() == 1))
         {
           ++nb_gens_;
-          for (auto e: this->todo)
+          for (auto& e: this->todo)
             this->sys_.recycle(e.it, this->tid_);
 
           // Clear structures.
