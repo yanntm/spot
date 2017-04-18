@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <ltdl.h>
 #include <memory>
+
 namespace spot
 {
   ////////////////////////////////////////////////////////////////////////
@@ -38,7 +38,9 @@ namespace spot
 
   struct spins_interface
   {
-    lt_dlhandle handle;        // handle to the dynamic library
+    // handle to the dynamic library. The variable is of type lt_dlhandle, but
+    // we need this trick since we cannot put ltdl.h in public headers
+    void* handle;
     void (*get_initial_state)(void *to);
     int (*have_property)();
     int (*get_successors)(void* m, int *in, TransitionCB, void *arg);
@@ -49,13 +51,7 @@ namespace spot
     const char* (*get_type_name)(int type);
     int (*get_type_value_count)(int type);
     const char* (*get_type_value_name)(int type, int value);
-
-    ~spins_interface()
-    {
-      if (handle)
-        lt_dlclose(handle);
-      lt_dlexit();
-    }
+    ~spins_interface();
   };
 
   using spins_interface_ptr = std::shared_ptr<const spins_interface>;
