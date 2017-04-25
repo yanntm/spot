@@ -251,19 +251,23 @@ namespace spot
   {
     struct my_pair
     {
-      my_pair(): color(0){}
-      my_pair(const my_pair& p): st(p.st), color(p.color.load()){}
-      my_pair(const State st, int bar): st(st), color(bar) { }
-      my_pair& operator=(my_pair& other)
-      {
-        if (this == &other)
-          return *this;
-        st = other.st;
-        color = other.color.load();
-        return *this;
-      }
+      // my_pair(): color(0){}
+      // my_pair(const my_pair& p): st(p.st),
+      //                            color(p.color)
+      //                             //p.color.load(std::memory_order_relaxed)){}
+      // my_pair(const State st, int bar): st(st), color(bar) { }
+      // my_pair& operator=(my_pair& other)
+      // {
+      //   if (this == &other)
+      //     return *this;
+      //   st = other.st;
+      //   color = other.color;
+      //     //other.color.load(std::memory_order_relaxed);
+      //   return *this;
+      // }
       State st;
-      std::atomic<int> color;
+      //      std::atomic<int>
+      int color;
     };
 
     struct inner_pair_hasher
@@ -326,7 +330,8 @@ namespace spot
       // just skip the insertion
       bool b = it.isnew();
       inserted_ += b;
-      if (!b && it->color.load(std::memory_order_relaxed) == CLOSED)
+      if (!b && it->color/* == CLOSED */)
+        //.load(std::memory_order_relaxed) == CLOSED)
         {
           return false;
         }
@@ -338,7 +343,8 @@ namespace spot
       // Don't avoid pop but modify the status of the state
       // during backtrack
       auto it = map_.insert({s, CLOSED}); // FIXME Find is enough
-      it->color.store(CLOSED, std::memory_order_relaxed);
+      it->color = CLOSED;
+        //.store(CLOSED, std::memory_order_relaxed);
       return true;
     }
 
