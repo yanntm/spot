@@ -68,6 +68,7 @@
 %shared_ptr(spot::emptiness_check)
 %shared_ptr(spot::emptiness_check_instantiator)
 %shared_ptr(spot::tgbasl)
+%shared_ptr(spot::product_emptiness_res)
 
 %import "buddy.i"
 
@@ -139,6 +140,7 @@
 #include <spot/twaalgos/magic.hh>
 #include <spot/twaalgos/minimize.hh>
 #include <spot/twaalgos/neverclaim.hh>
+#include <spot/twaalgos/product_emptiness.hh>
 #include <spot/twaalgos/randomize.hh>
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/remprop.hh>
@@ -478,6 +480,7 @@ namespace std {
   %template(vectorstring) vector<string>;
   %template(atomic_prop_set) set<spot::formula>;
   %template(relabeling_map) map<spot::formula, spot::formula>;
+  %template(pairrun) pair<spot::twa_run_ptr, spot::twa_run_ptr>;
 }
 
 %include <spot/tl/environment.hh>
@@ -625,6 +628,7 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/twaalgos/magic.hh>
 %include <spot/twaalgos/minimize.hh>
 %include <spot/twaalgos/neverclaim.hh>
+%include <spot/twaalgos/product_emptiness.hh>
 %include <spot/twaalgos/randomize.hh>
 %include <spot/twaalgos/remfin.hh>
 %include <spot/twaalgos/remprop.hh>
