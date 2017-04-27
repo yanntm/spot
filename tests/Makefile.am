@@ -393,6 +393,7 @@ TESTS_python = \
   python/prodexpt.py \
   python/_product_weak.ipynb \
   python/_product_susp.ipynb \
+  python/product_emptiness.py \
   python/randgen.py \
   python/relabel.py \
   python/remfin.py \
