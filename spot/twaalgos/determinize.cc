@@ -53,13 +53,15 @@ namespace spot
     using state_t = unsigned;
     using color_t = unsigned;
     using bdd_id_t = unsigned;
-    using nodes_t = std::map<state_t, std::vector<node_helper::brace_t>>;
+    using nodes_t =
+    std::map<state_t, std::pair<std::vector<node_helper::brace_t>, unsigned>>;
     using succs_t = std::vector<std::pair<safra_state, bdd_id_t>>;
-    using safra_node_t = std::pair<state_t, std::vector<node_helper::brace_t>>;
+    using safra_node_t =
+    std::pair<state_t, std::pair<std::vector<node_helper::brace_t>, unsigned>>;
 
     bool operator<(const safra_state& other) const;
-    // Printh the number of states in each brace
-    safra_state(state_t state_number, bool init_state = false,
+    // Print the number of states in each brace
+    safra_state(unsigned state_number, bool init_state = false,
                 bool acceptance_scc = false);
     // Given a certain transition_label, compute all the successors of that
     // label, and return that new node.
@@ -71,6 +73,8 @@ namespace spot
                   const std::vector<bool>& is_connected,
                   std::unordered_map<bdd, unsigned, bdd_hash>& bdd2num,
                   std::vector<bdd>& all_bdds,
+                  const std::vector<acc_cond::mark_t>& common_out,
+                  const std::vector<unsigned>& order,
                   bool use_scc,
                   bool use_simulation,
                   bool use_stutter) const;
@@ -81,6 +85,8 @@ namespace spot
                  const scc_info& scc,
                  const std::vector<bdd>& implications,
                  const std::vector<bool>& is_connected,
+                 const std::vector<acc_cond::mark_t>& common_out,
+                 const std::vector<unsigned>& order,
                  bool use_scc,
                  bool use_simulation) const;
     // The outermost brace of each node cannot be green
@@ -93,7 +99,7 @@ namespace spot
     // A new intermediate node is created with  src's braces and with dst as id
     // A merge is done if dst already existed in *this
     void update_succ(const std::vector<node_helper::brace_t>& braces,
-                     state_t dst, const acc_cond::mark_t acc);
+                     state_t dst, unsigned lvl, bool is_acc);
     // Return the emitted color, red or green
     color_t finalize_construction();
     // A list of nodes similar to the ones of a
@@ -152,7 +158,7 @@ namespace spot
       return lhs.size() > rhs.size();
     }
 
-    // Used to remove all acceptance whos value is above and equal max_acc
+    // Used to remove all acceptance whose value is above or equal to max_acc
     void remove_dead_acc(twa_graph_ptr& aut, unsigned max_acc)
     {
       assert(max_acc < 32);
@@ -169,11 +175,11 @@ namespace spot
       operator() (const safra_state::safra_node_t& lhs,
                   const safra_state::safra_node_t& rhs)
       {
-        return lhs.second < rhs.second;
+        return lhs.second.first < rhs.second.first;
       }
     };
 
-    // Return the sorteds nodes in ascending order
+    // Return the sorted nodes in ascending order
     std::vector<safra_state::safra_node_t>
     sorted_nodes(const safra_state::nodes_t& nodes)
     {
@@ -193,15 +199,16 @@ namespace spot
       bool first = true;
       for (auto& n: copy)
         {
-          auto it = n.second.begin();
+          auto it = n.second.first.begin();
           // Find brace on top of stack in vector
           // If brace is not present, then we close it as no other ones of that
           // type will be found since we ordered our vector
           while (!s.empty())
             {
-              it = std::lower_bound(n.second.begin(), n.second.end(),
+              it = std::lower_bound(n.second.first.begin(),
+                                    n.second.first.end(),
                                     s.top());
-              if (it == n.second.end() || *it != s.top())
+              if (it == n.second.first.end() || *it != s.top())
                 {
                   os << subscript(s.top()) << '}';
                   s.pop();
@@ -214,7 +221,7 @@ namespace spot
                 }
             }
           // Add new braces
-          while (it != n.second.end())
+          while (it != n.second.first.end())
             {
               os << '{' << subscript(*it);
               s.push(*it);
@@ -223,7 +230,7 @@ namespace spot
             }
           if (!first)
             os << ' ';
-          os << n.first;
+          os << '(' << n.first << ',' << n.second.second << ')';
           first = false;
         }
       // Finish unwinding stack to print last braces
@@ -249,33 +256,72 @@ namespace spot
 
   std::vector<bool> find_scc_paths(const scc_info& scc);
 
+  static
+  std::pair<unsigned, bool>
+  next_lvl(unsigned lvl, const acc_cond::mark_t& acc,
+           const std::vector<unsigned>& order)
+  {
+    bool is_acc = false;
+    if (acc.count() == order.size())
+      is_acc = true;
+    else
+      {
+        while (acc.has(order[lvl]))
+          {
+            ++lvl;
+            if (lvl == order.size())
+            {
+              is_acc = true;
+              lvl = 0;
+            }
+          }
+      }
+    return std::make_pair(lvl, is_acc);
+  }
+
   safra_state
   safra_state::compute_succ(const const_twa_graph_ptr& aut,
                             const bdd& ap,
                             const scc_info& scc,
                             const std::vector<bdd>& implications,
                             const std::vector<bool>& is_connected,
+                            const std::vector<acc_cond::mark_t>& common_out,
+                            const std::vector<unsigned>& order,
                             bool use_scc,
                             bool use_simulation) const
   {
     safra_state ss = safra_state(nb_braces_.size());
     for (auto& node: nodes_)
       {
-        for (auto& t: aut->out(node.first))
+        for (const auto& t: aut->out(node.first))
           {
             if (!bdd_implies(ap, t.cond))
               continue;
+            unsigned lvl = node.second.second;
+            auto tmp = next_lvl(lvl, common_out[t.dst] | t.acc, order);
+            lvl = tmp.first;
+            bool is_acc = aut->acc().is_t() || tmp.second;
             // Check if we are leaving the SCC, if so we delete all the
             // braces as no cycles can be found with that node
-            if (use_scc && scc.scc_of(node.first) != scc.scc_of(t.dst))
-              if (scc.is_accepting_scc(scc.scc_of(t.dst)))
-                // Entering accepting SCC so add brace
-                ss.update_succ({ /* no braces */ }, t.dst, { 0 });
-              else
-                // When entering non accepting SCC don't create any braces
-                ss.update_succ({ /* no braces */ }, t.dst, { /* empty */ });
-            else
-              ss.update_succ(node.second, t.dst, t.acc);
+            auto brace = node.second.first;
+            if (use_scc)
+              {
+                if (scc.scc_of(node.first) != scc.scc_of(t.dst))
+                  {
+                    brace = {/* no braces */};
+                    if (scc.is_accepting_scc(scc.scc_of(t.dst)))
+                      is_acc = true;
+                    lvl = next_lvl(lvl, common_out[t.dst], order).first;
+                  }
+              }
+            // no need to degeneralize non-accepting SCCs, keep level 0
+            if (!scc.is_accepting_scc(scc.scc_of(t.dst)))
+              {
+                lvl = 0;
+                is_acc = false;
+              }
+
+            ss.update_succ(brace, t.dst, lvl, is_acc);
             assert(ss.nb_braces_.size() == ss.is_green_.size());
           }
       }
@@ -295,6 +341,8 @@ namespace spot
                              std::unordered_map<bdd, unsigned, bdd_hash>&
                              bdd2num,
                              std::vector<bdd>& all_bdds,
+                             const std::vector<acc_cond::mark_t>& common_out,
+                             const std::vector<unsigned>& order,
                              bool use_scc,
                              bool use_simulation,
                              bool use_stutter) const
@@ -315,6 +363,7 @@ namespace spot
                 // insert should never fail
                 assert(pair.second);
                 ss = ss.compute_succ(aut, ap, scc, implications, is_connected,
+                                     common_out, order,
                                      use_scc, use_simulation);
                 colors.emplace_back(ss.color_);
                 stop = safra2id.find(ss) != safra2id.end();
@@ -331,7 +380,7 @@ namespace spot
           }
         else
           ss = compute_succ(aut, ap, scc, implications, is_connected,
-                            use_scc, use_simulation);
+                            common_out, order, use_scc, use_simulation);
         unsigned bdd_idx = bdd2num[ap];
         res.emplace_back(ss, bdd_idx);
       }
@@ -342,7 +391,7 @@ namespace spot
                                       const scc_info& scc,
                                       const std::vector<bool>& is_connected)
   {
-    std::vector<int> to_remove;
+    std::vector<state_t> to_remove;
     for (auto& n1: nodes_)
       for (auto& n2: nodes_)
         {
@@ -357,7 +406,7 @@ namespace spot
         }
     for (auto& n: to_remove)
       {
-        for (auto& brace: nodes_[n])
+        for (auto& brace: nodes_[n].first)
           --nb_braces_[brace];
         nodes_.erase(n);
       }
@@ -369,8 +418,8 @@ namespace spot
     // Hence, the last brace cannot emit green as it is the most inside brace.
     for (auto& n: nodes_)
       {
-        if (!n.second.empty())
-          is_green_[n.second.back()] = false;
+        if (!n.second.first.empty())
+          is_green_[n.second.first.back()] = false;
       }
   }
 
@@ -401,7 +450,7 @@ namespace spot
     for (auto& n: nodes_)
       {
         // Step A4 Remove all brackets inside each green pair
-        node_helper::truncate_braces(n.second, rem_succ_of, nb_braces_);
+        node_helper::truncate_braces(n.second.first, rem_succ_of, nb_braces_);
       }
 
     // Step A5 define the rem variable
@@ -421,7 +470,7 @@ namespace spot
     nb_braces_.resize(nb_braces_.size() - decr);
     for (auto& n: nodes_)
       {
-        node_helper::renumber(n.second, decr_by);
+        node_helper::renumber(n.second.first, decr_by);
       }
     return std::min(red, green);
   }
@@ -464,12 +513,11 @@ namespace spot
   }
 
   void safra_state::update_succ(const std::vector<node_helper::brace_t>& braces,
-                                state_t dst, const acc_cond::mark_t acc)
+                                state_t dst, unsigned lvl, bool is_acc)
   {
     std::vector<node_helper::brace_t> copy = braces;
-    if (acc.count())
+    if (is_acc)
       {
-        assert(acc.has(0) && acc.count() == 1 && "Only TBA are accepted");
         // Accepting edge generate new braces: step A1
         copy.emplace_back(nb_braces_.size());
         // nb_braces_ gets updated later so put 0 for now
@@ -478,42 +526,51 @@ namespace spot
         // any braces inside them (by construction)
         is_green_.push_back(false);
       }
-    auto i = nodes_.emplace(dst, copy);
+
+    auto i = nodes_.emplace(dst, std::make_pair(copy, lvl));
+    // if insertion did not take place, i.e. dst has already a pattern
     if (!i.second)
       {
-        // Step A2: Only keep the smallest nesting pattern (i-e  braces_) for
-        // identical nodes.  Nesting_cmp returnes true if copy is smaller
-        if (nesting_cmp(copy, i.first->second))
+        // Step A2: Only keep the smallest nesting pattern (i.e. braces_)
+        // for identical nodes. Nesting_cmp returns true if copy is smaller.
+        if (nesting_cmp(copy, i.first->second.first))
           {
             // Remove brace count of replaced node
-            for (auto b: i.first->second)
+            for (auto b : i.first->second.first)
               --nb_braces_[b];
-            i.first->second = std::move(copy);
+            i.first->second.first = std::move(copy);
+            i.first->second.second = lvl;
           }
-        else
-          // Node already exists and has bigger nesting pattern value
+        else if (copy == i.first->second.first &&
+                 lvl > i.first->second.second)
+          {
+            i.first->second.second = lvl;
+            return;
+          }
+        else // Node already exists with smaller nesting pattern
           return;
       }
-    // After inserting new node, update the brace count per node
-    for (auto b: i.first->second)
+
+    // After inserting a new node, update the brace count per node
+    for (auto b : i.first->second.first)
       ++nb_braces_[b];
   }
 
   // Called only to initialize first state
-  safra_state::safra_state(state_t val, bool init_state, bool accepting_scc)
+  safra_state::safra_state(unsigned val, bool init_state, bool accepting_scc)
   {
     if (init_state)
       {
-        unsigned state_num = val;
+        state_t state = val;
         if (!accepting_scc)
           {
             std::vector<node_helper::brace_t> braces = { /* no braces */ };
-            nodes_.emplace(state_num, std::move(braces));
+            nodes_.emplace(state, std::make_pair(braces, 0));
           }
         else
           {
             std::vector<node_helper::brace_t> braces = { 0 };
-            nodes_.emplace(state_num, std::move(braces));
+            nodes_.emplace(state, std::make_pair(braces, 0));
             // First brace has init_state hence one state inside the first
             // braces.
             nb_braces_.emplace_back(1);
@@ -574,14 +631,52 @@ namespace spot
     if (is_universal(a))
       return std::const_pointer_cast<twa_graph>(a);
 
-    // Degeneralize
-    twa_graph_ptr aut = spot::degeneralize_tba(a);
+    // TGBA is OK, no need to degeneralize
+    // FIXME ensure that the colors used are consecutive numbers, and that they
+    // are all used.
+    assert(a->acc().is_generalized_buchi());
+    // Try to degeneralize, in case the degeneralized automaton is smaller
+    //twa_graph_ptr aut = make_twa_graph(a, {true, true, true, true, true, true});
+    twa_graph_ptr aut = simplify_degen(a);
+    //aut = spot::scc_filter(aut);
+    //aut = simulation(aut, nullptr);
+//    twa_graph_ptr aut = degeneralize_tba(a);
+//    if (aut->num_states() > a->num_states()) // if not smaller
+//      {
+//        // copy the input automaton
+//        aut = make_twa_graph(a, {true, true, true, true, true, true});
+//      }
+
     std::vector<bdd> implications;
     if (use_simulation)
       {
         aut = spot::scc_filter(aut);
         aut = simulation(aut, &implications);
       }
+
+    // The algorithm requires at least one acceptance set, handle the case where
+    // all transitions are accepting.
+    if (aut->acc().is_t())
+      {
+        aut->set_acceptance(1, acc_cond::acc_code::buchi());
+        for (auto& e : aut->edges())
+          e.acc = aut->acc().all_sets();
+      }
+
+    // Create an order of acceptance conditions.  Each entry in this vector
+    // corresponds to an acceptance set.  Each index can be used as a level in
+    // the degeneralization of the tgba.
+    std::vector<unsigned> order;
+    {
+      // The order is arbitrary, but it turns out that using this reverse order
+      // often gives better results, probably due to the order in which we
+      // declare the BDD variables during the translation.
+      unsigned n = aut->num_sets();
+      for (unsigned i = n; i > 0; --i)
+        order.emplace_back(i-1);
+    }
+    assert(order.size() > 0);
+
     scc_info scc = scc_info(aut);
     std::vector<bool> is_connected = find_scc_paths(scc);
 
@@ -624,6 +719,19 @@ namespace spot
           }
       }
 
+    // Marks that are common to all ingoing or outgoing transitions.
+    auto allaccs = aut->acc().all_sets();
+    std::vector<acc_cond::mark_t> common_in(aut->num_states(), allaccs);
+    std::vector<acc_cond::mark_t> common_out(aut->num_states(), allaccs);
+    for (const auto& e : aut->edges())
+      if (scc.scc_of(e.src) == scc.scc_of(e.dst))
+        {
+          common_in[e.dst] &= e.acc;
+          common_out[e.src] &= e.acc;
+        }
+    for (unsigned s = 0; s != aut->num_states(); ++s)
+      common_out[s] |= common_in[s];
+
     auto res = make_twa_graph(aut->get_dict());
     res->copy_ap_of(aut);
     res->prop_copy(aut,
@@ -655,8 +763,8 @@ namespace spot
         unsigned src_num = seen.find(curr)->second;
         todo.pop_front();
         curr.compute_succs(aut, succs, scc, implications, is_connected,
-                           bdd2num, num2bdd, use_scc, use_simulation,
-                           use_stutter);
+                           bdd2num, num2bdd, common_out, order,
+                           use_scc, use_simulation, use_stutter);
         for (auto s: succs)
           {
             // Don't construct sink state as complete does a better job at this
