@@ -57,15 +57,15 @@ namespace spot
     cspins_state out = nullptr;
     size_t size = state_size_;
     int* ref = dst;
-    if (compress_)
-      {
-        size_t csize = cmpsize;
-        fn_compress_(dst, state_size_, cmp, csize);
-        ref = cmp;
-        size = csize;
-        out = (cspins_state) msp_.allocate((size+2)*sizeof(int));
-      }
-    else
+    // if (compress_)
+    //   {
+    //     size_t csize = cmpsize;
+    //     fn_compress_(dst, state_size_, cmp, csize);
+    //     ref = cmp;
+    //     size = csize;
+    //     out = (cspins_state) msp_.allocate((size+2)*sizeof(int));
+    //   }
+    // else
       out = (cspins_state) p_.allocate();
     int hash_value = 0;
     memcpy(unbox_state(out), ref, size * sizeof(int));
@@ -84,9 +84,9 @@ namespace spot
 
   void cspins_state_manager::dealloc(cspins_state s)
   {
-    if (compress_)
-      msp_.deallocate(s, (s[1]+2)*sizeof(int));
-    else
+    // if (compress_)
+    //   msp_.deallocate(s, (s[1]+2)*sizeof(int));
+    // else
       p_.deallocate(s);
   }
 
@@ -94,7 +94,6 @@ namespace spot
   {
     return state_size_;
   }
-
 
   // This class provides an iterator over the successors of a state.
   // All successors are computed once when an iterator is recycled or
@@ -117,9 +116,9 @@ namespace spot
     inner.selfloopize = selfloopize;
     int* ref = s;
 
-    if (compress)
-      // already filled by compute_condition
-      ref = inner.uncompressed_;
+    // if (compress)
+    //   // already filled by compute_condition
+    //   ref = inner.uncompressed_;
 
     int n = d->get_successors
       (nullptr, manager.unbox_state(ref),
@@ -136,12 +135,13 @@ namespace spot
         //   inner->manager->dealloc(s);
        },
        &inner);
-    if (!n && selfloopize)
-      {
-        successors_.push_back(s);
-        if (dead_idx != -1)
-          cubeset.set_true_var(cond, dead_idx);
-      }
+    // if (!n && selfloopize)
+    //   {
+    //     successors_.push_back(s);
+    //     if (dead_idx != -1)
+    //       cubeset.set_true_var(cond, dead_idx);
+    //   }
+    // std::random_shuffle(successors_.begin(), successors_.end());
   }
 
   void cspins_iterator::recycle(cspins_state s,
@@ -153,19 +153,19 @@ namespace spot
                                 bool selfloopize,
                                 cubeset& cubeset, int dead_idx, unsigned tid)
   {
-    tid_ = tid;
-    cond_ = cond;
+    //tid_ = tid;
+    //    cond_ = cond;
     current_ = 0;
     // Constant time since int* is is_trivially_destructible
     successors_.clear();
-    inner.manager = &manager;
+    //inner.manager = &manager;
     inner.succ = &successors_;
-    inner.compress = compress;
-    inner.selfloopize = selfloopize;
+    // inner.compress = compress;
+    // inner.selfloopize = selfloopize;
     int* ref  = s;
-    if (compress)
-      // Already filled by compute_condition
-      ref = inner.uncompressed_;
+    // if (compress)
+    //   // Already filled by compute_condition
+    //   ref = inner.uncompressed_;
 
     int n = d->get_successors
       (nullptr, manager.unbox_state(ref),
@@ -173,7 +173,7 @@ namespace spot
         inner_callback_parameters* inner =
         static_cast<inner_callback_parameters*>(arg);
         cspins_state s =
-        inner->manager->alloc_setup(dst, inner->compressed_,
+         inner->manager->alloc_setup(dst, inner->compressed_,
                                     inner->manager->size() * 2);
         inner->succ->push_back(s);
         // auto it = inner->map.insert(s);
@@ -182,12 +182,13 @@ namespace spot
         //   inner->manager->dealloc(s);
        },
        &inner);
-    if (!n && selfloopize)
-      {
-        successors_.push_back(s);
-        if (dead_idx != -1)
-          cubeset.set_true_var(cond, dead_idx);
-      }
+    // if (!n && selfloopize)
+    //   {
+    //     successors_.push_back(s);
+    //     if (dead_idx != -1)
+    //       cubeset.set_true_var(cond, dead_idx);
+    //   }
+    //     std::random_shuffle ( successors_.begin(), successors_.end() );
   }
 
   cspins_iterator::~cspins_iterator()
@@ -208,10 +209,13 @@ namespace spot
 
   cspins_state cspins_iterator::state() const
   {
-    if (SPOT_UNLIKELY(!tid_))
-      return successors_[current_];
-    return  successors_[(((current_+1)*primes[tid_])
-                         % ((int)successors_.size()))];
+    // if (SPOT_UNLIKELY(!tid_))
+    //   return successors_[current_];
+    return  successors_[(tid_+current_)%((int)successors_.size())];
+
+                        //current_];
+                        //(((current_+1)*primes[tid_])
+                        //% ((int)successors_.size()))];
   }
 
   cube cspins_iterator::condition() const
@@ -231,44 +235,44 @@ namespace spot
       selfloopize_(selfloopize), aps_(visible_aps),
       nb_threads_(nb_threads)
   {
-    map_.initialSize(2000000);
+    //    map_.initialSize(2000000);
     manager_ = static_cast<cspins_state_manager*>
       (::operator new(sizeof(cspins_state_manager) * nb_threads));
     inner_ = new inner_callback_parameters[nb_threads_];
     for (unsigned i = 0; i < nb_threads_; ++i)
       {
         recycle_.push_back(std::vector<cspins_iterator*>());
-        recycle_.back().reserve(2000000);
+        //recycle_.back().reserve(2000000);
         new (&manager_[i])
           cspins_state_manager(d_->get_state_size(), compress);
         inner_[i].compressed_ = new int[d_->get_state_size() * 2];
         inner_[i].uncompressed_ = new int[d_->get_state_size()+30];
-        inner_[i].map = map_; // Must be a copy per thread
+        //        inner_[i].map = map_; // Must be a copy per thread
       }
     dead_idx_ = -1;
-    match_aps(visible_aps, dead_prop);
+    //    match_aps(visible_aps, dead_prop);
 
   }
 
   kripkecube<cspins_state, cspins_iterator>::~kripkecube()
   {
-    for (auto& i: recycle_)
-      {
-        for (auto& j: i)
-          {
-            cubeset_.release(j->condition());
-            delete j;
-          }
-      }
+    // for (auto& i: recycle_)
+    //   {
+    //     for (auto& j: i)
+    //       {
+    //         cubeset_.release(j->condition());
+    //         delete j;
+    //       }
+    //   }
 
-    for (unsigned i = 0; i < nb_threads_; ++i)
-      {
-        manager_[i].~cspins_state_manager();
-        delete[] inner_[i].compressed_;
-        delete[] inner_[i].uncompressed_;
-      }
-    ::operator delete(manager_);
-    delete[] inner_;
+    // for (unsigned i = 0; i < nb_threads_; ++i)
+    //   {
+    //     manager_[i].~cspins_state_manager();
+    //     delete[] inner_[i].compressed_;
+    //     delete[] inner_[i].uncompressed_;
+    //   }
+    // ::operator delete(manager_);
+    // delete[] inner_;
   }
 
   cspins_state kripkecube<cspins_state, cspins_iterator>::initial(unsigned tid)
@@ -307,14 +311,14 @@ namespace spot
       {
         auto tmp  = recycle_[tid].back();
         recycle_[tid].pop_back();
-        compute_condition(tmp->condition(), s, tid);
+        //compute_condition(tmp->condition(), s, tid);
         tmp->recycle(s, d_, manager_[tid], inner_[tid],
                      tmp->condition(), compress_, selfloopize_,
                      cubeset_, dead_idx_, tid);
         return tmp;
       }
-    cube cond = cubeset_.alloc();
-    compute_condition(cond, s, tid);
+    cube cond;// = cubeset_.alloc();
+    //compute_condition(cond, s, tid);
     return new cspins_iterator(s, d_, manager_[tid], inner_[tid],
                                cond, compress_, selfloopize_,
                                cubeset_, dead_idx_, tid);

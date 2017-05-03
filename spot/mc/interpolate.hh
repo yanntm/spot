@@ -243,11 +243,11 @@ namespace spot
 
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class swarmed_dfs  :
-    public seq_reach_kripke<State, SuccIterator,
-                            StateHash, StateEqual,
-                            swarmed_dfs<State, SuccIterator,
-                                        StateHash, StateEqual>>
+  class swarmed_dfs  // :
+    // public seq_reach_kripke<State, SuccIterator,
+    //                         StateHash, StateEqual,
+    //                         swarmed_dfs<State, SuccIterator,
+    //                                     StateHash, StateEqual>>
   {
     struct my_pair
     {
@@ -270,28 +270,28 @@ namespace spot
       int color;
     };
 
-    struct inner_pair_hasher
-    {
-      inner_pair_hasher(const my_pair&)
-      { }
+    // struct inner_pair_hasher
+    // {
+    //   inner_pair_hasher(const my_pair&)
+    //   { }
 
-      inner_pair_hasher() = default;
+    //   inner_pair_hasher() = default;
 
-      brick::hash::hash128_t
-      hash(const my_pair& lhs) const
-      {
-        StateHash hash;
-        auto u = hash(lhs.st);
-        return  {u, u}; // Just ignore the second part
-      }
+    //   brick::hash::hash128_t
+    //   hash(const my_pair& lhs) const
+    //   {
+    //     StateHash hash;
+    //     auto u =lhs.st[0]; //hash(lhs.st);
+    //     return  {u, u}; // Just ignore the second part
+    //   }
 
-      bool equal(const my_pair& lhs,
-                 const my_pair& rhs) const
-      {
-        StateEqual equal;
-        return equal(lhs.st, rhs.st);
-      }
-    };
+    //   bool equal(const my_pair& lhs,
+    //              const my_pair& rhs) const
+    //   {
+    //     StateEqual equal;
+    //     return equal(lhs.st, rhs.st);
+    //   }
+    // };
 
     enum st_status     // Describe the status of a state
       {
@@ -300,16 +300,17 @@ namespace spot
       };
 
   public:
-    using shared_map = brick::hashset::FastConcurrent <my_pair,
-                                                       inner_pair_hasher>;
+    // using shared_map = brick::hashset::FastConcurrent <my_pair,
+    //                                                    inner_pair_hasher>;
 
     swarmed_dfs(kripkecube<State, SuccIterator>& sys,
-                shared_map& map,
+                //                shared_map& map,
                 unsigned tid, bool& stop)
-      : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
-                         swarmed_dfs<State, SuccIterator,
-                                     StateHash, StateEqual>>(sys, tid, stop),
-      map_(map)
+      : sys_(&sys), tid_(tid), stop_(stop)
+      // : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
+      //                    swarmed_dfs<State, SuccIterator,
+      //                                StateHash, StateEqual>>(sys, tid, stop),
+      // map_(map)
       { }
 
     virtual ~swarmed_dfs()
@@ -318,23 +319,23 @@ namespace spot
 
     void setup()
     {
-      tm_.start("DFS thread " + std::to_string(this->tid_));
+      //      tm_.start("DFS thread " + std::to_string(this->tid_));
     }
 
     bool push(State s, unsigned int)
     {
-      ++states_;
-      auto it = map_.insert({s, OPEN});
+      // ++states_;
+      // auto it = map_.insert({s, OPEN});
 
-      // State has been marked as dead by another thread
-      // just skip the insertion
-      bool b = it.isnew();
-      inserted_ += b;
-      if (!b && it->color/* == CLOSED */)
-        //.load(std::memory_order_relaxed) == CLOSED)
-        {
-          return false;
-        }
+      // // State has been marked as dead by another thread
+      // // just skip the insertion
+      // bool b = it.isnew();
+      // inserted_ += b;
+      // if (!b && it->color/* == CLOSED */)
+      //   //.load(std::memory_order_relaxed) == CLOSED)
+      //   {
+      //     return false;
+      //   }
       return true;
     }
 
@@ -342,9 +343,9 @@ namespace spot
     {
       // Don't avoid pop but modify the status of the state
       // during backtrack
-      auto it = map_.insert({s, CLOSED}); // FIXME Find is enough
-      it->color = CLOSED;
-        //.store(CLOSED, std::memory_order_relaxed);
+      // auto it = map_.insert({s, CLOSED}); // FIXME Find is enough
+      // it->color = CLOSED;
+      //   //.store(CLOSED, std::memory_order_relaxed);
       return true;
     }
 
@@ -355,14 +356,17 @@ namespace spot
 
     void finalize()
     {
-      this->stop_ = true;
-      tm_.stop("DFS thread " + std::to_string(this->tid_));
+      // this->stop_ = true;
+      // //tm_.stop("DFS thread " + std::to_string(this->tid_));
+      // tm_.start("DFS thread " + std::to_string(this->tid_));
+      // tm_.stop("DFS thread " + std::to_string(this->tid_));
     }
 
     unsigned walltime()
     {
-      return tm_.timer("DFS thread " + std::to_string(this->tid_))
-        .walltime();
+      return 42;
+        //tm_.timer("DFS thread " + std::to_string(this->tid_))
+        //.walltime();
     }
 
     unsigned inserted()
@@ -385,9 +389,71 @@ namespace spot
       return nb_gens_;
     }
 
+    void run()
+    {
+      //      setup();      
+      State initial = sys_->initial(tid_);
+      if (push(initial, dfs_number))
+        {
+          todo.push_back({initial, sys_->succ(initial, tid_)});
+          visited[initial] = ++dfs_number;
+        }
+      while (!todo.empty() /*&& !stop_*/)
+        {
+          if (todo.back().it->done())
+            {
+              if (pop(todo.back().s))
+                {
+                  sys_->recycle(todo.back().it, tid_);
+                  todo.pop_back();
+                }
+            }
+          else
+            {
+              ++transitions;
+              State dst = todo.back().it->state();
+              auto it  = visited.insert({dst, dfs_number+1});
+              if (it.second)
+                {
+                  ++dfs_number;
+                  if (push(dst, dfs_number))
+                    {
+                      todo.back().it->next();
+                      todo.push_back({dst, sys_->succ(dst, tid_)});
+                    }
+                }
+              else
+                {
+                  //edge(visited[todo.back().s], visited[dst]);
+                  todo.back().it->next();
+                }
+            }
+        }
+      //finalize();
+    }
+
+    
   private:
+    kripkecube<State, SuccIterator>* sys_;
+    struct todo_element
+    {
+      State s;
+      SuccIterator* it;
+    };
+    std::vector<todo_element> todo;
+    // FIXME: The system already handle a set of visited states so
+    // this map is redundant: an we avoid this new map?
+    typedef std::unordered_map<const State, int,
+                               StateHash, StateEqual> visited_map;
+    visited_map visited;
+    unsigned int tid_;
+    bool& stop_; // Do not need to be atomic.
+    unsigned int dfs_number = 0;
+    unsigned int transitions = 0;
+
+
     spot::timer_map tm_;
-    shared_map map_;
+    // shared_map map_;
     unsigned inserted_ = 0;
     unsigned nb_gens_ = 0;
     unsigned states_ = 0;
@@ -406,19 +472,23 @@ namespace spot
   {
     struct my_pair
     {
-      my_pair(): color(0){}
-      my_pair(const my_pair& p): st(p.st), color(p.color.load()){}
-      my_pair(const State st, int bar): st(st), color(bar) { }
-      my_pair& operator=(my_pair& other)
-      {
-        if (this == &other)
-          return *this;
-        st = other.st;
-        color = other.color.load();
-        return *this;
-      }
+      // my_pair(): color(0){}
+      // my_pair(const my_pair& p): st(p.st),
+      //                            color(p.color)
+      //                             //p.color.load(std::memory_order_relaxed)){}
+      // my_pair(const State st, int bar): st(st), color(bar) { }
+      // my_pair& operator=(my_pair& other)
+      // {
+      //   if (this == &other)
+      //     return *this;
+      //   st = other.st;
+      //   color = other.color;
+      //     //other.color.load(std::memory_order_relaxed);
+      //   return *this;
+      // }
       State st;
-      std::atomic<int> color;
+      //      std::atomic<int>
+      int color;
     };
 
     struct inner_pair_hasher
@@ -513,14 +583,15 @@ namespace spot
             }
         }
 
-      auto it = map_.insert({s, insert_status_});
+      auto it = map_.insert({s, OPEN});//insert_status_});
 
       // State has been marked as dead by another thread
       // just skip the insertion
-      st_status status = (st_status) it->color.load(std::memory_order_relaxed);
+      st_status status = (st_status) it->color;
+        //(st_status) it->color.load(std::memory_order_relaxed);
       bool b = it.isnew();
       inserted_ += b;
-      if (!b && status == CLOSED)
+      if ((!b && status == CLOSED) || (status == OPEN && insert_status_ == UNKNOWN))
           //(status == CLOSED || status == UNKNOWN_CLOSED))
         return false;
       return true;
@@ -534,7 +605,8 @@ namespace spot
 
       // st_status status = (st_status) it->color.load(std::memory_order_relaxed);
       // if (status == OPEN)
-        it->color.store(CLOSED, std::memory_order_relaxed);
+      it->color = CLOSED;
+          //.store(CLOSED, std::memory_order_relaxed);
       // else
       //   it->color.store(UNKNOWN_CLOSED, std::memory_order_relaxed);
 

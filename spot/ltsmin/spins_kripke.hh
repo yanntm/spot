@@ -89,6 +89,7 @@ namespace spot
   class cspins_state_manager final
   {
   public:
+    cspins_state_manager() = delete;
     cspins_state_manager(unsigned int state_size, int compress);
     int* unbox_state(cspins_state s) const;
     // cmp is the area we can use to compute the compressed rep of dst.
@@ -113,7 +114,7 @@ namespace spot
   {
     cspins_state_manager* manager;   // The state manager
     std::vector<cspins_state>* succ; // The successors of a state
-    cspins_state_map map;            // Must be a copy and only one copy/thread
+    //    cspins_state_map map;            // Must be a copy and only one copy/thread
     int* compressed_;
     int* uncompressed_;
     bool compress;
@@ -126,6 +127,10 @@ namespace spot
   class cspins_iterator final
   {
   public:
+    cspins_iterator() = delete;
+    cspins_iterator(cspins_iterator&) = delete;
+    cspins_iterator(const cspins_iterator&) = delete;
+    
     cspins_iterator(cspins_state s,
                     const spot::spins_interface* d,
                     cspins_state_manager& manager,
@@ -197,7 +202,7 @@ namespace spot
     unsigned get_threads();
     bool compress();
     const spot::spins_interface* spins_interface();
-    cspins_state_manager& manager(unsigned i = 0);
+    cspins_state_manager& manager(unsigned i);
 
   private:
     /// Parse the set of atomic proposition to have a more
@@ -218,7 +223,7 @@ namespace spot
     bool selfloopize_;
     int dead_idx_;
     std::vector<std::string> aps_;
-    cspins_state_map map_;
+    //    cspins_state_map map_;
     unsigned int nb_threads_;
   };
 

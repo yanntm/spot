@@ -1382,20 +1382,26 @@ namespace spot
     using algo_name = spot::swarmed_dfs<cspins_state, cspins_iterator,
                                         cspins_state_hash, cspins_state_equal>;
 
-    // The shared map among all threads
-    algo_name::shared_map map;
+    // // The shared map among all threads
+    // algo_name::shared_map map;
+    // map.initialSize(2000000);
 
     tm.start("Initialisation");
-    std::vector<algo_name> swarmed;
+    std::vector<algo_name*> swarmed;
     for (unsigned i = 0; i < sys->get_threads(); ++i)
-      swarmed.emplace_back(*sys, map, i, stop);
+      swarmed.emplace_back(new algo_name(*sys/*, map*/, i, stop));
     tm.stop("Initialisation");
 
     tm.start("Run");
     std::vector<std::thread> threads;
     for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
+      threads.push_back(std::thread ([&swarmed](int tid){
+            //            srand (tid);
+            swarmed[tid]->run();
+          }, i));
 
+      // threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
+    
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       threads[i].join();
     tm.stop("Run");
@@ -1404,18 +1410,18 @@ namespace spot
               << "tid,walltime,uniq-inserted,visited-states,visited-edge,"
               << "number-fake-initial-used\n";
     unsigned cumul_states = 0;
-    for (unsigned i = 0; i < swarmed.size(); ++i)
-      {
-        cumul_states += swarmed[i].inserted();
-        std::cout << '@' << i << ','
-                  << swarmed[i].walltime() << ','
-                  << swarmed[i].inserted() << ','
-                  << swarmed[i].states() << ','
-                  << swarmed[i].edges() << ','
-                  << swarmed[i].how_many_generations()
-                  << std::endl;
+    // for (unsigned i = 0; i < swarmed.size(); ++i)
+    //   {
+    //     cumul_states += swarmed[i].inserted();
+    //     std::cout << '@' << i << ','
+    //               << swarmed[i].walltime() << ','
+    //               << swarmed[i].inserted() << ','
+    //               << swarmed[i].states() << ','
+    //               << swarmed[i].edges() << ','
+    //               << swarmed[i].how_many_generations()
+    //               << std::endl;
 
-      }
+    //   }
     std::cout << "\nFollowing csv describe the global computation:\n"
               << "algoname,walltime,preprocessing,uniq-visited-states"
               << "number-fake-initial-used,model\n";
