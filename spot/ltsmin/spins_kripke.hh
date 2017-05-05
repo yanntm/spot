@@ -49,7 +49,14 @@ namespace spot
   {
     bool operator()(const cspins_state lhs, const cspins_state rhs) const
     {
-      return 0 == memcmp(lhs, rhs, (2+rhs[1])* sizeof(int));
+      auto lhsb= lhs;
+      auto rhsb= rhs;      
+      unsigned n = (2+rhs[1]);
+      while (n-- > 0) {
+        if ((*lhsb++ - *rhsb++) != 0)
+          return 1;
+      }
+      //      return 0 == memcmp(lhs, rhs, (2+rhs[1])* sizeof(int));
     }
   };
 
@@ -90,6 +97,10 @@ namespace spot
   {
   public:
     cspins_state_manager() = delete;
+    cspins_state_manager(cspins_state_manager&) = delete;
+    cspins_state_manager(const cspins_state_manager&) = delete;
+
+    
     cspins_state_manager(unsigned int state_size, int compress);
     int* unbox_state(cspins_state s) const;
     // cmp is the area we can use to compute the compressed rep of dst.
@@ -113,12 +124,14 @@ namespace spot
   struct inner_callback_parameters
   {
     cspins_state_manager* manager;   // The state manager
+    const spot::spins_interface* d;
     std::vector<cspins_state>* succ; // The successors of a state
     //    cspins_state_map map;            // Must be a copy and only one copy/thread
     int* compressed_;
     int* uncompressed_;
-    bool compress;
-    bool selfloopize;
+    // bool compress;
+    // bool selfloopize;
+    char data[6532];
   };
 
   // This class provides an iterator over the successors of a state.
@@ -132,22 +145,22 @@ namespace spot
     cspins_iterator(const cspins_iterator&) = delete;
     
     cspins_iterator(cspins_state s,
-                    const spot::spins_interface* d,
-                    cspins_state_manager& manager,
+                    //const spot::spins_interface* d,
+                    //cspins_state_manager& manager,
                     inner_callback_parameters& inner,
                     cube cond,
-                    bool compress,
-                    bool selfloopize,
+                    // bool compress,
+                    // bool selfloopize,
                     cubeset& cubeset,
                     int dead_idx, unsigned tid);
 
     void recycle(cspins_state s,
-                 const spot::spins_interface* d,
-                 cspins_state_manager& manager,
+                 //const spot::spins_interface* d,
+                 //cspins_state_manager& manager,
                  inner_callback_parameters& inner,
                  cube cond,
-                 bool compress,
-                 bool selfloopize,
+                 // bool compress,
+                 // bool selfloopize,
                  cubeset& cubeset, int dead_idx, unsigned tid);
 
     ~cspins_iterator();
@@ -189,6 +202,9 @@ namespace spot
     prop_set pset_;
 
   public:
+    kripkecube() = delete;
+    kripkecube(const kripkecube&) = delete;
+    kripkecube(kripkecube&) = delete;
     kripkecube(spins_interface_ptr sip, bool compress,
                std::vector<std::string> visible_aps,
                bool selfloopize, std::string dead_prop,

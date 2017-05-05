@@ -90,7 +90,7 @@ namespace spot
     modelcheck(ltsmin_kripkecube_ptr sys,
                spot::twacube_ptr twa, bool compute_ctrx = false);
 
-    static void swarmed_dfs(ltsmin_kripkecube_ptr sys, std::string name);
+    static void swarmed_dfs(std::vector<ltsmin_kripkecube_ptr>& sys, std::string name);
     static void swarmed_gp_dfs(ltsmin_kripkecube_ptr sys,
                                 std::function<bool(unsigned, unsigned)> fitness,
                                std::string name);

@@ -50,7 +50,7 @@ AM_SILENT_RULES([no])
 # Activate at C14 for gnulib tests
 AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
 
-AX_CHECK_COMPILE_FLAG([-lpthread], [CFLAGS="$CFLAGS -lpthread"])
+AX_CHECK_COMPILE_FLAG([-lpthread], [CFLAGS="$CFLAGS -pthread"])
 
 gl_INIT
 

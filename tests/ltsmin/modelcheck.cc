@@ -471,13 +471,18 @@ static int checked_main()
 
   if (mc_options.swarmed_dfs || mc_options.swarmed_gp_dfs)
     {
-      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      std::vector<spot::ltsmin_kripkecube_ptr> modelcube;// = nullptr;
       tm.start("load kripkecube");
       try
         {
-          modelcube = spot::ltsmin_model::load(mc_options.model)
-            .kripkecube({}, deadf, mc_options.compress,
-                        mc_options.nb_threads);
+          for (unsigned i = 0; i < mc_options.nb_threads *10; ++i)
+            {
+              auto m = spot::ltsmin_model::load(mc_options.model)
+                .kripkecube({}, deadf, mc_options.compress,
+                            mc_options.nb_threads);
+              std::cout << m.get() << std::endl;
+              modelcube.push_back(m);
+            }
         }
       catch (std::runtime_error& e)
         {
@@ -521,7 +526,7 @@ static int checked_main()
               };
           else
               assert(false);
-          spot::ltsmin_model::swarmed_gp_dfs(modelcube, fitness,
+          spot::ltsmin_model::swarmed_gp_dfs(modelcube[0], fitness,
                                              mc_options.model);
 
         }

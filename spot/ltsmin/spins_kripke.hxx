@@ -99,29 +99,29 @@ namespace spot
   // All successors are computed once when an iterator is recycled or
   // created.
   cspins_iterator::cspins_iterator(cspins_state s,
-                                   const spot::spins_interface* d,
-                                   cspins_state_manager& manager,
+                                   //const spot::spins_interface* d,
+                                   //cspins_state_manager& manager,
                                    inner_callback_parameters& inner,
                                    cube cond,
-                                   bool compress,
-                                   bool selfloopize,
+                                   // bool compress,
+                                   // bool selfloopize,
                                    cubeset& cubeset,
                                    int dead_idx, unsigned tid)
     :  current_(0), cond_(cond), tid_(tid)
   {
-    successors_.reserve(10);
-    inner.manager = &manager;
+    //successors_.reserve(10);
+    //    inner.manager = &manager;
     inner.succ = &successors_;
-    inner.compress = compress;
-    inner.selfloopize = selfloopize;
+    //inner.compress = compress;
+    //inner.selfloopize = selfloopize;
     int* ref = s;
 
     // if (compress)
     //   // already filled by compute_condition
     //   ref = inner.uncompressed_;
 
-    int n = d->get_successors
-      (nullptr, manager.unbox_state(ref),
+    int n = inner.d->get_successors
+      (nullptr, ref+2,// manager.unbox_state(ref),
        [](void* arg, transition_info_t*, int *dst){
         inner_callback_parameters* inner =
         static_cast<inner_callback_parameters*>(arg);
@@ -145,12 +145,12 @@ namespace spot
   }
 
   void cspins_iterator::recycle(cspins_state s,
-                                const spot::spins_interface* d,
-                                cspins_state_manager& manager,
+                                //const spot::spins_interface* d,
+                                //cspins_state_manager& manager,
                                 inner_callback_parameters& inner,
                                 cube cond,
-                                bool compress,
-                                bool selfloopize,
+                                // bool compress,
+                                // bool selfloopize,
                                 cubeset& cubeset, int dead_idx, unsigned tid)
   {
     //tid_ = tid;
@@ -167,8 +167,8 @@ namespace spot
     //   // Already filled by compute_condition
     //   ref = inner.uncompressed_;
 
-    int n = d->get_successors
-      (nullptr, manager.unbox_state(ref),
+    int n = inner.d->get_successors
+      (nullptr, ref+2,//manager.unbox_state(ref),
        [](void* arg, transition_info_t*, int *dst){
         inner_callback_parameters* inner =
         static_cast<inner_callback_parameters*>(arg);
@@ -211,11 +211,10 @@ namespace spot
   {
     // if (SPOT_UNLIKELY(!tid_))
     //   return successors_[current_];
-    return  successors_[(tid_+current_)%((int)successors_.size())];
-
-                        //current_];
-                        //(((current_+1)*primes[tid_])
-                        //% ((int)successors_.size()))];
+    return  successors_[//(tid_+current_)%((int)successors_.size())];
+                        //                        current_];
+                        (((current_+1)*primes[tid_])
+                        % ((int)successors_.size()))];
   }
 
   cube cspins_iterator::condition() const
@@ -236,19 +235,23 @@ namespace spot
       nb_threads_(nb_threads)
   {
     //    map_.initialSize(2000000);
+    std::cout << nb_threads << std::endl;
     manager_ = static_cast<cspins_state_manager*>
-      (::operator new(sizeof(cspins_state_manager) * nb_threads));
-    inner_ = new inner_callback_parameters[nb_threads_];
-    for (unsigned i = 0; i < nb_threads_; ++i)
+      (::operator new(sizeof(cspins_state_manager) * /* nb_threads */ 1));
+    inner_ = new inner_callback_parameters[/* nb threads */ 1];
+    for (unsigned i = 0; i < /* nb_threads */ 1; ++i)
       {
         recycle_.push_back(std::vector<cspins_iterator*>());
         //recycle_.back().reserve(2000000);
         new (&manager_[i])
           cspins_state_manager(d_->get_state_size(), compress);
+        inner_[i].manager = &manager_[i];
+        inner_[i].d = d_;
         inner_[i].compressed_ = new int[d_->get_state_size() * 2];
         inner_[i].uncompressed_ = new int[d_->get_state_size()+30];
         //        inner_[i].map = map_; // Must be a copy per thread
       }
+    std::cout << nb_threads << std::endl;
     dead_idx_ = -1;
     //    match_aps(visible_aps, dead_prop);
 
@@ -309,18 +312,18 @@ namespace spot
   {
     if (SPOT_LIKELY(!recycle_[tid].empty()))
       {
-        auto tmp  = recycle_[tid].back();
+        auto* tmp  = recycle_[tid].back();
         recycle_[tid].pop_back();
         //compute_condition(tmp->condition(), s, tid);
-        tmp->recycle(s, d_, manager_[tid], inner_[tid],
-                     tmp->condition(), compress_, selfloopize_,
+        tmp->recycle(s/*, d_*/ /*,manager_[tid]*/, inner_[tid],
+                     tmp->condition(), //compress_, selfloopize_,
                      cubeset_, dead_idx_, tid);
         return tmp;
       }
     cube cond;// = cubeset_.alloc();
     //compute_condition(cond, s, tid);
-    return new cspins_iterator(s, d_, manager_[tid], inner_[tid],
-                               cond, compress_, selfloopize_,
+    return new cspins_iterator(s/*, d_*/ /*,manager_[tid]*/, inner_[tid],
+                               cond, //compress_, selfloopize_,
                                cubeset_, dead_idx_, tid);
   }
 

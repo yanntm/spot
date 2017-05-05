@@ -303,15 +303,16 @@ namespace spot
     // using shared_map = brick::hashset::FastConcurrent <my_pair,
     //                                                    inner_pair_hasher>;
 
-    swarmed_dfs(kripkecube<State, SuccIterator>& sys,
+    swarmed_dfs(kripkecube<State, SuccIterator>* sys,
                 //                shared_map& map,
                 unsigned tid, bool& stop)
-      : sys_(&sys), tid_(tid), stop_(stop)
+      : sys_(sys), tid_(tid)//, stop_(stop)
       // : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
       //                    swarmed_dfs<State, SuccIterator,
       //                                StateHash, StateEqual>>(sys, tid, stop),
       // map_(map)
-      { }
+      {
+      }
 
     virtual ~swarmed_dfs()
     {
@@ -393,7 +394,7 @@ namespace spot
     {
       //      setup();      
       State initial = sys_->initial(tid_);
-      if (push(initial, dfs_number))
+      //      if (push(initial, dfs_number))
         {
           todo.push_back({initial, sys_->succ(initial, tid_)});
           visited[initial] = ++dfs_number;
@@ -412,11 +413,11 @@ namespace spot
             {
               ++transitions;
               State dst = todo.back().it->state();
-              auto it  = visited.insert({dst, dfs_number+1});
+              auto const& it  = visited.insert({dst, dfs_number+1});
               if (it.second)
                 {
                   ++dfs_number;
-                  if (push(dst, dfs_number))
+                  //          if (push(dst, dfs_number))
                     {
                       todo.back().it->next();
                       todo.push_back({dst, sys_->succ(dst, tid_)});
@@ -447,7 +448,7 @@ namespace spot
                                StateHash, StateEqual> visited_map;
     visited_map visited;
     unsigned int tid_;
-    bool& stop_; // Do not need to be atomic.
+    //    bool& stop_; // Do not need to be atomic.
     unsigned int dfs_number = 0;
     unsigned int transitions = 0;
 

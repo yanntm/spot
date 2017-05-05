@@ -1065,6 +1065,7 @@ namespace spot
       throw std::runtime_error("Models with embedded properties "
                                "are not supported.");
 
+    std::cout << d << std::endl;
     return { d };
   }
 
@@ -1372,12 +1373,12 @@ namespace spot
 
 
   void
-  ltsmin_model::swarmed_dfs(ltsmin_kripkecube_ptr sys,
+  ltsmin_model::swarmed_dfs(std::vector<ltsmin_kripkecube_ptr>& sys,
                             std::string name)
   {
     name = name.substr(name.find_last_of("/")+1);
     spot::timer_map tm;
-
+    unsigned  nbth =    sys[0]->get_threads() ;
     bool stop = false;
     using algo_name = spot::swarmed_dfs<cspins_state, cspins_iterator,
                                         cspins_state_hash, cspins_state_equal>;
@@ -1388,13 +1389,15 @@ namespace spot
 
     tm.start("Initialisation");
     std::vector<algo_name*> swarmed;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      swarmed.emplace_back(new algo_name(*sys/*, map*/, i, stop));
+    for (unsigned i = 0; i < nbth /*FALSE SHARING*/; ++i)
+      {
+        swarmed.emplace_back(new algo_name(sys[i*10].get() /*, map*/, 0 /* FIXME*/, stop));
+      }
     tm.stop("Initialisation");
 
     tm.start("Run");
     std::vector<std::thread> threads;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
+    for (unsigned i = 0; i < nbth; ++i)
       threads.push_back(std::thread ([&swarmed](int tid){
             //            srand (tid);
             swarmed[tid]->run();
@@ -1402,7 +1405,7 @@ namespace spot
 
       // threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
     
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
+    for (unsigned i = 0; i < nbth; ++i)
       threads[i].join();
     tm.stop("Run");
 
@@ -1425,7 +1428,7 @@ namespace spot
     std::cout << "\nFollowing csv describe the global computation:\n"
               << "algoname,walltime,preprocessing,uniq-visited-states"
               << "number-fake-initial-used,model\n";
-    std::cout << '#' << "dfs" << sys->get_threads() << ','
+    std::cout << '#' << "dfs" << sys[0]->get_threads() << ','
               << tm.timer("Run").walltime() << ','
               << 0 /* No processing here*/ << ','
               << cumul_states << ','
