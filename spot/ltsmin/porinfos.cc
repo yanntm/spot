@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <set>
 #include <iterator>
 #include <iostream>
 #include <algorithm>
@@ -64,53 +65,56 @@ namespace spot
     m_read.resize(transitions_);
     m_write.resize(transitions_);
     m_nes.resize(guards_);
+    m_nds.resize(guards_);
     m_mbc.resize(guards_);
     m_guards.resize(transitions_);
 
-    for (int i = 0; i < transitions_; ++i)
+    for (unsigned i = 0; i < transitions_; ++i)
       m_read[i].resize(variables_);
-    for (int i = 0; i < transitions_; ++i)
+    for (unsigned i = 0; i < transitions_; ++i)
       m_write[i].resize(variables_);
-    for (int i = 0; i < guards_; ++i)
+    for (unsigned i = 0; i < guards_; ++i)
       m_nes[i].resize(transitions_);
-    for (int i = 0; i < guards_; ++i)
+    for (unsigned i = 0; i < guards_; ++i)
+      m_nds[i].resize(transitions_);
+    for (unsigned i = 0; i < guards_; ++i)
       m_mbc[i].resize(guards_);
 
     // Grab Read dependency Matrix
-    for (int i = 0; i < transitions_; ++i)
+    for (unsigned i = 0; i < transitions_; ++i)
       {
         int* read_dep = d_->get_transition_read_dependencies(i);
-        for (int j = 0; j < variables_; ++j)
+        for (unsigned j = 0; j < variables_; ++j)
           m_read[i][j] = read_dep[j];
       }
 
     // Grab Write depency Matrix
-    for (int i = 0; i < transitions_; ++i)
+    for (unsigned i = 0; i < transitions_; ++i)
       {
         int* write_dep = d_->get_transition_write_dependencies(i);
-        for (int j = 0; j < variables_; ++j)
+        for (unsigned j = 0; j < variables_; ++j)
           m_write[i][j] = write_dep[j];
       }
 
     // Grab NES matrix
-    for (int i = 0; i < guards_; ++i)
+    for (unsigned i = 0; i < guards_; ++i)
       {
         int* nes = d_->get_guard_nes_matrix(i);
-        for (int j = 0; j < transitions_; ++j)
+        for (unsigned j = 0; j < transitions_; ++j)
           m_nes[i][j] = nes[j];
       }
 
     // Grab "may-be-coenabled" matrix
-    for (int i = 0; i < guards_; ++i)
+    for (unsigned i = 0; i < guards_; ++i)
       {
         int* mbc = d_->get_guard_may_be_coenabled_matrix(i);
-        for (int j = 0; j < guards_; ++j)
+        for (unsigned j = 0; j < guards_; ++j)
           m_mbc[i][j] = mbc[j];
       }
 
 
     // Grab guards matrix
-    for (int i = 0; i < transitions_; ++i)
+    for (unsigned i = 0; i < transitions_; ++i)
       {
         int* array_guards = d_->get_guards(i);
         m_guards[i].resize(array_guards[0]);
@@ -121,15 +125,15 @@ namespace spot
     // Setup dependency between transitions. This
     // is a cache for speeding up dependancy computation.
     m_dep_tr.resize(transitions_);
-    for (int t1 = 0; t1 < transitions_; ++t1)
+    for (unsigned t1 = 0; t1 < transitions_; ++t1)
       m_dep_tr[t1].resize(transitions_);
 
-    for (int t1 = 0; t1 < transitions_; ++t1)
+    for (unsigned t1 = 0; t1 < transitions_; ++t1)
       {
-        for (int t2 = t1; t2 < transitions_; ++t2)
+        for (unsigned t2 = t1; t2 < transitions_; ++t2)
           {
             bool res = false;
-            for (int i = 0; i < variables_; ++i)
+            for (unsigned i = 0; i < variables_; ++i)
               if ((m_read[t1][i] && m_read[t2][i])
                 || (m_write[t1][i] && m_write[t2][i]))
                 {
@@ -141,18 +145,24 @@ namespace spot
           }
       }
 
+    // Compute a matrix of booleans
+    // [t1][t2] is true iff the transition t1 have at least one common guard
+    // with the transition t2.
     m_dep_guards.resize(transitions_);
-    for (int t1 = 0; t1 < transitions_; ++t1)
+    for (unsigned t1 = 0; t1 < transitions_; ++t1)
       m_dep_guards[t1].resize(transitions_);
-    for (int t1 = 0; t1 < transitions_; ++t1)
+    for (unsigned t1 = 0; t1 < transitions_; ++t1)
       {
-        for (int t2 = t1; t2 < transitions_; ++t2)
+        for (unsigned t2 = t1; t2 < transitions_; ++t2)
           {
             bool res = false;
-            for (unsigned i = 0; !res && i < m_guards[t1].size(); i++)
-              for (unsigned j = 0; !res && j < m_guards[t2].size(); j++)
+            for (unsigned i = 0; i < m_guards[t1].size(); i++)
+              for (unsigned j = 0; j < m_guards[t2].size(); j++)
                 if (m_guards[t1][i] == m_guards[t2][j])
+                {
                   res = true;
+                  break;
+                }
 
             m_dep_guards[t1][t2] = res;
             m_dep_guards[t2][t1] = res;
@@ -193,10 +203,10 @@ namespace spot
     // Compute the processus of each transition, based on the modified
     // variables. -1 means that we don't know with this method.
     t_processes.resize(transitions_);
-    for (int t = 0; t < transitions_; ++t)
+    for (unsigned t = 0; t < transitions_; ++t)
       {
         t_processes[t] = -1;
-        for (int v = 0; v < variables_; ++v)
+        for (unsigned v = 0; v < variables_; ++v)
           if (m_read[t][v] || m_write[t][v])
             {
               t_processes[t] = variable_proc[v];
@@ -206,20 +216,63 @@ namespace spot
 
     // Setup non maybe coenabled
     non_mbc_tr.resize(transitions_);
-    for (int i = 0; i < transitions_; ++i)
+    for (unsigned i = 0; i < transitions_; ++i)
       non_mbc_tr[i].resize(transitions_);
 
-    for (int t1 = 0; t1 < transitions_; ++t1)
-      for (int t2 = t1; t2 < transitions_; ++t2)
+    for (unsigned t1 = 0; t1 < transitions_; ++t1)
+      for (unsigned t2 = t1; t2 < transitions_; ++t2)
         {
           non_mbc_tr[t1][t2] = non_maybecoenabled(t1, t2);
           non_mbc_tr[t2][t1] = non_mbc_tr[t1][t2];
         }
   }
 
+  bool
+  porinfos::ct_base(int t, std::vector<int>& t_work,
+                    const std::vector<int>& enabled,
+                    const int* for_spins_state)
+  {
+    (void) t;
+    (void) t_work;
+    (void) enabled;
+    (void) for_spins_state;
+    return false;
+  }
+
+  bool
+  porinfos::stubborn_set(int t, std::vector<int>& t_work,
+                         const std::vector<int>& enabled,
+                         const int* for_spins_state)
+  {
+    (void) enabled;
+    int beta = t;
+    unsigned beta_guards_size = m_guards[beta].size();
+    bool goon = true;
+    for (unsigned i = 0; i < beta_guards_size && goon; ++i)
+      {
+        if (!d_->get_guard(nullptr, m_guards[beta][i], for_spins_state))
+          {
+            unsigned guard_to_look = m_guards[beta][i];
+            for (unsigned j = 0; j < transitions_ && goon; ++j)
+              {
+                if (std::find(t_work.begin(), t_work.end(), j) == t_work.end()
+                    && m_nes[guard_to_look][j])
+                {
+                  t_work.push_back(j);
+                  goon = false;
+                }
+              }
+          }
+      }
+    return true;
+  }
+
   std::vector<bool>
-  porinfos::compute_reduced_set_ct(const std::vector<int>& enabled,
-                                const int* for_spins_state)
+  porinfos::compute_reduced_set(const std::vector<int>& enabled,
+                                const int* for_spins_state,
+                                bool (porinfos::*not_enabled_transition)
+                                (int, std::vector<int>&,
+                                 const std::vector<int>&, const int*))
   {
     (void) for_spins_state;
     std::vector<bool> res(enabled.size(), true);
@@ -232,13 +285,12 @@ namespace spot
       }
 
     std::vector<int> t_work;
-    std::vector<int> t;
+    std::vector<int> t_s;
 
     // Randomly take one enabled transition
     {
       int alpha = enabled[0];
       t_work.push_back(alpha);
-      t.push_back(alpha);
     }
 
     auto are_conflicting = [&](int t1, int t2)
@@ -253,232 +305,32 @@ namespace spot
 
     while (!t_work.empty())
       {
-        int alpha = t_work.back();
+        unsigned alpha = t_work.back();
         t_work.pop_back();
+        t_s.push_back(alpha);
 
-        for (int beta = 0; beta < transitions_; ++beta)
+        if (std::find(enabled.begin(), enabled.end(), alpha) !=
+            enabled.end())
           {
-            if (alpha != beta && are_conflicting(alpha, beta))
-              {
-                if (std::find(enabled.begin(), enabled.end(), beta) ==
-                    enabled.end())
-                  return res;
-                if (std::find(t.begin(), t.end(), beta) == t.end())
-                  {
-                    t.push_back(beta);
-                    t_work.push_back(beta);
-                  }
-              }
+            for (unsigned beta = 0; beta < transitions_; ++beta)
+              if (alpha != beta && are_conflicting(alpha, beta)
+                  && std::find(t_s.begin(), t_s.end(), beta) == t_s.end())
+                t_work.push_back(beta);
+          }
+        else
+          {
+            if (!((this->*not_enabled_transition)(alpha, t_work, enabled,
+                                                  for_spins_state)))
+              return res;
           }
       }
 
     // Compute intersection between t and enabled
     for (unsigned i = 0; i < enabled.size(); ++i)
-      if (std::find(t.begin(), t.end(), enabled[i]) == t.end())
+      if (std::find(t_s.begin(), t_s.end(), enabled[i]) == t_s.end())
         res[i] = false;
 
     return res;
-  }
-
-  std::vector<bool>
-  porinfos::compute_reduced_set_ss(const std::vector<int>& enabled,
-                                const int* for_spins_state)
-  {
-    (void) for_spins_state;
-    std::vector<bool> res_(enabled.size());
-
-    if (enabled.empty())
-      {
-        //std::cerr << "Warning, state without successors\n" << std::endl;
-        stats_.cumul(0, enabled.size());
-        return res_;
-      }
-
-    // Compute the stubborn set algorithm as described by Elwin Pater
-    // in Partial Order Reduction for PINS [2011] (page 21)
-
-    // Declare usefull variables
-    std::vector<int> t_work;
-    std::vector<int> t_s;
-
-    std::unordered_set<int> cache;
-
-    // Randomly take one enabled transition
-    // FIXME here we choose the first enabled transition (as described
-    // in the previous report) but better heuristics may exist
-    {
-      int alpha = enabled[0];
-      t_work.push_back(alpha);
-    }
-
-    // Iteratively build the stubborn set
-    while (!t_work.empty())
-      {
-        int beta = t_work.back();
-        t_work.pop_back();
-        t_s.push_back(beta);
-        cache.insert(beta);
-
-        // Computes guards used by beta
-        int beta_guards_size = m_guards[beta].size();
-
-        if (std::find(enabled.begin(), enabled.end(), beta) != enabled.end())
-          {
-            // Beta is an enabled transition.
-            // Iterate over all transitions
-            for (int i = 0; i < transitions_; ++i)
-              {
-                // Beta is already in t_s or transitions are independants ...
-                // ... so we avoid extra computation.
-                if (i == beta || !m_dep_tr[i][beta])
-                  continue;
-
-                // The transition must be processed!
-                if (non_mbc_tr[beta][i] && cache.find(i) == cache.end())
-                  {
-                    t_work.push_back(i);
-                    cache.insert(i);
-                  }
-              }
-          }
-        else
-          {
-            (void) beta_guards_size;
-            // Beta is not an enabled transition.
-            // Compute GNES(beta, for_spins_state)
-            bool goon = true;
-            for (int i = 0; i < beta_guards_size && goon; ++i)
-              {
-                if (!d_->get_guard(nullptr, m_guards[beta][i],
-                                  for_spins_state))
-                  {
-                    unsigned guard_to_look = m_guards[beta][i];
-                    for (int j = 0; j < transitions_ && goon; ++j)
-                      {
-                        if (cache.find(j) == cache.end() &&
-                            m_nes[guard_to_look][j])
-                        {
-                          t_work.push_back(j);
-                          cache.insert(j);
-                          goon = false;
-                        }
-                      }
-                  }
-              }
-          }
-      }
-
-    // Compute the intersection between T_S and enabled
-    unsigned hidden = 0;
-    for (unsigned i = 0; i < enabled.size(); ++i)
-      {
-        const auto idx = std::find(t_s.begin(), t_s.end(), enabled[i]);
-        if (idx != t_s.end())
-          res_[i] = true;
-        else
-          ++hidden;
-      }
-
-    stats_.cumul(hidden, enabled.size());
-
-    // Here we activate a SPIN-like persistent set, i.e.
-    // wheter a persistent set with one transition or all transitions
-    if (spin_ && (enabled.size() - hidden != 1))
-      {
-        for (unsigned i = 0; i < res_.size(); ++i)
-          res_[i] = true;
-      }
-    return res_;
-  }
-
-  std::vector<bool>
-  porinfos::compute_reduced_set_ss_ns(const std::vector<int>& enabled,
-                                  const int* for_spins_state)
-  {
-    (void) for_spins_state;
-    std::vector<bool> res_(enabled.size(), false);
-
-    if (enabled.empty())
-      {
-        //std::cerr << "Warning, state without successors\n" << std::endl;
-        stats_.cumul(0, enabled.size());
-        return res_;
-      }
-
-    // Compute the stubborn set algorithm as described by Elwin Pater
-    // in Partial Order Reduction for PINS [2011] (page 21)
-
-    // Declare usefull variables
-    std::vector<int> t_work;
-    std::vector<int> t_s;
-
-    std::unordered_set<int> cache;
-
-    // Randomly take one enabled transition
-    // FIXME here we choose the first enabled transition (as described
-    // in the previous report) but better heuristics may exist
-    {
-      int alpha = enabled[0];
-      t_work.push_back(alpha);
-    }
-
-    while (!t_work.empty())
-      {
-        int beta = t_work.back();
-        t_work.pop_back();
-        t_s.push_back(beta);
-        cache.insert(beta);
-
-        // Computes guards used by beta
-        // int beta_guards_size = m_guards[beta].size();
-
-        if (std::find(enabled.begin(), enabled.end(), beta) != enabled.end())
-          {
-            // Beta is an enabled transition.
-            // Iterate over all transitions
-            for (int i = 0; i < transitions_; ++i)
-              {
-                // Beta is already in t_s or transitions are independants ...
-                // ... so we avoid extra computation.
-                if (i == beta || !m_dep_tr[i][beta])
-                  continue;
-
-                // The transition must be processed!
-                if (non_mbc_tr[beta][i] && cache.find(i) == cache.end())
-                  {
-                    t_work.push_back(i);
-                    cache.insert(i);
-                  }
-              }
-          }
-        else
-          {
-            // FIXME best nes
-          }
-      }
-
-    // Compute the intersection between T_S and enabled
-    unsigned hidden = 0;
-    for (unsigned i = 0; i < enabled.size(); ++i)
-      {
-        const auto idx = std::find(t_s.begin(), t_s.end(), enabled[i]);
-        if (idx != t_s.end())
-          res_[i] = true;
-        else
-          ++hidden;
-      }
-
-    stats_.cumul(hidden, enabled.size());
-
-    // Here we activate a SPIN-like persistent set, i.e.
-    // wheter a persistent set with one transition or all transitions
-    if (spin_ && (enabled.size() - hidden != 1))
-      {
-        for (unsigned i = 0; i < res_.size(); ++i)
-          res_[i] = true;
-      }
-
-    return res_;
   }
 
   bool porinfos::non_maybecoenabled(int t1, int t2)
@@ -505,10 +357,10 @@ namespace spot
   void porinfos::dump_read_dependency()
   {
     std::cout << "Read Dependency Matrix" << std::endl;
-    for (int i = 0; i < transitions_; ++i)
+    for (unsigned i = 0; i < transitions_; ++i)
       {
         std::cout << "   ";
-        for (int j = 0; j < variables_; ++j)
+        for (unsigned j = 0; j < variables_; ++j)
           std::cout << (m_read[i][j]? "+" : "-");
         std::cout << std::endl;
       }
@@ -518,10 +370,10 @@ namespace spot
   void porinfos::dump_write_dependency()
   {
     std::cout << "Write Dependency Matrix" << std::endl;
-    for (int i = 0; i < transitions_; ++i)
+    for (unsigned i = 0; i < transitions_; ++i)
       {
         std::cout << "   ";
-        for (int j = 0; j < variables_; ++j)
+        for (unsigned j = 0; j < variables_; ++j)
           std::cout << (m_write[i][j]? "+" : "-");
         std::cout << std::endl;
       }
@@ -531,10 +383,10 @@ namespace spot
   void porinfos::dump_nes_guards()
   {
     std::cout << "NES Matrix" << std::endl;
-    for (int i = 0; i < guards_; ++i)
+    for (unsigned i = 0; i < guards_; ++i)
       {
         std::cout << "   ";
-        for (int j = 0; j < transitions_; ++j)
+        for (unsigned j = 0; j < transitions_; ++j)
           std::cout << (m_nes[i][j]? "+" : "-");
         std::cout << std::endl;
       }
@@ -544,10 +396,10 @@ namespace spot
   void porinfos::dump_mbc_guards()
   {
     std::cout << "May be coenabled Matrix" << std::endl;
-    for (int i = 0; i < guards_; ++i)
+    for (unsigned i = 0; i < guards_; ++i)
       {
         std::cout << "   ";
-        for (int j = 0; j < guards_; ++j)
+        for (unsigned j = 0; j < guards_; ++j)
           std::cout << (m_mbc[i][j]? "+" : "-");
         std::cout << std::endl;
       }

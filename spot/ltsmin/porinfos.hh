@@ -56,14 +56,18 @@ namespace spot
   public:
     porinfos(const spins_interface* si);
 
-    std::vector<bool> compute_reduced_set_ct(const std::vector<int>& enabled,
-                                             const int* for_spins_state);
+    bool ct_base(int t, std::vector<int>& t_work,
+                 const std::vector<int>& enabled, const int* for_spins_state);
 
-    std::vector<bool> compute_reduced_set_ss(const std::vector<int>& enabled,
-                                             const int* for_spins_state);
+    bool stubborn_set(int t, std::vector<int>& t_work,
+                      const std::vector<int>& enabled,
+                      const int* for_spins_state);
 
-    std::vector<bool> compute_reduced_set_ss_ns(const std::vector<int>& enabled,
-                                                const int* for_spins_state);
+    std::vector<bool> compute_reduced_set(const std::vector<int>& enabled,
+                                       const int* for_spins_state,
+                                       bool (porinfos::*not_enabled_transition)
+                                       (int, std::vector<int>&,
+                                        const std::vector<int>&, const int*));
 
     inline bool non_maybecoenabled(int t1, int t2);
 
@@ -88,13 +92,14 @@ namespace spot
 
   private:
     const spins_interface* d_;
-    int transitions_;
-    int variables_;
-    int guards_;
+    unsigned transitions_;
+    unsigned variables_;
+    unsigned guards_;
     porinfos_stats stats_;
     std::vector<std::vector<bool>> m_read;
     std::vector<std::vector<bool>> m_write;
     std::vector<std::vector<bool>> m_nes;
+    std::vector<std::vector<bool>> m_nds;
     std::vector<std::vector<bool>> m_mbc;
     std::vector<std::vector<int>>  m_guards;
 

@@ -394,7 +394,8 @@ namespace spot
           {
             // Detect wich states are in Reduced(state)
             mask_ =
-              por_->compute_reduced_set_ct(cc_->transitions_id, cc_->source);
+              por_->compute_reduced_set(cc_->transitions_id, cc_->source,
+                                        &porinfos::stubborn_set);
 
             if (stab_seed_)
               {
@@ -1261,7 +1262,7 @@ namespace spot
           (int* (*)(int)) lt_dlsym(h, "get_guard_nes_matrix");
         d->get_guard_may_be_coenabled_matrix = (int* (*)(int))
           lt_dlsym(h, "get_guard_may_be_coenabled_matrix");
-        d->get_guard = (int (*)(void*, int , const int* )) sym("get_guard");
+        d->get_guard = (int (*)(void*, int, const int*)) sym("get_guard");
       }
 
     if (d->have_property && d->have_property())
