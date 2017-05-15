@@ -130,7 +130,8 @@ namespace spot
       int acc_vars;
       int label_vars;
       int class_vars;
-      std::vector<bddPair*> class_label_pairs;
+      std::vector<bddPair*> label_pairs;
+      bool nothing = false;
 
       acc_cond::mark_t all_inf_;
       size_t depth_;
@@ -157,18 +158,32 @@ namespace spot
         return acc_cond::mark_t(res.begin(), res.end());
       }
 
-      direct_simulation(const const_twa_graph_ptr& in, size_t depth = 3)
-        : depth_(depth),
+      direct_simulation(const const_twa_graph_ptr& in, size_t depth)
+        : depth_(depth - 1),
           po_size_(0),
           all_class_var_(bddtrue),
           original_(in)
       {
+        //std::cerr << "depth " << depth << std::endl;
         if (!has_separate_sets(in))
           throw std::runtime_error
             ("direct_simulation() requires separate Inf and Fin sets");
         if (!in->is_existential())
           throw std::runtime_error
             ("direct_simulation() does not yet support alternation");
+        if (depth == 0 || Cosimulation)
+          {
+            nothing = true;
+            a_ = make_twa_graph(in, twa::prop_set::all());
+            return;
+          }
+        if (Cosimulation)
+        {
+         // std::cerr << "old depth " << depth << std::endl;
+          depth = std::min(size_t(1), depth);
+          //std::cerr << "new depth " << depth << std::endl;
+          depth_ = depth - 1;
+        }
 
         scc_info_.reset(new scc_info(in));
 
@@ -244,7 +259,7 @@ namespace spot
             for (size_t d = 0; d < depth_; ++d)
               {
                 auto pair = bdd_newpair();
-                class_label_pairs.push_back(pair);
+                label_pairs.push_back(pair);
               }
 
             /*
@@ -272,7 +287,7 @@ namespace spot
                 for (size_t d = 0; d < depth_; ++d)
                   {
                     int new_ap = label_vars + d * ap.size() + i;
-                    bdd_setpair(class_label_pairs[d], old_ap, new_ap);
+                    bdd_setpair(label_pairs[d], old_ap, new_ap);
                   }
               }
           }
@@ -313,7 +328,7 @@ namespace spot
       // function simulation.
       virtual ~direct_simulation()
       {
-        for (auto& p: class_label_pairs)
+        for (auto& p: label_pairs)
           bdd_freepair(p);
         a_->get_dict()->unregister_all_my_variables(this);
       }
@@ -357,7 +372,7 @@ namespace spot
             po_size_ = 0;
             update_sig();
             go_to_next_it();
-            print_partition();
+            //print_partition();
           }
 
         update_previous_class();
@@ -366,95 +381,118 @@ namespace spot
       // The core loop of the algorithm.
       twa_graph_ptr run(std::vector<bdd>* implications = nullptr)
       {
+        if (nothing)
+        {
+          //std::cerr << "nothiiing" << std::endl;
+          return a_;
+        }
+       // std::cerr << "somethiiing" << std::endl;
         main_loop();
         return build_result(implications);
       }
 
-      // Take a state and compute its signature.
-      bdd compute_sig(unsigned src,
-                      size_t max_depth = 0, size_t current_depth = 0)
+      bdd compute_sig_old(unsigned src)
       {
         bdd res = bddfalse;
 
         for (auto& t: a_->out(src))
           {
             bdd acc = mark_to_bdd(t.acc);
-
-            // to_add is a conjunction of the acceptance condition,
-            // the label of the edge and the class of the
-            // destination and all the class it implies.
-            bdd to_add = acc & t.cond;
-            if (current_depth == max_depth)
-              to_add &= relation_[previous_class_[t.dst]];
-            std::cerr << std::endl << std::endl
-                      << "src " << src <<  "; depth" << current_depth << "; acc " << bdd_format_isop(a_->get_dict(), acc) << std::endl
-                      << "cond " << bdd_format_isop(a_->get_dict(), t.cond) << "; class " << bdd_format_isop(a_->get_dict(), relation_[previous_class_[t.dst]]) << std::endl;
-            std::cerr << "Before replace " <<  bdd_format_isop(a_->get_dict(), to_add);
-            if (current_depth > 0)
-              to_add = bdd_replace(to_add, class_label_pairs[current_depth - 1]);
-            std::cerr << "; Replace " << bdd_format_isop(a_->get_dict(), to_add) << std::endl;
-            if (current_depth < max_depth)
-              to_add &= compute_sig(t.dst, max_depth, current_depth + 1);
-
-            res |= to_add;
+            res |= acc & t.cond & relation_[previous_class_[t.dst]];
           }
-          std::cerr << "Final " << bdd_format_isop(a_->get_dict(), res) << std::endl;
-
-        // When we Cosimulate, we add a special flag to differentiate
-        // the initial state from the other.
         if (Cosimulation && src == a_->get_init_state_number())
           res |= bdd_initial;
 
         return res;
       }
 
-      bdd compute_sig(const std::list<unsigned>& src_list)
+
+      bdd compute_sig(unsigned src)
       {
         bdd res = bddfalse;
-        auto first = src_list.begin();
-        std::cerr << "BEGIN SECOND SIG" << std::endl;
-        for (auto& t_first: a_->out(*first))
-        {
-          bdd acc_first = mark_to_bdd(t_first.acc);
 
-          auto prev_class = relation_[previous_class_[t_first.dst]];
-          bdd to_add = bddtrue;
-          for (auto other = std::next(first); other != src_list.end(); ++other)
-            {
-              bdd acc_to_add = bddtrue;
-              for (auto& t_other: a_->out(*other))
-                {
-                  if (t_first.cond == t_other.cond
-                      && prev_class == relation_[previous_class_[t_other.dst]])
-                    {
-                      bdd acc_other = mark_to_bdd(t_other.acc);
-                      acc_to_add &= acc_other;
-                    }
-                }
-              to_add &= acc_to_add;
-              std::cerr << "src_other " << *other << "; acc " 
-                        << bdd_format_isop(a_->get_dict(), acc_to_add)
-                        << "; result "
-                        << bdd_format_isop(a_->get_dict(), to_add)
-                        << std::endl;
-            }
-          to_add &= t_first.cond & acc_first & prev_class;
-          std::cerr << "src fist " << *first << "; acc "
-                    << bdd_format_isop(a_->get_dict(), acc_first)
-                    << "; label "
-                    << bdd_format_isop(a_->get_dict(), t_first.cond)
-                    << "; class "
-                    << bdd_format_isop(a_->get_dict(), prev_class) << std::endl;
-          res |= to_add;
+        for (auto& t: a_->out(src))
+          {
+            bdd acc = mark_to_bdd(t.acc);
+            res |= acc & t.cond & relation_[previous_class_[t.dst]];
+          }
+
+        return res;
+      }
+
+      // Take a state and compute its signature.
+      bdd compute_sig(unsigned src, const std::vector<bdd>& prev_sig)
+      {
+        bdd res = bddfalse;
+
+        for (auto& t: a_->out(src))
+          {
+            bdd acc = mark_to_bdd(t.acc);
+            res |= acc & t.cond & prev_sig[t.dst];;
+          }
+         // std::cerr << "Final " << bdd_format_isop(a_->get_dict(), res) << std::endl;
+
+        // When we Cosimulate, we add a special flag to differentiate
+        // the initial state from the other.
+        return res;
+      }
+
+      bdd compute_sig(const std::list<unsigned>& src_list,
+                      const scc_info& scc)
+      {
+        (void) scc;
+        bdd res = bddfalse;
+        for (auto src: src_list)
+        {
+          for (auto& t: a_->out(src))
+          {
+            bdd acc = mark_to_bdd(t.acc);
+            unsigned dst = t.dst;
+            auto dst_class = relation_[previous_class_[dst]];
+            auto src_class = relation_[previous_class_[src]];
+            //std::cerr << dst << " dst class " << bdd_format_isop(a_->get_dict(), dst_class)  << "scc " << scc_info_->scc_of(dst) << std::endl;
+            //std::cerr << src << " src class " << bdd_format_isop(a_->get_dict(), src_class) << "scc " << scc_info_->scc_of(src) << std::endl;
+            //std::cerr << "different class " << (dst_class == src_class) << std::endl;
+            if (dst_class != src_class
+                || scc_info_->scc_of(src) == scc_info_->scc_of(dst))
+              res |= acc & t.cond & dst_class;
+          }
         }
-        std::cerr << "FINAL RESULT SECOND SIG " << bdd_format_isop(a_->get_dict(), res) << std::endl;
+     // std::cerr << " res " << bdd_format_isop(a_->get_dict(), res) << std::endl;
         return res;
       }
 
       void update_sig()
       {
+        std::vector<bdd> sig;
+        std::vector<bdd> sig2;
+        sig.resize(size_a_);
+        sig2.resize(size_a_);
+        std::vector<bdd>* prev_sig = &sig;
+        std::vector<bdd>* new_sig = &sig2;
+
         for (unsigned s = 0; s < size_a_; ++s)
-          bdd_lstate_[compute_sig(s, depth_, 0)].emplace_back(s);
+          (*new_sig)[s] = compute_sig(s);
+
+        for (size_t i = 0; i < depth_; ++i)
+          {
+            std::vector<bdd>* tmp_sig = prev_sig;
+            prev_sig = new_sig;
+            new_sig = tmp_sig;
+            for (unsigned s = 0; s < size_a_; ++s)
+              (*prev_sig)[s] = bdd_replace((*prev_sig)[s], label_pairs[i]);
+            for (unsigned s = 0; s < size_a_; ++s)
+            {
+              (*new_sig)[s] = compute_sig(s, *prev_sig);
+            }
+          }
+
+        for (unsigned s = 0; s < size_a_; ++s)
+          {
+            if (Cosimulation && s == a_->get_init_state_number())
+              (*new_sig)[s] |= bdd_initial;
+            bdd_lstate_[(*new_sig)[s]].emplace_back(s);
+          }
       }
 
 
@@ -578,6 +616,7 @@ namespace spot
         auto all_inf = all_inf_;
         // For each class, we will create
         // all the edges between the states.
+        auto scc = scc_info(a_);
         for (auto& p: bdd_lstate_)
           {
             // All states in p.second have the same class, so just
@@ -585,7 +624,8 @@ namespace spot
             bdd src = previous_class_[p.second.front()];
 
             // Get the signature to derive successors.
-            bdd sig = compute_sig(p.second);
+            bdd sig = depth_ > 0 ? compute_sig(p.second, scc)
+                                 : compute_sig_old(p.second.front());
 
             if (Cosimulation)
               sig = bdd_compose(sig, bddfalse, bdd_var(bdd_initial));
@@ -793,59 +833,62 @@ namespace spot
 
 
   twa_graph_ptr
-  simulation(const const_twa_graph_ptr& t)
+  simulation(const const_twa_graph_ptr& t, size_t depth)
   {
-    direct_simulation<false, false> simul(t);
+    direct_simulation<false, false> simul(t, depth);
     return simul.run();
   }
 
   twa_graph_ptr
   simulation(const const_twa_graph_ptr& t,
-             std::vector<bdd>* implications)
+             std::vector<bdd>* implications,
+             size_t depth)
   {
-    direct_simulation<false, false> simul(t);
+    direct_simulation<false, false> simul(t, depth);
     return simul.run(implications);
   }
 
   twa_graph_ptr
-  simulation_sba(const const_twa_graph_ptr& t)
+  simulation_sba(const const_twa_graph_ptr& t, size_t depth)
   {
-    direct_simulation<false, true> simul(t);
+    direct_simulation<false, true> simul(t, depth);
     return simul.run();
   }
 
   twa_graph_ptr
-  cosimulation(const const_twa_graph_ptr& t)
+  cosimulation(const const_twa_graph_ptr& t, size_t depth)
   {
-    direct_simulation<true, false> simul(t);
+    direct_simulation<true, false> simul(t, std::min((size_t)1u, depth));
     return simul.run();
   }
 
   twa_graph_ptr
-  cosimulation_sba(const const_twa_graph_ptr& t)
+  cosimulation_sba(const const_twa_graph_ptr& t, size_t depth)
   {
-    direct_simulation<true, true> simul(t);
+    direct_simulation<true, true> simul(t, std::min((size_t)1u, depth));
     return simul.run();
   }
 
 
   template<bool Sba>
   twa_graph_ptr
-  iterated_simulations_(const const_twa_graph_ptr& t)
+  iterated_simulations_(const const_twa_graph_ptr& t, size_t depth)
   {
     twa_graph_ptr res = nullptr;
     automaton_size prev;
     automaton_size next;
+   direct_simulation<false, Sba> simul(res ? res : t, depth);
 
+   return simul.run();
     do
       {
         prev = next;
-        direct_simulation<false, Sba> simul(res ? res : t);
+        direct_simulation<false, Sba> simul(res ? res : t, depth);
         res = simul.run();
         if (res->prop_universal())
           break;
 
-        direct_simulation<true, Sba> cosimul(res);
+        direct_simulation<true, Sba> cosimul(res, std::min(size_t(1u),depth));
         res = cosimul.run();
 
         if (Sba)
@@ -860,15 +903,15 @@ namespace spot
   }
 
   twa_graph_ptr
-  iterated_simulations(const const_twa_graph_ptr& t)
+  iterated_simulations(const const_twa_graph_ptr& t, size_t depth)
   {
-    return iterated_simulations_<false>(t);
+    return iterated_simulations_<false>(t, depth);
   }
 
   twa_graph_ptr
-  iterated_simulations_sba(const const_twa_graph_ptr& t)
+  iterated_simulations_sba(const const_twa_graph_ptr& t, size_t depth)
   {
-    return iterated_simulations_<true>(t);
+    return iterated_simulations_<true>(t, depth);
   }
 
 } // End namespace spot.

@@ -76,6 +76,7 @@ namespace spot
         sat_states_ = opt->get("sat-states", 0);
         state_based_ = opt->get("state-based", 0);
         wdba_minimize_ = opt->get("wdba-minimize", 1);
+        depth_ = opt->get("nb-steps-simulation", 1);
 
         if (sat_acc_ && sat_minimize_ == 0)
           sat_minimize_ = 1;        // Dicho.
@@ -110,12 +111,12 @@ namespace spot
       case 0:
         return a;
       case 1:
-        return simulation(a);
+        return simulation(a, depth_);
       case 2:
-        return cosimulation(a);
+        return cosimulation(a, depth_);
       case 3:
       default:
-        return iterated_simulations(a);
+        return iterated_simulations(a, depth_);
       }
   }
 

@@ -219,6 +219,7 @@ namespace spot
     bool sat_langmap_ = false;
     int sat_acc_ = 0;
     int sat_states_ = 0;
+    int depth_ = 1;
     bool state_based_ = false;
     bool wdba_minimize_ = true;
   };

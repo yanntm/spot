@@ -68,12 +68,15 @@ namespace spot
   /// \return a new automaton which is at worst a copy of the received
   /// one
   SPOT_API twa_graph_ptr
-  simulation(const const_twa_graph_ptr& automaton);
+  simulation(const const_twa_graph_ptr& automaton,
+             size_t depth = 0);
   SPOT_API twa_graph_ptr
   simulation(const const_twa_graph_ptr& automaton,
-             std::vector<bdd>* implications);
+             std::vector<bdd>* implications,
+             size_t depth = 0);
   SPOT_API twa_graph_ptr
-  simulation_sba(const const_twa_graph_ptr& automaton);
+  simulation_sba(const const_twa_graph_ptr& automaton,
+                 size_t depth = 0);
   /// @}
 
   /// @{
@@ -124,9 +127,11 @@ namespace spot
   /// \return a new automaton which is at worst a copy of the received
   /// one
   SPOT_API twa_graph_ptr
-  cosimulation(const const_twa_graph_ptr& automaton);
+  cosimulation(const const_twa_graph_ptr& automaton,
+               size_t depth = 0);
   SPOT_API twa_graph_ptr
-  cosimulation_sba(const const_twa_graph_ptr& automaton);
+  cosimulation_sba(const const_twa_graph_ptr& automaton,
+                   size_t depth = 0);
   /// @}
 
   /// @{
@@ -145,9 +150,11 @@ namespace spot
   /// \return a new automaton which is at worst a copy of the received
   /// one
   SPOT_API twa_graph_ptr
-  iterated_simulations(const const_twa_graph_ptr& automaton);
+  iterated_simulations(const const_twa_graph_ptr& automaton,
+                       size_t depth = 0);
   SPOT_API twa_graph_ptr
-  iterated_simulations_sba(const const_twa_graph_ptr& automaton);
+  iterated_simulations_sba(const const_twa_graph_ptr& automaton,
+                           size_t depth = 0);
   /// @}
 
 } // End namespace spot.
