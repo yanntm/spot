@@ -52,7 +52,7 @@ namespace spot
   /// The mapping between each state of the resulting automaton
   /// and the original state of the input automaton is stored in the
   /// "original-states" named property of the produced automaton.  Call
-  /// `aut->get_named_prop<std::vector<unsigned>>("original-states")`
+  /// `aut->get_named_prop<std::vector<std::pair<unsigned,unsigned>>>("original-states")`
   /// to retrieve it.  Note that these functions may return the original
   /// automaton as-is if it is already degeneralized; in this case
   /// the "original-states" property is not defined.
@@ -70,5 +70,8 @@ namespace spot
                    int use_lvl_cache = 1,
                    bool skip_levels = true,
                    bool ignaccsl = false);
+
+  SPOT_API twa_graph_ptr
+  simplify_degen(const const_twa_graph_ptr& a);
   /// \@}
 }

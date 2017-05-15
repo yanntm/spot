@@ -239,7 +239,7 @@ namespace spot
       // Preserve determinism, weakness, and stutter-invariance
       res->prop_copy(a, { false, true, true, true, true, true });
 
-      auto orig_states = new std::vector<unsigned>();
+      auto orig_states = new std::vector<std::pair<unsigned, unsigned>>();
       orig_states->reserve(a->num_states()); // likely more are needed.
       res->set_named_prop("original-states", orig_states);
 
@@ -327,7 +327,7 @@ namespace spot
           todo.emplace_back(ds);
 
           assert(ns == orig_states->size());
-          orig_states->emplace_back(ds.first);
+          orig_states->emplace_back(ds.first, ds.second);
 
           // Level cache stores one encountered level for each state
           // (the value of use_lvl_cache determinates which level
@@ -609,5 +609,67 @@ namespace spot
 
     return degeneralize_aux<false>(a, use_z_lvl, use_cust_acc_orders,
                                    use_lvl_cache, skip_levels, ignaccsl);
+  }
+
+  twa_graph_ptr
+  simplify_degen(const const_twa_graph_ptr& a)
+  {
+    // If this is already a degeneralized digraph, there is nothing we
+    // can improve.
+    if (a->acc().is_buchi())
+      return std::const_pointer_cast<twa_graph>(a);
+
+    using orig_t = std::vector<std::pair<unsigned, unsigned>>;
+    auto aut = degeneralize_tba(a);
+    const orig_t& orig_states = *aut->get_named_prop<orig_t>("original-states");
+
+    auto res = make_twa_graph(a->get_dict());
+    res->copy_ap_of(a);
+    // FIXME copy a's properties to res
+    res->prop_copy(a, {true, true, true, true, true, true});
+    res->new_states(a->num_states());
+    res->set_init_state(a->get_init_state_number());
+    unsigned nacc = a->acc().num_sets();
+    res->set_acceptance(nacc, acc_cond::acc_code::generalized_buchi(nacc));
+
+    std::vector<unsigned> order;
+    {
+      for (unsigned i = nacc; i > 0; --i)
+        order.emplace_back(i-1);
+    }
+
+    for (const auto& e : aut->edges())
+      {
+        std::pair<unsigned, unsigned> src = orig_states[e.src];
+        auto dst = orig_states[e.dst];
+
+        acc_cond::mark_t acc = 0U;
+        if (aut->acc().accepting(e.acc))
+          acc = res->acc().all_sets();
+        else
+            {
+              //assert(src.second <= dst.second);
+              for (unsigned i = src.second+1; i <= dst.second; ++i)
+                acc |= (1U << order[i]);
+            }
+        /*
+        if (src.second == dst.second && aut->acc().accepting(e.acc))
+          acc = res->acc().all_sets();
+        else
+          {
+            unsigned i = src.second;
+            for (; i != nacc && i != dst.second; ++i)
+              acc |= (1U << order[i]);
+            if (aut->acc().accepting(e.acc))
+              {
+                for (i = 0; i != dst.second; ++i)
+                  acc |= (1U << order[i]);
+              }
+          }
+          */
+
+        res->new_edge(src.first, dst.first, e.cond, acc);
+      }
+    return res;
   }
 }
