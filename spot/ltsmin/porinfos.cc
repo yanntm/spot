@@ -215,15 +215,28 @@ namespace spot
           }
         else
           {
+            (void) beta_guards_size;
             // Beta is not an enabled transition.
             // Compute GNES(beta, for_spins_state)
-            for (int i = 0; i < beta_guards_size; ++i)
-              for (int j = 0; j < transitions_; ++j)
-                if (m_nes[i][j] &&  cache.find(j) == cache.end())
+            bool goon = true;
+            for (int i = 0; i < beta_guards_size && goon; ++i)
+              {
+                if (!d_->get_guard(nullptr, m_guards[beta][i],
+                                  (int*)for_spins_state))
                   {
-                    t_work.push_back(j);
-                    cache.insert(j);
+                    unsigned guard_to_look = m_guards[beta][i];
+                    for (int j = 0; j < transitions_ && goon; ++j)
+                      {
+                        if (cache.find(j) == cache.end() &&
+                            m_nes[guard_to_look][j])
+                        {
+                          t_work.push_back(j);
+                          cache.insert(j);
+                          goon = false;
+                        }
+                      }
                   }
+              }
           }
       }
 

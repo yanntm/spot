@@ -998,11 +998,13 @@ namespace spot
           {
             cc = state_condition_last_cc_;
             state_condition_last_cc_ = nullptr; // Now owned by the iterator.
+            cc->source = ((spins_state*)st)->raw_state();
           }
         else
           {
             int t;
             cc = build_cc(get_vars(st), t);
+            cc->source = ((spins_state*)st)->raw_state();
 
             // Add a self-loop to dead-states if we care about these.
             if (t == 0 && scond != bddfalse)
@@ -1259,6 +1261,7 @@ namespace spot
           (int* (*)(int)) lt_dlsym(h, "get_guard_nes_matrix");
         d->get_guard_may_be_coenabled_matrix = (int* (*)(int))
           lt_dlsym(h, "get_guard_may_be_coenabled_matrix");
+        d->get_guard = (int (*)(void*, int , int* )) sym("get_guard");
       }
 
     if (d->have_property && d->have_property())
