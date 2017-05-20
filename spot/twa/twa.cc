@@ -27,6 +27,7 @@
 #include <spot/twaalgos/word.hh>
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/alternation.hh>
+#include <spot/twaalgos/two_aut_ec.hh>
 #include <spot/twa/twaproduct.hh>
 #include <utility>
 
@@ -110,7 +111,7 @@ namespace spot
   {
     auto a1 = remove_fin_maybe(shared_from_this());
     auto a2 = remove_fin_maybe(other);
-    return !otf_product(a1, a2)->is_empty();
+    return !two_aut_ec(a1, a2);
   }
 
   twa_run_ptr
