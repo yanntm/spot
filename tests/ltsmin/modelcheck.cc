@@ -475,12 +475,12 @@ static int checked_main()
       tm.start("load kripkecube");
       try
         {
+          std::cout << "nbthreads: " << mc_options.nb_threads << std::endl;
           for (unsigned i = 0; i < mc_options.nb_threads *10; ++i)
             {
               auto m = spot::ltsmin_model::load(mc_options.model)
                 .kripkecube({}, deadf, mc_options.compress,
                             mc_options.nb_threads);
-              std::cout << m.get() << std::endl;
               modelcube.push_back(m);
             }
         }

@@ -219,6 +219,7 @@ namespace spot
     bool compress();
     const spot::spins_interface* spins_interface();
     cspins_state_manager& manager(unsigned i);
+    void release(cspins_state, unsigned tid);
 
   private:
     /// Parse the set of atomic proposition to have a more

@@ -235,11 +235,10 @@ namespace spot
       nb_threads_(nb_threads)
   {
     //    map_.initialSize(2000000);
-    std::cout << nb_threads << std::endl;
     manager_ = static_cast<cspins_state_manager*>
-      (::operator new(sizeof(cspins_state_manager) * /* nb_threads */ 1));
-    inner_ = new inner_callback_parameters[/* nb threads */ 1];
-    for (unsigned i = 0; i < /* nb_threads */ 1; ++i)
+      (::operator new(sizeof(cspins_state_manager) * nb_threads ));
+    inner_ = new inner_callback_parameters[nb_threads];
+    for (unsigned i = 0; i < nb_threads; ++i)
       {
         recycle_.push_back(std::vector<cspins_iterator*>());
         //recycle_.back().reserve(2000000);
@@ -251,7 +250,6 @@ namespace spot
         inner_[i].uncompressed_ = new int[d_->get_state_size()+30];
         //        inner_[i].map = map_; // Must be a copy per thread
       }
-    std::cout << nb_threads << std::endl;
     dead_idx_ = -1;
     //    match_aps(visible_aps, dead_prop);
 
@@ -362,7 +360,12 @@ namespace spot
     return manager_[i];
   }
 
-
+  void
+  kripkecube<cspins_state, cspins_iterator>::release(cspins_state s, unsigned tid)
+  {
+    manager_[tid].dealloc(s);
+  }
+  
   void
   kripkecube<cspins_state, cspins_iterator>::compute_condition
   (cube c, cspins_state s, unsigned tid)

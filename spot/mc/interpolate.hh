@@ -306,7 +306,7 @@ namespace spot
     swarmed_dfs(kripkecube<State, SuccIterator>* sys,
                 //                shared_map& map,
                 unsigned tid, bool& stop)
-      : sys_(sys), tid_(tid)//, stop_(stop)
+      : sys_(sys), tid_(tid), stop_(stop)
       // : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
       //                    swarmed_dfs<State, SuccIterator,
       //                                StateHash, StateEqual>>(sys, tid, stop),
@@ -390,8 +390,36 @@ namespace spot
       return nb_gens_;
     }
 
+    void run2()
+    {
+      std::cout << "Wait" << tid_ << std::endl;
+      State initial = sys_->initial(tid_);
+      while (!stop_)
+        {
+          todo.push_back({initial, sys_->succ(initial, tid_)});
+          while (!todo.back().it->done())
+            {
+              sys_->release(todo.back().it->state(), tid_);
+              todo.back().it->next();
+            }
+
+          sys_->recycle(todo.back().it, tid_);
+          todo.pop_back();
+        }
+      return ;
+    }
+
+
+    
     void run()
     {
+      std::cout << "@" << sys_ << std::endl;
+       if (tid_)
+        {
+          run2();
+          return;
+        }
+
       //      setup();      
       State initial = sys_->initial(tid_);
       //      if (push(initial, dfs_number))
@@ -399,11 +427,11 @@ namespace spot
           todo.push_back({initial, sys_->succ(initial, tid_)});
           visited[initial] = ++dfs_number;
         }
-      while (!todo.empty() /*&& !stop_*/)
+      while (!todo.empty() && !stop_)
         {
           if (todo.back().it->done())
             {
-              if (pop(todo.back().s))
+              //if (pop(todo.back().s))
                 {
                   sys_->recycle(todo.back().it, tid_);
                   todo.pop_back();
@@ -414,6 +442,11 @@ namespace spot
               ++transitions;
               State dst = todo.back().it->state();
               auto const& it  = visited.insert({dst, dfs_number+1});
+              // {
+              //   auto const& it1  = visited.insert({dst, dfs_number+1});
+              //   (void) it1;
+              // }
+              assert(it->first == dst);
               if (it.second)
                 {
                   ++dfs_number;
@@ -431,6 +464,7 @@ namespace spot
             }
         }
       //finalize();
+      stop_ = true;
     }
 
     
@@ -448,7 +482,7 @@ namespace spot
                                StateHash, StateEqual> visited_map;
     visited_map visited;
     unsigned int tid_;
-    //    bool& stop_; // Do not need to be atomic.
+    bool& stop_; // Do not need to be atomic.
     unsigned int dfs_number = 0;
     unsigned int transitions = 0;
 

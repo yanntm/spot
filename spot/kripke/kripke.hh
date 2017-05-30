@@ -52,6 +52,9 @@ namespace spot
     /// method allows to reuse old iterators.
     void recycle(SuccIterator*, unsigned tid);
 
+
+    void release(State, unsigned tid);
+      
     /// \brief This method allow to deallocate a given state.
     const std::vector<std::string> get_ap();
   };

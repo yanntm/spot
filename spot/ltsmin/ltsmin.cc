@@ -1391,7 +1391,7 @@ namespace spot
     std::vector<algo_name*> swarmed;
     for (unsigned i = 0; i < nbth /*FALSE SHARING*/; ++i)
       {
-        swarmed.emplace_back(new algo_name(sys[i*10].get() /*, map*/, 0 /* FIXME*/, stop));
+        swarmed.emplace_back(new algo_name(sys[i*10].get() /*, map*/, i /* FIXME*/, stop));
       }
     tm.stop("Initialisation");
 
@@ -1399,7 +1399,6 @@ namespace spot
     std::vector<std::thread> threads;
     for (unsigned i = 0; i < nbth; ++i)
       threads.push_back(std::thread ([&swarmed](int tid){
-            //            srand (tid);
             swarmed[tid]->run();
           }, i));
 
