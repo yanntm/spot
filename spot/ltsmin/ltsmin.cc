@@ -1379,7 +1379,9 @@ namespace spot
     name = name.substr(name.find_last_of("/")+1);
     spot::timer_map tm;
     unsigned  nbth =    sys[0]->get_threads() ;
-    bool stop = false;
+    bool stop[200];// = {false, false};
+    for (unsigned i = 0; i < 200; ++i)
+      stop[i] = false;
     using algo_name = spot::swarmed_dfs<cspins_state, cspins_iterator,
                                         cspins_state_hash, cspins_state_equal>;
 
@@ -1394,16 +1396,33 @@ namespace spot
         swarmed.emplace_back(new algo_name(sys[i*10].get() /*, map*/, i /* FIXME*/, stop));
       }
     tm.stop("Initialisation");
+    std::mutex iomutex;
 
     tm.start("Run");
-    std::vector<std::thread> threads;
+    std::vector<std::thread> threads(nbth);
     for (unsigned i = 0; i < nbth; ++i)
-      threads.push_back(std::thread ([&swarmed](int tid){
+      {
+	threads[i] = std::thread ([&swarmed, &iomutex](int tid){
+	    {
+	      std::lock_guard<std::mutex> iolock(iomutex);
+	      std::cout << "Thread #" << tid << ": on CPU " << sched_getcpu() << "\n";
+	    }
             swarmed[tid]->run();
-          }, i));
+          }, i);
+
+	cpu_set_t cpuset;
+	CPU_ZERO(&cpuset);
+	CPU_SET(i, &cpuset);
+	int rc = pthread_setaffinity_np(threads[i].native_handle(),
+					sizeof(cpu_set_t), &cpuset);
+	if (rc != 0) {
+	  std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+	}
+      }
 
       // threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
-    
+
+
     for (unsigned i = 0; i < nbth; ++i)
       threads[i].join();
     tm.stop("Run");

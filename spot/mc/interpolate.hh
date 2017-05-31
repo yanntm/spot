@@ -305,7 +305,7 @@ namespace spot
 
     swarmed_dfs(kripkecube<State, SuccIterator>* sys,
                 //                shared_map& map,
-                unsigned tid, bool& stop)
+                unsigned tid, bool* stop)
       : sys_(sys), tid_(tid), stop_(stop)
       // : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
       //                    swarmed_dfs<State, SuccIterator,
@@ -390,44 +390,16 @@ namespace spot
       return nb_gens_;
     }
 
-    void run2()
-    {
-      std::cout << "Wait" << tid_ << std::endl;
-      State initial = sys_->initial(tid_);
-      while (!stop_)
-        {
-          todo.push_back({initial, sys_->succ(initial, tid_)});
-          while (!todo.back().it->done())
-            {
-              sys_->release(todo.back().it->state(), tid_);
-              todo.back().it->next();
-            }
-
-          sys_->recycle(todo.back().it, tid_);
-          todo.pop_back();
-        }
-      return ;
-    }
-
-
-    
     void run()
     {
-      std::cout << "@" << sys_ << std::endl;
-       if (tid_)
-        {
-          run2();
-          return;
-        }
-
-      //      setup();      
+      //      setup();
       State initial = sys_->initial(tid_);
       //      if (push(initial, dfs_number))
         {
           todo.push_back({initial, sys_->succ(initial, tid_)});
           visited[initial] = ++dfs_number;
         }
-      while (!todo.empty() && !stop_)
+      while (!todo.empty() && !stop_[tid_*100])
         {
           if (todo.back().it->done())
             {
@@ -464,10 +436,13 @@ namespace spot
             }
         }
       //finalize();
-      stop_ = true;
+      //stop_ = true;
+      for (unsigned i = 0; i < 200; ++i)
+	stop_[i] = true;
+      std::cout << "---> THE END\n";
     }
 
-    
+
   private:
     kripkecube<State, SuccIterator>* sys_;
     struct todo_element
@@ -482,7 +457,7 @@ namespace spot
                                StateHash, StateEqual> visited_map;
     visited_map visited;
     unsigned int tid_;
-    bool& stop_; // Do not need to be atomic.
+    volatile bool* stop_; // Do not need to be atomic.
     unsigned int dfs_number = 0;
     unsigned int transitions = 0;
 
@@ -493,6 +468,7 @@ namespace spot
     unsigned nb_gens_ = 0;
     unsigned states_ = 0;
     unsigned edges_ = 0;
+    bool stop_2 =  false; // Do not need to be atomic.
   };
 
 

@@ -365,7 +365,7 @@ namespace spot
   {
     manager_[tid].dealloc(s);
   }
-  
+
   void
   kripkecube<cspins_state, cspins_iterator>::compute_condition
   (cube c, cspins_state s, unsigned tid)

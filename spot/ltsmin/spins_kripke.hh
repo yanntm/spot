@@ -50,7 +50,7 @@ namespace spot
     bool operator()(const cspins_state lhs, const cspins_state rhs) const
     {
       auto lhsb= lhs;
-      auto rhsb= rhs;      
+      auto rhsb= rhs;
       unsigned n = (2+rhs[1]);
       while (n-- > 0) {
         if ((*lhsb++ - *rhsb++) != 0)
@@ -100,7 +100,7 @@ namespace spot
     cspins_state_manager(cspins_state_manager&) = delete;
     cspins_state_manager(const cspins_state_manager&) = delete;
 
-    
+
     cspins_state_manager(unsigned int state_size, int compress);
     int* unbox_state(cspins_state s) const;
     // cmp is the area we can use to compute the compressed rep of dst.
@@ -143,7 +143,7 @@ namespace spot
     cspins_iterator() = delete;
     cspins_iterator(cspins_iterator&) = delete;
     cspins_iterator(const cspins_iterator&) = delete;
-    
+
     cspins_iterator(cspins_state s,
                     //const spot::spins_interface* d,
                     //cspins_state_manager& manager,
