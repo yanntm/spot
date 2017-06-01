@@ -409,6 +409,7 @@ TESTS_python = \
   python/tra2tba.py \
   python/twagraph.py \
   python/toweak.py \
+  python/two_aut_ec.py \
   $(TESTS_ipython)
 endif
 

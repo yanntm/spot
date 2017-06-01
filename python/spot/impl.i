@@ -143,6 +143,7 @@
 #include <spot/twaalgos/remprop.hh>
 #include <spot/twaalgos/totgba.hh>
 #include <spot/twaalgos/sbacc.hh>
+#include <spot/twaalgos/two_aut_ec.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twaalgos/strength.hh>
 #include <spot/twaalgos/sccfilter.hh>
@@ -590,6 +591,7 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/twaalgos/remprop.hh>
 %include <spot/twaalgos/totgba.hh>
 %include <spot/twaalgos/sbacc.hh>
+%include <spot/twaalgos/two_aut_ec.hh>
 %traits_swigtype(spot::scc_info_node);
 %fragment(SWIG_Traits_frag(spot::scc_info_node));
 %nodefaultctor spot::internal::scc_edges;
