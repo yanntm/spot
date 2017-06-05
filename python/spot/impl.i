@@ -155,6 +155,7 @@
 #include <spot/twaalgos/dtwasat.hh>
 #include <spot/twaalgos/relabel.hh>
 #include <spot/twaalgos/word.hh>
+#include <spot/twaalgos/propagate.hh>
 
 #include <spot/parseaut/public.hh>
 
@@ -592,6 +593,7 @@ def state_is_accepting(self, src) -> "bool":
 %}
 
 %include <spot/twaalgos/complement.hh>
+%include <spot/twaalgos/propagate.hh>
 
 %include <spot/parseaut/public.hh>
 

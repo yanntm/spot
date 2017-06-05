@@ -354,6 +354,7 @@ TESTS_python = \
   python/otfcrash.py \
   python/parsetgba.py \
   python/prodexpt.py \
+  python/propagate.py \
   python/randgen.py \
   python/relabel.py \
   python/remfin.py \
