@@ -63,6 +63,10 @@ namespace spot
                       const std::vector<int>& enabled,
                       const int* for_spins_state);
 
+    bool necessary_set(int t, std::vector<int>& t_work,
+                       const std::vector<int>& enabled,
+                       const int* for_spins_state);
+
     std::vector<bool> compute_reduced_set(const std::vector<int>& enabled,
                                        const int* for_spins_state,
                                        bool (porinfos::*not_enabled_transition)
@@ -102,6 +106,8 @@ namespace spot
     std::vector<std::vector<bool>> m_nds;
     std::vector<std::vector<bool>> m_mbc;
     std::vector<std::vector<int>>  m_guards;
+    std::vector<std::vector<bool>> m_ns_e;
+    std::vector<std::vector<bool>> m_ns_d;
 
     // Develop caches to reduce computation time
     std::vector<std::vector<bool>> m_dep_tr;

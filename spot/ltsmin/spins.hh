@@ -54,6 +54,7 @@ namespace spot
     int* (*get_guards)(int t);
     int (*get_guard_count)();
     int* (*get_guard_nes_matrix)(int g);
+    int* (*get_guard_nds_matrix)(int g);
     int* (*get_guard_may_be_coenabled_matrix)(int g);
     int (*get_guard)(void* model, int g, const int* src);
   };

@@ -104,6 +104,14 @@ namespace spot
           m_nes[i][j] = nes[j];
       }
 
+    // Grab NDS matrix
+    for (unsigned i = 0; i < guards_; ++i)
+      {
+        int* nds = d_->get_guard_nds_matrix(i);
+        for (unsigned j = 0; j < transitions_; ++j)
+          m_nds[i][j] = nds[j];
+      }
+
     // Grab "may-be-coenabled" matrix
     for (unsigned i = 0; i < guards_; ++i)
       {
@@ -225,6 +233,26 @@ namespace spot
           non_mbc_tr[t1][t2] = non_maybecoenabled(t1, t2);
           non_mbc_tr[t2][t1] = non_mbc_tr[t1][t2];
         }
+
+    // This matrix contains the NES of the necessary set ...
+    m_ns_e.resize(transitions_);
+    for (unsigned alpha = 0; alpha < transitions_; ++alpha)
+      {
+        m_ns_e[alpha].resize(guards_);
+        for (unsigned g_alpha : m_guards[alpha])
+          m_ns_e[alpha][g_alpha] = true;
+      }
+
+    // ... and this one contains the NDS of this set.
+    m_ns_d.resize(transitions_);
+    for (unsigned alpha = 0; alpha < transitions_; ++alpha)
+      {
+        m_ns_d[alpha].resize(guards_);
+        for (unsigned beta = 0; beta < transitions_; ++beta)
+          if (alpha != beta && !m_mbc[alpha][beta])
+            for (unsigned g_beta : m_guards[beta])
+              m_ns_d[alpha][g_beta] = true;
+      }
   }
 
   bool
@@ -265,6 +293,68 @@ namespace spot
           }
       }
     return true;
+  }
+
+  bool
+  porinfos::necessary_set(int tr, std::vector<int>& t_work,
+                          const std::vector<int>& enabled,
+                          const int* for_spins_state)
+  {
+    (void) for_spins_state;
+
+    auto eval_ns = [&](const std::vector<bool>& ns)
+      {
+        unsigned h = 0;
+        for (unsigned t = 0; t < transitions_; ++t)
+          {
+            if (ns[t])
+              {
+                if (std::find(enabled.begin(), enabled.end(), t)
+                    != enabled.end())
+                  h += 10; // FIXME n ?
+                else
+                  ++h;
+              }
+          }
+        return h;
+      };
+
+    unsigned best_h = 0;
+    bool is_best_a_nes = true;
+    int best_ns = -1;
+
+    // Find the best necessary set for the transition beta
+    for (unsigned g = 0; g < guards_; ++g)
+      {
+        unsigned h;
+
+        if (m_ns_e[tr][g] && ((h = eval_ns(m_nes[g]) < best_h)
+                                || best_ns == -1))
+        {
+          best_h = h;
+          best_ns = g;
+          is_best_a_nes = true;
+        }
+
+        if (m_ns_d[tr][g] && ((h = eval_ns(m_nds[g]) < best_h)
+                                || best_ns == -1))
+        {
+          best_h = h;
+          best_ns = g;
+          is_best_a_nes = false;
+        }
+      }
+
+    // Add all transitions of the best nes in t_work
+    for (unsigned t = 0; t < transitions_; ++t)
+      {
+        if (((is_best_a_nes && m_nes[best_ns][t]) ||
+             (!is_best_a_nes && m_nds[best_ns][t])) &&
+             std::find(t_work.begin(), t_work.end(), t) == t_work.end())
+            t_work.push_back(t);
+      }
+
+     return true;
   }
 
   std::vector<bool>

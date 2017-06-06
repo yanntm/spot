@@ -1260,6 +1260,8 @@ namespace spot
         d->get_guards = (int* (*)(int)) lt_dlsym(h, "get_guards");
         d->get_guard_nes_matrix =
           (int* (*)(int)) lt_dlsym(h, "get_guard_nes_matrix");
+        d->get_guard_nds_matrix =
+          (int* (*)(int)) lt_dlsym(h, "get_guard_nds_matrix");
         d->get_guard_may_be_coenabled_matrix = (int* (*)(int))
           lt_dlsym(h, "get_guard_may_be_coenabled_matrix");
         d->get_guard = (int (*)(void*, int, const int*)) sym("get_guard");
