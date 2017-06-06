@@ -55,7 +55,7 @@ namespace spot
     int (*get_guard_count)();
     int* (*get_guard_nes_matrix)(int g);
     int* (*get_guard_may_be_coenabled_matrix)(int g);
-    int (*get_guard)(void* model, int g, int* src);
+    int (*get_guard)(void* model, int g, const int* src);
   };
 
   using spins_interface_ptr = std::shared_ptr<const spins_interface>;

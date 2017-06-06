@@ -222,7 +222,7 @@ namespace spot
             for (int i = 0; i < beta_guards_size && goon; ++i)
               {
                 if (!d_->get_guard(nullptr, m_guards[beta][i],
-                                  (int*)for_spins_state))
+                                  for_spins_state))
                   {
                     unsigned guard_to_look = m_guards[beta][i];
                     for (int j = 0; j < transitions_ && goon; ++j)
