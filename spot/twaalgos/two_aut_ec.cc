@@ -24,6 +24,7 @@
 
 #include <spot/twaalgos/two_aut_ec.hh>
 
+#include <spot/kripke/kripke.hh>
 #include <spot/misc/hash.hh>
 #include <spot/twa/twa.hh>
 #include <spot/twa/twagraph.hh>
@@ -34,13 +35,16 @@ namespace spot
   {
     // 'tae' stands for 'Two-Automaton Emptiness check'
 
+    // The types of automata we optimize on
+    enum tae_aut_type { EXPLICIT, OTF, KRIPKE };
+
     // A helper class to manage iterators
-    template<bool is_explicit>
+    template<tae_aut_type type>
     class tae_iterator
     {};
 
     template<>
-    class tae_iterator<true>
+    class tae_iterator<EXPLICIT>
     {
     public:
       tae_iterator(const const_twa_graph_ptr& aut, const unsigned s)
@@ -89,17 +93,15 @@ namespace spot
       twa_graph::graph_t::const_iterator end_;
     };
 
-    template<>
-    class tae_iterator<false>
+    // The common part of OTF and KRIPKE templates of tae_iterator
+    class tae_iterator_otf_common
     {
     public:
-      tae_iterator(const const_twa_ptr& aut, const state* s)
+      tae_iterator_otf_common(const const_twa_ptr& aut, const state* s)
         : aut_(aut), it_(aut->succ_iter(s))
-      {
-        it_->first();
-      }
+      {}
 
-      ~tae_iterator()
+      ~tae_iterator_otf_common()
       {
         aut_->release_iter(it_);
       }
@@ -124,32 +126,63 @@ namespace spot
         return it_->acc();
       }
 
-      bdd cond() const
-      {
-        return it_->cond();
-      }
-
       const state* dst() const
       {
         return it_->dst();
       }
 
-    private:
+    protected:
       const const_twa_ptr& aut_;
       twa_succ_iterator* it_;
     };
 
+    template<>
+    class tae_iterator<OTF> : public tae_iterator_otf_common
+    {
+    public:
+      tae_iterator(const const_twa_ptr& aut, const state* s)
+        : tae_iterator_otf_common(aut, s)
+      {
+        it_->first();
+      }
+
+      bdd cond() const
+      {
+        return it_->cond();
+      }
+    };
+
+    template<>
+    class tae_iterator<KRIPKE> : public tae_iterator_otf_common
+    {
+    public:
+      tae_iterator(const const_fair_kripke_ptr& aut, const state* s)
+        : tae_iterator_otf_common(aut, s), cond_(bddfalse)
+      {
+        if (it_->first())
+          cond_ = it_->cond();
+      }
+
+      bdd cond() const
+      {
+        return cond_;
+      }
+
+    private:
+      bdd cond_;
+    };
+
     // A helper class, templated over expliciteness. Defines the type of states
     // and iterators, and operations over them.
-    template<bool is_explicit>
+    template<tae_aut_type type>
     struct tae_element {};
 
     template<>
-    struct tae_element<true>
+    struct tae_element<EXPLICIT>
     {
       using aut_t = const const_twa_graph_ptr;
       using state_t = unsigned;
-      using iterator_t = tae_iterator<true>;
+      using iterator_t = tae_iterator<EXPLICIT>;
 
       static
       bool state_equals(state_t l, state_t r)
@@ -172,12 +205,10 @@ namespace spot
       static void destroy(state_t) {}
     };
 
-    template<>
-    struct tae_element<false>
+    // The common part of OTF and KRIPKE templates of tae_element
+    struct tae_element_otf_common
     {
-      using aut_t = const const_twa_ptr;
       using state_t = const state*;
-      using iterator_t = tae_iterator<false>;
 
       static
       bool state_equals(state_t l, state_t r)
@@ -192,7 +223,7 @@ namespace spot
       }
 
       static
-      state_t init(aut_t a)
+      state_t init(const const_twa_ptr a)
       {
         return a->get_init_state();
       }
@@ -204,13 +235,27 @@ namespace spot
       }
     };
 
+    template<>
+    struct tae_element<OTF> : public tae_element_otf_common
+    {
+      using aut_t = const const_twa_ptr;
+      using iterator_t = tae_iterator<OTF>;
+    };
+
+    template<>
+    struct tae_element<KRIPKE> : public tae_element_otf_common
+    {
+      using aut_t = const const_fair_kripke_ptr;
+      using iterator_t = tae_iterator<KRIPKE>;
+    };
+
     // Represents a state in the product. Essentially a pair of states.
-    template<bool exp_l, bool exp_r>
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
     class product_state
     {
     public:
-      using state_l_t = typename tae_element<exp_l>::state_t;
-      using state_r_t = typename tae_element<exp_r>::state_t;
+      using state_l_t = typename tae_element<aut_type_l>::state_t;
+      using state_r_t = typename tae_element<aut_type_r>::state_t;
 
       product_state() {}
 
@@ -218,16 +263,16 @@ namespace spot
         : left_(left), right_(right)
       {}
 
-      bool operator==(const product_state<exp_l, exp_r>& other) const
+      bool operator==(const product_state<aut_type_l, aut_type_r>& other) const
       {
-        return tae_element<exp_l>::state_equals(left_, other.left_)
-            && tae_element<exp_r>::state_equals(right_, other.right_);
+        return tae_element<aut_type_l>::state_equals(left_, other.left_)
+            && tae_element<aut_type_r>::state_equals(right_, other.right_);
       }
 
       size_t hash() const
       {
-        return wang32_hash(tae_element<exp_l>::state_hash(left_)
-                         ^ tae_element<exp_r>::state_hash(right_));
+        return wang32_hash(tae_element<aut_type_l>::state_hash(left_)
+                         ^ tae_element<aut_type_r>::state_hash(right_));
       }
 
     private:
@@ -235,11 +280,11 @@ namespace spot
       state_r_t right_;
     };
 
-    template<bool exp_l, bool exp_r>
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
     struct product_state_hash
     {
       size_t
-      operator()(const product_state<exp_l, exp_r>& s) const
+      operator()(const product_state<aut_type_l, aut_type_r>& s) const
       {
         return s.hash();
       }
@@ -268,17 +313,17 @@ namespace spot
     };
 
     // A pseudo iterator to iterate over successors of a state in the product
-    template<bool exp_l, bool exp_r>
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
     class product_iterator
     {
     public:
-      using iterator_l_t = typename tae_element<exp_l>::iterator_t;
-      using iterator_r_t = typename tae_element<exp_r>::iterator_t;
+      using iterator_l_t = typename tae_element<aut_type_l>::iterator_t;
+      using iterator_r_t = typename tae_element<aut_type_r>::iterator_t;
 
-      product_iterator(typename tae_element<exp_l>::aut_t l_aut,
-                       typename tae_element<exp_l>::state_t l_state,
-                       typename tae_element<exp_r>::aut_t r_aut,
-                       typename tae_element<exp_r>::state_t r_state)
+      product_iterator(typename tae_element<aut_type_l>::aut_t l_aut,
+                       typename tae_element<aut_type_l>::state_t l_state,
+                       typename tae_element<aut_type_r>::aut_t r_aut,
+                       typename tae_element<aut_type_r>::state_t r_state)
         : left(l_aut, l_state), right(r_aut, r_state)
       {
         // This initialises the iterator to the first valid transition. However,
@@ -339,12 +384,12 @@ namespace spot
       product_mark condition;
     };
 
-    template<bool exp_l, bool exp_r>
-    bool tae_impl(typename tae_element<exp_l>::aut_t& left,
-                  typename tae_element<exp_r>::aut_t& right)
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
+    bool tae_impl(typename tae_element<aut_type_l>::aut_t& left,
+                  typename tae_element<aut_type_r>::aut_t& right)
     {
-      using p_state = product_state<exp_l, exp_r>;
-      using p_iterator = product_iterator<exp_l, exp_r>;
+      using p_state = product_state<aut_type_l, aut_type_r>;
+      using p_iterator = product_iterator<aut_type_l, aut_type_r>;
 
       if (left->get_dict() != right->get_dict())
         throw std::runtime_error("two_aut_ec: left and right automata should "
@@ -363,7 +408,7 @@ namespace spot
       unsigned num = 1;
       // states of the product and their order (Hash in Couvreur's algorithm)
       std::unordered_map<p_state, unsigned,
-                         product_state_hash<exp_l, exp_r>> states;
+                         product_state_hash<aut_type_l, aut_type_r>> states;
       // the roots of our SCCs
       std::stack<scc> root;
       // states yet to explore
@@ -375,8 +420,8 @@ namespace spot
       std::stack<p_state> live;
 
       auto new_state =
-        [&](typename tae_element<exp_l>::state_t left_state,
-            typename tae_element<exp_r>::state_t right_state)
+        [&](typename tae_element<aut_type_l>::state_t left_state,
+            typename tae_element<aut_type_r>::state_t right_state)
         {
           p_state x(left_state, right_state);
           auto p = states.emplace(x, 0);
@@ -391,14 +436,14 @@ namespace spot
             }
           else
             {
-              tae_element<exp_l>::destroy(left_state);
-              tae_element<exp_r>::destroy(right_state);
+              tae_element<aut_type_l>::destroy(left_state);
+              tae_element<aut_type_r>::destroy(right_state);
             }
           return p;
         };
 
-      new_state(tae_element<exp_l>::init(left),
-                tae_element<exp_r>::init(right));
+      new_state(tae_element<aut_type_l>::init(left),
+                tae_element<aut_type_r>::init(right));
       arc.emplace();
 
       while (!todo.empty())
@@ -489,25 +534,42 @@ namespace spot
     }
   }
 
-  bool two_aut_ec(const const_twa_ptr& left,
-                  const const_twa_ptr& right)
+  bool two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right)
   {
-    const_twa_graph_ptr l_g = std::dynamic_pointer_cast<const twa_graph>(left);
-    const_twa_graph_ptr r_g = std::dynamic_pointer_cast<const twa_graph>(right);
+    const_fair_kripke_ptr l_k = std::dynamic_pointer_cast<const fair_kripke>
+                                                         (left);
+    const_fair_kripke_ptr r_k = std::dynamic_pointer_cast<const fair_kripke>
+                                                         (right);
 
-    if (l_g)
-    {
-      if (r_g)
-        return tae_impl<true, true>(l_g, r_g);
-      else
-        return tae_impl<true, false>(l_g, right);
-    }
+    // We don't often check Kripke against Kripke, so we save on templates by
+    // only having Kripke structures on the left.
+    if (r_k && !l_k)
+      return two_aut_ec(right, left);
+
+    const_twa_graph_ptr l_e = std::dynamic_pointer_cast<const twa_graph>(left);
+    const_twa_graph_ptr r_e = std::dynamic_pointer_cast<const twa_graph>(right);
+
+    if (l_k)
+      {
+        if (r_e)
+          return tae_impl<KRIPKE, EXPLICIT>(l_k, r_e);
+        else
+          return tae_impl<KRIPKE, OTF>(l_k, right);
+      }
+
+    if (l_e)
+      {
+        if (r_e)
+          return tae_impl<EXPLICIT, EXPLICIT>(l_e, r_e);
+        else
+          return tae_impl<EXPLICIT, OTF>(l_e, right);
+      }
     else
-    {
-      if (r_g)
-        return tae_impl<false, true>(left, r_g);
-      else
-        return tae_impl<false, false>(left, right);
-    }
+      {
+        if (r_e)
+          return tae_impl<OTF, EXPLICIT>(left, r_e);
+        else
+          return tae_impl<OTF, OTF>(left, right);
+      }
   }
 }
