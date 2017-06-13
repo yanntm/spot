@@ -249,24 +249,25 @@ namespace spot
     twa_graph_ptr state_space_;
 
   public:
-    dfs_stats(const const_twa_ptr& a, proviso& proviso):
-      aut_(a), proviso_(proviso)
+    dfs_stats(const const_twa_ptr& a, proviso& proviso, bool hoaiffy = false):
+      aut_(a), proviso_(proviso), hoaiffy_(hoaiffy)
     { }
 
     void push_state(const state* st)
     {
+      ++states_;
+
       if (SPOT_UNLIKELY(Checker))
         {
           auto s1 =  state_space_->new_state();
           SPOT_ASSERT(s1+1 == dfs_number);
           if (!todo.empty())
             state_space_->new_edge(seen[todo.back().src].live_number-1,
-                                   s1, bddtrue);
+                                   s1, todo.back().it->cond());
         }
-
-      ++states_;
       todo.push_back({st, aut_->succ_iter(st)});
       todo.back().it->first();
+
 
       max_dfssize_ = max_dfssize_ > todo.size()?
         max_dfssize_ : todo.size();
@@ -348,7 +349,7 @@ namespace spot
           // only check all SCC of  the state_space_ automaton are
           // weak accepting to be sure that every cycle contains at
           // least one  state fully expanded.
-          if (todo.back().it->all_enabled())
+          if (todo.back().it->all_enabled() && !hoaiffy_)
             {
               for (auto& e: state_space_->
                      out(seen[todo.back().src].live_number-1))
@@ -387,6 +388,7 @@ namespace spot
       if (SPOT_UNLIKELY(Checker))
         {
           state_space_ = make_twa_graph(aut_->get_dict());
+          state_space_->copy_ap_of(aut_);
           state_space_->prop_state_acc(true);
           state_space_->set_acceptance(1, state_space_->get_acceptance());
         }
@@ -475,8 +477,12 @@ namespace spot
         }
       if (SPOT_UNLIKELY(Checker))
         {
+          if (hoaiffy_)
+            {
+              print_hoa(std::cout, state_space_);
+              return;
+            }
           std::cout << "Check...\n";
-          //print_dot(std::cout, state_space_);
           scc_info si(state_space_);
           bool all_cycles_expanded = true;
           for (unsigned int i = 0; i < si.scc_count(); ++i)
@@ -496,6 +502,8 @@ namespace spot
 
     std::string dump()
     {
+      if (hoaiffy_)
+        return "\n";
       return
         " states           : " + std::to_string(states_)           + '\n' +
         " transitions      : " + std::to_string(transitions_)      + '\n' +
@@ -636,5 +644,6 @@ namespace spot
     std::deque<stack_item> todo; ///< the DFS stack
     std::vector<int> roots;
     mutable int_unionfind_IPC_LRPC_MS uf;
+    bool hoaiffy_;
   };
 }

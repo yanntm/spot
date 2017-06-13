@@ -111,6 +111,7 @@ checked_main(int argc, char **argv)
   bool highlinks = false;
   bool reverse_anticipated = false;
   bool randomgraph = false;
+  bool hoaiffy = false;
 
   int dest = 1;
   int n = argc;
@@ -123,6 +124,9 @@ checked_main(int argc, char **argv)
             {
             case '@':         // Not showed to user
               randomgraph = true;
+              break;
+            case '%':         // Not showed to user
+              hoaiffy = true;
               break;
             case 'a':
               anticipated = true;
@@ -161,6 +165,7 @@ checked_main(int argc, char **argv)
                 break;
               }
             case 'g':
+              hoaiffy = true;
               switch (opt[1])
                 {
                 case 'm':
@@ -761,7 +766,8 @@ checked_main(int argc, char **argv)
               if (fully_anticipated)
                 {
                   spot::dfs_stats<true, true,
-                                  false, true, false> dfs(model, *m_proviso);
+                                  false, true, false> dfs(model, *m_proviso,
+                                                          hoaiffy);
                   tm.start("Exploration");
                   dfs.run();
                   tm.stop("Exploration");
@@ -778,7 +784,8 @@ checked_main(int argc, char **argv)
               else if (anticipated)
                 {
                   spot::dfs_stats<true, false,
-                                  false, true, false> dfs(model, *m_proviso);
+                                  false, true, false> dfs(model, *m_proviso,
+                                                          hoaiffy);
                   tm.start("Exploration");
                   dfs.run();
                   tm.stop("Exploration");
@@ -795,7 +802,8 @@ checked_main(int argc, char **argv)
               else if (reverse_anticipated)
                 {
                   spot::dfs_stats<false, false,
-                                  false, true, true> dfs(model, *m_proviso);
+                                  false, true, true> dfs(model, *m_proviso,
+                                                         hoaiffy);
                   tm.start("Exploration");
                   dfs.run();
                   tm.stop("Exploration");
@@ -812,7 +820,8 @@ checked_main(int argc, char **argv)
               else
                 {
                   spot::dfs_stats<false, false,
-                                  false, true, false> dfs(model, *m_proviso);
+                                  false, true, false> dfs(model, *m_proviso,
+                                                          hoaiffy);
                   tm.start("Exploration");
                   dfs.run();
                   tm.stop("Exploration");
@@ -833,7 +842,8 @@ checked_main(int argc, char **argv)
               if (fully_anticipated)
                 {
                   spot::dfs_stats<true, true,
-                                  true, true, false> dfs(model, *m_proviso);
+                                  true, true, false> dfs(model, *m_proviso,
+                                                         hoaiffy);
                   tm.start("Exploration");
                   dfs.run();
                   tm.stop("Exploration");
@@ -851,7 +861,8 @@ checked_main(int argc, char **argv)
               else if (anticipated)
                 {
                   spot::dfs_stats<true, false,
-                                  true, true, false> dfs(model, *m_proviso);
+                                  true, true, false> dfs(model, *m_proviso,
+                                                         hoaiffy);
                   tm.start("Exploration");
                   dfs.run();
                   tm.stop("Exploration");
@@ -868,7 +879,8 @@ checked_main(int argc, char **argv)
               else if (reverse_anticipated)
                 {
                   spot::dfs_stats<false, false,
-                                  true, true, true> dfs(model, *m_proviso);
+                                  true, true, true> dfs(model, *m_proviso,
+                                                        hoaiffy);
                   tm.start("Exploration");
                   dfs.run();
                   tm.stop("Exploration");
@@ -886,7 +898,8 @@ checked_main(int argc, char **argv)
               else
                 {
                   spot::dfs_stats<false, false,
-                                  true, true, false> dfs(model, *m_proviso);
+                                  true, true, false> dfs(model, *m_proviso,
+                                                         hoaiffy);
                   tm.start("Exploration");
                   dfs.run();
                   tm.stop("Exploration");
