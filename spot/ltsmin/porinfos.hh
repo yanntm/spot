@@ -56,14 +56,16 @@ namespace spot
   public:
     porinfos(const spins_interface* si);
 
-    bool ct_base(int t, std::vector<int>& t_work,
+    bool ct_base(int t, std::vector<int>& t_work, const std::vector<int>& t_s,
                  const std::vector<int>& enabled, const int* for_spins_state);
 
     bool stubborn_set(int t, std::vector<int>& t_work,
+                      const std::vector<int>& t_s,
                       const std::vector<int>& enabled,
                       const int* for_spins_state);
 
     bool necessary_set(int t, std::vector<int>& t_work,
+                       const std::vector<int>& t_s,
                        const std::vector<int>& enabled,
                        const int* for_spins_state);
 
@@ -71,6 +73,7 @@ namespace spot
                                        const int* for_spins_state,
                                        bool (porinfos::*not_enabled_transition)
                                        (int, std::vector<int>&,
+                                        const std::vector<int>&,
                                         const std::vector<int>&, const int*));
 
     inline bool non_maybecoenabled(int t1, int t2);
@@ -106,14 +109,17 @@ namespace spot
     std::vector<std::vector<bool>> m_nds;
     std::vector<std::vector<bool>> m_mbc;
     std::vector<std::vector<int>>  m_guards;
+    std::vector<std::vector<bool>> m_guard_variables;
     std::vector<std::vector<bool>> m_ns_e;
     std::vector<std::vector<bool>> m_ns_d;
 
     // Develop caches to reduce computation time
     std::vector<std::vector<bool>> m_dep_tr;
-    std::vector<std::vector<bool>> m_dep_guards;
+    std::vector<std::vector<bool>> m_dep_state;
+    std::vector<std::vector<bool>> m_dep_process;
+    std::vector<std::vector<bool>> m_conflict_tr;
     std::vector<std::vector<bool>> non_mbc_tr;
-    std::vector<int> t_processes;
+    std::vector<std::set<unsigned>> t_processes;
     bool spin_ = false;
   };
 }

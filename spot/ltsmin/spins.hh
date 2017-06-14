@@ -51,8 +51,10 @@ namespace spot
     int (*get_transition_count)();
     int* (*get_transition_read_dependencies)(int t);
     int* (*get_transition_write_dependencies)(int t);
-    int* (*get_guards)(int t);
+
     int (*get_guard_count)();
+    int* (*get_guards)(int t);
+    int* (*get_guard_variables_matrix)(int g);
     int* (*get_guard_nes_matrix)(int g);
     int* (*get_guard_nds_matrix)(int g);
     int* (*get_guard_may_be_coenabled_matrix)(int g);

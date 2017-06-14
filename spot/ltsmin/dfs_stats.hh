@@ -20,6 +20,8 @@
 #pragma once
 
 #include <spot/twaalgos/reachiter.hh>
+#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/dot.hh>
 #include <spot/twaalgos/stats.hh>
 #include <spot/ltsmin/proviso.hh>
 #include <spot/twaalgos/isweakscc.hh>
@@ -256,7 +258,7 @@ namespace spot
     void push_state(const state* st)
     {
       ++states_;
-
+      
       if (SPOT_UNLIKELY(Checker))
         {
           auto s1 =  state_space_->new_state();
@@ -346,7 +348,7 @@ namespace spot
       if (SPOT_UNLIKELY(Checker))
         {
           // We mark expanded states has "accepting" so we can
-          // only check all SCC of  the state_space_ automaton are
+          // only check all SCC of the state_space_ automaton are
           // weak accepting to be sure that every cycle contains at
           // least one  state fully expanded.
           if (todo.back().it->all_enabled() && !hoaiffy_)
@@ -482,6 +484,12 @@ namespace spot
               print_hoa(std::cout, state_space_);
               return;
             }
+          //else
+            //{
+              std::cout << hoaiffy_ << "\n";
+              print_dot(std::cout, state_space_);
+              return;
+            //}
           std::cout << "Check...\n";
           scc_info si(state_space_);
           bool all_cycles_expanded = true;

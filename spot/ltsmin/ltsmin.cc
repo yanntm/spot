@@ -395,7 +395,7 @@ namespace spot
             // Detect wich states are in Reduced(state)
             mask_ =
               por_->compute_reduced_set(cc_->transitions_id, cc_->source,
-                                        &porinfos::stubborn_set);
+                                        &porinfos::ct_base);
 
             if (stab_seed_)
               {
@@ -421,6 +421,7 @@ namespace spot
           }
         else
           {
+	    
             for (unsigned i = 0; i < cc_->transitions.size(); ++i)
               to_process_.push_back(cc_->transitions[i]);
           }
@@ -1258,6 +1259,8 @@ namespace spot
         // Support for Partial Order Reductions
         d->get_guard_count = (int (*)()) lt_dlsym(h, "get_guard_count");
         d->get_guards = (int* (*)(int)) lt_dlsym(h, "get_guards");
+        d->get_guard_variables_matrix =
+          (int* (*)(int)) lt_dlsym(h, "get_guard_matrix");
         d->get_guard_nes_matrix =
           (int* (*)(int)) lt_dlsym(h, "get_guard_nes_matrix");
         d->get_guard_nds_matrix =
