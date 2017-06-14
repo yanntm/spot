@@ -62,7 +62,7 @@ namespace spot
           todo.push_back({initial, sys_.succ(initial, tid_)});
           visited[initial] = ++dfs_number;
         }
-      while (!todo.empty() && !stop_)
+      while (!todo.empty()/* && !stop_*/)
         {
           if (todo.back().it->done())
             {

@@ -240,30 +240,21 @@ namespace spot
   };
 
 
-
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class swarmed_dfs  :
-    public seq_reach_kripke<State, SuccIterator,
-                            StateHash, StateEqual,
-                            swarmed_dfs<State, SuccIterator,
-                                        StateHash, StateEqual>>
+  class swarmed_dfs
   {
+    enum st_status     // Describe the status of a state
+      {
+        OPEN = 1,       // The state is currently processed by this thread
+        CLOSED = 2,     // All the successors of this state have been visited
+	UNKNOWN = 4     // First time this state is discoverd by this thread
+      };
+
     struct my_pair
     {
-      my_pair(): color(0){}
-      my_pair(const my_pair& p): st(p.st), color(p.color.load()){}
-      my_pair(const State st, int bar): st(st), color(bar) { }
-      my_pair& operator=(my_pair& other)
-      {
-        if (this == &other)
-          return *this;
-        st = other.st;
-        color = other.color.load();
-        return *this;
-      }
       State st;
-      std::atomic<int> color;
+      int* colors;
     };
 
     struct inner_pair_hasher
@@ -277,8 +268,9 @@ namespace spot
       hash(const my_pair& lhs) const
       {
         StateHash hash;
-        auto u = hash(lhs.st);
-        return  {u, u}; // Just ignore the second part
+	// FIXME without that insert/find fail !!
+	unsigned u = hash(lhs.st) % (1<<30);
+	return {u, u};
       }
 
       bool equal(const my_pair& lhs,
@@ -289,24 +281,18 @@ namespace spot
       }
     };
 
-    enum st_status     // Describe the status of a state
-      {
-        OPEN = 0,      // The state is currently processed by a thread
-        CLOSED = 1     // All the successors of this state have been visited
-      };
-
   public:
     using shared_map = brick::hashset::FastConcurrent <my_pair,
-                                                       inner_pair_hasher>;
+						       inner_pair_hasher>;
 
     swarmed_dfs(kripkecube<State, SuccIterator>& sys,
-                shared_map& map,
-                unsigned tid, bool& stop)
-      : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
-                         swarmed_dfs<State, SuccIterator,
-                                     StateHash, StateEqual>>(sys, tid, stop),
-      map_(map)
-      { }
+                shared_map& map, unsigned tid):
+      sys_(sys), tid_(tid), map_(map),
+      nb_th_(std::thread::hardware_concurrency()),
+      p_(sizeof(int)*std::thread::hardware_concurrency())
+    {
+      SPOT_ASSERT(is_a_kripkecube(sys));
+    }
 
     virtual ~swarmed_dfs()
     {
@@ -317,19 +303,38 @@ namespace spot
       tm_.start("DFS thread " + std::to_string(this->tid_));
     }
 
-    bool push(State s, unsigned int)
+    bool push(State s, unsigned int tid)
     {
-      ++states_;
-      auto it = map_.insert({s, OPEN});
+      // Prepare data for a newer allocation
+      int* ref = (int*) p_.allocate();
+      for (unsigned i = 0; i < nb_th_; ++i)
+	ref[i] = UNKNOWN;
 
-      // State has been marked as dead by another thread
-      // just skip the insertion
+      // Try to insert the new state in the shared map.
+      auto it = map_.insert({s, ref});
       bool b = it.isnew();
       inserted_ += b;
-      if (!b && it->color.load(std::memory_order_relaxed) == CLOSED)
-        {
-          return false;
-        }
+
+      // Insertion failed, delete element
+      // FIXME add a cache to avoid useless allocations.
+      if (!b)
+	p_.deallocate(ref);
+
+      // The state has been mark dead by another thread
+      for (unsigned i = 0; i < nb_th_; ++i)
+	if (it->colors[i] == static_cast<int>(CLOSED))
+	  return false;
+
+      // The state has already been visited by the current thread
+      if (it->colors[tid_] == static_cast<int>(OPEN))
+	return false;
+
+      // Keep a ptr over the array of colors
+      refs_.push_back(it->colors);
+
+      // Mark state as visited.
+      it->colors[tid_] = OPEN;
+      ++states_;
       return true;
     }
 
@@ -337,8 +342,8 @@ namespace spot
     {
       // Don't avoid pop but modify the status of the state
       // during backtrack
-      auto it = map_.insert({s, CLOSED}); // FIXME Find is enough
-      it->color.store(CLOSED, std::memory_order_relaxed);
+      refs_.back()[tid_] = CLOSED;
+      refs_.pop_back();
       return true;
     }
 
@@ -349,7 +354,6 @@ namespace spot
 
     void finalize()
     {
-      this->stop_ = true;
       tm_.stop("DFS thread " + std::to_string(this->tid_));
     }
 
@@ -379,13 +383,67 @@ namespace spot
       return nb_gens_;
     }
 
+    void run()
+    {
+      setup();
+      State initial = sys_.initial(tid_);
+      if (SPOT_LIKELY(push(initial, dfs_number)))
+        {
+          todo.push_back({initial, sys_.succ(initial, tid_)});
+	  ++dfs_number;
+        }
+      while (!todo.empty())
+        {
+          if (todo.back().it->done())
+            {
+              if (SPOT_LIKELY(pop(todo.back().s)))
+                {
+                  sys_.recycle(todo.back().it, tid_);
+                  todo.pop_back();
+                }
+            }
+          else
+            {
+              ++transitions;
+              State dst = todo.back().it->state();
+
+	      if (SPOT_LIKELY(push(dst, dfs_number)))
+		{
+		  ++dfs_number;
+		  todo.back().it->next();
+		  todo.push_back({dst, sys_.succ(dst, tid_)});
+		}
+              else
+                {
+                  todo.back().it->next();
+                }
+            }
+        }
+      finalize();
+    }
+
+
   private:
+    struct todo_element
+    {
+      State s;
+      SuccIterator* it;
+    };
+    kripkecube<State, SuccIterator>& sys_;
+    std::vector<todo_element> todo;
+    unsigned int dfs_number = 0;
+    unsigned int transitions = 0;
+    unsigned int tid_;
+
     spot::timer_map tm_;
     shared_map map_;
     unsigned inserted_ = 0;
     unsigned nb_gens_ = 0;
     unsigned states_ = 0;
     unsigned edges_ = 0;
+    unsigned nb_th_ = 0;
+    fixed_size_pool p_;
+    std::vector<int*> refs_;
   };
 
 

@@ -56,9 +56,9 @@ namespace spot
   /// \brief This class provides the ability to hash a state
   struct cspins_state_hash
   {
-    size_t operator()(const cspins_state that) const
+    unsigned operator()(const cspins_state that) const
     {
-      return that[0];
+      return (unsigned) that[0];
     }
   };
 
@@ -113,7 +113,6 @@ namespace spot
   {
     cspins_state_manager* manager;   // The state manager
     std::vector<cspins_state>* succ; // The successors of a state
-    cspins_state_map map;            // Must be a copy and only one copy/thread
     int* compressed_;
     int* uncompressed_;
     bool compress;
@@ -218,7 +217,6 @@ namespace spot
     bool selfloopize_;
     int dead_idx_;
     std::vector<std::string> aps_;
-    cspins_state_map map_;
     unsigned int nb_threads_;
   };
 

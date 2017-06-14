@@ -1368,36 +1368,61 @@ namespace spot
     return res;
   }
 
-
-
-
   void
   ltsmin_model::swarmed_dfs(ltsmin_kripkecube_ptr sys,
                             std::string name)
   {
     name = name.substr(name.find_last_of("/")+1);
     spot::timer_map tm;
-
-    bool stop = false;
     using algo_name = spot::swarmed_dfs<cspins_state, cspins_iterator,
                                         cspins_state_hash, cspins_state_equal>;
 
-    // The shared map among all threads
+    unsigned  nbth = sys->get_threads() ;
     algo_name::shared_map map;
 
     tm.start("Initialisation");
-    std::vector<algo_name> swarmed;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      swarmed.emplace_back(*sys, map, i, stop);
+    std::vector<algo_name*> swarmed(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      swarmed[i] = new algo_name(*sys, map, i);
     tm.stop("Initialisation");
 
-    tm.start("Run");
-    std::vector<std::thread> threads;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+  	threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+  	  {
+  	    {
+  	      std::lock_guard<std::mutex> iolock(iomutex);
+  	      std::cout << "Thread #" << i
+  			<< ": on CPU " << sched_getcpu() << "\n";
+  	    }
 
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads[i].join();
+  	    // Wait all threads to be instanciated.
+  	    while (barrier)
+  	      continue;
+            swarmed[i]->run();
+         });
+
+  	//  Pins threads to a dedicated core.
+  	cpu_set_t cpuset;
+  	CPU_ZERO(&cpuset);
+  	CPU_SET(i, &cpuset);
+  	int rc = pthread_setaffinity_np(threads[i].native_handle(),
+  					sizeof(cpu_set_t), &cpuset);
+  	if (rc != 0)
+  	  {
+  	    std::lock_guard<std::mutex> iolock(iomutex);
+  	    std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+  	  }
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
     tm.stop("Run");
 
     std::cout << "Following csv describe for each threads:\n"
@@ -1406,13 +1431,13 @@ namespace spot
     unsigned cumul_states = 0;
     for (unsigned i = 0; i < swarmed.size(); ++i)
       {
-        cumul_states += swarmed[i].inserted();
+        cumul_states += swarmed[i]->inserted();
         std::cout << '@' << i << ','
-                  << swarmed[i].walltime() << ','
-                  << swarmed[i].inserted() << ','
-                  << swarmed[i].states() << ','
-                  << swarmed[i].edges() << ','
-                  << swarmed[i].how_many_generations()
+                  << swarmed[i]->walltime() << ','
+                  << swarmed[i]->inserted() << ','
+                  << swarmed[i]->states() << ','
+                  << swarmed[i]->edges() << ','
+                  << swarmed[i]->how_many_generations()
                   << std::endl;
 
       }
@@ -1425,9 +1450,6 @@ namespace spot
               << cumul_states << ','
               << name
               << std::endl;
-
-
-
     tm.print(std::cout);
 
     return;
