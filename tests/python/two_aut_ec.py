@@ -22,7 +22,7 @@ import time
 
 import spot
 
-g = spot.automata('randaut -A 4 -Q5 -n -1 2|')
+g = spot.automata('randaut -A 4 -Q5 -n -1 --check=strength 2|')
 end = time.time() + 10
 while time.time() < end:
     a = spot.remove_fin(g.__next__())

@@ -38,6 +38,10 @@ namespace spot
     // The types of automata we optimize on
     enum tae_aut_type { EXPLICIT, OTF, KRIPKE };
 
+    // The pairs of strengths we deal with: Strong-Strong, Weak-Strong, and
+    // Weak-Weak
+    enum tae_strength { STRONG, WEAK_L, WEAK };
+
     // A helper class to manage iterators
     template<tae_aut_type type>
     class tae_iterator
@@ -291,9 +295,20 @@ namespace spot
     };
 
     // An acceptance mark in the product
-    class product_mark
+    template<tae_strength strength>
+    struct product_mark {};
+
+    // The algorithm manipulates only STRONG marks, which hold both marks, but
+    // the data structures store any type. So we need to define, in that order:
+    //  - every mark,
+    //  - STRONG-to-any conversions, through their constructors, for when we
+    //    store a STRONG mark in a data structure,
+    //  - operations (just |= actually) on STRONG marks with any other type of
+    //    mark.
+
+    template<>
+    struct product_mark<STRONG>
     {
-    public:
       product_mark() : left{}, right{}
       {}
 
@@ -301,16 +316,56 @@ namespace spot
         : left(l), right(r)
       {}
 
-      product_mark& operator|=(const product_mark& o)
+      product_mark(const product_mark<STRONG>& p_m)
+        : left(p_m.left), right(p_m.right)
+      {}
+
+      product_mark& operator|=(const product_mark<STRONG>& o)
       {
         left |= o.left;
         right |= o.right;
         return *this;
       }
 
+      product_mark& operator|=(const product_mark<WEAK_L>& o);
+      product_mark& operator|=(const product_mark<WEAK>&);
+
       acc_cond::mark_t left;
       acc_cond::mark_t right;
     };
+
+    template<>
+    struct product_mark<WEAK_L>
+    {
+      product_mark() : mark{}
+      {}
+
+      product_mark(const product_mark<STRONG>& p_m)
+        : mark(p_m.right)
+      {}
+
+      acc_cond::mark_t mark;
+    };
+
+    template<>
+    struct product_mark<WEAK>
+    {
+      product_mark() {}
+      product_mark(const product_mark<STRONG>&) {}
+    };
+
+    product_mark<STRONG>&
+    product_mark<STRONG>::operator|=(const product_mark<WEAK_L>& o)
+    {
+      right |= o.mark;
+      return *this;
+    }
+
+    product_mark<STRONG>&
+    product_mark<STRONG>::operator|=(const product_mark<WEAK>&)
+    {
+      return *this;
+    }
 
     // A pseudo iterator to iterate over successors of a state in the product
     template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
@@ -366,9 +421,9 @@ namespace spot
         return right.done();
       }
 
-      product_mark acc() const
+      product_mark<STRONG> acc() const
       {
-        return product_mark(left.acc(), right.acc());
+        return product_mark<STRONG>(left.acc(), right.acc());
       }
 
       iterator_l_t left;
@@ -376,20 +431,24 @@ namespace spot
     };
 
     // Represents an SCC
+    template<tae_strength strength>
     struct scc
     {
       scc(unsigned i) : index(i), condition() {}
 
       unsigned index;
-      product_mark condition;
+      product_mark<strength> condition;
     };
 
-    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
+    template<tae_aut_type aut_type_l,
+             tae_aut_type aut_type_r,
+             tae_strength strength>
     bool tae_impl(typename tae_element<aut_type_l>::aut_t& left,
                   typename tae_element<aut_type_r>::aut_t& right)
     {
       using p_state = product_state<aut_type_l, aut_type_r>;
       using p_iterator = product_iterator<aut_type_l, aut_type_r>;
+      using p_mark = product_mark<strength>;
 
       if (left->get_dict() != right->get_dict())
         throw std::runtime_error("two_aut_ec: left and right automata should "
@@ -410,11 +469,11 @@ namespace spot
       std::unordered_map<p_state, unsigned,
                          product_state_hash<aut_type_l, aut_type_r>> states;
       // the roots of our SCCs
-      std::stack<scc> root;
+      std::stack<scc<strength>> root;
       // states yet to explore
       std::stack<std::pair<p_state, p_iterator>> todo;
       // acceptance conditions between SCCs
-      std::stack<product_mark> arc;
+      std::stack<p_mark> arc;
       // the depth-first-search stack. Used to mark nodes as dead when we pop
       // their SCC.
       std::stack<p_state> live;
@@ -444,7 +503,9 @@ namespace spot
 
       new_state(tae_element<aut_type_l>::init(left),
                 tae_element<aut_type_r>::init(right));
-      arc.emplace();
+
+      if (strength != WEAK)
+        arc.emplace();
 
       while (!todo.empty())
         {
@@ -463,7 +524,11 @@ namespace spot
               if (root.top().index == states[curr])
                 // We are backtracking the root of an SCC
                 {
-                  arc.pop();
+                  if (strength != WEAK)
+                    {
+                      assert(!arc.empty());
+                      arc.pop();
+                    }
                   p_state s;
                   // pop from live to find curr, mark as order 0, curr included
                   do
@@ -484,13 +549,14 @@ namespace spot
             }
 
           auto p = new_state(succ.left.dst(), succ.right.dst());
-          product_mark acc = succ.acc();
+          auto acc = succ.acc();
           succ.next();
 
           if (p.second)
             // This is a new state
             {
-              arc.push(acc);
+              if (strength != WEAK)
+                arc.push(acc);
               continue;
             }
 
@@ -509,16 +575,20 @@ namespace spot
           while (threshold < root.top().index)
             {
               assert(!root.empty());
-              assert(!arc.empty());
-              acc |= root.top().condition;
-              acc |= arc.top();
+              if (strength != WEAK)
+                {
+                  assert(!arc.empty());
+                  acc |= root.top().condition;
+                  acc |= arc.top();
+                  arc.pop();
+                }
               root.pop();
-              arc.pop();
             }
-          root.top().condition |= acc;
+          acc |= root.top().condition;
+          root.top().condition = acc;
 
-          if (left->acc().accepting(root.top().condition.left)
-              && right->acc().accepting(root.top().condition.right))
+          if (left->acc().accepting(acc.left)
+              && right->acc().accepting(acc.right))
             // This SCC is accepting
             {
               while (!todo.empty())
@@ -531,6 +601,27 @@ namespace spot
       // DFS ended and we haven't found any accepting SCCs: left and right's
       // languages do not intersect.
       return true;
+    }
+
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
+    bool tae_dispatch(typename tae_element<aut_type_l>::aut_t& left,
+                      typename tae_element<aut_type_r>::aut_t& right)
+    {
+      auto l = left->prop_weak();
+      auto r = right->prop_weak();
+
+      if (!l && r && aut_type_l != KRIPKE)
+        // We save on templates by only having weak automata on the left. This
+        // is not compatible with, and less significant than, the Kripke swap.
+        return tae_dispatch<aut_type_r, aut_type_l>(right, left);
+
+      if (l && r)
+        return tae_impl<aut_type_l, aut_type_r, WEAK>(left, right);
+
+      if (l && !r)
+        return tae_impl<aut_type_l, aut_type_r, WEAK_L>(left, right);
+
+      return tae_impl<aut_type_l, aut_type_r, STRONG>(left, right);
     }
   }
 
@@ -552,24 +643,24 @@ namespace spot
     if (l_k)
       {
         if (r_e)
-          return tae_impl<KRIPKE, EXPLICIT>(l_k, r_e);
+          return tae_dispatch<KRIPKE, EXPLICIT>(l_k, r_e);
         else
-          return tae_impl<KRIPKE, OTF>(l_k, right);
+          return tae_dispatch<KRIPKE, OTF>(l_k, right);
       }
 
     if (l_e)
       {
         if (r_e)
-          return tae_impl<EXPLICIT, EXPLICIT>(l_e, r_e);
+          return tae_dispatch<EXPLICIT, EXPLICIT>(l_e, r_e);
         else
-          return tae_impl<EXPLICIT, OTF>(l_e, right);
+          return tae_dispatch<EXPLICIT, OTF>(l_e, right);
       }
     else
       {
         if (r_e)
-          return tae_impl<OTF, EXPLICIT>(left, r_e);
+          return tae_dispatch<OTF, EXPLICIT>(left, r_e);
         else
-          return tae_impl<OTF, OTF>(left, right);
+          return tae_dispatch<OTF, OTF>(left, right);
       }
   }
 }
