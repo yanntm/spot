@@ -171,7 +171,7 @@ namespace spot
             ("direct_simulation() requires separate Inf and Fin sets");
 
         has_univ_ = !in->is_existential();
-        PRINT_D("%1", has_univ_);
+        PRINT_D("HAS UNIV  %1", has_univ_);
 
         PRINT_D("MID CONSTRUCTION2");
         scc_info_.reset(new scc_info(in));
@@ -186,13 +186,6 @@ namespace spot
         all_inf_ = all_inf;
         PRINT_D("MID CONSTRUCTION6");
 
-        // Now, we have to get the bdd which will represent the
-        // class. We register one bdd by state, because in the worst
-        // case, |Class| == |State|.
-        unsigned set_num = a_->get_dict()
-          ->register_anonymous_variables(size_a_ + 1, this);
-        PRINT_D("MID CONSTRUCTION7");
-
         // Replace all the acceptance conditions by their complements.
         // (In the case of Cosimulation, we also flip the edges.)
         if (Cosimulation)
@@ -201,7 +194,42 @@ namespace spot
             a_->copy_ap_of(in);
             a_->copy_acceptance_of(in);
             a_->new_states(ns);
+            auto init_it = in->univ_dests(init_state_number);
+            a_->set_univ_init_state(init_it.begin(), init_it.end());
+          }
+        else
+          {
+            a_ = make_twa_graph(in, twa::prop_set::all());
+            for (auto& t: a_->edges())
+              t.acc ^= all_inf;
+          }
+        assert(a_->num_states() == size_a_);
 
+        want_implications_ = !is_deterministic(a_);
+
+        // Now, we have to get the bdd which will represent the
+        // class. We register one bdd by state, because in the worst
+        // case, |Class| == |State|.
+        unsigned set_num = a_->get_dict()
+          ->register_anonymous_variables(size_a_ + 1, this);
+        PRINT_D("MID CONSTRUCTION7");
+
+        unsigned n_acc = a_->num_sets();
+        acc_vars = a_->get_dict()
+          ->register_anonymous_variables(n_acc, this);
+
+        all_proms_ = bddtrue;
+        for (unsigned v = acc_vars; v < acc_vars + n_acc; ++v)
+          all_proms_ &= bdd_ithvar(v);
+
+        bdd_initial = bdd_ithvar(set_num++);
+        bdd init = bdd_ithvar(set_num++);
+
+        used_var_.emplace_back(init);
+        all_class_var_ = init;
+
+        if (Cosimulation)
+          {
             for (unsigned s = 0; s < ns; ++s)
               {
                 for (auto& t: in->out(s))
@@ -230,50 +258,25 @@ namespace spot
                     if (dst_it.begin() + 1 == dst_it.end())
                       a_->new_edge(t.dst, s, t.cond, acc);
                     else
-                    {
-                      // In Cosimulation, states that are destinations of
-                      // universal transitions are not merged, we store them
-                      // in a map to associate a special class with each of
-                      // them.
-                      for (auto dst_state: dst_it)
-                        univ_states_[dst_state] = bddfalse;
-                      for (auto& univ_dst_pair: univ_states_)
-                        {
-                          bdd dst_class = bdd_ithvar(set_num++);
-                          all_class_var_ &= dst_class;
-                          used_var_.emplace_back(dst_class);
-                          univ_dst_pair.second = dst_class;
-                          relation_[dst_class] = dst_class;
-                        }
-                    }
+                      {
+                        // In Cosimulation, states that are destinations of
+                        // universal transitions are not merged, we store them
+                        // in a map to associate a special class with each of
+                        // them.
+                        for (auto dst_state: dst_it)
+                          univ_states_[dst_state] = bddfalse;
+                        for (auto& univ_dst_pair: univ_states_)
+                          {
+                            bdd dst_class = bdd_ithvar(set_num++);
+                            all_class_var_ &= dst_class;
+                            //used_var_.emplace_back(dst_class);
+                            univ_dst_pair.second = dst_class;
+                            relation_[dst_class] = dst_class;
+                          }
+                      }
                   }
-
-                auto init_it = in->univ_dests(init_state_number);
-                a_->set_univ_init_state(init_it.begin(), init_it.end());
               }
           }
-        else
-          {
-            a_ = make_twa_graph(in, twa::prop_set::all());
-            for (auto& t: a_->edges())
-              t.acc ^= all_inf;
-          }
-        assert(a_->num_states() == size_a_);
-
-        want_implications_ = !is_deterministic(a_);
-
-        unsigned n_acc = a_->num_sets();
-        acc_vars = a_->get_dict()
-          ->register_anonymous_variables(n_acc, this);
-
-        all_proms_ = bddtrue;
-        for (unsigned v = acc_vars; v < acc_vars + n_acc; ++v)
-          all_proms_ &= bdd_ithvar(v);
-
-        bdd_initial = bdd_ithvar(set_num++);
-        bdd init = bdd_ithvar(set_num++);
-
-        used_var_.emplace_back(init);
 
         // Initialize all classes to init. In Cosimulation destinations
         // of universal transitions are initialized to special classes.
@@ -291,7 +294,6 @@ namespace spot
         // of these in a variable all_class_var_ which will be used
         // to understand the destination part in the signature when
         // building the resulting automaton.
-        all_class_var_ = init;
         for (unsigned i = set_num;
              i < set_num + size_a_ - 1 - univ_states_.size(); ++i)
           {
@@ -349,13 +351,15 @@ namespace spot
         while (nb_partition_before != bdd_lstate_.size()
                || nb_po_before != po_size_)
           {
+            PRINT_D("BEGIN LOOP");
             update_previous_class();
             nb_partition_before = bdd_lstate_.size();
             nb_po_before = po_size_;
             po_size_ = 0;
             update_sig();
-            // print_partition();
+            print_partition();
             go_to_next_it();
+            PRINT_D("END LOOP");
           }
 
         update_previous_class();
@@ -376,14 +380,14 @@ namespace spot
         for (auto& t: a_->out(src))
           {
             std::vector<bdd> classes;
-            bdd outclass;
+            bdd outclass = bddtrue;
             bdd acc = mark_to_bdd(t.acc);
 
             // to_add is a conjunction of the acceptance condition,
             // the label of the edge and the class of the
             // destination and all the class it implies.
             bdd to_add = acc & t.cond;
-            if (has_univ_)
+            if (has_univ_ && !Cosimulation)
               {
                 auto it = a_->univ_dests(t.dst);
                 for (auto dst: it)
@@ -396,32 +400,43 @@ namespace spot
                         outclass &= implications;
                         classes.push_back(dst_class);
                       }
-                    if (build_result &&
-                        classes.size() > 1 &&
-                        sig2classes.find(outclass) == sig2classes.end())
+                  }
+                if (build_result &&
+                    classes.size() > 1 &&
+                    sig2classes.find(outclass) == sig2classes.end())
+                  {
+                    std::vector<unsigned> useful_classes;
+                    for (size_t i = 0; i < classes.size(); ++i)
                       {
-                        std::vector<unsigned> useful_classes;
-                        for (size_t i = 0; i < classes.size(); ++i)
-                          {
-                            bool is_implied = false;
-                            bdd current_imp = relation_[classes[i]];
-                            for (size_t j = 0; j < classes.size(); ++j)
-                              if (i != j)
+                        bool is_implied = false;
+                        bdd current_imp = relation_[classes[i]];
+                        for (size_t j = 0; j < classes.size(); ++j)
+                          if (i != j)
+                            {
+                              bdd other_imp = relation_[classes[j]];
+                              is_implied = bdd_implies(other_imp,
+                                                       current_imp) &&
+                                           (other_imp != current_imp ||
+                                            i < j);
+                              if (is_implied)
                                 {
-                                  bdd other_imp = relation_[classes[j]];
-                                  is_implied = bdd_implies(other_imp,
-                                                           current_imp) &&
-                                               other_imp != current_imp &&
-                                               i > j;
-                                  if (is_implied)
-                                    break;
+                                  PRINT_D("FAIL %1 %2",
+                                      bdd_format_isop(a_->get_dict(), current_imp),
+                                      bdd_format_isop(a_->get_dict(), other_imp));
+                                  break;
                                 }
-                            if (!is_implied)
-                              useful_classes.push_back(current_imp.id());
-                          }
-                        if (useful_classes.size() > 1)
-                          sig2classes[outclass] = useful_classes;
+                            }
+                        if (!is_implied)
+                          useful_classes.push_back(current_imp.id());
                       }
+                    if (useful_classes.size() > 1)
+                    {
+                        PRINT_D("STORE %1",
+                            bdd_format_isop(a_->get_dict(), outclass));
+                      sig2classes[outclass] = useful_classes;
+                    }
+                  PRINT_D("useful classes size %1", useful_classes.size());
+                  PRINT_D("classes size %1", classes.size());
                   }
               }
             else
@@ -450,7 +465,9 @@ namespace spot
         sorted_classes_.clear();
         for (unsigned s = 0; s < size_a_; ++s)
           {
-            if (univ_states_.find(s) != univ_states_.end())
+            if (!Cosimulation
+                || !has_univ_
+                || univ_states_.find(s) == univ_states_.end())
               {
                 bdd sig = compute_sig(s);
                 auto p = bdd_lstate_.emplace(std::piecewise_construct,
@@ -467,6 +484,7 @@ namespace spot
       // This method renames the color set, updates the partial order.
       void go_to_next_it()
       {
+        PRINT_D("BEGIN NEXT IT");
         int nb_new_color = bdd_lstate_.size() - used_var_.size();
 
 
@@ -542,11 +560,13 @@ namespace spot
                 }
             relation_[now_to_next[n].second] = n_class;
           }
+        PRINT_D("END NEXT IT");
       }
 
       // Build the minimal resulting automaton.
       twa_graph_ptr build_result(std::vector<bdd>* implications = nullptr)
       {
+        PRINT_D("BEGIN BUILD");
         twa_graph_ptr res = make_twa_graph(a_->get_dict());
         res->copy_ap_of(a_);
         res->copy_acceptance_of(a_);
@@ -575,7 +595,9 @@ namespace spot
               (*state_mapping)[st] = s;
             if (implications)
               (*implications)[s] = relation_[cl];
+            PRINT_D("REGISTER %1", relation_[cl].id());
           }
+        PRINT_D("REGISTER NB %1", sorted_classes_.size());
 
         if (Cosimulation && has_univ_)
           {
@@ -589,6 +611,7 @@ namespace spot
                   (*implications)[p.first] = relation_[cl];
               }
           }
+        PRINT_D("BUILD 1");
 
         // Acceptance of states.  Only used if Sba && Cosimulation.
         std::vector<acc_cond::mark_t> accst;
@@ -605,6 +628,7 @@ namespace spot
 
         auto add_edge = [&](bdd src, bdd sig)
           {
+            //PRINT_D("ADD EDGE 1");
             if (Cosimulation)
               sig = bdd_compose(sig, bddfalse, bdd_var(bdd_initial));
 
@@ -620,6 +644,7 @@ namespace spot
             // First loop over all possible valuations atomic properties.
             while (all_atomic_prop != bddfalse)
               {
+            //PRINT_D("ADD EDGE 2");
                 bdd one = bdd_satoneset(all_atomic_prop,
                                         sup_all_atomic_prop,
                                         bddtrue);
@@ -638,8 +663,10 @@ namespace spot
                 ++nb_satoneset;
 
                 bdd cond_acc_dest;
+            //PRINT_D("ADD EDGE 3");
                 while ((cond_acc_dest = isop.next()) != bddfalse)
                   {
+            //PRINT_D("ADD EDGE 4");
                     ++stat.edges;
 
                     ++nb_minato;
@@ -649,10 +676,12 @@ namespace spot
                     bdd dst = bdd_existcomp(cond_acc_dest,
                                             all_class_var_);
 
+            //PRINT_D("ADD EDGE 4.1");
                     // Keep only ones who are acceptance condition.
                     auto acc = bdd_to_mark(bdd_existcomp(cond_acc_dest,
                                                          all_proms_));
 
+            //PRINT_D("ADD EDGE 4.2");
                     // Keep the other!
                     bdd cond = bdd_existcomp(cond_acc_dest,
                                              sup_all_atomic_prop);
@@ -661,42 +690,49 @@ namespace spot
                     // acceptance conditions on the input automaton,
                     // we must revert them to create a new edge.
                     acc ^= all_inf;
+            //PRINT_D("ADD EDGE 4.3");
 
-                    while (dst != bddfalse)
-                    {
-                      if (Cosimulation)
-                        {
-                          if (Sba)
-                            {
-                              // acc should be attached to src, or rather,
-                              // in our edge-based representation)
-                              // to all edges leaving src.  As we
-                              // can't do this here, store this in a table
-                              // so we can fix it later.
-                              accst[gb->get_state(src.id())] = acc;
-                              acc = 0U;
-                            }
-                          gb->new_edge(dst.id(), src.id(), cond, acc);
-                        }
-                      else
-                        {
-                          if (has_univ_)
+                    if (Cosimulation)
+                      {
+                        if (Sba)
                           {
-                            auto p = sig2classes.find(dst);
-                            if (p != sig2classes.end())
-                            {
-                              gb->new_univ_edge(src.id(), p->second.begin(),
-                                                p->second.end(), cond, acc);
-                              continue;
-                            }
+                            // acc should be attached to src, or rather,
+                            // in our edge-based representation)
+                            // to all edges leaving src.  As we
+                            // can't do this here, store this in a table
+                            // so we can fix it later.
+                            accst[gb->get_state(src.id())] = acc;
+                            acc = 0U;
                           }
-                          gb->new_edge(src.id(), dst.id(), cond, acc);
+                        gb->new_edge(dst.id(), src.id(), cond, acc);
+                      }
+                    else
+                      {
+                        if (has_univ_)
+                        {
+                          auto p = sig2classes.find(dst);
+                        PRINT_D("LOOK FOR %1",
+                            bdd_format_isop(a_->get_dict(), dst));
+                          if (p != sig2classes.end())
+                          {
+            PRINT_D("NEW ADD EDGE", src.id());
+                            gb->new_univ_edge(src.id(), p->second.begin(),
+                                              p->second.end(), cond, acc);
+                            continue;
+                          }
                         }
-                    }
+            PRINT_D("OLD ADD EDGE");
+                        gb->new_edge(src.id(), dst.id(), cond, acc);
+           // PRINT_D("ADD EDGE 4.5");
+                      }
+           // PRINT_D("ADD EDGE 5");
                   }
+           // PRINT_D("ADD EDGE 6");
               }
+           // PRINT_D("ADD EDGE 7");
           };
 
+        PRINT_D("BUILD 2");
         // For each class, we will create
         // all the edges between the states.
         for (auto& p: sorted_classes_)
@@ -712,14 +748,15 @@ namespace spot
             add_edge(src, sig);
           }
 
+        PRINT_D("BUILD 3");
         if (Cosimulation && has_univ_)
           {
             for (unsigned s = 0; s < size_a_; ++s)
               {
                 auto src = relation_[previous_class_[s]];
-                for (auto t: a_->out(s))
+                for (auto t: original_->out(s))
                   {
-                    auto it = a_->univ_dests(t.dst);
+                    auto it = original_->univ_dests(t.dst);
                     if (it.begin() + 1 != it.end())
                       {
                         std::vector<unsigned> dests;
@@ -727,20 +764,40 @@ namespace spot
                           dests.push_back(univ_states_[s].id());
                         gb->new_univ_edge(src.id(), dests.begin(), dests.end(),
                                           t.cond, t.acc);
+                          PRINT_D("CO NEW ADD EDGE", src.id());
+                            for (auto tmp: dests)
+                            {
+                              PRINT_D("DESTINATIONS EDGES %1", tmp);
+                            }
+                            PRINT_D("HERE WHAT AN END");
                       }
                   }
               }
-            for (auto& p: univ_states_)
+           for (auto& p: univ_states_)
               add_edge(p.second, compute_sig(p.first));
           }
 
+        PRINT_D("BUILD 4");
         std::vector<unsigned> initial_states;
         for (auto dst: a_->univ_dests(a_->get_init_state_number()))
-            initial_states.push_back(gb->get_state(previous_class_[dst].id()));
+        {
+            PRINT_D("BUILD 4.0.1");
+            auto bddclass = previous_class_[dst];
+            PRINT_D("BUILD 4.0.2");
+            unsigned stateid = bddclass.id();
+            PRINT_D("BUILD 4.0.3 %1", stateid);
+            unsigned st = gb->get_state(stateid);
+            PRINT_D("BUILD 4.0.4");
+            initial_states.push_back(st);
+            PRINT_D("BUILD 4.0.5");
+        }
+        PRINT_D("BUILD 4.1");
         res->set_univ_init_state(initial_states.begin(), initial_states.end());
+        PRINT_D("BUILD 4.2");
 
         res->merge_edges(); // FIXME: is this really needed?
 
+        PRINT_D("BUILD 5");
         // Mark all accepting state in a second pass, when
         // dealing with SBA in cosimulation.
         if (Sba && Cosimulation)
@@ -756,6 +813,7 @@ namespace spot
               }
           }
 
+        PRINT_D("BUILD 6");
         // If we recorded implications for the determinization
         // procedure, we should not remove unreachable states, as that
         // will invalidate the contents of the IMPLICATIONS vector.
@@ -764,6 +822,7 @@ namespace spot
         if (!implications)
           res->purge_unreachable_states();
 
+        PRINT_D("BUILD 7");
         delete gb;
         res->prop_copy(original_,
                        { false, // state-based acc forced below
@@ -777,6 +836,7 @@ namespace spot
           res->prop_universal(nb_minato == nb_satoneset);
         if (Sba)
           res->prop_state_acc(true);
+        PRINT_D("END BUILD");
         return res;
       }
 
