@@ -1049,6 +1049,17 @@ typedef void (*bddstrmhandler)(std::ostream &, int);
 
 BUDDY_API bddstrmhandler bdd_strm_hook(bddstrmhandler);
 
+namespace std
+{
+template <> struct hash<bdd>
+{
+  size_t operator()(const bdd& x) const
+  {
+    return x.id();
+  }
+};
+}
+
 #endif /* CPLUSPLUS */
 
 #endif /* _BDDX_H */

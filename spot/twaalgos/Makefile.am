@@ -85,7 +85,8 @@ twaalgos_HEADERS = \
   tau03opt.hh \
   totgba.hh \
   translate.hh \
-  word.hh
+  word.hh \
+  misc.h
 
 noinst_LTLIBRARIES = libtwaalgos.la
 libtwaalgos_la_SOURCES = \
@@ -146,6 +147,7 @@ libtwaalgos_la_SOURCES = \
   tau03opt.cc \
   totgba.cc \
   translate.cc \
-  word.cc
+  word.cc \
+  misc.cc
 
 libtwaalgos_la_LIBADD = gtec/libgtec.la
