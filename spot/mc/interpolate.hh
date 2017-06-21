@@ -321,7 +321,7 @@ namespace spot
 	p_.deallocate(ref);
 
       // The state has been mark dead by another thread
-      for (unsigned i = 0; i < nb_th_; ++i)
+      for (unsigned i = 0; !b && i < nb_th_; ++i)
 	if (it->colors[i] == static_cast<int>(CLOSED))
 	  return false;
 
@@ -446,7 +446,304 @@ namespace spot
     std::vector<int*> refs_;
   };
 
+  std::mutex iomutex; // TOREMOVE
 
+  template<typename State, typename SuccIterator,
+           typename StateHash, typename StateEqual>
+  class swarmed_dfs2
+  {
+    enum st_status     // Describe the status of a state
+      {
+        OPEN = 1,       // The state is currently processed by this thread
+        CLOSED = 2,     // All the successors of this state have been visited
+	UNKNOWN = 4,    // First time this state is discoverd by this thread
+	UNKNOWN_OPEN = 8,
+	PHASE_1 = 16
+      };
+
+    struct my_pair
+    {
+      State st;
+      int* colors;
+    };
+
+    struct inner_pair_hasher
+    {
+      inner_pair_hasher(const my_pair&)
+      { }
+
+      inner_pair_hasher() = default;
+
+      brick::hash::hash128_t
+      hash(const my_pair& lhs) const
+      {
+        StateHash hash;
+	// FIXME without that insert/find fail !!
+	unsigned u = hash(lhs.st) % (1<<30);
+	return {u, u};
+      }
+
+      bool equal(const my_pair& lhs,
+                 const my_pair& rhs) const
+      {
+        StateEqual equal;
+        return equal(lhs.st, rhs.st);
+      }
+    };
+
+  public:
+    st_status insert_status_;
+    using shared_map = brick::hashset::FastConcurrent <my_pair,
+						       inner_pair_hasher>;
+
+    swarmed_dfs2(kripkecube<State, SuccIterator>& sys,
+		 shared_map& map, unsigned tid,
+		 std::function<std::vector<State>*(std::vector<State>&)> fun,
+		 std::atomic<bool>& stop):
+      sys_(sys), tid_(tid), map_(map),
+      nb_th_(std::thread::hardware_concurrency()),
+      p_(sizeof(int)*std::thread::hardware_concurrency()),
+      interpolate_fun_(fun), stop_(stop)
+    {
+      SPOT_ASSERT(is_a_kripkecube(sys));
+      if (!(tid_%2)) // FIXME How many !
+	phase1 = false;       // Reference, no GP for this thread
+    }
+
+    virtual ~swarmed_dfs2()
+    {
+      delete new_gen_;
+    }
+
+    void setup()
+    {
+      tm_.start("DFS thread " + std::to_string(this->tid_));
+    }
+
+    bool push(State s, unsigned int tid)
+    {
+      // Prepare data for a newer allocation
+      int* ref = (int*) p_.allocate();
+      for (unsigned i = 0; i < nb_th_; ++i)
+	ref[i] = UNKNOWN;
+
+      // Try to insert the new state in the shared map.
+      auto it = map_.insert({s, ref});
+      bool b = it.isnew();
+      inserted_ += b;
+
+      // Insertion failed, delete element
+      // FIXME add a cache to avoid useless allocations.
+      if (!b)
+	p_.deallocate(ref);
+
+      // The state has been mark dead by another thread
+      for (unsigned i = 0; !b && i < nb_th_; ++i)
+	if (it->colors[i] == static_cast<int>(CLOSED))
+	  return false;
+
+      // The state has already been visited by the current thread
+      if (it->colors[tid_] == static_cast<int>(insert_status_))
+	return false;
+
+     // Keep a ptr over the array of colors
+      refs_.push_back(it->colors);
+
+      // Mark state as visited.
+      it->colors[tid_] = insert_status_;// FIX for GP previous was OPEN;
+      ++states_;
+      return true;
+    }
+
+    bool pop(State s)
+    {
+      // Don't avoid pop but modify the status of the state
+      // during backtrack
+      refs_.back()[tid_] = CLOSED;
+      refs_.pop_back();
+      return true;
+    }
+
+    void edge(unsigned int, unsigned int)
+    {
+      ++edges_;
+    }
+
+    void finalize()
+    {
+      tm_.stop("DFS thread " + std::to_string(this->tid_));
+    }
+
+    unsigned walltime()
+    {
+      return tm_.timer("DFS thread " + std::to_string(this->tid_))
+        .walltime();
+    }
+
+    unsigned inserted()
+    {
+      return inserted_;
+    }
+
+    unsigned states()
+    {
+      return states_;
+    }
+
+    unsigned edges()
+    {
+      return edges_;
+    }
+
+    unsigned how_many_generations()
+    {
+      return nb_gens_;
+    }
+
+    void sampling()
+    {
+      unsigned THRESHOLD = 1000;
+      State initial = sys_.initial(tid_);
+      if (SPOT_LIKELY(push(initial, dfs_number)))
+        {
+          todo.push_back({initial, sys_.succ(initial, tid_)});
+	  ++dfs_number;
+	  sample_.push_back(initial);
+        }
+      while (!todo.empty() && sample_.size() < THRESHOLD)
+        {
+          if (todo.back().it->done())
+            {
+              if (SPOT_LIKELY(pop(todo.back().s)))
+                {
+                  sys_.recycle(todo.back().it, tid_);
+                  todo.pop_back();
+                }
+            }
+          else
+            {
+              ++transitions;
+              State dst = todo.back().it->state();
+
+	      if (SPOT_LIKELY(push(dst, dfs_number)))
+		{
+		  ++dfs_number;
+		  todo.back().it->next();
+		  todo.push_back({dst, sys_.succ(dst, tid_)});
+		  sample_.push_back(dst);
+		}
+              else
+                {
+                  todo.back().it->next();
+                }
+            }
+        }
+    }
+
+    void cleaning()
+    {
+      todo.clear();
+      refs_.clear();
+      dfs_number = 0;
+    }
+
+    void swarming(State initial)
+    {
+      if (SPOT_LIKELY(push(initial, dfs_number)))
+        {
+          todo.push_back({initial, sys_.succ(initial, tid_)});
+	  ++dfs_number;
+        }
+      while (!todo.empty() && !stop_.load(std::memory_order_relaxed))
+        {
+          if (todo.back().it->done())
+            {
+              if (SPOT_LIKELY(pop(todo.back().s)))
+                {
+                  sys_.recycle(todo.back().it, tid_);
+                  todo.pop_back();
+                }
+            }
+          else
+            {
+              ++transitions;
+              State dst = todo.back().it->state();
+
+	      if (SPOT_LIKELY(push(dst, dfs_number)))
+		{
+		  ++dfs_number;
+		  todo.back().it->next();
+		  todo.push_back({dst, sys_.succ(dst, tid_)});
+		}
+              else
+                {
+                  todo.back().it->next();
+                }
+            }
+        }
+    }
+
+
+    void run()
+    {
+      setup();
+      if (phase1)
+	{
+	  insert_status_ = PHASE_1;
+	  sampling();
+	  cleaning();
+
+	  // Generate the next geneation from the sample
+	  new_gen_ = interpolate_fun_(sample_);
+
+	  // Use all mutated states as initial state
+	  unsigned i = 0;
+	  while (i < new_gen_->size() && !stop_.load(std::memory_order_relaxed))
+	    {
+	      insert_status_ = UNKNOWN_OPEN;
+	      swarming(new_gen_->at(i));
+	      ++i;
+	      ++nb_gens_;
+	    }
+	}
+      else
+	{
+	  insert_status_ = OPEN;
+	  swarming(sys_.initial(tid_));
+	  stop_.store(true, std::memory_order_relaxed);
+	}
+      finalize();
+    }
+
+
+
+  private:
+    struct todo_element
+    {
+      State s;
+      SuccIterator* it;
+    };
+    kripkecube<State, SuccIterator>& sys_;
+    std::vector<todo_element> todo;
+    unsigned int dfs_number = 0;
+    unsigned int transitions = 0;
+    unsigned int tid_;
+
+    spot::timer_map tm_;
+    shared_map map_;
+    unsigned inserted_ = 0;
+    unsigned nb_gens_ = 0;
+    unsigned states_ = 0;
+    unsigned edges_ = 0;
+    unsigned nb_th_ = 0;
+    fixed_size_pool p_;
+    std::vector<int*> refs_;
+    std::function<std::vector<State>*(std::vector<State>&)> interpolate_fun_;
+    std::atomic<bool>& stop_;
+    std::vector<State> sample_;
+    bool phase1 = true;
+    std::vector<State>* new_gen_ = nullptr;
+  };
 
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>

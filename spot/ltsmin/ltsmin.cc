@@ -1451,7 +1451,8 @@ namespace spot
               << name
               << std::endl;
     tm.print(std::cout);
-
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
     return;
   }
 
@@ -1491,37 +1492,68 @@ namespace spot
     tm.stop("Preprocessing");
 
 
-    bool stop = false;
+    std::atomic<bool> stop(false);
     using algo_name =
-      spot::swarmed_gp<cspins_state, cspins_iterator,
-                           cspins_state_hash, cspins_state_equal>;
+      spot::swarmed_dfs2<cspins_state, cspins_iterator,
+			 cspins_state_hash, cspins_state_equal>;
+    unsigned  nbth = sys->get_threads() ;
     algo_name::shared_map map;
 
-    std::vector<algo_name> swarmed;
     tm.start("Initialisation");
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
+    std::vector<algo_name*> swarmed(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
       {
-        auto& manager = sys->manager(i);
-        swarmed.emplace_back(
-          *sys,
-          [&manager, &sys, &d_, splitter_, i, fitness]
-            (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
-              {
-                return  interpolate_states(cs, manager, sys, d_,
-                                           splitter_, i, fitness);
-              },
-            map, i, stop);
+	auto& manager = sys->manager(i);
+	swarmed[i] =
+	    new algo_name(*sys, map, i,
+	    [&manager, &sys, &d_, splitter_, i, fitness]
+	    (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
+	    {
+	      return  interpolate_states(cs, manager, sys, d_,
+					 splitter_, i, fitness);
+	    }, stop);
       }
     tm.stop("Initialisation");
 
-    tm.start("Run");
-    std::vector<std::thread> threads;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads.push_back(std::thread(&algo_name::run, &swarmed[i]));
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+  	threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+  	  {
+  	    {
+  	      std::lock_guard<std::mutex> iolock(iomutex);
+  	      std::cout << "Thread #" << i
+  			<< ": on CPU " << sched_getcpu() << "\n";
+  	    }
 
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads[i].join();
+  	    // Wait all threads to be instanciated.
+  	    while (barrier)
+  	      continue;
+            swarmed[i]->run();
+         });
+
+  	//  Pins threads to a dedicated core.
+  	cpu_set_t cpuset;
+  	CPU_ZERO(&cpuset);
+  	CPU_SET(i, &cpuset);
+  	int rc = pthread_setaffinity_np(threads[i].native_handle(),
+  					sizeof(cpu_set_t), &cpuset);
+  	if (rc != 0)
+  	  {
+  	    std::lock_guard<std::mutex> iolock(iomutex);
+  	    std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+  	  }
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
     tm.stop("Run");
+
 
 
     std::cout << "Following csv describe for each threads:\n"
@@ -1530,13 +1562,13 @@ namespace spot
     unsigned cumul_states = 0;
     for (unsigned i = 0; i < swarmed.size(); ++i)
       {
-        cumul_states += swarmed[i].inserted();
+        cumul_states += swarmed[i]->inserted();
         std::cout << '@' << i << ','
-                  << swarmed[i].walltime() << ','
-                  << swarmed[i].inserted() << ','
-                  << swarmed[i].states() << ','
-                  << swarmed[i].edges() << ','
-                  << swarmed[i].how_many_generations()
+                  << swarmed[i]->walltime() << ','
+                  << swarmed[i]->inserted() << ','
+                  << swarmed[i]->states() << ','
+                  << swarmed[i]->edges() << ','
+                  << swarmed[i]->how_many_generations()
                   << std::endl;
 
       }
@@ -1550,16 +1582,11 @@ namespace spot
               << name
               << std::endl;
 
-
-
     tm.print(std::cout);
-
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
     return;
   }
-
-
-
-
 
   int ltsmin_model::state_size() const
   {
