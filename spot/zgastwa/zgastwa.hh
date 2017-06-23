@@ -32,16 +32,21 @@
 namespace spot
 {
 
-  struct SPOT_API zg_as_twa_state: public kripke_graph_state,
-                                   public semantics::zg::state_t
+  /// \ingroup zgastwa
+  /// \brief Class for a state in a zone graph
+  class SPOT_API zg_as_twa_state: public kripke_graph_state,
+                                  public semantics::zg::state_t
   {
   public:
+    /// \brief Constructor
+    /// The \a cond argument is useless here, it is used to be
+    /// in accord with kripke representation
     zg_as_twa_state(bdd cond = bddfalse)
       : kripke_graph_state(cond), semantics::zg::state_t()
     {
     }
 
-    // Copy constructor
+    /// \brief Copy constructor
     zg_as_twa_state(zg_as_twa_state const & s)
       : kripke_graph_state(s.cond()), semantics::zg::state_t(s)
     {
@@ -88,6 +93,8 @@ namespace spot
     {}
   };
 
+  /// \ingroup zgastwa
+  /// \brief Class for the iterator of edges of the automaton
   class SPOT_API zg_as_twa_succ_iterator: public kripke_succ_iterator
   {
   private:
@@ -132,7 +139,6 @@ namespace spot
         In TChecker, there is a test to verify if the next status
         is valid or not, to skip it during exploring.
         Maybe it's just for the DST or maybe it's necessary ?
-        CHECK IT
       */
       if (this->done())
         return false;
@@ -153,13 +159,14 @@ namespace spot
     virtual const zg_as_twa_state* dst() const override
     {
       SPOT_ASSERT(!done());
-      //SPOT_ASSERT(vedge_ != nullptr);
       zg_as_twa_state res;
       zone_graph_->next(src_state_, vedge_, res);
       return new zg_as_twa_state(res);
     }
   };
 
+  /// \ingroup zgastwa
+  /// \brief Class for representation in Spot of a timed automaton
   class SPOT_API zg_as_twa: public kripke
   {
   private:

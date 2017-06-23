@@ -34,8 +34,18 @@ noinst_LTLIBRARIES = libzgastwa.la
 libzgastwa_la_SOURCES = \
   zgastwa.cc
 
-libzgastwa_la_LIBFLAGS =    \
-  -L@TCHECKER_PREFIX@/src   \
-  -L@UDBM_PREFIX@/lib       \
-  -ludbm                    \
-  -ltchecker
+am_libzgastwa_la_OBJECTS = \
+  zgastwa.o
+
+libzgastwa_la_LDFLAGS = -shared -fPIC  \
+  -L@TCHECKER_PREFIX@/src/.libs        \
+  -L@UDBM_PREFIX@/lib                  \
+  -Wl,--whole-archive                  \
+  -ltchk2spot                          \
+  -ludbm                               \
+  -rdynamic                            \
+  -Wl,--no-whole-archive
+
+libzgastwa_la_LINK = $(CXXLD) $(AM_CXXFLAGS)                      \
+                     $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS)         \
+                     $(libzgastwa_la_LDFLAGS) -o libzgastwa.so

@@ -18,9 +18,13 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 if USE_TCHECKER
-  TCHECKER_CPPFLAGS = -I@TCHECKER_PREFIX@/src/include        \
-                      -I@TCHECKER_PREFIX@/contrib/utap2tchk  \
-                      -I@UDBM_PREFIX@/include
+  TCHECKER_CPPFLAGS = -I$(top_builddir)                     \
+                      -I$(top_srcdir) $(BUDDY_CPPFLAGS)     \
+                      -I@TCHECKER_PREFIX@/src/include       \
+                      -I@TCHECKER_PREFIX@/contrib/utap2tchk \
+                      -I@UDBM_PREFIX@/include               \
+                      -DTCHECKER_PATH=@TCHECKER_PREFIX@     \
+                      -DUDBM_PATH=@UDBM_PREFIX@
 
   TA_BIN = ta
 endif
@@ -105,16 +109,15 @@ spot_x_SOURCES = spot-x.cc
 spot_SOURCES = spot.cc
 ltlcross_LDADD = $(LDADD) $(LIB_GETHRXTIME)
 if USE_TCHECKER
-  ta_SOURCES = test_ta.cc ta.cc
-  ta_LDADD = \
-             $(top_builddir)/spot/zgastwa/libzgastwa.la          \
-             -L@TCHECKER_PREFIX@/src                \
-             -L@UDBM_PREFIX@/lib                    \
-             -L@TCHECKER_PREFIX@/contrib/utap2tchk  \
-             -lutap2tchk                            \
-             -ltchecker                             \
-             -ludbm                                 \
-             $(LDADD)
+  ta_SOURCES = ta.cc
+  ta_LDADD = $(top_builddir)/spot/zgastwa/libzgastwa.so
+  ta_LDFLAGS = \
+             $(LIBLTDL)                             \
+             ##libcommon.a ../lib/.libs/libgnu.a      \
+             ../spot/.libs/libspot.so               \
+             ../buddy/src/.libs/libbddx.so
+
+  EXTRA_ta_DEPENDENCIES = $(LTDLEPS)
 endif
 
 EXTRA_DIST = options.py
