@@ -1399,7 +1399,7 @@ namespace spot
   			<< ": on CPU " << sched_getcpu() << "\n";
   	    }
 #endif
-
+	    srand(i);
   	    // Wait all threads to be instanciated.
   	    while (barrier)
   	      continue;
@@ -1538,6 +1538,7 @@ namespace spot
   	    }
 #endif
 
+	    srand(i);
   	    // Wait all threads to be instanciated.
   	    while (barrier)
   	      continue;
