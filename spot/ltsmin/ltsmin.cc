@@ -1393,11 +1393,13 @@ namespace spot
       {
   	threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
   	  {
+#if defined(unix) || defined(__unix__) || defined(__unix)
   	    {
   	      std::lock_guard<std::mutex> iolock(iomutex);
   	      std::cout << "Thread #" << i
   			<< ": on CPU " << sched_getcpu() << "\n";
   	    }
+#endif
 
   	    // Wait all threads to be instanciated.
   	    while (barrier)
@@ -1405,6 +1407,7 @@ namespace spot
             swarmed[i]->run();
          });
 
+#if defined(unix) || defined(__unix__) || defined(__unix)
   	//  Pins threads to a dedicated core.
   	cpu_set_t cpuset;
   	CPU_ZERO(&cpuset);
@@ -1416,6 +1419,7 @@ namespace spot
   	    std::lock_guard<std::mutex> iolock(iomutex);
   	    std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
   	  }
+#endif
       }
 
     tm.start("Run");
@@ -1522,11 +1526,13 @@ namespace spot
       {
   	threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
   	  {
+#if defined(unix) || defined(__unix__) || defined(__unix)
   	    {
   	      std::lock_guard<std::mutex> iolock(iomutex);
   	      std::cout << "Thread #" << i
   			<< ": on CPU " << sched_getcpu() << "\n";
   	    }
+#endif
 
   	    // Wait all threads to be instanciated.
   	    while (barrier)
@@ -1534,6 +1540,7 @@ namespace spot
             swarmed[i]->run();
          });
 
+#if defined(unix) || defined(__unix__) || defined(__unix)
   	//  Pins threads to a dedicated core.
   	cpu_set_t cpuset;
   	CPU_ZERO(&cpuset);
@@ -1545,6 +1552,7 @@ namespace spot
   	    std::lock_guard<std::mutex> iolock(iomutex);
   	    std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
   	  }
+#endif
       }
 
     tm.start("Run");

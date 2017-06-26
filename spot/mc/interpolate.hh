@@ -305,6 +305,7 @@ namespace spot
 
     bool push(State s, unsigned int tid)
     {
+      (void) tid;
       // Prepare data for a newer allocation
       int* ref = (int*) p_.allocate();
       for (unsigned i = 0; i < nb_th_; ++i)
@@ -340,6 +341,7 @@ namespace spot
 
     bool pop(State s)
     {
+      (void) s;
       // Don't avoid pop but modify the status of the state
       // during backtrack
       refs_.back()[tid_] = CLOSED;
@@ -522,6 +524,8 @@ namespace spot
 
     bool push(State s, unsigned int tid)
     {
+      (void) tid;
+
       // Prepare data for a newer allocation
       int* ref = (int*) p_.allocate();
       for (unsigned i = 0; i < nb_th_; ++i)
@@ -557,6 +561,7 @@ namespace spot
 
     bool pop(State s)
     {
+      (void) s;
       // Don't avoid pop but modify the status of the state
       // during backtrack
       refs_.back()[tid_] = CLOSED;
