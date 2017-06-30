@@ -24,6 +24,9 @@
 #include <spot/twaalgos/complete.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/isdet.hh>
+#include <spot/twaalgos/sbacc.hh>
+
+#include <memory>
 
 namespace spot
 {
@@ -33,7 +36,7 @@ namespace spot
     {
     private:
       // Input automaton
-      const const_twa_graph_ptr aut_;
+      const_twa_graph_ptr aut_;
       // State id to bdd variable association
       // [id] == bddtrue means the state will be accepting everything
       // (true state) in the dual automaton.
@@ -272,7 +275,9 @@ namespace spot
 
     public:
       dualizer(const const_twa_graph_ptr& aut)
-        : aut_(aut),
+        : aut_(is_universal(aut)
+                ? aut
+                : sbacc(std::const_pointer_cast<spot::twa_graph>(aut))),
           state_to_var_(aut_->num_states(), bddfalse),
           true_state_(-1U),
           acc_(0U),
