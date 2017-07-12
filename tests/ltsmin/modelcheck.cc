@@ -78,6 +78,10 @@ struct mc_options_
   std::string interpolate_fitness = "";
   bool swarmed_dfs = false;
   bool swarmed_gp_dfs = false;
+  unsigned nb_generations = 3;
+  unsigned initial_population = 1000;
+  unsigned new_generation = 50;
+  float threshold = 0.999;
 } mc_options;
 
 
@@ -130,6 +134,18 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case 'm':
       mc_options.model = arg;
+      break;
+    case 'G':
+      mc_options.nb_generations = to_unsigned(arg);
+      break;
+    case 'T':
+      mc_options.threshold = to_float(arg);
+      break;
+    case 'I':
+      mc_options.initial_population = to_unsigned(arg);
+      break;
+    case 'P':
+      mc_options.initial_population = to_unsigned(arg);
       break;
     case 'p':
       mc_options.nb_threads = to_unsigned(arg);
@@ -185,6 +201,10 @@ static const argp_option options[] =
     { "swarmed-gp-dfs", SWARMED_GP_DFS,
       "[equal|lessthan|greaterthan|lessstrict|greaterstrict|greaterbounded]", 0,
       "walk the automaton using a swarmed GP DFS", 0 },
+    { "threshold", 'T', "FLOAT", 0, "Threshold (0.999)", 0 },
+    { "generation", 'G', "INT", 0, "nb generation (3)", 0 },
+    { "initial", 'I', "INT", 0, "size of the initial population (1000)", 0 },
+    { "initial", 'P', "INT", 0, "size of each new population (50)", 0 },
     { "csv", CSV, nullptr, 0,
       "output a CSV containing interesting values", 0 },
     // ------------------------------------------------------------
@@ -514,7 +534,8 @@ static int checked_main()
               {
                 return succ > fitness;
               };
-          else if (mc_options.interpolate_fitness.compare("greaterbounded") == 0)
+          else if (mc_options.interpolate_fitness.compare("greaterbounded")
+                   == 0)
             fitness = [](unsigned succ, unsigned fitness)
               {
                 return succ >= fitness && succ <= 2 * fitness;
@@ -522,7 +543,11 @@ static int checked_main()
           else
               assert(false);
           spot::ltsmin_model::swarmed_gp_dfs(modelcube, fitness,
-                                             mc_options.model);
+                                             mc_options.model,
+                                             mc_options.nb_generations,
+                                             mc_options.initial_population,
+                                             mc_options.threshold,
+                                             mc_options.new_generation);
 
         }
       else

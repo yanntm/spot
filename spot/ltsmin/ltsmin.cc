@@ -1180,7 +1180,9 @@ namespace spot
                       ltsmin_kripkecube_ptr sys,
                       const spins_interface* d,
                       std::vector<int> splitter_, unsigned tid,
-                      std::function<bool(unsigned, unsigned)> cmp)
+                      std::function<bool(unsigned, unsigned)> cmp,
+                      unsigned nb_generations = 3,
+                      float threshold = 0.999, unsigned new_generation = 50)
   {
     // FIXME compress!
     if (sys->compress())
@@ -1191,7 +1193,6 @@ namespace spot
     std::vector<cspins_state>* next_gen = new std::vector<cspins_state>();
     for (auto st: cs)
       population->push_back(st);
-
 
     // compute the fitness
     unsigned fitness = 0;
@@ -1207,14 +1208,13 @@ namespace spot
     fitness /= population->size();
 
 
-    unsigned pop_size = 50;     // FIXME
+    unsigned pop_size = new_generation;
     std::mt19937 gen;
     gen.seed(tid);
-    float THRESHOLD = 0.999;        //  FIXME
     int *tab = new int [d->get_state_size()+30]; // FIXME
 
-    // Genetic mutations: 3 generations of 25 elements
-    for (unsigned nbgen = 0; nbgen < 3; ++nbgen)
+    // Genetic mutations
+    for (unsigned nbgen = 0; nbgen < nb_generations; ++nbgen)
        {
          for (unsigned k = 0; k < pop_size; ++k)
            {
@@ -1239,7 +1239,7 @@ namespace spot
                        // ... Apply mutation
                        {
                          float proba = (float) gen();
-                         if ((proba / (float) gen.max()) >= THRESHOLD)
+                         if ((proba / (float) gen.max()) >= threshold)
                            {
                              // Here really perform the mutation:
                              // Be more efficient using bounds
@@ -1251,7 +1251,6 @@ namespace spot
                              tab[i] = tab[i] % bounds;
                            }
                        }
-                       (void)THRESHOLD;
                        ++i;
                      }
                    ++curr;
@@ -1463,7 +1462,9 @@ namespace spot
   void
   ltsmin_model::swarmed_gp_dfs(ltsmin_kripkecube_ptr sys,
                                std::function<bool(unsigned, unsigned)> fitness,
-                               std::string name)
+                               std::string name, unsigned nb_generations,
+                               int initial_population, float threshold,
+                               unsigned new_generation)
   {
     name = name.substr(name.find_last_of("/")+1);
     spot::timer_map tm;
@@ -1510,12 +1511,15 @@ namespace spot
 	auto& manager = sys->manager(i);
 	swarmed[i] =
 	    new algo_name(*sys, map, i,
-	    [&manager, &sys, &d_, splitter_, i, fitness]
+                          [&manager, &sys, &d_, splitter_, i, fitness,
+                           nb_generations, threshold, new_generation]
 	    (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
 	    {
 	      return  interpolate_states(cs, manager, sys, d_,
-					 splitter_, i, fitness);
-	    }, stop);
+					 splitter_, i, fitness,
+                                         nb_generations, threshold,
+                                         new_generation);
+	    }, stop, initial_population);
       }
     tm.stop("Initialisation");
 

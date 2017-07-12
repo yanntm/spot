@@ -501,11 +501,11 @@ namespace spot
     swarmed_dfs2(kripkecube<State, SuccIterator>& sys,
 		 shared_map& map, unsigned tid,
 		 std::function<std::vector<State>*(std::vector<State>&)> fun,
-		 std::atomic<bool>& stop):
+		 std::atomic<bool>& stop, unsigned initial_population = 1000):
       sys_(sys), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
       p_(sizeof(int)*std::thread::hardware_concurrency()),
-      interpolate_fun_(fun), stop_(stop)
+      interpolate_fun_(fun), stop_(stop), THRESHOLD(initial_population)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
       if (!(tid_%2)) // FIXME How many !
@@ -607,7 +607,6 @@ namespace spot
 
     void sampling()
     {
-      unsigned THRESHOLD = 1000;
       State initial = sys_.initial(tid_);
       if (SPOT_LIKELY(push(initial, dfs_number)))
         {
@@ -748,6 +747,7 @@ namespace spot
     std::vector<State> sample_;
     bool phase1 = true;
     std::vector<State>* new_gen_ = nullptr;
+    unsigned THRESHOLD = 1000;
   };
 
   template<typename State, typename SuccIterator,

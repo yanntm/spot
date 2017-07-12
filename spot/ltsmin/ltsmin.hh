@@ -92,8 +92,10 @@ namespace spot
 
     static void swarmed_dfs(ltsmin_kripkecube_ptr sys, std::string name);
     static void swarmed_gp_dfs(ltsmin_kripkecube_ptr sys,
-                                std::function<bool(unsigned, unsigned)> fitness,
-                               std::string name);
+                               std::function<bool(unsigned, unsigned)> fitness,
+                               std::string name, unsigned nb_generations,
+                               int initial_population, float threshold,
+                               unsigned new_generation);
 
     // \brief
     static std::string
