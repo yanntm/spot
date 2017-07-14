@@ -97,6 +97,8 @@ namespace spot
                                int initial_population, float threshold,
                                unsigned new_generation);
 
+    static void swarmed_deadlock(ltsmin_kripkecube_ptr sys, std::string name);
+
     // \brief
     static std::string
       interpolate_csv(ltsmin_kripkecube_ptr sys,

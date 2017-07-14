@@ -58,6 +58,7 @@ const unsigned CSV = 8;
 const unsigned INTERPOLATE_CSV = 16;
 const unsigned SWARMED_DFS = 32;
 const unsigned SWARMED_GP_DFS = 33;
+const unsigned SWARMED_DEADLOCK = 34;
 
 // Handle all options specified in the command line
 struct mc_options_
@@ -78,6 +79,7 @@ struct mc_options_
   std::string interpolate_fitness = "";
   bool swarmed_dfs = false;
   bool swarmed_gp_dfs = false;
+  bool swarmed_deadlock = false;
   unsigned nb_generations = 3;
   unsigned initial_population = 1000;
   unsigned new_generation = 50;
@@ -105,6 +107,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       mc_options.swarmed_gp_dfs = true;
       std::cout << arg << std::endl;
       mc_options.interpolate_fitness = arg;
+      break;
+    case SWARMED_DEADLOCK:
+      mc_options.swarmed_deadlock = true;
       break;
     case 'c':
       mc_options.compute_counterexample = true;
@@ -201,6 +206,8 @@ static const argp_option options[] =
     { "swarmed-gp-dfs", SWARMED_GP_DFS,
       "[equal|lessthan|greaterthan|lessstrict|greaterstrict|greaterbounded]", 0,
       "walk the automaton using a swarmed GP DFS", 0 },
+    { "swarmed-deadlock", SWARMED_DEADLOCK, nullptr, 0,
+      "Look for deadlock inside of the model", 0 },
     { "threshold", 'T', "FLOAT", 0, "Threshold (0.999)", 0 },
     { "generation", 'G', "INT", 0, "nb generation (3)", 0 },
     { "initial", 'I', "INT", 0, "size of the initial population (1000)", 0 },
@@ -489,7 +496,8 @@ static int checked_main()
         (modelcube, fitness, mc_options.interpolate_fitness);
     }
 
-  if (mc_options.swarmed_dfs || mc_options.swarmed_gp_dfs)
+  if (mc_options.swarmed_dfs || mc_options.swarmed_gp_dfs ||
+      mc_options.swarmed_deadlock)
     {
       spot::ltsmin_kripkecube_ptr modelcube = nullptr;
       tm.start("load kripkecube");
@@ -550,8 +558,10 @@ static int checked_main()
                                              mc_options.new_generation);
 
         }
-      else
+      else if (mc_options.swarmed_dfs)
         spot::ltsmin_model::swarmed_dfs(modelcube, mc_options.model);
+      else //if (mc_options.swarmed_deadlock)
+        spot::ltsmin_model::swarmed_deadlock(modelcube, mc_options.model);
       tm.stop("swarming");
       std::cout << tm.timer("swarming").walltime() << '\n';
 

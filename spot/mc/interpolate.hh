@@ -750,6 +750,275 @@ namespace spot
     unsigned THRESHOLD = 1000;
   };
 
+
+
+
+
+  template<typename State, typename SuccIterator,
+           typename StateHash, typename StateEqual>
+  class swarmed_deadlock
+  {
+    enum st_status     // Describe the status of a state
+      {
+        OPEN = 1,       // The state is currently processed by this thread
+        CLOSED = 2,     // All the successors of this state have been visited
+	UNKNOWN = 4     // First time this state is discoverd by this thread
+      };
+
+    struct my_pair
+    {
+      State st;
+      int* colors;
+    };
+
+    struct inner_pair_hasher
+    {
+      inner_pair_hasher(const my_pair&)
+      { }
+
+      inner_pair_hasher() = default;
+
+      brick::hash::hash128_t
+      hash(const my_pair& lhs) const
+      {
+        StateHash hash;
+	// FIXME without that insert/find fail !!
+	unsigned u = hash(lhs.st) % (1<<30);
+	return {u, u};
+      }
+
+      bool equal(const my_pair& lhs,
+                 const my_pair& rhs) const
+      {
+        StateEqual equal;
+        return equal(lhs.st, rhs.st);
+      }
+    };
+
+  public:
+    using shared_map = brick::hashset::FastConcurrent <my_pair,
+						       inner_pair_hasher>;
+
+    swarmed_deadlock(kripkecube<State, SuccIterator>& sys,
+                shared_map& map, unsigned tid):
+      sys_(sys), tid_(tid), map_(map),
+      nb_th_(std::thread::hardware_concurrency()),
+      p_(sizeof(int)*std::thread::hardware_concurrency())
+    {
+      SPOT_ASSERT(is_a_kripkecube(sys));
+    }
+
+    virtual ~swarmed_deadlock()
+    {
+    }
+
+    void setup()
+    {
+      tm_.start("DFS thread " + std::to_string(this->tid_));
+    }
+
+    bool push(State s, unsigned int tid)
+    {
+      (void) tid;
+      // Prepare data for a newer allocation
+      int* ref = (int*) p_.allocate();
+      for (unsigned i = 0; i < nb_th_; ++i)
+	ref[i] = UNKNOWN;
+
+      // Try to insert the new state in the shared map.
+      auto it = map_.insert({s, ref});
+      bool b = it.isnew();
+      inserted_ += b;
+
+      // Insertion failed, delete element
+      // FIXME add a cache to avoid useless allocations.
+      if (!b)
+	p_.deallocate(ref);
+
+      // The state has been mark dead by another thread
+      for (unsigned i = 0; !b && i < nb_th_; ++i)
+	if (it->colors[i] == static_cast<int>(CLOSED))
+	  return false;
+
+      // The state has already been visited by the current thread
+      if (it->colors[tid_] == static_cast<int>(OPEN))
+	return false;
+
+      // Keep a ptr over the array of colors
+      refs_.push_back(it->colors);
+
+      // Mark state as visited.
+      it->colors[tid_] = OPEN;
+      ++states_;
+      return true;
+    }
+
+    bool pop(State s)
+    {
+      (void) s;
+      // Don't avoid pop but modify the status of the state
+      // during backtrack
+      refs_.back()[tid_] = CLOSED;
+      refs_.pop_back();
+      return true;
+    }
+
+    void edge(unsigned int, unsigned int)
+    {
+      ++edges_;
+    }
+
+    void finalize()
+    {
+      tm_.stop("DFS thread " + std::to_string(this->tid_));
+    }
+
+    unsigned walltime()
+    {
+      return tm_.timer("DFS thread " + std::to_string(this->tid_))
+        .walltime();
+    }
+
+    unsigned inserted()
+    {
+      return inserted_;
+    }
+
+    unsigned states()
+    {
+      return states_;
+    }
+
+    unsigned edges()
+    {
+      return edges_;
+    }
+
+    unsigned how_many_generations()
+    {
+      return nb_gens_;
+    }
+
+    void run()
+    {
+      setup();
+      State initial = sys_.initial(tid_);
+      if (SPOT_LIKELY(push(initial, dfs_number)))
+        {
+          todo.push_back({initial, sys_.succ(initial, tid_), transitions});
+	  ++dfs_number;
+        }
+      while (!todo.empty())
+        {
+          if (todo.back().it->done())
+            {
+              if (SPOT_LIKELY(pop(todo.back().s)))
+                {
+                  deadlock_ = todo.back().current_tr == transitions;
+                  if (deadlock_)
+                    break;
+                  sys_.recycle(todo.back().it, tid_);
+                  todo.pop_back();
+                }
+            }
+          else
+            {
+              ++transitions;
+              State dst = todo.back().it->state();
+
+	      if (SPOT_LIKELY(push(dst, dfs_number)))
+		{
+		  ++dfs_number;
+		  todo.back().it->next();
+		  todo.push_back({dst, sys_.succ(dst, tid_), transitions});
+		}
+              else
+                {
+                  todo.back().it->next();
+                }
+            }
+        }
+      finalize();
+    }
+
+    bool has_deadlock()
+    {
+      return deadlock_;
+    }
+
+  private:
+    struct todo_element
+    {
+      State s;
+      SuccIterator* it;
+      unsigned current_tr;
+    };
+    kripkecube<State, SuccIterator>& sys_;
+    std::vector<todo_element> todo;
+    unsigned int dfs_number = 0;
+    unsigned int transitions = 0;
+    unsigned int tid_;
+
+    spot::timer_map tm_;
+    shared_map map_;
+    unsigned inserted_ = 0;
+    unsigned nb_gens_ = 0;
+    unsigned states_ = 0;
+    unsigned edges_ = 0;
+    unsigned nb_th_ = 0;
+    fixed_size_pool p_;
+    std::vector<int*> refs_;
+    bool deadlock_ = false;
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
   class swarmed_gp  :
