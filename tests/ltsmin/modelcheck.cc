@@ -59,6 +59,7 @@ const unsigned INTERPOLATE_CSV = 16;
 const unsigned SWARMED_DFS = 32;
 const unsigned SWARMED_GP_DFS = 33;
 const unsigned SWARMED_DEADLOCK = 34;
+const unsigned SWARMED_GP_DEADLOCK = 35;
 
 // Handle all options specified in the command line
 struct mc_options_
@@ -80,6 +81,7 @@ struct mc_options_
   bool swarmed_dfs = false;
   bool swarmed_gp_dfs = false;
   bool swarmed_deadlock = false;
+  bool swarmed_gp_deadlock = false;
   unsigned nb_generations = 3;
   unsigned initial_population = 1000;
   unsigned new_generation = 50;
@@ -110,6 +112,10 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case SWARMED_DEADLOCK:
       mc_options.swarmed_deadlock = true;
+      break;
+    case SWARMED_GP_DEADLOCK:
+      mc_options.swarmed_gp_deadlock = true;
+      mc_options.interpolate_fitness = arg;
       break;
     case 'c':
       mc_options.compute_counterexample = true;
@@ -208,6 +214,9 @@ static const argp_option options[] =
       "walk the automaton using a swarmed GP DFS", 0 },
     { "swarmed-deadlock", SWARMED_DEADLOCK, nullptr, 0,
       "Look for deadlock inside of the model", 0 },
+    { "swarmed-gp-deadlock", SWARMED_GP_DEADLOCK,
+      "[equal|lessthan|greaterthan|lessstrict|greaterstrict|greaterbounded]", 0,
+      "Look for deadlock inside of the model with gp", 0 },
     { "threshold", 'T', "FLOAT", 0, "Threshold (0.999)", 0 },
     { "generation", 'G', "INT", 0, "nb generation (3)", 0 },
     { "initial", 'I', "INT", 0, "size of the initial population (1000)", 0 },
@@ -497,7 +506,7 @@ static int checked_main()
     }
 
   if (mc_options.swarmed_dfs || mc_options.swarmed_gp_dfs ||
-      mc_options.swarmed_deadlock)
+      mc_options.swarmed_deadlock || mc_options.swarmed_gp_deadlock)
     {
       spot::ltsmin_kripkecube_ptr modelcube = nullptr;
       tm.start("load kripkecube");
@@ -514,7 +523,7 @@ static int checked_main()
       tm.stop("load kripkecube");
 
       tm.start("swarming");
-      if (mc_options.swarmed_gp_dfs)
+      if (mc_options.swarmed_gp_dfs || mc_options.swarmed_gp_deadlock)
         {
           std::function<bool(unsigned, unsigned)> fitness;
           if (mc_options.interpolate_fitness.compare("equal") == 0)
@@ -550,13 +559,20 @@ static int checked_main()
               };
           else
               assert(false);
-          spot::ltsmin_model::swarmed_gp_dfs(modelcube, fitness,
-                                             mc_options.model,
-                                             mc_options.nb_generations,
-                                             mc_options.initial_population,
-                                             mc_options.threshold,
-                                             mc_options.new_generation);
-
+          if (mc_options.swarmed_gp_dfs)
+            spot::ltsmin_model::swarmed_gp_dfs(modelcube, fitness,
+                                               mc_options.model,
+                                               mc_options.nb_generations,
+                                               mc_options.initial_population,
+                                               mc_options.threshold,
+                                               mc_options.new_generation);
+          else
+            spot::ltsmin_model::swarmed_gp_deadlock(modelcube, fitness,
+                                               mc_options.model,
+                                               mc_options.nb_generations,
+                                               mc_options.initial_population,
+                                               mc_options.threshold,
+                                               mc_options.new_generation);
         }
       else if (mc_options.swarmed_dfs)
         spot::ltsmin_model::swarmed_dfs(modelcube, mc_options.model);

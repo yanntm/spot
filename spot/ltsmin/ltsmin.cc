@@ -1697,7 +1697,149 @@ namespace spot
 
 
 
+  void
+  ltsmin_model::swarmed_gp_deadlock(ltsmin_kripkecube_ptr sys,
+                               std::function<bool(unsigned, unsigned)> fitness,
+                               std::string name, unsigned nb_generations,
+                               int initial_population, float threshold,
+                               unsigned new_generation)
+  {
+    name = name.substr(name.find_last_of("/")+1);
+    spot::timer_map tm;
 
+    // FIXME redundant code
+    auto d_ = sys->spins_interface();
+
+    tm.start("Preprocessing");
+    std::vector<int> splitter_;
+    {
+      for (int i = 0; i < d_->get_type_count(); ++i)
+        {
+          std::string name(d_->get_type_name(i));
+          if (name.compare("int") == 0 || name.compare("byte") == 0)
+            continue;
+          for (int j = 0; j < d_->get_state_size(); ++j)
+            if (name.compare(d_->get_state_variable_name(j)) == 0 && j != 0)
+              {
+                if (splitter_.empty())
+                  {
+                    for (int k = 1; k <= j; ++k)
+                      splitter_.push_back(k);
+                  }
+                else
+                  splitter_.push_back(j);
+              }
+        }
+    }
+    splitter_.push_back(d_->get_state_size());
+    tm.stop("Preprocessing");
+
+
+    std::atomic<bool> stop(false);
+    using algo_name =
+      spot::swarmed_gp_deadlock<cspins_state, cspins_iterator,
+                             cspins_state_hash, cspins_state_equal>;
+    unsigned  nbth = sys->get_threads() ;
+    algo_name::shared_map map;
+
+    tm.start("Initialisation");
+    std::vector<algo_name*> swarmed(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+	auto& manager = sys->manager(i);
+	swarmed[i] =
+	    new algo_name(*sys, map, i,
+                          [&manager, &sys, &d_, splitter_, i, fitness,
+                           nb_generations, threshold, new_generation]
+	    (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
+	    {
+	      return  interpolate_states(cs, manager, sys, d_,
+					 splitter_, i, fitness,
+                                         nb_generations, threshold,
+                                         new_generation);
+	    }, stop, initial_population);
+      }
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+  	threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+  	  {
+#if defined(unix) || defined(__unix__) || defined(__unix)
+  	    {
+  	      std::lock_guard<std::mutex> iolock(iomutex);
+  	      std::cout << "Thread #" << i
+  			<< ": on CPU " << sched_getcpu() << "\n";
+  	    }
+#endif
+
+  	    // Wait all threads to be instanciated.
+  	    while (barrier)
+  	      continue;
+            swarmed[i]->run();
+         });
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+  	//  Pins threads to a dedicated core.
+  	cpu_set_t cpuset;
+  	CPU_ZERO(&cpuset);
+  	CPU_SET(i, &cpuset);
+  	int rc = pthread_setaffinity_np(threads[i].native_handle(),
+  					sizeof(cpu_set_t), &cpuset);
+  	if (rc != 0)
+  	  {
+  	    std::lock_guard<std::mutex> iolock(iomutex);
+  	    std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+  	  }
+#endif
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
+    tm.stop("Run");
+
+
+
+    std::cout << "Following csv describe for each threads:\n"
+              << "tid,walltime,uniq-inserted,visited-states,visited-edge,"
+              << "number-fake-initial-used\n";
+    unsigned cumul_states = 0;
+    bool has_deadlock = false;
+    for (unsigned i = 0; i < swarmed.size(); ++i)
+      {
+        cumul_states += swarmed[i]->inserted();
+        std::cout << '@' << i << ','
+                  << swarmed[i]->walltime() << ','
+                  << swarmed[i]->inserted() << ','
+                  << swarmed[i]->states() << ','
+                  << swarmed[i]->edges() << ','
+                  << swarmed[i]->how_many_generations() << ','
+                  << swarmed[i]->has_deadlock()
+                  << std::endl;
+        has_deadlock |= swarmed[i]->has_deadlock();
+      }
+    std::cout << "\nFollowing csv describe the global computation:\n"
+              << "algoname,walltime,preprocessing,uniq-visited-states"
+              << "number-fake-initial-used,model,has_deadlock\n";
+    std::cout << '#' << "gp-deadlock" << sys->get_threads() << ','
+              << tm.timer("Run").walltime() << ','
+              << tm.timer("Preprocessing").walltime() << ','
+              << cumul_states << ','
+              << name << ','
+              << has_deadlock
+              << std::endl;
+
+    tm.print(std::cout);
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
+    return;
+  }
 
 
 

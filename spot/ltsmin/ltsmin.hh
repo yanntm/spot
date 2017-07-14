@@ -96,6 +96,11 @@ namespace spot
                                std::string name, unsigned nb_generations,
                                int initial_population, float threshold,
                                unsigned new_generation);
+    static void swarmed_gp_deadlock(ltsmin_kripkecube_ptr sys,
+                               std::function<bool(unsigned, unsigned)> fitness,
+                               std::string name, unsigned nb_generations,
+                               int initial_population, float threshold,
+                               unsigned new_generation);
 
     static void swarmed_deadlock(ltsmin_kripkecube_ptr sys, std::string name);
 
