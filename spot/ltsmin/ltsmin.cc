@@ -1612,11 +1612,12 @@ namespace spot
 
     unsigned  nbth = sys->get_threads() ;
     algo_name::shared_map map;
+    std::atomic<bool> stop(false);
 
     tm.start("Initialisation");
     std::vector<algo_name*> swarmed(nbth);
     for (unsigned i = 0; i < nbth; ++i)
-      swarmed[i] = new algo_name(*sys, map, i);
+      swarmed[i] = new algo_name(*sys, map, i, stop);
     tm.stop("Initialisation");
 
     std::mutex iomutex;

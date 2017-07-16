@@ -800,10 +800,10 @@ namespace spot
 						       inner_pair_hasher>;
 
     swarmed_deadlock(kripkecube<State, SuccIterator>& sys,
-                shared_map& map, unsigned tid):
+		     shared_map& map, unsigned tid, std::atomic<bool>& stop):
       sys_(sys), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
-      p_(sizeof(int)*std::thread::hardware_concurrency())
+      p_(sizeof(int)*std::thread::hardware_concurrency()), stop_(stop)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
     }
@@ -870,6 +870,7 @@ namespace spot
 
     void finalize()
     {
+      this->stop_ = true;
       tm_.stop("DFS thread " + std::to_string(this->tid_));
     }
 
@@ -908,7 +909,7 @@ namespace spot
           todo.push_back({initial, sys_.succ(initial, tid_), transitions});
 	  ++dfs_number;
         }
-      while (!todo.empty())
+      while (!todo.empty() && !stop_.load(std::memory_order_relaxed))
         {
           if (todo.back().it->done())
             {
@@ -969,6 +970,7 @@ namespace spot
     fixed_size_pool p_;
     std::vector<int*> refs_;
     bool deadlock_ = false;
+    std::atomic<bool>& stop_;
   };
 
 
