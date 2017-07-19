@@ -105,11 +105,13 @@ namespace spot
           unsigned rank = st.rank;
 
           bdd res = bddfalse;
+
+          bool rank_odd = rank % 2;
           for (auto& e : aut_->out(id))
             {
               // If we are on odd level and the edge is marked with the set we
               // don't want to see, skip. (delete transition).
-              if ((rank % 2) && (e.acc & st.mark))
+              if (rank_odd && (e.acc & st.mark))
                 continue;
 
               bdd dest = bddtrue;
@@ -117,8 +119,9 @@ namespace spot
                 {
                   bdd levels = bddfalse;
                   int curr = static_cast<int>(rank);
-                  for (int i = curr; i >= 0
-                       && (!less_ || i >= ((curr - 1) & ~0x01)); --i)
+                  // We must always be able to go to the previous even rank
+                  int lower = less_ ? ((curr - 1) & ~1) : 0;
+                  for (int i = curr; i >= lower; --i)
                     {
                       if (i % 2)
                         for (unsigned m = 0; m < numsets_; ++m)
