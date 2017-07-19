@@ -82,7 +82,7 @@ namespace spot
         std::queue<rc_state> todo_;
         bool less_;
 
-        unsigned new_state (unsigned st, unsigned rank, acc_cond::mark_t mark)
+        unsigned new_state(unsigned st, unsigned rank, acc_cond::mark_t mark)
         {
           rc_state s(st, rank, mark);
           auto p = state_map_.emplace(s, 0);
