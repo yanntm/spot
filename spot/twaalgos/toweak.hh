@@ -25,7 +25,7 @@ namespace spot
 {
   /// \brief Convert an alternating automaton to a weak alternating automaton.
   ///
-  /// The input automaton has a generalized co-Büchi or Büchi acceptance
+  /// The input automaton must have a generalized co-Büchi or Büchi acceptance
   /// condition.
   /// The automaton will be converted into a weak Büchi automaton. If the input
   /// automaton is already weak, it will simply be copied.
