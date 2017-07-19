@@ -218,7 +218,7 @@ namespace spot
   twa_graph_ptr to_weak_alternating(const_twa_graph_ptr& aut, bool less)
   {
     if (is_weak_automaton(aut))
-      return make_twa_graph(aut);
+      return make_twa_graph(aut, twa::prop_set::all());
     /* The current implementation of is_inherently_weak does not support
        alternating automata. In case the input automaton is inherently weak,
        it can be easily transformed to weak without the need to call to_weak
