@@ -162,7 +162,6 @@ namespace spot
 
           res_->set_univ_init_state(states.begin(), states.end());
 
-          states.clear();
           while (!todo_.empty())
             {
               rc_state st = todo_.front();
