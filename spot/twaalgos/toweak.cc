@@ -50,8 +50,8 @@ namespace spot
       {
         using std::hash;
         return ((hash<int>()(s.id)
-                 ^ (hash<int>()(s.rank) << 1)) >> 1)
-                 ^ (hash<int>()(s.mark.id) << 1);
+                 ^ (hash<int>()(s.rank)))
+                 ^ (hash<int>()(s.mark.id)));
       }
     };
 
