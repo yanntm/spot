@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <spot/misc/bddlt.hh>
 #include <spot/misc/minato.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/dualize.hh>
@@ -65,15 +66,6 @@ namespace spot
       }
     };
 
-    struct bdd_hash
-    {
-      size_t
-      operator()(const bdd& b) const
-      {
-        return std::hash<int>()(b.id());
-      }
-    };
-
     class to_weak
     {
       private:
@@ -84,7 +76,7 @@ namespace spot
                            rc_state_hash,
                            rc_state_equal> state_map_;
         std::vector<bdd> state_to_var_;
-        std::unordered_map<bdd, unsigned, bdd_hash> var_to_state_;
+        std::unordered_map<bdd, unsigned, spot::bdd_hash> var_to_state_;
         bdd all_states_;
         twa_graph_ptr res_;
         std::queue<rc_state> todo_;
