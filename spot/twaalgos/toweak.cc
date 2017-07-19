@@ -218,30 +218,9 @@ namespace spot
   twa_graph_ptr to_weak_alternating(const_twa_graph_ptr& aut, bool less)
   {
     if (is_weak_automaton(aut))
-      {
-        auto res = make_twa_graph(aut->get_dict());
-        res->new_states(aut->num_states());
-
-        std::vector<unsigned> dst;
-        for (unsigned d: aut->univ_dests(aut->get_init_state_number()))
-          dst.push_back(d);
-
-        res->set_univ_init_state(dst.begin(), dst.end());
-        res->set_acceptance(aut->get_acceptance());
-
-        for (auto e: aut->edges())
-          {
-            dst.clear();
-            for (auto d: aut->univ_dests(e.dst))
-              {
-                dst.push_back(d);
-              }
-            res->new_univ_edge(e.src, dst.begin(), dst.end(), e.cond, e.acc);
-          }
-        return res;
-      }
+      return make_twa_graph(aut);
     /* The current implementation of is_inherently_weak does not support
-       alternating automatons. In case the input automaton is inherently weak,
+       alternating automata. In case the input automaton is inherently weak,
        it can be easily transformed to weak without the need to call to_weak
     */
     if (aut->acc().is_generalized_buchi())
