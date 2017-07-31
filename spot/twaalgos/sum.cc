@@ -76,7 +76,7 @@ namespace spot
         }
     }
 
-    // Helper function that perform the sum of the automaton in left and the 
+    // Helper function that performs the sum of the automaton in left and the
     // automaton in right, using is_sum true for sum_or and is_sum false
     // as sum_and
     static
@@ -93,39 +93,55 @@ namespace spot
       res->copy_ap_of(left);
       res->copy_ap_of(right);
 
-      auto unsatl = left->acc().unsat_mark();
-      acc_cond::mark_t markl = 0U;
-      acc_cond::mark_t markr = 0U;
-      auto left_acc = left->get_acceptance();
       unsigned left_num_sets = left->num_sets();
-      if (!unsatl.first)
-        {
-          markl.set(0);
-          left_num_sets = 1;
-          left_acc = acc_cond::acc_code::buchi();
-        }
-      else
-        {
-          markr |= unsatl.second;
-        }
-
-      auto unsatr = right->acc().unsat_mark();
-      auto right_acc = right->get_acceptance();
       unsigned right_num_sets = right->num_sets();
-      if (!unsatr.first)
+
+      if (left->acc().is_generalized_buchi() &&
+          right->acc().is_generalized_buchi())
         {
-          markr.set(left_num_sets);
-          right_num_sets = 1;
-          right_acc = acc_cond::acc_code::buchi();
+          auto markl = right->acc().all_sets();
+          markl -= left->acc().all_sets();
+          auto markr = left->acc().all_sets();
+          markr -= right->acc().all_sets();
+
+          res->set_generalized_buchi(std::max(left_num_sets, right_num_sets));
+          copy_union(res, left, markl);
+          copy_union(res, right, markr);
         }
       else
         {
-          markl |= (unsatr.second << left_num_sets);
+          auto unsatl = left->acc().unsat_mark();
+          auto left_acc = left->get_acceptance();
+          acc_cond::mark_t markl = 0U;
+          acc_cond::mark_t markr = 0U;
+          if (!unsatl.first)
+            {
+              markl.set(0);
+              left_num_sets = 1;
+              left_acc = acc_cond::acc_code::buchi();
+            }
+          else
+            {
+              markr |= unsatl.second;
+            }
+
+          auto unsatr = right->acc().unsat_mark();
+          auto right_acc = right->get_acceptance();
+          if (!unsatr.first)
+            {
+              markr.set(left_num_sets);
+              right_num_sets = 1;
+              right_acc = acc_cond::acc_code::buchi();
+            }
+          else
+            {
+              markl |= (unsatr.second << left_num_sets);
+            }
+          res->set_acceptance(left_num_sets + right_num_sets,
+                             (right_acc << left_num_sets) | left_acc);
+          copy_union(res, left, markl);
+          copy_union(res, right, markr, left_num_sets);
         }
-      res->set_acceptance(left_num_sets + right_num_sets,
-                         (right_acc << left_num_sets) |= left_acc);
-      copy_union(res, left, markl);
-      copy_union(res, right, markr, left_num_sets);
 
       if (is_sum)
         {

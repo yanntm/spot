@@ -24,51 +24,49 @@
 
 namespace spot
 {
-  /// \brief Sum two twa into a new twa, performing the union of the two input
-  /// automata.
+  /// \brief Sum two twa into a new twa. \a sum performs the union of the
+  /// (languages of the) input automata, while \a sum_and performs their
+  /// intersection.
   ///
-  /// \param left Left term of the sum.
-  /// \param right Right term of the sum.
-  /// \return A spot::twa_graph containing the sum of \a left and \a right
-  SPOT_API
-  twa_graph_ptr sum(const const_twa_graph_ptr& left,
-                    const const_twa_graph_ptr& right);
-
-  /// \brief Sum two twa into a new twa, performing the union of the two input
-  /// automata.
+  /// The sum is performed by adding a new initial state and a transition from
+  /// this new initial states to the initial states of the arguments. \a uses an
+  /// existential transition, and \a sum_and uses a universal one.
+  /// The acceptance condition is the disjunction of those of the arguments.
+  /// If both input automata are TGBA, the output automaton is also a TGBA,
+  /// whose acceptance condition is the conjunction of the input acceptance
+  /// conditions. This reduces the number of acceptance marks from
+  ///   left->num_sets() + right->num_sets()
+  /// to
+  ///   max(left->num_sets(), right->num_sets())
   ///
-  /// \param left Left term of the sum.
-  /// \param right Right term of the sum.
-  /// \param left_state Initial state of the left term of the sum.
-  /// \param right_state Initial state of the right term of the sum.
-  /// \return A spot::twa_graph containing the sum of \a left and \a right
+  /// \a sum and \a sum_and also have a version to specify explicitely the
+  /// states to be considered as initial. This is useful when considering the
+  /// language recognized from a given state.
+  ///
+  /// \param left Left-hand-side term of the sum.
+  /// \param right Right-hand-side term of the sum.
+  /// \param left_state Initial state of the lhs term of the sum.
+  /// \param right_state Initial state of the rhs term of the sum.
+  /// \return A spot::twa_graph containing the sum of \a left and \a right.
+  /// \@{
   SPOT_API
   twa_graph_ptr sum(const const_twa_graph_ptr& left,
                     const const_twa_graph_ptr& right,
                     unsigned left_state,
                     unsigned right_state);
 
-  /// \brief Sum two twa into a new twa, using a universal initial transition,
-  /// performing the intersection of the two languages of the input automata.
-  ///
-  /// \param left Left term of the sum.
-  /// \param right Right term of the sum.
-  /// \return A spot::twa_graph containing the sum of \a left and \a right
   SPOT_API
-  twa_graph_ptr sum_and(const const_twa_graph_ptr& left,
-                        const const_twa_graph_ptr& right);
+  twa_graph_ptr sum(const const_twa_graph_ptr& left,
+                    const const_twa_graph_ptr& right);
 
-  /// \brief Sum two twa into a new twa, using a universal initial transition,
-  /// performing the intersection of the two languages of the input automata.
-  ///
-  /// \param left Left term of the sum.
-  /// \param right Right term of the sum.
-  /// \param left_state Initial state of the left term of the sum.
-  /// \param right_state Initial state of the right term of the sum.
-  /// \return A spot::twa_graph containing the sum of \a left and \a right
   SPOT_API
   twa_graph_ptr sum_and(const const_twa_graph_ptr& left,
                         const const_twa_graph_ptr& right,
                         unsigned left_state,
                         unsigned right_state);
+
+  SPOT_API
+  twa_graph_ptr sum_and(const const_twa_graph_ptr& left,
+                        const const_twa_graph_ptr& right);
+  /// \@}
 }
