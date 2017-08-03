@@ -1,6 +1,6 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2009, 2010, 2012, 2014, 2015, 2016 Laboratoire de Recherche et
-# Développement de l'Epita (LRDE).
+# Copyright (C) 2009, 2010, 2012, 2014, 2015, 2016-2017 Laboratoire de Recherche
+# et Développement de l'Epita (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
 # et Marie Curie.
@@ -35,6 +35,7 @@ Options:
   -d   turn on traces during parsing
   -D   degeneralize the automaton
   -f   use Couvreur's FM algorithm for translation
+  -r   use Colange's recursive algorithm for translation
   -t   display reachable states in LBTT's format
   -T   use ltl2taa for translation
   -v   display the BDD variables used by the automaton
@@ -45,7 +46,7 @@ Options:
 
 prog = sys.argv[0]
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'dDftTvW')
+    opts, args = getopt.getopt(sys.argv[1:], 'dDfrtTvW')
 except getopt.GetoptError:
     usage(prog)
 
@@ -54,6 +55,7 @@ debug_opt = False
 degeneralize_opt = None
 output = 0
 fm_opt = 0
+rec_opt = 0
 taa_opt = 0
 wdba = 0
 
@@ -64,6 +66,8 @@ for o, a in opts:
         degeneralize_opt = 1
     elif o == '-f':
         fm_opt = 1
+    elif o == '-r':
+        rec_opt = 1
     elif o == '-t':
         output = 6
     elif o == '-T':
@@ -74,6 +78,9 @@ for o, a in opts:
         wdba = 1
     else:
         usage(prog)
+
+if fm_opt and rec_opt:
+    assert "options -f and -r are incompatible"
 
 if len(args) != 1:
     usage(prog)
@@ -94,6 +101,9 @@ dict = spot.make_bdd_dict()
 if f:
     if fm_opt:
         a = spot.ltl_to_tgba_fm(f, dict)
+        concrete = 0
+    elif rec_opt:
+        a = spot.ltl_to_tgba_rec(f, dict)
         concrete = 0
     elif taa_opt:
         a = concrete = spot.ltl_to_taa(f, dict)

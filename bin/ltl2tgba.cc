@@ -24,6 +24,7 @@
 
 #include <argp.h>
 #include "error.h"
+#include "argmatch.h"
 
 #include "common_setup.hh"
 #include "common_r.hh"
@@ -59,6 +60,8 @@ static const argp_option options[] =
       "the part of the line after the formula if it "
       "comes from a column extracted from a CSV file", 4 },
     /**************************************************/
+    { "algo", 'T', "FM|REC", 0, "selects the translation algorithm", 2 },
+    /**************************************************/
     { "unambiguous", 'U', nullptr, 0, "output unambiguous automata", 2 },
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },
     { "extra-options", 'x', "OPTS", 0,
@@ -79,12 +82,26 @@ const struct argp_child children[] =
 static spot::option_map extra_options;
 static spot::postprocessor::output_pref unambig = 0;
 
+static spot::translator::algo_type trans_algo = spot::translator::FM;
+static char const* const algo_args[] =
+{
+  "default", "FM", "REC", nullptr
+};
+static spot::translator::algo_type const algo_types[] =
+{
+  spot::translator::FM, spot::translator::FM, spot::translator::REC
+};
+ARGMATCH_VERIFY(algo_args, algo_types);
+
 static int
 parse_opt(int key, char* arg, struct argp_state*)
 {
   // This switch is alphabetically-ordered.
   switch (key)
     {
+    case 'T':
+      trans_algo = XARGMATCH("--algo", arg, algo_args, algo_types);
+      break;
     case 'U':
       unambig = spot::postprocessor::Unambiguous;
       break;
@@ -179,6 +196,7 @@ main(int argc, char** argv)
       trans.set_pref(pref | comp | sbacc | unambig);
       trans.set_type(type);
       trans.set_level(level);
+      trans.set_algo(trans_algo);
 
       trans_processor processor(trans);
       if (processor.run())

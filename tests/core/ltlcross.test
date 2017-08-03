@@ -56,6 +56,7 @@ ltlcross -D \
   "$ltl2tgba -t -f -x -p -L %f > %T" \
   "$ltl2tgba -t -f -x -p -DT %f > %T" \
   "$ltl2tgba -t -f -x -p -L -DT %f > %T" \
+  "$ltl2tgba -t -r %f > %T" \
   "$ltl2tgba -t -taa -r4 %f > %T" \
   "$ltl2tgba -t -taa -r4 -c %f > %T" \
   "$ltl2tgba -t -taa -r4 -R3 -RDS %f > %T"

@@ -47,5 +47,16 @@ set -e
 ../run $srcdir/ltl2tgba.py -f 'Fa & Xa & GFc & Gc'
 ../run $srcdir/ltl2tgba.py -f 'Fc & X(a | Xb) & GF(a | Xb) & Gc'
 
+../run $srcdir/ltl2tgba.py -r a
+../run $srcdir/ltl2tgba.py -r 'a U b'
+../run $srcdir/ltl2tgba.py -r 'X a'
+../run $srcdir/ltl2tgba.py -r 'a & b & c'
+../run $srcdir/ltl2tgba.py -r 'a | b | (c U (d & (g U (h ^ i))))'
+../run $srcdir/ltl2tgba.py -r 'Xa & (b U !a) & (b U !a)'
+../run $srcdir/ltl2tgba.py -r 'Fa & Xb & GFc & Gd'
+../run $srcdir/ltl2tgba.py -r 'Fa & Xa & GFc & Gc'
+../run $srcdir/ltl2tgba.py -r 'Fc & X(a | Xb) & GF(a | Xb) & Gc'
+
 ../run $srcdir/ltl2tgba.py -W -f 'Ga | Gb | Gc'
 ../run $srcdir/ltl2tgba.py -W -T 'Ga | Gb | Gc'
+../run $srcdir/ltl2tgba.py -W -r 'Ga | Gb | Gc'

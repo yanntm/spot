@@ -19,6 +19,7 @@
 
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
+#include <spot/twaalgos/ltl2tgba_rec.hh>
 #include <spot/twaalgos/compsusp.hh>
 #include <spot/misc/optionmap.hh>
 #include <spot/tl/relabel.hh>
@@ -29,6 +30,7 @@ namespace spot
 
   void translator::setup_opt(const option_map* opt)
   {
+    translate_algo_ = FM;
     comp_susp_ = early_susp_ = skel_wdba_ = skel_simul_ = 0;
     relabel_bool_ = -1;
 
@@ -134,12 +136,17 @@ namespace spot
                        skel_simul_ == 0, early_susp_ != 0,
                        comp_susp_ == 2, skel_wdba == 2, false);
       }
-    else
+    else if (translate_algo_ == FM)
       {
+        //aut = ltl_to_tgba_rec(r, simpl_->get_dict());
         bool exprop = unambiguous || level_ == postprocessor::High;
         aut = ltl_to_tgba_fm(r, simpl_->get_dict(), exprop,
                              true, false, false, nullptr, nullptr,
                              unambiguous);
+      }
+    else // translate_algo_ == REC
+      {
+        aut = ltl_to_tgba_rec(r, simpl_->get_dict());
       }
 
     aut = this->postprocessor::run(aut, r);

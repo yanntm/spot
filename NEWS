@@ -17,6 +17,10 @@ New in spot 2.4.0.dev (not yet released)
     odd) automaton. The number of priorities is twice the number of
     Rabin pairs.
 
+  - A new recursive algorithm to translate LTL formulas to TGBA has been
+    implemented. Use function ltl_to_tgba_rec() or use the new option --algo=REC
+    of ltl2tgba.
+
 New in spot 2.4 (2017-09-06)
 
   Build:

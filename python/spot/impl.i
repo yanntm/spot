@@ -128,6 +128,7 @@
 #include <spot/twaalgos/lbtt.hh>
 #include <spot/twaalgos/ltl2taa.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
+#include <spot/twaalgos/ltl2tgba_rec.hh>
 #include <spot/twaalgos/compsusp.hh>
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/magic.hh>
@@ -546,6 +547,7 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/twaalgos/lbtt.hh>
 %include <spot/twaalgos/ltl2taa.hh>
 %include <spot/twaalgos/ltl2tgba_fm.hh>
+%include <spot/twaalgos/ltl2tgba_rec.hh>
 %include <spot/twaalgos/compsusp.hh>
 %include <spot/twaalgos/determinize.hh>
 %include <spot/twaalgos/dualize.hh>

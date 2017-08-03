@@ -31,6 +31,7 @@
 #include <spot/tl/formula.hh>
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
+#include <spot/twaalgos/ltl2tgba_rec.hh>
 #include <spot/twaalgos/ltl2taa.hh>
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/dot.hh>
@@ -101,6 +102,7 @@ syntax(char* prog)
     "\n"
     "Translation algorithm:\n"
     "  -f    use Couvreur's FM algorithm for LTL (default)\n"
+    "  -r    use Colange's recursive algorithm for LTL\n"
     "  -taa  use Tauriainen's TAA-based algorithm for LTL\n"
     "  -u    use Compositional translation\n"
     "\n"
@@ -243,7 +245,7 @@ checked_main(int argc, char** argv)
   bool paper_opt = false;
   bool utf8_opt = false;
   enum { NoDegen, DegenTBA, DegenSBA } degeneralize_opt = NoDegen;
-  enum { TransFM, TransTAA, TransCompo } translation = TransFM;
+  enum { TransFM, TransRec, TransTAA, TransCompo } translation = TransFM;
   bool fm_red = false;
   bool fm_exprop_opt = false;
   bool fm_symb_merge_opt = true;
@@ -525,6 +527,10 @@ checked_main(int argc, char** argv)
           daut->aut->merge_edges();
           system_aut = daut->aut;
           tm.stop("reading -P's argument");
+        }
+      else if (!strcmp(argv[formula_index], "-r"))
+        {
+          translation = TransRec;
         }
       else if (!strcmp(argv[formula_index], "-r1"))
         {
@@ -846,6 +852,7 @@ checked_main(int argc, char** argv)
       switch (translation)
         {
         case TransFM:
+        case TransRec:
         case TransTAA:
         case TransCompo:
           {
@@ -924,6 +931,9 @@ checked_main(int argc, char** argv)
                                        unobservables,
                                        fm_red ? simp : nullptr,
                                        fm_unambiguous);
+              break;
+            case TransRec:
+              a = spot::ltl_to_tgba_rec(f, dict);
               break;
             case TransCompo:
               {

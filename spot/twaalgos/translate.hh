@@ -64,6 +64,8 @@ namespace spot
   class SPOT_API translator: protected postprocessor
   {
   public:
+    enum algo_type { FM, REC };
+
     translator(tl_simplifier* simpl, const option_map* opt = nullptr)
       : postprocessor(opt), simpl_(simpl), simpl_owned_(nullptr)
     {
@@ -121,6 +123,12 @@ namespace spot
         }
     }
 
+    void
+    set_algo(algo_type algo)
+    {
+      translate_algo_ = algo;
+    }
+
     /// \brief Convert \a f into an automaton.
     ///
     /// The formula \a f is simplified internally.
@@ -142,6 +150,7 @@ namespace spot
   private:
     tl_simplifier* simpl_;
     tl_simplifier* simpl_owned_;
+    int translate_algo_;
     int comp_susp_;
     int early_susp_;
     int skel_wdba_;
