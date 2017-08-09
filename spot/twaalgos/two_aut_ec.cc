@@ -440,8 +440,7 @@ namespace spot
       product_mark<strength> condition;
     };
 
-    template<tae_aut_type aut_type_l,
-             tae_aut_type aut_type_r,
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r,
              tae_strength strength>
     bool tae_impl(typename tae_element<aut_type_l>::aut_t& left,
                   typename tae_element<aut_type_r>::aut_t& right)
@@ -604,8 +603,8 @@ namespace spot
     }
 
     template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
-    bool tae_dispatch(typename tae_element<aut_type_l>::aut_t& left,
-                      typename tae_element<aut_type_r>::aut_t& right)
+    bool tae_dispatch_strength(typename tae_element<aut_type_l>::aut_t& left,
+                               typename tae_element<aut_type_r>::aut_t& right)
     {
       auto l = left->prop_weak();
       auto r = right->prop_weak();
@@ -613,7 +612,7 @@ namespace spot
       if (!l && r && aut_type_l != KRIPKE)
         // We save on templates by only having weak automata on the left. This
         // is not compatible with, and less significant than, the Kripke swap.
-        return tae_dispatch<aut_type_r, aut_type_l>(right, left);
+        return tae_impl<aut_type_r, aut_type_l, WEAK_L>(right, left);
 
       if (l && r)
         return tae_impl<aut_type_l, aut_type_r, WEAK>(left, right);
@@ -623,44 +622,54 @@ namespace spot
 
       return tae_impl<aut_type_l, aut_type_r, STRONG>(left, right);
     }
-  }
+
+    bool tae_dispatch_type(const const_twa_ptr& left,
+                           const const_twa_ptr& right)
+    {
+      const_fair_kripke_ptr l_k = std::dynamic_pointer_cast<const fair_kripke>
+                                                           (left);
+      const_fair_kripke_ptr r_k = std::dynamic_pointer_cast<const fair_kripke>
+                                                           (right);
+
+      // We don't often check Kripke against Kripke, so we save on templates by
+      // only having Kripke structures on the left.
+      if (r_k && !l_k)
+        return tae_dispatch_type(right, left);
+
+      const_twa_graph_ptr l_e = std::dynamic_pointer_cast<const twa_graph>
+                                                         (left);
+      const_twa_graph_ptr r_e = std::dynamic_pointer_cast<const twa_graph>
+                                                         (right);
+
+      if (l_k)
+        {
+          if (r_e)
+            return tae_dispatch_strength<KRIPKE, EXPLICIT>(l_k, r_e);
+          else
+            return tae_dispatch_strength<KRIPKE, OTF>(l_k, right);
+        }
+
+      if (l_e)
+        {
+          if (r_e)
+            return tae_dispatch_strength<EXPLICIT, EXPLICIT>
+                                        (l_e, r_e);
+          else
+            return tae_dispatch_strength<EXPLICIT, OTF>
+                                        (l_e, right);
+        }
+      else
+        {
+          if (r_e)
+            return tae_dispatch_strength<OTF, EXPLICIT>(left, r_e);
+          else
+            return tae_dispatch_strength<OTF, OTF>(left, right);
+        }
+    }
+  } // namespace
 
   bool two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right)
   {
-    const_fair_kripke_ptr l_k = std::dynamic_pointer_cast<const fair_kripke>
-                                                         (left);
-    const_fair_kripke_ptr r_k = std::dynamic_pointer_cast<const fair_kripke>
-                                                         (right);
-
-    // We don't often check Kripke against Kripke, so we save on templates by
-    // only having Kripke structures on the left.
-    if (r_k && !l_k)
-      return two_aut_ec(right, left);
-
-    const_twa_graph_ptr l_e = std::dynamic_pointer_cast<const twa_graph>(left);
-    const_twa_graph_ptr r_e = std::dynamic_pointer_cast<const twa_graph>(right);
-
-    if (l_k)
-      {
-        if (r_e)
-          return tae_dispatch<KRIPKE, EXPLICIT>(l_k, r_e);
-        else
-          return tae_dispatch<KRIPKE, OTF>(l_k, right);
-      }
-
-    if (l_e)
-      {
-        if (r_e)
-          return tae_dispatch<EXPLICIT, EXPLICIT>(l_e, r_e);
-        else
-          return tae_dispatch<EXPLICIT, OTF>(l_e, right);
-      }
-    else
-      {
-        if (r_e)
-          return tae_dispatch<OTF, EXPLICIT>(left, r_e);
-        else
-          return tae_dispatch<OTF, OTF>(left, right);
-      }
+    return tae_dispatch_type(left, right);
   }
 }
