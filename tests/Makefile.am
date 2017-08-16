@@ -361,6 +361,7 @@ TESTS_python = \
   python/randgen.py \
   python/relabel.py \
   python/remfin.py \
+  python/remove_alternation.py \
   python/satmin.py \
   python/sbacc.py \
   python/sccfilter.py \

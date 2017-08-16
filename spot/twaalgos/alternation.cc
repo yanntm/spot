@@ -487,4 +487,214 @@ namespace spot
     return ar.run(named_states);
   }
 
+  namespace
+  {
+    using stateset = std::set<unsigned>;
+    struct dealt_state
+    {
+      stateset states;
+      std::vector<stateset> unseen;
+
+      bool operator<(const dealt_state& other) const
+      {
+        return states == other.states ? unseen < other.unseen
+                                      : states < other.states;
+      }
+    };
+
+    class dealt_it
+    {
+    public:
+      explicit dealt_it(const const_twa_graph_ptr& a,
+                        const dealt_state& s,
+                        const scc_info& si)
+      : aut_(a)
+      , scc_(si)
+      , src_(s)
+      , done_(false)
+      {
+        for (unsigned i : src_.states)
+          cont_.push_back(aut_->out(i));
+      }
+      // iterator interface
+      void first()
+      {
+        done_ = false;
+        it_.resize(cont_.size());
+        for (unsigned i = 0; i != cont_.size(); ++i)
+          {
+            it_[i] = cont_[i].begin();
+
+            // detect emptiness
+            if (it_[i] == cont_[i].end())
+              done_ = true;
+          }
+        while (!done() && cond() == bddfalse)
+          _next();
+      }
+
+      bool done() const { return done_; }
+
+      // should not be public
+      void _next()
+      {
+        assert(!done());
+        for (unsigned i = 0; i != cont_.size(); ++i)
+          {
+            if (++it_[i] == cont_[i].end())
+              it_[i] = cont_[i].begin();
+            else
+              return;
+          }
+        done_ = true;
+      }
+
+      void next()
+      {
+        assert(!done());
+        do
+          {
+            _next();
+          }
+        while (!done() && cond() == bddfalse);
+      }
+
+      bdd cond() const
+      {
+        bdd res = bddtrue;
+        for (const auto& it : it_)
+          res &= it->cond;
+        return res;
+      }
+
+      // NB It is more efficient to compute both the destination and the
+      // acceptance condition at the same time
+      std::pair<dealt_state, acc_cond::mark_t> dstacc() const
+      {
+        dealt_state dst;
+        dst.unseen = std::vector<stateset>(src_.unseen.size());
+        acc_cond::mark_t acc = 0U;
+
+        for (const auto& it : it_)
+          {
+            auto univ_dsts = aut_->univ_dests(it->dst);
+            dst.states.insert(univ_dsts.begin(), univ_dsts.end());
+
+            // keep only successors that belong to the scc of the source
+            // the removed successors can be safely been marked as seen
+            auto src_scc = scc_.scc_of(it->src);
+            stateset new_dsts;
+            for (unsigned d : univ_dsts)
+              if (src_scc == scc_.scc_of(d))
+                new_dsts.insert(d);
+
+            for (unsigned j = 0; j != dst.unseen.size(); ++j)
+              {
+                // unseen wins over seen
+                // recall that a state is unseen iff it is the successor, by an
+                // unmarked transition, of an unseen state in the same SCC.
+                // we have already removed state in another SCC.
+                if (!it->acc.has(j))
+                  if (src_.unseen[j].find(it->src) != src_.unseen[j].end())
+                    dst.unseen[j].insert(new_dsts.begin(), new_dsts.end());
+              }
+          }
+
+        for (unsigned j = 0; j != dst.unseen.size(); ++j)
+          {
+            // If some state d belongs to an SCC that does not have the mark j,
+            // AND d is unseen, then all states can be safely marked as unseen.
+            // TODO we could add an option to deactivate this optimization.
+            bool all_unseen = false;
+            for (unsigned d : dst.unseen[j])
+              if (!scc_.acc(scc_.scc_of(d)).has(j))
+                {
+                  all_unseen = true;
+                  break;
+                }
+            if (all_unseen)
+              dst.unseen[j] = dst.states;
+
+            // emit the mark if the unseen set is empty
+            if (dst.unseen[j].empty())
+              {
+                dst.unseen[j] = dst.states;
+                acc |= acc_cond::mark_t({j});
+              }
+          }
+
+        return std::make_pair(dst, acc);
+      }
+
+    private:
+      const const_twa_graph_ptr& aut_;
+      const scc_info& scc_;
+      const dealt_state& src_;
+
+      using cont_t = internal::state_out<const twa_graph::graph_t>;
+      using it_t = internal::edge_iterator<const twa_graph::graph_t>;
+
+      std::vector<cont_t> cont_;
+      std::vector<it_t> it_;
+      bool done_;
+    };
+
+  }
+
+
+  twa_graph_ptr remove_alternation_buchi(const const_twa_graph_ptr& aut)
+  {
+    if (aut->is_existential())
+      // Nothing to do, why was this function called at all?
+      return std::const_pointer_cast<twa_graph>(aut);
+
+    if (!aut->acc().is_generalized_buchi())
+      throw std::runtime_error("remove alternation only handles TGBA");
+
+    auto res = make_twa_graph(aut->get_dict());
+    res->copy_ap_of(aut);
+    res->set_acceptance(aut->acc());
+
+    // mapping between the dealt_state and their number in the built automaton
+    std::map<dealt_state, unsigned> dealt2int;
+    std::map<unsigned, dealt_state> int2dealt;
+    auto get_state = [&](const dealt_state& s)
+      {
+        auto it = dealt2int.find(s);
+        if (it == dealt2int.end())
+          {
+            unsigned tmp = res->new_state();
+            dealt2int[s] = tmp;
+            int2dealt[tmp] = s;
+            return tmp;
+          }
+        return it->second;
+      };
+
+    // scc of the input automaton
+    scc_info scc(aut);
+
+    // initial state: all (universal) initial states are initially unseen
+    dealt_state init;
+    auto tmp = aut->univ_dests(aut->get_init_state_number());
+    init.states = stateset(tmp.begin(), tmp.end());
+    init.unseen = std::vector<stateset>(aut->num_sets(), init.states);
+    unsigned init_nb = get_state(init);
+    res->set_init_state(init_nb);
+
+    for (unsigned s = 0; s != res->num_states(); ++s)
+      {
+        dealt_state src = int2dealt.at(s);
+        dealt_it it(aut, src, scc);
+        for (it.first(); !it.done(); it.next())
+          {
+            auto dstacc = it.dstacc();
+            unsigned dst_nb = get_state(dstacc.first);
+            res->new_edge(s, dst_nb, it.cond(), dstacc.second);
+          }
+      }
+
+    return res;
+  }
+
 }

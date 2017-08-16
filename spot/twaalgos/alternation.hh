@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016 Laboratoire de Recherche et Développement de
+// Copyright (C) 2016-2017 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -100,4 +100,12 @@ namespace spot
   SPOT_API
   twa_graph_ptr remove_alternation(const const_twa_graph_ptr& aut,
                                    bool named_states = false);
+
+  /// \brief Remove universal edges from an automaton.
+  ///
+  /// This procedure is restricted to Generalized Büchi alternating automata as
+  /// input, and produces TGBA as output.
+  /// This is an adaptation of the breakpoint algorithm to TGBA.
+  SPOT_API
+  twa_graph_ptr remove_alternation_buchi(const const_twa_graph_ptr& aut);
 }
