@@ -52,6 +52,11 @@ namespace spot
   make_weak_until(const twa_graph_ptr& lhs, const twa_graph_ptr& rhs,
                   bool rem_alt = true);
 
+  SPOT_API
+  twa_graph_ptr
+  make_release(const twa_graph_ptr& lhs, const twa_graph_ptr& rhs,
+               bool strict, bool rem_alt);
+
   /// Recursive translation of ltl formula to TGBA.
   ///
   /// The translation does not handle all operators yet: only X, U, W, && and ||

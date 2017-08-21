@@ -150,6 +150,69 @@ namespace spot
 
   }
 
+  // TODO make a general version for strict and non-strict (M and R)
+  twa_graph_ptr
+  make_release(const twa_graph_ptr& lhs, const twa_graph_ptr& rhs,
+               bool strict, bool remove_alt)
+  {
+    auto res = make_twa_graph(lhs, {});
+    // TODO the following line should be unnecessary as lhs and rhs
+    // should already use the same dict
+    res->copy_ap_of(rhs);
+
+    // add an initial state
+    {
+      state_num init = res->new_state();
+      res->set_init_state(init);
+    }
+
+    acc_cond::mark_t all_rhs = rhs->acc().all_sets();
+    acc_cond::mark_t all_lhs = lhs->acc().all_sets() << all_rhs.count();
+    // build the acceptance condition of the automaton
+    unsigned num_sum = lhs->num_sets() + rhs->num_sets();
+    //auto promise = acc_cond::mark_t({ num_sum });
+    {
+      if (strict)
+        res->set_generalized_buchi(num_sum + 1);
+      else
+        res->set_generalized_buchi(num_sum);
+
+      // update acceptance marks of existing edges
+      unsigned offset = all_lhs.count();
+      for (auto& e : res->edges())
+        {
+          e.acc = all_rhs | (e.acc << offset);
+          // TODO not sure where to put the promise
+          //if (strict)
+          //  e.acc |= promise;
+        }
+    }
+
+    unsigned offset = res->num_states();
+    res->new_states(rhs->num_states());
+    state_num init = res->get_init_state_number();
+    for (const auto& e : rhs->out(rhs->get_init_state_number()))
+      {
+        res->new_univ_edge(init, {init, e.dst + offset}, e.cond,
+                           all_lhs | all_rhs);
+        // for the following transitions, the acceptance mark is irrelevant
+        for (const auto& f : lhs->out(lhs->get_init_state_number()))
+          res->new_univ_edge(init, { f.dst, e.dst + offset }, e.cond & f.cond,
+                             0U);
+      }
+
+    // TODO not sure where to put the promise
+    //if (strict)
+    //  all_rhs |= promise;
+    for (const auto& e : rhs->edges())
+      res->new_edge(e.src + offset, e.dst + offset, e.cond, e.acc | all_lhs);
+
+    if (remove_alt)
+      return remove_alternation_buchi(res);
+    else
+      return res;
+  }
+
   twa_graph_ptr
   make_weak_until(const twa_graph_ptr& lhs, const twa_graph_ptr& rhs,
                   bool rem_alt)
@@ -204,6 +267,9 @@ namespace spot
         break;
       case op::W:
         res = make_weak_until(recurse(f[0]), recurse(f[1]));
+        break;
+      case op::R:
+        res = make_release(recurse(f[0]), recurse(f[1]), false, true);
         break;
       default:
         throw std::runtime_error("operator not handled by ltl_to_tgba_rec");
