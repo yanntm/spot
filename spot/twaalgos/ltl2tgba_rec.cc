@@ -85,7 +85,8 @@ namespace spot
     make_and(const twa_graph_ptr& lhs,
              const twa_graph_ptr& rhs)
     {
-      return remove_alternation_buchi(sum_and(lhs, rhs));
+      return product(lhs, rhs);
+      //return remove_alternation_buchi(sum_and(lhs, rhs));
     }
 
     using state_num = twa_graph::state_num;
