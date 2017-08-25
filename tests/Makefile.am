@@ -299,7 +299,8 @@ TESTS_twa = \
   core/complementation.test \
   core/randpsl.test \
   core/cycles.test \
-  core/acc_word.test
+  core/acc_word.test \
+  core/rabin2parity.test
 
 ############################## PYTHON ##############################
 

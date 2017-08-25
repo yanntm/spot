@@ -58,6 +58,7 @@
 #include <spot/twaalgos/langmap.hh>
 #include <spot/twaalgos/mask.hh>
 #include <spot/twaalgos/product.hh>
+#include <spot/twaalgos/rabin2parity.hh>
 #include <spot/twaalgos/randomize.hh>
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/remprop.hh>
@@ -122,6 +123,7 @@ enum {
   OPT_MASK_ACC,
   OPT_MERGE,
   OPT_NONDET_STATES,
+  OPT_PARITY,
   OPT_PRODUCT_AND,
   OPT_PRODUCT_OR,
   OPT_RANDOMIZE,
@@ -291,6 +293,9 @@ static const argp_option options[] =
       " therefore reducing the number of sets; the default"
       " \"unique-fin\" does not", 0 },
     { "gsa", 0, nullptr, OPTION_ALIAS, nullptr, 0 },
+    { "parity", OPT_PARITY, nullptr, 0, "rewrite the acceptance condition as a "
+      "parity condition. This currently only works on deterministic Rabin "
+      "automata", 0 },
     { "cleanup-acceptance", OPT_CLEAN_ACC, nullptr, 0,
       "remove unused acceptance sets from the automaton", 0 },
     { "complement", OPT_COMPLEMENT, nullptr, 0,
@@ -424,6 +429,8 @@ static gsa_type const gsa_types[] =
   GSA_UNIQUE_FIN, GSA_SHARE_FIN, GSA_UNIQUE_FIN
 };
 ARGMATCH_VERIFY(gsa_args, gsa_types);
+
+static bool opt_parity = false;
 
 // We want all these variables to be destroyed when we exit main, to
 // make sure it happens before all other global variables (like the
@@ -636,6 +643,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       else
         opt_gsa = GSA_UNIQUE_FIN;
       opt_gra = GRA_NO;
+      break;
+    case OPT_PARITY:
+      opt_parity = true;
       break;
     case OPT_HIGHLIGHT_NONDET:
       {
@@ -1190,6 +1200,8 @@ namespace
         aut = spot::to_generalized_rabin(aut, opt_gra == GRA_SHARE_INF);
       if (opt_gsa)
         aut = spot::to_generalized_streett(aut, opt_gsa == GSA_SHARE_FIN);
+      if (opt_parity)
+        aut = spot::rabin_to_parity(aut);
 
       if (opt_simplify_exclusive_ap && !opt->excl_ap.empty())
         aut = opt->excl_ap.constrain(aut, true);
