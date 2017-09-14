@@ -108,7 +108,7 @@ namespace spot
     static std::string
       interpolate_csv(ltsmin_kripkecube_ptr sys,
                       std::function<bool(unsigned, unsigned)> fitness,
-                      std::string algoname);
+                      std::string algoname, unsigned initial_population);
 
     /// Number of variables in a state
     int state_size() const;

@@ -502,7 +502,8 @@ static int checked_main()
           };
 
       std::cout << spot::ltsmin_model::interpolate_csv
-        (modelcube, fitness, mc_options.interpolate_fitness);
+        (modelcube, fitness, mc_options.interpolate_fitness,
+         mc_options.initial_population);
     }
 
   if (mc_options.swarmed_dfs || mc_options.swarmed_gp_dfs ||
