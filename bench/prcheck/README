@@ -1,0 +1,17 @@
+This benchmark measures the performance of different algorithms to
+check if a formula belongs to the persistence or the recurrence class.
+
+To reproduce the benchmark, execute the following commands;
+
+export SPOT_BENCH_PRCHECK="/path/to/spot/root/folder"
+./prcheck_bench.sh
+
+This should create 6 files:
+
+  - patterns:
+      A list of literature formula.
+  - random:
+      A list of random formula.
+  - {kind}.{class}.csv:
+      A resulting file where kind is either patterns or random and class
+      is either persistence or recurrence.

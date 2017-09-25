@@ -216,6 +216,7 @@ bench/            Benchmarks for ...
    ltl2tgba/      ... LTL-to-Büchi translation algorithms,
    ltlcounter/    ... translation of a class of LTL formulas,
    ltlclasses/    ... translation of more classes of LTL formulas,
+   prcheck/       ... persistence and recurrence check,
    spin13/        ... compositional suspension and other improvements,
    stutter/       ... stutter-invariance checking algorithms,
    wdba/          ... WDBA minimization (for obligation properties).

@@ -80,3 +80,9 @@ GTAGS
 *.changes
 *.dsc
 *.gcov
+bench/prcheck/patterns
+bench/prcheck/random
+bench/prcheck/random.persistence.csv
+bench/prcheck/random.recurrence.csv
+bench/prcheck/patterns.persistence.csv
+bench/prcheck/patterns.recurrence.csv

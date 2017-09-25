@@ -210,6 +210,7 @@ AC_CONFIG_FILES([
   bench/spin13/Makefile
   bench/wdba/Makefile
   bench/stutter/Makefile
+  bench/prcheck/Makefile
   doc/Doxyfile
   doc/Makefile
   doc/tl/Makefile

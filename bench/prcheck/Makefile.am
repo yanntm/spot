@@ -1,8 +1,6 @@
-## Copyright (C) 2008, 2009, 2010, 2012, 2013, 2014, 2017
-## Laboratoire de Recherche et Développement de l'Epita (LRDE).
-## Copyright (C) 2005 Laboratoire d'Informatique de Paris 6 (LIP6),
-## département Systèmes Répartis Coopératifs (SRC), Université Pierre
-## et Marie Curie.
+## -*- coding: utf-8 -*-
+## Copyright (C) 2017 Laboratoire de Recherche et DÃ©veloppement
+## de l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
 ##
@@ -19,5 +17,16 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = emptchk ltl2tgba ltlcounter ltlclasses wdba spin13 dtgbasat stutter \
-					prcheck
+AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS) \
+              -I$(top_builddir)/lib -I$(top_srcdir)/lib
+AM_CXXFLAGS = $(WARNING_CXXFLAGS)
+
+LDADD =	$(top_builddir)/spot/libspot.la
+
+bin_PROGRAMS = prcheck_formula \
+							 dba_builder
+
+prcheck_formula_SOURCES = prcheck_formula.cc
+dba_builder_SOURCES = dba_builder.cc
+
+EXTRA_DIST = prcheck_process.py prcheck_bench.sh dba_process.py README
