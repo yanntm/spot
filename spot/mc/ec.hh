@@ -67,7 +67,7 @@ namespace spot
     /// \brief This method is called to notify the emptiness checks
     /// that a new state has been discovered. If this method return
     /// false, the state will not be explored. The parameter \a dfsnum
-    /// specify an unique id for the state \a s. Parameter \a cond represents
+    /// specify a unique id for the state. Parameter \a cond represents
     /// The value on the ingoing edge to \a s.
     bool push_state(product_state, unsigned dfsnum, acc_cond::mark_t cond)
     {
