@@ -36,11 +36,11 @@ namespace spot
     cstate() {}
     cstate(const cstate& s) = delete;
     cstate(cstate&& s) noexcept;
-    cstate(unsigned int id);
+    cstate(unsigned id);
     virtual ~cstate();
-    unsigned int label();
+    unsigned label();
   private:
-    unsigned int id_;
+    unsigned id_;
   };
 
   /// \brief Class for representing a transition.
@@ -64,7 +64,7 @@ namespace spot
     typedef graph_t::edge_storage_t edge_storage_t;
 
     trans_index(trans_index& ci) = delete;
-    trans_index(unsigned int state, graph_t& g):
+    trans_index(unsigned state, graph_t& g):
       st_(g.state_storage(state))
     {
       reset();
@@ -97,7 +97,7 @@ namespace spot
 
     /// \brief Returns the current transition according to a specific
     /// \a seed. The \a  seed is traditionnally the thread identifier.
-    inline unsigned int current(unsigned int seed = 0) const
+    inline unsigned current(unsigned seed = 0) const
     {
       // no-swarming : since twacube are dedicated for parallelism, i.e.
       // swarming, we expect swarming is activated.
@@ -114,7 +114,7 @@ namespace spot
     }
 
   private:
-    unsigned int idx_;                   ///< The current transition
+    unsigned idx_;                   ///< The current transition
     const graph_t::state_storage_t& st_; ///< The underlying states
   };
 
@@ -137,23 +137,23 @@ namespace spot
     std::vector<std::string> get_ap();
 
     /// \brief This method creates a new state.
-    unsigned int new_state();
+    unsigned new_state();
 
     /// \brief Updates the initial state to \a init
-    void set_initial(unsigned int init);
+    void set_initial(unsigned init);
 
     /// \brief Returns the id of the initial state in the automaton.
-    unsigned int get_initial();
+    unsigned get_initial();
 
     /// \brief Accessor for a state from its id.
-    cstate* state_from_int(unsigned int i);
+    cstate* state_from_int(unsigned i);
 
     /// \brief create a transition between state \a src and state \a dst,
     /// using \a cube as the labelling cube and \a mark as the acceptance mark.
-    void create_transition(unsigned int src,
+    void create_transition(unsigned src,
                            const cube& cube,
                            const acc_cond::mark_t& mark,
-                           unsigned int dst);
+                           unsigned dst);
 
     /// \brief Accessor the cube's manipulator.
     const cubeset& get_cubeset() const;
@@ -175,20 +175,20 @@ namespace spot
     /// \brief Returns the storage associated to a transition.
     const graph_t::edge_storage_t&
     trans_storage(std::shared_ptr<trans_index> ci,
-                  unsigned int seed = 0) const
+                  unsigned seed = 0) const
     {
       return theg_.edge_storage(ci->current(seed));
     }
 
     /// \brief Returns the data associated to a transition.
     const transition& trans_data(std::shared_ptr<trans_index> ci,
-                                 unsigned int seed = 0) const
+                                 unsigned seed = 0) const
     {
       return theg_.edge_data(ci->current(seed));
     }
 
     ///< \brief Returns the successor of state \a i.
-    std::shared_ptr<trans_index> succ(unsigned int i)
+    std::shared_ptr<trans_index> succ(unsigned i)
     {
       return std::make_shared<trans_index>(i, theg_);
     }
@@ -196,7 +196,7 @@ namespace spot
     friend SPOT_API std::ostream& operator<<(std::ostream& os,
                                              const twacube& twa);
   private:
-    unsigned int init_;                  ///< The Id of the initial state
+    unsigned init_;                  ///< The Id of the initial state
     acc_cond acc_;                       ///< The acceptance contidion
     const std::vector<std::string> aps_; ///< The name of atomic propositions
     graph_t theg_;                       ///< The underlying graph
