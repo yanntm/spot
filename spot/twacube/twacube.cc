@@ -25,14 +25,14 @@ namespace spot
   cstate::cstate(cstate&& s) noexcept: id_(std::move(s.id_))
   {
   }
-  cstate::cstate(unsigned int id): id_(id)
+  cstate::cstate(unsigned id): id_(id)
   {
   }
 
   cstate::~cstate()
   { }
 
-  unsigned int cstate::label()
+  unsigned cstate::label()
   {
     return id_;
   }
@@ -60,7 +60,7 @@ namespace spot
   twacube::~twacube()
   {
     spot::cubeset cs = get_cubeset();
-    for (unsigned int i = 1; i <= theg_.num_edges(); ++i)
+    for (unsigned i = 1; i <= theg_.num_edges(); ++i)
       cs.release(theg_.edge_data(i).cube_);
   }
 
@@ -79,17 +79,17 @@ namespace spot
     return aps_;
   }
 
-  unsigned int twacube::new_state()
+  unsigned twacube::new_state()
   {
     return theg_.new_state();
   }
 
-  void twacube::set_initial(unsigned int init)
+  void twacube::set_initial(unsigned init)
   {
     init_ = init;
   }
 
-  unsigned int twacube::get_initial()
+  unsigned twacube::get_initial()
   {
     if (theg_.num_states() == 0)
       new_state();
@@ -97,14 +97,14 @@ namespace spot
     return init_;
   }
 
-  cstate* twacube::state_from_int(unsigned int i)
+  cstate* twacube::state_from_int(unsigned i)
   {
     return &theg_.state_data(i);
   }
 
   void
-  twacube::create_transition(unsigned int src, const cube& cube,
-                             const acc_cond::mark_t& mark, unsigned int dst)
+  twacube::create_transition(unsigned src, const cube& cube,
+                             const acc_cond::mark_t& mark, unsigned dst)
   {
     theg_.new_edge(src, dst, cube, mark);
   }
@@ -118,10 +118,10 @@ namespace spot
   bool
   twacube::succ_contiguous() const
   {
-    unsigned int i = 1;
+    unsigned i = 1;
     while (i <= theg_.num_edges())
       {
-        unsigned int j = i;
+        unsigned j = i;
 
         // Walk first bucket of successors
         while (j <= theg_.num_edges() &&
@@ -129,7 +129,7 @@ namespace spot
           ++j;
 
         // Remove the next bucket
-        unsigned int itmp = j;
+        unsigned itmp = j;
 
         // Look if there are some transitions missing in this bucket.
         while (j <= theg_.num_edges())
@@ -148,7 +148,7 @@ namespace spot
   {
     spot::cubeset cs = twa.get_cubeset();
     os << "init : " << twa.init_ << '\n';
-     for (unsigned int i = 1; i <= twa.theg_.num_edges(); ++i)
+     for (unsigned i = 1; i <= twa.theg_.num_edges(); ++i)
        os << twa.theg_.edge_storage(i).src << "->"
           << twa.theg_.edge_storage(i).dst <<  " : "
           << cs.dump(twa.theg_.edge_data(i).cube_, twa.aps_)
