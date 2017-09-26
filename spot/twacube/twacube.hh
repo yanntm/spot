@@ -29,6 +29,7 @@
 
 namespace spot
 {
+  /// \brief Class for thread-safe states.
   class SPOT_API cstate
   {
   public:
@@ -42,6 +43,7 @@ namespace spot
     unsigned int id_;
   };
 
+  /// \brief Class for representing a transition.
   class SPOT_API transition
   {
   public:
@@ -54,6 +56,7 @@ namespace spot
     virtual ~transition();
   };
 
+  /// \brief Class for iterators over transitions
   class SPOT_API trans_index final
   {
   public:
@@ -73,21 +76,27 @@ namespace spot
     {
     }
 
+    /// Reset the iterator on the first element.
     inline void reset()
     {
       idx_ = st_.succ;
     }
 
+    /// \brief Iterate over the next transition.
     inline void next()
     {
       ++idx_;
     }
 
+    /// \brief Returns a boolean indicating wether all the transitions
+    /// have been iterated.
     inline bool done() const
     {
       return !idx_ || idx_ > st_.succ_tail;
     }
 
+    /// \brief Returns the current transition according to a specific
+    /// \a seed. The \a  seed is traditionnally the thread identifier.
     inline unsigned int current(unsigned int seed = 0) const
     {
       // no-swarming : since twacube are dedicated for parallelism, i.e.
@@ -105,45 +114,80 @@ namespace spot
     }
 
   private:
-    unsigned int idx_;
-    const graph_t::state_storage_t& st_;
+    unsigned int idx_;                   ///< The current transition
+    const graph_t::state_storage_t& st_; ///< The underlying states
   };
 
+  /// \brief Class for representign
   class SPOT_API twacube final: public std::enable_shared_from_this<twacube>
   {
   public:
     twacube() = delete;
+
+    /// \brief Build a new automaton from a list of atomic propositions.
     twacube(const std::vector<std::string> aps);
+
     virtual ~twacube();
+
+    /// \brief Returns the acceptance condition associated to the automaton.
     const acc_cond& acc() const;
     acc_cond& acc();
+
+    /// \brief Returns the names of the atomic properties.
     std::vector<std::string> get_ap();
+
+    /// \brief This method creates a new state.
     unsigned int new_state();
+
+    /// \brief Updates the initial state to \a init
     void set_initial(unsigned int init);
+
+    /// \brief Returns the id of the initial state in the automaton.
     unsigned int get_initial();
+
+    /// \brief Accessor for a state from its id.
     cstate* state_from_int(unsigned int i);
-    void create_transition(unsigned int src, const cube& cube,
-                           const acc_cond::mark_t& mark, unsigned int dst);
+
+    /// \brief create a transition between state \a src and state \a dst,
+    /// using \a cube as the labelling cube and \a mark as the acceptance mark.
+    void create_transition(unsigned int src,
+                           const cube& cube,
+                           const acc_cond::mark_t& mark,
+                           unsigned int dst);
+
+    /// \brief Accessor the cube's manipulator.
     const cubeset& get_cubeset() const;
+
+    /// \brief Check if all the successors of a state are located contigously
+    /// in memory. This is mandatory for swarming techniques.
     bool succ_contiguous() const;
+
+
     typedef digraph<cstate, transition> graph_t;
+
+    /// \brief Returns the underlying graph for this automaton.
     const graph_t& get_graph()
     {
       return theg_;
     }
     typedef graph_t::edge_storage_t edge_storage_t;
+
+    /// \brief Returns the storage associated to a transition.
     const graph_t::edge_storage_t&
-      trans_storage(std::shared_ptr<trans_index> ci,
-                    unsigned int seed = 0) const
+    trans_storage(std::shared_ptr<trans_index> ci,
+                  unsigned int seed = 0) const
     {
       return theg_.edge_storage(ci->current(seed));
     }
+
+    /// \brief Returns the data associated to a transition.
     const transition& trans_data(std::shared_ptr<trans_index> ci,
                                  unsigned int seed = 0) const
     {
       return theg_.edge_data(ci->current(seed));
     }
 
+    ///< \brief Returns the successor of state \a i.
     std::shared_ptr<trans_index> succ(unsigned int i)
     {
       return std::make_shared<trans_index>(i, theg_);
@@ -152,11 +196,11 @@ namespace spot
     friend SPOT_API std::ostream& operator<<(std::ostream& os,
                                              const twacube& twa);
   private:
-    unsigned int init_;
-    acc_cond acc_;
-    const std::vector<std::string> aps_;
-    graph_t theg_;
-    cubeset cubeset_;
+    unsigned int init_;                  ///< The Id of the initial state
+    acc_cond acc_;                       ///< The acceptance contidion
+    const std::vector<std::string> aps_; ///< The name of atomic propositions
+    graph_t theg_;                       ///< The underlying graph
+    cubeset cubeset_;                    ///< Ease the cube manipulation
   };
 
   inline twacube_ptr make_twacube(const std::vector<std::string> aps)
