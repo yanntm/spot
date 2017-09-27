@@ -57,7 +57,8 @@ namespace spot
   };
 
   /// \brief Class for iterators over transitions
-  class SPOT_API trans_index final
+  class SPOT_API trans_index final:
+    public std::enable_shared_from_this<trans_index>
   {
   public:
     typedef digraph<cstate, transition> graph_t;
