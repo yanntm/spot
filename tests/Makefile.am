@@ -83,6 +83,7 @@ check_PROGRAMS = \
   core/nenoform \
   core/ngraph \
   core/parity \
+  core/powerset \
   core/randtgba \
   core/readsat \
   core/reduc \
@@ -130,6 +131,7 @@ core_nenoform_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM
 core_nequals_SOURCES = core/equalsf.cc
 core_nequals_CPPFLAGS = $(AM_CPPFLAGS) -DNEGATE
 core_parity_SOURCES = core/parity.cc
+core_powerset_SOURCES = core/powerset.cc
 core_reduc_SOURCES = core/reduc.cc
 core_reduccmp_SOURCES = core/equalsf.cc
 core_reduccmp_CPPFLAGS = $(AM_CPPFLAGS) -DREDUC
@@ -199,6 +201,7 @@ TESTS_misc = \
   core/bitvect.test \
   core/intvcomp.test \
   core/minusx.test \
+  core/powerset.test \
   core/full.test \
   core/trival.test
 

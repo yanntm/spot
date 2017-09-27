@@ -50,6 +50,7 @@ misc_HEADERS = \
   mspool.hh \
   optionmap.hh \
   position.hh \
+  powerset.hh \
   random.hh \
   satsolver.hh \
   timer.hh \
