@@ -67,7 +67,7 @@ namespace spot
       &kripkecube<State, SuccIter>::initial;
     std::string (kripkecube<State, SuccIter>::*test_to_string)
       (const State, unsigned) const = &kripkecube<State, SuccIter>::to_string;
-    auto (kripkecube<State, SuccIter>::*test_recycle)(SuccIter*, unsigned) =
+    void (kripkecube<State, SuccIter>::*test_recycle)(SuccIter*, unsigned) =
       &kripkecube<State, SuccIter>::recycle;
     const std::vector<std::string>
       (kripkecube<State, SuccIter>::*test_get_ap)() =
