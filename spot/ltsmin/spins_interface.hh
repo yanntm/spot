@@ -20,6 +20,7 @@
 #pragma once
 
 #include <memory>
+#include <ltdl.h>
 
 namespace spot
 {
@@ -51,7 +52,13 @@ namespace spot
     const char* (*get_type_name)(int type);
     int (*get_type_value_count)(int type);
     const char* (*get_type_value_name)(int type, int value);
-    ~spins_interface();
+    ~spins_interface()
+    {
+      lt_dlhandle h = (lt_dlhandle) handle;
+      if (h)
+        lt_dlclose(h);
+      lt_dlexit();
+    }
   };
 
   using spins_interface_ptr = std::shared_ptr<const spins_interface>;
