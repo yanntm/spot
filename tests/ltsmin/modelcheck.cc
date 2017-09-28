@@ -306,7 +306,7 @@ static int checked_main()
             {
               res = ec->check();
             }
-          catch (std::bad_alloc)
+          catch (std::bad_alloc&)
           {
             std::cerr << "Out of memory during emptiness check."
                       << std::endl;
@@ -341,7 +341,7 @@ static int checked_main()
               {
                 run = res->accepting_run();
               }
-            catch (std::bad_alloc)
+            catch (std::bad_alloc&)
               {
                 std::cerr << "Out of memory while looking for counterexample."
                           << std::endl;
