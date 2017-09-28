@@ -24,8 +24,9 @@ AUTOMAKE_OPTIONS = subdir-objects
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) \
 	$(BUDDY_CPPFLAGS) $(BRICKS_CPPFLAGS)
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
-LDADD = $(top_builddir)/spot/libspot.la $(top_builddir)/buddy/src/libbddx.la
-
+LDADD = $(top_builddir)/spot/libspot.la \
+       $(top_builddir)/buddy/src/libbddx.la \
+       $(LIBLTDL) -lpthread
 
 # Explicitely set it to avoid default value ".test"
 TEST_EXTENSIONS =
