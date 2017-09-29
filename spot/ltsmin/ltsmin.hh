@@ -25,7 +25,6 @@
 #include <spot/twacube/twacube.hh>
 #include <spot/tl/apcollect.hh>
 #include <tuple>
-#include <spot/mc/intersect.hh>
 
 namespace spot
 {
@@ -81,14 +80,6 @@ namespace spot
                                      formula dead = formula::tt(),
                                      int compress = 0,
                                      unsigned int nb_threads = 1) const;
-
-    /// \brief Check for the emptiness between a system and a twa.
-    /// Return a pair containing a boolean indicating wether a counterexample
-    /// has been found and a string representing the counterexample if the
-    /// computation have been required
-    static std::tuple<bool, std::string, std::vector<istats>>
-    modelcheck(ltsmin_kripkecube_ptr sys,
-               spot::twacube_ptr twa, bool compute_ctrx = false);
 
     /// Number of variables in a state
     int state_size() const;
