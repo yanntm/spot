@@ -79,10 +79,6 @@ namespace spot
     }
   };
 
-  /// \brief Shortcut to avoid long names...
-  typedef brick::hashset::FastConcurrent<cspins_state, cspins_state_hasher>
-          cspins_state_map;
-
   /// \brief The management of states (i.e. allocation/deallocation) can
   /// be painless since every time we have to consider wether the state will
   /// be compressed or not. This class aims to simplify this management
@@ -113,7 +109,6 @@ namespace spot
   {
     cspins_state_manager* manager;   // The state manager
     std::vector<cspins_state>* succ; // The successors of a state
-    cspins_state_map map;            // Must be a copy and only one copy/thread
     int* compressed_;
     int* uncompressed_;
     bool compress;
@@ -215,7 +210,6 @@ namespace spot
     bool selfloopize_;
     int dead_idx_;
     std::vector<std::string> aps_;
-    cspins_state_map map_;
     unsigned int nb_threads_;
   };
 
