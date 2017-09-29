@@ -129,10 +129,7 @@ namespace spot
         cspins_state s =
         inner->manager->alloc_setup(dst, inner->compressed_,
                                     inner->manager->size() * 2);
-        auto it = inner->map.insert(s);
-        inner->succ->push_back(*it);
-        if (!it.isnew())
-          inner->manager->dealloc(s);
+        inner->succ->push_back(s);
        },
        &inner);
     if (!n && selfloopize)
@@ -175,10 +172,7 @@ namespace spot
         cspins_state s =
         inner->manager->alloc_setup(dst, inner->compressed_,
                                     inner->manager->size() * 2);
-        auto it = inner->map.insert(s);
-        inner->succ->push_back(*it);
-        if (!it.isnew())
-          inner->manager->dealloc(s);
+        inner->succ->push_back(s);
        },
        &inner);
     if (!n && selfloopize)
@@ -230,7 +224,6 @@ namespace spot
       selfloopize_(selfloopize), aps_(visible_aps),
       nb_threads_(nb_threads)
   {
-    map_.initialSize(2000000);
     manager_ = static_cast<cspins_state_manager*>
       (::operator new(sizeof(cspins_state_manager) * nb_threads));
     inner_ = new inner_callback_parameters[nb_threads_];
@@ -242,7 +235,6 @@ namespace spot
           cspins_state_manager(d_->get_state_size(), compress);
         inner_[i].compressed_ = new int[d_->get_state_size() * 2];
         inner_[i].uncompressed_ = new int[d_->get_state_size()+30];
-        inner_[i].map = map_; // Must be a copy per thread
       }
     dead_idx_ = -1;
     match_aps(visible_aps, dead_prop);
