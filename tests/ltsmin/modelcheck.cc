@@ -23,6 +23,8 @@
 #include "bin/common_output.hh"
 
 #include <spot/ltsmin/ltsmin.hh>
+#include <spot/ltsmin/spins_kripke.hh>
+#include <spot/mc/mc.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/tl/defaultenv.hh>
 #include <spot/tl/parse.hh>
@@ -421,7 +423,11 @@ static int checked_main()
 
       int memused = spot::memusage();
       tm.start("emptiness check");
-      auto res = spot::ltsmin_model::modelcheck
+      auto res = spot::modelcheck<spot::ltsmin_kripkecube_ptr,
+                                  spot::cspins_state,
+                                  spot::cspins_iterator,
+                                  spot::cspins_state_hash,
+                                  spot::cspins_state_equal>
         (modelcube, propcube, mc_options.compute_counterexample);
       tm.stop("emptiness check");
       memused = spot::memusage() - memused;
