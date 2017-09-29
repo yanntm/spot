@@ -40,7 +40,6 @@
 #include <spot/twaalgos/reachiter.hh>
 #include <string.h>
 #include <spot/mc/utils.hh>
-#include <spot/mc/ec.hh>
 
 namespace spot
 {
@@ -1112,45 +1111,6 @@ namespace spot
 
   ltsmin_model::~ltsmin_model()
   {
-  }
-
-  std::tuple<bool, std::string, std::vector<istats>>
-  ltsmin_model::modelcheck(ltsmin_kripkecube_ptr sys,
-                           spot::twacube_ptr twa, bool compute_ctrx)
-  {
-    // Must ensure that the two automata are working on the same
-    // set of atomic propositions.
-    assert(sys->get_ap().size() == twa->get_ap().size());
-    for (unsigned int i = 0; i < sys->get_ap().size(); ++i)
-      assert(sys->get_ap()[i].compare(twa->get_ap()[i]) == 0);
-
-    bool stop = false;
-    std::vector<ec_renault13lpar<cspins_state, cspins_iterator,
-                                 cspins_state_hash, cspins_state_equal>> ecs;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      ecs.push_back({*sys, twa, i, stop});
-
-    std::vector<std::thread> threads;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads.push_back
-        (std::thread(&ec_renault13lpar<cspins_state, cspins_iterator,
-                     cspins_state_hash, cspins_state_equal>::run, &ecs[i]));
-
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads[i].join();
-
-    bool has_ctrx = false;
-    std::string trace = "";
-    std::vector<istats> stats;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      {
-        has_ctrx |= ecs[i].counterexample_found();
-        if (compute_ctrx && ecs[i].counterexample_found()
-            && trace.compare("") == 0)
-          trace = ecs[i].trace(); // Pick randomly one !
-        stats.push_back(ecs[i].stats());
-      }
-    return std::make_tuple(has_ctrx, trace, stats);
   }
 
   int ltsmin_model::state_size() const
