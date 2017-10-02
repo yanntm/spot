@@ -72,6 +72,7 @@ struct mc_options_
   bool kripke_output = false;
   unsigned nb_threads = 1;
   bool csv = false;
+  bool has_deadlock = false;
 } mc_options;
 
 
@@ -106,6 +107,10 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case 'f':
       mc_options.formula = arg;
+      break;
+    case 'h':
+      mc_options.has_deadlock = true;
+      mc_options.selfloopize = false;
       break;
     case 'k':
       mc_options.kripke_output = true;
@@ -146,6 +151,10 @@ static const argp_option options[] =
     { "is-empty", 'e', nullptr, 0,
       "check if the model meets its specification. "
       "Return 1 if a counterexample is found."
+      , 0 },
+    { "has-deadlock", 'h', nullptr, 0,
+      "check if the model has a deadlock. "
+      "Return 1 if the model contains a deadlock."
       , 0 },
     { "parallel", 'p', "INT", 0, "use INT threads (when possible)", 0 },
     { "selfloopize", 's', "STRING", 0,
@@ -279,7 +288,6 @@ static int checked_main()
           tm.stop("kripke output");
         }
     }
-
 
   if (mc_options.nb_threads == 1 &&
       mc_options.formula != nullptr &&
@@ -499,6 +507,104 @@ static int checked_main()
                     << (!std::get<0>(res) ? "EMPTY," : "NONEMPTY,")
                     << std::get<2>(res)[smallest].states << ','
                     << std::get<2>(res)[smallest].transitions
+                    << '\n';
+        }
+    }
+
+
+    if (mc_options.has_deadlock &&  mc_options.model != nullptr)
+    {
+      assert(!mc_options.selfloopize);
+      unsigned int hc = std::thread::hardware_concurrency();
+      if (mc_options.nb_threads > hc)
+        std::cerr << "Warning: you require " << mc_options.nb_threads
+                  << " threads, but your computer only support " << hc
+                  << ". This could slow down parallel algorithms.\n";
+
+      tm.start("load kripkecube");
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      try
+        {
+           modelcube = spot::ltsmin_model::load(mc_options.model)
+             .kripkecube({}, deadf, mc_options.compress,
+                         mc_options.nb_threads);
+        }
+      catch (std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      int memused = spot::memusage();
+      tm.start("deadlock check");
+      auto res = spot::has_deadlock<spot::ltsmin_kripkecube_ptr,
+                                    spot::cspins_state,
+                                    spot::cspins_iterator,
+                                    spot::cspins_state_hash,
+                                    spot::cspins_state_equal>(modelcube);
+      tm.stop("deadlock check");
+      memused = spot::memusage() - memused;
+
+      if (!modelcube)
+        {
+          exit_code = 2;
+          goto safe_exit;
+        }
+
+      // Display statistics
+      unsigned smallest = 0;
+      for (unsigned i = 0; i < std::get<1>(res).size(); ++i)
+        {
+          if (std::get<1>(res)[i].states < std::get<1>(res)[smallest].states)
+            smallest = i;
+
+          std::cout << "\n---- Thread number : " << i << '\n';
+          std::cout << std::get<1>(res)[i].states << " unique states visited\n";
+          std::cout << std::get<1>(res)[i].transitions
+                    << " transitions explored\n";
+          std::cout << std::get<1>(res)[i].instack_dfs
+                    << " items max in DFS search stack\n";
+          std::cout << std::get<1>(res)[i].walltime
+                    << " milliseconds\n";
+
+          if (mc_options.csv)
+            {
+              std::cout << "Find following the csv: "
+                        << "thread_id,walltimems,type,"
+                        << "states,transitions\n";
+              std::cout << "@th_" << i << ','
+                        << std::get<1>(res)[i].walltime << ','
+                        << (std::get<1>(res)[i].has_deadlock ?
+                            "DEADLOCK," : "NO-DEADLOCK,")
+                        << std::get<1>(res)[i].states << ','
+                        << std::get<1>(res)[i].transitions
+                        << std::endl;
+            }
+        }
+
+      if (mc_options.csv)
+        {
+          std::cout << "\nSummary :\n";
+          if (!std::get<0>(res))
+            std::cout << "No no deadlock found!\n";
+          else
+            {
+              std::cout << "A deadlock exists!\n";
+              exit_code = 1;
+            }
+
+          std::cout << "Find following the csv: "
+                    << "model,walltimems,memused,type,"
+                    << "states,transitions\n";
+
+          std::cout << '#'
+                    << split_filename(mc_options.model)
+                    << ','
+                    << tm.timer("deadlock check").walltime() << ','
+                    << memused << ','
+                    << (std::get<0>(res) ? "DEADLOCK," : "NO-DEADLOCK,")
+                    << std::get<1>(res)[smallest].states << ','
+                    << std::get<1>(res)[smallest].transitions
                     << '\n';
         }
     }
