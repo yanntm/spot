@@ -19,13 +19,16 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include <thread>
 #include <tuple>
 #include <vector>
 #include <spot/kripke/kripke.hh>
 #include <spot/mc/ec.hh>
+#include <spot/mc/deadlock.hh>
 #include <spot/misc/common.hh>
+#include <spot/misc/timer.hh>
 
 namespace spot
 {
@@ -60,7 +63,7 @@ namespace spot
 
     bool has_ctrx = false;
     std::string trace = "";
-     std::vector<istats> stats;
+    std::vector<istats> stats;
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       {
         has_ctrx |= ecs[i].counterexample_found();
@@ -70,5 +73,83 @@ namespace spot
         stats.push_back(ecs[i].stats());
       }
     return std::make_tuple(has_ctrx, trace, stats);
+  }
+
+  /// \bief Check wether the system contains a deadlock. The algorithm
+  /// spawns multiple threads performing a classical swarming DFS. As
+  /// soon one thread detects a deadlock all the other threads are stopped.
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::tuple<bool, std::vector<deadlock_stats>, spot::timer_map>
+  has_deadlock(kripke_ptr sys)
+  {
+    spot::timer_map tm;
+    using algo_name = spot::swarmed_deadlock<State, Iterator, Hash, Equal>;
+
+    unsigned  nbth = sys->get_threads();
+    typename algo_name::shared_map map;
+    std::atomic<bool> stop(false);
+
+    tm.start("Initialisation");
+    std::vector<algo_name*> swarmed(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      swarmed[i] = new algo_name(*sys, map, i, stop);
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+        {
+#if defined(unix) || defined(__unix__) || defined(__unix)
+            {
+              std::lock_guard<std::mutex> iolock(iomutex);
+              std::cout << "Thread #" << i
+                        << ": on CPU " << sched_getcpu() << '\n';
+            }
+#endif
+
+            // Wait all threads to be instanciated.
+            while (barrier)
+              continue;
+            swarmed[i]->run();
+         });
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+        //  Pins threads to a dedicated core.
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(i, &cpuset);
+        int rc = pthread_setaffinity_np(threads[i].native_handle(),
+                                        sizeof(cpu_set_t), &cpuset);
+        if (rc != 0)
+          {
+            std::lock_guard<std::mutex> iolock(iomutex);
+            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
+          }
+#endif
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
+    tm.stop("Run");
+
+    std::vector<deadlock_stats> stats;
+    bool has_deadlock = false;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      {
+        has_deadlock |= swarmed[i]->has_deadlock();
+        stats.push_back(swarmed[i]->stats());
+      }
+
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
+
+    return std::make_tuple(has_deadlock, stats, tm);
   }
 }
