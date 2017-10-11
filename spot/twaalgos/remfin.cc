@@ -164,10 +164,10 @@ namespace spot
           return remove_fin_impl(sccaut, skip)->is_empty();
         }
 
-      // Remaining infs corresponds to I₁s that have been seen with seeing
-      // the mathing F₁. In this SCC any edge in these I₁ is therefore
+      // Remaining infs corresponds to I₁s that have been seen without seeing
+      // the matching F₁. In this SCC any edge in these I₁ is therefore
       // final. Otherwise we do not know: it is possible that there is
-      // a non-accepting cycle in the SCC that do not visit Fᵢ.
+      // a non-accepting cycle in the SCC that does not visit Fᵢ.
       std::set<unsigned> unknown;
       for_each_edge(aut, si.inner_edges_of(scc), keep, [&](unsigned e)
         {

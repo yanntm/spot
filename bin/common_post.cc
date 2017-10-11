@@ -67,7 +67,7 @@ static constexpr const argp_option options[] =
       OPTION_ARG_OPTIONAL,
       "colored automaton with parity acceptance", 0, },
     { "cobuchi", OPT_COBUCHI, nullptr, 0,
-      "automaton with co-Büchi acceptance (will recognize"
+      "automaton with co-Büchi acceptance (will recognize "
       "a superset of the input language if not co-Büchi "
       "realizable)", 0 },
     { "coBuchi", 0, nullptr, OPTION_ALIAS, nullptr, 0 },
@@ -130,7 +130,7 @@ static const argp_option options_disabled[] =
       OPTION_ARG_OPTIONAL,
       "colored automaton with parity acceptance", 0, },
     { "cobuchi", OPT_COBUCHI, nullptr, 0,
-      "automaton with co-Büchi acceptance (will recognize"
+      "automaton with co-Büchi acceptance (will recognize "
       "a superset of the input language if not co-Büchi "
       "realizable)", 0 },
     { "coBuchi", 0, nullptr, OPTION_ALIAS, nullptr, 0 },

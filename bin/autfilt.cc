@@ -212,7 +212,7 @@ static const argp_option options[] =
       "keep automata whose languages are included in that of the "
       "automaton from FILENAME", 0 },
     { "equivalent-to", OPT_EQUIVALENT_TO, "FILENAME", 0,
-      "keep automata thare are equivalent (language-wise) to the automaton "
+      "keep automata that are equivalent (language-wise) to the automaton "
       "in FILENAME", 0 },
     { "invert-match", 'v', nullptr, 0, "select non-matching automata", 0 },
     { "states", OPT_STATES, "RANGE", 0,

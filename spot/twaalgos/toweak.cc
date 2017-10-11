@@ -49,9 +49,9 @@ namespace spot
       operator()(const rc_state& s) const noexcept
       {
         using std::hash;
-        return ((hash<int>()(s.id)
-                 ^ (hash<int>()(s.rank)))
-                 ^ (hash<int>()(s.mark.id)));
+        return ((hash<unsigned>()(s.id)
+                 ^ (hash<unsigned>()(s.rank)))
+                 ^ (hash<acc_cond::mark_t>()(s.mark)));
       }
     };
 
