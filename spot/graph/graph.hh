@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014, 2015, 2016, 2017 Laboratoire de Recherche et
+// Copyright (C) 2014-2018 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -1076,7 +1076,7 @@ namespace spot
       killed_edge_ = 0;
     }
 
-    /// \brief Sort all edge according to a predicate
+    /// \brief Sort all edges according to a predicate
     ///
     /// This will invalidate all iterators, and also destroy edge
     /// chains.  Call chain_edges_() immediately afterwards unless you

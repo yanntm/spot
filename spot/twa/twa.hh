@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011, 2013-2017 Laboratoire de Recherche et
+// Copyright (C) 2009, 2011, 2013-2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2003-2005 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -92,7 +92,7 @@ namespace spot
     /// new state that you should deallocate with this function.
     /// Before Spot 0.7, you had to "delete" your state directly.
     /// Starting with Spot 0.7, you should update your code to use
-    /// this function instead. destroy() usually call delete, except
+    /// this function instead. destroy() usually calls delete, except
     /// in subclasses that destroy() to allow better memory management
     /// (e.g., no memory allocation for explicit automata).
     virtual void destroy() const
@@ -116,7 +116,7 @@ namespace spot
   /// \brief Strict Weak Ordering for \c state*.
   ///
   /// This is meant to be used as a comparison functor for
-  /// STL \c map whose key are of type \c state*.
+  /// STL \c map whose keys are of type \c state*.
   ///
   /// For instance here is how one could declare
   /// a map of \c state*.
@@ -138,7 +138,7 @@ namespace spot
   /// \brief An Equivalence Relation for \c state*.
   ///
   /// This is meant to be used as a comparison functor for
-  /// an \c unordered_map whose key are of type \c state*.
+  /// an \c unordered_map whose keys are of type \c state*.
   ///
   /// For instance here is how one could declare
   /// a map of \c state*.
@@ -162,7 +162,7 @@ namespace spot
   /// \brief Hash Function for \c state*.
   ///
   /// This is meant to be used as a hash functor for
-  /// an \c unordered_map whose key are of type \c state*.
+  /// an \c unordered_map whose keys are of type \c state*.
   ///
   /// For instance here is how one could declare
   /// a map of \c state*.
@@ -205,9 +205,9 @@ namespace spot
 
     /// \brief Canonicalize state pointer.
     ///
-    /// If this is the first time a state is seen, this return the
+    /// If this is the first time a state is seen, this returns the
     /// state pointer as-is, otherwise it frees the state and returns
-    /// a point to the previously seen copy.
+    /// a pointer to the previously seen copy.
     ///
     /// States are owned by the table and will be freed on
     /// destruction.
@@ -239,7 +239,7 @@ namespace spot
       for (state_set::iterator i = m.begin(); i != m.end();)
         {
           // Advance the iterator before destroying its key.  This
-          // avoid issues with old g++ implementations.
+          // avoids issues with old g++ implementations.
           state_set::iterator old = i++;
           (*old)->destroy();
         }
@@ -266,7 +266,7 @@ namespace spot
   /// (shared_ptr<const state*>).
   ///
   /// This is meant to be used as a comparison functor for
-  /// STL \c map whose key are of type \c shared_state.
+  /// STL \c map whose keys are of type \c shared_state.
   ///
   /// For instance here is how one could declare
   /// a map of \c shared_state.
@@ -290,7 +290,7 @@ namespace spot
   /// (shared_ptr<const state*>).
   ///
   /// This is meant to be used as a comparison functor for
-  /// an \c unordered_map whose key are of type \c shared_state.
+  /// an \c unordered_map whose keys are of type \c shared_state.
   ///
   /// For instance here is how one could declare
   /// a map of \c shared_state
@@ -318,7 +318,7 @@ namespace spot
   /// \brief Hash Function for \c shared_state (shared_ptr<const state*>).
   ///
   /// This is meant to be used as a hash functor for
-  /// an \c unordered_map whose key are of type
+  /// an \c unordered_map whose keys are of type
   /// \c shared_state.
   ///
   /// For instance here is how one could declare
@@ -365,7 +365,7 @@ namespace spot
   /// The twa_succ_iterator is usually subclassed so that iteration
   /// methods and accessor methods can be implemented differently in
   /// different automata.  In particular, this interface allows
-  /// computing the set of successor on the fly if needed.
+  /// computing the set of successors on the fly if needed.
   ///
   /// The iterator can be used to iterate over all successors in a
   /// loop as follows:
@@ -392,7 +392,7 @@ namespace spot
   ///       while(i->next());
   /// \endcode
   ///
-  /// This loops uses the return value of first() and next() to save
+  /// This loop uses the return value of first() and next() to save
   /// n+1 calls to done().
   class SPOT_API twa_succ_iterator
   {
@@ -424,7 +424,7 @@ namespace spot
     /// \brief Jump to the next successor (if any).
     ///
     /// \warning Again, one should always call \c done() (or better:
-    /// check the return value of next()) ensure there is a successor.
+    /// check the return value of next()) to ensure there is a successor.
     ///
     /// \return true if the iterator moved to a new successor, false
     /// if the iterator could not move to a new successor.
@@ -459,7 +459,7 @@ namespace spot
     ///
     /// Each call to dst() (even several times on the same edge)
     /// creates a new state that has to be destroyed (see
-    /// state::destroy()).  by the caller after it is no longer used.
+    /// state::destroy()) by the caller after it is no longer used.
     ///
     /// Note that the same state may occur at different points in the
     /// iteration, as different outgoing edges (usually with different
@@ -467,7 +467,7 @@ namespace spot
     virtual const state* dst() const = 0;
     /// \brief Get the condition on the edge leading to this successor.
     ///
-    /// This is a boolean function of atomic propositions.
+    /// This is a Boolean function of atomic propositions.
     virtual bdd cond() const = 0;
     /// \brief Get the acceptance mark of the edge leading to this
     /// successor.
@@ -478,7 +478,7 @@ namespace spot
 
   namespace internal
   {
-    /// \brief Helper structure to iterate over the successor of a
+    /// \brief Helper structure to iterate over the successors of a
     /// state using the on-the-fly interface.
     ///
     /// This one emulates an STL-like iterator over the
@@ -517,7 +517,7 @@ namespace spot
     };
 
 #ifndef SWIG
-    /// \brief Helper class to iterate over the successor of a state
+    /// \brief Helper class to iterate over the successors of a state
     /// using the on-the-fly interface
     ///
     /// This one emulates an STL-like container with begin()/end()
@@ -575,9 +575,9 @@ namespace spot
   /// w is just a non-utf8 replacement for ω that should not be
   /// capitalized.
   ///
-  /// TωAs are transition-based automata, meanings that not-only do
+  /// TωAs are transition-based automata, meaning that not-only do
   /// they have labels on edges, but they also have an acceptance
-  /// condition defined in term of sets of transitions.  The
+  /// condition defined in terms of sets of transitions.  The
   /// acceptance condition can be anything supported by the HOA format
   /// (http://adl.github.io/hoaf/).  The only restriction w.r.t. the
   /// format is that this class does not support alternating automata.
@@ -598,7 +598,7 @@ namespace spot
   /// of any given state. A TωA is always assumed to have at least
   /// one state, the initial one.
   ///
-  /// Note that although this is a transition-based automata, we never
+  /// Note that although this is a transition-based automaton, we never
   /// represent edges in the API.  Information about edges can be
   /// obtained by querying the iterator over the successors of a
   /// state.
@@ -617,7 +617,7 @@ namespace spot
   /// graph in memory, use the spot::twa_graph subclass instead.  A
   /// twa_graph object can be used as a spot::twa (using the
   /// on-the-fly interface, even though nothing needs to be
-  /// constructed), but it also offers a faster interface that do not
+  /// constructed), but it also offers a faster interface that does not
   /// use virtual methods.
   class SPOT_API twa: public std::enable_shared_from_this<twa>
   {
@@ -694,7 +694,7 @@ namespace spot
     /// \brief Get the dictionary associated to the automaton.
     ///
     /// Automata are labeled by Boolean formulas over atomic
-    /// propositions.  These Boolean formula are represented as BDDs.
+    /// propositions.  These Boolean formulas are represented as BDDs.
     /// The dictionary allows to map BDD variables back to atomic
     /// propositions, and vice versa.
     ///
@@ -704,7 +704,7 @@ namespace spot
     ///
     /// It is however possible to declare automata that use different
     /// sets of atomic propositions with different dictionaries.  That
-    /// way a BDD variable associated to some atomic proposition in
+    /// way, a BDD variable associated to some atomic proposition in
     /// one automaton might be reused for another atomic proposition
     /// in the other automaton.
     bdd_dict_ptr get_dict() const
@@ -719,7 +719,7 @@ namespace spot
     /// a given atomic proposition.
     ///
     /// This adds the atomic proposition to the list of atomic
-    /// proposition of the automaton, and also register it to the
+    /// proposition of the automaton, and also registers it to the
     /// bdd_dict.
     ///
     /// \return The BDD variable number assigned for this atomic
@@ -748,10 +748,10 @@ namespace spot
     void unregister_ap(int num);
 
     /// \brief Register all atomic propositions that have
-    /// already be register by the bdd_dict for this automaton.
+    /// already been registered by the bdd_dict for this automaton.
     ///
     /// This method may only be called on an automaton with an empty
-    /// list of AP.  It will fetch all atomic proposition that have
+    /// list of AP.  It will fetch all atomic propositions that have
     /// been set in the bdd_dict for this particular automaton.
     ///
     /// The typical use-case for this function is when the labels of
@@ -799,7 +799,7 @@ namespace spot
     ///
     /// This converts \a s, into that corresponding spot::state for \a
     /// t.  This is useful when you have the state of a product, and
-    /// want restrict this state to a specific automata occuring in
+    /// want to restrict this state to a specific automata occuring in
     /// the product.
     ///
     /// It goes without saying that \a s and \a t should be compatible
@@ -985,7 +985,7 @@ namespace spot
     ///
     /// This declares a single acceptance set, and \c Inf(0)
     /// acceptance.  The returned mark \c {0} can be used to tag
-    /// accepting transition.
+    /// accepting transitions.
     ///
     /// Note that this does not mark the automaton as using
     /// state-based acceptance. If you want to create a Büchi
@@ -1006,7 +1006,7 @@ namespace spot
     ///
     /// This declares a single acceptance set, and \c Fin(0)
     /// acceptance.  The returned mark \c {0} can be used to tag
-    /// non-accepting transition.
+    /// non-accepting transitions.
     ///
     /// Note that this does not mark the automaton as using
     /// state-based acceptance. If you want to create a co-Büchi
@@ -1030,16 +1030,16 @@ namespace spot
     /// Helper structure used to store property flags.
     struct bprop
     {
-      trival::repr_t state_based_acc:2;   // State-based acceptance.
-      trival::repr_t inherently_weak:2;   // Inherently Weak automaton.
-      trival::repr_t weak:2;               // Weak automaton.
-      trival::repr_t terminal:2;               // Terminal automaton.
-      trival::repr_t universal:2;         // Universal automaton.
-      trival::repr_t unambiguous:2;       // Unambiguous automaton.
-      trival::repr_t stutter_invariant:2; // Stutter invariant language.
-      trival::repr_t very_weak:2;         // very-weak, or 1-weak
-      trival::repr_t semi_deterministic:2; // semi-deterministic automaton.
-      trival::repr_t complete:2;           // Complete automaton.
+      trival::repr_t state_based_acc:2;     // State-based acceptance.
+      trival::repr_t inherently_weak:2;     // Inherently Weak automaton.
+      trival::repr_t weak:2;                // Weak automaton.
+      trival::repr_t terminal:2;            // Terminal automaton.
+      trival::repr_t universal:2;           // Universal automaton.
+      trival::repr_t unambiguous:2;         // Unambiguous automaton.
+      trival::repr_t stutter_invariant:2;   // Stutter invariant language.
+      trival::repr_t very_weak:2;           // very-weak, or 1-weak
+      trival::repr_t semi_deterministic:2;  // semi-deterministic automaton.
+      trival::repr_t complete:2;            // Complete automaton.
     };
     union
     {
@@ -1062,10 +1062,10 @@ namespace spot
     ///
     /// Arbitrary objects can be attached to automata.  Those are called
     /// named properties.  They are used for instance to name all the
-    /// state of an automaton.
+    /// states of an automaton.
     ///
     /// This function attaches the object \a val to the current
-    /// automaton, under the name \a s and destroy any previous
+    /// automaton, under the name \a s and destroys any previous
     /// property with the same name.
     ///
     /// When the automaton is destroyed, the \a destructor function will
@@ -1080,10 +1080,10 @@ namespace spot
     ///
     /// Arbitrary objects can be attached to automata.  Those are called
     /// named properties.  They are used for instance to name all the
-    /// state of an automaton.
+    /// states of an automaton.
     ///
     /// This function attaches the object \a val to the current
-    /// automaton, under the name \a s and destroy any previous
+    /// automaton, under the name \a s and destroys any previous
     /// property with the same name.
     ///
     /// When the automaton is destroyed, the attached object will be
@@ -1101,7 +1101,7 @@ namespace spot
     ///
     /// Arbitrary objects can be attached to automata.  Those are called
     /// named properties.  They are used for instance to name all the
-    /// state of an automaton.
+    /// states of an automaton.
     ///
     /// This function removes the property \a s if it exists.
     ///
@@ -1137,11 +1137,11 @@ namespace spot
     ///
     /// Arbitrary objects can be attached to automata.  Those are called
     /// named properties.  They are used for instance to name all the
-    /// state of an automaton.
+    /// states of an automaton.
     ///
-    /// This function create a property object of a given type, and
-    /// attached it to \a name if not such property exist, or it
-    /// returns
+    /// This function creates a property object of a given type, and
+    /// attaches it to \a name if no such property exists, or it
+    /// returns the found object.
     ///
     /// See https://spot.lrde.epita.fr/concepts.html#named-properties
     /// for a list of named properties used by Spot.
@@ -1161,7 +1161,7 @@ namespace spot
     /// \brief Destroy all named properties.
     ///
     /// This is used by the automaton destructor, but it could be used
-    /// by any algorithm that want to get rid of all named properties.
+    /// by any algorithm that wants to get rid of all named properties.
     void release_named_properties()
     {
       // Destroy all named properties.
@@ -1214,7 +1214,7 @@ namespace spot
       return is.inherently_weak;
     }
 
-    /// \brief Set the "inherently weak" proeprty.
+    /// \brief Set the "inherently weak" property.
     ///
     /// Setting "inherently weak" to false automatically
     /// disables "terminal", "very weak", and "weak".
@@ -1235,7 +1235,7 @@ namespace spot
     /// to a non-accepting SCC.
     ///
     /// This property ensures that a word can be accepted as soon as
-    /// on of its prefixes move through an accepting edge.
+    /// one of its prefixes moves through an accepting edge.
     ///
     /// \see prop_weak()
     /// \see prop_inherently_weak()
@@ -1274,7 +1274,7 @@ namespace spot
     ///
     /// Marking an automaton as "weak" automatically marks it as
     /// "inherently weak".  Marking an automaton as "not weak"
-    /// automatically marks are as "not terminal".
+    /// automatically marks it as "not terminal".
     ///
     /// \see prop_terminal()
     /// \see prop_inherently_weak()
@@ -1315,7 +1315,7 @@ namespace spot
     }
 
 
-    /// \brief Whether the automaton is complete..
+    /// \brief Whether the automaton is complete.
     ///
     /// An automaton is complete if for each state the union of the
     /// labels of its outgoing transitions is always true.
@@ -1370,7 +1370,7 @@ namespace spot
         is.unambiguous = is.semi_deterministic = val.val();
     }
 
-    // Starting with Spot 2.4, and automaton is deterministic if it is
+    // Starting with Spot 2.4, an automaton is deterministic if it is
     // both universal and existential, but as we already have
     // twa::is_existential(), we only need to additionally record the
     // universal property.  Before that, the deterministic property
@@ -1406,7 +1406,7 @@ namespace spot
       return is.unambiguous;
     }
 
-    /// \brief Sets the unambiguous property
+    /// \brief Set the unambiguous property
     ///
     /// Marking an automaton as "non unambiguous" automatically
     /// marks it as "non universal".
@@ -1436,7 +1436,7 @@ namespace spot
       return is.semi_deterministic;
     }
 
-    /// \brief Sets the semi-deterministic property
+    /// \brief Set the semi-deterministic property
     ///
     /// Marking an automaton as "non semi-deterministic" automatically
     /// marks it as "non universal".
@@ -1453,11 +1453,11 @@ namespace spot
     ///
     /// An automaton is stutter-invariant iff any accepted word
     /// remains accepted after removing a finite number of duplicate
-    /// letters, or after duplicating finite number of letters.
+    /// letters, or after duplicating a finite number of letters.
     ///
     /// Note that this method may return trival::maybe() when it is
     /// unknown whether the automaton is stutter-invariant or not.  If
-    /// you need a true/false answer, prefer one using of the the
+    /// you need a true/false answer, prefer the
     /// is_stutter_invariant() function.
     ///
     /// \see is_stutter_invariant
@@ -1505,19 +1505,19 @@ namespace spot
     /// only copied if they are positive.
     ///
     /// The reason there is no default value for these flags is that
-    /// whenever we add a new property that do not fall into any of
-    /// these groups, we will be forced to review all algorithm to
+    /// whenever we add a new property that does not fall into any of
+    /// these groups, we will be forced to review all algorithms to
     /// decide if the property should be preserved or not.
     ///
     /// \see make_twa_graph_ptr
     /// \see prop_copy
     struct prop_set
     {
-      bool state_based;     ///< preserve state-based acceptnace
+      bool state_based;     ///< preserve state-based acceptance
       bool inherently_weak; ///< preserve inherently weak, weak, & terminal
       bool deterministic;   ///< preserve deterministic, semi-det, unambiguous
-      bool improve_det;     ///< improves deterministic, semi-det, unambiguous
-      bool complete;        ///< preserves completeness
+      bool improve_det;     ///< improve deterministic, semi-det, unambiguous
+      bool complete;        ///< preserve completeness
       bool stutter_inv;     ///< preserve stutter invariance
 
       prop_set()
@@ -1586,7 +1586,7 @@ namespace spot
 
     /// \brief Copy the properties of another automaton.
     ///
-    /// Copy the property speciefied with \a p from \a other to the
+    /// Copy the property specified with \a p from \a other to the
     /// current automaton.
     ///
     /// There is no default value for \a p on purpose.  This way any

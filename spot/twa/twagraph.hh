@@ -616,7 +616,7 @@ namespace spot
       return 0U;
     }
 
-    /// \brief Tell if a state is acceptince.
+    /// \brief Tell if a state is accepting.
     ///
     /// This makes only sense for automata using state-based
     /// acceptance, and a simple acceptance condition like Büchi or
