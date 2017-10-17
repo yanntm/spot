@@ -94,3 +94,41 @@ bool sim_tree::apply(spot::formula f, spot::formula& res)
   str_map map;
   return root_->apply(f, res, map, true);
 }
+
+//////////////////////////////////////////////////////
+///
+/// argsnode
+///
+//////////////////////////////////////////////////////
+
+
+void args_node::to_dot(int *i, int father, std::ofstream& ofs)
+{
+  int nb = (*i)++;
+  if (!father)
+    ofs << nb << " [label=\"root\" shape=box];\n";
+  else
+  {
+    if (condition_)
+    {
+      auto cond = *condition_;
+      std::string str = "{ ";
+      for (auto elem : cond)
+      {
+        str += "{ " + dot_no_special(elem.cond_get()) + " | "
+          + dot_no_special(elem.ret_get()) + " } |";
+      }
+      str.pop_back();
+      str += " } ";
+      ofs << nb << " [label=\"" << str << "\" shape=record];\n";
+    }
+    else
+      ofs << nb << " [label=\"\" shape=box];\n";
+    ofs << father << " -> " << nb << "\n";
+  }
+  for (unsigned j = 0; j < children_.size(); j++)
+  {
+    auto& child = children_[j];
+    child->to_dot(i, nb, ofs);
+  }
+}
