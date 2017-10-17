@@ -286,3 +286,40 @@ bool op_node::insert(sim_line sl, str_map& ap_asso,
   children_.push_back(std::make_unique<args_node>());
   return ins(children_.size() - 1);
 }
+
+bool op_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
+    bool last)
+{
+  bool ins;
+  //std::cout << f.kindstr() << " " << (f.kind() == op_) << std::endl;
+  if ((op_ == spot::op::ap && is_special(opstr_))
+      || is_final(f) && f.kind() == op_)
+    return true;
+  for (unsigned j = 0; j < children_.size(); j++)
+  {
+    auto& child = children_[j];
+    pair_vect vect;
+    if (child->is_equivalent(f, vect, true))
+    {
+      str_map new_asso = ap_asso;
+      for (auto pair : vect)
+        if (new_asso.find(opstr_) == new_asso.end())
+          new_asso.emplace(pair.second, pair.first);
+      //if (is_sorted(f))
+      unsigned i = 0;
+      for (; i < f.size(); i++)
+      {
+        //std::vector<bool> marked(f.size(), false);
+        if (!child->apply(f[i], res, new_asso, last && i == f.size() - 1))
+          break;
+      }
+      //std::cout << i << "/" << f.size() << std::endl;
+      if (i == f.size())
+      {
+        ap_asso.insert(new_asso.begin(), new_asso.end());
+        return true;
+      }
+    }
+  }
+  return false;
+}
