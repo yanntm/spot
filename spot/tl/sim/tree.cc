@@ -227,3 +227,23 @@ bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
   }
   return false;
 }
+
+
+//////////////////////////////////////////////////////
+///
+/// opnode
+///
+//////////////////////////////////////////////////////
+
+void op_node::to_dot(int *i, int father, std::ofstream& ofs)
+{
+  int nb = (*i)++;
+  ofs << nb << " [label=\"" << opstr_ << "\"];\n";
+  if (father)
+    ofs << father << " -> " << nb << "\n";
+  for (unsigned j = 0; j < children_.size(); j++)
+  {
+    auto& child = children_[j];
+    child->to_dot(i, nb, ofs);
+  }
+}
