@@ -34,5 +34,37 @@ spot::formula chg_ap_name(spot::formula f, str_map ap_asso)
   return chg_ap(f);
 }
 
+// does the formula has child?
+inline bool is_final(spot::formula f)
+{
+  return f.size() == 0;
+}
+
+inline bool is_special(std::string ap)
+{
+  auto name = ap[0];
+  return name == 'u' || name == 'e' || name == 'f';
+}
+
+// search key in str and replaces it by replace
+std::string sar(std::string str, std::string key, std::string replace)
+{
+  std::string res = str;
+  auto pos = res.find(key);
+  while (pos != std::string::npos)
+  {
+    res.replace(pos, key.length(), replace);
+    pos = res.find(key, pos + replace.length());
+  }
+  return res;
+}
+
+
+// precede by backslash special characters for dot format labels
+inline std::string dot_no_special(std::string str)
+{
+  return sar(sar(sar(str, ">", "\\>"), "<", "\\<"), "|", "\\|");
+}
+
 
 
