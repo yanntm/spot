@@ -247,3 +247,42 @@ void op_node::to_dot(int *i, int father, std::ofstream& ofs)
     child->to_dot(i, nb, ofs);
   }
 }
+
+bool op_node::insert(sim_line sl, str_map& ap_asso,
+    bool last)
+{
+  auto f = sl.formula_get();
+  auto ins = [&](unsigned child, pair_vect* vect = nullptr) -> bool
+  {
+    if (vect)
+      for (auto pair : *vect)
+        ap_asso.emplace(pair.first, pair.second);
+    bool inserted = false;
+    for (unsigned i = 0; i < f.size(); i++)
+    {
+      //do not insert duplicates ap when is_equivalent
+      if (!vect || f[i].kind() != spot::op::ap)
+        inserted |= children_[child]->insert(sim_line(sl.cond_get(), f[i],
+              sl.replace_get()), ap_asso, last && i == f.size() - 1);
+      else
+        //insert cond
+        if (last && i == f.size() - 1)
+        {
+          auto& cond = children_[child]->condition_get();
+          if (!cond)
+            cond = std::make_unique<std::vector<conds>>();
+          cond->push_back(conds(sl.cond_get(),
+                sl.replace_get(), ap_asso));
+        }
+    }
+    return inserted;
+  };
+  for (unsigned i = 0; i < children_.size(); i++)
+  {
+    pair_vect vect;
+    if (children_[i]->is_equivalent(f, vect, false))
+      return ins(i, &vect);
+  }
+  children_.push_back(std::make_unique<args_node>());
+  return ins(children_.size() - 1);
+}
