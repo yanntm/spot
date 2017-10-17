@@ -67,4 +67,30 @@ inline std::string dot_no_special(std::string str)
 }
 
 
+//////////////////////////////////////////////////
+///
+/// simtree
+///
+//////////////////////////////////////////////////
 
+
+bool sim_tree::insert(sim_line sl)
+{
+  str_map map;
+  return root_->insert(sl, map, true);
+}
+
+void sim_tree::to_dot(std::string filename)
+{
+  int i = 1;
+  std::ofstream ofs(filename);
+  ofs << "digraph simplifyTree{\n";
+  root_->to_dot(&i, 0, ofs);
+  ofs << "}\n";
+}
+
+bool sim_tree::apply(spot::formula f, spot::formula& res)
+{
+  str_map map;
+  return root_->apply(f, res, map, true);
+}
