@@ -132,3 +132,44 @@ void args_node::to_dot(int *i, int father, std::ofstream& ofs)
     child->to_dot(i, nb, ofs);
   }
 }
+
+bool args_node::insert(sim_line sl, str_map& ap_asso, bool last)
+{
+  auto f = sl.formula_get();
+  for (unsigned i = 0; i < children_.size(); i++)
+  {
+    auto& child = children_[i];
+    if(child->op_get()== f.kind() && !is_final(f))
+      return child->insert(sl, ap_asso, last);
+  }
+  if (f.kind() == spot::op::ap)
+  {
+    auto name = f.ap_name();
+    auto search = ap_asso.find(name);
+    std::string str;
+    if (search == ap_asso.end())
+    {
+      str = "f" + std::to_string(ap_asso.size());
+      ap_asso.emplace(name, str);
+    }
+    else
+      str = search->second;
+    children_.push_back(std::make_unique<op_node>(f, str));
+  }
+  else
+    children_.push_back(std::make_unique<op_node>(f));
+  if (is_final(f))
+  {
+    if (last)
+    {
+      if (!condition_)
+        condition_ = std::make_unique<std::vector<conds>>();
+      condition_->push_back(conds(sl.cond_get(), sl.replace_get(),
+            ap_asso));
+    }
+    return true;
+  }
+  return children_[children_.size() - 1]->insert(sl, ap_asso, last);
+}
+
+
