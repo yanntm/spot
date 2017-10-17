@@ -195,4 +195,35 @@ bool args_node::is_equivalent(spot::formula f, pair_vect& asso, bool check)
   return true;
 }
 
-
+bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
+    bool last)
+{
+  for (unsigned i = 0; i < children_.size(); i++)
+  {
+    auto& child = children_[i];
+    auto op = child->op_get();
+    if ((op == spot::op::ap && is_special(child->opstr_get()))
+        || f.kind() == op)
+      if (child->apply(f, res, ap_asso, last))
+      {
+        // !res so we do not try to access condition_ after
+        if (last && !res)
+        {
+          auto cond = *condition_;
+          unsigned nb = cond.size();
+          unsigned i = 0;
+          for (; i < nb; i++)
+          {
+            cond[i].check(f, ap_asso);
+          }
+          if (i == nb)
+            continue;
+          // building res
+          //auto cond = chg_ap_name(search->second.condf_get(), ap_asso);
+          res = chg_ap_name(cond[i].retf_get(), ap_asso);
+        }
+        return true;
+      }
+  }
+  return false;
+}
