@@ -173,3 +173,26 @@ bool args_node::insert(sim_line sl, str_map& ap_asso, bool last)
 }
 
 
+
+bool args_node::is_equivalent(spot::formula f, pair_vect& asso, bool check)
+{
+  // must do something handling 'args'
+  int nb = f.size();
+  for (unsigned i = 0; i < nb; i++)
+  {
+    auto kind = f[i].kind();
+    auto& child = *(children_[i]);
+    auto chkind = child.op_get();
+    // AP in the tree matches any formula, so we put formula in the name map.
+    if (chkind == spot::op::ap)
+    {
+      asso.push_back(std::make_pair(str_psl(f[i]), child.opstr_get()));
+      continue;
+    }
+    if (child.op_get() != kind)
+      return false;
+  }
+  return true;
+}
+
+
