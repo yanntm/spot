@@ -33,6 +33,7 @@
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/isdet.hh>
+#include <spot/misc/fixpool.hh>
 
 
 namespace spot
@@ -43,6 +44,11 @@ namespace spot
     struct safra_build;
     class compute_succs;
   }
+
+  // useful typedef
+  template<class Key, class T, class Hash, class Equal=std::equal_to<Key>>
+  using hash_map = std::unordered_map<Key, T, Hash, Equal,
+                                      pool_allocator<std::pair<const Key, T>>>;
 
   class safra_state final
   {
@@ -132,7 +138,7 @@ namespace spot
       }
     };
 
-    using power_set = std::unordered_map<safra_state, unsigned, hash_safra>;
+    using power_set = hash_map<safra_state, unsigned, hash_safra>;
 
     std::string
     nodes_to_string(const const_twa_graph_ptr& aut,
@@ -159,7 +165,9 @@ namespace spot
     struct safra_build final
     {
       std::vector<int> braces_;
-      std::map<unsigned, int> nodes_;
+      std::map<unsigned, int,
+               std::less<unsigned>,
+               pool_allocator<std::pair<const unsigned, int>>> nodes_;
 
       bool
       compare_braces(int a, int b)
@@ -567,7 +575,7 @@ namespace spot
     class safra_support
     {
       const std::vector<bdd>& state_supports;
-      std::unordered_map<bdd, std::vector<bdd>, bdd_hash> cache;
+      hash_map<bdd, std::vector<bdd>, bdd_hash> cache;
 
     public:
       safra_support(const std::vector<bdd>& s): state_supports(s) {}
