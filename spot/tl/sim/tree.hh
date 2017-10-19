@@ -16,6 +16,7 @@ typedef std::vector<std::pair<std::string, std::string>> pair_vect;
 typedef std::map<std::string, std::string> str_map;
 
 spot::formula chg_ap_name(spot::formula f, str_map ap_asso);
+bool has(spot::formula f, spot::formula pattern);
 
 
 class args_node;
@@ -58,15 +59,16 @@ class conds
     auto add_cond = [this](std::string str)
     {
       cond_ += (cond_.size() ? " & " : "") + str;
+      condf_.push_back(spot::parse_formula(str));
     };
     for (auto elem : ap_asso)
     {
-      std::cout << "-> " << elem.first << " // " << elem.second << std::endl;
+      //std::cout << "-> " << elem.first << " // " << elem.second << std::endl;
       auto name = elem.first[0];
       if (name == 'e')
-        add_cond(elem.first + ".eventual");
+        add_cond(elem.second + ".eventual");
       else if (name == 'u')
-        add_cond(elem.first + ".universal");
+        add_cond(elem.second + ".universal");
     }
     retf_ = chg_ap_name(spot::parse_formula(ret), ap_asso);
     if (cond.size())
@@ -94,6 +96,7 @@ class conds
 
   private:
     std::string cond_;
+    std::vector<spot::formula> condf_;
     std::string ret_;
     spot::formula retf_;
 };
@@ -159,7 +162,7 @@ class args_node
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
         bool last);
     void to_dot(int *i, int father, std::ofstream& ofs);
-    bool is_equivalent(spot::formula f, pair_vect& vect, bool check);
+    bool is_equivalent(spot::formula f, pair_vect& vect);
 
     std::string ap_name()
     {
