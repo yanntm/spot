@@ -108,7 +108,7 @@ namespace spot
       {
         if (--count)
           return;
-        pool->deallocate(this);
+        pool->deallocate(const_cast<spins_state*>(this));
       }
 
       size_t hash() const override
