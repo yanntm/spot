@@ -24,6 +24,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 noinst_LTLIBRARIES = libpriv.la
 libpriv_la_SOURCES = \
   accmap.hh \
+  allocator.hh \
   bddalloc.cc \
   bddalloc.hh \
   freelist.cc \

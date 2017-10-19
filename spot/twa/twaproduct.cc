@@ -46,7 +46,7 @@ namespace spot
       return;
     fixed_size_pool* p = pool_;
     this->~state_product();
-    p->deallocate(this);
+    p->deallocate(const_cast<state_product*>(this));
   }
 
   int
