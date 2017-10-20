@@ -70,11 +70,50 @@ class conds
       else if (name == 'u')
         add_cond(elem.second + ".universal");
     }
-    retf_ = chg_ap_name(spot::parse_formula(ret), ap_asso);
     if (cond.size())
-      add_cond(spot::str_psl(chg_ap_name(spot::parse_formula(cond), ap_asso)));
+    {
+      unsigned begin = 0;
+      std::string delim = " and ";
+      auto search = cond.find(delim);
+      do
+      {
+        std::string condi = cond.substr(begin, search - begin);
+        if (condi.find('@') != std::string::npos)
+        {
+          //
+          condi = "\"" + condi + "\"";
+          //
+          auto args = condi.find('(') + 1;
+          auto comma = condi.find(',');
+          condi.replace(args, comma - args,
+              ap_asso.find(condi.substr(args, comma - args))->second);
+          add_cond(condi);
+        }
+        else
+          add_cond(spot::str_psl(chg_ap_name(spot::parse_formula(condi),
+                   ap_asso)));
+        begin = search + delim.size();
+        search = cond.find(delim, begin);
+      } while (search != std::string::npos);
+    }
     if (!cond_.size())
       cond_ = "1";
+    auto search = ret.find("split");
+    while (search != std::string::npos)
+    {
+      ret.insert(search, "\"");
+      //
+      auto args = ret.find('(', search) + 1;
+      auto comma = ret.find(',', search);
+      ret.replace(args, comma - args,
+          ap_asso.find(ret.substr(args, comma - args))->second);
+      auto searchend = ret.find(')', search);
+      ret.insert(searchend + 1, "\"");
+      std::string str = ret.substr(search + 1, searchend - search);
+      ap_asso.emplace(str, str);
+      search = ret.find("split", searchend);
+    }
+    retf_ = chg_ap_name(spot::parse_formula(ret), ap_asso);
     ret_ = str_psl(retf_);
   }
 

@@ -75,7 +75,8 @@ std::string sar(std::string str, std::string key, std::string replace)
 // precede by backslash special characters for dot format labels
 inline std::string dot_no_special(std::string str)
 {
-  return sar(sar(sar(str, ">", "\\>"), "<", "\\<"), "|", "\\|");
+  return sar(sar(sar(sar(sar(sar(str, ">", "\\>"), "<", "\\<"), "|", "\\|"),
+    "(", "\\("), ")", "\\)"), "\"", "");
 }
 
 
@@ -388,6 +389,9 @@ bool conds::check(spot::formula f, str_map& ap_asso)
           }
           break;
         }
+      case spot::op::Implies:
+        // do the Thing. The thing where you do things (equiv)
+        break;
       default:
         SPOT_UNREACHABLE();
     }
