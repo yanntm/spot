@@ -14,9 +14,12 @@
 
 typedef std::vector<std::pair<std::string, std::string>> pair_vect;
 typedef std::map<std::string, std::string> str_map;
+typedef std::vector<std::string> str_vect;
+typedef std::map<std::pair<std::string, std::string>, std::string> splitmap;
 
-spot::formula chg_ap_name(spot::formula f, str_map ap_asso);
-bool has(spot::formula f, spot::formula pattern);
+spot::formula chg_ap_name(spot::formula f, str_map ap_asso,
+    bool parse = false);
+bool has(spot::formula f, spot::formula pattern, str_vect& pos, str_vect& neg);
 
 
 class args_node;
@@ -102,15 +105,36 @@ class conds
     while (search != std::string::npos)
     {
       ret.insert(search, "\"");
+      // update search after insertion
+      search++;
       //
       auto args = ret.find('(', search) + 1;
       auto comma = ret.find(',', search);
-      ret.replace(args, comma - args,
-          ap_asso.find(ret.substr(args, comma - args))->second);
+      std::string arg1 = ap_asso.find(ret.substr(args, comma - args))->second;
+      ret.replace(args, comma - args, arg1);
       auto searchend = ret.find(')', search);
       ret.insert(searchend + 1, "\"");
-      std::string str = ret.substr(search + 1, searchend - search);
+      std::string str = ret.substr(search, searchend - search + 1);
+      // for ap_chg_name
       ap_asso.emplace(str, str);
+      // refresh first comma after replace
+      comma = ret.find(',', search) + 1;
+      std::string arg2;
+      std::string arg3;
+      // find another comma before closing parenthesis
+      auto comma2 = ret.find(',', comma);
+      if (comma2 != std::string::npos && comma2 < searchend)
+      {
+        arg2 = ret.substr(comma, comma2 - comma);
+        arg3 = ret.substr(comma2 + 1, searchend - comma2 - 1);
+      }
+      else
+        arg2 = ret.substr(comma, searchend - comma);
+      std::cout << ret.substr(search).find("splitnot") << std::endl;
+      if (ret.find("splitnot", search) == search)
+        splitnot_.emplace(std::make_pair(arg1, arg2), arg3);
+      else
+        split_.emplace(std::make_pair(arg1, arg2), arg3);
       search = ret.find("split", searchend);
     }
     retf_ = chg_ap_name(spot::parse_formula(ret), ap_asso);
@@ -138,6 +162,8 @@ class conds
     std::vector<spot::formula> condf_;
     std::string ret_;
     spot::formula retf_;
+    splitmap split_;
+    splitmap splitnot_;
 };
 
 

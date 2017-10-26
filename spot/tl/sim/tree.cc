@@ -8,26 +8,31 @@
 ///////////////////////////////////////
 
 // replace ap names in f by the corresponding in ap_asso
-spot::formula chg_ap_name(spot::formula f, str_map ap_asso)
+
+spot::formula chg_ap_name(spot::formula f, str_map ap_asso, bool parse)
 {
-//debugging print map
-/*
-     for(auto elem : ap_asso)
-     {
-     std::cout << "'" << elem.first << "' '" << elem.second << "'" << std::endl;
-     }
-*/
+  //debugging print map
+  /*
+  for(auto elem : ap_asso)
+  {
+    std::cout << "'" << elem.first << "' '" << elem.second << "'" << std::endl;
+  }
+  */
   std::function<spot::formula(spot::formula)> chg_ap;
-  chg_ap = [&chg_ap, ap_asso](spot::formula f)->spot::formula
+  chg_ap = [&chg_ap, ap_asso, parse](spot::formula f)->spot::formula
   {
     if (f.is(spot::op::ap))
     {
       auto name = f.ap_name();
-      //std::cout << name << std::endl;
-      auto search = ap_asso.find(f.ap_name());
+      //\
+      std::cout << name << std::endl;
+      auto search = ap_asso.find(name);
       if (search == ap_asso.end())
         SPOT_UNREACHABLE();
-      return spot::formula::ap(search->second);
+      if (parse)
+        return spot::parse_formula(search->second);
+      else
+        return spot::formula::ap(search->second);
     }
     return f.map(chg_ap);
   };
@@ -38,6 +43,23 @@ spot::formula chg_ap_name(spot::formula f, str_map ap_asso)
 inline bool is_final(spot::formula f)
 {
   return f.size() == 0;
+}
+
+inline std::string str(spot::op op)
+{
+  switch (op)
+  {
+    case spot::op::Or:
+    case spot::op::OrRat:
+      return " | ";
+    case spot::op::And:
+    case spot::op::AndNLM:
+      return " & ";
+    case spot::op::AndRat:
+      return " && ";
+    default:
+      SPOT_UNREACHABLE();
+  }
 }
 
 // is an nary operator ?
@@ -198,8 +220,7 @@ bool args_node::is_equivalent(spot::formula f, pair_vect& asso)
     if (children_.size() == 1)
     {
       auto name = children_[0]->opstr_get();
-      for (unsigned i = 0; i < nb; i++)
-        asso.emplace_back(str_psl(f[i]), name);
+      asso.emplace_back(str_psl(f), name);
       return true;
     }
   for (unsigned i = 0; i < nb; i++)
@@ -242,9 +263,11 @@ bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
           }
           if (i == nb)
             continue;
+          for (auto e : ap_asso)
+            std::cout << e.first << "->" << e.second << std::endl;
           // building res
-          //auto cond = chg_ap_name(search->second.condf_get(), ap_asso);
-          res = chg_ap_name(cond[i].retf_get(), ap_asso);
+          // auto cond = chg_ap_name(search->second.condf_get(), ap_asso);
+          res = chg_ap_name(cond[i].retf_get(), ap_asso, true);
         }
         return true;
       }
@@ -355,6 +378,12 @@ bool op_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
 
 bool conds::check(spot::formula f, str_map& ap_asso)
 {
+/*
+     for(auto elem : ap_asso)
+     {
+     std::cout << "'" << elem.first << "' '" << elem.second << "'" << std::endl;
+     }
+*/
   for (auto form : condf_)
   {
     switch (form.kind())
@@ -367,25 +396,88 @@ bool conds::check(spot::formula f, str_map& ap_asso)
           auto search = condi.find(".");
           if (search != std::string::npos)
           {
-            std::string name = condi.substr(0, search - 1);
-            spot::formula fname = spot::parse_formula(ap_asso.find(name)->second);
+            std::string name = condi.substr(0, search);
+            spot::formula fn = spot::parse_formula(ap_asso.find(name)->second);
             std::string rule = condi.substr(search + 1);
-            if (rule == "eventual" && !fname.is_eventual())
+            if (rule == "eventual" && !fn.is_eventual())
               return false;
-            if (rule == "universal" && !fname.is_universal())
+            if (rule == "universal" && !fn.is_universal())
               return false;
             break;
           }
-          search = condi.find("~");
+          search = condi.find("@");
           if (search != std::string::npos)
           {
-            std::string name = condi.substr(0, search - 1);
+            auto args = condi.find('(') + 1;
+            auto comma = condi.find(',');
+            std::string name = condi.substr(args, comma - args);
             spot::formula fn = spot::parse_formula(ap_asso.find(name)->second);
-            std::string ptrn = condi.substr(search + 1);
-            spot::formula fp = spot::parse_formula(ap_asso.find(ptrn)->second);
-            if (!has(fn, fp))
+            auto end = condi.find(')');
+            std::string ptrn = condi.substr(comma + 1, end - comma - 1);
+            spot::formula fp = spot::parse_formula(ptrn);
+            //std::cout << "fn & fp: "<< fn << " / " << fp << std::endl;
+            str_vect pos;
+            str_vect neg;
+            if (!has(fn, fp, pos, neg))
               return false;
-            break;
+            // debugging purpose
+            /*
+            for (auto e : ap_asso)
+              std::cout << e.first << "->" << e.second << std::endl;
+            std::cout << retf_ << std::endl;
+            for (auto s : pos)
+              std::cout << "\"" << s << "\" matches " << fp << std::endl;
+            for (auto s : neg)
+              std::cout << "\"" << s << "\" doesn't match " << fp << std::endl;
+            */
+
+            auto op = str(fn.kind());
+            auto replace = [&name, &ptrn](str_vect& vect, splitmap map)
+              -> std::string
+            {
+              auto rep = map.find(std::make_pair(name,ptrn))->second;
+              if (rep.size())
+              {
+                sim_tree t;
+                t.insert(sim_line("1", spot::parse_formula(ptrn), rep));
+                for (unsigned i = 0; i < vect.size(); i++)
+                {
+                  spot::formula res;
+                  // should always be true
+                  t.apply(spot::parse_formula(vect[i]), res);
+                  vect[i] = str_psl(res);
+                }
+              }
+              return rep;
+            };
+
+            auto splits = [&](str_vect& vect, std::string str, splitmap& map)
+            {
+              if (vect.size())
+              {
+                std::string split;
+                auto rep = replace(vect, map);
+                split = vect[0];
+                for (unsigned i = 1; i < vect.size(); i++)
+                  split += op + vect[i];
+                ap_asso.emplace(str + "(" + name + "," + ptrn
+                    + (rep.size() ? "," + rep : "") + ")", split);
+              }
+              else
+                ap_asso.emplace(str + "(" + name + "," + ptrn + ")", "");
+            };
+            splits(pos, "split", split_);
+            splits(neg, "splitnot", splitnot_);
+            std::string splitnot;
+            if (neg.size())
+            {
+              auto rep = replace(neg, splitnot_);
+              splitnot = neg[0];
+              for (unsigned i = 1; i < neg.size(); i++)
+                splitnot += op + neg[i];
+            }
+            ap_asso.emplace("splitnot(" + name + "," + ptrn + ")",
+                splitnot);
           }
           break;
         }
