@@ -73,6 +73,7 @@ struct mc_options_
   unsigned nb_threads = 1;
   bool csv = false;
   bool has_deadlock = false;
+  bool bloemen = false;
 } mc_options;
 
 
@@ -84,6 +85,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     {
     case CSV:
       mc_options.csv = true;
+      break;
+    case 'b':
+      mc_options.bloemen = true;
       break;
     case 'c':
       mc_options.compute_counterexample = true;
@@ -146,6 +150,8 @@ static const argp_option options[] =
     { "model", 'm', "STRING", 0, "use  the model stored in file STRING", 0 },
     // ------------------------------------------------------------
     { nullptr, 0, nullptr, 0, "Process options:", 2 },
+    { "bloemen", 'b', nullptr, 0,
+      "run the SCC computation of Bloemen et al. (PPOPP'16)", 0 },
     { "counterexample", 'c', nullptr, 0,
       "compute an accepting counterexample (if it exists)", 0 },
     { "is-empty", 'e', nullptr, 0,
@@ -608,6 +614,92 @@ static int checked_main()
                     << '\n';
         }
     }
+
+    if (mc_options.bloemen &&  mc_options.model != nullptr)
+      {
+        unsigned int hc = std::thread::hardware_concurrency();
+        if (mc_options.nb_threads > hc)
+          std::cerr << "Warning: you require " << mc_options.nb_threads
+                    << " threads, but your computer only support " << hc
+                    << ". This could slow down parallel algorithms.\n";
+
+        tm.start("load kripkecube");
+        spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+        try
+          {
+            modelcube = spot::ltsmin_model::load(mc_options.model)
+              .kripkecube({}, deadf, mc_options.compress,
+                          mc_options.nb_threads);
+          }
+        catch (std::runtime_error& e)
+          {
+            std::cerr << e.what() << '\n';
+          }
+        tm.stop("load kripkecube");
+
+        int memused = spot::memusage();
+        tm.start("bloemen");
+        auto res = spot::bloemen<spot::ltsmin_kripkecube_ptr,
+                                 spot::cspins_state,
+                                 spot::cspins_iterator,
+                                 spot::cspins_state_hash,
+                                 spot::cspins_state_equal>(modelcube);
+        tm.stop("bloemen");
+        memused = spot::memusage() - memused;
+
+        if (!modelcube)
+          {
+            exit_code = 2;
+            goto safe_exit;
+          }
+
+        // Display statistics
+        unsigned greatest = 0;
+        for (unsigned i = 0; i < res.first.size(); ++i)
+          {
+            if (res.first[i].states < res.first[greatest].states)
+              greatest = i;
+
+            std::cout << "\n---- Thread number : " << i << '\n';
+            std::cout << res.first[i].states << " unique states visited\n";
+            std::cout << res.first[i].transitions
+                      << " transitions explored\n";
+            std::cout << res.first[i].sccs << " sccs found\n";
+            std::cout << res.first[i].walltime
+                      << " milliseconds\n";
+
+            if (mc_options.csv)
+              {
+                std::cout << "Find following the csv: "
+                          << "thread_id,walltimems,"
+                          << "states,transitions,sccs\n";
+                std::cout << "@th_" << i << ','
+                          << res.first[i].walltime << ','
+                          << res.first[i].states << ','
+                          << res.first[i].transitions << ','
+                          << res.first[i].sccs
+                          << std::endl;
+              }
+          }
+
+      if (mc_options.csv)
+        {
+          std::cout << "\nSummary :\n";
+          std::cout << "Find following the csv: "
+                    << "model,walltimems,memused,type,"
+                    << "states,transitions,sccs\n";
+
+          std::cout << '#'
+                    << split_filename(mc_options.model)
+                    << ','
+                    << tm.timer("bloemen").walltime() << ','
+                    << memused << ','
+                    << res.first[greatest].states << ','
+                    << res.first[greatest].transitions << ','
+                    << res.first[greatest].sccs << ','
+                    << '\n';
+        }
+      }
 
  safe_exit:
   if (mc_options.use_timer)
