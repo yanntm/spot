@@ -654,12 +654,11 @@ static int checked_main()
           }
 
         // Display statistics
-        unsigned greatest = 0;
+        unsigned sccs = 0;
+        unsigned st = 0;
+        unsigned tr = 0;
         for (unsigned i = 0; i < res.first.size(); ++i)
           {
-            if (res.first[i].states < res.first[greatest].states)
-              greatest = i;
-
             std::cout << "\n---- Thread number : " << i << '\n';
             std::cout << res.first[i].states << " unique states visited\n";
             std::cout << res.first[i].transitions
@@ -667,6 +666,10 @@ static int checked_main()
             std::cout << res.first[i].sccs << " sccs found\n";
             std::cout << res.first[i].walltime
                       << " milliseconds\n";
+
+            sccs += res.first[i].sccs;
+            st += res.first[i].states;
+            tr += res.first[i].transitions;
 
             if (mc_options.csv)
               {
@@ -686,17 +689,18 @@ static int checked_main()
         {
           std::cout << "\nSummary :\n";
           std::cout << "Find following the csv: "
-                    << "model,walltimems,memused,type,"
-                    << "states,transitions,sccs\n";
+                    << "model,walltimems,memused,"
+                    << "cumulated_states,cumulated_transitions,"
+                    << "cumulated_sccs\n";
 
           std::cout << '#'
                     << split_filename(mc_options.model)
                     << ','
                     << tm.timer("bloemen").walltime() << ','
                     << memused << ','
-                    << res.first[greatest].states << ','
-                    << res.first[greatest].transitions << ','
-                    << res.first[greatest].sccs << ','
+                    << st << ','
+                    << tr << ','
+                    << sccs
                     << '\n';
         }
       }
