@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <thread>
 #include <vector>
+#include <utility>
 #include <spot/misc/common.hh>
 #include <spot/kripke/kripke.hh>
 #include <spot/misc/fixpool.hh>
@@ -32,7 +33,6 @@
 
 namespace spot
 {
-
   template<typename State,
            typename StateHash,
            typename StateEqual>
@@ -47,12 +47,18 @@ namespace spot
     /// \brief Represents an Union-Find element
     struct uf_element
     {
-      State st;                 ///< \brief the state handled by the element
-      uf_element* parent;       ///< \brief reference to the pointer
-      int* workers;             ///< \brief assign only once at allocation
-      uf_element* next;         ///< \brief next element for work stealing
-      uf_status uf_status;      ///< \brief current status for the element
-      list_status list_status;  ///< \brief current status for the list
+      /// \brief the state handled by the element
+      State st;
+      /// \brief reference to the pointer
+      std::atomic<uf_element*> parent;
+      /// The set of worker for a given state
+      std::atomic<unsigned> worker;
+      /// \brief next element for work stealing
+      std::atomic<uf_element*> next;
+      /// \brief current status for the element
+      std::atomic<uf_status> uf_status;
+      ///< \brief current status for the list
+      std::atomic<list_status> list_status;
     };
 
     /// \brief The haser for the previous uf_element.
@@ -86,7 +92,6 @@ namespace spot
 
 
     iterable_uf(shared_map& map, unsigned tid):
-      p_(sizeof(int)*std::thread::hardware_concurrency()),
       map_(map), tid_(tid), size_(std::thread::hardware_concurrency()),
       nb_th_(std::thread::hardware_concurrency())
     {
@@ -97,17 +102,14 @@ namespace spot
     std::pair<claim_status, uf_element*>
     make_claim(State a)
     {
-      // Prepare data for a newer allocation
-      int* ref = (int*) p_.allocate();
-      for (unsigned i = 0; i < nb_th_; ++i)
-        ref[i] = 0;
+      unsigned w_id = (1U << tid_);
 
       // Setup and try to insert the new state in the shared map.
       uf_element* v = new uf_element();
       v->st = a;
       v->parent = v;
-      v->workers = ref;
       v->next = v;
+      v->worker = 0;
       v->uf_status = uf_status::LIVE;
       v->list_status = list_status::BUSY;
 
@@ -117,182 +119,265 @@ namespace spot
       // Insertion failed, delete element
       // FIXME Should we add a local cache to avoid useless allocations?
       if (!b)
+        delete v;
+
+      uf_element* a_root = find(*it);
+      if (a_root->uf_status.load() == uf_status::DEAD)
+        return {claim_status::CLAIM_DEAD, *it};
+
+      if ((a_root->worker.load() & w_id) != 0)
+        return {claim_status::CLAIM_FOUND, *it};
+
+      atomic_fetch_or(&(a_root->worker), w_id);
+      while (a_root->parent.load() != a_root)
         {
-          p_.deallocate(ref);
-          delete v;
-        }
-
-      uf_element* a_root = find(*it); // FIXME??
-      if (a_root->uf_status == uf_status::DEAD)
-        return {claim_status::CLAIM_DEAD, a_root};
-
-      if (a_root->workers[tid_])
-        return {claim_status::CLAIM_FOUND, a_root};
-
-      while (!a_root->workers[tid_])
-        {
-          a_root->workers[tid_] = 1;
           a_root = find(a_root);
+          atomic_fetch_or(&(a_root->worker), w_id);
         }
 
-      return {claim_status::CLAIM_NEW, a_root};
+      return {claim_status::CLAIM_NEW, *it};
     }
 
     uf_element* find(uf_element* a)
     {
-      if (a->parent != a)
-        a->parent = find(a->parent);
-      return a->parent;
-    }
+      uf_element* parent = a->parent.load();
+      uf_element* x = a;
+      uf_element* y;
 
+      while (x != parent)
+        {
+          y = parent;
+          parent = y->parent.load();
+          if (parent == y)
+            return y;
+          x->parent.store(parent);
+          x = parent;
+          parent = x->parent.load();
+        }
+      return x;
+    }
 
     bool sameset(uf_element* a, uf_element* b)
     {
       uf_element* a_root = find(a);
       uf_element* b_root = find(b);
-
-      assert(a_root != nullptr);
-      assert(b_root != nullptr);
-
       if (a_root == b_root)
         return true;
 
-      if (a_root->parent == a_root)
+      if (a_root->parent.load() == a_root)
         return false;
 
       return sameset(a_root, b_root);
     }
 
-
     bool lock_root(uf_element* a)
     {
-      if (CAS(&(a->uf_status), uf_status::LIVE, uf_status::LOCK))
+      uf_status expected = uf_status::LIVE;
+      if (a->uf_status.load() == expected)
         {
-          if (a->parent == a)
-            return true;
-          unlock_root(a);
+          if (std::atomic_compare_exchange_strong
+              (&(a->uf_status), &expected, uf_status::LOCK))
+            {
+              if (a->parent.load() == a)
+                return true;
+              unlock_root(a);
+            }
         }
       return false;
     }
 
-    void unlock_root(uf_element* a)
+    inline void unlock_root(uf_element* a)
     {
-      a->uf_status = uf_status::LIVE;
+      a->uf_status.store(uf_status::LIVE);
     }
 
     uf_element* lock_list(uf_element* a)
     {
-      assert(a != nullptr);
-      bool dontcare = false;
-      uf_element* a_list = pick_from_list(a, &dontcare);
-      if (a_list == nullptr)
-        return nullptr;
+      uf_element* a_list = a;
+      while (true)
+        {
+          bool dontcare = false;
+          a_list = pick_from_list(a_list, &dontcare);
+          if (a_list == nullptr)
+            {
+              assert(false);
+              return nullptr;
+            }
 
-      if (CAS(&(a->list_status), list_status::BUSY, list_status::LOCK))
-        return a_list;
+          auto expected = list_status::BUSY;
+          bool b = std::atomic_compare_exchange_strong
+            (&(a_list->list_status), &expected, list_status::LOCK);
 
-      return lock_list(a_list->next);
+          if (b)
+            return a_list;
+
+          a_list = a_list->next.load();
+        }
+    }
+
+    void unlock_list(uf_element* a)
+    {
+      a->list_status.store(list_status::BUSY);
     }
 
     void unite(uf_element* a, uf_element* b)
     {
-      uf_element* a_root = find(a);
-      uf_element* b_root = find(b);
-      if (a_root == b_root)
-        return;
+      uf_element* a_root;
+      uf_element* b_root;
+      uf_element* q;
+      uf_element* r;
 
-      uf_element* r = std::max(a_root, b_root);
-      uf_element* q = std::min(a_root, b_root);
-
-      if (!lock_root(q))
+      while (true)
         {
-          unite(a_root, b_root);
-          return;
+          a_root = find(a);
+          b_root = find(b);
+
+          if (a_root == b_root)
+            return;
+
+          r = std::max(a_root, b_root);
+          q = std::min(a_root, b_root);
+
+          if (!lock_root(q))
+            continue;
+
+          break;
         }
 
       uf_element* a_list = lock_list(a);
-      uf_element* b_list = lock_list(b);
-
-      if (a_list == nullptr || b_list == nullptr)
+      if (a_list == nullptr)
         return;
 
-      //  Swapping
-      uf_element* tmp = a_list->next;
-      a_list->next = b_list->next;
-      b_list->next = tmp;
-      q->parent = r;
-
-      do
+      uf_element* b_list = lock_list(b);
+      if (b_list == nullptr)
         {
-          r = find(r);
-          for(unsigned i = 0; i < nb_th_; ++i)
-            r->workers[i] |= q->workers[i];
+          unlock_list(a_list);
+          return;
         }
-      while(r->parent != r);
 
-      a_list->list_status = list_status::BUSY;
-      b_list->list_status = list_status::BUSY;
-      q->uf_status = uf_status::LIVE;
+      assert(a_list->list_status.load() == list_status::LOCK);
+      assert(b_list->list_status.load() == list_status::LOCK);
+
+
+      //  Swapping
+      uf_element* a_next =  a_list->next.load();
+      uf_element* b_next =  b_list->next.load();
+      assert(a_next != 0);
+      assert(b_next != 0);
+
+      a_list->next.store(b_next);
+      b_list->next.store(a_next);
+      q->parent.store(r);
+
+      // Update workers
+      unsigned q_worker = q->worker.load();
+      unsigned r_worker = r->worker.load();
+      if ((q_worker|r_worker) != r_worker)
+        {
+          atomic_fetch_or(&(r->worker), q_worker);
+          while(r->parent.load() != r)
+            {
+              r = find(r);
+              atomic_fetch_or(&(r->worker), q_worker);
+            }
+        }
+
+      unlock_list(a_list);
+      unlock_list(b_list);
+      unlock_root(q);
     }
 
-    uf_element* pick_from_list(uf_element* a, bool* sccfound)
+    uf_element* pick_from_list(uf_element* u, bool* sccfound)
     {
-      assert(a != nullptr);
-      do
+      uf_element* a = u;
+      while (true)
         {
-          if (a->list_status == list_status::BUSY)
-            return a;
-        }
-      while (a->list_status == list_status::LOCK);
-      uf_element* b = a->next;
+          list_status a_status;
+          while (true)
+            {
+              a_status = a->list_status.load();
 
-      assert(b != nullptr);
-      if (a == b)
-        {
-          uf_element* a_root = find(a);
-          if (CAS(&(a_root->uf_status), uf_status::LIVE, uf_status::DEAD))
-            *sccfound = true;   // Report An SCC.
-          return nullptr;
-        }
+              if (a_status == list_status::BUSY)
+                {
+                  return a;
+                }
 
-      do
-        {
-          if (b->list_status == list_status::BUSY)
-            return b;
-        }
-      while (b->list_status == list_status::LOCK);
+              if (a_status == list_status::DONE)
+                break;
+            }
 
-      uf_element* c = b->next;
-      a->next = c;
-      return pick_from_list(c, sccfound);
+          uf_element* b = a->next.load();
+
+          // ------------------------------ NO LAZY : start
+          // if (b == u)
+          //   {
+          //     uf_element* a_root = find(a);
+          //     uf_status status = a_root->uf_status.load();
+          //     while (status != uf_status::DEAD)
+          //       {
+          //         if (status == uf_status::LIVE)
+          //           *sccfound = std::atomic_compare_exchange_strong
+          //             (&(a_root->uf_status), &status, uf_status::DEAD);
+          //         status = a_root->uf_status.load();
+          //       }
+          //     return nullptr;
+          //   }
+          // a = b;
+          // ------------------------------ NO LAZY : end
+
+          if (a == b)
+            {
+              uf_element* a_root = find(u);
+              uf_status status = a_root->uf_status.load();
+              while (status != uf_status::DEAD)
+                {
+                  if (status == uf_status::LIVE)
+                    *sccfound = std::atomic_compare_exchange_strong
+                      (&(a_root->uf_status), &status, uf_status::DEAD);
+                  status = a_root->uf_status.load();
+                }
+              return nullptr;
+            }
+
+          list_status b_status;
+          while (true)
+            {
+              b_status = b->list_status.load();
+
+              if (b_status == list_status::BUSY)
+                {
+                  return b;
+                }
+
+              if (b_status == list_status::DONE)
+                break;
+            }
+
+          assert(b_status == list_status::DONE);
+          assert(a_status == list_status::DONE);
+
+          uf_element* c = b->next.load();
+          a->next.store(c);
+          a = c;
+        }
     }
 
     void remove_from_list(uf_element* a)
     {
-      while (a->list_status != list_status::DONE)
+      while (true)
         {
-          CAS(&(a->list_status), list_status::BUSY, list_status::DONE);
+          list_status a_status = a->list_status.load();
+
+          if (a_status == list_status::DONE)
+            break;
+
+          if (a_status == list_status::BUSY)
+              std::atomic_compare_exchange_strong
+                (&(a->list_status), &a_status, list_status::DONE);
         }
     }
 
-    bool CAS(list_status* ls, list_status ls_old, list_status ls_new)
-    {
-      if (*ls != ls_old)
-        return false;
-      *ls = ls_new;
-      return true;
-    }
-
-    bool CAS(uf_status* uf, uf_status uf_old, uf_status uf_new)
-    {
-      if (*uf != uf_old)
-        return false;
-      *uf = uf_new;
-      return true;
-    }
-
   private:
-    fixed_size_pool p_;   ///< \brief Element Allocator
     shared_map map_;      ///< \brief Map shared by threads copy!
     unsigned tid_;        ///< \brief The Id of the current thread
     unsigned size_;       ///< \brief Maximum number of thread
