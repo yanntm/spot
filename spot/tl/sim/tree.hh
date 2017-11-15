@@ -1,3 +1,24 @@
+// -*- coding: utf-8 -*-
+// Copyright (C) 2015, 2016, 2017 Laboratoire de Recherche et Développement de
+// l'Epita (LRDE).
+//
+// This file is part of Spot, a model checking library.
+//
+// Spot is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// Spot is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+// or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+// License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
 /// \file tl/sim/tree.hh
 /// \brief LTL/PSL simplification interface
 #pragma once
@@ -17,6 +38,7 @@ typedef std::map<std::string, std::string> str_map;
 typedef std::vector<std::string> str_vect;
 typedef std::map<std::pair<std::string, std::string>, std::string> splitmap;
 
+
 spot::formula chg_ap_name(spot::formula f, str_map ap_asso,
     bool parse = false);
 bool has(spot::formula& f, spot::formula& pattern, str_vect& pos,
@@ -25,6 +47,9 @@ void rm_spaces(std::string& str);
 std::string str(spot::op op);
 bool is_nary(spot::formula& f);
 
+std::string sar(std::string str, std::string key, std::string replace);
+
+void generate_simple(spot::formula f, std::ostream& os);
 
 class args_node;
 
@@ -74,7 +99,7 @@ public:
           name_ = str.substr(0, i);
           save = i + 1;
         }
-        par++;
+        ++par;
       }
       else if (str[i] == ')')
       {
@@ -135,9 +160,15 @@ std::ostream& operator<<(std::ostream& os, builtin& f);
 
 class conds
 {
-  public:
-    conds(std::string cond, std::string ret, str_map ap_asso)
+public:
+  conds()
   {
+    empty_ = true;
+  }
+
+  conds(std::string cond, std::string ret, str_map ap_asso)
+  {
+    empty_ = false;
     auto add_cond = [this](std::string str)
     {
       cond_ += (cond_.size() ? " & " : "") + str;
@@ -156,7 +187,7 @@ class conds
       else if (name == 'b')
         add_cond(elem.second + ".boolean");
     }
-    if (cond.size())
+    if (!cond.empty())
     {
       unsigned begin = 0;
       std::string delim = " and ";
@@ -189,7 +220,7 @@ class conds
         search = cond.find(delim, begin);
       }
     }
-    if (!cond_.size())
+    if (cond_.empty())
       cond_ = "1";
     auto search = ret.find("split");
     while (search != std::string::npos)
@@ -204,7 +235,7 @@ class conds
         ap_asso.emplace(arg1, arg1);
       //std::cout << arg1 << std::endl;
       //for (auto elem : ap_asso)
-        //std::cout << "-> " << elem.first << " // " << elem.second << std::endl;
+      //std::cout << "-> " << elem.first << " // " << elem.second << std::endl;
       else
         arg1 = find->second;
       //std::cout << arg1 << std::endl;
@@ -224,10 +255,10 @@ class conds
     }
     /*
     for (auto p : splitnot_)
-      std::cout << p.first.first << "/" << p.first.second << "->"
+      std::cout << p.first.first << '/' << p.first.second << "->"
         << p.second << std::endl;
     for (auto p : split_)
-      std::cout << p.first.first << "/" << p.first.second << "->"
+      std::cout << p.first.first << '/' << p.first.second << "->"
         << p.second << std::endl;
     */
     std::string debug = ret;
@@ -254,6 +285,11 @@ class conds
       return retf_;
     }
 
+    operator bool() const
+    {
+      return empty_;
+    }
+
   private:
     std::string cond_;
     std::vector<spot::formula> condf_;
@@ -261,8 +297,10 @@ class conds
     spot::formula retf_;
     splitmap split_;
     splitmap splitnot_;
+    bool empty_;
 };
 
+typedef std::vector<std::unique_ptr<std::vector<conds>>*> conds_vect;
 
 class op_node
 {
@@ -271,7 +309,8 @@ class op_node
       : op_(f.kind()),
       opstr_(f.kindstr())
   {
-    if (f.size() == 0)
+    bool size = f.size();
+    if (!size)
     {
       switch (f.kind())
       {
@@ -303,7 +342,7 @@ class op_node
       return opstr_;
     }
 
-    bool insert(sim_line sl, str_map& ap_asso, bool last);
+    bool insert(sim_line sl, str_map& ap_asso, int state, conds_vect& cond);
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
         bool last);
     void to_dot(int *i, int father, std::ofstream& ofs);
@@ -320,11 +359,15 @@ class op_node
 class args_node
 {
   public:
-    bool insert(sim_line sl, str_map& ap_asso, bool last);
+    bool insert(sim_line sl, str_map& ap_asso, int state, conds_vect& cond);
+    // for sorted op
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
-        bool last);
+        bool last, int i);
+    // for root and unsorted op
+    bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
+        bool last, std::vector<bool>& marks);
     void to_dot(int *i, int father, std::ofstream& ofs);
-    bool is_equivalent(spot::formula f, pair_vect& vect);
+    bool is_equivalent(spot::formula f, pair_vect& vect, bool insert);
 
     std::string ap_name()
     {
