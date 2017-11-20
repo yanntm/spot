@@ -74,6 +74,7 @@ struct mc_options_
   bool csv = false;
   bool has_deadlock = false;
   bool bloemen = false;
+  bool use_por = false;
 } mc_options;
 
 
@@ -125,6 +126,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 'p':
       mc_options.nb_threads = to_unsigned(arg);
       break;
+    case 'P':
+      mc_options.use_por = true;
+      break;
     case 's':
       mc_options.dead_ap = arg;
       break;
@@ -163,6 +167,7 @@ static const argp_option options[] =
       "Return 1 if the model contains a deadlock."
       , 0 },
     { "parallel", 'p', "INT", 0, "use INT threads (when possible)", 0 },
+    { "POR", 'P', nullptr, 0, "use partial-order-reduction", 0 },
     { "selfloopize", 's', "STRING", 0,
       "use STRING as property for marking deadlock "
       "states (by default selfloopize is activated with STRING='true')", 0 },
@@ -629,7 +634,7 @@ static int checked_main()
           {
             modelcube = spot::ltsmin_model::load(mc_options.model)
               .kripkecube({}, deadf, mc_options.compress,
-                          mc_options.nb_threads);
+                          mc_options.nb_threads, mc_options.use_por);
           }
         catch (const std::runtime_error& e)
           {
