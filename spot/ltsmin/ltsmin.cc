@@ -1055,7 +1055,23 @@ namespace spot
           sym("get_state_variable_type_value_count");
         d->get_type_value_name = (const char* (*)(int, int))
           sym("get_state_variable_type_value");
-      }
+
+        d->get_transition_count = (int (*)())
+          sym("get_transition_count");
+        d->get_transition_read_dependencies = (int* (*)(int))
+          sym("get_transition_read_dependencies");
+        d->get_transition_write_dependencies = (int* (*)(int))
+          sym("get_transition_write_dependencies");
+
+        // Support for Partial Order Reductions
+        d->get_guard_count = (int (*)()) lt_dlsym(h, "get_guard_count");
+        d->get_guards = (int* (*)(int)) lt_dlsym(h, "get_guards");
+        d->get_guard_nes_matrix =
+          (int* (*)(int)) lt_dlsym(h, "get_guard_nes_matrix");
+        d->get_guard_may_be_coenabled_matrix = (int* (*)(int))
+          lt_dlsym(h, "get_guard_may_be_coenabled_matrix");
+        d->get_guard = (int (*)(void*, int , const int*)) sym("get_guard");
+   }
 
     if (d->have_property && d->have_property())
       throw std::runtime_error("Models with embedded properties "
@@ -1068,7 +1084,7 @@ namespace spot
   ltsmin_kripkecube_ptr
   ltsmin_model::kripkecube(std::vector<std::string> to_observe,
                            const formula dead, int compress,
-                           unsigned int nb_threads) const
+                           unsigned int nb_threads, bool use_por) const
   {
     // Register the "dead" proposition.  There are three cases to
     // consider:
@@ -1098,7 +1114,7 @@ namespace spot
     // Finally build the system.
     return std::make_shared<spot::kripkecube<spot::cspins_state,
                                              spot::cspins_iterator>>
-      (iface, compress, to_observe, selfloopize, dead_ap, nb_threads);
+      (iface, compress, to_observe, selfloopize, dead_ap, nb_threads, use_por);
   }
 
   kripke_ptr
