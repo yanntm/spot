@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2011, 2013, 2014, 2016 Laboratoire de Recherche et
+# Copyright (C) 2011, 2013, 2014, 2016, 2017 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -28,28 +28,33 @@ if ! gal2c $srcdir/finite.gal; then
 fi
 
 set -e
-run 0 ../modelcheck -gm $srcdir/finite.gal '"P.a < 10"' > stdout
+run 0 ../modelcheck --model $srcdir/finite.gal \
+    --formula '"P.a < 10"' --dot model > stdout
 test `grep ' -> ' stdout | wc -l` = 25
 test `grep 'P.a=' stdout | wc -l` = 15
 
-run 0 ../modelcheck -dtrue -gm $srcdir/finite.gal '"P.a < 10"' > stdout2
+run 0 ../modelcheck --selfloopize true --model $srcdir/finite.gal \
+    --formula '"P.a < 10"' > stdout2
 cmp stdout stdout2
 
-run 0 ../modelcheck -dfalse -gm $srcdir/finite.gal '"P.a < 10"' > stdout
+run 0 ../modelcheck --selfloopize false --model $srcdir/finite.gal \
+    --formula '"P.a < 10"' --dot model > stdout
 test `grep ' -> ' stdout | wc -l` = 19
 test `grep 'P.a=' stdout | wc -l` = 15
 
 # the same with compressed states
-run 0 ../modelcheck -z -dfalse -gm $srcdir/finite.gal '"P.a < 10"' > stdout
+run 0 ../modelcheck --compress 1 --selfloopize false \
+    --model $srcdir/finite.gal \
+    --formula '"P.a < 10"'  --dot model > stdout
 test `grep ' -> ' stdout | wc -l` = 19
 test `grep 'P.a=' stdout | wc -l` = 15
 
-run 0 ../modelcheck -ddead -E $srcdir/finite.gal \
-  '!(G(dead -> ("P.a==3" | "P.b==3")))'
+run 0 ../modelcheck --selfloopize dead --is-empty $srcdir/finite.gal \
+  --formula '!(G(dead -> ("P.a==3" | "P.b==3")))'
 
-run 0 ../modelcheck -ddead -e $srcdir/finite.gal \
-  '!(G(dead -> ("P.a==2" | "P.b==3")))'
+run 1 ../modelcheck --selfloopize dead --is-empty  $srcdir/finite.gal \
+  --formula '!(G(dead -> ("P.a==2" | "P.b==3")))'
 
 # This used to segfault because of a bug in a
 # function that do not exist anymore.
-run 0 ../modelcheck -gp $srcdir/finite.gal true
+run 0 ../modelcheck --dot product $srcdir/finite.gal --formula 'true'
