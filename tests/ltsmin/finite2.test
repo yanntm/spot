@@ -1,7 +1,7 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2011, 2013, 2014, 2016 Laboratoire de Recherche et Développement
-# de l'Epita (LRDE).
+# Copyright (C) 2011, 2013, 2014, 2016, 2017 Laboratoire de Recherche
+# et Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -33,25 +33,30 @@ run 0 ../modelcheck --dot model --model  $srcdir/finite.pm \
 test `grep ' -> ' stdout | wc -l` = 25
 test `grep 'P_0.a=' stdout | wc -l` = 15
 
-run 0 ../modelcheck --selfloopize true --dot model --model $srcdir/finite.pm \
+run 0 ../modelcheck --selfloopize true --dot model \
+    --model $srcdir/finite.pm \
     --formula '"P_0.a < 10"' > stdout2
 diff stdout stdout2
 
-run 0 ../modelcheck --selfloopize dfalse --dot model --model $srcdir/finite.pm \
+run 0 ../modelcheck --selfloopize false --dot model \
+    --model $srcdir/finite.pm \
     --formula '"P_0.a < 10"' > stdout
 test `grep ' -> ' stdout | wc -l` = 19
 test `grep 'P_0.a=' stdout | wc -l` = 15
 
 # the same with compressed states
-run 0 ../modelcheck -compress --selfloopize false --dot model \
+run 0 ../modelcheck --compress 1 --selfloopize false --dot model \
     --model $srcdir/finite.pm --formula '"P_0.a < 10"' > stdout
 test `grep ' -> ' stdout | wc -l` = 19
 test `grep 'P_0.a=' stdout | wc -l` = 15
 
-run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.pm \
+run 0 ../modelcheck --is-empty --selfloopize dead \
+    --model $srcdir/finite.pm \
     --formula '!(G(dead -> ("P_0.a==3" | "P_0.b==3")))'
 
-run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.pm \
+run 1 ../modelcheck --is-empty --selfloopize dead \
+    --model $srcdir/finite.pm \
     --formula '!(G(dead -> ("P_0.a==2" | "P_0.b==3")))'
 
-run 0 ../modelcheck --dot product --model $srcdir/finite.pm --formula true
+run 0 ../modelcheck --dot product --model $srcdir/finite.pm \
+    --formula true
