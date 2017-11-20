@@ -61,6 +61,15 @@ namespace spot
     int (*get_type_value_count)(int type);
     const char* (*get_type_value_name)(int type, int value);
 
+    int (*get_transition_count)();
+    int* (*get_transition_read_dependencies)(int t);
+    int* (*get_transition_write_dependencies)(int t);
+    int* (*get_guards)(int t);
+    int (*get_guard_count)();
+    int* (*get_guard_nes_matrix)(int g);
+    int* (*get_guard_may_be_coenabled_matrix)(int g);
+    int (*get_guard)(void* model, int g, const int* src);
+
   private:
     // handle to the dynamic library. The variable is of type lt_dlhandle, but
     // we need this trick since we cannot put ltdl.h in public headers

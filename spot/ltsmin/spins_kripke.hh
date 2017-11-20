@@ -23,6 +23,7 @@
 #include <spot/bricks/brick-hashset>
 #include <spot/kripke/kripke.hh>
 #include <spot/ltsmin/spins_interface.hh>
+#include <spot/ltsmin/porinfos.hh>
 #include <spot/misc/fixpool.hh>
 #include <spot/misc/mspool.hh>
 #include <spot/misc/intvcomp.hh>
@@ -107,6 +108,7 @@ namespace spot
   {
     cspins_state_manager* manager;   // The state manager
     std::vector<cspins_state>* succ; // The successors of a state
+    std::vector<int>* transitions_id; // The transition group for a state
     int* compressed;                 // Area to store compressed state
     int* uncompressed;               // Area to store uncompressed state
     bool compress;                   // Should the state be compressed?
@@ -134,6 +136,8 @@ namespace spot
       spot::cubeset& cubeset;
       int dead_idx;
       unsigned tid;
+      bool use_por;
+      porinfos* porinfos;
     };
 
     cspins_iterator(const cspins_iterator&) = delete;
@@ -147,6 +151,10 @@ namespace spot
     bool done() const;
     cspins_state state() const;
     cube condition() const;
+    void fireall();
+
+  private:
+    void next_por();
 
   private:
     /// \brief Compute the real index in the successor vector
@@ -160,12 +168,18 @@ namespace spot
                                bool compress,
                                bool selfloopize,
                                cubeset& cubeset,
-                               int dead_idx);
+                               int dead_idx,
+                               bool use_por,
+                               porinfos* porinfos);
 
     std::vector<cspins_state> successors_;
-    unsigned int current_;
+    mutable unsigned int current_;
     cube cond_;
     unsigned tid_;
+    bool fireall_{false};
+    bool first_pass_{true};
+    bool use_por_;
+     std::vector<bool> reduced_;
   };
 
 
@@ -213,7 +227,7 @@ namespace spot
     kripkecube(spins_interface_ptr sip, bool compress,
                std::vector<std::string> visible_aps,
                bool selfloopize, std::string dead_prop,
-               unsigned int nb_threads);
+               unsigned int nb_threads, bool use_por);
     ~kripkecube();
     cspins_state initial(unsigned tid);
     std::string to_string(const cspins_state s, unsigned tid = 0) const;
@@ -249,6 +263,8 @@ namespace spot
     int dead_idx_;                     // If yes, index of the "dead ap"
     std::vector<std::string> aps_;     // All the atomic propositions
     unsigned int nb_threads_;          // The number of threads used
+    bool use_por_;
+    porinfos* porinfos_;
   };
 
   /// \brief shortcut to manipulate the kripke below

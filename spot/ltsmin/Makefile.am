@@ -25,7 +25,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS) -pthread
 ltsmindir = $(pkgincludedir)/ltsmin
 
 ltsmin_HEADERS = ltsmin.hh spins_interface.hh spins_kripke.hh \
-				 spins_kripke.hxx
+				 spins_kripke.hxx porinfos.hh
 
 lib_LTLIBRARIES = libspotltsmin.la
 libspotltsmin_la_DEPENDENCIES = \
@@ -39,8 +39,7 @@ libspotltsmin_la_LIBADD = \
   $(top_builddir)/lib/libgnu.la \
   $(LIBLTDL) -lpthread
 libspotltsmin_la_LDFLAGS = -no-undefined $(SYMBOLIC_LDFLAGS)
-libspotltsmin_la_SOURCES = spins_interface.cc ltsmin.cc
-
+libspotltsmin_la_SOURCES = spins_interface.cc porinfos.cc ltsmin.cc
 
 EXTRA_DIST = $(srcdir)/libspotltsmin.pc.in
 pkgconfigdir = $(libdir)/pkgconfig

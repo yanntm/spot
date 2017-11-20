@@ -100,7 +100,8 @@ namespace spot
   {
     successors_.reserve(10);
     setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
-                   p.selfloopize, p.cubeset, p.dead_idx);
+                   p.selfloopize, p.cubeset, p.dead_idx, p.use_por,
+                   p.porinfos);
   }
 
   void cspins_iterator::recycle(cspins_iterator_param& p)
@@ -111,7 +112,8 @@ namespace spot
     // Constant time since int* is is_trivially_destructible
     successors_.clear();
     setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
-                   p.selfloopize, p.cubeset, p.dead_idx);
+                   p.selfloopize, p.cubeset, p.dead_idx, p.use_por,
+                   p.porinfos);
   }
 
   void cspins_iterator::setup_iterator(cspins_state s,
@@ -122,13 +124,26 @@ namespace spot
                                        bool compress,
                                        bool selfloopize,
                                        cubeset& cubeset,
-                                       int dead_idx)
+                                       int dead_idx,
+                                       bool use_por,
+                                       porinfos* porinfos)
   {
     inner.manager = &manager;
     inner.succ = &successors_;
     inner.compress = compress;
     inner.selfloopize = selfloopize;
-    int* ref = s;
+
+    // Local variable since we only need it to compute
+    // reduced set
+    std::vector<int> transitions_id;
+    inner.transitions_id = &transitions_id;
+
+    // Reset POR variables
+    fireall_ = false;
+    first_pass_ = true;
+    use_por_ = use_por;
+
+    int* ref  = s;
 
     if (compress)
       // already filled by compute_condition
@@ -136,13 +151,14 @@ namespace spot
 
     int n = d->get_successors
       (nullptr, manager.unbox_state(ref),
-       [](void* arg, transition_info_t*, int *dst){
+       [](void* arg, transition_info_t* t, int *dst){
         inner_callback_parameters* inner =
         static_cast<inner_callback_parameters*>(arg);
         cspins_state s =
         inner->manager->alloc_setup(dst, inner->compressed,
                                     inner->manager->size() * 2);
         inner->succ->push_back(s);
+        inner->transitions_id->push_back(t->group);
        },
        &inner);
     if (!n && selfloopize)
@@ -152,6 +168,28 @@ namespace spot
           cubeset.set_true_var(cond, dead_idx);
       }
 
+    if (use_por) // FIXME should be constexpr!
+      {
+         // Compute the reduced set for s
+        reduced_ = porinfos->compute_reduced_set(transitions_id, s);
+
+        // Check wether the state is naturally enabled.
+        if (std::find(std::cbegin(reduced_), std::cend(reduced_), false)
+            == std::cend(reduced_))
+          {
+            use_por_ = false;
+            return;
+          }
+
+        // Now we have to update current to the first valid position.
+        // distinguish tid = 0 from other.
+        if ((tid_ == 0 && reduced_[current_]) ||
+            (tid_ != 0 && reduced_[(((current_+1)*primes[tid_]) %
+                                    ((int)successors_.size()))]))
+          return;
+        next_por();
+
+      }
   }
 
   cspins_iterator::~cspins_iterator()
@@ -162,7 +200,10 @@ namespace spot
 
   void cspins_iterator::next()
   {
-    ++current_;
+    if (!use_por_)
+      ++current_;
+    else
+      next_por();
   }
 
   bool cspins_iterator::done() const
@@ -190,17 +231,114 @@ namespace spot
     return cond_;
   }
 
+  void cspins_iterator::fireall()
+  {
+    fireall_ = true;
+
+    // Fireall has been done after all successors have
+    // been visited
+    if (done())
+      {
+        current_ = 0;           // reset iterator
+
+        // Check if current_ is referencing an (enabled\reduced) transition
+        if ((tid_ == 0 && !reduced_[current_]) ||
+            (tid_ != 0 && !reduced_[(((current_+1)*primes[tid_]) %
+                                     ((int)successors_.size()))]))
+          return;
+        next_por();
+      }
+  }
+
+  // void cspins_iterator::setup_por_iterator(cspins_state s, porinfos* porinfos,
+  //                                          std::vector<int>& transitions_id)
+  // {
+  // }
+
+
+  void cspins_iterator::next_por()
+  {
+    SPOT_ASSERT(use_por_);
+
+    // We are walking the iterator during the first phase.
+    if (first_pass_)
+      {
+        // tid_ == 0, means the "default" order
+        if (tid_ == 0)
+          {
+            do
+              {
+                ++current_;
+              }
+            while (!done() && !reduced_[current_]);
+          }
+        else
+          {
+            do
+              {
+                ++current_;
+              }
+            while (!done() && !reduced_[(((current_+1)*primes[tid_]) %
+                                        ((int)successors_.size()))]);
+          }
+
+        // We have reach some enabled transitions in the reduced set,
+        // so we can stop.
+        if (!done())
+          return;
+
+        // Otherwise all the transitions in the reduced set have been explored
+        first_pass_ = false;
+
+        if (!fireall_)
+          return;
+
+        // Reset the iterator over transitions
+        current_ = 0;
+
+        // Check if current_ is referencing an (enabled\reduced) transition
+        if ((tid_ == 0 && !reduced_[current_]) ||
+            (tid_ != 0 && !reduced_[(((current_+1)*primes[tid_]) %
+                                     ((int)successors_.size()))]))
+          return;
+      }
+
+    // All the transitions in the reduced set have been explored BUT
+    // we asked for expansion, i.e. now we ignore transitions all in
+    // reduced and only consider those that are not in reduced
+    if (!first_pass_ && fireall_)
+      {
+        // tid_ == 0, means the "default" order
+        if (tid_ == 0)
+          {
+            do
+              {
+                ++current_;
+              }
+            while (!done() && reduced_[current_]);
+          }
+        else
+          {
+            do
+              {
+                ++current_;
+              }
+            while (!done() && reduced_[(((current_+1)*primes[tid_]) %
+                                        ((int)successors_.size()))]);
+          }
+      }
+  }
 
   kripkecube<cspins_state, cspins_iterator>
   ::kripkecube (spins_interface_ptr sip,
                 bool compress,
                 std::vector<std::string> visible_aps,
                 bool selfloopize, std::string dead_prop,
-                unsigned int nb_threads)
+                unsigned int nb_threads, bool use_por)
     : sip_(sip), d_(sip.get()),
       compress_(compress), cubeset_(visible_aps.size()),
       selfloopize_(selfloopize), aps_(visible_aps),
-      nb_threads_(nb_threads)
+      nb_threads_(nb_threads), use_por_(use_por)
   {
     manager_ = static_cast<cspins_state_manager*>
       (::operator new(sizeof(cspins_state_manager) * nb_threads));
@@ -217,6 +355,7 @@ namespace spot
     dead_idx_ = -1;
     match_aps(visible_aps, dead_prop);
 
+    porinfos_ = new porinfos(d_);
   }
 
   kripkecube<cspins_state, cspins_iterator>::~kripkecube()
@@ -276,7 +415,7 @@ namespace spot
       {
         s, d_, manager_[tid], inner_[tid],
         nullptr, compress_, selfloopize_,
-        cubeset_, dead_idx_, tid
+        cubeset_, dead_idx_, tid, use_por_, porinfos_
       };
 
     if (SPOT_LIKELY(!recycle_[tid].empty()))

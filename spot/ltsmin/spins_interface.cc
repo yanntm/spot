@@ -166,6 +166,19 @@ namespace spot
         sym(&get_type_name, "get_state_variable_type_name");
         sym(&get_type_value_count, "get_state_variable_type_value_count");
         sym(&get_type_value_name, "get_state_variable_type_value");
+        sym(&get_transition_count, "get_transition_count");
+        sym(&get_transition_read_dependencies,
+            "get_transition_read_dependencies");
+        sym(&get_transition_write_dependencies,
+            "get_transition_write_dependencies");
+
+        // Support for Partial Order Reductions
+        sym(&get_guard_count, "get_guard_count");
+        sym(&get_guards, "get_guards");
+        sym(&get_guard_nes_matrix, "get_guard_nes_matrix");
+        sym(&get_guard_may_be_coenabled_matrix,
+            "get_guard_may_be_coenabled_matrix");
+        sym(&get_guard, "get_guard");
       }
 
     if (have_property && have_property())
