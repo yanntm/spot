@@ -174,7 +174,7 @@ namespace spot
     for (unsigned i = 0; i < nbth; ++i)
       {
         ufs[i] = new uf_name(map, i);
-        swarmed[i] = new algo_name(*sys, *ufs[i],i);
+        swarmed[i] = new algo_name(*sys, *ufs[i], i);
       }
     tm.stop("Initialisation");
 
