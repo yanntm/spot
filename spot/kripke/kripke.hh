@@ -76,6 +76,7 @@ namespace spot
     State (SuccIter::*test_state)() const= &SuccIter::state;
     bool (SuccIter::*test_done)() const= &SuccIter::done;
     cube (SuccIter::*test_condition)() const = &SuccIter::condition;
+    void (SuccIter::*test_fireall)() = &SuccIter::fireall;
 
     // suppress warnings about unused variables
     (void) test_initial;
@@ -86,6 +87,7 @@ namespace spot
     (void) test_state;
     (void) test_done;
     (void) test_condition;
+    (void) test_fireall;
 
     // Always return true since otherwise a compile-time error will be raised.
     return true;

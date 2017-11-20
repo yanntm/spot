@@ -23,6 +23,7 @@
 #include <spot/bricks/brick-hashset>
 #include <spot/kripke/kripke.hh>
 #include <spot/ltsmin/spins_interface.hh>
+#include <spot/ltsmin/porinfos.hh>
 #include <spot/misc/fixpool.hh>
 #include <spot/misc/mspool.hh>
 #include <spot/misc/intvcomp.hh>
@@ -107,8 +108,9 @@ namespace spot
   // generating states from the shared librarie produced by LTSmin
   struct inner_callback_parameters
   {
-    cspins_state_manager* manager;   // The state manager
-    std::vector<cspins_state>* succ; // The successors of a state
+    cspins_state_manager* manager;    // The state manager
+    std::vector<cspins_state>* succ;  // The successors of a state
+    std::vector<int>* transitions_id; // The transition group for a state
     int* compressed_;
     int* uncompressed_;
     bool compress;
@@ -131,7 +133,10 @@ namespace spot
                     bool compress,
                     bool selfloopize,
                     cubeset& cubeset,
-                    int dead_idx, unsigned tid);
+                    int dead_idx,
+                    unsigned tid,
+                    bool use_por,
+                    porinfos* porinfos);
 
     void recycle(cspins_state s,
                  const spot::spins_interface* d,
@@ -140,22 +145,36 @@ namespace spot
                  cube cond,
                  bool compress,
                  bool selfloopize,
-                 cubeset& cubeset, int dead_idx, unsigned tid);
+                 cubeset& cubeset,
+                 int dead_idx,
+                 unsigned tid,
+                 bool use_por,
+                 porinfos* porinfos);
 
     ~cspins_iterator();
     void next();
     bool done() const;
     cspins_state state() const;
     cube condition() const;
+    void fireall();
+
+  private:
+    void next_por();
+    void setup_por_iterator(cspins_state s, porinfos* porinfos,
+                            std::vector<int>& transitions_id);
 
   private:
     /// Compute the real index in the successor vector
     unsigned compute_index() const;
 
     std::vector<cspins_state> successors_;
-    unsigned int current_;
+    mutable unsigned int current_;
     cube cond_;
     unsigned tid_;
+    bool fireall_{false};
+    bool first_pass_{true};
+    bool use_por_;
+     std::vector<bool> reduced_;
   };
 
 
@@ -187,7 +206,7 @@ namespace spot
     kripkecube(spins_interface_ptr sip, bool compress,
                std::vector<std::string> visible_aps,
                bool selfloopize, std::string dead_prop,
-               unsigned int nb_threads);
+               unsigned int nb_threads, bool use_por);
     ~kripkecube();
     cspins_state initial(unsigned tid);
     std::string to_string(const cspins_state s, unsigned tid = 0) const;
@@ -216,6 +235,8 @@ namespace spot
     int dead_idx_;
     std::vector<std::string> aps_;
     unsigned int nb_threads_;
+    bool use_por_;
+    porinfos* porinfos_;
   };
 
   /// \brief shortcut to manipulate the kripke below
