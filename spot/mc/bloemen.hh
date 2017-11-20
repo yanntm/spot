@@ -44,21 +44,21 @@ namespace spot
     enum class list_status  { BUSY, LOCK, DONE };
     enum class claim_status  { CLAIM_FOUND, CLAIM_NEW, CLAIM_DEAD };
 
-    /// \brief Represents an Union-Find element
+    /// \brief Represents a Union-Find element
     struct uf_element
     {
       /// \brief the state handled by the element
-      State st;
+      State st_;
       /// \brief reference to the pointer
       std::atomic<uf_element*> parent;
       /// The set of worker for a given state
-      std::atomic<unsigned> worker;
+      std::atomic<unsigned> worker_;
       /// \brief next element for work stealing
-      std::atomic<uf_element*> next;
+      std::atomic<uf_element*> next_;
       /// \brief current status for the element
-      std::atomic<uf_status> uf_status;
+      std::atomic<uf_status> uf_status_;
       ///< \brief current status for the list
-      std::atomic<list_status> list_status;
+      std::atomic<list_status> list_status_;
     };
 
     /// \brief The haser for the previous uf_element.
@@ -74,7 +74,7 @@ namespace spot
       {
         StateHash hash;
         // Not modulo 31 according to brick::hashset specifications.
-        unsigned u = hash(lhs->st) % (1<<30);
+        unsigned u = hash(lhs->st_) % (1<<30);
         return {u, u};
       }
 
@@ -82,7 +82,7 @@ namespace spot
                  const uf_element* rhs) const
       {
         StateEqual equal;
-        return equal(lhs->st, rhs->st);
+        return equal(lhs->st_, rhs->st_);
       }
     };
 
@@ -106,12 +106,12 @@ namespace spot
 
       // Setup and try to insert the new state in the shared map.
       uf_element* v = new uf_element();
-      v->st = a;
+      v->st_ = a;
       v->parent = v;
-      v->next = v;
-      v->worker = 0;
-      v->uf_status = uf_status::LIVE;
-      v->list_status = list_status::BUSY;
+      v->next_ = v;
+      v->worker_ = 0;
+      v->uf_status_ = uf_status::LIVE;
+      v->list_status_ = list_status::BUSY;
 
       auto it = map_.insert({v});
       bool b = it.isnew();
@@ -122,17 +122,17 @@ namespace spot
         delete v;
 
       uf_element* a_root = find(*it);
-      if (a_root->uf_status.load() == uf_status::DEAD)
+      if (a_root->uf_status_.load() == uf_status::DEAD)
         return {claim_status::CLAIM_DEAD, *it};
 
-      if ((a_root->worker.load() & w_id) != 0)
+      if ((a_root->worker_.load() & w_id) != 0)
         return {claim_status::CLAIM_FOUND, *it};
 
-      atomic_fetch_or(&(a_root->worker), w_id);
+      atomic_fetch_or(&(a_root->worker_), w_id);
       while (a_root->parent.load() != a_root)
         {
           a_root = find(a_root);
-          atomic_fetch_or(&(a_root->worker), w_id);
+          atomic_fetch_or(&(a_root->worker_), w_id);
         }
 
       return {claim_status::CLAIM_NEW, *it};
@@ -173,10 +173,10 @@ namespace spot
     bool lock_root(uf_element* a)
     {
       uf_status expected = uf_status::LIVE;
-      if (a->uf_status.load() == expected)
+      if (a->uf_status_.load() == expected)
         {
           if (std::atomic_compare_exchange_strong
-              (&(a->uf_status), &expected, uf_status::LOCK))
+              (&(a->uf_status_), &expected, uf_status::LOCK))
             {
               if (a->parent.load() == a)
                 return true;
@@ -188,7 +188,7 @@ namespace spot
 
     inline void unlock_root(uf_element* a)
     {
-      a->uf_status.store(uf_status::LIVE);
+      a->uf_status_.store(uf_status::LIVE);
     }
 
     uf_element* lock_list(uf_element* a)
@@ -200,24 +200,23 @@ namespace spot
           a_list = pick_from_list(a_list, &dontcare);
           if (a_list == nullptr)
             {
-              assert(false);
               return nullptr;
             }
 
           auto expected = list_status::BUSY;
           bool b = std::atomic_compare_exchange_strong
-            (&(a_list->list_status), &expected, list_status::LOCK);
+            (&(a_list->list_status_), &expected, list_status::LOCK);
 
           if (b)
             return a_list;
 
-          a_list = a_list->next.load();
+          a_list = a_list->next_.load();
         }
     }
 
     void unlock_list(uf_element* a)
     {
-      a->list_status.store(list_status::BUSY);
+      a->list_status_.store(list_status::BUSY);
     }
 
     void unite(uf_element* a, uf_element* b)
@@ -255,30 +254,30 @@ namespace spot
           return;
         }
 
-      assert(a_list->list_status.load() == list_status::LOCK);
-      assert(b_list->list_status.load() == list_status::LOCK);
+      SPOT_ASSERT(a_list->list_status_.load() == list_status::LOCK);
+      SPOT_ASSERT(b_list->list_status_.load() == list_status::LOCK);
 
 
       //  Swapping
-      uf_element* a_next =  a_list->next.load();
-      uf_element* b_next =  b_list->next.load();
-      assert(a_next != 0);
-      assert(b_next != 0);
+      uf_element* a_next =  a_list->next_.load();
+      uf_element* b_next =  b_list->next_.load();
+      SPOT_ASSERT(a_next != nullptr);
+      SPOT_ASSERT(b_next != nullptr);
 
-      a_list->next.store(b_next);
-      b_list->next.store(a_next);
+      a_list->next_.store(b_next);
+      b_list->next_.store(a_next);
       q->parent.store(r);
 
       // Update workers
-      unsigned q_worker = q->worker.load();
-      unsigned r_worker = r->worker.load();
+      unsigned q_worker = q->worker_.load();
+      unsigned r_worker = r->worker_.load();
       if ((q_worker|r_worker) != r_worker)
         {
-          atomic_fetch_or(&(r->worker), q_worker);
-          while(r->parent.load() != r)
+          atomic_fetch_or(&(r->worker_), q_worker);
+          while (r->parent.load() != r)
             {
               r = find(r);
-              atomic_fetch_or(&(r->worker), q_worker);
+              atomic_fetch_or(&(r->worker_), q_worker);
             }
         }
 
@@ -295,7 +294,7 @@ namespace spot
           list_status a_status;
           while (true)
             {
-              a_status = a->list_status.load();
+              a_status = a->list_status_.load();
 
               if (a_status == list_status::BUSY)
                 {
@@ -306,19 +305,19 @@ namespace spot
                 break;
             }
 
-          uf_element* b = a->next.load();
+          uf_element* b = a->next_.load();
 
           // ------------------------------ NO LAZY : start
           // if (b == u)
           //   {
           //     uf_element* a_root = find(a);
-          //     uf_status status = a_root->uf_status.load();
+          //     uf_status status = a_root->uf_status_.load();
           //     while (status != uf_status::DEAD)
           //       {
           //         if (status == uf_status::LIVE)
           //           *sccfound = std::atomic_compare_exchange_strong
-          //             (&(a_root->uf_status), &status, uf_status::DEAD);
-          //         status = a_root->uf_status.load();
+          //             (&(a_root->uf_status_), &status, uf_status::DEAD);
+          //         status = a_root->uf_status_.load();
           //       }
           //     return nullptr;
           //   }
@@ -328,13 +327,13 @@ namespace spot
           if (a == b)
             {
               uf_element* a_root = find(u);
-              uf_status status = a_root->uf_status.load();
+              uf_status status = a_root->uf_status_.load();
               while (status != uf_status::DEAD)
                 {
                   if (status == uf_status::LIVE)
                     *sccfound = std::atomic_compare_exchange_strong
-                      (&(a_root->uf_status), &status, uf_status::DEAD);
-                  status = a_root->uf_status.load();
+                      (&(a_root->uf_status_), &status, uf_status::DEAD);
+                  status = a_root->uf_status_.load();
                 }
               return nullptr;
             }
@@ -342,7 +341,7 @@ namespace spot
           list_status b_status;
           while (true)
             {
-              b_status = b->list_status.load();
+              b_status = b->list_status_.load();
 
               if (b_status == list_status::BUSY)
                 {
@@ -353,11 +352,11 @@ namespace spot
                 break;
             }
 
-          assert(b_status == list_status::DONE);
-          assert(a_status == list_status::DONE);
+          SPOT_ASSERT(b_status == list_status::DONE);
+          SPOT_ASSERT(a_status == list_status::DONE);
 
-          uf_element* c = b->next.load();
-          a->next.store(c);
+          uf_element* c = b->next_.load();
+          a->next_.store(c);
           a = c;
         }
     }
@@ -366,14 +365,14 @@ namespace spot
     {
       while (true)
         {
-          list_status a_status = a->list_status.load();
+          list_status a_status = a->list_status_.load();
 
           if (a_status == list_status::DONE)
             break;
 
           if (a_status == list_status::BUSY)
               std::atomic_compare_exchange_strong
-                (&(a->list_status), &a_status, list_status::DONE);
+                (&(a->list_status_), &a_status, list_status::DONE);
         }
     }
 
@@ -412,8 +411,7 @@ namespace spot
     }
 
     using uf = iterable_uf<State, StateHash, StateEqual>;
-    using uf_element = typename uf::uf_element ;
-
+    using uf_element = typename uf::uf_element;
 
     void run()
     {
@@ -439,7 +437,7 @@ namespace spot
                   break;
                 }
 
-              auto it = sys_.succ(v_prime->st, tid_);
+              auto it = sys_.succ(v_prime->st_, tid_);
               while (!it->done())
                 {
                   auto w = uf_.make_claim(it->state());
