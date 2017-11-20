@@ -52,6 +52,14 @@ namespace spot
     const char* (*get_type_name)(int type);
     int (*get_type_value_count)(int type);
     const char* (*get_type_value_name)(int type, int value);
+    int (*get_transition_count)();
+    int* (*get_transition_read_dependencies)(int t);
+    int* (*get_transition_write_dependencies)(int t);
+    int* (*get_guards)(int t);
+    int (*get_guard_count)();
+    int* (*get_guard_nes_matrix)(int g);
+    int* (*get_guard_may_be_coenabled_matrix)(int g);
+    int (*get_guard)(void* model, int g, const int* src);
     ~spins_interface()
     {
       lt_dlhandle h = (lt_dlhandle) handle;
