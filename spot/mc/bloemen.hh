@@ -93,7 +93,7 @@ namespace spot
 
     iterable_uf(shared_map& map, unsigned tid):
       map_(map), tid_(tid), size_(std::thread::hardware_concurrency()),
-      nb_th_(std::thread::hardware_concurrency())
+      nb_th_(std::thread::hardware_concurrency()), inserted_(0)
     {
     }
 
@@ -120,6 +120,8 @@ namespace spot
       // FIXME Should we add a local cache to avoid useless allocations?
       if (!b)
         delete v;
+      else
+        ++inserted_;
 
       uf_element* a_root = find(*it);
       if (a_root->uf_status_.load() == uf_status::DEAD)
@@ -376,16 +378,23 @@ namespace spot
         }
     }
 
+    unsigned inserted()
+    {
+      return inserted_;
+    }
+
   private:
     shared_map map_;      ///< \brief Map shared by threads copy!
     unsigned tid_;        ///< \brief The Id of the current thread
     unsigned size_;       ///< \brief Maximum number of thread
     unsigned nb_th_;      ///< \brief Current number of threads
+    unsigned inserted_;   ///< \brief The number of insert succes
   };
 
   /// \brief This object is returned by the algorithm below
   struct SPOT_API bloemen_stats
   {
+    unsigned inserted;          ///< \brief Number of states inserted
     unsigned states;            ///< \brief Number of states visited
     unsigned transitions;       ///< \brief Number of transitions visited
     unsigned sccs;              ///< \brief Number of SCCs visited
@@ -477,7 +486,7 @@ namespace spot
 
     bloemen_stats stats()
     {
-      return {states_, transitions_, sccs_, walltime()};
+      return {uf_.inserted(), states_, transitions_, sccs_, walltime()};
     }
 
   private:
@@ -487,6 +496,7 @@ namespace spot
     iterable_uf<State, StateHash, StateEqual> uf_; ///< Copy!
     unsigned tid_;
     unsigned nb_th_;
+    unsigned inserted_ = 0;           ///< \brief Number of states inserted
     unsigned states_  = 0;            ///< \brief Number of states visited
     unsigned transitions_ = 0;        ///< \brief Number of transitions visited
     unsigned sccs_ = 0;               ///< \brief Number of SCC visited
