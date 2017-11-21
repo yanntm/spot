@@ -657,10 +657,12 @@ static int checked_main()
         unsigned sccs = 0;
         unsigned st = 0;
         unsigned tr = 0;
+        unsigned inserted = 0;
         for (unsigned i = 0; i < res.first.size(); ++i)
           {
             std::cout << "\n---- Thread number : " << i << '\n';
             std::cout << res.first[i].states << " unique states visited\n";
+            std::cout << res.first[i].inserted << " unique states inserted\n";
             std::cout << res.first[i].transitions
                       << " transitions explored\n";
             std::cout << res.first[i].sccs << " sccs found\n";
@@ -670,6 +672,7 @@ static int checked_main()
             sccs += res.first[i].sccs;
             st += res.first[i].states;
             tr += res.first[i].transitions;
+            inserted += res.first[i].inserted;
 
             if (mc_options.csv)
               {
@@ -679,6 +682,7 @@ static int checked_main()
                 std::cout << "@th_" << i << ','
                           << res.first[i].walltime << ','
                           << res.first[i].states << ','
+                          << res.first[i].inserted << ','
                           << res.first[i].transitions << ','
                           << res.first[i].sccs
                           << std::endl;
@@ -690,6 +694,7 @@ static int checked_main()
           std::cout << "\nSummary :\n";
           std::cout << "Find following the csv: "
                     << "model,walltimems,memused,"
+                    << "inserted_states,"
                     << "cumulated_states,cumulated_transitions,"
                     << "cumulated_sccs\n";
 
@@ -698,6 +703,7 @@ static int checked_main()
                     << ','
                     << tm.timer("bloemen").walltime() << ','
                     << memused << ','
+                    << inserted << ','
                     << st << ','
                     << tr << ','
                     << sccs
