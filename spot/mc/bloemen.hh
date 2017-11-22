@@ -470,6 +470,7 @@ namespace spot
                     }
                 }
               uf_.remove_from_list(v_prime);
+              sys_.recycle(it, tid_);
             }
 
           if (todo_.back() == Rp_.back())
