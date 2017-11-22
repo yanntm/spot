@@ -77,3 +77,17 @@ cat stderr
 grep 'No variable' stderr
 grep 'No state' stderr
 grep 'Unexpected' stderr
+
+# Test parallel algorithms
+
+# Test Deadlock
+run 0 ../modelcheck --model beem-peterson.4.dve2C \
+    --csv --has-deadlock -p 3 >stdout
+test `grep "#" stdout | awk -F',' '{print $4}'` = "NO-DEADLOCK"
+
+
+# Test Bloemen
+run 0 ../modelcheck --model beem-peterson.4.dve2C \
+    --csv --bloemen -p 3 >stdout
+test `grep "#" stdout | awk -F',' '{print $7}'` -eq 29115
+
