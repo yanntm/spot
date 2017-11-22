@@ -235,6 +235,62 @@ namespace spot
           os << 'o' << i << ' ' << output_names_[i] << '\n';
       }
 
+      // put in next the value of latches when the current state of latches is
+      // described by previous, and inputs are given in letter.
+      // Also check that the outputs in letter are consistent.
+      void
+      latch_value(const std::vector<char>& previous, std::vector<char>& next,
+                  const bdd& letter) const;
+
+      // throws an exception on failure
+      void
+      check_equivalence(const twa_graph_ptr& aut) const
+      {
+        // Try and find a one-to-one correspondence between latch valuations
+        // and states of aut.
+        // We know that all latches are initially 0 (the initial state), and
+        // that the circuit should encode aut.
+        std::map<unsigned, std::vector<char>> state2latches;
+        std::deque<unsigned> todo;
+
+        auto check_latch =
+          [&state2latches, &todo](unsigned s, const std::vector<char>& v)
+            -> bool
+          {
+            auto it = state2latches.find(s);
+            if (it == state2latches.end())
+              {
+                state2latches[s] = v;
+                todo.emplace_back(s);
+                return true;
+              }
+            else
+              {
+                return it->second == v;
+              }
+          };
+
+        std::vector<char> next(latches_.size(), 0);
+        // push the initial state
+        check_latch(0, next);
+
+        // walk the automaton starting from the initial state
+        // NB all edges should be walked
+        while (!todo.empty())
+          {
+            unsigned current = todo.back();
+            todo.pop_back();
+            const std::vector<char>& latch =
+              state2latches.find(current)->second;
+            for (const auto& e : aut->out(current))
+              {
+                latch_value(latch, next, e.cond);
+                if (!check_latch(e.dst, next))
+                  throw std::runtime_error("aiger and strategy do not match");
+              }
+          }
+      }
+
     };
 
     static std::vector<bool>
