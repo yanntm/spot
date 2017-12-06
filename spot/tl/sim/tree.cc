@@ -29,14 +29,14 @@
 
 // replace ap names in f by the corresponding in ap_asso
 
-spot::formula chg_ap_name(spot::formula f, str_map ap_asso, bool parse)
+spot::formula chg_ap_name(spot::formula f, str_map& ap_asso, bool parse)
 {
   //debugging print map
   /*
   for(auto elem : ap_asso)
   {
     std::cout << '\'' << elem.first << "' '" << elem.second << '\''
-    << std::endl;
+    << '\n';
   }
   */
   std::function<spot::formula(spot::formula)> chg_ap;
@@ -45,7 +45,7 @@ spot::formula chg_ap_name(spot::formula f, str_map ap_asso, bool parse)
     if (f.is(spot::op::ap))
     {
       auto name = f.ap_name();
-      //std::cout << name << std::endl;
+      //std::cout << name << '\n';
       auto search = ap_asso.find(name);
       if (search == ap_asso.end())
         SPOT_UNREACHABLE();
@@ -145,6 +145,12 @@ inline std::string dot_no_special(std::string str)
 //////////////////////////////////////////////////
 
 
+bool sim_tree::insert(sim_line sl, str_map& map)
+{
+  conds_vect condv;
+  return root_->insert(sl, map, 1, condv);
+}
+
 bool sim_tree::insert(sim_line sl)
 {
   str_map map;
@@ -164,22 +170,22 @@ void sim_tree::to_dot(std::string filename)
 bool sim_tree::apply(spot::formula f, spot::formula& res, str_map& ap_asso)
 {
   std::vector<bool> mark;
-  return root_->apply(f, res, ap_asso, true, mark);
+  return root_->apply(f, res, ap_asso, true, mark, true);
 }
 
 bool sim_tree::apply(spot::formula f, spot::formula& res)
 {
   str_map map;
   std::vector<bool> mark;
-  return root_->apply(f, res, map, true, mark);
+  return root_->apply(f, res, map, true, mark, true);
   /*
   bool rep = root_->apply(f, res, map, true);
   for (auto e : map)
-    std::cout << e.first << "->" << e.second << std::endl;
+    std::cout << e.first << "->" << e.second << '\n';
   if (rep)
-    std::cout << f << " is simplified " << res << std::endl;
+    std::cout << f << " is simplified " << res << '\n';
   else
-    std::cout << f << " cannot be simplified." << std::endl;
+    std::cout << f << " cannot be simplified." << '\n';
   return rep;
   */
 }
@@ -222,16 +228,17 @@ void args_node::to_dot(int *i, int father, std::ofstream& ofs)
   }
 }
 
-bool args_node::insert(sim_line sl, str_map& ap_asso, int state,
-    conds_vect& cond)
+bool args_node::insert(sim_line& sl, str_map& ap_asso, int state,
+    conds_vect& cond, bool nw)
 {
   auto f = sl.formula_get();
-  for (unsigned i = 0; i < children_.size(); i++)
-  {
-    auto& child = children_[i];
-    if (child->op_get()== f.kind() && !is_final(f))
-      return child->insert(sl, ap_asso, state, cond);
-  }
+  if (!nw)
+    for (unsigned i = 0; i < children_.size(); i++)
+    {
+      auto& child = children_[i];
+      if (child->op_get()== f.kind() && !is_final(f))
+        return child->insert(sl, ap_asso, state, cond);
+    }
   if (f.kind() == spot::op::ap)
   {
     auto name = f.ap_name();
@@ -239,14 +246,16 @@ bool args_node::insert(sim_line sl, str_map& ap_asso, int state,
       // here could be handled nary checking if input is not trustworthy
       return true;
     auto search = ap_asso.find(name);
-    std::string str;
+    std::string str = "f" + std::to_string(ap_asso.size());
     if (search == ap_asso.end())
-    {
-      str = "f" + std::to_string(ap_asso.size());
       ap_asso.emplace(name, str);
-    }
     else
-      str = search->second;
+    {
+      // inserting unique value to update map size
+      ap_asso.emplace(name + '=' + str, str);
+      sl.cond_add(str + "=" + search->second);
+    }
+    //str = search->second;
     children_.push_back(std::make_unique<op_node>(f, str));
   }
   else
@@ -269,21 +278,35 @@ bool args_node::insert(sim_line sl, str_map& ap_asso, int state,
     }
     return true;
   }
-  return children_.back()->insert(sl, ap_asso, state, cond);
+  return children_.back()->insert(sl, ap_asso, state, cond, nw);
 }
 
 
 
-bool args_node::is_equivalent(spot::formula f, pair_vect& asso, bool insert)
+
+// uses the args_node under op corresponding to f
+bool args_node::is_equivalent(spot::formula f, str_map& asso, bool insert)
 {
+  auto emplace_check = [&asso, &insert](std::string first, std::string second) -> bool
+  {
+    for (auto p : asso)
+      if (p.second == second && p.first != first)
+        return false;
+    if (!insert)
+      asso.emplace(second, first);
+    else
+      asso.emplace(first, second);
+    return true;
+  };
   int nb = f.size();
-  // handling 'args & ...' -> pushing every n-ary OP children in the map
   if (is_nary(f))
   {
     if (children_.size() == 1)
     {
+      // handling 'args & ...' -> pushing every n-ary OP children in the map
       auto name = children_[0]->opstr_get();
-      asso.emplace_back(str_psl(f), name);
+      if (!emplace_check(str_psl(f), name))
+        return false;
       return true;
     }
     if (children_.size() == nb)
@@ -294,7 +317,8 @@ bool args_node::is_equivalent(spot::formula f, pair_vect& asso, bool insert)
         auto chkind = child.op_get();
         if (chkind == spot::op::ap)
         {
-          asso.emplace_back(str_psl(f[i]), child.opstr_get());
+          if (!emplace_check(str_psl(f[i]), child.opstr_get()))
+            return false;
           if (!insert)
             continue;
         }
@@ -303,13 +327,18 @@ bool args_node::is_equivalent(spot::formula f, pair_vect& asso, bool insert)
         {
           auto kind = f[j].kind();
           if (chkind == kind)
-            break;
+          {
+            // !insert prevents insert on map
+            if (/*!insert || */child.is_equivalent(f[j], asso, insert))
+              break;
+          }
         }
         if (j == nb)
           return false;
       }
       return true;
     }
+    return false;
   }
   for (unsigned i = 0; i < nb; i++)
   {
@@ -319,23 +348,25 @@ bool args_node::is_equivalent(spot::formula f, pair_vect& asso, bool insert)
     // AP in the tree matches any formula, so we put formula in the name map.
     if (chkind == spot::op::ap)
     {
-      asso.emplace_back(str_psl(f[i]), child.opstr_get());
+      if (!emplace_check(str_psl(f[i]), child.opstr_get()))
+        return false;
       if (!insert)
         continue;
     }
-    if (chkind != kind)
+    // insert prevents map insertion again?
+    if (chkind != kind || (/*insert && */!child.is_equivalent(f[i], asso, insert)))
       return false;
   }
   return true;
 }
 
 bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
-    bool last, int i)
+    bool last, int i, bool top_op)
 {
   auto& child = children_[i];
   auto op = child->op_get();
   if (op == spot::op::ap || f.kind() == op)
-    if (child->apply(f, res, ap_asso, last))
+    if (child->apply(f, res, ap_asso, last, top_op))
     {
       // !res so we do not try to access condition_ after
       if (last && !res)
@@ -345,7 +376,8 @@ bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
         unsigned j = 0;
         for (; j < nb; j++)
         {
-          if (cond[j].check(ap_asso))
+          str_map map = ap_asso;
+          if (cond[j].check(map))
             break;
         }
         if (j == nb)
@@ -358,7 +390,7 @@ bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
 }
 
 bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
-    bool last, std::vector<bool>& marks)
+    bool last, std::vector<bool>& marks, bool top_op)
 {
   for (unsigned i = 0; i < children_.size(); i++)
   {
@@ -367,7 +399,7 @@ bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
     auto& child = children_[i];
     auto op = child->op_get();
     if (op == spot::op::ap || f.kind() == op)
-      if (child->apply(f, res, ap_asso, last))
+      if (child->apply(f, res, ap_asso, last, top_op))
       {
         // !res so we do not try to access condition_ after
         if (last && !res)
@@ -377,13 +409,14 @@ bool args_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
           unsigned j = 0;
           for (; j < nb; j++)
           {
-            if (cond[j].check(ap_asso))
+            str_map map = ap_asso;
+            if (cond[j].check(map))
               break;
           }
           if (j == nb)
             continue;
           //for (auto e : ap_asso)
-            //std::cout << e.first << "->" << e.second << std::endl;
+            //std::cout << e.first << "->" << e.second << '\n';
           // building res
           // auto cond = chg_ap_name(search->second.condf_get(), ap_asso);
           res = chg_ap_name(cond[j].retf_get(), ap_asso, true);
@@ -416,8 +449,8 @@ void op_node::to_dot(int *i, int father, std::ofstream& ofs)
   }
 }
 
-bool op_node::insert(sim_line sl, str_map& ap_asso, int state,
-    conds_vect& cond)
+bool op_node::insert(sim_line& sl, str_map& ap_asso, int state,
+    conds_vect& cond, bool nw)
 {
   auto update_state = [&state](bool last, bool commut) -> int
   {
@@ -428,38 +461,34 @@ bool op_node::insert(sim_line sl, str_map& ap_asso, int state,
     return 0;
   };
   auto f = sl.formula_get();
-  auto ins = [&](unsigned child, pair_vect* vect = nullptr) -> bool
+  auto ins = [&](unsigned child, str_map* vect = nullptr) -> bool
   {
     if (vect)
-      for (auto pair : *vect)
-        ap_asso.emplace(pair.first, pair.second);
+      ap_asso.insert(vect->begin(), vect->end());
+      //for (auto pair : *vect)
+        //ap_asso.emplace(pair.first, pair.second);
     bool inserted = false;
+    bool commut = is_commut(op_);
     for (unsigned i = 0; i < f.size(); i++)
     {
-      bool commut = is_commut(op_);
       //do not insert duplicates ap when is_equivalent
       if (!vect || f[i].kind() != spot::op::ap)
       {
-        inserted |= children_[child]->insert(sim_line(sl.cond_get(), f[i],
-            sl.replace_get()), ap_asso, update_state(i == f.size() - 1, commut)
-            , cond);
-        /*
-        {
-          auto condi = children_[child]->condition_get()->back();
-          for (unsigned i = 0; i < children_.size() && i != child; i++)
-            children_[i]->condition_get()->push_back(condi);
-        }*/
+        sim_line sl2(sl.cond_get(), f[i], sl.replace_get());
+        inserted |= children_[child]->insert(sl2, ap_asso,
+            update_state(i == f.size() - 1, commut), cond, !vect);
+        sl.cond_get() = sl2.cond_get();
       }
       else
-        //insert cond
-        if (state && i == f.size() - 1)
+        //insert cond if insert was not called
+        if (update_state(i == f.size() - 1, commut))
         {
           // FIXME surely handle state == 2
-          auto& cond = children_[child]->condition_get();
-          if (!cond)
-            cond = std::make_unique<std::vector<conds>>();
+          auto& conda = children_[child]->condition_get();
+          if (!conda)
+            conda = std::make_unique<std::vector<conds>>();
           auto condi = conds(sl.cond_get(), sl.replace_get(), ap_asso);
-          cond->push_back(condi);
+          conda->push_back(condi);
           if (commut)
             for (unsigned i = 0; i < children_.size() && i != child; i++)
               children_[i]->condition_get()->push_back(condi);
@@ -467,42 +496,172 @@ bool op_node::insert(sim_line sl, str_map& ap_asso, int state,
     }
     return inserted;
   };
-  for (unsigned i = 0; i < children_.size(); i++)
-  {
-    pair_vect vect;
-    if (children_[i]->is_equivalent(f, vect, true))
-      return ins(i, &vect);
-  }
+  if (!nw)
+    for (unsigned i = 0; i < children_.size(); i++)
+    {
+      str_map vect;
+      if (children_[i]->is_equivalent(f, vect, true))
+        return ins(i, &vect);
+    }
   children_.push_back(std::make_unique<args_node>());
   return ins(children_.size() - 1);
 }
 
+bool op_node::is_equivalent(spot::formula f, str_map& asso, bool insert)
+{
+  if (op_ == spot::op::ap && f.kind() == op_)
+  {
+    auto search = asso.find(opstr_);
+    if (search == asso.end())
+      SPOT_UNREACHABLE();
+    return search->second == f.ap_name();
+  }
+  for (auto& child : children_)
+    if (child->is_equivalent(f, asso, insert))
+      return true;
+  //std::cout << opstr_ << ' ' << f.kindstr() << '\n';
+  return false;
+}
+
+inline spot::formula nary_cons(spot::op op, std::vector<spot::formula> c)
+{
+  switch (op)
+  {
+    case spot::op::And:
+      return spot::formula::And(c);
+    case spot::op::AndRat:
+      return spot::formula::AndRat(c);
+    case spot::op::AndNLM:
+      return spot::formula::AndNLM(c);
+    case spot::op::Or:
+      return spot::formula::Or(c);
+    case spot::op::OrRat:
+      return spot::formula::OrRat(c);
+    case spot::op::Concat:
+      return spot::formula::Concat(c);
+    case spot::op::Fusion:
+      return spot::formula::Fusion(c);
+    default:
+      SPOT_UNREACHABLE();
+  }
+}
+
+bool op_node::apply_top_nary(spot::formula& f, spot::formula& res)
+{
+  std::function<bool(int, std::vector<spot::formula>, spot::formula&,
+      op_child&)> iterate;
+  int k = f.size();
+  int n;
+  std::set<int> set;
+  // iterate goes through the list of binomial coefficient possibilities
+  iterate = [&](int start, std::vector<spot::formula> comb,
+      spot::formula& res, op_child& child) -> bool
+  {
+    if (n == comb.size())
+    {
+      auto newf = nary_cons(f.kind(), comb);
+      std::cout << newf << '\n';
+      int fsize = newf.size();
+      auto marks = std::vector<bool>(fsize, false);
+      int i;
+      str_map new_asso;
+      for (; i < fsize; i++)
+        if (!child->apply(newf[i], res, new_asso, i == fsize - 1, marks))
+          break;
+      if (i == fsize)
+        return true;
+    }
+    else
+      for (int i = start; i < k; i++)
+      {
+        //std::cout << "add " << i << ' ' << f[i] << '\n';
+        set.insert(i);
+        comb.push_back(f[i]);
+        if (iterate(i + 1, comb, res, child))
+        {
+          std::vector<spot::formula> excluded;
+          for (int j = 0; j < k; j++)
+            if (set.find(j) == set.end())
+              excluded.push_back(f[j]);
+          // adding simplification of included parts
+          excluded.push_back(res);
+          res = nary_cons(f.kind(), excluded);
+          return true;
+        }
+        //std::cout << "rm " << i << ' ' << f[i] << '\n';
+        set.erase(i);
+        comb.pop_back();
+      }
+      return false;
+  };
+  //std::map<std::vector<std::pair<int, int>>, str_map> cache;
+
+  // iterate over pattern possiblities
+  for (int i = 0; i < children_.size(); i++)
+  {
+      auto& child = children_[i];
+      n = child->size();
+      if (iterate(0, std::vector<spot::formula>(), res, child))
+        return true;
+  }
+  return false;
+}
+
 bool op_node::apply(spot::formula f, spot::formula& res, str_map& ap_asso,
-    bool last)
+    bool last, bool top_op)
 {
   bool ins;
-  //std::cout << f.kindstr() << ' ' << (f.kind() == op_) << std::endl;
+  //std::cout << f.kindstr() << ' ' << (f.kind() == op_) << '\n';
   if (op_ == spot::op::ap || is_final(f) && f.kind() == op_)
+  {
+    if (op_ == spot::op::ap)
+      ap_asso.emplace(opstr_, str_psl(f));
     return true;
+  }
+  if (top_op)
+  {
+    spot::formula rep;
+    if (apply_top_nary(f, rep))
+    {
+      while (true)
+      {
+        spot::formula tmp;
+        //check nary because the transformed formula can be another if there
+        //were not trash terms and we dont want to use apply_top_nary on it.
+        if (!is_nary(rep) || !apply_top_nary(rep, tmp))
+          break;
+        rep = tmp;
+      }
+      res = rep;
+      return true;
+    }
+    return false;
+  }
+
   for (unsigned j = 0; j < children_.size(); j++)
   {
     auto& child = children_[j];
-    pair_vect vect;
+    str_map vect;
     if (child->is_equivalent(f, vect, false))
     {
       str_map new_asso = ap_asso;
       for (auto pair : vect)
         if (new_asso.find(opstr_) == new_asso.end())
-          new_asso.emplace(pair.second, pair.first);
+          new_asso.emplace(pair.first, pair.second);
       unsigned i = 0;
       unsigned fsize = f.size();
+      if (is_nary(f) && children_.size() == 1)
+        fsize = 1;
       auto kind = f.kind();
       bool commut = is_commut(op_);
       std::vector<bool> marks;
       if (commut)
-        marks = std::vector<bool>(fsize, false);
+          marks = std::vector<bool>(fsize, false);
+
       for (; i < fsize; i++)
       {
+        //if (top_operator)
+
         if (commut || is_nary(f))
         {
           if (!child->apply(f[i], res, new_asso, last && i == fsize - 1,
@@ -534,8 +693,7 @@ bool conds::check(str_map& ap_asso)
 /*
   for(auto elem : ap_asso)
   {
-    std::cout << '\'' << elem.first << "' '" << elem.second << '\''
-    << std::endl;
+    std::cout << '\'' << elem.first << "' '" << elem.second << "\'\n";
   }
 */
   for (auto form : condf_)
@@ -552,17 +710,23 @@ bool conds::check(str_map& ap_asso)
           {
             std::string name = condi.substr(0, search);
             spot::formula fn = spot::parse_formula(ap_asso.find(name)->second);
-            //std::cout << fn << std::endl;
+            //std::cout << fn << '\n';
             std::string rule = condi.substr(search + 1);
             if (rule == "eventual" && !fn.is_eventual())
               return false;
-            if (rule == "universal" && !fn.is_universal())
+            else if (rule == "universal" && !fn.is_universal())
               return false;
-            if (rule == "univentual"
+            else if (rule == "univentual"
                 && (!fn.is_universal() || !fn.is_eventual()))
               return false;
-            if (rule == "boolean" && !fn.is_boolean())
+            else if (rule == "boolean" && !fn.is_boolean())
               return false;
+            else if (rule == "sere" && !fn.is_sere_formula())
+              return false;
+            else if (rule.substr(0, 6) == "equals")
+              if (ap_asso.find(name)->second
+                  != ap_asso.find(rule.substr(6))->second)
+                return false;
             break;
           }
           search = condi.find("@");
@@ -582,11 +746,11 @@ bool conds::check(str_map& ap_asso)
             spot::formula fn = spot::parse_formula(name_asso);
             std::string& ptrn = at.arg_no(1);
             spot::formula fp = spot::parse_formula(ptrn);
-            ///*
-            std::cout << "fn & fp: "<< fn << " / " << fp << std::endl;
             /*
+            std::cout << "fn & fp: "<< fn << " / " << fp << '\n';
+            /
             for (auto e : ap_asso)
-              std::cout << e.first << "->" << e.second << std::endl;
+              std::cout << e.first << "->" << e.second << '\n';
             */
             str_vect pos;
             str_vect neg;
@@ -595,12 +759,12 @@ bool conds::check(str_map& ap_asso)
             // debugging purpose
             /*
             for (auto e : ap_asso)
-              std::cout << e.first << "->" << e.second << std::endl;
-            //std::cout << retf_ << std::endl;
+              std::cout << e.first << "->" << e.second << '\n';
+            //std::cout << retf_ << '\n';
             for (auto s : pos)
-              std::cout << '"' << s << "\" matches " << fp << std::endl;
+              std::cout << '"' << s << "\" matches " << fp << '\n';
             for (auto s : neg)
-              std::cout << '"' << s << "\" doesn't match " << fp << std::endl;
+              std::cout << '"' << s << "\" doesn't match " << fp << '\n';
             */
 
             auto op = str(fn.kind());
@@ -621,13 +785,19 @@ bool conds::check(str_map& ap_asso)
                 }
               }
             };
-
+            int min = 0;
+            int max = 0;
             auto splits = [&](str_vect& vect, std::string str, splitmap& map)
             {
               std::string rep = "";
               auto search = map.find(std::make_pair(name, ptrn));
               if (search != map.end())
-                rep = search->second;
+              {
+                auto tup = search->second;
+                rep = std::get<0>(tup);
+                min = std::get<1>(tup);
+                max = std::get<2>(tup);
+              }
               std::string split;
               if (!vect.empty())
               {
@@ -642,18 +812,29 @@ bool conds::check(str_map& ap_asso)
             /*
             for (auto p : split_)
               std::cout << p.first.first << '/' << p.first.second << "->"
-                << p.second << std::endl;
+                << p.second << '\n';
             for (auto p : splitnot_)
               std::cout << p.first.first << '/' << p.first.second << "->"
-                << p.second << std::endl;
+                << p.second << '\n';
             */
-            splits(pos, "split", split_);
-            splits(neg, "splitnot", splitnot_);
+            auto checks = [&](str_vect& vect, std::string str, splitmap& map)
+            -> bool
+            {
+              splits(vect, str, map);
+              int size = vect.size();
+              if ((min && size < min) || (max && size > max))
+                return false;
+              return true;
+            };
+            if (!checks(pos, "split", split_))
+              return false;
+            if (!checks(neg, "splitnot", splitnot_))
+              return false;
           }
           break;
         }
       case spot::op::Implies:
-        // do the Thing. The thing where you do things (equiv)
+        // FIXME do the Thing. The thing where you do things (equiv)
         break;
       default:
         SPOT_UNREACHABLE();

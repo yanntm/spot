@@ -32,14 +32,16 @@
 #include <spot/tl/formula.hh>
 #include <memory>
 #include <map>
+#include <set>
 
-typedef std::vector<std::pair<std::string, std::string>> pair_vect;
+
 typedef std::map<std::string, std::string> str_map;
 typedef std::vector<std::string> str_vect;
-typedef std::map<std::pair<std::string, std::string>, std::string> splitmap;
+typedef std::map<std::pair<std::string, std::string>,
+        std::tuple<std::string, int, int>> splitmap;
 
 
-spot::formula chg_ap_name(spot::formula f, str_map ap_asso,
+spot::formula chg_ap_name(spot::formula f, str_map& ap_asso,
     bool parse = false);
 bool has(spot::formula& f, spot::formula& pattern, str_vect& pos,
     str_vect& neg, str_map& map);
@@ -49,7 +51,6 @@ bool is_nary(spot::formula& f);
 
 std::string sar(std::string str, std::string key, std::string replace);
 
-void generate_simple(spot::formula f, std::ostream& os);
 
 class args_node;
 
@@ -62,19 +63,27 @@ class sim_line
       replace_(replace)
   {}
 
-    std::string cond_get()
+    std::string& cond_get()
     {
       return cond_;
     }
 
-    spot::formula formula_get()
+    spot::formula& formula_get()
     {
       return formula_;
     }
 
-    std::string replace_get()
+    std::string& replace_get()
     {
       return replace_;
+    }
+
+    void cond_add(std::string condi)
+    {
+      if (cond_.empty())
+        cond_ = condi;
+      else
+        cond_ += " and " + condi;
     }
 
   private:
@@ -186,6 +195,8 @@ public:
         add_cond(elem.second + ".univentual");
       else if (name == 'b')
         add_cond(elem.second + ".boolean");
+      else if (name == 'r')
+        add_cond(elem.second + ".sere");
     }
     if (!cond.empty())
     {
@@ -212,8 +223,17 @@ public:
           add_cond("\""  + at.to_string() + "\"");
         }
         else
-          add_cond(spot::str_psl(chg_ap_name(spot::parse_formula(condi),
-                   ap_asso)));
+        {
+          auto eq = condi.find('=');
+          if (eq != std::string::npos)
+          {
+            condi.replace(eq, 1, ".equals");
+            add_cond(condi);
+          }
+          else
+            add_cond(spot::str_psl(chg_ap_name(spot::parse_formula(condi),
+                     ap_asso)));
+        }
         if (last)
           break;
         begin = search + delim.size();
@@ -241,14 +261,31 @@ public:
       //std::cout << arg1 << std::endl;
       std::string& arg2 = spl.arg_no(1);
       std::string arg3;
-      if (spl.size() > 2)
+      int min = 0;
+      int max = 0;
+      int size =spl.size();
+      if (size == 3 || size == 5)
         arg3 = spl.arg_no(2);
+      if (size > 3)
+      {
+        try
+        {
+          min = std::stoi(spl.arg_no(size - 1));
+          max = std::stoi(spl.arg_no(size - 2));
+        }
+        catch (std::exception e)
+        {
+          std::cerr << spl.to_string() << e.what() << std::endl;
+        }
+      }
       std::string str = spl.to_string();
       ap_asso.emplace(str, str);
       if (spl.name_get() == "splitnot")
-        splitnot_.emplace(std::make_pair(arg1, arg2), arg3);
+        splitnot_.emplace(std::make_pair(arg1, arg2), std::make_tuple(arg3,
+              min, max));
       else
-        split_.emplace(std::make_pair(arg1, arg2), arg3);
+        split_.emplace(std::make_pair(arg1, arg2), std::make_tuple(arg3, min,
+              max));
       std::string rep = "\"" + spl.to_string() + "\"";
       ret.replace(search, end, rep);
       search = ret.find("split", search + rep.size());
@@ -300,6 +337,8 @@ public:
     bool empty_;
 };
 
+void generate_simple(spot::formula f, spot::formula res, conds cond,
+    std::ostream& os);
 typedef std::vector<std::unique_ptr<std::vector<conds>>*> conds_vect;
 
 class op_node
@@ -342,10 +381,18 @@ class op_node
       return opstr_;
     }
 
-    bool insert(sim_line sl, str_map& ap_asso, int state, conds_vect& cond);
+    int size()
+    {
+      return children_.size();
+    }
+
+    bool insert(sim_line& sl, str_map& ap_asso, int state, conds_vect& cond,
+        bool nw = false);
+    bool is_equivalent(spot::formula f, str_map& asso, bool insert);
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
-        bool last);
+        bool last, bool top_op = false);
     void to_dot(int *i, int father, std::ofstream& ofs);
+    bool apply_top_nary(spot::formula& f, spot::formula& res);
 
     op_node(op_node&) = delete;
 
@@ -355,19 +402,23 @@ class op_node
     std::vector<std::unique_ptr<args_node>> children_;
 };
 
+typedef std::unique_ptr<args_node> op_child;
+typedef std::unique_ptr<op_node> args_child;
+
 
 class args_node
 {
   public:
-    bool insert(sim_line sl, str_map& ap_asso, int state, conds_vect& cond);
+    bool insert(sim_line& sl, str_map& ap_asso, int state, conds_vect& cond,
+        bool nw =  false);
     // for sorted op
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
-        bool last, int i);
+        bool last, int i, bool top_op = false);
     // for root and unsorted op
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
-        bool last, std::vector<bool>& marks);
+        bool last, std::vector<bool>& marks, bool top_op = false);
     void to_dot(int *i, int father, std::ofstream& ofs);
-    bool is_equivalent(spot::formula f, pair_vect& vect, bool insert);
+    bool is_equivalent(spot::formula f, str_map& vect, bool insert);
 
     std::string ap_name()
     {
@@ -380,6 +431,12 @@ class args_node
     {
       return condition_;
     }
+
+    int size()
+    {
+      return children_.size();
+    }
+
   private:
     std::vector<std::unique_ptr<op_node>> children_;
     std::unique_ptr<std::vector<conds>> condition_;
@@ -393,6 +450,7 @@ class sim_tree
       root_ = std::make_unique<args_node>();
     }
 
+    bool insert(sim_line sl, str_map& str);
     bool insert(sim_line sl);
     bool apply(spot::formula f, spot::formula& res);
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso);

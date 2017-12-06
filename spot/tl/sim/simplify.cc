@@ -136,6 +136,7 @@ bool has(spot::formula& f, spot::formula& pattern, str_vect& pos,
 {
   std::vector<std::tuple<std::string, std::string, std::string>> chg;
   spot::formula ptrn = pattern;
+  // might be useless or overkill
   pattern.traverse([&chg](spot::formula f)
   {
     if (is_nary(f))
@@ -151,6 +152,7 @@ bool has(spot::formula& f, spot::formula& pattern, str_vect& pos,
   });
   sim_tree t;
   std::string nary_name;
+  str_map ap_asso = map;
   if (!chg.empty())
   {
     std::string ret = str_psl(pattern);
@@ -165,15 +167,17 @@ bool has(spot::formula& f, spot::formula& pattern, str_vect& pos,
       ret.replace(ret.find(find), find.size(), rep);
       cond += cond.size() ? " and @" + arg : "@" + arg;
     }
-    t.insert(sim_line(cond, pattern, ret));
+    t.insert(sim_line(cond, pattern, ret), ap_asso);
   }
   else
-    t.insert(sim_line("", ptrn, str_psl(pattern)));
+    t.insert(sim_line("", ptrn, str_psl(pattern)), ap_asso);
+  t.to_dot("intermed.dot");
   spot::formula ref;
   bool res = false;
-  str_map ap_asso;
   for (unsigned i = 0; i < f.size(); i++)
     res |= simp(t, f[i], ref, &pos, &neg, &ap_asso);
+  if (res)
+    map.insert(ap_asso.begin(), ap_asso.end());
   if (!nary_name.empty())
   {
     auto search = ap_asso.find("f0");
@@ -201,6 +205,6 @@ int main()
     std::cout << f << " final simplification: " << res << std::endl;
   else
     std::cout << f << " could not be reduced." << std::endl;
-  generate_simple(spot::parse_formula("f U (g | e)"), std::cout);
+  //generate_simple(spot::parse_formula("f U (g | e)"), std::cout);
   return 0;
 }
