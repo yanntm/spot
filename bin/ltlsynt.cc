@@ -49,9 +49,9 @@
 enum
 {
   OPT_ALGO = 256,
+  OPT_INCREMENTAL,
   OPT_INPUT,
   OPT_OUTPUT,
-  OPT_PRINT,
   OPT_PRINT_AIGER,
   OPT_REAL
 };
@@ -72,10 +72,12 @@ static const argp_option options[] =
       "choose the parity game algorithm, valid ones are rec (Zielonka's"
       " recursive algorithm, default) and qp (Calude et al.'s quasi-polynomial"
       " time algorithm)", 0 },
+    { "incremental", OPT_INCREMENTAL, nullptr, 0,
+      "Start with the controller having only a subset of its transitions"
+      " available, and incrementally add them back until a strategy was found"
+      " or all of its transitions have been added", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
-    { "print-pg", OPT_PRINT, nullptr, 0,
-      "print the parity game in the pgsolver format, do not solve it", 0},
     { "realizability", OPT_REAL, nullptr, 0,
       "realizability only, do not compute a winning strategy", 0},
     { "aiger", OPT_PRINT_AIGER, nullptr, 0,
@@ -107,6 +109,7 @@ static std::vector<std::string> output_aps;
 bool opt_print_pg(false);
 bool opt_real(false);
 bool opt_print_aiger(false);
+bool opt_incremental(false);
 
 // FIXME rename options to choose the algorithm
 enum solver
@@ -276,6 +279,37 @@ namespace
     return aut;
   }
 
+  using edge_iterator_t =
+    spot::internal::edge_iterator<spot::twa_graph::graph_t>;
+
+  spot::twa_graph_ptr filter_edges(const spot::twa_graph_ptr& aut,
+                                   const std::vector<edge_iterator_t>& filter)
+  {
+    auto res = spot::make_twa_graph(aut->get_dict());
+    res->copy_ap_of(aut);
+    res->copy_acceptance_of(aut);
+    for (unsigned s = 0; s < aut->num_states(); ++s)
+      res->new_state();
+    res->set_init_state(aut->get_init_state_number());
+    for (unsigned s = 0; s < aut->num_states(); ++s)
+      for (auto it = aut->out(s).begin(); it != filter[s]; ++it)
+        res->new_edge(it->src, it->dst, it->cond, it->acc);
+    return res;
+  }
+
+  bool add_one_trans(const spot::twa_graph_ptr& aut,
+                     std::vector<edge_iterator_t>& filter)
+  {
+    for (unsigned s = 0; s < filter.size(); ++s)
+      {
+        if (filter[s] != aut->out(s).end())
+          {
+            ++filter[s];
+            return true;
+          }
+      }
+    return false;
+  }
 
   class ltl_processor final : public job_processor
   {
@@ -319,68 +353,104 @@ namespace
           all_outputs &= bdd_ithvar(v);
         }
       auto split = split_automaton(aut, all_inputs);
-      auto dpa = to_dpa(split);
-      auto owner = make_alternating_owner(dpa);
-      auto pg = spot::parity_game(dpa, owner);
-      timer.stop();
+      auto owner = make_alternating_owner(split);
 
-      if (opt_print_pg)
-        {
-          pg.print(std::cout);
-          return 0;
-        }
-      switch (opt_solver)
-        {
-          case REC:
-            {
-              spot::parity_game::strategy_t strategy;
-              spot::parity_game::region_t winning_region;
-              std::tie(winning_region, strategy) = pg.solve();
-              if (winning_region.count(pg.get_init_state_number()))
-                {
-                  std::cout << "REALIZABLE\n";
-                  if (!opt_real)
-                    {
-                      auto strat_aut =
-                        strat_to_aut(pg, strategy, dpa, all_outputs);
-
-                      // output the winning strategy
-                      if (opt_print_aiger)
-                        spot::print_aiger(std::cout, strat_aut);
-                      else
-                        {
-                          automaton_printer printer;
-                          printer.print(strat_aut, timer);
-                        }
-                    }
-                  return 0;
-                }
-              else
-                {
-                  std::cout << "UNREALIZABLE\n";
-                  return 1;
-                }
-            }
-          case QP:
-            if (!opt_real)
+      // filter[s] = max transition iterator considered for state s.
+      // Start with a deterministic subautomaton by allowing at most 1
+      // outgoing transition for each state
+      std::vector<edge_iterator_t> filter(split->num_states());
+      if (opt_incremental)
+      {
+        for (unsigned s = 0; s < split->num_states(); ++s)
+          {
+            if (owner[s])
               {
-                std::cout << "The quasi-polynomial time algorithm does not"
-                  " implement synthesis yet, use --realizability\n";
-                return 2;
-              }
-            else if (pg.solve_qp())
-              {
-                std::cout << "REALIZABLE\n";
-                return 0;
+                bdd all = bddfalse;
+                auto it = split->out(s).begin();
+                for (; it != split->out(s).end(); ++it)
+                  {
+                    if ((all & it->cond) != bddfalse)
+                      break;
+                    all |= it->cond;
+                  }
+                filter[s] = it;
               }
             else
-              {
-                std::cout << "UNREALIZABLE\n";
-                return 1;
-              }
-          default:
-            SPOT_UNREACHABLE();
-            return 2;
+              filter[s] = split->out(s).end();
+          }
+      }
+
+      for (int it = 0; ; ++it)
+        {
+          spot::twa_graph_ptr dpa;
+          if (opt_incremental)
+            {
+              auto constrained = filter_edges(split, filter);
+              dpa = to_dpa(constrained);
+            }
+          else
+            dpa = to_dpa(split);
+          auto owner = make_alternating_owner(dpa);
+          auto pg = spot::parity_game(dpa, owner);
+          switch (opt_solver)
+            {
+              case REC:
+                {
+                  spot::parity_game::strategy_t strategy;
+                  spot::parity_game::region_t winning_region;
+                  std::tie(winning_region, strategy) = pg.solve();
+                  if (winning_region.count(pg.get_init_state_number()))
+                    {
+                      std::cout << "REALIZABLE\n";
+                      if (!opt_real)
+                        {
+                          auto strat_aut =
+                            strat_to_aut(pg, strategy, dpa, all_outputs);
+
+                          // output the winning strategy
+                          if (opt_print_aiger)
+                            spot::print_aiger(std::cout, strat_aut);
+                          else
+                            {
+                              automaton_printer printer;
+                              printer.print(strat_aut, timer);
+                            }
+                        }
+                      return 0;
+                    }
+                  else
+                    {
+                      if (opt_incremental && add_one_trans(aut, filter))
+                        continue;
+                      else
+                        {
+                          std::cout << "UNREALIZABLE\n";
+                          return 1;
+                        }
+                    }
+                }
+                break;
+              case QP:
+                if (!opt_real)
+                  {
+                    std::cout << "The quasi-polynomial time algorithm does not"
+                      " implement synthesis yet, use --realizability\n";
+                    return 1;
+                  }
+                else if (pg.solve_qp())
+                  {
+                    std::cout << "REALIZABLE";
+                    return 0;
+                  }
+                else if (opt_incremental && add_one_trans(aut, filter))
+                  continue;
+                else
+                  std::cout << "UNREALIZABLE";
+                break;
+              default:
+                SPOT_UNREACHABLE();
+                return 0;
+            }
         }
     }
   };
@@ -413,9 +483,6 @@ parse_opt(int key, char* arg, struct argp_state*)
           }
         break;
       }
-    case OPT_PRINT:
-      opt_print_pg = true;
-      break;
     case OPT_ALGO:
       opt_solver = XARGMATCH("--algo", arg, solver_args, solver_types);
       break;
@@ -424,6 +491,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_PRINT_AIGER:
       opt_print_aiger = true;
+      break;
+    case OPT_INCREMENTAL:
+      opt_incremental = true;
       break;
     }
   return 0;
