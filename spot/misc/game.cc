@@ -54,14 +54,13 @@ void parity_game::print(std::ostream& os)
     }
 }
 
-std::pair<parity_game::region_t, parity_game::strategy_t>
-parity_game::solve() const
+void parity_game::solve(region_t (&w)[2], strategy_t (&s)[2]) const
 {
   region_t states_;
   for (unsigned i = 0; i < num_states(); ++i)
     states_.insert(i);
   unsigned m = max_parity();
-  return solve_rec(states_, m);
+  solve_rec(states_, m, w, s);
 }
 
 bool parity_game::solve_qp() const
@@ -71,7 +70,7 @@ bool parity_game::solve_qp() const
 
 parity_game::strategy_t
 parity_game::attractor(const region_t& subgame, region_t& set,
-                       unsigned max_parity, bool odd, bool attr_max) const
+                       unsigned max_parity, int p, bool attr_max) const
 {
   strategy_t strategy;
   unsigned size;
@@ -94,7 +93,7 @@ parity_game::attractor(const region_t& subgame, region_t& set,
                   if (set.count(e.dst)
                       || (attr_max && e.acc.max_set() - 1 == max_parity))
                     {
-                      if (!any && owner_[s] && odd)
+                      if (!any && (owner_[s] == p))
                         strategy[s] = i;
                       any = true;
                     }
@@ -103,7 +102,7 @@ parity_game::attractor(const region_t& subgame, region_t& set,
                 }
               ++i;
             }
-          bool owner_is_odd = !!owner_[s] == odd;
+          bool owner_is_odd = owner_[s] == p;
           if ((owner_is_odd && any) || (!owner_is_odd && all))
             {
               set.insert(s);
@@ -114,67 +113,63 @@ parity_game::attractor(const region_t& subgame, region_t& set,
   return strategy;
 }
 
-auto parity_game::solve_rec(region_t& subgame, unsigned max_parity) const
-  -> std::pair<region_t, strategy_t>
+void parity_game::solve_rec(region_t& subgame, unsigned max_parity,
+                            region_t (&w)[2], strategy_t (&s)[2]) const
 {
+  assert(w[0].empty());
+  assert(w[1].empty());
+  assert(s[0].empty());
+  assert(s[1].empty());
   // The algorithm works recursively on subgames. To avoid useless copies of
   // the game at each call, subgame and max_parity are used to filter states
   // and transitions.
   if (max_parity == 0 || subgame.empty())
-    return {};
-  bool odd = max_parity % 2 == 1;
-  region_t w1;
-  strategy_t strategy;
+    return;
+  int p = max_parity % 2;
 
   // Recursion on max_parity.
   region_t u;
-  auto strat_u = attractor(subgame, u, max_parity, odd, true);
+  auto strat_u = attractor(subgame, u, max_parity, p, true);
 
   for (unsigned s: u)
     subgame.erase(s);
-  region_t w00; // Even's winning region in the first recursive call.
-  region_t w10; // Odd's winning region in the first recursive call.
-  strategy_t s10; // Odd's winning strategy in the first recursive call.
-  std::tie(w10, s10) = solve_rec(subgame, max_parity - 1);
-  if (odd && w10.size() != subgame.size())
+  region_t w0[2]; // Player's winning region in the first recursive call.
+  strategy_t s0[2]; // Player's winning strategy in the first recursive call.
+  solve_rec(subgame, max_parity - 1, w0, s0);
+  if (w0[p].size() != subgame.size())
     for (unsigned s: subgame)
-      if (w10.find(s) == w10.end())
-        w00.insert(s);
-  // If !odd, w00 is not used, no need to compute it.
+      if (w0[p].find(s) == w0[p].end())
+        w0[!p].insert(s);
   subgame.insert(u.begin(), u.end());
 
-  if (odd && w10.size() + u.size() == subgame.size())
+  if (w0[p].size() + u.size() == subgame.size())
     {
-      strategy.insert(s10.begin(), s10.end());
-      strategy.insert(strat_u.begin(), strat_u.end());
-      w1.insert(subgame.begin(), subgame.end());
-      return {w1, strategy};
+      s[p].insert(s0[p].begin(), s0[p].end());
+      s[p].insert(strat_u.begin(), strat_u.end());
+      w[p].insert(subgame.begin(), subgame.end());
+      return;
     }
-  else if (!odd && w10.empty())
-    return {};
 
   // Recursion on game size.
-  auto& wni = odd ? w00 : w10;
-  auto strat_wni = attractor(subgame, wni, max_parity, !odd);
-  if (!odd)
-    strat_wni.insert(s10.begin(), s10.end());
+  auto strat_wnp = attractor(subgame, w0[!p], max_parity, !p);
+  strat_wnp.insert(s0[!p].begin(), s0[!p].end());
 
-  for (unsigned s: wni)
+  for (unsigned s: w0[!p])
     subgame.erase(s);
 
-  region_t w11; // Odd's winning region in the second recursive call.
-  strategy_t s11; // Odd's winning strategy in the second recursive call.
-  std::tie(w11, s11) = solve_rec(subgame, max_parity);
+  region_t w1[2]; // Odd's winning region in the second recursive call.
+  strategy_t s1[2]; // Odd's winning strategy in the second recursive call.
+  solve_rec(subgame, max_parity, w1, s1);
 
-  w1.insert(w11.begin(), w11.end());
-  strategy.insert(s11.begin(), s11.end());
-  if (!odd)
-    {
-      strategy.insert(strat_wni.begin(), strat_wni.end());
-      w1.insert(wni.begin(), wni.end());
-    }
-  subgame.insert(wni.begin(), wni.end());
-  return {w1, strategy};
+  w[p].insert(w1[p].begin(), w1[p].end());
+  s[p].insert(s1[p].begin(), s1[p].end());
+
+  w[!p].insert(w0[!p].begin(), w0[!p].end());
+  w[!p].insert(w1[!p].begin(), w1[!p].end());
+  s[!p].insert(strat_wnp.begin(), strat_wnp.end());
+  s[!p].insert(s1[!p].begin(), s1[!p].end());
+
+  subgame.insert(w0[!p].begin(), w0[!p].end());
 }
 
 int reachability_state::compare(const state* other) const

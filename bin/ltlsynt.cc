@@ -396,16 +396,16 @@ namespace
             {
               case REC:
                 {
-                  spot::parity_game::strategy_t strategy;
-                  spot::parity_game::region_t winning_region;
-                  std::tie(winning_region, strategy) = pg.solve();
-                  if (winning_region.count(pg.get_init_state_number()))
+                  spot::parity_game::region_t winning_region[2];
+                  spot::parity_game::strategy_t strategy[2];
+                  pg.solve(winning_region, strategy);
+                  if (winning_region[1].count(pg.get_init_state_number()))
                     {
                       std::cout << "REALIZABLE\n";
                       if (!opt_real)
                         {
                           auto strat_aut =
-                            strat_to_aut(pg, strategy, dpa, all_outputs);
+                            strat_to_aut(pg, strategy[1], dpa, all_outputs);
 
                           // output the winning strategy
                           if (opt_print_aiger)
