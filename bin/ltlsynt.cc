@@ -50,6 +50,7 @@ enum
 {
   OPT_ALGO = 256,
   OPT_INCREMENTAL,
+  OPT_DET_ENV,
   OPT_USE_ENV_STRAT,
   OPT_INPUT,
   OPT_OUTPUT,
@@ -77,6 +78,10 @@ static const argp_option options[] =
       "Start with the controller having only a subset of its transitions"
       " available, and incrementally add them back until a strategy was found"
       " or all of its transitions have been added", 0},
+    { "det-env", OPT_DET_ENV, nullptr, 0,
+      "during automaton splitting, do it in such a way that the environment"
+      " is deterministic.  This can slow down the splitting step, but speed up"
+      " the determinization.", 0},
     { "use-env-strat", OPT_USE_ENV_STRAT, nullptr, 0,
       "When incrementally adding transitions to the controller, add in"
       " priority the transitions that come from the environment's winning"
@@ -115,6 +120,7 @@ bool opt_print_pg(false);
 bool opt_real(false);
 bool opt_print_aiger(false);
 bool opt_incremental(false);
+bool opt_det_env(false);
 bool opt_use_env_strat(false);
 
 // FIXME rename options to choose the algorithm
@@ -172,20 +178,47 @@ namespace
     split->new_states(tgba->num_states());
     split->set_init_state(tgba->get_init_state_number());
 
-    for (unsigned src = 0; src < tgba->num_states(); ++src)
-      for (const auto& e: tgba->out(src))
+    if (opt_det_env)
+      for (unsigned src = 0; src < tgba->num_states(); ++src)
         {
-          spot::minato_isop isop(e.cond);
-          bdd cube;
-          while ((cube = isop.next()) != bddfalse)
+          std::unordered_map<bdd, unsigned, spot::bdd_hash> input2state;
+          bdd support = bddtrue;
+          for (const auto& e: tgba->out(src))
+            support &= bdd_support(e.cond);
+          support = bdd_existcomp(support, input_bdd);
+          for (const auto& e: tgba->out(src))
             {
-              unsigned q = split->new_state();
-              bdd in = bdd_existcomp(cube, input_bdd);
-              bdd out = bdd_exist(cube, input_bdd);
-              split->new_edge(src, q, in, 0);
-              split->new_edge(q, e.dst, out, e.acc);
+              bdd all_letters = bddtrue;
+              while (all_letters != bddfalse)
+                {
+                  bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
+                  all_letters -= one_letter;
+                  auto it = input2state.find(one_letter);
+                  if (it == input2state.end())
+                    {
+                      it = input2state.emplace(one_letter, split->new_state()).first;
+                      split->new_edge(src, it->second, one_letter, 0);
+                    }
+                  bdd out = bdd_exist(e.cond & one_letter, input_bdd);
+                  split->new_edge(it->second, e.dst, out, e.acc);
+                }
             }
         }
+    else
+      for (unsigned src = 0; src < tgba->num_states(); ++src)
+        for (const auto& e: tgba->out(src))
+          {
+            spot::minato_isop isop(e.cond);
+            bdd cube;
+            while ((cube = isop.next()) != bddfalse)
+              {
+                unsigned q = split->new_state();
+                bdd in = bdd_existcomp(cube, input_bdd);
+                bdd out = bdd_exist(cube, input_bdd);
+                split->new_edge(src, q, in, 0);
+                split->new_edge(q, e.dst, out, e.acc);
+              }
+          }
     split->prop_universal(spot::trival::maybe());
     return split;
   }
@@ -222,7 +255,13 @@ namespace
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
+    bool max, odd;
+    // Make tgba_determinize think that the automaton is non-deterministic
+    // to make sure it gets translated to a parity automaton.
+    split->prop_universal(false);
     auto dpa = spot::tgba_determinize(split);
+    assert(dpa->acc().is_parity(max, odd));
+    assert(spot::is_deterministic(dpa));
     dpa->merge_edges();
     spot::complete_here(dpa);
     spot::colorize_parity_here(dpa, true);
@@ -230,7 +269,6 @@ namespace
                              spot::parity_style_odd);
     if (opt_print_pg)
       dpa = spot::sbacc(dpa);
-    bool max, odd;
     dpa->acc().is_parity(max, odd);
     assert(max && odd);
     assert(spot::is_deterministic(dpa));
@@ -522,6 +560,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_INCREMENTAL:
       opt_incremental = true;
+      break;
+    case OPT_DET_ENV:
+      opt_det_env = true;
       break;
     }
   return 0;
