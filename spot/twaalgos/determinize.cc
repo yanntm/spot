@@ -155,6 +155,17 @@ namespace spot
       return lhs.size() > rhs.size();
     }
 
+    std::vector<std::vector<unsigned>>*
+    num_to_subset(const power_set& states)
+    {
+      auto res = new std::vector<std::vector<unsigned>>(states.size());
+      for (const auto& s: states)
+        for (auto& p: s.first.nodes_)
+          (*res)[s.second].push_back(p.first);
+      return res;
+    }
+
+
     // a helper class for building the successor of a safra_state
     struct safra_build final
     {
@@ -974,6 +985,8 @@ namespace spot
     res->prop_universal(true);
     res->prop_state_acc(false);
 
+    res->set_named_prop<std::vector<std::vector<unsigned>>>(
+        "safra-states", num_to_subset(seen));
     if (pretty_print)
       res->set_named_prop("state-names", print_debug(aut, seen));
     return res;

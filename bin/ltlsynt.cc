@@ -50,6 +50,7 @@ enum
 {
   OPT_ALGO = 256,
   OPT_INCREMENTAL,
+  OPT_USE_ENV_STRAT,
   OPT_INPUT,
   OPT_OUTPUT,
   OPT_PRINT_AIGER,
@@ -76,6 +77,10 @@ static const argp_option options[] =
       "Start with the controller having only a subset of its transitions"
       " available, and incrementally add them back until a strategy was found"
       " or all of its transitions have been added", 0},
+    { "use-env-strat", OPT_USE_ENV_STRAT, nullptr, 0,
+      "When incrementally adding transitions to the controller, add in"
+      " priority the transitions that come from the environment's winning"
+      " region", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "realizability", OPT_REAL, nullptr, 0,
@@ -110,6 +115,7 @@ bool opt_print_pg(false);
 bool opt_real(false);
 bool opt_print_aiger(false);
 bool opt_incremental(false);
+bool opt_use_env_strat(false);
 
 // FIXME rename options to choose the algorithm
 enum solver
@@ -298,8 +304,16 @@ namespace
   }
 
   bool add_one_trans(const spot::twa_graph_ptr& aut,
-                     std::vector<edge_iterator_t>& filter)
+                     std::vector<edge_iterator_t>& filter,
+                     std::set<unsigned>* w0 = nullptr)
   {
+    if (w0)
+      for (unsigned s: *w0)
+        if (filter[s] != aut->out(s).end())
+          {
+            ++filter[s];
+            return true;
+          }
     for (unsigned s = 0; s < filter.size(); ++s)
       {
         if (filter[s] != aut->out(s).end())
@@ -420,13 +434,27 @@ namespace
                     }
                   else
                     {
-                      if (opt_incremental && add_one_trans(aut, filter))
-                        continue;
-                      else
+                      if (opt_incremental)
                         {
-                          std::cout << "UNREALIZABLE\n";
-                          return 1;
+                          // Compute the set of states in the NPA that correspond
+                          // to a state in the winning region of the environment
+                          // in the DPA.
+                          std::set<unsigned> v;
+                          if (opt_use_env_strat)
+                            {
+                              std::vector<std::vector<unsigned>>* safra_states =
+                                dpa->get_named_prop<std::vector<std::vector<unsigned>>>("safra-states");
+                              if (safra_states)
+                                for (unsigned s0: winning_region[0])
+                                  for (unsigned s1: (*safra_states)[s0])
+                                    v.insert(s1);
+                            }
+
+                          if (add_one_trans(aut, filter, &v))
+                            continue;
                         }
+                      std::cout << "UNREALIZABLE\n";
+                      return 1;
                     }
                 }
                 break;
