@@ -93,7 +93,7 @@ bool input_check(int i, std::string str, sim_line& sl)
   split_delim(str, " IF ", str, cond);
   std::string ret;
   if (!split_delim(str, "=", str, ret))
-    return error(i , "missing =");
+    return error(i, "missing =");
   sl = sim_line(cond, spot::parse_formula(str), ret);
   //std::cout << sl.formula_get() << std::endl;
   return true;
@@ -107,7 +107,7 @@ bool simp(sim_tree& t, spot::formula f, spot::formula& res,
   std::function<spot::formula(spot::formula)> simplify;
   simplify = [&](spot::formula f) -> spot::formula
   {
-    if (ap_asso && t.apply(f, res, *ap_asso) || t.apply(f, res))
+    if (ap_asso && t.apply(f, res, *ap_asso) || (!ap_asso && t.apply(f, res)))
     {
       b = true;
       spot::formula rec;
@@ -125,6 +125,8 @@ bool simp(sim_tree& t, spot::formula f, spot::formula& res,
     }
     if (neg)
       neg->push_back(str_psl(f));
+    if (pos)
+      return f;
     return f.map(simplify);
   };
   res = simplify(f);
@@ -171,7 +173,7 @@ bool has(spot::formula& f, spot::formula& pattern, str_vect& pos,
   }
   else
     t.insert(sim_line("", ptrn, str_psl(pattern)), ap_asso);
-  t.to_dot("intermed.dot");
+  t.to_dot("subtree.dot");
   spot::formula ref;
   bool res = false;
   for (unsigned i = 0; i < f.size(); i++)
@@ -180,10 +182,10 @@ bool has(spot::formula& f, spot::formula& pattern, str_vect& pos,
     map.insert(ap_asso.begin(), ap_asso.end());
   if (!nary_name.empty())
   {
+    // f0 because first insertion on a has map is the name
     auto search = ap_asso.find("f0");
-    for (auto s : ap_asso)
-      std::cout << s.first << "->" << s.second << std::endl;
-    // FIXME
+    //for (auto s : ap_asso)
+      //std::cout << s.first << "->" << s.second << std::endl;
     if (search != ap_asso.end())
       map.emplace(nary_name, search->second);
   }
@@ -196,7 +198,7 @@ int main()
   auto vect = input_divide("input");
   sim_line sl("", spot::formula(),"");
   for (unsigned i = 0; i < vect.size(); i++)
-    if (input_check(i, vect[i], sl))
+    if (input_check(i+1, vect[i], sl))
       t.insert(sl);
   t.to_dot("tree.dot");
   spot::formula res;

@@ -30,6 +30,7 @@
 #include <spot/tl/parse.hh>
 #include <spot/tl/print.hh>
 #include <spot/tl/formula.hh>
+#include <spot/twa/bdddict.hh>
 #include <memory>
 #include <map>
 #include <set>
@@ -175,9 +176,11 @@ public:
     empty_ = true;
   }
 
-  conds(std::string cond, std::string ret, str_map ap_asso)
+  conds(std::string cond, std::string ret, str_map& ap_asso)
   {
     empty_ = false;
+    //for (auto elem : ap_asso)
+      //std::cout << "->" << elem.first << " // " << elem.second << std::endl;
     auto add_cond = [this](std::string str)
     {
       cond_ += (cond_.size() ? " & " : "") + str;
@@ -339,7 +342,7 @@ public:
 
 void generate_simple(spot::formula f, spot::formula res, conds cond,
     std::ostream& os);
-typedef std::vector<std::unique_ptr<std::vector<conds>>*> conds_vect;
+typedef std::set<std::unique_ptr<std::vector<conds>>*> conds_set;
 
 class op_node
 {
@@ -386,7 +389,7 @@ class op_node
       return children_.size();
     }
 
-    bool insert(sim_line& sl, str_map& ap_asso, int state, conds_vect& cond,
+    bool insert(sim_line& sl, str_map& ap_asso, int state, conds_set& cond,
         bool nw = false);
     bool is_equivalent(spot::formula f, str_map& asso, bool insert);
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
@@ -409,7 +412,7 @@ typedef std::unique_ptr<op_node> args_child;
 class args_node
 {
   public:
-    bool insert(sim_line& sl, str_map& ap_asso, int state, conds_vect& cond,
+    bool insert(sim_line& sl, str_map& ap_asso, int state, conds_set& cond,
         bool nw =  false);
     // for sorted op
     bool apply(spot::formula f, spot::formula& res, str_map& ap_asso,
