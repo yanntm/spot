@@ -237,7 +237,7 @@ namespace spot
 
     // Fireall has been done after all successors have
     // been visited
-    if (done())
+    if (done() && use_por_)
       {
         current_ = 0;           // reset iterator
 
@@ -250,10 +250,10 @@ namespace spot
       }
   }
 
-  // void cspins_iterator::setup_por_iterator(cspins_state s, porinfos* porinfos,
-  //                                          std::vector<int>& transitions_id)
-  // {
-  // }
+  bool cspins_iterator::naturally_expanded() const
+  {
+    return !use_por_;
+  }
 
 
   void cspins_iterator::next_por()
