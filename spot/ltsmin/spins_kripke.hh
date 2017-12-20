@@ -155,6 +155,7 @@ namespace spot
     cspins_state state() const;
     cube condition() const;
     void fireall();
+    bool naturally_expanded() const;
 
   private:
     void next_por();
@@ -169,7 +170,7 @@ namespace spot
     bool fireall_{false};
     bool first_pass_{true};
     bool use_por_;
-     std::vector<bool> reduced_;
+    std::vector<bool> reduced_;
   };
 
 
