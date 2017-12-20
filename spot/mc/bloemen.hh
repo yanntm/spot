@@ -59,6 +59,10 @@ namespace spot
       std::atomic<uf_status> uf_status_;
       ///< \brief current status for the list
       std::atomic<list_status> list_status_;
+      /// The set of active worker for a state
+      std::atomic<unsigned> wip_;
+      /// The state has been expanded by some thread
+      std::atomic<bool> expanded_;
     };
 
     /// \brief The haser for the previous uf_element.
@@ -113,6 +117,8 @@ namespace spot
       v->worker_ = 0;
       v->uf_status_ = uf_status::LIVE;
       v->list_status_ = list_status::BUSY;
+      v->wip_ = 0;
+      v->expanded_ = false;
 
       auto it = map_.insert({v});
       bool b = it.isnew();
@@ -431,6 +437,7 @@ namespace spot
     void run()
     {
       tm_.start("DFS thread " + std::to_string(tid_));
+      unsigned w_id = (1U << tid_);
 
       State init = sys_.initial(tid_);
       auto pair = uf_.make_claim(init);
@@ -453,6 +460,18 @@ namespace spot
                 }
 
               auto it = sys_.succ(v_prime->st_, tid_);
+
+              // This thread is actively working on this state
+              atomic_fetch_or(&(v_prime->wip_), w_id);
+
+              // This is an expanded state. Two situtations are of interrest:
+              // (1) another thread decided to apply an expansion
+              // (2) the state is naturally_expanded.
+              if (v_prime->expanded_)
+                it->fireall();
+              else if (it->naturally_expanded())
+                v_prime->expanded_.store(true);
+
               while (!it->done())
                 {
                   auto w = uf_.make_claim(it->state());
@@ -464,10 +483,23 @@ namespace spot
                       Rp_.push_back(w.second);
                       ++states_;
                       sys_.recycle(it, tid_);
+                      // This thread is no longer actively working on this state
+                      atomic_fetch_and(&(v_prime->wip_), ~w_id);
                       goto bloemen_recursive_start;
                     }
                   else if (w.first == uf::claim_status::CLAIM_FOUND)
                     {
+                      // An expansion is required
+                      if (!v_prime->expanded_.load() &&
+                          !w.second->expanded_.load() &&
+                          v_prime->list_status_ != uf::list_status::DONE &&
+                          ((w.second->list_status_ == uf::list_status::DONE) ||
+                           (w.second->wip_.load() != 0)))
+                        {
+                          v_prime->expanded_.store(true);
+                          it->fireall();
+                        }
+
                       while (!uf_.sameset(todo_.back(), w.second))
                         {
                           uf_element* r = Rp_.back();
@@ -477,6 +509,9 @@ namespace spot
                     }
                 }
               uf_.remove_from_list(v_prime);
+              // This thread is no longer actively working on this state
+              // FIXME: This is maybe useless for POR, since v_prime is now DONE
+              atomic_fetch_and(&(v_prime->wip_), ~w_id);
               sys_.recycle(it, tid_);
             }
 
