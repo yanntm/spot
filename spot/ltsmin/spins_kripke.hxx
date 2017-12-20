@@ -118,8 +118,6 @@ namespace spot
     inner.compress = compress;
     inner.selfloopize = selfloopize;
     int* ref = s;
-    use_por_ = use_por;
-
 
     // Local variable since we only need it to compute
     // reduced set
@@ -258,7 +256,7 @@ namespace spot
 
     // Fireall has been done after all successors have
     // been visited
-    if (done())
+    if (done() && use_por_)
       {
         current_ = 0;           // reset iterator
 
@@ -269,6 +267,11 @@ namespace spot
           return;
         next_por();
       }
+  }
+
+  bool cspins_iterator::naturally_expanded() const
+  {
+    return !use_por_;
   }
 
   void cspins_iterator::setup_por_iterator(cspins_state s, porinfos* porinfos,
