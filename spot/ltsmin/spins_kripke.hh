@@ -136,7 +136,8 @@ namespace spot
                     int dead_idx,
                     unsigned tid,
                     bool use_por,
-                    porinfos* porinfos);
+                    porinfos* porinfos,
+                    std::vector<bool>* reduced = nullptr);
 
     void recycle(cspins_state s,
                  const spot::spins_interface* d,
@@ -149,7 +150,8 @@ namespace spot
                  int dead_idx,
                  unsigned tid,
                  bool use_por,
-                 porinfos* porinfos);
+                 porinfos* porinfos,
+                 std::vector<bool>* reduced = nullptr);
 
     ~cspins_iterator();
     void next();
@@ -158,11 +160,13 @@ namespace spot
     cube condition() const;
     void fireall();
     bool naturally_expanded() const;
+    std::vector<bool> reduced() const;
 
   private:
     void next_por();
     void setup_por_iterator(cspins_state s, porinfos* porinfos,
-                            std::vector<int>& transitions_id);
+                            std::vector<int>& transitions_id,
+                            std::vector<bool>* reduced);
 
   private:
     /// Compute the real index in the successor vector
@@ -211,7 +215,8 @@ namespace spot
     ~kripkecube();
     cspins_state initial(unsigned tid);
     std::string to_string(const cspins_state s, unsigned tid = 0) const;
-    cspins_iterator* succ(const cspins_state s, unsigned tid);
+    cspins_iterator* succ(const cspins_state s, unsigned tid,
+                          std::vector<bool>* reduced = nullptr);
     void recycle(cspins_iterator* it, unsigned tid);
     const std::vector<std::string> get_ap();
     unsigned get_threads();
