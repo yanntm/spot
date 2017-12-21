@@ -57,12 +57,19 @@ namespace spot
       std::atomic<uf_element*> next_;
       /// \brief current status for the element
       std::atomic<uf_status> uf_status_;
-      ///< \brief current status for the list
+      /// \brief current status for the list
       std::atomic<list_status> list_status_;
-      /// The set of active worker for a state
+      /// \brief The set of active worker for a state
       std::atomic<unsigned> wip_;
-      /// The state has been expanded by some thread
+      /// \brief The state has been expanded by some thread
       std::atomic<bool> expanded_;
+      /// \brief the reduced set has been computed by some thread
+      std::atomic<bool> ok_reduced_;
+      /// \brief the mutex for updating the reduced set
+      std::mutex m_reduced_;
+      /// \brief the shared reduced set.
+      std::vector<bool> reduced_;
+
     };
 
     /// \brief The haser for the previous uf_element.
@@ -96,7 +103,8 @@ namespace spot
 
 
     iterable_uf(shared_map& map, unsigned tid):
-      map_(map), tid_(tid), size_(std::thread::hardware_concurrency()),
+      map_(map), tid_(tid),
+      size_(std::thread::hardware_concurrency()),
       nb_th_(std::thread::hardware_concurrency()), inserted_(0)
     {
     }
@@ -457,7 +465,25 @@ namespace spot
                   break;
                 }
 
-              auto it = sys_.succ(v_prime->st_, tid_);
+              // ---------------------------------------------------
+              // This part is used to reduce the amount of time the
+              // reduced set is computed. In other word, it avoid
+              // a recomputation of the reduced set every time a
+              //  state if picked.
+              std::vector<bool>* v = nullptr;
+              if (v_prime->ok_reduced_.load())
+                v = &v_prime->reduced_;
+
+              auto it = sys_.succ(v_prime->st_, tid_, v);
+              if (! v_prime->ok_reduced_.load() &&
+                  v_prime->m_reduced_.try_lock())
+                {
+                  v_prime->reduced_ = it->reduced();
+                  v_prime->ok_reduced_ = true;
+                  v_prime->m_reduced_.unlock();
+                }
+              // ---------------------------------------------------
+
 
               // This thread is actively working on this state
               atomic_fetch_or(&(v_prime->wip_), w_id);

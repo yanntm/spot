@@ -109,7 +109,8 @@ namespace spot
                                    cubeset& cubeset,
                                    int dead_idx, unsigned tid,
                                    bool use_por,
-                                   porinfos* porinfos)
+                                   porinfos* porinfos,
+                                   std::vector<bool>* reduced)
   :  current_(0), cond_(cond), tid_(tid), use_por_(use_por)
   {
     successors_.reserve(10);
@@ -148,7 +149,7 @@ namespace spot
       }
 
     if (use_por_) // FIXME should be constexpr!
-      setup_por_iterator(s, porinfos, transitions_id);
+      setup_por_iterator(s, porinfos, transitions_id, reduced);
   }
 
   void cspins_iterator::recycle(cspins_state s,
@@ -161,7 +162,8 @@ namespace spot
                                 cubeset& cubeset, int dead_idx,
                                 unsigned tid,
                                 bool use_por,
-                                porinfos* porinfos)
+                                porinfos* porinfos,
+                                std::vector<bool>* reduced)
   {
     tid_ = tid;
     cond_ = cond;
@@ -208,7 +210,7 @@ namespace spot
       }
 
     if (use_por_) // FIXME should be constexpr!
-      setup_por_iterator(s, porinfos, transitions_id);
+      setup_por_iterator(s, porinfos, transitions_id, reduced);
   }
 
   cspins_iterator::~cspins_iterator()
@@ -267,13 +269,22 @@ namespace spot
     return !use_por_;
   }
 
+  std::vector<bool> cspins_iterator::reduced() const
+  {
+    return reduced_;
+  }
+
   void cspins_iterator::setup_por_iterator(cspins_state s, porinfos* porinfos,
-                                           std::vector<int>& transitions_id)
+                                           std::vector<int>& transitions_id,
+                                           std::vector<bool>* red)
   {
     SPOT_ASSERT(use_por_);
 
     // Compute the reduced set for s
-    reduced_ = porinfos->compute_reduced_set(transitions_id, s);
+    if (red == nullptr)
+      reduced_ = porinfos->compute_reduced_set(transitions_id, s);
+    else
+      reduced_ = *red;
 
     // Check wether the state is naturally enabled.
     if (std::find(std::cbegin(reduced_), std::cend(reduced_), false)
@@ -446,7 +457,8 @@ namespace spot
 
   cspins_iterator*
   kripkecube<cspins_state, cspins_iterator>::succ(const cspins_state s,
-                                                  unsigned tid)
+                                                  unsigned tid,
+                                                  std::vector<bool>* reduced)
   {
     if (SPOT_LIKELY(!recycle_[tid].empty()))
       {
@@ -455,14 +467,16 @@ namespace spot
         compute_condition(tmp->condition(), s, tid);
         tmp->recycle(s, d_, manager_[tid], inner_[tid],
                      tmp->condition(), compress_, selfloopize_,
-                     cubeset_, dead_idx_, tid, use_por_, porinfos_);
+                     cubeset_, dead_idx_, tid, use_por_, porinfos_,
+                     reduced);
         return tmp;
       }
     cube cond = cubeset_.alloc();
     compute_condition(cond, s, tid);
     return new cspins_iterator(s, d_, manager_[tid], inner_[tid],
                                cond, compress_, selfloopize_,
-                               cubeset_, dead_idx_, tid, use_por_, porinfos_);
+                               cubeset_, dead_idx_, tid, use_por_, porinfos_,
+                               reduced);
   }
 
   void
