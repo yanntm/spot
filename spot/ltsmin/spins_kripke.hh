@@ -138,6 +138,7 @@ namespace spot
       unsigned tid;
       bool use_por;
       porinfos* porinfos;
+      std::vector<bool>* reduced;
     };
 
     cspins_iterator(const cspins_iterator&) = delete;
@@ -153,6 +154,7 @@ namespace spot
     cube condition() const;
     void fireall();
     bool naturally_expanded() const;
+    std::vector<bool> reduced() const;
 
   private:
     void next_por();
@@ -171,7 +173,8 @@ namespace spot
                                cubeset& cubeset,
                                int dead_idx,
                                bool use_por,
-                               porinfos* porinfos);
+                               porinfos* porinfos,
+                               std::vector<bool>* reduced);
 
     std::vector<cspins_state> successors_;
     mutable unsigned int current_;
@@ -232,7 +235,8 @@ namespace spot
     ~kripkecube();
     cspins_state initial(unsigned tid);
     std::string to_string(const cspins_state s, unsigned tid = 0) const;
-    cspins_iterator* succ(const cspins_state s, unsigned tid);
+    cspins_iterator* succ(const cspins_state s, unsigned tid,
+                          std::vector<bool>* reduced = nullptr);
     void recycle(cspins_iterator* it, unsigned tid);
 
     /// \brief List the atomic propositions used by *this* kripke

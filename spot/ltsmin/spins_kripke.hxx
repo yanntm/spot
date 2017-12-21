@@ -101,7 +101,7 @@ namespace spot
     successors_.reserve(10);
     setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
                    p.selfloopize, p.cubeset, p.dead_idx, p.use_por,
-                   p.porinfos);
+                   p.porinfos, p.reduced);
   }
 
   void cspins_iterator::recycle(cspins_iterator_param& p)
@@ -113,7 +113,7 @@ namespace spot
     successors_.clear();
     setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
                    p.selfloopize, p.cubeset, p.dead_idx, p.use_por,
-                   p.porinfos);
+                   p.porinfos, p.reduced);
   }
 
   void cspins_iterator::setup_iterator(cspins_state s,
@@ -126,7 +126,8 @@ namespace spot
                                        cubeset& cubeset,
                                        int dead_idx,
                                        bool use_por,
-                                       porinfos* porinfos)
+                                       porinfos* porinfos,
+                                       std::vector<bool>* reduced)
   {
     inner.manager = &manager;
     inner.succ = &successors_;
@@ -170,8 +171,11 @@ namespace spot
 
     if (use_por) // FIXME should be constexpr!
       {
-         // Compute the reduced set for s
-        reduced_ = porinfos->compute_reduced_set(transitions_id, s);
+        // Compute the reduced set for s
+        if (reduced == nullptr)
+          reduced_ = porinfos->compute_reduced_set(transitions_id, s);
+        else
+          reduced_ = *reduced;
 
         // Check wether the state is naturally enabled.
         if (std::find(std::cbegin(reduced_), std::cend(reduced_), false)
@@ -188,7 +192,6 @@ namespace spot
                                     ((int)successors_.size()))]))
           return;
         next_por();
-
       }
   }
 
@@ -254,7 +257,6 @@ namespace spot
   {
     return !use_por_;
   }
-
 
   void cspins_iterator::next_por()
   {
@@ -409,13 +411,15 @@ namespace spot
 
   cspins_iterator*
   kripkecube<cspins_state, cspins_iterator>::succ(const cspins_state s,
-                                                  unsigned tid)
+                                                  unsigned tid,
+                                                  std::vector<bool>* reduced)
   {
     cspins_iterator::cspins_iterator_param p =
       {
         s, d_, manager_[tid], inner_[tid],
         nullptr, compress_, selfloopize_,
-        cubeset_, dead_idx_, tid, use_por_, porinfos_
+        cubeset_, dead_idx_, tid, use_por_, porinfos_,
+        reduced
       };
 
     if (SPOT_LIKELY(!recycle_[tid].empty()))
