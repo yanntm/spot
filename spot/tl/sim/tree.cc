@@ -66,6 +66,23 @@ bool is_final(spot::formula& f)
   return !ret;
 }
 
+
+std::string str_annulator(spot::op op)
+{
+  switch (op)
+  {
+    case spot::op::Or:
+    case spot::op::OrRat:
+      return "0";
+    case spot::op::And:
+    case spot::op::AndNLM:
+    case spot::op::AndRat:
+      return "1";
+    default:
+      SPOT_UNREACHABLE();
+  }
+}
+
 std::string str(spot::op op)
 {
   switch (op)
@@ -859,8 +876,18 @@ bool conds::check(str_map& ap_asso)
                 for (unsigned i = 1; i < vect.size(); i++)
                   split += op + vect[i];
               }
-              ap_asso.emplace(str + "(" + rec_name + ", " + ptrn
-                  + (rep.size() ? ", " + rep : "") + ")", split);
+              if (split.empty())
+                split = str_annulator(fn.kind());
+              for (auto n : {name, rec_name})
+              {
+                std::string lookup = str + "(" + n + ", " + ptrn
+                  + (rep.size() ? ", " + rep : "") + ")";
+                auto search2 = ap_asso.find(lookup);
+                if (search2 != ap_asso.end())
+                  search2->second = split;
+                else
+                  ap_asso.emplace(lookup, split);
+              }
             };
             /*
             for (auto p : split_)
@@ -888,9 +915,46 @@ bool conds::check(str_map& ap_asso)
           break;
         }
       case spot::op::Implies:
-        // FIXME do the Thing. The thing where you do things (equiv)
-        break;
+        {
+          spot::tl_simplifier tl_sim;
+          spot::formula f1;
+          spot::formula f2;
+          auto search = ap_asso.find(str_psl(form[0]));
+          if (search == ap_asso.end())
+            SPOT_UNREACHABLE();
+          f1 = spot::parse_formula(search->second);
+          search = ap_asso.find(str_psl(form[1]));
+          if (search == ap_asso.end())
+            SPOT_UNREACHABLE();
+          f2 = spot::parse_formula(search->second);
+          //std::cout << f1 << "->" << f2 << '\n';
+          if (!tl_sim.implication(f1, f2))
+            return false;
+          //std::cout << "yes\n";
+          break;
+        }
+      case spot::op::Equiv:
+        {
+          // equivalence = double implication + FIXME boolean size
+          spot::tl_simplifier tl_sim;
+          spot::formula f1;
+          spot::formula f2;
+          auto search = ap_asso.find(str_psl(form[0]));
+          if (search == ap_asso.end())
+            SPOT_UNREACHABLE();
+          f1 = spot::parse_formula(search->second);
+          search = ap_asso.find(str_psl(form[1]));
+          if (search == ap_asso.end())
+            SPOT_UNREACHABLE();
+          f2 = spot::parse_formula(search->second);
+          //std::cout << f1 << "<->" << f2 << '\n';
+          if (!tl_sim.implication(f1, f2) || !tl_sim.implication(f2, f1))
+            return false;
+          //std::cout << "yes\n";
+          break;
+        }
       default:
+        // everything should have its solution
         SPOT_UNREACHABLE();
     }
   }

@@ -229,6 +229,7 @@ AC_CONFIG_FILES([
   spot/taalgos/Makefile
   spot/ta/Makefile
   spot/tl/Makefile
+  spot/tl/sim/Makefile
   spot/twaalgos/gtec/Makefile
   spot/twaalgos/Makefile
   spot/twa/Makefile

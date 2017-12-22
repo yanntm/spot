@@ -30,7 +30,7 @@
 #include <spot/tl/parse.hh>
 #include <spot/tl/print.hh>
 #include <spot/tl/formula.hh>
-#include <spot/twa/bdddict.hh>
+#include <spot/tl/simplify.hh>
 #include <memory>
 #include <map>
 #include <set>

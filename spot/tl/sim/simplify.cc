@@ -62,7 +62,10 @@ std::vector<std::string> input_divide(std::string filename)
       if (str[size - 1] == '\\')
         save = str.substr(0, size - 1);
       else if (size > 2 && str[0] == '/' && str[1] == '/')
+      {
+        save = "";
         continue;
+      }
       else
       {
         vect.push_back(str);
@@ -111,7 +114,7 @@ bool simp(sim_tree& t, spot::formula f, spot::formula& res,
     {
       b = true;
       spot::formula rec;
-      if (simp(t, res, rec))
+      if (!pos && simp(t, res, rec))
       {
         if (pos)
           pos->push_back(str_psl(f));
@@ -174,12 +177,17 @@ bool has(spot::formula& f, spot::formula& pattern, str_vect& pos,
   else
     t.insert(sim_line("", ptrn, str_psl(pattern)), ap_asso);
   t.to_dot("subtree.dot");
-  spot::formula ref;
   bool res = false;
+  str_map all;
   for (unsigned i = 0; i < f.size(); i++)
-    res |= simp(t, f[i], ref, &pos, &neg, &ap_asso);
+  {
+    spot::formula ref;
+    str_map map = ap_asso;
+    res |= simp(t, f[i], ref, &pos, &neg, &map);
+    all.insert(map.begin(), map.end());
+  }
   if (res)
-    map.insert(ap_asso.begin(), ap_asso.end());
+    map.insert(all.begin(), all.end());
   if (!nary_name.empty())
   {
     // f0 because first insertion on a has map is the name
