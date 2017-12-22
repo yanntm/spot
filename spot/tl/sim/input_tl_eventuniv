@@ -1,0 +1,9 @@
+F(args | ...) = F(splitnot(args, Xu) | split(args, Xu, u)) IF @(args, Xu)
+G(args & ...) = G(splitnot(args, Xe) & split(args, Xe, e)) IF @(args, Xe)
+G(args & ...) = G(splitnot(args, F(args2 & ...)) & F(splitnot(args2, Xe)) \
+    & split(args2, Xe, e)) \
+    IF @(args, F(args2 & ...)) and @(args2, Xe)
+F(args | ...) = F(splitnot(args, G(args2 | ...)) | G(splitnot(args2, Xu)) \
+    | split(args2, Xu, u)) \
+    IF @(args, G(args2 | ...)) and @(args2, Xu)
+G(args | ...) = G(splitnot(args, q)) | split(args, q)  IF @(args, q)

@@ -1,0 +1,14 @@
+XFGf = FGf
+XGFf = GFf
+FXf = XFf
+F(f U g) = Fg
+F(f M g) = F(f & g)
+FG(f & Xg) = FG(f & g)
+FG(f & Gg) = FG(f & g)
+GXf = XGf
+G(f R g) = Gg
+G(f W g) = G(f | g)
+GF(f | Xg) = GF(f | g)
+GF(f | Fg) = GF(f | g)
+// last one is stronk
+G(args | ...) = G(splitnot(args, GFf)) | GF(split(args, GFf, f)) IF @(args, GFf)

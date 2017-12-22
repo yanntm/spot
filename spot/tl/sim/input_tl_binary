@@ -1,0 +1,25 @@
+1 U f = Ff
+f M 1 = Ff
+(Xf) U (Xg) = X(f U g)
+(Xf) M (Xg) = X(f M g)
+(Xf) U b = b | X(b M f)
+(Xf) M b = b & X(b U f)
+f U (Gf) = Gf
+f M (Ff) = Ff
+f U (g | Gf) = f W g
+f M (g & Ff) = f M g
+f U (g & f) = g M f
+f M (g | f) = g U f
+f W 0 = Gf
+0 R f = Gf
+(Xf) W (Xg) = X(f W g)
+(Xf) R (Xg) = X(f R g)
+(Xf) W b = b | X(f R b)
+(Xf) R b = b & X(f W b)
+f W (Gf) = Gf
+f R (Ff) = Ff
+f W (g | Gf) = f W g
+f R (g & Ff) = F M g
+f W (g & f) = g R f
+f R (g | f) = g W f
+
