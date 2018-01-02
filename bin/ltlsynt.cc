@@ -53,7 +53,8 @@ enum
   OPT_OUTPUT,
   OPT_PRINT,
   OPT_PRINT_AIGER,
-  OPT_REAL
+  OPT_REAL,
+  OPT_VERBOSE
 };
 
 static const argp_option options[] =
@@ -80,6 +81,8 @@ static const argp_option options[] =
       "realizability only, do not compute a winning strategy", 0},
     { "aiger", OPT_PRINT_AIGER, nullptr, 0,
       "prints the winning strategy as an AIGER circuit", 0},
+    { "verbose", OPT_VERBOSE, nullptr, 0,
+      "verbose mode", -1 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },
     { nullptr, 0, nullptr, 0, nullptr, 0 },
@@ -129,6 +132,7 @@ static solver const solver_types[] =
 ARGMATCH_VERIFY(solver_args, solver_types);
 
 static solver opt_solver = REC;
+static bool verbose = false;
 
 namespace
 {
@@ -276,7 +280,6 @@ namespace
     return aut;
   }
 
-
   class ltl_processor final : public job_processor
   {
   private:
@@ -300,6 +303,8 @@ namespace
       timer.start();
 
       auto aut = trans_.run(&f);
+      if (verbose)
+        std::cerr << "translating formula done" << std::endl;
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
       for (unsigned i = 0; i < input_aps_.size(); ++i)
@@ -318,10 +323,17 @@ namespace
           unsigned v = aut->register_ap(spot::formula::ap(lowercase.str()));
           all_outputs &= bdd_ithvar(v);
         }
+
       auto split = split_automaton(aut, all_inputs);
+      if (verbose)
+        std::cerr << "split inputs and outputs done" << std::endl;
       auto dpa = to_dpa(split);
+      if (verbose)
+        std::cerr << "determinization done" << std::endl;
       auto owner = make_alternating_owner(dpa);
       auto pg = spot::parity_game(dpa, owner);
+      if (verbose)
+        std::cerr << "parity game built" << std::endl;
       timer.stop();
 
       if (opt_print_pg)
@@ -424,6 +436,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_PRINT_AIGER:
       opt_print_aiger = true;
+      break;
+    case OPT_VERBOSE:
+      verbose = true;
       break;
     }
   return 0;
