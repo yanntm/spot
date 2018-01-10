@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C)  2015, 2016, 2017 Laboratoire de Recherche et
+// Copyright (C)  2015, 2016, 2017, 2018 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 #include <iterator>
 #include <iostream>
 #include <algorithm>
@@ -96,5 +97,8 @@ namespace spot
     std::vector<std::vector<bool>> m_dep_tr;
     std::vector<std::vector<bool>> non_mbc_tr;
     bool spin_ = false;
+
+    std::unordered_map<unsigned, std::vector<int>> gnes_cache_;
+    std::unordered_map<unsigned, std::vector<int>> gnes_cache_e_;
   };
 }
