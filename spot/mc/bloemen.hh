@@ -447,8 +447,8 @@ namespace spot
 
       State init = sys_.initial(tid_);
       auto pair = uf_.make_claim(init);
-      todo_.push_back(pair.second);
-      Rp_.push_back(pair.second);
+      todo_.emplace_back(pair.second);
+      Rp_.emplace_back(pair.second);
       ++states_;
 
       while (!todo_.empty())
@@ -475,7 +475,7 @@ namespace spot
                 v = &v_prime->reduced_;
 
               auto it = sys_.succ(v_prime->st_, tid_, v);
-              if (! v_prime->ok_reduced_.load() &&
+              if (!v_prime->ok_reduced_.load() &&
                   v_prime->m_reduced_.try_lock())
                 {
                   v_prime->reduced_ = it->reduced();
@@ -503,8 +503,8 @@ namespace spot
                   ++transitions_;
                   if (w.first == uf::claim_status::CLAIM_NEW)
                     {
-                      todo_.push_back(w.second);
-                      Rp_.push_back(w.second);
+                      todo_.emplace_back(w.second);
+                      Rp_.emplace_back(w.second);
                       ++states_;
                       // This thread is no longer actively working on this state
                       atomic_fetch_and(&(v_prime->wip_), ~w_id);
@@ -534,7 +534,7 @@ namespace spot
               uf_.remove_from_list(v_prime);
               // This thread is no longer actively working on this state
               // FIXME: This is maybe useless for POR, since v_prime is now DONE
-              atomic_fetch_and(&(v_prime->wip_), ~w_id);
+              // atomic_fetch_and(&(v_prime->wip_), ~w_id);
               sys_.recycle(it, tid_);
             }
 
