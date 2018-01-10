@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 #include <iterator>
 #include <iostream>
 #include <algorithm>
@@ -96,5 +97,8 @@ namespace spot
     std::vector<std::vector<bool>> m_dep_tr;
     std::vector<std::vector<bool>> non_mbc_tr;
     bool spin_ = false;
+
+    std::unordered_map<unsigned, std::vector<int>> gnes_cache_;
+    std::unordered_map<unsigned, std::vector<int>> gnes_cache_e_;
   };
 }

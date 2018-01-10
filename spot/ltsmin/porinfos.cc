@@ -147,114 +147,134 @@ namespace spot
           non_mbc_tr[t1][t2] = non_maybecoenabled(t1, t2);
           non_mbc_tr[t2][t1] = non_mbc_tr[t1][t2];
         }
+
+
+    // Speedup Stubborn  set computation
+    std::vector<int> tmp;
+    for (unsigned i = 0; i < guards_; ++i)
+      {
+        unsigned guard_to_look = i;
+        for (unsigned j = 0; j < transitions_; ++j)
+          {
+            if (m_nes[guard_to_look][j])
+              tmp.emplace_back(j);
+          }
+        gnes_cache_.insert({guard_to_look, tmp});
+        tmp.clear();
+      }
+
+
+    for (unsigned beta = 0; beta < transitions_; ++beta)
+      {
+        for (unsigned i = 0; i < transitions_; ++i)
+          {
+            // Beta is already in t_s or transitions are independants ...
+            // ... so we avoid extra computation.
+            if (i == (unsigned) beta || !m_dep_tr[i][beta])
+              continue;
+
+            // The transition must be processed!
+            if (non_mbc_tr[beta][i])
+              {
+                tmp.emplace_back(i);
+              }
+          }
+        gnes_cache_e_.insert({beta, tmp});
+        tmp.clear();
+      }
   }
 
   std::vector<bool>
   porinfos::compute_reduced_set(const std::vector<int>& enabled,
                                 const int* for_spins_state)
   {
-    (void) for_spins_state;
+    // Compute the stubborn set algorithm as described by Elwin Pater
+    // in Partial Order Reduction for PINS [2011] (page 21)
+
+    // The result, bit = true means that the corresponding transition
+    // belongs to the reduced set
     std::vector<bool> res_(enabled.size());
 
-    if (enabled.empty())
+    if (SPOT_UNLIKELY(enabled.empty()))
       {
-        //std::cerr << "Warning, state without successors\n" << std::endl;
         stats_.cumul(0, enabled.size());
         return res_;
       }
 
-    // Compute the stubborn set algorithm as described by Elwin Pater
-    // in Partial Order Reduction for PINS [2011] (page 21)
-
     // Declare usefull variables
-    std::vector<int> t_work;
-    std::vector<int> t_s;
+    thread_local std::vector<int> t_work;
+    thread_local std::unordered_set<int> cache;
+    t_work.clear();
+    cache.clear();
 
-    std::unordered_set<int> cache;
+    // Store enable transitions in a map. Every time such a transition is
+    // discovered we remove it from the map. When the map is empty we know
+    // that the state is naturally expanded.
+    thread_local std::unordered_map<int, unsigned> enabled_to_remove;
+    thread_local std::unordered_map<int, unsigned> enabled_cache;
+    enabled_to_remove.clear();
+    unsigned enabled_size = enabled.size();
+    for (unsigned i = 1; i < enabled_size; ++i) // skip first transition
+      enabled_to_remove.insert({enabled[i], i});
 
     // Randomly take one enabled transition
     // FIXME here we choose the first enabled transition (as described
     // in the previous report) but better heuristics may exist
     {
       int alpha = enabled[0];
-      t_work.push_back(alpha);
+      res_[0] = true;
+      t_work.emplace_back(alpha);
+      cache.insert(alpha);
     }
 
     // Iteratively build the stubborn set
-    while (!t_work.empty())
+    unsigned idx = 0;
+    std::vector<int>* to_add;
+    while (idx < t_work.size() && !enabled_to_remove.empty())
       {
-        int beta = t_work.back();
-        t_work.pop_back();
-        t_s.push_back(beta);
-        cache.insert(beta);
+        int beta = t_work[idx++];
 
-        // Computes guards used by beta
-        unsigned beta_guards_size = m_guards[beta].size();
-
+        // Transition beta is enabled
         if (std::find(enabled.begin(), enabled.end(), beta) != enabled.end())
           {
-            // Beta is an enabled transition.
-            // Iterate over all transitions
-            for (unsigned i = 0; i < transitions_; ++i)
-              {
-                // Beta is already in t_s or transitions are independants ...
-                // ... so we avoid extra computation.
-                if (i == (unsigned) beta || !m_dep_tr[i][beta])
-                  continue;
-
-                // The transition must be processed!
-                if (non_mbc_tr[beta][i] && cache.find(i) == cache.end())
-                  {
-                    t_work.push_back(i);
-                    cache.insert(i);
-                  }
-              }
+            to_add = &gnes_cache_e_[beta];
           }
         else
           {
-            // Beta is not an enabled transition.
-            // Compute GNES(beta, for_spins_state)
-            bool goon = true;
-            for (unsigned i = 0; i < beta_guards_size && goon; ++i)
+            // Beta is not an enabled, build GNES(beta, for_spins_state)
+
+            // Computes guards used by beta
+            unsigned beta_guards_size = m_guards[beta].size();
+
+            // Pick only one guard that is not enabled
+            for (unsigned i = 0; i < beta_guards_size; ++i)
               {
-                if (!d_->get_guard(nullptr, m_guards[beta][i],
-                                  for_spins_state))
+                unsigned beta_guard = m_guards[beta][i];
+                if (!d_->get_guard(nullptr, beta_guard, for_spins_state))
                   {
-                    unsigned guard_to_look = m_guards[beta][i];
-                    for (unsigned j = 0; j < transitions_ && goon; ++j)
-                      {
-                        if (cache.find(j) == cache.end() &&
-                            m_nes[guard_to_look][j])
-                        {
-                          t_work.push_back(j);
-                          cache.insert(j);
-                          goon = false;
-                        }
-                      }
+                    to_add = &gnes_cache_[beta_guard];
+                    break;
                   }
               }
           }
-      }
 
-    // Compute the intersection between T_S and enabled
-    unsigned hidden = 0;
-    for (unsigned i = 0; i < enabled.size(); ++i)
-      {
-        const auto idx = std::find(t_s.begin(), t_s.end(), enabled[i]);
-        if (idx != t_s.end())
-          res_[i] = true;
-        else
-          ++hidden;
-      }
+        // Process all transitions to add to t_work
+        for (const int tr: *to_add)
+          {
+            const auto& it = cache.insert(tr);
+            if (it.second)
+              {
+                t_work.emplace_back(tr);
 
-    //stats_.cumul(hidden, enabled.size());
-
-    // Here we activate a SPIN-like persistent set, i.e.
-    // wheter a persistent set with one transition or all transitions
-    if (spin_ && (enabled.size() - hidden != 1))
-      {
-        for (unsigned i = 0; i < res_.size(); ++i)
-          res_[i] = true;
+                // Speedup computation
+                const auto& iterator = enabled_to_remove.find(tr);
+                if (iterator != enabled_to_remove.end())
+                  {
+                    res_[iterator->second] = true;
+                    enabled_to_remove.erase(iterator);
+                  }
+              }
+          }
       }
     return res_;
   }
