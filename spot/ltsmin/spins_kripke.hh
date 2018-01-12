@@ -158,7 +158,7 @@ namespace spot
     cube condition() const;
     void fireall();
     bool naturally_expanded() const;
-    const std::vector<bool> reduced() const;
+    const std::vector<bool>& reduced() const;
 
   private:
     void next_por();
