@@ -258,6 +258,11 @@ namespace spot
     return !use_por_;
   }
 
+  const std::vector<bool> cspins_iterator::reduced() const
+  {
+    return reduced_;
+  }
+
   void cspins_iterator::next_por()
   {
     SPOT_ASSERT(use_por_);
