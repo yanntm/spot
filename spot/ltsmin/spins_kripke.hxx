@@ -269,7 +269,7 @@ namespace spot
     return !use_por_;
   }
 
-  std::vector<bool> cspins_iterator::reduced() const
+  const std::vector<bool> cspins_iterator::reduced() const
   {
     return reduced_;
   }
@@ -287,8 +287,8 @@ namespace spot
       reduced_ = *red;
 
     // Check wether the state is naturally enabled.
-    if (std::find(std::cbegin(reduced_), std::cend(reduced_), false)
-        == std::cend(reduced_))
+    if (std::find(std::begin(reduced_), std::end(reduced_), false)
+        == std::end(reduced_))
       {
         use_por_ = false;
         return;
