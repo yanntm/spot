@@ -159,7 +159,7 @@ namespace spot
   template<typename kripke_ptr, typename State,
            typename Iterator, typename Hash, typename Equal>
   static std::pair<std::vector<bloemen_stats>, spot::timer_map>
-  bloemen(kripke_ptr sys)
+  bloemen(kripke_ptr sys, const std::string filename)
   {
     spot::timer_map tm;
     using algo_name = spot::swarmed_bloemen<State, Iterator, Hash, Equal>;
@@ -224,6 +224,12 @@ namespace spot
     std::vector<bloemen_stats> stats;
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       stats.push_back(swarmed[i]->stats());
+
+    if (filename.compare("") != 0 && nbth == 1)
+      {
+        swarmed[0]->to_hoa(filename);
+      }
+
 
     for (unsigned i = 0; i < nbth; ++i)
       delete swarmed[i];

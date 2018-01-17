@@ -648,7 +648,8 @@ static int checked_main()
                                  spot::cspins_state,
                                  spot::cspins_iterator,
                                  spot::cspins_state_hash,
-                                 spot::cspins_state_equal>(modelcube);
+                                 spot::cspins_state_equal>
+          (modelcube, std::string(mc_options.model) + ".hoa");
         tm.stop("bloemen");
         memused = spot::memusage() - memused;
 

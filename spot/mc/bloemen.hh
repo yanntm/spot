@@ -446,6 +446,8 @@ namespace spot
       todo_.emplace_back(pair.second);
       Rp_.emplace_back(pair.second);
       ++states_;
+      all_states_.insert(pair.second);
+
 
       while (!todo_.empty())
         {
@@ -497,11 +499,18 @@ namespace spot
                   auto w = uf_.make_claim(it->state());
                   it->next();
                   ++transitions_;
+
+                  {
+                    all_trans_[v_prime].emplace_back(w.second);
+                  }
+
                   if (w.first == uf::claim_status::CLAIM_NEW)
                     {
                       todo_.emplace_back(w.second);
                       Rp_.emplace_back(w.second);
                       ++states_;
+                      all_states_.insert(w.second);
+
                       // This thread is no longer actively working on this state
                       atomic_fetch_and(&(v_prime->wip_), ~w_id);
                       goto bloemen_recursive_start;
@@ -551,6 +560,41 @@ namespace spot
       return {uf_.inserted(), states_, transitions_, sccs_, walltime()};
     }
 
+
+    void to_hoa(const std::string filename)
+    {
+      std::ofstream out(filename);
+      std::unordered_map<uf_element*, unsigned> binder;
+      unsigned id = 0;
+      for (const auto& i: all_states_)
+        {
+          binder.insert({i, id});
+          ++id;
+        }
+
+      out << "HOA: v1.1" << std::endl;
+      out << "States: "<< all_states_.size() << std::endl;
+      out << "Start: "
+                << binder[uf_.make_claim(sys_.initial(tid_)).second]
+                << std::endl;
+      out << "AP: 1 \"e\"" << std::endl;
+      out << "Acceptance: 0 t" << std::endl;
+      out << "--BODY--" << std::endl;
+
+      for (const auto& i: all_states_)
+        {
+          std::string s = i->expanded_.load() ? "[0]" : "[!0]";
+          out << "State: " << s << " " <<  binder[i] << std::endl;
+
+          std::sort(all_trans_[i].begin(), all_trans_[i].end());
+          auto last = std::unique(all_trans_[i].begin(), all_trans_[i].end());
+          all_trans_[i].erase(last, all_trans_[i].end());
+          for (auto j : all_trans_[i])
+            out << binder[j] << std::endl;
+        }
+      out << "--END--" << std::endl;
+    }
+
   private:
     kripkecube<State, SuccIterator>& sys_;   ///< \brief The system to check
     std::vector<uf_element*> todo_;          ///< \brief The "recursive" stack
@@ -563,5 +607,9 @@ namespace spot
     unsigned transitions_ = 0;        ///< \brief Number of transitions visited
     unsigned sccs_ = 0;               ///< \brief Number of SCC visited
     spot::timer_map tm_;              ///< \brief Time execution
+
+
+    std::unordered_set<uf_element*> all_states_;
+    std::unordered_map<uf_element*, std::vector<uf_element*>> all_trans_;
   };
 }
