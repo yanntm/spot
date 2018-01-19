@@ -236,12 +236,12 @@ namespace spot
 
   void cspins_iterator::fireall()
   {
-    fireall_ = true;
-
     // Fireall has been done after all successors have
     // been visited
-    if (done() && use_por_)
+    if (done() && use_por_ && !fireall_)
       {
+        first_pass_ = false;
+        fireall_ = true;
         current_ = 0;           // reset iterator
 
         // Check if current_ is referencing an (enabled\reduced) transition
@@ -251,6 +251,9 @@ namespace spot
           return;
         next_por();
       }
+    else
+      fireall_ = true;
+
   }
 
   bool cspins_iterator::naturally_expanded() const
