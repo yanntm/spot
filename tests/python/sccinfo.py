@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2017-2018 Laboratoire de Recherche et Développement de
 # l'EPITA.
 #
 # This file is part of Spot, a model checking library.
@@ -27,6 +27,25 @@ try:
     exit(2)
 except RuntimeError as e:
     assert "initial state does not exist" in str(e)
+
+si = spot.scc_info(a, 0, None, None, spot.scc_info_options_STOP_ON_ACC)
+try:
+    si.is_useful_scc(0)
+    exit(2)
+except RuntimeError as e:
+    assert 'scc_info was run with option STOP_ON_ACC' in str(e)
+si = spot.scc_info(a, 0, None, None, spot.scc_info_options_NONE)
+try:
+    si.is_useful_state(0)
+    exit(2)
+except RuntimeError as e:
+    assert 'scc_info was not run with option TRACK_SUCCS' in str(e)
+try:
+    si.states_of(0)
+    exit(2)
+except RuntimeError as e:
+    assert 'scc_info was not run with option TRACK_STATES' in str(e)
+
 
 si = spot.scc_info(a)
 n = si.scc_count()

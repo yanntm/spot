@@ -25,7 +25,7 @@
 import spot
 
 try:
-    spot.iar(spot.translate('GFa & GFb & GFc'))
+    spot.iar(spot.iar(spot.translate('GFa & GFb & GFc')))
 except RuntimeError as e:
     assert 'iar() expects Rabin-like or Streett-like input' in str(e)
 
@@ -35,7 +35,17 @@ try:
     spot.tgba_determinize(alt)
 except RuntimeError as e:
     assert 'tgba_determinize() does not support alternation' in str(e)
+try:
+    spot.degeneralize_tba(alt)
+except RuntimeError as e:
+    assert 'degeneralize() only works with generalized Büchi acceptance' \
+            in str(e)
 
+alt.set_generalized_buchi(2)
+try:
+    spot.degeneralize_tba(alt)
+except RuntimeError as e:
+    assert 'degeneralize() does not support alternation' in str(e)
 
 aut = spot.translate('a U b U c')
 aps = aut.ap()
