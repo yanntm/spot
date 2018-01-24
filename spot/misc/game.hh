@@ -113,7 +113,7 @@ public:
         author = "Wieslaw Zielonka",
       }
       \endverbatim */
-  std::pair<region_t, strategy_t> solve() const;
+  void solve(region_t (&w)[2], strategy_t (&s)[2]) const;
 
   /// Whether player 1 has a winning strategy from the initial state.
   /// Implements Calude et al.'s quasipolynomial time algorithm.
@@ -148,12 +148,12 @@ private:
   // if attr_max is true, states that can force a visit through an edge with
   // max parity are also counted in.
   strategy_t attractor(const region_t& subgame, region_t& set,
-                       unsigned max_parity, bool odd,
+                       unsigned max_parity, int odd,
                        bool attr_max = false) const;
 
-  // Compute the winning strategy and winning region for player 1.
-  std::pair<region_t, strategy_t>
-  solve_rec(region_t& subgame, unsigned max_parity) const;
+  // Compute the winning strategy and winning region for both players.
+  void solve_rec(region_t& subgame, unsigned max_parity,
+                 region_t (&w)[2], strategy_t (&s)[2]) const;
 };
 
 
