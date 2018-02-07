@@ -45,7 +45,8 @@ static void help()
     "\t-b\treduce result using bisimulation\n"
     "\t--scc_opt\tUse an SCC-based Safra\n"
     "\t--bisim_opt\tUse Simulation info to reduce macro-states size\n"
-    "\t--stutter\tStutter-invarience optimisation\n";
+    "\t--stutter\tStutter-invarience optimisation\n"
+    "\t--incr\tIncremental determinization\n";
   exit(1);
 }
 
@@ -61,6 +62,7 @@ int main(int argc, char* argv[])
   bool pretty_print = false;
   bool complete = false;
   bool use_stutter = false;
+  bool use_incr = false;
 
   char* input = nullptr;
   if (argc <= 2)
@@ -98,6 +100,8 @@ int main(int argc, char* argv[])
         use_bisim = true;
       else if (!strncmp(argv[i], "--stutter", 9))
         use_stutter = true;
+      else if (!strncmp(argv[i], "--incr", 6))
+        use_incr = true;
       else
         {
           std::cerr << "Warning: " << argv[i] << " not used\n";
@@ -118,16 +122,24 @@ int main(int argc, char* argv[])
       spot::translator trans(dict);
       trans.set_pref(spot::postprocessor::Deterministic);
       auto tmp = trans.run(pf.f);
-      res = spot::tgba_determinize(tmp, pretty_print, scc_opt,
-                                   use_bisim, use_stutter);
+      if (use_incr)
+        res = tgba_determinize_incr(tmp, pretty_print, scc_opt,
+                                    use_bisim, use_stutter);
+      else
+        res = tgba_determinize(tmp, pretty_print, scc_opt,
+                               use_bisim,  use_stutter);
     }
   else if (in_hoa)
     {
       auto aut = spot::parse_aut(input, dict);
       if (aut->format_errors(std::cerr))
         return 2;
-      res = tgba_determinize(aut->aut, pretty_print, scc_opt,
-                             use_bisim, use_stutter);
+      if (use_incr)
+        res = tgba_determinize_incr(aut->aut, pretty_print, scc_opt,
+                                    use_bisim, use_stutter);
+      else
+        res = tgba_determinize(aut->aut, pretty_print, scc_opt,
+                               use_bisim, use_stutter);
     }
   if (sim)
     res = simulation(res);

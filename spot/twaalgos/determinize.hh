@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016 Laboratoire de Recherche et Développement
+// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -20,9 +20,132 @@
 #pragma once
 
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/sccinfo.hh>
+#include <spot/misc/bddlt.hh>
 
 namespace spot
 {
+  namespace
+  {
+    // forward declarations
+    struct safra_build;
+    class compute_succs;
+  }
+
+  class SPOT_API safra_state final
+  {
+#ifndef SWIG
+  public:
+    // a helper method to check invariants
+    void check() const;
+
+    using state_t = unsigned;
+    using safra_node_t = std::pair<state_t, std::vector<int>>;
+
+    bool operator<(const safra_state&) const;
+    bool operator==(const safra_state&) const;
+    size_t hash() const;
+
+    // default constructor
+    safra_state();
+    safra_state(state_t state_number, bool acceptance_scc = false);
+    safra_state(const safra_build& s, const compute_succs& cs, unsigned& color);
+    // Compute successor for transition ap
+    safra_state
+    compute_succ(const compute_succs& cs, const bdd& ap, unsigned& color) const;
+    void
+    merge_redundant_states(const std::vector<std::vector<char>>& implies);
+    unsigned
+    finalize_construction(const std::vector<int>& buildbraces,
+                          const compute_succs& cs);
+
+    bool contains(state_t s) const;
+
+    // each brace points to its parent.
+    // braces_[i] is the parent of i
+    // Note that braces_[i] < i, -1 stands for "no parent" (top-level)
+    std::vector<int> braces_;
+    std::vector<std::pair<state_t, int>> nodes_;
+#endif
+  };
+
+  struct hash_safra
+  {
+    size_t
+    operator()(const safra_state& s) const noexcept
+    {
+      return s.hash();
+    }
+  };
+
+  class SPOT_API safra_support
+  {
+    std::vector<bdd> state_supports;
+    std::unordered_map<bdd, std::vector<bdd>, bdd_hash> cache;
+  public:
+    explicit safra_support(const const_twa_graph_ptr& a,
+                           bool use_stutter,
+                           const scc_info& scc);
+
+    const std::vector<bdd>& get(const safra_state& s);
+  };
+
+  using safra_map = std::unordered_map<safra_state, unsigned, hash_safra>;
+
+  class SPOT_API determinizer
+  {
+  private:
+    explicit determinizer(const const_twa_graph_ptr& aut,
+                          const std::vector<bdd>& implications,
+                          bool pretty_print,
+                          bool use_scc,
+                          bool use_simulation,
+                          bool use_stutter);
+  public:
+    // factory method
+    static determinizer build(const const_twa_graph_ptr& aut,
+                              bool pretty_print,
+                              bool use_scc,
+                              bool use_simulation,
+                              bool use_stutter);
+
+    // activate an unactive state
+    void activate(unsigned);
+    void deactivate_all();
+
+    // run the determinization
+    void run();
+    // retrieve the current deterministic automaton
+    twa_graph_ptr get() const;
+    // retrieve the base automaton
+    const_twa_graph_ptr aut() const { return aut_; }
+
+    // retrieve a safra_state from a state number in res_
+    // throw an exception if no corresponding state is found
+    const safra_state& get_safra(unsigned) const;
+
+  private:
+    const const_twa_graph_ptr aut_;
+    twa_graph_ptr res_;
+    const scc_info scc_;
+    std::vector<std::vector<char>> implies_;
+    safra_support safra2letters_;
+
+    std::vector<char> toadd_;
+    std::vector<char> active_;
+    std::set<unsigned> nondet_states_;
+    safra_map seen_;
+    std::vector<safra_state> num2safra_;
+    unsigned sets_;
+
+    bool pretty_print_;
+    bool use_scc_;
+    bool use_simulation_;
+    bool use_stutter_;
+
+    void reset_res();
+  };
+
   /// \ingroup twa_algorithms
   /// \brief Determinize a TGBA
   ///
@@ -78,4 +201,11 @@ namespace spot
                    bool use_scc = true,
                    bool use_simulation = true,
                    bool use_stutter = true);
+
+  SPOT_API twa_graph_ptr
+  tgba_determinize_incr(const const_twa_graph_ptr& aut,
+                        bool pretty_print = false,
+                        bool use_scc = true,
+                        bool use_simulation = true,
+                        bool use_stutter = true);
 }
