@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015, 2016 Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -65,6 +65,8 @@ State: 3
 EOF
 
 run 0 ../safra --hoa double_a.hoa -H > out.hoa
+diff out.hoa out.exp
+run 0 ../safra --incr --hoa double_a.hoa -H > out.hoa
 diff out.hoa out.exp
 
 cat >double_b.hoa << EOF
@@ -181,4 +183,9 @@ ltlcross -F formulae \
     "../safra --bisim_opt -f %f -H > %O" \
     "../safra --stutter -f %f -H > %O" \
     "../safra --scc_opt --bisim_opt --stutter -f %f -H > %O" \
+    "../safra --incr -f %f -H > %O" \
+    "../safra --incr --scc_opt -f %f -H > %O" \
+    "../safra --incr --bisim_opt -f %f -H > %O" \
+    "../safra --incr --stutter -f %f -H > %O" \
+    "../safra --incr --scc_opt --bisim_opt --stutter -f %f -H > %O" \
     "ltl2tgba"
