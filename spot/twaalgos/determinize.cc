@@ -26,7 +26,6 @@
 #include <set>
 #include <map>
 
-#include <spot/misc/bddlt.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/degen.hh>
@@ -37,90 +36,50 @@
 
 namespace spot
 {
-  namespace
+  void
+  safra_state::check() const
   {
-    // forward declaration
-    struct safra_build;
-    class compute_succs;
+    // do not refer to braces that do not exist
+    for (const auto& p : nodes_)
+      if (p.second >= 0)
+        if (((unsigned)p.second) >= braces_.size())
+          assert(false);
+
+    // braces_ describes the parenthood relation, -1 meaning toplevel
+    // so braces_[b] < b always, and -1 is the only negative number allowed
+    for (int b : braces_)
+      {
+        if (b < 0 && b != -1)
+          assert(false);
+        if (b >= 0 && braces_[b] > b)
+          assert(false);
+      }
+
+    // no unused braces
+    std::set<int> used_braces;
+    for (const auto& n : nodes_)
+      {
+        int b = n.second;
+        while (b >= 0)
+          {
+            used_braces.insert(b);
+            b = braces_[b];
+          }
+      }
+    assert(used_braces.size() == braces_.size());
   }
 
-  class safra_state final
+  bool
+  safra_state::contains(safra_state::state_t s) const
   {
-  public:
-    // a helper method to check invariants
-    void
-    check() const
-    {
-      // do not refer to braces that do not exist
-      for (const auto& p : nodes_)
-        if (p.second >= 0)
-          if (((unsigned)p.second) >= braces_.size())
-            assert(false);
-
-      // braces_ describes the parenthood relation, -1 meaning toplevel
-      // so braces_[b] < b always, and -1 is the only negative number allowed
-      for (int b : braces_)
-        {
-          if (b < 0 && b != -1)
-            assert(false);
-          if (b >= 0 && braces_[b] > b)
-            assert(false);
-        }
-
-      // no unused braces
-      std::set<int> used_braces;
-      for (const auto& n : nodes_)
-        {
-          int b = n.second;
-          while (b >= 0)
-            {
-              used_braces.insert(b);
-              b = braces_[b];
-            }
-        }
-      assert(used_braces.size() == braces_.size());
-    }
-
-  public:
-    using state_t = unsigned;
-    using safra_node_t = std::pair<state_t, std::vector<int>>;
-
-    bool operator<(const safra_state&) const;
-    bool operator==(const safra_state&) const;
-    size_t hash() const;
-
-    // Print the number of states in each brace
-    // default constructor
-    safra_state();
-    safra_state(state_t state_number, bool acceptance_scc = false);
-    safra_state(const safra_build& s, const compute_succs& cs, unsigned& color);
-    // Compute successor for transition ap
-    safra_state
-    compute_succ(const compute_succs& cs, const bdd& ap, unsigned& color) const;
-    void
-    merge_redundant_states(const std::vector<std::vector<char>>& implies);
-    unsigned
-    finalize_construction(const std::vector<int>& buildbraces,
-                          const compute_succs& cs);
-
-    // each brace points to its parent.
-    // braces_[i] is the parent of i
-    // Note that braces_[i] < i, -1 stands for "no parent" (top-level)
-    std::vector<int> braces_;
-    std::vector<std::pair<state_t, int>> nodes_;
-  };
+    for (const auto& p : nodes_)
+      if (p.first == s)
+        return true;
+    return false;
+  }
 
   namespace
   {
-    struct hash_safra
-    {
-      size_t
-      operator()(const safra_state& s) const noexcept
-      {
-        return s.hash();
-      }
-    };
-
     template<class T>
     struct ref_wrap_equal
     {
@@ -132,7 +91,7 @@ namespace spot
       }
     };
 
-    using power_set = std::unordered_map<safra_state, unsigned, hash_safra>;
+    using power_set = safra_map;
 
     std::string
     nodes_to_string(const const_twa_graph_ptr& aut,
@@ -255,6 +214,7 @@ namespace spot
       const power_set& seen;
       const scc_info& scc;
       const std::vector<std::vector<char>>& implies;
+      const std::vector<char>& active;
       bool use_scc;
       bool use_simulation;
       bool use_stutter;
@@ -270,6 +230,7 @@ namespace spot
                     const power_set& seen,
                     const scc_info& scc,
                     const std::vector<std::vector<char>>& implies,
+                    const std::vector<char>& active,
                     bool use_scc,
                     bool use_simulation,
                     bool use_stutter)
@@ -279,6 +240,7 @@ namespace spot
       , seen(seen)
       , scc(scc)
       , implies(implies)
+      , active(active)
       , use_scc(use_scc)
       , use_simulation(use_simulation)
       , use_stutter(use_stutter)
@@ -554,27 +516,49 @@ namespace spot
         }
       return res;
     }
+  }
 
-    class safra_support
-    {
-      const std::vector<bdd>& state_supports;
-      std::unordered_map<bdd, std::vector<bdd>, bdd_hash> cache;
-
-    public:
-      safra_support(const std::vector<bdd>& s): state_supports(s) {}
-
-      const std::vector<bdd>&
-      get(const safra_state& s)
+  safra_support::safra_support(const const_twa_graph_ptr& a,
+                               bool use_stutter,
+                               const scc_info& scc)
+  : state_supports(a->num_states())
+  {
+    if (use_stutter && a->prop_stutter_invariant())
       {
-        bdd supp = bddtrue;
-        for (const auto& n : s.nodes_)
-          supp &= state_supports[n.first];
-        auto i = cache.emplace(supp, std::vector<bdd>());
-        if (i.second) // insertion took place
-          i.first->second = letters(supp);
-        return i.first->second;
+        // FIXME this could be improved
+        // supports of states should account for possible stuttering if we plan
+        // to use stuttering invariance
+        for (unsigned c = 0; c != scc.scc_count(); ++c)
+          {
+            bdd c_supp = scc.scc_ap_support(c);
+            for (const auto& su: scc.succ(c))
+              c_supp &= state_supports[scc.one_state_of(su)];
+            for (unsigned st: scc.states_of(c))
+              state_supports[st] = c_supp;
+          }
       }
-    };
+    else
+      {
+        for (unsigned i = 0; i != a->num_states(); ++i)
+          {
+            bdd res = bddtrue;
+            for (const auto& e : a->out(i))
+              res &= bdd_support(e.cond);
+            state_supports[i] = res;
+          }
+      }
+  }
+
+  const std::vector<bdd>&
+  safra_support::get(const safra_state& s)
+  {
+    bdd supp = bddtrue;
+    for (const auto& n : s.nodes_)
+      supp &= state_supports[n.first];
+    auto i = cache.emplace(supp, std::vector<bdd>());
+    if (i.second) // insertion took place
+      i.first->second = letters(supp);
+    return i.first->second;
   }
 
   std::vector<char> find_scc_paths(const scc_info& scc);
@@ -588,10 +572,15 @@ namespace spot
     ss.nodes_.clear();
     for (const auto& node: nodes_)
       {
+        // skip inactive nodes
+        if (!cs.active.empty() && cs.active[node.first] == 0)
+          continue;
+
         for (const auto& t: cs.aut->out(node.first))
           {
             if (!bdd_implies(ap, t.cond))
               continue;
+
             // Check if we are leaving the SCC, if so we delete all the
             // braces as no cycles can be found with that node
             if (cs.use_scc && cs.scc.scc_of(node.first) != cs.scc.scc_of(t.dst))
@@ -801,10 +790,11 @@ namespace spot
     return res;
   }
 
+  template<bool incremental>
   twa_graph_ptr
-  tgba_determinize(const const_twa_graph_ptr& a,
-                   bool pretty_print, bool use_scc,
-                   bool use_simulation, bool use_stutter)
+  tgba_determinize_aux(const const_twa_graph_ptr& a,
+                       bool pretty_print, bool use_scc,
+                       bool use_simulation, bool use_stutter)
   {
     if (!a->is_existential())
       throw std::runtime_error
@@ -814,34 +804,119 @@ namespace spot
 
     // Degeneralize
     const_twa_graph_ptr aut;
-    std::vector<bdd> implications;
     {
       twa_graph_ptr aut_tmp = spot::degeneralize_tba(a);
       if (pretty_print)
         aut_tmp->copy_state_names_from(a);
-      if (use_simulation)
-        {
-          aut_tmp = spot::scc_filter(aut_tmp);
-          auto aut2 = simulation(aut_tmp, &implications);
-          if (pretty_print)
-            aut2->copy_state_names_from(aut_tmp);
-          aut_tmp = aut2;
-        }
       aut = aut_tmp;
     }
-    scc_info_options scc_opt = scc_info_options::TRACK_SUCCS;
-    // We do need to track states in SCC for stutter invariance (see below how
-    // supports are computed in this case)
-    if (use_stutter && aut->prop_stutter_invariant())
-      scc_opt = scc_info_options::TRACK_SUCCS | scc_info_options::TRACK_STATES;
-    scc_info scc = scc_info(aut, scc_opt);
 
+    determinizer d =
+      determinizer::build(aut,
+                          pretty_print, use_scc, use_simulation, use_stutter);
+
+    if (incremental)
+      {
+        // test incremental build, even though it is not very useful here
+        d.deactivate_all();
+        unsigned n_states = d.aut()->num_states();
+        for (unsigned i = 0; i != n_states; ++i)
+          {
+            d.activate(i);
+            d.run();
+          }
+
+        d.get()->merge_edges();
+        d.get()->purge_unreachable_states();
+      }
+    else
+      {
+        d.run();
+      }
+
+    cleanup_parity_here(d.get());
+    return d.get();
+  }
+
+  twa_graph_ptr
+  tgba_determinize(const const_twa_graph_ptr& a,
+                   bool pretty_print, bool use_scc,
+                   bool use_simulation, bool use_stutter)
+  {
+    return tgba_determinize_aux<false>(a, pretty_print, use_scc,
+                                       use_simulation, use_stutter);
+  }
+
+  twa_graph_ptr
+  tgba_determinize_incr(const const_twa_graph_ptr& a,
+                        bool pretty_print, bool use_scc,
+                        bool use_simulation, bool use_stutter)
+  {
+    return tgba_determinize_aux<true>(a, pretty_print, use_scc,
+                                      use_simulation, use_stutter);
+  }
+
+  const safra_state&
+  determinizer::get_safra(unsigned s) const
+  {
+    return num2safra_.at(s);
+  }
+
+  determinizer
+  determinizer::build(const const_twa_graph_ptr& a,
+                      bool pretty_print,
+                      bool use_scc,
+                      bool use_simulation,
+                      bool use_stutter)
+  {
+    // the input automaton should be Büchi, to avoid the handling of the
+    // edges correspondence between a TGBA and its degeneralization.
+    if (!(a->acc().is_buchi() or a->acc().is_t()))
+      throw std::runtime_error("incremental determinization only handles \
+          Büchi automata");
+
+    const_twa_graph_ptr aut = a;
+    std::vector<bdd> implications;
+    if (use_simulation)
+      {
+        aut = spot::scc_filter(aut);
+        auto aut2 = simulation(aut, &implications);
+        if (pretty_print)
+          aut2->copy_state_names_from(aut);
+        aut = aut2;
+      }
+
+    return determinizer(aut, implications,
+                        pretty_print, use_scc, use_simulation, use_stutter);
+  }
+
+  determinizer::determinizer(const const_twa_graph_ptr& aut,
+                             const std::vector<bdd>& implications,
+                             bool pretty_print,
+                             bool use_scc,
+                             bool use_simulation,
+                             bool use_stutter)
+  : aut_(aut)
+  , res_(nullptr)
+  , scc_(aut_, use_stutter && aut_->prop_stutter_invariant() ?
+               scc_info_options::TRACK_SUCCS | scc_info_options::TRACK_STATES :
+               scc_info_options::TRACK_SUCCS)
+  , safra2letters_(aut_, use_stutter, scc_)
+  , active_(aut_->num_states(), false)
+  , seen_()
+  , num2safra_()
+  , sets_(0)
+  , pretty_print_(pretty_print)
+  , use_scc_(use_scc)
+  , use_simulation_(use_simulation)
+  , use_stutter_(use_stutter)
+  {
     // If use_simulation is false, implications is empty, so nothing is built
-    std::vector<std::vector<char>> implies(
+    implies_ = std::vector<std::vector<char>>(
         implications.size(),
         std::vector<char>(implications.size(), 0));
     {
-      std::vector<char> is_connected = find_scc_paths(scc);
+      std::vector<char> is_connected = find_scc_paths(scc_);
       for (unsigned i = 0; i != implications.size(); ++i)
         {
           // NB spot::simulation() does not remove unreachable states, as it
@@ -850,98 +925,194 @@ namespace spot
           // FIXME based on the scc_info, we could remove the unreachable
           // states, both in the input automaton and in 'implications'
           // to reduce the size of 'implies'.
-          if (!scc.reachable_state(i))
+          if (!scc_.reachable_state(i))
             continue;
           for (unsigned j = 0; j != implications.size(); ++j)
             {
-              if (!scc.reachable_state(j))
+              if (!scc_.reachable_state(j))
                 continue;
 
               // index to see if there is a path from scc2 -> scc1
-              unsigned idx = scc.scc_count() * scc.scc_of(j) + scc.scc_of(i);
-              implies[i][j] =     !is_connected[idx]
+              unsigned idx = scc_.scc_count() * scc_.scc_of(j) + scc_.scc_of(i);
+              implies_[i][j] =    !is_connected[idx]
                               &&  bdd_implies(implications[i], implications[j]);
             }
         }
     }
 
+    reset_res();
+  }
 
-    // Compute the support of each state
-    std::vector<bdd> support(aut->num_states());
-    if (use_stutter && aut->prop_stutter_invariant())
-      {
-        // FIXME this could be improved
-        // supports of states should account for possible stuttering if we plan
-        // to use stuttering invariance
-        for (unsigned c = 0; c != scc.scc_count(); ++c)
-          {
-            bdd c_supp = scc.scc_ap_support(c);
-            for (const auto& su: scc.succ(c))
-              c_supp &= support[scc.one_state_of(su)];
-            for (unsigned st: scc.states_of(c))
-              support[st] = c_supp;
-          }
-      }
-    else
-      {
-        for (unsigned i = 0; i != aut->num_states(); ++i)
-          {
-            bdd res = bddtrue;
-            for (const auto& e : aut->out(i))
-              res &= bdd_support(e.cond);
-            support[i] = res;
-          }
-      }
+  void determinizer::reset_res()
+  {
+    seen_.clear();
+    num2safra_.clear();
+    sets_ = 0;
 
-    safra_support safra2letters(support);
+    res_ = make_twa_graph(aut_->get_dict());
+    res_->copy_ap_of(aut_);
+    res_->prop_copy(aut_, { false, // state based
+                            false, // inherently_weak
+                            false, false, // deterministic
+                            true, // complete
+                            true // stutter inv
+                          });
 
-    auto res = make_twa_graph(aut->get_dict());
-    res->copy_ap_of(aut);
-    res->prop_copy(aut,
-                   { false, // state based
-                       false, // inherently_weak
-                       false, false, // deterministic
-                       true, // complete
-                       true // stutter inv
-                       });
+    // add initial state
+    unsigned init_state = aut_->get_init_state_number();
+    bool start_accepting =
+      !use_scc_ || scc_.is_accepting_scc(scc_.scc_of(init_state));
+    safra_state init(init_state, start_accepting);
+    unsigned num = res_->new_state();
+    seen_.emplace(init, num); // insert initial state in seen_
+    num2safra_.emplace_back(init);
+    res_->set_init_state(num); // mark as initial state
+  }
 
-    // Given a safra_state get its associated state in output automata.
-    // Required to create new edges from 2 safra-state
-    power_set seen;
+  void
+  determinizer::activate(unsigned s)
+  {
+    toadd_[s] = true;
+  }
+
+  void
+  determinizer::deactivate_all()
+  {
+    toadd_ = std::vector<char>(aut_->num_states(), false);
+    reset_res();
+  }
+
+  twa_graph_ptr
+  determinizer::get() const
+  {
+    return res_;
+  }
+
+  void
+  determinizer::run()
+  {
+    // In fact, simulation can be used as usual.
+    // Note that the simulation is based on the full automaton, so the
+    // deterministic automaton may NOT be equivalent to the current
+    // sub-automaton, but its language is included in the one of the input full
+    // automaton.
+
     // As per the standard, references to elements in a std::unordered_set or
     // std::unordered_map are invalidated by erasure only.
     std::deque<std::reference_wrapper<power_set::value_type>> todo;
-    auto get_state = [&res, &seen, &todo](const safra_state& s) -> unsigned
+
+    // find the actual state associated to a given safra state
+    // if the safra state has no actual state associated with it, create it and
+    // update seen_, num2safra_ and todo accordingly
+    auto get_state = [this, &todo](const safra_state& s) -> unsigned
       {
-        auto it = seen.find(s);
-        if (it == seen.end())
+        auto it = seen_.find(s);
+        if (it == seen_.end())
           {
-            unsigned dst_num = res->new_state();
-            it = seen.emplace(s, dst_num).first;
+            unsigned dst_num = res_->new_state();
+            it = seen_.emplace(s, dst_num).first;
+            num2safra_.emplace_back(s);
             todo.emplace_back(*it);
           }
+        assert(it->second < res_->num_states());
         return it->second;
       };
 
-    {
-      unsigned init_state = aut->get_init_state_number();
-      bool start_accepting =
-        !use_scc || scc.is_accepting_scc(scc.scc_of(init_state));
-      safra_state init(init_state, start_accepting);
-      unsigned num = get_state(init); // inserts both in seen and in todo
-      res->set_init_state(num);
-    }
-    unsigned sets = 0;
+    // add a safra state to todo, if the given safra state has not been deleted
+    // (i.e. it is still in seen_)
+    auto re_add = [this, &todo](const safra_state& s) -> void
+      {
+        auto it = seen_.find(s);
+        if (it != seen_.end())
+          todo.emplace_back(*it);
+      };
 
-    compute_succs succs(aut, seen, scc, implies, use_scc, use_simulation,
-                        use_stutter);
+    if (toadd_.empty())
+      {
+        // special case: unconditionnally build the whole automaton
+        active_ = {};
+        unsigned init_state = aut_->get_init_state_number();
+        bool start_accepting =
+          !use_scc_ || scc_.is_accepting_scc(scc_.scc_of(init_state));
+        safra_state init(init_state, start_accepting);
+        re_add(init);
+      }
+    else
+      {
+        // currently, incremental determinization does not support
+        // stutter-invariance
+        // stutter-invariance allows to accelerate paths when computing a
+        // successor: there is no way currently to detect that some of the
+        // intermediate (accelerated) states needs to be re-computed
+        use_stutter_ = false;
+
+        // re-add all safra states containing one activated state
+        // also remove all edges from these
+        std::set<safra_state> waiting;
+        for (unsigned i = 0; i != toadd_.size(); ++i)
+          {
+            if (toadd_[i] && !active_[i])
+              {
+                active_[i] = 1; // activate state
+
+                for (const auto& ss : seen_)
+                  {
+                    if (ss.first.contains(i))
+                      {
+                        unsigned num = ss.second;
+                        // add the state to waiting
+                        waiting.insert(ss.first);
+                        // remove all outgoing edges from res_
+                        for (auto t = res_->get_graph().out_iteraser(num); t;)
+                          t.erase(); // erase() advances the iterator
+                        // remove the state from non-deterministic states
+                        nondet_states_.erase(num);
+                      }
+                  }
+              }
+          }
+
+        void (*f)(const std::vector<unsigned>&, void*) =
+          [](const std::vector<unsigned>& newst, void* d)
+          {
+            determinizer* det = static_cast<determinizer*>(d);
+            for (auto it = det->seen_.begin(); it != det->seen_.end();)
+              {
+                unsigned dst = newst[it->second];
+                if (dst == -1U)
+                  it = det->seen_.erase(it);
+                else
+                  {
+                    it->second = dst;
+                    ++it;
+                  }
+              }
+            unsigned j = 0;
+            for (unsigned i = 0; i != newst.size(); ++i)
+              if (newst[i] != -1U)
+                det->num2safra_[j++] = det->num2safra_[i];
+            det->num2safra_.resize(j);
+          };
+
+        res_->purge_unreachable_states(&f, this);
+        for (const auto& s : waiting)
+          re_add(s);
+
+        // add the initial state if it is the first time that run() is called
+        if (res_->num_edges() == 0)
+          re_add(get_safra(res_->get_init_state_number()));
+      }
+
+    compute_succs succs(aut_, seen_, scc_, implies_, active_, use_scc_,
+                        use_simulation_, use_stutter_);
     // The main loop
     while (!todo.empty())
       {
         const safra_state& curr = todo.front().get().first;
         unsigned src_num = todo.front().get().second;
         todo.pop_front();
-        succs.set(curr, safra2letters.get(curr));
+        assert(src_num < res_->num_states());
+        succs.set(curr, safra2letters_.get(curr));
         for (auto s = succs.begin(); s != succs.end(); ++s)
           {
             // Don't construct sink state as complete does a better job at this
@@ -950,26 +1121,51 @@ namespace spot
             unsigned dst_num = get_state(*s);
             if (s.color_ != -1U)
               {
-                res->new_edge(src_num, dst_num, s.cond(), {s.color_});
-                sets = std::max(s.color_ + 1, sets);
+                res_->new_edge(src_num, dst_num, s.cond(), {s.color_});
+                sets_ = std::max(s.color_ + 1, sets_);
               }
             else
-              res->new_edge(src_num, dst_num, s.cond());
+              res_->new_edge(src_num, dst_num, s.cond());
+          }
+
+        if (active_.empty())
+          continue;
+
+        // inactive nodes remain non-deterministic
+        for (const auto& node : curr.nodes_)
+          {
+            if (active_[node.first] == 0)
+              {
+                nondet_states_.insert(src_num);
+                bool is_acc = (node.second >= 0);
+
+                for (const auto& e : aut_->out(node.first))
+                  {
+                    bool is_accepting =
+                      !use_scc_ || scc_.is_accepting_scc(scc_.scc_of(e.dst));
+                    unsigned dst_num =
+                      get_state(safra_state(e.dst, is_accepting));
+                    if (e.acc || (is_acc && !is_accepting))
+                      res_->new_edge(src_num, dst_num, e.cond, {1});
+                    else
+                      res_->new_edge(src_num, dst_num, e.cond);
+                  }
+              }
           }
       }
     // Green and red colors work in pairs, so the number of parity conditions is
     // necessarily even.
-    if (sets % 2 == 1)
-      sets += 1;
+    if (sets_ % 2 == 1)
+      sets_ += 1;
+    if (!nondet_states_.empty())
+      sets_ = std::max(2U, sets_);
+
     // Acceptance is now min(odd) since we can emit Red on paths 0 with new opti
-    res->set_acceptance(sets, acc_cond::acc_code::parity(false, true, sets));
-    res->prop_universal(true);
-    res->prop_state_acc(false);
+    res_->set_acceptance(sets_, acc_cond::acc_code::parity(false, true, sets_));
+    res_->prop_universal(nondet_states_.empty() ? true : spot::trival::maybe());
+    res_->prop_state_acc(false);
 
-    cleanup_parity_here(res);
-
-    if (pretty_print)
-      res->set_named_prop("state-names", print_debug(aut, seen));
-    return res;
+    if (pretty_print_)
+      res_->set_named_prop("state-names", print_debug(aut_, seen_));
   }
 }

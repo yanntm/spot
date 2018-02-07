@@ -393,6 +393,7 @@ TESTS_python = \
   python/randgen.py \
   python/relabel.py \
   python/remfin.py \
+  python/safra.py \
   python/satmin.py \
   python/sbacc.py \
   python/sccfilter.py \
