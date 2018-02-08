@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de l'Epita
+# Copyright (C) 2017-2018 Laboratoire de Recherche et Développement de l'Epita
 # (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -21,7 +21,7 @@
 # This file tests various error conditions on the twa API
 
 import spot
-from buddy import bddtrue
+from buddy import bddtrue, bddfalse
 
 aut = spot.make_twa_graph(spot.make_bdd_dict())
 
@@ -72,7 +72,21 @@ assert aut.state_acc_sets(0) == all
 assert aut.state_is_accepting(0) == True
 
 aut.set_init_state(0)
+aut.new_acc_edge(0, 1, bddfalse)
+aut.new_edge(1, 2, bddfalse)
 aut.purge_unreachable_states()
+assert aut.to_str() == """HOA: v1
+States: 2
+Start: 0
+AP: 0
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc deterministic
+--BODY--
+State: 0 {0}
+[t] 1
+State: 1
+--END--"""
 i = aut.get_init_state()
 assert aut.state_is_accepting(i) == True
 

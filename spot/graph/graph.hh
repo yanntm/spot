@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014, 2015, 2016, 2017 Laboratoire de Recherche et
+// Copyright (C) 2014, 2015, 2016, 2017-2018 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -1168,18 +1168,8 @@ namespace spot
       for (state s = 0; s < send; ++s)
         {
           state dst = newst[s];
-          if (dst == s)
+          if (dst == s || dst == -1U)
             continue;
-          if (dst == -1U)
-            {
-              // This is an erased state.  Mark all its edges as
-              // dead (i.e., t.next_succ should point to t for each of
-              // them).
-              auto t = states_[s].succ;
-              while (t)
-                std::swap(t, edges_[t].next_succ);
-              continue;
-            }
           states_[dst] = std::move(states_[s]);
         }
       states_.resize(used_states);
@@ -1192,7 +1182,12 @@ namespace spot
       unsigned dest = 1;
       for (edge t = 1; t < tend; ++t)
         {
-          if (is_dead_edge(t))
+          if (is_dead_edge(t) ||
+              // remove edges coming out of a deleted state
+              newst[edges_[t].src] == -1U ||
+              // remove edges going to a deleted state (only for non-universal
+              // edges)
+              (edges_[t].dst < send && newst[edges_[t].dst] == -1U))
             continue;
           if (t != dest)
             edges_[dest] = std::move(edges_[t]);

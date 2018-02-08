@@ -231,7 +231,7 @@ namespace spot
     g_.chain_edges_();
   }
 
-  void twa_graph::purge_unreachable_states()
+  void twa_graph::purge_unreachable_states(shift_action* f, void* action_data)
   {
     unsigned num_states = g_.num_states();
     // The TODO vector serves two purposes:
@@ -254,13 +254,20 @@ namespace spot
       {
         unsigned cur = todo[--todo_pos] & mask;
         todo[todo_pos] ^= cur;        // Zero the state
-        for (auto& t: g_.out(cur))
-          for (unsigned dst: univ_dests(t.dst))
-            if (!(todo[dst] & seen))
+        for (auto t = g_.out_iteraser(cur); t; ++t)
+          {
+            if (t->cond == bddfalse)
               {
-                todo[dst] |= seen;
-                todo[todo_pos++] |= dst;
+                t.erase();
+                continue;
               }
+            for (unsigned dst: univ_dests(t->dst))
+              if (!(todo[dst] & seen))
+                {
+                  todo[dst] |= seen;
+                  todo[todo_pos++] |= dst;
+                }
+          }
       }
     while (todo_pos > 0);
     // Now renumber each used state.
@@ -279,6 +286,9 @@ namespace spot
       prop_universal(trival::maybe());
     if (prop_complete().is_false())
       prop_complete(trival::maybe());
+
+    if (f)
+      (*f)(todo, action_data);
 
     defrag_states(std::move(todo), current);
   }
