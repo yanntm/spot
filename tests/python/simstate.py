@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2015, 2017  Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2017-2018  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -70,26 +70,26 @@ assert daut.to_str() == """HOA: v1
 States: 3
 Start: 0
 AP: 2 "p1" "p0"
-acc-name: parity min odd 4
-Acceptance: 4 Fin(0) & (Inf(1) | (Fin(2) & Inf(3)))
+acc-name: parity min even 3
+Acceptance: 3 Inf(0) | (Fin(1) & Inf(2))
 properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0 "{₀[0]₀}"
 [!0&!1] 0
 [!0&1] 0
-[0&!1] 0 {1}
-[0&1] 1 {3}
+[0&!1] 0 {0}
+[0&1] 1 {2}
 State: 1 "{₀[0]{₂[2]₂}₀}{₁[1]₁}"
-[!0&!1] 0 {2}
+[!0&!1] 0 {1}
 [!0&1] 2
-[0&!1] 0 {1}
-[0&1] 1 {3}
+[0&!1] 0 {0}
+[0&1] 1 {2}
 State: 2 "{₀[0]₀}{₁[1]₁}"
-[!0&!1] 0 {2}
+[!0&!1] 0 {1}
 [!0&1] 2
-[0&!1] 0 {1}
-[0&1] 1 {3}
+[0&!1] 0 {0}
+[0&1] 1 {2}
 --END--"""
 
 aut = spot.automaton("""
@@ -113,8 +113,8 @@ assert daut.to_str() == """HOA: v1
 States: 12
 Start: 0
 AP: 2 "a" "b"
-acc-name: parity min odd 4
-Acceptance: 4 Fin(0) & (Inf(1) | (Fin(2) & Inf(3)))
+acc-name: Buchi
+Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels trans-acc deterministic
 --BODY--
 State: 0 "{₀[0#0,0#1]₀}"
@@ -123,7 +123,7 @@ State: 0 "{₀[0#0,0#1]₀}"
 [0&1] 2
 State: 1 "{₀[1#1]₀}"
 [!0&1] 0
-[0&!1] 3 {1}
+[0&!1] 3 {0}
 [0&1] 4
 State: 2 "{₀[0#0,0#1] [1#1]₀}"
 [!0&1] 2
@@ -147,24 +147,24 @@ State: 6 "{₀[0#0,0#1] [1#0]₀}"
 [0&1] 9
 State: 7 "{₀[1#1]{₁[0#0,0#1]₁}₀}"
 [!0&1] 10
-[0&!1] 6 {1}
-[0&1] 9 {1}
+[0&!1] 6 {0}
+[0&1] 9 {0}
 State: 8 "{₀[1#1]{₁[0#0,0#1] [1#0]₁}₀}"
-[!0&1] 2 {1}
-[0&!1] 6 {1}
-[0&1] 9 {1}
+[!0&1] 2 {0}
+[0&!1] 6 {0}
+[0&1] 9 {0}
 State: 9 "{₀[0#0,0#1] [1#1] [1#0]₀}"
 [!0&1] 2
 [0&!1] 4
 [0&1] 5
 State: 10 "{₀[0#0,0#1]{₁[1#1]₁}₀}"
 [!0&1] 7
-[0&!1] 4 {3}
+[0&!1] 4 {0}
 [0&1] 11
 State: 11 "{₀[1#1]{₁[0#0,0#1]{₂[1#0]₂}₁}₀}"
-[!0&1] 2 {1}
-[0&!1] 6 {1}
-[0&1] 9 {1}
+[!0&1] 2 {0}
+[0&!1] 6 {0}
+[0&1] 9 {0}
 --END--"""
 
 a = spot.translate('!Gp0 xor FG((p0 W Gp1) M p1)')

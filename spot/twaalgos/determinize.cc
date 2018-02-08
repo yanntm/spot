@@ -26,7 +26,6 @@
 #include <set>
 #include <map>
 
-
 #include <spot/misc/bddlt.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twaalgos/determinize.hh>
@@ -34,7 +33,7 @@
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/isdet.hh>
-
+#include <spot/twaalgos/parity.hh>
 
 namespace spot
 {
@@ -446,15 +445,6 @@ namespace spot
         }
       while (start);
       return res;
-    }
-
-    // Used to remove all acceptance whose value is above or equal to max_acc
-    void remove_dead_acc(twa_graph_ptr& aut, unsigned max_acc)
-    {
-      assert(max_acc < 32);
-      unsigned mask = (1 << max_acc) - 1;
-      for (auto& t: aut->edges())
-        t.acc &= mask;
     }
 
     struct compare
@@ -961,19 +951,22 @@ namespace spot
             if (s.color_ != -1U)
               {
                 res->new_edge(src_num, dst_num, s.cond(), {s.color_});
-                // We only care about green acc which are odd
-                if (s.color_ % 2 == 1)
-                  sets = std::max(s.color_ + 1, sets);
+                sets = std::max(s.color_ + 1, sets);
               }
             else
               res->new_edge(src_num, dst_num, s.cond());
           }
       }
-    remove_dead_acc(res, sets);
+    // Green and red colors work in pairs, so the number of parity conditions is
+    // necessarily even.
+    if (sets % 2 == 1)
+      sets += 1;
     // Acceptance is now min(odd) since we can emit Red on paths 0 with new opti
     res->set_acceptance(sets, acc_cond::acc_code::parity(false, true, sets));
     res->prop_universal(true);
     res->prop_state_acc(false);
+
+    cleanup_parity_here(res);
 
     if (pretty_print)
       res->set_named_prop("state-names", print_debug(aut, seen));
