@@ -39,6 +39,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/complete.hh>
+#include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/sbacc.hh>
@@ -54,6 +55,7 @@ enum
   OPT_PRINT,
   OPT_PRINT_AIGER,
   OPT_REAL,
+  OPT_INCREMENTAL,
   OPT_VERBOSE
 };
 
@@ -73,6 +75,8 @@ static const argp_option options[] =
       "choose the parity game algorithm, valid ones are rec (Zielonka's"
       " recursive algorithm, default) and qp (Calude et al.'s quasi-polynomial"
       " time algorithm)", 0 },
+    { "incr", OPT_INCREMENTAL, nullptr, 0,
+      "use the incremental algorithm", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
@@ -110,6 +114,7 @@ static std::vector<std::string> output_aps;
 bool opt_print_pg(false);
 bool opt_real(false);
 bool opt_print_aiger(false);
+bool opt_incremental(false);
 
 // FIXME rename options to choose the algorithm
 enum solver
@@ -327,24 +332,79 @@ namespace
       auto split = split_automaton(aut, all_inputs);
       if (verbose)
         std::cerr << "split inputs and outputs done" << std::endl;
-      auto dpa = to_dpa(split);
-      if (verbose)
-        std::cerr << "determinization done" << std::endl;
-      auto owner = make_alternating_owner(dpa);
-      auto pg = spot::parity_game(dpa, owner);
-      if (verbose)
-        std::cerr << "parity game built" << std::endl;
-      timer.stop();
 
-      if (opt_print_pg)
+      if (opt_incremental)
         {
-          pg.print(std::cout);
-          return 0;
-        }
-      switch (opt_solver)
-        {
-          case REC:
+          // Degeneralize the automaton, so that it can be determinized
+          auto degen = spot::degeneralize_tba(split);
+
+          spot::determinizer det =
+            spot::determinizer::build(degen, false, true, true, true);
+          auto nda = det.aut();
+
+          std::vector<char> edges(nda->num_edges() + 1, 0);
+          unsigned nb_control = 0;
+          {
+            // First add all the transitions from the environment
+            std::vector<char> seen(nda->num_states(), false);
+            // true for the environment, false for the controller
+            std::deque<std::pair<unsigned,bool>> todo;
+            todo.push_back({nda->get_init_state_number(), true});
+            while (!todo.empty())
+              {
+                unsigned src = todo.back().first;
+                bool owner = todo.back().second;
+                todo.pop_back();
+                seen[src] = true;
+                for (const auto& e: nda->out(src))
+                  {
+                    if (owner)
+                      edges[nda->edge_number(e)] = 1;
+                    else
+                      ++nb_control;
+
+                    if (!seen[e.dst])
+                      todo.push_back({e.dst, !owner});
+                  }
+              }
+          }
+
+          unsigned i = 0;
+          while (true)
             {
+              if (verbose)
+                std::cerr << "iteration # " << i++ << " / "
+                  << nb_control << std::endl;
+
+              det.add_edges(edges);
+              det.run();
+              auto dpa = make_twa_graph(det.get(), { true, true, true,
+                                                     true, true, true });
+
+              if (verbose)
+                std::cerr << "dpa has " << dpa->num_states()
+                  << " states" << std::endl;
+
+              dpa->merge_edges();
+              dpa->purge_unreachable_states();
+              spot::cleanup_parity_here(dpa);
+              spot::complete_here(dpa);
+              spot::colorize_parity_here(dpa, true);
+              change_parity_here(dpa, spot::parity_kind_max,
+                                      spot::parity_style_odd);
+
+              auto f_aux = [&dpa]()
+                {
+                  bool max, odd;
+                  dpa->acc().is_parity(max, odd);
+                  return max && odd;
+                };
+              assert(f_aux());
+              assert(is_deterministic(dpa));
+
+              auto owner = make_alternating_owner(dpa);
+              auto pg = spot::parity_game(dpa, owner);
+
               spot::parity_game::strategy_t strategy[2];
               spot::parity_game::region_t winning_region[2];
               pg.solve(winning_region, strategy);
@@ -367,32 +427,110 @@ namespace
                     }
                   return 0;
                 }
-              else
+
+              bool edge_added = false;
+              // FIXME what are the "best" edges to add?
+              for (unsigned wins : winning_region[0])
                 {
-                  std::cout << "UNREALIZABLE\n";
-                  return 1;
+                  // if the state belongs to the environment, nothing to do
+                  if (owner[wins] == 0)
+                    continue;
+
+                  // find the corresponding safra_state
+                  const spot::safra_state& s = det.get_safra(wins);
+                  // activate inactivated edges from the nodes in s
+                  for (const auto& node : s.nodes_)
+                    {
+                      for (const auto& e : nda->out(node.first))
+                        {
+                          unsigned edge = nda->edge_number(e);
+                          if (edges[edge])
+                            continue;
+                          edges[edge] = true;
+                          edge_added = true;
+                        }
+                    }
+
+                  if (edge_added)
+                    break;
                 }
+
+              if (!edge_added)
+                break;
             }
-          case QP:
-            if (!opt_real)
-              {
-                std::cout << "The quasi-polynomial time algorithm does not"
-                  " implement synthesis yet, use --realizability\n";
+
+          std::cout << "UNREALIZABLE\n";
+          return 1;
+        }
+      else
+        {
+          auto dpa = to_dpa(split);
+          if (verbose)
+            std::cerr << "determinization done" << std::endl;
+          auto owner = make_alternating_owner(dpa);
+          auto pg = spot::parity_game(dpa, owner);
+          if (verbose)
+            std::cerr << "parity game built" << std::endl;
+          timer.stop();
+
+          if (opt_print_pg)
+            {
+              pg.print(std::cout);
+              return 0;
+            }
+          switch (opt_solver)
+            {
+              case REC:
+                {
+                  spot::parity_game::strategy_t strategy[2];
+                  spot::parity_game::region_t winning_region[2];
+                  pg.solve(winning_region, strategy);
+                  if (winning_region[1].count(pg.get_init_state_number()))
+                    {
+                      std::cout << "REALIZABLE\n";
+                      if (!opt_real)
+                        {
+                          auto strat_aut =
+                            strat_to_aut(pg, strategy[1], dpa, all_outputs);
+
+                          // output the winning strategy
+                          if (opt_print_aiger)
+                            spot::print_aiger(std::cout, strat_aut);
+                          else
+                            {
+                              automaton_printer printer;
+                              printer.print(strat_aut, timer);
+                            }
+                        }
+                      return 0;
+                    }
+                  else
+                    {
+                      std::cout << "UNREALIZABLE\n";
+                      return 1;
+                    }
+                }
+              case QP:
+                if (!opt_real)
+                  {
+                    std::cout << "The quasi-polynomial time algorithm does not"
+                      " implement synthesis yet, use --realizability\n";
+                    return 2;
+                  }
+                else if (pg.solve_qp())
+                  {
+                    std::cout << "REALIZABLE\n";
+                    return 0;
+                  }
+                else
+                  {
+                    std::cout << "UNREALIZABLE\n";
+                    return 1;
+                  }
+              default:
+                SPOT_UNREACHABLE();
                 return 2;
-              }
-            else if (pg.solve_qp())
-              {
-                std::cout << "REALIZABLE\n";
-                return 0;
-              }
-            else
-              {
-                std::cout << "UNREALIZABLE\n";
-                return 1;
-              }
-          default:
-            SPOT_UNREACHABLE();
-            return 2;
+            }
         }
     }
   };
@@ -439,6 +577,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_VERBOSE:
       verbose = true;
+      break;
+    case OPT_INCREMENTAL:
+      opt_incremental = true;
       break;
     }
   return 0;

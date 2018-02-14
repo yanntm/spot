@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement
+# Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -118,6 +118,8 @@ for i in 0 1 7 8 9; do
   --algo=rec)
   test $EXP = $(ltlsynt -f "$F" --ins="$IN" --outs="$OUT" --realizability \
   --algo=qp)
+  test $EXP = $(ltlsynt -f "$F" --ins="$IN" --outs="$OUT" --realizability \
+  --incr)
 done
 
 for i in 2 3 4 5 6 10; do
@@ -125,7 +127,18 @@ for i in 2 3 4 5 6 10; do
   IN=$(eval echo \$IN$i)
   OUT=$(eval echo \$OUT$i)
   EXP=$(eval echo \$EXP$i)
-  ltlsynt -f "$F" --ins="$IN" --outs="$OUT" > out$i
+
+  # test ltlsynt
+  ltlsynt -f "$F" --ins="$IN" --outs="$OUT" > out$i || true
+  REAL=`head -1 out$i`
+  test $REAL = $EXP
+  tail -n +2 out$i > res$i
+  ltl2tgba -f "!($F)" > negf_aut$i
+  # check that the L(strategy) is included in L(F)
+  autfilt -q -v --intersect=negf_aut$i res$i
+
+  # test ltlsynt with incremental resolution
+  ltlsynt --incr -f "$F" --ins="$IN" --outs="$OUT" > out$i || true
   REAL=`head -1 out$i`
   test $REAL = $EXP
   tail -n +2 out$i > res$i
