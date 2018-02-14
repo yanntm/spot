@@ -57,6 +57,10 @@ const unsigned DOT_PRODUCT = 2;
 const unsigned DOT_FORMULA = 4;
 const unsigned CSV = 8;
 
+// FIXME: should have an enum for this...
+const unsigned COUNTEREXAMPLE = 256;
+const unsigned COND_DEST = 257;
+
 // Handle all options specified in the command line
 struct mc_options_
 {
@@ -74,6 +78,7 @@ struct mc_options_
   bool csv = false;
   bool has_deadlock = false;
   bool bloemen = false;
+  bool cond_dest = false;
   bool use_por = false;
 } mc_options;
 
@@ -90,8 +95,11 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 'b':
       mc_options.bloemen = true;
       break;
-    case 'c':
-      mc_options.compute_counterexample = true;
+    case COND_DEST:
+        mc_options.cond_dest = true;
+        break;
+    case COUNTEREXAMPLE:
+        mc_options.compute_counterexample = true;
       break;
     case 'd':
       if (strcmp(arg, "model") == 0)
@@ -156,7 +164,9 @@ static const argp_option options[] =
     { nullptr, 0, nullptr, 0, "Process options:", 2 },
     { "bloemen", 'b', nullptr, 0,
       "run the SCC computation of Bloemen et al. (PPOPP'16)", 0 },
-    { "counterexample", 'c', nullptr, 0,
+    { "cond_dest", COND_DEST, nullptr, 0,
+      "run the a swarmed cond_dest POR algorithm (with --POR)", 0 },
+    { "counterexample", COUNTEREXAMPLE, nullptr, 0,
       "compute an accepting counterexample (if it exists)", 0 },
     { "is-empty", 'e', nullptr, 0,
       "check if the model meets its specification. "
@@ -714,6 +724,102 @@ static int checked_main()
                     << sccs
                     << '\n';
         }
+      }
+
+    if (mc_options.cond_dest &&  mc_options.model != nullptr)
+      {
+        unsigned int hc = std::thread::hardware_concurrency();
+        if (mc_options.nb_threads > hc)
+          std::cerr << "Warning: you require " << mc_options.nb_threads
+                    << " threads, but your computer only support " << hc
+                    << ". This could slow down parallel algorithms.\n";
+
+        tm.start("load kripkecube");
+        spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+        try
+          {
+            modelcube = spot::ltsmin_model::load(mc_options.model)
+              .kripkecube({}, deadf, mc_options.compress,
+                          mc_options.nb_threads, mc_options.use_por);
+          }
+        catch (std::runtime_error& e)
+          {
+            std::cerr << e.what() << '\n';
+          }
+        tm.stop("load kripkecube");
+
+        int memused = spot::memusage();
+        tm.start("cond_dest");
+        auto res = spot::cond_dest<spot::ltsmin_kripkecube_ptr,
+                                 spot::cspins_state,
+                                 spot::cspins_iterator,
+                                 spot::cspins_state_hash,
+                                 spot::cspins_state_equal>(modelcube);
+        tm.stop("cond_dest");
+        memused = spot::memusage() - memused;
+
+        if (!modelcube)
+          {
+            exit_code = 2;
+            goto safe_exit;
+          }
+
+        // Display statistics
+        unsigned sccs = 0;
+        unsigned st = 0;
+        unsigned tr = 0;
+        unsigned inserted = 0;
+        for (unsigned i = 0; i < res.first.size(); ++i)
+          {
+            std::cout << "\n---- Thread number : " << i << '\n';
+            std::cout << res.first[i].states << " unique states visited\n";
+            std::cout << res.first[i].inserted << " unique states inserted\n";
+            std::cout << res.first[i].transitions
+                      << " transitions explored\n";
+            std::cout << res.first[i].sccs << " sccs found\n";
+            std::cout << res.first[i].walltime
+                      << " milliseconds\n";
+
+            sccs += res.first[i].sccs;
+            st += res.first[i].states;
+            tr += res.first[i].transitions;
+            inserted += res.first[i].inserted;
+
+            if (mc_options.csv)
+              {
+                std::cout << "Find following the csv: "
+                          << "thread_id,walltimems,"
+                          << "states,transitions,sccs\n";
+                std::cout << "@th_" << i << ','
+                          << res.first[i].walltime << ','
+                          << res.first[i].states << ','
+                          << res.first[i].inserted << ','
+                          << res.first[i].transitions << ','
+                          << res.first[i].sccs
+                          << std::endl;
+              }
+          }
+
+        if (mc_options.csv)
+          {
+            std::cout << "\nSummary :\n";
+            std::cout << "Find following the csv: "
+                      << "model,walltimems,memused,"
+                      << "inserted_states,"
+                      << "cumulated_states,cumulated_transitions,"
+                      << "cumulated_sccs\n";
+
+            std::cout << '#'
+                      << split_filename(mc_options.model)
+                      << ','
+                      << tm.timer("cond_dest").walltime() << ','
+                      << memused << ','
+                      << inserted << ','
+                      << st << ','
+                      << tr << ','
+                      << sccs
+                      << '\n';
+          }
       }
 
  safe_exit:
