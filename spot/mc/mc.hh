@@ -242,18 +242,18 @@ namespace spot
   {
     spot::timer_map tm;
     using algo_name = spot::swarmed_cond_dest<State, Iterator, Hash, Equal>;
-    using uf_name = spot::uf<State, Hash, Equal>;
+    using store_name = spot::store<State, Hash, Equal>;
 
     unsigned  nbth = sys->get_threads();
-    typename uf_name::shared_map map;
+    typename store_name::shared_map map;
 
     tm.start("Initialisation");
     std::vector<algo_name*> swarmed(nbth);
-    std::vector<uf_name*> ufs(nbth);
+    std::vector<store_name*> stores(nbth);
     for (unsigned i = 0; i < nbth; ++i)
       {
-        ufs[i] = new uf_name(map, i);
-        swarmed[i] = new algo_name(*sys, *ufs[i], i);
+        stores[i] = new store_name(map, i);
+        swarmed[i] = new algo_name(*sys, *stores[i], i);
       }
     tm.stop("Initialisation");
 
