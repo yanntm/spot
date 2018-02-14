@@ -4,6 +4,8 @@ New in spot 2.6.0.dev  (not yet released)
     --algo=sd     is the historical one. The automaton of the formula
                   is split to separate inputs and outputs, then
                   determinized.
+    --algo=incr   same as above, except that the determinization is
+                  done incrementally.
     --algo=ds     the automaton of the formula is determinized, then
                   split to separate inputs and outputs.
     In all three cases, the obtained parity game is solved using
