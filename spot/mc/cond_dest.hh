@@ -36,15 +36,14 @@ namespace spot
   template<typename State,
            typename StateHash,
            typename StateEqual>
-  class uf
+  class store
   {
-
   public:
     enum class st_status  { LIVE, DEAD };
     enum class claim_status  { CLAIM_FOUND, CLAIM_NEW, CLAIM_DEAD };
 
     /// \brief Represents a Union-Find element
-    struct uf_element
+    struct store_element
     {
       /// \brief the state handled by the element
       State st_;
@@ -65,16 +64,16 @@ namespace spot
 
     };
 
-    /// \brief The haser for the previous uf_element.
-    struct uf_element_hasher
+    /// \brief The haser for the previous store_element.
+    struct store_element_hasher
     {
-      uf_element_hasher(const uf_element*)
+      store_element_hasher(const store_element*)
       { }
 
-      uf_element_hasher() = default;
+      store_element_hasher() = default;
 
       brick::hash::hash128_t
-      hash(const uf_element* lhs) const
+      hash(const store_element* lhs) const
       {
         StateHash hash;
         // Not modulo 31 according to brick::hashset specifications.
@@ -82,8 +81,8 @@ namespace spot
         return {u, u};
       }
 
-      bool equal(const uf_element* lhs,
-                 const uf_element* rhs) const
+      bool equal(const store_element* lhs,
+                 const store_element* rhs) const
       {
         StateEqual equal;
         return equal(lhs->st_, rhs->st_);
@@ -91,26 +90,26 @@ namespace spot
     };
 
     ///< \brief Shortcut to ease shared map manipulation
-    using shared_map = brick::hashset::FastConcurrent <uf_element*,
-                                                       uf_element_hasher>;
+    using shared_map = brick::hashset::FastConcurrent <store_element*,
+                                                       store_element_hasher>;
 
 
-    uf(shared_map& map, unsigned tid):
+    store(shared_map& map, unsigned tid):
       map_(map), tid_(tid),
       size_(std::thread::hardware_concurrency()),
       nb_th_(std::thread::hardware_concurrency()), inserted_(0)
     {
     }
 
-    ~uf() {}
+    ~store() {}
 
-    std::pair<claim_status, uf_element*>
+    std::pair<claim_status, store_element*>
     make_claim(State a)
     {
       unsigned w_id = (1U << tid_);
 
       // Setup and try to insert the new state in the shared map.
-      uf_element* v = new uf_element();
+      store_element* v = new store_element();
       v->st_ = a;
       v->worker_ = 0;
       v->st_status_ = st_status::LIVE;
@@ -138,7 +137,7 @@ namespace spot
       return {claim_status::CLAIM_NEW, *it};
     }
 
-    void make_dead(uf_element* a)
+    void make_dead(store_element* a)
     {
       a->st_status_.store(st_status::DEAD);
     }
@@ -176,16 +175,16 @@ namespace spot
   public:
 
     swarmed_cond_dest(kripkecube<State, SuccIterator>& sys,
-                    uf<State, StateHash, StateEqual>& uf,
+                    store<State, StateHash, StateEqual>& store,
                     unsigned tid):
-      sys_(sys),  uf_(uf), tid_(tid),
+      sys_(sys),  store_(store), tid_(tid),
       nb_th_(std::thread::hardware_concurrency())
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
     }
 
-    using uf = uf<State, StateHash, StateEqual>;
-    using uf_element = typename uf::uf_element;
+    using st_store = store<State, StateHash, StateEqual>;
+    using store_element = typename st_store::store_element;
 
     void run()
     {
@@ -196,7 +195,7 @@ namespace spot
       // Insert the initial state
       {
         State init = sys_.initial(tid_);
-        auto pair = uf_.make_claim(init);
+        auto pair = store_.make_claim(init);
         std::vector<bool>* v = nullptr;
 
         if (pair.second->ok_reduced_.load())
@@ -227,7 +226,7 @@ namespace spot
               if (todo_.back().e == Rp_.back())
                 {
                   Rp_.pop_back();
-                  uf_.make_dead(todo_.back().e);
+                  store_.make_dead(todo_.back().e);
                 }
               // The state is no longer on thread's stack
               atomic_fetch_and(&(todo_.back().e->onstack_), ~w_id);
@@ -238,12 +237,12 @@ namespace spot
             {
               ++transitions_;
               State dst = todo_.back().it->state();
-              auto w = uf_.make_claim(dst);
+              auto w = store_.make_claim(dst);
 
               // Move forward iterators...
               todo_.back().it->next();
 
-              if (w.first == uf::claim_status::CLAIM_NEW)
+              if (w.first == st_store::claim_status::CLAIM_NEW)
                 {
                   // ... and insert the new state
                   std::vector<bool>* v = nullptr;
@@ -262,7 +261,7 @@ namespace spot
                   Rp_.emplace_back(w.second);
                   ++states_;
                 }
-              else if (w.first == uf::claim_status::CLAIM_FOUND)
+              else if (w.first == st_store::claim_status::CLAIM_FOUND)
                 {
                   // An expansion is required
                   if ((w.second->onstack_.load() & w_id) &&
@@ -281,13 +280,13 @@ namespace spot
 
     cond_dest_stats stats()
     {
-      return {uf_.inserted(), states_, transitions_, sccs_, walltime()};
+      return {store_.inserted(), states_, transitions_, sccs_, walltime()};
     }
 
   private:
     struct todo_element
     {
-      uf_element* e;
+      store_element* e;
       SuccIterator* it;
     };
 
@@ -295,8 +294,8 @@ namespace spot
 
     kripkecube<State, SuccIterator>& sys_;   ///< \brief The system to check
     std::vector<todo_element> todo_;          ///< \brief The "recursive" stack
-    std::vector<uf_element*> Rp_;            ///< \brief The DFS stack
-    uf uf_; ///< Copy!
+    std::vector<store_element*> Rp_;            ///< \brief The DFS stack
+    st_store store_; ///< Copy!
     unsigned tid_;
     unsigned nb_th_;
     unsigned inserted_ = 0;           ///< \brief Number of states inserted
