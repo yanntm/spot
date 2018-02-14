@@ -55,6 +55,7 @@ enum
   OPT_PRINT,
   OPT_PRINT_AIGER,
   OPT_REAL,
+  OPT_INCREMENTAL,
   OPT_VERBOSE
 };
 
@@ -74,6 +75,8 @@ static const argp_option options[] =
       "choose the parity game algorithm, valid ones are rec (Zielonka's"
       " recursive algorithm, default) and qp (Calude et al.'s quasi-polynomial"
       " time algorithm)", 0 },
+    { "incr", OPT_INCREMENTAL, nullptr, 0,
+      "use the incremental algorithm", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
@@ -111,6 +114,7 @@ static std::vector<std::string> output_aps;
 bool opt_print_pg(false);
 bool opt_real(false);
 bool opt_print_aiger(false);
+bool opt_incremental(false);
 
 // FIXME rename options to choose the algorithm
 enum solver
@@ -295,25 +299,142 @@ namespace
 
       auto split = split_2step(aut, all_inputs);
       if (verbose)
-        std::cerr << "split inputs and outputs done" << std::endl;
-      auto dpa = to_dpa(split);
-      if (verbose)
-        std::cerr << "determinization done" << std::endl;
-      auto owner = complete_env(dpa);
-      auto pg = spot::parity_game(dpa, owner);
-      if (verbose)
-        std::cerr << "parity game built" << std::endl;
-      timer.stop();
-
-      if (opt_print_pg)
         {
-          pg.print(std::cout);
-          return 0;
+          std::cerr << "split inputs and outputs done" << std::endl;
+          std::cerr << "automaton has " << split->num_states() << " states"
+            << std::endl;
         }
-      switch (opt_solver)
+
+      //split = spot::simulation(split);
+      //if (verbose)
+      //  {
+      //    std::cerr << split->num_states() << " states left after simulation"
+      //      << std::endl;
+      //  }
+
+      if (opt_incremental)
         {
-          case REC:
+          // Degeneralize the automaton, so that it can be determinized
+          auto degen = spot::degeneralize_tba(split);
+          if (verbose)
             {
+              std::cerr << "degeneralization done" << std::endl;
+              std::cerr << "automaton has " << degen->num_states() << " states"
+                << std::endl;
+            }
+
+          bool sim_ok = degen->num_states() > 100000 ? false : true;
+          spot::determinizer det =
+            spot::determinizer::build(degen, false, true, sim_ok, true);
+          det.deactivate_all();
+          auto nda = det.aut();
+          if (verbose)
+            {
+              std::cerr << "ready for incremental determinization" << std::endl;
+              std::cerr << "NDA has " << nda->num_states() << " states"
+                << std::endl;
+
+              //print_hoa(std::cerr, nda);
+              //std::cerr << std::endl;
+            }
+
+          unsigned nb_control = 0;
+          unsigned active = 0;
+          std::vector<bool> active_states(nda->num_states(), false);
+          {
+            std::vector<char> seen(nda->num_states(), false);
+            // true for the environment, false for the controller
+            std::deque<std::pair<unsigned, bool>> todo;
+            todo.push_back({nda->get_init_state_number(), true});
+            while (!todo.empty())
+              {
+                unsigned src = todo.back().first;
+                bool owner = todo.back().second;
+                todo.pop_back();
+                seen[src] = true;
+
+                // check if the state happens to be deterministic
+                // (only for controller states)
+                if (!owner)
+                  {
+                    bool is_det = true;
+                    bdd available = bddtrue;
+                    for (const auto& e : nda->out(src))
+                      if (!bdd_implies(e.cond, available))
+                        {
+                          // nondet
+                          is_det = false;
+                          break;
+                        }
+                      else
+                        {
+                          available -= e.cond;
+                        }
+
+                    // FIXME activating controller's deterministic states may
+                    // reduce the number of iterations, but may increase the
+                    // size of intermediate automata
+                    if (is_det)
+                      {
+                        det.activate(src);
+                        active_states[src] = true;
+                        ++active;
+                      }
+                  }
+
+                if (owner)
+                  {
+                    det.activate(src);
+                    active_states[src] = true;
+                  }
+                else
+                  ++nb_control;
+
+                for (const auto& e: nda->out(src))
+                  if (!seen[e.dst])
+                    todo.push_back({e.dst, !owner});
+              }
+          }
+
+          unsigned i = 0;
+          while (true)
+            {
+              if (verbose)
+                std::cerr << "iteration # " << i++ << ", " << active
+                  << " active control nodes out of " << nb_control << std::endl;
+
+              det.run();
+              det.get()->merge_edges();
+              auto dpa = make_twa_graph(det.get(), { true, true, true,
+                                                     true, true, true });
+
+              //dpa->merge_edges();
+              dpa->purge_unreachable_states();
+              spot::cleanup_parity_here(dpa);
+              spot::colorize_parity_here(dpa, true);
+              change_parity_here(dpa, spot::parity_kind_max,
+                                      spot::parity_style_odd);
+
+
+              assert(
+                [&dpa]()
+                {
+                  bool max; bool odd;
+                  dpa->acc().is_parity(max, odd);
+                  return max && odd;
+                }());
+
+              auto owner = complete_env(dpa);
+              if (verbose)
+                {
+                  std::cerr << "dpa has " << dpa->num_states()
+                    << " states" << std::endl;
+
+                  //print_hoa(std::cerr, dpa);
+                  //std::cerr << std::endl;
+                }
+              auto pg = spot::parity_game(dpa, owner);
+
               spot::parity_game::strategy_t strategy[2];
               spot::parity_game::region_t winning_region[2];
               pg.solve(winning_region, strategy);
@@ -336,32 +457,154 @@ namespace
                     }
                   return 0;
                 }
-              else
+
+              bool state_added = false;
+              // FIXME use the strategy to find relevant states to activate
+              std::vector<bool> seen(dpa->num_states(), false);
+              std::deque<unsigned> todo({dpa->get_init_state_number()});
+
+              while (!todo.empty())
                 {
-                  std::cout << "UNREALIZABLE\n";
-                  return 1;
+                  unsigned wins = todo.front();
+                  todo.pop_front();
+                  seen[wins] = true;
+
+                  // if the state is one of the sinks, nothing to do
+                  if (wins >= det.get()->num_states())
+                    continue;
+                  // if the controller wins in this state, nothing to do
+                  if (winning_region[1].count(wins))
+                    continue;
+
+                  // the environment wins from this state
+                  // if the state belongs to the environment, then the
+                  // environment has a strategy from it
+                  // use this strategy to guide our exploration
+                  if (!owner[wins])
+                    {
+                      //if (strategy[0].find(wins) == strategy[0].end())
+                      //  throw std::runtime_error("no move for winner");
+
+                      // activate all winning successors
+                      for (const auto& e: dpa->out(wins))
+                        {
+                          if (winning_region[0].count(e.dst))
+                            if (!seen[e.dst])
+                              todo.push_back(e.dst);
+                        }
+                      continue;
+                    }
+
+
+                  bool is_det = true;
+                  // find the corresponding safra state
+                  const spot::safra_state& s = det.get_safra(wins);
+                  // activate states inactive in s
+                  for (const auto& node : s.nodes_)
+                    {
+                      if (active_states[node.first])
+                        continue;
+
+                      //if (verbose)
+                      //  std::cerr << "activate node " << node.first
+                      //    << std::endl;
+                      active_states[node.first] = true;
+                      det.activate(node.first);
+                      state_added = true;
+                      ++active;
+                      is_det = false;
+                    }
+
+                  // do not consider states after a non-det state
+                  if (is_det)
+                    {
+                      for (const auto& e : dpa->out(wins))
+                        {
+                          if (!seen[e.dst])
+                            todo.push_back(e.dst);
+                        }
+                    }
+
+                  //if (state_added)
+                  //  break;
                 }
+
+              if (!state_added)
+                break;
             }
-          case QP:
-            if (!opt_real)
-              {
-                std::cout << "The quasi-polynomial time algorithm does not"
-                  " implement synthesis yet, use --realizability\n";
+
+          std::cout << "UNREALIZABLE\n";
+          return 1;
+        }
+      else
+        {
+          auto dpa = to_dpa(split);
+          if (verbose)
+            std::cerr << "determinization done" << std::endl;
+          auto owner = complete_env(dpa);
+          auto pg = spot::parity_game(dpa, owner);
+          if (verbose)
+            std::cerr << "parity game built" << std::endl;
+          timer.stop();
+
+          if (opt_print_pg)
+            {
+              pg.print(std::cout);
+              return 0;
+            }
+          switch (opt_solver)
+            {
+              case REC:
+                {
+                  spot::parity_game::strategy_t strategy[2];
+                  spot::parity_game::region_t winning_region[2];
+                  pg.solve(winning_region, strategy);
+                  if (winning_region[1].count(pg.get_init_state_number()))
+                    {
+                      std::cout << "REALIZABLE\n";
+                      if (!opt_real)
+                        {
+                          auto strat_aut =
+                            strat_to_aut(pg, strategy[1], dpa, all_outputs);
+
+                          // output the winning strategy
+                          if (opt_print_aiger)
+                            spot::print_aiger(std::cout, strat_aut);
+                          else
+                            {
+                              automaton_printer printer;
+                              printer.print(strat_aut, timer);
+                            }
+                        }
+                      return 0;
+                    }
+                  else
+                    {
+                      std::cout << "UNREALIZABLE\n";
+                      return 1;
+                    }
+                }
+              case QP:
+                if (!opt_real)
+                  {
+                    std::cout << "The quasi-polynomial time algorithm does not"
+                      " implement synthesis yet, use --realizability\n";
+                    return 2;
+                  }
+                else if (pg.solve_qp())
+                  {
+                    std::cout << "REALIZABLE\n";
+                    return 0;
+                  }
+                else
+                  {
+                    std::cout << "UNREALIZABLE\n";
+                    return 1;
+                  }
+              default:
+                SPOT_UNREACHABLE();
                 return 2;
-              }
-            else if (pg.solve_qp())
-              {
-                std::cout << "REALIZABLE\n";
-                return 0;
-              }
-            else
-              {
-                std::cout << "UNREALIZABLE\n";
-                return 1;
-              }
-          default:
-            SPOT_UNREACHABLE();
-            return 2;
+            }
         }
     }
   };
@@ -408,6 +651,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_VERBOSE:
       verbose = true;
+      break;
+    case OPT_INCREMENTAL:
+      opt_incremental = true;
       break;
     }
   return 0;
