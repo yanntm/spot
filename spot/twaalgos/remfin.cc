@@ -312,7 +312,7 @@ namespace spot
 
               for (const auto& e: si.edges_of(scc))
                 {
-                  bool acc{e.acc & scc_infs_alone};
+                  bool acc = (e.acc & scc_infs_alone) != 0;
                   res->new_acc_edge(e.src, e.dst, e.cond, acc);
                 }
 
@@ -320,6 +320,7 @@ namespace spot
 
               for (auto r: scc_pairs.fins().sets())
                 {
+                  acc_cond::mark_t pairinf = scc_pairs.paired_with_fin(r);
                   unsigned base = res->new_states(states.size());
                   for (auto s: states)
                       state_map[s] = base++;
@@ -329,9 +330,7 @@ namespace spot
                         continue;
                       auto src = state_map[e.src];
                       auto dst = state_map[e.dst];
-                      bool cacc = fins_alone.has(r)
-                                ? true
-                                : ((scc_pairs.paired_with(r) & e.acc) != 0);
+                      bool cacc = fins_alone.has(r) || (pairinf & e.acc) != 0;
                       res->new_acc_edge(src, dst, e.cond, cacc);
                       // We need only one non-deterministic jump per
                       // cycle.  As an approximation, we only do

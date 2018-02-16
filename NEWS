@@ -18,6 +18,13 @@ New in spot 2.5.0.dev (not yet released)
     as Fin(0)|(Fin(1)&Inf(2)) instead.  Likewise for
     is_generalized_streett
 
+  - the conversion from Rabin to Büchi was broken on Rabin-like
+    acceptance condition where one pair used Fin(x) and another pair
+    used Inf(x) with the same x.  Unfortunately, this situation could
+    also occur as a side effect of simplifying the acceptance
+    condition (by merging identical set) prior to running the
+    conversion to Büchi.
+
 New in spot 2.5 (2018-01-20)
 
   Build:

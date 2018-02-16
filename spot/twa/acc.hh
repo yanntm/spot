@@ -1397,19 +1397,12 @@ namespace spot
         });
     }
 
-    acc_cond::mark_t paired_with(unsigned mark) const
+    acc_cond::mark_t paired_with_fin(unsigned mark) const
     {
       acc_cond::mark_t res = 0U;
       for (const auto& p: pairs_)
-      {
-        if (visible(p.fin) && visible(p.inf))
-          {
-            if (p.fin.has(mark))
-              res |= p.inf;
-            if (p.inf.has(mark))
-              res |= p.fin;
-          }
-      }
+        if (p.fin.has(mark) && visible(p.fin) && visible(p.inf))
+          res |= p.inf;
       return res;
     }
 

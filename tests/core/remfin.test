@@ -1504,6 +1504,27 @@ run 0 autfilt -H --tgba test1 > output
 cat output
 diff -u output expected-tgba
 
+# Issue #324.
+cat > 324 <<EOF
+HOA: v1
+States: 2
+Start: 1
+AP: 2 "a" "b"
+acc-name: Rabin 3
+Acceptance: 6 (Fin(0) & Inf(1)) | (Fin(2) & Inf(3)) | (Fin(4) & Inf(5))
+properties: trans-labels explicit-labels trans-acc deterministic
+--BODY--
+State: 0
+[!0&!1] 0 {0 4}
+[!0&1] 0 {0 3 4}
+[0&!1] 0 {2 5}
+[0&1] 0 {1 2 5}
+State: 1
+[0] 0
+--END--
+EOF
+autfilt --remove-fin 324 > out
+test 2 = `autfilt -c --reject-word='a;cycle{!a&!b}' 324 out`
 
 # Add 10 small random automata for the next case
 randaut -A'random 6' -Q10 -n10 3 -Hl >> test1
