@@ -69,17 +69,16 @@ namespace spot
 
   twa_graph_ptr cleanup_acceptance(const_twa_graph_ptr aut)
   {
-    return cleanup_acceptance_here(make_twa_graph(aut,
-                                                     twa::prop_set::all()));
+    return cleanup_acceptance_here(make_twa_graph(aut, twa::prop_set::all()));
   }
 
   namespace
   {
     twa_graph_ptr merge_identical_marks_here(twa_graph_ptr aut)
     {
-      // always cleanup before proceeding, otherwise if some mark appears in the
-      // acceptance condition, but not in the automaton the result is undefined.
-      cleanup_acceptance_here(aut, false);
+      // /!\ This assumes that the acceptance condition has been
+      // cleaned up first.  If some mark appears in the acceptance
+      // condition but not in the automaton, the result is undefined.
 
       auto& acc = aut->acc();
       auto& c = acc.get_acceptance();
