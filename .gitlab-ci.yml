@@ -15,7 +15,7 @@ debian-stable-gcc:
   artifacts:
     when: always
     paths:
-      - tests/*/*.log
+      - ./spot-*/_build/sub/tests/*/*.log
       - ./*.log
       - ./*.tar.gz
 
@@ -57,7 +57,7 @@ arch-clang:
   artifacts:
     when: on_failure
     paths:
-      - tests/*/*.log
+      - ./spot-*/_build/sub/tests/*/*.log
       - ./*.log
 
 arch-gcc-glibcxxdebug:
@@ -74,7 +74,7 @@ arch-gcc-glibcxxdebug:
   artifacts:
     when: on_failure
     paths:
-      - tests/*/*.log
+      - ./spot-*/_build/sub/tests/*/*.log
       - ./*.log
 
 mingw-shared:
