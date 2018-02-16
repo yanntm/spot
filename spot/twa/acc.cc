@@ -666,7 +666,7 @@ namespace spot
     auto s = code_.back().sub.size;
     acc_cond::mark_t seen_fin = 0U;
     acc_cond::mark_t seen_inf = 0U;
-    // Each pairs is the position of a Fin followed
+    // Each pair is the position of a Fin followed
     // by the number of Inf.
     std::map<unsigned, unsigned> p;
     while (s)
@@ -697,7 +697,7 @@ namespace spot
             unsigned i = m2.count();
             // If we have seen this pair already, it must have the
             // same size.
-            if (p.emplace(m1.max_set(), i).first->second != i)
+            if (p.emplace(m1.max_set() - 1, i).first->second != i)
               return false;
             assert(i > 0);
             unsigned j = m1.max_set(); // == n+1
@@ -705,7 +705,6 @@ namespace spot
               if (!m2.has(j++))
                 return false;
             while (--i);
-
             seen_fin |= m1;
             seen_inf |= m2;
           }
@@ -715,8 +714,10 @@ namespace spot
             for (auto s: m1.sets())
               // If we have seen this pair already, it must have the
               // same size.
-              if (p.emplace(s, 0U).first->second != 0U)
-                return false;
+              {
+                if (p.emplace(s, 0U).first->second != 0U)
+                  return false;
+              }
             seen_fin |= m1;
           }
         else
@@ -777,7 +778,7 @@ namespace spot
             unsigned i = m2.count();
             // If we have seen this pair already, it must have the
             // same size.
-            if (p.emplace(m1.max_set(), i).first->second != i)
+            if (p.emplace(m1.max_set() - 1, i).first->second != i)
               return false;
             assert(i > 0);
             unsigned j = m1.max_set(); // == n+1
