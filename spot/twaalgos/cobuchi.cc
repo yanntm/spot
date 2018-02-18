@@ -134,38 +134,27 @@ namespace spot
         unsigned nb_states_;                    // Number of states.
         unsigned was_rabin_;                    // Was it Rabin before Streett?
         std::vector<unsigned>* orig_states_;    // Match old Rabin st. from new.
+        std::vector<unsigned>* orig_clauses_;   // Associated Rabin clauses.
         unsigned orig_num_st_;                  // Rabin original nb states.
 
         // Keep information of states that are wanted to be seen infinitely
         // often (cf Header).
-        void save_inf_nca_st(unsigned s, acc_cond::mark_t m,
-                             vect_nca_info* nca_info)
+        void save_inf_nca_st(unsigned s, vect_nca_info* nca_info)
         {
-          if (was_rabin_ && m)
+          const pair_state_nca& st = (*res_map_)[s];
+          auto bv = make_bitvect(orig_num_st_);
+          for (unsigned state : pmap_.states_of(st.second))
+            bv->set(state);
+          unsigned clause = 0;
+          unsigned state = st.first;
+          if (was_rabin_)
             {
-              for (unsigned p = 0; p < nb_pairs_; ++p)
-                if (pairs_[p].fin || m & pairs_[p].inf)
-                  {
-                    const pair_state_nca& st = (*res_map_)[s];
-                    auto bv = make_bitvect(orig_num_st_);
-                    for (unsigned state : pmap_.states_of(st.second))
-                      bv->set(state);
-                    assert(!was_rabin_
-                            || ((int)(*orig_states_)[st.first] >= 0));
-                    unsigned state = was_rabin_ ? (*orig_states_)[st.first]
-                                              : st.first;
-                    unsigned clause_nb = was_rabin_ ? p / 2 : p;
-                    nca_info->push_back(new nca_st_info(clause_nb, state, bv));
-                  }
+              clause = (*orig_clauses_)[state];
+              assert((int)clause >= 0);
+              state = (*orig_states_)[state];
+              assert((int)state >= 0);
             }
-          else if (!was_rabin_)
-            {
-              const pair_state_nca& st = (*res_map_)[s];
-              auto bv = make_bitvect(aut_->num_states());
-              for (unsigned state : pmap_.states_of(st.second))
-                bv->set(state);
-              nca_info->push_back(new nca_st_info(0, st.first, bv));
-            }
+          nca_info->push_back(new nca_st_info(clause, state, bv));
         }
 
         // Helper function that marks states that we want to see finitely often
@@ -179,17 +168,11 @@ namespace spot
               unsigned src_scc = si_.scc_of(s);
               if (nca_is_inf_state[s])
                 {
-                  acc_cond::mark_t m = 0u;
                   for (auto& e : res_->out(s))
-                    {
-                      if (nca_info && e.acc && (si_.scc_of(e.dst) == src_scc
-                                                || state_based_))
-                        m |= e.acc;
-                      e.acc = 0u;
-                    }
+                    e.acc = 0U;
 
                   if (nca_info)
-                    save_inf_nca_st(s, m, nca_info);
+                    save_inf_nca_st(s, nca_info);
                 }
               else
                 {
@@ -223,11 +206,15 @@ namespace spot
                        | scc_info_options::TRACK_SUCCS)),
             nb_states_(res_->num_states()),
             was_rabin_(was_rabin),
-            orig_num_st_(orig_num_st)
+            orig_num_st_(orig_num_st ? orig_num_st : ref_prod->num_states())
         {
           if (was_rabin)
-            orig_states_ = ref_prod->get_named_prop<std::vector<unsigned>>
-                                      ("original-states");
+            {
+              orig_states_ = ref_prod->get_named_prop<std::vector<unsigned>>
+                ("original-states");
+              orig_clauses_ = ref_prod->get_named_prop<std::vector<unsigned>>
+                ("original-clauses");
+            }
         }
 
         ~nsa_to_nca_converter()

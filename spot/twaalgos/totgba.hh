@@ -114,7 +114,9 @@ namespace spot
   /// automaton and the original state of the input automaton. This is stored
   /// in the "original-states" named property of the produced automaton. Call
   /// `aut->get_named_prop<std::vector<unsigned>>("original-states")`
-  /// to retrieve it.
+  /// to retrieve it.  Additionally, the correspondence between each created
+  /// state and the associated DNF clause is recorded in the
+  /// "original-clauses" property (also a vector of unsigned).
   SPOT_API twa_graph_ptr
   dnf_to_streett(const const_twa_graph_ptr& aut, bool original_states = false);
 }

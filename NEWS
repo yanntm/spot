@@ -25,6 +25,8 @@ New in spot 2.5.0.dev (not yet released)
     condition (by merging identical set) prior to running the
     conversion to Büchi.
 
+  - dnf_to_dca() was mishandling some Rabin-like input.
+
 New in spot 2.5 (2018-01-20)
 
   Build:

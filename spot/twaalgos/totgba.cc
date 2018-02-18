@@ -402,18 +402,22 @@ namespace spot
             auto orig_states = new std::vector<unsigned>();
             orig_states->resize(res_->num_states(), -1U);
             res_->set_named_prop("original-states", orig_states);
+
+            auto orig_clauses = new std::vector<unsigned>();
+            orig_clauses->resize(res_->num_states(), -1U);
+            res_->set_named_prop("original-clauses", orig_clauses);
+
             unsigned orig_num_states = in_->num_states();
             for (unsigned orig = 0; orig < orig_num_states; ++orig)
               {
                 if (!si_.is_useful_scc(si_.scc_of(orig)))
                     continue;
                 for (const auto& p : st_repr_[orig])
-                  (*orig_states)[p.second] = orig;
+                  {
+                    (*orig_states)[p.second] = orig;
+                    (*orig_clauses)[p.second] = p.first;
+                  }
               }
-#if DEBUG
-            for (unsigned i = 1; i < orig_states->size(); ++i)
-              assert((int)(*orig_states)[i] >= 0);
-#endif
           }
 
         set_acc_condition();
