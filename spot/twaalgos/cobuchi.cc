@@ -183,7 +183,7 @@ namespace spot
                   for (auto& e : res_->out(s))
                     {
                       if (nca_info && e.acc && (si_.scc_of(e.dst) == src_scc
-                                                   || state_based_))
+                                                || state_based_))
                         m |= e.acc;
                       e.acc = 0u;
                     }
@@ -219,8 +219,8 @@ namespace spot
             named_states_(named_states),
             res_(aug_subset_cons(ref_prod, ref_power, named_states_, pmap_)),
             res_map_(res_->get_named_prop<product_states>("product-states")),
-            si_(scc_info(res_, scc_info_options::TRACK_STATES
-                               | scc_info_options::TRACK_SUCCS)),
+            si_(res_, (scc_info_options::TRACK_STATES
+                       | scc_info_options::TRACK_SUCCS)),
             nb_states_(res_->num_states()),
             was_rabin_(was_rabin),
             orig_num_st_(orig_num_st)
@@ -405,7 +405,7 @@ namespace spot
     {
       protected:
         const_twa_graph_ptr aut_;                        // The given automaton.
-        vect_nca_info* nca_info_;             // Info (cf Header).
+        vect_nca_info* nca_info_;                        // Info (cf Header).
         unsigned nb_copy_;                               // != 0 if was Rabin.
         bdd ap_;                                         // All AP.
         std::vector<bdd> num2bdd_;                       // Get bdd from AP num.
@@ -474,7 +474,7 @@ namespace spot
                     }
                 }
             }
-          debug << "All_states:\n" << *bv_aut_trans_ << std::endl;
+          debug << "All_states:\n" << *bv_aut_trans_ << '\n';
 
           twa_graph_ptr res = make_twa_graph(aut_->get_dict());
           res->copy_ap_of(aut_);
@@ -561,12 +561,16 @@ namespace spot
                       bv_trans_mark->at(l) |= bv_aut_trans_->at(s * nc + l);
               toclean_.push_back(bv_trans_mark);
 
-              debug << "src:" << top.second << std::endl;
+              debug << "src:" << top.second;
+              if (named_states)
+                debug << ' ' << (*state_name)[top.second];
+              debug << '\n';
+
               for (unsigned l = 0; l < nc; ++l)
                 {
-                  debug << "l:"
-                    << bdd_format_formula(aut_->get_dict(), num2bdd_[l])
-                    << '\n';
+                  debug << "l: "
+                        << bdd_format_formula(aut_->get_dict(), num2bdd_[l])
+                        << '\n';
 
                   auto bv_res = make_bitvect_array(ns, 2);
                   toclean_.push_back(bv_res);
@@ -591,8 +595,7 @@ namespace spot
                                 (top.first.first + 1) % (nb_copy_ + 1)
                               : top.first.first;
 
-                  debug << "dest\n" << *bv_res << "i: " << i
-                    << std::endl;
+                  debug << "dest\n" << *bv_res << "i: " << i << '\n';
                   res->new_edge(top.second,
                                 new_state(std::make_pair(i, bv_res)),
                                 num2bdd_[l]);
@@ -600,15 +603,18 @@ namespace spot
               debug << '\n';
             }
 
-          // Set accepting states.
+          // Set rejecting states.
           scc_info si(res);
           bool state_based = (bool)aut_->prop_state_acc();
           unsigned res_size = res->num_states();
           for (unsigned s = 0; s < res_size; ++s)
-            if (num_2_bv_[s].second->at(1).is_fully_clear())
-              for (auto& edge : res->out(s))
-                if (si.scc_of(edge.dst) == si.scc_of(s) || state_based)
-                  edge.acc = acc_cond::mark_t({0});
+            {
+              unsigned s_scc = si.scc_of(s);
+              if (num_2_bv_[s].second->at(1).is_fully_clear())
+                for (auto& edge : res->out(s))
+                  if (state_based || si.scc_of(edge.dst) == s_scc)
+                    edge.acc = acc_cond::mark_t({0});
+            }
 
           // Delete all bitvect arrays allocated by this method (run).
           for (auto v: toclean_)
@@ -624,7 +630,7 @@ namespace spot
   twa_graph_ptr
   nsa_to_dca(const_twa_graph_ptr aut, bool named_states)
   {
-    debug << "NSA_to_dca" << std::endl;
+    debug << "NSA_to_dca\n";
     std::vector<acc_cond::rs_pair> pairs;
     if (!aut->acc().is_streett_like(pairs) && !aut->acc().is_parity())
       throw std::runtime_error("nsa_to_dca() only works with Streett-like or "
@@ -640,10 +646,10 @@ namespace spot
     nsa_to_nca(aut, named_states, &nca_info);
 
 #if DEBUG
-    debug << "PRINTING INFO" << std::endl;
+    debug << "PRINTING INFO\n";
     for (unsigned i = 0; i < nca_info.size(); ++i)
       debug << '<' << nca_info[i]->clause_num << ',' << nca_info[i]->state_num
-        << ',' << nca_info[i]->all_dst << '>' << std::endl;
+            << ',' << *nca_info[i]->all_dst << ">\n";
 #endif
 
     dca_breakpoint_cons dca(aut, &nca_info, 0);
@@ -654,9 +660,8 @@ namespace spot
   twa_graph_ptr
   dnf_to_dca(const_twa_graph_ptr aut, bool named_states)
   {
-    debug << "DNF_to_dca" << std::endl;
+    debug << "DNF_to_dca\n";
     const acc_cond::acc_code& code = aut->get_acceptance();
-    std::vector<acc_cond::rs_pair> pairs;
     if (!code.is_dnf())
       throw std::runtime_error("dnf_to_dca() only works with DNF (Rabin-like "
                                "included) acceptance condition");
@@ -671,10 +676,10 @@ namespace spot
     dnf_to_nca(aut, false, &nca_info);
 
 #if DEBUG
-    debug << "PRINTING INFO" << std::endl;
+    debug << "PRINTING INFO\n";
     for (unsigned i = 0; i < nca_info.size(); ++i)
       debug << '<' << nca_info[i]->clause_num << ',' << nca_info[i]->state_num
-        << ',' << nca_info[i]->all_dst << '>' << std::endl;
+            << ',' << *nca_info[i]->all_dst << ">\n";
 #endif
 
     unsigned nb_copy = 0;

@@ -126,18 +126,18 @@ namespace spot
         for (unsigned i = 0; i < all_clauses_.size(); ++i)
           {
             debug << i << " Fin:" << all_clauses_[i].first << " Inf:"
-              << all_clauses_[i].second << std::endl;
+                  << all_clauses_[i].second << '\n';
           }
 #endif
       }
 
       // Compute all the acceptance sets that will be needed:
       //   -Inf(x) will be converted to (Inf(x) | Fin(y)) with y appearing
-      //     on every edge.
+      //     on every edge of the associated clone.
       //   -Fin(x) will be converted to (Inf(y) | Fin(x)) with y appearing
       //     nowhere.
-      //
-      // All the previous 'y' are the new sets assigned.
+      // In the second form, Inf(y) with no occurrence of y, can be
+      // reused multiple times.  It's called "missing_set" below.
       void
       assign_new_sets()
       {
@@ -151,7 +151,7 @@ namespace spot
             {
               if ((int)missing_set < 0)
                 {
-                  while (all_m & acc_cond::mark_t({next_set}))
+                  while (all_m.has(next_set))
                     ++next_set;
                   missing_set = next_set++;
                 }
@@ -160,13 +160,13 @@ namespace spot
             }
           else if (all_inf_.has(set))
             {
-              while (all_m & acc_cond::mark_t({next_set}))
+              while (all_m.has(next_set))
                 ++next_set;
 
               assigned_sets_[set] = next_set++;
             }
 
-        num_sets_res_ = next_set > max_set_in_ ? next_set : max_set_in_;
+        num_sets_res_ = std::max(next_set, max_set_in_);
       }
 
       // Precompute:
@@ -239,15 +239,15 @@ namespace spot
               }
           }
 #if DEBUG
-        debug << "accepting clauses" << std::endl;
+        debug << "accepting clauses\n";
         for (unsigned i = 0; i < res.size(); ++i)
           {
             debug << "scc(" << i << ") --> ";
             for (auto elt : res[i])
               debug << elt << ',';
-            debug << std::endl;
+            debug << '\n'
           }
-        debug << std::endl;
+        debug << '\n';
 #endif
       }
 
@@ -257,7 +257,7 @@ namespace spot
       void
       add_state(unsigned st)
       {
-        debug << "add_state(" << st << ')' << std::endl;
+        debug << "add_state(" << st << ")\n";
         if (st_repr_[st].empty())
           {
             unsigned st_scc = si_.scc_of(st);
@@ -270,7 +270,7 @@ namespace spot
 
             else
               st_repr_[st].emplace_back(-1U, res_->new_state());
-            debug << "added" << std::endl;
+            debug << "added\n";
           }
       }
 
@@ -317,7 +317,7 @@ namespace spot
           init_st_in_(in->get_init_state_number()),
           init_reachable_(is_init_reachable())
       {
-        debug << "State based ? " << state_based_ << std::endl;
+        debug << "State based ? " << state_based_ << '\n';
         std::tie(all_inf_, all_fin_) = code.used_inf_fin_sets();
         split_dnf_clauses(code);
         find_set_to_add();
@@ -346,8 +346,7 @@ namespace spot
                 add_state(st);
                 for (const auto& e : in_->out(st))
                   {
-                    debug << "working_on_edge(" << st << ',' << e.dst << ')'
-                      << std::endl;
+                    debug << "working_on_edge(" << st << ',' << e.dst << ")\n";
 
                     unsigned dst_scc = si_.scc_of(e.dst);
                     if (!si_.is_useful_scc(dst_scc))
@@ -368,7 +367,7 @@ namespace spot
                         for (const auto& p_dst : st_repr_[e.dst])
                           {
                             debug << "repr(" << p_src.second << ','
-                              << p_dst.second << ')' << std::endl;
+                                  << p_dst.second << ")\n";
 
                             if (same_scc && p_src.first == p_dst.first)
                               res_->new_edge(p_src.second, p_dst.second, e.cond,
