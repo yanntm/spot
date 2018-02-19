@@ -11,7 +11,7 @@ The latest release of Spot is version {{{LASTRELEASE}}}:
 - {{{LASTTARBALL}}} (see also the {{{LASTNEWS}}})
 
 Past releases can be found [[https://www.lrde.epita.fr/dload/spot/][in the same directory]].  If you are
-interested in /future/ releases, you can always peek at the [[http://teamcity.lrde.epita.fr/viewLog.html?buildTypeId=bt16&buildId=lastFinished&buildBranch=next&tab=artifacts&guest=1][last
+interested in /future/ releases, you can always peek at the [[https://gitlab.lrde.epita.fr/spot/spot/-/jobs/artifacts/next/browse?job=debian-stable-gcc][last
 successful development build]].
 
 ** Requirements
