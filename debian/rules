@@ -27,12 +27,12 @@ LTOPLUG := $(shell gcc -v 2>&1 | \
 
 # ARFLAGS is for Automake
 # AR_FLAGS is for Libtool
-LTOSETUP =					\
-  LDFLAGS='-fuse-linker-plugin'			\
-  NM='nm --plugin $(LTOPLUG)'			\
-  ARFLAGS='cru --plugin $(LTOPLUG)'		\
-  AR_FLAGS='cru --plugin $(LTOPLUG)'		\
-  RANLIB='ranlib --plugin $(LTOPLUG)'           \
+LTOSETUP =					    \
+  LDFLAGS='-fuse-linker-plugin'			    \
+  NM='nm --plugin $(LTOPLUG)'			    \
+  ARFLAGS='cru --plugin $(LTOPLUG)'		    \
+  AR_FLAGS='cru --plugin $(LTOPLUG)'		    \
+  RANLIB='ranlib --plugin $(LTOPLUG)'
   VALGRIND=false
 GCDADIR := $(shell pwd)/gcda
 PROFW = -Wno-error=coverage-mismatch
@@ -40,8 +40,8 @@ PRO1SETUP =							\
   CFLAGS='-flto -fprofile-generate=$(GCDADIR) $(PROFW)'		\
   CXXFLAGS='-flto -fprofile-generate=$(GCDADIR) $(PROFW)'
 PRO2SETUP =						\
-  CFLAGS='-flto -fprofile-use=$(GCDADIR) $(PROFW)'	\
-  CXXFLAGS='-flto -fprofile-use=$(GCDADIR) $(PROFW)'
+  CFLAGS='-flto -fprofile-use=$(GCDADIR) $(PROFW) -fprofile-correction'	\
+  CXXFLAGS='-flto -fprofile-use=$(GCDADIR) $(PROFW) -fprofile-correction'
 PYDEFAULT=$(shell py3versions --default)
 PYOTHERS=$(filter-out $(PYDEFAULT), $(shell py3versions --supported))
 
