@@ -33,7 +33,8 @@ run 0 ../modelcheck --model $srcdir/finite.gal \
 test `grep ' -> ' stdout | wc -l` = 25
 test `grep 'P.a=' stdout | wc -l` = 15
 
-run 0 ../modelcheck --selfloopize true --model $srcdir/finite.gal \
+run 0 ../modelcheck --selfloopize true  --dot model \
+    --model $srcdir/finite.gal \
     --formula '"P.a < 10"' > stdout2
 cmp stdout stdout2
 
@@ -49,12 +50,12 @@ run 0 ../modelcheck --compress 1 --selfloopize false \
 test `grep ' -> ' stdout | wc -l` = 19
 test `grep 'P.a=' stdout | wc -l` = 15
 
-run 0 ../modelcheck --selfloopize dead --is-empty $srcdir/finite.gal \
+run 0 ../modelcheck --selfloopize dead --is-empty --model $srcdir/finite.gal \
   --formula '!(G(dead -> ("P.a==3" | "P.b==3")))'
 
-run 1 ../modelcheck --selfloopize dead --is-empty  $srcdir/finite.gal \
+run 1 ../modelcheck --selfloopize dead --is-empty  --model $srcdir/finite.gal \
   --formula '!(G(dead -> ("P.a==2" | "P.b==3")))'
 
 # This used to segfault because of a bug in a
 # function that do not exist anymore.
-run 0 ../modelcheck --dot product $srcdir/finite.gal --formula 'true'
+run 0 ../modelcheck --dot product --model $srcdir/finite.gal --formula 'true'
