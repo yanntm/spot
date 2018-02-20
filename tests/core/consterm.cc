@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2010-2012, 2015-2016, 2018 Laboratoire de Recherche
 // et Dévelopement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>

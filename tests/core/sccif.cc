@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -18,6 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include "config.h"
 #include <iostream>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/sccinfo.hh>

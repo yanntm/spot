@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche
+// Copyright (C) 2013-2018 Laboratoire de Recherche
 // et Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <fstream>
 #include <sstream>
 #include <map>
@@ -41,14 +42,14 @@
 // file used to communicate with the sat solver will be left in
 // the current directory.
 //
-// Additionally, if the following DEBUG macro is set to 1, the CNF
+// Additionally, if the following TRACE macro is set to 1, the CNF
 // file will be output with a comment before each clause, and an
 // additional output file (dtwa-sat.dbg) will be created with a list
 // of all positive variables in the result and their meaning.
 
-#define DEBUG 0
+#define TRACE 0
 
-#if DEBUG
+#if TRACE
 #define dout out << "c "
 #define cnf_comment(...)  solver.comment(__VA_ARGS__)
 #define trace std::cerr
@@ -247,7 +248,7 @@ namespace spot
       int
       transid(unsigned src, bdd& cond, unsigned dst)
       {
-#if DEBUG
+#if TRACE
         try
         {
           return helper.get_t(src, alpha_map.at(cond), dst);
@@ -272,7 +273,7 @@ namespace spot
       int
       transacc(unsigned src, bdd& cond, unsigned dst, unsigned nacc)
       {
-#if DEBUG
+#if TRACE
         try
         {
           return helper.get_ta(src, alpha_map.at(cond), dst, nacc);
@@ -293,7 +294,7 @@ namespace spot
           unsigned dst_ref, acc_cond::mark_t acc_cand = 0U,
           acc_cond::mark_t acc_ref = 0U)
       {
-#if DEBUG
+#if TRACE
         try
         {
           return helper.get_p(
@@ -315,7 +316,7 @@ namespace spot
 #endif
       }
 
-#if DEBUG
+#if TRACE
       int
       pathid(unsigned path, unsigned src_cand, unsigned dst_cand)
       {
@@ -539,7 +540,7 @@ namespace spot
                           bool state_based,
                           bool colored)
     {
-#if DEBUG
+#if TRACE
       debug_dict = ref->get_dict();
 #endif
       // Compute the AP used.
@@ -572,7 +573,7 @@ namespace spot
       // Empty automaton is impossible.
       assert(d.cand_size > 0);
 
-#if DEBUG
+#if TRACE
       debug_ref_acc = &ref->acc();
       debug_cand_acc = &d.cacc;
       solver.comment("d.ref_size:", d.ref_size, '\n');
@@ -597,7 +598,7 @@ namespace spot
       for (unsigned q1 = 0; q1 < d.cand_size; ++q1)
         for (unsigned l = 0; l < alpha_size; ++l)
           {
-#if DEBUG
+#if TRACE
             solver.comment("");
             for (unsigned q2 = 0; q2 < d.cand_size; ++q2)
               {
@@ -768,7 +769,7 @@ namespace spot
 
                                           for (auto& v: missing)
                                             {
-#if DEBUG
+#if TRACE
                                               solver.comment((rejloop ?
                                                        "(11) " : "(12) "), f_p,
                                                   " ∧ ", d.fmt_t(q2, l, q3),
@@ -787,7 +788,7 @@ namespace spot
                                                   orsep = " ∨ ";
                                                 }
                                               solver.comment_rec(")\n");
-#endif // DEBUG
+#endif // TRACE
                                               solver.add({-pid, -ti});
                                               for (int s: v)
                                                 if (s < 0)
@@ -825,7 +826,7 @@ namespace spot
                                                 q1, q1p, q3, dp, f2, f2p);
                                             if (pid == p2id)
                                               continue;
-#if DEBUG
+#if TRACE
                                             solver.comment("(13) ", f_p, " ∧ ",
                                                  d.fmt_t(q1, l, q3), "δ ");
 
@@ -883,7 +884,7 @@ namespace spot
       a->set_acceptance(satdict.cand_nacc, satdict.cand_acc);
       a->new_states(satdict.cand_size);
 
-#if DEBUG
+#if TRACE
       std::fstream out("dtwa-sat.dbg",
                        std::ios_base::trunc | std::ios_base::out);
       out.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -922,7 +923,7 @@ namespace spot
             }
           }
 
-#if DEBUG
+#if TRACE
       dout << "--- transition variables ---\n";
       for (unsigned i = 0; i < satdict.cand_size; ++i)
         for (unsigned j = 0; j < alpha_size; ++j)

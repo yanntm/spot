@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008-2010, 2012-2017 Laboratoire de Recherche et
+// Copyright (C) 2008-2010, 2012-2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005, 2007 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -20,6 +20,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <spot/twaalgos/randomgraph.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/misc/random.hh>

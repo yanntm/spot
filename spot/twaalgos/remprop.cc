@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <spot/twaalgos/remprop.hh>
 #include <spot/twaalgos/mask.hh>
 #include <spot/misc/casts.hh>
@@ -124,7 +125,7 @@ namespace spot
 
   twa_graph_ptr remove_ap::strip(const_twa_graph_ptr aut) const
   {
-    bdd restrict = bddtrue;
+    bdd restrict_ = bddtrue;
     bdd exist = bddtrue;
     auto d = aut->get_dict();
 
@@ -147,7 +148,7 @@ namespace spot
         int v = d->has_registered_proposition(ap, aut);
         if (v >= 0)
           {
-            restrict &= bdd_ithvar(v);
+            restrict_ &= bdd_ithvar(v);
             res->unregister_ap(v);
           }
       }
@@ -156,7 +157,7 @@ namespace spot
         int v = d->has_registered_proposition(ap, aut);
         if (v >= 0)
           {
-            restrict &= bdd_nithvar(v);
+            restrict_ &= bdd_nithvar(v);
             res->unregister_ap(v);
           }
       }
@@ -165,7 +166,7 @@ namespace spot
                                        acc_cond::mark_t&, unsigned)
                          {
                            cond = bdd_restrict(bdd_exist(cond, exist),
-                                               restrict);
+                                               restrict_);
                          });
     return res;
   }

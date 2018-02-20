@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015  Laboratoire de Recherche et Developpement de
-// l'Epita (LRDE).
+// Copyright (C) 2015, 2018 Laboratoire de Recherche et Developpement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <spot/priv/trim.hh>
 #include <algorithm>
 #include <functional>

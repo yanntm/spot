@@ -1,6 +1,6 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2010, 2012, 2013, 2015 Laboratoire de Recherche et
-## Développement de l'Epita (LRDE).
+## Copyright (C) 2010, 2012, 2013, 2015, 2018 Laboratoire de Recherche
+## et Développement de l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
 ##
@@ -18,7 +18,8 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) -I.. $(BUDDY_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) -I.. $(BUDDY_CPPFLAGS) \
+              -I$(top_builddir)/lib -I$(top_srcdir)/lib
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 taalgosdir = $(pkgincludedir)/taalgos

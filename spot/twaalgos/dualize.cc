@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <spot/misc/minato.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/alternation.hh>
@@ -180,8 +181,8 @@ namespace spot
       }
 
       // Handles the dualization of a universal initial transition.
-      // In theory the transition would be split into several existential 
-      // initial transitions, but since spot does not allow multiple initial 
+      // In theory the transition would be split into several existential
+      // initial transitions, but since spot does not allow multiple initial
       // states, we rather use a trick: We add a new initial state, and then
       // copy all exiting transitions from each of the state of the universal
       // initial transition.
@@ -251,9 +252,9 @@ namespace spot
       }
 
       // Given the bdd representation b of a transition, adds destination states
-      // to s, and returns the marks on the transition. s being empty means the 
+      // to s, and returns the marks on the transition. s being empty means the
       // transition goes toward a "forever true" state. s with size one
-      // represents an existential transition, while size over one represents 
+      // represents an existential transition, while size over one represents
       // a universal transition.
       acc_cond::mark_t bdd_to_state(bdd b, std::vector<unsigned>& s)
       {

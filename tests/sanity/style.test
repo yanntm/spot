@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2009-2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2009-2018 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 # Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6
 # (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -306,11 +306,16 @@ for dir in "$TOP/spot" "$TOP/bin" "$TOP/tests"; do
 	    *)
 	      $GREP '#.*include.*priv/' $tmp &&
 		diag 'Do not include private headers in public headers.'
-        $GREP '^[^#]*[^#_]assert[	 ]*(.*)' $tmp &&
-          diag 'Use SPOT_ASSERT() instead of assert() in public headers.'
+              $GREP '^[^#]*[^#_]assert[	 ]*(.*)' $tmp &&
+                diag 'Use SPOT_ASSERT() instead of assert() in public headers.'
 	      ;;
-
 	  esac
+          case $file in
+              */bin/*);;
+              *.hh)
+                  $GREP '#.*include.*[<"]config.h[">]' $tmp &&
+                      diag 'Do not include config.h in header files.'
+          esac
 	  ;;
 	*.cc)
 	  if $GREP 'namespace$' $tmp >/dev/null; then
@@ -322,7 +327,15 @@ for dir in "$TOP/spot" "$TOP/bin" "$TOP/tests"; do
 	  fi
           e$GREP '	' $tmp &&
 	      diag 'Use spaces instead of tabs.'
-	  ;;
+          case $file in
+              */bin/*) ;;
+              *)
+                  if $GREP -q '#.*include.*"config.h"' $tmp; then
+                      :
+                  else
+                      diag "*.cc files should include "'"config.h"'
+                  fi;;
+          esac;;
       esac
       case $file in
 	*/bin/*|*.cc);;

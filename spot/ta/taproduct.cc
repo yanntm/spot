@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2014-2017 Laboratoire de Recherche et
+// Copyright (C) 2011, 2012, 2014-2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 //
@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <spot/ta/taproduct.hh>
 #include <cassert>
 #include <spot/misc/hashfunc.hh>

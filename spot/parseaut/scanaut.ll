@@ -1,5 +1,5 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2014-2017 Laboratoire de Recherche et Développement
+** Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
 ** de l'Epita (LRDE).
 **
 ** This file is part of Spot, a model checking library.
@@ -24,7 +24,9 @@
 %option extra-type="struct extra_data*"
 
 /* %option debug */
-
+%top{
+#include "config.h"
+}
 %{
 #include <string>
 #include <sys/stat.h>

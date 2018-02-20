@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire
-// de Recherche et Développement de l'Epita (LRDE).
+// Copyright (C) 2010-2016, 2018 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -19,6 +19,7 @@
 
 //#define TRACE
 
+#include "config.h"
 #include <iostream>
 #ifdef TRACE
 #define trace std::clog

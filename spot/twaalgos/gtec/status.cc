@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014, 2016 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2014, 2016, 2018 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 // Copyright (C) 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
 // et Marie Curie.
@@ -20,6 +20,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <ostream>
 #include <spot/twaalgos/gtec/status.hh>
 

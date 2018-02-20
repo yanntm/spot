@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <spot/twaalgos/cobuchi.hh>
 
 #include <spot/misc/bddlt.hh>
@@ -35,11 +36,11 @@
 #include <stack>
 #include <unordered_map>
 
-#define DEBUG 0
-#if DEBUG
-#define debug std::cerr
+#define TRACE 0
+#if TRACE
+#define trace std::cerr
 #else
-#define debug while (0) std::cout
+#define trace while (0) std::cout
 #endif
 
 namespace spot
@@ -461,7 +462,7 @@ namespace spot
                     }
                 }
             }
-          debug << "All_states:\n" << *bv_aut_trans_ << '\n';
+          trace << "All_states:\n" << *bv_aut_trans_ << '\n';
 
           twa_graph_ptr res = make_twa_graph(aut_->get_dict());
           res->copy_ap_of(aut_);
@@ -548,14 +549,14 @@ namespace spot
                       bv_trans_mark->at(l) |= bv_aut_trans_->at(s * nc + l);
               toclean_.push_back(bv_trans_mark);
 
-              debug << "src:" << top.second;
+              trace << "src:" << top.second;
               if (named_states)
-                debug << ' ' << (*state_name)[top.second];
-              debug << '\n';
+                trace << ' ' << (*state_name)[top.second];
+              trace << '\n';
 
               for (unsigned l = 0; l < nc; ++l)
                 {
-                  debug << "l: "
+                  trace << "l: "
                         << bdd_format_formula(aut_->get_dict(), num2bdd_[l])
                         << '\n';
 
@@ -582,12 +583,12 @@ namespace spot
                                 (top.first.first + 1) % (nb_copy_ + 1)
                               : top.first.first;
 
-                  debug << "dest\n" << *bv_res << "i: " << i << '\n';
+                  trace << "dest\n" << *bv_res << "i: " << i << '\n';
                   res->new_edge(top.second,
                                 new_state(std::make_pair(i, bv_res)),
                                 num2bdd_[l]);
                 }
-              debug << '\n';
+              trace << '\n';
             }
 
           // Set rejecting states.
@@ -617,7 +618,7 @@ namespace spot
   twa_graph_ptr
   nsa_to_dca(const_twa_graph_ptr aut, bool named_states)
   {
-    debug << "NSA_to_dca\n";
+    trace << "NSA_to_dca\n";
     std::vector<acc_cond::rs_pair> pairs;
     if (!aut->acc().is_streett_like(pairs) && !aut->acc().is_parity())
       throw std::runtime_error("nsa_to_dca() only works with Streett-like or "
@@ -632,10 +633,10 @@ namespace spot
     vect_nca_info nca_info;
     nsa_to_nca(aut, named_states, &nca_info);
 
-#if DEBUG
-    debug << "PRINTING INFO\n";
+#if TRACE
+    trace << "PRINTING INFO\n";
     for (unsigned i = 0; i < nca_info.size(); ++i)
-      debug << '<' << nca_info[i]->clause_num << ',' << nca_info[i]->state_num
+      trace << '<' << nca_info[i]->clause_num << ',' << nca_info[i]->state_num
             << ',' << *nca_info[i]->all_dst << ">\n";
 #endif
 
@@ -647,7 +648,7 @@ namespace spot
   twa_graph_ptr
   dnf_to_dca(const_twa_graph_ptr aut, bool named_states)
   {
-    debug << "DNF_to_dca\n";
+    trace << "DNF_to_dca\n";
     const acc_cond::acc_code& code = aut->get_acceptance();
     if (!code.is_dnf())
       throw std::runtime_error("dnf_to_dca() only works with DNF (Rabin-like "
@@ -662,10 +663,10 @@ namespace spot
     vect_nca_info nca_info;
     dnf_to_nca(aut, false, &nca_info);
 
-#if DEBUG
-    debug << "PRINTING INFO\n";
+#if TRACE
+    trace << "PRINTING INFO\n";
     for (unsigned i = 0; i < nca_info.size(); ++i)
-      debug << '<' << nca_info[i]->clause_num << ',' << nca_info[i]->state_num
+      trace << '<' << nca_info[i]->clause_num << ',' << nca_info[i]->state_num
             << ',' << *nca_info[i]->all_dst << ">\n";
 #endif
 

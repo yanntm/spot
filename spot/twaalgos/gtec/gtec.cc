@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2011, 2014, 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2008, 2011, 2014-2016, 2018 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -22,6 +22,7 @@
 
 // #define TRACE
 
+#include "config.h"
 #include <iostream>
 #ifdef TRACE
 #define trace std::cerr

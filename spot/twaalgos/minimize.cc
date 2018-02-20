@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010-2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2010-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -19,13 +19,13 @@
 
 
 //#define TRACE
-
 #ifdef TRACE
 #  define trace std::cerr
 #else
 #  define trace while (0) std::cerr
 #endif
 
+#include "config.h"
 #include <queue>
 #include <deque>
 #include <set>

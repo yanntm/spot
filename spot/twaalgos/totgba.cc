@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <spot/twaalgos/totgba.hh>
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/cleanacc.hh>
@@ -25,11 +26,11 @@
 #include <deque>
 #include <tuple>
 
-#define DEBUG 0
-#if DEBUG
-#define debug std::cerr
+#define TRACE 0
+#if TRACE
+#define trace std::cerr
 #else
-#define debug while (0) std::cerr
+#define trace while (0) std::cerr
 #endif
 
 namespace spot
@@ -121,11 +122,11 @@ namespace spot
                 SPOT_UNREACHABLE();
               }
           }
-#if DEBUG
-        debug << "\nPrinting all clauses\n";
+#if TRACE
+        trace << "\nPrinting all clauses\n";
         for (unsigned i = 0; i < all_clauses_.size(); ++i)
           {
-            debug << i << " Fin:" << all_clauses_[i].first << " Inf:"
+            trace << i << " Fin:" << all_clauses_[i].first << " Inf:"
                   << all_clauses_[i].second << '\n';
           }
 #endif
@@ -238,16 +239,16 @@ namespace spot
                   res[scc].push_back(clause);
               }
           }
-#if DEBUG
-        debug << "accepting clauses\n";
+#if TRACE
+        trace << "accepting clauses\n";
         for (unsigned i = 0; i < res.size(); ++i)
           {
-            debug << "scc(" << i << ") --> ";
+            trace << "scc(" << i << ") --> ";
             for (auto elt : res[i])
-              debug << elt << ',';
-            debug << '\n'
+              trace << elt << ',';
+            trace << '\n'
           }
-        debug << '\n';
+        trace << '\n';
 #endif
       }
 
@@ -257,7 +258,7 @@ namespace spot
       void
       add_state(unsigned st)
       {
-        debug << "add_state(" << st << ")\n";
+        trace << "add_state(" << st << ")\n";
         if (st_repr_[st].empty())
           {
             unsigned st_scc = si_.scc_of(st);
@@ -270,7 +271,7 @@ namespace spot
 
             else
               st_repr_[st].emplace_back(-1U, res_->new_state());
-            debug << "added\n";
+            trace << "added\n";
           }
       }
 
@@ -317,7 +318,7 @@ namespace spot
           init_st_in_(in->get_init_state_number()),
           init_reachable_(is_init_reachable())
       {
-        debug << "State based ? " << state_based_ << '\n';
+        trace << "State based ? " << state_based_ << '\n';
         std::tie(all_inf_, all_fin_) = code.used_inf_fin_sets();
         split_dnf_clauses(code);
         find_set_to_add();
@@ -346,7 +347,7 @@ namespace spot
                 add_state(st);
                 for (const auto& e : in_->out(st))
                   {
-                    debug << "working_on_edge(" << st << ',' << e.dst << ")\n";
+                    trace << "working_on_edge(" << st << ',' << e.dst << ")\n";
 
                     unsigned dst_scc = si_.scc_of(e.dst);
                     if (!si_.is_useful_scc(dst_scc))
@@ -366,7 +367,7 @@ namespace spot
                       for (const auto& p_src : st_repr_[st])
                         for (const auto& p_dst : st_repr_[e.dst])
                           {
-                            debug << "repr(" << p_src.second << ','
+                            trace << "repr(" << p_src.second << ','
                                   << p_dst.second << ")\n";
 
                             if (same_scc && p_src.first == p_dst.first)

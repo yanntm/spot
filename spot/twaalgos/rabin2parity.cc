@@ -1,5 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement de l'Epita.
+// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
+// de l'Epita.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -16,10 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <deque>
-
 #include <spot/twaalgos/rabin2parity.hh>
-
 #include <spot/twaalgos/sccinfo.hh>
 
 namespace spot

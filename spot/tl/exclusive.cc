@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -17,6 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include <spot/tl/exclusive.hh>
 #include <spot/twaalgos/mask.hh>
 #include <spot/misc/casts.hh>
@@ -154,7 +155,7 @@ namespace spot
           support &= bdd_support(t.cond);
     }
 
-    bdd restrict = bddtrue;
+    bdd restrict_ = bddtrue;
     auto d = aut->get_dict();
 
     std::vector<bdd> group;
@@ -172,7 +173,7 @@ namespace spot
         unsigned s = group.size();
         for (unsigned j = 0; j < s; ++j)
           for (unsigned k = j + 1; k < s; ++k)
-            restrict &= group[j] | group[k];
+            restrict_ &= group[j] | group[k];
       }
 
     twa_graph_ptr res = make_twa_graph(aut->get_dict());
@@ -184,8 +185,8 @@ namespace spot
         transform_accessible(aut, res, [&](unsigned, bdd& cond,
                                            acc_cond::mark_t&, unsigned)
                              {
-                               minato_isop isop(cond & restrict,
-                                                cond | !restrict,
+                               minato_isop isop(cond & restrict_,
+                                                cond | !restrict_,
                                                 true);
                                bdd res = bddfalse;
                                bdd cube = bddfalse;
@@ -200,7 +201,7 @@ namespace spot
         transform_accessible(aut, res, [&](unsigned, bdd& cond,
                                            acc_cond::mark_t&, unsigned)
                              {
-                               cond &= restrict;
+                               cond &= restrict_;
                              });
       }
     return res;

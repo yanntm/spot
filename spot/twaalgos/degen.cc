@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+#include "config.h"
 #include <spot/twaalgos/degen.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/misc/hash.hh>
