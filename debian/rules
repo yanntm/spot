@@ -27,18 +27,18 @@ LTOPLUG := $(shell gcc -v 2>&1 | \
 
 # ARFLAGS is for Automake
 # AR_FLAGS is for Libtool
-LTOSETUP =					\
-  LDFLAGS='-fuse-linker-plugin'			\
-  NM='nm --plugin $(LTOPLUG)'			\
-  ARFLAGS='cru --plugin $(LTOPLUG)'		\
-  AR_FLAGS='cru --plugin $(LTOPLUG)'		\
+LTOSETUP =					    \
+  LDFLAGS='-fuse-linker-plugin'			    \
+  NM='nm --plugin $(LTOPLUG)'			    \
+  ARFLAGS='cru --plugin $(LTOPLUG)'		    \
+  AR_FLAGS='cru --plugin $(LTOPLUG)'		    \
   RANLIB='ranlib --plugin $(LTOPLUG)'
-PRO1SETUP =					\
-  CFLAGS='-flto -fprofile-generate'		\
+PRO1SETUP =					    \
+  CFLAGS='-flto -fprofile-generate'		    \
   CXXFLAGS='-flto -fprofile-generate'
-PRO2SETUP =					\
-  CFLAGS='-flto -fprofile-use'			\
-  CXXFLAGS='-flto -fprofile-use'
+PRO2SETUP =					    \
+  CFLAGS='-flto -fprofile-use -fprofile-correction' \
+  CXXFLAGS='-flto -fprofile-use -fprofile-correction'
 PYDEFAULT=$(shell py3versions --default)
 PYOTHERS=$(filter-out $(PYDEFAULT), $(shell py3versions --supported))
 
