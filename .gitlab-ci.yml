@@ -4,6 +4,8 @@ stages:
 
 debian-stable-gcc:
   stage: build
+  only:
+    - branches
   except:
     - /wip/
   image: gadl/spot-debuild:stable
@@ -21,6 +23,8 @@ debian-stable-gcc:
 
 debian-unstable-gcc-coverage:
   stage: build
+  only:
+    - branches
   except:
     - /wip/
   image: gadl/spot-debuild
@@ -46,6 +50,8 @@ debian-unstable-gcc-coverage:
 
 arch-clang:
   stage: build
+  only:
+    - branches
   except:
     - /wip/
   image: registry.lrde.epita.fr/spot-arch
@@ -62,6 +68,8 @@ arch-clang:
 
 arch-gcc-glibcxxdebug:
   stage: build
+  only:
+    - branches
   except:
     - /wip/
   image: registry.lrde.epita.fr/spot-arch
@@ -79,6 +87,8 @@ arch-gcc-glibcxxdebug:
 
 mingw-shared:
   stage: build
+  only:
+    - branches
   except:
     - /wip/
   image: gadl/spot-debuild
@@ -94,6 +104,8 @@ mingw-shared:
 
 mingw-static:
   stage: build
+  only:
+    - branches
   except:
     - /wip/
   image: gadl/spot-debuild
@@ -116,6 +128,8 @@ mingw-static:
 
 debpkg-stable:
   stage: build
+  only:
+    - branches
   script:
     - docker pull gadl/spot-debuild:stable
     - docker pull gadl/spot-debuild-i386:stable
@@ -137,6 +151,8 @@ debpkg-stable:
 
 debpkg-unstable:
   stage: build
+  only:
+    - branches
   script:
     - docker pull gadl/spot-debuild
     - docker pull gadl/spot-debuild-i386
@@ -170,7 +186,7 @@ publish-stable:
     - dput lrde *.changes
     - tgz=`ls spot-*.tar.* | head -n 1`
     - case $tgz in *[0-9].tar.*) cp $tgz /lrde/dload/spot/;; esac
-    - curl -X POST -F ref=master -F token=$TRIGGER_SPOT_WEB -F "variables[skip_next]=1" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
+    - curl -X POST -F ref=master -F token=$CI_JOB_TOKEN -F "variables[skip_next]=1" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
 
 publish-unstable:
   only:
@@ -184,5 +200,5 @@ publish-unstable:
     - cd _build_unstable
     - ls -l
     - dput lrde *.changes
-    - curl -X POST -F ref=master -F token=$TRIGGER_SPOT_WEB -F "variables[skip_stable]=1" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
-    - curl -X POST -F ref=master -F token=$TRIGGER_SANDBOX https://gitlab.lrde.epita.fr/api/v4/projects/181/trigger/pipeline
+    - curl -X POST -F ref=master -F token=$CI_JOB_TOKEN -F "variables[skip_stable]=1" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
+    - curl -X POST -F ref=master -F token=$CI_JOB_TOKEN https://gitlab.lrde.epita.fr/api/v4/projects/181/trigger/pipeline
