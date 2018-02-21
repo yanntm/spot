@@ -1,6 +1,10 @@
 New in spot 2.5.1.dev (not yet released)
 
-  Nothing yet.
+  Library:
+
+  - cleanup_parity() and cleanup_parity_here() are smarter and now
+    remove from the acceptance condition the parity colors that are
+    not used in the automaton.
 
 New in spot 2.5.1 (2018-02-20)
 

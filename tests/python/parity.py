@@ -37,3 +37,54 @@ except RuntimeError as e:
     assert 'input should have parity acceptance' in str(e)
 else:
     exit(2)
+
+a = spot.automaton("""
+HOA: v1
+States: 1
+Start: 0
+AP: 1 "a"
+Acceptance: 2 Fin(0) & Inf(1)
+--BODY--
+State: 0
+[t] 0 {0}
+--END--
+""")
+spot.cleanup_parity_here(a)
+assert a.to_str() == """HOA: v1
+States: 1
+Start: 0
+AP: 1 "a"
+acc-name: none
+Acceptance: 0 f
+properties: trans-labels explicit-labels state-acc complete
+properties: deterministic
+--BODY--
+State: 0
+[t] 0
+--END--"""
+
+a = spot.automaton("""
+HOA: v1
+States: 1
+Start: 0
+AP: 1 "a"
+Acceptance: 2 Fin(0) | Inf(1)
+--BODY--
+State: 0
+[t] 0 {1}
+--END--
+""")
+spot.cleanup_parity_here(a)
+assert a.to_str() == """HOA: v1
+States: 1
+Start: 0
+AP: 1 "a"
+acc-name: all
+Acceptance: 0 t
+properties: trans-labels explicit-labels state-acc complete
+properties: deterministic
+--BODY--
+State: 0
+[t] 0
+--END--"""
+

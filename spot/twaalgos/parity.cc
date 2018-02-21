@@ -177,6 +177,7 @@ namespace spot
     auto used_in_aut = acc_cond::mark_t();
     for (auto& t: aut->edges())
       {
+        // leave only one color on each transition
         if (current_max)
           {
             auto maxset = t.acc.max_set();
@@ -187,16 +188,45 @@ namespace spot
           {
             t.acc = t.acc.lowest();
           }
+        // recall colors used in the automaton
         used_in_aut |= t.acc;
+      }
+
+    // remove from the acceptance condition the unused one (starting from the
+    // least significant)
+    auto useful = used_in_aut;
+    int useful_min = 0;
+    int useful_max = num_sets-1;
+    if (!current_max)
+      {
+        int n = num_sets-1;
+        while (n >= 0 && !useful.has(n))
+          {
+            if (n > 0)
+              useful.clear(n-1);
+            n -= 2;
+          }
+        useful_max = n;
+      }
+    else
+      {
+        unsigned n = 0;
+        while (n < num_sets && !useful.has(n))
+          {
+            useful.clear(n+1);
+            n += 2;
+          }
+        useful_min = n;
       }
     if (used_in_aut)
     {
       // Never remove the least significant acceptance set, and mark the
       // acceptance set 0 to keep the style if needed.
-      if (current_max || keep_style)
-        used_in_aut.set(0);
-      if (!current_max)
-        used_in_aut.set(num_sets - 1);
+      if (keep_style && useful_min <= useful_max)
+        {
+          useful.set(useful_min);
+          useful.set(useful_max);
+        }
 
       // Fill the vector shift with the new acceptance sets
       std::vector<unsigned> shift(num_sets);
@@ -204,7 +234,7 @@ namespace spot
       bool change_style = false;
       unsigned new_index = 0;
       for (auto i = 0U; i < num_sets; ++i)
-        if (used_in_aut.has(i))
+        if (useful.has(i))
           {
             if (prev_used == -1)
               change_style = i % 2 != 0;
@@ -217,16 +247,28 @@ namespace spot
       // Update all the transitions with the vector shift
       for (auto& t: aut->edges())
         {
+          t.acc &= useful;
           auto maxset = t.acc.max_set();
           if (maxset)
             t.acc = acc_cond::mark_t{shift[maxset - 1]};
         }
+
       auto new_num_sets = new_index + 1;
+      if (!useful)
+        {
+          new_num_sets = 0;
+          if (current_max)
+            change_style = false;
+          else
+            change_style = num_sets % 2 == 1;
+        }
+
       if (new_num_sets < num_sets)
         {
-          auto new_acc = acc_cond::acc_code::parity(current_max,
-                                                    current_odd != change_style,
-                                                    new_num_sets);
+          auto new_acc =
+            acc_cond::acc_code::parity(current_max,
+                                       current_odd != change_style,
+                                       new_num_sets);
           aut->set_acceptance(new_num_sets, new_acc);
         }
     }
