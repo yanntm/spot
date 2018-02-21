@@ -170,7 +170,7 @@ if test x$enable_warnings = xyes; then
 fi
 
 AM_CONDITIONAL([NEVER], [false])
-AC_CHECK_PROG([DOT], [dot])
+AC_CHECK_PROG([DOT], [dot], [dot])
 AC_CHECK_PROG([LBT], [lbt], [lbt])
 AC_CHECK_PROG([LTL2BA], [ltl2ba], [ltl2ba])
 AC_CHECK_PROG([LTL3BA], [ltl3ba], [ltl3ba])
