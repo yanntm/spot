@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include <spot/tl/apcollect.hh>
+#include <spot/tl/unabbrev.hh>
 #include <spot/twa/twa.hh>
 #include <spot/twa/bdddict.hh>
 
@@ -62,5 +63,32 @@ namespace spot
     for (auto f: aps)
       res &= bdd_ithvar(a->register_ap(f));
     return res;
+  }
+
+  static void
+  literal_collect_rec(formula f, literal_set* s, bool b)
+  {
+    if (f.is(op::Not))
+      b = !b;
+    else if (f.is(op::ap))
+      {
+        if (b)
+          s->insert(f);
+        else
+          s->insert(formula::Not(f));
+      }
+
+    for (auto g: f)
+      literal_collect_rec(g, s, b);
+  }
+
+  literal_set*
+  literal_collect(formula f, literal_set* s)
+  {
+    if (!s)
+      s = new literal_set;
+    formula f2 = unabbreviate(f, "ei^");
+    literal_collect_rec(f2, s, true);
+    return s;
   }
 }

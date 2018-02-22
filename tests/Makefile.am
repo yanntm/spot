@@ -75,6 +75,7 @@ check_PROGRAMS = \
   core/graph \
   core/kind \
   core/length \
+  core/literals \
   core/ikwiad \
   core/intvcomp \
   core/intvcmp2 \
@@ -115,6 +116,7 @@ core_ikwiad_SOURCES = core/ikwiad.cc
 core_intvcomp_SOURCES = core/intvcomp.cc
 core_intvcmp2_SOURCES = core/intvcmp2.cc
 core_kripkecat_SOURCES = core/kripkecat.cc
+core_literals_SOURCES = core/literals.cc
 core_ngraph_SOURCES = core/ngraph.cc
 core_randtgba_SOURCES = core/randtgba.cc
 core_taatgba_SOURCES = core/taatgba.cc
@@ -156,6 +158,7 @@ core_twacube_SOURCES = core/twacube.cc
 
 
 TESTS_tl = \
+  core/literals.test \
   core/bare.test \
   core/cube.test \
   core/parse.test \

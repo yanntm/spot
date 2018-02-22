@@ -1,0 +1,40 @@
+#!/bin/sh
+# -*- coding: utf-8 -*-
+# Copyright (C) 2018 Laboratoire de Recherche et Développement
+# de l'Epita (LRDE).
+#
+# This file is part of Spot, a model checking library.
+#
+# Spot is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Spot is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+# License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+test_formula ()
+{
+  f=$1
+  p=$(../literals "$f" | head -n1 | tr " " "\n" | sort | tr "\n" " ")
+  n=$(../literals "$f" | tail -n1 | tr " " "\n" | sort | tr "\n" " ")
+
+  test "$p" = " $2 "
+  test "$n" = " $3 "
+}
+
+. ./defs
+set -e
+
+test_formula 'a | !b' 'a' 'b'
+test_formula 'a | b | d | c | !e | !f' 'a b c d' 'e f'
+test_formula '!!!!!!a | !!!!!!!!!b' 'a' 'b'
+test_formula 'a | !a & !b' 'a' 'a b'
+test_formula 'a -> b' 'b' 'a'
+test_formula 'a <-> b' 'a b' 'a b'
+test_formula 'a ^ b' 'a b' 'a b'
