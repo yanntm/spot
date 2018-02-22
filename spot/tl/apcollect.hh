@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2012, 2013, 2014, 2015, 2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -35,6 +35,9 @@ namespace spot
   /// Set of atomic propositions.
   typedef std::set<formula> atomic_prop_set;
 
+  /// Set of literals.
+  typedef std::set<formula> literal_set;
+
   /// \brief construct an atomic_prop_set with n propositions
   SPOT_API
   atomic_prop_set create_atomic_prop_set(unsigned n);
@@ -58,6 +61,17 @@ namespace spot
   /// \return A conjunction the atomic propositions.
   SPOT_API bdd
   atomic_prop_collect_as_bdd(formula f, const twa_ptr& a);
+
+  /// \brief Return the set of literals occuring in a formula
+  ///
+  /// \param f the formula to inspect
+  /// \param s an existing set to fill with literals discovered, of 0 if
+  ///        the set should be allocated by the function.
+  /// \return A pointer to the supplied set, \c s, augmented with literals
+  ///        occuring in \c f; of a newly allocated set containing all these
+  ///        literals if \c s is 0.
+  SPOT_API literal_set*
+  literal_collect(formula f, literal_set* s = nullptr);
 
   /// @}
 }

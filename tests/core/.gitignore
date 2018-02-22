@@ -30,6 +30,7 @@ kind
 kripkecat
 length
 .libs
+literals
 ikwiad
 ltl2dot
 ltl2text
