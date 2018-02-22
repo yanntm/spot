@@ -48,6 +48,28 @@ debian-unstable-gcc-coverage:
       - ./*.tar.gz
       - spot2.info
 
+debian-gcc-snapshot:
+  stage: build
+  only:
+    - branches
+  except:
+    - /wip/
+  image: gadl/spot-debuild
+  script:
+    - export PATH="/usr/lib/gcc-snapshot/bin:$PATH" LD_LIBRARY_PATH="/usr/lib/gcc-snapshot/lib:$LD_LIBRARY_PATH"
+    - autoreconf -vfi
+    - ./configure CXX='g++'
+    - make
+    - make distcheck
+  artifacts:
+    when: always
+    paths:
+      - tests/*/*.log
+      - ./*.log
+      - doc/spot.html/
+      - doc/userdoc/
+      - ./*.tar.gz
+
 arch-clang:
   stage: build
   only:
@@ -129,7 +151,10 @@ mingw-static:
 debpkg-stable:
   stage: build
   only:
-    - branches
+    - /-deb$/
+    - master
+    - next
+    - stable
   script:
     - docker pull gadl/spot-debuild:stable
     - docker pull gadl/spot-debuild-i386:stable
@@ -152,7 +177,8 @@ debpkg-stable:
 debpkg-unstable:
   stage: build
   only:
-    - branches
+    - /-deb$/
+    - next
   script:
     - docker pull gadl/spot-debuild
     - docker pull gadl/spot-debuild-i386
