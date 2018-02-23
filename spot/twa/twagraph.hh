@@ -576,8 +576,16 @@ namespace spot
     /// purge_dead_states() will remove more states than
     /// purge_unreachable_states(), but it is more costly.
     ///
+    /// You can pass a function to this method, which will be invoked
+    /// with a vector indicating the renumbering of states.
+    /// newst[i] == -1U means that state i is unreachable and thus deleted.
+    /// Otherwise, state i is renumbered newst[i].
+    ///
     /// \see purge_dead_states
-    void purge_unreachable_states();
+    typedef void (*shift_action)(const std::vector<unsigned>& newst,
+                                 void* action_data);
+    void purge_unreachable_states(shift_action* f = nullptr,
+                                  void* action_data = nullptr);
 
     /// \brief Remove unused atomic propositions
     ///

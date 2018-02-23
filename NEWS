@@ -6,6 +6,11 @@ New in spot 2.5.1.dev (not yet released)
     remove from the acceptance condition the parity colors that are
     not used in the automaton.
 
+  - twa_graph::purge_unreachable_states() now takes a function which
+    is called with the new numbering of states. This is useful to
+    update an external structure that references states of the twa
+    that we want to purge.
+
 New in spot 2.5.1 (2018-02-20)
 
   Library:

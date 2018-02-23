@@ -105,7 +105,19 @@ static void f2()
   }
   tg->set_init_state(s3);
   spot::print_dot(std::cout, tg);
-  tg->purge_unreachable_states();
+  void (*action)(const std::vector<unsigned>&, void*) =
+    [](const std::vector<unsigned>& newst, void*)
+    {
+      for (unsigned i = 0; i != newst.size(); ++i)
+        {
+          std::cout << i << " -> ";
+          if (newst[i] == -1U)
+            std::cout << "deleted" << std::endl;
+          else
+            std::cout << newst[i] << std::endl;
+        }
+    };
+  tg->purge_unreachable_states(&action);
   spot::print_dot(std::cout, tg);
 }
 

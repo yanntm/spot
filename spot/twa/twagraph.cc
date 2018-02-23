@@ -231,7 +231,7 @@ namespace spot
     g_.chain_edges_();
   }
 
-  void twa_graph::purge_unreachable_states()
+  void twa_graph::purge_unreachable_states(shift_action* f, void* action_data)
   {
     unsigned num_states = g_.num_states();
     // The TODO vector serves two purposes:
@@ -279,6 +279,9 @@ namespace spot
       prop_universal(trival::maybe());
     if (prop_complete().is_false())
       prop_complete(trival::maybe());
+
+    if (f)
+      (*f)(todo, action_data);
 
     defrag_states(std::move(todo), current);
   }
