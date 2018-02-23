@@ -320,11 +320,15 @@ Includes
     are distributed with Spot.  Those can be from Spot itself, or from
     third-party libraries that we ship.  E.g.,
 
+    #include "config.h"
     #include "utf8/utf8.hh"
     #include "spot/priv/trim.hh"
-    #include "config.h"
 
     This style of #include should never occur in public headers.
+
+  * "config.h" should be the first file included by any *.cc or *.c
+    file, as it setups several macros for replacing missing functions.
+
 
 Exporting symbols
 -----------------
