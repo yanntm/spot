@@ -389,6 +389,16 @@ Comments
   * Prefer C++-style comments (// foo) to C-style comments (/* foo */).
     Use /// for Doxygen comments.
 
+  * When mentioning an issue number, in comments as well as in commit
+    messages, use one of the following forms so that we can configure
+    our editors to turn these into hyperlinks.
+
+       Issue #123 / issue #123 / Fixes #123 / fixes #123
+
+    (When gitlab sees a commit message containing "Fixes #123" or
+    "fixes #123" pushed to branch "next", it will automatically close
+    the issue.)
+
 Formating
 ---------
 

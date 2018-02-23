@@ -2,6 +2,11 @@
 	 (whitespace-style face empty trailing lines-tail)
 	 (require-final-newline . t)
 	 (mode . global-whitespace)
+         (bug-reference-bug-regexp
+          . "\\(?:[Ff]ix\\(es\\)? \\|[Ii]ssue \\)#\\(?2:[0-9]+\\)")
+         (bug-reference-url-format
+          . "https://gitlab.lrde.epita.fr/spot/spot/issues/%s")
+	 (mode . bug-reference)
          (magit-branch-adjust-remote-upstream-alist ("origin/next" . "/"))))
  (c++-mode . ((c-default-style . "gnu")
 	      (indent-tab-mode . t)

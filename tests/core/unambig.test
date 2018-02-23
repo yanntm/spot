@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013, 2015-2017 Laboratoire de Recherche et
+# Copyright (C) 2013, 2015-2018 Laboratoire de Recherche et
 # Developpement de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -244,9 +244,9 @@ diff expected ltlcross.res
 
 
 # This automaton was supplied by František Blahoudek, and is discussed
-# in #188.  Our initial implementation of is_unambiguous() on this
-# automaton used to take 38s, while the new version takes 0.2s.  Using
-# valgrind on this is a way to ensure that the test is procedure
+# in issue #188.  Our initial implementation of is_unambiguous() on
+# this automaton used to take 38s, while the new version takes 0.2s.
+# Using valgrind on this is a way to ensure that the test is procedure
 # enough: it would have been too long on the previous version.
 
 cat >smaller.hoa<<EOF
