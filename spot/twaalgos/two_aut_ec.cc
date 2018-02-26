@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -19,6 +19,8 @@
 
 #include "config.h"
 
+#include <algorithm>
+#include <deque>
 #include <stack>
 #include <unordered_map>
 
@@ -26,8 +28,8 @@
 
 #include <spot/kripke/kripke.hh>
 #include <spot/misc/hash.hh>
-#include <spot/twa/twa.hh>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/emptiness.hh>
 
 namespace spot
 {
@@ -207,6 +209,12 @@ namespace spot
       }
 
       static void destroy(state_t) {}
+
+      static
+      const state* get_state(aut_t a, state_t s)
+      {
+        return a->state_from_number(s);
+      }
     };
 
     // The common part of OTF and KRIPKE templates of tae_element
@@ -236,6 +244,12 @@ namespace spot
       void destroy(state_t s)
       {
         s->destroy();
+      }
+
+      static
+      const state* get_state(const const_twa_ptr, state_t s)
+      {
+        return s;
       }
     };
 
@@ -277,6 +291,34 @@ namespace spot
       {
         return wang32_hash(tae_element<aut_type_l>::state_hash(left_)
                          ^ tae_element<aut_type_r>::state_hash(right_));
+      }
+
+      const state_l_t get_left() const
+      {
+        return left_;
+      }
+
+      const state_r_t get_right() const
+      {
+        return right_;
+      }
+
+      const state *get_left_state(typename tae_element<aut_type_l>::aut_t a)
+        const
+      {
+        return tae_element<aut_type_l>::get_state(a, left_);
+      }
+
+      const state *get_right_state(typename tae_element<aut_type_r>::aut_t a)
+        const
+      {
+        return tae_element<aut_type_r>::get_state(a, right_);
+      }
+
+      void destroy()
+      {
+        tae_element<aut_type_l>::destroy(left_);
+        tae_element<aut_type_r>::destroy(right_);
       }
 
     private:
@@ -440,10 +482,213 @@ namespace spot
       product_mark<strength> condition;
     };
 
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
+    void tae_run(typename tae_element<aut_type_l>::aut_t& left,
+                 typename tae_element<aut_type_r>::aut_t& right,
+                 const twa_run_ptr ar_l, const twa_run_ptr ar_r,
+                 std::unordered_map<product_state<aut_type_l, aut_type_r>,
+                                    unsigned,
+                                    product_state_hash<aut_type_l, aut_type_r>>&
+                                    states,
+                 unsigned order, product_mark<STRONG>& acc)
+    {
+      using p_state = product_state<aut_type_l, aut_type_r>;
+      using p_iterator = product_iterator<aut_type_l, aut_type_r>;
+
+      if (!(ar_l || ar_r))
+        return;
+
+#define CHECK_LR(TODO_LEFT, TODO_RIGHT) \
+  if (ar_l)                             \
+    TODO_LEFT;                          \
+  if (ar_r)                             \
+    TODO_RIGHT;
+
+#define CHECK_BOTH_ON(TODO) \
+  if (ar_l)                 \
+    ar_l-> TODO;            \
+  if (ar_r)                 \
+    ar_r-> TODO;
+
+#define CHECK_LR_ON(TODO_LEFT, TODO_RIGHT) \
+  if (ar_l)                             \
+    ar_l-> TODO_LEFT;                   \
+  if (ar_r)                             \
+    ar_r-> TODO_RIGHT;
+
+      // ##### Run setup #####
+
+      CHECK_BOTH_ON(prefix.clear())
+      CHECK_BOTH_ON(cycle.clear())
+      CHECK_LR_ON(aut = left, aut = right)
+
+      // ##### BFS setup #####
+
+      struct p_step
+      {
+        p_state src;
+        struct { bdd left, right; } cond;
+        product_mark<STRONG> acc;
+      };
+
+      // An adaptation of spot::bfs_steps
+      auto product_bfs_steps =
+        [&](const p_state& start, auto match, auto filter,
+            twa_run::steps *l_steps, twa_run::steps *r_steps)
+        {
+          // Map a state to the breadth first discovered step that lead to it.
+          std::unordered_map<p_state, p_step,
+                             product_state_hash<aut_type_l, aut_type_r>>
+                               backlinks;
+
+          std::deque<p_state> bfs_queue;
+
+          bfs_queue.push_back(start);
+
+          unsigned start_order = states[start];
+
+          while (!bfs_queue.empty())
+            {
+              p_state& src_state = bfs_queue.front();
+
+              p_iterator src_out(left, src_state.get_left(),
+                                 right, src_state.get_right());
+
+              do
+                {
+                  p_state dst_state(src_out.left.dst(), src_out.right.dst());
+
+                  auto i = states.find(dst_state);
+
+                  if (i == states.end() // State not visited
+                      || i->second == 0 // State marked as dead
+                      || filter(dst_state))
+                    {
+                      dst_state.destroy();
+                      continue;
+                    }
+
+                  p_step current = {src_state,
+                                    {src_out.left.cond(), src_out.right.cond()},
+                                    {src_out.left.acc(), src_out.right.acc()}};
+
+                  if (match(current, dst_state))
+                    {
+                      twa_run::steps steps_l, steps_r;
+
+                      for (;;)
+                        {
+                          CHECK_LR(
+                            steps_l.emplace_front(
+                              current.src.get_left_state(left)->clone(),
+                              current.cond.left,
+                              current.acc.left),
+                            steps_r.emplace_front(
+                              current.src.get_right_state(right)->clone(),
+                              current.cond.right,
+                              current.acc.right))
+                          if (states[current.src] == start_order)
+                            break;
+                          const auto& j = backlinks.find(current.src);
+                          assert(j != backlinks.end());
+                          current = j->second;
+                        }
+
+                      if (l_steps)
+                        l_steps->splice(l_steps->end(), steps_l);
+                      if (r_steps)
+                        r_steps->splice(r_steps->end(), steps_r);
+
+                      for (auto& j : bfs_queue)
+                        j.destroy();
+
+                      for (auto& j : backlinks)
+                        j.second.src.destroy();
+
+                      return dst_state;
+                    }
+
+                  if (backlinks.emplace(dst_state, current).second)
+                    bfs_queue.push_back(dst_state);
+                }
+              while (src_out.next());
+
+              src_state.destroy();
+              bfs_queue.pop_front();
+            }
+
+          return start;
+        };
+
+      // ##### Prefix search V3 #####
+
+      p_state init(tae_element<aut_type_l>::init(left),
+                   tae_element<aut_type_r>::init(right));
+
+      p_state substart =
+        product_bfs_steps(init,
+                          [&](p_step&, p_state& dest)
+                          {
+                            return states[dest] == order;
+                          },
+                          [&](p_state&)
+                          {
+                            return false; // Do not filter states
+                          },
+                          ar_l ? &(ar_l->prefix) : nullptr,
+                          ar_r ? &(ar_r->prefix) : nullptr);
+
+      // ##### Accepting Marks search #####
+
+      /*
+      ** Look for unseen marks : once one is found, register the path to it, and
+      ** restart a new BFS, until all marks were seen.
+      */
+      while (acc.left | acc.right)
+        substart =
+          product_bfs_steps(substart,
+                            [&](p_step& step, p_state&)
+                            {
+                              if ((acc.left & step.acc.left)
+                                  || (acc.right & step.acc.right))
+                                {
+                                  acc.left -= step.acc.left;
+                                  acc.right -= step.acc.right;
+                                  return true;
+                                }
+                              return false;
+                            },
+                            [&](p_state& dest)
+                            {
+                              // Stay in accepting SCC
+                              return states[dest] < order;
+                            },
+                            ar_l ? &(ar_l->cycle) : nullptr,
+                            ar_r ? &(ar_r->cycle) : nullptr);
+
+
+      // Return to cycle start
+      product_bfs_steps(substart,
+                        [&](p_step&, p_state& dest)
+                        {
+                          return states[dest] == order;
+                        },
+                        [&](p_state& dest)
+                        {
+                          // Stay in accepting SCC
+                          return states[dest] < order;
+                        },
+                        ar_l ? &(ar_l->cycle) : nullptr,
+                        ar_r ? &(ar_r->cycle) : nullptr);
+    }
+
+
+
     template<tae_aut_type aut_type_l, tae_aut_type aut_type_r,
              tae_strength strength>
     bool tae_impl(typename tae_element<aut_type_l>::aut_t& left,
-                  typename tae_element<aut_type_r>::aut_t& right)
+                  typename tae_element<aut_type_r>::aut_t& right,
+                  const twa_run_ptr ar_l, const twa_run_ptr ar_r)
     {
       using p_state = product_state<aut_type_l, aut_type_r>;
       using p_iterator = product_iterator<aut_type_l, aut_type_r>;
@@ -474,8 +719,9 @@ namespace spot
       // acceptance conditions between SCCs
       std::stack<p_mark> arc;
       // the depth-first-search stack. Used to mark nodes as dead when we pop
-      // their SCC.
-      std::stack<p_state> live;
+      // their SCC. Used as a stack by Couvreur, but as a list by the run
+      // search.
+      std::deque<p_state> live;
 
       auto new_state =
         [&](typename tae_element<aut_type_l>::state_t left_state,
@@ -490,12 +736,11 @@ namespace spot
               p_iterator it(left, left_state, right, right_state);
               root.push(num++);
               todo.emplace(x, it);
-              live.emplace(x);
+              live.emplace_back(x);
             }
           else
             {
-              tae_element<aut_type_l>::destroy(left_state);
-              tae_element<aut_type_r>::destroy(right_state);
+              x.destroy();
             }
           return p;
         };
@@ -533,9 +778,9 @@ namespace spot
                   do
                     {
                       assert(!live.empty());
-                      s = live.top();
+                      s = live.back();
                       states[s] = 0;
-                      live.pop();
+                      live.pop_back();
                     }
                   while (!(curr == s));
 
@@ -593,6 +838,8 @@ namespace spot
               while (!todo.empty())
                 // Iterators are properly released.
                 todo.pop();
+              tae_run<aut_type_l, aut_type_r>(left, right, ar_l, ar_r, states,
+                                              root.top().index, acc);
               return false;
             }
         } // end while (!todo.empty())
@@ -604,7 +851,8 @@ namespace spot
 
     template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
     bool tae_dispatch_strength(typename tae_element<aut_type_l>::aut_t& left,
-                               typename tae_element<aut_type_r>::aut_t& right)
+                               typename tae_element<aut_type_r>::aut_t& right,
+                               const twa_run_ptr ar_l, const twa_run_ptr ar_r)
     {
       auto l = left->prop_weak();
       auto r = right->prop_weak();
@@ -612,19 +860,22 @@ namespace spot
       if (!l && r && aut_type_l != KRIPKE)
         // We save on templates by only having weak automata on the left. This
         // is not compatible with, and less significant than, the Kripke swap.
-        return tae_impl<aut_type_r, aut_type_l, WEAK_L>(right, left);
+        return tae_impl<aut_type_r, aut_type_l, WEAK_L>
+                       (right, left, ar_r, ar_l);
 
       if (l && r)
-        return tae_impl<aut_type_l, aut_type_r, WEAK>(left, right);
+        return tae_impl<aut_type_l, aut_type_r, WEAK>(left, right, ar_l, ar_r);
 
       if (l && !r)
-        return tae_impl<aut_type_l, aut_type_r, WEAK_L>(left, right);
+        return tae_impl<aut_type_l, aut_type_r, WEAK_L>
+                       (left, right, ar_l, ar_r);
 
-      return tae_impl<aut_type_l, aut_type_r, STRONG>(left, right);
+      return tae_impl<aut_type_l, aut_type_r, STRONG>(left, right, ar_l, ar_r);
     }
 
     bool tae_dispatch_type(const const_twa_ptr& left,
-                           const const_twa_ptr& right)
+                           const const_twa_ptr& right,
+                           const twa_run_ptr ar_l, const twa_run_ptr ar_r)
     {
       const_fair_kripke_ptr l_k = std::dynamic_pointer_cast<const fair_kripke>
                                                            (left);
@@ -634,7 +885,7 @@ namespace spot
       // We don't often check Kripke against Kripke, so we save on templates by
       // only having Kripke structures on the left.
       if (r_k && !l_k)
-        return tae_dispatch_type(right, left);
+        return tae_dispatch_type(right, left, ar_r, ar_l);
 
       const_twa_graph_ptr l_e = std::dynamic_pointer_cast<const twa_graph>
                                                          (left);
@@ -644,32 +895,33 @@ namespace spot
       if (l_k)
         {
           if (r_e)
-            return tae_dispatch_strength<KRIPKE, EXPLICIT>(l_k, r_e);
+            return tae_dispatch_strength<KRIPKE, EXPLICIT>
+                                        (l_k, r_e, ar_l, ar_r);
           else
-            return tae_dispatch_strength<KRIPKE, OTF>(l_k, right);
+            return tae_dispatch_strength<KRIPKE, OTF>(l_k, right, ar_l, ar_r);
         }
 
       if (l_e)
         {
           if (r_e)
             return tae_dispatch_strength<EXPLICIT, EXPLICIT>
-                                        (l_e, r_e);
+                                        (l_e, r_e, ar_l, ar_r);
           else
-            return tae_dispatch_strength<EXPLICIT, OTF>
-                                        (l_e, right);
+            return tae_dispatch_strength<EXPLICIT, OTF>(l_e, right, ar_l, ar_r);
         }
       else
         {
           if (r_e)
-            return tae_dispatch_strength<OTF, EXPLICIT>(left, r_e);
+            return tae_dispatch_strength<OTF, EXPLICIT>(left, r_e, ar_l, ar_r);
           else
-            return tae_dispatch_strength<OTF, OTF>(left, right);
+            return tae_dispatch_strength<OTF, OTF>(left, right, ar_l, ar_r);
         }
     }
   } // namespace
 
-  bool two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right)
+  bool two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right,
+                  const twa_run_ptr ar_l, const twa_run_ptr ar_r)
   {
-    return tae_dispatch_type(left, right);
+    return tae_dispatch_type(left, right, ar_l, ar_r);
   }
 }

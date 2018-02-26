@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et
+// Copyright (C) 2017-2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -21,10 +21,17 @@
 
 #include <spot/misc/common.hh>
 #include <spot/twa/fwd.hh>
+#include <spot/twa/twa.hh>
 
 namespace spot
 {
   /// \brief Check whether the languages of the two automata intersect.
+  /// \param ar_l if not null and language is not empty, fill it with an
+  //              accepting run over the left automaton.
+  /// \param ar_r if not null and language is not empty, fill it with an
+  //              accepting run over the right automaton.
   SPOT_API
-  bool two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right);
+  bool two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right,
+                  const twa_run_ptr ar_l = nullptr,
+                  const twa_run_ptr ar_r = nullptr);
 }
