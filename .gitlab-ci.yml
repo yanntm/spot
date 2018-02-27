@@ -8,7 +8,7 @@ debian-stable-gcc:
     - branches
   except:
     - /wip/
-  image: gadl/spot-debuild:stable
+  image: registry.lrde.epita.fr/spot-debuild:stable
   script:
     - autoreconf -vfi
     - ./configure
@@ -27,7 +27,7 @@ debian-unstable-gcc-coverage:
     - branches
   except:
     - /wip/
-  image: gadl/spot-debuild
+  image: registry.lrde.epita.fr/spot-debuild
   script:
     - autoreconf -vfi
     - ./configure CXX='g++ --coverage' --enable-devel --disable-static --enable-doxygen
@@ -54,7 +54,7 @@ debian-gcc-snapshot:
     - branches
   except:
     - /wip/
-  image: gadl/spot-debuild
+  image: registry.lrde.epita.fr/spot-debuild
   script:
     - export PATH="/usr/lib/gcc-snapshot/bin:$PATH" LD_LIBRARY_PATH="/usr/lib/gcc-snapshot/lib:$LD_LIBRARY_PATH"
     - autoreconf -vfi
@@ -113,7 +113,7 @@ mingw-shared:
     - branches
   except:
     - /wip/
-  image: gadl/spot-debuild
+  image: registry.lrde.epita.fr/spot-debuild
   script:
     - autoreconf -vfi
     - ./configure CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++-posix --host i686-w64-mingw32 --disable-python
@@ -130,7 +130,7 @@ mingw-static:
     - branches
   except:
     - /wip/
-  image: gadl/spot-debuild
+  image: registry.lrde.epita.fr/spot-debuild
   script:
     - mkdir install_dir
     - autoreconf -vfi
@@ -156,8 +156,8 @@ debpkg-stable:
     - next
     - stable
   script:
-    - docker pull gadl/spot-debuild:stable
-    - docker pull gadl/spot-debuild-i386:stable
+    - docker pull registry.lrde.epita.fr/spot-debuild:stable
+    - docker pull registry.lrde.epita.fr/spot-debuild-i386:stable
     - vol=spot-stable-$CI_COMMIT_SHA
     - docker volume create $vol
     - exitcode=0
@@ -180,8 +180,8 @@ debpkg-unstable:
     - /-deb$/
     - next
   script:
-    - docker pull gadl/spot-debuild
-    - docker pull gadl/spot-debuild-i386
+    - docker pull registry.lrde.epita.fr/spot-debuild
+    - docker pull registry.lrde.epita.fr/spot-debuild-i386
     - vol=spot-unstable-$CI_COMMIT_SHA
     - docker volume create $vol
     - exitcode=0
