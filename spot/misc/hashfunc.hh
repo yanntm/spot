@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015 Laboratoire de Recherche et Développement
+// Copyright (C) 2015, 2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE)
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
 namespace spot
 {
@@ -62,5 +63,44 @@ namespace spot
     // bits assumes that all objects are aligned on a 8 byte boundary.
     return (key >> 3) * 2654435761U;
   }
+
+  /// Struct for Fowler-Noll-Vo parameters
+  template<class T>
+  struct fnv
+  {};
+
+  /// Fowler-Noll-Vo hash parameters for 32 bits
+  template<>
+  struct fnv<uint32_t>
+  {
+    static constexpr uint32_t init = 2166136261UL;
+    static constexpr uint32_t prime = 16777619UL;
+  };
+
+  /// Fowler-Noll-Vo hash parameters for 64 bits
+  template<>
+  struct fnv<uint64_t>
+  {
+    static constexpr uint64_t init = 14695981039346656037UL;
+    static constexpr uint64_t prime = 1099511628211UL;
+  };
+
+  /// \brief Fowler-Noll-Vo hash function
+  ///
+  /// This function is a non-cryptographic fast hash function.
+  /// The magic constants depend on the size of a size_t.
+  template<class It>
+  size_t
+  fnv_hash(It begin, It end)
+  {
+    size_t res = fnv<size_t>::init;
+    for (; begin != end; ++begin)
+      {
+        res ^= *begin;
+        res *= fnv<size_t>::prime;
+      }
+    return res;
+  }
+
   /// @}
 }

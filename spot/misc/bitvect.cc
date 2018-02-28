@@ -43,48 +43,6 @@ namespace spot
       return n;
     }
 
-    // Fowler-Noll-Vo hash parameters.
-    // Add specializations as needed.
-    template<int numbytes>
-    struct fnv
-    {
-    };
-
-    // Do not define the following if ULONG_MAX cannot
-    // hold a 64-bit value, otherwise the parser will
-    // choke when parsing the constants.
-#if ULONG_MAX >> 31 >> 31 >> 1 > 0
-    // Fowler-Noll-Vo hash parameters for 64bits
-    template<>
-    struct fnv<8>
-    {
-      static unsigned long init()
-      {
-        return 14695981039346656037UL;
-      }
-
-      static unsigned long prime()
-      {
-        return 1099511628211UL;
-      }
-    };
-#endif
-
-    // Fowler-Noll-Vo hash parameters for 32bits
-    template<>
-    struct fnv<4>
-    {
-      static unsigned long init()
-      {
-        return 2166136261UL;
-      }
-
-      static unsigned long prime()
-      {
-        return 16777619UL;
-      }
-    };
-
   }
 
   bitvect::bitvect(size_t size, size_t block_count):
@@ -117,23 +75,17 @@ namespace spot
 
   size_t bitvect::hash() const noexcept
   {
-
-    block_t res = fnv<sizeof(block_t)>::init();
-    size_t i;
-    size_t m = used_blocks();
+    const size_t m = used_blocks();
     if (m == 0)
-      return res;
-    for (i = 0; i < m - 1; ++i)
-      {
-        res ^= storage_[i];
-        res *= fnv<sizeof(block_t)>::prime();
-      }
+      return fnv_hash(storage_, storage_ + m);
+
+    size_t res = fnv_hash(storage_, storage_ + m - 1);
     // Deal with the last block, that might not be fully used.
     // Compute the number n of bits used in the last block.
     const size_t bpb = 8 * sizeof(bitvect::block_t);
     size_t n = size() % bpb;
     // Use only the least n bits from storage_[i].
-    res ^= storage_[i] & ((1UL << n) - 1);
+    res ^= storage_[m-1] & ((1UL << n) - 1);
     return res;
   }
 
