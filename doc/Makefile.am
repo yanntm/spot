@@ -1,9 +1,9 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2010, 2011, 2013, 2014, 2015, 2016, 2017 Laboratoire de
-## Recherche et Développement de l'Epita (LRDE).
-## Copyright (C) 2003, 2004, 2005 Laboratoire d'Informatique de Paris
-## 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
-## Université Pierre et Marie Curie.
+## Copyright (C) 2010-2011, 2013-2018 Laboratoire de Recherche et
+## Développement de l'Epita (LRDE).
+## Copyright (C) 2003-2005 Laboratoire d'Informatique de Paris 6
+## (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
+## Pierre et Marie Curie.
 ##
 ## This file is part of Spot, a model checking library.
 ##
@@ -54,8 +54,9 @@ org:
 	  cat $(builddir)/org/org.errors; exit 1; \
         else :; fi
 
+PLANTUML_URL = https://sourceforge.net/projects/plantuml/files/latest/download
 org/plantuml.jar:
-	wget http://downloads.sourceforge.net/project/plantuml/plantuml.jar -O org/plantuml.jar || curl http://downloads.sourceforge.net/project/plantuml/plantuml.jar -o org/plantuml.jar
+	wget $(PLANTUML_URL) -O org/plantuml.jar || curl -L $(PLANTUML_URL) -o org/plantuml.jar
 
 org-man:
 	mkdir -p $(srcdir)/userdoc/man
