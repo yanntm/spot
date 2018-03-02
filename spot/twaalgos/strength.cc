@@ -50,7 +50,7 @@ namespace spot
           if (si->states_of(i).size() > 1)
             is_single_state_scc = false;
           bool first = true;
-          acc_cond::mark_t m = 0U;
+          acc_cond::mark_t m = {};
           if (is_weak)
             for (auto& t: si->edges_of(i))
               // In case of a universal edge we only need to check if
@@ -294,7 +294,7 @@ namespace spot
 
     auto p = aut->acc().unsat_mark();
     bool all_accepting = !p.first;
-    acc_cond::mark_t wacc = 0U;        // acceptance for weak SCCs
+    acc_cond::mark_t wacc = {};        // acceptance for weak SCCs
     acc_cond::mark_t uacc = p.second; // Acceptance for "needed" SCCs, that
                                       // we only want to traverse.
 

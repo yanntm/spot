@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -173,7 +173,7 @@ namespace
               unsigned q = split->new_state();
               bdd in = bdd_existcomp(cube, input_bdd);
               bdd out = bdd_exist(cube, input_bdd);
-              split->new_edge(src, q, in, 0);
+              split->new_edge(src, q, in, {});
               split->new_edge(q, e.dst, out, e.acc);
             }
         }
@@ -264,7 +264,7 @@ namespace
                         todo.push_back(e2.dst);
                       }
                     aut->new_edge(pg2aut[s], pg2aut[e2.dst],
-                                  (e1.cond & out), 0);
+                                  (e1.cond & out), {});
                     break;
                   }
                 ++i;

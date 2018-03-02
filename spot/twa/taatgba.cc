@@ -132,7 +132,7 @@ namespace spot
     {
       taa_tgba::transition* t = new taa_tgba::transition;
       t->condition = bddtrue;
-      t->acceptance_conditions = 0U;
+      t->acceptance_conditions = {};
       t->dst = new taa_tgba::state_set;
       succ_.emplace_back(t);
       return;
@@ -155,7 +155,7 @@ namespace spot
     {
       taa_tgba::transition* t = new taa_tgba::transition;
       t->condition = bddtrue;
-      t->acceptance_conditions = 0U;
+      t->acceptance_conditions = {};
       taa_tgba::state_set* ss = new taa_tgba::state_set;
 
       unsigned p;

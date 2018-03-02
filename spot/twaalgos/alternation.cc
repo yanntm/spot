@@ -109,7 +109,7 @@ namespace spot
       {
         bool first = true;
         bool reject_cycle = false;
-        acc_cond::mark_t m = 0U;
+        acc_cond::mark_t m = {};
         for (unsigned src: si_.states_of(scc))
           for (auto& t: aut_->out(src))
             for (unsigned d: aut_->univ_dests(t.dst))
@@ -280,7 +280,7 @@ namespace spot
 
       acc_cond::mark_t bdd_to_state(bdd b, std::vector<unsigned>& s)
       {
-        acc_cond::mark_t m = 0U;
+        acc_cond::mark_t m = {};
         while (b != bddtrue)
           {
             assert(bdd_low(b) == bddfalse);
@@ -649,7 +649,9 @@ namespace spot
     virtual acc_cond::mark_t acc() const override
     {
       assert(dst_);
-      return dst_->is_reset();
+      return dst_->is_reset() ?
+                acc_cond::mark_t({0}) :
+                acc_cond::mark_t({});
     }
   };
 

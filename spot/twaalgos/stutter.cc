@@ -181,7 +181,7 @@ namespace spot
       acc() const override
       {
         if (loop_)
-          return 0U;
+          return {};
         return it_->acc();
       }
 
@@ -329,7 +329,7 @@ namespace spot
           }
 
         if (self_loop_needed && s.second != bddfalse)
-          res->new_edge(src, src, s.second, 0U);
+          res->new_edge(src, src, s.second, {});
       }
     res->merge_edges();
     return res;
@@ -381,10 +381,10 @@ namespace spot
                 unsigned tmp = p.first->second; // intermediate state
                 unsigned i = a->new_edge(src, tmp, one, acc);
                 assert(i > num_edges);
-                i = a->new_edge(tmp, tmp, one, 0U);
+                i = a->new_edge(tmp, tmp, one, {});
                 assert(i > num_edges);
                 // No acceptance here to preserve the state-based property.
-                i = a->new_edge(tmp, dst, one, 0U);
+                i = a->new_edge(tmp, dst, one, {});
                 assert(i > num_edges);
                 (void)i;
               }

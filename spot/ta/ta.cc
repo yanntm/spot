@@ -29,7 +29,7 @@ namespace spot
   {
     index = i;
     is_accepting = false;
-    condition = 0U;
+    condition = {};
   }
 
   scc_stack_ta::connected_component&

@@ -66,7 +66,7 @@ namespace spot
         // is not terribly efficient since we have to create the
         // iterator.
         twa_succ_iterator* it = aut_->succ_iter(s);
-        acc_cond::mark_t res = 0U;
+        acc_cond::mark_t res = {};
         if (it->first())
           res = it->acc();
         aut_->release_iter(it);

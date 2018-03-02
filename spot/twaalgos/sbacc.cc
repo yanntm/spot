@@ -52,9 +52,9 @@ namespace spot
     std::vector<acc_cond::mark_t> common_in(ns, all);
     std::vector<acc_cond::mark_t> common_out(ns, all);
     // Marks that label one incoming transition from the same SCC.
-    std::vector<acc_cond::mark_t> one_in(ns, 0U);
+    std::vector<acc_cond::mark_t> one_in(ns, acc_cond::mark_t({}));
     std::vector<bool> true_state(ns, false);
-    acc_cond::mark_t true_state_acc = 0U;
+    acc_cond::mark_t true_state_acc = {};
     unsigned true_state_last;
     for (auto& e: old->edges())
       for (unsigned d: old->univ_dests(e.dst))
@@ -95,7 +95,7 @@ namespace spot
         if (ts)
           {
             state = true_state_last; // Merge all true states.
-            m = 0U;
+            m = {};
           }
         pair_t x(state, m);
         auto p = s2n.emplace(x, 0);
@@ -126,7 +126,7 @@ namespace spot
     internal::univ_dest_mapper<twa_graph::graph_t> uniq(res->get_graph());
     for (unsigned s: old_init)
       {
-        acc_cond::mark_t init_acc = 0U;
+        acc_cond::mark_t init_acc = {};
         if (!si.is_rejecting_scc(si.scc_of(s)))
           // Use any edge going into the initial state to set the first
           // acceptance mark.
@@ -148,7 +148,7 @@ namespace spot
             for (unsigned d: old->univ_dests(t.dst))
               {
                 unsigned scc_dst = si.scc_of(d);
-                acc_cond::mark_t acc = 0U;
+                acc_cond::mark_t acc = {};
                 bool dst_acc = !si.is_rejecting_scc(scc_dst);
                 if (maybe_accepting && scc_src == scc_dst)
                   acc = t.acc - common_out[t.src];

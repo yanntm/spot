@@ -80,7 +80,7 @@ namespace spot
       {
         unsigned s1 = scc_of(s);
         acc_cond::mark_t common = a_->acc().all_sets();
-        acc_cond::mark_t union_ = 0U;
+        acc_cond::mark_t union_ = {};
         bool has_acc_self_loop = false;
         bool is_true_state = false;
         bool seen = false;
@@ -108,7 +108,7 @@ namespace spot
             seen = true;
           }
         if (!seen)
-          common = 0U;
+          common = {};
         std::get<0>(cache_[s]) = common;
         std::get<1>(cache_[s]) = union_;
         std::get<3>(cache_[s]) = has_acc_self_loop;

@@ -207,7 +207,7 @@ namespace spot
             acc_cond::mark_t less_acc =
               acc_to_traverse - st.acc;
             if (less_acc != acc_to_traverse
-                || (acc_to_traverse == 0U
+                || (!acc_to_traverse
                     && s == ecs->cycle_seed))
               {
                 acc_to_traverse = less_acc;
@@ -221,7 +221,7 @@ namespace spot
         substart = b.search(substart, run_->cycle);
         assert(substart);
       }
-    while (acc_to_traverse != 0U || substart != ecs_->cycle_seed);
+    while (acc_to_traverse || substart != ecs_->cycle_seed);
   }
 
   void

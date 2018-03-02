@@ -34,13 +34,13 @@ namespace spot
 {
   std::ostream& operator<<(std::ostream& os, spot::acc_cond::mark_t m)
   {
-    auto a = m.id;
+    auto a = m;
     os << '{';
     unsigned level = 0;
     const char* comma = "";
     while (a)
       {
-        if (a & 1)
+        if (a.has(0))
           {
             os << comma << level;
             comma = ",";
@@ -129,8 +129,8 @@ namespace spot
           SPOT_FALLTHROUGH;
         case acc_cond::acc_op::Inf:
           {
-            auto a = code[pos - 1].mark.id;
-            if (a == 0U)
+            auto a = code[pos - 1].mark;
+            if (!a)
               {
                 if (style == LATEX)
                   os << "\\mathsf{t}";
@@ -164,7 +164,7 @@ namespace spot
                 const char* inf_ = (style == LATEX) ? "\\mathsf{Inf}(" : "Inf(";
                 while (a)
                   {
-                    if (a & 1)
+                    if (a.has(0))
                       {
                         os << and_ << inf_ << negated_pre;
                         set_printer(os, level);
@@ -184,8 +184,8 @@ namespace spot
           SPOT_FALLTHROUGH;
         case acc_cond::acc_op::Fin:
           {
-            auto a = code[pos - 1].mark.id;
-            if (a == 0U)
+            auto a = code[pos - 1].mark;
+            if (!a)
               {
                 if (style == LATEX)
                   os << "\\mathsf{f}";
@@ -204,7 +204,7 @@ namespace spot
                 const char* fin_ = (style == LATEX) ? "\\mathsf{Fin}(" : "Fin(";
                 while (a)
                   {
-                    if (a & 1)
+                    if (a.has(0))
                       {
                         os << or_ << fin_ << negated_pre;
                         set_printer(os, level);
@@ -330,14 +330,14 @@ namespace spot
         case acc_cond::acc_op::And:
           {
             auto sub = pos - pos->sub.size;
-            acc_cond::mark_t m = 0U;
+            acc_cond::mark_t m = {};
             while (sub < pos)
               {
                 --pos;
                 if (auto s = eval_sets(inf, pos))
                   m |= s;
                 else
-                  return 0U;
+                  return {};
                 pos -= pos->sub.size;
               }
             return m;
@@ -352,20 +352,20 @@ namespace spot
                   return s;
                 pos -= pos->sub.size;
               }
-            return 0U;
+            return {};
           }
         case acc_cond::acc_op::Inf:
           if ((pos[-1].mark & inf) == pos[-1].mark)
             return pos[-1].mark;
           else
-            return 0U;
+            return {};
         case acc_cond::acc_op::Fin:
         case acc_cond::acc_op::FinNeg:
         case acc_cond::acc_op::InfNeg:
           SPOT_UNREACHABLE();
         }
       SPOT_UNREACHABLE();
-      return 0U;
+      return {};
     }
   }
 
@@ -387,7 +387,7 @@ namespace spot
 
   bool acc_cond::acc_code::inf_satisfiable(mark_t inf) const
   {
-    return !maybe_accepting(inf, 0U).is_false();
+    return !maybe_accepting(inf, {}).is_false();
   }
 
 
@@ -397,7 +397,7 @@ namespace spot
       throw std::runtime_error
         ("Fin acceptance is not supported by this code path.");
     if (code_.empty())
-      return 0U;
+      return {};
     return eval_sets(inf, &code_.back());
   }
 
@@ -419,7 +419,7 @@ namespace spot
             pos -= 2;
             break;
           case acc_cond::acc_op::Fin:
-            if (code_[pos - 2].mark == 0U) // f
+            if (!code_[pos - 2].mark) // f
               {
                 pos -= 2;
                 break;
@@ -458,8 +458,8 @@ namespace spot
           // Pretend we were in a unary highop.
           s = 5;
         }
-      acc_cond::mark_t seen_fin = 0U;
-      acc_cond::mark_t seen_inf = 0U;
+      acc_cond::mark_t seen_fin = {};
+      acc_cond::mark_t seen_inf = {};
       while (s)
         {
           if (code[--s].sub.op != lowop)
@@ -481,7 +481,7 @@ namespace spot
           if (o1 != acc_cond::acc_op::Fin
               || o2 != acc_cond::acc_op::Inf
               || m1.count() != 1
-              || m2.id != (m1.id << 1))
+              || m2 != (m1 << 1))
             return false;
           seen_fin |= m1;
           seen_inf |= m2;
@@ -511,8 +511,8 @@ namespace spot
           if (mainop == singleop && m.count() != 1)
             return false;
 
-          acc_cond::mark_t fin(0U);
-          acc_cond::mark_t inf(0U);
+          acc_cond::mark_t fin = {};
+          acc_cond::mark_t inf = {};
           for (unsigned mark: m.sets())
             {
               if (mainop == acc_cond::acc_op::Fin)
@@ -543,8 +543,8 @@ namespace spot
               || op == acc_cond::acc_op::Inf)
             {
               auto m = code[--s].mark;
-              acc_cond::mark_t fin(0U);
-              acc_cond::mark_t inf(0U);
+              acc_cond::mark_t fin = {};
+              acc_cond::mark_t inf = {};
 
               if (op == singleop && m.count() != 1)
                 {
@@ -631,7 +631,7 @@ namespace spot
       return true;
     if (code_.is_f())
       {
-        pairs.emplace_back(0U, 0U);
+        pairs.emplace_back(mark_t({}), mark_t({}));
         return true;
       }
     return is_rs_like(code_, acc_op::And, acc_op::Or, acc_op::Fin, pairs);
@@ -644,7 +644,7 @@ namespace spot
       return true;
     if (code_.is_t())
       {
-        pairs.emplace_back(0U, 0U);
+        pairs.emplace_back(mark_t({}), mark_t({}));
         return true;
       }
     return is_rs_like(code_, acc_op::Or, acc_op::And, acc_op::Inf, pairs);
@@ -668,8 +668,8 @@ namespace spot
       return false;
 
     auto s = code_.back().sub.size;
-    acc_cond::mark_t seen_fin = 0U;
-    acc_cond::mark_t seen_inf = 0U;
+    acc_cond::mark_t seen_fin = {};
+    acc_cond::mark_t seen_inf = {};
     // Each pair is the position of a Fin followed
     // by the number of Inf.
     std::map<unsigned, unsigned> p;
@@ -752,8 +752,8 @@ namespace spot
       return false;
 
     auto s = code_.back().sub.size;
-    acc_cond::mark_t seen_fin = 0U;
-    acc_cond::mark_t seen_inf = 0U;
+    acc_cond::mark_t seen_fin = {};
+    acc_cond::mark_t seen_inf = {};
     // Each pairs is the position of a Inf followed
     // by the number of Fin.
     std::map<unsigned, unsigned> p;
@@ -1054,12 +1054,12 @@ namespace spot
     acc_code rescode = f();
     while ((cube = isop.next()) != bddfalse)
       {
-        mark_t i = 0U;
+        mark_t i = {};
         acc_code f;
         while (cube != bddtrue)
           {
             // The acceptance set associated to this BDD variable
-            mark_t s = 0U;
+            mark_t s = {};
             s.set(sets[bdd_var(cube)]);
 
             bdd h = bdd_high(cube);
@@ -1123,12 +1123,12 @@ namespace spot
     acc_code rescode;
     while ((cube = isop.next()) != bddfalse)
       {
-        mark_t m = 0U;
+        mark_t m = {};
         acc_code i = f();
         while (cube != bddtrue)
           {
             // The acceptance set associated to this BDD variable
-            mark_t s = 0U;
+            mark_t s = {};
             s.set(sets[bdd_var(cube)]);
 
             bdd h = bdd_high(cube);
@@ -1156,9 +1156,9 @@ namespace spot
   acc_cond::unsat_mark() const
   {
     if (is_t())
-      return {false, 0U};
+      return {false, mark_t({})};
     if (!uses_fin_acceptance())
-      return {true, 0U};
+      return {true, mark_t({})};
 
     auto used = code_.used_sets();
     unsigned c = used.count();
@@ -1185,12 +1185,12 @@ namespace spot
     bdd res = to_bdd_rec(&code_.back(), &r[0]);
 
     if (res == bddtrue)
-      return {false, 0U};
+      return {false, mark_t({})};
     if (res == bddfalse)
-      return {true, 0U};
+      return {true, mark_t({})};
 
     bdd cube = bdd_satone(!res);
-    mark_t i = 0U;
+    mark_t i = {};
     while (cube != bddtrue)
       {
         // The acceptance set associated to this BDD variable
@@ -1483,8 +1483,8 @@ namespace spot
   acc_cond::acc_code::used_sets() const
   {
     if (is_t() || is_f())
-      return 0U;
-    acc_cond::mark_t used_in_cond = 0U;
+      return {};
+    acc_cond::mark_t used_in_cond = {};
     auto pos = &back();
     auto end = &front();
     while (pos > end)
@@ -1511,10 +1511,10 @@ namespace spot
   acc_cond::acc_code::used_inf_fin_sets() const
   {
     if (is_t() || is_f())
-      return {0U, 0U};
+      return {mark_t({}), mark_t({})};
 
-    acc_cond::mark_t used_fin = 0U;
-    acc_cond::mark_t used_inf = 0U;
+    acc_cond::mark_t used_fin = {};
+    acc_cond::mark_t used_inf = {};
     auto pos = &back();
     auto end = &front();
     while (pos > end)

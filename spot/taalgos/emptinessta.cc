@@ -109,7 +109,7 @@ namespace spot
           }
 
         scc.push(++num);
-        arc.push(0U);
+        arc.push({});
 
         ta_succ_iterator_product* iter = a_->succ_iter(init);
         iter->first();

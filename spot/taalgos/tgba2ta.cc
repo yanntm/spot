@@ -175,7 +175,7 @@ namespace spot
               }
 
             sscc.push(++num);
-            arc.push(0U);
+            arc.push({});
             sscc.top().is_accepting
               = testing_aut->is_accepting_state(init);
             twa_succ_iterator* iter = testing_aut->succ_iter(init);
@@ -407,7 +407,7 @@ namespace spot
           twa_succ_iterator* it = tgba_->succ_iter(tgba_init_state);
           it->first();
           if (!it->done())
-            is_acc = it->acc() != 0U;
+            is_acc = !!it->acc();
           delete it;
         }
 
@@ -459,7 +459,7 @@ namespace spot
                     twa_succ_iterator* it = tgba_->succ_iter(tgba_state);
                     it->first();
                     if (!it->done())
-                      is_acc = it->acc() != 0U;
+                      is_acc = !!it->acc();
                     delete it;
                   }
 
@@ -631,7 +631,7 @@ namespace spot
 
         if (state->compare(ta->get_artificial_initial_state()))
           ta->create_transition(state, bdd_stutering_transition,
-                                0U, state);
+                                {}, state);
 
         state->set_livelock_accepting_state(false);
         state->set_accepting_state(false);

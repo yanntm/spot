@@ -28,7 +28,7 @@ namespace spot
     unsigned n = a->num_states();
     for (unsigned s = 0; s < n; ++s)
       for (auto& t: a->out(s))
-        t.acc = 0U;
+        t.acc = {};
     a->set_generalized_buchi(0);
     a->release_named_properties();
     a->prop_weak(true);

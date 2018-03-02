@@ -87,8 +87,8 @@ namespace spot
               {
                 s = one_conjunction ? s + 1 : s;
                 const unsigned short size = code[s].sub.size;
-                acc_cond::mark_t fin = 0u;
-                acc_cond::mark_t inf = 0u;
+                acc_cond::mark_t fin = {};
+                acc_cond::mark_t inf = {};
                 for (unsigned i = 1; i <= size; i += 2)
                   {
                     if (code[s-i].sub.op == acc_cond::acc_op::Fin)
@@ -107,14 +107,15 @@ namespace spot
                 auto m1 = code[--s].mark;
                 for (unsigned int s : m1.sets())
                   {
-                    all_clauses_.emplace_back(acc_cond::mark_t({s}), 0u);
+                    all_clauses_.emplace_back(acc_cond::mark_t({s}),
+                                              acc_cond::mark_t({}));
                     set_to_keep_.emplace_back(acc_cond::mark_t({s}));
                   }
               }
             else if (code[s].sub.op == acc_cond::acc_op::Inf) // Inf
               {
                 auto m2 = code[--s].mark;
-                all_clauses_.emplace_back(0u, m2);
+                all_clauses_.emplace_back(acc_cond::mark_t({}), m2);
                 set_to_keep_.emplace_back(m2);
               }
             else
@@ -183,7 +184,7 @@ namespace spot
           {
             if (all_clauses_[clause].second)
               {
-                acc_cond::mark_t m = 0u;
+                acc_cond::mark_t m = {};
                 for (unsigned set = 0; set < max_set_in_; ++set)
                   if (all_clauses_[clause].second.has(set))
                     {
@@ -194,11 +195,11 @@ namespace spot
               }
             else
               {
-                set_to_add_.emplace_back(0u);
+                set_to_add_.emplace_back(acc_cond::mark_t({}));
               }
           }
 
-        all_set_to_add_ = 0u;
+        all_set_to_add_ = {};
         for (unsigned s = 0; s < max_set_in_; ++s)
           if (all_inf_.has(s))
             {
@@ -358,7 +359,7 @@ namespace spot
                     if (st == init_st_in_)
                       {
                         for (const auto& p_dst : st_repr_[e.dst])
-                          res_->new_edge(res_init_, p_dst.second, e.cond, 0u);
+                          res_->new_edge(res_init_, p_dst.second, e.cond, {});
                         if (!init_reachable_)
                           continue;
                       }
@@ -378,14 +379,14 @@ namespace spot
                               res_->new_edge(p_src.second, p_dst.second, e.cond,
                                              state_based_ ?
                                                get_edge_mark(e.acc, p_src.first)
-                                             : 0u);
+                                             : acc_cond::mark_t({}));
                           }
                     else
                       {
                         assert(st_repr_[st].size() == 1);
                         unsigned src = st_repr_[st][0].second;
 
-                        acc_cond::mark_t m = 0u;
+                        acc_cond::mark_t m = {};
                         if (same_scc || state_based_)
                           m = all_set_to_add_;
 
@@ -451,7 +452,7 @@ namespace spot
       acc_cond::mark_t pend;
       unsigned s;
 
-      st2gba_state(unsigned st, acc_cond::mark_t bv = -1U):
+      st2gba_state(unsigned st, acc_cond::mark_t bv = acc_cond::mark_t::all()):
         pend(bv), s(st)
       {
       }
@@ -495,7 +496,7 @@ namespace spot
           bool inor = pos->sub.op == acc_cond::acc_op::Or;
           if (inor)
             --pos;
-          acc_cond::mark_t m = 0U;
+          acc_cond::mark_t m = {};
           while (pos > term_end)
             {
               assert(pos->sub.op == acc_cond::acc_op::Inf);
@@ -554,15 +555,17 @@ namespace spot
     unsigned p = inf.count();
     // At some point we will remove anything that is not used as Inf.
     acc_cond::mark_t to_strip = in->acc().all_sets() - inf;
-    acc_cond::mark_t inf_alone = 0U;
-    acc_cond::mark_t fin_alone = 0U;
+    acc_cond::mark_t inf_alone = {};
+    acc_cond::mark_t fin_alone = {};
 
     if (!p)
       return remove_fin(in);
 
     unsigned numsets = in->acc().num_sets();
-    std::vector<acc_cond::mark_t> fin_to_infpairs(numsets, 0U);
-    std::vector<acc_cond::mark_t> inf_to_finpairs(numsets, 0U);
+    std::vector<acc_cond::mark_t> fin_to_infpairs(numsets,
+                                                  acc_cond::mark_t({}));
+    std::vector<acc_cond::mark_t> inf_to_finpairs(numsets,
+                                                  acc_cond::mark_t({}));
     for (auto pair: pairs)
       {
         if (pair.fin)
@@ -581,7 +584,7 @@ namespace spot
     // fin_alone, but we also have fin_to_infpair[0] = {1}.  This should
     // really be simplified to Fin(0).
     for (auto mark: fin_alone.sets())
-      fin_to_infpairs[mark] = 0U;
+      fin_to_infpairs[mark] = {};
 
     scc_info si(in, scc_info_options::NONE);
 
@@ -598,7 +601,7 @@ namespace spot
         // Fin sets that are alone either because the acceptance
         // condition has no matching Inf, or because the SCC does not
         // intersect the matching Inf.
-        acc_cond::mark_t fin_wo_inf = 0U;
+        acc_cond::mark_t fin_wo_inf = {};
         for (unsigned mark: acc_fin.sets())
           if (!fin_to_infpairs[mark] || (fin_to_infpairs[mark] - acc_inf))
             fin_wo_inf.set(mark);
@@ -606,13 +609,13 @@ namespace spot
         // Inf sets that *do* have a matching Fin in the acceptance
         // condition but without matching Fin in the SCC: they can be
         // considered as always present in the SCC.
-        acc_cond::mark_t inf_wo_fin = 0U;
+        acc_cond::mark_t inf_wo_fin = {};
         for (unsigned mark: inf.sets())
           if (inf_to_finpairs[mark] && (inf_to_finpairs[mark] - acc_fin))
             inf_wo_fin.set(mark);
 
         sccfi.emplace_back(fin_wo_inf, inf_wo_fin,
-                           acc_fin == 0U, acc_inf == 0U);
+                           !acc_fin, !acc_inf);
       }
 
     auto out = make_twa_graph(in->get_dict());
@@ -637,7 +640,7 @@ namespace spot
     bool sbacc = in->prop_state_acc().is_true();
 
     // States of the original automaton are marked with s.pend == -1U.
-    const acc_cond::mark_t orig_copy(-1U);
+    const acc_cond::mark_t orig_copy = acc_cond::mark_t::all();
 
     while (!todo.empty())
       {
@@ -658,7 +661,7 @@ namespace spot
         for (auto& t: in->out(s.s))
           {
             acc_cond::mark_t pend = s.pend;
-            acc_cond::mark_t acc = 0U;
+            acc_cond::mark_t acc = {};
 
             bool maybe_acc = maybe_acc_scc && (scc_src == si.scc_of(t.dst));
             if (pend != orig_copy)
@@ -725,7 +728,7 @@ namespace spot
             // this has to occur at least once per cycle.
             if (pend == orig_copy && (t.src >= t.dst) && maybe_acc && !no_fin)
               {
-                acc_cond::mark_t stpend = 0U;
+                acc_cond::mark_t stpend = {};
                 if (sbacc)
                   {
                     auto a = in->state_acc_sets(t.dst);
@@ -808,7 +811,7 @@ namespace spot
     // state without successor.
     if (cnf.is_f())
       {
-        assert(cnf.front().mark == 0U);
+        assert(!cnf.front().mark);
         res = make_twa_graph(aut->get_dict());
         res->set_init_state(res->new_state());
         res->prop_state_acc(true);
@@ -826,7 +829,7 @@ namespace spot
     for (auto& t: res->edges())
       {
         acc_cond::mark_t cur_m = t.acc;
-        acc_cond::mark_t new_m = 0U;
+        acc_cond::mark_t new_m = {};
         for (unsigned n = 0; n < nterms; ++n)
           if (cur_m & terms[n])
             new_m.set(n);
@@ -852,7 +855,7 @@ namespace spot
       std::vector<std::pair<acc_cond::mark_t, acc_cond::mark_t>> res;
       if (acc.empty())
         {
-          res.emplace_back(0U, 0U);
+          res.emplace_back(acc_cond::mark_t({}), acc_cond::mark_t({}));
           return res;
         }
       auto pos = &acc.back();
@@ -866,15 +869,15 @@ namespace spot
               // We have only a Fin term, without Inf.  In this case
               // only, the Fin() may encode a disjunction of sets.
               for (auto s: pos[-1].mark.sets())
-                res.emplace_back(acc_cond::mark_t({s}), 0U);
+                res.emplace_back(acc_cond::mark_t({s}), acc_cond::mark_t({}));
               pos -= pos->sub.size + 1;
             }
           else
             {
               // We have a conjunction of Fin and Inf sets.
               auto end = pos - pos->sub.size - 1;
-              acc_cond::mark_t fin = 0U;
-              acc_cond::mark_t inf = 0U;
+              acc_cond::mark_t fin = {};
+              acc_cond::mark_t inf = {};
               while (pos > end)
                 {
                   switch (pos->sub.op)
@@ -958,7 +961,7 @@ namespace spot
               fin_set = next_set++;
             }
 
-          acc_cond::mark_t infsets = 0U;
+          acc_cond::mark_t infsets = {};
 
           if (share_inf)
             for (auto s: i.second.sets())
@@ -1007,7 +1010,7 @@ namespace spot
       res->set_acceptance(next_set, code);
       for (auto& e: res->edges())
         {
-          acc_cond::mark_t m = 0U;
+          acc_cond::mark_t m = {};
           for (auto s: e.acc.sets())
             m |= rename[s];
           e.acc = m;

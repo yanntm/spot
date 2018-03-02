@@ -88,11 +88,13 @@ namespace spot
     acc_cond::mark_t acc;
 
     explicit twa_graph_edge_data() noexcept
-      : cond(bddfalse), acc(0)
+      : cond(bddfalse), acc({})
     {
     }
 
-    twa_graph_edge_data(bdd cond, acc_cond::mark_t acc = 0U) noexcept
+    twa_graph_edge_data(
+        bdd cond,
+        acc_cond::mark_t acc = {}) noexcept
       : cond(cond), acc(acc)
     {
     }
@@ -425,7 +427,8 @@ namespace spot
     }
 
     unsigned new_edge(unsigned src, unsigned dst,
-                      bdd cond, acc_cond::mark_t acc = 0U)
+                      bdd cond,
+                      acc_cond::mark_t acc = {})
     {
       return g_.new_edge(src, dst, cond, acc);
     }
@@ -441,13 +444,15 @@ namespace spot
 
     template<class I>
     unsigned new_univ_edge(unsigned src, I begin, I end,
-                           bdd cond, acc_cond::mark_t acc = 0U)
+                           bdd cond,
+                           acc_cond::mark_t acc = {})
     {
       return g_.new_univ_edge(src, begin, end, cond, acc);
     }
 
     unsigned new_univ_edge(unsigned src, std::initializer_list<unsigned> dst,
-                           bdd cond, acc_cond::mark_t acc = 0U)
+                           bdd cond,
+                           acc_cond::mark_t acc = {})
     {
       return g_.new_univ_edge(src, dst.begin(), dst.end(), cond, acc);
     }
@@ -613,7 +618,7 @@ namespace spot
         // Stop at the first edge, since the remaining should be
         // labeled identically.
         return t.acc;
-      return 0U;
+      return {};
     }
 
     /// \brief Tell if a state is accepting.

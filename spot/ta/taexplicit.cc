@@ -391,7 +391,7 @@ namespace spot
         {
           auto i =
             down_cast<state_ta_explicit*>(get_artificial_initial_state());
-          create_transition(i, condition, 0U, s);
+          create_transition(i, condition, {}, s);
         }
   }
 

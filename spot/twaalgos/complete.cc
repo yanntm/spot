@@ -153,7 +153,7 @@ namespace spot
                 // in case the automaton uses state-based acceptance, propagate
                 // the acceptance of the first edge to the one we add.
                 if (!aut->prop_state_acc().is_true() && i != sink)
-                  acc = 0U;
+                  acc = {};
 
                 aut->new_edge(i, sink, missingcond, acc);
               }

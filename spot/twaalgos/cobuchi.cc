@@ -170,7 +170,7 @@ namespace spot
               if (nca_is_inf_state[s])
                 {
                   for (auto& e : res_->out(s))
-                    e.acc = 0U;
+                    e.acc = {};
 
                   if (nca_info)
                     save_inf_nca_st(s, nca_info);
@@ -182,7 +182,7 @@ namespace spot
                       if (si_.scc_of(e.dst) == src_scc || state_based_)
                           e.acc = acc_cond::mark_t({0});
                       else
-                        e.acc = 0u;
+                        e.acc = {};
                     }
                 }
             }
@@ -318,7 +318,7 @@ namespace spot
       unsigned ns = si.scc_count();
       for (unsigned s = 0; s < ns; ++s)
         {
-          acc_cond::mark_t m = 0U;
+          acc_cond::mark_t m = {};
           if (si.is_rejecting_scc(s))
             m = acc_cond::mark_t{0};
           else

@@ -264,7 +264,7 @@ namespace spot
     // A simple struct representing an SCC.
     struct scc
     {
-      scc(int i): index(i), condition(0U) {}
+      scc(int i): index(i), condition({}) {}
 
       int index;
       acc_cond::mark_t condition;
@@ -424,7 +424,7 @@ namespace spot
                 acc_cond::mark_t less_acc =
                   acc_to_traverse - st.acc;
                 if (less_acc != acc_to_traverse
-                    || (acc_to_traverse == 0U
+                    || (!acc_to_traverse
                         && T::from_state(ecs->aut, s) == ecs->cycle_seed))
                   {
                     acc_to_traverse = less_acc;
@@ -437,7 +437,7 @@ namespace spot
             substart = b.search(substart, run_->cycle);
             assert(substart);
           }
-        while (acc_to_traverse != 0U || substart != cycle_seed);
+        while (acc_to_traverse || substart != cycle_seed);
       }
     };
 
@@ -691,7 +691,7 @@ namespace spot
           ecs_->h[init] = 1;
           ecs_->root.push(1);
           if (strength == STRONG)
-            arc.push(0U);
+            arc.push({});
           auto iter = T::succ(ecs_->aut, init);
           todo.emplace(init, iter);
           live.emplace_back(init);

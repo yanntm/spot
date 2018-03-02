@@ -74,7 +74,7 @@ namespace spot
                                    const Edges& edges,
                                    const EdgeMask& mask)
     {
-      acc_cond::mark_t scc_mark = 0U;
+      acc_cond::mark_t scc_mark = {};
       for_each_edge(aut, edges, mask, [&] (unsigned e)
         {
           scc_mark |= aut->edge_data(e).acc;
@@ -89,7 +89,7 @@ namespace spot
       unsigned nst = aut->num_states();
       for (unsigned s = 0; s < nst; ++s)
         {
-          acc_cond::mark_t acc = 0U;
+          acc_cond::mark_t acc = {};
           for (auto& t: aut->out(s))
             acc |= t.acc;
           for (auto& t: aut->out(s))
@@ -313,7 +313,7 @@ namespace spot
 
               for (const auto& e: si.edges_of(scc))
                 {
-                  bool acc = (e.acc & scc_infs_alone) != 0;
+                  bool acc = !!(e.acc & scc_infs_alone);
                   res->new_acc_edge(e.src, e.dst, e.cond, acc);
                 }
 
@@ -331,7 +331,7 @@ namespace spot
                         continue;
                       auto src = state_map[e.src];
                       auto dst = state_map[e.dst];
-                      bool cacc = fins_alone.has(r) || (pairinf & e.acc) != 0;
+                      bool cacc = fins_alone.has(r) || (pairinf & e.acc);
                       res->new_acc_edge(src, dst, e.cond, cacc);
                       // We need only one non-deterministic jump per
                       // cycle.  As an approximation, we only do
@@ -339,7 +339,7 @@ namespace spot
                       if (e.dst <= e.src)
                         {
                           deterministic = false;
-                          bool jacc = ((e.acc & scc_infs_alone) != 0);
+                          bool jacc = !!(e.acc & scc_infs_alone);
                           res->new_acc_edge(e.src, dst, e.cond, jacc);
                         }
                     }
@@ -379,7 +379,7 @@ namespace spot
               // only, the Fin() may encode a disjunction of sets.
               for (auto s: pos[-1].mark.sets())
                 {
-                  acc_cond::mark_t fin = 0U;
+                  acc_cond::mark_t fin = {};
                   fin.set(s);
                   res[fin] = acc_cond::acc_code{};
                 }
@@ -389,8 +389,8 @@ namespace spot
             {
               // We have a conjunction of Fin and Inf sets.
               auto end = pos - pos->sub.size - 1;
-              acc_cond::mark_t fin = 0U;
-              acc_cond::mark_t inf = 0U;
+              acc_cond::mark_t fin = {};
+              acc_cond::mark_t inf = {};
               while (pos > end)
                 {
                   switch (pos->sub.op)
@@ -453,7 +453,7 @@ namespace spot
         {
           if (!si.reachable_state(src))
             continue;
-          acc_cond::mark_t acc = 0U;
+          acc_cond::mark_t acc = {};
           unsigned scc = si.scc_of(src);
           if (si.is_accepting_scc(scc) && !si.is_trivial(scc))
             acc = all_acc;
@@ -504,8 +504,8 @@ namespace spot
       std::vector<acc_cond::mark_t> keep;
       std::vector<acc_cond::mark_t> add;
       bool has_true_term = false;
-      acc_cond::mark_t allinf = 0U;
-      acc_cond::mark_t allfin = 0U;
+      acc_cond::mark_t allinf = {};
+      acc_cond::mark_t allfin = {};
       {
         auto acccode = aut->get_acceptance();
         if (!acccode.is_dnf())
@@ -534,10 +534,10 @@ namespace spot
         for (auto p: split)
           {
             // The empty Fin should always come first
-            assert(p.first != 0U || rem.empty());
+            assert(p.first || rem.empty());
             rem.emplace_back(p.first);
             allfin |= p.first;
-            acc_cond::mark_t inf = 0U;
+            acc_cond::mark_t inf = {};
             if (!p.second.empty())
               {
                 auto pos = &p.second.back();
@@ -562,14 +562,14 @@ namespace spot
                       }
                   }
               }
-            if (inf == 0U)
+            if (!inf)
               {
                 has_true_term = true;
               }
             code.emplace_back(std::move(p.second));
             keep.emplace_back(inf);
             allinf |= inf;
-            add.emplace_back(0U);
+            add.emplace_back(acc_cond::mark_t({}));
           }
       }
       assert(add.size() > 0);
@@ -582,7 +582,7 @@ namespace spot
       bool interference = false;
       {
         auto sz = keep.size();
-        acc_cond::mark_t sofar = 0U;
+        acc_cond::mark_t sofar = {};
         for (unsigned i = 0; i < sz; ++i)
           {
             auto k = keep[i];
@@ -614,7 +614,7 @@ namespace spot
               }
             for (unsigned i = 0; i < sz; ++i)
               {
-                acc_cond::mark_t m = 0U;
+                acc_cond::mark_t m = {};
                 for (auto f: rem[i].sets())
                   m.set(exs[f]);
                 trace << "rem[" << i << "] = " << rem[i]
@@ -637,14 +637,15 @@ namespace spot
                   continue;
                 add[i] = m;
                 code[i] &= std::move(c);
-                c = acc.fin(0U);        // Use false for the other terms.
+                // Use false for the other terms.
+                c = acc.fin({});
                 trace << "code[" << i << "] = " << code[i] << '\n';
               }
 
           }
       }
 
-      acc_cond::acc_code new_code = aut->acc().fin(0U);
+      acc_cond::acc_code new_code = aut->acc().fin({});
       for (auto c: code)
         new_code |= std::move(c);
 
@@ -662,7 +663,7 @@ namespace spot
       res->set_init_state(aut->get_init_state_number());
 
       // If the input had no Inf, the output is a state-based automaton.
-      if (allinf == 0U)
+      if (!allinf)
         res->prop_state_acc(true);
 
       bool sbacc = res->prop_state_acc().is_true();
@@ -676,8 +677,8 @@ namespace spot
           trace << "SCC #" << n << " uses " << m << '\n';
 
           // What to keep and add into the main copy
-          acc_cond::mark_t main_sets = 0U;
-          acc_cond::mark_t main_add = 0U;
+          acc_cond::mark_t main_sets = {};
+          acc_cond::mark_t main_add = {};
           bool intersects_fin = false;
           for (unsigned i = 0; i < cs; ++i)
             if (!(m & rem[i]))
@@ -696,7 +697,7 @@ namespace spot
           for (auto s: states)
             for (auto& t: aut->out(s))
               {
-                acc_cond::mark_t a = 0U;
+                acc_cond::mark_t a = {};
                 if (sbacc || SPOT_LIKELY(si.scc_of(t.dst) == n))
                   a = (t.acc & main_sets) | main_add;
                 res->new_edge(s, t.dst, t.cond, a);
@@ -732,7 +733,7 @@ namespace spot
                         // them on back-links.
                         if (t.dst <= s)
                           {
-                            acc_cond::mark_t a = 0U;
+                            acc_cond::mark_t a = {};
                             if (sbacc)
                               a = (t.acc & main_sets) | main_add;
                             res->new_edge(s, nd, t.cond, a);

@@ -58,8 +58,9 @@ namespace spot
       }
 
       acc_cond::mark_t in_acc; // Acceptance sets on the incoming transition
-      acc_cond::mark_t acc = 0U; // union of all acceptance marks in the SCC
-      acc_cond::mark_t common = -1U; // intersection of all marks in the SCC
+      acc_cond::mark_t acc = {}; // union of all acceptance marks in the SCC
+      // intersection of all marks in the SCC
+      acc_cond::mark_t common = acc_cond::mark_t::all();
       int index;                     // Index of the SCC
       bool trivial = true;           // Whether the SCC has no cycle
       bool accepting = false;        // Necessarily accepting
@@ -205,7 +206,7 @@ namespace spot
           continue;
         assert(spi == 0);
         h_[init] = --num_;
-        root_.emplace_back(num_, 0U);
+        root_.emplace_back(num_, acc_cond::mark_t({}));
         todo_.emplace(stack_item{init, gr.state_storage(init).succ, 0});
         live.emplace_back(init);
 
@@ -568,7 +569,7 @@ namespace spot
 
         // Get all Fin acceptance set that appears in the SCC and does not have
         // their corresponding Inf appearing in the SCC.
-        acc_cond::mark_t m = 0u;
+        acc_cond::mark_t m = {};
         if (fin)
           for (unsigned p = 0; p < nb_pairs; ++p)
             if (fin & pairs[p].fin && !(inf & pairs[p].inf))
@@ -617,8 +618,8 @@ namespace spot
         for (unsigned i = 0; i < nb_states; ++i)
           old.push_back(i);
 
-        acc_cond::mark_t all_fin = 0U;
-        acc_cond::mark_t all_inf = 0U;
+        acc_cond::mark_t all_fin = {};
+        acc_cond::mark_t all_inf = {};
         std::tie(all_inf, all_fin) = aut_->get_acceptance().used_inf_fin_sets();
 
         states_on_acc_cycle_of_rec(scc, all_fin, all_inf, nb_pairs, pairs, res,

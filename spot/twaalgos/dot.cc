@@ -81,8 +81,8 @@ namespace spot
       std::string* name_ = nullptr;
       std::map<std::pair<int, int>, int> univ_done;
 
-      acc_cond::mark_t inf_sets_ = 0U;
-      acc_cond::mark_t fin_sets_ = 0U;
+      acc_cond::mark_t inf_sets_ = {};
+      acc_cond::mark_t fin_sets_ = {};
       unsigned opt_shift_sets_ = 0;
       enum { ShapeAuto = 0, ShapeCircle, ShapeEllipse } opt_shape_ = ShapeAuto;
       bool opt_force_acc_trans_ = false;
@@ -591,7 +591,7 @@ namespace spot
 
         if (mark_states_ && !dcircles_)
           {
-            acc_cond::mark_t acc = 0U;
+            acc_cond::mark_t acc = {};
             for (auto& t: aut_->out(s))
               {
                 acc = t.acc;

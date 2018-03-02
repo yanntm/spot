@@ -162,7 +162,7 @@ namespace spot
       const state* init = ecs_->aut->get_init_state();
       ecs_->h[init] = 1;
       ecs_->root.push(1);
-      arc.push(0U);
+      arc.push({});
       twa_succ_iterator* iter = ecs_->aut->succ_iter(init);
       iter->first();
       todo.emplace(init, iter);

@@ -188,12 +188,12 @@ namespace spot
                 if (!this->si->is_trivial(u))
                   acc &= accmask; // No choice.
                 else if (RemoveAll)
-                  acc = 0U;
+                  acc = {};
               }
             else if (!PreserveSBA)
               {
                 if (RemoveAll)
-                  acc = 0U;
+                  acc = {};
                 else if (this->si->is_rejecting_scc(v))
                   acc &= accmask;
               }
@@ -264,7 +264,7 @@ namespace spot
             unsigned u = this->si->scc_of(dst);
 
             if (this->si->is_rejecting_scc(u))
-              acc = 0U;
+              acc = {};
             else
               acc = acc.strip(strip_[u]);
           }

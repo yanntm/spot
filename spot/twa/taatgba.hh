@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011-2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2009, 2011-2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -177,7 +177,7 @@ namespace spot
       transition* t = new transition;
       t->dst = dst;
       t->condition = bddtrue;
-      t->acceptance_conditions = 0U;
+      t->acceptance_conditions = {};
       src->emplace_back(t);
       return t;
     }
@@ -192,7 +192,7 @@ namespace spot
 
     void add_acceptance_condition(transition* t, formula f)
     {
-      auto p = acc_map_.emplace(f, 0);
+      auto p = acc_map_.emplace(f, acc_cond::mark_t({}));
       if (p.second)
         p.first->second = acc_cond::mark_t({acc().add_set()});
       t->acceptance_conditions |= p.first->second;

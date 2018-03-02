@@ -28,7 +28,7 @@ namespace spot
   scc_stack::connected_component::connected_component(int i)
   {
     index = i;
-    condition = 0U;
+    condition = acc_cond::mark_t({});
   }
 
   scc_stack::connected_component&

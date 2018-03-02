@@ -143,7 +143,7 @@ namespace spot
         auto colors = scc_.acc_sets_of(scc_num);
         std::set<unsigned> scc_pairs;
         for (unsigned k = 0; k != pairs_.size(); ++k)
-          if (inf(k) == 0U || (colors & (pairs_[k].fin | pairs_[k].inf)))
+          if (!inf(k) || (colors & (pairs_[k].fin | pairs_[k].inf)))
             scc_pairs.insert(k);
 
         perm_t p0;
@@ -213,13 +213,13 @@ namespace spot
                     for (unsigned k = 0; k != current.perm.size(); ++k)
                       {
                         unsigned pk = current.perm[k];
-                        if (inf(pk) == 0U ||
+                        if (!inf(pk) ||
                             (e.acc & (pairs_[pk].fin | pairs_[pk].inf)))
                           // k increases in the loop, so k > maxint necessarily
                           maxint = k;
                       }
 
-                    acc_cond::mark_t acc = 0U;
+                    acc_cond::mark_t acc = {};
                     if (maxint == -1U)
                       acc = {0};
                     else if (e.acc & fin(current.perm[maxint]))

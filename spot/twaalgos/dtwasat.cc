@@ -76,7 +76,7 @@ namespace spot
 
       path(unsigned src_ref)
         : src_ref(src_ref), dst_ref(src_ref),
-          acc_cand(0U), acc_ref(0U)
+          acc_cand({}), acc_ref({})
       {
       }
 
@@ -131,7 +131,7 @@ namespace spot
       auto pos = &acc.back();
       if (pos->sub.op == acc_cond::acc_op::Or)
         --pos;
-      acc_cond::mark_t all_fin = 0U;
+      acc_cond::mark_t all_fin = {};
       auto start = &acc.front();
       while (pos > start)
         {
@@ -145,8 +145,8 @@ namespace spot
             {
               // We have a conjunction of Fin and Inf sets.
               auto end = pos - pos->sub.size - 1;
-              acc_cond::mark_t fin = 0U;
-              acc_cond::mark_t inf = 0U;
+              acc_cond::mark_t fin = {};
+              acc_cond::mark_t inf = {};
               while (pos > end)
                 {
                   switch (pos->sub.op)
@@ -291,8 +291,8 @@ namespace spot
 
       int
       pathid(unsigned src_cand, unsigned src_ref, unsigned dst_cand,
-          unsigned dst_ref, acc_cond::mark_t acc_cand = 0U,
-          acc_cond::mark_t acc_ref = 0U)
+          unsigned dst_ref, acc_cond::mark_t acc_cand = {},
+          acc_cond::mark_t acc_ref = {})
       {
 #if TRACE
         try
@@ -352,8 +352,8 @@ namespace spot
 
       std::string
       fmt_p(unsigned src_cand, unsigned src_ref, unsigned dst_cand,
-          unsigned dst_ref, acc_cond::mark_t acc_cand = 0U,
-          acc_cond::mark_t acc_ref = 0U)
+          unsigned dst_ref, acc_cond::mark_t acc_cand = {},
+          acc_cond::mark_t acc_ref = {})
       {
         return helper.format_p(debug_cand_acc, debug_ref_acc, src_cand,
             src_ref, dst_cand, dst_ref, acc_cand, acc_ref);
@@ -405,7 +405,7 @@ namespace spot
         d.scc_marks.reserve(scccount);
         for (auto& v: tmp)
           {
-            acc_cond::mark_t m = 0U;
+            acc_cond::mark_t m = {};
             for (auto i: v)
               m |= i;
             d.scc_marks.emplace_back(m);
@@ -423,7 +423,7 @@ namespace spot
         d.cand_inf_trim_map = split_dnf_acc_by_inf(d.cand_acc);
 
       bdd_dict_ptr bd = aut->get_dict();
-      d.all_cand_acc.emplace_back(0U);
+      d.all_cand_acc.emplace_back(acc_cond::mark_t({}));
       for (unsigned n = 0; n < d.cand_nacc; ++n)
         {
           auto c = d.cacc.mark(n);
@@ -443,7 +443,7 @@ namespace spot
             }
         }
 
-      d.all_ref_acc.emplace_back(0U);
+      d.all_ref_acc.emplace_back(acc_cond::mark_t({}));
       unsigned ref_nacc = aut->num_sets();
       for (unsigned n = 0; n < ref_nacc; ++n)
         {
@@ -818,7 +818,7 @@ namespace spot
                                               d.cand_inf_trim
                                               (candhist_p |
                                                d.all_cand_acc[f]);
-                                            acc_cond::mark_t f2p = 0U;
+                                            acc_cond::mark_t f2p = {};
                                             if (!is_weak)
                                               f2p = d.ref_inf_trim(refhist |
                                                                    curacc);
@@ -906,7 +906,7 @@ namespace spot
               // Skip (s,l,d2) if we have already seen some (s,l,d1).
               if (seen_trans.insert(src_cond(i, satdict.alpha_vect[j])).second)
               {
-                acc_cond::mark_t acc = 0U;
+                acc_cond::mark_t acc = {};
                 if (state_based)
                   {
                     auto tmp = state_acc.find(i);
