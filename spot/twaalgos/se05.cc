@@ -101,7 +101,7 @@ namespace spot
             const state* s0 = a_->get_init_state();
             inc_states();
             h.add_new_state(s0, CYAN);
-            push(st_blue, s0, bddfalse, 0U);
+            push(st_blue, s0, bddfalse, {});
             if (dfs_blue())
               return std::make_shared<se05_result>(t, options());
           }

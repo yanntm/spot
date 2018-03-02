@@ -358,7 +358,7 @@ namespace spot
 
     // Start from the end of the original cycle, and rewind until all
     // acceptance sets have been seen.
-    acc_cond::mark_t seen_acc = 0U;
+    acc_cond::mark_t seen_acc = {};
     twa_run::steps::const_iterator seg = cycle.end();
     do
       {
@@ -371,7 +371,7 @@ namespace spot
 
     // Now go forward and ends the segment as soon as we have seen all
     // acceptance sets, cloning it in our result along the way.
-    seen_acc = 0U;
+    seen_acc = {};
     do
       {
         assert(seg != cycle.end());
@@ -507,7 +507,7 @@ namespace spot
     int serial = 1;
     const twa_run::steps* l;
     std::string in;
-    acc_cond::mark_t all_acc = 0U;
+    acc_cond::mark_t all_acc = {};
     bool all_acc_seen = false;
     state_map<std::set<int>> seen;
 
@@ -771,7 +771,7 @@ namespace spot
     unsigned src;
     unsigned dst;
     const twa_run::steps* l;
-    acc_cond::mark_t seen_acc = 0U;
+    acc_cond::mark_t seen_acc = {};
 
     state_map<unsigned> seen;
 

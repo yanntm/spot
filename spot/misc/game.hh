@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -265,7 +265,7 @@ public:
 
   acc_cond::mark_t acc() const override
   {
-    return 0;
+    return {};
   }
 };
 

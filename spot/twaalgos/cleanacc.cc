@@ -31,7 +31,7 @@ namespace spot
     auto c = aut->get_acceptance();
     acc_cond::mark_t used_in_cond = c.used_sets();
 
-    acc_cond::mark_t used_in_aut = 0U;
+    acc_cond::mark_t used_in_aut = {};
     acc_cond::mark_t used_on_all_edges = used_in_cond;
     for (auto& t: aut->edges())
       {
@@ -97,7 +97,7 @@ namespace spot
         else
           always_together[i] = acc_cond::mark_t({i});
 
-      acc_cond::mark_t previous_a = 0U;
+      acc_cond::mark_t previous_a = {};
       for (auto& t: aut->edges())
         {
           acc_cond::mark_t a = t.acc & used_in_cond;
@@ -116,7 +116,7 @@ namespace spot
             }
         }
 
-      acc_cond::mark_t to_remove = 0U;
+      acc_cond::mark_t to_remove = {};
       for (unsigned i = 0; i < num_sets; ++i)
         {
           auto oldm = always_together[i];
@@ -168,8 +168,8 @@ namespace spot
             {
               --pos;
               auto res = acc_cond::acc_code::t();
-              acc_cond::mark_t seen_fin = 0U;
-              auto inf = acc_cond::acc_code::inf(0U);
+              acc_cond::mark_t seen_fin = {};
+              auto inf = acc_cond::acc_code::inf({});
               do
                 {
                   auto tmp = remove_compl_rec(pos, complement);
@@ -212,7 +212,7 @@ namespace spot
             {
               --pos;
               auto res = acc_cond::acc_code::f();
-              acc_cond::mark_t seen_inf = 0U;
+              acc_cond::mark_t seen_inf = {};
               auto fin = acc_cond::acc_code::f();
               do
                 {
@@ -288,7 +288,7 @@ namespace spot
       // prev_acc that would allow us to fail the comparison on the
       // first edge (this was issue #315), so we have to deal with
       // that first edge specifically.
-      acc_cond::mark_t prev_acc = 0U;
+      acc_cond::mark_t prev_acc = {};
       const auto& edges = aut->edges();
       auto b = edges.begin();
       auto e = edges.end();

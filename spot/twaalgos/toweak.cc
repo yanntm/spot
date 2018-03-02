@@ -38,7 +38,8 @@ namespace spot
       unsigned rank;
       acc_cond::mark_t mark;
 
-      rc_state(unsigned state_id, unsigned state_rank, acc_cond::mark_t m = 0U)
+      rc_state(unsigned state_id, unsigned state_rank,
+               acc_cond::mark_t m = acc_cond::mark_t({}))
        : id(state_id), rank(state_rank), mark(m)
       {
       }
@@ -129,7 +130,7 @@ namespace spot
                         for (unsigned m = start_set; m < numsets_; ++m)
                           levels |= state_to_var_[new_state(d, i, {m})];
                       else
-                        levels |= state_to_var_[new_state(d, i, 0U)];
+                        levels |= state_to_var_[new_state(d, i, {})];
                     }
                   dest &= levels;
                 }
@@ -160,7 +161,7 @@ namespace spot
         {
           std::vector<unsigned> states;
           for (unsigned d: aut_->univ_dests(aut_->get_init_state_number()))
-            states.push_back(new_state(d, aut_->num_states() * 2, 0U));
+            states.push_back(new_state(d, aut_->num_states() * 2, {}));
 
           res_->set_univ_init_state(states.begin(), states.end());
 
@@ -168,7 +169,7 @@ namespace spot
             {
               rc_state st = todo_.front();
 
-              acc_cond::mark_t mark = 0U;
+              acc_cond::mark_t mark = {};
               if (st.rank % 2)
                 mark = {0};
 

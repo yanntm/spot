@@ -56,7 +56,7 @@ namespace spot
     static
     void copy_union(const twa_graph_ptr& res,
                     const const_twa_graph_ptr& graph,
-                    acc_cond::mark_t mark = 0U,
+                    acc_cond::mark_t mark = acc_cond::mark_t({}),
                     unsigned offset = 0U)
     {
       unsigned state_offset = res->num_states();
@@ -95,8 +95,8 @@ namespace spot
       res->copy_ap_of(right);
 
       auto unsatl = left->acc().unsat_mark();
-      acc_cond::mark_t markl = 0U;
-      acc_cond::mark_t markr = 0U;
+      acc_cond::mark_t markl = {};
+      acc_cond::mark_t markr = {};
       auto left_acc = left->get_acceptance();
       unsigned left_num_sets = left->num_sets();
       if (!unsatl.first)

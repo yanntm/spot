@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014  Laboratoire de Recherche et Developpement de
+// Copyright (C) 2014, 2018  Laboratoire de Recherche et Developpement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -63,7 +63,7 @@ namespace spot
     {
        auto p = map_.find(name);
        if (p == map_.end())
-         return std::make_pair(false, 0U);
+         return std::make_pair(false, acc_cond::mark_t({}));
        return std::make_pair(true, acc_cond::mark_t({p->second}));
     }
   };
@@ -85,7 +85,7 @@ namespace spot
       if (n < aut_->acc().num_sets())
         return std::make_pair(true, acc_cond::mark_t({n}));
       else
-        return std::make_pair(false, 0U);
+        return std::make_pair(false, acc_cond::mark_t({}));
     }
   };
 
@@ -113,7 +113,7 @@ namespace spot
            map_[n] = res;
            return std::make_pair(true, res);
          }
-       return std::make_pair(false, 0U);
+       return std::make_pair(false, acc_cond::mark_t({}));
     }
   };
 }

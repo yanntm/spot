@@ -64,7 +64,7 @@ int main()
   auto m2 = spot::acc_cond::mark_t({0, 3});
   auto m3 = spot::acc_cond::mark_t({2, 1});
 
-  spot::acc_cond::mark_t m0 = 0U;
+  spot::acc_cond::mark_t m0 = {};
   std::cout << m0.max_set() << ' ' << m0.min_set() << '\n';
   std::cout << m3.max_set() << ' ' << m3.min_set() << '\n';
 
@@ -160,7 +160,7 @@ int main()
   // {1}
   // {2, 3}
   std::cout << code3 << ' ' << "{0} true\n";
-  spot::acc_cond::mark_t m = 0U;
+  spot::acc_cond::mark_t m = {};
   m.set(0);
   print(code3.missing(m, true));
   std::cout << code3 << ' ' << "{0} false\n";

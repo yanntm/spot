@@ -80,7 +80,7 @@ namespace spot
     static acc_cond::mark_t
     random_acc(unsigned n_accs, float a)
     {
-      acc_cond::mark_t m = 0U;
+      acc_cond::mark_t m = {};
       for (unsigned i = 0U; i < n_accs; ++i)
         if (drand() < a)
           m.set(i);
@@ -194,7 +194,7 @@ namespace spot
 
         int possibilities = n;
         unsigned dst;
-        acc_cond::mark_t m = 0U;
+        acc_cond::mark_t m = {};
         if (state_acc)
           m = colored ? random_acc1(n_accs) : random_acc(n_accs, a);
 

@@ -193,7 +193,7 @@ namespace spot
                         // the destination state on its incoming arcs
                         // (which now become outgoing arcs after
                         // transposition).
-                        acc = 0U;
+                        acc = {};
                         for (auto& td: in->out(t.dst))
                           {
                             acc = td.acc ^ all_inf;
@@ -476,7 +476,7 @@ namespace spot
         // Acceptance of states.  Only used if Sba && Cosimulation.
         std::vector<acc_cond::mark_t> accst;
         if (Sba && Cosimulation)
-          accst.resize(res->num_states(), 0U);
+          accst.resize(res->num_states(), acc_cond::mark_t({}));
 
         stat.states = bdd_lstate_.size();
         stat.edges = 0;
@@ -565,7 +565,7 @@ namespace spot
                             // can't do this here, store this in a table
                             // so we can fix it later.
                             accst[gb->get_state(src.id())] = acc;
-                            acc = 0U;
+                            acc = {};
                           }
                         gb->new_edge(dst.id(), src.id(), cond, acc);
                       }
@@ -592,7 +592,7 @@ namespace spot
             for (unsigned s = 0; s < ns; ++s)
               {
                 acc_cond::mark_t acc = accst[s];
-                if (acc == 0U)
+                if (!acc)
                   continue;
                 for (auto& t: res->out(s))
                   t.acc = acc;

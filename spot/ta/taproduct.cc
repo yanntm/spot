@@ -184,7 +184,7 @@ namespace spot
             //if stuttering transition, the TA automata stays in the same state
             current_state_ = new state_ta_product(source_->get_ta_state(),
                 kripke_current_dest_state->clone());
-            current_acceptance_conditions_ = 0U;
+            current_acceptance_conditions_ = {};
             return true;
           }
 

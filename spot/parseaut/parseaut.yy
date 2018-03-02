@@ -115,8 +115,8 @@ extern "C" int strverscmp(const char *s1, const char *s2);
       spot::location state_label_loc;
       spot::location accset_loc;
       spot::acc_cond::mark_t acc_state;
-      spot::acc_cond::mark_t neg_acc_sets = 0U;
-      spot::acc_cond::mark_t pos_acc_sets = 0U;
+      spot::acc_cond::mark_t neg_acc_sets = {};
+      spot::acc_cond::mark_t pos_acc_sets = {};
       int plus;
       int minus;
       std::vector<std::string>* state_names = nullptr;
@@ -1366,19 +1366,19 @@ acc-sig: '{' acc-sets '}'
 	     }
 acc-sets:
           {
-	    $$ = spot::acc_cond::mark_t(0U);
+	    $$ = spot::acc_cond::mark_t({});
 	  }
         | acc-sets acc-set
 	  {
 	    if (res.ignore_acc || $2 == -1U)
-	      $$ = spot::acc_cond::mark_t(0U);
+	      $$ = spot::acc_cond::mark_t({});
 	    else
 	      $$ = $1 | res.aut_or_ks->acc().mark($2);
 	  }
 
 state-acc_opt:
                {
-                 $$ = spot::acc_cond::mark_t(0U);
+                 $$ = spot::acc_cond::mark_t({});
                }
              | acc-sig
                {
@@ -1393,7 +1393,7 @@ state-acc_opt:
 	       }
 trans-acc_opt:
                {
-                 $$ = spot::acc_cond::mark_t(0U);
+                 $$ = spot::acc_cond::mark_t({});
                }
              | acc-sig
                {
@@ -1686,7 +1686,7 @@ sign: '+' { $$ = res.plus; }
 // Membership to a pair is represented as (+NUM,-NUM)
 dstar_accsigs:
   {
-    $$ = 0U;
+    $$ = spot::acc_cond::mark_t({});
   }
   | dstar_accsigs sign INT
   {
@@ -1830,7 +1830,7 @@ nc-state:
 	res.accept_all_seen = true;
 
       auto acc = !strncmp("accept", $1->c_str(), 6) ?
-	res.h->aut->acc().all_sets() : spot::acc_cond::mark_t(0U);
+	res.h->aut->acc().all_sets() : spot::acc_cond::mark_t({});
       res.namer->new_edge(*$1, *$1, bddtrue, acc);
       delete $1;
     }
@@ -1839,7 +1839,7 @@ nc-state:
   | nc-ident-list nc-transition-block
     {
       auto acc = !strncmp("accept", $1->c_str(), 6) ?
-	res.h->aut->acc().all_sets() : spot::acc_cond::mark_t(0U);
+	res.h->aut->acc().all_sets() : spot::acc_cond::mark_t({});
       for (auto& p: *$2)
 	{
 	  bdd c = bdd_from_int(p.first);
@@ -2041,7 +2041,7 @@ lbtt-state: STATE_NUM INT lbtt-acc
                                      std::vector<unsigned>{res.cur_state});
 	    res.acc_state = $3;
 	  }
-lbtt-acc:               { $$ = 0U; }
+lbtt-acc:               { $$ = spot::acc_cond::mark_t({}); }
         | lbtt-acc ACC
 	{
 	  $$  = $1;
@@ -2183,7 +2183,7 @@ fix_acceptance_aux(spot::acc_cond& acc,
       {
 	auto m = in[pos - 1].mark;
 	auto c = acc.fin(onlyneg & m);
-	spot::acc_cond::mark_t tmp = 0U;
+	spot::acc_cond::mark_t tmp = {};
 	for (auto i: both.sets())
 	  {
 	    if (m.has(i))
@@ -2198,7 +2198,7 @@ fix_acceptance_aux(spot::acc_cond& acc,
       {
 	auto m = in[pos - 1].mark;
 	auto c = acc.inf(onlyneg & m);
-	spot::acc_cond::mark_t tmp = 0U;
+	spot::acc_cond::mark_t tmp = {};
 	for (auto i: both.sets())
 	  {
 	    if (m.has(i))

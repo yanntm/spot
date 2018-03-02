@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013, 2014, 2015, 2016 Laboratoire de recherche
+// Copyright (C) 2011, 2013, 2014, 2015, 2016, 2018 Laboratoire de recherche
 // et développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005, 2006 Laboratoire d'Informatique de Paris
 // 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -111,7 +111,7 @@ namespace spot
 
       SPOT_ASSERT(!stb.empty());
 
-      acc_cond::mark_t covered_acc = 0U;
+      acc_cond::mark_t covered_acc = {};
       accepting_transitions_list acc_trans;
 
       const state* start;
@@ -263,7 +263,7 @@ namespace spot
       seen.insert(start);
       twa_succ_iterator* i = a_->succ_iter(start);
       i->first();
-      st1.emplace_front(start, i, bddfalse, 0U);
+      st1.emplace_front(start, i, bddfalse, acc_cond::mark_t({}));
 
       while (!st1.empty())
         {
@@ -608,7 +608,7 @@ namespace spot
           transition tmp;
           // Initialize to please GCC 4.0.1 (Darwin).
           tmp.source = tmp.dest = nullptr;
-          tmp.acc = 0U;
+          tmp.acc = {};
           target.emplace(begin, tmp);
           min_path<true> s(this, a_, target, h_);
           const state* res = s.search(current.dest->clone(), run->cycle);
@@ -623,7 +623,7 @@ namespace spot
       m_source_trans target;
       transition tmp;
       tmp.source = tmp.dest = nullptr; // Initialize to please GCC 4.0.
-      tmp.acc = 0U;
+      tmp.acc = {};
 
       // Register all states from the cycle as target of the BFS.
       for (twa_run::steps::const_iterator i = run->cycle.begin();

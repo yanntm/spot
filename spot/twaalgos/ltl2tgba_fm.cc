@@ -238,7 +238,7 @@ namespace spot
       {
         bdd o = a;
         if (a == bddtrue)
-          return 0U;
+          return {};
         assert(a != bddfalse);
         std::vector<unsigned> t;
         do

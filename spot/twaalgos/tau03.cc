@@ -93,7 +93,7 @@ namespace spot
         const state* s0 = a_->get_init_state();
         inc_states();
         h.add_new_state(s0, BLUE);
-        push(st_blue, s0, bddfalse, 0U);
+        push(st_blue, s0, bddfalse, {});
         auto t = std::static_pointer_cast<tau03_search>
           (this->emptiness_check::shared_from_this());
         if (dfs_blue())
@@ -350,7 +350,7 @@ namespace spot
           assert(h.find(s) == h.end());
           h.emplace(std::piecewise_construct,
                     std::forward_as_tuple(s),
-                    std::forward_as_tuple(c, 0U));
+                    std::forward_as_tuple(c, acc_cond::mark_t({})));
         }
 
       void pop_notify(const state*) const

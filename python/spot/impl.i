@@ -883,7 +883,7 @@ def state_is_accepting(self, src) -> "bool":
 
 %extend spot::twa_graph {
   unsigned new_univ_edge(unsigned src, const std::vector<unsigned>& v,
-                         bdd cond, acc_cond::mark_t acc = 0U)
+                         bdd cond, acc_cond::mark_t acc = {})
   {
     return self->new_univ_edge(src, v.begin(), v.end(), cond, acc);
   }

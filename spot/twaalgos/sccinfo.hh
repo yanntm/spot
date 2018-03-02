@@ -230,7 +230,7 @@ namespace spot
     bool useful_:1;
   public:
     scc_info_node():
-      acc_(0U), trivial_(true), accepting_(false),
+      acc_({}), trivial_(true), accepting_(false),
       rejecting_(false), useful_(false)
     {
     }

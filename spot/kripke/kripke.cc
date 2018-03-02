@@ -40,7 +40,7 @@ namespace spot
   {
     // Do not assert(!done()) here.  It is OK to call
     // this function on a state without successor.
-    return 0U;
+    return {};
   }
 
   kripke::~kripke()
@@ -50,6 +50,6 @@ namespace spot
   acc_cond::mark_t
   kripke::state_acceptance_mark(const state*) const
   {
-    return 0U;
+    return {};
   }
 }

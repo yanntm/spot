@@ -258,7 +258,7 @@ namespace spot
       // a universal transition.
       acc_cond::mark_t bdd_to_state(bdd b, std::vector<unsigned>& s)
       {
-        acc_cond::mark_t m = 0U;
+        acc_cond::mark_t m = {};
         while (b != bddtrue)
           {
             assert(bdd_low(b) == bddfalse);
@@ -281,7 +281,7 @@ namespace spot
                 : sbacc(std::const_pointer_cast<spot::twa_graph>(aut))),
           state_to_var_(aut_->num_states(), bddfalse),
           true_state_(-1U),
-          acc_(0U),
+          acc_({}),
           has_sink(false)
       {
       }
@@ -303,7 +303,7 @@ namespace spot
           {
             //Shortcut if dual is false
             res->new_states(1);
-            res->new_edge(0, 0, bddtrue, 0U);
+            res->new_edge(0, 0, bddtrue, {});
             res->set_init_state(0);
             res->set_acceptance(0, acc_cond::acc_code::f());
 

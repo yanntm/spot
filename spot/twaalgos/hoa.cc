@@ -72,7 +72,7 @@ namespace spot
       emit_acc(std::ostream& os, acc_cond::mark_t b)
       {
         // FIXME: We could use a cache for this.
-        if (b == 0U)
+        if (!b)
           return os;
         os << " {";
         bool notfirst = false;
@@ -104,7 +104,7 @@ namespace spot
             bdd available = bddtrue;
             bool st_acc = true;
             bool notfirst = false;
-            acc_cond::mark_t prev = 0U;
+            acc_cond::mark_t prev = {};
             bool has_succ = false;
             bdd lastcond = bddfalse;
             for (auto& t: aut->out(src))
@@ -636,7 +636,7 @@ namespace spot
           os << " \"" << (*sn)[i] << '"';
         if (this_acc == Hoa_Acceptance_States)
           {
-            acc_cond::mark_t acc = 0U;
+            acc_cond::mark_t acc = {};
             for (auto& t: aut->out(i))
               {
                 acc = t.acc;

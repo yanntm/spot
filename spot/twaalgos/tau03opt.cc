@@ -108,7 +108,7 @@ namespace spot
         const state* s0 = a_->get_init_state();
         inc_states();
         h.add_new_state(s0, CYAN, current_weight);
-        push(st_blue, s0, bddfalse, 0U);
+        push(st_blue, s0, bddfalse, {});
         auto t = std::static_pointer_cast<tau03_opt_search>
           (this->emptiness_check::shared_from_this());
         if (dfs_blue())
@@ -310,7 +310,7 @@ namespace spot
         typedef std::pair<acc_cond::mark_t, unsigned> cond_level;
         std::stack<cond_level> condition_stack;
         unsigned depth = 1;
-        condition_stack.emplace(0U, 0);
+        condition_stack.emplace(acc_cond::mark_t({}), 0);
 
         while (!st_red.empty())
           {
@@ -340,7 +340,7 @@ namespace spot
                            current_weight.diff(a_->acc(),
                                                c_prime.
                                                get_weight())
-                           : acc_cond::mark_t(0U))))
+                           : acc_cond::mark_t({}))))
                   {
                     trace << "  It is cyan and acceptance condition "
                           << "is reached, report cycle" << std::endl;
@@ -526,7 +526,7 @@ namespace spot
           (void)c;
           hc.emplace(std::piecewise_construct,
                      std::forward_as_tuple(s),
-                     std::forward_as_tuple(w, 0U));
+                     std::forward_as_tuple(w, acc_cond::mark_t({})));
         }
 
       void pop_notify(const state*) const

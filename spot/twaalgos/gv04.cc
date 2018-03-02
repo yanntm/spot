@@ -364,7 +364,7 @@ namespace spot
             virtual bool
             match(twa_run::step& step, const state*) override
             {
-              return step.acc != 0U;
+              return !!step.acc;
             }
           };
 

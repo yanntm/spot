@@ -35,14 +35,14 @@ namespace spot
 
   bool has_separate_sets(const const_twa_graph_ptr& aut)
   {
-    return common_sets(aut) == 0U;
+    return !common_sets(aut);
   }
 
   twa_graph_ptr
   separate_sets_here(const twa_graph_ptr& aut)
   {
     auto common = common_sets(aut);
-    if (common == 0U)
+    if (!common)
       return aut;
     // Each Fin(first) should be replaced by Fin(second).
     std::vector<std::pair<acc_cond::mark_t, acc_cond::mark_t>> map;
@@ -69,7 +69,7 @@ namespace spot
             break;
           case acc_cond::acc_op::Fin:
           case acc_cond::acc_op::FinNeg:
-            if ((pos[-1].mark & common) == 0U)
+            if (!(pos[-1].mark & common))
               break;
             for (auto p: map)
               if (pos[-1].mark & p.first)
@@ -88,7 +88,7 @@ namespace spot
     // Fix the edges
     for (auto& t: aut->edges())
       {
-        if ((t.acc & common) == 0U)
+        if (!(t.acc & common))
           continue;
         for (auto p: map)
           if (t.acc & p.first)

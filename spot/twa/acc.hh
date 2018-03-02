@@ -51,8 +51,8 @@ namespace spot
 
       template<class iterator>
       mark_t(const iterator& begin, const iterator& end) noexcept
+        : mark_t(0U)
       {
-        id = 0U;
         for (iterator i = begin; i != end; ++i)
           set(*i);
       }
@@ -62,16 +62,23 @@ namespace spot
       {
       }
 
+      static mark_t all()
+      {
+        mark_t res({});
+        res.id -= 1;
+        return res;
+      }
+
       bool operator==(unsigned o) const
       {
         SPOT_ASSERT(o == 0U);
-        return id == o;
+        return !id;
       }
 
       bool operator!=(unsigned o) const
       {
         SPOT_ASSERT(o == 0U);
-        return id != o;
+        return !!id;
       }
 
       bool operator==(mark_t o) const
@@ -106,12 +113,12 @@ namespace spot
 
       explicit operator bool() const
       {
-        return id != 0;
+        return !!id;
       }
 
       bool has(unsigned u) const
       {
-        return id & (1U << u);
+        return !!this->operator&(mark_t({0}) << u);
       }
 
       void set(unsigned u)
@@ -220,7 +227,7 @@ namespace spot
 
       bool subset(mark_t m) const
       {
-        return (*this) - m == 0U;
+        return !((*this) - m);
       }
 
       bool proper_subset(mark_t m) const
@@ -302,11 +309,11 @@ namespace spot
       template<class iterator>
       void fill(iterator here) const
       {
-        auto a = id;
+        auto a = *this;
         unsigned level = 0;
         while (a)
           {
-            if (a & 1)
+            if (a.has(0))
               *here++ = level;
             ++level;
             a >>= 1;
@@ -437,21 +444,21 @@ namespace spot
       {
         unsigned s = size();
         return s == 0 || ((*this)[s - 1].sub.op == acc_op::Inf
-                          && (*this)[s - 2].mark == 0U);
+                          && !((*this)[s - 2].mark));
       }
 
       bool is_f() const
       {
         unsigned s = size();
         return s > 1
-          && (*this)[s - 1].sub.op == acc_op::Fin && (*this)[s - 2].mark == 0U;
+          && (*this)[s - 1].sub.op == acc_op::Fin && !((*this)[s - 2].mark);
       }
 
       static acc_code f()
       {
         acc_code res;
         res.resize(2);
-        res[0].mark = 0U;
+        res[0].mark = {};
         res[1].sub.op = acc_op::Fin;
         res[1].sub.size = 1;
         return res;
@@ -534,17 +541,19 @@ namespace spot
 
       static acc_code generalized_buchi(unsigned n)
       {
-        acc_cond::mark_t m = (1U << n) - 1;
-        if (n == 8 * sizeof(mark_t::value_t))
-          m = mark_t(-1U);
+        if (n == 0)
+          return inf({});
+        acc_cond::mark_t m = mark_t::all();
+        m >>= (8*sizeof(mark_t::value_t) - n);
         return inf(m);
       }
 
       static acc_code generalized_co_buchi(unsigned n)
       {
-        acc_cond::mark_t m = (1U << n) - 1;
-        if (n == 8 * sizeof(mark_t::value_t))
-          m = mark_t(-1U);
+        if (n == 0)
+          return fin({});
+        acc_cond::mark_t m = mark_t::all();
+        m >>= (8*sizeof(mark_t::value_t) - n);
         return fin(m);
       }
 
@@ -580,7 +589,7 @@ namespace spot
         for (Iterator i = begin; i != end; ++i)
           {
             unsigned f = n++;
-            acc_cond::mark_t m = 0U;
+            acc_cond::mark_t m = {};
             for (unsigned ni = *i; ni > 0; --ni)
               m.set(n++);
             auto pair = inf(m) & fin({f});
@@ -666,7 +675,7 @@ namespace spot
             right_inf = right_end - 1;
           }
 
-        acc_cond::mark_t carry = 0U;
+        acc_cond::mark_t carry = {};
         if (left_inf && right_inf)
           {
             carry = left_inf->mark;
@@ -767,7 +776,7 @@ namespace spot
             right_fin = right_end - 1;
           }
 
-        acc_cond::mark_t carry = 0U;
+        acc_cond::mark_t carry = {};
         if (left_fin && right_fin)
           {
             carry = left_fin->mark;
@@ -817,7 +826,7 @@ namespace spot
               case acc_cond::acc_op::Fin:
               case acc_cond::acc_op::FinNeg:
                 pos -= 2;
-                (*this)[pos].mark.id <<= sets;
+                (*this)[pos].mark <<= sets;
                 break;
               }
           }
@@ -937,14 +946,14 @@ namespace spot
     };
 
     acc_cond(unsigned n_sets = 0, const acc_code& code = {})
-      : num_(0U), all_(0U), code_(code)
+      : num_(0U), all_({}), code_(code)
     {
       add_sets(n_sets);
       uses_fin_acceptance_ = check_fin_acceptance();
     }
 
     acc_cond(const acc_code& code)
-      : num_(0U), all_(0U), code_(code)
+      : num_(0U), all_({}), code_(code)
     {
       add_sets(code.used_sets().max_set());
       uses_fin_acceptance_ = check_fin_acceptance();
@@ -1205,7 +1214,7 @@ namespace spot
         return -1U;
       unsigned j = num_;
       num_ += num;
-      if (num_ > 8 * sizeof(mark_t::id))
+      if (num_ > 8 * sizeof(mark_t::value_t))
         throw std::runtime_error("Too many acceptance sets used.");
       all_ = all_sets_();
       return j;
@@ -1219,12 +1228,12 @@ namespace spot
     mark_t mark(unsigned u) const
     {
       SPOT_ASSERT(u < num_sets());
-      return 1U << u;
+      return mark_t({0}) << u;
     }
 
-    mark_t comp(mark_t l) const
+    mark_t comp(const mark_t& l) const
     {
-      return all_ ^ l.id;
+      return all_ ^ l;
     }
 
     mark_t all_sets() const
@@ -1252,7 +1261,7 @@ namespace spot
     std::ostream& format(std::ostream& os, mark_t m) const
     {
       auto a = m;
-      if (a == 0U)
+      if (!a)
         return os;
       return os << m;
     }
@@ -1272,17 +1281,18 @@ namespace spot
     template<class iterator>
     mark_t useless(iterator begin, iterator end) const
     {
-      mark_t::value_t u = 0U;        // The set of useless marks.
+      mark_t u = {};        // The set of useless marks
+      const mark_t one = {0};
       for (unsigned x = 0; x < num_; ++x)
         {
           // Skip marks that are already known to be useless.
-          if (u & (1 << x))
+          if (u & (one << x))
             continue;
-          unsigned all = all_ ^ (u | (1 << x));
+          auto all = all_ ^ (u | (one << x));
           for (iterator y = begin; y != end; ++y)
             {
-              auto v = y->id;
-              if (v & (1 << x))
+              const mark_t& v = *y;
+              if (!!(v & (one << x)))
                 {
                   all &= v;
                   if (!all)
@@ -1340,15 +1350,13 @@ namespace spot
     std::string name(const char* fmt = "alo") const;
 
   protected:
-    mark_t::value_t all_sets_() const
+    mark_t all_sets_() const
     {
-      if (num_ == 0)
-        return 0;
-      return -1U >> (8 * sizeof(mark_t::value_t) - num_);
+      return mark_t::all() >> (8*sizeof(mark_t::value_t) - num_);
     }
 
     unsigned num_;
-    mark_t::value_t all_;
+    mark_t all_;
     acc_code code_;
     bool uses_fin_acceptance_ = false;
 
@@ -1363,13 +1371,13 @@ namespace spot
 
     // Creates view of pairs without restriction to marks
     explicit rs_pairs_view(const rs_pairs& p)
-      : rs_pairs_view(p, std::numeric_limits<unsigned>::max()) {}
+      : rs_pairs_view(p, acc_cond::mark_t::all()) {}
 
     acc_cond::mark_t infs() const
     {
       return do_view([&](const acc_cond::rs_pair& p)
         {
-          return visible(p.inf) ? p.inf : 0U;
+          return visible(p.inf) ? p.inf : acc_cond::mark_t({});
         });
     }
 
@@ -1377,7 +1385,7 @@ namespace spot
     {
       return do_view([&](const acc_cond::rs_pair& p)
         {
-          return visible(p.fin) ? p.fin : 0U;
+          return visible(p.fin) ? p.fin : acc_cond::mark_t({});
         });
     }
 
@@ -1385,7 +1393,8 @@ namespace spot
     {
       return do_view([&](const acc_cond::rs_pair& p)
         {
-          return !visible(p.inf) && visible(p.fin) ? p.fin : 0U;
+          return !visible(p.inf) && visible(p.fin) ? p.fin
+                                                   : acc_cond::mark_t({});
         });
     }
 
@@ -1393,13 +1402,14 @@ namespace spot
     {
       return do_view([&](const acc_cond::rs_pair& p)
         {
-          return !visible(p.fin) && visible(p.inf) ? p.inf : 0U;
+          return !visible(p.fin) && visible(p.inf) ? p.inf
+                                                   : acc_cond::mark_t({});
         });
     }
 
     acc_cond::mark_t paired_with_fin(unsigned mark) const
     {
-      acc_cond::mark_t res = 0U;
+      acc_cond::mark_t res = {};
       for (const auto& p: pairs_)
         if (p.fin.has(mark) && visible(p.fin) && visible(p.inf))
           res |= p.inf;
@@ -1415,7 +1425,7 @@ namespace spot
     template<typename filter>
     acc_cond::mark_t do_view(const filter& filt) const
     {
-      acc_cond::mark_t res = 0U;
+      acc_cond::mark_t res = {};
       for (const auto& p: pairs_)
         res |= filt(p);
       return res;
@@ -1423,7 +1433,7 @@ namespace spot
 
     bool visible(const acc_cond::mark_t& v) const
     {
-      return (view_marks_ & v) != 0;
+      return !!(view_marks_ & v);
     }
 
     const rs_pairs& pairs_;
@@ -1446,7 +1456,7 @@ namespace spot
       typedef std::forward_iterator_tag iterator_category;
 
       mark_iterator() noexcept
-        : m_(0U)
+        : m_({})
       {
       }
 
@@ -1471,9 +1481,9 @@ namespace spot
         return m_.min_set() - 1;
       }
 
-      mark_iterator operator++()
+      mark_iterator& operator++()
       {
-        m_.id &= m_.id - 1;
+        m_.clear(this->operator*());
         return *this;
       }
 
