@@ -17,6 +17,11 @@ New in spot 2.5.3.dev  (not yet released)
 
   Library:
 
+  - You can now specify to Spot the number of acceptance marks you
+    wish to use. This is a compile-time option, accessible through
+    option --with-nb-acc of the configure script. The default is
+    still 32, but this limit is no longer hardcoded.
+
   - Option "a" of print_dot(), for printing the acceptance condition,
     is now enabled by default.  Option "A", introduced in Spot 2.4,
     can be used to hide the acceptance condition in case you do not

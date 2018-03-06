@@ -59,6 +59,19 @@ AC_ARG_ENABLE([doxygen],
   [enable_doxygen=yes], [enable_doxygen=no])
 AM_CONDITIONAL([ENABLE_DOXYGEN], [test "x${enable_doxygen:-no}" = xyes])
 
+# Option to indicate the maximal number of acceptance marks
+AC_COMPUTE_INT([default_nb_acc], [8*sizeof(unsigned)])
+AC_ARG_ENABLE([nb-acc],
+              [AC_HELP_STRING([--enable-nb-acc=N],
+                              [Use up to N acceptance marks])],
+              [enable_nb_acc=$enableval], [enable_nb_acc=$default_nb_acc])
+if (( $enable_nb_acc % $default_nb_acc == 0 ))
+then
+  AC_DEFINE_UNQUOTED([NB_ACC], [$enable_nb_acc], [The number of acceptance marks])
+else
+  AC_ERROR([The argument of --enable-nb-acc must be a multiple of $default_nb_acc])
+fi
+
 # Activate C11 for gnulib tests
 AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
 

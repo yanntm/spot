@@ -20,12 +20,13 @@
 #pragma once
 
 #include <functional>
-#include <unordered_map>
 #include <sstream>
 #include <vector>
-#include <spot/tl/defaultenv.hh>
-#include <spot/misc/trival.hh>
 #include <iostream>
+
+#include <spot/misc/_config.h>
+#include <spot/misc/bitset.hh>
+#include <spot/misc/trival.hh>
 
 namespace spot
 {
@@ -39,19 +40,22 @@ namespace spot
   public:
     struct mark_t
     {
-      typedef unsigned value_t;
+      // configure guarantees that SPOT_NB_ACC % (8*sizeof(unsigned)) == 0
+      typedef bitset<SPOT_NB_ACC / (8*sizeof(unsigned))> value_t;
       value_t id;
 
-      mark_t() = default;
-
+    private:
       mark_t(value_t id) noexcept
         : id(id)
       {
       }
 
+    public:
+      mark_t() = default;
+
       template<class iterator>
       mark_t(const iterator& begin, const iterator& end) noexcept
-        : mark_t(0U)
+        : mark_t(value_t::zero())
       {
         for (iterator i = begin; i != end; ++i)
           set(*i);
@@ -123,12 +127,12 @@ namespace spot
 
       void set(unsigned u)
       {
-        id |= (1U << u);
+        id |= (value_t::one() << u);
       }
 
       void clear(unsigned u)
       {
-        id &= ~(1U << u);
+        id &= ~(value_t::one() << u);
       }
 
       mark_t& operator&=(mark_t r)
@@ -238,18 +242,7 @@ namespace spot
       // Number of bits sets.
       unsigned count() const
       {
-#ifdef __GNUC__
-        return __builtin_popcount(id);
-#else
-        unsigned c = 0U;
-        auto v = id;
-        while (v)
-          {
-            ++c;
-            v &= v - 1;
-          }
-        return c;
-#endif
+        return id.count();
       }
 
       // Return the number of the highest set used plus one.
@@ -257,18 +250,10 @@ namespace spot
       // If the sets {1,3,8} are used, this returns 9.
       unsigned max_set() const
       {
-#ifdef __GNUC__
-        return (id == 0) ? 0 : (sizeof(unsigned) * 8 - __builtin_clz(id));
-#else
-        auto i = id;
-        int res = 0;
-        while (i)
-          {
-            ++res;
-            i >>= 1;
-          }
-        return res;
-#endif
+        if (id)
+          return id.highest()+1;
+        else
+          return 0;
       }
 
       // Return the number of the lowest set used plus one.
@@ -276,20 +261,10 @@ namespace spot
       // If the sets {1,3,8} are used, this returns 2.
       unsigned min_set() const
       {
-        if (id == 0)
+        if (id)
+          return id.lowest()+1;
+        else
           return 0;
-#ifdef __GNUC__
-        return __builtin_ctz(id) + 1;
-#else
-        auto i = id;
-        int res = 1;
-        while ((i & 1) == 0)
-          {
-            ++res;
-            i >>= 1;
-          }
-        return res;
-#endif
       }
 
       // Return the lowest acceptance mark

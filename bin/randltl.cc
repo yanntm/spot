@@ -34,6 +34,7 @@
 #include "common_cout.hh"
 
 #include <sstream>
+#include <spot/tl/defaultenv.hh>
 #include <spot/tl/randomltl.hh>
 #include <spot/tl/simplify.hh>
 #include <spot/misc/random.hh>

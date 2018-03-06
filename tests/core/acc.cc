@@ -23,6 +23,7 @@
 #include <vector>
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 #include <spot/twa/acc.hh>
 
 static void check(spot::acc_cond& ac, spot::acc_cond::mark_t m)
@@ -178,4 +179,14 @@ int main()
   std::cout << c1 << '\n';
   std::cout << c2 << '\n';
   assert(c1 == c2);
+
+  try
+  {
+    spot::acc_cond a{SPOT_NB_ACC+1};
+  }
+  catch (const std::runtime_error& e)
+  {
+    return std::strcmp(e.what(), "Too many acceptance sets used.");
+  }
+  return 1;
 }
