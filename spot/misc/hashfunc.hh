@@ -23,7 +23,7 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
+#include <type_traits>
 
 namespace spot
 {
@@ -64,25 +64,30 @@ namespace spot
     return (key >> 3) * 2654435761U;
   }
 
+
   /// Struct for Fowler-Noll-Vo parameters
-  template<class T>
+  template<class T, class Enable = void>
   struct fnv
   {};
 
   /// Fowler-Noll-Vo hash parameters for 32 bits
-  template<>
-  struct fnv<uint32_t>
+  template<class T>
+  struct fnv<T, typename std::enable_if<sizeof(T) == 4>::type>
   {
-    static constexpr uint32_t init = 2166136261UL;
-    static constexpr uint32_t prime = 16777619UL;
+    static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value,
+                  "Fowler-Noll-Vo hash requires an unsigned integral type");
+    static constexpr T init = 2166136261UL;
+    static constexpr T prime = 16777619UL;
   };
 
   /// Fowler-Noll-Vo hash parameters for 64 bits
-  template<>
-  struct fnv<uint64_t>
+  template<class T>
+  struct fnv<T, typename std::enable_if<sizeof(T) == 8>::type>
   {
-    static constexpr uint64_t init = 14695981039346656037UL;
-    static constexpr uint64_t prime = 1099511628211UL;
+    static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value,
+                  "Fowler-Noll-Vo hash requires an unsigned integral type");
+    static constexpr T init = 14695981039346656037ULL;
+    static constexpr T prime = 1099511628211ULL;
   };
 
   /// \brief Fowler-Noll-Vo hash function
