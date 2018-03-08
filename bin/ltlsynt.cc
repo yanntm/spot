@@ -46,6 +46,9 @@
 #include <spot/twaalgos/totgba.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/simulation.hh>
+
+#include <spot/twaalgos/hoa.hh>
 
 enum
 {
@@ -175,15 +178,28 @@ namespace
     for (unsigned src = 0; src < tgba->num_states(); ++src)
       for (const auto& e: tgba->out(src))
         {
-          spot::minato_isop isop(e.cond);
-          bdd cube;
-          while ((cube = isop.next()) != bddfalse)
+          std::unordered_map<bdd, unsigned, spot::bdd_hash> input2state;
+          bdd support = bddtrue;
+          for (const auto& e : tgba->out(src))
+            support &= bdd_support(e.cond);
+          support = bdd_existcomp(support, input_bdd);
+          for (const auto& e : tgba->out(src))
             {
-              unsigned q = split->new_state();
-              bdd in = bdd_existcomp(cube, input_bdd);
-              bdd out = bdd_exist(cube, input_bdd);
-              split->new_edge(src, q, in, {});
-              split->new_edge(q, e.dst, out, e.acc);
+              bdd all_letters = bddtrue;
+              while (all_letters != bddfalse)
+                {
+                  bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
+                  all_letters -= one_letter;
+                  auto it = input2state.find(one_letter);
+                  if (it == input2state.end())
+                    {
+                      unsigned ns = split->new_state();
+                      it = input2state.emplace(one_letter, ns).first;
+                      split->new_edge(src, it->second, one_letter);
+                    }
+                  bdd out = bdd_exist(e.cond & one_letter, input_bdd);
+                  split->new_edge(it->second, e.dst, out, e.acc);
+                }
             }
         }
     split->prop_universal(spot::trival::maybe());
@@ -331,7 +347,18 @@ namespace
 
       auto split = split_automaton(aut, all_inputs);
       if (verbose)
-        std::cerr << "split inputs and outputs done" << std::endl;
+        {
+          std::cerr << "split inputs and outputs done" << std::endl;
+          std::cerr << "automaton has " << split->num_states() << " states"
+            << std::endl;
+        }
+
+      split = spot::simulation(split);
+      if (verbose)
+        {
+          std::cerr << split->num_states() << " states left after simulation"
+            << std::endl;
+        }
 
       if (opt_incremental)
         {
