@@ -388,7 +388,6 @@ namespace
               dpa->merge_edges();
               dpa->purge_unreachable_states();
               spot::cleanup_parity_here(dpa);
-              spot::complete_here(dpa);
               spot::colorize_parity_here(dpa, true);
               change_parity_here(dpa, spot::parity_kind_max,
                                       spot::parity_style_odd);
