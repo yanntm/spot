@@ -108,6 +108,10 @@ OUT10='p0, p1, p2'
 F10='G (p0 && ! p1 && ! p2 || (! p0 && p1 && ! p2) || (! p0 && ! p1 && p2)) &&
   (F (G a) || F (G b) || G (F c) <-> (G (F p0) || (G (F p1) && ! G (F p2))))'
 EXP10='REALIZABLE'
+IN11='a, b'
+OUT11='c'
+F11='G ((a -> ((X c) <-> b)) && ((!a) -> ((X c) <-> c)))'
+EXP11='REALIZABLE'
 
 for i in 0 1 7 8 9; do
   F=$(eval echo \$F$i)
@@ -122,7 +126,7 @@ for i in 0 1 7 8 9; do
   --incr)
 done
 
-for i in 2 3 4 5 6 10; do
+for i in 2 3 4 5 6 10 11; do
   F=$(eval echo \$F$i)
   IN=$(eval echo \$IN$i)
   OUT=$(eval echo \$OUT$i)
