@@ -25,7 +25,6 @@
 #include <string>
 #include <functional>
 #include <spot/misc/hashfunc.hh>
-#include <spot/misc/_config.h>
 
 #include <unordered_map>
 #include <unordered_set>
