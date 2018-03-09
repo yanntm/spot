@@ -21,7 +21,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-//FIXME includes
+#include <vector>
+#include <spot/tl/formula.hh>
+#include <spot/twaalgos/word.hh>
 
 namespace spot
 {
