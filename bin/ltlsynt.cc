@@ -364,10 +364,39 @@ namespace
         {
           // Degeneralize the automaton, so that it can be determinized
           auto degen = spot::degeneralize_tba(split);
+          if (verbose)
+            {
+              std::cerr << "degeneralization done" << std::endl;
+              std::cerr << "automaton has " << degen->num_states() << " states"
+                << std::endl;
 
+              //auto degen_copy = make_twa_graph(degen, { true, true, true,
+              //                                          true, true, true });
+              //spot::colorize_parity_here(degen_copy, true);
+              //change_parity_here(degen_copy,
+              //                   spot::parity_kind_max,
+              //                   spot::parity_style_odd);
+              //auto owner = make_alternating_owner(degen_copy);
+              //auto pg = spot::parity_game(degen_copy, owner);
+              //spot::parity_game::strategy_t strategy[2];
+              //spot::parity_game::region_t winning_region[2];
+              //std::cerr << "controller has " << winning_region[1].size()
+              //  << " winning states!" << std::endl;
+            }
+
+          bool sim_ok = degen->num_states() > 100000 ? false : true;
           spot::determinizer det =
-            spot::determinizer::build(degen, false, true, true, true);
+            spot::determinizer::build(degen, true, true, sim_ok, true);
           auto nda = det.aut();
+          if (verbose)
+            {
+              std::cerr << "ready for incremental determinization" << std::endl;
+              std::cerr << "NDA has " << nda->num_states() << " states"
+                << std::endl;
+            }
+
+          //print_hoa(std::cerr, nda);
+          //std::cerr << std::endl;
 
           std::vector<char> edges(nda->num_edges() + 1, 0);
           unsigned nb_control = 0;
@@ -397,14 +426,16 @@ namespace
           }
 
           unsigned i = 0;
+          unsigned active = 0;
           while (true)
             {
               if (verbose)
-                std::cerr << "iteration # " << i++ << " / "
-                  << nb_control << std::endl;
+                std::cerr << "iteration # " << i++ << ", " << active
+                  << " active control edges out of " << nb_control << std::endl;
 
               det.add_edges(edges);
-              det.run();
+              det.run(-1U);
+              std::cerr << "using " << det.get()->num_sets() << " colors" << std::endl;
               auto dpa = make_twa_graph(det.get(), { true, true, true,
                                                      true, true, true });
 
@@ -474,6 +505,7 @@ namespace
                             continue;
                           edges[edge] = true;
                           edge_added = true;
+                          active++;
                         }
                     }
 
