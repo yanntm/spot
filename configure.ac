@@ -171,11 +171,8 @@ fi
 
 AM_CONDITIONAL([NEVER], [false])
 AC_CHECK_PROG([DOT], [dot], [dot])
-AC_CHECK_PROG([LBT], [lbt], [lbt])
 AC_CHECK_PROG([LTL2BA], [ltl2ba], [ltl2ba])
 AC_CHECK_PROG([LTL3BA], [ltl3ba], [ltl3ba])
-AC_CHECK_PROG([MODELLA], [modella], [modella])
-AC_CHECK_PROG([LTL2NBA], [script4lbtt.py], [script4lbtt.py])
 AC_CHECK_PROG([PERL], [perl], [perl])
 AC_CHECK_PROG([SPIN], [spin], [spin])
 AC_CHECK_PROG([LBTT], [lbtt], [lbtt])
@@ -183,7 +180,6 @@ AC_CHECK_PROG([EMACS], [emacs], [emacs])
 AC_CHECK_PROGS([IPYTHON], [ipython3 ipython], [ipython])
 AC_CHECK_PROG([LBTT_TRANSLATE], [lbtt-translate], [lbtt-translate])
 AX_CHECK_VALGRIND
-AC_CHECK_PROG([WRING2LBTT], [wring2lbtt], [wring2lbtt])
 # Debian has a binary for SWIG 3.0 named swig3.0 and they kept swig as
 # an alias for swig-2.0.  Let's use the former when available.
 AC_CHECK_PROGS([SWIG], [swig3.0 swig], [swig])
