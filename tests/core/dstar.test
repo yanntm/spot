@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013, 2014, 2015, 2016 Laboratoire de Recherche et
+# Copyright (C) 2013-2016, 2018 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -61,6 +61,8 @@ run 0 ../ikwiad -d -XD dra.dstar | tee stdout
 cat >expected <<EOF
 digraph G {
   rankdir=LR
+  label="Fin(0) & Inf(1)\n[Rabin 1]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0
@@ -83,6 +85,8 @@ run 0 ../ikwiad -d -XDB -R3 dra.dstar | tee stdout
 cat >expected <<EOF
 digraph G {
   rankdir=LR
+  label="\n[Büchi]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0
@@ -128,6 +132,8 @@ run 0 ../ikwiad -d -XDB dsa.dstar | tee stdout
 cat >expected <<EOF
 digraph G {
   rankdir=LR
+  label="\n[Büchi]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 1
@@ -212,7 +218,7 @@ State: 3 "str\n\"ing" Acc-Sig: -0 +1 3 3 3 3
 State: 4 "more\"string\"" Acc-Sig: +0 +1 3 4 3 4
 EOF
 
-run 0 autfilt -d -B dra.dstar | tee stdout
+run 0 autfilt -dA -B dra.dstar | tee stdout
 
 cat >expected <<EOF
 digraph G {
@@ -281,7 +287,7 @@ State: 0
 Acc-Sig:
 0
 EOF
-run 0 dstar2tgba --name=%F --dot=nt aut.dsa | tee stdout
+run 0 dstar2tgba --name=%F --dot=Ant aut.dsa | tee stdout
 
 cat >expected<<EOF
 digraph G {

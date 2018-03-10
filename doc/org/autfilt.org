@@ -49,7 +49,7 @@ autfilt example.hoa --dot
 #+END_SRC
 
 #+BEGIN_SRC sh :results verbatim :exports results
-SPOT_DOTEXTRA= autfilt example.hoa --dot=
+SPOT_DOTEXTRA= autfilt example.hoa --dot
 #+END_SRC
 
 #+RESULTS:
@@ -469,13 +469,12 @@ State: 2
 EOF
 #+END_SRC
 
-(Note: the '=.=' argument passed to =--dot= below hides default
-options discussed [[file:oaut.org::#default-dot][on another page]], while the '=a=' causes the
-acceptance condition to be displayed.)
+(Note: that the =--dot= option used below uses some default options
+discussed [[file:oaut.org::#default-dot][on another page]].)
 
 #+NAME: autfilt-ex1
 #+BEGIN_SRC sh :results verbatim :exports code
-autfilt aut-ex1.hoa --dot=.a
+autfilt aut-ex1.hoa --dot
 #+END_SRC
 
 #+RESULTS: autfilt-ex1
@@ -516,7 +515,7 @@ Using =-S= will "push" the acceptance membership of the transitions to the state
 
 #+NAME: autfilt-ex2
 #+BEGIN_SRC sh :results verbatim :exports code
-autfilt -S aut-ex1.hoa --dot=.a
+autfilt -S aut-ex1.hoa --dot=
 #+END_SRC
 
 #+RESULTS: autfilt-ex2
@@ -578,7 +577,7 @@ Using =--cnf-acceptance= simply rewrites the acceptance condition in Conjunctive
 
 #+NAME: autfilt-ex3
 #+BEGIN_SRC sh :results verbatim :exports code
-autfilt --cnf-acceptance aut-ex1.hoa --dot=.a
+autfilt --cnf-acceptance aut-ex1.hoa --dot
 #+END_SRC
 
 #+RESULTS: autfilt-ex3
@@ -622,7 +621,7 @@ altered copies of strongly-connected components.
 
 #+NAME: autfilt-ex4
 #+BEGIN_SRC sh :results verbatim :exports code
-autfilt --remove-fin aut-ex1.hoa --dot=.a
+autfilt --remove-fin aut-ex1.hoa --dot
 #+END_SRC
 
 #+RESULTS: autfilt-ex4
@@ -668,7 +667,7 @@ reflect the fact that these sets can never be visited.
 
 #+NAME: autfilt-ex5
 #+BEGIN_SRC sh :results verbatim :exports code
-autfilt --mask-acc=1,2 aut-ex1.hoa --dot=.a
+autfilt --mask-acc=1,2 aut-ex1.hoa --dot
 #+END_SRC
 
 #+RESULTS: autfilt-ex5
@@ -715,7 +714,7 @@ Here are the results of these three options on our example:
 
 #+NAME: autfilt-ex6a
 #+BEGIN_SRC sh :results verbatim :exports code
-autfilt --remove-ap=a aut-ex1.hoa --dot=.a
+autfilt --remove-ap=a aut-ex1.hoa --dot
 #+END_SRC
 
 #+RESULTS: autfilt-ex6a
@@ -754,7 +753,7 @@ $txt
 
 #+NAME: autfilt-ex6b
 #+BEGIN_SRC sh :results verbatim :exports code
-autfilt --remove-ap=a=0 aut-ex1.hoa --dot=.a
+autfilt --remove-ap=a=0 aut-ex1.hoa --dot
 #+END_SRC
 
 #+RESULTS: autfilt-ex6b
@@ -787,7 +786,7 @@ $txt
 
 #+NAME: autfilt-ex6c
 #+BEGIN_SRC sh :results verbatim :exports code
-autfilt --remove-ap=a=1 aut-ex1.hoa --dot=.a
+autfilt --remove-ap=a=1 aut-ex1.hoa --dot
 #+END_SRC
 
 #+RESULTS: autfilt-ex6c

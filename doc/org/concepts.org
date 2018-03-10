@@ -222,7 +222,7 @@ State: 0 0 0 1 1
 State: 1 1 0 0 0
 --END--
 EOF
-autfilt --merge concept-te.hoa -d
+autfilt --merge concept-te.hoa -d.A
 #+END_SRC
 #+BEGIN_SRC dot :file concept-te1.svg :var txt=te1 :exports results
 $txt
@@ -244,7 +244,7 @@ following transition structure:
 
 #+NAME: te2
 #+BEGIN_SRC sh :results verbatim :exports none
-autfilt concept-te.hoa -d
+autfilt concept-te.hoa -d.A
 #+END_SRC
 #+BEGIN_SRC dot :file concept-te2.svg :var txt=te2 :exports results
 $txt
@@ -545,7 +545,7 @@ by Spot:
 
 #+NAME: twa-example1
 #+BEGIN_SRC sh :results verbatim :exports none
-ltlfilt -l -f 'GFa | FGb' | ltl2dstar --output-format=hoa - - | autfilt --merge -d.a
+ltlfilt -l -f 'GFa | FGb' | ltl2dstar --output-format=hoa - - | autfilt --merge -d
 #+END_SRC
 #+BEGIN_SRC dot :file concept-twa1.svg :var txt=twa-example1 :exports results
 $txt
@@ -822,7 +822,7 @@ Acc-Sig: +0 +1
 
 #+NAME: dstar-example1
 #+BEGIN_SRC sh :results verbatim :exports none
-echo '| F G p0 G F p1' | ltl2dstar --output-format=native - - | autfilt -d.a
+echo '| F G p0 G F p1' | ltl2dstar --output-format=native - - | autfilt -d
 #+END_SRC
 #+BEGIN_SRC dot :file concept-dstar.svg :var txt=dstar-example1 :exports results
 $txt
@@ -881,7 +881,7 @@ State: 3 {1 3}
 
 #+NAME: hoa1
 #+BEGIN_SRC sh :results verbatim :exports none
-ltldo ltl2dstar -f 'FGp0 | GFp1' -d.a
+ltldo ltl2dstar -f 'FGp0 | GFp1' -d
 #+END_SRC
 #+BEGIN_SRC dot :file concept-hoa.svg :var txt=hoa1 :exports results
 $txt

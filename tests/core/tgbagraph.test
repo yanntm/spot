@@ -37,6 +37,8 @@ p1
 p2
 digraph G {
   rankdir=LR
+  label="t\n[Fin-less 2]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0
@@ -53,6 +55,8 @@ digraph G {
 }
 digraph G {
   rankdir=LR
+  label="t\n[Fin-less 2]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0
@@ -67,6 +71,8 @@ digraph G {
 }
 digraph G {
   rankdir=LR
+  label="t\n[Fin-less 2]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0
@@ -80,6 +86,8 @@ digraph G {
 }
 digraph G {
   rankdir=LR
+  label="t\n[Fin-less 2]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0
@@ -96,6 +104,8 @@ digraph G {
 }
 digraph G {
   rankdir=LR
+  label="t\n[Fin-less 2]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0
@@ -110,6 +120,8 @@ digraph G {
 }
 digraph G {
   rankdir=LR
+  label="t\n[Fin-less 2]"
+  labelloc="t"
   I [label="", style=invis, width=0]
   I -> 0
   0 [label="0"]
@@ -223,6 +235,8 @@ digraph G {
 }
 digraph G {
   rankdir=LR
+  label="t\n[all]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 2
@@ -235,6 +249,8 @@ digraph G {
 2 -> 0
 digraph G {
   rankdir=LR
+  label="t\n[all]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0

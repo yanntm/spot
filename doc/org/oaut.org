@@ -856,7 +856,7 @@ The dot output can also be customized via two environment variables:
   (for any value of =xyz=, even empty) will ignore the
   =SPOT_DOTDEFAULT= variable.  If the argument of =--dot= contains
   a dot character, then this dot is replaced by the contents of
-  =SPOT_DOTDEFAULT=.  So ~--dot=.a~ would be equivalent to =--dot=vcsna=
+  =SPOT_DOTDEFAULT=.  So ~--dot=.A~ would be equivalent to =--dot=vcsnA=
   with our example definition of =SPOT_DOTDEFAULT=.
 - =SPOT_DOTEXTRA= may contains an arbitrary string that will be emitted
   in the dot output before the first state.  This can be used to modify

@@ -37,7 +37,7 @@ State: 2
 cat >tut24.hoa <<EOF
 <<tut24in>>
 EOF
-autfilt --dot=.a tut24.hoa
+autfilt --dot tut24.hoa
 #+END_SRC
 
 #+BEGIN_SRC dot :file tut24in.svg :var txt=tut24dot :exports results

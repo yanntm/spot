@@ -362,7 +362,7 @@ for the obligation property =a <-> GXa=:
 
 #+NAME: hier-oblig-3
 #+BEGIN_SRC sh :results verbatim :exports code
-ltldo 'ltl2dstar --automata=streett' -f 'a <-> GXa' -d.a
+ltldo 'ltl2dstar --automata=streett' -f 'a <-> GXa' -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-oblig-3.svg :var txt=hier-oblig-3 :exports results
 $txt
@@ -602,7 +602,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
 
     #+NAME: hier-recurrence-4
     #+BEGIN_SRC sh :results verbatim :exports code
-    ltl2tgba -G -D 'G(Gb | Fa)' -d.a
+    ltl2tgba -G -D 'G(Gb | Fa)' -d
     #+END_SRC
     #+BEGIN_SRC dot :file hier-recurrence-4.svg :var txt=hier-recurrence-4 :exports results
     $txt
@@ -618,7 +618,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
     #+NAME: hier-recurrence-5
     #+BEGIN_SRC sh :results verbatim :exports code
     ltl2tgba -G -D 'G(Gb | Fa)' |
-      autfilt --generalized-rabin -d.a
+      autfilt --generalized-rabin -d
     #+END_SRC
     #+BEGIN_SRC dot :file hier-recurrence-5.svg :var txt=hier-recurrence-5 :exports results
     $txt
@@ -637,7 +637,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
     #+NAME: hier-recurrence-6
     #+BEGIN_SRC sh :results verbatim :exports code
     ltl2tgba -G -D 'G(Gb | Fa)' |
-      autfilt -S --generalized-rabin -d.a
+      autfilt -S --generalized-rabin -d
     #+END_SRC
 
     #+BEGIN_SRC dot :file hier-recurrence-6.svg :var txt=hier-recurrence-6 :exports results
@@ -661,7 +661,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
     #+BEGIN_SRC sh :results verbatim :exports code
     ltl2tgba -G -D 'G(Gb | Fa)' |
       autfilt -S --generalized-rabin |
-      autfilt -B -D -d.a
+      autfilt -B -D -d
     #+END_SRC
 
     #+BEGIN_SRC dot :file hier-recurrence-7.svg :var txt=hier-recurrence-7 :exports results
@@ -680,7 +680,7 @@ helps producing a smaller automaton.  Here is what we get without it:
 #+BEGIN_SRC sh :results verbatim :exports code
 ltl2tgba -G -D 'G(Gb | Fa)' |
   autfilt --generalized-rabin |
-  autfilt -B -D -d.a
+  autfilt -B -D -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file hier-recurrence-8.svg :var txt=hier-recurrence-8 :exports results
@@ -701,7 +701,7 @@ persistence formula is =FGa=, and using =-D= on this is hopeless.
 
 #+NAME: hier-persistence-1
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba -D FGa -d.a
+ltl2tgba -D FGa -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-persistence-1.svg :var txt=hier-persistence-1 :exports results
 $txt
@@ -721,7 +721,7 @@ complementation ourselves:
 #+BEGIN_SRC sh :results verbatim :exports code
 ltlfilt --negate -f FGa |
   ltl2tgba -D |
-  autfilt --complement -d.a
+  autfilt --complement -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-persistence-2.svg :var txt=hier-persistence-2 :exports results
 $txt
@@ -780,7 +780,7 @@ generalized Büchi automaton:
 #+BEGIN_SRC sh :results verbatim :exports code
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
   ltl2tgba -D |
-  autfilt --highlight-nondet=5 -d.a
+  autfilt --highlight-nondet=5 -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-persistence-4.svg :var txt=hier-persistence-4 :exports results
 $txt
@@ -798,7 +798,7 @@ deterministic Büchi:
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
   ltl2tgba -G -D |
   autfilt --generalized-rabin |
-  autfilt --tgba -D -d.a
+  autfilt --tgba -D -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-persistence-5.svg :var txt=hier-persistence-5 :exports results
 $txt
@@ -816,8 +816,9 @@ ltlfilt --negate -f 'F(G!a | G(b U a))' |
   ltl2tgba -G -D |
   autfilt --generalized-rabin |
   autfilt --tgba -D |
-  autfilt --complement -d.ab
+  autfilt --complement -d
 #+END_SRC
+
 #+BEGIN_SRC dot :file hier-persistence-6.svg :var txt=hier-persistence-6 :exports results
 $txt
 #+END_SRC

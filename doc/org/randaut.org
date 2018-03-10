@@ -293,7 +293,7 @@ $txt
 
 #+NAME: randaut5b
 #+BEGIN_SRC sh :results verbatim :exports code
-randaut -Q6 -e0.4 -S -a.2 -A 'Streett 1..3' 2 --dot=.a
+randaut -Q6 -e0.4 -S -a.2 -A 'Streett 1..3' 2 --dot
 #+END_SRC
 
 #+RESULTS: randaut5b
@@ -346,7 +346,7 @@ give =randaut= some freedom, as in this example.
 
 #+NAME: randaut5c
 #+BEGIN_SRC sh :results verbatim :exports code
-randaut -Q10 -S --colored -A 'parity rand rand 3..4' 2 --dot=.a
+randaut -Q10 -S --colored -A 'parity rand rand 3..4' 2 --dot
 #+END_SRC
 
 #+RESULTS: randaut5c
@@ -511,14 +511,14 @@ to the same sets).  This leaves us with one extra SCC that should
 necessarily mix accepting and rejecting cycles.
 
 (Note: the '=.=' argument passed to =--dot= below hides default
-options discussed [[file:oaut.org::#default-dot][on another page]], while '=a=' causes the acceptance
-condition to be displayed and'=s=' shows SCCs.)
+options discussed [[file:oaut.org::#default-dot][on another page]], while '=s=' causes SCCs to be
+displayed.)
 
 #+NAME: randaut7
 #+BEGIN_SRC sh :results verbatim :exports code
 randaut -n -1 --colored -A'parity min odd 4' a b |
 autfilt --sccs=5 --trivial-sccs=1 --rejecting-sccs=1 \
-        --inherently-weak-sccs=2 --weak-sccs=1 -n 1 --dot=.as
+        --inherently-weak-sccs=2 --weak-sccs=1 -n 1 --dot=.s
 #+END_SRC
 
 #+BEGIN_SRC dot :file randaut7.svg :var txt=randaut7 :exports results

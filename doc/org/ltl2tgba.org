@@ -147,7 +147,7 @@ $txt
 #+RESULTS:
 [[file:dotex2.svg]]
 
-The above TGBA has two acceptance sets: ⓿ and ❶.  The position of
+The above TGBA has two acceptance sets: ⓿ and ❶.  The definition of
 these acceptance sets ensures that atomic propositions =a= and =b= must
 be true infinitely often.
 
@@ -733,7 +733,7 @@ expectations.
 
 #+NAME: ltl2tgba-fga
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "FGa" -D -d.a
+ltl2tgba "FGa" -D -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-fga.svg :var txt=ltl2tgba-fga :exports results
@@ -747,7 +747,7 @@ ltl2tgba "FGa" -D -d.a
 
 #+NAME: ltl2tgba-fga-D
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "FGa" -G -D -d.a
+ltl2tgba "FGa" -G -D -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-fga-D.svg :var txt=ltl2tgba-fga-D :exports results
@@ -771,7 +771,7 @@ For instance the following deterministic automaton
 
 #+NAME: ltl2tgba-det1
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "F(a W FGb)" -G -D -d.a
+ltl2tgba "F(a W FGb)" -G -D -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-det1.svg :var txt=ltl2tgba-det1 :exports results
@@ -785,7 +785,7 @@ would be larger if SCC-based optimizations were disabled:
 
 #+NAME: ltl2tgba-det2
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "F(a W FGb)" -x '!det-scc' -G -D -d.a
+ltl2tgba "F(a W FGb)" -x '!det-scc' -G -D -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-det2.svg :var txt=ltl2tgba-det2 :exports results
@@ -831,7 +831,7 @@ acceptance (another name for =parity min odd 2=):
 
 #+NAME: ltl2tgba-dp1
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "FGa" -D -P -d.a
+ltl2tgba "FGa" -D -P -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-dp1.svg :var txt=ltl2tgba-dp1 :exports results
@@ -846,7 +846,7 @@ for =parity min even 1=):
 
 #+NAME: ltl2tgba-dp2
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "GFa & GFb" -D -P -d.a
+ltl2tgba "GFa & GFb" -D -P -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-dp2.svg :var txt=ltl2tgba-dp2 :exports results
@@ -861,7 +861,7 @@ we can specify it as an argument to the =--parity= option.  For instance
 
 #+NAME: ltl2tgba-dp3
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "GFa & GFb" -D -P'min odd' -d.a
+ltl2tgba "GFa & GFb" -D -P'min odd' -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-dp3.svg :var txt=ltl2tgba-dp3 :exports results
@@ -879,7 +879,7 @@ requested) should belong to exactly one acceptance set.
 
 #+NAME: ltl2tgba-dp4
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "GFa & GFb" -D -p -d.a
+ltl2tgba "GFa & GFb" -D -p -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-dp4.svg :var txt=ltl2tgba-dp4 :exports results
@@ -891,7 +891,7 @@ ltl2tgba "GFa & GFb" -D -p -d.a
 
 #+NAME: ltl2tgba-dp5
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "GFa & GFb" -D -p'min odd' -d.a
+ltl2tgba "GFa & GFb" -D -p'min odd' -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-dp5.svg :var txt=ltl2tgba-dp5 :exports results
@@ -906,7 +906,7 @@ acceptance if needed:
 
 #+NAME: ltl2tgba-dp6
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "GFa & GFb" -D -S -p'max even' -d.a
+ltl2tgba "GFa & GFb" -D -S -p'max even' -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-dp6.svg :var txt=ltl2tgba-dp6 :exports results

@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2009, 2010, 2012, 2014, 2015, 2016, 2017 Laboratoire de
+# Copyright (C) 2009, 2010, 2012, 2014-2018 Laboratoire de
 # Recherche et Développement de l'Epita (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -391,7 +391,7 @@ EOF
 diff output expected
 
 
-SPOT_DOTDEFAULT=bra ltl2tgba --dot='e.f(Lato)' 'GFa & GFb' >output
+SPOT_DOTDEFAULT=bra ltl2tgba --dot='Ae.f(Lato)' 'GFa & GFb' >output
 cat output
 
 zero='<font color="#1F78B4">⓿</font>'
@@ -562,7 +562,7 @@ EOF
 
 # States should be circled even if <5 causes all states to be named,
 # because the names are smaller then 2 characters anyway.
-ltl2tgba --det 'Ga | Gb | Gc' -d'<5' | grep -v '>' >out
+ltl2tgba --det 'Ga | Gb | Gc' -d'A<5' | grep -v '>' >out
 diff out expected3
 
 # Let's pretend that this is some used supplied input, as discussed in
@@ -867,7 +867,7 @@ EOF
 
 diff output6 expect6
 
-run 0 autfilt -dk input6 >output6d
+run 0 autfilt -dAk input6 >output6d
 cat >expect6d <<EOF
 digraph G {
   rankdir=LR
@@ -1006,7 +1006,7 @@ State: 2
 [0&!2] 2
 --END--
 EOF
-autfilt -d input9 > output9
+autfilt -dA input9 > output9
 cat >expected9 <<EOF
 digraph G {
   rankdir=LR
@@ -1031,7 +1031,7 @@ diff output9 expected9
 autfilt input9 -H1 | autfilt -H1  | grep highlight && exit 1
 autfilt input9 -H1 | autfilt -H1.1 | grep highlight && exit 1
 autfilt -H1.1 input9 | autfilt -H1.1 | grep highlight
-autfilt -H1.1 input9 | autfilt -d > output9b
+autfilt -H1.1 input9 | autfilt -dA > output9b
 diff output9 output9b
 
 test 2 = `ltl2tgba 'GFa' 'a U b' 'a U b U c'| autfilt --ap=2..3 --count`
@@ -1042,7 +1042,7 @@ test 2 = `genltl --dac=1..3 | ltl2tgba --stats='%e,"%h",%s' |
           autfilt --states=2..3 -F-/3 --stats='%<,"%h"' | wc -l`
 
 # --dot=d
-ltl2tgba 'GF(a <-> Fb)' | autfilt -B --dot=d | grep ' (' >out
+ltl2tgba 'GF(a <-> Fb)' | autfilt -B --dot=dA | grep ' (' >out
 cat >expected <<EOF
   0 [label="0 (0)", peripheries=2]
   1 [label="1 (0)"]
@@ -1052,7 +1052,7 @@ cat >expected <<EOF
 EOF
 diff out expected
 # --dot=d should also not use circles
-ltl2tgba 'a U b' | autfilt --remove-ap=b=0 --dot=d >out
+ltl2tgba 'a U b' | autfilt --remove-ap=b=0 --dot=dA >out
 cat >expected <<EOF
 digraph G {
   rankdir=LR
