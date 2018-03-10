@@ -88,7 +88,7 @@ namespace spot
       bool opt_force_acc_trans_ = false;
       bool opt_vertical_ = false;
       bool opt_name_ = false;
-      bool opt_show_acc_ = false;
+      bool opt_show_acc_ = true;
       bool mark_states_ = false;
       bool dcircles_ = false;
       bool opt_scc_ = false;

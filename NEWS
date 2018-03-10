@@ -2,6 +2,13 @@ New in spot 2.5.1.dev (not yet released)
 
   Library:
 
+  - Option "a" of print_dot(), for printing the acceptance condition,
+    is now enabled by default.  Option "A", introduced in Spot 2.4,
+    can be used to hide the acceptance condition in case you do not
+    want it.  This change of course affects the --dot option of all
+    the command-line tools, as well as the various way to display
+    automata using the Python bindings.
+
   - cleanup_parity() and cleanup_parity_here() are smarter and now
     remove from the acceptance condition the parity colors that are
     not used in the automaton.

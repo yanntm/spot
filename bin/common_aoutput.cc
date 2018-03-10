@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -92,7 +92,7 @@ static const argp_option options[] =
       OPTION_ARG_OPTIONAL,
       "GraphViz's format.  Add letters for "
       "(1) force numbered states, "
-      "(a) show acceptance condition, "
+      "(a) show acceptance condition (default), "
       "(A) hide acceptance condition, "
       "(b) acceptance sets as bullets, "
       "(B) bullets except for Büchi/co-Büchi automata, "

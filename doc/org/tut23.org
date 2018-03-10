@@ -9,7 +9,7 @@ co-Büchi automaton (recognizing =GFa=) and then print it.
 
 #+NAME: tut23-dot
 #+BEGIN_SRC sh :results verbatim :exports none :var txt=tut23-cpp
-autfilt --dot=.a <<EOF
+autfilt --dot <<EOF
 $txt
 EOF
 #+END_SRC
