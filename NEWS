@@ -1,6 +1,10 @@
 New in spot 2.5.1.dev (not yet released)
 
-  Nothing yet.
+  Bugs fixed:
+
+  - acc_cond::is_generalized_rabin() and
+    acc_cond::is_generalized_streett() would segfault on weird
+    acceptance conditions such as "3 t" or "3 f".
 
 New in spot 2.5.1 (2018-02-20)
 
