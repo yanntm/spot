@@ -660,7 +660,10 @@ namespace spot
         pairs.resize(num_);
         return true;
       }
-    if (code_.is_t()
+    // "Acceptance: 0 f" is caught by is_generalized_rabin() above.
+    // Therefore is_f() below catches "Acceptance: n f" with n>0.
+    if (code_.is_f()
+        || code_.is_t()
         || code_.back().sub.op != acc_op::Or)
       return false;
 
@@ -741,7 +744,10 @@ namespace spot
         pairs.resize(num_);
         return true;
       }
-    if (code_.is_f()
+    // "Acceptance: 0 t" is caught by is_generalized_buchi() above.
+    // Therefore is_t() below catches "Acceptance: n t" with n>0.
+    if (code_.is_t()
+        || code_.is_f()
         || code_.back().sub.op != acc_op::And)
       return false;
 
