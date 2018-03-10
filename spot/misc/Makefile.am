@@ -45,6 +45,7 @@ misc_HEADERS = \
   intvcmp2.hh \
   location.hh \
   ltstr.hh \
+  match_word.hh \
   minato.hh \
   memusage.hh \
   mspool.hh \
@@ -66,6 +67,7 @@ libmisc_la_SOURCES = \
   game.cc \
   intvcomp.cc \
   intvcmp2.cc \
+  match_word.cc \
   memusage.cc \
   minato.cc \
   optionmap.cc \
