@@ -18,6 +18,10 @@ New in spot 2.5.1.dev (not yet released)
     update an external structure that references states of the twa
     that we want to purge.
 
+  - match_word() takes a formula and an twa_word and tests if the
+    word corresponds to the formula. This is way faster than constructing
+    an automata and a good way to answer questions.
+
   Bugs fixed:
 
   - acc_cond::is_generalized_rabin() and
