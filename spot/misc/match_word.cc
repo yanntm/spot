@@ -37,20 +37,20 @@ namespace spot
     find_list(const std::list<formula>& list, const formula& f)
     {
       spot::language_containment_checker c;
-      std::cout << "find " << f << " in ";
+      //std::cout << "find " << f << " in ";
       for (auto iter_list = list.begin(); iter_list != list.end(); ++iter_list)
         {
-          std::cout << *iter_list << " ";
+          //std::cout << *iter_list << " ";
           if (iter_list->kind() != f.kind())
             continue;
-          std::cout << "match type ";
+          //std::cout << "match type ";
           if (c.equal(*iter_list, f))
             {
-              std::cout << "found" << std::endl;
+              //std::cout << "found" << std::endl;
               return true;
             }
         }
-      std::cout << "not found" << std::endl;
+      //std::cout << "not found" << std::endl;
       return false;
     }
 
@@ -96,7 +96,7 @@ namespace spot
           if (find_list(*iter_vec, f1))
             {
               if ((operation == op::U || operation == op::W)
-                  || find_list(*iter_mark, f0))
+                  || find_list(*iter_vec, f0))
                 {
                   //if found b, loop from the mark to the current
                   //position and push_front
@@ -180,8 +180,8 @@ namespace spot
       for (; iter_cycle != cycle.end()
           && find_list(*iter_cycle, f[0]); ++iter_cycle)
         continue;
-      // if all letters in the cycle don't validate Gf, then there are no letters
-      // to mark
+      // if all letters in the cycle don't validate Gf, then there are
+      // no letters to mark
       if (iter_cycle != cycle.end())
         return;
       for (iter_cycle = cycle.begin(); iter_cycle != cycle.end(); ++iter_cycle)
@@ -202,7 +202,8 @@ namespace spot
       for (; iter_cycle != cycle.end()
           && !find_list(*iter_cycle, f[0]); ++iter_cycle)
         continue;
-      // if there is at least one occurence of a the Fa is true for all the cycle
+      // if there is at least one occurence of a the Fa is true for
+      // all the cycle
       if (iter_cycle != cycle.end())
         {
           for (iter_cycle = cycle.begin(); iter_cycle != cycle.end();
@@ -231,22 +232,24 @@ namespace spot
 
     //handle Not operator
     //loops through the word and push_front values
+    template<typename Lambda>
     static void
-    handle_not(std::vector<std::list<formula>>& prefix,
-        std::vector<std::list<formula>>& cycle, const formula& f)
+    handle_map(std::vector<std::list<formula>>& prefix,
+        std::vector<std::list<formula>>& cycle, const formula& f,
+        Lambda lambda)
     {
       //loop on the prefix
       for (auto iter_pref = prefix.begin(); iter_pref != prefix.end();
           ++iter_pref)
         {
-          if (find_list(*iter_pref, f[0]))
+          if (lambda(*iter_pref, f))
             iter_pref->push_front(f);
         }
       //loop on the cycle
       for (auto iter_cycle = cycle.begin(); iter_cycle != cycle.end();
           ++iter_cycle)
         {
-          if (find_list(*iter_cycle, f[0]))
+          if (lambda(*iter_cycle, f))
             iter_cycle->push_front(f);
         }
     }
@@ -264,18 +267,21 @@ namespace spot
         }
       if (prefix.size() > 0)
         {
+          //test if last letter of prefix should be marked
           if (find_list(cycle[0], f[0]))
             prefix[prefix.size() - 1].push_front(f);
           for (size_t index = prefix.size() - 1; index > 0; --index)
             {
-              if (find_list(cycle[index], f[0]))
-                cycle[index - 1].push_front(f);
+              if (find_list(prefix[index], f[0]))
+                prefix[index - 1].push_front(f);
             }
         }
     }
 
+
     //Function that evaluates every sub formulas on the word.
-    //It will call itself on all the subformulas and then evaluate its formula
+    //It will call itself on all the subformulas and then evaluate
+    //its formula
     static void
     rec_match(std::vector<std::list<formula>>& prefix,
         std::vector<std::list<formula>>& cycle, formula f)
@@ -292,7 +298,11 @@ namespace spot
       switch (f.kind())
         {
         case op::Not:
-          handle_not(prefix, cycle, f);
+          handle_map(prefix, cycle, f,
+              [](const std::list<formula>& list, const formula& f) -> bool
+                {
+                  return find_list(list, f[0]);
+                });
           break;
 
         case op::X:
@@ -323,15 +333,95 @@ namespace spot
           handle_until(prefix, cycle, f, op::R);
           break;
 
+        case op::OrRat:
+          handle_map(prefix, cycle, f,
+              [](const std::list<formula>& list, const formula& f) -> bool
+                {
+                  for (auto it_f = f.begin(); it_f != f.end(); ++it_f)
+                    {
+                      if (find_list(list, *it_f))
+                        return true;
+                    }
+                    return false;
+                });
+          break;
+
+        case op::Or:
+          handle_map(prefix, cycle, f,
+              [](const std::list<formula>& list, const formula& f) -> bool
+                {
+                  for (auto it_f = f.begin(); it_f != f.end(); ++it_f)
+                    {
+                      if (find_list(list, *it_f))
+                        return true;
+                    }
+                    return false;
+                });
+          break;
+
+        case op::AndRat:
+          handle_map(prefix, cycle, f,
+              [](const std::list<formula>& list, const formula& f) -> bool
+                {
+                  for (auto it_f = f.begin(); it_f != f.end(); ++it_f)
+                    {
+                      if (!find_list(list, *it_f))
+                        return false;
+                    }
+                    return true;
+                });
+          break;
+
+        case op::And:
+          handle_map(prefix, cycle, f,
+              [](const std::list<formula>& list, const formula& f) -> bool
+                {
+                  for (auto it_f = f.begin(); it_f != f.end(); ++it_f)
+                    {
+                      if (!find_list(list, *it_f))
+                        return false;
+                    }
+                    return true;
+                });
+          break;
+
         default:
           std::cerr << "Alert ! one operator isn't implemented" << std::endl;
         }
     }
 
+    static void
+    print_log(const std::vector<std::list<formula>>& prefix,
+        const std::vector<std::list<formula>>& cycle)
+    {
+      std::cout << "print pref ";
+      for (auto a = prefix.begin(); a != prefix.end(); ++a)
+        {
+          for (auto b = a->begin(); b != a->end(); ++b)
+            {
+              std::cout << *b << ", ";
+            }
+          if (a + 1 != cycle.end())
+            std::cout << "| ";
+        }
+      std::cout << "print cycle ";
+      for (auto a = cycle.begin(); a != cycle.end(); ++a)
+        {
+          for (auto b = a->begin(); b != a->end(); ++b)
+            {
+              std::cout << *b << " ";
+            }
+          if (a + 1 != cycle.end())
+            std::cout << "| ";
+        }
+      std::cout << std::endl;
+    }
   }
+
   //This function takes a formula and a word. Returns true if the word
   //corresponds to the formula.
-  //It works by transforming the twa_word into two vectors of lists of formulas.
+  //It works by transforming the twa_word into two vectors of lists of
+  //formulas.
   //
   bool
   match_word(formula f, twa_word_ptr w)
@@ -340,35 +430,16 @@ namespace spot
     std::vector<std::list<formula>> prefix = get_vector_formula(w, true);
     std::vector<std::list<formula>> cycle = get_vector_formula(w, false);
 
-    for (auto a = prefix.begin(); a != prefix.end(); ++a)
-      {
-        std::cout << "print ";
-        for (auto b = a->begin(); b != a->end(); ++b)
-          {
-            std::cout << *b << " ";
-          }
-        std::cout << std::endl;
-      }
     // runs the recursive function that will proccess the vectors.
     rec_match(prefix, cycle, f);
+    print_log(prefix, cycle);
 
-    for (auto a = prefix.begin(); a != prefix.end(); ++a)
-      {
-        std::cout << "print ";
-        for (auto b = a->begin(); b != a->end(); ++b)
-          {
-            std::cout << *b << " ";
-          }
-        std::cout << std::endl;
-      }
     // Returns true if first letter of the prefix is recognized or if
     // the prefix is empty, applies on first letter of the cycle.
     if (prefix.size() > 0)
       {
-        std::cout << "result " << find_list(prefix[0], f) << std::endl;
         return find_list(prefix[0], f);
       }
-    std::cout << "result " << find_list(cycle[0], f) << std::endl;
     return find_list(cycle[0], f);
   }
 }

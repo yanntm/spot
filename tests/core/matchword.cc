@@ -24,27 +24,16 @@
 #include <spot/twa/bdddict.hh>
 #include <spot/twaalgos/word.hh>
 #include <iostream>
-/*
-static void fill_dictionnary(std::shared_ptr<spot::bdd_dict>& d, spot::formula f)
-{
-  if (f.kind() != spot::op::ap)
-    {
-      for (auto iter_f = f.begin(); iter_f != f.end(); ++iter_f)
-        fill_dictionnary(d, *iter_f);
-    }
-  else
-    d->register_proposition(f, d);
-}
-*/
+#include <cstdlib>
 
 int main(int argc, char** argv)
 {
-  if (argc != 3)
+  if (argc != 4)
     return 1;
   std::string form(argv[1]);
   spot::formula f = spot::parse_formula(form);
   auto d = spot::make_bdd_dict();
-//  fill_dictionnary(d, f);
   spot::twa_word_ptr w = spot::parse_word(argv[2], d);
-  return !match_word(f, w);
+  int b = std::atoi(argv[3]);
+  return match_word(f, w) != b;
 }

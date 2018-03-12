@@ -20,9 +20,69 @@
 
 . ./defs
 set -e
+# using as third argument some C boolean : 1 is true and 0 is false.
+../matchword 'G a' 'a;a;a;cycle{a;a;a}' '1'
+../matchword 'G b' 'a;a;a;cycle{a;a;a}' '0'
+../matchword 'G a' 'a;a;a;cycle{a;b;a}' '0'
+../matchword 'G a' 'a;a;b;cycle{a;a;a}' '0'
 
-test 1 -eq $(../matchword 'G a' 'a;a;a;cycle{a;a;a}')
-test 1 -eq $(../matchword 'F a' 'a;a;a;cycle{a;a;a}')
-#test 0 -eq $(../matchword 'G F a' 'a;a;a;cycle{a;a;a}')
-#test 1 -eq $(../matchword 'G a' 'a;a;b;cycle{a;a;a}')
-#test 1 -eq $(../matchword 'G a' 'a;a;a;cycle{b;a;a}')
+../matchword 'F a' 'a;a;a;cycle{a;a;a}' '1'
+../matchword 'F b' 'a;a;a;cycle{a;a;a}' '0'
+../matchword 'F a' 'b;b;b;cycle{b;a;b}' '1'
+../matchword 'F b' 'a;a;b;cycle{a;a;a}' '1'
+
+../matchword 'a U b' 'a;a;a;cycle{a;a;a}' '0'
+../matchword 'a W b' 'a;a;a;cycle{a;a;a}' '1'
+../matchword 'b M a' 'a;a;a;cycle{a;a;a}' '0'
+../matchword 'b R a' 'a;a;a;cycle{a;a;a}' '1'
+
+../matchword 'a U b' 'a;a;a;cycle{a;b;a}' '1'
+../matchword 'a U b' 'a;a;a;cycle{a;a&b;a}' '1'
+../matchword 'a U b' 'a;a;b;cycle{a;a;a}' '1'
+../matchword 'a U b' 'b;a;a;cycle{a;a;a}' '1'
+../matchword 'a U b' 'c;c;b;cycle{a;a&b;a}' '0'
+../matchword 'a U b' 'a;a;a;cycle{c;a&b;a}' '0'
+
+
+../matchword 'a W b' 'a;a;a;cycle{a;b;a}' '1'
+../matchword 'a W b' 'a;a;a;cycle{a;a&b;a}' '1'
+../matchword 'a W b' 'a;a;b;cycle{a;a;a}' '1'
+../matchword 'a W b' 'b;a;a;cycle{a;a;a}' '1'
+../matchword 'a W b' 'c;c;b;cycle{a;a&b;a}' '0'
+../matchword 'a W b' 'a;a;a;cycle{c;a&b;a}' '0'
+
+
+../matchword 'b M a' 'a;a;a;cycle{a;b;a}' '0'
+../matchword 'b M a' 'a;a;a;cycle{a;a&b;a}' '1'
+../matchword 'b M a' 'a;a;b;cycle{a;a;a}' '0'
+../matchword 'b M a' 'a;a;a&b;cycle{a;a;a}' '1'
+../matchword 'b M a' 'b;a;a;cycle{a;a;a}' '0'
+../matchword 'b M a' 'a&b;a;a;cycle{a;a;a}' '1'
+../matchword 'b M a' 'c;c;b;cycle{a;a&b;a}' '0'
+../matchword 'b M a' 'a;a;a;cycle{c;a&b;a}' '0'
+
+
+../matchword 'b R a' 'a;a;a;cycle{a;b;a}' '0'
+../matchword 'b R a' 'a;a;a;cycle{a;a&b;a}' '1'
+../matchword 'b R a' 'a;a;b;cycle{a;a;a}' '0'
+../matchword 'b R a' 'a;a;a&b;cycle{a;a;a}' '1'
+../matchword 'b R a' 'b;a;a;cycle{a;a;a}' '0'
+../matchword 'b R a' 'a&b;a;a;cycle{a;a;a}' '1'
+../matchword 'b R a' 'c;c;b;cycle{a;a&b;a}' '0'
+../matchword 'b R a' 'a;a;a;cycle{c;a&b;a}' '0'
+
+
+../matchword '!a' 'a;a;a;cycle{c;a&b;a}' '1'
+../matchword '!b' 'a;a;a;cycle{c;a&b;a}' '0'
+
+../matchword 'X a' 'a;a;a;cycle{c;a&b;a}' '1'
+../matchword 'X b' 'a;a;a;cycle{c;a&b;a}' '0'
+../matchword 'X b' 'a;b;a;cycle{c;a&b;a}' '1'
+../matchword 'X b' 'a;a&b;a;cycle{c;a&b;a}' '1'
+
+../matchword '& a b' 'a&b;a&b;a&b;a&b;cycle{a&b;a&b}' '1'
+../matchword '& a b' 'b;a&b;a&b;a&b;cycle{a&b;a&b}' '0'
+
+../matchword '| a b' 'a&b;a&b;a&b;a&b;cycle{a&b;a&b}' '1'
+../matchword '| a b' 'b;a&b;a&b;a&b;cycle{a&b;a&b}' '1'
+../matchword '| a b' 'c;a&b;a&b;a&b;cycle{a&b;a&b}' '0'
