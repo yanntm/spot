@@ -18,19 +18,24 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config.h"
+#include <spot/tl/formula.hh>
 #include <spot/misc/match_word.hh>
 #include <spot/tl/parse.hh>
-//#include <spot/twaalgos/word.hh>
-
-void fill_dictionnary(std::shared_ptr<spot::bdd_dict>& d, formula f)
+#include <spot/twa/bdddict.hh>
+#include <spot/twaalgos/word.hh>
+#include <iostream>
+/*
+static void fill_dictionnary(std::shared_ptr<spot::bdd_dict>& d, spot::formula f)
 {
-  d->register_propostion(f, d);
-  if (f.kind() != op::ap)
+  if (f.kind() != spot::op::ap)
     {
       for (auto iter_f = f.begin(); iter_f != f.end(); ++iter_f)
         fill_dictionnary(d, *iter_f);
     }
+  else
+    d->register_proposition(f, d);
 }
+*/
 
 int main(int argc, char** argv)
 {
@@ -38,8 +43,8 @@ int main(int argc, char** argv)
     return 1;
   std::string form(argv[1]);
   spot::formula f = spot::parse_formula(form);
-  auto d = make_bdd_dict();
-  fill_dictionnary(d, f);
-  twa_word_ptr w = parse_word(argv[2], d);
-  return match_word(f, w);
+  auto d = spot::make_bdd_dict();
+//  fill_dictionnary(d, f);
+  spot::twa_word_ptr w = spot::parse_word(argv[2], d);
+  return !match_word(f, w);
 }

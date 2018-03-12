@@ -21,4 +21,8 @@
 . ./defs
 set -e
 
-test 0 -eq ../match_word #arguments
+test 1 -eq $(../matchword 'G a' 'a;a;a;cycle{a;a;a}')
+test 1 -eq $(../matchword 'F a' 'a;a;a;cycle{a;a;a}')
+#test 0 -eq $(../matchword 'G F a' 'a;a;a;cycle{a;a;a}')
+#test 1 -eq $(../matchword 'G a' 'a;a;b;cycle{a;a;a}')
+#test 1 -eq $(../matchword 'G a' 'a;a;a;cycle{b;a;a}')

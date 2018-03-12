@@ -71,18 +71,19 @@ check_PROGRAMS = \
   core/emptchk \
   core/equals \
   core/graph \
-  core/kind \
-  core/length \
   core/ikwiad \
-  core/intvcomp \
   core/intvcmp2 \
+  core/intvcomp \
+  core/kind \
   core/kripkecat \
+  core/length \
   core/ltl2dot \
   core/ltl2text \
   core/ltlrel \
   core/lunabbrev \
-  core/nequals \
+  core/matchword \
   core/nenoform \
+  core/nequals \
   core/ngraph \
   core/parity \
   core/randtgba \
@@ -94,9 +95,9 @@ check_PROGRAMS = \
   core/sccif \
   core/syntimpl \
   core/taatgba \
-  core/trival \
   core/tgbagraph \
   core/tostring \
+  core/trival \
   core/tunabbrev \
   core/tunenoform
 
@@ -106,47 +107,48 @@ core_bdddict_SOURCES  = core/bdddict.cc
 core_bitvect_SOURCES  = core/bitvect.cc
 core_checkpsl_SOURCES = core/checkpsl.cc
 core_checkta_SOURCES = core/checkta.cc
+core_consterm_SOURCES = core/consterm.cc
 core_emptchk_SOURCES  = core/emptchk.cc
+core_equals_SOURCES = core/equalsf.cc
 core_graph_SOURCES = core/graph.cc
 core_ikwiad_SOURCES = core/ikwiad.cc
-core_intvcomp_SOURCES = core/intvcomp.cc
 core_intvcmp2_SOURCES = core/intvcmp2.cc
-core_kripkecat_SOURCES = core/kripkecat.cc
-core_ngraph_SOURCES = core/ngraph.cc
-core_randtgba_SOURCES = core/randtgba.cc
-core_taatgba_SOURCES = core/taatgba.cc
-core_tgbagraph_SOURCES = core/twagraph.cc
-core_consterm_SOURCES = core/consterm.cc
-core_equals_SOURCES = core/equalsf.cc
+core_intvcomp_SOURCES = core/intvcomp.cc
 core_kind_SOURCES = core/kind.cc
+core_kripkecat_SOURCES = core/kripkecat.cc
 core_length_SOURCES = core/length.cc
-core_ltl2dot_SOURCES = core/readltl.cc
 core_ltl2dot_CPPFLAGS = $(AM_CPPFLAGS) -DDOTTY
+core_ltl2dot_SOURCES = core/readltl.cc
 core_ltl2text_SOURCES = core/readltl.cc
 core_ltlrel_SOURCES = core/ltlrel.cc
-core_lunabbrev_SOURCES = core/equalsf.cc
 core_lunabbrev_CPPFLAGS = $(AM_CPPFLAGS) -DUNABBREV='"^ie"'
-core_nenoform_SOURCES = core/equalsf.cc
+core_lunabbrev_SOURCES = core/equalsf.cc
+core_matchword_SOURCES = core/matchword.cc
 core_nenoform_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM
-core_nequals_SOURCES = core/equalsf.cc
+core_nenoform_SOURCES = core/equalsf.cc
 core_nequals_CPPFLAGS = $(AM_CPPFLAGS) -DNEGATE
+core_nequals_SOURCES = core/equalsf.cc
+core_ngraph_SOURCES = core/ngraph.cc
 core_parity_SOURCES = core/parity.cc
+core_randtgba_SOURCES = core/randtgba.cc
 core_reduc_SOURCES = core/reduc.cc
-core_reduccmp_SOURCES = core/equalsf.cc
 core_reduccmp_CPPFLAGS = $(AM_CPPFLAGS) -DREDUC
-core_reduceu_SOURCES = core/equalsf.cc
+core_reduccmp_SOURCES = core/equalsf.cc
 core_reduceu_CPPFLAGS = $(AM_CPPFLAGS) -DREDUC -DEVENT_UNIV
-core_reductaustr_SOURCES = core/equalsf.cc
+core_reduceu_SOURCES = core/equalsf.cc
 core_reductaustr_CPPFLAGS = $(AM_CPPFLAGS) -DREDUC_TAUSTR
+core_reductaustr_SOURCES = core/equalsf.cc
 core_safra_SOURCES = core/safra.cc
 core_sccif_SOURCES = core/sccif.cc
 core_syntimpl_SOURCES = core/syntimpl.cc
+core_taatgba_SOURCES = core/taatgba.cc
+core_tgbagraph_SOURCES = core/twagraph.cc
 core_tostring_SOURCES = core/tostring.cc
 core_trival_SOURCES = core/trival.cc
-core_tunabbrev_SOURCES = core/equalsf.cc
 core_tunabbrev_CPPFLAGS = $(AM_CPPFLAGS) -DUNABBREV='"^ieFG"'
-core_tunenoform_SOURCES = core/equalsf.cc
+core_tunabbrev_SOURCES = core/equalsf.cc
 core_tunenoform_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM -DUNABBREV='"^ieFG"'
+core_tunenoform_SOURCES = core/equalsf.cc
 
 
 TESTS_tl = \
@@ -200,6 +202,7 @@ TESTS_misc = \
   core/bdd.test \
   core/bitvect.test \
   core/intvcomp.test \
+  core/matchword.test \
   core/minusx.test \
   core/full.test \
   core/trival.test
