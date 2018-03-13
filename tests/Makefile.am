@@ -81,7 +81,6 @@ check_PROGRAMS = \
   core/ltl2text \
   core/ltlrel \
   core/lunabbrev \
-  core/matchword \
   core/nenoform \
   core/nequals \
   core/ngraph \
@@ -123,7 +122,6 @@ core_ltl2text_SOURCES = core/readltl.cc
 core_ltlrel_SOURCES = core/ltlrel.cc
 core_lunabbrev_CPPFLAGS = $(AM_CPPFLAGS) -DUNABBREV='"^ie"'
 core_lunabbrev_SOURCES = core/equalsf.cc
-core_matchword_SOURCES = core/matchword.cc
 core_nenoform_CPPFLAGS = $(AM_CPPFLAGS) -DNENOFORM
 core_nenoform_SOURCES = core/equalsf.cc
 core_nequals_CPPFLAGS = $(AM_CPPFLAGS) -DNEGATE
@@ -202,7 +200,6 @@ TESTS_misc = \
   core/bdd.test \
   core/bitvect.test \
   core/intvcomp.test \
-  core/matchword.test \
   core/minusx.test \
   core/full.test \
   core/trival.test

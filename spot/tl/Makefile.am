@@ -35,6 +35,7 @@ tl_HEADERS =					\
   hierarchy.hh					\
   length.hh					\
   ltlf.hh					\
+  match_word.hh			\
   mutation.hh					\
   nenoform.hh					\
   parse.hh					\
@@ -59,6 +60,7 @@ libtl_la_SOURCES =				\
   length.cc					\
   ltlf.cc					\
   mark.cc					\
+  match_word.cc			\
   mark.hh					\
   mutation.cc					\
   nenoform.cc					\

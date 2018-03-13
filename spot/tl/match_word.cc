@@ -20,9 +20,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <config.h>
+#include "config.h"
 #include <iostream>
-#include <spot/misc/match_word.hh>
+#include <spot/tl/match_word.hh>
 
 namespace spot
 {
@@ -37,23 +37,19 @@ namespace spot
     find_list(const std::list<formula>& list, const formula& f)
     {
       spot::language_containment_checker c;
-      //std::cout << "find " << f << " in ";
       for (auto iter_list = list.begin(); iter_list != list.end(); ++iter_list)
         {
-          //std::cout << *iter_list << " ";
           if (iter_list->kind() != f.kind())
             continue;
-          //std::cout << "match type ";
           if (c.equal(*iter_list, f))
             {
-              //std::cout << "found" << std::endl;
               return true;
             }
         }
-      //std::cout << "not found" << std::endl;
       return false;
     }
 
+    //fills the lists contained in the vectors used everywhere
     static void
     rec_fill_list(std::list<formula>& list, formula f)
     {
@@ -301,7 +297,7 @@ namespace spot
           handle_map(prefix, cycle, f,
               [](const std::list<formula>& list, const formula& f) -> bool
                 {
-                  return find_list(list, f[0]);
+                  return !find_list(list, f[0]);
                 });
           break;
 
@@ -333,19 +329,6 @@ namespace spot
           handle_until(prefix, cycle, f, op::R);
           break;
 
-        case op::OrRat:
-          handle_map(prefix, cycle, f,
-              [](const std::list<formula>& list, const formula& f) -> bool
-                {
-                  for (auto it_f = f.begin(); it_f != f.end(); ++it_f)
-                    {
-                      if (find_list(list, *it_f))
-                        return true;
-                    }
-                    return false;
-                });
-          break;
-
         case op::Or:
           handle_map(prefix, cycle, f,
               [](const std::list<formula>& list, const formula& f) -> bool
@@ -356,19 +339,6 @@ namespace spot
                         return true;
                     }
                     return false;
-                });
-          break;
-
-        case op::AndRat:
-          handle_map(prefix, cycle, f,
-              [](const std::list<formula>& list, const formula& f) -> bool
-                {
-                  for (auto it_f = f.begin(); it_f != f.end(); ++it_f)
-                    {
-                      if (!find_list(list, *it_f))
-                        return false;
-                    }
-                    return true;
                 });
           break;
 
@@ -389,34 +359,8 @@ namespace spot
           std::cerr << "Alert ! one operator isn't implemented" << std::endl;
         }
     }
-
-    static void
-    print_log(const std::vector<std::list<formula>>& prefix,
-        const std::vector<std::list<formula>>& cycle)
-    {
-      std::cout << "print pref ";
-      for (auto a = prefix.begin(); a != prefix.end(); ++a)
-        {
-          for (auto b = a->begin(); b != a->end(); ++b)
-            {
-              std::cout << *b << ", ";
-            }
-          if (a + 1 != cycle.end())
-            std::cout << "| ";
-        }
-      std::cout << "print cycle ";
-      for (auto a = cycle.begin(); a != cycle.end(); ++a)
-        {
-          for (auto b = a->begin(); b != a->end(); ++b)
-            {
-              std::cout << *b << " ";
-            }
-          if (a + 1 != cycle.end())
-            std::cout << "| ";
-        }
-      std::cout << std::endl;
-    }
   }
+
 
   //This function takes a formula and a word. Returns true if the word
   //corresponds to the formula.
@@ -432,7 +376,6 @@ namespace spot
 
     // runs the recursive function that will proccess the vectors.
     rec_match(prefix, cycle, f);
-    print_log(prefix, cycle);
 
     // Returns true if first letter of the prefix is recognized or if
     // the prefix is empty, applies on first letter of the cycle.
