@@ -185,32 +185,47 @@ namespace
     return split;
   }
 
-  // Generates a vector indicating the owner of each state, with the
-  // convention that false is player 0 (the environment) and true is player 1
-  // (the controller).  Starting with player 0 on the initial state, the owner
-  // is switched after each transition.
+  // Ensures that the game is complete for player 0.
+  // Also computes the owner of each state (false for player 0, i.e. env).
+  // Initial state belongs to Player 0 and the game is turn-based.
   static std::vector<bool>
-  make_alternating_owner(const spot::twa_graph_ptr& dpa,
-                         bool init_owner = false)
+  complete_env(spot::twa_graph_ptr& arena)
   {
-    std::vector<bool> seen(dpa->num_states(), false);
-    std::vector<unsigned> todo({dpa->get_init_state_number()});
-    std::vector<bool> owner(dpa->num_states());
-    owner[dpa->get_init_state_number()] = init_owner;
+    unsigned sink_env = arena->new_state();
+    unsigned sink_con = arena->new_state();
+
+    auto um = arena->acc().unsat_mark();
+    if (!um.first)
+      throw std::runtime_error("game winning condition is a tautology");
+    arena->new_edge(sink_con, sink_env, bddtrue, um.second);
+    arena->new_edge(sink_env, sink_con, bddtrue, um.second);
+
+    std::vector<bool> seen(arena->num_states(), false);
+    std::vector<unsigned> todo({arena->get_init_state_number()});
+    std::vector<bool> owner(arena->num_states(), false);
+    owner[arena->get_init_state_number()] = false;
+    owner[sink_env] = true;
     while (!todo.empty())
       {
         unsigned src = todo.back();
         todo.pop_back();
         seen[src] = true;
-        for (auto& e: dpa->out(src))
+        bdd missing = bddtrue;
+        for (const auto& e: arena->out(src))
           {
+            if (!owner[src])
+              missing -= e.cond;
+
             if (!seen[e.dst])
               {
                 owner[e.dst] = !owner[src];
                 todo.push_back(e.dst);
               }
           }
+        if (!owner[src] && missing != bddfalse)
+          arena->new_edge(src, sink_con, missing, um.second);
       }
+
     return owner;
   }
 
@@ -219,12 +234,11 @@ namespace
   {
     auto dpa = spot::tgba_determinize(split);
     dpa->merge_edges();
-    spot::complete_here(dpa);
+    if (opt_print_pg)
+      dpa = spot::sbacc(dpa);
     spot::colorize_parity_here(dpa, true);
     spot::change_parity_here(dpa, spot::parity_kind_max,
                              spot::parity_style_odd);
-    if (opt_print_pg)
-      dpa = spot::sbacc(dpa);
     bool max, odd;
     dpa->acc().is_parity(max, odd);
     assert(max && odd);
@@ -330,7 +344,7 @@ namespace
       auto dpa = to_dpa(split);
       if (verbose)
         std::cerr << "determinization done" << std::endl;
-      auto owner = make_alternating_owner(dpa);
+      auto owner = complete_env(dpa);
       auto pg = spot::parity_game(dpa, owner);
       if (verbose)
         std::cerr << "parity game built" << std::endl;
