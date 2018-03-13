@@ -74,12 +74,25 @@ inputs = ['G a', 'a;a;a;cycle{a;a;a}', True,
           'X b', 'a;b;a;cycle{c;a&b;a}', True,
           'X b', 'a;a&b;a;cycle{c;a&b;a}', True,
 
-          '& a b', 'a&b;a&b;a&b;a&b;cycle{a&b;a&b}', True,
-          '& a b', 'b;a&b;a&b;a&b;cycle{a&b;a&b}', False,
+          'a & b', 'a&b;a&b;a&b;a&b;cycle{a&b;a&b}', True,
+          'a & b', 'b;a&b;a&b;a&b;cycle{a&b;a&b}', False,
 
-          '| a b', 'a&b;a&b;a&b;a&b;cycle{a&b;a&b}', True,
-          '| a b', 'b;a&b;a&b;a&b;cycle{a&b;a&b}', True,
-          '| a b', 'c;a&b;a&b;a&b;cycle{a&b;a&b}', False]
+          'a | b', 'a&b;a&b;a&b;a&b;cycle{a&b;a&b}', True,
+          'a | b', 'b;a&b;a&b;a&b;cycle{a&b;a&b}', True,
+          'a | b', 'c;a&b;a&b;a&b;cycle{a&b;a&b}', False,
+          
+          'a U (b & c)', 'a&b;a&c;cycle{a&b;b&c}', True,
+          'FGa', 'b;b;b;cycle{a;a;a}', True,
+          'GFa', 'b;b;b;cycle{b;a;b}', True,
+          '!a U (b & c)', 'b;c;cycle{b;b&c}', True,
+          '!a U (b & c)', 'b;c;cycle{a&b;b&c}', False,
+          'FGa', 'b;b;b;cycle{b;a;a}', False,
+          'GFa', 'b;b;a;cycle{b;b;b}', False,
+          
+          'a U b', 'cycle{a;b}', True,
+          'F(G(b & c) M a)', 'd;d;b&c;cycle{b&c;b&c&a}', True,
+          'F a', 'cycle{b}', False,
+          'a & b', 'cycle{a&b;b&c}', True ]
 
 
 assert(len(inputs) % 3 == 0)

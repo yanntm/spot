@@ -23,6 +23,8 @@
 #include "config.h"
 #include <iostream>
 #include <spot/tl/match_word.hh>
+#include <spot/twa/formula2bdd.hh>
+#include <spot/tl/contain.hh>
 
 namespace spot
 {

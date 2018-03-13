@@ -22,11 +22,8 @@
 
 #pragma once
 
-#include <vector>
 #include <spot/tl/formula.hh>
 #include <spot/twaalgos/word.hh>
-#include <spot/twa/formula2bdd.hh>
-#include <spot/tl/contain.hh>
 
 namespace spot
 {
