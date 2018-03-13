@@ -112,8 +112,16 @@ IN11='a, b'
 OUT11='c'
 F11='G ((a -> ((X c) <-> b)) && ((!a) -> ((X c) <-> c)))'
 EXP11='REALIZABLE'
+IN12='r_0, r_1'
+OUT12='g_0, g_1'
+F12='((G (((! g_0) || (! g_1)) && ((r_0 && (X r_1)) -> (F (g_0 && g_1))))) && (G (r_0 -> F g_0))) && (G (r_1 -> F g_1))'
+EXP12='UNREALIZABLE'
+IN13='p_0, p_1'
+OUT13='acc'
+F13='(((G F p_0) || (F G p_1)) && (G F p_1)) <-> (G F acc)'
+EXP13='UNREALIZABLE'
 
-for i in 0 1 7 8 9; do
+for i in 0 1 7 8 9 12 13; do
   F=$(eval echo \$F$i)
   IN=$(eval echo \$IN$i)
   OUT=$(eval echo \$OUT$i)
@@ -132,21 +140,25 @@ for i in 2 3 4 5 6 10 11; do
   OUT=$(eval echo \$OUT$i)
   EXP=$(eval echo \$EXP$i)
 
+  ltl2tgba -f "!($F)" > negf_aut$i
+
   # test ltlsynt
   ltlsynt -f "$F" --ins="$IN" --outs="$OUT" > out$i || true
   REAL=`head -1 out$i`
   test $REAL = $EXP
   tail -n +2 out$i > res$i
-  ltl2tgba -f "!($F)" > negf_aut$i
   # check that the L(strategy) is included in L(F)
   autfilt -q -v --intersect=negf_aut$i res$i
+  # check that all environment actions are possible
+  autfilt --remove-ap="$OUT" res$i | autfilt --dualize | autfilt --is-empty
 
   # test ltlsynt with incremental resolution
   ltlsynt --incr -f "$F" --ins="$IN" --outs="$OUT" > out$i || true
   REAL=`head -1 out$i`
   test $REAL = $EXP
   tail -n +2 out$i > res$i
-  ltl2tgba -f "!($F)" > negf_aut$i
   # check that the L(strategy) is included in L(F)
   autfilt -q -v --intersect=negf_aut$i res$i
+  # check that all environment actions are possible
+  autfilt --remove-ap="$OUT" res$i | autfilt --dualize | autfilt --is-empty
 done
