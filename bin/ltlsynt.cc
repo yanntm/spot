@@ -168,6 +168,7 @@ namespace
   split_automaton(const spot::twa_graph_ptr& aut,
                   bdd input_bdd)
   {
+    // FIXME choose to rely on tgba or on aut, not on both
     auto tgba = spot::to_generalized_buchi(aut);
     auto split = spot::make_twa_graph(tgba->get_dict());
     split->copy_ap_of(tgba);
@@ -175,33 +176,98 @@ namespace
     split->new_states(tgba->num_states());
     split->set_init_state(tgba->get_init_state_number());
 
+    std::unordered_map<bdd, unsigned, spot::bdd_hash> sig2state;
+
+    unsigned set_num = split->get_dict()
+      ->register_anonymous_variables(aut->num_states()+1, &sig2state);
+    bdd all_states = bddtrue;
+    for (unsigned i = 0; i <= aut->num_states(); ++i)
+      all_states &= bdd_ithvar(set_num + i);
+
+    unsigned acc_vars = split->get_dict()
+      ->register_anonymous_variables(aut->num_sets(), &sig2state);
+    bdd all_acc = bddtrue;
+    for (unsigned i = 0; i < aut->num_sets(); ++i)
+      all_acc &= bdd_ithvar(acc_vars + i);
+
     for (unsigned src = 0; src < tgba->num_states(); ++src)
-      for (const auto& e: tgba->out(src))
-        {
-          std::unordered_map<bdd, unsigned, spot::bdd_hash> input2state;
-          bdd support = bddtrue;
-          for (const auto& e : tgba->out(src))
-            support &= bdd_support(e.cond);
-          support = bdd_existcomp(support, input_bdd);
-          for (const auto& e : tgba->out(src))
-            {
-              bdd all_letters = bddtrue;
-              while (all_letters != bddfalse)
-                {
-                  bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
-                  all_letters -= one_letter;
-                  auto it = input2state.find(one_letter);
-                  if (it == input2state.end())
-                    {
-                      unsigned ns = split->new_state();
-                      it = input2state.emplace(one_letter, ns).first;
-                      split->new_edge(src, it->second, one_letter);
-                    }
-                  bdd out = bdd_exist(e.cond & one_letter, input_bdd);
-                  split->new_edge(it->second, e.dst, out, e.acc);
-                }
-            }
-        }
+      {
+        std::unordered_map<bdd, bdd, spot::bdd_hash> input2sig;
+        for (const auto& e: tgba->out(src))
+          {
+            bdd support = bddtrue;
+            for (const auto& e : tgba->out(src))
+              support &= bdd_support(e.cond);
+            support = bdd_existcomp(support, input_bdd);
+            for (const auto& e : tgba->out(src))
+              {
+                bdd all_letters = bddtrue;
+                while (all_letters != bddfalse)
+                  {
+                    bdd one_letter =
+                      bdd_satoneset(all_letters, support, bddtrue);
+                    all_letters -= one_letter;
+                    auto it = input2sig.find(one_letter);
+                    if (it == input2sig.end())
+                      it = input2sig.emplace(one_letter, bddfalse).first;
+
+                    bdd sig = bddtrue;
+                    for (auto n : e.acc.sets())
+                      sig &= bdd_ithvar(acc_vars + n);
+                    sig &= bdd_exist(e.cond & one_letter, input_bdd);
+                    sig &= bdd_ithvar(set_num + e.dst);
+
+                    it->second |= sig;
+                  }
+              }
+          }
+
+        for (const auto& in : input2sig)
+          {
+            bdd sig = in.second;
+            auto it = sig2state.find(sig);
+            if (it == sig2state.end())
+              {
+                unsigned ns = split->new_state();
+                it = sig2state.emplace(sig, ns).first;
+              }
+            split->new_edge(src, it->second, in.first);
+          }
+      }
+
+    // Now add all states based on their signatures
+    // This is very similar to the code of the simulation
+    bdd nonapvars = all_acc & all_states;
+    for (const auto& sig : sig2state)
+      {
+        // for each valuation, extract cond, acc and dst
+        bdd sup_sig = bdd_support(sig.first);
+        bdd sup_all_atomic_prop = bdd_exist(sup_sig, nonapvars);
+        bdd all_atomic_prop = bdd_exist(sig.first, nonapvars);
+
+        spot::minato_isop isop(sig.first);
+        bdd cond_acc_dest;
+        while ((cond_acc_dest = isop.next()) != bddfalse)
+          {
+            bdd cond = bdd_existcomp(cond_acc_dest, split->ap_vars());
+
+            unsigned dst =
+              bdd_var(bdd_existcomp(cond_acc_dest, all_states)) - set_num;
+
+            bdd acc = bdd_existcomp(cond_acc_dest, all_acc);
+            spot::acc_cond::mark_t m({});
+            while (acc != bddtrue)
+              {
+                m.set(bdd_var(acc) - acc_vars);
+                acc = bdd_high(acc);
+              }
+
+            split->new_edge(sig.second, dst, cond, m);
+          }
+      }
+
+    split->get_dict()->unregister_all_my_variables(&sig2state);
+
     split->prop_universal(spot::trival::maybe());
     return split;
   }
