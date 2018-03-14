@@ -1403,7 +1403,7 @@ namespace
                       sm = new
                         spot::scc_info(p, spot::scc_info_options::TRACK_STATES);
                     }
-                  catch (std::bad_alloc&)
+                  catch (const std::bad_alloc&)
                     {
                       std::cerr << ("warning: not enough memory to build "
                                     "product of P") << i << " with state-space";
@@ -1440,7 +1440,7 @@ namespace
                           spot::scc_info(p,
                                          spot::scc_info_options::TRACK_STATES);
                       }
-                    catch (std::bad_alloc&)
+                    catch (const std::bad_alloc&)
                       {
                         std::cerr << ("warning: not enough memory to build "
                                       "product of N")

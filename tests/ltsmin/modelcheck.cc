@@ -222,7 +222,7 @@ checked_main(int argc, char **argv)
           model = spot::ltsmin_model::load(argv[1]).kripke(&ap, dict, deadf,
                                                            compress_states);
         }
-      catch (std::runtime_error& e)
+      catch (const std::runtime_error& e)
         {
           std::cerr << e.what() << '\n';
         }
