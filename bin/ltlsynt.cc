@@ -462,12 +462,12 @@ namespace
             << std::endl;
         }
 
-      split = spot::simulation(split);
-      if (verbose)
-        {
-          std::cerr << split->num_states() << " states left after simulation"
-            << std::endl;
-        }
+      //split = spot::simulation(split);
+      //if (verbose)
+      //  {
+      //    std::cerr << split->num_states() << " states left after simulation"
+      //      << std::endl;
+      //  }
 
       if (opt_incremental)
         {
@@ -478,19 +478,6 @@ namespace
               std::cerr << "degeneralization done" << std::endl;
               std::cerr << "automaton has " << degen->num_states() << " states"
                 << std::endl;
-
-              //auto degen_copy = make_twa_graph(degen, { true, true, true,
-              //                                          true, true, true });
-              //spot::colorize_parity_here(degen_copy, true);
-              //change_parity_here(degen_copy,
-              //                   spot::parity_kind_max,
-              //                   spot::parity_style_odd);
-              //auto owner = make_alternating_owner(degen_copy);
-              //auto pg = spot::parity_game(degen_copy, owner);
-              //spot::parity_game::strategy_t strategy[2];
-              //spot::parity_game::region_t winning_region[2];
-              //std::cerr << "controller has " << winning_region[1].size()
-              //  << " winning states!" << std::endl;
             }
 
           bool sim_ok = degen->num_states() > 100000 ? false : true;
@@ -504,8 +491,9 @@ namespace
                 << std::endl;
             }
 
-          //print_hoa(std::cerr, nda);
-          //std::cerr << std::endl;
+          std::cerr << "NDA is " << std::endl;
+          print_hoa(std::cerr, nda);
+          std::cerr << std::endl;
 
           std::vector<char> edges(nda->num_edges() + 1, 0);
           unsigned nb_control = 0;
@@ -521,6 +509,28 @@ namespace
                 bool owner = todo.back().second;
                 todo.pop_back();
                 seen[src] = true;
+
+                // check if the state happens to be deterministic
+                if (!owner)
+                  {
+                    bool is_det = true;
+                    bdd available = bddtrue;
+                    for (const auto& e : nda->out(src))
+                      if (!bdd_implies(e.cond, available))
+                        {
+                          // nondet
+                          is_det = false;
+                          break;
+                        }
+                      else
+                        {
+                          available -= e.cond;
+                        }
+
+                    if (is_det)
+                      owner = true;
+                  }
+
                 for (const auto& e: nda->out(src))
                   {
                     if (owner)
@@ -543,8 +553,7 @@ namespace
                   << " active control edges out of " << nb_control << std::endl;
 
               det.add_edges(edges);
-              det.run(-1U);
-              std::cerr << "using " << det.get()->num_sets() << " colors" << std::endl;
+              det.run();
               auto dpa = make_twa_graph(det.get(), { true, true, true,
                                                      true, true, true });
 
@@ -559,6 +568,7 @@ namespace
               change_parity_here(dpa, spot::parity_kind_max,
                                       spot::parity_style_odd);
 
+
               auto f_aux = [&dpa]()
                 {
                   bool max, odd;
@@ -566,9 +576,13 @@ namespace
                   return max && odd;
                 };
               assert(f_aux());
-              assert(is_deterministic(dpa));
 
-              auto owner = make_alternating_owner(dpa);
+              auto owner = complete_env(dpa, all_inputs);
+
+              std::cerr << "intermediate \"DPA\"" << std::endl;
+              print_hoa(std::cerr, dpa);
+              std::cerr << std::endl;
+
               auto pg = spot::parity_game(dpa, owner);
 
               spot::parity_game::strategy_t strategy[2];
