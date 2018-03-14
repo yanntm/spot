@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -240,7 +240,7 @@ namespace spot
     struct product_state_hash
     {
       size_t
-      operator()(const product_state that) const
+      operator()(const product_state that) const noexcept
       {
         // FIXME! wang32_hash(that.st_prop) could have
         // been pre-calculated!
