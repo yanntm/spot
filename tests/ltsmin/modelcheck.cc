@@ -340,7 +340,7 @@ static int checked_main()
 
         if (!res)
           {
-            std::cout << "no accepting run found";
+            std::cout << "no accepting run found" << std::endl;
           }
         else if (!mc_options.compute_counterexample)
           {
