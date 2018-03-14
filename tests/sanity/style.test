@@ -287,6 +287,10 @@ for dir in "$TOP/spot" "$TOP/bin" "$TOP/tests"; do
 	 diag 'No "if (x)" required before "delete x;".'
       fi
 
+      # we want catch (const reftype&) or catch (...)
+      $GREP 'catch *([^.]' $tmp | $GREP -v 'const.*\&' &&
+	diag 'Always capture exceptions by const reference.'
+
       case $file in
 	*.hh | *.hxx)
 	  if e$GREP '(<<|>>)' $tmp >/dev/null; then
