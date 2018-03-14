@@ -529,23 +529,43 @@ namespace
                 }
 
               bool edge_added = false;
-              // FIXME what are the "best" edges to add?
-              for (unsigned wins : winning_region[0])
+              // FIXME do a BFS of the arena to activate early edges first
+              // also use the strategy to find relevant edges to activate
+              std::vector<bool> seen(dpa->num_states(), false);
+              std::deque<unsigned> todo({dpa->get_init_state_number()});
+              while (!todo.empty())
                 {
+                  unsigned wins = todo.front();
+                  todo.pop_front();
+                  seen[wins] = true;
+                  for (const auto& e : dpa->out(wins))
+                    {
+                      if (!seen[e.dst])
+                        todo.push_back(e.dst);
+                    }
+
                   // if the state belongs to the environment, nothing to do
-                  if (owner[wins] == 0)
+                  if (!owner[wins])
+                    continue;
+                  // if the state is the sink, nothing to do
+                  if (wins == det.get()->num_states())
+                    continue;
+                  // if the state is not winning, nothing to do
+                  if (winning_region[0].find(wins) == winning_region[0].end())
                     continue;
 
-                  // find the corresponding safra_state
+                  // FIXME do not consider states after a non-det state
+
+                  // find the corresponding safra state
                   const spot::safra_state& s = det.get_safra(wins);
-                  // activate inactivated edges from the nodes in s
+                  // activate inactive edges from the nodes in s
                   for (const auto& node : s.nodes_)
                     {
-                      for (const auto& e : nda->out(node.first))
+                      for (const auto&e : nda->out(node.first))
                         {
                           unsigned edge = nda->edge_number(e);
                           if (edges[edge])
-                            continue;
+                            break;
                           edges[edge] = true;
                           edge_added = true;
                           active++;
