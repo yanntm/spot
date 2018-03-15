@@ -22,6 +22,10 @@ New in spot 2.5.1.dev (not yet released)
     word corresponds to the formula. This is way faster than constructing
     an automata and a good way to answer questions.
 
+  - the PSL simplification routines learned that {SERE;1} can be
+    simplified to {1} or {SERE} depending on whether SERE accepts
+    the empty word or not.
+
   Bugs fixed:
 
   - acc_cond::is_generalized_rabin() and

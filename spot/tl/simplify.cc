@@ -1268,12 +1268,26 @@ namespace spot
 
                   // Some term does not accept the empty word.
                   unsigned end = c.size() - 1;
+
+                  // {r;1} = 1 if r accepts [*0], else {r}
+                  // !{r;1} = 0 if r accepts [*0], else !{r}
+                  if (c[end].is_tt())
+                    {
+                      formula rest = c.all_but(end);
+                      if (rest.accepts_eword())
+                        return o == op::Closure ? formula::tt() : formula::ff();
+                      return recurse(formula::unop(o, rest));
+                    }
+
                   // {b₁;b₂;e₁;f₁;e₂;f₂;e₂;e₃;e₄}
                   //    = b₁&X(b₂&X({e₁;f₁;e₂;f₂}))
                   // !{b₁;b₂;e₁;f₁;e₂;f₂;e₂;e₃;e₄}
                   //    = !b₁|X(!b₂|X(!{e₁;f₁;e₂;f₂}))
                   // if e denotes a term that accepts [*0]
                   // and b denotes a Boolean formula.
+                  //
+                  // if reduce_size_strictly is set, we simply remove
+                  // the trailing e2;e3;e4.
                   while (c[end].accepts_eword())
                     --end;
                   unsigned start = 0;

@@ -1636,6 +1636,10 @@ Here are the basic rewritings for the weak closure and its negation:
 \begin{align*}
   \sere{r\STAR{}}&\equiv \sere{r}&
   \nsere{r\STAR{}}&\equiv \nsere{r}\\
+  \sere{r;\1}&\equiv \sere{r} \quad\text{if~}\varepsilon\not\VDash r&
+  \nsere{r;\1}&\equiv \nsere{r} \quad\text{if~}\varepsilon\not\VDash r\\
+  \sere{r;\1}&\equiv \1 \quad\text{if~}\varepsilon\VDash r&
+  \nsere{r;\1}&\equiv \0 \quad\text{if~}\varepsilon\VDash r\\
   \sere{r_1;r_2}&\equiv \sere{r_1}\phantom{{}\OR\sere{r_2}}\quad\text{if~}\varepsilon\not\VDash r_1\land\varepsilon\VDash r_2&
   \nsere{r_1;r_2}&\equiv \nsere{r_1}\phantom{{}\AND\nsere{r_2}}\quad\text{if~}\varepsilon\not\VDash r_1\land\varepsilon\VDash r_2\\
   \sere{r_1;r_2}&\equiv \sere{r_1}\OR\sere{r_2}\quad\text{if~}\varepsilon\VDash r_1\land\varepsilon\VDash r_2&
