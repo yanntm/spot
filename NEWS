@@ -18,6 +18,10 @@ New in spot 2.5.1.dev (not yet released)
     update an external structure that references states of the twa
     that we want to purge.
 
+  - the PSL simplification routines learned that {SERE;1} can be
+    simplified to {1} or {SERE} depending on whether SERE accepts
+    the empty word or not.
+
   Bugs fixed:
 
   - acc_cond::is_generalized_rabin() and
