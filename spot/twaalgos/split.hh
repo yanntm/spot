@@ -31,4 +31,26 @@ namespace spot
   /// propositions.  After this we can consider that each edge of the
   /// automate is a transition labeled by one letter.
   SPOT_API twa_graph_ptr split_edges(const const_twa_graph_ptr& aut);
+
+  // Take an automaton and a set of atomic propositions I, and split each
+  // transition
+  //
+  //     p -- cond --> q                cond in 2^2^AP
+  //
+  // into a set of transitions of the form
+  //
+  //     p -- i1 --> r1 -- o1 --> q     i1 in 2^I
+  //                                    o1 in 2^O
+  //
+  //     p -- i2 --> r2 -- o2 --> q     i2 in 2^I
+  //                                    o2 in 2^O
+  //     ...
+  //
+  // where O = AP\I, and such that cond = (i1 & o1) | (i2 & o2) | ...
+  //
+  // When determinized, this encodes a game automaton that has a winning
+  // strategy iff aut has an accepting run for any valuation of atomic
+  // propositions in I.
+  SPOT_API twa_graph_ptr
+  split_automaton(const const_twa_graph_ptr& aut, bdd input_bdd);
 }
