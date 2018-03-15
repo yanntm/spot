@@ -340,7 +340,7 @@ namespace spot
                       if (find_list(list, *it_f))
                         return true;
                     }
-                    return false;
+                  return false;
                 });
           break;
 
@@ -353,7 +353,23 @@ namespace spot
                       if (!find_list(list, *it_f))
                         return false;
                     }
-                    return true;
+                  return true;
+                });
+          break;
+
+        case op::tt:
+          handle_map(prefix, cycle, f,
+              [](...) -> bool
+                {
+                  return true;
+                });
+          break;
+
+        case op::ff:
+          handle_map(prefix, cycle, f,
+              [](...) -> bool
+                {
+                  return false;
                 });
           break;
 
