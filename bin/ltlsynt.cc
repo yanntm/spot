@@ -357,6 +357,7 @@ namespace
           bool sim_ok = degen->num_states() > 100000 ? false : true;
           spot::determinizer det =
             spot::determinizer::build(degen, true, true, sim_ok, true);
+          det.deactivate_all();
           auto nda = det.aut();
           if (verbose)
             {
@@ -369,8 +370,8 @@ namespace
           print_hoa(std::cerr, nda);
           std::cerr << std::endl;
 
-          std::vector<char> edges(nda->num_edges() + 1, 0);
           unsigned nb_control = 0;
+          std::vector<bool> active_states(nda->num_states(), false);
           {
             // First add all the transitions from the environment
             std::vector<char> seen(nda->num_states(), false);
@@ -405,16 +406,17 @@ namespace
                       owner = true;
                   }
 
-                for (const auto& e: nda->out(src))
+                if (owner)
                   {
-                    if (owner)
-                      edges[nda->edge_number(e)] = 1;
-                    else
-                      ++nb_control;
-
-                    if (!seen[e.dst])
-                      todo.push_back({e.dst, !owner});
+                    det.activate(src);
+                    active_states[src] = true;
                   }
+                else
+                  ++nb_control;
+
+                for (const auto& e: nda->out(src))
+                  if (!seen[e.dst])
+                    todo.push_back({e.dst, !owner});
               }
           }
 
@@ -426,7 +428,6 @@ namespace
                 std::cerr << "iteration # " << i++ << ", " << active
                   << " active control edges out of " << nb_control << std::endl;
 
-              det.add_edges(edges);
               det.run();
               auto dpa = make_twa_graph(det.get(), { true, true, true,
                                                      true, true, true });
@@ -482,9 +483,8 @@ namespace
                   return 0;
                 }
 
-              bool edge_added = false;
-              // FIXME do a BFS of the arena to activate early edges first
-              // also use the strategy to find relevant edges to activate
+              bool state_added = false;
+              // FIXME use the strategy to find relevant states to activate
               std::vector<bool> seen(dpa->num_states(), false);
               std::deque<unsigned> todo({dpa->get_init_state_number()});
               while (!todo.empty())
@@ -512,25 +512,23 @@ namespace
 
                   // find the corresponding safra state
                   const spot::safra_state& s = det.get_safra(wins);
-                  // activate inactive edges from the nodes in s
+                  // activate an inactive state from the nodes in s
                   for (const auto& node : s.nodes_)
                     {
-                      for (const auto&e : nda->out(node.first))
-                        {
-                          unsigned edge = nda->edge_number(e);
-                          if (edges[edge])
-                            break;
-                          edges[edge] = true;
-                          edge_added = true;
-                          active++;
-                        }
+                      if (active_states[node.first])
+                        continue;
+
+                      active_states[node.first] = true;
+                      det.activate(node.first);
+                      state_added = true;
+                      active++;
                     }
 
-                  if (edge_added)
+                  if (state_added)
                     break;
                 }
 
-              if (!edge_added)
+              if (!state_added)
                 break;
             }
 
