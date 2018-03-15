@@ -49,7 +49,7 @@ int main()
 
   // Test translation
   auto aut = twa_to_twacube(tg);
-  spot::print_dot(std::cout, tg);
+  spot::print_dot(std::cout, tg, "A");
   std::cout << "-----------\n" << *aut << "-----------\n";
 
   const std::vector<std::string>& aps = aut->get_ap();
@@ -63,5 +63,5 @@ int main()
                 << ' ' << d.acc_
                 << std::endl;
     }
-  spot::print_dot(std::cout, spot::twacube_to_twa(aut));
+  spot::print_dot(std::cout, spot::twacube_to_twa(aut), "A");
 }
