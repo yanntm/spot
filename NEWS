@@ -12,6 +12,9 @@ New in spot 2.5.1.dev (not yet released)
   - "autfilt --acceptance-is=Fin-less" no longer accept automata
     with "f" acceptance.
 
+  - twa_run methods will now diagnose cases where the cycle is
+    unexpectedly empty instead of segfaulting.
+
 New in spot 2.5.1 (2018-02-20)
 
   Library:

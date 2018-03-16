@@ -282,6 +282,13 @@ namespace spot
     return os;
   }
 
+  void twa_run::ensure_non_empty_cycle(const char* where) const
+  {
+    if (cycle.empty())
+      throw std::runtime_error(std::string(where)
+                               + " expects a non-empty cycle");
+  }
+
   namespace
   {
     class shortest_path final: public bfs_steps
@@ -343,6 +350,7 @@ namespace spot
 
   twa_run_ptr twa_run::reduce() const
   {
+    ensure_non_empty_cycle("twa_run::reduce()");
     auto& a = aut;
     auto res = std::make_shared<twa_run>(a);
     state_set ss;
@@ -502,6 +510,7 @@ namespace spot
 
   bool twa_run::replay(std::ostream& os, bool debug) const
   {
+    ensure_non_empty_cycle("twa_run::replay()");
     const state* s = aut->get_init_state();
     int serial = 1;
     const twa_run::steps* l;
@@ -754,6 +763,7 @@ namespace spot
   twa_graph_ptr
   twa_run::as_twa(bool preserve_names) const
   {
+    ensure_non_empty_cycle("twa_run::as_twa()");
     auto d = aut->get_dict();
     auto res = make_twa_graph(d);
     res->copy_ap_of(aut);

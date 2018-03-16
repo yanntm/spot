@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013, 2014, 2015, 2016, 2017 Laboratoire de
+// Copyright (C) 2011, 2013, 2014, 2015, 2016, 2017, 2018 Laboratoire de
 // Recherche et Developpement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -401,6 +401,15 @@ namespace spot
     }
     twa_run(const twa_run& run);
     twa_run& operator=(const twa_run& run);
+
+    /// \brief Raise an exception of the cycle is empty.
+    ///
+    /// It is OK for a twa_run to have an empty cycle while the run is
+    /// being filled by some procedure.  But after that, we expect
+    /// cycles to be non-empty.  Calling this function will raise an
+    /// std::runtime_error if the cycle is empty, giving \a where
+    /// (usually the name of the calling function) as context.
+    void ensure_non_empty_cycle(const char* where) const;
 
     /// \brief Reduce an accepting run.
     ///
