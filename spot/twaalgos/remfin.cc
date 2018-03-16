@@ -464,6 +464,20 @@ namespace spot
 
     twa_graph_ptr trivial_strategy(const const_twa_graph_ptr& aut)
     {
+      if (aut->acc().is_f())
+        {
+          // The original acceptance was equivalent to
+          // "f". Simply return an empty automaton with "t"
+          // acceptance.
+          auto res = make_twa_graph(aut->get_dict());
+          res->set_generalized_buchi(0);
+          res->set_init_state(res->new_state());
+          res->prop_stutter_invariant(true);
+          res->prop_weak(true);
+          res->prop_complete(false);
+          return res;
+        }
+
       return (!aut->acc().uses_fin_acceptance())
              ? std::const_pointer_cast<twa_graph>(aut)
              : nullptr;
@@ -514,10 +528,14 @@ namespace spot
             if (acccode.is_f())
               {
                 // The original acceptance was equivalent to
-                // "f". Simply return an empty automaton.
+                // "f". Simply return an empty automaton with "t"
+                // acceptance.
                 auto res = make_twa_graph(aut->get_dict());
-                res->set_acceptance(0, acccode);
+                res->set_generalized_buchi(0);
                 res->set_init_state(res->new_state());
+                res->prop_stutter_invariant(true);
+                res->prop_weak(true);
+                res->prop_complete(false);
                 return res;
               }
           }
@@ -746,6 +764,18 @@ namespace spot
       trace << "before cleanup: " << res->get_acceptance() << '\n';
       cleanup_acceptance_here(res);
       trace << "after cleanup: " << res->get_acceptance() << '\n';
+      if (res->acc().is_f())
+        {
+          // "f" is not generalized-Büchi.  Just return an
+          // empty automaton instead.
+          auto res2 = make_twa_graph(res->get_dict());
+          res2->set_generalized_buchi(0);
+          res2->set_init_state(res2->new_state());
+          res2->prop_stutter_invariant(true);
+          res2->prop_weak(true);
+          res2->prop_complete(false);
+          return res2;
+        }
       res->merge_edges();
       return res;
     }
@@ -822,6 +852,9 @@ namespace spot
 
   twa_graph_ptr remove_fin(const const_twa_graph_ptr& aut)
   {
-    return remove_fin_impl(aut);
+    twa_graph_ptr res = remove_fin_impl(aut);
+    assert(!res->acc().uses_fin_acceptance());
+    assert(!res->acc().is_f());
+    return res;
   }
 }

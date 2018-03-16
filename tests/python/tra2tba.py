@@ -91,18 +91,15 @@ State: 1
 """)
 
 exp = """HOA: v1
-States: 2
+States: 1
 Start: 0
-AP: 2 "a" "b"
-acc-name: none
-Acceptance: 0 f
+AP: 0
+acc-name: all
+Acceptance: 0 t
 properties: trans-labels explicit-labels state-acc deterministic
+properties: stutter-invariant weak
 --BODY--
 State: 0
-[!0] 0
-[0] 1
-State: 1
-[0] 1
 --END--"""
 
 res = spot.remove_fin(aut)

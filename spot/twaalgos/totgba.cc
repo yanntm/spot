@@ -753,6 +753,18 @@ namespace spot
           }
       }
     simplify_acceptance_here(out);
+    if (out->acc().is_f())
+      {
+        // "f" is not generalized-Büchi.  Just return an
+        // empty automaton instead.
+        auto res = make_twa_graph(out->get_dict());
+        res->set_generalized_buchi(0);
+        res->set_init_state(res->new_state());
+        res->prop_stutter_invariant(true);
+        res->prop_weak(true);
+        res->prop_complete(false);
+        return res;
+      }
     return out;
   }
 
