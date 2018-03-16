@@ -32,6 +32,9 @@ New in spot 2.5.1.dev (not yet released)
     acc_cond::is_generalized_streett() would segfault on weird
     acceptance conditions such as "3 t" or "3 f".
 
+  - remove_fin(), streett_to_generalized_buchi() should never
+    return automata with "f" acceptance.
+
 New in spot 2.5.1 (2018-02-20)
 
   Library:

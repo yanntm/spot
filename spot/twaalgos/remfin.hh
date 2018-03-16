@@ -48,12 +48,16 @@ namespace spot
   rabin_to_buchi_maybe(const const_twa_graph_ptr& aut);
 
   /// \ingroup twa_acc_transform
-  /// \brief Rewrite an automaton without Fin acceptance.
+  /// \brief Rewrite an automaton without Fin or f acceptance.
   ///
   /// This algorithm dispatches between many strategies.  It has
   /// dedicated algorithms for weak automata, automata with Rabin-like
   /// acceptance, automata with Streett-like acceptance, and some
   /// generic code that will work on any kind of acceptance condition.
+  ///
+  /// In Spot "f" acceptance is not considered Fin-less, because
+  /// it can be seen as a case of generalized co-Büchi with 0 sets.
+  /// Just like "t" corresponds generalized Büchi with 0 sets.)
   SPOT_API twa_graph_ptr
   remove_fin(const const_twa_graph_ptr& aut);
 }
