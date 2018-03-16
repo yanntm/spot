@@ -1541,3 +1541,10 @@ SPOT_STREETT_CONV_MIN=0 \
 autcross --language-preserved -Ftest1 \
   'SPOT_STREETT_CONV_MIN=1 autfilt --remove-fin %H>%O' \
   'SPOT_STREETT_CONV_MIN=1 autfilt --tgba %H>%O'
+
+ltl2tgba true > h1
+autfilt -F h1 --acceptance-is=Fin-less
+autfilt --complement -F h1 > h2
+autfilt -F h2 --acceptance-is=f
+autfilt -F h2 --acceptance-is=Fin-less && exit 1
+autfilt --remove-fin -F h2 | autfilt --acceptance-is=Fin-less
