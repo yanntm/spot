@@ -1191,7 +1191,7 @@ namespace
             }
         }
       case ACC_FinLess:
-        return !acc.uses_fin_acceptance();
+        return !acc.uses_fin_acceptance() && !acc.is_f();
       }
     SPOT_UNREACHABLE();
   }

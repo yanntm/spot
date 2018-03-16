@@ -35,6 +35,9 @@ New in spot 2.5.1.dev (not yet released)
   - remove_fin(), streett_to_generalized_buchi() should never
     return automata with "f" acceptance.
 
+  - "autfilt --acceptance-is=Fin-less" no longer accept automata
+    with "f" acceptance.
+
 New in spot 2.5.1 (2018-02-20)
 
   Library:
