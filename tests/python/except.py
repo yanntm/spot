@@ -59,3 +59,19 @@ try:
     si.determine_unknown_acceptance()
 except RuntimeError as e:
     assert "scc_info::determine_unknown_acceptance() does not supp" in str(e)
+
+r = spot.twa_run(aut)
+try:
+    a = r.as_twa()
+except RuntimeError as e:
+    assert "empty cycle" in str(e)
+
+try:
+    a = r.replay(spot.get_cout())
+except RuntimeError as e:
+    assert "empty cycle" in str(e)
+
+try:
+    a = r.reduce()
+except RuntimeError as e:
+    assert "empty cycle" in str(e)
