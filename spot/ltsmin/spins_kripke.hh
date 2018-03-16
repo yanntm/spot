@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -165,6 +165,7 @@ namespace spot
     void setup_por_iterator(cspins_state s, porinfos* porinfos,
                             std::vector<int>& transitions_id,
                             std::vector<bool>* reduced);
+    unsigned compute_index() const;
 
   private:
     std::vector<cspins_state> successors_;

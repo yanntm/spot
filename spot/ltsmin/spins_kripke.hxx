@@ -234,10 +234,10 @@ namespace spot
 
   cspins_state cspins_iterator::state() const
   {
+    SPOT_ASSERT(successors_.size());
     if (SPOT_UNLIKELY(!tid_))
       return successors_[current_];
-    return  successors_[(((current_+1)*primes[tid_])
-                         % ((int)successors_.size()))];
+    return  successors_[compute_index()];
   }
 
   cube cspins_iterator::condition() const
@@ -257,8 +257,7 @@ namespace spot
 
         // Check if current_ is referencing an (enabled\reduced) transition
         if ((tid_ == 0 && !reduced_[current_]) ||
-            (tid_ != 0 && !reduced_[(((current_+1)*primes[tid_]) %
-                                     ((int)successors_.size()))]))
+            (tid_ != 0 && !reduced_[compute_index()]))
           return;
         next_por();
       }
@@ -297,13 +296,22 @@ namespace spot
         return;
       }
 
+    SPOT_ASSERT(successors_.size());
+
     // Now we have to update current to the first valid position.
     // distinguish tid = 0 from other.
     if ((tid_ == 0 && reduced_[current_]) ||
-        (tid_ != 0 && reduced_[(((current_+1)*primes[tid_]) %
-                                ((int)successors_.size()))]))
+        (tid_ != 0 && reduced_[compute_index()]))
       return;
     next_por();
+  }
+
+  unsigned cspins_iterator::compute_index() const
+  {
+    unsigned long long c = current_ + 1;
+    unsigned long long p = primes[tid_];
+    unsigned long long s = successors_.size();
+    return (unsigned)  ((c*p) % s);
   }
 
 
@@ -328,9 +336,9 @@ namespace spot
             do
               {
                 ++current_;
+                SPOT_ASSERT(successors_.size());
               }
-            while (!done() && !reduced_[(((current_+1)*primes[tid_]) %
-                                        ((int)successors_.size()))]);
+            while (!done() && !reduced_[compute_index()]);
           }
 
         // We have reach some enabled transitions in the reduced set,
@@ -347,10 +355,11 @@ namespace spot
         // Reset the iterator over transitions
         current_ = 0;
 
+        SPOT_ASSERT(successors_.size());
+
         // Check if current_ is referencing an (enabled\reduced) transition
         if ((tid_ == 0 && !reduced_[current_]) ||
-            (tid_ != 0 && !reduced_[(((current_+1)*primes[tid_]) %
-                                     ((int)successors_.size()))]))
+            (tid_ != 0 && !reduced_[compute_index()]))
           return;
       }
 
@@ -373,9 +382,9 @@ namespace spot
             do
               {
                 ++current_;
+                SPOT_ASSERT(successors_.size());
               }
-            while (!done() && reduced_[(((current_+1)*primes[tid_]) %
-                                        ((int)successors_.size()))]);
+            while (!done() && reduced_[compute_index()]);
           }
       }
   }
