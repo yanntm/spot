@@ -36,7 +36,7 @@ namespace spot
 
   struct spins_interface
   {
-    lt_dlhandle handle;	// handle to the dynamic library
+    lt_dlhandle handle; // handle to the dynamic library
     void (*get_initial_state)(void *to);
     int (*have_property)();
     int (*get_successors)(void* m, int *in, TransitionCB, void *arg);
@@ -51,8 +51,10 @@ namespace spot
     int (*get_transition_count)();
     int* (*get_transition_read_dependencies)(int t);
     int* (*get_transition_write_dependencies)(int t);
+
     int* (*get_guards)(int t);
     int (*get_guard_count)();
+    int* (*get_guard_variables_matrix)(int g);
     int* (*get_guard_nes_matrix)(int g);
     int* (*get_guard_may_be_coenabled_matrix)(int g);
     int (*get_guard)(void* model, int g, const int* src);

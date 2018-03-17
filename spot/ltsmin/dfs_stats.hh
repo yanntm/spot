@@ -24,6 +24,8 @@
 #include <spot/ltsmin/proviso.hh>
 #include <spot/twaalgos/isweakscc.hh>
 #include <spot/kripke/kripke.hh>
+#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/dot.hh>
 #include <random>
 
 namespace spot

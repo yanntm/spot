@@ -1257,11 +1257,13 @@ namespace spot
         // Support for Partial Order Reductions
         d->get_guard_count = (int (*)()) lt_dlsym(h, "get_guard_count");
         d->get_guards = (int* (*)(int)) lt_dlsym(h, "get_guards");
+        d->get_guard_variables_matrix =
+          (int* (*)(int)) lt_dlsym(h, "get_guard_matrix");
         d->get_guard_nes_matrix =
           (int* (*)(int)) lt_dlsym(h, "get_guard_nes_matrix");
         d->get_guard_may_be_coenabled_matrix = (int* (*)(int))
           lt_dlsym(h, "get_guard_may_be_coenabled_matrix");
-        d->get_guard = (int (*)(void*, int , const int* )) sym("get_guard");
+        d->get_guard = (int (*)(void*, int , const int*)) sym("get_guard");
       }
 
     if (d->have_property && d->have_property())

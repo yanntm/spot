@@ -24,6 +24,7 @@
 #include <iterator>
 #include <iostream>
 #include <algorithm>
+#include <set>
 #include <assert.h>
 #include <spot/ltsmin/spins.hh>
 #include <spot/misc/common.hh>
@@ -50,11 +51,27 @@ namespace spot
     unsigned max_en_;
   };
 
+  // \brief Store configuration informations for partial order
+  class SPOT_API porinfos_options
+  {
+  public:
+    enum class porinfos_method { stubborn_set };
+
+    porinfos_options(porinfos_method method = porinfos_method::stubborn_set)
+      : method_(method)
+    {
+    }
+
+    porinfos_method method_;
+  };
+
   // \brief Store informations about partial order
   class SPOT_API porinfos
   {
   public:
     porinfos(const spins_interface* si);
+
+    porinfos(const spins_interface* si, const porinfos_options& opt);
 
     std::vector<bool> compute_reduced_set(const std::vector<int>& enabled,
                                           const int* for_spins_state);
@@ -81,20 +98,36 @@ namespace spot
     }
 
   private:
+    const porinfos_options opt;
+
+    bool stubborn_set(int t, std::vector<int>& t_work,
+                      const std::vector<int>& t_s,
+                      const std::vector<int>& enabled,
+                      const int* for_spins_state);
+
     const spins_interface* d_;
-    int transitions_;
-    int variables_;
-    int guards_;
+    unsigned transitions_;
+    unsigned variables_;
+    unsigned guards_;
     porinfos_stats stats_;
     std::vector<std::vector<bool>> m_read;
     std::vector<std::vector<bool>> m_write;
     std::vector<std::vector<bool>> m_nes;
     std::vector<std::vector<bool>> m_mbc;
     std::vector<std::vector<int>>  m_guards;
+    std::vector<std::vector<bool>> m_guard_variables;
 
     // Develop caches to reduce computation time
     std::vector<std::vector<bool>> m_dep_tr;
+    std::vector<std::vector<bool>> m_dep_state;
+    std::vector<std::vector<bool>> m_dep_process;
+    std::vector<std::vector<bool>> m_conflict_tr;
     std::vector<std::vector<bool>> non_mbc_tr;
+    std::vector<std::set<unsigned>> t_processes;
     bool spin_ = false;
+
+    bool (porinfos::*f_not_enabled_transition)
+      (int, std::vector<int>&, const std::vector<int>&, const std::vector<int>&,
+       const int*);
   };
 }
