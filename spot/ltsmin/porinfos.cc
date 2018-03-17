@@ -77,6 +77,10 @@ namespace spot
       {
         case porinfos_options::porinfos_method::stubborn_set:
           f_not_enabled_transition = &porinfos::stubborn_set;
+        break;
+        case porinfos_options::porinfos_method::base:
+          f_not_enabled_transition = &porinfos::base;
+        break;
       }
 
     for (unsigned i = 0; i < transitions_; ++i)
@@ -293,6 +297,20 @@ namespace spot
           non_mbc_tr[t1][t2] = non_maybecoenabled(t1, t2);
           non_mbc_tr[t2][t1] = non_mbc_tr[t1][t2];
         }
+  }
+
+  bool
+  porinfos::base(int t, std::vector<int>& t_work,
+                 const std::vector<int>& t_s,
+                 const std::vector<int>& enabled,
+                 const int* for_spins_state)
+  {
+    (void) t;
+    (void) t_work;
+    (void) t_s;
+    (void) enabled;
+    (void) for_spins_state;
+    return false;
   }
 
   bool

@@ -55,9 +55,9 @@ namespace spot
   class SPOT_API porinfos_options
   {
   public:
-    enum class porinfos_method { stubborn_set };
+    enum class porinfos_method { stubborn_set, base };
 
-    porinfos_options(porinfos_method method = porinfos_method::stubborn_set)
+    porinfos_options(porinfos_method method = porinfos_method::base)
       : method_(method)
     {
     }
@@ -99,6 +99,11 @@ namespace spot
 
   private:
     const porinfos_options opt;
+
+    bool base(int t, std::vector<int>& t_work,
+              const std::vector<int>& t_s,
+              const std::vector<int>& enabled,
+              const int* for_spins_state);
 
     bool stubborn_set(int t, std::vector<int>& t_work,
                       const std::vector<int>& t_s,
