@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -312,6 +312,7 @@ filed_automaton::print(std::ostream& os, const char* pos) const
 {
   std::ostringstream ss;
   char* opt = nullptr;
+  bool filename = true;
   if (*pos == '[')
     {
       ++pos;
@@ -330,10 +331,20 @@ filed_automaton::print(std::ostream& os, const char* pos) const
     case 'L':
       spot::print_lbtt(ss, aut_, opt);
       break;
+    case 'M':
+      {
+        filename = false;
+        std::string* name = aut_->get_named_prop<std::string>("automaton-name");
+        spot::quote_shell_string(os,
+                                 name ? name->c_str() :
+                                 opt ? opt :
+                                 "");
+      }
     }
   if (opt)
     free(opt);
-  os << '\'' << string_to_tmp(ss.str(), serial_) << '\'';
+  if (filename)
+    os << '\'' << string_to_tmp(ss.str(), serial_) << '\'';
 }
 
 translator_runner::translator_runner(spot::bdd_dict_ptr dict,
@@ -409,6 +420,7 @@ autproc_runner::autproc_runner(bool no_output_allowed)
   declare('H', &filename_automaton);
   declare('S', &filename_automaton);
   declare('L', &filename_automaton);
+  declare('M', &filename_automaton);
   declare('O', &output);
 
   size_t s = tools.size();
@@ -420,9 +432,10 @@ autproc_runner::autproc_runner(bool no_output_allowed)
       std::vector<bool> has(256);
       const tool_spec& t = tools[n];
       scan(t.cmd, has);
-      if (!(has['H'] || has['S'] || has['L']))
+      if (!(has['H'] || has['S'] || has['L'] || has['M']))
         error(2, 0, "no input %%-sequence in '%s'.\n       Use "
-              "one of %%H,%%S,%%L to indicate the input automaton filename.",
+              "one of %%H,%%S,%%L to indicate the input automaton filename.\n"
+              "        (Or use %%M if you want to work from its name.)\n",
               t.spec);
       if (!no_output_allowed && !has['O'])
         error(2, 0, "no output %%-sequence in '%s'.\n      Use  "
@@ -831,6 +844,8 @@ static const argp_option options_aut[] =
     { "%H,%S,%L", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
       "filename for the input automaton in (H) HOA, (S) Spin's neverclaim, "
       "or (L) LBTT's format", 0 },
+    { "%M, %[val]M", 0, nullptr,  OPTION_DOC | OPTION_NO_USAGE,
+      "the name of the input automaton, with an optional default value", 0 },
     { "%O", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
       "filename for the automaton output in HOA, never claim, LBTT, or "
       "ltl2dstar's format", 0 },
