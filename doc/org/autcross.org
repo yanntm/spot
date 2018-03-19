@@ -86,7 +86,7 @@ No problem detected.
 In this example, we generate 3 random Büchi automata (because
 =ltl2dstar= expects Büchi automata as input) using [[file:randaut.org][=randaut=]], and pipe
 them to =autcross=.  For each of those automata, =autcross= display
-the source location of that automaton (here =-= indicate that the
+the source location of that automaton (here =-= indicates that the
 automaton is read from standard input, and this is followed by
 =beginline.column-endline.colum= specifying the position of that
 automaton in the input.   If the automata had names, they would
