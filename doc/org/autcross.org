@@ -40,6 +40,8 @@ following character sequences:
 :   %%                         a single %
 :   %H,%S,%L                   filename for the input automaton in (H) HOA, (S)
 :                              Spin's neverclaim, or (L) LBTT's format
+:   %M, %[val]M                the name of the input automaton, with an optional
+:                              default value
 :   %O                         filename for the automaton output in HOA, never
 :                              claim, LBTT, or ltl2dstar's format
 
@@ -123,7 +125,7 @@ will be changed into
 
 What this implies is our previous example could be shortened to:
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :results silent :exports code
 randaut -B -n 3 a b |
 autcross 'autfilt --complement' 'ltl2dstar --complement-input=yes'
 #+END_SRC
@@ -386,3 +388,91 @@ No problem detected.
 #  LocalWords:  ok complementation Ai Aj gRqrd ubUpHb JxFi oQGbj SQT
 #  LocalWords:  kWt Eo Xsc WXgCB vLwKMQ tI SXF qqlE KXplk ZFTCz PNY
 #  LocalWords:  hUAK IjnFhD cWys ZqjdQh
+* Use-cases for =%M=
+
+If the input automata are named, it is possible to use =%M= in some
+tool specification to pass this name to the tool.  In particular, this
+can be used to replace the input automaton by something else.
+
+For instance if the name of the automaton is an actual LTL formula
+(automata produced by [[file:ltl2tgba.org][=ltl2tgba=]] follow this convention), you can
+cross-compare some tool that input that formula instead of the
+automaton.  For instance consider the following command-line, where we
+compare the determinization of =autfilt -D= (starting from an
+automaton) to the determinization of =ltl2dstar= (starting from the
+LTL formula encoded in the name of the automaton).  That LTL formula
+is not in a syntax supported by =ltl2dstar=, so we call =ltl2dstar=
+via [[file:ltldo.org][=ltldo=]] to arrange that.
+
+#+BEGIN_SRC sh :results silent :export code
+genltl --eh-patterns=1..3 | ltl2tgba |
+  autcross 'autfilt -P -D' 'ltldo ltl2dstar -f %M >%O'
+#+END_SRC
+
+#+BEGIN_SRC sh :results verbatim :export results
+genltl --eh-patterns=1..3 | ltl2tgba |
+  autcross 'autfilt -P -D' 'ltldo ltl2dstar -f %M >%O' 2>&1
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+-:1.1-16.7	p0 U (p1 & Gp2)
+Running [A0]: autfilt -P -D 'lcr-i0-rBSCo9'>'lcr-o0-xyRJhy'
+Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & Gp2)' >'lcr-o1-9uDUjX'
+Performing sanity checks and gathering statistics...
+
+-:17.1-34.7	p0 U (p1 & X(p2 U p3))
+Running [A0]: autfilt -P -D 'lcr-i1-LFDrvm'>'lcr-o0-6fBZGL'
+Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & X(p2 U p3))' >'lcr-o1-AUXx0a'
+Performing sanity checks and gathering statistics...
+
+-:35.1-64.7	p0 U (p1 & X(p2 & F(p3 & XF(p4 & XF(p5 & XFp6)))))
+Running [A0]: autfilt -P -D 'lcr-i2-UaZCtA'>'lcr-o0-hhbJWZ'
+Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & X(p2 & F(p3 & XF(p4 & XF(p5 & XFp6)))))' >'lcr-o1-xhS4Ap'
+Performing sanity checks and gathering statistics...
+
+No problem detected.
+#+end_example
+
+This example is a bit contrived, and in this case, an alternative would
+be to use [[file:ltlcross.org][=ltlcross=]], as in:
+
+#+BEGIN_SRC sh :results silent :export code
+genltl --eh-patterns=1..3 |
+  ltlcross 'ltl2tgba %f | autfilt -P -D > %O' 'ltl2dstar'
+#+END_SRC
+
+#+BEGIN_SRC sh :results verbatim :export results
+genltl --eh-patterns=1..3 |
+  ltlcross 'ltl2tgba %f | autfilt -P -D > %O' 'ltl2dstar' 2>&1
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+-:1: (p0) U ((p1) & (G(p2)))
+Running [P0]: ltl2tgba '(p0) U ((p1) & (G(p2)))' | autfilt -P -D > 'lcr-o0-DnV1rm'
+Running [P1]: ltl2dstar --output-format=hoa 'lcr-i0-jBLulv' 'lcr-o1-epwYeE'
+Running [N0]: ltl2tgba '!((p0) U ((p1) & (G(p2))))' | autfilt -P -D > 'lcr-o0-8bVQ9M'
+Running [N1]: ltl2dstar --output-format=hoa 'lcr-i0-5oAAdW' 'lcr-o1-W7elh5'
+Performing sanity checks and gathering statistics...
+
+-:2: (p0) U ((p1) & (X((p2) U (p3))))
+Running [P0]: ltl2tgba '(p0) U ((p1) & (X((p2) U (p3))))' | autfilt -P -D > 'lcr-o0-xMdCve'
+Running [P1]: ltl2dstar --output-format=hoa 'lcr-i1-OJU1Sn' 'lcr-o1-wOCsgx'
+Running [N0]: ltl2tgba '!((p0) U ((p1) & (X((p2) U (p3)))))' | autfilt -P -D > 'lcr-o0-SzgmFG'
+Running [N1]: ltl2dstar --output-format=hoa 'lcr-i1-8iIddQ' 'lcr-o1-zBV5KZ'
+Performing sanity checks and gathering statistics...
+
+-:3: (p0) U ((p1) & (X((p2) & (F((p3) & (X(F((p4) & (X(F((p5) & (X(F(p6))))))))))))))
+Running [P0]: ltl2tgba '(p0) U ((p1) & (X((p2) & (F((p3) & (X(F((p4) & (X(F((p5) & (X(F(p6))))))))))))))' | autfilt -P -D > 'lcr-o0-FEA6s9'
+Running [P1]: ltl2dstar --output-format=hoa 'lcr-i2-E0Ikpj' 'lcr-o1-ppDzlt'
+Running [N0]: ltl2tgba '!((p0) U ((p1) & (X((p2) & (F((p3) & (X(F((p4) & (X(F((p5) & (X(F(p6)))))))))))))))' | autfilt -P -D > 'lcr-o0-jqlelD'
+Running [N1]: ltl2dstar --output-format=hoa 'lcr-i2-IwU1uN' 'lcr-o1-6YdQEX'
+Performing sanity checks and gathering statistics...
+
+No problem detected.
+#+end_example
+
+However in practice you could also use the =name:= field of the input
+automaton, combined with =%M= in the tool specification, to designate
+an alternate filename to load, or some key to look up somewhere.

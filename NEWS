@@ -1,5 +1,10 @@
 New in spot 2.5.1.dev (not yet released)
 
+  Command-line tools:
+
+  - autcross' tool specifications now have %M replaced by the name of
+    the input automaton.
+
   Library:
 
   - Option "a" of print_dot(), for printing the acceptance condition,
