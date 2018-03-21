@@ -108,25 +108,92 @@ namespace spot
     assert(nc == (1UL << nap));
 
     // An array of bit vectors of size 'ns'.  Each original state is
-    // represented by 'nc' bitvectors representing the possible
-    // destinations for each condition.
-    auto bv = std::unique_ptr<bitvect_array>(make_bitvect_array(ns, ns * nc));
+    // represented by 'nc' consecutive bitvectors representing the
+    // possible destinations for each condition.
+    //
+    //  src  cond
+    //  0   !a&!b   [...bit vector of size ns...]
+    //      !a&b    [...bit vector of size ns...]
+    //       a&!b   [...bit vector of size ns...]
+    //       a&b    [...bit vector of size ns...]
+    //  1   !a&!b   [...bit vector of size ns...]
+    //      !a&b    [...bit vector of size ns...]
+    //       a&!b   [...bit vector of size ns...]
+    //       a&b    [...bit vector of size ns...]
+    //  2   !a&!b   [...bit vector of size ns...]
+    //      !a&b    [...bit vector of size ns...]
+    //       a&!b   [...bit vector of size ns...]
+    //       a&b    [...bit vector of size ns...]
+    //  ...
+    //
+    // since there are nc possible "cond" value, ans ns sources, the
+    // ns*nc bitvectors of ns bits each can take a lot of space.  In
+    // issue #302, we had the case of an automaton with ns=8777
+    // states, and 8 atomic propositions (nc=256): this large array
+    // would require 2.3GB, causing out-of-memory error on small
+    // systems.
+    //
+    // To work around this, we reduce the number of states we store in
+    // this array to reduced_ns, which we currently limit to 512
+    // (chosen arbitrarily), and use it as a least-recently-used
+    // cache.  A separate vector of size ns, contains pointer
+    // (i.e. iterators) to a list cell that gives an index in this
+    // cache.  The purpose of the list is to maintain the
+    // least-recently-used order.
+    typedef std::list<std::pair<unsigned, unsigned>>::const_iterator iter;
+    std::list<std::pair<unsigned, unsigned>> lru; // list of (idx in bv, state#)
+    std::vector<iter> iters(ns, lru.end());
+    const unsigned reduced_ns = std::min(512U, ns);
+    auto bv =
+      std::unique_ptr<bitvect_array>(make_bitvect_array(ns, reduced_ns * nc));
 
-    for (unsigned src = 0; src < ns; ++src)
-      {
-        size_t base = src * nc;
-        for (auto& t: aut->out(src))
-          {
-            bdd all = t.cond;
-            while (all != bddfalse)
-              {
-                bdd one = bdd_satoneset(all, allap, bddfalse);
-                all -= one;
-                unsigned num = bdd2num[one];
-                bv->at(base + num).set(t.dst);
-              }
-          }
-      }
+    // Get the index of src in bv, filling bv in an LRU-fashion if needed.
+    auto index = [&](unsigned src) {
+      iter i = iters[src];
+      if (i != lru.end())
+        {
+          // bv has already been filled for this state.  Just move it
+          // to the front of the LRU list.
+          lru.splice(lru.begin(), lru, i);
+          return i->first;
+        }
+
+      unsigned idx = lru.size();
+      bool reused = false;
+      if (idx < reduced_ns)
+        {
+          lru.emplace_front(idx, src);
+        }
+      else
+        {
+          unsigned state;
+          std::tie(idx, state) = lru.back();
+          iters[state] = lru.end();
+          lru.pop_back();
+          lru.emplace_front(idx, src);
+          reused = true;
+        }
+      iters[src] = lru.begin();
+
+      size_t base = idx * nc;
+      if (reused)
+        for (unsigned i = 0; i < nc; ++i)
+          bv->at(base + i).clear_all();
+      for (auto& t: aut->out(src))
+        {
+          bdd all = t.cond;
+          while (all != bddfalse)
+            {
+              bdd one = bdd_satoneset(all, allap, bddfalse);
+              all -= one;
+              unsigned num = bdd2num[one];
+              bv->at(base + num).set(t.dst);
+            }
+        }
+
+      assert(idx == lru.begin()->first);
+      return idx;
+    };
 
     typedef power_map::power_state power_state;
 
@@ -159,10 +226,9 @@ namespace spot
         om->clear_all();
 
         const power_state& src = pm.states_of(src_num);
-
         for (auto s: src)
           {
-            size_t base = s * nc;
+            size_t base = index(s) * nc;
             for (unsigned c = 0; c < nc; ++c)
               om->at(c) |= bv->at(base + c);
           }
