@@ -409,6 +409,11 @@ namespace spot
   twa_graph_ptr
   closure_inplace(twa_graph_ptr a)
   {
+    // In the fin-less version of the closure, we can merge edges that
+    // have the same src, letter, and destination by taking the union
+    // of their marks.  If some Fin() is used, we cannot do that.
+    bool fin_less = !a->acc().uses_fin_acceptance();
+
     a->prop_keep({false,        // state_based
                   false,        // inherently_weak
                   false, false, // deterministic
@@ -457,7 +462,7 @@ namespace spot
                             need_new_trans = false;
                             break;
                           }
-                        else if (cond == ts.cond)
+                        else if (fin_less && cond == ts.cond)
                           {
                             acc |= ts.acc;
                             if (ts.acc != acc)
