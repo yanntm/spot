@@ -42,6 +42,14 @@ New in spot 2.5.1.dev (not yet released)
   - twa_run methods will now diagnose cases where the cycle is
     unexpectedly empty instead of segfaulting.
 
+  - spot::closure(), used by default for testing stutter-invariance,
+    was using an optimization incorrect if the acceptance condition
+    had some Fin(x).  Consequently stutter-invariance tests for
+    automata, for instance with "autfilt --is-stutter-invariant",
+    could be to be wrong (even if the input does not use Fin(x), its
+    complement, used in the stutter-invariance test likely will).
+    Stutter-invariance checks of LTL formulas are not affected.
+
 New in spot 2.5.1 (2018-02-20)
 
   Library:
