@@ -248,7 +248,6 @@ namespace spot
             ok = false;
         }
 
-        std::vector<succ_state>::iterator i;
         taa_tgba::transition* t = nullptr;
         switch (f.kind())
           {
