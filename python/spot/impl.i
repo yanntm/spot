@@ -68,6 +68,7 @@
 %shared_ptr(spot::emptiness_check)
 %shared_ptr(spot::emptiness_check_instantiator)
 %shared_ptr(spot::tgbasl)
+%shared_ptr(spot::two_aut_res)
 
 %import "buddy.i"
 
@@ -445,6 +446,7 @@ namespace std {
   %template(vectorstring) vector<string>;
   %template(atomic_prop_set) set<spot::formula>;
   %template(relabeling_map) map<spot::formula, spot::formula>;
+  %template(pairrun) pair<spot::twa_run_ptr, spot::twa_run_ptr>;
 }
 
 %include <spot/tl/environment.hh>

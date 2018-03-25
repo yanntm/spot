@@ -30,36 +30,41 @@ count_ec = 0
 count_ar = 0
 
 end = time.time() + 10
+err = 0
 
 while time.time() < end:
     a = next(g)
     b = next(g)
-    ra = spot.twa_run(a)
-    rb = spot.twa_run(b)
 
-    res = spot.two_aut_ec(a, b, ra, rb)
+    res = spot.two_aut_ec(a, b)
+    res_otf = spot.otf_product(a, b).is_empty()
 
-    if spot.otf_product(a, b).is_empty() != res:
+    if res_otf == bool(res):
         print("spot.two_aut_ec(a, b) != spot.otf_product(a, b).is_empty()",
               file=sys.stderr)
-        print("\na:\n" + a.to_str(), file=sys.stderr)
+        print("res_otf =", res_otf, file=sys.stderr)
+        print("bool(res) =", bool(res), file=sys.stderr)
+        err = 2
+
+
+    if res is not None:
+        ra, rb = res.accepting_runs()
+        if ra.replay(spot.get_cout()) == False:
+            print("Could not replay left accepting run", file=sys.stderr)
+            err = 2
+        if rb.replay(spot.get_cout()) == False:
+            print("Could not replay right accepting run", file=sys.stderr)
+            err = 2
+        if err == 0:
+            count_ar += 1
+
+    if err != 0:
+        print("a:\n" + a.to_str(), file=sys.stderr)
         print("\nb:\n" + b.to_str(), file=sys.stderr)
-        exit(2)
+        break
 
     count_ec += 1
 
-    if res == False:
-        if ra.replay(spot.get_cout()) == False:
-            print("Could not replay left accepting run", file=sys.stderr)
-            print("\na:\n" + a.to_str(), file=sys.stderr)
-            print("\nb:\n" + b.to_str(), file=sys.stderr)
-            exit(2)
-        if rb.replay(spot.get_cout()) == False:
-            print("Could not replay right accepting run", file=sys.stderr)
-            print("\na:\n" + a.to_str(), file=sys.stderr)
-            print("\nb:\n" + b.to_str(), file=sys.stderr)
-            exit(2)
-        count_ar += 1
-
 print("Computed {} emptiness checks and {} accepting runs".format(count_ec,
                                                                   count_ar))
+exit(err)

@@ -111,7 +111,7 @@ namespace spot
   {
     auto a1 = remove_fin_maybe(shared_from_this());
     auto a2 = remove_fin_maybe(other);
-    return !two_aut_ec(a1, a2);
+    return bool(two_aut_ec(a1, a2));
   }
 
   twa_run_ptr

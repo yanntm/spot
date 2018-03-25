@@ -336,6 +336,12 @@ namespace spot
       }
     };
 
+    // A map from a product_state to its order
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
+    using order_map =
+      std::unordered_map<product_state<aut_type_l, aut_type_r>, unsigned,
+                         product_state_hash<aut_type_l, aut_type_r>>;
+
     // An acceptance mark in the product
     template<tae_strength strength>
     struct product_mark {};
@@ -476,6 +482,8 @@ namespace spot
     template<tae_strength strength>
     struct scc
     {
+      scc() : index(0), condition() {}
+
       scc(unsigned i) : index(i), condition() {}
 
       unsigned index;
@@ -483,14 +491,11 @@ namespace spot
     };
 
     template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
-    void tae_run(typename tae_element<aut_type_l>::aut_t& left,
-                 typename tae_element<aut_type_r>::aut_t& right,
+    void tae_run(const typename tae_element<aut_type_l>::aut_t& left,
+                 const typename tae_element<aut_type_r>::aut_t& right,
                  const twa_run_ptr ar_l, const twa_run_ptr ar_r,
-                 std::unordered_map<product_state<aut_type_l, aut_type_r>,
-                                    unsigned,
-                                    product_state_hash<aut_type_l, aut_type_r>>&
-                                    states,
-                 unsigned order, product_mark<STRONG>& acc)
+                 const order_map<aut_type_l, aut_type_r>& states,
+                 const unsigned order, product_mark<STRONG> acc)
     {
       using p_state = product_state<aut_type_l, aut_type_r>;
       using p_iterator = product_iterator<aut_type_l, aut_type_r>;
@@ -545,7 +550,11 @@ namespace spot
 
           bfs_queue.push_back(start);
 
-          unsigned start_order = states[start];
+          /*
+          ** std::unsigned_map::operator[] is not const because it also provides
+          ** assignation, so we use at() instead.
+          */
+          unsigned start_order = states.at(start);
 
           while (!bfs_queue.empty())
             {
@@ -587,7 +596,7 @@ namespace spot
                               current.src.get_right_state(right)->clone(),
                               current.cond.right,
                               current.acc.right))
-                          if (states[current.src] == start_order)
+                          if (states.at(current.src) == start_order)
                             break;
                           const auto& j = backlinks.find(current.src);
                           assert(j != backlinks.end());
@@ -629,7 +638,7 @@ namespace spot
         product_bfs_steps(init,
                           [&](p_step&, p_state& dest)
                           {
-                            return states[dest] == order;
+                            return states.at(dest) == order;
                           },
                           [&](p_state&)
                           {
@@ -661,7 +670,7 @@ namespace spot
                             [&](p_state& dest)
                             {
                               // Stay in accepting SCC
-                              return states[dest] < order;
+                              return states.at(dest) < order;
                             },
                             ar_l ? &(ar_l->cycle) : nullptr,
                             ar_r ? &(ar_r->cycle) : nullptr);
@@ -671,24 +680,94 @@ namespace spot
       product_bfs_steps(substart,
                         [&](p_step&, p_state& dest)
                         {
-                          return states[dest] == order;
+                          return states.at(dest) == order;
                         },
                         [&](p_state& dest)
                         {
                           // Stay in accepting SCC
-                          return states[dest] < order;
+                          return states.at(dest) < order;
                         },
                         ar_l ? &(ar_l->cycle) : nullptr,
                         ar_r ? &(ar_r->cycle) : nullptr);
     }
 
+    // The result of an accepting run.
+    template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
+    class tae_res : public two_aut_res
+    {
+    public:
+      tae_res(typename tae_element<aut_type_l>::aut_t& left,
+              typename tae_element<aut_type_r>::aut_t& right, bool swapped)
+        : two_aut_res(), left_(left), right_(right), swapped_(swapped)
+      {
+      }
 
+      ~tae_res() override
+      {
+      }
+
+      void accepting_scc(unsigned order, product_mark<STRONG> acc)
+      {
+        accepting_.index = order;
+        accepting_.condition = acc;
+      }
+
+      std::pair<twa_run_ptr, twa_run_ptr> accepting_runs() const override
+      {
+        twa_run_ptr ar_l = std::make_shared<twa_run>(left_);
+        twa_run_ptr ar_r = std::make_shared<twa_run>(right_);
+
+        tae_run(left_, right_, ar_l, ar_r, states,
+                accepting_.index, accepting_.condition);
+
+        if (swapped_)
+          return std::make_pair(ar_r, ar_l);
+        return std::make_pair(ar_l, ar_r);
+      }
+
+      twa_run_ptr left_accepting_run() const override
+      {
+        twa_run_ptr ar = std::make_shared<twa_run>(left_);
+
+        if (!swapped_)
+          tae_run(left_, right_, ar, nullptr, states,
+                  accepting_.index, accepting_.condition);
+        else
+          tae_run(left_, right_, nullptr, ar, states,
+                  accepting_.index, accepting_.condition);
+
+        return ar;
+      }
+
+      twa_run_ptr right_accepting_run() const override
+      {
+        twa_run_ptr ar = std::make_shared<twa_run>(right_);
+
+        if (!swapped_)
+          tae_run(left_, right_, nullptr, ar, states,
+                  accepting_.index, accepting_.condition);
+        else
+          tae_run(left_, right_, ar, nullptr, states,
+                  accepting_.index, accepting_.condition);
+
+        return ar;
+      }
+
+      // `Hash` in Couvreur's algorithm.
+      order_map<aut_type_l, aut_type_r> states;
+
+    private:
+      typename tae_element<aut_type_l>::aut_t left_;
+      typename tae_element<aut_type_r>::aut_t right_;
+      scc<STRONG> accepting_;
+      bool swapped_;
+    };
 
     template<tae_aut_type aut_type_l, tae_aut_type aut_type_r,
              tae_strength strength>
-    bool tae_impl(typename tae_element<aut_type_l>::aut_t& left,
-                  typename tae_element<aut_type_r>::aut_t& right,
-                  const twa_run_ptr ar_l, const twa_run_ptr ar_r)
+    two_aut_res_ptr
+    tae_impl(typename tae_element<aut_type_l>::aut_t& left,
+             typename tae_element<aut_type_r>::aut_t& right, bool swapped)
     {
       using p_state = product_state<aut_type_l, aut_type_r>;
       using p_iterator = product_iterator<aut_type_l, aut_type_r>;
@@ -705,13 +784,14 @@ namespace spot
 
       if (left->acc().is_f() || right->acc().is_f())
         //Resulting acceptance is false
-        return true;
+        return nullptr;
 
       // number of visited nodes ; order/id of the next node to be created
       unsigned num = 1;
-      // states of the product and their order (Hash in Couvreur's algorithm)
-      std::unordered_map<p_state, unsigned,
-                         product_state_hash<aut_type_l, aut_type_r>> states;
+      // the result of the two-automaton emptiness check. Contains the `Hash`
+      // structure of Couvreur's algorithm.
+      auto res = std::make_shared<tae_res<aut_type_l, aut_type_r>>(left, right,
+                                                                   swapped);
       // the roots of our SCCs
       std::stack<scc<strength>> root;
       // states yet to explore
@@ -728,7 +808,7 @@ namespace spot
             typename tae_element<aut_type_r>::state_t right_state)
         {
           p_state x(left_state, right_state);
-          auto p = states.emplace(x, 0);
+          auto p = res->states.emplace(x, 0);
           if (p.second)
             // This is a new state
             {
@@ -765,7 +845,7 @@ namespace spot
               todo.pop();
 
               assert(!root.empty());
-              if (root.top().index == states[curr])
+              if (root.top().index == res->states[curr])
                 // We are backtracking the root of an SCC
                 {
                   if (strength != WEAK)
@@ -779,7 +859,7 @@ namespace spot
                     {
                       assert(!live.empty());
                       s = live.back();
-                      states[s] = 0;
+                      res->states[s] = 0;
                       live.pop_back();
                     }
                   while (!(curr == s));
@@ -838,21 +918,22 @@ namespace spot
               while (!todo.empty())
                 // Iterators are properly released.
                 todo.pop();
-              tae_run<aut_type_l, aut_type_r>(left, right, ar_l, ar_r, states,
-                                              root.top().index, acc);
-              return false;
+
+              res->accepting_scc(root.top().index, acc);
+              return std::static_pointer_cast<two_aut_res>(res);
             }
         } // end while (!todo.empty())
 
       // DFS ended and we haven't found any accepting SCCs: left and right's
       // languages do not intersect.
-      return true;
+      return nullptr;
     }
 
     template<tae_aut_type aut_type_l, tae_aut_type aut_type_r>
-    bool tae_dispatch_strength(typename tae_element<aut_type_l>::aut_t& left,
-                               typename tae_element<aut_type_r>::aut_t& right,
-                               const twa_run_ptr ar_l, const twa_run_ptr ar_r)
+    two_aut_res_ptr
+    tae_dispatch_strength(typename tae_element<aut_type_l>::aut_t& left,
+                          typename tae_element<aut_type_r>::aut_t& right,
+                          bool swapped)
     {
       auto l = left->prop_weak();
       auto r = right->prop_weak();
@@ -860,22 +941,20 @@ namespace spot
       if (!l && r && aut_type_l != KRIPKE)
         // We save on templates by only having weak automata on the left. This
         // is not compatible with, and less significant than, the Kripke swap.
-        return tae_impl<aut_type_r, aut_type_l, WEAK_L>
-                       (right, left, ar_r, ar_l);
+        return tae_impl<aut_type_r, aut_type_l, WEAK_L>(right, left, !swapped);
 
       if (l && r)
-        return tae_impl<aut_type_l, aut_type_r, WEAK>(left, right, ar_l, ar_r);
+        return tae_impl<aut_type_l, aut_type_r, WEAK>(left, right, swapped);
 
       if (l && !r)
-        return tae_impl<aut_type_l, aut_type_r, WEAK_L>
-                       (left, right, ar_l, ar_r);
+        return tae_impl<aut_type_l, aut_type_r, WEAK_L>(left, right, swapped);
 
-      return tae_impl<aut_type_l, aut_type_r, STRONG>(left, right, ar_l, ar_r);
+      return tae_impl<aut_type_l, aut_type_r, STRONG>(left, right, swapped);
     }
 
-    bool tae_dispatch_type(const const_twa_ptr& left,
-                           const const_twa_ptr& right,
-                           const twa_run_ptr ar_l, const twa_run_ptr ar_r)
+    two_aut_res_ptr
+    tae_dispatch_type(const const_twa_ptr& left, const const_twa_ptr& right,
+                      bool swapped)
     {
       const_fair_kripke_ptr l_k = std::dynamic_pointer_cast<const fair_kripke>
                                                            (left);
@@ -885,43 +964,41 @@ namespace spot
       // We don't often check Kripke against Kripke, so we save on templates by
       // only having Kripke structures on the left.
       if (r_k && !l_k)
-        return tae_dispatch_type(right, left, ar_r, ar_l);
+        return tae_dispatch_type(right, left, !swapped);
 
-      const_twa_graph_ptr l_e = std::dynamic_pointer_cast<const twa_graph>
-                                                         (left);
-      const_twa_graph_ptr r_e = std::dynamic_pointer_cast<const twa_graph>
-                                                         (right);
+      const_twa_graph_ptr l_e =
+        std::dynamic_pointer_cast<const twa_graph>(left);
+      const_twa_graph_ptr r_e =
+        std::dynamic_pointer_cast<const twa_graph>(right);
 
       if (l_k)
         {
           if (r_e)
-            return tae_dispatch_strength<KRIPKE, EXPLICIT>
-                                        (l_k, r_e, ar_l, ar_r);
+            return tae_dispatch_strength<KRIPKE, EXPLICIT>(l_k, r_e, swapped);
           else
-            return tae_dispatch_strength<KRIPKE, OTF>(l_k, right, ar_l, ar_r);
+            return tae_dispatch_strength<KRIPKE, OTF>(l_k, right, swapped);
         }
 
       if (l_e)
         {
           if (r_e)
-            return tae_dispatch_strength<EXPLICIT, EXPLICIT>
-                                        (l_e, r_e, ar_l, ar_r);
+            return tae_dispatch_strength<EXPLICIT, EXPLICIT>(l_e, r_e, swapped);
           else
-            return tae_dispatch_strength<EXPLICIT, OTF>(l_e, right, ar_l, ar_r);
+            return tae_dispatch_strength<EXPLICIT, OTF>(l_e, right, swapped);
         }
       else
         {
           if (r_e)
-            return tae_dispatch_strength<OTF, EXPLICIT>(left, r_e, ar_l, ar_r);
+            return tae_dispatch_strength<OTF, EXPLICIT>(left, r_e, swapped);
           else
-            return tae_dispatch_strength<OTF, OTF>(left, right, ar_l, ar_r);
+            return tae_dispatch_strength<OTF, OTF>(left, right, swapped);
         }
     }
   } // namespace
 
-  bool two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right,
-                  const twa_run_ptr ar_l, const twa_run_ptr ar_r)
+  two_aut_res_ptr
+  two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right)
   {
-    return tae_dispatch_type(left, right, ar_l, ar_r);
+    return tae_dispatch_type(left, right, false);
   }
 }
