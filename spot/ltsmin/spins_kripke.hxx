@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -201,10 +201,18 @@ namespace spot
 
   cspins_state cspins_iterator::state() const
   {
+    unsigned idx = compute_index();
+    return successors_[idx];
+  }
+
+  unsigned cspins_iterator::compute_index() const
+  {
     if (SPOT_UNLIKELY(!tid_))
-      return successors_[current_];
-    return  successors_[(((current_+1)*primes[tid_])
-                         % ((int)successors_.size()))];
+      return current_;
+    unsigned long long c = current_ + 1;
+    unsigned long long p = primes[tid_];
+    unsigned long long s = successors_.size();
+    return (unsigned)  ((c*p) % s);
   }
 
   cube cspins_iterator::condition() const

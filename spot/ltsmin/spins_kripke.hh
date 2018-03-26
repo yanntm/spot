@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -144,6 +144,7 @@ namespace spot
     void next();
     bool done() const;
     cspins_state state() const;
+    unsigned compute_index() const;
     cube condition() const;
 
   private:
