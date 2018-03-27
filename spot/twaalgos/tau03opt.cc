@@ -407,7 +407,7 @@ namespace spot
       public:
         color_ref(hash_type* h, hcyan_type* hc, const state* s,
                   const weight* w, acc_cond::mark_t* a)
-          : is_cyan(true), w(w), ph(h), phc(hc), ps(s), acc(a)
+          : is_cyan(true), w(w), ph(h), phc(hc), ps(s), pc(nullptr), acc(a)
           {
           }
         color_ref(color* c, acc_cond::mark_t* a)

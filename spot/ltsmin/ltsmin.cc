@@ -233,6 +233,7 @@ namespace spot
       fixed_size_pool* p = static_cast<fixed_size_pool*>(ctx->pool);
       spins_state* out =
         new(p->allocate()) spins_state(ctx->state_size, p);
+      assert(out != nullptr);
       memcpy(out->vars, dst, ctx->state_size * sizeof(int));
       out->compute_hash();
       ctx->transitions.emplace_back(out);
@@ -250,6 +251,7 @@ namespace spot
                               - sizeof(spins_compressed_state::vars)
                               + sizeof(int) * csize);
       spins_compressed_state* out = new(mem) spins_compressed_state(csize, p);
+      assert(out != nullptr);
       memcpy(out->vars, ctx->compressed, csize * sizeof(int));
       out->compute_hash();
       ctx->transitions.emplace_back(out);
@@ -710,6 +712,7 @@ namespace spot
                                     + sizeof(int) * csize);
             spins_compressed_state* res = new(mem)
               spins_compressed_state(csize, p);
+            assert(res != nullptr);
             memcpy(res->vars, compressed_, csize * sizeof(int));
             res->compute_hash();
             return res;
@@ -718,6 +721,7 @@ namespace spot
           {
             fixed_size_pool* p = const_cast<fixed_size_pool*>(&statepool_);
             spins_state* res = new(p->allocate()) spins_state(state_size_, p);
+            assert(res != nullptr);
             d_->get_initial_state(res->vars);
             res->compute_hash();
             return res;

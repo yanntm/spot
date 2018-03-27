@@ -44,6 +44,7 @@ namespace spot
     for (unsigned i = 0; i < n_states; ++i)
       {
         twa_graph_ptr c = make_twa_graph(aut, twa::prop_set::all());
+        assert(c); // for some reason g++ 7.3 thinks this could be null
         c->set_init_state(i);
         alt_init_st_auts[i] = c;
         compl_alt_init_st_auts[i] = remove_fin(dualize(c));
