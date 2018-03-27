@@ -63,6 +63,7 @@ const unsigned COND_DEST = 257;
 const unsigned COND_SOURCE = 258;
 const unsigned RENAULT_COND_DEST = 259;
 const unsigned RENAULT_COND_SOURCE = 260;
+const unsigned NONE = 261;
 
 // Handle all options specified in the command line
 struct mc_options_
@@ -85,6 +86,7 @@ struct mc_options_
   bool cond_source = false;
   bool renault_cond_dest = false;
   bool renault_cond_source = false;
+  bool none = false;
   bool use_por = false;
 } mc_options;
 
@@ -102,19 +104,22 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       mc_options.bloemen = true;
       break;
     case COND_DEST:
-        mc_options.cond_dest = true;
-        break;
+      mc_options.cond_dest = true;
+      break;
     case COND_SOURCE:
-        mc_options.cond_source = true;
-        break;
+      mc_options.cond_source = true;
+      break;
     case RENAULT_COND_DEST:
-        mc_options.renault_cond_dest = true;
-        break;
+      mc_options.renault_cond_dest = true;
+      break;
     case RENAULT_COND_SOURCE:
-        mc_options.renault_cond_source = true;
-        break;
+      mc_options.renault_cond_source = true;
+      break;
+    case NONE:
+      mc_options.none = true;
+      break;
     case COUNTEREXAMPLE:
-        mc_options.compute_counterexample = true;
+      mc_options.compute_counterexample = true;
       break;
     case 'd':
       if (strcmp(arg, "model") == 0)
@@ -187,6 +192,8 @@ static const argp_option options[] =
       "run the a swarmed renault_cond_dest POR algorithm (with --POR)", 0 },
     { "renault_cond_source", RENAULT_COND_SOURCE, nullptr, 0,
       "run the a swarmed renault_cond_source POR algorithm (with --POR)", 0 },
+    { "none", NONE, nullptr, 0,
+      "explore the reduced graph (with --POR)", 0 },
     { "counterexample", COUNTEREXAMPLE, nullptr, 0,
       "compute an accepting counterexample (if it exists)", 0 },
     { "is-empty", 'e', nullptr, 0,
@@ -930,6 +937,102 @@ static int checked_main()
                       << split_filename(mc_options.model)
                       << ','
                       << tm.timer("cond_source").walltime() << ','
+                      << memused << ','
+                      << inserted << ','
+                      << st << ','
+                      << tr << ','
+                      << sccs
+                      << '\n';
+          }
+      }
+
+    if (mc_options.none &&  mc_options.model != nullptr)
+      {
+        unsigned int hc = std::thread::hardware_concurrency();
+        if (mc_options.nb_threads > hc)
+          std::cerr << "Warning: you require " << mc_options.nb_threads
+                    << " threads, but your computer only support " << hc
+                    << ". This could slow down parallel algorithms.\n";
+
+        tm.start("load kripkecube");
+        spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+        try
+          {
+            modelcube = spot::ltsmin_model::load(mc_options.model)
+              .kripkecube({}, deadf, mc_options.compress,
+                          mc_options.nb_threads, mc_options.use_por);
+          }
+        catch (std::runtime_error& e)
+          {
+            std::cerr << e.what() << '\n';
+          }
+        tm.stop("load kripkecube");
+
+        int memused = spot::memusage();
+        tm.start("none");
+        auto res = spot::none<spot::ltsmin_kripkecube_ptr,
+                                     spot::cspins_state,
+                                     spot::cspins_iterator,
+                                     spot::cspins_state_hash,
+                                     spot::cspins_state_equal>(modelcube);
+        tm.stop("none");
+        memused = spot::memusage() - memused;
+
+        if (!modelcube)
+          {
+            exit_code = 2;
+            goto safe_exit;
+          }
+
+        // Display statistics
+        unsigned sccs = 0;
+        unsigned st = 0;
+        unsigned tr = 0;
+        unsigned inserted = 0;
+        for (unsigned i = 0; i < res.first.size(); ++i)
+          {
+            std::cout << "\n---- Thread number : " << i << '\n';
+            std::cout << res.first[i].states << " unique states visited\n";
+            std::cout << res.first[i].inserted << " unique states inserted\n";
+            std::cout << res.first[i].transitions
+                      << " transitions explored\n";
+            std::cout << res.first[i].sccs << " sccs found\n";
+            std::cout << res.first[i].walltime
+                      << " milliseconds\n";
+
+            sccs += res.first[i].sccs;
+            st += res.first[i].states;
+            tr += res.first[i].transitions;
+            inserted += res.first[i].inserted;
+
+            if (mc_options.csv)
+              {
+                std::cout << "Find following the csv: "
+                          << "thread_id,walltimems,"
+                          << "states,transitions,sccs\n";
+                std::cout << "@th_" << i << ','
+                          << res.first[i].walltime << ','
+                          << res.first[i].states << ','
+                          << res.first[i].inserted << ','
+                          << res.first[i].transitions << ','
+                          << res.first[i].sccs
+                          << std::endl;
+              }
+          }
+
+        if (mc_options.csv)
+          {
+            std::cout << "\nSummary :\n";
+            std::cout << "Find following the csv: "
+                      << "model,walltimems,memused,"
+                      << "inserted_states,"
+                      << "cumulated_states,cumulated_transitions,"
+                      << "cumulated_sccs\n";
+
+            std::cout << '#'
+                      << split_filename(mc_options.model)
+                      << ','
+                      << tm.timer("none").walltime() << ','
                       << memused << ','
                       << inserted << ','
                       << st << ','
