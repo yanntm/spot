@@ -161,15 +161,16 @@ namespace spot
 
     bool sameset(uf_element* a, uf_element* b)
     {
-      uf_element* a_root = find(a);
-      uf_element* b_root = find(b);
-      if (a_root == b_root)
-        return true;
+      while (true)
+        {
+          uf_element* a_root = find(a);
+          uf_element* b_root = find(b);
+          if (a_root == b_root)
+            return true;
 
-      if (a_root->parent.load() == a_root)
-        return false;
-
-      return sameset(a_root, b_root);
+          if (a_root->parent.load() == a_root)
+            return false;
+        }
     }
 
     bool lock_root(uf_element* a)
