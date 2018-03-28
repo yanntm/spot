@@ -40,6 +40,9 @@ New in spot 2.5.2 (2018-03-25)
   - "autfilt --cobuchi --small/--det" would turn a transition-based
     co-Büchi automaton into a state-based co-Büchi.
 
+  - Fix cryptic error message from Python's spot.translate() and
+    spot.postprocess() when supplying conflicting arguments.
+
   - acc_cond::is_generalized_rabin() and
     acc_cond::is_generalized_streett() would segfault on weird
     acceptance conditions such as "3 t" or "3 f".
