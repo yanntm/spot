@@ -8,6 +8,9 @@ New in spot 2.5.2.dev (not yet released)
   - Fix cryptic error message from Python's spot.translate() and
     spot.postprocess() when supplying conflicting arguments.
 
+  - "autfilt -B --sat-minimize" was incorrectly producing
+    transition-based automata.
+
 New in spot 2.5.2 (2018-03-25)
 
   Bugs fixed:
