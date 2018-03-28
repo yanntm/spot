@@ -484,8 +484,11 @@ def automaton(filename, **kwargs):
 
 
 def _postproc_translate_options(obj, default_type, *args):
+    type_name_ = None
     type_ = None
+    pref_name_ = None
     pref_ = None
+    optm_name_ = None
     optm_ = None
     comp_ = 0
     unam_ = 0
@@ -493,10 +496,10 @@ def _postproc_translate_options(obj, default_type, *args):
     colo_ = 0
 
     def type_set(val):
-        nonlocal type_
-        if type_ is not None and type_ != val:
+        nonlocal type_, type_name_
+        if type_ is not None and type_name_ != val:
             raise ValueError("type cannot be both {} and {}"
-                             .format(type_, val))
+                             .format(type_name_, val))
         elif val == 'generic':
             type_ = postprocessor.Generic
         elif val == 'tgba':
@@ -529,12 +532,13 @@ def _postproc_translate_options(obj, default_type, *args):
         else:
             assert(val == 'monitor')
             type_ = postprocessor.Monitor
+        type_name_ = val
 
     def pref_set(val):
-        nonlocal pref_
-        if pref_ is not None and pref_ != val:
+        nonlocal pref_, pref_name_
+        if pref_ is not None and pref_name_ != val:
             raise ValueError("preference cannot be both {} and {}"
-                             .format(pref_, val))
+                             .format(pref_name, val))
         elif val == 'small':
             pref_ = postprocessor.Small
         elif val == 'deterministic':
@@ -542,12 +546,13 @@ def _postproc_translate_options(obj, default_type, *args):
         else:
             assert(val == 'any')
             pref_ = postprocessor.Any
+        pref_name_ = val
 
     def optm_set(val):
-        nonlocal optm_
-        if optm_ is not None and optm_ != val:
+        nonlocal optm_, optm_name_
+        if optm_ is not None and optm_name_ != val:
             raise ValueError("optimization level cannot be both {} and {}"
-                             .format(optm_, val))
+                             .format(optm_name_, val))
         if val == 'high':
             optm_ = postprocessor.High
         elif val.startswith('med'):
@@ -555,6 +560,7 @@ def _postproc_translate_options(obj, default_type, *args):
         else:
             assert(val == 'low')
             optm_ = postprocessor.Low
+        optm_name_ = val
 
     def misc_set(val):
         nonlocal comp_, unam_, sbac_, colo_
