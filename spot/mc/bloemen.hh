@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -247,18 +247,21 @@ namespace spot
 
       uf_element* a_list = lock_list(a);
       if (a_list == nullptr)
-        return;
+        {
+          unlock_root(q);
+          return;
+        }
 
       uf_element* b_list = lock_list(b);
       if (b_list == nullptr)
         {
           unlock_list(a_list);
+          unlock_root(q);
           return;
         }
 
       SPOT_ASSERT(a_list->list_status_.load() == list_status::LOCK);
       SPOT_ASSERT(b_list->list_status_.load() == list_status::LOCK);
-
 
       //  Swapping
       uf_element* a_next =  a_list->next_.load();
