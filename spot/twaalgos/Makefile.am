@@ -49,6 +49,7 @@ twaalgos_HEADERS = \
   dualize.hh \
   emptiness.hh \
   emptiness_stats.hh \
+  gfguarantee.hh \
   gv04.hh \
   hoa.hh \
   iscolored.hh \
@@ -114,6 +115,7 @@ libtwaalgos_la_SOURCES = \
   dtwasat.cc \
   dualize.cc \
   emptiness.cc \
+  gfguarantee.cc \
   gv04.cc \
   hoa.cc \
   iscolored.cc \

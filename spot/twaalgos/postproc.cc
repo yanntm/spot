@@ -105,7 +105,7 @@ namespace spot
   }
 
   twa_graph_ptr
-  postprocessor::do_simul(const twa_graph_ptr& a, int opt)
+  postprocessor::do_simul(const twa_graph_ptr& a, int opt) const
   {
     if (!has_separate_sets(a))
       return a;
@@ -124,7 +124,7 @@ namespace spot
   }
 
   twa_graph_ptr
-  postprocessor::do_sba_simul(const twa_graph_ptr& a, int opt)
+  postprocessor::do_sba_simul(const twa_graph_ptr& a, int opt) const
   {
     if (ba_simul_ <= 0)
       return a;
@@ -143,7 +143,7 @@ namespace spot
   }
 
   twa_graph_ptr
-  postprocessor::do_degen(const twa_graph_ptr& a)
+  postprocessor::do_degen(const twa_graph_ptr& a) const
   {
     auto d = degeneralize(a,
                           degen_reset_, degen_order_,
@@ -153,7 +153,7 @@ namespace spot
   }
 
   twa_graph_ptr
-  postprocessor::do_degen_tba(const twa_graph_ptr& a)
+  postprocessor::do_degen_tba(const twa_graph_ptr& a) const
   {
     return degeneralize_tba(a,
                             degen_reset_, degen_order_,
@@ -162,7 +162,7 @@ namespace spot
   }
 
   twa_graph_ptr
-  postprocessor::do_scc_filter(const twa_graph_ptr& a, bool arg)
+  postprocessor::do_scc_filter(const twa_graph_ptr& a, bool arg) const
   {
     if (scc_filter_ == 0)
       return a;
@@ -176,7 +176,7 @@ namespace spot
   }
 
   twa_graph_ptr
-  postprocessor::do_scc_filter(const twa_graph_ptr& a)
+  postprocessor::do_scc_filter(const twa_graph_ptr& a) const
   {
     return do_scc_filter(a, scc_filter_ > 1);
   }
@@ -185,6 +185,36 @@ namespace spot
 #define COMP_ (pref_ & Complete)
 #define SBACC_ (pref_ & SBAcc)
 #define COLORED_ (pref_ & Colored)
+
+
+  twa_graph_ptr
+  postprocessor::finalize(twa_graph_ptr tmp) const
+  {
+    if (COMP_)
+      tmp = complete(tmp);
+    bool want_parity = type_ & Parity;
+    if (want_parity && tmp->acc().is_generalized_buchi())
+      tmp = SBACC_ ? do_degen(tmp) : do_degen_tba(tmp);
+    if (SBACC_)
+      tmp = sbacc(tmp);
+    if (want_parity)
+      {
+        if (COLORED_)
+          colorize_parity_here(tmp);
+        parity_kind kind = parity_kind_any;
+        parity_style style = parity_style_any;
+        if ((type_ & ParityMin) == ParityMin)
+          kind = parity_kind_min;
+        else if ((type_ & ParityMax) == ParityMax)
+          kind = parity_kind_max;
+        if ((type_ & ParityOdd) == ParityOdd)
+          style = parity_style_odd;
+        else if ((type_ & ParityEven) == ParityEven)
+          style = parity_style_even;
+        change_parity_here(tmp, kind, style);
+      }
+    return tmp;
+  }
 
   twa_graph_ptr
   postprocessor::run(twa_graph_ptr a, formula f)
@@ -199,37 +229,10 @@ namespace spot
       state_based_ = true;
 
     bool via_gba = (type_ == BA) || (type_ == TGBA) || (type_ == Monitor);
-    bool want_parity = (type_ & Parity) == Parity;
+    bool want_parity = type_ & Parity;
     if (COLORED_ && !want_parity)
       throw std::runtime_error("postprocessor: the Colored setting only works "
                                "for parity acceptance");
-
-    auto finalize = [&](twa_graph_ptr tmp)
-      {
-        if (COMP_)
-          tmp = complete(tmp);
-        if (want_parity && tmp->acc().is_generalized_buchi())
-          tmp = SBACC_ ? do_degen(tmp) : do_degen_tba(tmp);
-        if (SBACC_)
-          tmp = sbacc(tmp);
-        if (want_parity)
-          {
-            if (COLORED_)
-              colorize_parity_here(tmp);
-            parity_kind kind = parity_kind_any;
-            parity_style style = parity_style_any;
-            if ((type_ & ParityMin) == ParityMin)
-              kind = parity_kind_min;
-            else if ((type_ & ParityMax) == ParityMax)
-              kind = parity_kind_max;
-            if ((type_ & ParityOdd) == ParityOdd)
-              style = parity_style_odd;
-            else if ((type_ & ParityEven) == ParityEven)
-              style = parity_style_even;
-            change_parity_here(tmp, kind, style);
-          }
-        return tmp;
-      };
 
     if (!a->is_existential() &&
         // We will probably have to revisit this condition later.

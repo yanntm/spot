@@ -75,3 +75,15 @@ try:
     a = r.reduce()
 except RuntimeError as e:
     assert "empty cycle" in str(e)
+
+f = spot.formula('GF(a | Gb)')
+try:
+    spot.gf_guarantee_to_ba(f, spot._bdd_dict)
+except RuntimeError as e:
+    assert "guarantee" in str(e)
+
+f = spot.formula('FG(a | Fb)')
+try:
+    spot.fg_safety_to_dca(f, spot._bdd_dict)
+except RuntimeError as e:
+    assert "safety" in str(e)

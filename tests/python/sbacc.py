@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de l'Epita
+# Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de l'Epita
 # (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -50,12 +50,12 @@ h = s.to_str('hoa')
 assert h == """HOA: v1
 States: 2
 Start: 0
-AP: 2 "b" "a"
+AP: 2 "a" "b"
 Acceptance: 2 Inf(0) | Inf(1)
 properties: trans-labels explicit-labels state-acc deterministic
 --BODY--
 State: 0
-[1] 1
+[0] 1
 State: 1 {1}
 [t] 1
 --END--"""
@@ -84,13 +84,13 @@ h = d.to_str('hoa')
 assert h == """HOA: v1
 States: 2
 Start: 0
-AP: 2 "b" "a"
+AP: 2 "a" "b"
 acc-name: Buchi
 Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels state-acc deterministic
 --BODY--
 State: 0
-[1] 1
+[0] 1
 State: 1 {0}
 [t] 1
 --END--"""

@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2009-2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2009-2018 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -132,8 +132,8 @@ sb-patterns,26, 1,1, 1,1, 1,1, 1,1
 sb-patterns,27, 2,7, 2,7, 2,7, 2,7
 hkrss-patterns,1, 1,2, 1,2, 3,6, 3,6
 hkrss-patterns,2, 1,2, 1,2, 3,6, 3,6
-hkrss-patterns,3, 5,36, 5,36, 5,36, 5,36
-hkrss-patterns,4, 9,400, 9,400, 9,400, 9,400
+hkrss-patterns,3, 5,20, 5,20, 5,20, 5,20
+hkrss-patterns,4, 9,400, 17,272, 9,400, 17,272
 hkrss-patterns,6, 1,2, 1,2, 3,6, 3,6
 hkrss-patterns,7, 2,8, 2,8, 2,8, 2,8
 hkrss-patterns,8, 1,1, 1,1, 1,1, 1,1

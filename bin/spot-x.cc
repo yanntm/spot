@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche et
+// Copyright (C) 2013, 2014, 2015, 2016, 2017, 2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -107,6 +107,14 @@ the determinization algorithm.") },
 the determinization algorithm.") },
     { DOC("det-stutter", "Set to 0 to disable optimizations based on \
 the stutter-invariance in the determinization algorithm.") },
+    // FIXME: Add bibliographic reference to their paper ASAP.
+    { DOC("gf-guarantee", "Set to 0 to disable alternate constructions \
+for GF(guarantee)->[D]BA and FG(safety)->DCA.  Those constructions \
+are based on work by J. Esparza, J. Křentínský, and S. Sickert.  \
+This is enabled by default for medium and high optimization \
+levels.  Unless we are building deterministic automata, the \
+resulting automata are compared to the automata built using the \
+more traditional pipeline, and only kept if they are better.") },
     { DOC("simul", "Set to 0 to disable simulation-based reductions. \
 Set to 1 to use only direct simulation. Set to 2 to use only reverse \
 simulation. Set to 3 to iterate both direct and reverse simulations. \
