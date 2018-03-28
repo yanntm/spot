@@ -86,7 +86,7 @@ namespace spot
                 break;
             }
         }
-      // A terminal automaton should accept any word that as a prefix
+      // A terminal automaton should accept any word that has a prefix
       // leading to an accepting edge.  In other words, we cannot have
       // an accepting edge that goes into a rejecting SCC.
       if (terminal && is_term && !ignore_trivial_term)
