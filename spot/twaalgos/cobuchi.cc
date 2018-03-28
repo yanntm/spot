@@ -337,6 +337,9 @@ namespace spot
   twa_graph_ptr
   to_nca(const_twa_graph_ptr aut, bool named_states)
   {
+    if (aut->acc().is_co_buchi())
+      return make_twa_graph(aut, twa::prop_set::all());
+
     if (auto weak = weak_to_cobuchi(aut))
       return weak;
 
@@ -683,8 +686,12 @@ namespace spot
   to_dca(const_twa_graph_ptr aut, bool named_states)
   {
     if (is_deterministic(aut))
-      if (auto weak = weak_to_cobuchi(aut))
-        return weak;
+      {
+        if (aut->acc().is_co_buchi())
+          return make_twa_graph(aut, twa::prop_set::all());
+        if (auto weak = weak_to_cobuchi(aut))
+          return weak;
+      }
 
     const acc_cond::acc_code& code = aut->get_acceptance();
 
