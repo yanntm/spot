@@ -1,7 +1,7 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013, 2015, 2017 Laboratoire de Recherche et Développement
-# de l'Epita (LRDE).
+# Copyright (C) 2013, 2015, 2017, 2018 Laboratoire de Recherche et
+# Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -520,3 +520,8 @@ test "`cat out`" = 1
 
 # Make sure no extra state are added.  See issue #204
 test 2 = `ltl2tgba a | autfilt --sat-minimize --stats=%s`
+
+# Make sure -B implies -S even for --sat-minimize.  See issue #340.
+ltl2tgba -G -D -f 'GF(a <-> XXb)' > aut
+test 6 = "`autfilt -B --sat-minimize --stats=%s aut`"
+test 6 = "`autfilt -B -S --sat-minimize --stats=%s aut`"

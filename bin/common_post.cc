@@ -164,6 +164,7 @@ parse_opt_post(int key, char* arg, struct argp_state*)
     case 'B':
       type = spot::postprocessor::BA;
       colored = spot::postprocessor::Any;
+      sbacc = spot::postprocessor::SBAcc;
       break;
     case 'C':
       comp = spot::postprocessor::Complete;
