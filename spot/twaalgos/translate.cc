@@ -24,6 +24,8 @@
 #include <spot/misc/optionmap.hh>
 #include <spot/tl/relabel.hh>
 #include <spot/twaalgos/relabel.hh>
+#include <spot/twaalgos/gfguarantee.hh>
+#include <spot/twaalgos/isdet.hh>
 
 namespace spot
 {
@@ -32,6 +34,7 @@ namespace spot
   {
     comp_susp_ = early_susp_ = skel_wdba_ = skel_simul_ = 0;
     relabel_bool_ = tls_impl_ = -1;
+    gf_guarantee_ = level_ != Low;
 
     if (!opt)
       return;
@@ -45,6 +48,7 @@ namespace spot
         skel_simul_ = opt->get("skel-simul", 1);
       }
     tls_impl_ = opt->get("tls-impl", -1);
+    gf_guarantee_ = opt->get("gf-guarantee", gf_guarantee_);
   }
 
   void translator::build_simplifier(const bdd_dict_ptr& dict)
@@ -96,6 +100,8 @@ namespace spot
 
   twa_graph_ptr translator::run(formula* f)
   {
+#define PREF_ (pref_ & (Small | Deterministic))
+
     bool unambiguous = (pref_ & postprocessor::Unambiguous);
     if (unambiguous && type_ == postprocessor::Monitor)
       {
@@ -153,12 +159,13 @@ namespace spot
     simpl_->clear_as_bdd_cache();
 
     twa_graph_ptr aut;
+    twa_graph_ptr aut2 = nullptr;
     if (comp_susp_ > 0)
       {
         // FIXME: Handle unambiguous_ automata?
         int skel_wdba = skel_wdba_;
         if (skel_wdba < 0)
-          skel_wdba = (pref_ == postprocessor::Deterministic) ? 1 : 2;
+          skel_wdba = (pref_ & postprocessor::Deterministic) ? 1 : 2;
 
         aut = compsusp(r, simpl_->get_dict(), skel_wdba == 0,
                        skel_simul_ == 0, early_susp_ != 0,
@@ -166,6 +173,24 @@ namespace spot
       }
     else
       {
+        if (gf_guarantee_ && PREF_ != Any)
+          {
+            bool det = unambiguous || (PREF_ == Deterministic);
+            bool sba = type_ == BA || (pref_ & SBAcc);
+            if ((type_ & (BA | Parity | Generic)) || type_ == TGBA)
+              aut2 = gf_guarantee_to_ba_maybe(r, simpl_->get_dict(), det, sba);
+            if (aut2 && (type_ & (BA | Parity)) && (pref_ & Deterministic))
+              return finalize(aut2);
+            if (!aut2 && (type_ & (Generic | Parity | CoBuchi)))
+              {
+                aut2 = fg_safety_to_dca_maybe(r, simpl_->get_dict(), sba);
+                if (aut2
+                    && (type_ & (CoBuchi | Parity))
+                    && (pref_ & Deterministic))
+                  return finalize(aut2);
+              }
+          }
+
         bool exprop = unambiguous || level_ == postprocessor::High;
         aut = ltl_to_tgba_fm(r, simpl_->get_dict(), exprop,
                              true, false, false, nullptr, nullptr,
@@ -173,6 +198,18 @@ namespace spot
       }
 
     aut = this->postprocessor::run(aut, r);
+    if (aut2)
+      {
+        aut2 = this->postprocessor::run(aut2, r);
+        unsigned s2 = aut2->num_states();
+        unsigned s1 = aut->num_states();
+        bool d2_more_det = !is_deterministic(aut) && is_deterministic(aut2);
+        if (((PREF_ == Deterministic) && d2_more_det)
+            || (s2 < s1)
+            || (s2 == s1
+                && ((aut2->num_sets() < aut2->num_sets()) || d2_more_det)))
+          aut = std::move(aut2);
+      }
 
     if (!m.empty())
       relabel_here(aut, &m);
@@ -188,5 +225,4 @@ namespace spot
   {
     simpl_->clear_caches();
   }
-
 }

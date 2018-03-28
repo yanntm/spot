@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014, 2015 Laboratoire de Recherche et Développement
+// Copyright (C) 2014, 2015, 2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -23,6 +23,9 @@
 
 namespace spot
 {
+  class bdd_dict;
+  typedef std::shared_ptr<bdd_dict> bdd_dict_ptr;
+
   class twa;
   typedef std::shared_ptr<twa> twa_ptr;
   typedef std::shared_ptr<const twa> const_twa_ptr;

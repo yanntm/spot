@@ -53,7 +53,8 @@ EOF
 
 while read l_f; do
     ltl2tgba --parity='max odd' "$l_f" > l.hoa
-    autfilt -q --acceptance-is='Fin(0) | Inf(1)' l.hoa
+    autfilt -q --acceptance-is='Fin(0) | Inf(1)' l.hoa ||
+        autfilt -q --acceptance-is='Fin(0)' l.hoa
     while read r_f; do
         # Dualizing a deterministic transition-based parity automaton
         # to obtain a transition-based deterministic streett
@@ -63,10 +64,10 @@ while read l_f; do
         ltl2tgba "$r_f" -D --parity='min odd' | autfilt --dualize --gsa > r.hoa
         # Streett & Streett
         autfilt r.hoa --name="($l_f)&!($r_f)" --product=l.hoa -S > and.hoa
-        autfilt -q --acceptance-is=Streett and.hoa
+        autfilt -q --acceptance-is=Streett-like and.hoa
         # Streett | Streett
         autfilt r.hoa --name="($l_f)|!($r_f)" --product-or=l.hoa -S > or.hoa
-        autfilt -q -v --acceptance-is=Streett or.hoa
+        autfilt -q -v --acceptance-is=Streett-like or.hoa
 
         autcross --language-preserved --verbose -F or.hoa -F and.hoa \
                  'autfilt %H --stats=%M | ltl2tgba >%O' \

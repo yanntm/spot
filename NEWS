@@ -27,6 +27,19 @@ New in spot 2.5.2.dev (not yet released)
     simplified to {1} or {SERE} depending on whether SERE accepts
     the empty word or not.
 
+  - gf_guarantee_to_ba() is a specialized construction for
+    translating formulas of the form GF(guarantee) to BA or DBA,
+    and fg_safety_to_dca() is a specialized construction for
+    translating formulas of the form FG(safety) to DCA.  These
+    are slight generalizations of some constructions proposed
+    by J. Esparza, J. Křentínský, and S. Sickert in a submitted
+    paper.
+
+    These are now used by the main translation routine, and can be
+    disabled by passing -x '!gf-guarantee' to ltl2tgba.  As an
+    example, the translation of GF(a <-> XXb) to transition-based
+    Büchi went from 9 to 5 states using that construction.
+
   Bugs fixed:
 
   - "autfilt --cobuchi --small/--det" would turn a transition-based
