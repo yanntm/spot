@@ -770,7 +770,7 @@ static int checked_main()
               .kripkecube({}, deadf, mc_options.compress,
                           mc_options.nb_threads, mc_options.use_por);
           }
-        catch (std::runtime_error& e)
+        catch (const std::runtime_error& e)
           {
             std::cerr << e.what() << '\n';
           }
@@ -866,7 +866,7 @@ static int checked_main()
               .kripkecube({}, deadf, mc_options.compress,
                           mc_options.nb_threads, mc_options.use_por);
           }
-        catch (std::runtime_error& e)
+        catch (const std::runtime_error& e)
           {
             std::cerr << e.what() << '\n';
           }
@@ -962,7 +962,7 @@ static int checked_main()
               .kripkecube({}, deadf, mc_options.compress,
                           mc_options.nb_threads, mc_options.use_por);
           }
-        catch (std::runtime_error& e)
+        catch (const std::runtime_error& e)
           {
             std::cerr << e.what() << '\n';
           }
@@ -1058,7 +1058,7 @@ static int checked_main()
               .kripkecube({}, deadf, mc_options.compress,
                           mc_options.nb_threads, mc_options.use_por);
           }
-        catch (std::runtime_error& e)
+        catch (const std::runtime_error& e)
           {
             std::cerr << e.what() << '\n';
           }
@@ -1155,7 +1155,7 @@ static int checked_main()
               .kripkecube({}, deadf, mc_options.compress,
                           mc_options.nb_threads, mc_options.use_por);
           }
-        catch (std::runtime_error& e)
+        catch (const std::runtime_error& e)
           {
             std::cerr << e.what() << '\n';
           }
