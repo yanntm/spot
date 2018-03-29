@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2009-2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2009-2018 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 # Copyright (C) 2003-2004 Laboratoire d'Informatique de Paris 6
 # (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -278,3 +278,6 @@ test 4 = `ltl2tgba -f "$f" --low -x tls-impl=0 --stats=%s`
 test 3 = `ltl2tgba -f "$f" --low -x tls-impl=1 --stats=%s`
 test 2 = `ltl2tgba -f "$f" --low -x tls-impl=2 --stats=%s`
 test 2 = `ltl2tgba -f "$f" --low -x tls-impl=3 --stats=%s`
+
+# This is not optimal, the smallest DBA for this formula has 2 states.
+test 3 = `ltl2tgba -BD -f 'GF((p0 & GF!p0) | (!p0 & FGp0))' --stats=%s`

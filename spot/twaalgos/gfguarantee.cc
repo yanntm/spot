@@ -99,7 +99,9 @@ namespace spot
           for (auto& e: aut->out(init))
             aut->new_edge(accstate, e.dst, e.cond, {0});
           // This is not mandatory, but starting on the accepting
-          // state helps getting shorter accepting words.
+          // state helps getting shorter accepting words and may
+          // reader the original initial state unreachable, saving one
+          // state.
           aut->set_init_state(accstate);
         }
 
@@ -137,7 +139,7 @@ namespace spot
     twa_graph_ptr reduced = minimize_obligation(aut, f, nullptr,
                                                 !deterministic);
     scc_info si(reduced);
-    if (!is_terminal_automaton(aut, &si, true))
+    if (!is_terminal_automaton(reduced, &si, true))
       return nullptr;
     do_g_f_terminal_inplace(si, state_based);
     return reduced;
@@ -148,7 +150,7 @@ namespace spot
                      bool deterministic, bool state_based)
   {
     twa_graph_ptr res = gf_guarantee_to_ba_maybe(gf, dict,
-                                              deterministic, state_based);
+                                                 deterministic, state_based);
     if (!res)
       throw std::runtime_error
         ("gf_guarantee_to_ba(): expects a formula of the form GF(guarantee)");
