@@ -118,6 +118,10 @@ def canonicalize(s, type, ignores):
     # Different Pandas versions produce different CSS styles (when there is a
     # style).
     s = re.sub(r'<style[ a-z]*>.*</style>\n', '', s, flags=re.DOTALL)
+    # Table that contains enc.user are log from the SAT-solver.  They contain
+    # timing result we cannot compare between runs.
+    s = re.sub(r'<table.*dataframe.*enc.user.*</table>', '<table></table>', s,
+               flags=re.DOTALL)
 
     for n, p in enumerate(ignores):
         s = re.sub(p, 'IGN{}'.format(n), s)
@@ -134,8 +138,11 @@ def canonical_dict(dict, ignores):
         dict['text'] = canonicalize(dict['text'], 'text', ignores)
 
     if 'data' in dict:
-        for k in dict['data']:
-            dict['data'][k] = canonicalize(dict['data'][k], k, ignores)
+        d = dict['data']
+        if "text/html" in d and "text/plain" in d:
+            del d["text/plain"]
+        for k in d:
+            d[k] = canonicalize(d[k], k, ignores)
 
     if ('ename' in dict and
             dict['ename'] == 'SystemExit' and dict['evalue'] == '77'):

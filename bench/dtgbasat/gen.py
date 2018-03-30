@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2016, 2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2016-2018 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -272,7 +272,7 @@ def get_last_successful(n, category, pattern):
                    + '.satlog', 'r')
         log_csv = csv.reader(log)
         for line in log_csv:
-            min_val = line[1]
+            min_val = line[2]
         return '$\\le$' + min_val
     except Exception:
         return ''

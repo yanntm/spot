@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2013, 2014, 2015, 2018 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -140,6 +140,7 @@ namespace spot
   ///                       fixed number of states before starting from scratch
   ///   incr < 0         // use satsolver incrementally, never restart
   ///   colored = 1      // build a colored TωA
+  ///   log = "filename"
   ///
   SPOT_API twa_graph_ptr
   sat_minimize(twa_graph_ptr aut, const char* opt, bool state_based = false);

@@ -57,6 +57,15 @@ New in spot 2.5.2 (2018-03-25)
     example, the translation of GF(a <-> XXb) to transition-based
     Büchi went from 9 to 5 states using that construction.
 
+  - Slightly improved log output for the SAT-based minimization
+    functions.  The CSV log files now include an additional column
+    with the size of the reference automaton, and they now have a
+    header line.  These log files give more details and are more
+    accurate in the case of incremental SAT-solving.  The python
+    bindings for sat_minimize() now have a display_log and return_log
+    options; there are demonstrated on the new
+    https://spot.lrde.epita.fr/ipynb/satmin.html page.
+
   Bugs fixed:
 
   - "autfilt --cobuchi --small/--det" would turn a transition-based
