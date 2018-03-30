@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2013-2016, 2018 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -231,11 +231,17 @@ public:
         unsigned dst_ref);
   };
 
-  /// \brief Good old function that prints log is SPOT_SATLOG. It has been
-  /// moved from spot/twaalgos/dt*asat.cc files.
-  void
-  print_log(timer_map& t, int target_state_number, twa_graph_ptr& res,
-            satsolver& solver);
+  /// \brief Give a filename to save the log of the SAT minimization.
+  ///
+  /// This has priority over the SPOT_SATLOG environment variable.
+  /// Pass en empty string to reset it.
+  void set_satlog_filename(const std::string& filename);
+
+  /// \brief Prints a line in the SPOT_SATLOG file.
+  void print_log(timer_map& t,
+                 int input_state_number,
+                 int target_state_number, const twa_graph_ptr& res,
+                 const satsolver& solver);
 
   /// \brief Returns the number of distinct values containted in a vector.
   int

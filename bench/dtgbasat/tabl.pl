@@ -79,7 +79,7 @@ sub getlastsuccesful($$)
     while (my $line = <LOG>)
     {
 	my @f = split(/,/, $line);
-	$min = $f[1] if $f[1] ne '';
+	$min = $f[2] if $f[2] ne '';
     }
     $min = ", \$\\le\$$min" if $min ne "";
     return $min;

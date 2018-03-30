@@ -142,50 +142,63 @@ namespace spot
     return buffer.str();
   }
 
+  static std::string satlog_filename;
+
   void
-  print_log(timer_map& t, int target_state_number,
-            twa_graph_ptr& res, satsolver& solver)
+  set_satlog_filename(const std::string& filename)
+  {
+    satlog_filename = filename;
+  }
+
+  void
+  print_log(timer_map& t,
+            int input_state_number, int target_state_number,
+            const twa_graph_ptr& res, const satsolver& solver)
   {
     // Always copy the environment variable into a static string,
     // so that we (1) look it up once, but (2) won't crash if the
     // environment is changed.
-    static std::string log = []()
+    static std::string envlog = []()
       {
         auto s = getenv("SPOT_SATLOG");
         return s ? s : "";
       }();
-    if (!log.empty())
+    const std::string log = satlog_filename.empty() ? envlog : satlog_filename;
+    if (log.empty())
+      return;
+
+    std::ofstream out(log, std::ios_base::ate | std::ios_base::app);
+    out.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    if (out.tellp() == 0)
+      out <<
+        ("input.states,target.states,reachable.states,edges,transitions,"
+         "variables,clauses,enc.user,enc.sys,sat.user,sat.sys,automaton\n");
+
+    const timer& te = t.timer("encode");
+    const timer& ts = t.timer("solve");
+    out << input_state_number << ',' << target_state_number << ',';
+    if (res)
       {
-        std::fstream out(log,
-                         std::ios_base::app | std::ios_base::out);
-        out.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        const timer& te = t.timer("encode");
-        const timer& ts = t.timer("solve");
-        out << target_state_number << ',';
-        if (res)
-          {
-            twa_sub_statistics st = sub_stats_reachable(res);
-            out << st.states << ',' << st.edges << ',' << st.transitions;
-          }
-        else
-          {
-            out << ",,";
-          }
-        std::pair<int, int> s = solver.stats(); // sat_stats
-        out << ','
-            << s.first << ',' << s.second << ','
-            << te.utime() + te.cutime() << ','
-            << te.stime() + te.cstime() << ','
-            << ts.utime() + ts.cutime() << ','
-            << ts.stime() + ts.cstime() << ",\"";
-        if (res)
-        {
-          std::ostringstream f;
-          print_hoa(f, res, "l");
-          escape_rfc4180(out, f.str());
-        }
-        out << "\"\n";
+        twa_sub_statistics st = sub_stats_reachable(res);
+        out << st.states << ',' << st.edges << ',' << st.transitions;
       }
+    else
+      {
+        out << ",,";
+      }
+    std::pair<int, int> s = solver.stats();
+    out << ',' << s.first << ',' << s.second << ','
+        << te.utime() + te.cutime() << ','
+        << te.stime() + te.cstime() << ','
+        << ts.utime() + ts.cutime() << ','
+        << ts.stime() + ts.cstime() << ',';
+    if (res)
+      {
+        std::ostringstream f;
+        print_hoa(f, res, "l");
+        escape_rfc4180(out << '"', f.str()) << '"';
+      }
+    out << std::endl;
   }
 
   int

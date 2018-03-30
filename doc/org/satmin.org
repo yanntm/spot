@@ -29,7 +29,7 @@ Let us first state a few facts about this minimization procedure.
    use state-based acceptance. (They simply restrict all the outgoing
    transitions of a state to belong to the same acceptance sets.)
 4) Spot is built using PicoSAT call_version()[:results raw].
-   This solver was chosen for its performances, simplicity of
+   This solver was chosen for its performance, simplicity of
    integration and license compatibility.  However, it is
    still possible to use an external SAT solver (as described below).
 5) [[file:ltl2tgba.org][=ltl2tgba=]] and [[file:dstar2tgba.org][=dstar2tgba=]] will always try to output an automaton.
@@ -730,48 +730,52 @@ export SPOT_SATLOG=stats.csv
 ltlfilt -f 'Ga R (F!b & (c U b))' -l |
 ltl2dstar --ltl2nba=spin:ltl2tgba@-Ds - - |
 dstar2tgba -D -x sat-minimize,sat-acc=2 --stats='input(states=%S) output(states=%s, acc-sets=%a, det=%d)'
+echo ==== stats.csv ====
 cat stats.csv
 #+END_SRC
 #+RESULTS:
 : input(states=11) output(states=5, acc-sets=2, det=1)
-: 9,9,36,72,44064,9043076,616,18,258,24
-: 8,7,29,56,19712,3493822,236,9,135,6
-: 6,6,25,48,10512,1362749,97,4,42,2
-: 5,,,,7200,784142,65,2,40,2
+: ==== stats.csv ====
+: input.states,target.states,reachable.states,edges,transitions,variables,clauses,enc.user,enc.sys,sat.user,sat.sys,automaton
+: 10,5,,,,13600,1543042,59,3,187,0,
+: 10,7,7,33,56,26656,4247441,162,7,775,0,"HOA: v1 States: 7 Start: 0 AP: 3 ""a"" ""b"" ""c"" acc-name: generalized-Buchi 2 Acceptance: 2 Inf(0)&Inf(1) properties: trans-labels explicit-labels trans-acc complete deterministic --BODY-- State: 0 [!0&!1&2] 0 {1} [!0&1] 0 {0} [!0&!1&!2] 1 {0} [0&!1&!2] 1 [0&!1&2] 2 {1} [0&1&!2] 4 [0&1&2] 4 {0} State: 1 [0&!1] 1 {0} [!0&!1&!2 | 0&1] 1 [!0&1 | !0&2] 3 {0} State: 2 [!0&!1&2] 0 {1} [!0&1] 0 {0 1} [!0&!1&!2] 1 [0&!1&2] 2 [0&!1&!2] 3 {1} [0&1] 5 {0 1} State: 3 [!1&!2] 3 [1 | 2] 3 {0} State: 4 [!0&!1&2] 0 {0 1} [!0&1] 0 {0} [!0&!1&!2] 1 [0&1] 4 {0} [0&!1&2] 5 {0} [0&!1&!2] 6 State: 5 [!0&1 | !0&2] 0 {0 1} [!0&!1&!2] 1 [0&1 | 0&2] 5 {0 1} [0&!1&!2] 6 {0} State: 6 [!0&!1&!2] 1 [!0&1&!2] 1 {0 1} [!0&1&2] 1 {1} [!0&!1&2] 3 {0 1} [0] 6 {0 1} --END--"
+: 7,6,6,26,48,10512,1376507,50,0,269,0,"HOA: v1 States: 6 Start: 0 AP: 3 ""a"" ""b"" ""c"" acc-name: generalized-Buchi 2 Acceptance: 2 Inf(0)&Inf(1) properties: trans-labels explicit-labels trans-acc complete deterministic --BODY-- State: 0 [!0&!1&2] 0 {1} [!0&1] 0 {0} [!0&!1&!2] 1 [0&!1&!2] 1 {0 1} [0&!1&2] 2 {1} [0&1] 3 {0} State: 1 [t] 1 State: 2 [!0&!1&2] 0 {1} [!0&1] 0 {0} [!1&!2] 1 [0&!1&2] 2 {1} [0&1] 4 {1} State: 3 [!0&!1&2] 0 {1} [!0&1] 0 [!0&!1&!2] 1 [0&1] 3 [0&!1&2] 4 {1} [0&!1&!2] 5 {1} State: 4 [!0&!1&2 | !0&1&!2] 0 {0 1} [!0&1&2] 0 {0} [!0&!1&!2] 1 [0&1 | 0&2] 4 {0 1} [0&!1&!2] 5 State: 5 [!0&!1&!2] 1 [!0&1 | !0&2] 1 {0 1} [0] 5 {0 1} --END--"
 
 The generated CSV file use the following columns:
-- the n passed to the SAT-based minimization algorithm
+- =input.states=: the number of states of the reference automaton at this step
+- =target.states=: the n passed to the SAT-based minimization algorithm
   (it means the input automaton had n+1 states)
-- number of reachable states in the output of
-  the minimization.
-- number of edges in the output
-- number of transitions
-- number of variables in the SAT problem
-- number of clauses in the SAT problem
-- user time for encoding the SAT problem
-- system time for encoding the SAT problem
-- user time for solving the SAT problem
-- system time for solving the SAT problem
-- automaton produced
+- =reachable.states=: number of reachable states in the output of
+  the minimization (with any luck this can be smaller than =target.states=)
+- =edges=, =transitions=: number of edges or transitions in the output
+- =variables=, =clauses=: size of the SAT problem
+- =enc.user=, =enc.sys=: user and system time for encoding the SAT problem
+- =sat.user=, =sat.sys=: user and system time for solving the SAT problem
+- =automaton=: the automaton produced in HOA format.
 
-Times are measured with the times() function, and expressed
-in ticks (usually: 1/100 of seconds).
+Times are measured with the times() function, and expressed in ticks
+(usually: 1/100 of seconds).  The encoding of the automaton in the CSV
+file follows RFC4180 in escaping double-quote by doubling them.
 
-In the above example, the input DRA had 11
-states.  In the first line of the =stats.csv= file, you can see the
-minimization function searching for a 9 state DTBA and obtaining a
-8-state solution.  (Since the minimization function searched for a
-9-state DTBA, it means it received a 10-state complete DTBA, so the
-processings performed before the minimization procedure managed to
-convert the 11-state DRA into a 10-state DTBA.)  Starting from the
-8-state solution, it looked for (and found) a 7-state solution, and
-then a 6-state solution.  The search for a 5-state complete DTBA
-failed.  The final output is reported with 5 states, because by
-default we output trim automata. If the =--complete= option had been
-given, the useless sink state would have been kept and the output
-automaton would have 6 states.
+In the above example, the DRA produced by =ltl2dstar= had 11 states.
+In the first line of the =stats.csv= file, you can see the
+minimization function had a 10-state input, which means that
+=dstar2tgba= first reduced the 11-state (complete) DRA into a 10-state
+(complete) DBA before calling the SAT-based minimization.  This first
+line shows the SAT-based minimization for a (complete) 5-state DTGBA
+and failing to find one.  Then on the next line it looks for a 7-state
+solution, finds one.  Finally, it finds a (complete) 6-state solution,
+now using the 7-state version as reference automaton to further
+simplify the problem.
 
+The final output is reported with 5 states, because by default we
+output trim automata. If the =--complete= option had been given, the
+useless sink state would have been kept and the output automaton would
+have 6 states.
 
 #+BEGIN_SRC sh :results silent :exports results
 rm -f output.hoa output2.hoa
 #+END_SRC
+* Python interface
+
+See the [[https://spot.lrde.epita.fr/ipynb/satmin.html][=satmin.ipynb=]] notebook.

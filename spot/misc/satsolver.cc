@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche et
-// Développement de l'Epita.
+// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// de l'Epita.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -209,7 +209,7 @@ namespace spot
     return nvars_;
   }
 
-  std::pair<int, int> satsolver::stats()
+  std::pair<int, int> satsolver::stats() const
   {
     return std::make_pair(get_nb_vars(), get_nb_clauses());
   }

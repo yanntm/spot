@@ -150,13 +150,14 @@ to the recurrence (or the persistence) class.
 \fBSPOT_SATLOG\fR
 If set to a filename, the SAT-based minimization routines will append
 statistics about each iteration to the named file.  Each line lists
-the following comma-separated values: requested number of states,
-number of reachable states in the output, number of edges in the
-output, number of transitions in the output, number of variables in
-the SAT problem, number of clauses in the SAT problem, user time for
-encoding the SAT problem, system time for encoding the SAT problem,
-user time for solving the SAT problem, system time for solving the SAT
-problem.
+the following comma-separated values: input number of states, target
+number of states, number of reachable states in the output, number of
+edges in the output, number of transitions in the output, number of
+variables in the SAT problem, number of clauses in the SAT problem,
+user time for encoding the SAT problem, system time for encoding the
+SAT problem, user time for solving the SAT problem, system time for
+solving the SAT problem, automaton produced at this step in HOA
+format.
 
 .TP
 \fBSPOT_SATSOLVER\fR

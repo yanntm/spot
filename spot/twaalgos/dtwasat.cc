@@ -36,7 +36,6 @@
 #include <spot/twaalgos/sbacc.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/sccinfo.hh>
-#include <spot/twaalgos/stats.hh>
 
 // If you set the SPOT_TMPKEEP environment variable the temporary
 // file used to communicate with the sat solver will be left in
@@ -624,7 +623,7 @@ namespace spot
         {
           unsigned nacc = d.cand_nacc;
           cnf_comment("transitions belong to exactly one of the", nacc,
-                      "acceptance set\n");
+                      "acceptance sets\n");
           for (unsigned l = 0; l < alpha_size; ++l)
             for (unsigned q1 = 0; q1 < d.cand_size; ++q1)
               for (unsigned q2 = 0; q2 < d.cand_size; ++q2)
@@ -982,6 +981,7 @@ namespace spot
 #endif
 
       a->merge_edges();
+      a->purge_unreachable_states();
       return a;
     }
   }
@@ -1023,7 +1023,7 @@ namespace spot
     if (!solution.second.empty())
       res = sat_build(solution.second, d, a, state_based);
 
-    print_log(t, target_state_number, res, solver); // if SPOT_SATLOG is set.
+    print_log(t, a->num_states(), target_state_number, res, solver);
 
     trace << "dtwa_sat_synthetize(...) = " << res << '\n';
     return res;
@@ -1066,7 +1066,6 @@ namespace spot
   dichotomy_dtwa_research(int max,
                           dict& d,
                           satsolver& solver,
-                          timer_map& t1,
                           const_twa_graph_ptr& prev,
                           bool state_based)
   {
@@ -1081,35 +1080,46 @@ namespace spot
       trace << "min:" << min << ", max:" << max << ", target:" << target
         << '\n';
 
+      timer_map t1;
+      t1.start("encode");
       solver.assume(d.nvars + target);
+      t1.stop("encode");
       trace << "solver.assume(" << d.nvars + target << ")\n";
-
+      t1.start("solve");
       satsolver::solution_pair solution = solver.get_solution();
+      t1.stop("solve");
       if (solution.second.empty())
       {
         trace << "UNSAT\n";
         max = target;
+        print_log(t1, prev->num_states(), d.cand_size - target,
+                  nullptr, solver);
       }
       else
       {
         trace << "SAT\n";
         res = sat_build(solution.second, d, prev, state_based);
-        min = d.cand_size - stats_reachable(res).states + 1;
+        min = d.cand_size - res->num_states() + 1;
+        print_log(t1, prev->num_states(), d.cand_size - target,
+                  res, solver);
       }
     }
 
     trace << "End with max:" << max << ", min:" << min << '\n';
     if (!res)
     {
-      trace << "All assumptions are UNSAT, let's try without...";
+      trace << "All assumptions are UNSAT, let's try without...\n";
+      timer_map t1;
+      t1.start("encode");
+      t1.stop("encode");
+      t1.start("solve");
       satsolver::solution_pair solution = solver.get_solution();
+      t1.stop("solve");
       trace << (solution.second.empty() ? "UNSAT!\n" : "SAT\n");
       res = solution.second.empty() ? nullptr :
         sat_build(solution.second, d, prev, state_based);
+      print_log(t1, prev->num_states(), d.cand_size - target, res, solver);
     }
-
-    t1.stop("solve");
-    print_log(t1, d.cand_size - target , res, solver); // SPOT_SATLOG.
     return res ? res : std::const_pointer_cast<spot::twa_graph>(prev);
   }
 
@@ -1128,8 +1138,7 @@ namespace spot
 
     const_twa_graph_ptr prev = a;
     dict d(prev);
-    d.cand_size = (max_states < 0) ?
-      stats_reachable(prev).states - 1 : max_states;
+    d.cand_size = (max_states < 0) ? prev->num_states() - 1 : max_states;
     d.cand_nacc = target_acc_number;
     d.cand_acc = target_acc;
     if (d.cand_size == 0)
@@ -1144,9 +1153,9 @@ namespace spot
     while (next && d.cand_size > 0)
     {
       // Warns the satsolver of the number of assumptions.
-      int n_assumptions = (int) d.cand_size < sat_incr_steps ?
+      int n_assumptions = (int) d.cand_size <= sat_incr_steps ?
         d.cand_size - 1 : sat_incr_steps;
-      trace << "number of assumptions:" << n_assumptions << '\n';
+      trace << "number of assumptions: " << n_assumptions << '\n';
       satsolver solver;
       solver.set_nassumptions_vars(n_assumptions);
 
@@ -1182,35 +1191,39 @@ namespace spot
           solver.add({-assume_lit, assume_lit - 1, 0});
         }
       }
-      t1.stop("encode");
 
-      t1.start("solve");
       if (n_assumptions)
       {
         trace << "solver.assume(" << d.nvars + n_assumptions << ")\n";
         solver.assume(d.nvars + n_assumptions);
       }
+      t1.stop("encode");
+      t1.start("solve");
       satsolver::solution_pair solution = solver.get_solution();
+      t1.stop("solve");
 
       if (solution.second.empty() && n_assumptions) // UNSAT
       {
+        print_log(t1, prev->num_states(),
+                  d.cand_size - n_assumptions, nullptr, solver);
         trace << "UNSAT\n";
         twa_graph_ptr res = dichotomy_dtwa_research(n_assumptions, d, solver,
-                                                    t1, prev, state_based);
+                                                    prev, state_based);
         return res == a ? nullptr : res;
       }
 
-      t1.stop("solve");
       trace << "SAT, restarting from zero\n";
       next = solution.second.empty() ? nullptr :
         sat_build(solution.second, d, prev, state_based);
-      print_log(t1, d.cand_size - n_assumptions, next, solver); // SPOT_SATLOG.
+      print_log(t1, prev->num_states(),
+                d.cand_size - n_assumptions, next, solver);
 
       if (next)
       {
         prev = next;
+        trace << "prev has " << prev->num_states() << '\n';
         d = dict(prev);
-        d.cand_size = stats_reachable(prev).states - 1;
+        d.cand_size = prev->num_states() - 1;
         d.cand_nacc = target_acc_number;
         d.cand_acc = target_acc;
         if (d.cand_size == 0)
@@ -1233,7 +1246,7 @@ namespace spot
 
     dict d(prev);
     d.cand_size = (max_states < 0) ?
-      stats_reachable(prev).states - 1 : max_states;
+      prev->num_states() - 1 : max_states;
     d.cand_nacc = target_acc_number;
     d.cand_acc = target_acc;
     if (d.cand_size == 0)
@@ -1260,9 +1273,9 @@ namespace spot
       t1.stop("solve");
       next = solution.second.empty() ? nullptr :
         sat_build(solution.second, d, prev, state_based);
-      print_log(t1, d.cand_size, next, solver); // If SPOT_SATLOG is set.
+      print_log(t1, prev->num_states(), d.cand_size, next, solver);
 
-      trace << "First iteraton done\n";
+      trace << "First iteration done\n";
 
       // Compute the AP used.
       bdd ap = prev->ap_vars();
@@ -1273,27 +1286,25 @@ namespace spot
       for (int k = 0; next && d.cand_size > 0 && (naive || k < sat_incr_steps);
            ++k)
       {
-        t1.start("encode");
         prev = next;
-        int reach_states = stats_reachable(prev).states;
-        cnf_comment("Next iteration:", reach_states - 1, "\n");
-
+        int reach_states = prev->num_states();
         trace << "Encoding the deletion of state " << reach_states - 1 << '\n';
-
+        cnf_comment("Next iteration:", reach_states - 1, "\n");
+        timer_map t2;
+        t2.start("encode");
         // Add new constraints.
         for (unsigned i = reach_states - 1; i < d.cand_size; ++i)
           for (unsigned l = 0; l < alpha_size; ++l)
             for (unsigned j = 0; j < orig_cand_size; ++j)
               solver.add({-d.transid(j, l, i), 0});
-
+        t2.stop("encode");
         d.cand_size = reach_states - 1;
-        t1.stop("encode");
-        t1.start("solve");
+        t2.start("solve");
         solution = solver.get_solution();
-        t1.stop("solve");
+        t2.stop("solve");
         next = solution.second.empty() ? nullptr :
           sat_build(solution.second, d, prev, state_based);
-        print_log(t1, d.cand_size, next, solver); // If SPOT_SATLOG is set.
+        print_log(t2, prev->num_states(), d.cand_size, next, solver);
       }
 
       if (next)
@@ -1301,7 +1312,7 @@ namespace spot
         trace << "Starting from scratch\n";
         prev = next;
         d = dict(prev);
-        d.cand_size = stats_reachable(prev).states - 1;
+        d.cand_size = prev->num_states() - 1;
         d.cand_nacc = target_acc_number;
         d.cand_acc = target_acc;
         if (d.cand_size == 0)
@@ -1320,8 +1331,7 @@ namespace spot
                     bool state_based, int max_states,
                     bool colored)
   {
-    int n_states = (max_states < 0) ?
-      stats_reachable(a).states : max_states + 1;
+    int n_states = (max_states < 0) ? a->num_states() : max_states + 1;
 
     twa_graph_ptr prev = nullptr;
     for (;;)
@@ -1333,7 +1343,7 @@ namespace spot
         if (!next)
           return prev;
         else
-          n_states = stats_reachable(next).states;
+          n_states = next->num_states();
         prev = next;
       }
     SPOT_UNREACHABLE();
@@ -1348,7 +1358,7 @@ namespace spot
   {
     trace << "Dichotomy\n";
     if (max_states < 1)
-      max_states = stats_reachable(a).states - 1;
+      max_states = a->num_states() - 1;
     int min_states = 1;
     if (langmap)
     {
@@ -1373,7 +1383,7 @@ namespace spot
         else
           {
             prev = next;
-            max_states = stats_reachable(next).states - 1;
+            max_states = next->num_states() - 1;
           }
       }
     return prev;
@@ -1401,10 +1411,10 @@ namespace spot
     bool sat_langmap = om.get("sat-langmap", 0);
     int states = om.get("states", -1);
     int max_states = om.get("max-states", -1);
-    auto accstr = om.get_str("acc");
+    std::string accstr = om.get_str("acc");
     bool colored = om.get("colored", 0);
     int preproc = om.get("preproc", 3);
-
+    set_satlog_filename(om.get_str("log"));
 
     // Set default sat-incr-steps value if not provided and used.
     if (sat_incr == 1 && !sat_incr_steps) // Assume
@@ -1551,7 +1561,7 @@ namespace spot
 
     if (a)
       {
-        if (state_based)
+        if (state_based || colored)
           a = scc_filter_states(a);
         else
           a = scc_filter(a);

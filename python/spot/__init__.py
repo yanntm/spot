@@ -33,7 +33,7 @@ from spot.aux import \
 import subprocess
 import os
 import signal
-
+import tempfile
 
 # The parrameters used by default when show() is called on an automaton.
 _show_default = None
@@ -927,7 +927,8 @@ for fun in ['remove_x', 'relabel', 'relabel_bse',
 def sat_minimize(aut, acc=None, colored=False,
                  state_based=False, states=0,
                  max_states=0, sat_naive=False, sat_langmap=False,
-                 sat_incr=0, sat_incr_steps=0):
+                 sat_incr=0, sat_incr_steps=0,
+                 display_log=False, return_log=False):
     args=''
     if acc is not None:
         if type(acc) is not str:
@@ -950,9 +951,25 @@ def sat_minimize(aut, acc=None, colored=False,
     if sat_incr:
         args += ',sat-incr=' + str(sat_incr)
         args += ',sat-incr-steps=' + str(sat_incr_steps)
-
     from spot.impl import sat_minimize as sm
-    return sm(aut, args, state_based)
+
+    if display_log or return_log:
+        import pandas as pd
+        with tempfile.NamedTemporaryFile(dir='.', suffix='.satlog') as t:
+            args += ',log="{}"'.format(t.name)
+            aut = sm(aut, args, state_based)
+            dfrm = pd.read_csv(t.name, dtype=object)
+            if display_log:
+                # old versions of ipython do not import display by default
+                from IPython.display import display
+                del dfrm['automaton']
+                display(dfrm)
+            if return_log:
+                return aut, dfrm
+            else:
+                return aut
+    else:
+        return sm(aut, args, state_based)
 
 
 def parse_word(word, dic=_bdd_dict):
