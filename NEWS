@@ -32,8 +32,7 @@ New in spot 2.5.2.dev (not yet released)
     and fg_safety_to_dca() is a specialized construction for
     translating formulas of the form FG(safety) to DCA.  These
     are slight generalizations of some constructions proposed
-    by J. Esparza, J. Křentínský, and S. Sickert in a submitted
-    paper.
+    by J. Esparza, J. Křentínský, and S. Sickert (LICS'18).
 
     These are now used by the main translation routine, and can be
     disabled by passing -x '!gf-guarantee' to ltl2tgba.  As an

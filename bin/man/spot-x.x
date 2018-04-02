@@ -281,6 +281,16 @@ checks for ω-regular languages, Proceedings of SPIN'15.  LNCS 9232.
 Describes the stutter-invariance checks that can be selected through
 \fBSPOT_STUTTER_CHECK\fR.
 
+.TP
+5.
+Javier Esparza, Jan Křetínský and Salomon Sickert: One Theorem to Rule
+Them All: A Unified Translation of LTL into ω-Automata.  Proceedings
+of LICS'18.  To appear.
+
+Describes (among other things) the constructions used for translating
+formulas of the form GF(guarantee) or FG(safety), that can be
+disabled with \fB-x gf-guarantee=0\fR.
+
 
 [SEE ALSO]
 .BR ltl2tgba (1)
