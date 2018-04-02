@@ -39,8 +39,8 @@ namespace spot
   /// If \a state_based is not set, all transition going to terminal
   /// states are made accepting and redirected to the initial state.
   ///
-  /// This construction is inspired by a similar construction in a
-  /// submitted paper by J. Esparza, J. Křetínský, & S. Sickert.
+  /// This construction is inspired by a similar construction in the
+  /// LICS'18 paper by J. Esparza, J. Křetínský, and S. Sickert.
   SPOT_API twa_graph_ptr
   g_f_terminal_inplace(twa_graph_ptr f_terminal, bool state_based = false);
 
@@ -56,10 +56,10 @@ namespace spot
   /// Return nullptr if the input formula is not of the supported
   /// form.
   ///
-  /// This construction generalized a similar construction in a
-  /// submitted paper by J. Esparza, J. Křetínský, & S. Sickert in the
-  /// sense that it will work if Φ represent a safety property, even
-  /// if it is not a syntactic safety.
+  /// This construction generalizes a construction in the LICS'18
+  /// paper of J. Esparza, J. Křetínský, and S. Sickert.  This version
+  /// will work if Φ represent a safety property, even if it is not a
+  /// syntactic safety.
   SPOT_API twa_graph_ptr
   gf_guarantee_to_ba_maybe(formula gf, const bdd_dict_ptr& dict,
                            bool deterministic = true, bool state_based = false);

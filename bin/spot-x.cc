@@ -107,10 +107,9 @@ the determinization algorithm.") },
 the determinization algorithm.") },
     { DOC("det-stutter", "Set to 0 to disable optimizations based on \
 the stutter-invariance in the determinization algorithm.") },
-    // FIXME: Add bibliographic reference to their paper ASAP.
     { DOC("gf-guarantee", "Set to 0 to disable alternate constructions \
 for GF(guarantee)->[D]BA and FG(safety)->DCA.  Those constructions \
-are based on work by J. Esparza, J. Křentínský, and S. Sickert.  \
+are from an LICS'18 paper by J. Esparza, J. Křentínský, and S. Sickert.  \
 This is enabled by default for medium and high optimization \
 levels.  Unless we are building deterministic automata, the \
 resulting automata are compared to the automata built using the \
