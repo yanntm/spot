@@ -351,10 +351,10 @@ TESTS_ipython = \
 # do not consider part of the documentation: those have to start
 # with a _.
 TESTS_python = \
+  python/341.py \
   python/_altscc.ipynb \
   python/_autparserr.ipynb \
   python/_aux.ipynb \
-  python/_word.ipynb \
   python/accparse2.py \
   python/alarm.py \
   python/alternating.py \
@@ -362,6 +362,7 @@ TESTS_python = \
   python/bddnqueen.py \
   python/bugdet.py \
   python/declenv.py \
+  python/_word.ipynb \
   python/decompose_scc.py \
   python/dualize.py \
   python/except.py \

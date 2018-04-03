@@ -34,6 +34,7 @@ import subprocess
 import os
 import signal
 import tempfile
+from contextlib import suppress as _supress
 
 # The parrameters used by default when show() is called on an automaton.
 _show_default = None
@@ -441,30 +442,33 @@ def automata(*sources, timeout=None, ignore_abort=True,
             else:
                 p = automaton_stream_parser(filename, o)
             a = True
-            while a:
-                # This returns None when we reach the end of the file.
-                a = p.parse(_bdd_dict).aut
-                if a:
-                    yield a
+            # Using proc as a context manager ensures that proc.stdout will be
+            # closed on exit, and the process will be properly waited for.
+            # This is important when running tools that produce an infinite
+            # stream of automata and that must be killed once the generator
+            # returned by spot.automata() is destroyed.  Otherwise, _supress()
+            # is just a dummy context manager that does nothing (Python 3.7
+            # introduces nullcontext() for this purpose, but at the time of
+            # writing we support Python 3.4).
+            mgr = proc if proc else _supress()
+            with mgr:
+                while a:
+                    # This returns None when we reach the end of the file.
+                    a = p.parse(_bdd_dict).aut
+                    if a:
+                        yield a
         finally:
             # Make sure we destroy the parser (p) and the subprocess
-            # (prop) in the correct order...
+            # (prop) in the correct order.
             del p
             if proc is not None:
-                if not a:
-                    # We reached the end of the stream.  Wait for the
-                    # process to finish, so that we get its exit code.
-                    ret = proc.wait()
-                else:
-                    # if a != None, we probably got there through an
-                    # exception, and the subprocess might still be
-                    # running.  Check if an exit status is available
-                    # just in case.
-                    ret = proc.poll()
+                ret = proc.returncode
                 del proc
-                if ret:
+                # Do not complain about the exit code if we are already raising
+                # an exception.
+                if ret and sys.exc_info()[0] is None:
                     raise subprocess.CalledProcessError(ret, filename[:-1])
-    # deleting o explicitely now prevents Python 3.5 from
+    # deleting o explicitly now prevents Python 3.5 from
     # reporting the following error: "<built-in function
     # delete_automaton_parser_options> returned a result with
     # an error set".  It's not clear to me if the bug is in Python
