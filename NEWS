@@ -11,6 +11,9 @@ New in spot 2.5.2.dev (not yet released)
   - "autfilt -B --sat-minimize" was incorrectly producing
     transition-based automata.
 
+  - Using spot.automata("cmd...|") to read just a few automata out of
+    an infinite stream would not properly terminate the command.
+
 New in spot 2.5.2 (2018-03-25)
 
   Bugs fixed:
