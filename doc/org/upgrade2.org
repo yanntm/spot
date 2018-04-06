@@ -85,7 +85,7 @@ experience of updating a couple of projects that are using Spot.
 
 * Upgrading to C++14
   :PROPERTIES:
-  :CUSTOM_ID: cpp11
+  :CUSTOM_ID: cpp14
   :END:
 
   Because Spot now relies on C++14 features, programs that use Spot
