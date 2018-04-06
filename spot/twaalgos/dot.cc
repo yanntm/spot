@@ -112,7 +112,7 @@ namespace spot
       std::string opt_font_;
       std::string opt_node_color_;
       std::ostream& os_;
-      bool opt_want_state_names_ = true;
+      bool inline_state_names_ = true;
       unsigned max_states_ = -1U; // related to max_states_given_
 
       bool opt_shared_univ_dest_ = true;
@@ -189,7 +189,7 @@ namespace spot
               opt_numbered_edges_ = true;
               break;
             case '1':
-              opt_want_state_names_ = false;
+              inline_state_names_ = false;
               break;
             case 'a':
               opt_show_acc_ = true;
@@ -576,19 +576,39 @@ namespace spot
         os_ << '}' << std::endl;
       }
 
+      bool print_state_name(std::ostream& os, unsigned s,
+                            bool force_text = false) const
+      {
+        if (sn_ && s < sn_->size() && !(*sn_)[s].empty())
+          {
+            if (force_text)
+              escape_str(os, (*sn_)[s]);
+            else
+              escape_for_output(os, (*sn_)[s]);
+          }
+        else if (sprod_)
+          {
+            os << (*sprod_)[s].first << ',' << (*sprod_)[s].second;
+          }
+        else
+          {
+            return false;
+          }
+        return true;
+      }
+
       void
       process_state(unsigned s)
       {
         os_ << "  " << s << " [" << label_pre_;
-        if (sn_ && s < sn_->size() && !(*sn_)[s].empty())
-          escape_for_output(os_, (*sn_)[s]);
-        else if (sprod_)
-          os_ << (*sprod_)[s].first << ',' << (*sprod_)[s].second;
-        else
+
+        if (!(inline_state_names_ && print_state_name(os_, s)))
           os_ << s;
         if (orig_ && s < orig_->size())
           os_ << " (" << (*orig_)[s] << ')';
 
+        bool include_state_labels =
+          opt_state_labels_ && (inline_state_names_ || opt_latex_);
         if (mark_states_ && !dcircles_)
           {
             acc_cond::mark_t acc = {};
@@ -603,13 +623,13 @@ namespace spot
                 os_ << nl_;
                 output_mark(acc);
               }
-            if (opt_state_labels_)
+            if (include_state_labels)
               format_state_label(os_ << nl_, s);
             os_ << label_post_;
           }
         else
           {
-            if (opt_state_labels_)
+            if (include_state_labels)
               format_state_label(os_ << nl_, s);
             os_ << label_post_;
             // Use state_acc_sets(), not state_is_accepting() because
@@ -629,6 +649,21 @@ namespace spot
                 os_ << "\", color=\"" << palette[iter->second % palette_mod]
                     << '"';
               }
+          }
+        if (!inline_state_names_ && (sn_ || sprod_ || opt_state_labels_)
+            && !opt_latex_)
+          {
+            std::ostringstream os;
+            bool nonempty = print_state_name(os, s, true);
+            if (opt_state_labels_)
+              {
+                if (nonempty)
+                  os << '\n';
+                format_state_label(os, s);
+                nonempty = true;
+              }
+            if (nonempty)
+              os_ << ", tooltip=\"" << os.str() << '"';
           }
         os_ << "]\n";
         if (incomplete_ && incomplete_->find(s) != incomplete_->end())
@@ -707,19 +742,18 @@ namespace spot
       void print(const const_twa_graph_ptr& aut)
       {
         aut_ = aut;
-        if (opt_want_state_names_)
+
+        sn_ = aut->get_named_prop<std::vector<std::string>>("state-names");
+        // We have no names.  Do we have product sources?
+        if (!sn_)
           {
-            sn_ = aut->get_named_prop<std::vector<std::string>>("state-names");
-            // We have no names.  Do we have product sources?
-            if (!sn_)
-              {
-                sprod_ = aut->get_named_prop
-                  <std::vector<std::pair<unsigned, unsigned>>>
-                  ("product-states");
-                if (sprod_ && aut->num_states() != sprod_->size())
-                  sprod_ = nullptr;
-              }
+            sprod_ = aut->get_named_prop
+              <std::vector<std::pair<unsigned, unsigned>>>
+              ("product-states");
+            if (sprod_ && aut->num_states() != sprod_->size())
+              sprod_ = nullptr;
           }
+
         if (opt_orig_show_)
           orig_ = aut->get_named_prop<std::vector<unsigned>>("original-states");
         if (opt_state_labels_)
@@ -758,8 +792,10 @@ namespace spot
                      && (aut_->acc().is_buchi() || aut_->acc().is_co_buchi()));
         if (opt_shape_ == ShapeAuto)
           {
-            if (sn_ || sprod_ || aut->num_states() > 100
-                || opt_state_labels_ || orig_)
+            if ((inline_state_names_ && (sn_ || sprod_ || opt_state_labels_))
+                || (opt_state_labels_ && opt_latex_)
+                || aut->num_states() > 100
+                || orig_)
               {
                 opt_shape_ = ShapeEllipse;
                 // If all state names are short, prefer circles.

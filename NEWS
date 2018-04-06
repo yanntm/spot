@@ -30,6 +30,12 @@ New in spot 2.5.2 (2018-03-25)
     the command-line tools, as well as the various way to display
     automata using the Python bindings.
 
+  - When option "1" is passed to print_dot() to hide state names
+    and force the display of state numbers, the actual state names
+    is now moved to the "tooltip" field of the state.  The SVG
+    files produced by "dot -Tsvg" will show those as popups.
+    This is also done for state labels of kripke structures.
+
   - cleanup_parity() and cleanup_parity_here() are smarter and now
     remove from the acceptance condition the parity colors that are
     not used in the automaton.

@@ -469,13 +469,15 @@ counterexample:
 
 With a small variant of the above code, we could also display the
 counterexample on the state space, but only because our state space is
-so small: displaying large state spaces is not sensible.  Besides, highlighting
-a run only works on =twa_graph= automata, so we need to convert the
-Kripke structure to a =twa_graph=: this can be done with =make_twa_graph()=. But
-now =k= is no longer a Kripke structure (also not generated
-on-the-fly anymore), so the =print_dot()= function will display it as
-a classical automaton with conditions on edges rather than state:
-passing the option "~k~" to =print_dot()= will fix that.
+so small: displaying large state spaces is not sensible.  Besides,
+highlighting a run only works on =twa_graph= automata, so we need to
+convert the Kripke structure to a =twa_graph=: this can be done with
+=make_twa_graph()=. But now =k= is no longer a Kripke structure (also
+not generated on-the-fly anymore), so the =print_dot()= function will
+display it as a classical automaton with conditions on edges rather
+than state: passing the option "~k~" to =print_dot()= will fix that.
+We also pass option "~A~" to hide the acceptance condition (which is
+=t=, i.e., accepting every infinite run).
 
 #+NAME: demo-3-aux
 #+BEGIN_SRC C++ :exports none :noweb strip-export
@@ -515,7 +517,7 @@ passing the option "~k~" to =print_dot()= will fix that.
     if (auto run = k->intersecting_run(af))
       {
         run->highlight(5); // 5 is a color number.
-        spot::print_dot(std::cout, k, ".k");
+        spot::print_dot(std::cout, k, ".kA");
       }
   }
 #+END_SRC
@@ -526,6 +528,58 @@ $txt
 
 #+RESULTS:
 [[file:kripke-3.svg]]
+
+Note that labeling states with names (the first line) and the
+valuation of all atomic propositions (the second line) will quickly
+produce graphs with large nodes that are problematic to render.  A
+trick to reduce the clutter and the size of the graph is to pass
+option "~1~" to =print_dot()=, changing the above call to
+src_cpp[:exports code]{spot::print_dot(std::cout, k, ".kA1");}.  This
+will cause all states to be numbered instead, but if the automaton is
+rendered as an SVG figure, the old label will still appear as a
+tooltip when the mouse is over a state.  Try that on the following
+figure:
+
+#+NAME: demo-3b
+#+BEGIN_SRC C++ :exports none :noweb strip-export :results verbatim
+  #include <spot/twaalgos/dot.hh>
+  #include <spot/tl/parse.hh>
+  #include <spot/twaalgos/translate.hh>
+  #include <spot/twa/twaproduct.hh>
+  #include <spot/twaalgos/emptiness.hh>
+  <<demo-3-aux>>
+  int main()
+  {
+    auto d = spot::make_bdd_dict();
+
+    // Parse the input formula.
+    spot::parsed_formula pf = spot::parse_infix_psl("GF(odd_x) -> GF(odd_y)");
+    if (pf.format_errors(std::cerr))
+      return 1;
+
+    // Translate its negation.
+    spot::formula f = spot::formula::Not(pf.f);
+    spot::twa_graph_ptr af = spot::translator(d).run(f);
+
+    // Convert demo_kripke into an explicit graph
+    spot::twa_graph_ptr k =
+      spot::make_twa_graph(std::make_shared<demo_kripke>(d),
+                           spot::twa::prop_set::all(), true);
+     // Find a run of or demo_kripke that intersects af.
+    if (auto run = k->intersecting_run(af))
+      {
+        run->highlight(5); // 5 is a color number.
+        spot::print_dot(std::cout, k, ".kA1");
+      }
+  }
+#+END_SRC
+
+#+BEGIN_SRC dot :file kripke-3b.svg :cmd circo :var txt=demo-3b :exports results
+$txt
+#+END_SRC
+
+#+RESULTS:
+[[file:kripke-3b.svg]]
 
 * Possible improvements
 
