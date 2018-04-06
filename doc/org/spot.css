@@ -39,6 +39,7 @@ thead tr {background: #ffe35e;}
 #content tbody:nth-child(odd) tr:nth-child(odd) {background: #fff7cf;}
 #content tbody:nth-child(even) tr:nth-child(even) {background: #fff3bc;}
 #content tbody:nth-child(even) tr:nth-child(odd) {background: #fffbe0;}
+.org-svg {max-width:100%;width:auto;}
 .org-keyword{font-weight:bold}
 .org-builtin{font-weight:bold}
 .org-preprocessor{font-weight:bold}

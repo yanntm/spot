@@ -1,15 +1,44 @@
-(setq load-path (append '("@abs_top_srcdir@/elisp/" ; for hoa-mode.el
-			  ;; htmlize is not always in the load-path.
-			  ;; On Debian it can be found here.
-			  "/usr/share/emacs/site-lisp/emacs-goodies-el")
+(setq load-path (append '("@abs_top_srcdir@/elisp/") ; for hoa-mode.el
 			load-path))
-(or (require 'org-publish nil t)	; Org 7
-    (require 'ox-publish))		; Org 8
-(require 'org-install)
+
+(setq debug-on-error t)
+
+(package-initialize)
+(require 'cl)
+(setq features-before features)
+
 (require 'org-version)
+(print (org-version nil t t))
+(print (concat "Org " org-version))
+
+; The Org version that ships with emacs is usually too old.
+(when (version< org-version "9.1")
+  (warn "Org-mode is too old; attempting to download a more recent version")
+  ;; we need to unload any bits of org that were loaded before calling
+  ;; install package, otherwise the byte code might mix the two versions.
+  (dolist (feature (set-difference features features-before))
+    (when (and (featurep feature)
+               (let ((feature-name (symbol-name feature)))
+                 (or (string-prefix-p "org" feature-name)
+                     (string-prefix-p "ob" feature-name))))
+      (message "unloading feature %s" feature)
+      (unload-feature feature t)))
+  ;; install org-plus-contrib, not org, as the former includes htmlize
+  (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
+  (package-refresh-contents)
+  (let ((org-p-c (cadr (assq 'org-plus-contrib package-archive-contents))))
+    (package-install org-p-c)))
+
+(unless (require 'htmlize nil t)
+  (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+  (package-refresh-contents)
+  (let ((htmlize (cadr (assq 'htmlize package-archive-contents))))
+    (package-install htmlize)))
+
+(require 'ox-publish)
+(require 'org-install)
 (require 'hoa-mode)
 
-(print (concat "Org " (org-version)))
 (setq org-export-htmlize-output-type 'css)
 (setq org-html-htmlize-output-type 'css)
 ; the .org-timestamp directory does not always exist, is not always
@@ -29,6 +58,9 @@
 (setq org-confirm-babel-evaluate nil)
 (setq org-plantuml-jar-path "@abs_top_builddir@/doc/org/plantuml.jar")
 (setq org-babel-temporary-directory "@abs_top_builddir@/doc/org/tmp")
+;;; the directory might already exist from a previously aborted run.
+(if (file-directory-p org-babel-temporary-directory)
+    (delete-directory org-babel-temporary-directory t))
 (make-directory org-babel-temporary-directory t)
 (setq org-babel-python-command "@PYTHON@")
 (setq org-babel-C++-compiler "./g++wrap")
@@ -37,9 +69,8 @@
 (setq org-babel-default-header-args:plantuml
       '((:results . "file")
         (:exports . "results")
-        ;; prevent the plantuml logo to annoying appear on top of
-        ;; whatever you are doing when the project compiles in the
-        ;; background.
+        ;; Prevent the plantuml logo to appear on top of whatever you
+        ;; are doing when the project compiles in the background.
         (:java . "-Djava.awt.headless=true")))
 
 (setenv "PATH"
@@ -66,8 +97,14 @@
 
 (setq org-export-html-postamble nil)
 
+(defun spot-publish-sitemap (title list)
+  "Same as org-publish-sitemap-default except it adds the SETUPFILE."
+  (concat "#+TITLE: " title
+          "\n#+SETUPFILE: setup.org\n#+HTML_LINK_UP: index.html\n\n"
+          (org-list-to-org list)))
+
 (setq org-publish-project-alist
-      `(("spot-html"
+      '(("spot-html"
 	:base-directory "@abs_top_srcdir@/doc/org/"
 	:base-extension "org"
 	:publishing-directory "@abs_top_srcdir@/doc/userdoc/"
@@ -75,13 +112,9 @@
 	:exclude "setup.org"
 	:auto-sitemap t
 	:sitemap-title "Sitemap for Spot"
-	:publishing-function
-	,(if (require 'org-publish nil t) 'org-publish-org-to-html ; Org 7
-	   'org-html-publish-to-html)                              ; Org 8
-	; Org 8
+        :sitemap-function spot-publish-sitemap
+	:publishing-function org-html-publish-to-html
 	:html-head "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"spot.css\" />"
-	; Org 7
-	:style "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"spot.css\" />"
 	:auto-preamble t)
        ("spot-static"
 	:base-directory "@abs_top_srcdir@/doc/org/"
@@ -94,5 +127,6 @@
 (org-publish-all t)
 ;;; org-babel-remove-temporary-directory does not correctly remove
 ;;; nested directories and we have some files in tmp/.libs/ because of
-;;; libtool.  So let us clean that ourselves.
-(delete-directory org-babel-temporary-directory t)
+;;; libtool.  So we have to clean that ourselves.
+(if (file-directory-p org-babel-temporary-directory)
+    (delete-directory org-babel-temporary-directory t))
