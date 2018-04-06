@@ -114,7 +114,7 @@ run 0 autfilt -q --are-isomorph ex.hoa out.hoa
 
 run 0 ../ikwiad -x -DC 'GFa & XGFb' > out.tgba
 cat >ex.tgba <<EOF
-digraph G {
+digraph "GFa & XGFb" {
   rankdir=LR
   label="\n[Büchi]"
   labelloc="t"

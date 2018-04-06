@@ -20,6 +20,12 @@ New in spot 2.5.2.dev (not yet released)
     files produced by "dot -Tsvg" will show those as popups.
     This is also done for state labels of kripke structures.
 
+  - print_dot() will now name the output digraph using the name of the
+    automaton if available, or the empty string otherwise.  (Previous
+    versions used to call all digraphs "G".)  This name appears as a
+    tooltip in SVG figures when the mouse is over the acceptance
+    condition.
+
   - cleanup_parity() and cleanup_parity_here() are smarter and now
     remove from the acceptance condition the parity colors that are
     not used in the automaton.

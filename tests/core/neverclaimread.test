@@ -132,7 +132,7 @@ EOF
 run 0 ../ikwiad -XN input > stdout
 
 cat >expected <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label="\n[Büchi]"
   labelloc="t"
@@ -327,7 +327,7 @@ accept_all:
 EOF
 autfilt --name=%F --dot=nsc <input >stdout 2>stderr && exit 1
 cat >expected <<EOF
-digraph G {
+digraph "-" {
   rankdir=LR
   label="-\n[Büchi]"
   labelloc="t"

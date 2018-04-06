@@ -59,7 +59,7 @@ EOF
 run 0 ../ikwiad -d -XD dra.dstar | tee stdout
 
 cat >expected <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label="Fin(0) & Inf(1)\n[Rabin 1]"
   labelloc="t"
@@ -83,7 +83,7 @@ diff expected stdout
 run 0 ../ikwiad -d -XDB -R3 dra.dstar | tee stdout
 
 cat >expected <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label="\n[Büchi]"
   labelloc="t"
@@ -130,7 +130,7 @@ EOF
 run 0 ../ikwiad -d -XDB dsa.dstar | tee stdout
 
 cat >expected <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label="\n[Büchi]"
   labelloc="t"
@@ -221,7 +221,7 @@ EOF
 run 0 autfilt -dA -B dra.dstar | tee stdout
 
 cat >expected <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   node [shape="circle"]
   I [label="", style=invis, width=0]
@@ -245,7 +245,7 @@ digraph G {
   4 -> 3 [label="!a"]
   4 -> 4 [label="a"]
 }
-digraph G {
+digraph "" {
   rankdir=LR
   node [shape="circle"]
   I [label="", style=invis, width=0]
@@ -290,7 +290,7 @@ EOF
 run 0 dstar2tgba --name=%F --dot=Ant aut.dsa | tee stdout
 
 cat >expected<<EOF
-digraph G {
+digraph "aut.dsa" {
   rankdir=LR
   label="aut.dsa"
   labelloc="t"
