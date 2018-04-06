@@ -117,15 +117,14 @@ namespace spot
   twa_run_ptr
   twa::intersecting_run(const_twa_ptr other, bool from_other) const
   {
-    auto a = shared_from_this();
-    if (from_other)
-      other = remove_fin_maybe(other);
-    else
-      a = remove_fin_maybe(a);
-    auto run = otf_product(a, other)->accepting_run();
-    if (!run)
+    auto a1 = remove_fin_maybe(shared_from_this());
+    auto a2 = remove_fin_maybe(other);
+    auto res = two_aut_ec(a1, a2);
+    if (!res)
       return nullptr;
-    return run->project(from_other ? other : a);
+    if (from_other)
+      return res->right_accepting_run();
+    return res->left_accepting_run();
   }
 
   twa_word_ptr
