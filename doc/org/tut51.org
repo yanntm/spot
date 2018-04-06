@@ -377,23 +377,23 @@ this reason.
  <<demo-succ-iter-2>>
 #+END_SRC
 
- #+NAME: demo-1
- #+BEGIN_SRC C++ :exports code :noweb strip-export :results verbatim
- #include <spot/twaalgos/dot.hh>
- <<demo-1-aux>>
- int main()
- {
-    auto k = std::make_shared<demo_kripke>(spot::make_bdd_dict());
-    spot::print_dot(std::cout, k);
- }
- #+END_SRC
+#+NAME: demo-1
+#+BEGIN_SRC C++ :exports code :noweb strip-export :results verbatim
+#include <spot/twaalgos/dot.hh>
+<<demo-1-aux>>
+int main()
+{
+   auto k = std::make_shared<demo_kripke>(spot::make_bdd_dict());
+   spot::print_dot(std::cout, k);
+}
+#+END_SRC
 
- #+BEGIN_SRC dot :file kripke-1.svg :cmd circo :var txt=demo-1 :exports results
- $txt
- #+END_SRC
+#+BEGIN_SRC dot :file kripke-1.svg :cmd circo :var txt=demo-1 :exports results
+$txt
+#+END_SRC
 
- #+RESULTS:
- q[[file:kripke-1.svg]]
+#+RESULTS:
+[[file:kripke-1.svg]]
 
 * Checking a property on this state space
 
