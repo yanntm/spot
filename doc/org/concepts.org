@@ -836,7 +836,7 @@ $txt
    :CUSTOM_ID: hoa
    :END:
 
-The [[http://adl.github.io/hoaf/][HOA format]] inherits several features from the [[:dstar][DSTAR format]], but
+The [[http://adl.github.io/hoaf/][HOA format]] inherits several features from the [[#dstar][DSTAR format]], but
 extends it in many ways, including support for non-deterministic
 automata, alternating automata, and for arbitrary acceptance conditions.
 
@@ -1107,7 +1107,7 @@ correspond to any =twa= flag.
    :CUSTOM_ID: named-properties
    :END:
 
-In addition to [[#proeprty-flags][property flags]], automata in Spot can be tied to an
+In addition to [[#property-flags][property flags]], automata in Spot can be tied to an
 arbitrary number of objects via a system of named properties that is
 implemented mostly as an =std::map= between =std::string= and =void*=.
 

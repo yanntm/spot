@@ -44,7 +44,7 @@ Spot's default LTL parser is able to parse the syntaxes of many tools,
 such as [[http://spinroot.com][Spin]], [[http://vlsi.colorado.edu/~rbloem/wring.html][Wring]], [[http://goal.im.ntu.edu.tw][Goal]], etc.  For instance here are the preferred ways
 to express the same formula for different tools.
 
-# <<tab:formula-syntaxes>>
+#+NAME: tab:formula-syntaxes
 | Tool         | Formula                 |
 |--------------+-------------------------|
 | Spot         | =G(a -> (b R !c))=      |
