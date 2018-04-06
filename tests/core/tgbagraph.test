@@ -35,7 +35,7 @@ run 0 ../tgbagraph | tee stdout
 cat >expected <<EOF
 p1
 p2
-digraph G {
+digraph "" {
   rankdir=LR
   label="t\n[Fin-less 2]"
   labelloc="t"
@@ -53,7 +53,7 @@ digraph G {
   2 -> 1 [label="!p1 | p2"]
   2 -> 2 [label="1\n{0,1}"]
 }
-digraph G {
+digraph "" {
   rankdir=LR
   label="t\n[Fin-less 2]"
   labelloc="t"
@@ -69,7 +69,7 @@ digraph G {
   2 [label="2"]
   2 -> 0 [label="p1 | p2\n{0,1}"]
 }
-digraph G {
+digraph "" {
   rankdir=LR
   label="t\n[Fin-less 2]"
   labelloc="t"
@@ -84,7 +84,7 @@ digraph G {
   1 -> 2 [label="p1 & p2\n{0}"]
   2 [label="2"]
 }
-digraph G {
+digraph "" {
   rankdir=LR
   label="t\n[Fin-less 2]"
   labelloc="t"
@@ -102,7 +102,7 @@ digraph G {
   2 -> 1 [label="!p1 | p2"]
   2 -> 0 [label="1\n{0,1}"]
 }
-digraph G {
+digraph "" {
   rankdir=LR
   label="t\n[Fin-less 2]"
   labelloc="t"
@@ -118,7 +118,7 @@ digraph G {
   2 -> 0 [label="1\n{0,1}"]
   2 -> 1 [label="!p1 | p2"]
 }
-digraph G {
+digraph "" {
   rankdir=LR
   label="t\n[Fin-less 2]"
   labelloc="t"
@@ -233,7 +233,7 @@ digraph G {
   101 [label="101"]
   102 [label="102"]
 }
-digraph G {
+digraph "" {
   rankdir=LR
   label="t\n[all]"
   labelloc="t"
@@ -247,7 +247,7 @@ digraph G {
 0 -> deleted
 1 -> deleted
 2 -> 0
-digraph G {
+digraph "" {
   rankdir=LR
   label="t\n[all]"
   labelloc="t"

@@ -319,7 +319,7 @@ autfilt -H input |
     autfilt >output
 
 cat >expected <<EOF
-digraph G {
+digraph "" {
   node [shape="circle"]
   /* hello world */
   I [label="", style=invis, height=0]
@@ -355,7 +355,7 @@ test 1 = `autfilt -H input --complete | autfilt --is-complete --count`
 SPOT_DEFAULT_FORMAT=hoa ltl2tgba --dot=ak 'GFa & GFb' >output
 cat output
 cat >expected <<EOF
-digraph G {
+digraph "G(Fa & Fb)" {
   rankdir=LR
   label="Inf(0)&Inf(1)\n[gen. Büchi 2]"
   labelloc="t"
@@ -374,7 +374,7 @@ diff output expected
 ltl2tgba -dban 'GFa & GFb' >output
 cat output
 cat >expected <<EOF
-digraph G {
+digraph "G(Fa & Fb)" {
   rankdir=LR
   label="G(Fa & Fb)\nInf(⓿)&Inf(❶)\n[gen. Büchi 2]"
   labelloc="t"
@@ -397,7 +397,7 @@ cat output
 zero='<font color="#1F78B4">⓿</font>'
 one='<font color="#FF4DA0">❶</font>'
 cat >expected <<EOF
-digraph G {
+digraph "G(Fa & Fb)" {
   rankdir=LR
   label=<Inf($zero)&amp;Inf($one)<br/>[gen. Büchi 2]>
   labelloc="t"
@@ -468,7 +468,7 @@ State: 9 {0 2 3}
 EOF
 
 cat >expected <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label="(Fin(⓿)|Fin(❸)) | (Fin(❶) & Inf(❷))\n[gen. Rabin 3]"
   labelloc="t"
@@ -522,7 +522,7 @@ autfilt --dot=bao in >out
 diff out expected
 
 cat >expected2 <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label="(Fin(⓿)|Fin(❸)) | (Fin(❶) & Inf(❷))\n[gen. Rabin 3]"
   labelloc="t"
@@ -547,7 +547,7 @@ autfilt --dot=bao1 in | grep -v '>' >out
 diff out expected2
 
 cat >expected3 <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   node [shape="circle"]
   I [label="", style=invis, width=0]
@@ -869,7 +869,7 @@ diff output6 expect6
 
 run 0 autfilt -dAk input6 >output6d
 cat >expect6d <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   I [label="", style=invis, width=0]
   I -> 1
@@ -890,7 +890,7 @@ diff output6d expect6d
 
 run 0 autfilt -dbark input6 >output6d2
 cat >expect6d2 <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label=<Inf(<font color="#1F78B4">⓿</font>)<br/>[Büchi]>
   labelloc="t"
@@ -1008,7 +1008,7 @@ State: 2
 EOF
 autfilt -dA input9 > output9
 cat >expected9 <<EOF
-digraph G {
+digraph "a U (b U c)" {
   rankdir=LR
   node [shape="circle"]
   I [label="", style=invis, width=0]
@@ -1052,9 +1052,9 @@ cat >expected <<EOF
 EOF
 diff out expected
 # --dot=d should also not use circles
-ltl2tgba 'a U b' | autfilt --remove-ap=b=0 --dot=dA >out
+ltl2tgba 'a U b' | autfilt --remove-ap=b=0 --name=%M --dot=dA >out
 cat >expected <<EOF
-digraph G {
+digraph "a U b" {
   rankdir=LR
   I [label="", style=invis, width=0]
   I -> 0

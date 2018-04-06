@@ -78,7 +78,8 @@ namespace spot
       std::vector<std::pair<unsigned, unsigned>>* sprod_ = nullptr;
       std::vector<unsigned>* orig_ = nullptr;
       std::set<unsigned>* incomplete_ = nullptr;
-      std::string* name_ = nullptr;
+      std::string* name_ = nullptr; // title for the graph
+      std::string* graph_name_ = nullptr; // name for the digraph
       std::map<std::pair<int, int>, int> univ_done;
 
       acc_cond::mark_t inf_sets_ = {};
@@ -473,7 +474,10 @@ namespace spot
         // UTF-8 has no glyphs for circled numbers larger than MAX_BULLET.
         if (opt_bullet && (aut_->num_sets() <= MAX_BULLET || opt_latex_))
           opt_all_bullets = true;
-        os_ << "digraph G {\n";
+        os_ << "digraph \"";
+        if (graph_name_)
+          escape_str(os_, *graph_name_);
+        os_ << "\" {\n";
         if (opt_latex_)
           {
             os_ << "  d2tgraphstyle=\"every node/.style={align=center}\"\n";
@@ -783,8 +787,9 @@ namespace spot
           aut->get_named_prop<std::map<unsigned, unsigned>>("highlight-states");
         incomplete_ =
           aut->get_named_prop<std::set<unsigned>>("incomplete-states");
+        graph_name_ = aut_->get_named_prop<std::string>("automaton-name");
         if (opt_name_)
-          name_ = aut_->get_named_prop<std::string>("automaton-name");
+          name_ = graph_name_;
         mark_states_ = (!opt_force_acc_trans_
                         && aut_->prop_state_acc().is_true());
         dcircles_ = (mark_states_

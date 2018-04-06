@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016, 2017 Laboratoire de Recherche et Développement
+# Copyright (C) 2016-2018 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -56,7 +56,7 @@ EOF
 autfilt --dot=bans alt.hoa >alt.dot
 
 cat >expect.dot <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label="Fin(⓿)\n[co-Büchi]"
   labelloc="t"
@@ -498,7 +498,7 @@ run 0 autfilt --dot='baryf(Lato)' ex6 > ex6.dot
 
 style='arrowhead=onormal'
 cat >expect6.dot<<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label=<Fin(<font color="#1F78B4">⓿</font>)<br/>[co-Büchi]>
   labelloc="t"
@@ -561,7 +561,7 @@ run 0 autfilt --dot='sbarf(Lato)' ex7 > ex7.dot
 color='<font color="#1F78B4">⓿</font>'
 color1='<font color="#FF4DA0">❶</font>'
 cat >expect7.dot<<EOF
-digraph G {
+digraph "SLAA for c R (c | G(a & b) | (F!b & F!a))" {
   rankdir=LR
   label=<Fin($color1) &amp; Fin($color)<br/>[Streett-like 2]>
   labelloc="t"
@@ -657,7 +657,7 @@ EOF
 run 0 autfilt --dot='sbarf(Lato)' ex8 > ex8.dot
 
 cat >expect8.dot<<EOF
-digraph G {
+digraph "SLAA for c R (c | G(a & b) | (F!b & F!a))" {
   rankdir=LR
   label=<Fin($color1) &amp; Fin($color)<br/>[Streett-like 2]>
   labelloc="t"
@@ -737,7 +737,7 @@ EOF
 run 0 autfilt --dot='baryf(Lato)' ex9 > ex9.dot
 
 cat >expect9.dot <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label=<Fin(<font color="#1F78B4">⓿</font>)<br/>[co-Büchi]>
   labelloc="t"
@@ -784,7 +784,7 @@ EOF
 run 0 autfilt --dot='baryf(Lato)' ex10 > ex10.dot
 
 cat >expect10.dot <<EOF
-digraph G {
+digraph "" {
   rankdir=LR
   label=<Fin(<font color="#1F78B4">⓿</font>)<br/>[co-Büchi]>
   labelloc="t"
@@ -840,7 +840,7 @@ EOF
 run 2 autfilt --dot='sbarf(Lato)' ex11 > ex11.dot
 
 cat >expect11.dot <<EOF
-digraph G {
+digraph "SLAA for G((b & Fa) | (!b & G!a))" {
   rankdir=LR
   label=<Fin(<font color="#1F78B4">⓿</font>)<br/>[co-Büchi]>
   labelloc="t"

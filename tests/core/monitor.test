@@ -32,7 +32,7 @@ expect()
 }
 
 expect ltl2tgba -dA --monitor a <<EOF
-digraph G {
+digraph "a" {
   rankdir=LR
   node [shape="circle"]
   I [label="", style=invis, width=0]

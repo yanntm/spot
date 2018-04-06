@@ -1,7 +1,7 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015, 2017 Laboratoire de Recherche et Développement de
-# l'Epita
+# Copyright (C) 2015, 2017, 2018 Laboratoire de Recherche et
+# Développement de l'Epita
 #
 # This file is part of Spot, a model checking library.
 #
@@ -72,7 +72,7 @@ run 0 autfilt --dot=as in.hoa > out.dot
 
 # The important stuff is the color=xxx lines
 cat <<EOF >expected
-digraph G {
+digraph "" {
   rankdir=LR
   label="(Inf(0)&Inf(1)) & Fin(2)\n[Streett-like 3]"
   labelloc="t"
