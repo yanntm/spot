@@ -45,7 +45,7 @@ spot.html spot.tag: stamp
 DISTCLEANFILES = spot.tag spot.html stamp
 
 .PHONY: org org-man
-org:
+org: $(PICTURES_EXTRA)
 	cd $(top_builddir) && $(MAKE) doc/org/init.el
 	rm -rf $(srcdir)/userdoc $(builddir)/org/org.errors
 	$(MAKE) org-man org/plantuml.jar
@@ -68,7 +68,6 @@ ORG_FILES = \
   org/init.el.in \
   org/spot.css \
   org/arch.tex \
-  $(srcdir)/org/arch.svg \
   org/autcross.org \
   org/autfilt.org \
   org/csv.org \
@@ -81,7 +80,6 @@ ORG_FILES = \
   org/hoa.org \
   org/hierarchy.org \
   org/hierarchy.tex \
-  $(srcdir)/org/hierarchy.svg \
   org/index.org \
   org/install.org \
   org/ioltl.org \
@@ -115,7 +113,11 @@ ORG_FILES = \
   org/upgrade2.org \
   org/satmin.org \
   org/satmin.tex \
-  org/setup.org \
+  org/setup.org
+
+PICTURES_EXTRA = \
+  $(srcdir)/org/arch.svg \
+  $(srcdir)/org/hierarchy.svg \
   $(srcdir)/org/satmin.svg
 
 $(srcdir)/org/satmin.svg: org/satmin.tex
@@ -145,6 +147,7 @@ EXTRA_DIST = \
   footer.html \
   mainpage.dox \
   $(ORG_FILES) \
+  $(PICTURES_EXTRA) \
   $(srcdir)/org-stamp \
   $(srcdir)/userdoc
 
