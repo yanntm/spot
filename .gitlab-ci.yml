@@ -70,6 +70,24 @@ debian-gcc-snapshot:
       - doc/userdoc/
       - ./*.tar.gz
 
+debian-unstable-gcc-asan:
+  stage: build
+  only:
+    - branches
+  except:
+    - /wip/
+  image: registry.lrde.epita.fr/spot-debuild
+  script:
+    - autoreconf -vfi
+    - ./configure --enable-devel CFLAGS=-fsanitize=address CXXFLAGS=-fsanitize=address --disable-static --disable-python
+    - make
+    - make check
+  artifacts:
+    when: on_failure
+    paths:
+      - tests/*/*.log
+      - ./*.log
+
 arch-clang:
   stage: build
   only:
