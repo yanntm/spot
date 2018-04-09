@@ -96,7 +96,7 @@ namespace spot
         unsigned one_state = sccmap_prod.states_of(n).front();
         bool accepting =
           v[(*sprod)[one_state].first] && v[(*sprod)[one_state].second];
-        if (accepting)
+        if (accepting && !sccmap_prod.is_trivial(n))
           {
             useful[n] = true;
             continue;
