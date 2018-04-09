@@ -28,43 +28,60 @@ g = spot.automata('randaut -A "Inf(0)&Inf(1)|Inf(2)&Inf(3)" -Q5 -n -1'
 
 count_ec = 0
 count_ar = 0
-
-end = time.time() + 10
 err = 0
 
-while time.time() < end:
-    a = next(g)
-    b = next(g)
+def finish():
+    print("Computed {} emptiness checks and {} accepting runs".format(count_ec,
+                                                                      count_ar))
+    exit(err)
 
-    res = spot.two_aut_ec(a, b)
-    res_otf = spot.otf_product(a, b).is_empty()
+def error(context, res_otf, res_tae, a, b, ra, rb):
+    global err
+    print(context, file=sys.stderr)
+    print("res_otf =", res_otf, file=sys.stderr)
+    print("bool(res) =", bool(res_tae), file=sys.stderr)
+    print("type(res) =", type(res_tae), file=sys.stderr)
+    print("dir(res) =", dir(res), file=sys.stderr)
+    if 'this' in dir(res):
+        print("res.this =", res.this, file=sys.stderr)
+    if ra is not None:
+        print("\nra:\n" + str(ra), file=sys.stderr)
+    if rb is not None:
+        print("\nrb:\n" + str(rb), file=sys.stderr)
+    print("\na:\n" + a.to_str(), file=sys.stderr)
+    print("\nb:\n" + b.to_str(), file=sys.stderr)
+    err = 2
 
-    if res_otf == bool(res):
-        print("spot.two_aut_ec(a, b) != spot.otf_product(a, b).is_empty()",
-              file=sys.stderr)
-        print("res_otf =", res_otf, file=sys.stderr)
-        print("bool(res) =", bool(res), file=sys.stderr)
-        err = 2
+end = time.time() + 10
 
+while time.time() < end and err == 0:
+    ra = None
+    rb = None
+    try:
+        a = next(g)
+        b = next(g)
 
-    if res is not None:
-        ra, rb = res.accepting_runs()
-        if ra.replay(spot.get_cout()) == False:
-            print("Could not replay left accepting run", file=sys.stderr)
-            err = 2
-        if rb.replay(spot.get_cout()) == False:
-            print("Could not replay right accepting run", file=sys.stderr)
-            err = 2
+        res = spot.two_aut_ec(a, b)
+        res_otf = spot.otf_product(a, b).is_empty()
+
+        if res_otf == bool(res):
+            error("spot.two_aut_ec(a, b) != spot.otf_product(a, b).is_empty()",
+                  res_otf, res, a, b, None, None)
+
+        if res is not None:
+            ra, rb = res.accepting_runs()
+            if ra.replay(spot.get_cout()) is False:
+                error("Could not replay left accepting run",
+                      res_otf, res, a, b, ra, rb)
+            if rb.replay(spot.get_cout()) is False:
+                error("Could not replay right accepting run",
+                      res_otf, res, a, b, ra, rb)
+            if err == 0:
+                count_ar += 1
+
         if err == 0:
-            count_ar += 1
+            count_ec += 1
+    except Exception as e:
+        error(str(e), res_otf, res, a, b, ra, rb)
 
-    if err != 0:
-        print("a:\n" + a.to_str(), file=sys.stderr)
-        print("\nb:\n" + b.to_str(), file=sys.stderr)
-        break
-
-    count_ec += 1
-
-print("Computed {} emptiness checks and {} accepting runs".format(count_ec,
-                                                                  count_ar))
-exit(err)
+finish()
