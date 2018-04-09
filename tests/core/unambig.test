@@ -284,4 +284,54 @@ EOF
 
 run 1 autfilt -q --is-unambiguous smaller.hoa
 
-true
+# These automata come from Simon Jantsch and David Müller.
+cat >sjdb.hoa <<EOF
+HOA: v1
+name: "G(!a | !b) & (Ga | G(b | XGb))"
+States: 4
+Start: 0
+AP: 2 "a" "b"
+acc-name: all
+Acceptance: 0 t
+properties: trans-labels explicit-labels state-acc inherently-weak
+--BODY--
+State: 0
+[!0&1] 1
+[0&!1] 2
+[!1] 3
+State: 1
+[!0&1] 1
+[!1] 3
+State: 2
+[0&!1] 2
+State: 3
+[!0&1] 3
+--END--
+HOA: v1
+name: "F(!a & XGa) | (F(!b & XGb) & G(!a | !b))"
+States: 5
+Start: 0
+AP: 2 "a" "b"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc inherently-weak
+--BODY--
+State: 0
+[!0] 1
+[t] 2
+[!0 | !1] 3
+[!1] 4
+State: 1 {0}
+[0] 1
+State: 2
+[!0] 1
+[t] 2
+State: 3
+[!0 | !1] 3
+[!1] 4
+State: 4 {0}
+[!0&1] 4
+--END--
+EOF
+
+test 2 = `autfilt -c --is-unambiguous sjdb.hoa`
