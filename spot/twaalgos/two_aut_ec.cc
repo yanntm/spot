@@ -504,6 +504,7 @@ namespace spot
                  const typename tae_element<aut_type_r>::aut_t& right,
                  const twa_run_ptr ar_l, const twa_run_ptr ar_r,
                  const order_map<aut_type_l, aut_type_r>& states,
+                 const product_state<aut_type_l, aut_type_r>& init,
                  const unsigned order, product_mark<STRONG> acc)
     {
       using p_state = product_state<aut_type_l, aut_type_r>;
@@ -643,9 +644,6 @@ namespace spot
 
       // ##### Prefix search V3 #####
 
-      p_state init(tae_element<aut_type_l>::init(left),
-                   tae_element<aut_type_r>::init(right));
-
       p_state substart =
         product_bfs_steps(init,
                           [&](p_step&, p_state& dest)
@@ -658,8 +656,6 @@ namespace spot
                           },
                           ar_l ? &(ar_l->prefix) : nullptr,
                           ar_r ? &(ar_r->prefix) : nullptr);
-
-      init.destroy();
 
       // ##### Accepting Marks search #####
 
@@ -713,13 +709,18 @@ namespace spot
     {
     public:
       tae_res(typename tae_element<aut_type_l>::aut_t& left,
-              typename tae_element<aut_type_r>::aut_t& right, bool swapped)
-        : two_aut_res(), left_(left), right_(right), swapped_(swapped)
+              typename tae_element<aut_type_r>::aut_t& right,
+              typename tae_element<aut_type_l>::state_t left_init,
+              typename tae_element<aut_type_r>::state_t right_init,
+              bool swapped)
+        : two_aut_res(), left_(left), right_(right),
+          init_(left_init, right_init), swapped_(swapped)
       {
       }
 
       ~tae_res() override
       {
+        init_.destroy();
       }
 
       void accepting_scc(unsigned order, product_mark<STRONG> acc)
@@ -733,7 +734,7 @@ namespace spot
         twa_run_ptr ar_l = std::make_shared<twa_run>(left_);
         twa_run_ptr ar_r = std::make_shared<twa_run>(right_);
 
-        tae_run(left_, right_, ar_l, ar_r, states,
+        tae_run(left_, right_, ar_l, ar_r, states, init_,
                 accepting_.index, accepting_.condition);
 
         if (swapped_)
@@ -746,10 +747,10 @@ namespace spot
         twa_run_ptr ar = std::make_shared<twa_run>(left_);
 
         if (!swapped_)
-          tae_run(left_, right_, ar, nullptr, states,
+          tae_run(left_, right_, ar, nullptr, states, init_,
                   accepting_.index, accepting_.condition);
         else
-          tae_run(left_, right_, nullptr, ar, states,
+          tae_run(left_, right_, nullptr, ar, states, init_,
                   accepting_.index, accepting_.condition);
 
         return ar;
@@ -760,10 +761,10 @@ namespace spot
         twa_run_ptr ar = std::make_shared<twa_run>(right_);
 
         if (!swapped_)
-          tae_run(left_, right_, nullptr, ar, states,
+          tae_run(left_, right_, nullptr, ar, states, init_,
                   accepting_.index, accepting_.condition);
         else
-          tae_run(left_, right_, ar, nullptr, states,
+          tae_run(left_, right_, ar, nullptr, states, init_,
                   accepting_.index, accepting_.condition);
 
         return ar;
@@ -775,6 +776,7 @@ namespace spot
     private:
       typename tae_element<aut_type_l>::aut_t left_;
       typename tae_element<aut_type_r>::aut_t right_;
+      product_state<aut_type_l, aut_type_r> init_;
       scc<STRONG> accepting_;
       bool swapped_;
     };
@@ -783,7 +785,9 @@ namespace spot
              tae_strength strength>
     two_aut_res_ptr
     tae_impl(typename tae_element<aut_type_l>::aut_t& left,
-             typename tae_element<aut_type_r>::aut_t& right, bool swapped)
+             typename tae_element<aut_type_r>::aut_t& right,
+             typename tae_element<aut_type_l>::state_t left_init,
+             typename tae_element<aut_type_r>::state_t right_init, bool swapped)
     {
       using p_state = product_state<aut_type_l, aut_type_r>;
       using p_iterator = product_iterator<aut_type_l, aut_type_r>;
@@ -806,8 +810,8 @@ namespace spot
       unsigned num = 1;
       // the result of the two-automaton emptiness check. Contains the `Hash`
       // structure of Couvreur's algorithm.
-      auto res = std::make_shared<tae_res<aut_type_l, aut_type_r>>(left, right,
-                                                                   swapped);
+      auto res = std::make_shared<tae_res<aut_type_l, aut_type_r>>
+        (left, right, left_init, right_init, swapped);
       // the roots of our SCCs
       std::stack<scc<strength>> root;
       // states yet to explore
@@ -841,8 +845,7 @@ namespace spot
           return p;
         };
 
-      new_state(tae_element<aut_type_l>::init(left),
-                tae_element<aut_type_r>::init(right));
+      new_state(left_init, right_init);
 
       if (strength != WEAK)
         arc.emplace();
@@ -951,6 +954,8 @@ namespace spot
     two_aut_res_ptr
     tae_dispatch_strength(typename tae_element<aut_type_l>::aut_t& left,
                           typename tae_element<aut_type_r>::aut_t& right,
+                          typename tae_element<aut_type_l>::state_t left_init,
+                          typename tae_element<aut_type_r>::state_t right_init,
                           bool swapped)
     {
       auto l = left->prop_weak();
@@ -959,19 +964,24 @@ namespace spot
       if (!l && r && aut_type_l != KRIPKE)
         // We save on templates by only having weak automata on the left. This
         // is not compatible with, and less significant than, the Kripke swap.
-        return tae_impl<aut_type_r, aut_type_l, WEAK_L>(right, left, !swapped);
+        return tae_impl<aut_type_r, aut_type_l, WEAK_L>
+          (right, left, right_init, left_init, !swapped);
 
       if (l && r)
-        return tae_impl<aut_type_l, aut_type_r, WEAK>(left, right, swapped);
+        return tae_impl<aut_type_l, aut_type_r, WEAK>
+          (left, right, left_init, right_init, swapped);
 
       if (l && !r)
-        return tae_impl<aut_type_l, aut_type_r, WEAK_L>(left, right, swapped);
+        return tae_impl<aut_type_l, aut_type_r, WEAK_L>
+          (left, right, left_init, right_init, swapped);
 
-      return tae_impl<aut_type_l, aut_type_r, STRONG>(left, right, swapped);
+      return tae_impl<aut_type_l, aut_type_r, STRONG>
+        (left, right, left_init, right_init, swapped);
     }
 
     two_aut_res_ptr
     tae_dispatch_type(const const_twa_ptr& left, const const_twa_ptr& right,
+                      const state *left_init, const state *right_init,
                       bool swapped)
     {
       const_fair_kripke_ptr l_k = std::dynamic_pointer_cast<const fair_kripke>
@@ -982,7 +992,7 @@ namespace spot
       // We don't often check Kripke against Kripke, so we save on templates by
       // only having Kripke structures on the left.
       if (r_k && !l_k)
-        return tae_dispatch_type(right, left, !swapped);
+        return tae_dispatch_type(right, left, right_init, left_init, !swapped);
 
       const_twa_graph_ptr l_e =
         std::dynamic_pointer_cast<const twa_graph>(left);
@@ -992,24 +1002,32 @@ namespace spot
       if (l_k)
         {
           if (r_e)
-            return tae_dispatch_strength<KRIPKE, EXPLICIT>(l_k, r_e, swapped);
+            return tae_dispatch_strength<KRIPKE, EXPLICIT>
+              (l_k, r_e, left_init, r_e->state_number(right_init), swapped);
           else
-            return tae_dispatch_strength<KRIPKE, OTF>(l_k, right, swapped);
+            return tae_dispatch_strength<KRIPKE, OTF>
+              (l_k, right, left_init, right_init, swapped);
         }
 
       if (l_e)
         {
           if (r_e)
-            return tae_dispatch_strength<EXPLICIT, EXPLICIT>(l_e, r_e, swapped);
+            return tae_dispatch_strength<EXPLICIT, EXPLICIT>
+              (l_e, r_e,
+               l_e->state_number(left_init), r_e->state_number(right_init),
+               swapped);
           else
-            return tae_dispatch_strength<EXPLICIT, OTF>(l_e, right, swapped);
+            return tae_dispatch_strength<EXPLICIT, OTF>
+              (l_e, right, l_e->state_number(left_init), right_init, swapped);
         }
       else
         {
           if (r_e)
-            return tae_dispatch_strength<OTF, EXPLICIT>(left, r_e, swapped);
+            return tae_dispatch_strength<OTF, EXPLICIT>
+              (left, r_e, left_init, r_e->state_number(right_init), swapped);
           else
-            return tae_dispatch_strength<OTF, OTF>(left, right, swapped);
+            return tae_dispatch_strength<OTF, OTF>
+              (left, right, left_init, right_init, swapped);
         }
     }
   } // namespace
@@ -1017,6 +1035,15 @@ namespace spot
   two_aut_res_ptr
   two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right)
   {
-    return tae_dispatch_type(left, right, false);
+    return tae_dispatch_type(left, right,
+                             left->get_init_state(), right->get_init_state(),
+                             false);
+  }
+
+  two_aut_res_ptr
+  two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right,
+             const state *left_init, const state *right_init)
+  {
+    return tae_dispatch_type(left, right, left_init, right_init, false);
   }
 }

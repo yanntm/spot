@@ -70,11 +70,44 @@ namespace spot
 
   /// \brief Check whether the languages of the two automata intersect.
   ///
+  /// This is based on the following paper.
+  /** \verbatim
+      @InProceedings{couvreur.99.fm,
+        author    = {Jean-Michel Couvreur},
+        title     = {On-the-fly Verification of Temporal Logic},
+        pages     = {253--271},
+        editor    = {Jeannette M. Wing and Jim Woodcock and Jim Davies},
+        booktitle = {Proceedings of the World Congress on Formal Methods in
+                     the Development of Computing Systems (FM'99)},
+        publisher = {Springer-Verlag},
+        series    = {Lecture Notes in Computer Science},
+        volume    = {1708},
+        year      = {1999},
+        address   = {Toulouse, France},
+        month     = {September},
+        isbn      = {3-540-66587-0}
+      }
+      \endverbatim */
+  ///
   /// \return An null std::shared_ptr if the languages do not intersect, a
   /// shared pointer to an instance of spot::two_aut_res otherwise.
   SPOT_API
   two_aut_res_ptr
   two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right);
+
+  /// \brief Check whether the languages of the two automata intersect.
+  ///
+  /// This variant forces the initial states used in the emptiness check
+  /// exploration and the accepting run exploration done by the two_aut_res.
+  ///
+  /// \note The languages considered will reflect the change in initial states.
+  ///
+  /// \return An null std::shared_ptr if the languages do not intersect, a
+  /// shared pointer to an instance of spot::two_aut_res otherwise.
+  SPOT_API
+  two_aut_res_ptr
+  two_aut_ec(const const_twa_ptr& left, const const_twa_ptr& right,
+             const state *left_init, const state *right_init);
 
   /// @}
 }
