@@ -52,7 +52,7 @@ namespace spot
   /// \ingroup twa_algorithms
   /// \brief Intersect two automata using a synchronous product
   ///
-  /// These variant allow changing the initial state of both automata
+  /// This variant allows changing the initial state of both automata
   /// in case you want to start the product at a different place.
   ///
   /// The resulting automaton will accept the intersection of the
@@ -96,7 +96,7 @@ namespace spot
   /// \ingroup twa_algorithms
   /// \brief Sum two automata using a synchronous product
   ///
-  /// These variant allow changing the initial state of both automata
+  /// This variant allows changing the initial state of both automata
   /// in case you want to start the product at a different place.
   ///
   /// The resulting automaton will accept the sum of the languages
