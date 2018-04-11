@@ -1,0 +1,34 @@
+#!/bin/sh
+
+sed 's/(spot::<unnamed>::tae_aut_type)0/EXPLICIT/g' | \
+sed 's/(spot::<unnamed>::tae_aut_type)1/OTF/g' | \
+sed 's/(spot::<unnamed>::tae_aut_type)2/KRIPKE/g' | \
+sed 's/(spot::<unnamed>::tae_strength)0/STRONG/g' | \
+sed 's/(spot::<unnamed>::tae_strength)1/WEAK_L/g' | \
+sed 's/(spot::<unnamed>::tae_strength)2/WEAK/g' | \
+sed 's/(spot::(anonymous namespace)::tae_aut_type)0/EXPLICIT/g' | \
+sed 's/(spot::(anonymous namespace)::tae_aut_type)1/OTF/g' | \
+sed 's/(spot::(anonymous namespace)::tae_aut_type)2/KRIPKE/g' | \
+sed 's/(spot::(anonymous namespace)::tae_strength)0/STRONG/g' | \
+sed 's/(spot::(anonymous namespace)::tae_strength)1/WEAK_L/g' | \
+sed 's/(spot::(anonymous namespace)::tae_strength)2/WEAK/g' | \
+sed 's/spot::{anonymous}::product_state/p_state/g' | \
+sed 's/spot::{anonymous}::product_iterator/p_iterator/g' | \
+sed 's/typename spot::{anonymous}::tae_element<aut_type_l>::aut_t/aut_t_l/g' | \
+sed 's/typename spot::{anonymous}::tae_element<aut_type_r>::aut_t/aut_t_r/g' | \
+sed 's/typename spot::{anonymous}::tae_element<aut_type_l>::state_t/state_t_l/g' | \
+sed 's/typename spot::{anonymous}::tae_element<aut_type_r>::state_t/state_t_r/g' | \
+sed 's/spot::{anonymous}::tae_aut_type aut_type_l/aut_type_l/g' | \
+sed 's/spot::{anonymous}::tae_aut_type aut_type_r/aut_type_r/g' | \
+sed 's/spot::{anonymous}::tae_strength strength/strength/g' | \
+sed 's/typename spot::{anonymous}::tae_element<aut_type_r>::aut_t/aut_t_r/g' | \
+sed 's/spot::{anonymous}::tae_impl/tae_impl/g' | \
+sed 's/spot::{anonymous}::tae_dispatch_strength/tae_dispatch_strength/g' | \
+sed 's/(spot::(anonymous namespace)::tae_aut_type)0/EXPLICIT/g' | \
+sed 's/(spot::(anonymous namespace)::tae_aut_type)1/OTF/g' | \
+sed 's/(spot::(anonymous namespace)::tae_aut_type)2/KRIPKE/g' | \
+sed 's/(spot::(anonymous namespace)::tae_strength)0/STRONG/g' | \
+sed 's/(spot::(anonymous namespace)::tae_strength)1/WEAK_L/g' | \
+sed 's/(spot::(anonymous namespace)::tae_strength)2/WEAK/g' | \
+sed 's/spot::(anonymous namespace):://g' | \
+cat
