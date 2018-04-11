@@ -25,6 +25,23 @@
 namespace spot
 {
 
+parity_game::parity_game(const twa_graph_ptr& arena,
+                         const std::vector<bool>& owner)
+  : arena_(arena)
+  , owner_(owner)
+{
+  bool max, odd;
+  arena_->acc().is_parity(max, odd, true);
+  if (!(max && odd))
+    throw std::runtime_error("arena must have max-odd acceptance condition");
+
+  for (const auto& e : arena_->edges())
+    if (e.acc.max_set() == 0)
+      throw std::runtime_error("arena must be colorized");
+
+  assert(owner_.size() == arena_->num_states());
+}
+
 void parity_game::print(std::ostream& os)
 {
   os << "parity " << num_states() - 1 << ";\n";
@@ -86,7 +103,7 @@ parity_game::attractor(const region_t& subgame, region_t& set,
           bool any = false;
           bool all = true;
           unsigned i = 0;
-          for (auto& e: out(s))
+          for (const auto& e: out(s))
             {
               if (e.acc.max_set() - 1 <= max_parity && subgame.count(e.dst))
                 {
@@ -144,6 +161,7 @@ void parity_game::solve_rec(region_t& subgame, unsigned max_parity,
 
   if (w0[p].size() + u.size() == subgame.size())
     {
+      std::cerr << "finished" << std::endl;
       s[p].insert(s0[p].begin(), s0[p].end());
       s[p].insert(strat_u.begin(), strat_u.end());
       w[p].insert(subgame.begin(), subgame.end());
