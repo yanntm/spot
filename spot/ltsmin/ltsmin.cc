@@ -1287,6 +1287,38 @@ namespace spot
     return population;
   }
 
+
+  static std::vector<cspins_state>*
+  random_states (std::vector<cspins_state>&,
+                 cspins_state_manager& manager,
+                 ltsmin_kripkecube_ptr sys,
+                 const spins_interface* d,
+                 std::vector<int>, unsigned tid,
+                 std::function<bool(unsigned, unsigned)> ,
+                 unsigned,
+                 float, unsigned new_generation = 50)
+  {
+    // FIXME compress!
+    if (sys->compress())
+      assert(false);
+
+    unsigned pop_size = new_generation;
+    std::mt19937 gen;
+    gen.seed(tid);
+    std::vector<cspins_state>* population = new std::vector<cspins_state>();
+    int *tab = new int [d->get_state_size()+30]; // FIXME
+
+    for (unsigned i = 0; i < pop_size; ++i)
+      {
+        tab[i] = gen();
+        cspins_state res = manager.alloc_setup(tab, nullptr, 0); // FIXME
+        population->push_back(res);
+      }
+    delete[] tab;
+    return population;
+  }
+
+
   std::string
   ltsmin_model::interpolate_csv(ltsmin_kripkecube_ptr sys,
                                 std::function<bool(unsigned, unsigned)> fitness,
@@ -1465,7 +1497,7 @@ namespace spot
                                std::function<bool(unsigned, unsigned)> fitness,
                                std::string name, unsigned nb_generations,
                                int initial_population, float threshold,
-                               unsigned new_generation)
+                               unsigned new_generation, bool random)
   {
     name = name.substr(name.find_last_of("/")+1);
     spot::timer_map tm;
@@ -1510,7 +1542,9 @@ namespace spot
     for (unsigned i = 0; i < nbth; ++i)
       {
 	auto& manager = sys->manager(i);
-	swarmed[i] =
+        if (!random)
+          {
+            swarmed[i] =
 	    new algo_name(*sys, map, i,
                           [&manager, &sys, &d_, splitter_, i, fitness,
                            nb_generations, threshold, new_generation]
@@ -1521,6 +1555,21 @@ namespace spot
                                          nb_generations, threshold,
                                          new_generation);
 	    }, stop, initial_population);
+          }
+        else
+                    {
+            swarmed[i] =
+	    new algo_name(*sys, map, i,
+                          [&manager, &sys, &d_, splitter_, i, fitness,
+                           nb_generations, threshold, new_generation]
+	    (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
+	    {
+	      return random_states(cs, manager, sys, d_,
+					 splitter_, i, fitness,
+                                         nb_generations, threshold,
+                                         new_generation);
+	    }, stop, initial_population);
+          }
       }
     tm.stop("Initialisation");
 
@@ -1705,7 +1754,7 @@ namespace spot
                                std::function<bool(unsigned, unsigned)> fitness,
                                std::string name, unsigned nb_generations,
                                int initial_population, float threshold,
-                               unsigned new_generation)
+                               unsigned new_generation, bool random)
   {
     name = name.substr(name.find_last_of("/")+1);
     spot::timer_map tm;
@@ -1750,17 +1799,35 @@ namespace spot
     for (unsigned i = 0; i < nbth; ++i)
       {
 	auto& manager = sys->manager(i);
-	swarmed[i] =
-	    new algo_name(*sys, map, i,
-                          [&manager, &sys, &d_, splitter_, i, fitness,
-                           nb_generations, threshold, new_generation]
-	    (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
-	    {
-	      return  interpolate_states(cs, manager, sys, d_,
-					 splitter_, i, fitness,
-                                         nb_generations, threshold,
-                                         new_generation);
-	    }, stop, initial_population);
+
+        if (!random)
+          {
+            swarmed[i] =
+              new algo_name(*sys, map, i,
+               [&manager, &sys, &d_, splitter_, i, fitness,
+                nb_generations, threshold, new_generation]
+               (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
+               {
+                 return  interpolate_states(cs, manager, sys, d_,
+                                            splitter_, i, fitness,
+                                            nb_generations, threshold,
+                                            new_generation);
+               }, stop, initial_population);
+          }
+        else
+          {
+            swarmed[i] =
+              new algo_name(*sys, map, i,
+               [&manager, &sys, &d_, splitter_, i, fitness,
+                nb_generations, threshold, new_generation]
+               (std::vector<cspins_state> cs) -> std::vector<cspins_state>*
+               {
+                 return random_states(cs, manager, sys, d_,
+                                            splitter_, i, fitness,
+                                            nb_generations, threshold,
+                                            new_generation);
+               }, stop, initial_population);
+          }
       }
     tm.stop("Initialisation");
 

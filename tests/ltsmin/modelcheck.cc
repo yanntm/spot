@@ -215,7 +215,8 @@ static const argp_option options[] =
     { "swarmed-deadlock", SWARMED_DEADLOCK, nullptr, 0,
       "Look for deadlock inside of the model", 0 },
     { "swarmed-gp-deadlock", SWARMED_GP_DEADLOCK,
-      "[equal|lessthan|greaterthan|lessstrict|greaterstrict|greaterbounded]", 0,
+      "[equal|lessthan|greaterthan|lessstrict|greaterstrict|greaterbounded"
+       "|random]", 0,
       "Look for deadlock inside of the model with gp", 0 },
     { "threshold", 'T', "FLOAT", 0, "Threshold (0.999)", 0 },
     { "generation", 'G', "INT", 0, "nb generation (3)", 0 },
@@ -524,6 +525,7 @@ static int checked_main()
       tm.stop("load kripkecube");
 
       tm.start("swarming");
+      bool random = false;
       if (mc_options.swarmed_gp_dfs || mc_options.swarmed_gp_deadlock)
         {
           std::function<bool(unsigned, unsigned)> fitness;
@@ -558,7 +560,16 @@ static int checked_main()
               {
                 return succ >= fitness && succ <= 2 * fitness;
               };
-          else
+          else if (mc_options.interpolate_fitness.compare("random")
+                   == 0)
+            {
+              fitness = [](unsigned, unsigned)
+                {
+                  return true; //USELESS
+                };
+              random = true;
+            }
+            else
               assert(false);
           if (mc_options.swarmed_gp_dfs)
             spot::ltsmin_model::swarmed_gp_dfs(modelcube, fitness,
@@ -566,14 +577,16 @@ static int checked_main()
                                                mc_options.nb_generations,
                                                mc_options.initial_population,
                                                mc_options.threshold,
-                                               mc_options.new_generation);
+                                               mc_options.new_generation,
+                                               random);
           else
             spot::ltsmin_model::swarmed_gp_deadlock(modelcube, fitness,
                                                mc_options.model,
                                                mc_options.nb_generations,
                                                mc_options.initial_population,
                                                mc_options.threshold,
-                                               mc_options.new_generation);
+                                               mc_options.new_generation,
+                                               random);
         }
       else if (mc_options.swarmed_dfs)
         spot::ltsmin_model::swarmed_dfs(modelcube, mc_options.model);
