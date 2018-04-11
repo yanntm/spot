@@ -61,6 +61,9 @@ namespace spot
         it_ = begin_;
       }
 
+      void release()
+      {}
+
       bool first()
       {
         it_ = begin_;
@@ -107,7 +110,7 @@ namespace spot
         : aut_(aut), it_(aut->succ_iter(s))
       {}
 
-      ~tae_iterator_otf_common()
+      void release()
       {
         aut_->release_iter(it_);
       }
@@ -474,6 +477,12 @@ namespace spot
         return product_mark<STRONG>(left.acc(), right.acc());
       }
 
+      void release()
+      {
+        left.release();
+        right.release();
+      }
+
       iterator_l_t left;
       iterator_r_t right;
     };
@@ -619,9 +628,12 @@ namespace spot
 
                   if (backlinks.emplace(dst_state, current).second)
                     bfs_queue.push_back(dst_state);
+                  else
+                    dst_state.destroy();
                 }
               while (src_out.next());
 
+              src_out.release();
               src_state.destroy();
               bfs_queue.pop_front();
             }
@@ -646,6 +658,8 @@ namespace spot
                           },
                           ar_l ? &(ar_l->prefix) : nullptr,
                           ar_r ? &(ar_r->prefix) : nullptr);
+
+      init.destroy();
 
       // ##### Accepting Marks search #####
 
@@ -689,6 +703,8 @@ namespace spot
                         },
                         ar_l ? &(ar_l->cycle) : nullptr,
                         ar_r ? &(ar_r->cycle) : nullptr);
+
+      substart.destroy();
     }
 
     // The result of an accepting run.
@@ -867,7 +883,7 @@ namespace spot
                   root.pop();
                 }
 
-              // End of the scope, succ dies, iterators are properly released
+              succ.release();
 
               continue;
             }
@@ -916,8 +932,10 @@ namespace spot
             // This SCC is accepting
             {
               while (!todo.empty())
-                // Iterators are properly released.
-                todo.pop();
+                {
+                  todo.top().second.release();
+                  todo.pop();
+                }
 
               res->accepting_scc(root.top().index, acc);
               return std::static_pointer_cast<two_aut_res>(res);
