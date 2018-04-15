@@ -79,36 +79,48 @@ namespace spot
     assert(sprod);
 
     // What follow is a way to compute whether an SCC is useless in
-    // prod, without having to call
-    // scc_map::determine_unknown_acceptance() on scc_map(prod),
-    // because prod has potentially a large acceptance condition.
-    //
-    // We know that an SCC of the product is accepting iff it is the
-    // combination of two accepting SCCs of the original automaton.
-    //
-    // So we can just compute the acceptance of each SCC this way, and
-    // derive the usefulness from that.
+    // prod, avoiding scc_info::determine_unknown_acceptance() on the
+    // product, because prod may have a large acceptance condition.
     scc_info sccmap_prod(prod);
     unsigned psc = sccmap_prod.scc_count();
     std::vector<bool> useful(psc);
     for (unsigned n = 0; n < psc; ++n)
       {
-        unsigned one_state = sccmap_prod.states_of(n).front();
-        bool accepting =
-          v[(*sprod)[one_state].first] && v[(*sprod)[one_state].second];
-        if (accepting && !sccmap_prod.is_trivial(n))
+        // If scc_info could determinate acceptance easily, use it.
+        // An accepting SCC is useful.
+        bool uf = sccmap_prod.is_accepting_scc(n);
+        // If any of the successor is useful, this SCC is useful as
+        // well regardless of its acceptance.
+        if (!uf)
+          for (unsigned j: sccmap_prod.succ(n))
+            if (useful[j])
+              {
+                uf = true;
+                break;
+              }
+        if (uf)
           {
             useful[n] = true;
             continue;
           }
-        bool uf = false;
-        for (unsigned j: sccmap_prod.succ(n))
-          if (useful[j])
-            {
-              uf = true;
-              break;
-            }
-        useful[n] = uf;
+        if (!sccmap_prod.is_rejecting_scc(n))
+          {
+            // This SCC has no useful successors, but we still do not
+            // known if it is accepting.
+            //
+            // A necessary condition for the SCC to be accepting is that
+            // its it the combination of two accepting SCCs.  So let's
+            // test that first.
+            unsigned one_state = sccmap_prod.states_of(n).front();
+            bool accepting =
+              v[(*sprod)[one_state].first] && v[(*sprod)[one_state].second];
+            if (!accepting)
+              continue;
+            // We can't avoid it any more, we have to check the
+            // acceptance if the SCC.
+            std::vector<bool> k;
+            useful[n] = !sccmap_prod.check_scc_emptiness(n, &k);
+          }
       }
 
     // Now we just have to count the number of states && edges that

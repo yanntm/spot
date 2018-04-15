@@ -421,6 +421,20 @@ namespace spot
     return support;
   }
 
+  bool scc_info::check_scc_emptiness(unsigned n, std::vector<bool>* k)
+  {
+    if (SPOT_UNLIKELY(!aut_->is_existential()))
+      throw std::runtime_error("scc_info::check_scc_emptiness() "
+                               "does not support alternating automata");
+    if (SPOT_UNLIKELY(!(options_ & scc_info_options::TRACK_STATES)))
+      report_need_track_states();
+    k->assign(aut_->num_states(), false);
+    auto& node = node_[n];
+    for (auto i: node.states_)
+      (*k)[i] = true;
+    return mask_keep_accessible_states(aut_, *k, node.one_state_)->is_empty();
+  }
+
   void scc_info::determine_unknown_acceptance()
   {
     std::vector<bool> k;
@@ -436,15 +450,8 @@ namespace spot
               throw std::runtime_error(
                   "scc_info::determine_unknown_acceptance() "
                   "does not support alternating automata");
-            if (SPOT_UNLIKELY(!(options_ & scc_info_options::TRACK_STATES)))
-              report_need_track_states();
             auto& node = node_[s];
-            if (k.empty())
-              k.resize(aut_->num_states());
-            for (auto i: node.states_)
-              k[i] = true;
-            if (mask_keep_accessible_states(aut_, k, node.one_state_)
-                ->is_empty())
+            if (check_scc_emptiness(s, &k))
               node.rejecting_ = true;
             else
               node.accepting_ = true;
