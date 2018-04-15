@@ -583,9 +583,19 @@ namespace spot
       return node(scc).is_rejecting();
     }
 
-    // Study the SCC that are currently reported neither as accepting
-    // nor rejecting because of the presence of Fin sets
+    /// \brief Study the SCCs that are currently reported neither as
+    /// accepting nor as rejecting because of the presence of Fin sets
+    ///
+    /// This simply calls check_scc_emptiness() on undeterminate SCCs.
     void determine_unknown_acceptance();
+
+    /// \brief Recompute whether an SCC is accepting or not.
+    ///
+    /// This is an internal function of
+    /// determine_unknown_acceptance().  The Boolean vector k will be
+    /// used by the method to mark the state that belong to the SCC.
+    /// It can be shared between multiple calls.
+    bool check_scc_emptiness(unsigned n, std::vector<bool>* k);
 
     bool is_useful_scc(unsigned scc) const
     {
