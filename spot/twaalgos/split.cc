@@ -132,6 +132,35 @@ namespace spot
     return split;
   }
 
+  twa_graph_ptr unsplit(const const_twa_graph_ptr& aut)
+  {
+    twa_graph_ptr out = make_twa_graph(aut->get_dict());
+    out->copy_acceptance_of(aut);
+    out->copy_ap_of(aut);
+    out->new_states(aut->num_states());
+    out->set_init_state(aut->get_init_state_number());
+
+    std::vector<bool> seen(aut->num_states(), false);
+    std::deque<unsigned> todo;
+    todo.push_back(aut->get_init_state_number());
+    seen[aut->get_init_state_number()] = true;
+    while (!todo.empty())
+      {
+        unsigned cur = todo.front();
+        todo.pop_front();
+        seen[cur] = true;
+
+        for (const auto& i : aut->out(cur))
+          for (const auto& o : aut->out(i.dst))
+            {
+              out->new_edge(cur, o.dst, i.cond & o.cond, i.acc | o.acc);
+              if (!seen[o.dst])
+                todo.push_back(o.dst);
+            }
+      }
+    return out;
+  }
+
   twa_graph_ptr split_edges(const const_twa_graph_ptr& aut)
   {
     twa_graph_ptr out = make_twa_graph(aut->get_dict());

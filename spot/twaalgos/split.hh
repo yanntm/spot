@@ -53,4 +53,7 @@ namespace spot
   // propositions in I.
   SPOT_API twa_graph_ptr
   split_automaton(const const_twa_graph_ptr& aut, bdd input_bdd);
+  // helper function to test the above
+  SPOT_API twa_graph_ptr
+  unsplit(const const_twa_graph_ptr& aut);
 }
