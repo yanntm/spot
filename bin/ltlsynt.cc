@@ -360,7 +360,7 @@ namespace
 
           bool sim_ok = degen->num_states() > 100000 ? false : true;
           spot::determinizer det =
-            spot::determinizer::build(degen, true, true, sim_ok, true);
+            spot::determinizer::build(degen, false, true, sim_ok, true);
           det.deactivate_all();
           auto nda = det.aut();
           if (verbose)
