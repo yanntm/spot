@@ -140,13 +140,19 @@ void parity_game::solve_rec(region_t& subgame, unsigned max_parity,
   // The algorithm works recursively on subgames. To avoid useless copies of
   // the game at each call, subgame and max_parity are used to filter states
   // and transitions.
-  if (max_parity == 0 || subgame.empty())
+  if (subgame.empty())
     return;
   int p = max_parity % 2;
 
   // Recursion on max_parity.
   region_t u;
   auto strat_u = attractor(subgame, u, max_parity, p, true);
+
+  if (max_parity == 0)
+    {
+      s[p].insert(strat_u.begin(), strat_u.end());
+      return;
+    }
 
   for (unsigned s: u)
     subgame.erase(s);
@@ -161,7 +167,6 @@ void parity_game::solve_rec(region_t& subgame, unsigned max_parity,
 
   if (w0[p].size() + u.size() == subgame.size())
     {
-      std::cerr << "finished" << std::endl;
       s[p].insert(s0[p].begin(), s0[p].end());
       s[p].insert(strat_u.begin(), strat_u.end());
       w[p].insert(subgame.begin(), subgame.end());
