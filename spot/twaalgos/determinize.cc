@@ -820,7 +820,7 @@ namespace spot
         // test incremental build, even though it is not very useful here
         d.deactivate_all();
         unsigned n_states = d.aut()->num_states();
-        for (unsigned i = 1; i != n_states; ++i)
+        for (unsigned i = 0; i != n_states; ++i)
           {
             d.activate(i);
             d.run();
@@ -834,9 +834,8 @@ namespace spot
         d.run();
       }
 
-    auto res = d.get();
     cleanup_parity_here(d.get());
-    return res;
+    return d.get();
   }
 
   twa_graph_ptr
@@ -1088,6 +1087,10 @@ namespace spot
         res_->purge_unreachable_states(&f, this);
         for (const auto& s : waiting)
           re_add(s);
+
+        // add the initial state if it is the first time that run() is called
+        if (res_->num_edges() == 0)
+          re_add(get_safra(res_->get_init_state_number()));
       }
 
     compute_succs succs(aut_, seen_, scc_, implies_, active_, use_scc_,
@@ -1128,7 +1131,10 @@ namespace spot
 
                 for (const auto& e : aut_->out(node.first))
                   {
-                    unsigned dst_num = get_state(safra_state(e.dst));
+                    bool is_accepting =
+                      !use_scc_ || scc_.is_accepting_scc(scc_.scc_of(e.dst));
+                    unsigned dst_num =
+                      get_state(safra_state(e.dst, is_accepting));
                     if (e.acc || is_acc)
                       res_->new_edge(src_num, dst_num, e.cond, {1});
                     else
