@@ -483,26 +483,47 @@ namespace
               // FIXME use the strategy to find relevant states to activate
               std::vector<bool> seen(dpa->num_states(), false);
               std::deque<unsigned> todo({dpa->get_init_state_number()});
+
               while (!todo.empty())
                 {
                   unsigned wins = todo.front();
                   todo.pop_front();
                   seen[wins] = true;
+
+                  // if the state is one of the sinks, nothing to do
+                  if (wins >= det.get()->num_states())
+                    continue;
+                  // if the controller wins in this state, nothing to do
+                  if (winning_region[1].count(wins))
+                    continue;
+
+                  // the environment wins from this state
+                  // if the state belongs to the environment, then the
+                  // environment has a strategy from it
+                  // use this strategy to guide our exploration
+                  if (!owner[wins])
+                    {
+                      //if (strategy[0].find(wins) == strategy[0].end())
+                      //  throw std::runtime_error("no move for winner");
+
+                      unsigned i = 0;
+                      for (const auto& e : dpa->out(wins))
+                        {
+                          if (i++ != strategy[0].find(wins)->second)
+                            continue;
+
+                          if (!seen[e.dst])
+                            todo.push_back(e.dst);
+                          break;
+                        }
+                      continue;
+                    }
+
                   for (const auto& e : dpa->out(wins))
                     {
                       if (!seen[e.dst])
                         todo.push_back(e.dst);
                     }
-
-                  // if the state belongs to the environment, nothing to do
-                  if (!owner[wins])
-                    continue;
-                  // if the state is the sink, nothing to do
-                  if (wins == det.get()->num_states())
-                    continue;
-                  // if the state is not winning, nothing to do
-                  if (winning_region[0].find(wins) == winning_region[0].end())
-                    continue;
 
                   // FIXME do not consider states after a non-det state
 
