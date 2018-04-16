@@ -225,7 +225,7 @@ namespace
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
-    auto dpa = spot::tgba_determinize(split);
+    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split));
     dpa->merge_edges();
     spot::complete_here(dpa);
     spot::colorize_parity_here(dpa, true);
@@ -429,6 +429,7 @@ namespace
                   << " active control edges out of " << nb_control << std::endl;
 
               det.run();
+              det.get()->merge_edges();
               auto dpa = make_twa_graph(det.get(), { true, true, true,
                                                      true, true, true });
 
@@ -436,7 +437,7 @@ namespace
                 std::cerr << "dpa has " << dpa->num_states()
                   << " states" << std::endl;
 
-              dpa->merge_edges();
+              //dpa->merge_edges();
               dpa->purge_unreachable_states();
               spot::cleanup_parity_here(dpa);
               spot::colorize_parity_here(dpa, true);
