@@ -29,6 +29,7 @@
 
 #include "common_aoutput.hh"
 #include "common_finput.hh"
+#include "common_hoaread.hh"
 #include "common_setup.hh"
 #include "common_sys.hh"
 
@@ -60,7 +61,8 @@ enum
   OPT_PRINT_AIGER,
   OPT_REAL,
   OPT_INCREMENTAL,
-  OPT_VERBOSE
+  OPT_VERBOSE,
+  OPT_ARENA
 };
 
 static const argp_option options[] =
@@ -93,6 +95,7 @@ static const argp_option options[] =
       "verbose mode", -1 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },
+    { "arena", OPT_ARENA, "FILE", 0, "reads an arena directly", 0},
     { nullptr, 0, nullptr, 0, nullptr, 0 },
   };
 
@@ -142,6 +145,7 @@ ARGMATCH_VERIFY(solver_args, solver_types);
 
 static solver opt_solver = REC;
 static bool verbose = false;
+static bool opt_arena = false;
 
 namespace
 {
@@ -607,6 +611,38 @@ namespace
         }
     }
   };
+
+  class arena_processor : public hoa_processor
+  {
+  public:
+    arena_processor(spot::bdd_dict_ptr dict)
+      : hoa_processor(dict)
+    {}
+
+    int
+    process_automaton(const spot::const_parsed_aut_ptr& haut) override
+    {
+      auto aut = haut->aut;
+
+      auto owner = make_alternating_owner(aut);
+      auto pg = spot::parity_game(aut, owner);
+
+      spot::parity_game::strategy_t strategy[2];
+      spot::parity_game::region_t winning_region[2];
+      pg.solve(winning_region, strategy);
+
+      if (winning_region[1].count(pg.get_init_state_number()))
+        {
+          std::cout << "REALIZABLE" << std::endl;
+          return 0;
+        }
+      else
+        {
+          std::cout << "UNREALIZABLE" << std::endl;
+          return 1;
+        }
+    }
+  };
 }
 
 static int
@@ -654,6 +690,10 @@ parse_opt(int key, char* arg, struct argp_state*)
     case OPT_INCREMENTAL:
       opt_incremental = true;
       break;
+    case OPT_ARENA:
+      opt_arena = true;
+      jobs.emplace_back(arg, true);
+      break;
     }
   return 0;
 }
@@ -666,9 +706,18 @@ main(int argc, char **argv)
                     argp_program_doc, children, nullptr, nullptr };
   if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
     exit(err);
-  check_no_formula();
 
-  spot::translator trans;
-  ltl_processor processor(trans, input_aps, output_aps);
-  return processor.run();
+  if (opt_arena)
+    {
+      arena_processor processor(spot::make_bdd_dict());
+      return processor.run();
+    }
+  else
+    {
+      check_no_formula();
+
+      spot::translator trans;
+      ltl_processor processor(trans, input_aps, output_aps);
+      return processor.run();
+    }
 }
