@@ -53,32 +53,28 @@ namespace spot
     for (unsigned src = 0; src < tgba->num_states(); ++src)
       {
         std::unordered_map<bdd, bdd, spot::bdd_hash> input2sig;
-        for (const auto& e: tgba->out(src))
+        bdd support = bddtrue;
+        for (const auto& e : tgba->out(src))
+          support &= bdd_support(e.cond);
+        support = bdd_existcomp(support, input_bdd);
+
+        bdd all_letters = bddtrue;
+        while (all_letters != bddfalse)
           {
-            bdd support = bddtrue;
-            for (const auto& e : tgba->out(src))
-              support &= bdd_support(e.cond);
-            support = bdd_existcomp(support, input_bdd);
+            bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
+            all_letters -= one_letter;
+            auto it = input2sig.emplace(one_letter, bddfalse).first;
+
             for (const auto& e : tgba->out(src))
               {
-                bdd all_letters = bddtrue;
-                while (all_letters != bddfalse)
-                  {
-                    bdd one_letter =
-                      bdd_satoneset(all_letters, support, bddtrue);
-                    all_letters -= one_letter;
-                    auto it = input2sig.find(one_letter);
-                    if (it == input2sig.end())
-                      it = input2sig.emplace(one_letter, bddfalse).first;
+                bdd sig = bddtrue;
+                sig &= bdd_exist(e.cond & one_letter, input_bdd);
 
-                    bdd sig = bddtrue;
-                    for (auto n : e.acc.sets())
-                      sig &= bdd_ithvar(acc_vars + n);
-                    sig &= bdd_exist(e.cond & one_letter, input_bdd);
-                    sig &= bdd_ithvar(set_num + e.dst);
+                for (auto n : e.acc.sets())
+                  sig &= bdd_ithvar(acc_vars + n);
+                sig &= bdd_ithvar(set_num + e.dst);
 
-                    it->second |= sig;
-                  }
+                it->second |= sig;
               }
           }
 
@@ -105,28 +101,38 @@ namespace spot
         bdd sup_all_atomic_prop = bdd_exist(sup_sig, nonapvars);
         bdd all_atomic_prop = bdd_exist(sig.first, nonapvars);
 
-        spot::minato_isop isop(sig.first);
-        bdd cond_acc_dest;
-        while ((cond_acc_dest = isop.next()) != bddfalse)
+        // FIXME this is overkill, is not it?
+        while (all_atomic_prop != bddfalse)
           {
-            bdd cond = bdd_existcomp(cond_acc_dest, split->ap_vars());
+            bdd one = bdd_satoneset(all_atomic_prop, sup_all_atomic_prop,
+                                    bddtrue);
+            all_atomic_prop -= one;
 
-            unsigned dst =
-              bdd_var(bdd_existcomp(cond_acc_dest, all_states)) - set_num;
-
-            bdd acc = bdd_existcomp(cond_acc_dest, all_acc);
-            spot::acc_cond::mark_t m({});
-            while (acc != bddtrue)
+            minato_isop isop(sig.first & one);
+            bdd cond_acc_dest;
+            while ((cond_acc_dest = isop.next()) != bddfalse)
               {
-                m.set(bdd_var(acc) - acc_vars);
-                acc = bdd_high(acc);
-              }
 
-            split->new_edge(sig.second, dst, cond, m);
+                bdd cond = bdd_existcomp(cond_acc_dest, sup_all_atomic_prop);
+                unsigned dst =
+                  bdd_var(bdd_existcomp(cond_acc_dest, all_states)) - set_num;
+
+                bdd acc = bdd_existcomp(cond_acc_dest, all_acc);
+                spot::acc_cond::mark_t m({});
+                while (acc != bddtrue)
+                  {
+                    m.set(bdd_var(acc) - acc_vars);
+                    acc = bdd_high(acc);
+                  }
+
+                split->new_edge(sig.second, dst, cond, m);
+              }
           }
       }
 
     split->get_dict()->unregister_all_my_variables(&sig2state);
+
+    split->merge_edges();
 
     split->prop_universal(spot::trival::maybe());
     return split;
