@@ -370,10 +370,6 @@ namespace
                 << std::endl;
             }
 
-          std::cerr << "NDA is " << std::endl;
-          print_hoa(std::cerr, nda);
-          std::cerr << std::endl;
-
           unsigned nb_control = 0;
           std::vector<bool> active_states(nda->num_states(), false);
           {
@@ -457,10 +453,6 @@ namespace
               assert(f_aux());
 
               auto owner = complete_env(dpa, all_inputs);
-
-              std::cerr << "intermediate \"DPA\"" << std::endl;
-              print_hoa(std::cerr, dpa);
-              std::cerr << std::endl;
 
               auto pg = spot::parity_game(dpa, owner);
 
