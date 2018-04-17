@@ -29,6 +29,8 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/parity.hh>
 
+#include <spot/misc/fixpool.hh>
+
 namespace spot
 {
 
@@ -136,16 +138,21 @@ public:
 private:
   typedef twa_graph::graph_t::edge_storage_t edge_t;
 
+  typedef std::unordered_set<unsigned,
+                             std::hash<unsigned>,
+                             std::equal_to<unsigned>,
+                             pool_allocator<unsigned>> subgame_t;
+
   // Compute (in place) a set of states from which player can force a visit
   // through set, and a strategy to do it.
   // if attr_max is true, states that can force a visit through an edge with
   // max parity are also counted in.
-  strategy_t attractor(const region_t& subgame, region_t& set,
+  strategy_t attractor(const subgame_t& subgame, region_t& set,
                        unsigned max_parity, int odd,
                        bool attr_max = false) const;
 
   // Compute the winning strategy and winning region for both players.
-  void solve_rec(region_t& subgame, unsigned max_parity,
+  void solve_rec(subgame_t& subgame, unsigned max_parity,
                  region_t (&w)[2], strategy_t (&s)[2]) const;
 };
 
