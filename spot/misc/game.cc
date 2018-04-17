@@ -90,19 +90,22 @@ parity_game::attractor(const region_t& subgame, region_t& set,
                        unsigned max_parity, int p, bool attr_max) const
 {
   strategy_t strategy;
-  unsigned size;
   std::unordered_set<unsigned> complement = subgame;
+  for (unsigned s: set)
+    complement.erase(s);
+
+  bool once_more;
   do
     {
-      size = set.size();
-      for (unsigned s: set)
-        complement.erase(s);
+      once_more = false;
       for (auto it = complement.begin(); it != complement.end(); )
         {
           unsigned s = *it;
-          bool any = false;
-          bool all = true;
           unsigned i = 0;
+
+          bool is_owned = owner_[s] == p;
+          bool wins = !is_owned;
+
           for (const auto& e: out(s))
             {
               if (e.acc.max_set() - 1 <= max_parity && subgame.count(e.dst))
@@ -110,25 +113,35 @@ parity_game::attractor(const region_t& subgame, region_t& set,
                   if (set.count(e.dst)
                       || (attr_max && e.acc.max_set() - 1 == max_parity))
                     {
-                      if (!any && (owner_[s] == p))
-                        strategy[s] = i;
-                      any = true;
+                      if (is_owned)
+                        {
+                          strategy[s] = i;
+                          wins = true;
+                          break; // no need to check all edges
+                        }
                     }
                   else
-                    all = false;
+                    {
+                      if (!is_owned)
+                        {
+                          wins = false;
+                          break; // no need to check all edges
+                        }
+                    }
                 }
               ++i;
             }
-          bool owner_is_odd = owner_[s] == p;
-          if ((owner_is_odd && any) || (!owner_is_odd && all))
+
+          if (wins)
             {
               set.insert(s);
               it = complement.erase(it);
+              once_more = true;
             }
           else
             ++it;
         }
-    } while (set.size() != size);
+    } while (once_more);
   return strategy;
 }
 
