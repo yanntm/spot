@@ -19,8 +19,8 @@
 
 #include "config.h"
 
-#include <cmath>
 #include <spot/misc/game.hh>
+#include <spot/priv/allocator.hh>
 
 namespace spot
 {
@@ -73,149 +73,187 @@ void parity_game::print(std::ostream& os)
     }
 }
 
+
+  namespace
+  {
+    class zielonka final
+    {
+    public:
+      explicit zielonka(const parity_game& p): pg(p) {}
+
+      void solve(parity_game::region_t (&w)[2],
+                 parity_game::strategy_t (&s)[2]) const
+      {
+        subgame_t states_;
+        for (unsigned i = 0; i < pg.num_states(); ++i)
+          states_.insert(i);
+        unsigned m = pg.max_parity();
+        solve_rec(states_, m, w, s);
+      }
+
+    private:
+      const parity_game& pg;
+
+      using edge_t = twa_graph::graph_t::edge_storage_t;
+      using subgame_t =
+        std::unordered_set<unsigned,
+                           std::hash<unsigned>,
+                           std::equal_to<unsigned>,
+                           pool_allocator<unsigned>>;
+
+      using region_t = parity_game::region_t;
+      using strategy_t = parity_game::strategy_t;
+
+      // Compute (in place) a set of states from which player can force a visit
+      // through set, and a strategy to do it.
+      // if attr_max is true, states that can force a visit through an edge with
+      // max parity are also counted in.
+      parity_game::strategy_t
+      attractor(const subgame_t& subgame, region_t& set,
+                unsigned max_parity, int p, bool attr_max = false) const
+      {
+        // TODO move local variables to class members?
+        strategy_t strategy;
+        std::set<unsigned, std::less<unsigned>, pool_allocator<unsigned>>
+          complement(subgame.begin(), subgame.end());
+        for (unsigned s: set)
+          complement.erase(s);
+
+        acc_cond::mark_t max_acc({});
+        for (unsigned i = 0; i <= max_parity; ++i)
+          max_acc.set(i);
+
+        bool once_more;
+        do
+          {
+            once_more = false;
+            for (auto it = complement.begin(); it != complement.end();)
+              {
+                unsigned s = *it;
+                unsigned i = 0;
+
+                bool is_owned = pg.owner(s) == p;
+                bool wins = !is_owned;
+
+                for (const auto& e: pg.out(s))
+                  {
+                    if ((e.acc & max_acc) && subgame.count(e.dst))
+                      {
+                        if (set.count(e.dst)
+                            || (attr_max && e.acc.max_set() - 1 == max_parity))
+                          {
+                            if (is_owned)
+                              {
+                                strategy[s] = i;
+                                wins = true;
+                                break; // no need to check all edges
+                              }
+                          }
+                        else
+                          {
+                            if (!is_owned)
+                              {
+                                wins = false;
+                                break; // no need to check all edges
+                              }
+                          }
+                      }
+                    ++i;
+                  }
+
+                if (wins)
+                  {
+                    // FIXME C++17 extract/insert could be useful here
+                    set.emplace(s);
+                    it = complement.erase(it);
+                    once_more = true;
+                  }
+                else
+                  ++it;
+              }
+          } while (once_more);
+        return strategy;
+      }
+
+      // Compute the winning strategy and winning region for both players.
+      void solve_rec(subgame_t& subgame, unsigned max_parity,
+                     region_t (&w)[2], strategy_t (&s)[2]) const
+      {
+        assert(w[0].empty());
+        assert(w[1].empty());
+        assert(s[0].empty());
+        assert(s[1].empty());
+        // The algorithm works recursively on subgames. To avoid useless copies
+        // of the game at each call, subgame and max_parity are used to filter
+        // states and transitions.
+        if (subgame.empty())
+          return;
+        int p = max_parity % 2;
+
+        // Recursion on max_parity.
+        region_t u;
+        auto strat_u = attractor(subgame, u, max_parity, p, true);
+
+        if (max_parity == 0)
+          {
+            s[p] = std::move(strat_u);
+            w[p] = std::move(u);
+            // FIXME what about w[!p]?
+            return;
+          }
+
+        for (unsigned s: u)
+          subgame.erase(s);
+        region_t w0[2];   // Player's winning region in first recursive call
+        strategy_t s0[2]; // Player's winning strategy in first recursive call
+        solve_rec(subgame, max_parity - 1, w0, s0);
+        if (w0[0].size() + w0[1].size() != subgame.size())
+          throw std::runtime_error("size mismatch");
+        //if (w0[p].size() != subgame.size())
+        //  for (unsigned s: subgame)
+        //    if (w0[p].find(s) == w0[p].end())
+        //      w0[!p].insert(s);
+        subgame.insert(u.begin(), u.end());
+
+        if (w0[p].size() + u.size() == subgame.size())
+          {
+            s[p] = std::move(strat_u);
+            s[p].insert(s0[p].begin(), s0[p].end());
+            w[p].insert(subgame.begin(), subgame.end());
+            return;
+          }
+
+        // Recursion on game size.
+        auto strat_wnp = attractor(subgame, w0[!p], max_parity, !p);
+
+        for (unsigned s: w0[!p])
+          subgame.erase(s);
+
+        region_t w1[2];   // Odd's winning region in second recursive call
+        strategy_t s1[2]; // Odd's winning strategy in second recursive call
+        solve_rec(subgame, max_parity, w1, s1);
+        if (w1[0].size() + w1[1].size() != subgame.size())
+          throw std::runtime_error("size mismatch");
+
+        w[p] = std::move(w1[p]);
+        s[p] = std::move(s1[p]);
+
+        w[!p] = std::move(w1[!p]);
+        w[!p].insert(w0[!p].begin(), w0[!p].end());
+        s[!p] = std::move(strat_wnp);
+        s[!p].insert(s0[!p].begin(), s0[!p].end());
+        s[!p].insert(s1[!p].begin(), s1[!p].end());
+
+        subgame.insert(w0[!p].begin(), w0[!p].end());
+      }
+
+    };
+  }
+
 void parity_game::solve(region_t (&w)[2], strategy_t (&s)[2]) const
 {
-  region_t states_;
-  for (unsigned i = 0; i < num_states(); ++i)
-    states_.insert(i);
-  unsigned m = max_parity();
-  solve_rec(states_, m, w, s);
-}
-
-parity_game::strategy_t
-parity_game::attractor(const region_t& subgame, region_t& set,
-                       unsigned max_parity, int p, bool attr_max) const
-{
-  strategy_t strategy;
-  std::set<unsigned> complement(subgame.begin(), subgame.end());
-  for (unsigned s: set)
-    complement.erase(s);
-
-  acc_cond::mark_t max_acc({});
-  for (unsigned i = 0; i <= max_parity; ++i)
-    max_acc.set(i);
-
-  bool once_more;
-  do
-    {
-      once_more = false;
-      for (auto it = complement.begin(); it != complement.end();)
-        {
-          unsigned s = *it;
-          unsigned i = 0;
-
-          bool is_owned = owner_[s] == p;
-          bool wins = !is_owned;
-
-          for (const auto& e: out(s))
-            {
-              if ((e.acc & max_acc) && subgame.count(e.dst))
-                {
-                  if (set.count(e.dst)
-                      || (attr_max && e.acc.max_set() - 1 == max_parity))
-                    {
-                      if (is_owned)
-                        {
-                          strategy[s] = i;
-                          wins = true;
-                          break; // no need to check all edges
-                        }
-                    }
-                  else
-                    {
-                      if (!is_owned)
-                        {
-                          wins = false;
-                          break; // no need to check all edges
-                        }
-                    }
-                }
-              ++i;
-            }
-
-          if (wins)
-            {
-              // FIXME C++17 extract/insert could be useful here
-              set.emplace(s);
-              it = complement.erase(it);
-              once_more = true;
-            }
-          else
-            ++it;
-        }
-    } while (once_more);
-  return strategy;
-}
-
-void parity_game::solve_rec(region_t& subgame, unsigned max_parity,
-                            region_t (&w)[2], strategy_t (&s)[2]) const
-{
-  assert(w[0].empty());
-  assert(w[1].empty());
-  assert(s[0].empty());
-  assert(s[1].empty());
-  // The algorithm works recursively on subgames. To avoid useless copies of
-  // the game at each call, subgame and max_parity are used to filter states
-  // and transitions.
-  if (subgame.empty())
-    return;
-  int p = max_parity % 2;
-
-  // Recursion on max_parity.
-  region_t u;
-  auto strat_u = attractor(subgame, u, max_parity, p, true);
-
-  if (max_parity == 0)
-    {
-      s[p] = std::move(strat_u);
-      w[p] = std::move(u);
-      // FIXME what about w[!p]?
-      return;
-    }
-
-  for (unsigned s: u)
-    subgame.erase(s);
-  region_t w0[2]; // Player's winning region in the first recursive call.
-  strategy_t s0[2]; // Player's winning strategy in the first recursive call.
-  solve_rec(subgame, max_parity - 1, w0, s0);
-  if (w0[0].size() + w0[1].size() != subgame.size())
-    throw std::runtime_error("size mismatch");
-  //if (w0[p].size() != subgame.size())
-  //  for (unsigned s: subgame)
-  //    if (w0[p].find(s) == w0[p].end())
-  //      w0[!p].insert(s);
-  subgame.insert(u.begin(), u.end());
-
-  if (w0[p].size() + u.size() == subgame.size())
-    {
-      s[p] = std::move(strat_u);
-      s[p].insert(s0[p].begin(), s0[p].end());
-      w[p].insert(subgame.begin(), subgame.end());
-      return;
-    }
-
-  // Recursion on game size.
-  auto strat_wnp = attractor(subgame, w0[!p], max_parity, !p);
-
-  for (unsigned s: w0[!p])
-    subgame.erase(s);
-
-  region_t w1[2]; // Odd's winning region in the second recursive call.
-  strategy_t s1[2]; // Odd's winning strategy in the second recursive call.
-  solve_rec(subgame, max_parity, w1, s1);
-  if (w1[0].size() + w1[1].size() != subgame.size())
-    throw std::runtime_error("size mismatch");
-
-  w[p] = std::move(w1[p]);
-  s[p] = std::move(s1[p]);
-
-  w[!p] = std::move(w1[!p]);
-  w[!p].insert(w0[!p].begin(), w0[!p].end());
-  s[!p] = std::move(strat_wnp);
-  s[!p].insert(s0[!p].begin(), s0[!p].end());
-  s[!p].insert(s1[!p].begin(), s1[!p].end());
-
-  subgame.insert(w0[!p].begin(), w0[!p].end());
+  zielonka z(*this);
+  z.solve(w, s);
 }
 
 }
