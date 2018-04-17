@@ -92,14 +92,14 @@ parity_game::attractor(const region_t& subgame, region_t& set,
   strategy_t strategy;
   unsigned size;
   std::unordered_set<unsigned> complement = subgame;
-  std::unordered_set<unsigned> delta = set;
   do
     {
       size = set.size();
-      for (unsigned s: delta)
+      for (unsigned s: set)
         complement.erase(s);
-      for (unsigned s: complement)
+      for (auto it = complement.begin(); it != complement.end(); )
         {
+          unsigned s = *it;
           bool any = false;
           bool all = true;
           unsigned i = 0;
@@ -123,8 +123,10 @@ parity_game::attractor(const region_t& subgame, region_t& set,
           if ((owner_is_odd && any) || (!owner_is_odd && all))
             {
               set.insert(s);
-              delta.insert(s);
+              it = complement.erase(it);
             }
+          else
+            ++it;
         }
     } while (set.size() != size);
   return strategy;
