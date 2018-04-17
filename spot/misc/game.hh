@@ -38,6 +38,12 @@ private:
   const const_twa_graph_ptr arena_;
   const std::vector<bool> owner_;
 
+  static constexpr char UNSOLVED = 255;
+  static constexpr char ODD = 1;
+  static constexpr char EVEN = 0;
+
+  mutable std::vector<char> winner_;
+  mutable std::vector<unsigned> strategy_;
 public:
   /// \a parity_game provides an interface to manipulate a colorized parity
   /// automaton as a parity game, including methods to solve the game.
