@@ -149,11 +149,62 @@ static bool opt_arena = false;
 
 namespace
 {
+  static void
+  solve_oink(spot::twa_graph_ptr& _arena)
+  {
+    auto arena = sbacc(_arena);
+
+    unsigned sink_env = arena->new_state();
+    unsigned sink_con = arena->new_state();
+
+    auto um = arena->acc().unsat_mark();
+    if (!um.first)
+      throw std::runtime_error("game winning condition is a tautology");
+    arena->new_edge(sink_con, sink_env, bddtrue, um.second);
+    arena->new_edge(sink_env, sink_con, bddtrue, um.second);
+
+    std::vector<bool> seen(arena->num_states(), false);
+    std::vector<unsigned> todo({arena->get_init_state_number()});
+    std::vector<bool> owner(arena->num_states(), false);
+    owner[arena->get_init_state_number()] = false;
+    owner[sink_env] = true;
+    while (!todo.empty())
+      {
+        unsigned src = todo.back();
+        todo.pop_back();
+        seen[src] = true;
+        bdd missing = bddtrue;
+        for (const auto& e: arena->out(src))
+          {
+            if (!owner[src])
+              missing -= e.cond;
+
+            if (!seen[e.dst])
+              {
+                owner[e.dst] = !owner[src];
+                todo.push_back(e.dst);
+              }
+          }
+        if (!owner[src] && missing != bddfalse)
+          arena->new_edge(src, sink_con, missing, um.second);
+      }
+
+    pg::Game oink_game(arena->num_states());
+    for (unsigned i = 0; i != arena->num_states(); ++i)
+      {
+        for (const auto& e: arena->out(i))
+          oink_game.addEdge(i, e.dst);
+        oink_game.initNode(i, arena->out(i).begin()->acc.max_set()-1, owner[i]);
+      }
+    pg::Oink solver(oink_game, std::cerr);
+    solver.setSolver("atl");
+    solver.run();
+  }
 
   // Ensures that the game is complete for player 0.
   // Also computes the owner of each state (false for player 0, i.e. env)
   static std::vector<bool>
-  complete_env(spot::twa_graph_ptr& arena, bdd inputs)
+  complete_env(spot::twa_graph_ptr& arena)
   {
     unsigned sink_env = arena->new_state();
     unsigned sink_con = arena->new_state();
@@ -453,7 +504,7 @@ namespace
                 };
               assert(f_aux());
 
-              auto owner = complete_env(dpa, all_inputs);
+              auto owner = complete_env(dpa);
 
               auto pg = spot::parity_game(dpa, owner);
 
