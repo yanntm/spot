@@ -52,6 +52,8 @@
 
 #include <spot/twaalgos/hoa.hh>
 
+#include <src/oink.hpp>
+
 enum
 {
   OPT_ALGO = 256,
@@ -62,7 +64,8 @@ enum
   OPT_REAL,
   OPT_INCREMENTAL,
   OPT_VERBOSE,
-  OPT_ARENA
+  OPT_ARENA,
+  OPT_OINK // FIXME protect it with #ifdef
 };
 
 static const argp_option options[] =
@@ -83,6 +86,9 @@ static const argp_option options[] =
       " time algorithm)", 0 },
     { "incr", OPT_INCREMENTAL, nullptr, 0,
       "use the incremental algorithm", 0 },
+    // FIXME merge with OPT_ALGO??
+    { "oink", OPT_OINK, nullptr, 0,
+      "use oink to solve the parity game", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
@@ -122,6 +128,7 @@ bool opt_print_pg(false);
 bool opt_real(false);
 bool opt_print_aiger(false);
 bool opt_incremental(false);
+bool opt_oink(false);
 
 // FIXME rename options to choose the algorithm
 enum solver
@@ -149,8 +156,10 @@ static bool opt_arena = false;
 
 namespace
 {
-  static void
-  solve_oink(spot::twa_graph_ptr& arena)
+  static std::vector<bool>
+  solve_oink(spot::twa_graph_ptr& arena,
+             spot::parity_game::region_t (&winning)[2],
+             spot::parity_game::strategy_t (&strat)[2])
   {
     unsigned sink_env = arena->new_state();
     unsigned sink_con = arena->new_state();
@@ -166,6 +175,7 @@ namespace
     std::vector<bool> owner(arena->num_states(), false);
     owner[arena->get_init_state_number()] = false;
     owner[sink_env] = true;
+    unsigned max_parity = 0;
     while (!todo.empty())
       {
         unsigned src = todo.back();
@@ -182,42 +192,71 @@ namespace
                 owner[e.dst] = !owner[src];
                 todo.push_back(e.dst);
               }
+
+            max_parity = std::max(max_parity, e.acc.max_set());
           }
         if (!owner[src] && missing != bddfalse)
           arena->new_edge(src, sink_con, missing, um.second);
-      }
-
-    std::map<std::pair<unsigned, unsigned>, unsigned> spot2oink;
-    std::map<unsigned, std::pair<unsigned, unsigned>> oink2spot;
-    pg::Game oink_game();
-    // it is really a shame that oink uses state-based games
-    auto find_state = [&spot2oink, &oink2spot](unsigned st, unsigned p)
-      {
-        auto tmp = spot2oink.emplace(std::piecewise_construct, st, p, 0);
-        if (tmp.first)
-          {
-            unsigned n = spot2oink.size();
-            tmp.second->second = n;
-            oink2spot[n] = std::make_pair(st, p);
-          }
-        return tmp.second->second;
-      };
-
-    for (const auto& e: arena->edges())
-      {
 
       }
 
-    pg::Game oink_game(arena->num_states());
+    // max_parity contains the number of priorities used in the arena
+    // states of the arena are mapped to oink game states with
+    //  (st,p) -> st*max_parity + p
+
+    pg::Game oink_game(arena->num_states() * max_parity);
     for (unsigned i = 0; i != arena->num_states(); ++i)
-      {
-        for (const auto& e: arena->out(i))
-          oink_game.addEdge(i, e.dst);
-        oink_game.initNode(i, arena->out(i).begin()->acc.max_set()-1, owner[i]);
-      }
+      for (unsigned p = 0; p != max_parity; ++p)
+        oink_game.initNode(i*max_parity + p, p, owner[i]);
+    for (const auto& e: arena->edges())
+      for (unsigned p = 0; p != max_parity; ++p)
+        oink_game.addEdge(e.src*max_parity + p,
+                          e.dst*max_parity + e.acc.max_set()-1);
+
+    if (verbose)
+      oink_game.write_pgsolver(std::cerr);
+
+    // Oink game is built, now solve it
     pg::Oink solver(oink_game, std::cerr);
     solver.setSolver("atl");
+    std::cerr << "ready to solve with oink" << std::endl;
     solver.run();
+    std::cerr << "oink done" << std::endl;
+
+    for (unsigned i = 0; i != arena->num_states(); ++i)
+      {
+        unsigned iwin = oink_game.winner[i*max_parity];
+        for (unsigned p = 1; p != max_parity; ++p)
+          if (oink_game.winner[i*max_parity + p] != iwin)
+            throw std::runtime_error("inconsistency");
+
+        winning[iwin].insert(i);
+
+        // strategy computation
+        if (owner[i] == iwin)
+          {
+            unsigned j = i*max_parity + 0;
+            // FIXME how can I be sure that all nodes agree? should I retain the
+            // largest priority played? the smallest? the oddest?
+            // I think I should retain the largest
+            assert(strategy[j] != -1);
+            unsigned dst = oink_game.strategy[j] / max_parity;
+            unsigned par = oink_game.strategy[j] % max_parity;
+            // find an edge with this priority and destination
+            unsigned k = 0;
+            for (const auto& e: arena->out(i))
+              {
+                if (e.dst == dst && e.acc.max_set()-1 == par)
+                  {
+                    strat[iwin][i] = k;
+                    break;
+                  }
+                ++k;
+              }
+          }
+      }
+
+    return owner;
   }
 
   // Ensures that the game is complete for player 0.
@@ -314,17 +353,16 @@ namespace
   // accessible.  Also merge back pairs of p --(i)--> q --(o)--> r
   // transitions to p --(i&o)--> r.
   static spot::twa_graph_ptr
-  strat_to_aut(const spot::parity_game& pg,
-               const spot::parity_game::strategy_t& strat,
+  strat_to_aut(const spot::parity_game::strategy_t& strat,
                const spot::twa_graph_ptr& dpa,
                bdd all_outputs)
   {
     auto aut = spot::make_twa_graph(dpa->get_dict());
     aut->copy_ap_of(dpa);
-    std::vector<unsigned> todo{pg.get_init_state_number()};
-    std::vector<int> pg2aut(pg.num_states(), -1);
+    std::vector<unsigned> todo{dpa->get_init_state_number()};
+    std::vector<int> pg2aut(dpa->num_states(), -1);
     aut->set_init_state(aut->new_state());
-    pg2aut[pg.get_init_state_number()] = aut->get_init_state_number();
+    pg2aut[dpa->get_init_state_number()] = aut->get_init_state_number();
     while (!todo.empty())
       {
         unsigned s = todo.back();
@@ -523,20 +561,27 @@ namespace
                 };
               assert(f_aux());
 
-              auto owner = complete_env(dpa);
-
-              auto pg = spot::parity_game(dpa, owner);
-
               spot::parity_game::strategy_t strategy[2];
               spot::parity_game::region_t winning_region[2];
-              pg.solve(winning_region, strategy);
-              if (winning_region[1].count(pg.get_init_state_number()))
+              std::vector<bool> owner;
+              if (opt_oink)
+                {
+                  owner = solve_oink(dpa, winning_region, strategy);
+                }
+              else
+                {
+                  owner = complete_env(dpa);
+                  auto pg = spot::parity_game(dpa, owner);
+                  pg.solve(winning_region, strategy);
+                }
+
+              if (winning_region[1].count(dpa->get_init_state_number()))
                 {
                   std::cout << "REALIZABLE\n";
                   if (!opt_real)
                     {
                       auto strat_aut =
-                        strat_to_aut(pg, strategy[1], dpa, all_outputs);
+                        strat_to_aut(strategy[1], dpa, all_outputs);
 
                       // output the winning strategy
                       if (opt_print_aiger)
@@ -652,7 +697,7 @@ namespace
                       if (!opt_real)
                         {
                           auto strat_aut =
-                            strat_to_aut(pg, strategy[1], dpa, all_outputs);
+                            strat_to_aut(strategy[1], dpa, all_outputs);
 
                           // output the winning strategy
                           if (opt_print_aiger)
@@ -773,6 +818,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_INCREMENTAL:
       opt_incremental = true;
+      break;
+    case OPT_OINK:
+      opt_oink = true;
       break;
     case OPT_ARENA:
       opt_arena = true;

@@ -59,6 +59,14 @@ AC_ARG_ENABLE([doxygen],
   [enable_doxygen=yes], [enable_doxygen=no])
 AM_CONDITIONAL([ENABLE_DOXYGEN], [test "x${enable_doxygen:-no}" = xyes])
 
+AC_ARG_WITH([oink],
+            [AC_HELP_STRING([--with-oink=path/to/oink],
+                            [Provide the path to oink library.])])
+AM_CONDITIONAL([WITH_OINK_PATH], [test "x${with_oink} != x"])
+if test "x${with_oink} != x"; then
+  AC_SUBST([OINK_PATH], ["${with_oink}"])
+fi
+
 # Activate C11 for gnulib tests
 AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
 
