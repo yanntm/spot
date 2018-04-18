@@ -150,10 +150,8 @@ static bool opt_arena = false;
 namespace
 {
   static void
-  solve_oink(spot::twa_graph_ptr& _arena)
+  solve_oink(spot::twa_graph_ptr& arena)
   {
-    auto arena = sbacc(_arena);
-
     unsigned sink_env = arena->new_state();
     unsigned sink_con = arena->new_state();
 
@@ -187,6 +185,27 @@ namespace
           }
         if (!owner[src] && missing != bddfalse)
           arena->new_edge(src, sink_con, missing, um.second);
+      }
+
+    std::map<std::pair<unsigned, unsigned>, unsigned> spot2oink;
+    std::map<unsigned, std::pair<unsigned, unsigned>> oink2spot;
+    pg::Game oink_game();
+    // it is really a shame that oink uses state-based games
+    auto find_state = [&spot2oink, &oink2spot](unsigned st, unsigned p)
+      {
+        auto tmp = spot2oink.emplace(std::piecewise_construct, st, p, 0);
+        if (tmp.first)
+          {
+            unsigned n = spot2oink.size();
+            tmp.second->second = n;
+            oink2spot[n] = std::make_pair(st, p);
+          }
+        return tmp.second->second;
+      };
+
+    for (const auto& e: arena->edges())
+      {
+
       }
 
     pg::Game oink_game(arena->num_states());
