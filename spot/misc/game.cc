@@ -73,7 +73,7 @@ void parity_game::print(std::ostream& os)
 
 void parity_game::solve(region_t (&w)[2], strategy_t (&s)[2]) const
 {
-  region_t states_;
+  subgame_t states_;
   for (unsigned i = 0; i < num_states(); ++i)
     states_.insert(i);
   unsigned m = max_parity();
@@ -86,11 +86,11 @@ bool parity_game::solve_qp() const
 }
 
 parity_game::strategy_t
-parity_game::attractor(const region_t& subgame, region_t& set,
+parity_game::attractor(const subgame_t& subgame, region_t& set,
                        unsigned max_parity, int p, bool attr_max) const
 {
   strategy_t strategy;
-  std::unordered_set<unsigned> complement = subgame;
+  subgame_t complement(subgame.begin(), subgame.end());
   for (unsigned s: set)
     complement.erase(s);
 
@@ -145,7 +145,7 @@ parity_game::attractor(const region_t& subgame, region_t& set,
   return strategy;
 }
 
-void parity_game::solve_rec(region_t& subgame, unsigned max_parity,
+void parity_game::solve_rec(subgame_t& subgame, unsigned max_parity,
                             region_t (&w)[2], strategy_t (&s)[2]) const
 {
   assert(w[0].empty());

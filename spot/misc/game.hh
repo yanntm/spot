@@ -29,6 +29,8 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/parity.hh>
 
+#include <spot/misc/fixpool.hh>
+
 namespace spot
 {
 
@@ -145,7 +147,7 @@ private:
   typedef std::unordered_set<unsigned,
                              std::hash<unsigned>,
                              std::equal_to<unsigned>,
-                             myfancyallocator> subgame_t;
+                             pool_allocator<unsigned>> subgame_t;
 
   // Compute (in place) a set of states from which player can force a visit
   // through set, and a strategy to do it.
