@@ -36,6 +36,7 @@ import signal
 import tempfile
 from contextlib import suppress as _supress
 
+
 # The parrameters used by default when show() is called on an automaton.
 _show_default = None
 

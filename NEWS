@@ -1,4 +1,4 @@
-New in spot 2.5.2.dev (not yet released)
+New in spot 2.5.3.dev  (not yet released)
 
   Command-line tools:
 
@@ -59,6 +59,8 @@ New in spot 2.5.2.dev (not yet released)
     bindings for sat_minimize() now have a display_log and return_log
     options; there are demonstrated on the new
     https://spot.lrde.epita.fr/ipynb/satmin.html page.
+
+New in spot 2.5.3 (2018-04-20)
 
   Bugs fixed:
 
