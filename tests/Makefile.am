@@ -393,6 +393,7 @@ TESTS_python = \
   python/setacc.py \
   python/setxor.py \
   python/simstate.py \
+  python/split.py \
   python/streett_totgba.py \
   python/streett_totgba2.py \
   python/rs_like.py \

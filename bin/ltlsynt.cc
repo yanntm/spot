@@ -34,17 +34,18 @@
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/game.hh>
-#include <spot/misc/minato.hh>
 #include <spot/tl/formula.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
-#include <spot/twaalgos/complete.hh>
+#include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/sbacc.hh>
 #include <spot/twaalgos/totgba.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/simulation.hh>
+#include <spot/twaalgos/split.hh>
 
 enum
 {
@@ -136,54 +137,6 @@ static bool verbose = false;
 
 namespace
 {
-  // Take an automaton and a set of atomic propositions I, and split each
-  // transition
-  //
-  //     p -- cond --> q                cond in 2^2^AP
-  //
-  // into a set of transitions of the form
-  //
-  //     p -- i1 --> r1 -- o1 --> q     i1 in 2^I
-  //                                    o1 in 2^O
-  //
-  //     p -- i2 --> r2 -- o2 --> q     i2 in 2^I
-  //                                    o2 in 2^O
-  //     ...
-  //
-  // where O = AP\I, and such that cond = (i1 & o1) | (i2 & o2) | ...
-  //
-  // When determinized, this encodes a game automaton that has a winning
-  // strategy iff aut has an accepting run for any valuation of atomic
-  // propositions in I.
-
-  static spot::twa_graph_ptr
-  split_automaton(const spot::twa_graph_ptr& aut,
-                  bdd input_bdd)
-  {
-    auto tgba = spot::to_generalized_buchi(aut);
-    auto split = spot::make_twa_graph(tgba->get_dict());
-    split->copy_ap_of(tgba);
-    split->copy_acceptance_of(tgba);
-    split->new_states(tgba->num_states());
-    split->set_init_state(tgba->get_init_state_number());
-
-    for (unsigned src = 0; src < tgba->num_states(); ++src)
-      for (const auto& e: tgba->out(src))
-        {
-          spot::minato_isop isop(e.cond);
-          bdd cube;
-          while ((cube = isop.next()) != bddfalse)
-            {
-              unsigned q = split->new_state();
-              bdd in = bdd_existcomp(cube, input_bdd);
-              bdd out = bdd_exist(cube, input_bdd);
-              split->new_edge(src, q, in, {});
-              split->new_edge(q, e.dst, out, e.acc);
-            }
-        }
-    split->prop_universal(spot::trival::maybe());
-    return split;
-  }
 
   // Ensures that the game is complete for player 0.
   // Also computes the owner of each state (false for player 0, i.e. env).
@@ -232,7 +185,9 @@ namespace
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
-    auto dpa = spot::tgba_determinize(split);
+    // if the input automaton is deterministic, degeneralize it to be sure to
+    // end up with a parity automaton
+    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split));
     dpa->merge_edges();
     if (opt_print_pg)
       dpa = spot::sbacc(dpa);
@@ -338,7 +293,7 @@ namespace
           all_outputs &= bdd_ithvar(v);
         }
 
-      auto split = split_automaton(aut, all_inputs);
+      auto split = split_2step(aut, all_inputs);
       if (verbose)
         std::cerr << "split inputs and outputs done" << std::endl;
       auto dpa = to_dpa(split);
