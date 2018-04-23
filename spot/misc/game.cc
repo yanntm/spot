@@ -51,6 +51,8 @@ void parity_game::print(std::ostream& os)
     {
       unsigned src = todo.back();
       todo.pop_back();
+      if (seen[src])
+        continue;
       seen[src] = true;
       os << src << ' ';
       os << out(src).begin()->acc.max_set() - 1 << ' ';
