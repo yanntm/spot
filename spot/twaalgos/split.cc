@@ -19,9 +19,154 @@
 
 #include "config.h"
 #include <spot/twaalgos/split.hh>
+#include <spot/misc/minato.hh>
+#include <spot/twaalgos/totgba.hh>
+#include <spot/misc/bddlt.hh>
 
 namespace spot
 {
+  twa_graph_ptr
+  split_2step(const const_twa_graph_ptr& aut, bdd input_bdd)
+  {
+    if (!aut->acc().is_generalized_buchi())
+      throw std::runtime_error("2step_split only works on TGBA");
+    auto split = make_twa_graph(aut->get_dict());
+    split->copy_ap_of(aut);
+    split->copy_acceptance_of(aut);
+    split->new_states(aut->num_states());
+    split->set_init_state(aut->get_init_state_number());
+
+    std::unordered_map<bdd, unsigned, spot::bdd_hash> sig2state;
+
+    unsigned set_num = split->get_dict()
+      ->register_anonymous_variables(aut->num_states()+1, &sig2state);
+    bdd all_states = bddtrue;
+    for (unsigned i = 0; i <= aut->num_states(); ++i)
+      all_states &= bdd_ithvar(set_num + i);
+
+    unsigned acc_vars = split->get_dict()
+      ->register_anonymous_variables(aut->num_sets(), &sig2state);
+    bdd all_acc = bddtrue;
+    for (unsigned i = 0; i < aut->num_sets(); ++i)
+      all_acc &= bdd_ithvar(acc_vars + i);
+
+    for (unsigned src = 0; src < aut->num_states(); ++src)
+      {
+        std::unordered_map<bdd, bdd, spot::bdd_hash> input2sig;
+        bdd support = bddtrue;
+        for (const auto& e : aut->out(src))
+          support &= bdd_support(e.cond);
+        support = bdd_existcomp(support, input_bdd);
+
+        bdd all_letters = bddtrue;
+        while (all_letters != bddfalse)
+          {
+            bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
+            all_letters -= one_letter;
+            auto it = input2sig.emplace(one_letter, bddfalse).first;
+
+            for (const auto& e : aut->out(src))
+              {
+                bdd sig = bddtrue;
+                sig &= bdd_exist(e.cond & one_letter, input_bdd);
+
+                for (auto n : e.acc.sets())
+                  sig &= bdd_ithvar(acc_vars + n);
+                sig &= bdd_ithvar(set_num + e.dst);
+
+                it->second |= sig;
+              }
+          }
+
+        for (const auto& in : input2sig)
+          {
+            bdd sig = in.second;
+            auto it = sig2state.find(sig);
+            if (it == sig2state.end())
+              {
+                unsigned ns = split->new_state();
+                it = sig2state.emplace(sig, ns).first;
+              }
+            split->new_edge(src, it->second, in.first);
+          }
+      }
+
+    // Now add all states based on their signatures
+    // This is very similar to the code of the simulation
+    bdd nonapvars = all_acc & all_states;
+    for (const auto& sig : sig2state)
+      {
+        // for each valuation, extract cond, acc and dst
+        bdd sup_sig = bdd_support(sig.first);
+        bdd sup_all_atomic_prop = bdd_exist(sup_sig, nonapvars);
+        bdd all_atomic_prop = bdd_exist(sig.first, nonapvars);
+
+        // FIXME this is overkill, is not it?
+        while (all_atomic_prop != bddfalse)
+          {
+            bdd one = bdd_satoneset(all_atomic_prop, sup_all_atomic_prop,
+                                    bddtrue);
+            all_atomic_prop -= one;
+
+            minato_isop isop(sig.first & one);
+            bdd cond_acc_dest;
+            while ((cond_acc_dest = isop.next()) != bddfalse)
+              {
+
+                bdd cond = bdd_existcomp(cond_acc_dest, sup_all_atomic_prop);
+                unsigned dst =
+                  bdd_var(bdd_existcomp(cond_acc_dest, all_states)) - set_num;
+
+                bdd acc = bdd_existcomp(cond_acc_dest, all_acc);
+                spot::acc_cond::mark_t m({});
+                while (acc != bddtrue)
+                  {
+                    m.set(bdd_var(acc) - acc_vars);
+                    acc = bdd_high(acc);
+                  }
+
+                split->new_edge(sig.second, dst, cond, m);
+              }
+          }
+      }
+
+    split->get_dict()->unregister_all_my_variables(&sig2state);
+
+    split->merge_edges();
+
+    split->prop_universal(spot::trival::maybe());
+    return split;
+  }
+
+  twa_graph_ptr unsplit_2step(const const_twa_graph_ptr& aut)
+  {
+    twa_graph_ptr out = make_twa_graph(aut->get_dict());
+    out->copy_acceptance_of(aut);
+    out->copy_ap_of(aut);
+    out->new_states(aut->num_states());
+    out->set_init_state(aut->get_init_state_number());
+
+    std::vector<bool> seen(aut->num_states(), false);
+    std::deque<unsigned> todo;
+    todo.push_back(aut->get_init_state_number());
+    seen[aut->get_init_state_number()] = true;
+    while (!todo.empty())
+      {
+        unsigned cur = todo.front();
+        todo.pop_front();
+        seen[cur] = true;
+
+        for (const auto& i : aut->out(cur))
+          for (const auto& o : aut->out(i.dst))
+            {
+              out->new_edge(cur, o.dst, i.cond & o.cond, i.acc | o.acc);
+              if (!seen[o.dst])
+                todo.push_back(o.dst);
+            }
+      }
+    return out;
+  }
+
   twa_graph_ptr split_edges(const const_twa_graph_ptr& aut)
   {
     twa_graph_ptr out = make_twa_graph(aut->get_dict());
