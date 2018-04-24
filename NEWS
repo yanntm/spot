@@ -60,6 +60,11 @@ New in spot 2.5.3.dev  (not yet released)
     options; there are demonstrated on the new
     https://spot.lrde.epita.fr/ipynb/satmin.html page.
 
+  Bugs fixed:
+
+  - print_dot() will correctly escape strings containing \n in HTML
+    mode.
+
 New in spot 2.5.3 (2018-04-20)
 
   Bugs fixed:

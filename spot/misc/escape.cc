@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2015, 2016 Laboratoire de Recherche et
-// Developpement de l'Epita (LRDE)
+// Copyright (C) 2012, 2013, 2015, 2016, 2018 Laboratoire de Recherche
+// et Developpement de l'Epita (LRDE)
 // Copyright (C) 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
 // et Marie Curie.
@@ -92,6 +92,9 @@ namespace spot
           break;
         case '>':
           os << "&gt;";
+          break;
+        case '\n':
+          os << "<br/>";
           break;
         default:
           os << i;
