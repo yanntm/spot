@@ -55,7 +55,9 @@ enum
   OPT_PRINT,
   OPT_PRINT_AIGER,
   OPT_REAL,
-  OPT_VERBOSE
+  OPT_VERBOSE,
+  OPT_NAIVE,
+  OPT_TIME
 };
 
 static const argp_option options[] =
@@ -86,6 +88,8 @@ static const argp_option options[] =
       "verbose mode", -1 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },
+    { "time", OPT_TIME, nullptr, 0, "time the different steps of synthesis", 0},
+    { "naive", OPT_NAIVE, nullptr, 0, "deactivate Spot optimizations", 0},
     { nullptr, 0, nullptr, 0, nullptr, 0 },
   };
 
@@ -111,6 +115,8 @@ static std::vector<std::string> output_aps;
 bool opt_print_pg(false);
 bool opt_real(false);
 bool opt_print_aiger(false);
+bool opt_time(false);
+bool opt_naive(false);
 
 // FIXME rename options to choose the algorithm
 enum solver
@@ -187,9 +193,10 @@ namespace
   {
     // if the input automaton is deterministic, degeneralize it to be sure to
     // end up with a parity automaton
-    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split));
+    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split), false,
+                                      !opt_naive, !opt_naive, !opt_naive);
     dpa->merge_edges();
-    if (opt_print_pg)
+    if (opt_print_pg || opt_naive)
       dpa = spot::sbacc(dpa);
     spot::colorize_parity_here(dpa, true);
     spot::change_parity_here(dpa, spot::parity_kind_max,
@@ -256,6 +263,11 @@ namespace
     std::vector<std::string> input_aps_;
     std::vector<std::string> output_aps_;
 
+    double trans_time;
+    double split_time;
+    double deter_time;
+    double solve_time;
+
   public:
 
     ltl_processor(spot::translator& trans,
@@ -270,8 +282,19 @@ namespace
     {
       spot::process_timer timer;
       timer.start();
+      // initialize buddy before measuring time
+      {
+        auto dict = spot::make_bdd_dict();
+      }
+      spot::stopwatch sw;
+      sw.start();
+
+      if (opt_naive)
+        trans_.set_level(spot::postprocessor::Low);
 
       auto aut = trans_.run(&f);
+      if (opt_time)
+        trans_time = sw.stop();
       if (verbose)
         std::cerr << "translating formula done" << std::endl;
       bdd all_inputs = bddtrue;
@@ -294,9 +317,13 @@ namespace
         }
 
       auto split = split_2step(aut, all_inputs);
+      if (opt_time)
+        split_time = sw.stop();
       if (verbose)
         std::cerr << "split inputs and outputs done" << std::endl;
       auto dpa = to_dpa(split);
+      if (opt_time)
+        deter_time = sw.stop();
       if (verbose)
         std::cerr << "determinization done" << std::endl;
       auto owner = complete_env(dpa);
@@ -317,6 +344,15 @@ namespace
               spot::parity_game::strategy_t strategy[2];
               spot::parity_game::region_t winning_region[2];
               pg.solve(winning_region, strategy);
+              if (opt_time)
+                solve_time = sw.stop();
+              if (opt_time)
+                {
+                  std::cerr << "translation took " << trans_time << '\n'
+                    << "splitting took " << split_time - trans_time << '\n'
+                    << "determinize took " << deter_time - split_time << '\n'
+                    << "solving took " << solve_time - deter_time << std::endl;
+                }
               if (winning_region[1].count(pg.get_init_state_number()))
                 {
                   std::cout << "REALIZABLE\n";
@@ -408,6 +444,12 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_VERBOSE:
       verbose = true;
+      break;
+    case OPT_TIME:
+      opt_time = true;
+      break;
+    case OPT_NAIVE:
+      opt_naive = true;
       break;
     }
   return 0;
