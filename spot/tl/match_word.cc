@@ -359,16 +359,20 @@ namespace spot
 
         case op::tt:
           handle_map(prefix, cycle, f,
-              [](...) -> bool
+              [](const std::list<formula>& list, const formula& f) -> bool
                 {
+                  (void)list;
+                  (void)f;
                   return true;
                 });
           break;
 
         case op::ff:
           handle_map(prefix, cycle, f,
-              [](...) -> bool
+              [](const std::list<formula>& list, const formula& f) -> bool
                 {
+                  (void)list;
+                  (void)f;
                   return false;
                 });
           break;
