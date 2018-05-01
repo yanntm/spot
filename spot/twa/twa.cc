@@ -109,22 +109,46 @@ namespace spot
   bool
   twa::intersects(const_twa_ptr other) const
   {
+    static bool use_two_aut = []()
+      {
+        auto s = getenv("SPOT_TWO_AUT");
+        return s ? std::stoi(s) : true;
+      }();
     auto a1 = remove_fin_maybe(shared_from_this());
     auto a2 = remove_fin_maybe(other);
-    return bool(two_aut_ec(a1, a2));
+    if (use_two_aut)
+      return bool(two_aut_ec(a1, a2));
+    return !otf_product(a1, a2)->is_empty();
   }
 
   twa_run_ptr
   twa::intersecting_run(const_twa_ptr other, bool from_other) const
   {
-    auto a1 = remove_fin_maybe(shared_from_this());
-    auto a2 = remove_fin_maybe(other);
-    auto res = two_aut_ec(a1, a2);
-    if (!res)
-      return nullptr;
+    static bool use_two_aut = []()
+      {
+        auto s = getenv("SPOT_TWO_AUT");
+        return s ? std::stoi(s) : true;
+      }();
+    if (use_two_aut)
+      {
+        auto a1 = remove_fin_maybe(shared_from_this());
+        auto a2 = remove_fin_maybe(other);
+        auto res = two_aut_ec(a1, a2);
+        if (!res)
+          return nullptr;
+        if (from_other)
+          return res->right_accepting_run();
+        return res->left_accepting_run();
+      }
+    auto a = shared_from_this();
     if (from_other)
-      return res->right_accepting_run();
-    return res->left_accepting_run();
+      other = remove_fin_maybe(other);
+    else
+      a = remove_fin_maybe(a);
+    auto run = otf_product(a, other)->accepting_run();
+    if (!run)
+      return nullptr;
+    return run->project(from_other ? other : a);
   }
 
   twa_word_ptr

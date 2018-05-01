@@ -235,6 +235,11 @@ When this variable is defined, temporary files are not removed.
 This is mostly useful for debugging.
 
 .TP
+\fBSPOT_TWO_AUT\fR
+If this variable is set to 0, intersection checks will not make use of the
+two-automaton emptiness check.
+
+.TP
 \fBSPOT_XCNF\fR
 Assign a folder path to this variable to generate XCNF files whenever
 SAT\-based minimization is used \- the file is outputed as "incr.xcnf"
