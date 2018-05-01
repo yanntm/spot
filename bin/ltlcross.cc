@@ -711,8 +711,6 @@ namespace
         return false;
       }
 
-    auto prod = spot::product(aut_i, aut_j);
-
     if (verbose)
       {
         std::cerr << "info: check_empty ";
@@ -727,7 +725,7 @@ namespace
         std::cerr << '\n';
       }
 
-    auto w = prod->accepting_word();
+    auto w = aut_i->intersecting_word(aut_j);
     if (w)
       {
         std::ostream& err = global_error();

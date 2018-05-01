@@ -50,7 +50,6 @@
 #include <spot/twaalgos/alternation.hh>
 #include <spot/twaalgos/cleanacc.hh>
 #include <spot/twaalgos/remfin.hh>
-#include <spot/twaalgos/product.hh>
 #include <spot/misc/escape.hh>
 #include <spot/misc/timer.hh>
 
@@ -518,13 +517,11 @@ namespace
         return false;
       }
 
-    auto prod = spot::product(aut_i, aut_j);
-
     if (verbose)
       std::cerr << "info: check_empty "
                 << autname(i) << '*' << autname(j, true) << '\n';
 
-    auto w = prod->accepting_word();
+    auto w = aut_i->intersecting_word(aut_j);
     if (w)
       {
         std::ostream& err = global_error();
