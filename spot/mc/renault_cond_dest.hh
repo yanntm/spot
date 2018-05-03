@@ -55,6 +55,10 @@ namespace spot
       std::atomic<unsigned> worker_;
       /// The set of worker for which this state is on DFS
       std::atomic<unsigned> onstack_;
+
+      /// The local expanded view
+      std::atomic<unsigned> expanded_local_;
+
       /// \brief next element for work stealing
       std::atomic<uf_element*> next_;
       /// \brief current status for the element
@@ -128,7 +132,7 @@ namespace spot
       v->list_status_ = list_status::BUSY;
       v->wip_ = 0;
       v->expanded_ = false;
-
+      v->expanded_local_ = 0;
       auto it = map_.insert({v});
       bool b = it.isnew();
 
