@@ -26,6 +26,7 @@
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twaalgos/minimize.hh>
 #include <spot/twaalgos/dualize.hh>
+#include <spot/twaalgos/isdet.hh>
 
 namespace spot
 {
@@ -73,16 +74,75 @@ namespace spot
 
       if (!state_based)
         {
+          bool is_det = is_deterministic(aut);
+          bool initial_state_reachable = false;
           for (auto& e: aut->edges())
-            if (term[si.scc_of(e.dst)])
+            if (e.dst == init)
               {
-                e.dst = init;
-                e.acc = {0};
+                initial_state_reachable = true;
+                break;
               }
-            else
-              {
-                e.acc = {};
-              }
+          unsigned nedges = aut->num_edges();
+          unsigned new_init = -1U;
+          // The loop might add new edges, but we just want to iterate
+          // on the initial ones.
+          for (unsigned edge = 1; edge <= nedges; ++edge)
+            {
+              auto& e = aut->edge_storage(edge);
+              if (term[si.scc_of(e.dst)])
+                {
+                  if (initial_state_reachable
+                      // If the source state is the initial state, we
+                      // should not try to combine it with itself...
+                      || e.src == init)
+                    {
+                      e.dst = init;
+                      e.acc = {0};
+                      new_init = init;
+                      continue;
+                    }
+                  // If initial state cannot be reached from another
+                  // state of the automaton, we can get rid of it by
+                  // combining the edge reaching the terminal state
+                  // with the edges leaving the initial state.
+                  bdd econd = e.cond;
+                  bool first = true;
+                  // Combine this edge with any compatible edge from
+                  // the initial state.
+                  for (auto& ei: aut->out(init))
+                    {
+                      bdd cond = ei.cond & econd;
+                      if (cond != bddfalse)
+                        {
+                          if (first)
+                            {
+                              e.dst = ei.dst;
+                              e.acc = {0};
+                              e.cond = cond;
+                              first = false;
+                              if (new_init == -1U)
+                                new_init = e.src;
+                            }
+                          else
+                            {
+                              aut->new_edge(e.src, ei.dst, cond, {0});
+                            }
+
+                        }
+                    }
+                }
+              else
+                {
+                  e.acc = {};
+                }
+            }
+          // In a deterministic and suspendable automaton, all states
+          // recognize the same language, so we can freely move the
+          // initial state.  We decide to use the source of any
+          // accepting transition, in the hope that it will make the
+          // original initial state unreachable.
+          if (is_det && new_init != -1U)
+            aut->set_init_state(new_init);
         }
       else
         {
