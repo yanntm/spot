@@ -70,10 +70,10 @@ static const argp_option options[] =
       " propositions", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
-    { "algo", OPT_ALGO, "qp|rec", 0,
-      "choose the parity game algorithm, valid ones are rec (Zielonka's"
-      " recursive algorithm, default) and qp (Calude et al.'s quasi-polynomial"
-      " time algorithm)", 0 },
+    { "algo", OPT_ALGO, "ds|sd", 0,
+      "choose the algorithm for synthesis:\n"
+      " - sd: split then determinize (default)\n"
+      " - ds: determinize then split", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
@@ -112,27 +112,29 @@ bool opt_print_pg(false);
 bool opt_real(false);
 bool opt_print_aiger(false);
 
-// FIXME rename options to choose the algorithm
 enum solver
 {
-  QP,
-  REC
+  INCR,
+  DET_SPLIT,
+  SPLIT_DET
 };
 
 static char const *const solver_args[] =
 {
-  "qp", "quasi-polynomial",
-  "recursive",
+  "incr",
+  "detsplit", "ds",
+  "splitdet", "sd",
   nullptr
 };
 static solver const solver_types[] =
 {
-  QP, QP,
-  REC,
+  INCR,
+  DET_SPLIT, DET_SPLIT,
+  SPLIT_DET, SPLIT_DET
 };
 ARGMATCH_VERIFY(solver_args, solver_types);
 
-static solver opt_solver = REC;
+static solver opt_solver = SPLIT_DET;
 static bool verbose = false;
 
 namespace
@@ -187,7 +189,8 @@ namespace
   {
     // if the input automaton is deterministic, degeneralize it to be sure to
     // end up with a parity automaton
-    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split));
+    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
+                                      false, true, true, false);
     dpa->merge_edges();
     if (opt_print_pg)
       dpa = spot::sbacc(dpa);
@@ -293,12 +296,40 @@ namespace
           all_outputs &= bdd_ithvar(v);
         }
 
-      auto split = split_2step(aut, all_inputs);
-      if (verbose)
-        std::cerr << "split inputs and outputs done" << std::endl;
-      auto dpa = to_dpa(split);
-      if (verbose)
-        std::cerr << "determinization done" << std::endl;
+      spot::twa_graph_ptr dpa = nullptr;
+      if (opt_solver == DET_SPLIT)
+        {
+          auto tmp = to_dpa(aut);
+          if (verbose)
+            std::cerr << "determinization done\n"
+              << "dpa has " << tmp->num_states() << " states" << std::endl;
+          tmp->merge_states();
+          if (verbose)
+            std::cerr << "simulation done\n"
+              << "dpa has " << tmp->num_states() << " states" << std::endl;
+          dpa = split_2step(tmp, all_inputs);
+          if (verbose)
+            std::cerr << "split inputs and outputs done\n"
+              << "automaton has " << dpa->num_states() << " states"
+              << std::endl;
+          spot::colorize_parity_here(dpa, true);
+        }
+      else
+        {
+          auto split = split_2step(aut, all_inputs);
+          if (verbose)
+            std::cerr << "split inputs and outputs done\n"
+              << "automaton has " << split->num_states() << " states"
+              << std::endl;
+          dpa = to_dpa(split);
+          if (verbose)
+            std::cerr << "determinization done\n"
+              << "dpa has " << dpa->num_states() << " states" << std::endl;
+          dpa->merge_states();
+          if (verbose)
+            std::cerr << "simulation done\n"
+              << "dpa has " << dpa->num_states() << " states" << std::endl;
+        }
       auto owner = complete_env(dpa);
       auto pg = spot::parity_game(dpa, owner);
       if (verbose)
@@ -310,58 +341,33 @@ namespace
           pg.print(std::cout);
           return 0;
         }
-      switch (opt_solver)
-        {
-          case REC:
-            {
-              spot::parity_game::strategy_t strategy[2];
-              spot::parity_game::region_t winning_region[2];
-              pg.solve(winning_region, strategy);
-              if (winning_region[1].count(pg.get_init_state_number()))
-                {
-                  std::cout << "REALIZABLE\n";
-                  if (!opt_real)
-                    {
-                      auto strat_aut =
-                        strat_to_aut(pg, strategy[1], dpa, all_outputs);
 
-                      // output the winning strategy
-                      if (opt_print_aiger)
-                        spot::print_aiger(std::cout, strat_aut);
-                      else
-                        {
-                          automaton_printer printer;
-                          printer.print(strat_aut, timer);
-                        }
-                    }
-                  return 0;
-                }
+      spot::parity_game::strategy_t strategy[2];
+      spot::parity_game::region_t winning_region[2];
+      pg.solve(winning_region, strategy);
+      if (winning_region[1].count(pg.get_init_state_number()))
+        {
+          std::cout << "REALIZABLE\n";
+          if (!opt_real)
+            {
+              auto strat_aut =
+                strat_to_aut(pg, strategy[1], dpa, all_outputs);
+
+              // output the winning strategy
+              if (opt_print_aiger)
+                spot::print_aiger(std::cout, strat_aut);
               else
                 {
-                  std::cout << "UNREALIZABLE\n";
-                  return 1;
+                  automaton_printer printer;
+                  printer.print(strat_aut, timer);
                 }
             }
-          case QP:
-            if (!opt_real)
-              {
-                std::cout << "The quasi-polynomial time algorithm does not"
-                  " implement synthesis yet, use --realizability\n";
-                return 2;
-              }
-            else if (pg.solve_qp())
-              {
-                std::cout << "REALIZABLE\n";
-                return 0;
-              }
-            else
-              {
-                std::cout << "UNREALIZABLE\n";
-                return 1;
-              }
-          default:
-            SPOT_UNREACHABLE();
-            return 2;
+          return 0;
+        }
+      else
+        {
+          std::cout << "UNREALIZABLE\n";
+          return 1;
         }
     }
   };

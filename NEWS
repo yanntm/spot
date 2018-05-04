@@ -1,6 +1,15 @@
 New in spot 2.6.0.dev  (not yet released)
 
-  Nothing yet.
+  - ltlsynt now has two algorithms for synthesis:
+    --algo=sd     is the historical one. The automaton of the formula
+                  is split to separate inputs and outputs, then
+                  determinized.
+    --algo=ds     the automaton of the formula is determinized, then
+                  split to separate inputs and outputs.
+    In all three cases, the obtained parity game is solved using
+    Zielonka algorithm. Calude's quasi-polynomial time algorithm has
+    been dropped as it was not used.
+
 
 New in spot 2.6  (2018-07-04)
 
