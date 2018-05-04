@@ -84,6 +84,10 @@ New in spot 2.5.3.dev  (not yet released)
     They are most welcome in Python, since we used to redefine
     them every now and them.
 
+  - spot::parity_product() and spot::parity_product_or() were dropped.
+    The code was buggy, hard to maintain, and these functions do not
+    seem to be used.
+
   Python:
 
   - New spot.jupyter package.  This currently contains a function for
