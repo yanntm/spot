@@ -9,16 +9,17 @@ Spot is a C++14 library for LTL, ω-automata manipulation and model
 checking.  It has the following notable features:
 
 - Support for [[file:concepts.org::#ltl][LTL]] (several syntaxes supported) and
-  [[file:concepts.org::#psl][the linear fragment of PSL]].
+  [[file:concepts.org::#psl][a subset of the linear fragment of PSL]].
 - Support for ω-automata with [[file:concepts.org::#acceptance-condition][arbitrary acceptance condition]].
 - Support for [[file:concepts.org::#trans-acc][transition-based acceptance]] (state-based acceptance is
   supported by a reduction to transition-based acceptance).
 - The automaton parser can read a stream of automata written in any of
   four syntaxes ([[file:hoa.org][HOA]], [[http://spinroot.com/spin/Man/never.html][never claims]], [[http://www.tcs.hut.fi/Software/lbtt/doc/html/Format-for-automata.html][LBTT]], [[http://www.ltl2dstar.de/docs/ltl2dstar.html][DSTAR]]).
 - Several algorithms for formula manipulation including: simplifying
-  formulas, testing implication or equivalence, testing
-  stutter-invariance, removing some operators by rewriting, translation
-  to automata, testing membership to the [[file:hierarchy.org][temporal hierarchy of Manna & Pnueli]]...
+  formulas, testing implication or equivalence, [[https://spot.lrde.epita.fr/ipynb/stutter-inv.html][testing
+  stutter-invariance]], removing some operators by rewriting,
+  translation to automata, testing membership to the [[file:hierarchy.org][temporal
+  hierarchy of Manna & Pnueli]]...
 - Several algorithms for automata manipulation including: product,
   emptiness checks, simulation-based reductions, minimization of
   weak-DBA, removal of useless SCCs, acceptance-condition
@@ -29,7 +30,8 @@ checking.  It has the following notable features:
 - One command-line tool, called [[file:ltlcross.org][=ltlcross=]], is a rewrite of [[http://www.tcs.hut.fi/Software/lbtt/][LBTT]], but
   with support for PSL and automata with arbitrary acceptance
   conditions.  It can be used to test tools that translate LTL into
-  ω-automata, or benchmark them.
+  ω-automata, or benchmark them.  A similar tool, [[file:autcross.org][=autcross=]], checks
+  tools that transform automata.
 
 * Latest version
 
