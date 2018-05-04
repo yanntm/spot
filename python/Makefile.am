@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2010, 2011, 2013-2017 Laboratoire de Recherche
+## Copyright (C) 2010, 2011, 2013-2018 Laboratoire de Recherche
 ## et Development de l'Epita (LRDE).
 ## Copyright (C) 2003, 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 ## département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -41,6 +41,7 @@ nobase_python_PYTHON = \
   spot/impl.py \
   spot/ltsmin.py \
   spot/gen.py \
+  spot/jupyter.py \
   buddy.py
 nobase_pyexec_LTLIBRARIES = _buddy.la spot/_impl.la \
   spot/_ltsmin.la spot/_gen.la
