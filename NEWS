@@ -87,6 +87,11 @@ New in spot 2.5.2 (2018-03-25)
     options; there are demonstrated on the new
     https://spot.lrde.epita.fr/ipynb/satmin.html page.
 
+  - spot::contains() and spot::are_equivalent() can be used to
+    check language containement between two automata or formulas.
+    They are most welcome in Python, since we used to redefine
+    them every now and them.
+
   Python:
 
   - New spot.jupyter package.  This currently contains a function for

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 # l'EPITA.
 #
 # This file is part of Spot, a model checking library.
@@ -23,29 +23,6 @@ import os
 import shutil
 import sys
 
-def parse_multiple_auts(hoa):
-  l = hoa.split('--END--')
-  a = []
-  cpt = 0
-  for x in l:
-    if x.isspace() or x == '':
-      continue
-    x = x + "--END--"
-    a.append(spot.automaton(x))
-
-  return a
-
-def ensure_deterministic(a):
-  if a.is_existential() and spot.is_deterministic(a):
-    return a
-
-  return a.postprocess('Generic', 'deterministic', 'Low')
-
-def equivalent(a1, a2):
-  na1 = spot.dualize(ensure_deterministic(a1))
-  na2 = spot.dualize(ensure_deterministic(a2))
-  return (not a1.intersects(na2)) and (not a2.intersects(na1))
-
 def tgba(a):
   if not a.is_existential():
     a = spot.remove_alternation(a)
@@ -54,11 +31,11 @@ def tgba(a):
 
 def test_aut(aut):
   stgba = tgba(aut)
-  assert equivalent(stgba, aut)
+  assert stgba.equivalent_to(aut)
   os.environ["SPOT_STREETT_CONV_MIN"] = '1'
   sftgba = tgba(aut)
   del os.environ["SPOT_STREETT_CONV_MIN"]
-  assert equivalent(stgba, sftgba)
+  assert stgba.equivalent_to(sftgba)
 
   slike = spot.simplify_acceptance(aut)
 
@@ -66,7 +43,7 @@ def test_aut(aut):
   os.environ["SPOT_STREETT_CONV_MIN"] = "1"
   slftgba = tgba(slike)
   del os.environ["SPOT_STREETT_CONV_MIN"]
-  assert equivalent(sltgba, slftgba)
+  assert sltgba.equivalent_to(slftgba)
 
 # Those automata are generated with ltl2dstar, which is NOT part of spot,
 # using the following command:
