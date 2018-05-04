@@ -675,6 +675,27 @@ def translate(formula, *args, dict=_bdd_dict):
 formula.translate = translate
 
 
+def contains(left, right):
+    from spot.impl import contains as contains_impl
+    if type(left) is str:
+        left = formula(left)
+    if type(right) is str:
+        right = formula(right)
+    return contains_impl(left, right)
+
+def are_equivalent(left, right):
+    from spot.impl import are_equivalent as equiv
+    if type(left) is str:
+        left = formula(left)
+    if type(right) is str:
+        right = formula(right)
+    return equiv(left, right)
+
+formula.contains = contains
+formula.equivalent_to = are_equivalent
+twa.contains = contains
+twa.equivalent_to = are_equivalent
+
 def postprocess(automaton, *args, formula=None):
     """Post process an automaton.
 
@@ -713,15 +734,17 @@ twa.postprocess = postprocess
 
 # Wrap C++-functions into lambdas so that they get converted into
 # instance methods (i.e., self passed as first argument
-# automatically), because only used-defined functions are converted as
+# automatically), because only user-defined functions are converted as
 # instance methods.
-def _add_twa_graph(meth):
-    setattr(twa_graph, meth, (lambda self, *args, **kwargs:
-                              globals()[meth](self, *args, **kwargs)))
+def _add_twa_graph(meth, name = None):
+    setattr(twa_graph, name or meth, (lambda self, *args, **kwargs:
+                                      globals()[meth](self, *args, **kwargs)))
 
 for meth in ('scc_filter', 'scc_filter_states',
-             'is_deterministic', 'is_unambiguous'):
+             'is_deterministic', 'is_unambiguous',
+             'contains'):
     _add_twa_graph(meth)
+_add_twa_graph('are_equivalent', 'equivalent_to')
 
 # Wrapper around a formula iterator to which we add some methods of formula
 # (using _addfilter and _addmap), so that we can write things like
@@ -987,8 +1010,9 @@ def bdd_to_formula(b, dic=_bdd_dict):
 
 def language_containment_checker(dic=_bdd_dict):
     from spot.impl import language_containment_checker as c
+    c.contains = c.contained
+    c.are_equivalent = c.equal
     return c(dic)
-
 
 def mp_hierarchy_svg(cl=None):
     """

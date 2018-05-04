@@ -49,6 +49,7 @@
 #include <spot/twaalgos/canonicalize.hh>
 #include <spot/twaalgos/cobuchi.hh>
 #include <spot/twaalgos/cleanacc.hh>
+#include <spot/twaalgos/contains.hh>
 #include <spot/twaalgos/dtwasat.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/gtec/gtec.hh>
@@ -1342,8 +1343,7 @@ namespace
         matched &= !aut->intersects(opt->included_in);
       if (opt->equivalent_pos)
         matched &= !aut->intersects(opt->equivalent_neg)
-          && (!dualize(ensure_deterministic(aut, true))->
-              intersects(opt->equivalent_pos));
+          && spot::contains(opt->equivalent_pos, aut);
 
       if (matched && !opt->acc_words.empty())
         for (auto& word_aut: opt->acc_words)

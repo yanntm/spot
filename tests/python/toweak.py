@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017  Laboratoire de Recherche et Développement
+# Copyright (C) 2017, 2018  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -29,16 +29,10 @@ GF!b
 (b & GF!b) | (!b & FGb)
 b | (a & XF(b R a)) | (!a & XG(!b U !a))"""
 
-def equivalent(a, phi):
-    negphi = spot.formula.Not(phi)
-    nega = spot.dualize(a)
-    return not (spot.translate(negphi).intersects(a)
-                or spot.translate(phi).intersects(nega))
-
 def test_phi(phi):
     a =  spot.translate(phi, 'TGBA', 'SBAcc')
     res = spot.to_weak_alternating(spot.dualize(a))
-    assert equivalent(res, spot.formula.Not(spot.formula(phi)))
+    assert res.equivalent_to(spot.formula.Not(spot.formula(phi)))
 
 for p in phi1.split('\n'):
     print(p)
@@ -87,4 +81,4 @@ State: 6
 --END--
 """)
 a2 = spot.to_weak_alternating(a2)
-assert equivalent(a2, phi2)
+assert a2.equivalent_to(phi2)

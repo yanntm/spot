@@ -332,6 +332,7 @@ TESTS_ipython = \
   python/atva16-fig2b.ipynb \
   python/automata-io.ipynb \
   python/automata.ipynb \
+  python/contains.ipynb \
   python/decompose.ipynb \
   python/formulas.ipynb \
   python/gen.ipynb \

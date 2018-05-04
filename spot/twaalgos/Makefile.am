@@ -39,6 +39,7 @@ twaalgos_HEADERS = \
   complete.hh \
   complement.hh \
   compsusp.hh \
+  contains.hh \
   copy.hh \
   cycles.hh \
   degen.hh \
@@ -107,6 +108,7 @@ libtwaalgos_la_SOURCES = \
   complete.cc \
   complement.cc \
   compsusp.cc \
+  contains.cc \
   cycles.cc \
   degen.cc \
   determinize.cc \
