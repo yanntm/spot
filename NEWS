@@ -34,6 +34,16 @@ New in spot 2.6.0.dev  (not yet released)
   - "ltlfilt --suspendable" is now a synonym for
     "ltlfilt --universal --eventual".
 
+  - ltlsynt now has two algorithms for synthesis:
+    --algo=sd     is the historical one. The automaton of the formula
+                  is split to separate inputs and outputs, then
+                  determinized.
+    --algo=ds     the automaton of the formula is determinized, then
+                  split to separate inputs and outputs.
+    In both cases, the obtained parity game is solved using
+    Zielonka algorithm. Calude's quasi-polynomial time algorithm has
+    been dropped as it was not used.
+
   Bugs fixed:
 
   - scc_info::split_on_sets() did not correctly register the
