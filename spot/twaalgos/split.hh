@@ -48,7 +48,7 @@ namespace spot
   SPOT_API twa_graph_ptr
   split_2step(const const_twa_graph_ptr& aut, bdd input_bdd);
 
-  /// \brief the reverse of 2step_split
+  /// \brief the reverse of split_2step
   SPOT_API twa_graph_ptr
   unsplit_2step(const const_twa_graph_ptr& aut);
 }

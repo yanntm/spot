@@ -28,8 +28,6 @@ namespace spot
   twa_graph_ptr
   split_2step(const const_twa_graph_ptr& aut, bdd input_bdd)
   {
-    if (!aut->acc().is_generalized_buchi())
-      throw std::runtime_error("2step_split only works on TGBA");
     auto split = make_twa_graph(aut->get_dict());
     split->copy_ap_of(aut);
     split->copy_acceptance_of(aut);
