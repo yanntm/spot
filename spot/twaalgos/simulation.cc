@@ -126,8 +126,9 @@ namespace spot
     {
     protected:
       typedef std::map<bdd, bdd, bdd_less_than> map_bdd_bdd;
-      int acc_vars;
+      unsigned acc_vars;
       acc_cond::mark_t all_inf_;
+      unsigned set_num;
     public:
 
       bdd mark_to_bdd(acc_cond::mark_t m)
@@ -137,18 +138,6 @@ namespace spot
         for (auto n: m.sets())
           res &= bdd_ithvar(acc_vars + n);
         return res;
-      }
-
-      acc_cond::mark_t bdd_to_mark(bdd b)
-      {
-        // FIXME: Use a cache.
-        std::vector<unsigned> res;
-        while (b != bddtrue)
-          {
-            res.emplace_back(bdd_var(b) - acc_vars);
-            b = bdd_high(b);
-          }
-        return acc_cond::mark_t(res.begin(), res.end());
       }
 
       direct_simulation(const const_twa_graph_ptr& in)
@@ -221,7 +210,7 @@ namespace spot
         // Now, we have to get the bdd which will represent the
         // class. We register one bdd by state, because in the worst
         // case, |Class| == |State|.
-        unsigned set_num = a_->get_dict()
+        set_num = a_->get_dict()
           ->register_anonymous_variables(size_a_ + 1, this);
 
         unsigned n_acc = a_->num_sets();
@@ -252,6 +241,7 @@ namespace spot
             free_var_.push(i);
             all_class_var_ &= bdd_ithvar(i);
           }
+        --set_num;
 
         relation_[init] = init;
       }
@@ -536,18 +526,39 @@ namespace spot
 
                     ++nb_minato;
 
-                    // Take the edge, and keep only the variable which
-                    // are used to represent the class.
-                    bdd dst = bdd_existcomp(cond_acc_dest,
-                                             all_class_var_);
 
-                    // Keep only ones who are acceptance condition.
-                    auto acc = bdd_to_mark(bdd_existcomp(cond_acc_dest,
-                                                         all_proms_));
-
-                    // Keep the other!
-                    bdd cond = bdd_existcomp(cond_acc_dest,
-                                             sup_all_atomic_prop);
+                    // cond_acc_dest is a cube
+                    bdd dst = bddtrue;
+                    acc_cond::mark_t acc = {};
+                    bdd cond = bddtrue;
+                    while (cond_acc_dest != bddtrue)
+                      {
+                        unsigned var = bdd_var(cond_acc_dest);
+                        if (set_num <= var && var < set_num + size_a_)
+                          {
+                            dst &= bdd_ithvar(var);
+                            cond_acc_dest = bdd_high(cond_acc_dest);
+                          }
+                        else if (acc_vars <= var
+                            && var < acc_vars + a_->num_sets())
+                          {
+                            acc.set(var - acc_vars);
+                            cond_acc_dest = bdd_high(cond_acc_dest);
+                          }
+                        else
+                          {
+                            if (bdd_high(cond_acc_dest) == bddfalse)
+                              {
+                                cond &= bdd_nithvar(var);
+                                cond_acc_dest = bdd_low(cond_acc_dest);
+                              }
+                            else
+                              {
+                                cond &= bdd_ithvar(var);
+                                cond_acc_dest = bdd_high(cond_acc_dest);
+                              }
+                          }
+                      }
 
                     // Because we have complemented all the Inf
                     // acceptance conditions on the input automaton,
