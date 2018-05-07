@@ -34,23 +34,25 @@ namespace spot
     split->new_states(aut->num_states());
     split->set_init_state(aut->get_init_state_number());
 
-    std::unordered_map<bdd, unsigned, spot::bdd_hash> sig2state;
+    // a sort of hash-map
+    std::map<size_t, std::set<unsigned>> env_hash;
 
-    unsigned set_num = split->get_dict()
-      ->register_anonymous_variables(aut->num_states()+1, &sig2state);
-    bdd all_states = bddtrue;
-    for (unsigned i = 0; i <= aut->num_states(); ++i)
-      all_states &= bdd_ithvar(set_num + i);
+    struct trans_t
+    {
+      unsigned dst;
+      bdd cond;
+      acc_cond::mark_t acc;
 
-    unsigned acc_vars = split->get_dict()
-      ->register_anonymous_variables(aut->num_sets(), &sig2state);
-    bdd all_acc = bddtrue;
-    for (unsigned i = 0; i < aut->num_sets(); ++i)
-      all_acc &= bdd_ithvar(acc_vars + i);
+      size_t hash() const
+      {
+        return bdd_hash()(cond)
+          ^ wang32_hash(dst) ^ std::hash<acc_cond::mark_t>()(acc);
+      }
+    };
 
+    std::vector<trans_t> dests;
     for (unsigned src = 0; src < aut->num_states(); ++src)
       {
-        std::unordered_map<bdd, bdd, spot::bdd_hash> input2sig;
         bdd support = bddtrue;
         for (const auto& e : aut->out(src))
           support &= bdd_support(e.cond);
@@ -61,74 +63,52 @@ namespace spot
           {
             bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
             all_letters -= one_letter;
-            auto it = input2sig.emplace(one_letter, bddfalse).first;
 
+            dests.clear();
             for (const auto& e : aut->out(src))
               {
-                bdd sig = bddtrue;
-                sig &= bdd_exist(e.cond & one_letter, input_bdd);
-
-                for (auto n : e.acc.sets())
-                  sig &= bdd_ithvar(acc_vars + n);
-                sig &= bdd_ithvar(set_num + e.dst);
-
-                it->second |= sig;
+                bdd cond = bdd_exist(e.cond & one_letter, input_bdd);
+                if (cond != bddfalse)
+                  dests.emplace_back(trans_t{e.dst, cond, e.acc});
               }
-          }
 
-        for (const auto& in : input2sig)
-          {
-            bdd sig = in.second;
-            auto it = sig2state.find(sig);
-            if (it == sig2state.end())
+            bool to_add = true;
+            size_t h = fnv<size_t>::init;
+            for (const auto& t: dests)
               {
-                unsigned ns = split->new_state();
-                it = sig2state.emplace(sig, ns).first;
+                h ^= t.hash();
+                h *= fnv<size_t>::prime;
               }
-            split->new_edge(src, it->second, in.first);
-          }
-      }
 
-    // Now add all states based on their signatures
-    // This is very similar to the code of the simulation
-    bdd nonapvars = all_acc & all_states;
-    for (const auto& sig : sig2state)
-      {
-        // for each valuation, extract cond, acc and dst
-        bdd sup_sig = bdd_support(sig.first);
-        bdd sup_all_atomic_prop = bdd_exist(sup_sig, nonapvars);
-        bdd all_atomic_prop = bdd_exist(sig.first, nonapvars);
-
-        // FIXME this is overkill, is not it?
-        while (all_atomic_prop != bddfalse)
-          {
-            bdd one = bdd_satoneset(all_atomic_prop, sup_all_atomic_prop,
-                                    bddtrue);
-            all_atomic_prop -= one;
-
-            minato_isop isop(sig.first & one);
-            bdd cond_acc_dest;
-            while ((cond_acc_dest = isop.next()) != bddfalse)
+            for (unsigned i: env_hash[h])
               {
-
-                bdd cond = bdd_existcomp(cond_acc_dest, sup_all_atomic_prop);
-                unsigned dst =
-                  bdd_var(bdd_existcomp(cond_acc_dest, all_states)) - set_num;
-
-                bdd acc = bdd_existcomp(cond_acc_dest, all_acc);
-                spot::acc_cond::mark_t m({});
-                while (acc != bddtrue)
+                auto out = split->out(i);
+                if (std::equal(out.begin(), out.end(),
+                               dests.begin(), dests.end(),
+                               [](const twa_graph::edge_storage_t& x,
+                                  const trans_t& y)
+                               {
+                                 return   x.dst == y.dst
+                                      &&  x.cond.id() == y.cond.id()
+                                      &&  x.acc == y.acc;
+                               }))
                   {
-                    m.set(bdd_var(acc) - acc_vars);
-                    acc = bdd_high(acc);
+                    to_add = false;
+                    split->new_edge(src, i, one_letter);
+                    break;
                   }
+              }
 
-                split->new_edge(sig.second, dst, cond, m);
+            if (to_add)
+              {
+                unsigned d = split->new_state();
+                split->new_edge(src, d, one_letter);
+                env_hash[h].insert(d);
+                for (const auto& t: dests)
+                  split->new_edge(d, t.dst, t.cond, t.acc);
               }
           }
       }
-
-    split->get_dict()->unregister_all_my_variables(&sig2state);
 
     split->merge_edges();
 

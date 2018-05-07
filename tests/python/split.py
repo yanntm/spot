@@ -47,14 +47,14 @@ properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic
 --BODY--
 State: 0
-[!0] 1
-[0] 2
+[0] 1
+[!0] 2
 State: 1
-[!1] 0
-[1] 0 {1}
-State: 2
 [!1] 0 {0}
 [1] 0 {0 1}
+State: 2
+[!1] 0
+[1] 0 {1}
 --END--"""
 
 aut, s = do_split('! ((G (req -> (F ack))) && (G (go -> (F grant))))', ['go',
