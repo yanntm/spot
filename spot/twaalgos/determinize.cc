@@ -33,6 +33,7 @@
 #include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/parity.hh>
+#include <spot/misc/fixpool.hh>
 
 namespace spot
 {
@@ -118,7 +119,9 @@ namespace spot
     struct safra_build final
     {
       std::vector<int> braces_;
-      std::map<unsigned, int> nodes_;
+      std::map<unsigned, int,
+               std::less<unsigned>,
+               pool_allocator<std::pair<const unsigned, int>>> nodes_;
 
       bool
       compare_braces(int a, int b)
