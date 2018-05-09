@@ -124,6 +124,10 @@ namespace spot
           case op::AndNLM:
           case op::AndRat:
           case op::OrRat:
+          case op::S:
+          case op::H:
+          case op::O:
+          case op::Y:
             SPOT_UNIMPLEMENTED();
 
           case op::U:

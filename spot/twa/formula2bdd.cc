@@ -99,6 +99,10 @@ namespace spot
       case op::AndNLM:
       case op::OrRat:
       case op::AndRat:
+      case op::S:
+      case op::O:
+      case op::Y:
+      case op::H:
         SPOT_UNIMPLEMENTED();
       case op::ap:
         return bdd_ithvar(d->register_proposition(f, owner));

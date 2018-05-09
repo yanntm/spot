@@ -112,6 +112,10 @@ namespace spot
           case op::Xor:
           case op::Implies:
           case op::Equiv:
+          case op::S:
+          case op::Y:
+          case op::H:
+          case op::O:
           case op::U:
           case op::R:
           case op::W:

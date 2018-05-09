@@ -45,6 +45,10 @@ namespace spot
       KR,
       KW,
       KM,
+      KS,
+      KY,
+      KH,
+      KO,
       KSeq,
       KSeqNext,
       KSeqMarked,
@@ -517,6 +521,23 @@ namespace spot
             break;
           case op::F:
             emit(KF);
+            visit(f[0]);
+            break;
+          case op::Y:
+            emit(KY);
+            visit(f[0]);
+            break;
+          case op::S:
+            visit(f[0]);
+            emit(KS);
+            visit(f[1]);
+            break;
+          case op::H:
+            emit(KH);
+            visit(f[0]);
+            break;
+          case op::O:
+            emit(KO);
             visit(f[0]);
             break;
           case op::G:
@@ -1088,6 +1109,18 @@ namespace spot
             break;
           case op::M:
             os_ << 'M';
+            break;
+          case op::S:
+            os_ << 'S';
+            break;
+          case op::Y:
+            os_ << 'Y';
+            break;
+          case op::O:
+            os_ << 'O';
+            break;
+          case op::H:
+            os_ << 'H';
             break;
           case op::Or:
             for (unsigned i = f.size() - 1; i != 0; --i)

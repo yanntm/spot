@@ -21,13 +21,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config.h"
-#include <spot/misc/hash.hh>
 #include <spot/misc/bddlt.hh>
+#include <spot/misc/hash.hh>
 #include <spot/misc/minato.hh>
-#include <spot/tl/nenoform.hh>
-#include <spot/tl/print.hh>
 #include <spot/tl/apcollect.hh>
 #include <spot/tl/mark.hh>
+#include <spot/tl/nenoform.hh>
+#include <spot/tl/past_translation.hh>
+#include <spot/tl/print.hh>
 #include <spot/tl/print.hh>
 #include <cassert>
 #include <memory>
@@ -590,6 +591,10 @@ namespace spot
           case op::Closure:
           case op::NegClosure:
           case op::NegClosureMarked:
+          case op::S:
+          case op::Y:
+          case op::H:
+          case op::O:
             SPOT_UNREACHABLE();        // Because not rational operator
           case op::Not:
             {
@@ -1129,6 +1134,10 @@ namespace spot
           case op::tt:
             return bddtrue;
           case op::eword:
+          case op::S:
+          case op::Y:
+          case op::H:
+          case op::O:
             SPOT_UNIMPLEMENTED();
           case op::ap:
             return bdd_ithvar(dict_.register_proposition(node));
@@ -1900,6 +1909,8 @@ namespace spot
                  bool fair_loop_approx, const atomic_prop_set* unobs,
                  tl_simplifier* simplifier, bool unambiguous)
   {
+    //if (!f2.is_ltl_without_past()) FIXME past
+    f2 = translate_past(f2);
     tl_simplifier* s = simplifier;
 
     // Simplify the formula, if requested.

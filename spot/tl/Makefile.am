@@ -38,6 +38,7 @@ tl_HEADERS =					\
   mutation.hh					\
   nenoform.hh					\
   parse.hh					\
+  past_translation.hh			\
   print.hh					\
   randomltl.hh					\
   relabel.hh					\
@@ -59,6 +60,7 @@ libtl_la_SOURCES =				\
   length.cc					\
   ltlf.cc					\
   mark.cc					\
+  past_translation.cc			\
   mark.hh					\
   mutation.cc					\
   nenoform.cc					\

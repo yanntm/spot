@@ -104,6 +104,10 @@ namespace spot
       case op::EConcatMarked:
       case op::UConcat:
       case op::U:
+      case op::S:
+      case op::Y:
+      case op::H:
+      case op::O:
       case op::Or:
       case op::OrRat:
       case op::And:

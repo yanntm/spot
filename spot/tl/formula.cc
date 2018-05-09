@@ -219,6 +219,9 @@ namespace spot
         C(X);
         C(F);
         C(G);
+        C(O);
+        C(H);
+        C(Y);
         C(Closure);
         C(NegClosure);
         C(NegClosureMarked);
@@ -229,6 +232,7 @@ namespace spot
         C(R);
         C(W);
         C(M);
+        C(S);
         C(EConcat);
         C(EConcatMarked);
         C(UConcat);
@@ -843,6 +847,12 @@ namespace spot
     // Trivial identities:
     switch (o)
       {
+      case op::S:
+        if (second->is_ff())
+          return ff();
+        if (second->is_tt())
+          return unop(op::H, first);
+        break;
       case op::Xor:
         {
           // Xor is commutative: sort operands.
@@ -1084,6 +1094,7 @@ namespace spot
         is_.syntactic_si = true; // for LTL (not PSL)
         is_.sugar_free_ltl = true;
         is_.ltl_formula = true;
+        is_.ltl_without_past = true;
         is_.psl_formula = true;
         is_.sere_formula = true;
         is_.finite = true;
@@ -1106,6 +1117,7 @@ namespace spot
         is_.syntactic_si = true;
         is_.sugar_free_ltl = true;
         is_.ltl_formula = false;
+        is_.ltl_without_past = true;
         is_.psl_formula = false;
         is_.sere_formula = true;
         is_.finite = true;
@@ -1131,6 +1143,7 @@ namespace spot
         // matters.)
         is_.sugar_free_ltl = true;
         is_.ltl_formula = true;
+        is_.ltl_without_past = true;
         is_.psl_formula = true;
         is_.sere_formula = true;
         is_.finite = true;
@@ -1185,6 +1198,28 @@ namespace spot
         // is_.syntactic_obligation inherited
         // is_.syntactic_recurrence inherited
         // is_.syntactic_persistence inherited
+        is_.accepting_eword = false;
+        break;
+      case op::H:
+      case op::Y:
+      case op::O:
+        props = children[0]->props;
+        is_.not_marked = true;
+        is_.boolean = false;
+        is_.sere_formula = false;
+        is_.sugar_free_ltl = false;
+        is_.ltl_without_past = false;
+        //FIXME past props 
+        is_.accepting_eword = false;
+        break;
+      case op::S:
+        props = children[0]->props & children[0]->props;
+        is_.not_marked = true;
+        is_.boolean = false;
+        is_.sere_formula = false;
+        is_.sugar_free_ltl = false;
+        is_.ltl_without_past = false;
+        //FIXME past props 
         is_.accepting_eword = false;
         break;
       case op::F:

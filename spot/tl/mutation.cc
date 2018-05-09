@@ -152,6 +152,11 @@ namespace spot
               else
                 return f.map(recurse);
             }
+          case op::S:
+          case op::Y:
+          case op::H:
+          case op::O:
+            break;
           case op::Xor:
           case op::Implies:
           case op::Equiv:

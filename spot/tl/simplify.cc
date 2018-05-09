@@ -454,6 +454,20 @@ namespace spot
                 result = formula::binop(negated ? op::R : op::U, f1, f2);
                 break;
               }
+            case op::H:
+              result = formula::unop(negated ? op::O : op::H,
+                  rec(f[0], negated));
+              break;
+            case op::O:
+              result = formula::unop(negated ? op::H : op::O,
+                  rec(f[0], negated));
+              break;
+            case op::Y:
+              result = formula::unop(op::Y, rec(f[0], negated));
+              break;
+            case op::S:
+              result = formula::unop(op::S, rec(f[0], negated));
+              break;
             case op::R:
               {
                 // !(a R b) == !a U !b
@@ -855,6 +869,10 @@ namespace spot
           case op::ap:
           case op::Not:
           case op::FStar:
+          case op::S:
+          case op::O:
+          case op::H:
+          case op::Y:
             return f;
           case op::X:
             {

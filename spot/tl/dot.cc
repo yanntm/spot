@@ -78,6 +78,9 @@ namespace spot
           case op::X:
           case op::F:
           case op::G:
+          case op::H:
+          case op::Y:
+          case op::O:
           case op::Closure:
           case op::NegClosure:
           case op::NegClosureMarked:
@@ -93,6 +96,7 @@ namespace spot
           case op::Xor:
           case op::Implies:
           case op::Equiv:
+          case op::S:
           case op::U:
           case op::R:
           case op::W:

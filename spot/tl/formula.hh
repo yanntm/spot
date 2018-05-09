@@ -73,6 +73,9 @@ namespace spot
     X,                         ///< Next
     F,                         ///< Eventually
     G,                         ///< Globally
+    O,                         ///< Once  (PAST)
+    Y,                         ///< Yesturday  (PAST)
+    H,                         ///< Historically  (PAST)
     Closure,                   ///< PSL Closure
     NegClosure,                ///< Negated PSL Closure
     NegClosureMarked,          ///< marked version of the Negated PSL Closure
@@ -84,6 +87,7 @@ namespace spot
     R,                         ///< release (dual of until)
     W,                         ///< weak until
     M,                         ///< strong release (dual of weak until)
+    S,                         ///< since  (PAST)
     EConcat,                   ///< Seq
     EConcatMarked,             ///< Seq, Marked
     UConcat,                   ///< Triggers
@@ -368,6 +372,12 @@ namespace spot
         return is_.boolean;
       }
 
+      /// tells if formula contains ltl with past operators or not
+      bool is_ltl_without_past() const
+      {
+        return is_.ltl_without_past;
+      }
+
       /// \see formula::is_sugar_free_boolean
       bool is_sugar_free_boolean() const
       {
@@ -578,6 +588,7 @@ namespace spot
         bool syntactic_si:1;           // LTL-X or siPSL
         bool sugar_free_ltl:1;         // No F and G operators.
         bool ltl_formula:1;            // Only LTL operators.
+        bool ltl_without_past:1;       // No Past operators.
         bool psl_formula:1;            // Only PSL operators.
         bool sere_formula:1;           // Only SERE operators.
         bool finite:1;                 // Finite SERE formulae, or Bool+X forms.
@@ -1621,6 +1632,9 @@ namespace spot
           case op::X:
           case op::F:
           case op::G:
+          case op::O:
+          case op::Y:
+          case op::H:
           case op::Closure:
           case op::NegClosure:
           case op::NegClosureMarked:
@@ -1632,6 +1646,7 @@ namespace spot
           case op::R:
           case op::W:
           case op::M:
+          case op::S:
           case op::EConcat:
           case op::EConcatMarked:
           case op::UConcat:
