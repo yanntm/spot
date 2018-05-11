@@ -26,6 +26,10 @@ New in spot 2.5.3.dev  (not yet released)
     tooltip in SVG figures when the mouse is over the acceptance
     condition.
 
+  - print_dot() has a new option "u" to hide "true states" behind
+    "exiting transitions".  This can be used to display alternating
+    automata in a way many people expect.
+
   - cleanup_parity() and cleanup_parity_here() are smarter and now
     remove from the acceptance condition the parity colors that are
     not used in the automaton.

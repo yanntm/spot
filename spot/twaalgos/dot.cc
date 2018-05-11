@@ -81,6 +81,7 @@ namespace spot
       std::string* name_ = nullptr; // title for the graph
       std::string* graph_name_ = nullptr; // name for the digraph
       std::map<std::pair<int, int>, int> univ_done;
+      std::vector<bool> true_states_;
 
       acc_cond::mark_t inf_sets_ = {};
       acc_cond::mark_t fin_sets_ = {};
@@ -102,6 +103,7 @@ namespace spot
       bool opt_all_bullets = false;
       bool opt_ordered_edges_ = false;
       bool opt_numbered_edges_ = false;
+      bool opt_hide_true_states_ = false;
       bool opt_orig_show_ = false;
       bool max_states_given_ = false; // related to max_states_
       bool opt_latex_ = false;
@@ -129,6 +131,28 @@ namespace spot
       {
         return max_states_given_;
       }
+
+      void find_true_states()
+      {
+        unsigned n = aut_->num_states();
+        true_states_.resize(n, false);
+        auto& g = aut_->get_graph();
+        auto& acc = aut_->acc();
+        for (unsigned s = 0; s < n; ++s)
+          {
+            auto& ss = g.state_storage(s);
+            if (ss.succ == ss.succ_tail)
+              {
+                auto& es = g.edge_storage(ss.succ);
+                if (es.cond == bddtrue
+
+                    && es.src == es.dst
+                    && acc.accepting(es.acc))
+                  true_states_[s] = true;
+              }
+          }
+      }
+
 
       void
       parse_opts(const char* options)
@@ -266,6 +290,9 @@ namespace spot
               break;
             case 's':
               opt_scc_ = true;
+              break;
+            case 'u':
+              opt_hide_true_states_ = true;
               break;
             case 'v':
               opt_vertical_ = true;
@@ -430,6 +457,13 @@ namespace spot
         return tmp_dst.str();
       }
 
+      template<typename U, typename V>
+      void print_true_state(U to, V from) const
+      {
+        os_ << "  T" << to << 'T' << from << " [label=\"\", style=invis, ";
+        os_ << (opt_vertical_ ? "height=0]\n" : "width=0]\n");
+      }
+
       void
       print_dst(int dst, bool print_edges = false,
                 const char* style = nullptr, int color_num = -1)
@@ -444,7 +478,15 @@ namespace spot
           {
             for (unsigned d: aut_->univ_dests(dst))
               {
-                os_ << "  " << dest << " -> " << d;
+                bool dst_is_hidden_true_state =
+                  opt_hide_true_states_ && true_states_[d];
+                if (dst_is_hidden_true_state)
+                  print_true_state(d, dest);
+                os_ << "  " << dest << " -> ";
+                if (dst_is_hidden_true_state)
+                  os_ << 'T' << d << 'T' << dest;
+                else
+                  os_ << d;
                 if (style && *style)
                   os_ << " [" << style << ']';
                 os_ << '\n';
@@ -679,11 +721,20 @@ namespace spot
       process_link(const twa_graph::edge_storage_t& t, int number,
                    bool print_edges)
       {
+        bool dst_is_hidden_true_state =
+          (t.dst < true_states_.size()) && true_states_[t.dst];
+
         if (print_edges)
           {
-            os_ << "  " << t.src << " -> " << (int)t.dst;
+            if (dst_is_hidden_true_state)
+              print_true_state(t.dst, t.src);
+            os_ << "  " << t.src << " -> ";
+            if (dst_is_hidden_true_state)
+              os_ << 'T' << t.dst << 'T' << t.src;
+            else
+              os_  << (int)t.dst;
             if (aut_->is_univ_dest(t.dst) && highlight_edges_
-                && !opt_shared_univ_dest_)
+                && !opt_shared_univ_dest_ && !dst_is_hidden_true_state)
               {
                 auto idx = aut_->get_graph().index_of_edge(t);
                 auto iter = highlight_edges_->find(idx);
@@ -746,6 +797,8 @@ namespace spot
       void print(const const_twa_graph_ptr& aut)
       {
         aut_ = aut;
+        if (opt_hide_true_states_)
+          find_true_states();
 
         sn_ = aut->get_named_prop<std::vector<std::string>>("state-names");
         // We have no names.  Do we have product sources?
@@ -851,6 +904,8 @@ namespace spot
                   }
                 for (auto s: si->states_of(i))
                   {
+                    if (opt_hide_true_states_ && true_states_[s])
+                      continue;
                     process_state(s);
                     int trans_num = 0;
                     unsigned scc_of_s = si->scc_of(s);
@@ -871,6 +926,8 @@ namespace spot
         unsigned ns = aut_->num_states();
         for (unsigned n = 0; n < ns; ++n)
           {
+            if (opt_hide_true_states_ && true_states_[n])
+              continue;
             if (!si || !si->reachable_state(n))
               process_state(n);
             int trans_num = 0;
