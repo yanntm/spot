@@ -72,7 +72,9 @@ New in spot 2.5.3.dev  (not yet released)
   Python:
 
   - New spot.jupyter package.  This currently contains a function for
-    displaying several argument side by side in a Jupyter notebook.
+    displaying several arguments side by side in a Jupyter notebook.
+    See https://spot.lrde.epita.fr/ipynb/alternation.html for some
+    examples.
 
   Bugs fixed:
 

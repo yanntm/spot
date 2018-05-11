@@ -23,7 +23,7 @@ Auxiliary functions for Spot's Python bindings.
 
 from IPython.display import display, HTML
 
-def display_inline(*args, per_row=None):
+def display_inline(*args, per_row=None, show=None):
     """
     This is a wrapper around IPython's `display()` to display multiple
     elements in a row, without forced line break between them.
@@ -36,7 +36,9 @@ def display_inline(*args, per_row=None):
         width = 'width:{}%;'.format(100//per_row)
     for arg in args:
         dpy = 'inline-block'
-        if hasattr(arg, '_repr_svg_'):
+        if show is not None and hasattr(arg, 'show'):
+            rep = arg.show(show)._repr_svg_()
+        elif hasattr(arg, '_repr_svg_'):
             rep = arg._repr_svg_()
         elif hasattr(arg, '_repr_html_'):
             rep = arg._repr_html_()
