@@ -30,6 +30,11 @@ New in spot 2.5.3.dev  (not yet released)
     "exiting transitions".  This can be used to display alternating
     automata in a way many people expect.
 
+  - print_dot() has a new option "K" to cancel the effect of "k"
+    (which uses state labels whenever possible).  This is most useful
+    when one want to force transition-labeling of a Kripke structure,
+    where "k" is usually the default.
+
   - cleanup_parity() and cleanup_parity_here() are smarter and now
     remove from the acceptance condition the parity colors that are
     not used in the automaton.

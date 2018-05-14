@@ -88,7 +88,7 @@ static const argp_option options[] =
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output format:", 3 },
     { "dot", 'd',
-      "1|a|A|b|B|c|C(COLOR)|e|f(FONT)|h|k|n|N|o|r|R|s|t|u|v|y|+INT|<INT|#",
+      "1|a|A|b|B|c|C(COLOR)|e|f(FONT)|h|k|K|n|N|o|r|R|s|t|u|v|y|+INT|<INT|#",
       OPTION_ARG_OPTIONAL,
       "GraphViz's format.  Add letters for "
       "(1) force numbered states, "
@@ -103,6 +103,7 @@ static const argp_option options[] =
       "(f(FONT)) use FONT, "
       "(h) horizontal layout, "
       "(k) use state labels when possible, "
+      "(K) use transition labels (default), "
       "(n) show name, "
       "(N) hide name, "
       "(o) ordered transitions, "

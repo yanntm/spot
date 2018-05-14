@@ -115,12 +115,16 @@ def canonicalize(s, type, ignores):
     s = re.sub(r' fill="black"', '', s)
     s = re.sub(r' stroke="transparent"', ' stroke="none"', s)
     s = re.sub(r'><title>', '>\n<title>', s)
+    # tooltips with a ", " are likely to have \n which was not
+    # well supported by 2.38.
+    s = re.sub(r'<a xlink:title=".*?, .*?">\n', '<a xlink:title="...">\n', s,
+               flags=re.DOTALL)
     # Different Pandas versions produce different CSS styles (when there is a
     # style).
     s = re.sub(r'<style[ a-z]*>.*</style>\n', '', s, flags=re.DOTALL)
     # Table that contains enc.user are log from the SAT-solver.  They contain
     # timing result we cannot compare between runs.
-    s = re.sub(r'<table.*dataframe.*enc.user.*</table>', '<table></table>', s,
+    s = re.sub(r'<table.*dataframe.*?enc.user.*?</table>', '<table></table>', s,
                flags=re.DOTALL)
 
     for n, p in enumerate(ignores):

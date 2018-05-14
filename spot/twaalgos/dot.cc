@@ -97,6 +97,7 @@ namespace spot
       bool opt_html_labels_ = false;
       bool opt_color_sets_ = false;
       bool opt_state_labels_ = false;
+      bool uppercase_k_seen_ = false;
       bool opt_rainbow = false;
       bool opt_bullet = false;
       bool opt_bullet_but_buchi = false;
@@ -271,6 +272,10 @@ namespace spot
             case 'k':
               opt_state_labels_ = true;
               break;
+            case 'K':
+              opt_state_labels_ = false;
+              uppercase_k_seen_ = true;
+              break;
             case 'n':
               opt_name_ = true;
               break;
@@ -331,6 +336,11 @@ namespace spot
         : os_(os)
       {
         parse_opts(options ? options : ".");
+      }
+
+      bool uppercase_k_seen() const
+      {
+        return uppercase_k_seen_;
       }
 
       const char*
@@ -944,8 +954,9 @@ namespace spot
                   const char* options)
   {
     dotty_output d(os, options);
-    // Enable automatic state labels for Kripke structure.
-    if (std::dynamic_pointer_cast<const fair_kripke>(g))
+    // Enable state labels for Kripke structure.
+    if (std::dynamic_pointer_cast<const fair_kripke>(g)
+        && !d.uppercase_k_seen())
       d.parse_opts("k");
     auto aut = std::dynamic_pointer_cast<const twa_graph>(g);
     if (!aut || (d.max_states_given() && aut->num_states() >= d.max_states()))
