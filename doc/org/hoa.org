@@ -27,7 +27,9 @@ the HOA format.  It currently outputs version 1 by default, but
 version 1.1 can be requested from the command-line using option
 =-H1.1=.  Future version of Spot are likely to switch to version 1.1
 of HOA by default, so version 1 can already be requested explicitly
-using =-H1=.
+using =-H1=.  Note that version 1.1 is not yet published at the time
+of writing, and that there are discussion about calling it version 2
+instead.
 
 * Format, files, and TωA
 
@@ -384,7 +386,7 @@ that Spot will never produce an acceptance condition containing
 
 Whenever an HOA file is output, Spot attempts to recognize the
 acceptance condition to give it a suitable =acc-name:= (even if Spot
-does not use this line, it is useful to tools only deal with one
+does not use this line, it is useful to tools that only deal with one
 specific acceptance condition and that do not want to parse the
 =Acceptance:= line).  However the HOA output routine has no idea of
 what type of automata you are trying to output: it is only looking at
@@ -690,7 +692,7 @@ named properties of any type.  When attaching a property to a TωA, you
 only supply a name for the property, a pointer, and an optional
 destructor function.
 
-They are currently two [[file:concepts.org::#named-properties][named properties]] related to the HOA format.
+There are currently two [[file:concepts.org::#named-properties][named properties]] related to the HOA format.
 
 - =automaton-name= :: Is a string that stores the name of the automaton (the one given after =name:= in the HOA format)
 - =state-names= :: is a vector of strings that stores the name of the states (in case states are named in the HOA format)
@@ -836,7 +838,7 @@ randomize the order of their transitions and states before printing
 them in HOA format.
 
 #+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
-genltl --and-gf=1..3 | ltl2tgba -B -F- | autfilt --randomize
+genltl --and-gf=1..3 | ltl2tgba -B | autfilt --randomize
 #+END_SRC
 
 #+RESULTS:
@@ -869,16 +871,16 @@ properties: trans-labels explicit-labels state-acc complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
-[!0&1] 2
-[0&1] 1
-[!1] 0
+[0] 1
+[!0] 0
 State: 1 {0}
 [0&1] 1
-[!0&1] 2
-[!1] 0
+[!1] 2
+[!0&1] 0
 State: 2
-[!0] 2
-[0] 1
+[!1] 2
+[0&1] 1
+[!0&1] 0
 --END--
 HOA: v1
 name: "G(Fp1 & Fp2 & Fp3)"
@@ -891,22 +893,22 @@ properties: trans-labels explicit-labels state-acc complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
-[!2] 0
-[!1&2] 2
-[0&1&2] 1
-[!0&1&2] 3
-State: 1 {0}
-[!0&1&2] 3
-[!1&2] 2
-[0&1&2] 1
-[!2] 0
-State: 2
-[0&1] 1
-[!0&1] 3
-[!1] 2
-State: 3
+[!0] 0
 [0] 1
-[!0] 3
+State: 1 {0}
+[!2] 3
+[!1&2] 2
+[0&1&2] 1
+[!0&1&2] 0
+State: 2
+[!1] 2
+[!0&1] 0
+[0&1] 1
+State: 3
+[0&1&2] 1
+[!1&2] 2
+[!0&1&2] 0
+[!2] 3
 --END--
 #+END_SRC
 
@@ -917,11 +919,11 @@ commands =A | B= exchange automata via a pipe, the command =A= may
 require some time between the output of two automata, so if =B= does a
 block read on its input to fill the parser's buffer, it might not be
 able to process any automaton before =A= has produced enough automata
-to fill the buffer.  To avoid this delay, whenever =B= detects that
-the input is a pipe (or a terminal), it switches to an interactive
-mode, where the input is read one character at a time.  This way an
-automaton can be processed by =B= as soon as its =--END--= has been
-received.
+to fill the input buffer of =B=.  To avoid this delay, whenever =B=
+detects that the input is a pipe (or a terminal), it switches to an
+interactive mode, where the input is read one character at a time.
+This way an automaton can be processed by =B= as soon as its =--END--=
+has been received.
 
 The HOA format has support for a =--ABORT--= token, that can be used
 by tools that produce automata in a stream to cancel the current one.
@@ -1024,8 +1026,8 @@ digraph G {
 
 On the above example, we call =autfilt= with option =-d#= to display
 edges numbers, which helps identifying the edges to highlight.  The
-headers ~spot.highlight.states:~ and ~spot.highlight.edges:~ gives a
-list of alternating state/edges numbers and color numbers.
+headers ~spot.highlight.states:~ and ~spot.highlight.edges:~ are both
+followed by a list of alternating state/edges numbers and color numbers.
 
 So in the above file,
 #+BEGIN_SRC sh :results verbatim :exports results :wrap SRC hoa
@@ -1049,8 +1051,8 @@ The color palette is currently the same that is used for coloring
 acceptance sets.  This might change in the future.
 
 The automaton parser will not complain if these headers are used in
-the =HOA: v1= file, even if =v1= disallows dots in header names.
-However the automaton printer is more rigorous and will only output
+some =HOA: v1= file, even if =v1= disallows dots in header names.
+However [[https://en.wikipedia.org/wiki/Robustness_principle][the automaton printer is more rigorous]] and will only output
 these lines when version 1.1 is selected.
 
 Compare:
