@@ -365,7 +365,8 @@ namespace swig
 // default to None on the Python side.
 %typemap(in) spot::formula {
     void *tmp;
-    int res = SWIG_ConvertPtr($input, &tmp, $descriptor(spot::formula*), 0);
+    int res = SWIG_ConvertPtr($input, &tmp, $descriptor(spot::formula*),
+                              SWIG_POINTER_IMPLICIT_CONV);
     if (!SWIG_IsOK(res)) {
       %argument_fail(res, "spot::formula", $symname, $argnum);
     }
@@ -377,9 +378,10 @@ namespace swig
     // if tmp == nullptr, then the default value of $1 is fine.
 }
 
-%typemap(typecheck) spot::formula {
+%typemap(typecheck, precedence=2000) spot::formula {
     $1 = SWIG_CheckState(SWIG_ConvertPtr($input, nullptr,
-					 $descriptor(spot::formula*), 0));
+					 $descriptor(spot::formula*),
+                                         SWIG_POINTER_IMPLICIT_CONV));
 }
 
 %typemap(out) spot::formula {
@@ -427,6 +429,7 @@ namespace swig
 %include <spot/misc/trival.hh>
 
 %implicitconv std::vector<spot::formula>;
+%implicitconv spot::formula;
 
 %include <spot/tl/formula.hh>
 

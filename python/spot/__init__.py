@@ -675,26 +675,18 @@ def translate(formula, *args, dict=_bdd_dict):
 formula.translate = translate
 
 
-def contains(left, right):
-    from spot.impl import contains as contains_impl
-    if type(left) is str:
-        left = formula(left)
-    if type(right) is str:
-        right = formula(right)
-    return contains_impl(left, right)
+# Wrap C++-functions into lambdas so that they get converted into
+# instance methods (i.e., self passed as first argument
+# automatically), because only user-defined functions are converted as
+# instance methods.
+def _add_formula(meth, name = None):
+    setattr(formula, name or meth, (lambda self, *args, **kwargs:
+                                    globals()[meth](self, *args, **kwargs)))
 
-def are_equivalent(left, right):
-    from spot.impl import are_equivalent as equiv
-    if type(left) is str:
-        left = formula(left)
-    if type(right) is str:
-        right = formula(right)
-    return equiv(left, right)
 
-formula.contains = contains
-formula.equivalent_to = are_equivalent
-twa.contains = contains
-twa.equivalent_to = are_equivalent
+_add_formula('contains')
+_add_formula('are_equivalent', 'equivalent_to')
+
 
 def postprocess(automaton, *args, formula=None):
     """Post process an automaton.

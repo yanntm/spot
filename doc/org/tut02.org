@@ -62,18 +62,17 @@ pairs of atomic propositions of the form (new-name, old-name).
 
 #+BEGIN_SRC python :results output :exports both
 import spot
-f = spot.formula('"Proc@Here" U ("var > 10" | "var < 4")')
 m = spot.relabeling_map()
-g = spot.relabel(f, spot.Pnn, m)
+g = spot.relabel('"Proc@Here" U ("var > 10" | "var < 4")', spot.Pnn, m)
 for newname, oldname in m.items():
   print("#define {} ({})".format(newname.to_str(), oldname.to_str('spin', True)))
 print(g.to_str('spin', True))
 #+END_SRC
 
 #+RESULTS:
-: #define p0 ((Proc@Here))
-: #define p1 ((var < 4))
-: #define p2 ((var > 10))
+: #define p0 (Proc@Here)
+: #define p1 (var < 4)
+: #define p2 (var > 10)
 : (p0) U ((p1) || (p2))
 
 * C++
