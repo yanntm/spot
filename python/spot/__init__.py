@@ -193,6 +193,9 @@ class formula:
         from IPython.display import SVG
         return SVG(_str_to_svg(self.to_str('d')))
 
+    def _repr_latex_(self):
+        return '$' + self.to_str('j') + '$'
+
     def to_str(self, format='spot', parenth=False):
         if format == 'spot' or format == 'f':
             return str_psl(self, parenth)
@@ -208,6 +211,10 @@ class formula:
             return str_latex_psl(self, parenth)
         elif format == 'sclatex' or format == 'X':
             return str_sclatex_psl(self, parenth)
+        elif format == 'mathjax' or format == 'j':
+            return (str_sclatex_psl(self, parenth).
+                        replace("``", "\\unicode{x201C}").
+                        replace("\\textrm{''}", "\\unicode{x201D}"))
         elif format == 'dot' or format == 'd':
             ostr = ostringstream()
             print_dot_psl(ostr, self)
@@ -234,6 +241,7 @@ class formula:
         - 'w': use Wring's syntax
         - 'x': use LaTeX output
         - 'X': use self-contained LaTeX output
+        - 'j': use self-contained LaTeX output, adjusted for MathJax
 
         Add some of those letters for additional options:
 
@@ -263,7 +271,7 @@ class formula:
 
         while spec:
             c, spec = spec[0], spec[1:]
-            if c in ('f', 's', '8', 'l', 'w', 'x', 'X'):
+            if c in ('f', 's', '8', 'l', 'w', 'x', 'X', 'j'):
                 syntax = c
             elif c == 'p':
                 parent = True
@@ -322,6 +330,35 @@ class formula:
             return formula.bunop(k, func(self[0], *args),
                                  self.min(), self.max())
         raise ValueError("unknown type of formula")
+
+
+@_extend(atomic_prop_set)
+class atomic_prop_set:
+    def __repr__(self):
+        res = '{'
+        comma = ''
+        for ap in self:
+            res += comma
+            comma = ', '
+            res += '"' + ap.ap_name() + '"'
+        res += '}'
+        return res
+
+    def __str__(self):
+        return self.__repr__()
+
+    def _repr_latex_(self):
+        res = '$\{'
+        comma = ''
+        for ap in self:
+            apname = ap.to_str('j')
+            if not '\\unicode{' in apname:
+                apname = "\\unicode{x201C}" + apname + "\\unicode{x201D}"
+            res += comma
+            comma = ', '
+            res += apname
+        res += '\}$'
+        return res
 
 
 def automata(*sources, timeout=None, ignore_abort=True,

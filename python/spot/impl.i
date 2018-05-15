@@ -683,59 +683,6 @@ def state_is_accepting(self, src) -> "bool":
   }
 }
 
-%extend std::set<spot::formula> {
-  std::string __str__()
-  {
-    std::ostringstream s;
-    s << "{";
-    bool comma = false;
-    for (auto& i: *self)
-      {
-        if (comma)
-          s << ", ";
-        else
-          comma = true;
-        spot::print_psl(s, i);
-      }
-    s << "}";
-    return s.str();
-  }
-
-  std::string __repr__()
-  {
-    std::ostringstream s;
-    s << "{";
-    bool comma = false;
-    for (auto& i: *self)
-      {
-        if (comma)
-          s << ", ";
-        else
-          comma = true;
-        spot::print_psl(s, i);
-      }
-    s << "}";
-    return s.str();
-  }
-
-  std::string _repr_latex_()
-  {
-    std::ostringstream s;
-    s << "$\\{";
-    bool comma = false;
-    for (auto& i: *self)
-      {
-        if (comma)
-          s << ", ";
-        else
-          comma = true;
-        spot::print_sclatex_psl(s, i);
-      }
-    s << "\\}$";
-    return s.str();
-  }
-
-}
 
 %exception spot::formula::__getitem__ {
   try {
@@ -755,10 +702,6 @@ def state_is_accepting(self, src) -> "bool":
   formula __getitem__(unsigned pos) { return (*self)[pos]; }
 
   std::string __repr__() { return spot::str_psl(*self); }
-  std::string _repr_latex_()
-  {
-    return std::string("$") + spot::str_sclatex_psl(*self) + '$';
-  }
   std::string __str__() { return spot::str_psl(*self); }
 }
 
