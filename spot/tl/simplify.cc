@@ -446,9 +446,9 @@ namespace spot
                 result = equiv_or_xor(!negated, f[0], f[1], c);
                 break;
               }
+            // !(a U b) == !a E !b
             case op::U:
               {
-                // !(a U b) == !a R !b
                 auto f1 = rec(f[0], negated);
                 auto f2 = rec(f[1], negated);
                 result = formula::binop(negated ? op::R : op::U, f1, f2);
@@ -465,9 +465,21 @@ namespace spot
             case op::Y:
               result = formula::unop(op::Y, rec(f[0], negated));
               break;
+            // !(a E b) == !a S !b
+            case op::E:
+              {
+                auto f1 = rec(f[0], negated);
+                auto f2 = rec(f[1], negated);
+                result = formula::binop(negated ? op::S : op::E, f[0], f[1]);
+                break;
+              }
             case op::S:
-              result = formula::unop(op::S, rec(f[0], negated));
-              break;
+              {
+                auto f1 = rec(f[0], negated);
+                auto f2 = rec(f[1], negated);
+                result = formula::binop(negated ? op::E : op::S, f[0], f[1]);
+                break;
+              }
             case op::R:
               {
                 // !(a R b) == !a U !b
@@ -870,6 +882,7 @@ namespace spot
           case op::Not:
           case op::FStar:
           case op::S:
+          case op::E:
           case op::O:
           case op::H:
           case op::Y:

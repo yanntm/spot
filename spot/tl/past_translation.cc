@@ -33,6 +33,13 @@ namespace spot
             formula::tt()), f[1], formula::unop(op::Star, f[0])});
   }
 
+  // transforms formula 'a E b' as 'Concat (Star(formula::tt), b, Star(a))'
+  static formula
+  ergo_translation(const formula& f)
+  {
+    return formula::multop(op::Concat, {formula::unop(op::Star,
+            formula::tt()), f[1], formula::unop(op::Star, f[0])});
+  }
 
   // recursive translation of a ltl+past formula using regular expression
   // formula should have a future operator before a past operator
@@ -59,6 +66,16 @@ namespace spot
             rec_translation(&f[index], f->kind() == op::F ||
                 f->kind() == op::G || can_be_past, true);
           break;
+        case op::E:
+          if (!can_be_past)
+            {
+              std::cerr << "Wrong format for the formula !" << std::endl;
+              exit(1);
+            }
+          for (unsigned index = 0; index < f->size(); ++index)
+            rec_translation(&f[index], true, false);
+          *f = ergo_translation(*f);
+          break;
         case op::S:
           if (!can_be_past)
             {
@@ -71,7 +88,7 @@ namespace spot
           break;
         case op::Y:
           SPOT_UNIMPLEMENTED();
-        //O a translated as formula::tt S a
+        // 'O a' translated as 'tt S a'
         case op::O:
           if (!can_be_past)
             {

@@ -87,9 +87,9 @@ def setup(**kwargs):
 # can remove for following hack once 3.0.2 is no longer used in our
 # build farm.
 if 'op_ff' not in globals():
-    for i in ('ff', 'tt', 'eword', 'ap', 'Not', 'X', 'F', 'G',
+    for i in ('ff', 'tt', 'eword', 'ap', 'Not', 'X', 'F', 'G', 'Y', 'H', 'O',
               'Closure', 'NegClosure', 'NegClosureMarked',
-              'Xor', 'Implies', 'Equiv', 'U', 'R', 'W', 'M',
+              'Xor', 'Implies', 'Equiv', 'U', 'R', 'W', 'M', 'S', 'E',
               'EConcat', 'EConcatMarked', 'UConcat', 'Or',
               'OrRat', 'And', 'AndRat', 'AndNLM', 'Concat',
               'Fusion', 'Star', 'FStar'):
@@ -309,11 +309,11 @@ class formula:
         k = self.kind()
         if k in (op_ff, op_tt, op_eword, op_ap):
             return self
-        if k in (op_Not, op_X, op_F, op_G, op_Closure,
-                 op_NegClosure, op_NegClosureMarked):
+        if k in (op_Not, op_X, op_F, op_G, op_H, op_O, op_Y,
+                 op_Closure, op_NegClosure, op_NegClosureMarked):
             return formula.unop(k, func(self[0], *args))
         if k in (op_Xor, op_Implies, op_Equiv, op_U, op_R, op_W,
-                 op_M, op_EConcat, op_EConcatMarked, op_UConcat):
+                 op_M, op_S, op_E, op_EConcat, op_EConcatMarked, op_UConcat):
             return formula.binop(k, func(self[0], *args), func(self[1], *args))
         if k in (op_Or, op_OrRat, op_And, op_AndRat, op_AndNLM,
                  op_Concat, op_Fusion):

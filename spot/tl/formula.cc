@@ -233,6 +233,7 @@ namespace spot
         C(W);
         C(M);
         C(S);
+        C(E);
         C(EConcat);
         C(EConcatMarked);
         C(UConcat);
@@ -802,6 +803,9 @@ namespace spot
             }
           break;
         }
+      case op::H:
+      case op::O:
+      case op::Y:
       case op::X:
         // X(1) = 1,  X(0) = 0
         if (f->is_tt() || f->is_ff())
@@ -848,6 +852,12 @@ namespace spot
     switch (o)
       {
       case op::S:
+        if (second->is_ff())
+          return ff();
+        if (second->is_tt())
+          return unop(op::O, first);
+        break;
+      case op::E:
         if (second->is_ff())
           return ff();
         if (second->is_tt())
@@ -1213,6 +1223,7 @@ namespace spot
         is_.accepting_eword = false;
         break;
       case op::S:
+      case op::E:
         props = children[0]->props & children[0]->props;
         is_.not_marked = true;
         is_.boolean = false;

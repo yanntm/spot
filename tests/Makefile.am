@@ -373,6 +373,7 @@ TESTS_python = \
   python/ltl2tgba.test \
   python/ltlf.py \
   python/ltlparse.py \
+  python/ltlpast.py \
   python/ltlsimple.py \
   python/merge.py \
   python/minato.py \

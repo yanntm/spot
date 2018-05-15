@@ -595,6 +595,7 @@ namespace spot
           case op::Y:
           case op::H:
           case op::O:
+          case op::E:
             SPOT_UNREACHABLE();        // Because not rational operator
           case op::Not:
             {
@@ -1135,6 +1136,7 @@ namespace spot
             return bddtrue;
           case op::eword:
           case op::S:
+          case op::E:
           case op::Y:
           case op::H:
           case op::O:
@@ -1909,8 +1911,6 @@ namespace spot
                  bool fair_loop_approx, const atomic_prop_set* unobs,
                  tl_simplifier* simplifier, bool unambiguous)
   {
-    //if (!f2.is_ltl_without_past()) FIXME past
-    f2 = translate_past(f2);
     tl_simplifier* s = simplifier;
 
     // Simplify the formula, if requested.
@@ -1929,6 +1929,8 @@ namespace spot
         s = new tl_simplifier(dict);
         f2 = s->negative_normal_form(f2, false);
       }
+    if (!f2.is_ltl_without_past()) //past
+      f2 = translate_past(f2);
     assert(f2.is_in_nenoform());
 
     typedef std::set<formula> set_type;

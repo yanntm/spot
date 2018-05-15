@@ -156,6 +156,7 @@ namespace spot
           case op::Y:
           case op::H:
           case op::O:
+          case op::E:
             break;
           case op::Xor:
           case op::Implies:

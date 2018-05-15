@@ -282,6 +282,12 @@ eol2        (\n\r)+|(\r\n)+
 "W"				BEGIN(0); return token::OP_W;
 "M"				BEGIN(0); return token::OP_M;
 
+"S"				BEGIN(0); return token::OP_S;
+"E"				BEGIN(0); return token::OP_E;
+"O"				BEGIN(0); return token::OP_O;
+"H"				BEGIN(0); return token::OP_H;
+"Y"				BEGIN(0); return token::OP_Y;
+
   /* The combining overline or macron (overbar) should normally
      occur only after a single letter, but we do not check that. */
 "=0"|"̅"|"̄"			return token::OP_POST_NEG;

@@ -113,6 +113,7 @@ namespace spot
           case op::Implies:
           case op::Equiv:
           case op::S:
+          case op::E:
           case op::Y:
           case op::H:
           case op::O:

@@ -46,6 +46,7 @@ namespace spot
       KW,
       KM,
       KS,
+      KE,
       KY,
       KH,
       KO,
@@ -88,6 +89,11 @@ namespace spot
       " R ",
       " W ",
       " M ",
+      " S ",
+      " E ",
+      "Y",
+      "H",
+      "O",
       "<>-> ",
       "<>=> ",
       "<>+> ",
@@ -127,6 +133,11 @@ namespace spot
       " V ",
       " W ",                        // rewritten
       " M ",                        // rewritten
+      " S ",
+      " E ",
+      "Y",
+      "H",
+      "O",
       "<>-> ",                // not supported
       "<>=> ",                // not supported
       "<>+> ",                // not supported
@@ -166,6 +177,11 @@ namespace spot
       " R ",
       " W ",                        // rewritten
       " M ",                        // rewritten
+      " S ",
+      " E ",
+      "Y",
+      "H",
+      "O",
       "<>-> ",                // not supported
       "<>=> ",                // not supported
       "<>+> ",                // not supported
@@ -205,6 +221,11 @@ namespace spot
       " R ",
       " W ",
       " M ",
+      " S ",
+      " E ",
+      "Y",
+      "H",
+      "O",
       "◇→ ",
       "◇⇒ ",
       "◇→̃ ",
@@ -244,6 +265,11 @@ namespace spot
       " \\R ",
       " \\W ",
       " \\M ",
+      "\\S ",
+      "\\E ",
+      "\\Y ",
+      "\\H ",
+      "\\O ",
       "\\seq ",
       "\\seqX ",
       "\\seqM ",
@@ -283,6 +309,11 @@ namespace spot
       " \\mathbin{\\mathsf{R}} ",
       " \\mathbin{\\mathsf{W}} ",
       " \\mathbin{\\mathsf{M}} ",
+      " \\mathbin{\\mathsf{E}} ",
+      " \\mathbin{\\mathsf{S}} ",
+      "\\mathsf{Y} ",
+      "\\mathsf{H} ",
+      "\\mathsf{O} ",
       ("\\mathrel{\\Diamond\\kern-1.7pt\\raise.4pt"
        "\\hbox{$\\mathord{\\rightarrow}$}} "),
       ("\\mathrel{\\Diamond\\kern-1.7pt\\raise.4pt"
@@ -526,6 +557,11 @@ namespace spot
           case op::Y:
             emit(KY);
             visit(f[0]);
+            break;
+          case op::E:
+            visit(f[0]);
+            emit(KE);
+            visit(f[1]);
             break;
           case op::S:
             visit(f[0]);
@@ -1109,6 +1145,9 @@ namespace spot
             break;
           case op::M:
             os_ << 'M';
+            break;
+          case op::E:
+            os_ << 'E';
             break;
           case op::S:
             os_ << 'S';

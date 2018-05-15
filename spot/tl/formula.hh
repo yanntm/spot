@@ -88,6 +88,7 @@ namespace spot
     W,                         ///< weak until
     M,                         ///< strong release (dual of weak until)
     S,                         ///< since  (PAST)
+    E,                         ///< ergo (PAST) (dual of since)
     EConcat,                   ///< Seq
     EConcatMarked,             ///< Seq, Marked
     UConcat,                   ///< Triggers
@@ -898,6 +899,21 @@ namespace spot
     SPOT_DEF_UNOP(X);
     /// @}
 
+    /// \brief Construct an H
+    /// @{
+    SPOT_DEF_UNOP(H);
+    /// @}
+
+    /// \brief Construct an O
+    /// @{
+    SPOT_DEF_UNOP(O);
+    /// @}
+
+    /// \brief Construct an Y
+    /// @{
+    SPOT_DEF_UNOP(Y);
+    /// @}
+
     /// \brief Construct an F
     /// @{
     SPOT_DEF_UNOP(F);
@@ -1011,6 +1027,16 @@ namespace spot
     /// \brief Construct an `M` formula
     /// @{
     SPOT_DEF_BINOP(M);
+    /// @}
+
+    /// \brief Construct a `S` formula
+    /// @{
+    SPOT_DEF_BINOP(S);
+    /// @}
+
+    /// \brief Construct an `E` formula
+    /// @{
+    SPOT_DEF_BINOP(E);
     /// @}
 
     /// \brief Construct a `<>->` PSL formula
@@ -1534,6 +1560,8 @@ namespace spot
     SPOT_DEF_PROP(is_sugar_free_ltl);
     /// Whether the formula uses only LTL operators.
     SPOT_DEF_PROP(is_ltl_formula);
+    /// Whether the formula uses some past operators.
+    SPOT_DEF_PROP(is_ltl_without_past);
     /// Whether the formula uses only PSL operators.
     SPOT_DEF_PROP(is_psl_formula);
     /// Whether the formula uses only SERE operators.
@@ -1647,6 +1675,7 @@ namespace spot
           case op::W:
           case op::M:
           case op::S:
+          case op::E:
           case op::EConcat:
           case op::EConcatMarked:
           case op::UConcat:

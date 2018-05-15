@@ -59,6 +59,7 @@ namespace spot
       case op::H:
       case op::O:
       case op::S:
+      case op::E:
       case op::EConcatMarked:
       case op::UConcat:
       case op::Concat:
@@ -125,6 +126,7 @@ namespace spot
       case op::H:
       case op::O:
       case op::S:
+      case op::E:
       case op::EConcat:
       case op::EConcatMarked:
       case op::UConcat:

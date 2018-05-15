@@ -206,6 +206,9 @@ using namespace spot;
 %token OP_W "weak until operator" OP_M "strong release operator"
 %token OP_F "sometimes operator" OP_G "always operator"
 %token OP_X "next operator" OP_NOT "not operator"
+%token OP_S "since operator" OP_E "ergo operator" /*PAST OPERATORS*/
+%token OP_H "historically operator" OP_O "once operator"
+%token OP_Y "yesturday operator"
 %token OP_STAR "star operator" OP_BSTAR "bracket star operator"
 %token OP_BFSTAR "bracket fusion-star operator"
 %token OP_PLUS "plus operator"
@@ -252,6 +255,11 @@ using namespace spot;
 %right OP_U OP_R OP_M OP_W
 %nonassoc OP_F OP_G
 %nonassoc OP_X
+
+%right OP_S OP_E
+%nonassoc OP_H OP_O
+%nonassoc OP_Y
+
 
 /* High priority regex operator. */
 %nonassoc OP_BSTAR OP_STAR_OPEN OP_PLUS
@@ -802,6 +810,14 @@ subformula: booleanatom
 	      { $$ = fnode::binop(op::Equiv, $1, $3); }
 	    | subformula OP_EQUIV error
 	      { missing_right_binop($$, $1, @2, "equivalent operator"); }
+	    | subformula OP_E subformula
+	      { $$ = fnode::binop(op::E, $1, $3); }
+	    | subformula OP_E error
+	      { missing_right_binop($$, $1, @2, "ergo operator"); }
+	    | subformula OP_S subformula
+	      { $$ = fnode::binop(op::S, $1, $3); }
+	    | subformula OP_S error
+	      { missing_right_binop($$, $1, @2, "since operator"); }
 	    | subformula OP_U subformula
 	      { $$ = fnode::binop(op::U, $1, $3); }
 	    | subformula OP_U error
@@ -826,6 +842,18 @@ subformula: booleanatom
 	      { $$ = fnode::unop(op::G, $2); }
 	    | OP_G error
 	      { missing_right_op($$, @1, "always operator"); }
+	    | OP_H subformula
+	      { $$ = fnode::unop(op::H, $2); }
+	    | OP_H error
+	      { missing_right_op($$, @1, "historically operator"); }
+	    | OP_O subformula
+	      { $$ = fnode::unop(op::O, $2); }
+	    | OP_O error
+	      { missing_right_op($$, @1, "once operator"); }
+	    | OP_Y subformula
+	      { $$ = fnode::unop(op::Y, $2); }
+	    | OP_Y error
+	      { missing_right_op($$, @1, "yesturday operator"); }
 	    | OP_X subformula
 	      { $$ = fnode::unop(op::X, $2); }
 	    | OP_X error

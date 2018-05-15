@@ -105,6 +105,7 @@ namespace spot
       case op::UConcat:
       case op::U:
       case op::S:
+      case op::E:
       case op::Y:
       case op::H:
       case op::O:

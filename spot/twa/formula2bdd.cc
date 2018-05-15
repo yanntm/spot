@@ -100,6 +100,7 @@ namespace spot
       case op::OrRat:
       case op::AndRat:
       case op::S:
+      case op::E:
       case op::O:
       case op::Y:
       case op::H:
