@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013-2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2013-2018 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -385,4 +385,8 @@ ltlfilt out/2 > out.2
 diff out out.1
 diff out out.2
 
-true
+test a = `ltlfilt -r2 -f a`
+ltlfilt -r4 -f a 2>err && exit 1
+grep "invalid simplification level '4'" err
+ltlfilt -ra -f a 2>err && exit 1
+grep "invalid simplification level 'a'" err
