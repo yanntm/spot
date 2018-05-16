@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -388,12 +388,6 @@ output_formula(std::ostream& out,
       formula_with_location fl = { f, filename, linenum, prefix, suffix };
       format->print(fl, ptimer);
     }
-}
-
-void
-::printable_formula::print(std::ostream& os, const char*) const
-{
-  output_formula(os, val_);
 }
 
 void

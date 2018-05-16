@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche
-// et Développement de l'Epita (LRDE).
+// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -82,41 +82,3 @@ void output_formula_checked(spot::formula f,
                             const char* filename = nullptr, int linenum = 0,
                             const char* prefix = nullptr,
                             const char* suffix = nullptr);
-
-
-class printable_formula:
-  public spot::printable_value<spot::formula>
-{
-public:
-  printable_formula&
-  operator=(spot::formula new_val)
-  {
-    val_ = new_val;
-    return *this;
-  }
-
-  virtual void
-  print(std::ostream& os, const char*) const override;
-};
-
-class aut_stat_printer: protected spot::stat_printer
-{
-public:
-  aut_stat_printer(std::ostream& os, const char* format)
-    : spot::stat_printer(os, format)
-  {
-    declare('f', &formula_);        // Override the formula printer.
-  }
-
-  using spot::formater::set_output;
-
-  std::ostream&
-  print(const spot::const_twa_graph_ptr& aut,
-        spot::formula f = nullptr)
-  {
-    formula_ = f;
-    return this->spot::stat_printer::print(aut, f);
-  }
-
-  printable_formula formula_;
-};
