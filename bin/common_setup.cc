@@ -169,3 +169,23 @@ const struct argp misc_argp = { options, parse_opt_misc,
 const struct argp misc_argp_hidden = { options_hidden, parse_opt_misc,
                                        nullptr, nullptr, nullptr,
                                        nullptr, nullptr };
+
+
+int protected_main(char** progname, std::function<int()> mainfun)
+{
+  try
+    {
+      setup(progname);
+      return mainfun();
+    }
+  catch (const std::runtime_error& e)
+    {
+      error(2, 0, "%s", e.what());
+    }
+  catch (const std::invalid_argument& e)
+    {
+      error(2, 0, "%s", e.what());
+    }
+  SPOT_UNREACHABLE();
+  return 2;
+}

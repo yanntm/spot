@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -822,97 +822,97 @@ print_stats_csv(const char* filename)
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&]() -> unsigned {
+      const argp ap = { options, parse_opt, "[COMMANDFMT...]",
+                        argp_program_doc, children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "[COMMANDFMT...]",
-                    argp_program_doc, children, nullptr, nullptr };
+      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+        exit(err);
 
-  if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-    exit(err);
+      check_no_automaton();
 
-  check_no_automaton();
+      auto s = tools.size();
+      if (s == 0)
+        error(2, 0, "No tool to run?  Run '%s --help' for usage.",
+              program_name);
 
-  auto s = tools.size();
-  if (s == 0)
-    error(2, 0, "No tool to run?  Run '%s --help' for usage.",
-          program_name);
-
-  if (s == 1 && !opt_language_preserved && !no_checks)
-    error(2, 0, "Since --language-preserved is not used, you need "
-          "at least two tools to compare.");
+      if (s == 1 && !opt_language_preserved && !no_checks)
+        error(2, 0, "Since --language-preserved is not used, you need "
+              "at least two tools to compare.");
 
 
-  setup_color();
-  setup_sig_handler();
+      setup_color();
+      setup_sig_handler();
 
-  autcross_processor p;
-  if (p.run())
-    return 2;
+      autcross_processor p;
+      if (p.run())
+        return 2;
 
-  if (round_num == 0)
-    {
-      error(2, 0, "no automaton to translate");
-    }
-  else
-    {
-      if (global_error_flag)
+      if (round_num == 0)
         {
-          std::ostream& err = global_error();
-          if (bogus_output)
-            err << ("error: some error was detected during the above runs.\n"
-                    "       Check file ")
-                << bogus_output_filename
-                << " for problematic automata.";
-          else
-            err << ("error: some error was detected during the above runs,\n"
-                    "       please search for 'error:' messages in the above"
-                    " trace.");
-          err << std::endl;
-          end_error();
-        }
-      else if (timeout_count == 0 && ignored_exec_fail == 0)
-        {
-          std::cerr << "No problem detected." << std::endl;
+          error(2, 0, "no automaton to translate");
         }
       else
         {
-          std::cerr << "No major problem detected." << std::endl;
-        }
-
-      unsigned additional_errors = 0U;
-      additional_errors += timeout_count > 0;
-      additional_errors += ignored_exec_fail > 0;
-      if (additional_errors)
-        {
-          std::cerr << (global_error_flag ? "Additionally, " : "However, ");
-          if (timeout_count)
+          if (global_error_flag)
             {
-              if (additional_errors > 1)
-                std::cerr << "\n  - ";
-              if (timeout_count == 1)
-                std::cerr << "1 timeout occurred";
+              std::ostream& err = global_error();
+              if (bogus_output)
+                err << ("error: some error was detected during the above "
+                        "runs.\n       Check file ")
+                    << bogus_output_filename
+                    << " for problematic automata.";
               else
-                std::cerr << timeout_count << " timeouts occurred";
+                err << ("error: some error was detected during the above "
+                        "runs,\n       please search for 'error:' messages"
+                        " in the above trace.");
+              err << std::endl;
+              end_error();
+            }
+          else if (timeout_count == 0 && ignored_exec_fail == 0)
+            {
+              std::cerr << "No problem detected." << std::endl;
+            }
+          else
+            {
+              std::cerr << "No major problem detected." << std::endl;
             }
 
-          if (ignored_exec_fail)
+          unsigned additional_errors = 0U;
+          additional_errors += timeout_count > 0;
+          additional_errors += ignored_exec_fail > 0;
+          if (additional_errors)
             {
-              if (additional_errors > 1)
-                std::cerr << "\n  - ";
-              if (ignored_exec_fail == 1)
-                std::cerr << "1 non-zero exit status was ignored";
-              else
-                std::cerr << ignored_exec_fail
-                          << " non-zero exit statuses were ignored";
+              std::cerr << (global_error_flag ? "Additionally, " : "However, ");
+              if (timeout_count)
+                {
+                  if (additional_errors > 1)
+                    std::cerr << "\n  - ";
+                  if (timeout_count == 1)
+                    std::cerr << "1 timeout occurred";
+                  else
+                    std::cerr << timeout_count << " timeouts occurred";
+                }
+
+              if (ignored_exec_fail)
+                {
+                  if (additional_errors > 1)
+                    std::cerr << "\n  - ";
+                  if (ignored_exec_fail == 1)
+                    std::cerr << "1 non-zero exit status was ignored";
+                  else
+                    std::cerr << ignored_exec_fail
+                              << " non-zero exit statuses were ignored";
+                }
+              if (additional_errors == 1)
+                std::cerr << '.';
+              std::cerr << std::endl;
             }
-          if (additional_errors == 1)
-            std::cerr << '.';
-          std::cerr << std::endl;
         }
-    }
 
-  if (csv_output)
-    print_stats_csv(csv_output);
+      if (csv_output)
+        print_stats_csv(csv_output);
 
-  return global_error_flag;
+      return global_error_flag;
+    });
 }

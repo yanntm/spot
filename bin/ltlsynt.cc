@@ -416,14 +416,15 @@ parse_opt(int key, char* arg, struct argp_state*)
 int
 main(int argc, char **argv)
 {
-  setup(argv);
-  const argp ap = { options, parse_opt, nullptr,
-                    argp_program_doc, children, nullptr, nullptr };
-  if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-    exit(err);
-  check_no_formula();
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, nullptr,
+                        argp_program_doc, children, nullptr, nullptr };
+      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+        exit(err);
+      check_no_formula();
 
-  spot::translator trans;
-  ltl_processor processor(trans, input_aps, output_aps);
-  return processor.run();
+      spot::translator trans;
+      ltl_processor processor(trans, input_aps, output_aps);
+      return processor.run();
+    });
 }

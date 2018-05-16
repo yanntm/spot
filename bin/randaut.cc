@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015, 2016 Laboratoire de Recherche et
+// Copyright (C) 2012, 2013, 2014, 2015, 2016, 2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -276,15 +276,13 @@ parse_opt(int key, char* arg, struct argp_state* as)
 int
 main(int argc, char** argv)
 {
-  strcpy(F_doc, "seed number");
-  strcpy(L_doc, "automaton number");
-  setup(argv);
+  return protected_main(argv, [&] {
+      strcpy(F_doc, "seed number");
+      strcpy(L_doc, "automaton number");
 
-  const argp ap = { options, parse_opt, "N|PROP...", argp_program_doc,
-                    children, nullptr, nullptr };
+      const argp ap = { options, parse_opt, "N|PROP...", argp_program_doc,
+                        children, nullptr, nullptr };
 
-  try
-    {
       // This will ensure that all objects stored in this struct are
       // destroyed before global variables.
       opt_t o;
@@ -404,9 +402,6 @@ main(int argc, char** argv)
           if (opt_automata > 0 && automaton_num >= opt_automata)
             break;
         }
-    }
-  catch (const std::runtime_error& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
+      return 0;
+    });
 }

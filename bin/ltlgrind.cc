@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014, 2015, 2016, 2017 Laboratoire de Recherche et
+// Copyright (C) 2014, 2015, 2016, 2017, 2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -183,21 +183,21 @@ parse_opt(int key, char* arg, struct argp_state*)
 int
 main(int argc, char* argv[])
 {
-  setup(argv);
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, "[FILENAME[/COL]...]",
+                        argp_program_doc, children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "[FILENAME[/COL]...]", argp_program_doc,
-                    children, nullptr, nullptr };
+      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+        exit(err);
 
-  if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-    exit(err);
+      mut_opts |= opt_all;
 
-  mut_opts |= opt_all;
+      check_no_formula();
 
-  check_no_formula();
-
-  mutate_processor processor;
-  if (processor.run())
-    return 2;
-  flush_cout();
-  return 0;
+      mutate_processor processor;
+      if (processor.run())
+        return 2;
+      flush_cout();
+      return 0;
+    });
 }

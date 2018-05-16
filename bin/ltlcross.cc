@@ -1591,108 +1591,109 @@ print_stats_json(const char* filename)
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&]() -> unsigned {
+      const argp ap = { options, parse_opt, "[COMMANDFMT...]",
+                        argp_program_doc, children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "[COMMANDFMT...]",
-                    argp_program_doc, children, nullptr, nullptr };
+      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+        exit(err);
 
-  if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-    exit(err);
+      check_no_formula();
 
-  check_no_formula();
+      if (tools.empty())
+        error(2, 0, "No translator to run?  Run '%s --help' for usage.",
+              program_name);
 
-  if (tools.empty())
-    error(2, 0, "No translator to run?  Run '%s --help' for usage.",
-          program_name);
+      setup_color();
+      setup_sig_handler();
 
-  setup_color();
-  setup_sig_handler();
+      processor p;
+      if (p.run())
+        return 2;
 
-  processor p;
-  if (p.run())
-    return 2;
-
-  if (formulas.empty())
-    {
-      error(2, 0, "no formula to translate");
-    }
-  else
-    {
-      if (global_error_flag)
+      if (formulas.empty())
         {
-          std::ostream& err = global_error();
-          if (bogus_output)
-            err << ("error: some error was detected during the above runs.\n"
-                    "       Check file ")
-                << bogus_output_filename
-                << " for problematic formulas.";
-          else
-            err << ("error: some error was detected during the above runs,\n"
-                    "       please search for 'error:' messages in the above"
-                    " trace.");
-          err << std::endl;
-          end_error();
-        }
-      else if (timeout_count == 0 && ignored_exec_fail == 0 && oom_count == 0)
-        {
-          std::cerr << "No problem detected." << std::endl;
+          error(2, 0, "no formula to translate");
         }
       else
         {
-          std::cerr << "No major problem detected." << std::endl;
+          if (global_error_flag)
+            {
+              std::ostream& err = global_error();
+              if (bogus_output)
+                err << ("error: some error was detected during the above "
+                        "runs.\n       Check file ")
+                    << bogus_output_filename
+                    << " for problematic formulas.";
+              else
+                err << ("error: some error was detected during the above "
+                        "runs,\n       please search for 'error:' messages"
+                        " in the above trace.");
+              err << std::endl;
+              end_error();
+            }
+          else if (timeout_count == 0
+                   && ignored_exec_fail == 0 && oom_count == 0)
+            {
+              std::cerr << "No problem detected." << std::endl;
+            }
+          else
+            {
+              std::cerr << "No major problem detected." << std::endl;
+            }
+
+          unsigned additional_errors = 0U;
+          additional_errors += timeout_count > 0;
+          additional_errors += ignored_exec_fail > 0;
+          additional_errors += oom_count > 0;
+          if (additional_errors)
+            {
+              std::cerr << (global_error_flag ? "Additionally, " : "However, ");
+              if (timeout_count)
+                {
+                  if (additional_errors > 1)
+                    std::cerr << "\n  - ";
+                  if (timeout_count == 1)
+                    std::cerr << "1 timeout occurred";
+                  else
+                    std::cerr << timeout_count << " timeouts occurred";
+                }
+
+              if (oom_count)
+                {
+                  if (additional_errors > 1)
+                    std::cerr << "\n  - ";
+                  if (oom_count == 1)
+                    std::cerr << "1 state-space product was";
+                  else
+                    std::cerr << oom_count << "state-space products were";
+                  std::cerr << " skipped by lack of memory";
+                }
+
+              if (ignored_exec_fail)
+                {
+                  if (additional_errors > 1)
+                    std::cerr << "\n  - ";
+                  if (ignored_exec_fail == 1)
+                    std::cerr << "1 non-zero exit status was ignored";
+                  else
+                    std::cerr << ignored_exec_fail
+                              << " non-zero exit statuses were ignored";
+                }
+              if (additional_errors == 1)
+                std::cerr << '.';
+              std::cerr << std::endl;
+            }
         }
 
-      unsigned additional_errors = 0U;
-      additional_errors += timeout_count > 0;
-      additional_errors += ignored_exec_fail > 0;
-      additional_errors += oom_count > 0;
-      if (additional_errors)
-        {
-          std::cerr << (global_error_flag ? "Additionally, " : "However, ");
-          if (timeout_count)
-            {
-              if (additional_errors > 1)
-                std::cerr << "\n  - ";
-              if (timeout_count == 1)
-                std::cerr << "1 timeout occurred";
-              else
-                std::cerr << timeout_count << " timeouts occurred";
-            }
+      delete bogus_output;
+      delete grind_output;
 
-          if (oom_count)
-            {
-              if (additional_errors > 1)
-                std::cerr << "\n  - ";
-              if (oom_count == 1)
-                std::cerr << "1 state-space product was";
-              else
-                std::cerr << oom_count << "state-space products were";
-              std::cerr << " skipped by lack of memory";
-            }
+      if (json_output)
+        print_stats_json(json_output);
+      if (csv_output)
+        print_stats_csv(csv_output);
 
-          if (ignored_exec_fail)
-            {
-              if (additional_errors > 1)
-                std::cerr << "\n  - ";
-              if (ignored_exec_fail == 1)
-                std::cerr << "1 non-zero exit status was ignored";
-              else
-                std::cerr << ignored_exec_fail
-                          << " non-zero exit statuses were ignored";
-            }
-          if (additional_errors == 1)
-            std::cerr << '.';
-          std::cerr << std::endl;
-        }
-    }
-
-  delete bogus_output;
-  delete grind_output;
-
-  if (json_output)
-    print_stats_json(json_output);
-  if (csv_output)
-    print_stats_csv(csv_output);
-
-  return global_error_flag;
+      return global_error_flag;
+    });
 }

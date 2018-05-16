@@ -286,27 +286,19 @@ run_jobs()
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, nullptr, argp_program_doc,
+                        children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, nullptr, argp_program_doc,
-                    children, nullptr, nullptr };
+      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+        exit(err);
 
-  if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-    exit(err);
+      if (jobs.empty())
+        error(1, 0, "Nothing to do.  Try '%s --help' for more information.",
+              program_name);
 
-  if (jobs.empty())
-    error(1, 0, "Nothing to do.  Try '%s --help' for more information.",
-          program_name);
-
-  try
-    {
       run_jobs();
-    }
-  catch (const std::runtime_error& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
-
-  flush_cout();
-  return 0;
+      flush_cout();
+      return 0;
+    });
 }

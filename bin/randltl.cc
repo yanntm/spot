@@ -236,13 +236,10 @@ parse_opt(int key, char* arg, struct argp_state* as)
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, "N|PROP...", argp_program_doc,
+                        children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "N|PROP...", argp_program_doc,
-                    children, nullptr, nullptr };
-
-  try
-    {
       // This will ensure that all objects stored in this struct are
       // destroyed before global variables.
       opt_t o;
@@ -319,16 +316,7 @@ main(int argc, char** argv)
               output_formula_checked(f, nullptr, nullptr, ++count);
             }
         };
-    }
-  catch (const std::runtime_error& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
-  catch (const std::invalid_argument& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
-
-  flush_cout();
-  return 0;
+      flush_cout();
+      return 0;
+    });
 }

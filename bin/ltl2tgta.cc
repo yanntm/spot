@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -224,20 +224,17 @@ namespace
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, "[FORMULA...]",
+                        argp_program_doc, children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "[FORMULA...]",
-                    argp_program_doc, children, nullptr, nullptr };
+      simplification_level = 3;
 
-  simplification_level = 3;
+      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+        exit(err);
 
-  if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-    exit(err);
+      check_no_formula();
 
-  check_no_formula();
-
-  try
-    {
       spot::translator trans(&extra_options);
       trans.set_pref(pref | comp | sbacc);
       trans.set_type(type);
@@ -248,11 +245,6 @@ main(int argc, char** argv)
         return 2;
       // Diagnose unused -x options
       extra_options.report_unused_options();
-    }
-  catch (const std::runtime_error& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
-
-  return 0;
+      return 0;
+    });
 }

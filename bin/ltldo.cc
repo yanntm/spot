@@ -445,40 +445,33 @@ namespace
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, "[COMMANDFMT...]",
+                        argp_program_doc, children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "[COMMANDFMT...]",
-                    argp_program_doc, children, nullptr, nullptr };
+      // Disable post-processing as much as possible by default.
+      level = spot::postprocessor::Low;
+      pref = spot::postprocessor::Any;
+      type = spot::postprocessor::Generic;
+      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+        exit(err);
 
-  // Disable post-processing as much as possible by default.
-  level = spot::postprocessor::Low;
-  pref = spot::postprocessor::Any;
-  type = spot::postprocessor::Generic;
-  if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-    exit(err);
+      check_no_formula();
 
-  check_no_formula();
+      if (tools.empty())
+        error(2, 0, "No translator to run?  Run '%s --help' for usage.",
+              program_name);
 
-  if (tools.empty())
-    error(2, 0, "No translator to run?  Run '%s --help' for usage.",
-          program_name);
+      setup_sig_handler();
 
-  setup_sig_handler();
+      spot::postprocessor post;
+      post.set_pref(pref | comp | sbacc | colored);
+      post.set_type(type);
+      post.set_level(level);
 
-  spot::postprocessor post;
-  post.set_pref(pref | comp | sbacc | colored);
-  post.set_type(type);
-  post.set_level(level);
-
-  try
-    {
       processor p(post);
       if (p.run())
         return 2;
-    }
-  catch (const std::runtime_error& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
-  return 0;
+      return 0;
+    });
 }

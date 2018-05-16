@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013 Laboratoire de Recherche et Développement de
-// l'Epita (LRDE).
+// Copyright (C) 2012, 2013, 2018 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -21,8 +21,13 @@
 
 #include "common_sys.hh"
 #include "progname.h"
+#include <functional>
 
 void setup(char** progname);
 
 extern const struct argp misc_argp;
 extern const struct argp misc_argp_hidden;
+
+
+// Call setup(progname) then Run mainfun() and handle exceptions.
+int protected_main(char** progname, std::function<int()> mainfun);

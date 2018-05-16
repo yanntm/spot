@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -795,13 +795,10 @@ namespace
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, "[FILENAME[/COL]...]",
+                        argp_program_doc, children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "[FILENAME[/COL]...]",
-                    argp_program_doc, children, nullptr, nullptr };
-
-  try
-    {
       // This will ensure that all objects stored in this struct are
       // destroyed before global variables.
       opt_t o;
@@ -822,19 +819,10 @@ main(int argc, char** argv)
       ltl_processor processor(simpl);
       if (processor.run())
         return 2;
-    }
-  catch (const std::runtime_error& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
-  catch (const std::invalid_argument& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
 
-  if (output_format == count_output)
-    std::cout << match_count << std::endl;
-  flush_cout();
-
-  return one_match ? 0 : 1;
+      if (output_format == count_output)
+        std::cout << match_count << '\n';
+      flush_cout();
+      return one_match ? 0 : 1;
+    });
 }

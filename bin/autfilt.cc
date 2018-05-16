@@ -1496,13 +1496,10 @@ namespace
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, "[FILENAME[/COL]...]",
+                        argp_program_doc, children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "[FILENAME[/COL]...]",
-                    argp_program_doc, children, nullptr, nullptr };
-
-  try
-    {
       // This will ensure that all objects stored in this struct are
       // destroyed before global variables.
       opt_t o;
@@ -1544,19 +1541,11 @@ main(int argc, char** argv)
 
       // Diagnose unused -x options
       extra_options.report_unused_options();
-    }
-  catch (const std::runtime_error& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
-  catch (const std::invalid_argument& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
 
-  if (automaton_format == Count)
-    std::cout << match_count << std::endl;
+      if (automaton_format == Count)
+        std::cout << match_count << std::endl;
 
-  check_cout();
-  return !match_count;
+      check_cout();
+      return match_count ? 0 : 1;
+    });
 }

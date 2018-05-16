@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015, 2016, 2017, 2018 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -136,33 +136,26 @@ namespace
 int
 main(int argc, char** argv)
 {
-  setup(argv);
+  return protected_main(argv, [&] {
+      const argp ap = { options, parse_opt, "[FILENAME[/COL]...]",
+                        argp_program_doc, children, nullptr, nullptr };
 
-  const argp ap = { options, parse_opt, "[FILENAME[/COL]...]",
-                    argp_program_doc, children, nullptr, nullptr };
+      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+        exit(err);
 
-  if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-    exit(err);
+      check_no_automaton();
 
-  check_no_automaton();
+      spot::postprocessor post(&extra_options);
+      post.set_pref(pref | comp | sbacc | colored);
+      post.set_type(type);
+      post.set_level(level);
 
-  spot::postprocessor post(&extra_options);
-  post.set_pref(pref | comp | sbacc | colored);
-  post.set_type(type);
-  post.set_level(level);
-
-  try
-    {
       dstar_processor processor(post);
       if (processor.run())
         return 2;
 
       // Diagnose unused -x options
       extra_options.report_unused_options();
-    }
-  catch (const std::runtime_error& e)
-    {
-      error(2, 0, "%s", e.what());
-    }
-  return 0;
+      return 0;
+    });
 }
