@@ -26,7 +26,6 @@
 #include <spot/twaalgos/simulation.hh>
 #include <spot/misc/minato.hh>
 #include <spot/twa/bddprint.hh>
-#include <spot/twaalgos/reachiter.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/sepsets.hh>
 #include <spot/twaalgos/isdet.hh>

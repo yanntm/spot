@@ -25,7 +25,6 @@
 #include <spot/twa/twa.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/hoa.hh>
-#include <spot/twaalgos/reachiter.hh>
 #include <spot/misc/escape.hh>
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/minato.hh>

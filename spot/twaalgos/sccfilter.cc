@@ -19,7 +19,6 @@
 
 #include "config.h"
 #include <spot/twaalgos/sccfilter.hh>
-#include <spot/twaalgos/reachiter.hh>
 #include <spot/twaalgos/sccinfo.hh>
 
 namespace spot

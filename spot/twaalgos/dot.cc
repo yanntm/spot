@@ -28,7 +28,6 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/twa/bddprint.hh>
-#include <spot/twaalgos/reachiter.hh>
 #include <spot/misc/escape.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twa/formula2bdd.hh>
@@ -950,8 +949,7 @@ namespace spot
   } // anonymous namespace
 
   std::ostream&
-  print_dot(std::ostream& os, const const_twa_ptr& g,
-                  const char* options)
+  print_dot(std::ostream& os, const const_twa_ptr& g, const char* options)
   {
     dotty_output d(os, options);
     // Enable state labels for Kripke structure.

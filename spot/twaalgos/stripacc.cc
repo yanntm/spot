@@ -19,7 +19,6 @@
 
 #include "config.h"
 #include <spot/twaalgos/stripacc.hh>
-#include <spot/twaalgos/reachiter.hh>
 
 namespace spot
 {
