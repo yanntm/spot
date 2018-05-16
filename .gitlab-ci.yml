@@ -214,7 +214,7 @@ publish-stable:
     - dput lrde *.changes
     - tgz=`ls spot-*.tar.* | head -n 1`
     - case $tgz in *[0-9].tar.*) scp $tgz doc@perso:/var/www/dload/spot/;; esac
-    - curl -X POST -F ref=master -F token=$TRIGGER_SPOT_WEB -F "variables[skip_next]=1" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
+    - curl -X POST -F ref=master -F token=$TRIGGER_SPOT_WEB -F "variables[spot_branch]=stable" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
 
 publish-unstable:
   only:
@@ -228,5 +228,5 @@ publish-unstable:
     - cd _build_unstable
     - ls -l
     - dput lrde *.changes
-    - curl -X POST -F ref=master -F token=$TRIGGER_SPOT_WEB -F "variables[skip_stable]=1" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
+    - curl -X POST -F ref=master -F token=$TRIGGER_SPOT_WEB -F "variables[spot_branch]=next" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
     - curl -X POST -F ref=master -F token=$TRIGGER_SANDBOX https://gitlab.lrde.epita.fr/api/v4/projects/181/trigger/pipeline
