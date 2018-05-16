@@ -311,7 +311,7 @@ diff foo expected
 run 0 ltlcross --verbose --no-checks -f 'FGa' 'ltl2tgba'
 
 # The CSV file should not talk about product if --products=0
-ltlcross --products=0 ltl2tgba -f GFa -f FGa --csv=out.csv
+ltlcross --color --products=0 ltl2tgba -f GFa -f FGa --csv=out.csv
 grep product out.csv && exit 1
 check_csv out.csv
 
@@ -372,6 +372,6 @@ ltlcross './fake %f >%O' -f foo --verbose --csv=out.csv 2>stderr
 cat stderr
 test 2 = `grep -c 'info:.*-> failed (Too many .* used.)' stderr`
 check_csv out.csv
-ltlcross './fake %f >%O' -f foo --csv=out.csv 2>stderr
+ltlcross --color=never './fake %f >%O' -f foo --csv=out.csv 2>stderr
 cat stderr
 test 2 = `grep -c 'info: preproc.* failed (Too many .* used.)' stderr`
