@@ -411,7 +411,7 @@ namespace spot
       simpl_(tl_simplifier_options{opt_simpl_level_})
   {
     aprops_ = aprops;
-    output_ = opts.get("output", OUTPUTLTL);
+    output_ = opts.get("output", randltlgenerator::LTL);
     opt_seed_ = opts.get("seed", 0);
     opt_tree_size_min_ = opts.get("tree_size_min", 15);
     opt_tree_size_max_ = opts.get("tree_size_max", 15);
@@ -424,7 +424,7 @@ namespace spot
 
     switch (output_)
       {
-      case OUTPUTLTL:
+      case randltlgenerator::LTL:
         rf_ = new random_ltl(&aprops_);
         if (opt_pS)
           throw std::invalid_argument("Cannot set sere priorities with "
@@ -434,7 +434,7 @@ namespace spot
                                       "LTL output");
         tok_pL = rf_->parse_options(opt_pL);
         break;
-      case OUTPUTBOOL:
+      case randltlgenerator::Bool:
         rf_ = new random_boolean(&aprops_);
         tok_pB = rf_->parse_options(opt_pB);
         if (opt_pL)
@@ -444,7 +444,7 @@ namespace spot
           throw std::invalid_argument("Cannot set sere priorities "
                                       "with Boolean output");
         break;
-      case OUTPUTSERE:
+      case randltlgenerator::SERE:
         rf_ = rs_ = new random_sere(&aprops_);
         tok_pS = rs_->parse_options(opt_pS);
         tok_pB = rs_->rb.parse_options(opt_pB);
@@ -452,7 +452,7 @@ namespace spot
           throw std::invalid_argument("Cannot set ltl priorities "
                                       "with SERE output");
         break;
-      case OUTPUTPSL:
+      case randltlgenerator::PSL:
         rf_ = rp_ = new random_psl(&aprops_);
         rs_ = &rp_->rs;
         tok_pL = rp_->parse_options(opt_pL);

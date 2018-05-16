@@ -851,10 +851,10 @@ def randltl(ap, n=-1, **kwargs):
     """
     opts = option_map()
     output_map = {
-        "ltl": OUTPUTLTL,
-        "psl": OUTPUTPSL,
-        "bool": OUTPUTBOOL,
-        "sere": OUTPUTSERE
+        "ltl": randltlgenerator.LTL,
+        "psl": randltlgenerator.PSL,
+        "bool": randltlgenerator.Bool,
+        "sere": randltlgenerator.SERE
     }
 
     if isinstance(ap, list):
@@ -889,18 +889,18 @@ def randltl(ap, n=-1, **kwargs):
     dump_priorities = kwargs.get("dump_priorities", False)
     if dump_priorities:
         dumpstream = ostringstream()
-        if output == OUTPUTLTL:
+        if output == randltlgenerator.LTL:
             print('Use argument ltl_priorities=STRING to set the following '
                   'LTL priorities:\n')
             rg.dump_ltl_priorities(dumpstream)
             print(dumpstream.str())
-        elif output == OUTPUTBOOL:
+        elif output == randltlgenerator.Bool:
             print('Use argument boolean_priorities=STRING to set the '
                   'following Boolean formula priorities:\n')
             rg.dump_bool_priorities(dumpstream)
             print(dumpstream.str())
-        elif output == OUTPUTPSL or output == OUTPUTSERE:
-            if output != OUTPUTSERE:
+        elif output == randltlgenerator.PSL or output == randltlgenerator.SERE:
+            if output != randltlgenerator.SERE:
                 print('Use argument ltl_priorities=STRING to set the '
                       'following LTL priorities:\n')
                 rg.dump_psl_priorities(dumpstream)
@@ -933,7 +933,7 @@ def randltl(ap, n=-1, **kwargs):
             if f is None:
                 sys.stderr.write("Warning: could not generate a new "
                                  "unique formula after {} trials.\n"
-                                 .format(MAX_TRIALS))
+                                 .format(randltlgenerator.MAX_TRIALS))
                 raise StopIteration
             self.i += 1
             return f

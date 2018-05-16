@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire de
+// Copyright (C) 2010-2016, 2018 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -29,12 +29,6 @@
 #include <spot/misc/optionmap.hh>
 #include <spot/misc/hash.hh>
 #include <spot/tl/simplify.hh>
-
-#define OUTPUTBOOL 1
-#define OUTPUTLTL 2
-#define OUTPUTSERE 3
-#define OUTPUTPSL 4
-#define MAX_TRIALS 100000
 
 namespace spot
 {
@@ -305,6 +299,9 @@ namespace spot
 
 
   public:
+    enum output_type { Bool, LTL, SERE, PSL };
+    static constexpr unsigned MAX_TRIALS = 100000U;
+
     randltlgenerator(int aprops_n, const option_map& opts,
                      char* opt_pL = nullptr,
                      char* opt_pS = nullptr,

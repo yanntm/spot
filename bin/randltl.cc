@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2012, 2013, 2014, 2015, 2016, 2018 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -142,7 +142,8 @@ static struct opt_t
   spot::atomic_prop_set aprops;
 }* opt;
 
-static int output = OUTPUTLTL;
+static spot::randltlgenerator::output_type output =
+  spot::randltlgenerator::LTL;
 static char* opt_pL = nullptr;
 static char* opt_pS = nullptr;
 static char* opt_pB = nullptr;
@@ -161,22 +162,22 @@ parse_opt(int key, char* arg, struct argp_state* as)
   switch (key)
     {
     case 'B':
-      output = OUTPUTBOOL;
+      output = spot::randltlgenerator::Bool;
       break;
     case 'L':
-      output = OUTPUTLTL;
+      output = spot::randltlgenerator::LTL;
       break;
     case 'n':
       opt_formulas = to_int(arg);
       break;
     case 'P':
-      output = OUTPUTPSL;
+      output = spot::randltlgenerator::PSL;
       break;
     case OPT_R:
       parse_r(arg);
       break;
     case 'S':
-      output = OUTPUTSERE;
+      output = spot::randltlgenerator::SERE;
       break;
     case OPT_BOOLEAN_PRIORITIES:
       opt_pB = arg;
@@ -275,23 +276,23 @@ main(int argc, char** argv)
         {
           switch (output)
             {
-            case OUTPUTLTL:
+            case spot::randltlgenerator::LTL:
               std::cout <<
                 "Use --ltl-priorities to set the following LTL priorities:\n";
               rg.dump_ltl_priorities(std::cout);
               break;
-            case OUTPUTBOOL:
+            case spot::randltlgenerator::Bool:
               std::cout <<
                 "Use --boolean-priorities to set the following Boolean "
                 "formula priorities:\n";
               rg.dump_bool_priorities(std::cout);
               break;
-            case OUTPUTPSL:
+            case spot::randltlgenerator::PSL:
               std::cout <<
                 "Use --ltl-priorities to set the following LTL priorities:\n";
               rg.dump_psl_priorities(std::cout);
               SPOT_FALLTHROUGH;
-            case OUTPUTSERE:
+            case spot::randltlgenerator::SERE:
               std::cout <<
                 "Use --sere-priorities to set the following SERE priorities:\n";
               rg.dump_sere_priorities(std::cout);
@@ -300,8 +301,6 @@ main(int argc, char** argv)
                 "formula priorities:\n";
               rg.dump_sere_bool_priorities(std::cout);
               break;
-            default:
-              error(2, 0, "internal error: unknown type of output");
             }
           exit(0);
         }
@@ -313,7 +312,7 @@ main(int argc, char** argv)
           if (!f)
             {
               error(2, 0, "failed to generate a new unique formula after %d " \
-                    "trials", MAX_TRIALS);
+                    "trials", spot::randltlgenerator::MAX_TRIALS);
             }
           else
             {

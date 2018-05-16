@@ -34,7 +34,7 @@ except RuntimeError:
 
 
 opts = spot.option_map()
-opts.set('output', spot.OUTPUTLTL)
+opts.set('output', spot.randltlgenerator.LTL)
 opts.set('tree_size_min', 15)
 opts.set('tree_size_max', 15)
 opts.set('wf', False)

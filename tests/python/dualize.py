@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 # l'EPITA.
 #
 # This file is part of Spot, a model checking library.
@@ -585,7 +585,7 @@ State: 5
 --END--"""
 
 opts = spot.option_map()
-opts.set('output', spot.OUTPUTLTL)
+opts.set('output', spot.randltlgenerator.LTL)
 opts.set('tree_size_min', 15)
 opts.set('tree_size_max', 15)
 opts.set('seed', 0)
