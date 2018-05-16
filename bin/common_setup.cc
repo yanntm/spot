@@ -140,8 +140,6 @@ static const argp_option options_hidden[] =
     { "version", OPT_VERSION, nullptr, OPTION_HIDDEN,
       "print program version", -1 },
     { "help", OPT_HELP, nullptr, OPTION_HIDDEN, "print this help", -1 },
-    // We support this option just in case, but we don't advertise it.
-    { "usage", OPT_USAGE, nullptr, OPTION_HIDDEN, "show short usage", -1 },
     { nullptr, 0, nullptr, 0, nullptr, 0 }
   };
 
@@ -153,10 +151,6 @@ parse_opt_misc(int key, char*, struct argp_state* state)
     {
     case OPT_HELP:
       argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
-      break;
-    case OPT_USAGE:
-      argp_state_help(state, state->out_stream,
-                      ARGP_HELP_USAGE | ARGP_HELP_EXIT_OK);
       break;
     case OPT_VERSION:
       display_version(state->out_stream, state);
