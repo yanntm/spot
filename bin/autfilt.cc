@@ -304,8 +304,7 @@ static const argp_option options[] =
     { "cleanup-acceptance", OPT_CLEAN_ACC, nullptr, 0,
       "remove unused acceptance sets from the automaton", 0 },
     { "complement", OPT_COMPLEMENT, nullptr, 0,
-      "complement each automaton (currently support only deterministic "
-      "automata)", 0 },
+      "complement each automaton (currently via determinization)", 0 },
     { "complement-acceptance", OPT_COMPLEMENT_ACC, nullptr, 0,
       "complement the acceptance condition (without touching the automaton)",
       0 },
@@ -1423,7 +1422,10 @@ namespace
         }
 
       if (opt_complement)
-        aut = spot::dualize(ensure_deterministic(aut));
+        {
+          aut = spot::dualize(ensure_deterministic(aut));
+          aut->merge_edges();
+        }
 
       if (opt_dualize)
         aut = spot::dualize(aut);
