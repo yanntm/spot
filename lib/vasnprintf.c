@@ -1,5 +1,5 @@
 /* vsprintf with automatic memory allocation.
-   Copyright (C) 1999, 2002-2017 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2002-2018 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License along
-   with this program; if not, see <http://www.gnu.org/licenses/>.  */
+   with this program; if not, see <https://www.gnu.org/licenses/>.  */
 
 /* This file can be parametrized with the following macros:
      VASNPRINTF         The name of the function being defined.
@@ -4243,7 +4243,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                                   static const wchar_t decimal_format[] =
                                     /* Produce the same number of exponent digits
                                        as the native printf implementation.  */
-#    if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+#    if defined _WIN32 && ! defined __CYGWIN__
                                     { '%', '+', '.', '3', 'd', '\0' };
 #    else
                                     { '%', '+', '.', '2', 'd', '\0' };
@@ -4257,7 +4257,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                                   static const char decimal_format[] =
                                     /* Produce the same number of exponent digits
                                        as the native printf implementation.  */
-#    if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+#    if defined _WIN32 && ! defined __CYGWIN__
                                     "%+.3d";
 #    else
                                     "%+.2d";
@@ -4436,7 +4436,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                                           static const wchar_t decimal_format[] =
                                             /* Produce the same number of exponent digits
                                                as the native printf implementation.  */
-#    if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+#    if defined _WIN32 && ! defined __CYGWIN__
                                             { '%', '+', '.', '3', 'd', '\0' };
 #    else
                                             { '%', '+', '.', '2', 'd', '\0' };
@@ -4450,7 +4450,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                                           static const char decimal_format[] =
                                             /* Produce the same number of exponent digits
                                                as the native printf implementation.  */
-#    if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+#    if defined _WIN32 && ! defined __CYGWIN__
                                             "%+.3d";
 #    else
                                             "%+.2d";
@@ -4508,7 +4508,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                                 *p++ = '+';
                                 /* Produce the same number of exponent digits as
                                    the native printf implementation.  */
-#   if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+#   if defined _WIN32 && ! defined __CYGWIN__
                                 *p++ = '0';
 #   endif
                                 *p++ = '0';
@@ -4836,7 +4836,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
 #if HAVE_LONG_LONG_INT
                   case TYPE_LONGLONGINT:
                   case TYPE_ULONGLONGINT:
-# if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+# if defined _WIN32 && ! defined __CYGWIN__
                     *fbp++ = 'I';
                     *fbp++ = '6';
                     *fbp++ = '4';
@@ -4872,7 +4872,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
 # if ! (((__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 3))        \
          && !defined __UCLIBC__)                                            \
         || (defined __APPLE__ && defined __MACH__)                          \
-        || ((defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__))
+        || (defined _WIN32 && ! defined __CYGWIN__))
                 fbp[1] = '%';
                 fbp[2] = 'n';
                 fbp[3] = '\0';
@@ -4905,8 +4905,8 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                    On native Windows systems (such as mingw) where the OS is
                    Windows Vista, the use of %n in format strings by default
                    crashes the program. See
-                     <http://gcc.gnu.org/ml/gcc/2007-06/msg00122.html> and
-                     <http://msdn2.microsoft.com/en-us/library/ms175782(VS.80).aspx>
+                     <https://gcc.gnu.org/ml/gcc/2007-06/msg00122.html> and
+                     <https://msdn.microsoft.com/en-us/library/ms175782.aspx>
                    So we should avoid %n in this situation.  */
                 fbp[1] = '\0';
 # endif

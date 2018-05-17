@@ -1,5 +1,5 @@
 # DO NOT EDIT! GENERATED AUTOMATICALLY!
-# Copyright (C) 2002-2017 Free Software Foundation, Inc.
+# Copyright (C) 2002-2018 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this file.  If not, see <http://www.gnu.org/licenses/>.
+# along with this file.  If not, see <https://www.gnu.org/licenses/>.
 #
 # As a special exception to the GNU General Public License,
 # this file may be distributed as part of a program that
@@ -97,7 +97,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module quotearg:
   # Code from module quotearg-simple:
   # Code from module rawmemchr:
-  # Code from module secure_getenv:
   # Code from module size_max:
   # Code from module sleep:
   # Code from module snippet/_Noreturn:
@@ -106,6 +105,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module snippet/warn-on-use:
   # Code from module ssize_t:
   # Code from module stat:
+  # Code from module stat-time:
   # Code from module stdalign:
   # Code from module stdbool:
   # Code from module stddef:
@@ -296,12 +296,6 @@ AC_SUBST([LTALLOCA])
     gl_PREREQ_RAWMEMCHR
   fi
   gl_STRING_MODULE_INDICATOR([rawmemchr])
-  gl_FUNC_SECURE_GETENV
-  if test $HAVE_SECURE_GETENV = 0; then
-    AC_LIBOBJ([secure_getenv])
-    gl_PREREQ_SECURE_GETENV
-  fi
-  gl_STDLIB_MODULE_INDICATOR([secure_getenv])
   gl_SIZE_MAX
   gl_FUNC_SLEEP
   if test $HAVE_SLEEP = 0 || test $REPLACE_SLEEP = 1; then
@@ -320,6 +314,8 @@ AC_SUBST([LTALLOCA])
     gl_PREREQ_STAT
   fi
   gl_SYS_STAT_MODULE_INDICATOR([stat])
+  gl_STAT_TIME
+  gl_STAT_BIRTHTIME
   gl_STDALIGN_H
   AM_STDBOOL_H
   gl_STDDEF_H
@@ -602,7 +598,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/malloc.c
   lib/malloca.c
   lib/malloca.h
-  lib/malloca.valgrind
   lib/mbrtowc.c
   lib/mbsinit.c
   lib/memchr.c
@@ -629,9 +624,10 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/rawmemchr.valgrind
   lib/ref-add.sin
   lib/ref-del.sin
-  lib/secure_getenv.c
   lib/size_max.h
   lib/sleep.c
+  lib/stat-time.c
+  lib/stat-time.h
   lib/stat-w32.c
   lib/stat-w32.h
   lib/stat.c
@@ -738,10 +734,10 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/quote.m4
   m4/quotearg.m4
   m4/rawmemchr.m4
-  m4/secure_getenv.m4
   m4/size_max.m4
   m4/sleep.m4
   m4/ssize_t.m4
+  m4/stat-time.m4
   m4/stat.m4
   m4/stdalign.m4
   m4/stdbool.m4
