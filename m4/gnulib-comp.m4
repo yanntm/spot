@@ -50,6 +50,8 @@ AC_DEFUN([gl_EARLY],
   # Code from module c-ctype:
   # Code from module c-strcase:
   # Code from module c-strcaseeq:
+  # Code from module close-stream:
+  # Code from module closeout:
   # Code from module configmake:
   # Code from module dirname-lgpl:
   # Code from module dosname:
@@ -62,6 +64,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module fcntl-h:
   # Code from module filename:
   # Code from module float:
+  # Code from module fpending:
   # Code from module getopt-gnu:
   # Code from module getopt-posix:
   # Code from module getprogname:
@@ -97,6 +100,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module quotearg:
   # Code from module quotearg-simple:
   # Code from module rawmemchr:
+  # Code from module secure_getenv:
   # Code from module size_max:
   # Code from module sleep:
   # Code from module snippet/_Noreturn:
@@ -165,6 +169,9 @@ AC_SUBST([LTALLOCA])
   m4_ifdef([AM_XGETTEXT_OPTION],
     [AM_][XGETTEXT_OPTION([--flag=argp_error:2:c-format])
      AM_][XGETTEXT_OPTION([--flag=argp_failure:4:c-format])])
+  gl_CLOSE_STREAM
+  gl_MODULE_INDICATOR([close-stream])
+  gl_CLOSEOUT
   gl_CONFIGMAKE_PREP
   gl_DIRNAME_LGPL
   gl_DOUBLE_SLASH_ROOT
@@ -185,6 +192,10 @@ AC_SUBST([LTALLOCA])
   fi
   if test $REPLACE_ITOLD = 1; then
     AC_LIBOBJ([itold])
+  fi
+  gl_FUNC_FPENDING
+  if test $gl_cv_func___fpending = no; then
+    AC_LIBOBJ([fpending])
   fi
   gl_FUNC_GETOPT_GNU
   dnl Because of the way gl_FUNC_GETOPT_GNU is implemented (the gl_getopt_required
@@ -296,6 +307,12 @@ AC_SUBST([LTALLOCA])
     gl_PREREQ_RAWMEMCHR
   fi
   gl_STRING_MODULE_INDICATOR([rawmemchr])
+  gl_FUNC_SECURE_GETENV
+  if test $HAVE_SECURE_GETENV = 0; then
+    AC_LIBOBJ([secure_getenv])
+    gl_PREREQ_SECURE_GETENV
+  fi
+  gl_STDLIB_MODULE_INDICATOR([secure_getenv])
   gl_SIZE_MAX
   gl_FUNC_SLEEP
   if test $HAVE_SLEEP = 0 || test $REPLACE_SLEEP = 1; then
@@ -557,6 +574,10 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/c-strcasecmp.c
   lib/c-strcaseeq.h
   lib/c-strncasecmp.c
+  lib/close-stream.c
+  lib/close-stream.h
+  lib/closeout.c
+  lib/closeout.h
   lib/config.charset
   lib/dirname-lgpl.c
   lib/dirname.h
@@ -571,6 +592,8 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/float+.h
   lib/float.c
   lib/float.in.h
+  lib/fpending.c
+  lib/fpending.h
   lib/getopt-cdefs.in.h
   lib/getopt-core.h
   lib/getopt-ext.h
@@ -624,6 +647,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/rawmemchr.valgrind
   lib/ref-add.sin
   lib/ref-del.sin
+  lib/secure_getenv.c
   lib/size_max.h
   lib/sleep.c
   lib/stat-time.c
@@ -635,6 +659,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/stdbool.in.h
   lib/stddef.in.h
   lib/stdint.in.h
+  lib/stdio-impl.h
   lib/stdio.in.h
   lib/stdlib.in.h
   lib/stpcpy.c
@@ -680,6 +705,8 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/absolute-header.m4
   m4/alloca.m4
   m4/argp.m4
+  m4/close-stream.m4
+  m4/closeout.m4
   m4/codeset.m4
   m4/configmake.m4
   m4/dirname.m4
@@ -693,6 +720,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/fcntl-o.m4
   m4/fcntl_h.m4
   m4/float_h.m4
+  m4/fpending.m4
   m4/getopt.m4
   m4/getprogname.m4
   m4/gettimeofday.m4
@@ -734,6 +762,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/quote.m4
   m4/quotearg.m4
   m4/rawmemchr.m4
+  m4/secure_getenv.m4
   m4/size_max.m4
   m4/sleep.m4
   m4/ssize_t.m4
