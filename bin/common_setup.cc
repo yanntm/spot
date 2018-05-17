@@ -122,7 +122,6 @@ setup(char** argv)
 // a short version).
 enum {
   OPT_HELP = 1,
-  OPT_USAGE,
   OPT_VERSION,
 };
 
@@ -130,8 +129,6 @@ static const argp_option options[] =
   {
     { "version", OPT_VERSION, nullptr, 0, "print program version", -1 },
     { "help", OPT_HELP, nullptr, 0, "print this help", -1 },
-    // We support this option just in case, but we don't advertise it.
-    { "usage", OPT_USAGE, nullptr, OPTION_HIDDEN, "show short usage", -1 },
     { nullptr, 0, nullptr, 0, nullptr, 0 }
   };
 
