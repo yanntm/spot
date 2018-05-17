@@ -21,6 +21,7 @@
 #include "common_aoutput.hh"
 
 #include "argp.h"
+#include "closeout.h"
 #include <cstdlib>
 #include <unistd.h>
 #include <iostream>
@@ -147,10 +148,17 @@ parse_opt_misc(int key, char*, struct argp_state* state)
   switch (key)
     {
     case OPT_HELP:
-      argp_state_help(state, state->out_stream, ARGP_HELP_STD_HELP);
+      argp_state_help(state, state->out_stream,
+                      // Do not let argp exit: we want to diagnose a
+                      // failure to print --help by closing stdout
+                      // properly.
+                      ARGP_HELP_STD_HELP & ~ARGP_HELP_EXIT_OK);
+      close_stdout();
+      exit(0);
       break;
     case OPT_VERSION:
       display_version(state->out_stream, state);
+      close_stdout();
       exit(0);
       break;
     default:
