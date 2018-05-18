@@ -206,8 +206,8 @@ test `cat output` = 1
 
 
 # How about a state-based DPA?
-autfilt -S --sat-minimize='acc="parity max even 3",colored' -H test.hoa \
-	 > output
+autfilt -S --sat-minimize='acc="parity max even 3",colored' -H test.hoa |
+    autfilt --is-colored > output
 cat output
 grep 'properties:.*colored' output
 grep 'States: 3' output
@@ -384,6 +384,9 @@ State: 0
  0 {2 1}        /*{b, a}*/
 --END--
 EOF
+
+autfilt -q --is-colored foo.hoa && exit 1
+
 autfilt --sat-minimize='acc="Streett 1",max-states=2' foo.hoa \
 	 --stats=%s >out
 test "`cat out`" = 1

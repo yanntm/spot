@@ -54,6 +54,7 @@
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/gtec/gtec.hh>
 #include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/iscolored.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/isunamb.hh>
 #include <spot/twaalgos/isweakscc.hh>
@@ -112,6 +113,7 @@ enum {
   OPT_INHERENTLY_WEAK_SCCS,
   OPT_INTERSECT,
   OPT_IS_ALTERNATING,
+  OPT_IS_COLORED,
   OPT_IS_COMPLETE,
   OPT_IS_DETERMINISTIC,
   OPT_IS_EMPTY,
@@ -182,8 +184,11 @@ static const argp_option options[] =
       "keep automata that are isomorphic to the automaton in FILENAME", 0 },
     { "isomorphic", 0, nullptr, OPTION_ALIAS | OPTION_HIDDEN, nullptr, 0 },
     { "unique", 'u', nullptr, 0,
-      "do not output the same automaton twice (same in the sense that they "\
+      "do not output the same automaton twice (same in the sense that they "
       "are isomorphic)", 0 },
+    { "is-colored", OPT_IS_COLORED, nullptr, 0,
+      "keep colored automata (i.e., exactly one acceptance mark per "
+      "transition or state)", 0 },
     { "is-complete", OPT_IS_COMPLETE, nullptr, 0,
       "keep complete automata", 0 },
     { "is-deterministic", OPT_IS_DETERMINISTIC, nullptr, 0,
@@ -555,6 +560,7 @@ static struct opt_t
 
 static bool opt_merge = false;
 static bool opt_is_alternating = false;
+static bool opt_is_colored = false;
 static bool opt_is_complete = false;
 static bool opt_is_deterministic = false;
 static bool opt_is_semi_deterministic = false;
@@ -861,6 +867,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_IS_ALTERNATING:
       opt_is_alternating = true;
+      break;
+    case OPT_IS_COLORED:
+      opt_is_colored = true;
       break;
     case OPT_IS_COMPLETE:
       opt_is_complete = true;
@@ -1263,6 +1272,8 @@ namespace
         }
       if (matched && opt_is_alternating)
         matched &= !aut->is_existential();
+      if (matched && opt_is_colored)
+        matched &= is_colored(aut);
       if (matched && opt_is_complete)
         matched &= is_complete(aut);
 

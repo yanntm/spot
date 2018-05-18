@@ -5,6 +5,9 @@ New in spot 2.5.3.dev  (not yet released)
   - autcross' tool specifications now have %M replaced by the name of
     the input automaton.
 
+  - autfilt learned --is-colored to filter automata that use
+    exactly one acceptance set per mark or transition.
+
   Library:
 
   - Option "a" of print_dot(), for printing the acceptance condition,
