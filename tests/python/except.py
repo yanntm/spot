@@ -53,6 +53,13 @@ try:
 except ValueError as e:
     assert """unexpected '=' at position 3""" in str(e)
 
+si = spot.scc_info(aut)
+for meth in ('scc_has_rejecting_cycle', 'is_inherently_weak_scc',
+             'is_weak_scc', 'is_complete_scc', 'is_terminal_scc'):
+    try:
+        getattr(spot, meth)(si, 20)
+    except ValueError as e:
+        assert "invalid SCC number" in str(e)
 
 si = spot.scc_info(alt)
 try:
