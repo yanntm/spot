@@ -206,8 +206,10 @@ using namespace spot;
 %token OP_W "weak until operator" OP_M "strong release operator"
 %token OP_F "sometimes operator" OP_G "always operator"
 %token OP_X "next operator" OP_NOT "not operator"
-%token OP_S "since operator" OP_E "ergo operator" /*PAST OPERATORS*/
-%token OP_H "historically operator" OP_O "once operator"
+%token OP_S "since operator" /*PAST OPERATORS*/
+%token OP_E "ergo operator"
+%token OP_H "historically operator"
+%token OP_O "once operator"
 %token OP_Y "yesturday operator"
 %token OP_STAR "star operator" OP_BSTAR "bracket star operator"
 %token OP_BFSTAR "bracket fusion-star operator"
@@ -935,9 +937,19 @@ lbtformula: atomprop
             | 'R' lbtformula lbtformula
 	      { $$ = fnode::binop(op::R, $2, $3); }
             | 'W' lbtformula lbtformula
-	      { $$ = fnode::binop(op::W, $2, $3); }
+            { $$ = fnode::binop(op::W, $2, $3); }
             | 'M' lbtformula lbtformula
-	      { $$ = fnode::binop(op::M, $2, $3); }
+            { $$ = fnode::binop(op::M, $2, $3); }
+            | 'S' lbtformula lbtformula
+            { $$ = fnode::binop(op::S, $2, $3); }
+            | 'E' lbtformula lbtformula
+            { $$ = fnode::binop(op::E, $2, $3); }
+            | 'O' lbtformula
+            { $$ = fnode::unop(op::O, $2); }
+            | 'H' lbtformula
+            { $$ = fnode::unop(op::H, $2); }
+            | 'Y' lbtformula
+            { $$ = fnode::unop(op::Y, $2); }
             | 't'
 	      { $$ = fnode::tt(); }
             | 'f'

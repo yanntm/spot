@@ -20,14 +20,24 @@
 import sys
 import spot
 
-inputs = ['b S a', 'S',
+input1 = ['b S a', 'S',
           'b E a', 'E',
           'H a', 'H',
           'O a', 'O',
           'Y a', 'Y',
           ]
-assert(len(inputs) % 2 == 0)
-for i in range (0, int(len(inputs) / 2)):
-    f = spot.formula(inputs[i * 2])
+assert(len(input1) % 2 == 0)
+for i in range (0, int(len(input1) / 2)):
+    f = spot.formula(input1[i * 2])
     print(f)
-    assert(f.kindstr() == inputs[i * 2 + 1])
+    assert(f.kindstr() == input1[i * 2 + 1])
+
+
+input2 = ['G(a S b)', 'G(Oa)', 'F(Hc)', 'F(a E b)']
+for i in range (0 , len(input2)):
+    f = spot.formula(input2[i])
+    print( ' -- ')
+    print(input2[i])
+    g = spot.translate_past(f)
+    print(g)
+    print( ' -- ')

@@ -26,5 +26,5 @@
 namespace spot
 {
   SPOT_API formula
-  translate_past(formula& f);
+  translate_past(const formula& f);
 }

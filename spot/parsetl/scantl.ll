@@ -301,8 +301,8 @@ eol2        (\n\r)+|(\r\n)+
      it's an ATOMIC_PROP (even though F0 could be seen as Ffalse, we
      don't, because Ffalse is never used in practice).
   */
-<INITIAL>[a-zA-EH-WYZ_.][a-zA-Z0-9_.]* |
-<INITIAL>[FGX][0-9][a-zA-Z0-9_.]* |
+<INITIAL>[a-zA-EI-NP-WZ_.][a-zA-Z0-9_.]* |
+<INITIAL>[FGXYHO][0-9][a-zA-Z0-9_.]* |
   /*
      However if we have just parsed an atomic proposition, then we are
      not expecting another atomic proposition, so we can be stricter
@@ -318,8 +318,9 @@ eol2        (\n\r)+|(\r\n)+
      of a binary operator followed by several unary operators.
      E.g. UFXp.   This way, `p=0UFXp=1' will be parsed as `(p=0)U(F(X(p=1)))'.
   */
-<not_prop>[a-zA-EH-LN-QSTYZ_.][a-zA-EH-WYZ0-9_.]* |
-<not_prop>[a-zA-EH-LN-QSTYZ_.][a-zA-EH-WYZ0-9_.][a-zA-Z0-9_.]* {
+
+<not_prop>[a-zA-DI-LNPQTZ_.][a-zA-DI-LNPQTZ0-9_.]* |
+<not_prop>[a-zA-DI-LNPQTZ_.][a-zA-DI-LNPQTZ0-9_.][a-zA-Z0-9_.]* {
 			  yylval->str = new std::string(yytext, yyleng);
 			  BEGIN(not_prop);
 			  return token::ATOMIC_PROP;
@@ -365,7 +366,7 @@ eol2        (\n\r)+|(\r\n)+
 }
 
   /* these are operators */
-<lbt>[eitfXFGUVRWM]	return *yytext;
+<lbt>[eitfXFGUVRWMSEYHO]	return *yytext;
   /* in LBT's format, atomic proposition look like p0 or p3141592, but
      for compatibility with ltl2dstar we also accept any alphanumeric
      string that is not an operator. */

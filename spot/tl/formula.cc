@@ -1219,7 +1219,7 @@ namespace spot
         is_.sere_formula = false;
         is_.sugar_free_ltl = false;
         is_.ltl_without_past = false;
-        //FIXME past props 
+        //FIXME past props
         is_.accepting_eword = false;
         break;
       case op::S:
@@ -1230,7 +1230,7 @@ namespace spot
         is_.sere_formula = false;
         is_.sugar_free_ltl = false;
         is_.ltl_without_past = false;
-        //FIXME past props 
+        //FIXME past props
         is_.accepting_eword = false;
         break;
       case op::F:
