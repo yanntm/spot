@@ -41,3 +41,9 @@ for i in range (0 , len(input2)):
     g = spot.translate_past(f)
     print(g)
     print( ' -- ')
+
+for i in range(0, len(input2)):
+    print(input2[i])
+    v = spot.translate_past(spot.formula(input2[i]))
+    print(v)
+    v.translate()

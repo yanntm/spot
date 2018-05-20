@@ -1324,7 +1324,6 @@ namespace spot
             }
           case op::Star:
           case op::FStar:
-            SPOT_UNREACHABLE();         // Not an LTL operator
             // r(f1 logical-op f2) = r(f1) logical-op r(f2)
           case op::Xor:
           case op::Implies:
@@ -1392,8 +1391,7 @@ namespace spot
             {
               bdd res = recurse(node[1], recurring_);
               bdd f1 = recurse(node[0]);
-              // r(f1 M f2) = r(f2)(r(f1) + a(f1&f2)X(f1 M f2)) if not recurring
-              // r(f1 M f2) = r(f2)(r(f1) + a(f1&f2))           if recurring
+              // r(f1 M f2) = r(f2)(r(f1) + a(f1&f2)X(f1 M f2)) if not recurring // r(f1 M f2) = r(f2)(r(f1) + a(f1&f2))           if recurring
               //
               // Note that the rule above differs from the one given
               // in Figure 2 of
@@ -1912,7 +1910,6 @@ namespace spot
                  tl_simplifier* simplifier, bool unambiguous)
   {
     tl_simplifier* s = simplifier;
-
     // Simplify the formula, if requested.
     if (s)
       {
@@ -1929,8 +1926,6 @@ namespace spot
         s = new tl_simplifier(dict);
         f2 = s->negative_normal_form(f2, false);
       }
-    if (!f2.is_ltl_without_past()) //past
-      f2 = translate_past(f2);
     assert(f2.is_in_nenoform());
 
     typedef std::set<formula> set_type;

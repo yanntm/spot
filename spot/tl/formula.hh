@@ -73,9 +73,11 @@ namespace spot
     X,                         ///< Next
     F,                         ///< Eventually
     G,                         ///< Globally
+
     O,                         ///< Once  (PAST)
     Y,                         ///< Yesturday  (PAST)
     H,                         ///< Historically  (PAST)
+
     Closure,                   ///< PSL Closure
     NegClosure,                ///< Negated PSL Closure
     NegClosureMarked,          ///< marked version of the Negated PSL Closure
@@ -89,6 +91,7 @@ namespace spot
     M,                         ///< strong release (dual of weak until)
     S,                         ///< since  (PAST)
     E,                         ///< ergo (PAST) (dual of since)
+
     EConcat,                   ///< Seq
     EConcatMarked,             ///< Seq, Marked
     UConcat,                   ///< Triggers

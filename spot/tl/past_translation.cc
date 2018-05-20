@@ -36,8 +36,12 @@ namespace spot
                   << std::endl;
         exit(1);
       }
-    return formula::multop(op::Concat, {formula::bunop(op::Star,
-       formula::tt(), 1), f[1], formula::bunop(op::Star, f[0], 1)});
+    return formula::unop(op::Closure, formula::multop(op::Concat,
+        {
+          //formula::bunop(op::Star, formula::tt(), 0),
+          f[1],
+          formula::bunop(op::Star, f[0], 1)
+            }));
   }
 
   // transforms formula 'a E b' as 'Concat (Star(formula::tt), b, Star(a))'
@@ -50,21 +54,19 @@ namespace spot
                   << std::endl;
         exit(1);
       }
-    return formula::multop(op::Or,
+    return formula::unop(op::Closure, formula::multop(op::Or,
       {
-        formula::multop(op::Concat,
-          {
-            formula::bunop(op::Star,f[1], 1)
-          }),
           formula::multop(op::Concat,
-          {
-            formula::bunop(op::Star, formula::tt(), 1),
-            formula::unop(op::Not, f[1]),
-            formula::bunop(op::Star, formula::tt(), 1),
-            f[0],
-            formula::bunop(op::Star, formula::tt(), 1)
-          })
-      });
+            {
+              formula::bunop(op::Star,f[1], 1)
+            }),
+            formula::multop(op::Concat,
+            {
+              formula::unop(op::Not, f[1]),
+              formula::bunop(op::Star, formula::tt(), 0),
+              f[0]
+            })
+      }));
   }
 
   // recursive translation of a ltl+past formula using regular expression
