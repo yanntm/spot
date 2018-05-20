@@ -44,10 +44,13 @@ struct shorthands_t
   const char* suffix;
 };
 static shorthands_t shorthands_ltl[] = {
+    { "delag", " %f>%O" },
     { "lbt", " <%L>%O" },
     { "ltl2ba", " -f %s>%O" },
     { "ltl2da", " %f>%O" },
+    { "ltl2dgra", " %f>%O" },
     { "ltl2dpa", " %f>%O" },
+    { "ltl2dra", " %f>%O" },
     { "ltl2ldba", " %f>%O" },
     { "ltl2dstar", " --output-format=hoa %[MW]L %O"},
     { "ltl2tgba", " -H %f>%O" },
@@ -64,6 +67,7 @@ static shorthands_t shorthands_autproc[] = {
     { "autfilt", " %H>%O" },
     { "dstar2tgba", " %H>%O" },
     { "ltl2dstar", " -B %H %O" },
+    { "nba2dpa", " <%H>%O" },
     { "nba2ldpa", " <%H>%O" },
     { "seminator", " %H>%O" },
   };

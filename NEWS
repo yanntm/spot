@@ -8,6 +8,9 @@ New in spot 2.5.3.dev  (not yet released)
   - autfilt learned --is-colored to filter automata that use
     exactly one acceptance set per mark or transition.
 
+  - ltlcross, ltldo, and autcross learned shorthands to call
+    delag, ltl2dra, ltl2dgra, and nba2dpa.
+
   Library:
 
   - Option "a" of print_dot(), for printing the acceptance condition,
