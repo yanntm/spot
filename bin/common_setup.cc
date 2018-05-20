@@ -130,6 +130,9 @@ static const argp_option options[] =
   {
     { "version", OPT_VERSION, nullptr, 0, "print program version", -1 },
     { "help", OPT_HELP, nullptr, 0, "print this help", -1 },
+    // We support --usage as a synonym for --help because argp's
+    // hardcoded error message for unknown options mentions it.
+    { "usage", OPT_HELP, nullptr, OPTION_HIDDEN, nullptr, -1 },
     { nullptr, 0, nullptr, 0, nullptr, 0 }
   };
 
@@ -138,6 +141,9 @@ static const argp_option options_hidden[] =
     { "version", OPT_VERSION, nullptr, OPTION_HIDDEN,
       "print program version", -1 },
     { "help", OPT_HELP, nullptr, OPTION_HIDDEN, "print this help", -1 },
+    // We support --usage as a synonym for --help because argp's
+    // hardcoded error message for unknown options mentions it.
+    { "usage", OPT_HELP, nullptr, OPTION_HIDDEN, nullptr, -1 },
     { nullptr, 0, nullptr, 0, nullptr, 0 }
   };
 
