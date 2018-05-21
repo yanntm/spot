@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -61,12 +61,6 @@ extern std::vector<tool_spec> tools;
 
 void tools_push_trans(const char* trans, bool is_ref = false);
 void tools_push_autproc(const char* proc, bool is_ref = false);
-
-struct quoted_string final: public spot::printable_value<std::string>
-{
-  using spot::printable_value<std::string>::operator=;
-  void print(std::ostream& os, const char* pos) const override;
-};
 
 struct quoted_formula final: public spot::printable_value<spot::formula>
 {

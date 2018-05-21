@@ -198,12 +198,6 @@ void tools_push_autproc(const char* proc, bool is_ref)
                      is_ref);
 }
 
-void
-quoted_string::print(std::ostream& os, const char*) const
-{
-  spot::quote_shell_string(os, val().c_str());
-}
-
 void quoted_formula::print(std::ostream& os, const char* pos) const
 {
   spot::formula f = val_;
