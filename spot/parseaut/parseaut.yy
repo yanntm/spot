@@ -95,6 +95,18 @@ extern "C" int strverscmp(const char *s1, const char *s2);
       std::vector<int> ap;
       std::vector<bdd> guards;
       std::vector<bdd>::const_iterator cur_guard;
+      // If "Alias: ..." occurs before "AP: ..." in the HOA format we
+      // are in trouble because the parser would like to turn each
+      // alias into a BDD, yet the atomic proposition have not been
+      // declared yet.  We solve that by using arbitrary BDD variables
+      // numbers (in fact we use the same number given in the Alias:
+      // definition) and keeping track of the highest variable number
+      // we have seen (unknown_ap_max).  Once AP: is encountered,
+      // we can remap everything.  If AP: is never encountered an
+      // unknown_ap_max is non-negative, then we can signal an error.
+      int unknown_ap_max = -1;
+      spot::location unknown_ap_max_location;
+      bool in_alias = false;
       map_t dest_map;
       std::vector<state_info> info_states; // States declared and used.
       std::vector<std::pair<spot::location,
@@ -372,6 +384,13 @@ header: format-version header-items
 	      error(@$, "missing 'Acceptance:' header");
 	      res.ignore_acc = true;
 	    }
+          if (res.unknown_ap_max >= 0 && !res.ignore_more_ap)
+            {
+              error(res.unknown_ap_max_location,
+                    "atomic proposition used in Alias without AP declaration");
+              for (auto& p: res.alias)
+                p.second = bddtrue;
+            }
 	  // Process properties.
 	  {
 	    auto explicit_labels = res.prop_is_true("explicit-labels");
@@ -678,6 +697,29 @@ aps: "AP:" INT
 	       error(@$, out.str());
 	     }
 	   res.ignore_more_ap = true;
+           // If we have seen Alias: before AP: we have some variable
+           // renaming to perform.
+           if (res.unknown_ap_max >= 0)
+             {
+               int apsize = res.ap.size();
+               if (apsize <= res.unknown_ap_max)
+                 {
+                   error(res.unknown_ap_max_location,
+                         "AP number is larger than the number of APs...");
+                   error(@1, "... declared here");
+                 }
+               bddPair* pair = bdd_newpair();
+               int max = std::min(res.unknown_ap_max, apsize - 1);
+               for (int i = 0; i <= max; ++i)
+                 if (i != res.ap[i])
+                   bdd_setbddpair(pair, i, res.ap[i]);
+               bdd extra = bddtrue;
+               for (unsigned i = apsize; i <= res.unknown_ap_max; ++i)
+                 extra &= bdd_ithvar(i);
+               for (auto& p: res.alias)
+                 p.second = bdd_restrict(bdd_replace(p.second, pair), extra);
+               bdd_freepair(pair);
+             }
 	 }
      }
 
@@ -710,16 +752,17 @@ header-item: "States:" INT
 	       res.start.emplace_back(@$, std::vector<unsigned>{$2});
 	     }
            | aps
-           | "Alias:" ANAME label-expr
+           | "Alias:" ANAME { res.in_alias=true; } label-expr
              {
-	       if (!res.alias.emplace(*$2, bdd_from_int($3)).second)
+               res.in_alias = false;
+	       if (!res.alias.emplace(*$2, bdd_from_int($4)).second)
 		 {
 		   std::ostringstream o;
 		   o << "ignoring redefinition of alias @" << *$2;
 		   error(@$, o.str());
 		 }
 	       delete $2;
-	       bdd_delref($3);
+	       bdd_delref($4);
 	     }
            | "Acceptance:" INT
 	      {
@@ -891,7 +934,7 @@ state-conj-2: checked-state-num '&' checked-state-num
             }
 
 // Same as state-conj-2 except we cannot check the state numbers
-// against a number of state that may not have been declared yet.
+// against a number of states that may not have been declared yet.
 init-state-conj-2: state-num '&' state-num
             {
               $$ = new std::vector<unsigned>{$1, $3};
@@ -912,7 +955,22 @@ label-expr: 't'
 	    }
 	  | INT
 	    {
-	      if ($1 >= res.ap.size())
+              if (res.in_alias && !res.ignore_more_ap)
+                {
+                  // We are reading Alias: before AP: has been given.
+                  // Use $1 as temporary variable number.  We will relabel
+                  // everything once AP: is known.
+                  if (res.unknown_ap_max < (int)$1)
+                    {
+                      res.unknown_ap_max = $1;
+                      res.unknown_ap_max_location = @1;
+                      int missing_vars = 1 + bdd_varnum() - $1;
+                      if (missing_vars > 0)
+                        bdd_extvarnum(missing_vars);
+                    }
+                  $$ = bdd_ithvar($1).id();
+                }
+	      else if ($1 >= res.ap.size())
 		{
 		  error(@1, "AP number is larger than the number of APs...");
 		  error(res.ap_loc, "... declared here");

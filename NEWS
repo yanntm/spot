@@ -96,6 +96,9 @@ New in spot 2.5.3.dev  (not yet released)
   - print_dot() will correctly escape strings containing \n in HTML
     mode.
 
+  - The HOA parser will now accept Alias: declarations that occur
+    before AP:.
+
 New in spot 2.5.3 (2018-04-20)
 
   Bugs fixed:
