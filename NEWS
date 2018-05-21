@@ -5,6 +5,10 @@ New in spot 2.5.3.dev  (not yet released)
   - autcross' tool specifications now have %M replaced by the name of
     the input automaton.
 
+  - autcross now aborts if there is any parser diagnostic for the
+    input automata (previous versions would use the input automaton
+    whenever the parser would manage to read something).
+
   - autfilt learned --is-colored to filter automata that use
     exactly one acceptance set per mark or transition.
 

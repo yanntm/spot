@@ -542,7 +542,7 @@ namespace
     autcross_runner runner;
   public:
     autcross_processor()
-      : hoa_processor(spot::make_bdd_dict()), runner(dict_)
+      : hoa_processor(spot::make_bdd_dict(), true), runner(dict_)
     {
     }
 
@@ -829,12 +829,12 @@ main(int argc, char** argv)
       if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
         exit(err);
 
-      check_no_automaton();
-
       auto s = tools.size();
       if (s == 0)
         error(2, 0, "No tool to run?  Run '%s --help' for usage.",
               program_name);
+
+      check_no_automaton();
 
       if (s == 1 && !opt_language_preserved && !no_checks)
         error(2, 0, "Since --language-preserved is not used, you need "
@@ -845,8 +845,7 @@ main(int argc, char** argv)
       setup_sig_handler();
 
       autcross_processor p;
-      if (p.run())
-        return 2;
+      p.run();
 
       if (round_num == 0)
         {

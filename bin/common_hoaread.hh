@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2015, 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -45,10 +45,11 @@ class hoa_processor: public job_processor
 {
 protected:
   spot::bdd_dict_ptr dict_;
+  bool abort_on_error_;
 public:
 
-  hoa_processor(spot::bdd_dict_ptr dict)
-    : dict_(dict)
+  hoa_processor(spot::bdd_dict_ptr dict, bool abort_on_error = false)
+    : dict_(dict), abort_on_error_(abort_on_error)
   {
   }
 
@@ -131,7 +132,7 @@ public:
           break;
         if (haut->format_errors(std::cerr))
           err = 2;
-        if (!haut->aut)
+        if (!haut->aut || (err && abort_on_error_))
           error(2, 0, "failed to read automaton from %s",
                 haut->filename.c_str());
         else if (haut->aborted)
