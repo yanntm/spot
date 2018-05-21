@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015-2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2015-2018 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -161,6 +161,8 @@ grep 'error:.*foo/bar/ltl2baextended -f .*>.*' stderr
 test 2 = `genltl --and-gf=1..4 | ltldo ltl2tgba -n2 | autfilt -c`
 test 3 = `genltl --and-gf=1..2 | ltldo ltl2tgba 'ltl2tgba -s' -n3 | autfilt -c`
 
+ltldo ltl2tgba -n2a 2>err && exit 1
+grep "ltldo: failed to parse '2a'.*-n" err
 
 genltl --rv-counter=9 | ltldo ltl2tgba --stats='
 print("%[up]R + %[uc]R + %[sp]R + %[sc]R - %R\n");

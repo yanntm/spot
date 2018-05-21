@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015 Laboratoire de Recherche et Développement de
-// l'Epita (LRDE).
+// Copyright (C) 2015, 2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -22,11 +22,11 @@
 #include "common_sys.hh"
 #include <spot/twa/twagraph.hh>
 
-int to_int(const char* s);
-int to_pos_int(const char* s);
-unsigned to_unsigned (const char *s);
-float to_float(const char* s);
-float to_probability(const char* s);
+int to_int(const char* s, const char* where);
+int to_pos_int(const char* s, const char* where);
+unsigned to_unsigned (const char *s, const char* where);
+float to_float(const char* s, const char* where);
+float to_probability(const char* s, const char* where);
 
 // Parse the comma or space seperate string of numbers.
 std::vector<long> to_longs(const char* s);

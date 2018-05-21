@@ -134,10 +134,10 @@ parse_opt(int key, char* arg, struct argp_state*)
   switch (key)
     {
     case 'm':
-      mutation_nb = to_unsigned(arg);
+      mutation_nb = to_unsigned(arg, "-m/--mutations");
       break;
     case 'n':
-      max_output = to_int(arg);
+      max_output = to_int(arg, "-n/--max-count");
       break;
     case ARGP_KEY_ARG:
       // FIXME: use stat() to distinguish filename from string?

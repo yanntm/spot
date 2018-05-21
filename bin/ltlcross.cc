@@ -448,7 +448,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       csv_output = arg ? arg : "-";
       break;
     case OPT_DENSITY:
-      density = to_probability(arg);
+      density = to_probability(arg, "---density");
       break;
     case OPT_DUPS:
       allow_dups = true;
@@ -472,7 +472,7 @@ parse_opt(int key, char* arg, struct argp_state*)
           products_avg = false;
           ++arg;
         }
-      products = to_pos_int(arg);
+      products = to_pos_int(arg, "--products");
       if (products == 0)
         products_avg = false;
       break;
@@ -490,10 +490,10 @@ parse_opt(int key, char* arg, struct argp_state*)
       tools_push_trans(arg, true);
       break;
     case OPT_SEED:
-      seed = to_pos_int(arg);
+      seed = to_pos_int(arg, "--seed");
       break;
     case OPT_STATES:
-      states = to_pos_int(arg);
+      states = to_pos_int(arg, "--states");
       break;
     case OPT_STOP_ERR:
       stop_on_error = true;

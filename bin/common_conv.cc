@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015 Laboratoire de Recherche et Développement de
-// l'Epita (LRDE).
+// Copyright (C) 2015, 2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -22,50 +22,54 @@
 #include "error.h"
 
 int
-to_int(const char* s)
+to_int(const char* s, const char* where)
 {
   char* endptr;
   int res = strtol(s, &endptr, 10);
   if (*endptr)
-    error(2, 0, "failed to parse '%s' as an integer.", s);
+    error(2, 0, "failed to parse '%s' as an integer (in argument of %s).",
+          s, where);
   return res;
 }
 
 int
-to_pos_int(const char* s)
+to_pos_int(const char* s, const char* where)
 {
-  int res = to_int(s);
+  int res = to_int(s, where);
   if (res < 0)
-    error(2, 0, "%d is not positive", res);
+    error(2, 0, "%d is not positive (in argument of %s)", res, where);
   return res;
 }
 
 unsigned
-to_unsigned (const char *s)
+to_unsigned (const char *s, const char* where)
 {
   char* endptr;
   unsigned res = strtoul(s, &endptr, 10);
   if (*endptr)
-    error(2, 0, "failed to parse '%s' as an unsigned integer.", s);
+    error(2, 0,
+          "failed to parse '%s' as an unsigned integer (in argument of %s).",
+          s, where);
   return res;
 }
 
 float
-to_float(const char* s)
+to_float(const char* s, const char* where)
 {
   char* endptr;
   float res = strtof(s, &endptr);
   if (*endptr)
-    error(2, 0, "failed to parse '%s' as a float.", s);
+    error(2, 0, "failed to parse '%s' as a float (in argument of %s)",
+          s, where);
   return res;
 }
 
 float
-to_probability(const char* s)
+to_probability(const char* s, const char* where)
 {
-  float res = to_float(s);
+  float res = to_float(s, where);
   if (res < 0.0 || res > 1.0)
-    error(2, 0, "%f is not between 0 and 1.", res);
+    error(2, 0, "%f is not between 0 and 1 (in argument of %s).", res, where);
   return res;
 }
 

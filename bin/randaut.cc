@@ -189,10 +189,7 @@ parse_opt(int key, char* arg, struct argp_state* as)
       spot::enable_utf8();
       break;
     case 'a':
-      opt_acc_prob = to_float(arg);
-      if (opt_acc_prob < 0.0 || opt_acc_prob > 1.0)
-        error(2, 0, "probability of acceptance set membership "
-              "should be between 0.0 and 1.0");
+      opt_acc_prob = to_probability(arg, "-a/--acc-probability");
       break;
     case 'A':
       if (looks_like_a_range(arg))
@@ -215,15 +212,13 @@ parse_opt(int key, char* arg, struct argp_state* as)
       ba_wanted = true;
       break;
     case 'e':
-      opt_density = to_float(arg);
-      if (opt_density < 0.0 || opt_density > 1.0)
-        error(2, 0, "density should be between 0.0 and 1.0");
+      opt_density = to_probability(arg, "-e/--density");
       break;
     case 'D':
       opt_deterministic = true;
       break;
     case 'n':
-      opt_automata = to_int(arg);
+      opt_automata = to_int(arg, "-n/--automata");
       break;
     case 'Q':
       opt_states = parse_range(arg);
@@ -243,7 +238,7 @@ parse_opt(int key, char* arg, struct argp_state* as)
       opt_colored = true;
       break;
     case OPT_SEED:
-      opt_seed = to_int(arg);
+      opt_seed = to_int(arg, "--seed");
       opt_seed_str = arg;
       break;
     case ARGP_KEY_ARG:

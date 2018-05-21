@@ -647,7 +647,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       jobs.emplace_back(arg, true);
       break;
     case 'n':
-      opt_max_count = to_pos_int(arg);
+      opt_max_count = to_pos_int(arg, "-n/--max-count");
       break;
     case 'u':
       opt->uniq =
@@ -794,15 +794,17 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_HIGHLIGHT_NONDET:
       {
-        int v = arg ? to_pos_int(arg) : 1;
+        int v = arg ? to_pos_int(arg, "--highlight-nondet") : 1;
         opt_highlight_nondet_edges = opt_highlight_nondet_states = v;
         break;
       }
     case OPT_HIGHLIGHT_NONDET_STATES:
-      opt_highlight_nondet_states = arg ? to_pos_int(arg) : 1;
+      opt_highlight_nondet_states =
+        arg ? to_pos_int(arg, "--highlight-nondet-states") : 1;
       break;
     case OPT_HIGHLIGHT_NONDET_EDGES:
-      opt_highlight_nondet_edges = arg ? to_pos_int(arg) : 1;
+      opt_highlight_nondet_edges =
+        arg ? to_pos_int(arg, "--highlight-nondet-edges") : 1;
       break;
     case OPT_HIGHLIGHT_WORD:
       {
@@ -1021,7 +1023,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       opt_sccs = parse_range(arg, 0, std::numeric_limits<int>::max());
       break;
     case OPT_SEED:
-      opt_seed = to_int(arg);
+      opt_seed = to_int(arg, "--seed");
       break;
     case OPT_SEP_SETS:
       opt_sep_sets = true;

@@ -345,7 +345,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       output_format = count_output;
       break;
     case 'n':
-      opt_max_count = to_pos_int(arg);
+      opt_max_count = to_pos_int(arg, "-n/--max-count");
       break;
     case 'q':
       output_format = quiet_output;
@@ -385,10 +385,10 @@ parse_opt(int key, char* arg, struct argp_state*)
       bsize = parse_range(arg, 0, std::numeric_limits<int>::max());
       break;
     case OPT_BSIZE_MIN:
-      bsize.min = to_int(arg);
+      bsize.min = to_int(arg, "--bsize-min");
       break;
     case OPT_BSIZE_MAX:
-      bsize.max = to_int(arg);
+      bsize.max = to_int(arg, "--bsize-max");
       break;
     case OPT_DEFINE:
       opt->output_define.reset(new output_file(arg ? arg : "-"));
@@ -487,10 +487,10 @@ parse_opt(int key, char* arg, struct argp_state*)
       size = parse_range(arg, 0, std::numeric_limits<int>::max());
       break;
     case OPT_SIZE_MIN:
-      size.min = to_int(arg);
+      size.min = to_int(arg, "--size-min");
       break;
     case OPT_SIZE_MAX:
-      size.max = to_int(arg);
+      size.max = to_int(arg, "--size-max");
       break;
     case OPT_SKIP_ERRORS:
       error_style = skip_errors;

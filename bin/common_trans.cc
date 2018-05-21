@@ -802,7 +802,7 @@ static int parse_opt_trans(int key, char* arg, struct argp_state*)
       tools_push_trans(arg);
       break;
     case 'T':
-      timeout = to_pos_int(arg);
+      timeout = to_pos_int(arg, "-T/--timeout");
 #if !ENABLE_TIMEOUT
       std::cerr << "warning: setting a timeout is not supported "
                 << "on your platform" << std::endl;
@@ -865,7 +865,7 @@ static int parse_opt_autproc(int key, char* arg, struct argp_state*)
       tools_push_autproc(arg);
       break;
     case 'T':
-      timeout = to_pos_int(arg);
+      timeout = to_pos_int(arg, "-T/--timeout");
 #if !ENABLE_TIMEOUT
       std::cerr << "warning: setting a timeout is not supported "
                 << "on your platform" << std::endl;

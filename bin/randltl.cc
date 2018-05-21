@@ -168,7 +168,7 @@ parse_opt(int key, char* arg, struct argp_state* as)
       output = spot::randltlgenerator::LTL;
       break;
     case 'n':
-      opt_formulas = to_int(arg);
+      opt_formulas = to_int(arg, "-n/--formulas");
       break;
     case 'P':
       output = spot::randltlgenerator::PSL;
@@ -196,7 +196,7 @@ parse_opt(int key, char* arg, struct argp_state* as)
       opt_pS = arg;
       break;
     case OPT_SEED:
-      opt_seed = to_int(arg);
+      opt_seed = to_int(arg, "--seed");
       break;
     case OPT_TREE_SIZE:
       opt_tree_size = parse_range(arg);

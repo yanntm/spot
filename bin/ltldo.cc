@@ -179,7 +179,7 @@ parse_opt(int key, char* arg, struct argp_state*)
         best_format = arg;
       break;
     case 'n':
-      opt_max_count = to_pos_int(arg);
+      opt_max_count = to_pos_int(arg, "-n/--max-count");
       break;
     case ARGP_KEY_ARG:
       if (arg[0] == '-' && !arg[1])
