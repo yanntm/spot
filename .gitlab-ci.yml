@@ -34,7 +34,7 @@ debian-unstable-gcc-coverage:
     - make
     - make check
     - lcov --capture --directory . --no-external --output spot.info
-    - lcov --remove spot.info '*/spot/parse*/scan*.cc' '*/spot/parse*/parse*.cc' '*/utf8/*' '*/python/*' '*/buddy/*' '*/doc/org/tmp/*' --output spot2.info
+    - lcov --remove spot.info '*/bin/spot.cc' '*/bin/spot-x.cc' '*/spot/parse*/scan*.cc' '*/spot/parse*/parse*.cc' '*/utf8/*' '*/python/*' '*/buddy/*' '*/doc/org/tmp/*' --output spot2.info
     - lcov --summary spot2.info
     - genhtml --legend --demangle-cpp --output-directory coverage spot2.info
   artifacts:
