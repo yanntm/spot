@@ -115,9 +115,6 @@ parse_opt(int key, char* arg, struct argp_state*)
     case '8':
       spot::enable_utf8();
       break;
-    case 'B':
-      type = spot::postprocessor::BA;
-      break;
     case 'x':
       {
         const char* opt = extra_options.parse_options(arg);
