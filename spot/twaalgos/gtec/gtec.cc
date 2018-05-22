@@ -20,12 +20,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// #define TRACE
 
 #include "config.h"
 #include <iostream>
+// #define TRACE
 #ifdef TRACE
 #define trace std::cerr
+#define SPOT_TRACE 1
 #else
 #define trace while (0) std::cerr
 #endif
@@ -370,7 +371,7 @@ namespace spot
     assert(depth() == 0);
   }
 
-  void
+#ifdef TRACE
   couvreur99_check_shy::dump_queue(std::ostream& os)
   {
     os << "--- TODO ---\n";
@@ -390,6 +391,7 @@ namespace spot
         os << "}\n";
       }
   }
+#endif
 
   emptiness_check_result_ptr
   couvreur99_check_shy::check()

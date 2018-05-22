@@ -230,8 +230,10 @@ namespace spot
 
     void clear_todo();
 
+#ifdef SPOT_TRACE
     /// Dump the queue for debugging.
     void dump_queue(std::ostream& os = std::cerr);
+#endif
 
     /// Whether successors should be grouped for states in the same SCC.
     bool group_;
