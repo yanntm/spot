@@ -46,6 +46,15 @@ EOF
 ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --print-pg > out
 diff out exp
 
+cat >exp <<EOF
+translating formula done
+split inputs and outputs done
+determinization done
+parity game built
+EOF
+ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --verbose --realizability 2> out
+diff out exp
+
 F0='(G ((((req) -> (X ((grant) && (X ((grant) && (X (grant))))))) && ((grant)
 -> (X (! (grant))))) && ((cancel) -> (X ((! (grant)) U (go))))))'
 IN0='cancel, go, req'
