@@ -691,8 +691,7 @@ namespace
                    const spot::const_twa_graph_ptr& aut_j,
                    size_t i, size_t j, bool icomp, bool jcomp)
   {
-    if (aut_i->num_sets() + aut_j->num_sets()
-        > 8 * sizeof(spot::acc_cond::mark_t::value_t))
+    if (aut_i->num_sets() + aut_j->num_sets() > SPOT_NB_ACC)
       {
         // Report the skipped test if both automata are not
         // complemented, or the --verbose option is used,

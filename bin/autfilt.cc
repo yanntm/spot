@@ -930,8 +930,7 @@ parse_opt(int key, char* arg, struct argp_state*)
             if (res < 0)
               error(2, 0, "acceptance sets should be non-negative:"
                     " --mask-acc=%ld", res);
-            if (static_cast<unsigned long>(res)
-                > sizeof(spot::acc_cond::mark_t::value_t))
+            if (static_cast<unsigned long>(res) > SPOT_NB_ACC)
               error(2, 0, "this implementation does not support that many"
                     " acceptance sets: --mask-acc=%ld", res);
             opt_mask_acc.set(res);

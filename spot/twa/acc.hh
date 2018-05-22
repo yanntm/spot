@@ -33,19 +33,28 @@ namespace spot
   namespace internal
   {
     class mark_container;
+
+    template<bool>
+    struct _32acc {};
+    template<>
+    struct _32acc<true>
+    {
+      SPOT_DEPRECATED("mark_t no longer relies on unsigned, stop using value_t")
+      typedef unsigned value_t;
+    };
   }
 
   class SPOT_API acc_cond
   {
   public:
-    struct mark_t
+    struct mark_t : public internal::_32acc<SPOT_NB_ACC == 8*sizeof(unsigned)>
     {
-      // configure guarantees that SPOT_NB_ACC % (8*sizeof(unsigned)) == 0
-      typedef bitset<SPOT_NB_ACC / (8*sizeof(unsigned))> value_t;
-      value_t id;
-
     private:
-      mark_t(value_t id) noexcept
+      // configure guarantees that SPOT_NB_ACC % (8*sizeof(unsigned)) == 0
+      typedef bitset<SPOT_NB_ACC / (8*sizeof(unsigned))> _value_t;
+      _value_t id;
+
+      mark_t(_value_t id) noexcept
         : id(id)
       {
       }
@@ -55,7 +64,7 @@ namespace spot
 
       template<class iterator>
       mark_t(const iterator& begin, const iterator& end) noexcept
-        : mark_t(value_t::zero())
+        : mark_t(_value_t::zero())
       {
         for (iterator i = begin; i != end; ++i)
           set(*i);
@@ -84,6 +93,12 @@ namespace spot
         mark_t res({});
         res.id -= 1;
         return res;
+      }
+
+      size_t hash() const noexcept
+      {
+        std::hash<decltype(id)> h;
+        return h(id);
       }
 
       bool operator==(unsigned o) const
@@ -140,12 +155,12 @@ namespace spot
 
       void set(unsigned u)
       {
-        id |= (value_t::one() << u);
+        id |= (_value_t::one() << u);
       }
 
       void clear(unsigned u)
       {
-        id &= ~(value_t::one() << u);
+        id &= ~(_value_t::one() << u);
       }
 
       mark_t& operator&=(mark_t r)
@@ -532,7 +547,7 @@ namespace spot
         if (n == 0)
           return inf({});
         acc_cond::mark_t m = mark_t::all();
-        m >>= (8*sizeof(mark_t::value_t) - n);
+        m >>= (SPOT_NB_ACC - n);
         return inf(m);
       }
 
@@ -541,7 +556,7 @@ namespace spot
         if (n == 0)
           return fin({});
         acc_cond::mark_t m = mark_t::all();
-        m >>= (8*sizeof(mark_t::value_t) - n);
+        m >>= (SPOT_NB_ACC - n);
         return fin(m);
       }
 
@@ -1202,7 +1217,7 @@ namespace spot
         return -1U;
       unsigned j = num_;
       num_ += num;
-      if (num_ > 8 * sizeof(mark_t::value_t))
+      if (num_ > SPOT_NB_ACC)
         throw std::runtime_error("Too many acceptance sets used.");
       all_ = all_sets_();
       return j;
@@ -1340,7 +1355,7 @@ namespace spot
   protected:
     mark_t all_sets_() const
     {
-      return mark_t::all() >> (8*sizeof(mark_t::value_t) - num_);
+      return mark_t::all() >> (SPOT_NB_ACC - num_);
     }
 
     unsigned num_;
@@ -1519,8 +1534,7 @@ namespace std
   {
     size_t operator()(spot::acc_cond::mark_t m) const noexcept
     {
-      std::hash<decltype(m.id)> h;
-      return h(m.id);
+      return m.hash();
     }
   };
 }

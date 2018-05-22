@@ -772,7 +772,7 @@ header-item: "States:" INT
 			  "acceptance condition...");
 		    error(res.accset_loc, "... previously defined here.");
 		  }
-		else if ($2 > 8 * sizeof(spot::acc_cond::mark_t::value_t))
+		else if ($2 > SPOT_NB_ACC)
 		  {
 		    error(@1 + @2,
 			  "this implementation cannot support such a large "
