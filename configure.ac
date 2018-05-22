@@ -65,7 +65,7 @@ AC_ARG_ENABLE([nb-acc],
               [AC_HELP_STRING([--enable-nb-acc=N],
                               [Use up to N acceptance marks])],
               [enable_nb_acc=$enableval], [enable_nb_acc=$default_nb_acc])
-if (( $enable_nb_acc % $default_nb_acc == 0 ))
+if test 0 = `expr $enable_nb_acc % $default_nb_acc`
 then
   AC_DEFINE_UNQUOTED([NB_ACC], [$enable_nb_acc], [The number of acceptance marks])
 else
