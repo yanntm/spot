@@ -66,6 +66,19 @@ namespace spot
       {
       }
 
+      SPOT_DEPRECATED("use brace initialization instead")
+      mark_t(unsigned i)
+      {
+        unsigned j = 0;
+        while (i)
+          {
+            if (i & 1U)
+              this->set(j);
+            ++j;
+            i >>= 1;
+          }
+      }
+
       static mark_t all()
       {
         mark_t res({});
