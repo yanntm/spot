@@ -64,6 +64,9 @@ int main()
   auto m1 = spot::acc_cond::mark_t({0, 2});
   auto m2 = spot::acc_cond::mark_t({0, 3});
   auto m3 = spot::acc_cond::mark_t({2, 1});
+  auto m4 = spot::acc_cond::mark_t({0, SPOT_NB_ACC-2});
+  if (!(m4.min_set() == 1 && m4.max_set() == SPOT_NB_ACC-1))
+    return 1;
 
   spot::acc_cond::mark_t m0 = {};
   std::cout << m0.max_set() << ' ' << m0.min_set() << '\n';

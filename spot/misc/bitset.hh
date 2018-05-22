@@ -115,7 +115,7 @@ namespace spot
 
     bool operator>=(const bitset& other) const
     {
-      return other.operator>(*this);
+      return other.operator<=(*this);
     }
 
     bitset operator<<(unsigned s) const
@@ -295,19 +295,25 @@ namespace spot
 
     unsigned highest() const
     {
-      unsigned res = 0;
-      for (auto v: data)
+      unsigned res = (N-1)*8*sizeof(word_t);
+      unsigned i = N;
+      while (i--)
         {
+          auto v = data[i];
           if (v == 0)
             {
-              res += 8*sizeof(v);
+              res -= 8*sizeof(word_t);
               continue;
             }
+#ifdef __GNUC__
+          res += 8*sizeof(word_t) - __builtin_clz(v);
+#else
           while (v)
             {
               ++res;
               v >>= 1;
             }
+#endif
           return res-1;
         }
       return 0;
@@ -315,7 +321,7 @@ namespace spot
 
     unsigned lowest() const
     {
-      unsigned res = 0;
+      unsigned res = 0U;
       for (auto v: data)
         {
           if (v == 0)
@@ -323,11 +329,15 @@ namespace spot
               res += 8*sizeof(v);
               continue;
             }
+#ifdef __GNUC__
+          res += __builtin_ctz(v);
+#else
           while ((v & 1) == 0)
             {
               ++res;
               v >>= 1;
             }
+#endif
           return res;
         }
       return 0;
