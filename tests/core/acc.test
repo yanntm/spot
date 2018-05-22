@@ -87,5 +87,5 @@ Inf(2) & Fin(2)
 (Fin(0)|Fin(3)) | (Inf(1) & Fin(2))
 EOF
 
-run 0 ../acc | tee stdout
+run 0 ../acc > stdout
 diff stdout expect
