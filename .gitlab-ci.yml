@@ -11,7 +11,7 @@ debian-stable-gcc:
   image: registry.lrde.epita.fr/spot-debuild:stable
   script:
     - autoreconf -vfi
-    - ./configure
+    - ./configure --enable-nb-acc=256
     - make
     - make distcheck
   artifacts:
