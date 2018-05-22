@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2013, 2014, 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2008, 2013-2016, 2018 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2005 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -174,9 +174,9 @@ namespace spot
   void
   option_map::set(const option_map& o)
   {
-    options_ = o.options_;
-    options_str_ = o.options_str_;
-    unused_ = o.unused_;
+    options_.insert(o.options_.begin(), o.options_.end());
+    options_str_.insert(o.options_str_.begin(), o.options_str_.end());
+    unused_.insert(o.unused_.begin(), o.unused_.end());
   }
 
   int
