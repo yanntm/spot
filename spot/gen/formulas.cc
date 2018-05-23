@@ -1011,7 +1011,7 @@ namespace spot
         int k = ceil(log2(n)) + (n == 1);
 
         if (n <= 0)
-          bad_number("kr1-exp", n);
+          bad_number("kr-nlogn", n);
 
         formula fa = formula::ap(a);
         formula fb = formula::ap(b);
