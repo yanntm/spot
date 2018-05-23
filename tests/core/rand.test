@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014, 2015, 2017 Laboratoire de Recherche et
+# Copyright (C) 2014, 2015, 2017, 2018 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -138,3 +138,10 @@ diff test-cmp.ltl test-all.ltl
 
 randltl 2 --ltl-prio=X 2>stderr && exit 1
 grep 'failed to parse LTL priorities near X' stderr
+
+randltl -L --allow-dups -n2 1 > out
+cat >expected <<EOF
+0
+0
+EOF
+diff out expected

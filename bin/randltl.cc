@@ -267,6 +267,7 @@ main(int argc, char** argv)
           opts.set("wf", opt_wf);
           opts.set("seed", opt_seed);
           opts.set("simplification_level", simplification_level);
+          opts.set("unique", opt_unique);
           return opts;
         }(), opt_pL, opt_pS, opt_pB);
 
