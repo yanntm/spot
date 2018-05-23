@@ -1165,10 +1165,21 @@ namespace spot
     // Return (true, m) if there exist some acceptance mark m that
     // does not satisfy the acceptance condition.  Return (false, 0U)
     // otherwise.
-    std::pair<bool, acc_cond::mark_t> unsat_mark() const;
+    std::pair<bool, acc_cond::mark_t> unsat_mark() const
+    {
+      return sat_unsat_mark(false);
+    }
+    // Return (true, m) if there exist some acceptance mark m that
+    // does satisfy the acceptance condition.  Return (false, 0U)
+    // otherwise.
+    std::pair<bool, acc_cond::mark_t> sat_mark() const
+    {
+      return sat_unsat_mark(true);
+    }
 
   protected:
     bool check_fin_acceptance() const;
+    std::pair<bool, acc_cond::mark_t> sat_unsat_mark(bool) const;
 
   public:
     static acc_code inf(mark_t mark)

@@ -383,6 +383,7 @@ TESTS_python = \
   python/parsetgba.py \
   python/parity.py \
   python/prodexpt.py \
+  python/_product_weak.ipynb \
   python/randgen.py \
   python/relabel.py \
   python/remfin.py \

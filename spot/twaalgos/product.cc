@@ -40,32 +40,17 @@ namespace spot
       }
     };
 
+
+    template<typename T>
     static
-    twa_graph_ptr product_aux(const const_twa_graph_ptr& left,
-                              const const_twa_graph_ptr& right,
-                              unsigned left_state,
-                              unsigned right_state,
-                              bool and_acc)
+    void product_main(const const_twa_graph_ptr& left,
+                      const const_twa_graph_ptr& right,
+                      unsigned left_state,
+                      unsigned right_state,
+                      twa_graph_ptr res, T merge_acc)
     {
-      if (!(left->is_existential() && right->is_existential()))
-        throw std::runtime_error
-          ("product() does not support alternating automata");
       std::unordered_map<product_state, unsigned, product_state_hash> s2n;
       std::deque<std::pair<product_state, unsigned>> todo;
-
-      if (left->get_dict() != right->get_dict())
-        throw std::runtime_error("product: left and right automata should "
-                                 "share their bdd_dict");
-      auto res = make_twa_graph(left->get_dict());
-      res->copy_ap_of(left);
-      res->copy_ap_of(right);
-      auto left_num = left->num_sets();
-      auto right_acc = right->get_acceptance() << left_num;
-      if (and_acc)
-        right_acc &= left->get_acceptance();
-      else
-        right_acc |= left->get_acceptance();
-      res->set_acceptance(left_num + right->num_sets(), right_acc);
 
       auto v = new product_states;
       res->set_named_prop("product-states", v);
@@ -86,10 +71,10 @@ namespace spot
         };
 
       res->set_init_state(new_state(left_state, right_state));
-      if (right_acc.is_f())
+      if (res->acc().is_f())
         // Do not bother doing any work if the resulting acceptance is
         // false.
-        return res;
+        return;
       while (!todo.empty())
         {
           auto top = todo.front();
@@ -102,9 +87,191 @@ namespace spot
                   continue;
                 auto dst = new_state(l.dst, r.dst);
                 res->new_edge(top.second, dst, cond,
-                              l.acc | (r.acc << left_num));
+                              merge_acc(l.acc, r.acc));
                 // If right is deterministic, we can abort immediately!
               }
+        }
+    }
+
+    static
+    twa_graph_ptr product_aux(const const_twa_graph_ptr& left,
+                              const const_twa_graph_ptr& right,
+                              unsigned left_state,
+                              unsigned right_state,
+                              bool and_acc)
+    {
+      if (SPOT_UNLIKELY(!(left->is_existential() && right->is_existential())))
+        throw std::runtime_error
+          ("product() does not support alternating automata");
+      if (SPOT_UNLIKELY(left->get_dict() != right->get_dict()))
+        throw std::runtime_error("product: left and right automata should "
+                                 "share their bdd_dict");
+
+      auto res = make_twa_graph(left->get_dict());
+      res->copy_ap_of(left);
+      res->copy_ap_of(right);
+
+      bool leftweak = left->prop_weak().is_true();
+      bool rightweak = right->prop_weak().is_true();
+      // We have optimization to the standard product in case one
+      // of the arguments is weak.  However these optimizations
+      // are pointless if the said arguments are "t" or "f".
+      if ((leftweak || rightweak)
+          && (left->num_sets() > 0) && (right->num_sets() > 0))
+        {
+          // If both automata are weak, we can restrict the result to
+          // Büchi or co-Büchi.  We will favor Büchi unless the two
+          // operands are co-Büchi.
+          if (leftweak && rightweak)
+            {
+            weak_weak:
+              acc_cond::mark_t accmark = {0};
+              acc_cond::mark_t rejmark = {};
+              if (left->acc().is_co_buchi() && right->acc().is_co_buchi())
+                {
+                  res->set_co_buchi();
+                  std::swap(accmark, rejmark);
+                }
+              else
+                {
+                  res->set_buchi();
+                }
+              res->prop_weak(true);
+              auto& lacc = left->acc();
+              auto& racc = right->acc();
+              if (and_acc)
+                product_main(left, right, left_state, right_state, res,
+                             [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                             {
+                               if (lacc.accepting(ml) && racc.accepting(mr))
+                                 return accmark;
+                               else
+                                 return rejmark;
+                             });
+              else
+                product_main(left, right, left_state, right_state, res,
+                             [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                             {
+                               if (lacc.accepting(ml) || racc.accepting(mr))
+                                 return accmark;
+                               else
+                                 return rejmark;
+                             });
+            }
+          else if (!rightweak)
+            {
+              if (and_acc)
+                {
+                  auto rightunsatmark = right->acc().unsat_mark();
+                  if (!rightunsatmark.first)
+                    {
+                      // Left is weak.  Right was not weak, but it is
+                      // always accepting.  We can therefore pretend
+                      // that right is weak.
+                      goto weak_weak;
+                    }
+                  res->copy_acceptance_of(right);
+                  acc_cond::mark_t rejmark = rightunsatmark.second;
+                  auto& lacc = left->acc();
+                  product_main(left, right, left_state, right_state, res,
+                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                               {
+                                 if (lacc.accepting(ml))
+                                   return mr;
+                                 else
+                                   return rejmark;
+                               });
+                }
+              else
+                {
+                  auto rightsatmark = right->acc().sat_mark();
+                  if (!rightsatmark.first)
+                    {
+                      // Left is weak.  Right was not weak, but it is
+                      // always rejecting.  We can therefore pretend
+                      // that right is weak.
+                      goto weak_weak;
+                    }
+                  res->copy_acceptance_of(right);
+                  acc_cond::mark_t accmark = rightsatmark.second;
+                  auto& lacc = left->acc();
+                  product_main(left, right, left_state, right_state, res,
+                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                               {
+                                 if (!lacc.accepting(ml))
+                                   return mr;
+                                 else
+                                   return accmark;
+                               });
+
+                }
+            }
+          else
+            {
+              assert(!leftweak);
+              if (and_acc)
+                {
+                  auto leftunsatmark = left->acc().unsat_mark();
+                  if (!leftunsatmark.first)
+                    {
+                      // Right is weak.  Left was not weak, but it is
+                      // always accepting.  We can therefore pretend
+                      // that left is weak.
+                      goto weak_weak;
+                    }
+                  res->copy_acceptance_of(left);
+                  acc_cond::mark_t rejmark = leftunsatmark.second;
+                  auto& racc = right->acc();
+                  product_main(left, right, left_state, right_state, res,
+                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                               {
+                                 if (racc.accepting(mr))
+                                   return ml;
+                                 else
+                                   return rejmark;
+                               });
+                }
+              else
+                {
+                  auto leftsatmark = left->acc().sat_mark();
+                  if (!leftsatmark.first)
+                    {
+                      // Right is weak.  Left was not weak, but it is
+                      // always rejecting.  We can therefore pretend
+                      // that left is weak.
+                      goto weak_weak;
+                    }
+                  res->copy_acceptance_of(left);
+                  acc_cond::mark_t accmark = leftsatmark.second;
+                  auto& racc = right->acc();
+                  product_main(left, right, left_state, right_state, res,
+                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                               {
+                                 if (!racc.accepting(mr))
+                                   return ml;
+                                 else
+                                   return accmark;
+                               });
+
+                }
+            }
+        }
+      else // general case
+        {
+          auto left_num = left->num_sets();
+          auto right_acc = right->get_acceptance() << left_num;
+          if (and_acc)
+            right_acc &= left->get_acceptance();
+          else
+            right_acc |= left->get_acceptance();
+          res->set_acceptance(left_num + right->num_sets(), right_acc);
+
+          product_main(left, right, left_state, right_state, res,
+                       [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                       {
+                         return ml | (mr << left_num);
+                       });
+
         }
 
       // The product of two non-deterministic automata could be
@@ -147,8 +314,7 @@ namespace spot
                            unsigned left_state,
                            unsigned right_state)
   {
-    return product_aux(complete(left),
-                       complete(right),
+    return product_aux(complete(left), complete(right),
                        left_state, right_state, false);
   }
 

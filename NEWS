@@ -89,6 +89,11 @@ New in spot 2.5.3.dev  (not yet released)
     They are most welcome in Python, since we used to redefine
     them every now and them.
 
+  - spot::product() and spot::product_or() learned so produce an
+    automaton with a simpler acceptance condition if one of the
+    argument is a weak automaton.  In this case the resulting
+    acceptance condition is (usually) that of the other argument.
+
   - spot::parity_product() and spot::parity_product_or() were dropped.
     The code was buggy, hard to maintain, and these functions do not
     seem to be used.

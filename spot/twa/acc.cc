@@ -1153,12 +1153,22 @@ namespace spot
   }
 
   std::pair<bool, acc_cond::mark_t>
-  acc_cond::unsat_mark() const
+  acc_cond::sat_unsat_mark(bool sat) const
   {
-    if (is_t())
-      return {false, mark_t({})};
-    if (!uses_fin_acceptance())
-      return {true, mark_t({})};
+    if (sat)
+      {
+        if (is_f())
+          return {false, mark_t({})};
+        if (!uses_fin_acceptance())
+          return {true, all_sets()};
+      }
+    else
+      {
+        if (is_t())
+          return {false, mark_t({})};
+        if (!uses_fin_acceptance())
+          return {true, mark_t({})};
+      }
 
     auto used = code_.used_sets();
     unsigned c = used.count();
@@ -1185,11 +1195,11 @@ namespace spot
     bdd res = to_bdd_rec(&code_.back(), &r[0]);
 
     if (res == bddtrue)
-      return {false, mark_t({})};
+      return {sat, mark_t({})};
     if (res == bddfalse)
-      return {true, mark_t({})};
+      return {!sat, mark_t({})};
 
-    bdd cube = bdd_satone(!res);
+    bdd cube = bdd_satone(sat ? res : !res);
     mark_t i = {};
     while (cube != bddtrue)
       {
