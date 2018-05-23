@@ -50,6 +50,20 @@ F(a & !Xa & Xb)
 {a & {b|c} }
 EOF
 
+checkopt --boolean <<EOF
+a & (b | c)
+EOF
+
+checkopt --bsize-min=2 --bsize-max=4 <<EOF
+a U Fb
+Xa
+EOF
+
+checkopt --size-min=2 --size-max=4 <<EOF
+a U Fb
+Xa
+EOF
+
 checkopt --eventual <<EOF
 GFa | FGb
 F(GFa | Gb)
@@ -357,6 +371,9 @@ ltlfilt --stutter-invariant -f '!{a:b*:c}'
 # bug in the bitvectors.
 ltlfilt --stutter-invariant -f 'F(a & XXXXXX!a)' && exit 1
 
+ltlfilt --syntactic-stutter-invariant -f 'GFa <-> GFb'
+ltlfilt --syntactic-stutter-invariant -f 'GXa <-> GFb' && exit 1
+
 
 ltlfilt -c -o 'foo' -f a 2>stderr && exit 1
 grep 'ltlfilt: options --output and --count are incompatible' stderr
@@ -390,3 +407,20 @@ ltlfilt -r4 -f a 2>err && exit 1
 grep "invalid simplification level '4'" err
 ltlfilt -ra -f a 2>err && exit 1
 grep "invalid simplification level 'a'" err
+
+ltlfilt --ignore-errors -f 'F' > out 2> out && exit 1
+test $? = 1
+cat >exp <<EOF
+EOF
+diff out exp
+
+run 2 ltlfilt --drop-errors -f 'F' > out
+cat >exp <<EOF
+EOF
+diff out exp
+
+run 2 ltlfilt --skip-errors -f 'F' > out
+cat >exp <<EOF
+F
+EOF
+diff out exp
