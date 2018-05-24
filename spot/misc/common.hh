@@ -125,6 +125,19 @@
 #define SPOT_UNIMPLEMENTED() throw std::runtime_error("unimplemented");
 
 
+#if SPOT_DEBUG
+#define SPOT_ASSUME(cond) assert(cond)
+#else
+#define SPOT_ASSUME(cond)                       \
+  do                                            \
+    {                                           \
+      if (!(cond))                              \
+        SPOT_UNREACHABLE_BUILTIN();             \
+    }                                           \
+  while (0)
+#endif
+
+
 // Useful when forwarding methods such as:
 //   auto func(int param) SPOT_RETURN(implem_.func(param));
 #define SPOT_RETURN(code) -> decltype(code) { return code; }

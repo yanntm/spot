@@ -217,55 +217,39 @@ namespace spot
         return id ^ r.id;
       }
 
+#if SPOT_DEBUG || SWIG
+#  define SPOT_WRAP_OP(ins)                     \
+        try                                     \
+          {                                     \
+            ins;                                \
+          }                                     \
+        catch (const std::runtime_error& e)     \
+          {                                     \
+            report_too_many_sets();             \
+          }
+#else
+#  define SPOT_WRAP_OP(ins) ins;
+#endif
       mark_t operator<<(unsigned i) const
       {
-        try
-          {
-            return id << i;
-          }
-        catch (const std::runtime_error& e)
-          {
-            report_too_many_sets();
-          }
+        SPOT_WRAP_OP(return id << i);
       }
 
       mark_t& operator<<=(unsigned i)
       {
-        try
-          {
-            id <<= i;
-            return *this;
-          }
-        catch (const std::runtime_error& e)
-          {
-            report_too_many_sets();
-          }
+        SPOT_WRAP_OP(id <<= i; return *this);
       }
 
       mark_t operator>>(unsigned i) const
       {
-        try
-          {
-            return id >> i;
-          }
-        catch (const std::runtime_error& e)
-          {
-            report_too_many_sets();
-          }
+        SPOT_WRAP_OP(return id >> i);
       }
 
       mark_t& operator>>=(unsigned i)
       {
-        try
-          {
-            id >>= i;
-            return *this;
-          }
-        catch (const std::runtime_error& e)
-          {
-            report_too_many_sets();
-          }
+        SPOT_WRAP_OP(id >>= i; return *this);
       }
+#undef SPOT_WRAP_OP
 
       mark_t strip(mark_t y) const
       {

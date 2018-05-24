@@ -61,6 +61,7 @@ misc_HEADERS = \
 noinst_LTLIBRARIES = libmisc.la
 libmisc_la_SOURCES = \
   bareword.cc \
+  bitset.cc \
   bitvect.cc \
   escape.cc \
   formater.cc \

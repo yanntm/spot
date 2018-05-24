@@ -25,6 +25,13 @@
 
 namespace spot
 {
+#ifndef SWIG
+  namespace internal
+  {
+    [[noreturn]] SPOT_API void report_bit_shift_too_big();
+  }
+#endif
+
   template<size_t N>
   class bitset
   {
@@ -37,14 +44,13 @@ namespace spot
     /// a special constructor for -1 (cf. mone below)
     struct minus_one_tag {};
     explicit bitset(minus_one_tag)
-      : data{0}
     {
       for (auto& v : data)
-        v -= 1;
+        v = -1U;
     }
 
     constexpr explicit bitset(word_t s)
-      : data{s}
+      : data{{s}}
     {
       SPOT_ASSERT(s == 0U || s == 1U);
     }
@@ -133,23 +139,36 @@ namespace spot
 
     bitset& operator<<=(unsigned s)
     {
-      if (SPOT_UNLIKELY(s >= 8*N*sizeof(word_t)))
-        throw std::runtime_error("bit shift overflow is undefined behavior");
+#if SPOT_DEBUG || SWIG
+      if (SPOT_UNLIKELY(s >= 8 * N * sizeof(word_t)))
+        internal::report_bit_shift_too_big();
+#else
+      SPOT_ASSUME(s < 8 * N * sizeof(word_t));
+#endif
+
+      // Skip the rest of this function in the most common case of
+      // N==1.  g++ 6 can optimize away all the loops if N==1, but
+      // clang++4 cannot and needs help.
+      if (N == 1)
+       {
+         data[0] <<= s;
+         return *this;
+       }
 
       if (s == 0)
         return *this;
-      const unsigned wshift = s / (8*sizeof(word_t));
-      const unsigned offset = s % (8*sizeof(word_t));
+      const unsigned wshift = s / (8 * sizeof(word_t));
+      const unsigned offset = s % (8 * sizeof(word_t));
 
       if (offset == 0)
-      {
-        for (unsigned i = N-1; i >= wshift; --i)
-          data[i] = data[i - wshift];
-      }
+        {
+          for (unsigned i = N - 1; i >= wshift; --i)
+            data[i] = data[i - wshift];
+        }
       else
         {
-          const unsigned sub_offset = 8*sizeof(word_t) - offset;
-          for (unsigned i = N-1; i > wshift; --i)
+          const unsigned sub_offset = 8 * sizeof(word_t) - offset;
+          for (unsigned i = N - 1; i > wshift; --i)
             data[i] = ((data[i - wshift] << offset) |
                        (data[i - wshift - 1] >> sub_offset));
           data[wshift] = data[0] << offset;
@@ -160,25 +179,39 @@ namespace spot
 
     bitset& operator>>=(unsigned s)
     {
-      if (SPOT_UNLIKELY(s >= 8*N*sizeof(word_t)))
-        throw std::runtime_error("bit shift overflow is undefined behavior");
+#if SPOT_DEBUG || SWIG
+      if (SPOT_UNLIKELY(s >= 8 * N * sizeof(word_t)))
+        internal::report_bit_shift_too_big();
+#else
+      SPOT_ASSUME(s < 8 * N * sizeof(word_t));
+#endif
+      // Skip the rest of this function in the most common case of
+      // N==1.  g++ 6 can optimize away all the loops if N==1, but
+      // clang++4 cannot and needs help.
+      if (N == 1)
+       {
+         data[0] >>= s;
+         return *this;
+       }
 
       if (s == 0)
         return *this;
-      const unsigned wshift = s / (8*sizeof(word_t));
-      const unsigned offset = s % (8*sizeof(word_t));
+      const unsigned wshift = s / (8 * sizeof(word_t));
+      const unsigned offset = s % (8 * sizeof(word_t));
       const unsigned limit = N - wshift - 1;
 
       if (offset == 0)
-        for (unsigned i = 0; i <= limit; ++i)
-          data[i] = data[i + wshift];
+        {
+          for (unsigned i = 0; i <= limit; ++i)
+            data[i] = data[i + wshift];
+        }
       else
         {
-          const unsigned sub_offset = 8*sizeof(word_t) - offset;
+          const unsigned sub_offset = 8 * sizeof(word_t) - offset;
           for (unsigned i = 0; i < limit; ++i)
             data[i] = ((data[i + wshift] >> offset) |
                        (data[i + wshift + 1] << sub_offset));
-          data[limit] = data[N-1] >> offset;
+          data[limit] = data[N - 1] >> offset;
         }
       std::fill(data.begin() + limit + 1, data.end(), word_t(0));
       return *this;
