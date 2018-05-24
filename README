@@ -115,6 +115,14 @@ flags specific to Spot:
     do not have a working Python 3.2+ installation or if you are
     attempting some cross-compilation.
 
+  --enable-max-accsets=N
+    Compile Spot so that it supports up to N acceptance sets.  The
+    default is 32, so that the membership of each transition to
+    any of the 32 acceptance sets can be represented by an
+    "unsigned int" (interpreted as a bit-vector).  Using a larger
+    N (it still has to be a multiple of 32) will consume more
+    unsigned ints per transitions, costing both time and space.
+
   --enable-doxygen
     Generate the Doxygen documentation for the code as part of the
     build.  This requires Doxygen to be installed.  Even if
