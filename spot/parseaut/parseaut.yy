@@ -772,7 +772,7 @@ header-item: "States:" INT
 			  "acceptance condition...");
 		    error(res.accset_loc, "... previously defined here.");
 		  }
-		else if ($2 > SPOT_NB_ACC)
+		else if ($2 > SPOT_MAX_ACCSETS)
 		  {
 		    error(@1 + @2,
 			  "this implementation cannot support such a large "

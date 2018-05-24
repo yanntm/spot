@@ -52,11 +52,12 @@ namespace spot
       [[noreturn]] static void report_too_many_sets();
 #endif
   public:
-    struct mark_t : public internal::_32acc<SPOT_NB_ACC == 8*sizeof(unsigned)>
+    struct mark_t :
+    public internal::_32acc<SPOT_MAX_ACCSETS == 8*sizeof(unsigned)>
     {
     private:
-      // configure guarantees that SPOT_NB_ACC % (8*sizeof(unsigned)) == 0
-      typedef bitset<SPOT_NB_ACC / (8*sizeof(unsigned))> _value_t;
+      // configure guarantees that SPOT_MAX_ACCSETS % (8*sizeof(unsigned)) == 0
+      typedef bitset<SPOT_MAX_ACCSETS / (8*sizeof(unsigned))> _value_t;
       _value_t id;
 
       mark_t(_value_t id) noexcept
@@ -564,7 +565,7 @@ namespace spot
         if (n == 0)
           return inf({});
         acc_cond::mark_t m = mark_t::all();
-        m >>= (SPOT_NB_ACC - n);
+        m >>= (SPOT_MAX_ACCSETS - n);
         return inf(m);
       }
 
@@ -573,7 +574,7 @@ namespace spot
         if (n == 0)
           return fin({});
         acc_cond::mark_t m = mark_t::all();
-        m >>= (SPOT_NB_ACC - n);
+        m >>= (SPOT_MAX_ACCSETS - n);
         return fin(m);
       }
 
@@ -1245,7 +1246,7 @@ namespace spot
         return -1U;
       unsigned j = num_;
       num_ += num;
-      if (num_ > SPOT_NB_ACC)
+      if (num_ > SPOT_MAX_ACCSETS)
         report_too_many_sets();
       all_ = all_sets_();
       return j;
@@ -1383,7 +1384,7 @@ namespace spot
   protected:
     mark_t all_sets_() const
     {
-      return mark_t::all() >> (SPOT_NB_ACC - num_);
+      return mark_t::all() >> (SPOT_MAX_ACCSETS - num_);
     }
 
     unsigned num_;

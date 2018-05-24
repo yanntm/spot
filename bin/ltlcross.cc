@@ -691,7 +691,7 @@ namespace
                    const spot::const_twa_graph_ptr& aut_j,
                    size_t i, size_t j, bool icomp, bool jcomp)
   {
-    if (aut_i->num_sets() + aut_j->num_sets() > SPOT_NB_ACC)
+    if (aut_i->num_sets() + aut_j->num_sets() > SPOT_MAX_ACCSETS)
       {
         // Report the skipped test if both automata are not
         // complemented, or the --verbose option is used,

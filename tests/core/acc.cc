@@ -64,8 +64,8 @@ int main()
   auto m1 = spot::acc_cond::mark_t({0, 2});
   auto m2 = spot::acc_cond::mark_t({0, 3});
   auto m3 = spot::acc_cond::mark_t({2, 1});
-  auto m4 = spot::acc_cond::mark_t({0, SPOT_NB_ACC-2});
-  if (!(m4.min_set() == 1 && m4.max_set() == SPOT_NB_ACC-1))
+  auto m4 = spot::acc_cond::mark_t({0, SPOT_MAX_ACCSETS - 2});
+  if (!(m4.min_set() == 1 && m4.max_set() == SPOT_MAX_ACCSETS - 1))
     return 1;
 
   spot::acc_cond::mark_t m0 = {};
@@ -185,7 +185,7 @@ int main()
 
   try
   {
-    spot::acc_cond a{SPOT_NB_ACC+1};
+    spot::acc_cond a{SPOT_MAX_ACCSETS + 1};
   }
   catch (const std::runtime_error& e)
   {
@@ -195,7 +195,7 @@ int main()
   try
   {
     spot::acc_cond::mark_t m{0};
-    m <<= SPOT_NB_ACC + 1;
+    m <<= SPOT_MAX_ACCSETS + 1;
   }
   catch (const std::runtime_error& e)
   {
@@ -205,7 +205,7 @@ int main()
   try
   {
     spot::acc_cond::mark_t m{0};
-    m >>= SPOT_NB_ACC + 1;
+    m >>= SPOT_MAX_ACCSETS + 1;
   }
   catch (const std::runtime_error& e)
   {

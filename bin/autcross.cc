@@ -509,7 +509,7 @@ namespace
                    const spot::const_twa_graph_ptr& aut_j,
                    size_t i, size_t j)
   {
-    if (aut_i->num_sets() + aut_j->num_sets() > SPOT_NB_ACC)
+    if (aut_i->num_sets() + aut_j->num_sets() > SPOT_MAX_ACCSETS)
       {
         std::cerr << "info: building " << autname(i)
                   << '*' << autname(j, true)

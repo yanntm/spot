@@ -60,16 +60,18 @@ AC_ARG_ENABLE([doxygen],
 AM_CONDITIONAL([ENABLE_DOXYGEN], [test "x${enable_doxygen:-no}" = xyes])
 
 # Option to indicate the maximal number of acceptance marks
-AC_COMPUTE_INT([default_nb_acc], [8*sizeof(unsigned)])
-AC_ARG_ENABLE([nb-acc],
-              [AC_HELP_STRING([--enable-nb-acc=N],
-                              [Use up to N acceptance marks])],
-              [enable_nb_acc=$enableval], [enable_nb_acc=$default_nb_acc])
-if test 0 = `expr $enable_nb_acc % $default_nb_acc`
+AC_COMPUTE_INT([default_max_accsets], [8*sizeof(unsigned)])
+AC_ARG_ENABLE([max-accsets],
+              [AC_HELP_STRING([--enable-max-accsets=N],
+                              [Support up to N acceptance sets])],
+              [enable_max_accsets=$enableval],
+              [enable_max_accsets=$default_max_accsets])
+if test 0 -eq `expr $enable_max_accsets % $default_max_accsets`
 then
-  AC_DEFINE_UNQUOTED([NB_ACC], [$enable_nb_acc], [The number of acceptance marks])
+  AC_DEFINE_UNQUOTED([MAX_ACCSETS], [$enable_max_accsets],
+    [The maximal number of acceptance sets supported (also known as acceptance marks)])
 else
-  AC_ERROR([The argument of --enable-nb-acc must be a multiple of $default_nb_acc])
+  AC_ERROR([The argument of --enable-max-accsets must be a multiple of $default_nb_acc])
 fi
 
 # Activate C11 for gnulib tests
