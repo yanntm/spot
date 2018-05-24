@@ -15,6 +15,13 @@ New in spot 2.5.3.dev  (not yet released)
   - ltlcross, ltldo, and autcross learned shorthands to call
     delag, ltl2dra, ltl2dgra, and nba2dpa.
 
+  - When autfilt is asked to build a Büchi automaton from
+    of a chain of many products, as in
+    "autfilt -B --product 1.hoa ... --product n.hoa in.hoa"
+    then it will automatically degeneralize the intermediate
+    product to avoid exceeding the number of supported
+    acceptance sets.
+
   Library:
 
   - You can now specify to Spot the number of acceptance marks you

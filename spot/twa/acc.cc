@@ -32,6 +32,14 @@
 
 namespace spot
 {
+  void acc_cond::report_too_many_sets()
+  {
+#define STR(x) #x
+#define VALUESTR(x) STR(x)
+    throw std::runtime_error("Too many acceptance sets used.  "
+                             "The limit is " VALUESTR(SPOT_NB_ACC) ".");
+  }
+
   std::ostream& operator<<(std::ostream& os, spot::acc_cond::mark_t m)
   {
     auto a = m;

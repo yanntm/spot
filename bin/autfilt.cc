@@ -50,6 +50,7 @@
 #include <spot/twaalgos/cobuchi.hh>
 #include <spot/twaalgos/cleanacc.hh>
 #include <spot/twaalgos/contains.hh>
+#include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/dtwasat.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/gtec/gtec.hh>
@@ -634,6 +635,40 @@ ensure_deterministic(const spot::twa_graph_ptr& aut, bool nonalt = false)
   return p.run(aut);
 }
 
+static spot::twa_graph_ptr ensure_tba(spot::twa_graph_ptr aut)
+{
+  spot::postprocessor p;
+  p.set_type(spot::postprocessor::TGBA);
+  p.set_pref(spot::postprocessor::Any);
+  p.set_level(spot::postprocessor::Low);
+  return spot::degeneralize_tba(p.run(aut));
+
+}
+
+static spot::twa_graph_ptr
+product(spot::twa_graph_ptr left, spot::twa_graph_ptr right)
+{
+  if ((type == spot::postprocessor::BA)
+      && (left->num_sets() + right->num_sets() > SPOT_NB_ACC))
+    {
+      left = ensure_tba(left);
+      right = ensure_tba(right);
+    }
+  return spot::product(left, right);
+}
+
+static spot::twa_graph_ptr
+product_or(spot::twa_graph_ptr left, spot::twa_graph_ptr right)
+{
+  if ((type == spot::postprocessor::BA)
+      && (left->num_sets() + right->num_sets() > SPOT_NB_ACC))
+    {
+      left = ensure_tba(left);
+      right = ensure_tba(right);
+    }
+  return spot::product_or(left, right);
+}
+
 static int
 parse_opt(int key, char* arg, struct argp_state*)
 {
@@ -947,8 +982,8 @@ parse_opt(int key, char* arg, struct argp_state*)
         if (!opt->product_and)
           opt->product_and = std::move(a);
         else
-          opt->product_and = spot::product(std::move(opt->product_and),
-                                           std::move(a));
+          opt->product_and = ::product(std::move(opt->product_and),
+                                       std::move(a));
       }
       break;
     case OPT_PRODUCT_OR:
@@ -957,8 +992,8 @@ parse_opt(int key, char* arg, struct argp_state*)
         if (!opt->product_or)
           opt->product_or = std::move(a);
         else
-          opt->product_or = spot::product_or(std::move(opt->product_or),
-                                             std::move(a));
+          opt->product_or = ::product_or(std::move(opt->product_or),
+                                         std::move(a));
       }
       break;
     case OPT_RANDOMIZE:
@@ -1410,9 +1445,9 @@ namespace
         aut->purge_unreachable_states();
 
       if (opt->product_and)
-        aut = spot::product(std::move(aut), opt->product_and);
+        aut = ::product(std::move(aut), opt->product_and);
       if (opt->product_or)
-        aut = spot::product_or(std::move(aut), opt->product_or);
+        aut = ::product_or(std::move(aut), opt->product_or);
 
       if (opt->sum_or)
         aut = spot::sum(std::move(aut), opt->sum_or);

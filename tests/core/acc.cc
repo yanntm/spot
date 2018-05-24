@@ -189,8 +189,7 @@ int main()
   }
   catch (const std::runtime_error& e)
   {
-    if (std::strcmp(e.what(), "Too many acceptance sets used."))
-      return 1;
+    assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
   }
 
   try
@@ -200,8 +199,7 @@ int main()
   }
   catch (const std::runtime_error& e)
   {
-    if (std::strcmp(e.what(), "bit shift overflow is undefined behavior"))
-      return 1;
+    assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
   }
 
   try
@@ -211,8 +209,7 @@ int main()
   }
   catch (const std::runtime_error& e)
   {
-    if (std::strcmp(e.what(), "bit shift overflow is undefined behavior"))
-      return 1;
+    assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
   }
 
   return 0;

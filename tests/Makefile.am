@@ -229,6 +229,7 @@ TESTS_twa = \
   core/ltldo2.test \
   core/maskacc.test \
   core/maskkeep.test \
+  core/prodchain.test \
   core/prodor.test \
   core/simdet.test \
   core/sim2.test \

@@ -46,6 +46,11 @@ namespace spot
 
   class SPOT_API acc_cond
   {
+
+#ifndef SWIG
+  private:
+      [[noreturn]] static void report_too_many_sets();
+#endif
   public:
     struct mark_t : public internal::_32acc<SPOT_NB_ACC == 8*sizeof(unsigned)>
     {
@@ -214,24 +219,52 @@ namespace spot
 
       mark_t operator<<(unsigned i) const
       {
-        return id << i;
+        try
+          {
+            return id << i;
+          }
+        catch (const std::runtime_error& e)
+          {
+            report_too_many_sets();
+          }
       }
 
       mark_t& operator<<=(unsigned i)
       {
-        id <<= i;
-        return *this;
+        try
+          {
+            id <<= i;
+            return *this;
+          }
+        catch (const std::runtime_error& e)
+          {
+            report_too_many_sets();
+          }
       }
 
       mark_t operator>>(unsigned i) const
       {
-        return id >> i;
+        try
+          {
+            return id >> i;
+          }
+        catch (const std::runtime_error& e)
+          {
+            report_too_many_sets();
+          }
       }
 
       mark_t& operator>>=(unsigned i)
       {
-        id >>= i;
-        return *this;
+        try
+          {
+            id >>= i;
+            return *this;
+          }
+        catch (const std::runtime_error& e)
+          {
+            report_too_many_sets();
+          }
       }
 
       mark_t strip(mark_t y) const
@@ -1229,7 +1262,7 @@ namespace spot
       unsigned j = num_;
       num_ += num;
       if (num_ > SPOT_NB_ACC)
-        throw std::runtime_error("Too many acceptance sets used.");
+        report_too_many_sets();
       all_ = all_sets_();
       return j;
     }
