@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -107,7 +107,7 @@
 
 
 // Do not use those in code, prefer SPOT_UNREACHABLE() instead.
-#if defined __clang__ || defined __GNU__
+#if defined __clang__ || defined __GNUC__
 #  define SPOT_UNREACHABLE_BUILTIN() __builtin_unreachable()
 # elif defined _MSC_VER
 #  define SPOT_UNREACHABLE_BUILTIN() __assume(0)
