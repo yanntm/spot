@@ -94,6 +94,16 @@ namespace spot
           }
       }
 
+      /// \brief The maximum number of acceptance sets supported by
+      /// this implementation.
+      ///
+      /// The value can be changed at compile-time using configure's
+      /// --enable-max-accsets=N option.
+      constexpr static unsigned max_accsets()
+      {
+        return SPOT_MAX_ACCSETS;
+      }
+
       static mark_t all()
       {
         return mark_t(_value_t::mone());
@@ -220,7 +230,7 @@ namespace spot
         return id ^ r.id;
       }
 
-#if SPOT_DEBUG || SWIG
+#if SPOT_DEBUG || defined(SWIGPYTHON)
 #  define SPOT_WRAP_OP(ins)                     \
         try                                     \
           {                                     \
@@ -567,7 +577,7 @@ namespace spot
         if (n == 0)
           return inf({});
         acc_cond::mark_t m = mark_t::all();
-        m >>= (SPOT_MAX_ACCSETS - n);
+        m >>= mark_t::max_accsets() - n;
         return inf(m);
       }
 
@@ -576,7 +586,7 @@ namespace spot
         if (n == 0)
           return fin({});
         acc_cond::mark_t m = mark_t::all();
-        m >>= (SPOT_MAX_ACCSETS - n);
+        m >>= mark_t::max_accsets() - n;
         return fin(m);
       }
 
@@ -833,6 +843,8 @@ namespace spot
 
       acc_code& operator<<=(unsigned sets)
       {
+        if (SPOT_UNLIKELY(sets >= mark_t::max_accsets()))
+          report_too_many_sets();
         if (empty())
           return *this;
         unsigned pos = size();
@@ -1247,9 +1259,11 @@ namespace spot
       if (num == 0)
         return -1U;
       unsigned j = num_;
-      num_ += num;
-      if (num_ > SPOT_MAX_ACCSETS)
+      num += j;
+      if (num > mark_t::max_accsets())
         report_too_many_sets();
+      // Make sure we do not update if we raised an exception.
+      num_ = num;
       all_ = all_sets_();
       return j;
     }
@@ -1386,7 +1400,7 @@ namespace spot
   protected:
     mark_t all_sets_() const
     {
-      return mark_t::all() >> (SPOT_MAX_ACCSETS - num_);
+      return mark_t::all() >> (spot::acc_cond::mark_t::max_accsets() - num_);
     }
 
     unsigned num_;

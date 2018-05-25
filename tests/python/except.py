@@ -129,3 +129,13 @@ except RuntimeError as e:
     assert "safety" in str(e)
 else:
     report_missing_exception()
+
+n = spot.mark_t.max_accsets()
+m = spot.mark_t([n - 1])
+try:
+    m = spot.mark_t([0]) << n
+except RuntimeError as e:
+    assert "Too many acceptance sets" in str(e)
+else:
+    print(n, m)
+    report_missing_exception()

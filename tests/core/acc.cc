@@ -64,8 +64,10 @@ int main()
   auto m1 = spot::acc_cond::mark_t({0, 2});
   auto m2 = spot::acc_cond::mark_t({0, 3});
   auto m3 = spot::acc_cond::mark_t({2, 1});
-  auto m4 = spot::acc_cond::mark_t({0, SPOT_MAX_ACCSETS - 2});
-  if (!(m4.min_set() == 1 && m4.max_set() == SPOT_MAX_ACCSETS - 1))
+  auto m4 =
+    spot::acc_cond::mark_t({0, spot::acc_cond::mark_t::max_accsets() - 2});
+  if (!((m4.min_set() == 1) &&
+        (m4.max_set() == spot::acc_cond::mark_t::max_accsets() - 1)))
     return 1;
 
   spot::acc_cond::mark_t m0 = {};
@@ -184,33 +186,39 @@ int main()
   assert(c1 == c2);
 
   try
-  {
-    spot::acc_cond a{SPOT_MAX_ACCSETS + 1};
-  }
+    {
+      spot::acc_cond a{spot::acc_cond::mark_t::max_accsets() + 1};
+    }
   catch (const std::runtime_error& e)
-  {
-    assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
-  }
+    {
+      assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
+    }
+
+#if SPOT_DEBUG
+  // Those error message are disabled in non-debugging code as
+  // shifting mark_t is usually done in the innermost loop of
+  // algorithms.  However, they are still done in Python, and we
+  // test them in python/except.py
+  try
+    {
+      spot::acc_cond::mark_t m{0};
+      m <<= spot::acc_cond::mark_t::max_accsets() + 1;
+    }
+  catch (const std::runtime_error& e)
+    {
+      assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
+    }
 
   try
-  {
-    spot::acc_cond::mark_t m{0};
-    m <<= SPOT_MAX_ACCSETS + 1;
-  }
+    {
+      spot::acc_cond::mark_t m{0};
+      m >>= spot::acc_cond::mark_t::max_accsets() + 1;
+    }
   catch (const std::runtime_error& e)
-  {
-    assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
-  }
-
-  try
-  {
-    spot::acc_cond::mark_t m{0};
-    m >>= SPOT_MAX_ACCSETS + 1;
-  }
-  catch (const std::runtime_error& e)
-  {
-    assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
-  }
+    {
+      assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
+    }
+#endif
 
   return 0;
 }

@@ -151,7 +151,7 @@ namespace spot
 
     bitset& operator<<=(unsigned s)
     {
-#if SPOT_DEBUG || SWIG
+#if SPOT_DEBUG || defined(SWIGPYTHON)
       if (SPOT_UNLIKELY(s >= 8 * N * sizeof(word_t)))
         internal::report_bit_shift_too_big();
 #else
@@ -191,7 +191,7 @@ namespace spot
 
     bitset& operator>>=(unsigned s)
     {
-#if SPOT_DEBUG || SWIG
+#if SPOT_DEBUG || defined(SWIGPYTHON)
       if (SPOT_UNLIKELY(s >= 8 * N * sizeof(word_t)))
         internal::report_bit_shift_too_big();
 #else

@@ -649,7 +649,8 @@ static spot::twa_graph_ptr
 product(spot::twa_graph_ptr left, spot::twa_graph_ptr right)
 {
   if ((type == spot::postprocessor::BA)
-      && (left->num_sets() + right->num_sets() > SPOT_MAX_ACCSETS))
+      && (left->num_sets() + right->num_sets() >
+          spot::acc_cond::mark_t::max_accsets()))
     {
       left = ensure_tba(left);
       right = ensure_tba(right);
@@ -661,7 +662,8 @@ static spot::twa_graph_ptr
 product_or(spot::twa_graph_ptr left, spot::twa_graph_ptr right)
 {
   if ((type == spot::postprocessor::BA)
-      && (left->num_sets() + right->num_sets() > SPOT_MAX_ACCSETS))
+      && (left->num_sets() + right->num_sets() >
+          spot::acc_cond::mark_t::max_accsets()))
     {
       left = ensure_tba(left);
       right = ensure_tba(right);
@@ -965,7 +967,8 @@ parse_opt(int key, char* arg, struct argp_state*)
             if (res < 0)
               error(2, 0, "acceptance sets should be non-negative:"
                     " --mask-acc=%ld", res);
-            if (static_cast<unsigned long>(res) > SPOT_MAX_ACCSETS)
+            if (static_cast<unsigned long>(res) >=
+                spot::acc_cond::mark_t::max_accsets())
               error(2, 0, "this implementation does not support that many"
                     " acceptance sets: --mask-acc=%ld", res);
             opt_mask_acc.set(res);
