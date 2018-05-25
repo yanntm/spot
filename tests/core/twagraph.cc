@@ -158,10 +158,31 @@ static void f4()
   spot::print_hoa(std::cout, tg, "1.1") << '\n';
 }
 
+// Test merge_states()
+static void f5()
+{
+  auto d = spot::make_bdd_dict();
+  auto tg = make_twa_graph(d);
+
+  auto s1 = tg->new_state();
+  auto s2 = tg->new_state();
+  auto s3 = tg->new_state();
+
+  tg->set_init_state(s3);
+  tg->new_edge(s1, s2, bddtrue);
+  tg->new_edge(s2, s2, bddtrue);
+  tg->new_edge(s3, s2, bddtrue);
+
+  tg->merge_states();
+
+  spot::print_hoa(std::cout, tg) << '\n';
+}
+
 int main()
 {
   f1();
   f2();
   f3();
   f4();
+  f5();
 }

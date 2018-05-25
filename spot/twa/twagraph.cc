@@ -231,6 +231,48 @@ namespace spot
     g_.chain_edges_();
   }
 
+  void twa_graph::merge_states()
+  {
+    if (!is_existential())
+      throw std::runtime_error(
+          "twa_graph::merge_states() does not work on alternating automata");
+
+    const unsigned nb_states = num_states();
+    std::vector<unsigned> remap(nb_states, -1U);
+    for (unsigned i = 0; i != nb_states; ++i)
+      {
+        auto out1 = out(i);
+        for (unsigned j = 0; j != i; ++j)
+          {
+            auto out2 = out(j);
+            if (std::equal(out1.begin(), out1.end(), out2.begin(), out2.end(),
+                           [](const edge_storage_t& a,
+                              const edge_storage_t& b)
+                           { return a.dst == b.dst && a.data() == b.data(); }))
+            {
+              remap[i] = j;
+              break;
+            }
+          }
+      }
+
+    for (auto& e: edges())
+      if (remap[e.dst] != -1U)
+        e.dst = remap[e.dst];
+
+    if (remap[get_init_state_number()] != -1U)
+      set_init_state(remap[get_init_state_number()]);
+
+    unsigned st = 0;
+    for (auto& s: remap)
+      if (s == -1U)
+        s = st++;
+      else
+        s = -1U;
+
+    defrag_states(std::move(remap), st);
+  }
+
   void twa_graph::purge_unreachable_states(shift_action* f, void* action_data)
   {
     unsigned num_states = g_.num_states();

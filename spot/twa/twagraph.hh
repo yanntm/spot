@@ -553,6 +553,14 @@ namespace spot
     /// This is already called by merge_edges().
     void merge_univ_dests();
 
+    /// \brief Merge states that can be merged.
+    ///
+    /// This merges states that have the exact same outgoing edges. This method
+    /// compares the successors of states in the order in which they are stored.
+    /// Therefore, it is better to call it when you know that the edges are
+    /// stored, e.g. after a call to merge_edges().
+    void merge_states();
+
     /// \brief Remove all dead states
     ///
     /// Dead states are all the states that cannot be part of

@@ -30,7 +30,7 @@
 
 set -e
 
-run 0 ../tgbagraph | tee stdout
+run 0 ../tgbagraph > stdout
 
 cat >expected <<EOF
 p1
@@ -288,6 +288,18 @@ State: 1
 [t] 0
 State: 2
 [t] 0&1
+--END--
+HOA: v1
+States: 1
+Start: 0
+AP: 0
+acc-name: all
+Acceptance: 0 t
+properties: trans-labels explicit-labels state-acc complete
+properties: deterministic
+--BODY--
+State: 0
+[t] 0
 --END--
 EOF
 
