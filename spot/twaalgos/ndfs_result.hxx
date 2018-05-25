@@ -649,7 +649,7 @@ namespace spot
           // This initial state is outside the cycle.  Compute the prefix.
           min_path<false> s(this, a_, target, h_);
           cycle_entry_point = s.search(prefix_start, run->prefix);
-          SPOT_ASSERT(cycle_entry_point);
+          SPOT_ASSUME(cycle_entry_point);
           cycle_entry_point = cycle_entry_point->clone();
         }
 

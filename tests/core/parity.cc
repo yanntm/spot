@@ -18,7 +18,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config.h"
-#include <cassert>
 #include <ctime>
 #include <vector>
 #include <spot/twaalgos/dualize.hh>
@@ -344,43 +343,46 @@ int main()
               for (auto style: parity_styles)
                 {
                   auto output = spot::change_parity(aut, kind, style);
-                  assert(is_right_parity(output, kind, style,
-                                         is_max, is_odd, acc_num_sets)
-                         && "change_parity: wrong acceptance.");
-                  assert(are_equiv(aut, output)
-                         && "change_parity: not equivalent.");
-                  assert(is_almost_colored(output)
-                         && "change_parity: too many acc on a transition");
+
+                  if (!is_right_parity(output, kind, style,
+                                       is_max, is_odd, acc_num_sets))
+                    throw std::runtime_error("change parity: wrong acceptance");
+                  if (!are_equiv(aut, output))
+                    throw std::runtime_error("change_parity: not equivalent.");
+                  if (!is_almost_colored(output))
+                    throw std::runtime_error(
+                        "change_parity: too many acc on a transition");
                 }
             // Check colorize_parity
             for (auto keep_style: { true, false })
               {
                 auto output = spot::colorize_parity(aut, keep_style);
-                assert(is_colored_printerr(output)
-                       && "colorize_parity: not colored.");
-                assert(are_equiv(aut, output)
-                       && "colorize_parity: not equivalent.");
+                if (!is_colored_printerr(output))
+                  throw std::runtime_error("colorize_parity: not colored.");
+                if (!are_equiv(aut, output))
+                  throw std::runtime_error("colorize_parity: not equivalent.");
                 auto target_kind = to_parity_kind(is_max);
                 auto target_style = keep_style ? to_parity_style(is_odd)
                                     : spot::parity_style_any;
-                assert(is_right_parity(output, target_kind, target_style,
-                                       is_max, is_odd, acc_num_sets)
-                       && "change_parity: wrong acceptance.");
+                if (!is_right_parity(output, target_kind, target_style,
+                                     is_max, is_odd, acc_num_sets))
+                  throw std::runtime_error("change_parity: wrong acceptance.");
               }
             // Check cleanup_parity
             for (auto keep_style: { true, false })
               {
                 auto output = spot::cleanup_parity(aut, keep_style);
-                assert(is_almost_colored(output)
-                       && "cleanup_parity: too many acc on a transition.");
-                assert(are_equiv(aut, output)
-                       && "cleanup_parity: not equivalent.");
+                if (!is_almost_colored(output))
+                  throw std::runtime_error(
+                    "cleanup_parity: too many acc on a transition.");
+                if (!are_equiv(aut, output))
+                  throw std::runtime_error("cleanup_parity: not equivalent.");
                 auto target_kind = to_parity_kind(is_max);
                 auto target_style = keep_style ? to_parity_style(is_odd)
                                     : spot::parity_style_any;
-                assert(is_right_parity(output, target_kind, target_style,
-                                       is_max, is_odd, acc_num_sets)
-                       && "cleanup_parity: wrong acceptance.");
+                if (!is_right_parity(output, target_kind, target_style,
+                                     is_max, is_odd, acc_num_sets))
+                  throw std::runtime_error("cleanup_parity: wrong acceptance.");
               }
           }
         }

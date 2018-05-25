@@ -109,6 +109,7 @@ namespace spot
       bool operator==(unsigned o) const
       {
         SPOT_ASSERT(o == 0U);
+        (void)o;
         return !id;
       }
 
@@ -116,6 +117,7 @@ namespace spot
       bool operator!=(unsigned o) const
       {
         SPOT_ASSERT(o == 0U);
+        (void)o;
         return !!id;
       }
 

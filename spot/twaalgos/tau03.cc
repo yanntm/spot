@@ -299,7 +299,7 @@ namespace spot
           }
         acc_cond::mark_t get_acc() const
           {
-            assert(!is_white());
+            SPOT_ASSUME(!is_white());
             return *acc;
           }
         void cumulate_acc(acc_cond::mark_t a)

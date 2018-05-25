@@ -360,7 +360,7 @@ namespace spot
                 {
                   path.emplace_back(std::move(ss));
                   auto i = states.insert(path.back());
-                  assert(i.second);
+                  SPOT_ASSUME(i.second);
                   ss = path.back().compute_succ(cs_, ap, color_);
                   mincolor = std::min(color_, mincolor);
                   stop = states.find(ss) != states.end();
