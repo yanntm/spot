@@ -96,9 +96,7 @@ namespace spot
 
       static mark_t all()
       {
-        mark_t res({});
-        res.id -= 1;
-        return res;
+        return mark_t(_value_t::mone());
       }
 
       size_t hash() const noexcept
@@ -107,12 +105,14 @@ namespace spot
         return h(id);
       }
 
+      SPOT_DEPRECATED("compare mark_t to mark_t, not to unsigned")
       bool operator==(unsigned o) const
       {
         SPOT_ASSERT(o == 0U);
         return !id;
       }
 
+      SPOT_DEPRECATED("compare mark_t to mark_t, not to unsigned")
       bool operator!=(unsigned o) const
       {
         SPOT_ASSERT(o == 0U);
@@ -161,12 +161,12 @@ namespace spot
 
       void set(unsigned u)
       {
-        id |= (_value_t::one() << u);
+        id.set(u);
       }
 
       void clear(unsigned u)
       {
-        id &= ~(_value_t::one() << u);
+        id.clear(u);
       }
 
       mark_t& operator&=(mark_t r)

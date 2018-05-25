@@ -124,6 +124,18 @@ namespace spot
       return other.operator<=(*this);
     }
 
+    void set(unsigned s)
+    {
+      SPOT_ASSERT(s < 8*N*sizeof(word_t));
+      data[s / (8*sizeof(word_t))] |= 1U << (s % (8*sizeof(word_t)));
+    }
+
+    void clear(unsigned s)
+    {
+      SPOT_ASSERT(s < 8*N*sizeof(word_t));
+      data[s / (8*sizeof(word_t))] &= ~(1U << (s % (8*sizeof(word_t))));
+    }
+
     bitset operator<<(unsigned s) const
     {
       bitset r = *this;
