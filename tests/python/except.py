@@ -23,19 +23,28 @@
 
 
 import spot
+import buddy
 
+def report_missing_exception():
+    raise RuntimeError("missing exception")
+
+
+aut = spot.translate('GFa & GFb & GFc')
+aut.set_acceptance(spot.acc_cond("parity min even 4"))
 try:
-    spot.iar(spot.translate('GFa & GFb & GFc'))
+    spot.iar(aut)
 except RuntimeError as e:
     assert 'iar() expects Rabin-like or Streett-like input' in str(e)
+else:
+    report_missing_exception()
 
 alt = spot.dualize(spot.translate('FGa | FGb'))
-
 try:
     spot.tgba_determinize(alt)
 except RuntimeError as e:
     assert 'tgba_determinize() does not support alternation' in str(e)
-
+else:
+    report_missing_exception()
 
 aut = spot.translate('a U b U c')
 aps = aut.ap()
@@ -47,11 +56,15 @@ try:
     rem.add_ap('"a=0,b')
 except ValueError as e:
     assert """missing closing '"'""" in str(e)
+else:
+    report_missing_exception()
 
 try:
     rem.add_ap('a=0=b')
 except ValueError as e:
     assert """unexpected '=' at position 3""" in str(e)
+else:
+    report_missing_exception()
 
 si = spot.scc_info(aut)
 for meth in ('scc_has_rejecting_cycle', 'is_inherently_weak_scc',
@@ -60,37 +73,59 @@ for meth in ('scc_has_rejecting_cycle', 'is_inherently_weak_scc',
         getattr(spot, meth)(si, 20)
     except ValueError as e:
         assert "invalid SCC number" in str(e)
+    else:
+        report_missing_exception()
 
+
+s1 = alt.new_state()
+s2 = alt.new_state()
+alt.new_edge(0, s1, buddy.bddtrue)
+alt.new_edge(s1, s2, buddy.bddtrue, [0])
+alt.new_edge(s2, s1, buddy.bddtrue)
+alt.prop_inherently_weak(False)
+alt.prop_state_acc(False)
 si = spot.scc_info(alt)
 try:
     si.determine_unknown_acceptance()
 except RuntimeError as e:
     assert "scc_info::determine_unknown_acceptance() does not supp" in str(e)
+else:
+    report_missing_exception()
 
 r = spot.twa_run(aut)
 try:
     a = r.as_twa()
 except RuntimeError as e:
     assert "empty cycle" in str(e)
+else:
+    report_missing_exception()
 
 try:
     a = r.replay(spot.get_cout())
 except RuntimeError as e:
     assert "empty cycle" in str(e)
+else:
+    report_missing_exception()
 
 try:
     a = r.reduce()
 except RuntimeError as e:
     assert "empty cycle" in str(e)
+else:
+    report_missing_exception()
 
 f = spot.formula('GF(a | Gb)')
 try:
     spot.gf_guarantee_to_ba(f, spot._bdd_dict)
 except RuntimeError as e:
     assert "guarantee" in str(e)
+else:
+    report_missing_exception()
 
 f = spot.formula('FG(a | Fb)')
 try:
     spot.fg_safety_to_dca(f, spot._bdd_dict)
 except RuntimeError as e:
     assert "safety" in str(e)
+else:
+    report_missing_exception()
