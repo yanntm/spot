@@ -158,7 +158,9 @@ namespace spot
                     assert(si_.is_accepting_scc(n));
 
                     // Catch unsupported types of automata
-                    assert(!ensure_weak_scc(n));
+                    bool rejecting = ensure_weak_scc(n);
+                    assert(!rejecting);
+                    (void) rejecting;
                     // Detect if it is a "true state"
                     unsigned s = si_.states_of(n).front();
                     auto& ss = g.state_storage(s);
