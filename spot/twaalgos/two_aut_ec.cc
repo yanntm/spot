@@ -573,7 +573,7 @@ namespace spot
               p_iterator src_out(left, src_state.get_left(),
                                  right, src_state.get_right());
 
-              do
+              while (!(src_out.done()))
                 {
                   p_state dst_state(src_out.left.dst(), src_out.right.dst());
 
@@ -584,6 +584,7 @@ namespace spot
                       || filter(dst_state))
                     {
                       dst_state.destroy();
+                      src_out.next();
                       continue;
                     }
 
@@ -621,9 +622,6 @@ namespace spot
                       for (auto& j : bfs_queue)
                         j.destroy();
 
-                      for (auto& j : backlinks)
-                        j.second.src.destroy();
-
                       return dst_state;
                     }
 
@@ -631,11 +629,11 @@ namespace spot
                     bfs_queue.push_back(dst_state);
                   else
                     dst_state.destroy();
+
+                  src_out.next();
                 }
-              while (src_out.next());
 
               src_out.release();
-              src_state.destroy();
               bfs_queue.pop_front();
             }
 
@@ -687,18 +685,19 @@ namespace spot
 
 
       // Return to cycle start
-      product_bfs_steps(substart,
-                        [&](p_step&, p_state& dest)
-                        {
-                          return states.at(dest) == order;
-                        },
-                        [&](p_state& dest)
-                        {
-                          // Stay in accepting SCC
-                          return states.at(dest) < order;
-                        },
-                        ar_l ? &(ar_l->cycle) : nullptr,
-                        ar_r ? &(ar_r->cycle) : nullptr);
+      if (states.at(substart) != order)
+        product_bfs_steps(substart,
+                          [&](p_step&, p_state& dest)
+                          {
+                            return states.at(dest) == order;
+                          },
+                          [&](p_state& dest)
+                          {
+                            // Stay in accepting SCC
+                            return states.at(dest) < order;
+                          },
+                          ar_l ? &(ar_l->cycle) : nullptr,
+                          ar_r ? &(ar_r->cycle) : nullptr);
 
       substart.destroy();
     }
