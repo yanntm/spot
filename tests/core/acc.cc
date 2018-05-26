@@ -218,6 +218,14 @@ int main()
     {
       assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
     }
+  try
+    {
+      spot::acc_cond::mark_t m{spot::acc_cond::mark_t::max_accsets()};
+    }
+  catch (const std::runtime_error& e)
+    {
+      assert(!std::strcmp(e.what(), "bit index is out of bounds"));
+    }
 #endif
 
   return 0;

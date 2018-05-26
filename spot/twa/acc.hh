@@ -68,15 +68,16 @@ namespace spot
     public:
       mark_t() = default;
 
+#ifndef SWIG
       template<class iterator>
-      mark_t(const iterator& begin, const iterator& end) noexcept
+      mark_t(const iterator& begin, const iterator& end)
         : mark_t(_value_t::zero())
       {
         for (iterator i = begin; i != end; ++i)
           set(*i);
       }
 
-      mark_t(std::initializer_list<unsigned> vals) noexcept
+      mark_t(std::initializer_list<unsigned> vals)
         : mark_t(vals.begin(), vals.end())
       {
       }
@@ -93,6 +94,7 @@ namespace spot
             i >>= 1;
           }
       }
+#endif
 
       /// \brief The maximum number of acceptance sets supported by
       /// this implementation.

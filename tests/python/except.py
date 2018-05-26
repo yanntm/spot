@@ -137,5 +137,18 @@ try:
 except RuntimeError as e:
     assert "Too many acceptance sets" in str(e)
 else:
-    print(n, m)
+    report_missing_exception()
+
+try:
+    m.set(n)
+except RuntimeError as e:
+    assert "bit index is out of bounds" in str(e)
+else:
+    report_missing_exception()
+
+try:
+    m = spot.mark_t([0,n,1])
+except RuntimeError as e:
+    assert "bit index is out of bounds" in str(e)
+else:
     report_missing_exception()

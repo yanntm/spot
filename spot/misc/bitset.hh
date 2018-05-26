@@ -29,11 +29,12 @@ namespace spot
   namespace internal
   {
     [[noreturn]] SPOT_API void report_bit_shift_too_big();
+    [[noreturn]] SPOT_API void report_bit_out_of_bounds();
   }
 #endif
 
   template<size_t N>
-  class bitset
+  class SPOT_API bitset
   {
     using word_t = unsigned;
     // the number of bits must hold on an unsigned
@@ -126,13 +127,23 @@ namespace spot
 
     void set(unsigned s)
     {
-      SPOT_ASSERT(s < 8*N*sizeof(word_t));
+#if SPOT_DEBUG || defined(SWIGPYTHON)
+      if (SPOT_UNLIKELY(s >= 8 * N * sizeof(word_t)))
+        internal::report_bit_out_of_bounds();
+#else
+      SPOT_ASSUME(s < 8 * N * sizeof(word_t));
+#endif
       data[s / (8*sizeof(word_t))] |= 1U << (s % (8*sizeof(word_t)));
     }
 
     void clear(unsigned s)
     {
-      SPOT_ASSERT(s < 8*N*sizeof(word_t));
+#if SPOT_DEBUG || defined(SWIGPYTHON)
+      if (SPOT_UNLIKELY(s >= 8 * N * sizeof(word_t)))
+        internal::report_bit_out_of_bounds();
+#else
+      SPOT_ASSUME(s < 8 * N * sizeof(word_t));
+#endif
       data[s / (8*sizeof(word_t))] &= ~(1U << (s % (8*sizeof(word_t))));
     }
 

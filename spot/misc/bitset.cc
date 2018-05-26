@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include <spot/misc/bitset.hh>
+#include <stdexcept>
 
 namespace spot
 {
@@ -27,6 +28,11 @@ namespace spot
     void report_bit_shift_too_big()
     {
       throw std::runtime_error("bit shift by more bits than supported");
+    }
+
+    void report_bit_out_of_bounds()
+    {
+      throw std::runtime_error("bit index is out of bounds");
     }
   }
 }
