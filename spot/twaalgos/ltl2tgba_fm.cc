@@ -1815,7 +1815,7 @@ namespace spot
         bdd_to_formula_map::iterator i = b2f_.find(b);
         // Since we have just translated the formula, it is
         // necessarily in b2f_.
-        assert(i != b2f_.end());
+        SPOT_ASSUME(i != b2f_.end());
 
         if (i->second != f)
           // The translated bdd maps to an already seen formula.
