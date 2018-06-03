@@ -43,19 +43,14 @@ namespace spot
     namespace
     {
       static formula
-      ms_example(const char* a, const char* b, int n)
+      ms_example(const char* a, const char* b, int n, int m)
       {
         formula ax = formula::tt();
         formula fb = formula::tt();
         for (int i = n; i > 0; --i)
-          {
-            std::ostringstream ans;
-            ans << a << i;
-            ax = And_(formula::ap(ans.str()), X_(ax));
-            ans.str("");
-            ans << b << i;
-            fb = F_(And_(formula::ap(ans.str()), fb));
-          }
+          ax = And_(formula::ap(a + std::to_string(i)), X_(ax));
+        for (int i = m; i > 0; --i)
+          fb = F_(And_(formula::ap(b + std::to_string(i)), fb));
         return And_(G_(F_(ax)), fb);
       }
 
@@ -1255,7 +1250,7 @@ namespace spot
         case LTL_OR_GF:
           return GF_n("p", n, false);
         case LTL_MS_EXAMPLE:
-          return ms_example("a", "b", n);
+          return ms_example("a", "b", n, m);
         case LTL_MS_PHI_H:
           return ms_phi_h("a", "b", n);
         case LTL_MS_PHI_R:
@@ -1458,7 +1453,9 @@ namespace spot
         case LTL_KR_N:
         case LTL_KR_NLOGN:
         case LTL_KV_PSI:
+          return 1;
         case LTL_MS_EXAMPLE:
+          return 2;
         case LTL_MS_PHI_H:
         case LTL_MS_PHI_R:
         case LTL_MS_PHI_S:
