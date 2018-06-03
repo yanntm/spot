@@ -53,7 +53,7 @@ State: 6 "t"
 --END--
 EOF
 
-autfilt --dot=bans alt.hoa >alt.dot
+autfilt --has-univ-branch --has-exist-branch --dot=bans alt.hoa >alt.dot
 
 cat >expect.dot <<EOF
 digraph "" {
@@ -266,6 +266,8 @@ State: 2
 [t] 2
 --END--
 EOF
+
+autfilt --has-exist-branch ex3 && exit 1
 
 autfilt -q --equivalent-to=ex1 ex2
 autfilt -q --included-in=ex1 ex2
@@ -654,7 +656,7 @@ State: 4 "t"
 --END--
 EOF
 
-run 0 autfilt --dot='sbarf(Lato)' ex8 > ex8.dot
+run 0 autfilt --has-exist-branch --dot='sbarf(Lato)' ex8 > ex8.dot
 
 cat >expect8.dot<<EOF
 digraph "SLAA for c R (c | G(a & b) | (F!b & F!a))" {
@@ -734,7 +736,7 @@ State: 2
 --END--
 EOF
 
-run 0 autfilt --dot='baryf(Lato)' ex9 > ex9.dot
+run 0 autfilt -v --has-exist-branch --dot='baryf(Lato)' ex9 > ex9.dot
 
 cat >expect9.dot <<EOF
 digraph "" {

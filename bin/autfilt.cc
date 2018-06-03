@@ -104,6 +104,8 @@ enum {
   OPT_EXCLUSIVE_AP,
   OPT_GENERALIZED_RABIN,
   OPT_GENERALIZED_STREETT,
+  OPT_HAS_EXIST_BRANCHING,
+  OPT_HAS_UNIV_BRANCHING,
   OPT_HIGHLIGHT_NONDET,
   OPT_HIGHLIGHT_NONDET_EDGES,
   OPT_HIGHLIGHT_NONDET_STATES,
@@ -187,6 +189,11 @@ static const argp_option options[] =
     { "unique", 'u', nullptr, 0,
       "do not output the same automaton twice (same in the sense that they "
       "are isomorphic)", 0 },
+    { "has-exist-branching", OPT_HAS_EXIST_BRANCHING, nullptr, 0,
+      "keep automata that use existential branching (i.e., make "
+      "non-deterministic choices)", 0 },
+    { "has-univ-branching", OPT_HAS_UNIV_BRANCHING, nullptr, 0,
+      "keep alternating automata that use universal branching", 0 },
     { "is-colored", OPT_IS_COLORED, nullptr, 0,
       "keep colored automata (i.e., exactly one acceptance mark per "
       "transition or state)", 0 },
@@ -560,6 +567,8 @@ static struct opt_t
 }* opt;
 
 static bool opt_merge = false;
+static bool opt_has_univ_branching = false;
+static bool opt_has_exist_branching = false;
 static bool opt_is_alternating = false;
 static bool opt_is_colored = false;
 static bool opt_is_complete = false;
@@ -828,6 +837,12 @@ parse_opt(int key, char* arg, struct argp_state*)
       else
         opt_gsa = GSA_UNIQUE_FIN;
       opt_gra = GRA_NO;
+      break;
+    case OPT_HAS_EXIST_BRANCHING:
+      opt_has_exist_branching = true;
+      break;
+    case OPT_HAS_UNIV_BRANCHING:
+      opt_has_univ_branching = true;
       break;
     case OPT_HIGHLIGHT_NONDET:
       {
@@ -1363,6 +1378,10 @@ namespace
         }
       if (opt_nondet_states_set)
         matched &= opt_nondet_states.contains(spot::count_nondet_states(aut));
+      if (opt_has_univ_branching)
+        matched &= !aut->is_existential();
+      if (opt_has_exist_branching)
+        matched &= !is_universal(aut);
       if (opt_is_deterministic)
         {
           matched &= is_deterministic(aut);

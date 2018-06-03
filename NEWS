@@ -12,6 +12,10 @@ New in spot 2.5.3.dev  (not yet released)
   - autfilt learned --is-colored to filter automata that use
     exactly one acceptance set per mark or transition.
 
+  - autfilt learned --has-univ-branching and --has-exist-branching
+    to keep automata that have universal branching, or that make
+    non-deterministic choices.
+
   - ltlcross, ltldo, and autcross learned shorthands to call
     delag, ltl2dra, ltl2dgra, and nba2dpa.
 
