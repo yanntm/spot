@@ -29,7 +29,8 @@ s/[=[].*/=1/p
 res=`genltl $opts --format="--%F=%L"`
 test "$opts" = "$res"
 
-run 0 genltl --dac=1..5 --eh=1..5 --pos --neg --format="%F:%L %f" >output
+run 0 genltl --dac=1..5 --eh=1..5 --sejk-p --pos --neg \
+             --format="%F:%L %f" >output
 cat >expected <<EOF
 dac-patterns:1 G!p0
 !dac-patterns:1 !G!p0
@@ -51,6 +52,12 @@ eh-patterns:4 F(p0 & XGp1)
 !eh-patterns:4 !F(p0 & XGp1)
 eh-patterns:5 F(p0 & X(p1 & XFp2))
 !eh-patterns:5 !F(p0 & X(p1 & XFp2))
+sejk-patterns:1 GF(Fp0 | Gp1 | FG(p0 | Xp1))
+!sejk-patterns:1 !GF(Fp0 | Gp1 | FG(p0 | Xp1))
+sejk-patterns:2 FG(Gp0 | F!p1 | GF(p0 & Xp1))
+!sejk-patterns:2 !FG(Gp0 | F!p1 | GF(p0 & Xp1))
+sejk-patterns:3 GF(Fp0 | GXp1 | FG(p0 | XXp1))
+!sejk-patterns:3 !GF(Fp0 | GXp1 | FG(p0 | XXp1))
 EOF
 diff expected output
 
@@ -204,3 +211,7 @@ test "`cat err`" = "genltl: no pattern p-patterns=0, supported range is 1..20"
 genltl --sb-patterns=0 2> err && exit 1
 test $? = 2
 test "`cat err`" = "genltl: no pattern sb-patterns=0, supported range is 1..27"
+
+genltl --sejk-patterns=0 2> err && exit 1
+test $? = 2
+test "`cat err`" = "genltl: no pattern sejk-patterns=0, supported range is 1..3"

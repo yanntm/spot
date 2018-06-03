@@ -22,6 +22,12 @@ New in spot 2.5.3.dev  (not yet released)
     product to avoid exceeding the number of supported
     acceptance sets.
 
+  - genltl learned to generate three new families of formulas:
+      --sejk-j=RANGE         (GFa1&...&GFan) -> (GFb1&...&GFbn)
+      --sejk-k=RANGE         (GFa1|FGb1)&...&(GFan|FGbn)
+      --sejk-patterns[=RANGE]   φ₁,φ₂,φ₃ from Sikert et al's [CAV'16]
+                             paper (range should be included in 1..3)
+
   Library:
 
   - spot::twa_graph::merge_states() is a new method that merges states

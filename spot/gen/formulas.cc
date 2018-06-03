@@ -1139,6 +1139,41 @@ namespace spot
 
         return res;
       }
+
+      static formula
+      sejk_j(std::string a, std::string b, int n)
+      {
+        return formula::Implies(GF_n(a, n), GF_n(b, n));
+      }
+
+      static formula
+      sejk_k(std::string a, std::string b, int n)
+      {
+        formula result = formula::tt();
+        for (int i = 1; i <= n; ++i)
+          {
+            formula ai = formula::ap(a + std::to_string(i));
+            formula bi = formula::ap(b + std::to_string(i));
+            result = formula::And({result,
+                                   formula::Or({G_(F_(ai)), F_(G_(bi))})});
+          }
+        return result;
+      }
+
+      static formula
+      sejk_pattern(int n)
+      {
+        static const char* formulas[] = {
+          "GF(Fa | Gb | FG(a | Xb))",
+          "FG(Ga | F!b | GF(a & Xb))",
+          "GF(Fa | GXb | FG(a | XXb))",
+        };
+
+        constexpr unsigned max = (sizeof formulas)/(sizeof *formulas);
+        if (n < 1 || (unsigned) n > max)
+          bad_number("sejk-patterns", n, max);
+        return spot::relabel(parse_formula(formulas[n - 1]), Pnn);
+      }
     }
 
     formula ltl_pattern(ltl_pattern_id pattern, int n)
@@ -1222,6 +1257,12 @@ namespace spot
           return ltl_counter("b", "m", n, true);
         case LTL_SB_PATTERNS:
           return sb_pattern(n);
+        case LTL_SEJK_J:
+          return sejk_j("a", "b", n);
+        case LTL_SEJK_K:
+          return sejk_k("a", "b", n);
+        case LTL_SEJK_PATTERNS:
+          return sejk_pattern(n);
         case LTL_TV_F1:
           return tv_f1("p", "q", n);
         case LTL_TV_F2:
@@ -1281,6 +1322,9 @@ namespace spot
           "rv-counter-carry-linear",
           "rv-counter-linear",
           "sb-patterns",
+          "sejk-j",
+          "sejk-k",
+          "sejk-patterns",
           "tv-f1",
           "tv-f2",
           "tv-g1",
@@ -1346,6 +1390,11 @@ namespace spot
           return 0;
         case LTL_SB_PATTERNS:
           return 27;
+        case LTL_SEJK_J:
+        case LTL_SEJK_K:
+          return 0;
+        case LTL_SEJK_PATTERNS:
+          return 3;
         case LTL_TV_F1:
         case LTL_TV_F2:
         case LTL_TV_G1:
@@ -1358,8 +1407,6 @@ namespace spot
           break;
         }
       throw std::runtime_error("unsupported pattern");
-
     }
-
   }
 }

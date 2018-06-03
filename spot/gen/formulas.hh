@@ -174,6 +174,35 @@
 //   pages     = {180--194},
 //   doi       = {10.4204/EPTCS.256.13}
 // }
+//
+// @InProceedings{sickert.16.cav,
+//   author = {Salomon Sickert and Javier Esparza and Stefaan Jaax
+//             and Jan K{\v{r}}et{\'i}nsk{\'y}},
+//   title = {Limit-Deterministic {B\"u}chi Automata for Linear Temporal Logic}
+//   booktitle = {Proceedings of the 28th International Conference on
+//                Computer Aided Verification (CAV'16)},
+//   year = 2016,
+//   publisher = {Springer-Verlag}
+//   series = {Lecture Notes in Computer Science},
+//   volume    = {9780},
+//   pages     = {312--332},
+//   doi       = {10.1007/978-3-319-41540-6_17}
+// }
+//
+// @InProceedings{kretisnky.12.cav,
+//   author       = {Jan K{\v{r}}et{\'i}nsk{\'y} and Javier Esparza},
+//   title        = {Deterministic Automata for the {(F,G)}-Fragment of
+//                   {LTL}},
+//   booktitle    = {24th International Conference on Computer Aided
+//                   Verification (CAV'12)},
+//   year         = 2012,
+//   pages        = {7--22},
+//   doi          = {10.1007/978-3-642-31424-7_7},
+//   url          = {https://doi.org/10.1007/978-3-642-31424-7_7},
+//   isbn         = {978-3-642-31424-7},
+//   publisher    = {Springer},
+// }
+
 
 namespace spot
 {
@@ -215,6 +244,9 @@ namespace spot
       LTL_RV_COUNTER_CARRY_LINEAR,
       LTL_RV_COUNTER_LINEAR,
       LTL_SB_PATTERNS,
+      LTL_SEJK_J,
+      LTL_SEJK_K,
+      LTL_SEJK_PATTERNS,
       LTL_TV_F1,
       LTL_TV_F2,
       LTL_TV_G1,

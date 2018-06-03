@@ -141,6 +141,13 @@ static const argp_option options[] =
     { "sb-patterns", gen::LTL_SB_PATTERNS, "RANGE", OPTION_ARG_OPTIONAL,
       "Somenzi and Bloem [CAV'00] patterns "
       "(range should be included in 1..27)", 0 },
+    { "sejk-j", gen::LTL_SEJK_J, "RANGE", 0,
+      "(GFa1&...&GFan) -> (GFb1&...&GFbn)", 0 },
+    { "sejk-k", gen::LTL_SEJK_K, "RANGE", 0,
+      "(GFa1|FGb1)&...&(GFan|FGbn)", 0 },
+    { "sejk-patterns", gen::LTL_SEJK_PATTERNS, "RANGE", OPTION_ARG_OPTIONAL,
+      "φ₁,φ₂,φ₃ from Sikert et al's [CAV'16] paper "
+      "(range should be included in 1..3)", 0 },
     { "tv-f1", gen::LTL_TV_F1, "RANGE", 0,
       "G(p -> (q | Xq | ... | XX...Xq)", 0 },
     { "tv-f2", gen::LTL_TV_F2, "RANGE", 0,
