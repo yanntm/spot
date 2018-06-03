@@ -23,10 +23,10 @@ New in spot 2.5.3.dev  (not yet released)
     of a chain of many products, as in
     "autfilt -B --product 1.hoa ... --product n.hoa in.hoa"
     then it will automatically degeneralize the intermediate
-    product to avoid exceeding the number of supported
+    products to avoid exceeding the number of supported
     acceptance sets.
 
-  - genltl learned to generate four new families of formulas:
+  - genltl learned to generate four new families of LTL formulas:
       --sejk-f=RANGE[,RANGE] f(0,j)=(GFa0 U X^j(b)), f(i,j)=(GFai U
                              G(f(i-1,j)))
       --sejk-j=RANGE         (GFa1&...&GFan) -> (GFb1&...&GFbn)
@@ -37,45 +37,49 @@ New in spot 2.5.3.dev  (not yet released)
   - genltl --ms-example can now take a two-range argument,
     (as --sejk-f above).
 
+  Build:
+
+  - ./configure --enable-max-accsets=N let you specify a maximum
+    number of acceptance sets that Spot should support.  The default
+    is still 32, but this limit is no longer hardcoded.  Larger values
+    will cost additional memory and time.
+
   Library:
+
+  - print_dot(), used print automata in GraphViz's format, underwent
+    several changes:
+
+    * option "a", for printing the acceptance condition, is now
+      enabled by default.  Option "A", introduced in Spot 2.4, can be
+      used to hide the acceptance condition in case you do not want
+      it.  This change of course affects the --dot option of all the
+      command-line tools, as well as the various way to display
+      automata using the Python bindings.
+
+    * when option "1" is used to hide state names and force the
+      display of state numbers, the actual state names is now moved to
+      the "tooltip" field of the state.  The SVG files produced by
+      "dot -Tsvg" will show those as popups.  This is also done for
+      state labels of Kripke structures.
+
+    * the output digraph is now named using the name of the automaton
+      if available, or the empty string otherwise.  (Previous versions
+      used to call all digraphs "G".)  This name appears as a tooltip
+      in SVG figures when the mouse is over the acceptance condition.
+
+    * a new option "u" hides "true states" behind "exiting
+      transitions".  This can be used to display alternating automata
+      in a way many people expect.
+
+    * a new option "K" cancels the effect of "k" (which uses state
+      labels whenever possible).  This is most useful when one want to
+      force transition-labeling of a Kripke structure, where "k" is
+      usually the default.
 
   - spot::twa_graph::merge_states() is a new method that merges states
     with the exact same outgoing edges. As it performs no reordering of
     the edges, it is better to call it when you know that the edges in
     the twa_graph are sorted (e.g. after a call to merge_edges()).
-
-  - You can now specify to Spot the number of acceptance marks you
-    wish to use. This is a compile-time option, accessible through
-    option --enable-max-accsets of the configure script. The default
-    is still 32, but this limit is no longer hardcoded.
-
-  - Option "a" of print_dot(), for printing the acceptance condition,
-    is now enabled by default.  Option "A", introduced in Spot 2.4,
-    can be used to hide the acceptance condition in case you do not
-    want it.  This change of course affects the --dot option of all
-    the command-line tools, as well as the various way to display
-    automata using the Python bindings.
-
-  - When option "1" is passed to print_dot() to hide state names
-    and force the display of state numbers, the actual state names
-    is now moved to the "tooltip" field of the state.  The SVG
-    files produced by "dot -Tsvg" will show those as popups.
-    This is also done for state labels of kripke structures.
-
-  - print_dot() will now name the output digraph using the name of the
-    automaton if available, or the empty string otherwise.  (Previous
-    versions used to call all digraphs "G".)  This name appears as a
-    tooltip in SVG figures when the mouse is over the acceptance
-    condition.
-
-  - print_dot() has a new option "u" to hide "true states" behind
-    "exiting transitions".  This can be used to display alternating
-    automata in a way many people expect.
-
-  - print_dot() has a new option "K" to cancel the effect of "k"
-    (which uses state labels whenever possible).  This is most useful
-    when one want to force transition-labeling of a Kripke structure,
-    where "k" is usually the default.
 
   - cleanup_parity() and cleanup_parity_here() are smarter and now
     remove from the acceptance condition the parity colors that are
@@ -116,14 +120,10 @@ New in spot 2.5.3.dev  (not yet released)
     They are most welcome in Python, since we used to redefine
     them every now and them.
 
-  - spot::product() and spot::product_or() learned so produce an
+  - spot::product() and spot::product_or() learned to produce an
     automaton with a simpler acceptance condition if one of the
     argument is a weak automaton.  In this case the resulting
     acceptance condition is (usually) that of the other argument.
-
-  - spot::parity_product() and spot::parity_product_or() were dropped.
-    The code was buggy, hard to maintain, and these functions do not
-    seem to be used.
 
   - spot::remove_alternation() was slightly improved on very-weak
     alternating automata: the labeling of the outgoing transitions in
@@ -150,6 +150,41 @@ New in spot 2.5.3.dev  (not yet released)
     before AP:.
 
   - the option --allow-dups of randltl now works properly
+
+  Deprecation notice:
+
+  - The type spot::acc_cond::mark_t has been overhauled and uses
+    a custom bit-vector to represent acceptance sets instead of
+    storing everything in a "unsigned int".  This change is
+    to accomodate configure's --enable-max-accsets=N option and
+    has several effect:
+
+    * The following shortcuts are deprecated:
+        acc_cond::mark_t m1 = 0U;
+        acc_cond::mark_t m2 = -1U;
+      instead, use:
+        acc_cond::mark_t m1 = {};
+        acc_cond::mark_t m2 = acc_cond::mark_t::all();
+
+    * acc_cond::mark_t::value_t is deprecated.  It is now only
+      defined when --enable-max-accsets=32 (the default) and
+      equal to "unsigned" for backward compatibility reasons.
+
+  Backward incompatibilities:
+
+  - Functions spot::parity_product() and spot::parity_product_or()
+    were removed.  The code was unused, hard to maintain, and bogus.
+
+  - The output of print_dot() now include the acceptance condition.
+    Add option "A" (supported since version 2.4) to cancel that.
+
+  - Because genltl now supports LTL pattern with two argumens, using
+    --format=%L may output two comma-separated integer.  This is an
+    issue if you used to produce CSV files using for instance:
+      genltl --format='%F,%L,%f' ...
+    Make sure to quote %L to protect the potential commas:
+      genltl --format='%F,"%L",%f' ...
+
 
 New in spot 2.5.3 (2018-04-20)
 
