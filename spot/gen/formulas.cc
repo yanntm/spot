@@ -1141,6 +1141,20 @@ namespace spot
       }
 
       static formula
+      sejk_f(std::string a, std::string b, int n, int m)
+      {
+        formula left = G_(F_(formula::ap(a + std::to_string(0))));
+        formula right = X_n(formula::ap(b), m);
+        formula f0 = U_(left, right);
+        for (int i = 1; i <= n; ++i)
+          {
+            formula left = G_(F_(formula::ap(a + std::to_string(i))));
+            f0 = U_(left, G_(f0));
+          }
+        return f0;
+      }
+
+      static formula
       sejk_j(std::string a, std::string b, int n)
       {
         return formula::Implies(GF_n(a, n), GF_n(b, n));
@@ -1176,13 +1190,20 @@ namespace spot
       }
     }
 
-    formula ltl_pattern(ltl_pattern_id pattern, int n)
+    formula ltl_pattern(ltl_pattern_id pattern, int n, int m)
     {
       if (n < 0)
         {
           std::ostringstream err;
           err << "pattern argument for " << ltl_pattern_name(pattern)
               << " should be positive";
+          throw std::runtime_error(err.str());
+        }
+      if ((m >= 0) ^ (ltl_pattern_argc(pattern) == 2))
+        {
+          std::ostringstream err;
+          err << "unexpected number of arguments for "
+              << ltl_pattern_name(pattern);
           throw std::runtime_error(err.str());
         }
 
@@ -1257,6 +1278,8 @@ namespace spot
           return ltl_counter("b", "m", n, true);
         case LTL_SB_PATTERNS:
           return sb_pattern(n);
+        case LTL_SEJK_F:
+          return sejk_f("a", "b", n, m);
         case LTL_SEJK_J:
           return sejk_j("a", "b", n);
         case LTL_SEJK_K:
@@ -1322,6 +1345,7 @@ namespace spot
           "rv-counter-carry-linear",
           "rv-counter-linear",
           "sb-patterns",
+          "sejk-f",
           "sejk-j",
           "sejk-k",
           "sejk-patterns",
@@ -1390,6 +1414,7 @@ namespace spot
           return 0;
         case LTL_SB_PATTERNS:
           return 27;
+        case LTL_SEJK_F:
         case LTL_SEJK_J:
         case LTL_SEJK_K:
           return 0;
@@ -1403,6 +1428,65 @@ namespace spot
         case LTL_U_LEFT:
         case LTL_U_RIGHT:
           return 0;
+        case LTL_END:
+          break;
+        }
+      throw std::runtime_error("unsupported pattern");
+    }
+
+    int ltl_pattern_argc(ltl_pattern_id pattern)
+    {
+      switch (pattern)
+        {
+          // Keep this alphabetically-ordered!
+        case LTL_AND_F:
+        case LTL_AND_FG:
+        case LTL_AND_GF:
+        case LTL_CCJ_ALPHA:
+        case LTL_CCJ_BETA:
+        case LTL_CCJ_BETA_PRIME:
+        case LTL_DAC_PATTERNS:
+        case LTL_EH_PATTERNS:
+        case LTL_FXG_OR:
+        case LTL_GF_EQUIV:
+        case LTL_GF_IMPLIES:
+        case LTL_GH_Q:
+        case LTL_GH_R:
+        case LTL_GO_THETA:
+        case LTL_GXF_AND:
+        case LTL_HKRSS_PATTERNS:
+        case LTL_KR_N:
+        case LTL_KR_NLOGN:
+        case LTL_KV_PSI:
+        case LTL_MS_EXAMPLE:
+        case LTL_MS_PHI_H:
+        case LTL_MS_PHI_R:
+        case LTL_MS_PHI_S:
+        case LTL_OR_FG:
+        case LTL_OR_G:
+        case LTL_OR_GF:
+        case LTL_P_PATTERNS:
+        case LTL_R_LEFT:
+        case LTL_R_RIGHT:
+        case LTL_RV_COUNTER_CARRY:
+        case LTL_RV_COUNTER_CARRY_LINEAR:
+        case LTL_RV_COUNTER:
+        case LTL_RV_COUNTER_LINEAR:
+        case LTL_SB_PATTERNS:
+          return 1;
+        case LTL_SEJK_F:
+          return 2;
+        case LTL_SEJK_J:
+        case LTL_SEJK_K:
+        case LTL_SEJK_PATTERNS:
+        case LTL_TV_F1:
+        case LTL_TV_F2:
+        case LTL_TV_G1:
+        case LTL_TV_G2:
+        case LTL_TV_UU:
+        case LTL_U_LEFT:
+        case LTL_U_RIGHT:
+          return 1;
         case LTL_END:
           break;
         }

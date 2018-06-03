@@ -244,6 +244,7 @@ namespace spot
       LTL_RV_COUNTER_CARRY_LINEAR,
       LTL_RV_COUNTER_LINEAR,
       LTL_SB_PATTERNS,
+      LTL_SEJK_F,
       LTL_SEJK_J,
       LTL_SEJK_K,
       LTL_SEJK_PATTERNS,
@@ -262,7 +263,7 @@ namespace spot
     /// The pattern is specified using one value from the ltl_pattern_id
     /// enum.  See the man page of the `genltl` binary for a
     /// description of those patterns, and bibliographic references.
-    SPOT_API formula ltl_pattern(ltl_pattern_id pattern, int n);
+    SPOT_API formula ltl_pattern(ltl_pattern_id pattern, int n, int m = -1);
 
     /// \brief convert an ltl_pattern_id value into a name
     ///
@@ -275,5 +276,10 @@ namespace spot
     /// If an LTL pattern has an upper bound, this returns it.
     /// Otherwise, this returns 0.
     SPOT_API int ltl_pattern_max(ltl_pattern_id pattern);
+
+    /// \brief argument count for LTL patterns
+    ///
+    /// Return the number of arguments expected by an LTL pattern.
+    SPOT_API int ltl_pattern_argc(ltl_pattern_id pattern);
   }
 }

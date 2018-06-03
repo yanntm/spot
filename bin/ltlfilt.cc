@@ -781,7 +781,8 @@ namespace
               for (auto& p: m)
                 stream_formula(opt->output_define->ostream()
                                << "#define " << p.first << " (",
-                               p.second, filename, linenum) << ")\n";
+                               p.second, filename,
+                               std::to_string(linenum).c_str()) << ")\n";
             }
           one_match = true;
           output_formula_checked(f, &timer, filename, linenum, prefix, suffix);

@@ -78,20 +78,21 @@ const struct argp output_argp = { options, parse_opt_output,
 static
 void
 report_not_ltl(spot::formula f,
-               const char* filename, int linenum, const char* syn)
+               const char* filename, const char* linenum, const char* syn)
 {
   std::string s = spot::str_psl(f);
   static const char msg[] =
     "formula '%s' cannot be written %s's syntax because it is not LTL";
   if (filename)
-    error_at_line(2, 0, filename, linenum, msg, s.c_str(), syn);
+    error_at_line(2, 0, filename, atoi(linenum), msg, s.c_str(), syn);
   else
     error(2, 0, msg, s.c_str(), syn);
 }
 
 std::ostream&
 stream_formula(std::ostream& out,
-               spot::formula f, const char* filename, int linenum)
+               spot::formula f, const char* filename,
+               const char* linenum)
 {
   switch (output_format)
     {
@@ -132,7 +133,8 @@ stream_formula(std::ostream& out,
 static void
 stream_escapable_formula(std::ostream& os,
                          spot::formula f,
-                         const char* filename, int linenum)
+                         const char* filename,
+                         const char* linenum)
 {
   if (escape_csv)
     {
@@ -155,7 +157,7 @@ namespace
   {
     spot::formula f;
     const char* filename;
-    int line;
+    const char* line;
     const char* prefix;
     const char* suffix;
   };
@@ -283,7 +285,7 @@ namespace
     printable_formula_with_location fl_;
     printable_timer timer_;
     spot::printable_value<const char*> filename_;
-    spot::printable_value<int> line_;
+    spot::printable_value<const char*> line_;
     spot::printable_value<const char*> prefix_;
     spot::printable_value<const char*> suffix_;
     spot::printable_value<int> size_;
@@ -348,9 +350,9 @@ parse_opt_output(int key, char* arg, struct argp_state*)
 
 static void
 output_formula(std::ostream& out,
-               spot::formula f, spot::process_timer* ptimer = nullptr,
-               const char* filename = nullptr, int linenum = 0,
-               const char* prefix = nullptr, const char* suffix = nullptr)
+               spot::formula f, spot::process_timer* ptimer,
+               const char* filename, const char* linenum,
+               const char* prefix, const char* suffix)
 {
   if (!format)
     {
@@ -392,7 +394,7 @@ output_formula(std::ostream& out,
 
 void
 output_formula_checked(spot::formula f, spot::process_timer* ptimer,
-                       const char* filename, int linenum,
+                       const char* filename, const char* linenum,
                        const char* prefix, const char* suffix)
 {
   if (output_format == count_output)
@@ -421,4 +423,15 @@ output_formula_checked(spot::formula f, spot::process_timer* ptimer,
   // Make sure we abort if we can't write to std::cout anymore
   // (like disk full or broken pipe with SIGPIPE ignored).
   check_cout();
+}
+
+void output_formula_checked(spot::formula f,
+                            spot::process_timer* ptimer,
+                            const char* filename, int linenum,
+                            const char* prefix,
+                            const char* suffix)
+{
+  output_formula_checked(f, ptimer, filename,
+                         std::to_string(linenum).c_str(),
+                         prefix, suffix);
 }

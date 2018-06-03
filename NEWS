@@ -22,7 +22,9 @@ New in spot 2.5.3.dev  (not yet released)
     product to avoid exceeding the number of supported
     acceptance sets.
 
-  - genltl learned to generate three new families of formulas:
+  - genltl learned to generate four new families of formulas:
+      --sejk-f=RANGE[,RANGE] f(0,j)=(GFa0 U X^j(b)), f(i,j)=(GFai U
+                             G(f(i-1,j)))
       --sejk-j=RANGE         (GFa1&...&GFan) -> (GFb1&...&GFbn)
       --sejk-k=RANGE         (GFa1|FGb1)&...&(GFan|FGbn)
       --sejk-patterns[=RANGE]   φ₁,φ₂,φ₃ from Sikert et al's [CAV'16]

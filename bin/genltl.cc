@@ -141,6 +141,8 @@ static const argp_option options[] =
     { "sb-patterns", gen::LTL_SB_PATTERNS, "RANGE", OPTION_ARG_OPTIONAL,
       "Somenzi and Bloem [CAV'00] patterns "
       "(range should be included in 1..27)", 0 },
+    { "sejk-f", gen::LTL_SEJK_F, "RANGE[,RANGE]", 0,
+      "f(0,j)=(GFa0 U X^j(b)), f(i,j)=(GFai U G(f(i-1,j)))", 0 },
     { "sejk-j", gen::LTL_SEJK_J, "RANGE", 0,
       "(GFa1&...&GFan) -> (GFb1&...&GFbn)", 0 },
     { "sejk-k", gen::LTL_SEJK_K, "RANGE", 0,
@@ -192,6 +194,7 @@ struct job
 {
   gen::ltl_pattern_id pattern;
   struct range range;
+  struct range range2;
 };
 
 typedef std::vector<job> jobs_t;
@@ -211,9 +214,28 @@ enqueue_job(int pattern, const char* range_str = nullptr)
 {
   job j;
   j.pattern = static_cast<gen::ltl_pattern_id>(pattern);
+  j.range2.min = -1;
+  j.range2.max = -1;
   if (range_str)
     {
-      j.range = parse_range(range_str);
+      if (gen::ltl_pattern_argc(j.pattern) == 2)
+        {
+          const char* comma = strchr(range_str, ',');
+          if (!comma)
+            {
+              j.range2 = j.range = parse_range(range_str);
+            }
+          else
+            {
+              std::string range1(range_str, comma);
+              j.range = parse_range(range1.c_str());
+              j.range2 = parse_range(comma + 1);
+            }
+        }
+      else
+        {
+          j.range = parse_range(range_str);
+        }
     }
   else
     {
@@ -251,24 +273,29 @@ parse_opt(int key, char* arg, struct argp_state*)
 
 
 static void
-output_pattern(gen::ltl_pattern_id pattern, int n)
+output_pattern(gen::ltl_pattern_id pattern, int n, int n2)
 {
-  formula f = gen::ltl_pattern(pattern, n);
+  formula f = gen::ltl_pattern(pattern, n, n2);
 
   // Make sure we use only "p42"-style of atomic propositions
   // in lbt's output.
   if (output_format == lbt_output && !f.has_lbt_atomic_props())
     f = relabel(f, Pnn);
 
+  std::string args = std::to_string(n);
+  if (n2 >= 0)
+    args = args + ',' + std::to_string(n2);
   if (opt_positive || !opt_negative)
     {
-      output_formula_checked(f, nullptr, gen::ltl_pattern_name(pattern), n);
+      output_formula_checked(f, nullptr, gen::ltl_pattern_name(pattern),
+                             args.c_str());
     }
   if (opt_negative)
     {
       std::string tmp = "!";
       tmp += gen::ltl_pattern_name(pattern);
-      output_formula_checked(formula::Not(f), nullptr, tmp.c_str(), n);
+      output_formula_checked(formula::Not(f), nullptr, tmp.c_str(),
+                             args.c_str());
     }
 }
 
@@ -281,7 +308,15 @@ run_jobs()
       int n = j.range.min;
       for (;;)
         {
-          output_pattern(j.pattern, n);
+          int inc2 = (j.range2.max < j.range2.min) ? -1 : 1;
+          int n2 = j.range2.min;
+          for (;;)
+            {
+              output_pattern(j.pattern, n, n2);
+              if (n2 == j.range2.max)
+                break;
+              n2 += inc2;
+            }
           if (n == j.range.max)
             break;
           n += inc;

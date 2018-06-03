@@ -75,10 +75,17 @@ int parse_opt_output(int key, char* arg, struct argp_state* state);
 // Low-level output
 std::ostream&
 stream_formula(std::ostream& out,
-               spot::formula f, const char* filename, int linenum);
+               spot::formula f, const char* filename, const char* linenum);
 
 void output_formula_checked(spot::formula f,
                             spot::process_timer* ptimer = nullptr,
-                            const char* filename = nullptr, int linenum = 0,
+                            const char* filename = nullptr,
+                            const char* linenum = nullptr,
+                            const char* prefix = nullptr,
+                            const char* suffix = nullptr);
+
+void output_formula_checked(spot::formula f,
+                            spot::process_timer* ptimer,
+                            const char* filename, int linenum,
                             const char* prefix = nullptr,
                             const char* suffix = nullptr);

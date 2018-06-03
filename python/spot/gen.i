@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -61,7 +61,11 @@ def ltl_patterns(*args):
   """
   Generate LTL patterns.
 
-  The arguments should be have one of these three forms:
+  Each argument should specify a pattern with a
+  range for its parameter(s).
+
+  For single-parameter patterns, arguments of
+  ltl_patterns() should be have one of these three forms:
     - (id, n)
     - (id, min, max)
     - id
@@ -71,22 +75,54 @@ def ltl_patterns(*args):
   id denotes one of the hard-coded list of LTL formulas (like,
   DAC_PATTERNS, EH_PATTERNS, etc.) where all formulas from that
   list are output.
+
+  For two-parameter patterns, arguments of
+  ltl_patterns() should be have one of these four forms:
+    - (id, n1)
+    - (id, n1, n2)
+    - (id, min1, max1, min2, max2)
+    - id
+  In the first case, n2 is assumed to be equal to n1.  In
+  the third case, all combination of n1 and n2 such that
+  min1<=n1<=max1 and min2<=n2<=max2 are generated.  The
+  last case is a shorthand for (id, 1, 3, 1, 3).
   """
   for spec in args:
+    min2 = -1
+    max2 = -1
     if type(spec) is int:
       pat = spec
       min = 1
-      max = ltl_pattern_max(spec) or 10
-    else:
-      ls = len(spec)
-      if ls == 2:
-        pat, min, max = spec[0], spec[1], spec[1]
-      elif ls == 3:
-        pat, min, max = spec
+      argc = ltl_pattern_argc(spec)
+      if argc == 1:
+        max = ltl_pattern_max(spec) or 10
       else:
-        raise RuntimeError("invalid pattern specification")
+        min2 = 1
+        max = max2 = 3
+    else:
+      argc = ltl_pattern_argc(spec[0])
+      ls = len(spec)
+      if argc == 1:
+        if ls == 2:
+          pat, min, max = spec[0], spec[1], spec[1]
+        elif ls == 3:
+          pat, min, max = spec
+        else:
+          raise RuntimeError("invalid pattern specification " + str(spec))
+      else:
+        if ls == 2:
+          pat, min, max, min2, max2 = \
+            spec[0], spec[1], spec[1], spec[1], spec[1]
+        elif ls == 3:
+          pat, min, max, min2, max2 = \
+            spec[0], spec[1], spec[1], spec[2], spec[2]
+        elif ls == 5:
+          pat, min, max, min2, max2 = spec
+        else:
+          raise RuntimeError("invalid pattern specification " + str(spec))
     for n in range(min, max + 1):
-      yield ltl_pattern(pat, n)
+      for m in range(min2, max2 + 1):
+        yield ltl_pattern(pat, n, m)
 
 
 # Override aut_pattern now(), because %feature("shadow") does not
