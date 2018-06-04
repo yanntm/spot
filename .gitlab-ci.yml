@@ -64,7 +64,7 @@ debian-gcc-snapshot:
   artifacts:
     when: always
     paths:
-      - tests/*/*.log
+      - ./spot-*/_build/sub/tests/*/*.log
       - ./*.log
       - doc/spot.html/
       - doc/userdoc/
