@@ -36,7 +36,7 @@ cat >formulas <<'EOF'
 1,5,a M G(F!b | X!a)
 1,4,G!a R XFb
 1,4,XF(!a | GFb)
-1,6,GF!a U Xa
+1,5,X(GF!a U a)
 1,5,(a | G(a M !b)) W Fc
 1,6,Fa W Xb
 1,9,X(a R ((!b & F!c) M X!a))

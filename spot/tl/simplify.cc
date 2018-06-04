@@ -1682,8 +1682,19 @@ namespace spot
             if (a.is_universal() && bo.is(op::W))
               return recurse(formula::Or({a, b}));
 
+            // (q R Xf) = X(q R f)
+            // (q U Xf) = X(q U f)
+            if (a.is_eventual() && a.is_universal()
+                && bo.is(op::R, op::U) && b.is(op::X))
+              return recurse(formula::X(formula::binop(o, a, b[0])));
+
             // e₁ W e₂ = Ge₁ | e₂
             // u₁ M u₂ = Fu₁ & u₂
+            //
+            // The above formulas are actually true if e₁ and u₁ are
+            // unconstrained, however there are many cases were such a
+            // more generic reduction rule will actually produce more
+            // states once the resulting formula is translated.
             if (!opt_.reduce_size_strictly)
               {
                 if (bo.is(op::W) && a.is_eventual() && b.is_eventual())

@@ -130,6 +130,13 @@ New in spot 2.5.3.dev  (not yet released)
     the resulting TGBA makes it more likely that simulation-based
     reductions will reduce it.
 
+  - The LTL simplification routine learned the following reductions,
+    where f is any formula, and q is a "suspendable" formula (a.k.a.
+    both a pure eventuality and purely universal).
+
+      q R Xf = X(q R f)
+      q U Xf = X(q U f)
+
   Python:
 
   - New spot.jupyter package.  This currently contains a function for

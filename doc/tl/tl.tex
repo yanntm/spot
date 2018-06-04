@@ -1669,22 +1669,22 @@ notation to distinguish the class of subformulas:
 \begin{center}
 \begin{tabular}{rl}
 \toprule
-$f,\,f_i,\,g,\,g_i$ & any PSL formula \\
-$e,\,e_i$           & a pure eventuality \\
-$u,\,u_i$           & a purely universal formula \\
+$f,\,f_i,\,g,\,g_i$ & any PSL formula                                  \\
+$e,\,e_i$           & a pure eventuality                               \\
+$u,\,u_i$           & a purely universal formula                       \\
 $q,\,q_i$           & a pure eventuality that is also purely universal \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \begin{align*}
-  \F e        & \equiv e            & f \U e         & \equiv e                & e \M g        & \equiv e\AND g & u_1 \M u_2 & \equiV (\F u_1) \AND u_2 \\
-  \F(u)\OR q  & \equivEU \F(u\OR q) & f \U (g\OR e)  & \equivEU (f \U g)\OR e  & f\M (g\AND u) & \equivEU (f \M g)\AND u                                \\
-              &                     & f \U (g\AND q) & \equivEU (f \U g)\AND q & (f\AND q)\M g & \equivEU (f \M g)\AND q                                \\
-  \G u        & \equiv u            & u \W g         & \equiv u\OR g           & f \R u        & \equiv u       & e_1 \W e_2 & \equiV (\G e_1) \OR e_2  \\
-  \G(e)\AND q & \equiv \G(e\AND q)  & f \W (g\OR e)  & \equivEU (f \W g)\OR e  & f\R (g\AND u) & \equivEU (f \R g)\AND u                                \\
-  \X q        & \equiv q            & q \AND \X f    & \equivNeu \X(q \AND f)  & q\OR \X f     & \equivNeu \X(q \OR f)                                  \\
-              &                     & \X(q \AND f)   & \equivEU q \AND \X f    & \X(q \OR f)   & \equivEU q\OR \X f                                     \\
+  \F e        & \equiv e             & f \U e         & \equiv e                & e \M g        & \equiv e\AND g          & u_1 \M u_2 & \equiV (\F u_1) \AND u_2 \\
+  \F(u)\OR q  & \equivNeu \F(u\OR q) & f \U (g\OR e)  & \equivEU (f \U g)\OR e  & f\M (g\AND u) & \equivEU (f \M g)\AND u & q \U\X f   & \equiv \X(q \U f)        \\
+              &                      & f \U (g\AND q) & \equivEU (f \U g)\AND q & (f\AND q)\M g & \equivEU (f \M g)\AND q                                         \\
+  \G u        & \equiv u             & u \W g         & \equiv u\OR g           & f \R u        & \equiv u                & e_1 \W e_2 & \equiV (\G e_1) \OR e_2  \\
+  \G(e)\AND q & \equiv \G(e\AND q)   & f \W (g\OR e)  & \equivEU (f \W g)\OR e  & f\R (g\AND u) & \equivEU (f \R g)\AND u & q \R\X f   & \equiv \X(q \R f)        \\
+  \X q        & \equiv q             & q \AND \X f    & \equivNeu \X(q \AND f)  & q\OR \X f     & \equivNeu \X(q \OR f)                                           \\
+              &                      & \X(q \AND f)   & \equivEU q \AND \X f    & \X(q \OR f)   & \equivEU q\OR \X f                                              \\
 \end{align*}
 
 \begin{align*}

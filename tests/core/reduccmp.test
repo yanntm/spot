@@ -192,7 +192,11 @@ GFa <=> GFb, F(G(Fa&Fb)|G(!a&!b))
 FGa | (GFa & GFb), F(Ga | (G(Fa & Fb)))
 
 Gb W a, Gb|a
+a W Fb, a W Fb
 Fb M Fa, Fa & Fb
+a M Gb, a M Gb
+GFa R Xf, X(GFa R f)
+GFa U Xf, X(GFa U f)
 
 a U (b | G(a) | c), a W (b | c)
 a U (G(a)), Ga
