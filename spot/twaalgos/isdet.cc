@@ -138,6 +138,24 @@ namespace spot
     aut->prop_universal(universal);
   }
 
+  void highlight_semidet_sccs(scc_info& si, unsigned color)
+  {
+    auto det_sccs = semidet_sccs(si);
+    if (det_sccs.empty())
+      return;
+    auto aut = si.get_aut();
+    auto* highlight = std::const_pointer_cast<twa_graph>(aut)
+      ->get_or_set_named_prop<std::map<unsigned, unsigned>>("highlight-states");
+    for (unsigned scc = 0; scc < si.scc_count(); scc++)
+      {
+        if (det_sccs[scc])
+          {
+            for (auto& t : si.states_of(scc))
+              (*highlight)[t] = color;
+          }
+      }
+  }
+
   bool
   is_complete(const const_twa_graph_ptr& aut)
   {
@@ -236,6 +254,49 @@ namespace spot
         }
       return semi_det;
     }
+  }
+
+  std::vector<bool> semidet_sccs(scc_info& si)
+  {
+    const_twa_graph_ptr aut = si.get_aut();
+    trival sd = aut->prop_semi_deterministic();
+    if (sd.is_known() && sd.is_false())
+      return std::vector<bool>();
+    si.determine_unknown_acceptance();
+    unsigned nscc = si.scc_count();
+    assert(nscc);
+    std::vector<bool> reachable_from_acc(nscc);
+    std::vector<bool> res(nscc);
+    bool semi_det = true;
+    do // iterator of SCCs in reverse topological order
+      {
+        --nscc;
+        if (si.is_accepting_scc(nscc) || reachable_from_acc[nscc])
+          {
+            for (unsigned succ: si.succ(nscc))
+              reachable_from_acc[succ] = true;
+            for (unsigned src: si.states_of(nscc))
+              {
+                bdd available = bddtrue;
+                for (auto& t: aut->out(src))
+                  if (!bdd_implies(t.cond, available))
+                    {
+                      semi_det = false;
+                      goto done;
+                    }
+                  else
+                    {
+                      available -= t.cond;
+                    }
+              }
+            res[nscc] = true;
+          }
+      }
+    while (nscc);
+  done:
+    if (!semi_det)
+      return std::vector<bool>();
+    return res;
   }
 
   bool

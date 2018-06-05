@@ -43,4 +43,13 @@ namespace spot
   SPOT_DEPRECATED("use spot::dualize() instead")
   SPOT_API twa_graph_ptr
   dtwa_complement(const const_twa_graph_ptr& aut);
+
+  /// \brief Complement a semideterministic TωA
+  ///
+  /// The automaton \a aut should be semideterministic.
+  ///
+  /// Uses the NCSB algorithm described by F. Blahoudek, M. Heizmann,
+  /// S. Schewe, J. Strejček, and MH. Tsai (TACAS'16).
+  SPOT_API twa_graph_ptr
+  complement_semidet(const const_twa_graph_ptr& aut, bool show_names = false);
 }

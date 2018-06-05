@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <spot/twaalgos/sccinfo.hh>
 #include <spot/twa/twagraph.hh>
 
 namespace spot
@@ -77,6 +78,16 @@ namespace spot
   highlight_nondet_edges(twa_graph_ptr& aut, unsigned color);
   /// @}
 
+  /// \brief Highlight the deterministic part of the automaton
+  ///
+  /// In the case of a semideterministic automaton, highlights the
+  /// states reachable from any accepting SCC.
+  ///
+  /// \param aut the automaton to process
+  /// \param color the color to give to states reachable from accepting SCCs.
+  SPOT_API void
+  highlight_semidet_sccs(scc_info& si, unsigned color);
+
   /// \brief Return true iff \a aut is complete.
   ///
   /// An automaton is complete if its translation relation is total,
@@ -90,6 +101,10 @@ namespace spot
   /// reachable from any accepting SCC is deterministic.
   SPOT_API bool
   is_semi_deterministic(const const_twa_graph_ptr& aut);
+
+  /// \brief Whether an SCC is in the deterministic part of an automaton
+  SPOT_API std::vector<bool>
+  semidet_sccs(scc_info& si);
 
   /// \brief Set the deterministic and semi-deterministic properties
   /// appropriately.
