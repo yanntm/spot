@@ -42,7 +42,6 @@
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
-#include <spot/twaalgos/bfssteps.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/remfin.hh>
@@ -150,93 +149,6 @@ namespace spot
       else
         res->set_init_state(res->new_state());
       return res;
-    }
-
-    struct wdba_search_acc_loop final : public bfs_steps
-    {
-      wdba_search_acc_loop(const const_twa_ptr& det_a,
-                           unsigned scc_n, scc_info& sm,
-                           power_map& pm, const state* dest)
-        : bfs_steps(det_a), scc_n(scc_n), sm(sm), pm(pm), dest(dest)
-      {
-        seen(dest);
-      }
-
-      virtual const state*
-      filter(const state* s) override
-      {
-        s = seen(s);
-        if (sm.scc_of(std::static_pointer_cast<const twa_graph>(a_)
-                      ->state_number(s)) != scc_n)
-          return nullptr;
-        return s;
-      }
-
-      virtual bool
-      match(twa_run::step&, const state* to) override
-      {
-        return to == dest;
-      }
-
-      unsigned scc_n;
-      scc_info& sm;
-      power_map& pm;
-      const state* dest;
-      state_unicity_table seen;
-    };
-
-
-    bool
-    wdba_scc_is_accepting(const const_twa_graph_ptr& det_a, unsigned scc_n,
-                          const const_twa_graph_ptr& orig_a, scc_info& sm,
-                          power_map& pm)
-    {
-      // Get some state from the SCC #n.
-      const state* start = det_a->state_from_number(sm.one_state_of(scc_n));
-
-      // Find a loop around START in SCC #n.
-      wdba_search_acc_loop wsal(det_a, scc_n, sm, pm, start);
-      twa_run::steps loop;
-      const state* reached = wsal.search(start, loop);
-      assert(reached == start);
-      (void)reached;
-
-      // Build an automaton representing this loop.
-      auto loop_a = make_twa_graph(det_a->get_dict());
-      twa_run::steps::const_iterator i;
-      int loop_size = loop.size();
-      loop_a->new_states(loop_size);
-      int n;
-      for (n = 1, i = loop.begin(); n < loop_size; ++n, ++i)
-        {
-          loop_a->new_edge(n - 1, n, i->label);
-          i->s->destroy();
-        }
-      assert(i != loop.end());
-      loop_a->new_edge(n - 1, 0, i->label);
-      i->s->destroy();
-      assert(++i == loop.end());
-
-      loop_a->set_init_state(0U);
-
-      // Check if the loop is accepting in the original automaton.
-      bool accepting = false;
-
-      // Iterate on each original state corresponding to start.
-      const power_map::power_state& ps =
-        pm.states_of(det_a->state_number(start));
-      for (auto& s: ps)
-        {
-          // Construct a product between LOOP_A and ORIG_A starting in
-          // S.  FIXME: This could be sped up a lot!
-          if (!product(loop_a, orig_a, 0U, s)->is_empty())
-            {
-              accepting = true;
-              break;
-            }
-        }
-
-      return accepting;
     }
 
     static twa_graph_ptr minimize_dfa(const const_twa_graph_ptr& det_a,
@@ -492,10 +404,38 @@ namespace spot
       // (i.e., it is not the start of any accepting word).
 
       scc_info sm(det_a);
-      if (input_is_det)
-        sm.determine_unknown_acceptance();
-
       unsigned scc_count = sm.scc_count();
+
+      // SCCs of det_a are assumed accepting if any of their loop
+      // corresponds to an accepted word in the original automaton.
+      // If the automaton is the same as det_a, we can simply ask that
+      // to sm.
+      std::vector<char> is_accepting_scc(scc_count, 0);
+      if (input_is_det)
+        {
+          sm.determine_unknown_acceptance();
+          for (unsigned m = 0; m < scc_count; ++m)
+            is_accepting_scc[m] = sm.is_accepting_scc(m);
+        }
+      else
+        {
+          twa_graph_ptr prod = spot::product(a, det_a);
+          //print_dot(std::cerr, prod, "s");
+          const product_states* pmap =
+            prod->get_named_prop<product_states>("product-states");
+          assert(pmap);
+          scc_info sip(prod, scc_info_options::TRACK_STATES_IF_FIN_USED);
+          sip.determine_unknown_acceptance();
+          unsigned prod_scc_count = sip.scc_count();
+          for (unsigned m = 0; m < prod_scc_count; ++m)
+            if (sip.is_accepting_scc(m))
+              {
+                unsigned right_state = (*pmap)[sip.one_state_of(m)].second;
+                is_accepting_scc[sm.scc_of(right_state)] = true;
+              }
+        }
+
+
       // SCC that have been marked as useless.
       std::vector<bool> useless(scc_count);
       // The "color".  Even number correspond to
@@ -534,14 +474,7 @@ namespace spot
             }
           else
             {
-              // Regular SCCs are accepting if any of their loop
-              // corresponds to an accepted word in the original
-              // automaton.  If the automaton is the same as det_a, we
-              // can simply ask that to sm.
-              bool acc_scc = input_is_det
-                ? sm.is_accepting_scc(m)
-                : wdba_scc_is_accepting(det_a, m, a, sm, pm);
-              if (acc_scc)
+              if (is_accepting_scc[m])
                 {
                   is_useless = false;
                   d[m] = l & ~1; // largest even number inferior or equal
@@ -608,10 +541,6 @@ namespace spot
     // FIXME: we do not need to minimize the wdba to test realizability.
     auto min_aut = minimize_wdba(aut);
 
-    if (!is_deterministic(aut)
-        && !product(aut, remove_fin(dualize(min_aut)))->is_empty())
-      return false;
-
     twa_graph_ptr aut_neg;
     if (is_deterministic(aut))
       {
@@ -667,17 +596,6 @@ namespace spot
     // correct.
     if (is_terminal_automaton(aut_f))
       return min_aut_f;
-
-    // If the input was deterministic, then by construction
-    // min_aut_f accepts at least all the words of aut_f, so we do
-    // not need the reverse check.  Otherwise, complement the
-    // minimized WDBA to test the reverse inclusion.
-    // (remove_fin() has a special handling of weak automata, and
-    // dualize also has a special handling of deterministic
-    // automata, so all these steps are quite efficient.)
-    if (!is_deterministic(aut_f)
-        && !product(aut_f, remove_fin(dualize(min_aut_f)))->is_empty())
-      return std::const_pointer_cast<twa_graph>(aut_f);
 
     // Build negation automaton if not supplied.
     if (!aut_neg_f)

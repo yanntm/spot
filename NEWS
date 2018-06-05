@@ -130,6 +130,12 @@ New in spot 2.5.3.dev  (not yet released)
     the resulting TGBA makes it more likely that simulation-based
     reductions will reduce it.
 
+  - When applied to automata that are not WDBA-realizable,
+    spot::minimize_wdba() was changed to produce an automaton
+    recognizing a language that includes the original one.  As a
+    consequence spot::minimize_obligation() now only needs one
+    containement check instead of two.
+
   - The LTL simplification routine learned the following reductions,
     where f is any formula, and q is a "suspendable" formula (a.k.a.
     both a pure eventuality and purely universal).

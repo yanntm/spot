@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016
+// Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018
 // Laboratoire de Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -64,17 +64,17 @@ namespace spot
   /// Deterministic Büchi Automaton, and construct a minimal WDBA for
   /// this language.  This essentially chains three algorithms:
   /// determinization, acceptance adjustment (Löding's coloring
-  /// algorithm), and minimization (using a Moore-like approache).
+  /// algorithm), and minimization (using a Moore-like approach).
   ///
-  /// If the input automaton does not represent a WDBA language,
-  /// the resulting automaton is still a WDBA, but it will not
-  /// be equivalent to the original automaton.   Use the
-  /// minimize_obligation() function if you are not sure whether
-  /// it is safe to call this function.
+  /// If the input automaton does not represent a WDBA language, the
+  /// resulting automaton is still a WDBA, but it will accept a
+  /// superset of the original language.  Use the
+  /// minimize_obligation() function if you are not sure whether it is
+  /// safe to call this function.
   ///
-  /// Please see the following paper for a discussion of this
-  /// technique.
-  ///
+  /// The construction is inspired by the following paper, however we
+  /// guarantee that the output language is a subsets of the original
+  /// language while they don't.
   /** \verbatim
       @InProceedings{          dax.07.atva,
         author    = {Christian Dax and Jochen Eisinger and Felix Klaedtke},
