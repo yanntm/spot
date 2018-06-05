@@ -366,6 +366,7 @@ TESTS_python = \
   python/bdditer.py \
   python/bddnqueen.py \
   python/bugdet.py \
+  python/complement_semidet.py \
   python/declenv.py \
   python/_word.ipynb \
   python/decompose_scc.py \

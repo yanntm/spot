@@ -201,6 +201,12 @@ New in spot 2.5.3.dev  (not yet released)
     looking for differences.  See also
     https://spot.lrde.epita.fr/ipynb/contains.html
 
+  - spot::complement_semidet(aut) is a new function that returns the
+    complement of aut, where aut is a semideterministic automaton. The
+    function uses the NCSB complementation algorithm proposed by
+    F. Blahoudek, M. Heizmann, S. Schewe, J. Strejček, and MH. Tsai
+    (TACAS'16).
+
   - spot::remove_alternation() was slightly improved on very-weak
     alternating automata: the labeling of the outgoing transitions in
     the resulting TGBA makes it more likely that simulation-based
