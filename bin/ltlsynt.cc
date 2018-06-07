@@ -248,6 +248,7 @@ namespace
           }
       }
     aut->purge_dead_states();
+    aut = spot::iterated_simulations(aut);
     aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
     return aut;
   }
