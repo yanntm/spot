@@ -74,6 +74,40 @@ ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --aiger > out
 diff out exp
 
 cat >exp <<EOF
+REALIZABLE
+aag 25 1 2 2 19
+2
+4 3
+6 45
+49
+51
+8 5 7
+12 2 8
+14 4 7
+18 2 14
+20 5 6
+22 2 20
+24 3 20
+26 4 6
+28 3 26
+30 2 26
+32 25 29
+36 29 31
+38 25 36
+40 19 23
+42 13 40
+44 42 38
+46 23 31
+48 19 46
+50 40 32
+i0 a
+o0 b
+o1 c
+EOF
+ltlsynt --ins='a' --outs='b,c' -f 'GFa <-> (GFb & GFc)' --aiger > out
+diff out exp
+
+cat >exp <<EOF
 translating formula done
 split inputs and outputs done
 determinization done
