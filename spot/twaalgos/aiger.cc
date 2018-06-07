@@ -319,7 +319,7 @@ namespace spot
           int bddvar = aut->get_dict()->has_registered_proposition(ap, aut);
           assert(bddvar >= 0);
           bdd b = bdd_ithvar(bddvar);
-          if (bdd_implies(b, all_outputs)) // ap is an output AP
+          if (bdd_implies(all_outputs, b)) // ap is an output AP
             {
               bddvar_to_outputnum[bddvar] = output_names.size();
               output_names.emplace_back(ap.ap_name());
