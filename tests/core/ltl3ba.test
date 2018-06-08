@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016, 2017 Laboratoire de Recherche et Développement
+# Copyright (C) 2016, 2017, 2018 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -39,8 +39,15 @@ export SPOT_HOA_TOLERANT
 # compatible with Spin's syntax.
 (
     echo _x
+# Some formula used by Spot's GF(guarantee) translation.
+    cat <<EOF
+GF((a & XXa) | (!a & XX!a))
+GF((a & XXXa) | (!a & XXX!a))
+GF(((a & Xb) | XXc) & Xd)
+GF((b | Fa) & (b R Xb))
+EOF
     randltl -n 30 2
-) | ltlcross 'ltl3ba -H1' 'ltl3ba -H2' 'ltl3ba -H3' \
+) | ltlcross -D 'ltl3ba -H1' 'ltl3ba -H2' 'ltl3ba -H3' ltl2tgba \
              --ambiguous --strength --csv=output.csv
 
 grep _x output.csv && exit 1

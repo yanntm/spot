@@ -49,9 +49,10 @@ namespace spot
   ///
   /// If the formula \a gf has the form GΦ where Φ matches either F(φ)
   /// or F(φ₁)|F(φ₂)|...|F(φₙ), we translate Φ into A_Φ and attempt to
-  /// minimize it to a WDBA.  If \a deterministic is not set, we keep
-  /// the minimized automaton only if A_Φ is larger.  If the resulting
-  /// automaton is terminal, we then call g_f_terminal_inplace().
+  /// minimize it to a WDBA W_Φ.  If the resulting automaton is
+  /// terminal, we then call g_f_terminal_inplace(W_Φ).  If \a
+  /// deterministic is not set, we keep the minimized automaton only
+  /// if g_f_terminal_inplace(A_Φ) is larger.
   ///
   /// Return nullptr if the input formula is not of the supported
   /// form.
@@ -59,7 +60,9 @@ namespace spot
   /// This construction generalizes a construction in the LICS'18
   /// paper of J. Esparza, J. Křetínský, and S. Sickert.  This version
   /// will work if Φ represent a safety property, even if it is not a
-  /// syntactic safety.
+  /// syntactic safety.  When building deterministic transition-based
+  /// automata, it will also try to remove useless trivial components
+  /// at the beginning of wdba(A_Φ).
   SPOT_API twa_graph_ptr
   gf_guarantee_to_ba_maybe(formula gf, const bdd_dict_ptr& dict,
                            bool deterministic = true, bool state_based = false);

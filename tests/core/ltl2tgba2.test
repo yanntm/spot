@@ -360,3 +360,19 @@ p-patterns,20, 1,8, 1,8, 3,24, 3,24
 EOF
 
 diff output expected
+
+
+# These four formulas appear in a NEWS entry for Spot 2.6
+cat >formulas <<EOF
+GF((a & XXa) | (!a & XX!a)), 4,8, 4,8, 6,14, 7,14
+GF((a & XXXa) | (!a & XXX!a)), 7,14, 8,16, 8,18, 15,30
+GF(((a & Xb) | XXc) & Xd), 4,60, 4,64, 4,68, 5,80
+GF((b | Fa) & (b R Xb)), 2,4, 2,4, 3,6, 3,12
+EOF
+
+ltl2tgba -Fformulas/1 --stats='%f, %s,%t' |
+    ltl2tgba -D -F-/1 --stats='%f,%>, %s,%t' |
+    ltl2tgba -B -F-/1 --stats='%f,%>, %s,%t' |
+    ltl2tgba -BD -F-/1 --stats='%f,%>, %s,%t' > output
+
+diff formulas output

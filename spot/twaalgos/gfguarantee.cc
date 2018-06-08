@@ -75,13 +75,113 @@ namespace spot
       if (!state_based)
         {
           bool is_det = is_deterministic(aut);
-          bool initial_state_reachable = false;
-          for (auto& e: aut->edges())
-            if (e.dst == init)
+
+          // If the initial state is a trivial SCC, we will be able to
+          // remove it by combining the transitions leading to the
+          // terminal state on the transitions leaving the initial
+          // state.  However if some successor of the initial state is
+          // also trivial, we might be able to remove it as well if we
+          // are able to replay two step from the initial state: this
+          // can be generalized to more depth and require computing some
+          // history for each state (i.e., a common suffix to all finite
+          // words leading to this state).
+          std::vector<std::vector<bdd>> histories;
+          bool initial_state_trivial = si.is_trivial(si.initial());
+
+          if (is_det && initial_state_trivial)
+            {
+              // Compute the max number of steps we want to keep in
+              // the history of each state.  This is the largest
+              // number of trivial SCCs you can chain from the initial
+              // state.
+              unsigned max_histories = 1;
               {
-                initial_state_reachable = true;
-                break;
+                std::vector<unsigned> depths(ns, 0U);
+                for (unsigned d: si.succ(ns - 1))
+                  depths[d] = 2;
+                for (int scc = ns - 2; scc >= 0; --scc)
+                  {
+                    if (!si.is_trivial(scc))
+                      continue;
+                    unsigned sccd = depths[scc];
+                    max_histories = std::max(max_histories, sccd);
+                    ++sccd;
+                    for (unsigned d: si.succ(scc))
+                      depths[d] = std::max(depths[d], sccd);
+                  }
               }
+
+              unsigned numstates = aut->num_states();
+              histories.resize(numstates);
+              // Compute the one-letter history of each state.  If all
+              // transition entering a state have the same label, the history
+              // is that label.  Otherwise set it to bddfalse.
+              for (auto& e: aut->edges())
+                {
+                  std::vector<bdd>& hd = histories[e.dst];
+                  if (hd.empty())
+                    hd.push_back(e.cond);
+                  else if (hd[0] != e.cond)
+                    hd[0] = bddfalse;
+                }
+              // remove all bddfalse, and check if there is a chance to build
+              // a larger history.
+              bool should_continue = false;
+              for (auto&h: histories)
+                if (h.empty())
+                  continue;
+                else if (h[0] == bddfalse)
+                  h.pop_back();
+                else
+                  should_continue = true;
+              // Augment those histories with more letters.
+              unsigned historypos = 0;
+              while (should_continue && historypos + 1 < max_histories)
+                {
+                  ++historypos;
+                  for (auto& e: aut->edges())
+                    {
+                      std::vector<bdd>& hd = histories[e.dst];
+                      if (hd.size() >= historypos)
+                        {
+                          std::vector<bdd>& hs = histories[e.src];
+                          if (hd.size() == historypos)
+                            {
+                              if (hs.size() >= historypos)
+                                hd.push_back(hs[historypos - 1]);
+                              else
+                                hd.push_back(bddfalse);
+                            }
+                          else if (hs.size() < historypos
+                                   || hd[historypos] != hs[historypos - 1])
+                            {
+                              hd[historypos] = bddfalse;
+                            }
+                        }
+                    }
+                  should_continue = false;
+                  for (unsigned n = 0; n < numstates; ++n)
+                    {
+                      auto& h = histories[n];
+                      //for (auto&h: histories)
+                      if (h.size() <= historypos)
+                        continue;
+                      else if (h[historypos] == bddfalse)
+                        h.pop_back();
+                      else
+                        should_continue = true;
+                    }
+                }
+              // std::cerr << "computed histories:\n";
+              // for (unsigned n = 0; n < numstates; ++n)
+              //   {
+              //     std::cerr << n << ": [";
+              //     for (bdd b: histories[n])
+              //       bdd_print_formula(std::cerr, aut->get_dict(), b) << ", ";
+              //     std::cerr << '\n';
+              //   }
+            }
+
           unsigned nedges = aut->num_edges();
           unsigned new_init = -1U;
           // The loop might add new edges, but we just want to iterate
@@ -89,9 +189,14 @@ namespace spot
           for (unsigned edge = 1; edge <= nedges; ++edge)
             {
               auto& e = aut->edge_storage(edge);
+              // Don't bother with terminal states, they won't be
+              // reachable anymore.
+              if (term[si.scc_of(e.src)])
+                continue;
+              // It will loop
               if (term[si.scc_of(e.dst)])
                 {
-                  if (initial_state_reachable
+                  if (!initial_state_trivial
                       // If the source state is the initial state, we
                       // should not try to combine it with itself...
                       || e.src == init)
@@ -105,11 +210,55 @@ namespace spot
                   // state of the automaton, we can get rid of it by
                   // combining the edge reaching the terminal state
                   // with the edges leaving the initial state.
-                  bdd econd = e.cond;
-                  bool first = true;
+                  //
+                  // However if we have some histories for e.src
+                  // (which implies that the automaton is
+                  // deterministic), we can try to replay that from
+                  // the initial state first.
+                  //
+                  // One problem with those histories, is that we do
+                  // not know how much of it to replay.  It's possible
+                  // that we cannot find a matching transition (e.g. if
+                  // the history if "b" but the choices are "!a" or "a"),
+                  // and its also possible to that playing too much of
+                  // history will get us back the terminal state.  In both
+                  // cases, we should try again with a smaller history.
+                  unsigned moved_init = init;
+                  if (is_det)
+                    {
+                      auto& h = histories[e.src];
+                      int hsize = h.size();
+                      for (int hlen = hsize - 1; hlen > 0; --hlen)
+                        {
+                          for (int pos = hlen - 1; pos >= 0; --pos)
+                            {
+                              for (auto& e: aut->out(moved_init))
+                                if (bdd_implies(h[pos], e.cond))
+                                  {
+                                    if (term[si.scc_of(e.dst)])
+                                      goto failed;
+                                    moved_init = e.dst;
+                                    goto moved;
+                                  }
+                              // if we reach this place, we failed to follow
+                              // one step of the history.
+                              goto failed;
+                            moved:
+                              continue;
+                            }
+                          // we have successfully played all history
+                          // to a non-terminal state.
+                          break;
+                        failed:
+                          moved_init = init;
+                          continue;
+                        }
+                    }
                   // Combine this edge with any compatible edge from
                   // the initial state.
-                  for (auto& ei: aut->out(init))
+                  bdd econd = e.cond;
+                  bool first = true;
+                  for (auto& ei: aut->out(moved_init))
                     {
                       bdd cond = ei.cond & econd;
                       if (cond != bddfalse)
@@ -196,12 +345,22 @@ namespace spot
         f = nest_f(f);
       }
     twa_graph_ptr aut = ltl_to_tgba_fm(f, dict, true);
-    twa_graph_ptr reduced = minimize_obligation(aut, f, nullptr,
-                                                !deterministic);
+    twa_graph_ptr reduced = minimize_obligation(aut, f);
+    if (reduced == aut)
+      return nullptr;
     scc_info si(reduced);
     if (!is_terminal_automaton(reduced, &si, true))
       return nullptr;
     do_g_f_terminal_inplace(si, state_based);
+    if (!deterministic)
+      {
+        scc_info si2(aut);
+        if (!is_terminal_automaton(aut, &si2, true))
+          return reduced;
+        do_g_f_terminal_inplace(si2, state_based);
+        if (aut->num_states() <= reduced->num_states())
+          return aut;
+      }
     return reduced;
   }
 

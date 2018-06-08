@@ -94,17 +94,27 @@ New in spot 2.5.3.dev  (not yet released)
     simplified to {1} or {SERE} depending on whether SERE accepts
     the empty word or not.
 
-  - gf_guarantee_to_ba() is a specialized construction for
-    translating formulas of the form GF(guarantee) to BA or DBA,
-    and fg_safety_to_dca() is a specialized construction for
-    translating formulas of the form FG(safety) to DCA.  These
-    are slight generalizations of some constructions proposed
-    by J. Esparza, J. Křentínský, and S. Sickert (LICS'18).
+  - gf_guarantee_to_ba() is a specialized construction for translating
+    formulas of the form GF(guarantee) to BA or DBA, and
+    fg_safety_to_dca() is a specialized construction for translating
+    formulas of the form FG(safety) to DCA.  These are generalizations
+    of some constructions proposed by J. Esparza, J. Křentínský, and
+    S. Sickert (LICS'18).
 
     These are now used by the main translation routine, and can be
-    disabled by passing -x '!gf-guarantee' to ltl2tgba.  As an
-    example, the translation of GF(a <-> XXb) to transition-based
-    Büchi went from 9 to 5 states using that construction.
+    disabled by passing -x '!gf-guarantee' to ltl2tgba.  For example,
+    here are the size of deterministic transition-based Büchi automata
+    constructed from four GF(guarantee) formulas with two versions of
+    Spot, and converted to other types of deterministic automata by
+    other tools.
+
+                               ltl2tgba -D   rabinizer 4
+                                2.5   2.6   delag ltl2dra
+    -------------------------  -----------  -------------
+    GF(a <-> XXa)                9     4       4      9
+    GF(a <-> XXXa)              27     8       8     25
+    GF(((a & Xb) | XXc) & Xd)    6     4      16      5
+    GF((b | Fa) & (b R Xb))      6     2       3      3
 
   - Slightly improved log output for the SAT-based minimization
     functions.  The CSV log files now include an additional column
