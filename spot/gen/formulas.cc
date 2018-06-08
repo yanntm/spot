@@ -256,9 +256,20 @@ namespace spot
         return result;
       }
 
+      // Builds X(X(...X(p))) with n occurrences of X.
       static formula
-      LTL_GF_equiv_implies(int n, const std::string& a, const std::string& z,
-                           bool equiv)
+      X_n(formula p, int n)
+      {
+        assert(n >= 0);
+        formula res = p;
+        while (n--)
+          res = X_(res);
+        return res;
+      }
+
+      static formula
+      GF_equiv_implies(int n, const std::string& a, const std::string& z,
+                       bool equiv)
       {
         formula left = GF_n(a, n);
         formula right = formula::G(formula::F(formula::ap(z)));
@@ -266,6 +277,19 @@ namespace spot
           return formula::Equiv(left, right);
         else
           return formula::Implies(left, right);
+      }
+
+      static formula
+      GF_equiv_implies_xn(int n, const std::string& a, bool equiv)
+      {
+        formula ap = formula::ap(a);
+        formula xn = X_n(ap, n);
+        formula in;
+        if (equiv)
+          in = formula::Equiv(ap, xn);
+        else
+          in = formula::Implies(ap, xn);
+        return G_(F_(in));
       }
 
       //  (((p1 OP p2) OP p3)...OP pn)   if right_assoc == false
@@ -400,17 +424,6 @@ namespace spot
         formula fair = GF_n(p, n);
         formula resp = G_(Implies_(formula::ap(q), F_(formula::ap(r))));
         return Not_(Implies_(fair, resp));
-      }
-
-      // Builds X(X(...X(p))) with n occurrences of X.
-      static formula
-      X_n(formula p, int n)
-      {
-        assert(n >= 0);
-        formula res = p;
-        while (n--)
-          res = X_(res);
-        return res;
       }
 
       // Based on LTLcounter.pl from Kristin Rozier.
@@ -1224,9 +1237,13 @@ namespace spot
         case LTL_FXG_OR:
           return FXG_or_n("p", n);
         case LTL_GF_EQUIV:
-          return LTL_GF_equiv_implies(n, "a", "z", true);
+          return GF_equiv_implies(n, "a", "z", true);
+        case LTL_GF_EQUIV_XN:
+          return GF_equiv_implies_xn(n, "a", true);
         case LTL_GF_IMPLIES:
-          return LTL_GF_equiv_implies(n, "a", "z", false);
+          return GF_equiv_implies(n, "a", "z", false);
+        case LTL_GF_IMPLIES_XN:
+          return GF_equiv_implies_xn(n, "a", false);
         case LTL_GH_Q:
           return Q_n("p", n);
         case LTL_GH_R:
@@ -1316,7 +1333,9 @@ namespace spot
           "eh-patterns",
           "fxg-or",
           "gf-equiv",
+          "gf-equiv-xn",
           "gf-implies",
+          "gf-implies-xn",
           "gh-q",
           "gh-r",
           "go-theta",
@@ -1379,7 +1398,9 @@ namespace spot
           return 12;
         case LTL_FXG_OR:
         case LTL_GF_EQUIV:
+        case LTL_GF_EQUIV_XN:
         case LTL_GF_IMPLIES:
+        case LTL_GF_IMPLIES_XN:
         case LTL_GH_Q:
         case LTL_GH_R:
         case LTL_GO_THETA:
@@ -1444,7 +1465,9 @@ namespace spot
         case LTL_EH_PATTERNS:
         case LTL_FXG_OR:
         case LTL_GF_EQUIV:
+        case LTL_GF_EQUIV_XN:
         case LTL_GF_IMPLIES:
+        case LTL_GF_IMPLIES_XN:
         case LTL_GH_Q:
         case LTL_GH_R:
         case LTL_GO_THETA:

@@ -26,7 +26,9 @@ New in spot 2.5.3.dev  (not yet released)
     products to avoid exceeding the number of supported
     acceptance sets.
 
-  - genltl learned to generate four new families of LTL formulas:
+  - genltl learned to generate six new families of LTL formulas:
+      --gf-equiv-xn=RANGE    GF(a <-> X^n(a))
+      --gf-implies-xn=RANGE  GF(a -> X^n(a))
       --sejk-f=RANGE[,RANGE] f(0,j)=(GFa0 U X^j(b)), f(i,j)=(GFai U
                              G(f(i-1,j)))
       --sejk-j=RANGE         (GFa1&...&GFan) -> (GFb1&...&GFbn)

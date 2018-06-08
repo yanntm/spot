@@ -154,7 +154,8 @@ test $(genltl --kr-nlogn=4 | ltl2tgba --low --stats=%s) -ge 16
 test $(genltl --kr-n=4 | ltl2tgba --low --stats=%s) -ge 16
 
 genltl --ms-example=0..4 --ms-phi-r=0..2 --ms-phi-s=0..2 --ms-phi-h=0..4 \
-       --gf-equiv=0..5 --gf-implies=0..5 --format='"%F=%L",%f' |
+       --gf-equiv=0..5 --gf-implies=0..5 --gf-equiv-xn=1..3 --gf-implies-xn=3 \
+       --format='"%F=%L",%f' |
     ltl2tgba -G -D -F-/2 --stats='%<,%s' > out
 cat >exp<<EOF
 "ms-example=0,0",1
@@ -205,12 +206,17 @@ cat >exp<<EOF
 "gf-implies=3",41
 "gf-implies=4",186
 "gf-implies=5",1047
+"gf-equiv-xn=1",2
+"gf-equiv-xn=2",4
+"gf-equiv-xn=3",8
+"gf-implies-xn=3",1
 EOF
 diff out exp
 
 # Running ltl2tgba on one formula at a time should give the same results
 genltl --ms-example=0..4 --ms-phi-r=0..2 --ms-phi-s=0..2 --ms-phi-h=0..4 \
-       --gf-equiv=0..5 --gf-implies=0..5 --format='"%F=%L",%f' |
+       --gf-equiv=0..5 --gf-implies=0..5 --gf-equiv-xn=1..3 --gf-implies-xn=3 \
+       --format='"%F=%L",%f' |
     ltldo -F-/2 'ltl2tgba -G -D' --stats='%<,%s' > out
 diff out exp
 
