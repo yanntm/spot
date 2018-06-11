@@ -27,7 +27,8 @@ Start: 0
 AP: 1 "a"
 acc-name: co-Buchi
 Acceptance: 1 Fin(0)
-properties: trans-labels explicit-labels state-acc deterministic weak
+properties: trans-labels explicit-labels state-acc deterministic
+properties: very-weak
 --BODY--
 State: 0 {0}
 [0] 1

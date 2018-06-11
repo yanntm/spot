@@ -436,14 +436,20 @@ namespace spot
              scc_info* given_si)
   {
     twa_graph_ptr res;
+    scc_info* si = given_si;
     if (aut->prop_inherently_weak())
       {
+        // Create scc_info here, because we will need it to decide
+        // very-weakness.
+        if (!si)
+          si = new scc_info(aut, scc_info_options::TRACK_SUCCS
+                            | scc_info_options::TRACK_STATES_IF_FIN_USED);
         if (aut->acc().is_t() || aut->acc().is_co_buchi())
           res =
-            scc_filter_apply<state_filter<weak_filter<false>>>(aut, given_si);
+            scc_filter_apply<state_filter<weak_filter<false>>>(aut, si);
         else
           res =
-            scc_filter_apply<state_filter<weak_filter<true>>>(aut, given_si);
+            scc_filter_apply<state_filter<weak_filter<true>>>(aut, si);
       }
     else if (aut->acc().is_generalized_buchi())
       {
@@ -485,6 +491,10 @@ namespace spot
       {
         res->prop_weak(true);
         res->prop_state_acc(true);
+        if (si->scc_count() == aut->num_states())
+          res->prop_very_weak(true);
+        if (!given_si)
+          delete si;
       }
     return res;
   }

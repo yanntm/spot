@@ -98,7 +98,7 @@ AP: 1 "a"
 acc-name: co-Buchi
 Acceptance: 1 Fin(0)
 properties: trans-labels explicit-labels state-acc complete
-properties: deterministic stutter-invariant weak
+properties: deterministic stutter-invariant very-weak
 --BODY--
 State: 0 {0}
 [t] 0

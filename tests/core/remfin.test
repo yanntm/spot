@@ -972,7 +972,7 @@ AP: 0
 acc-name: all
 Acceptance: 0 t
 properties: trans-labels explicit-labels state-acc deterministic
-properties: stutter-invariant weak
+properties: stutter-invariant very-weak
 --BODY--
 State: 0
 --END--
