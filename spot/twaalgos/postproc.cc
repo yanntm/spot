@@ -38,7 +38,6 @@
 #include <spot/twaalgos/alternation.hh>
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/cobuchi.hh>
-#include <spot/twaalgos/dot.hh>
 #include <spot/twaalgos/rabin2parity.hh>
 
 namespace spot
@@ -166,10 +165,7 @@ namespace spot
   {
     if (scc_filter_ == 0)
       return a;
-    // If the automaton is weak, using transition-based acceptance
-    // won't help, so let's preserve state-based acceptance.
-    if ((state_based_ || a->prop_inherently_weak().is_true())
-        && a->prop_state_acc().is_true())
+    if (state_based_ && a->prop_state_acc().is_true())
       return scc_filter_states(a, arg);
     else
       return scc_filter(a, arg);

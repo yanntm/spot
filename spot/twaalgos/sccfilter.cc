@@ -124,6 +124,53 @@ namespace spot
       }
     };
 
+    // Transform inherently weak automata into weak Büchi automata.
+    template <bool buchi, class next_filter = id_filter>
+    struct weak_filter: next_filter
+    {
+      acc_cond::mark_t acc_m = {0};
+      acc_cond::mark_t rej_m = {};
+
+      template<typename... Args>
+      weak_filter(scc_info* si, Args&&... args)
+        : next_filter(si, std::forward<Args>(args)...)
+      {
+        if (!buchi)
+          {
+            acc_m = {};
+            if (si->get_aut()->acc().is_co_buchi())
+              rej_m = {0};
+          }
+      }
+
+      filtered_trans trans(unsigned src, unsigned dst,
+                           bdd cond, acc_cond::mark_t acc)
+      {
+
+        bool keep;
+        std::tie(keep, cond, acc) =
+          this->next_filter::trans(src, dst, cond, acc);
+
+        if (keep)
+          {
+            unsigned ss = this->si->scc_of(src);
+            if (this->si->is_accepting_scc(ss))
+              acc = acc_m;
+            else
+              acc = rej_m;
+          }
+        return filtered_trans(keep, cond, acc);
+      }
+
+      void fix_acceptance(const twa_graph_ptr& out)
+      {
+        if (buchi)
+          out->set_buchi();
+        else
+          out->copy_acceptance_of(this->si->get_aut());
+      }
+    };
+
     // Remove acceptance conditions from all edges outside of
     // non-accepting SCCs.  If "RemoveAll" is false, keep those on
     // transitions entering accepting SCCs.  If "PreserveSBA", is set
@@ -160,7 +207,7 @@ namespace spot
             unsigned v = this->si->scc_of(dst);
             // The basic rules are as follows:
             //
-            // - If an edge is between two SCCs, is OK to remove
+            // - If an edge is between two SCCs, it is OK to remove
             //   all acceptance sets, as this edge cannot be part
             //   of any loop.
             // - If an edge is in an non-accepting SCC, we can only
@@ -370,6 +417,10 @@ namespace spot
                     scc_info* given_si)
   {
     twa_graph_ptr res;
+    // For weak automata, scc_filter() is already doing the right
+    // thing and preserves state-based acceptance.
+    if (aut->prop_inherently_weak())
+      return scc_filter(aut, remove_all_useless, given_si);
     if (remove_all_useless)
       res = scc_filter_apply<state_filter
                              <acc_filter_mask<true, true>>>(aut, given_si);
@@ -385,9 +436,18 @@ namespace spot
              scc_info* given_si)
   {
     twa_graph_ptr res;
-    // acc_filter_simplify only works for generalized Büchi
-    if (aut->acc().is_generalized_buchi())
+    if (aut->prop_inherently_weak())
       {
+        if (aut->acc().is_t() || aut->acc().is_co_buchi())
+          res =
+            scc_filter_apply<state_filter<weak_filter<false>>>(aut, given_si);
+        else
+          res =
+            scc_filter_apply<state_filter<weak_filter<true>>>(aut, given_si);
+      }
+    else if (aut->acc().is_generalized_buchi())
+      {
+        // acc_filter_simplify only works for generalized Büchi
         if (remove_all_useless)
           res =
             scc_filter_apply<state_filter
@@ -421,6 +481,11 @@ namespace spot
                      false,
                      true,
                    });
+    if (aut->prop_inherently_weak())
+      {
+        res->prop_weak(true);
+        res->prop_state_acc(true);
+      }
     return res;
   }
 

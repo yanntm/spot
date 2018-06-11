@@ -57,23 +57,24 @@ HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
-Acceptance: 2 Inf(0) | Inf(1)
+acc-name: Buchi
+Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels trans-acc complete
 properties: stutter-invariant
 --BODY--
 State: 0
 [!0] 0
-[0] 0 {1}
+[0] 0 {0}
 [!0&1] 1
-[0&1] 1 {1}
+[0&1] 1 {0}
 State: 1
 [!0&1] 1 {0}
-[0&1] 1 {0 1}
+[0&1] 1 {0}
 [!0&!1] 2 {0}
-[0&!1] 2 {0 1}
+[0&!1] 2 {0}
 State: 2
 [!0] 2
-[0] 2 {1}
+[0] 2 {0}
 --END--
 EOF
 diff por.hoa exp
@@ -88,18 +89,18 @@ HOA: v1
 States: 2
 Start: 0
 AP: 2 "a" "b"
-acc-name: generalized-Buchi 2
-Acceptance: 2 Inf(0)&Inf(1)
+acc-name: Buchi
+Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels trans-acc stutter-invariant
 --BODY--
 State: 0
 [!0] 0
-[0] 0 {1}
+[0] 0
 [!0&1] 1
-[0&1] 1 {1}
+[0&1] 1
 State: 1
-[!0&1] 1 {0}
-[0&1] 1 {0 1}
+[!0&1] 1
+[0&1] 1 {0}
 --END--
 EOF
 diff pand.hoa exp

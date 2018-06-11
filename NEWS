@@ -122,6 +122,12 @@ New in spot 2.5.3.dev  (not yet released)
     to update an external structure that references states of the twa
     that we want to purge.
 
+  - spot::scc_filter() now automatically turns automata marked as
+    inherently-weak into weak automata with state-based acceptance.
+    The acceptance condition is set to Büchi unless the input had
+    co-Büchi or t acceptance.  spot::scc_filter_states() will pass
+    inherently-weak automata to spot::scc_filter().
+
   - spot::cleanup_parity() and spot::cleanup_parity_here() are smarter
     and now remove from the acceptance condition the parity colors
     that are not used in the automaton.

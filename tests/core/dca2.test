@@ -67,7 +67,11 @@ while read l_f; do
         autfilt -q --acceptance-is=Streett-like and.hoa
         # Streett | Streett
         autfilt r.hoa --name="($l_f)|!($r_f)" --product-or=l.hoa -S > or.hoa
-        autfilt -q -v --acceptance-is=Streett-like or.hoa
+        if ! grep -q ' weak' l.hoa; then
+            if ! grep -q ' weak' r.hoa; then
+                autfilt -q -v --acceptance-is=Streett-like or.hoa || exit 1
+            fi
+        fi
 
         autcross --language-preserved --verbose -F or.hoa -F and.hoa \
                  'autfilt %H --stats=%M | ltl2tgba >%O' \

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2012, 2013, 2014, 2015 Laboratoire de
+// Copyright (C) 2009, 2010, 2012, 2013, 2014, 2015, 2018 Laboratoire de
 // Recherche et Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -50,13 +50,18 @@ namespace spot
   /// degeneralization) will work better if transitions going to an
   /// accepting SCC are accepting.
   ///
+  /// If the input is inherently weak, the output will be a weak
+  /// automaton with state-based acceptance.  The acceptance condition
+  /// is set to Büchi unless the input was co-Büchi or t (in which
+  /// case we keep this acceptance).
+  ///
   /// If \a given_sm is supplied, the function will use its result
   /// without computing a map of its own.
   ///
-  /// \warning Calling scc_filter on a TωA that has the SBA property
-  /// (i.e., transitions leaving accepting states are all marked as
-  /// accepting) may destroy this property.  Use scc_filter_states()
-  /// instead.
+  /// \warning Calling scc_filter on a TωA that is not inherently weak
+  /// and has the SBA property (i.e., transitions leaving accepting
+  /// states are all marked as accepting) may destroy this property.
+  /// Use scc_filter_states() instead.
   SPOT_API twa_graph_ptr
   scc_filter(const const_twa_graph_ptr& aut, bool remove_all_useless = false,
              scc_info* given_si = nullptr);
