@@ -36,7 +36,6 @@
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/sccinfo.hh>
-//#include "twaalgos/dot.hh"
 
 namespace spot
 {
@@ -1928,8 +1927,14 @@ namespace spot
     twa_graph_ptr a = make_twa_graph(dict);
     auto namer = a->create_namer<formula>();
 
-    translate_dict d(a, s, exprop, f2.is_syntactic_persistence(),
-                     unambiguous);
+    // Translating syntactic persistence will give a weak automaton, unless
+    // the unambiguous option is used.  In the "unambiguous" case, formulas
+    // such as "FGa | FGb" (note: not "F(Ga | Gb)") will introduce terms like
+    // "FGb&GF!a" that are not syntactic persistence.
+    bool will_be_weak = (unambiguous
+                         ? f2.is_syntactic_obligation()
+                         : f2.is_syntactic_persistence());
+    translate_dict d(a, s, exprop, will_be_weak, unambiguous);
 
     // Compute the set of all promises that can possibly occur inside
     // the formula.  These are the right-hand sides of U or F
@@ -2194,8 +2199,10 @@ namespace spot
 
     acc.set_generalized_buchi();
 
-    if (f2.is_syntactic_persistence())
-      a->prop_inherently_weak(true);
+    // The unambiguous option can introduce sub-terms that are not
+    // persistence, hence the resulting automaton might not be weak.
+    if (will_be_weak)
+      a->prop_weak(true);
     if (f2.is_syntactic_stutter_invariant())
       a->prop_stutter_invariant(true);
     if (orig_f.is_syntactic_guarantee())
