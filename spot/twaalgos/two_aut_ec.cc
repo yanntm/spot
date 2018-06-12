@@ -141,7 +141,7 @@ namespace spot
       }
 
     protected:
-      const const_twa_ptr& aut_;
+      const const_twa_ptr aut_;
       twa_succ_iterator* it_;
     };
 
