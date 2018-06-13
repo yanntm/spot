@@ -68,6 +68,11 @@ be more specific about a particular aspect of Spot.
   Presents the automaton format [[file:hoa.org][supported by Spot]] and [[http://adl.github.io/hoaf/support.html][several other
   tools]].
 
+- *Reactive Synthesis from LTL Specification with Spot*,
+  /Thibaud Michaud/, /Maximilien Colange/.
+  In Proc. of SYNT@CAV'18. to appear.  ([[https://www.lrde.epita.fr/~max/bibtexbrowser.php?key=michaud.18.synt&bib=perso.bib][bib]] | [[https://www.lrde.epita.fr/dload/papers/michaud.18.synt.pdf][pdf]])
+
+  Presents the tool [[file:ltlsynt.org][=ltlsynt=]].
 
 * Obsolete reference
 

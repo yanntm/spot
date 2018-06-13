@@ -6,46 +6,61 @@
 
 * Basic usage
 
-This tool synthesizes [[http://fmv.jku.at/aiger/][AIGER]] circuits from LTL/PSL
-formulas.  =ltlsynt= is typically called with the following three options:
+This tool synthesizes controllers from LTL/PSL formulas.
 
-- =--input=: a comma-separated list of input signal names
-- =--output=: a comma-separated list of output signal names
-- =--formula= or =--file=: the LTL/PSL specification.
+Consider a set $I$ of /input/ atomic propositions, a set $O$ of output atomic
+propositions, and a PSL formula \phi over the propositions in $I \cup O$.  A
+=controller= realizing \phi is a function $c: 2^{I \cup O} \times 2^I \mapsto
+2^O$ such that, for every \omega-word $(u_i)_{i \in N} \in (2^I)^\omega$ over
+the input propositions, the word $(u_i \cup c(u_0 \dots u_{i-1}, u_i))_{i \in
+N}$ satisfies \phi.
 
-The following example illustrates the synthesis of an =AND= gate.  We call the two
-inputs =a= and =b=, and the output =c=.  We want the relationship between the
-inputs and the output to always hold, so we prefix the propositional formula
-with a =G= operator:
+=ltlsynt= has three mandatory options:
+- =--ins=: a comma-separated list of input atomic propositions;
+- =--outs=: a comma-separated list of output atomic propositions;
+- =--formula= or =--file=: a LTL/PSL specification.
 
+The following example illustrates the synthesis of a controller acting as an
+=AND= gate. We have two inputs =a= and =b= and one output =c=, and we want =c=
+to always be the =AND= of the two inputs:
 #+BEGIN_SRC sh :results verbatim :exports both
-ltlsynt --input=a,b --output=c --formula 'G (a & b <=> c)'
+ltlsynt --ins=a,b --outs=c -f 'G (a & b <=> c)'
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 REALIZABLE
-aag 3 2 0 1 1
-2
-4
-6
-6 2 4
-i0 a
-i1 b
-o0 c
+HOA: v1
+States: 1
+Start: 0
+AP: 3 "b" "c" "a"
+acc-name: all
+Acceptance: 0 t
+properties: trans-labels explicit-labels state-acc deterministic
+--BODY--
+State: 0
+[0&1&2] 0
+[!0&!1 | !1&!2] 0
+--END--
 #+end_example
 
-The output is composed of two sections.  The first one is a single line
-containing either REALIZABLE or UNREALIZABLE, and the second one is an AIGER
-circuit that satisfies the specification (or nothing if it is unrealizable).
-In this example, the generated circuit contains, as expected, a single =AND=
-gate linking the two inputs to the output.
+The output is composed of two parts:
+- the first one is a single line REALIZABLE or UNREALIZABLE;
+- the second one is an automaton describing the controller (if the input
+  specification is realizable). In this example, the controller has a single
+  state, with two loops labelled by =a & b & c= and =(!a | !b) & !c=.
 
-The following example is unrealizable, because =a= is an input, so no circuit
-can guarantee that it will be true eventually.
+If a controller exists, then one with finite memory exists. Such controllers
+are easily represented as automata (or more specifically as I/O automata or
+transducers).  In the automaton representing the controller, the acceptance
+condition is irrelevant and trivially true.
+
+The following example illustrates the case of an unrealizable specification. As
+=a= is an input proposition, there is no way to guarantee that it will
+eventually hold.
 
 #+BEGIN_SRC sh :results verbatim :exports both
-ltlsynt --input=a --output=b -f 'F a'
+ltlsynt --ins=a --outs=b -f 'F a'
 #+END_SRC
 
 #+RESULTS:
@@ -53,13 +68,23 @@ ltlsynt --input=a --output=b -f 'F a'
 UNREALIZABLE
 #+end_example
 
+
+By default, the controller is output in HOA format, but it can be output as an
+[[http://fmv.jku.at/aiger/][AIGER]] circuit thanks to the =--aiger= flag. This
+is the output format required for the [[http://syntcomp.org/][SYNTCOMP]]
+competition.
+
+The generation of a controller can be disabled with the flag =--realizability=.
+In this case, =ltlsynt= output is limited to REALIZABLE or UNREALIZABLE.
+
 * TLSF
 
 =ltlsynt= was made with the [[http://syntcomp.org/][SYNTCOMP]] competition in
 mind, and more specifically the TLSF track of this competition.  TLSF is a
 high-level specification language created for the purpose of this competition.
-Fortunately, the SYNTCOMP organizers also provide a tool called =syfco= which
-can translate a TLSF specification to an LTL formula.
+Fortunately, the SYNTCOMP organizers also provide a tool called
+[[https://github.com/reactive-systems/syfco][=syfco=]] which can translate a
+TLSF specification to an LTL formula.
 
 The following four steps show you how a TLSF specification called spec.tlsf can
 be synthesized using =syfco= and =ltlsynt=:
@@ -68,19 +93,19 @@ be synthesized using =syfco= and =ltlsynt=:
 LTL=$(syfco FILE -f ltlxba -m fully)
 IN=$(syfco FILE -f ltlxba -m fully)
 OUT=$(syfco FILE -f ltlxba -m fully)
-ltlsynt --formula="$LTL" --input="$IN" --output="$OUT"
+ltlsynt --formula="$LTL" --ins="$IN" --outs="$OUT"
 #+END_SRC
 
 * Algorithm
 
 The tool reduces the synthesis problem to a parity game, and solves the parity
 game using Zielonka's recursive algorithm.  The full reduction from LTL to
-parity game is described in a paper yet to be written and published.
+parity game is described in the following paper:
+- *Reactive Synthesis from LTL Specification with Spot*, /Thibaud Michaud/,
+  /Maximilien Colange/.  In Proc. of SYNT@CAV'18. to appear.
 
-You can control the parity game solving step in two ways:
-- By choosing a different algorithm using the =--algo= option. The default is
-=rec= for Zielonka's recursive algorithm, and as of now the only other
-available option is =qp= for Calude et al.'s quasi-polynomial time algorithm.
-- By asking =ltlsynt= not to solve the game and print it instead (in the
-PGSolver format) using the =--print-pg= option, and leaving you the choice of
-an external solver such as PGSolver.
+You can also ask =ltlsynt= to print to obtained parity game into
+[[https://github.com/tcsprojects/pgsolver][PGSolver]] format, with the flag
+=--print-pg=.  Note that this flag deactivates the resolution of the parity
+game, which is to be deferred to one of the solvers from PGSolver.
+
