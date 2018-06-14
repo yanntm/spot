@@ -118,4 +118,44 @@ namespace spot
                            unsigned left_state,
                            unsigned right_state);
 
+
+  /// \ingroup twa_algorithms
+  /// \brief Build the product of an automaton with a suspendable
+  /// automaton.
+  ///
+  /// The language of this product is the intersection of the
+  /// languages of both input automata.
+  ///
+  /// This function *assumes* that \a right_susp is a suspendable
+  /// automaton, i.e., it its language L satisfies L = Σ*.L.
+  /// Therefore the product between the two automata need only be done
+  /// with the accepting SCCs of left.
+  ///
+  /// If \a left is a weak automaton, the acceptance condition of the
+  /// output will be that of \a right_susp.  Otherwise the acceptance
+  /// condition is the conjunction of both acceptances.
+  SPOT_API
+  twa_graph_ptr product_susp(const const_twa_graph_ptr& left,
+                             const const_twa_graph_ptr& right_susp);
+
+  /// \ingroup twa_algorithms
+  /// \brief Build the "or" product of an automaton with a suspendable
+  /// automaton.
+  ///
+  /// The language of this product is the union of the languages of
+  /// both input automata.
+  ///
+  /// This function *assumes* that \a right_susp is a suspendable
+  /// automaton, i.e., it its language L satisfies L = Σ*.L.
+  /// Therefore, after left has been completed (this will be done by
+  /// product_or_susp) the product between the two automata need only
+  /// be done with the SCCs of left that contains some rejecting cycles.
+  ///
+  /// The current implementation is currently suboptimal as instead of
+  /// looking for SCC with rejecting cycles, it simply loop for
+  /// non-trivial SCC, (or in the case of weak automata, with
+  /// non-trivial and rejecting SCCs).
+  SPOT_API
+  twa_graph_ptr product_or_susp(const const_twa_graph_ptr& left,
+                                const const_twa_graph_ptr& right_susp);
 }

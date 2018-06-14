@@ -21,6 +21,7 @@
 #include <spot/twaalgos/product.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/complete.hh>
+#include <spot/twaalgos/sccinfo.hh>
 #include <deque>
 #include <unordered_map>
 #include <spot/misc/hash.hh>
@@ -324,6 +325,225 @@ namespace spot
     return product_or(left, right,
                       left->get_init_state_number(),
                       right->get_init_state_number());
+  }
+
+
+  namespace
+  {
+
+    template<typename T>
+    static void
+    product_susp_aux(const const_twa_graph_ptr& left,
+                     const const_twa_graph_ptr& right,
+                     twa_graph_ptr res, bool and_acc,
+                     bool sync_all, acc_cond::mark_t rejmark, T merge_acc)
+    {
+      std::unordered_map<product_state, unsigned, product_state_hash> s2n;
+      std::deque<std::pair<product_state, unsigned>> todo;
+
+      scc_info si(left,
+                  and_acc ? scc_info_options::TRACK_STATES_IF_FIN_USED
+                  : (scc_info_options::TRACK_STATES_IF_FIN_USED
+                     | scc_info_options::TRACK_SUCCS));
+      si.determine_unknown_acceptance();
+
+      auto new_state =
+        [&](unsigned left_state, unsigned right_state) -> unsigned
+        {
+          product_state x(left_state, right_state);
+          auto p = s2n.emplace(x, 0);
+          if (p.second)                // This is a new state
+            {
+              p.first->second = res->new_state();
+              todo.emplace_back(x, p.first->second);
+            }
+          return p.first->second;
+        };
+
+      unsigned right_init = right->get_init_state_number();
+      unsigned left_init = left->get_init_state_number();
+      unsigned res_init;
+
+      auto target_scc = [&](unsigned scc) -> bool
+        {
+          return (!si.is_trivial(scc)
+                  && (sync_all ||si.is_accepting_scc(scc) == and_acc));
+        };
+
+      if (target_scc(si.scc_of(left_init)))
+        res_init = new_state(left_init, right_init);
+      else
+        res_init = new_state(left_init, -1U);
+      res->set_init_state(res_init);
+
+      bool sbacc = res->prop_state_acc().is_true();
+
+      while (!todo.empty())
+        {
+          auto top = todo.front();
+          todo.pop_front();
+          for (auto& l: left->out(top.first.first))
+            if (!target_scc(si.scc_of(l.dst)))
+              {
+                if (!sbacc || top.first.second == -1U)
+                  {
+                    res->new_edge(top.second, new_state(l.dst, -1U), l.cond,
+                                  merge_acc(l.acc, rejmark));
+                  }
+                else
+                  {
+                    // This edge leaves a target SCC, but we build a
+                    // state-based automaton, so make sure we still
+                    // use the same acceptance marks as in the SCC.
+                    auto rm = right->state_acc_sets(top.first.second);
+                    res->new_edge(top.second, new_state(l.dst, -1U), l.cond,
+                                  merge_acc(l.acc, rm));
+                  }
+              }
+            else
+              {
+                unsigned right_state = top.first.second;
+                if (top.first.second == -1U)
+                  right_state = right_init;
+                for (auto& r: right->out(right_state))
+                  {
+                    auto cond = l.cond & r.cond;
+                    if (cond == bddfalse)
+                      continue;
+                    auto dst = new_state(l.dst, r.dst);
+                    res->new_edge(top.second, dst, cond,
+                                  merge_acc(l.acc, r.acc));
+                  }
+              }
+        }
+    }
+
+    static twa_graph_ptr
+    product_susp_main(const const_twa_graph_ptr& left,
+                      const const_twa_graph_ptr& right,
+                      bool and_acc = true)
+    {
+      if (SPOT_UNLIKELY(!(left->is_existential() && right->is_existential())))
+        throw std::runtime_error
+          ("product_susp() does not support alternating automata");
+      if (SPOT_UNLIKELY(left->get_dict() != right->get_dict()))
+        throw std::runtime_error("product_susp(): left and right automata "
+                                 "should share their bdd_dict");
+
+      auto false_or_left = [&] (bool ff)
+        {
+          if (ff)
+            {
+              auto res = make_twa_graph(left->get_dict());
+              res->new_state();
+              return res;
+            }
+          return make_twa_graph(left, twa::prop_set::all());
+        };
+
+      // We assume RIGHT is suspendable, but we want to deal with some
+      // trivial true/false cases so we can later assume right has
+      // more than one acceptance set.
+      // Note: suspendable with "t" acceptance = universal language.
+      if (SPOT_UNLIKELY(right->num_sets() == 0))
+        {
+          if (and_acc)
+            return false_or_left(right->is_empty());
+          else if (right->is_empty()) // left OR false = left
+            return make_twa_graph(left, twa::prop_set::all());
+          else // left OR true = true
+            return make_twa_graph(right, twa::prop_set::all());
+        }
+
+      auto res = make_twa_graph(left->get_dict());
+      res->copy_ap_of(left);
+      res->copy_ap_of(right);
+      bool leftweak = left->prop_weak().is_true();
+
+      res->prop_state_acc(left->prop_state_acc() && right->prop_state_acc());
+
+      auto rightunsatmark = right->acc().unsat_mark();
+      if (SPOT_UNLIKELY(!rightunsatmark.first))
+        return false_or_left(and_acc);
+      acc_cond::mark_t rejmark = rightunsatmark.second;
+
+      if (leftweak)
+        {
+          res->copy_acceptance_of(right);
+          if (and_acc)
+            {
+              product_susp_aux(left, right, res, true, false, rejmark,
+                               [&] (acc_cond::mark_t,
+                                    acc_cond::mark_t mr)
+                               {
+                                 return mr;
+                               });
+            }
+          else
+            {
+              auto rightsatmark = right->acc().sat_mark();
+              if (!rightsatmark.first)
+                // Right is always rejecting, no point in making a product_or
+                return make_twa_graph(left, twa::prop_set::all());
+              acc_cond::mark_t accmark = rightsatmark.second;
+              auto& lacc = left->acc();
+              product_susp_aux(left, right, res, false, false, rejmark,
+                               [&] (acc_cond::mark_t ml,
+                                    acc_cond::mark_t mr)
+                               {
+                                 if (!lacc.accepting(ml))
+                                   return mr;
+                                 else
+                                   return accmark;
+                               });
+            }
+        }
+      else // general case
+        {
+          auto left_num = left->num_sets();
+          auto right_acc = right->get_acceptance() << left_num;
+          if (and_acc)
+            right_acc &= left->get_acceptance();
+          else
+            right_acc |= left->get_acceptance();
+          res->set_acceptance(left_num + right->num_sets(), right_acc);
+
+          product_susp_aux(left, right, res, and_acc, !and_acc, rejmark,
+                           [&] (acc_cond::mark_t ml,
+                                acc_cond::mark_t mr)
+                           {
+                             return ml | (mr << left_num);
+                           });
+        }
+
+      // The product of two non-deterministic automata could be
+      // deterministic.  Likewise for non-complete automata.
+      if (left->prop_universal() && right->prop_universal())
+        res->prop_universal(true);
+      if (left->prop_complete() && right->prop_complete())
+        res->prop_complete(true);
+      if (left->prop_stutter_invariant() && right->prop_stutter_invariant())
+        res->prop_stutter_invariant(true);
+      if (left->prop_inherently_weak() && right->prop_inherently_weak())
+        res->prop_inherently_weak(true);
+      if (left->prop_weak() && right->prop_weak())
+        res->prop_weak(true);
+      if (left->prop_terminal() && right->prop_terminal())
+        res->prop_terminal(true);
+      return res;
+    }
+  }
+
+  twa_graph_ptr product_susp(const const_twa_graph_ptr& left,
+                             const const_twa_graph_ptr& right)
+  {
+    return product_susp_main(left, right);
+  }
+
+  twa_graph_ptr product_or_susp(const const_twa_graph_ptr& left,
+                                const const_twa_graph_ptr& right)
+  {
+    return product_susp_main(complete(left), right, false);
   }
 
 }

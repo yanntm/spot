@@ -55,11 +55,6 @@ New in spot 2.5.3.dev  (not yet released)
       {SERE;1} = {1}     if {SERE} accepts [*0]
       {SERE;1} = {SERE}  if {SERE} does not accept [*0]
 
-  - spot::product() and spot::product_or() learned to produce an
-    automaton with a simpler acceptance condition if one of the
-    argument is a weak automaton.  In this case the resulting
-    acceptance condition is (usually) that of the other argument.
-
   - gf_guarantee_to_ba() is a specialized construction for translating
     formulas of the form GF(guarantee) to BA or DBA, and
     fg_safety_to_dca() is a specialized construction for translating
@@ -81,6 +76,16 @@ New in spot 2.5.3.dev  (not yet released)
     GF(a <-> XXXa)              27     8       8     25
     GF(((a & Xb) | XXc) & Xd)    6     4      16      5
     GF((b | Fa) & (b R Xb))      6     2       3      3
+
+  - spot::product() and spot::product_or() learned to produce an
+    automaton with a simpler acceptance condition if one of the
+    argument is a weak automaton.  In this case the resulting
+    acceptance condition is (usually) that of the other argument.
+
+  - spot::product_susp() and spot::product_or_susp() are new
+    functions for building products between an automaton A and
+    a "suspendable" automaton B.  They are also optimized for
+    the case that A is weak.
 
   - print_dot(), used to print automata in GraphViz's format,
     underwent several changes:

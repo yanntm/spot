@@ -385,6 +385,7 @@ TESTS_python = \
   python/parity.py \
   python/prodexpt.py \
   python/_product_weak.ipynb \
+  python/_product_susp.ipynb \
   python/randgen.py \
   python/relabel.py \
   python/remfin.py \
