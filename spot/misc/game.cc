@@ -92,7 +92,7 @@ parity_game::attractor(const region_t& subgame, region_t& set,
                        unsigned max_parity, int p, bool attr_max) const
 {
   strategy_t strategy;
-  std::unordered_set<unsigned> complement = subgame;
+  std::set<unsigned> complement(subgame.begin(), subgame.end());
   for (unsigned s: set)
     complement.erase(s);
 
