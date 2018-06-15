@@ -9,7 +9,7 @@
 	 (mode . bug-reference)
          (magit-branch-adjust-remote-upstream-alist ("origin/next" . "/"))))
  (c++-mode . ((c-default-style . "gnu")
-	      (indent-tabs-mode . t)
+	      (indent-tabs-mode . nil)
 	      (tab-width . 8)
 	      (fill-column . 70)))
  ("tests" . ((nil . ((eval . (defun spot/execute-test ()
