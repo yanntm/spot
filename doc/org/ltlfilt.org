@@ -493,18 +493,15 @@ GF(1 U b)
 The =--format= option can be used the alter the way formulas are output.
 The list of supported =%=-escape sequences are recalled in the =--help= output:
 #+BEGIN_SRC sh :results verbatim :exports results
-ltlfilt --help | sed -n '/The FORMAT/,/^$/p' | sed '$d'
+ltlfilt --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
 #+begin_example
- The FORMAT string passed to --format may use the following interpreted
- sequences:
   %<                         the part of the line before the formula if it
                              comes from a column extracted from a CSV file
   %>                         the part of the line after the formula if it comes
                              from a column extracted from a CSV file
   %%                         a single %
-  %a                         number of atomic propositions used in the formula
   %b                         the Boolean-length of the formula (i.e., all
                              Boolean subformulas count as 1)
   %f                         the formula (in the selected syntax)
@@ -513,7 +510,26 @@ ltlfilt --help | sed -n '/The FORMAT/,/^$/p' | sed '$d'
                              hierarchy ([v] replaces abbreviations by class
                              names, [w] for all compatible classes)
   %L                         the original line number in the input file
+  %[OP]n                     the nesting depth of operator OP.  OP should be a
+                             single letter denoting the operator to count, or
+                             multiple letters to fuse several operators during
+                             depth evaluation.  Add '~' to rewrite the formula
+                             in negative normal form before counting.
+  %r                         wall-clock time elapsed in seconds (excluding
+                             parsing)
+  %R, %[LETTERS]R            CPU time (excluding parsing), in seconds; Add
+                             LETTERS to restrict to(u) user time, (s) system
+                             time, (p) parent process, or (c) children
+                             processes.
   %s                         the length (or size) of the formula
+  %x, %[LETTERS]X, %[LETTERS]x   number of atomic propositions used in the
+                             formula;  add LETTERS to list atomic propositions
+                             with (n) no quoting, (s) occasional double-quotes
+                             with C-style escape, (d) double-quotes with
+                             C-style escape, (c) double-quotes with CSV-style
+                             escape, (p) between parentheses, any extra
+                             non-alphanumeric character will be used to
+                             separate propositions
 #+end_example
 
 As a trivial example, use

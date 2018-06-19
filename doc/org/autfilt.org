@@ -127,25 +127,59 @@ autfilt --stats='%s states, %e edges, %a acc-sets, %c SCCs, det=%d'
 
 The following =%= sequences are available:
 #+BEGIN_SRC sh :results verbatim :exports results
-autfilt --help | sed -n '/^  %%/,/^$/p' | sed '$d'
+ltl2tgba --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
 #+begin_example
+  %<                         the part of the line before the formula if it
+                             comes from a column extracted from a CSV file
+  %>                         the part of the line after the formula if it comes
+                             from a column extracted from a CSV file
   %%                         a single %
-  %A, %a                     number of acceptance sets
-  %C, %c                     number of SCCs
+  %a                         number of acceptance sets
+  %c, %[LETTERS]c            number of SCCs; you may filter the SCCs to count
+                             using the following LETTERS, possibly
+                             concatenated: (a) accepting, (r) rejecting, (c)
+                             complete, (v) trivial, (t) terminal, (w) weak,
+                             (iw) inherently weak. Use uppercase letters to
+                             negate them.
   %d                         1 if the output is deterministic, 0 otherwise
-  %E, %e                     number of edges
+  %e                         number of reachable edges
+  %f                         the formula, in Spot's syntax
   %F                         name of the input file
-  %G, %g                     acceptance condition (in HOA syntax)
+  %g, %[LETTERS]g            acceptance condition (in HOA syntax); add brackets
+                             to print an acceptance name instead and LETTERS to
+                             tweak the format: (0) no parameters, (a)
+                             accentuated, (b) abbreviated, (d) style used in
+                             dot output, (g) no generalized parameter, (l)
+                             recognize Street-like and Rabin-like, (m) no main
+                             parameter, (p) no parity parameter, (o) name
+                             unknown acceptance as 'other', (s) shorthand for
+                             'lo0'.
+  %h                         the automaton in HOA format on a single line (use
+                             %[opt]h to specify additional options as in
+                             --hoa=opt)
   %L                         location in the input file
-  %M, %m                     name of the automaton
+  %m                         name of the automaton
   %n                         number of nondeterministic states in output
   %p                         1 if the output is complete, 0 otherwise
-  %r                         processing time (excluding parsing) in seconds
-  %S, %s                     number of states
-  %T, %t                     number of transitions
+  %r                         wall-clock time elapsed in seconds (excluding
+                             parsing)
+  %R, %[LETTERS]R            CPU time (excluding parsing), in seconds; Add
+                             LETTERS to restrict to(u) user time, (s) system
+                             time, (p) parent process, or (c) children
+                             processes.
+  %s                         number of reachable states
+  %t                         number of reachable transitions
   %w                         one word accepted by the output automaton
+  %x, %[LETTERS]x            number of atomic propositions declared in the
+                             automaton;  add LETTERS to list atomic
+                             propositions with (n) no quoting, (s) occasional
+                             double-quotes with C-style escape, (d)
+                             double-quotes with C-style escape, (c)
+                             double-quotes with CSV-style escape, (p) between
+                             parentheses, any extra non-alphanumeric character
+                             will be used to separate propositions
 #+end_example
 
 When a letter is available both as uppercase and lowercase, the
