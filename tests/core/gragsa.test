@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016 Laboratoire de Recherche
+# Copyright (C) 2016, 2018 Laboratoire de Recherche
 # et Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -21,8 +21,10 @@
 . ./defs
 set -e
 
+# formula 'XX((Fa|Gb)&FGc)' tests the X removal of the ltl-split path
+
 randltl -n 100 p1 p2 p3 --tree-size 5..15 --seed=200 |
-ltlcross --timeout=60 \
+ltlcross -F- -f 'XX((Fa|Gb)&FGc)' --timeout=60 \
 "ltl2tgba %f > %T" \
 "ltl2tgba -G -D %f > %T" \
 "ltl2tgba -G -D %f | autfilt --gsa=unique-fin > %T" \

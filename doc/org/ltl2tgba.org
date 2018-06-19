@@ -18,8 +18,8 @@ a quick summary:
 - =--ba= (or =-B=) outputs state-based Büchi automata
 - =--monitor= (or =-M=) outputs monitors
 - =--generic --deterministic= (or =-DG=) will do whatever it takes to
-  produce a deterministic automaton, and may output generalized Büchi,
-  or parity acceptance.
+  produce a deterministic automaton, and may use any acceptance
+  condition
 - =--parity --deterministic= (or =-DP=) will produce a deterministic
   automaton with parity acceptance.
 
@@ -466,8 +466,7 @@ In particular, for properties more complex than obligations, it is
 possible that no deterministic TGBA exist, and even if it exists,
 =ltl2tgba= might not find it: so a non-deterministic automaton can be
 returned in this case.  If you absolutely want a deterministic
-automaton, [[#generic][read on about the =--generic= option below]].
-
+automaton, see [[#generic][the =--generic= option]] or [[#parity][the =--parity= option]].
 
 An example formula where the difference between =-D= and =--small= is
 flagrant is =Ga|Gb|Gc=:
@@ -724,9 +723,15 @@ expectations.
    :END:
 
    The =--generic= (or =-G=) option allows =ltl2tgba= to use more
-   complex acceptance.  Combined with =--deterministic= (or =-D=) this
-   allows the use of a determinization algorithm that produces
-   automata with parity acceptance.
+   complex acceptance conditions.  This is done by splitting the LTL
+   formulas on Boolean connectives to recognize some subformulas that
+   are either to translate with different types of acceptance
+   conditions, and then combining everything back together.
+
+   Combined with =--deterministic= (or =-D=) this allows the use of a
+   determinization algorithm that produces automata with parity
+   acceptance.  This is only used for subformulas for which we do not
+   know a better way to get a deterministic automaton.
 
    For instance =FGa= is the typical formula for which not
    deterministic TGBA exists.
@@ -743,7 +748,7 @@ ltl2tgba "FGa" -D -d
 #+RESULTS:
 [[file:ltl2tgba-fga.svg]]
 
-   But with =--generic=, =ltl2tgba= will output the following Rabin automaton:
+   But with =--generic=, =ltl2tgba= will output the following co-Büchi automaton:
 
 #+NAME: ltl2tgba-fga-D
 #+BEGIN_SRC sh :results verbatim :exports code
@@ -757,9 +762,54 @@ ltl2tgba "FGa" -G -D -d
 #+RESULTS:
 [[file:ltl2tgba-fga-D.svg]]
 
-Note that determinization algorithm implemented actually outputs
-parity acceptance, but =Fin(0)&Inf(1)= can be interpreted either as
-=Rabin 1= or =parity min odd 2=.
+
+If we translate =Fb|Gc= as a deterministic automaton with any
+acceptance condition, we get a weak and deterministic Büchi automaton:
+
+#+NAME: ltl2tgba-fbgc-D
+#+BEGIN_SRC sh :results verbatim :exports code
+ltl2tgba "Fb|Gc" -G -D -d
+#+END_SRC
+
+#+BEGIN_SRC dot :file ltl2tgba-fbgc-D.svg :var txt=ltl2tgba-fbgc-D :exports results
+  $txt
+#+END_SRC
+
+#+RESULTS:
+[[file:ltl2tgba-fbgc-D.svg]]
+
+
+Finally if we translate the conjunction of these two subformulas, a
+product of these two automata will be made, producing:
+
+#+NAME: ltl2tgba-fbgcfga-D
+#+BEGIN_SRC sh :results verbatim :exports code
+ltl2tgba "(Fb|Gc)&FGa" -G -D -d
+#+END_SRC
+
+#+BEGIN_SRC dot :file ltl2tgba-fbgcfga-D.svg :var txt=ltl2tgba-fbgcfga-D :exports results
+  $txt
+#+END_SRC
+
+#+RESULTS:
+[[file:ltl2tgba-fbgcfga-D.svg]]
+
+Disabling the splitting of the original formula LTL formulas can be
+done using option =-x ltl-split=0=.  In that case the formula
+=(Fb|Gc)&FGa= will be translated into a single TGBA, and because this
+TGBA is non-deterministic, it will then be determinized into an
+automaton with parity acceptance:
+
+#+NAME: ltl2tgba-fbgcfga-nosplit-D
+#+BEGIN_SRC sh :results verbatim :exports code
+ltl2tgba "(Fb|Gc)&FGa" -G -D -xltl-split=0 -d
+#+END_SRC
+#+BEGIN_SRC dot :file ltl2tgba-fbgcfga-nosplit-D.svg :var txt=ltl2tgba-fbgcfga-nosplit-D :exports results
+  $txt
+#+END_SRC
+
+#+RESULTS:
+[[file:ltl2tgba-fbgcfga-nosplit-D.svg]]
 
 
 The [[./man/spot-x.7.html][=spot-x=]](7) man page lists a few =-x= options (=det-scc=,
@@ -785,7 +835,7 @@ would be larger if SCC-based optimizations were disabled:
 
 #+NAME: ltl2tgba-det2
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba "F(a W FGb)" -x '!det-scc' -G -D -d
+ltl2tgba "F(a W FGb)" -xdet-scc=0 -G -D -d
 #+END_SRC
 
 #+BEGIN_SRC dot :file ltl2tgba-det2.svg :var txt=ltl2tgba-det2 :exports results
@@ -795,11 +845,10 @@ ltl2tgba "F(a W FGb)" -x '!det-scc' -G -D -d
 #+RESULTS:
 [[file:ltl2tgba-det2.svg]]
 
-While the =--generic= option currently only builds automata with
-generalized-Büchi or parity acceptance, this is very likely to change
-in the future.
-
 * Deterministic automata with =--parity --deterministic=
+   :PROPERTIES:
+   :CUSTOM_ID: parity
+   :END:
 
 Using the =--parity= (or upper-case =-P=) option will force the
 acceptance condition to be of a parity type.  This has to be

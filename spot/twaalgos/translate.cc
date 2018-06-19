@@ -26,6 +26,7 @@
 #include <spot/twaalgos/relabel.hh>
 #include <spot/twaalgos/gfguarantee.hh>
 #include <spot/twaalgos/isdet.hh>
+#include <spot/twaalgos/product.hh>
 
 namespace spot
 {
@@ -35,7 +36,9 @@ namespace spot
     comp_susp_ = early_susp_ = skel_wdba_ = skel_simul_ = 0;
     relabel_bool_ = tls_impl_ = -1;
     gf_guarantee_ = level_ != Low;
+    ltl_split_ = true;
 
+    opt_ = opt;
     if (!opt)
       return;
 
@@ -49,6 +52,7 @@ namespace spot
       }
     tls_impl_ = opt->get("tls-impl", -1);
     gf_guarantee_ = opt->get("gf-guarantee", gf_guarantee_);
+    ltl_split_ = opt->get("ltl-split", 1);
   }
 
   void translator::build_simplifier(const bdd_dict_ptr& dict)
@@ -95,6 +99,8 @@ namespace spot
           throw std::runtime_error
             ("tls-impl should take a value between 0 and 3");
         }
+    if (comp_susp_ > 0 || (ltl_split_ && type_ == Generic))
+      options.favor_event_univ = true;
     simpl_owned_ = simpl_ = new tl_simplifier(options, dict);
   }
 
@@ -160,37 +166,160 @@ namespace spot
 
     twa_graph_ptr aut;
     twa_graph_ptr aut2 = nullptr;
-    if (comp_susp_ > 0)
-      {
-        // FIXME: Handle unambiguous_ automata?
-        int skel_wdba = skel_wdba_;
-        if (skel_wdba < 0)
-          skel_wdba = (pref_ & postprocessor::Deterministic) ? 1 : 2;
 
-        aut = compsusp(r, simpl_->get_dict(), skel_wdba == 0,
-                       skel_simul_ == 0, early_susp_ != 0,
-                       comp_susp_ == 2, skel_wdba == 2, false);
+    if (ltl_split_ && type_ == Generic && !r.is_syntactic_obligation())
+      {
+        formula r2 = r;
+        unsigned leading_x = 0;
+        while (r2.is(op::X))
+          {
+            r2 = r2[0];
+            ++leading_x;
+          }
+        // F(q|u|f) = q|F(u)|F(f)
+        // G(q&e&f) = q&G(e)&G(f)
+        bool want_u = r2.is({op::F, op::Or});
+        if (want_u || r2.is({op::G, op::And}))
+          {
+            std::vector<formula> susp;
+            std::vector<formula> rest;
+            auto op1 = r2.kind();
+            auto op2 = r2[0].kind();
+            for (formula child: r2[0])
+              {
+                bool u = child.is_universal();
+                bool e = child.is_eventual();
+                if (u && e)
+                  susp.push_back(child);
+                else if ((want_u && u) || (!want_u && e))
+                  susp.push_back(formula::unop(op1, child));
+                else
+                  rest.push_back(child);
+              }
+            susp.push_back(formula::unop(op1, formula::multop(op2, rest)));
+            r2 = formula::multop(op2, susp);
+          }
+        if (r2.is_syntactic_obligation() || !r2.is(op::And, op::Or))
+          goto nosplit;
+
+        bool is_and = r2.is(op::And);
+        // Let's classify subformulas.
+        std::vector<formula> oblg;
+        std::vector<formula> susp;
+        std::vector<formula> rest;
+        for (formula child: r2)
+          {
+            if (child.is_syntactic_obligation())
+              oblg.push_back(child);
+            else if (child.is_eventual() && child.is_universal())
+              susp.push_back(child);
+            else
+              rest.push_back(child);
+          }
+        option_map om;
+        if (opt_)
+          om = *opt_;
+        om.set("ltl-split", 0);
+        translator translate_without_split(simpl_, &om);
+        translate_without_split.set_pref(pref_);
+        translate_without_split.set_level(level_);
+        translate_without_split.set_type(type_);
+        auto transrun = [&](formula f)
+          {
+            if (f == r2)
+              return translate_without_split.run(f);
+            else
+              return run(f);
+          };
+
+        aut = nullptr;
+        // All obligations can be converted into a minimal WDBA.
+        if (!oblg.empty())
+          {
+            formula oblg_f = formula::multop(r2.kind(), oblg);
+            aut = transrun(oblg_f);
+          }
+        if (!rest.empty())
+          {
+            formula rest_f = formula::multop(r2.kind(), rest);
+            twa_graph_ptr rest_aut = transrun(rest_f);
+            if (aut == nullptr)
+              aut = rest_aut;
+            else if (is_and)
+              aut = product(aut, rest_aut);
+            else
+              aut = product_or(aut, rest_aut);
+          }
+        if (!susp.empty())
+          {
+            twa_graph_ptr susp_aut = nullptr;
+            // Each suspendable formula separately
+            for (formula f: susp)
+              {
+                twa_graph_ptr one = transrun(f);
+                if (!susp_aut)
+                  susp_aut = one;
+                else if (is_and)
+                  susp_aut = product(susp_aut, one);
+                else
+                  susp_aut = product_or(susp_aut, one);
+              }
+            if (aut == nullptr)
+              aut = susp_aut;
+            else if (is_and)
+              aut = product_susp(aut, susp_aut);
+            else
+              aut = product_or_susp(aut, susp_aut);
+          }
+        if (leading_x > 0)
+          {
+            unsigned init = aut->get_init_state_number();
+            do
+              {
+                unsigned tmp = aut->new_state();
+                aut->new_edge(tmp, init, bddtrue);
+                init = tmp;
+              }
+            while (--leading_x);
+            aut->set_init_state(init);
+          }
       }
     else
       {
-        if (gf_guarantee_ && PREF_ != Any)
+      nosplit:
+        if (comp_susp_ > 0)
           {
-            bool det = unambiguous || (PREF_ == Deterministic);
-            bool sba = type_ == BA || (pref_ & SBAcc);
-            if ((type_ & (BA | Parity | Generic)) || type_ == TGBA)
-              aut2 = gf_guarantee_to_ba_maybe(r, simpl_->get_dict(), det, sba);
-            if (aut2 && (type_ & (BA | Parity)) && (pref_ & Deterministic))
-              return finalize(aut2);
-            if (!aut2 && (type_ & (Generic | Parity | CoBuchi)))
+            // FIXME: Handle unambiguous_ automata?
+            int skel_wdba = skel_wdba_;
+            if (skel_wdba < 0)
+              skel_wdba = (pref_ & postprocessor::Deterministic) ? 1 : 2;
+
+            aut = compsusp(r, simpl_->get_dict(), skel_wdba == 0,
+                           skel_simul_ == 0, early_susp_ != 0,
+                           comp_susp_ == 2, skel_wdba == 2, false);
+          }
+        else
+          {
+            if (gf_guarantee_ && PREF_ != Any)
               {
-                aut2 = fg_safety_to_dca_maybe(r, simpl_->get_dict(), sba);
-                if (aut2
-                    && (type_ & (CoBuchi | Parity))
+                bool det = unambiguous || (PREF_ == Deterministic);
+                bool sba = type_ == BA || (pref_ & SBAcc);
+                if ((type_ & (BA | Parity | Generic)) || type_ == TGBA)
+                  aut2 = gf_guarantee_to_ba_maybe(r, simpl_->get_dict(),
+                                                  det, sba);
+                if (aut2 && ((type_ == BA) || (type_ & Parity))
                     && (pref_ & Deterministic))
                   return finalize(aut2);
+                if (!aut2 && (type_ & (Generic | Parity | CoBuchi)))
+                  {
+                    aut2 = fg_safety_to_dca_maybe(r, simpl_->get_dict(), sba);
+                    if (aut2
+                        && (type_ & (CoBuchi | Parity))
+                        && (pref_ & Deterministic))
+                      return finalize(aut2);
+                  }
               }
           }
-
         bool exprop = unambiguous || level_ == postprocessor::High;
         aut = ltl_to_tgba_fm(r, simpl_->get_dict(), exprop,
                              true, false, false, nullptr, nullptr,

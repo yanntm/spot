@@ -87,6 +87,35 @@ New in spot 2.5.3.dev  (not yet released)
     a "suspendable" automaton B.  They are also optimized for
     the case that A is weak.
 
+  - When 'generic' acceptance is enabled, the translation routine will
+    split the input formula on Boolean operators into components that
+    are syntactically 'obligation', 'suspendable', or 'something
+    else'.  Those will be translated separately and combined with
+    product()/product_susp().  This is inspired by the ways things are
+    done in ltl2dstar or delag, and can be disabled by passing option
+    -xltl-split=0, as in ltl2tgba -G -D -xltl-split=0.  Here are the
+    sizes of deterministic automata produced with generic acceptance
+    using two versions of ltl2tgba and delag for reference.
+
+                                             ltl2tgba -GD   rabinizer 4
+                                              2.5     2.6      delag
+                                             ------------- -------------
+    FGa0&GFb0                                  5       1         1
+    (FGa1&GFb1)|FGa0|GFb0                      8       1         1
+    (FGa2&GFb2)|((FGa1|GFb1)&FGa0&GFb0)      497       1         1
+    FGa0|GFb0                                  2       1         1
+    (FGa1|GFb1)&FGa0&GFb0                     16       1         1
+    (FGa2|GFb2)&((FGa1&GFb1)|FGa0|GFb0)       29       1         1
+    GFa1 <-> GFz                               4       1         1
+    (GFa1 & GFa2) <-> GFz                      8       1         1
+    (GFa1 & GFa2 & GFa3) <-> GFz              21       1         1
+    GFa1 -> GFz                                5       1         1
+    (GFa1 & GFa2) -> GFz                      12       1         1
+    (GFa1 & GFa2 & GFa3) -> GFz               41       1         1
+    FG(a|b)|FG(!a|Xb)                          4       2         2
+    FG(a|b)|FG(!a|Xb)|FG(a|XXb)               21       5         4
+    FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb)  170      15         8
+
   - print_dot(), used to print automata in GraphViz's format,
     underwent several changes:
 
@@ -218,6 +247,13 @@ New in spot 2.5.3.dev  (not yet released)
       genltl --format='%F,%L,%f' ...
     Make sure to quote %L to protect the potential commas:
       genltl --format='%F,"%L",%f' ...
+
+  - In Spot 2.5 and prior running "ltl2tgba --generic --det" on some
+    formula would attempt to translate it as deterministic TGBA or
+    determinize it into an automaton with parity acceptance.  Version
+    2.5 introduced --parity to force parity acceptance on the output.
+    This version finally gives --generic some more natural semantics:
+    any acceptance condition can be used.
 
 
 New in spot 2.5.3 (2018-04-20)

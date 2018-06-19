@@ -149,6 +149,8 @@ namespace spot
     int relabel_bool_;
     int tls_impl_;
     bool gf_guarantee_;
+    bool ltl_split_;
+    const option_map* opt_;
   };
   /// @}
 
