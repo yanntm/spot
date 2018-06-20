@@ -27,6 +27,7 @@
 #include <spot/twaalgos/gfguarantee.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/product.hh>
+#include <spot/twaalgos/sccinfo.hh>
 
 namespace spot
 {
@@ -263,6 +264,19 @@ namespace spot
                   susp_aut = product(susp_aut, one);
                 else
                   susp_aut = product_or(susp_aut, one);
+              }
+            if (susp_aut->prop_universal().is_true())
+              {
+                // In a deterministic and suspendable automaton, all
+                // state recognize the same language, so we can move
+                // the initial state into a bottom accepting SCC.
+                scc_info si(susp_aut, scc_info_options::NONE);
+                if (si.is_trivial(si.scc_of(susp_aut->get_init_state_number())))
+                  {
+                    assert(!si.is_trivial(0));
+                    susp_aut->set_init_state(si.one_state_of(0));
+                    susp_aut->purge_unreachable_states();
+                  }
               }
             if (aut == nullptr)
               aut = susp_aut;

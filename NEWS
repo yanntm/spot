@@ -113,8 +113,8 @@ New in spot 2.5.3.dev  (not yet released)
     (GFa1 & GFa2) -> GFz                      12       1         1
     (GFa1 & GFa2 & GFa3) -> GFz               41       1         1
     FG(a|b)|FG(!a|Xb)                          4       2         2
-    FG(a|b)|FG(!a|Xb)|FG(a|XXb)               21       5         4
-    FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb)  170      15         8
+    FG(a|b)|FG(!a|Xb)|FG(a|XXb)               21       4         4
+    FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb)  170       8         8
 
   - print_dot(), used to print automata in GraphViz's format,
     underwent several changes:

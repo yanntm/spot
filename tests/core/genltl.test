@@ -191,9 +191,9 @@ cat >exp<<EOF
 "ms-phi-s=2",1
 "ms-phi-h=0",1
 "ms-phi-h=1",2
-"ms-phi-h=2",5
-"ms-phi-h=3",19
-"ms-phi-h=4",83
+"ms-phi-h=2",4
+"ms-phi-h=3",8
+"ms-phi-h=4",16
 "gf-equiv=0",1
 "gf-equiv=1",1
 "gf-equiv=2",1

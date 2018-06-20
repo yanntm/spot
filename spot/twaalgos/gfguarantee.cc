@@ -27,6 +27,7 @@
 #include <spot/twaalgos/minimize.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/isdet.hh>
+// #include <spot/twa/bddprint.hh>
 
 namespace spot
 {
@@ -54,6 +55,7 @@ namespace spot
     static twa_graph_ptr
     do_g_f_terminal_inplace(scc_info& si, bool state_based)
     {
+      bool want_merge_edges = false;
       twa_graph_ptr aut = std::const_pointer_cast<twa_graph>(si.get_aut());
 
       if (!is_terminal_automaton(aut, &si, true))
@@ -82,56 +84,56 @@ namespace spot
           // state.  However if some successor of the initial state is
           // also trivial, we might be able to remove it as well if we
           // are able to replay two step from the initial state: this
-          // can be generalized to more depth and require computing some
-          // history for each state (i.e., a common suffix to all finite
-          // words leading to this state).
+          // can be generalized to more depth and requires computing
+          // some history for each state (i.e., a common suffix to all
+          // finite words leading to this state).
+          //
+          // We will replay such histories regardless of whether there
+          // is actually some trivial leading SCCs that could be
+          // removed, because it reduces the size of cycles in the
+          // automaton, and this helps getting smaller products when
+          // combining several automata generated this way.
           std::vector<std::vector<bdd>> histories;
           bool initial_state_trivial = si.is_trivial(si.initial());
 
-          if (is_det && initial_state_trivial)
+          if (is_det)
             {
               // Compute the max number of steps we want to keep in
-              // the history of each state.  This is the largest
-              // number of trivial SCCs you can chain from the initial
-              // state.
-              unsigned max_histories = 1;
+              // the history of each state.  This is the length of the
+              // maximal path we can build from the initial state.
+              unsigned max_histories;
               {
                 std::vector<unsigned> depths(ns, 0U);
-                for (unsigned d: si.succ(ns - 1))
-                  depths[d] = 2;
-                for (int scc = ns - 2; scc >= 0; --scc)
+                for (unsigned scc = 0; scc < ns; ++scc)
                   {
-                    if (!si.is_trivial(scc))
-                      continue;
-                    unsigned sccd = depths[scc];
-                    max_histories = std::max(max_histories, sccd);
-                    ++sccd;
-                    for (unsigned d: si.succ(scc))
-                      depths[d] = std::max(depths[d], sccd);
+                    unsigned depth = 0;
+                    for (unsigned succ: si.succ(scc))
+                      depth = std::max(depth, depths[succ]);
+                    depths[scc] = depth + si.states_of(scc).size();
                   }
+                max_histories = depths[ns - 1] - 1;
               }
 
               unsigned numstates = aut->num_states();
               histories.resize(numstates);
               // Compute the one-letter history of each state.  If all
-              // transition entering a state have the same label, the history
-              // is that label.  Otherwise set it to bddfalse.
+              // transition entering a state have the same label, the
+              // history is that label.  Otherwise, we make a
+              // disjunction of all those labels, so that what we have
+              // is an over-approximation of the history.
               for (auto& e: aut->edges())
                 {
                   std::vector<bdd>& hd = histories[e.dst];
                   if (hd.empty())
                     hd.push_back(e.cond);
-                  else if (hd[0] != e.cond)
-                    hd[0] = bddfalse;
+                  else
+                    hd[0] |= e.cond;
                 }
-              // remove all bddfalse, and check if there is a chance to build
-              // a larger history.
+              // check if there is a chance to build a larger history.
               bool should_continue = false;
               for (auto&h: histories)
                 if (h.empty())
                   continue;
-                else if (h[0] == bddfalse)
-                  h.pop_back();
                 else
                   should_continue = true;
               // Augment those histories with more letters.
@@ -152,10 +154,12 @@ namespace spot
                               else
                                 hd.push_back(bddfalse);
                             }
-                          else if (hs.size() < historypos
-                                   || hd[historypos] != hs[historypos - 1])
+                          else
                             {
-                              hd[historypos] = bddfalse;
+                              if (hs.size() >= historypos)
+                                hd[historypos] |= hs[historypos - 1];
+                              else
+                                hd[historypos] = bddfalse;
                             }
                         }
                     }
@@ -163,7 +167,6 @@ namespace spot
                   for (unsigned n = 0; n < numstates; ++n)
                     {
                       auto& h = histories[n];
-                      //for (auto&h: histories)
                       if (h.size() <= historypos)
                         continue;
                       else if (h[historypos] == bddfalse)
@@ -196,10 +199,14 @@ namespace spot
               // It will loop
               if (term[si.scc_of(e.dst)])
                 {
-                  if (!initial_state_trivial
-                      // If the source state is the initial state, we
-                      // should not try to combine it with itself...
-                      || e.src == init)
+                  // If the source state is the initial state, we
+                  // should not try to combine it with itself...
+                  //
+                  // Also if the automaton is not deterministic
+                  // and there is no trivial initial state, then
+                  // we simply loop back to the initial state.
+                  if (e.src == init
+                      || (!is_det && !initial_state_trivial))
                     {
                       e.dst = init;
                       e.acc = {0};
@@ -224,11 +231,13 @@ namespace spot
                   // history will get us back the terminal state.  In both
                   // cases, we should try again with a smaller history.
                   unsigned moved_init = init;
+                  bdd econd = e.cond;
+                  bool first;
                   if (is_det)
                     {
                       auto& h = histories[e.src];
                       int hsize = h.size();
-                      for (int hlen = hsize - 1; hlen > 0; --hlen)
+                      for (int hlen = hsize - 1; hlen >= 0; --hlen)
                         {
                           for (int pos = hlen - 1; pos >= 0; --pos)
                             {
@@ -248,36 +257,85 @@ namespace spot
                             }
                           // we have successfully played all history
                           // to a non-terminal state.
+                          //
+                          // Combine this edge with any compatible edge from
+                          // the initial state.
+                          first = true;
+                          for (auto& ei: aut->out(moved_init))
+                            {
+                              bdd cond = ei.cond & econd;
+                              if (cond != bddfalse)
+                                {
+                                  // We should never reach the terminal state,
+                                  // unless the history is empty.  In that
+                                  // case (ts=true) we have to make a loop to
+                                  // the initial state without any
+                                  // combination.
+                                  bool ts = term[si.scc_of(ei.dst)];
+                                  if (ts && hlen > 0)
+                                    goto failed;
+                                  if (ts)
+                                    want_merge_edges = true;
+                                  if (first)
+                                    {
+                                      e.acc = {0};
+                                      e.cond = cond;
+                                      first = false;
+                                      if (!ts)
+                                        {
+                                          e.dst = ei.dst;
+                                          if (new_init == -1U)
+                                            new_init = e.src;
+                                        }
+                                      else
+                                        {
+                                          new_init = e.dst = init;
+                                        }
+                                    }
+                                  else
+                                    {
+                                      if (ts)
+                                        {
+                                          aut->new_edge(e.src, init, cond, {0});
+                                          new_init = init;
+                                        }
+                                      else
+                                        {
+                                          aut->new_edge(e.src, ei.dst,
+                                                        cond, {0});
+                                        }
+                                    }
+
+                                }
+                            }
                           break;
                         failed:
                           moved_init = init;
                           continue;
                         }
                     }
-                  // Combine this edge with any compatible edge from
-                  // the initial state.
-                  bdd econd = e.cond;
-                  bool first = true;
-                  for (auto& ei: aut->out(moved_init))
+                  else
                     {
-                      bdd cond = ei.cond & econd;
-                      if (cond != bddfalse)
+                      first = true;
+                      for (auto& ei: aut->out(moved_init))
                         {
-                          if (first)
+                          bdd cond = ei.cond & econd;
+                          if (cond != bddfalse)
                             {
-                              e.dst = ei.dst;
-                              e.acc = {0};
-                              e.cond = cond;
-                              first = false;
-                              if (new_init == -1U)
-                                new_init = e.src;
+                              if (first)
+                                {
+                                  e.dst = ei.dst;
+                                  e.acc = {0};
+                                  e.cond = cond;
+                                  first = false;
+                                }
+                              else
+                                {
+                                  aut->new_edge(e.src, ei.dst, cond, {0});
+                                }
                             }
-                          else
-                            {
-                              aut->new_edge(e.src, ei.dst, cond, {0});
-                            }
-
                         }
+
                     }
                 }
               else
@@ -315,6 +373,8 @@ namespace spot
         }
 
       aut->purge_unreachable_states();
+      if (want_merge_edges)
+        aut->merge_edges();
       return aut;
     }
   }
