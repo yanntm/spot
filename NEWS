@@ -116,6 +116,10 @@ New in spot 2.5.3.dev  (not yet released)
     FG(a|b)|FG(!a|Xb)|FG(a|XXb)               21       4         4
     FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb)  170       8         8
 
+  - The automaton postprocessor will now simplify acceptance
+    conditions more aggressively, calling spot::simplify_acceptance()
+    or spot::cleanup_acceptance() depanding on the optimization level.
+
   - print_dot(), used to print automata in GraphViz's format,
     underwent several changes:
 
@@ -216,7 +220,10 @@ New in spot 2.5.3.dev  (not yet released)
   - The HOA parser will now accept Alias: declarations that occur
     before AP:.
 
-  - the option --allow-dups of randltl now works properly
+  - The option --allow-dups of randltl now works properly.
+
+  - Converting generalized-co-Büchi to Streett using dnf_to_nca()
+    could produce bogus automata if the input had rejecting SCCs.
 
   Deprecation notice:
 

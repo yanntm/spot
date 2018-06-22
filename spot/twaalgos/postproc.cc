@@ -39,6 +39,7 @@
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/cobuchi.hh>
 #include <spot/twaalgos/rabin2parity.hh>
+#include <spot/twaalgos/cleanacc.hh>
 
 namespace spot
 {
@@ -229,6 +230,27 @@ namespace spot
     if (COLORED_ && !want_parity)
       throw std::runtime_error("postprocessor: the Colored setting only works "
                                "for parity acceptance");
+
+
+
+    // Attempt to simplify the acceptance condition, unless this is a
+    // parity automaton and we want parity acceptance in the output.
+    auto simplify_acc = [&](twa_graph_ptr in)
+      {
+        if (PREF_ == Any && level_ == Low)
+          return in;
+        if (!(want_parity && in->acc().is_parity()))
+          {
+            if (level_ == High)
+              return simplify_acceptance(in);
+            else
+              return cleanup_acceptance(in);
+          }
+        if (level_ == High)
+          return cleanup_parity(in);
+        return in;
+      };
+    a = simplify_acc(a);
 
     if (!a->is_existential() &&
         // We will probably have to revisit this condition later.
@@ -438,6 +460,7 @@ namespace spot
       {
         dba = tgba_determinize(to_generalized_buchi(sim),
                                false, det_scc_, det_simul_, det_stutter_);
+        dba = simplify_acc(dba);
         if (level_ != Low)
           dba = simulation(dba);
         sim = nullptr;

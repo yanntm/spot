@@ -1,7 +1,7 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015 Laboratoire de Recherche et Développement de
-# l'Epita (LRDE).
+# Copyright (C) 2015, 2018 Laboratoire de Recherche et Développement
+# de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -55,25 +55,25 @@ HOA: v1
 States: 5
 Start: 0
 AP: 2 "b" "a"
-acc-name: Rabin 2
-Acceptance: 4 (Fin(0) & Inf(1)) | (Fin(2) & Inf(3))
+acc-name: Streett 1
+Acceptance: 2 Fin(0) | Inf(1)
 properties: trans-labels explicit-labels state-acc complete
 properties: deterministic
 --BODY--
 State: 0
 [!1] 1
 [1] 3
-State: 1 {1 3}
+State: 1 {1}
 [0&!1] 1
 [!0&!1] 2
 [0&1] 3
 [!0&1] 4
-State: 2 {1}
+State: 2
 [0&!1] 1
 [!0&!1] 2
 [0&1] 3
 [!0&1] 4
-State: 3 {0 3}
+State: 3 {0 1}
 [0&!1] 1
 [!0&!1] 2
 [0&1] 3

@@ -133,7 +133,7 @@ namespace spot
         product_states* res_map_;               // States of the aug. sub. cons.
         scc_info si_;                           // SCC information.
         unsigned nb_states_;                    // Number of states.
-        unsigned was_rabin_;                    // Was it Rabin before Streett?
+        unsigned was_dnf_;                      // Was it DNF before Streett?
         std::vector<unsigned>* orig_states_;    // Match old Rabin st. from new.
         std::vector<unsigned>* orig_clauses_;   // Associated Rabin clauses.
         unsigned orig_num_st_;                  // Rabin original nb states.
@@ -148,7 +148,7 @@ namespace spot
             bv->set(state);
           unsigned clause = 0;
           unsigned state = st.first;
-          if (was_rabin_)
+          if (was_dnf_)
             {
               clause = (*orig_clauses_)[state];
               assert((int)clause >= 0);
@@ -194,7 +194,7 @@ namespace spot
                              const const_twa_graph_ptr ref_power,
                              std::vector<acc_cond::rs_pair>& pairs,
                              bool named_states = false,
-                             bool was_rabin = false,
+                             bool was_dnf = false,
                              unsigned orig_num_st = 0)
           : aut_(ref_prod),
             state_based_(aut_->prop_state_acc().is_true()),
@@ -206,10 +206,10 @@ namespace spot
             si_(res_, (scc_info_options::TRACK_STATES
                        | scc_info_options::TRACK_SUCCS)),
             nb_states_(res_->num_states()),
-            was_rabin_(was_rabin),
+            was_dnf_(was_dnf),
             orig_num_st_(orig_num_st ? orig_num_st : ref_prod->num_states())
         {
-          if (was_rabin)
+          if (was_dnf)
             {
               orig_states_ = ref_prod->get_named_prop<std::vector<unsigned>>
                 ("original-states");

@@ -76,35 +76,32 @@ namespace spot
       void
       split_dnf_clauses(const acc_cond::acc_code& code)
       {
-        bool one_conjunction = false;
-        const acc_cond::acc_op root_op = code.back().sub.op;
-        auto s = code.back().sub.size;
-        while (s)
+        auto pos = &code.back();
+        if (pos->sub.op == acc_cond::acc_op::Or)
+          --pos;
+        auto start = &code.front();
+        while (pos > start)
           {
-            --s;
-            if (code[s].sub.op == acc_cond::acc_op::And
-                || ((one_conjunction = root_op == acc_cond::acc_op::And)))
+            const unsigned short size = pos[0].sub.size;
+            if (pos[0].sub.op == acc_cond::acc_op::And)
               {
-                s = one_conjunction ? s + 1 : s;
-                const unsigned short size = code[s].sub.size;
                 acc_cond::mark_t fin = {};
                 acc_cond::mark_t inf = {};
-                for (unsigned i = 1; i <= size; i += 2)
+                for (int i = 1; i <= (int)size; i += 2)
                   {
-                    if (code[s-i].sub.op == acc_cond::acc_op::Fin)
-                      fin |= code[s-i-1].mark;
-                    else if (code[s-i].sub.op == acc_cond::acc_op::Inf)
-                      inf |= code[s-i-1].mark;
+                    if (pos[-i].sub.op == acc_cond::acc_op::Fin)
+                      fin |= pos[-i - 1].mark;
+                    else if (pos[-i].sub.op == acc_cond::acc_op::Inf)
+                      inf |= pos[-i - 1].mark;
                     else
                       SPOT_UNREACHABLE();
                   }
                 all_clauses_.emplace_back(fin, inf);
                 set_to_keep_.emplace_back(fin | inf);
-                s -= size;
               }
-            else if (code[s].sub.op == acc_cond::acc_op::Fin) // Fin
+            else if (pos[0].sub.op == acc_cond::acc_op::Fin) // Fin
               {
-                auto m1 = code[--s].mark;
+                auto m1 = pos[-1].mark;
                 for (unsigned int s : m1.sets())
                   {
                     all_clauses_.emplace_back(acc_cond::mark_t({s}),
@@ -112,9 +109,9 @@ namespace spot
                     set_to_keep_.emplace_back(acc_cond::mark_t({s}));
                   }
               }
-            else if (code[s].sub.op == acc_cond::acc_op::Inf) // Inf
+            else if (pos[0].sub.op == acc_cond::acc_op::Inf) // Inf
               {
-                auto m2 = code[--s].mark;
+                auto m2 = pos[-1].mark;
                 all_clauses_.emplace_back(acc_cond::mark_t({}), m2);
                 set_to_keep_.emplace_back(m2);
               }
@@ -122,6 +119,7 @@ namespace spot
               {
                 SPOT_UNREACHABLE();
               }
+            pos -= size + 1;
           }
 #if TRACE
         trace << "\nPrinting all clauses\n";
@@ -244,10 +242,12 @@ namespace spot
         trace << "accepting clauses\n";
         for (unsigned i = 0; i < res.size(); ++i)
           {
-            trace << "scc(" << i << ") --> ";
+            trace << "scc(" << i << ") -->";
             for (auto elt : res[i])
-              trace << elt << ',';
-            trace << '\n'
+              trace << ' ' << elt;
+            if (si_.is_rejecting_scc(i))
+              trace << " rej";
+            trace << '\n';
           }
         trace << '\n';
 #endif
@@ -341,6 +341,7 @@ namespace spot
           {
             if (!si_.is_useful_scc(scc))
               continue;
+            trace << "scc #" << scc << '\n';
 
             bool rej_scc = acc_clauses_[scc].empty();
             for (auto st : si_.states_of(scc))
@@ -388,7 +389,7 @@ namespace spot
 
                         acc_cond::mark_t m = {};
                         if (same_scc || state_based_)
-                          m = all_set_to_add_;
+                          m = e.acc | all_set_to_add_;
 
                         for (const auto& p_dst : st_repr_[e.dst])
                           res_->new_edge(src, p_dst.second, e.cond, m);
