@@ -206,6 +206,10 @@ New in spot 2.5.3.dev  (not yet released)
 
   Bugs fixed:
 
+  - Python *.py and *.so files are now always installed into the same
+    directory.  This was an issue on systems like Fedora that separate
+    plateform-specific packages from non-plateform-specific ones.
+
   - print_dot() will correctly escape strings containing \n in HTML
     mode.
 

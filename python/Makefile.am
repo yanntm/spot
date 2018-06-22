@@ -35,7 +35,7 @@ AM_CPPFLAGS = -I$(PYTHONINC) -I$(top_builddir) -I$(top_srcdir) \
 SWIGFLAGS = -c++ -python -py3 -O -nofastproxy -MD
 
 EXTRA_DIST = buddy.i spot/impl.i spot/ltsmin.i spot/gen.i
-nobase_python_PYTHON = \
+nobase_pyexec_PYTHON = \
   spot/__init__.py \
   spot/aux.py \
   spot/impl.py \
