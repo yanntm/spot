@@ -154,6 +154,22 @@ namespace spot
   twa_word_ptr
   twa::intersecting_word(const_twa_ptr other) const
   {
+    static bool use_two_aut = []()
+      {
+        auto s = getenv("SPOT_TWO_AUT");
+        return s ? std::stoi(s) : true;
+      }();
+    if (use_two_aut)
+    {
+      auto run = intersecting_run(other);
+      if (run)
+      {
+        auto w = make_twa_word(run->reduce());
+        w->simplify();
+        return w;
+      }
+      return nullptr;
+    }
     auto a1 = remove_fin_maybe(shared_from_this());
     auto a2 = remove_fin_maybe(other);
     return otf_product(a1, a2)->accepting_word();
