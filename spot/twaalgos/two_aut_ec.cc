@@ -61,7 +61,7 @@ namespace spot
         it_ = begin_;
       }
 
-      void release()
+      void release(const const_twa_graph_ptr&)
       {}
 
       bool first()
@@ -107,12 +107,12 @@ namespace spot
     {
     public:
       tae_iterator_otf_common(const const_twa_ptr& aut, const state* s)
-        : aut_(aut), it_(aut->succ_iter(s))
+        : it_(aut->succ_iter(s))
       {}
 
-      void release()
+      void release(const const_twa_ptr& aut)
       {
-        aut_->release_iter(it_);
+        aut->release_iter(it_);
       }
 
       bool first()
@@ -141,7 +141,6 @@ namespace spot
       }
 
     protected:
-      const const_twa_ptr aut_;
       twa_succ_iterator* it_;
     };
 
@@ -206,7 +205,7 @@ namespace spot
       }
 
       static
-      state_t init(aut_t a)
+      state_t init(aut_t& a)
       {
         return a->get_init_state_number();
       }
@@ -214,7 +213,7 @@ namespace spot
       static void destroy(state_t) {}
 
       static
-      const state* get_state(aut_t a, state_t s)
+      const state* get_state(aut_t& a, state_t s)
       {
         return a->state_from_number(s);
       }
@@ -306,13 +305,13 @@ namespace spot
         return right_;
       }
 
-      const state *get_left_state(typename tae_element<aut_type_l>::aut_t a)
+      const state *get_left_state(typename tae_element<aut_type_l>::aut_t& a)
         const
       {
         return tae_element<aut_type_l>::get_state(a, left_);
       }
 
-      const state *get_right_state(typename tae_element<aut_type_r>::aut_t a)
+      const state *get_right_state(typename tae_element<aut_type_r>::aut_t& a)
         const
       {
         return tae_element<aut_type_r>::get_state(a, right_);
@@ -426,9 +425,9 @@ namespace spot
       using iterator_l_t = typename tae_element<aut_type_l>::iterator_t;
       using iterator_r_t = typename tae_element<aut_type_r>::iterator_t;
 
-      product_iterator(typename tae_element<aut_type_l>::aut_t l_aut,
+      product_iterator(typename tae_element<aut_type_l>::aut_t& l_aut,
                        typename tae_element<aut_type_l>::state_t l_state,
-                       typename tae_element<aut_type_r>::aut_t r_aut,
+                       typename tae_element<aut_type_r>::aut_t& r_aut,
                        typename tae_element<aut_type_r>::state_t r_state)
         : left(l_aut, l_state), right(r_aut, r_state)
       {
@@ -477,10 +476,11 @@ namespace spot
         return product_mark<STRONG>(left.acc(), right.acc());
       }
 
-      void release()
+      void release(typename tae_element<aut_type_l>::aut_t& l_aut,
+                   typename tae_element<aut_type_r>::aut_t& r_aut)
       {
-        left.release();
-        right.release();
+        left.release(l_aut);
+        right.release(r_aut);
       }
 
       iterator_l_t left;
@@ -633,7 +633,7 @@ namespace spot
                   src_out.next();
                 }
 
-              src_out.release();
+              src_out.release(left, right);
               bfs_queue.pop_front();
             }
 
@@ -885,7 +885,7 @@ namespace spot
                   root.pop();
                 }
 
-              succ.release();
+              succ.release(left, right);
 
               continue;
             }
@@ -935,7 +935,7 @@ namespace spot
             {
               while (!todo.empty())
                 {
-                  todo.top().second.release();
+                  todo.top().second.release(left, right);
                   todo.pop();
                 }
 
