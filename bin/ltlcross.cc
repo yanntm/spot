@@ -691,7 +691,14 @@ namespace
                    const spot::const_twa_graph_ptr& aut_j,
                    size_t i, size_t j, bool icomp, bool jcomp)
   {
-    if (aut_i->num_sets() + aut_j->num_sets() >
+    static bool use_two_aut = []()
+      {
+        auto s = getenv("SPOT_TWO_AUT");
+        return s ? std::stoi(s) : true;
+      }();
+
+    if (!use_two_aut &&
+        aut_i->num_sets() + aut_j->num_sets() >
         spot::acc_cond::mark_t::max_accsets())
       {
         // Report the skipped test if both automata are not
