@@ -14,7 +14,7 @@ auts = list()
 done = multiprocessing.Value('i', 0)
 done_lock = multiprocessing.Lock()
 
-# aut1, aut2, time prd+ec tae, time prd otf, time ec otf, time prd exp, time ec exp, res tae, res otf, res exp, states prd, trans prd, time ar tae, time ar otf, time ar exp
+# aut1, aut2, strength aut1, strength aut2, time prd+ec tae, time prd otf, time ec otf, time prd exp, time ec exp, res tae, res otf, res exp, states prd, trans prd, time ar tae, time ar otf, time ar exp
 
 def comp(ids):
     id1, id2 = ids
@@ -69,7 +69,7 @@ def comp(ids):
     with done_lock:
         done.value += 1
     print("{}/{}".format(done.value, todo))
-    return (id1, id2,
+    return (id1, id2, bool(aut1.prop_weak()), bool(aut2.prop_weak()),
             time_prd_ec_tae, time_prd_otf, time_ec_otf, time_prd_exp, time_ec_exp,
             not bool(res_tae), res_otf, res_exp,
             prd_exp.num_states(), prd_exp.num_edges(),
@@ -100,7 +100,9 @@ if __name__ == '__main__':
         c = 0
         for a in spot.automata(command + "|"):
             print("{}/{}".format(c, count))
-            auts.append(spot.remove_fin(a))
+            a = spot.remove_fin(a)
+            spot.check_strength(a)
+            auts.append(a)
             c += 1
 
         print("end of generation:", time.asctime(), file=log)
