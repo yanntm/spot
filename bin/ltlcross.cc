@@ -69,6 +69,8 @@
 #include <spot/misc/tmpfile.hh>
 #include <spot/misc/timer.hh>
 
+#include <ctime>
+
 const char argp_program_doc[] ="\
 Call several LTL/PSL translators and cross-compare their output to detect \
 bugs, or to gather statistics.  The list of formulas to use should be \
@@ -1596,7 +1598,8 @@ print_stats_json(const char* filename)
 int
 main(int argc, char** argv)
 {
-  return protected_main(argv, [&]() -> unsigned {
+  auto start = std::clock();
+  int p = protected_main(argv, [&]() -> unsigned {
       const argp ap = { options, parse_opt, "[COMMANDFMT...]",
                         argp_program_doc, children, nullptr, nullptr };
 
@@ -1701,4 +1704,7 @@ main(int argc, char** argv)
 
       return global_error_flag;
     });
+  auto end = std::clock();
+  std::cout << "CPU Time: " << (end - start) * 1000000000L / CLOCKS_PER_SEC << "ns" << std::endl;
+  return p;
 }
