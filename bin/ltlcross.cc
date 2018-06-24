@@ -69,6 +69,8 @@
 #include <spot/misc/tmpfile.hh>
 #include <spot/misc/timer.hh>
 
+#include <ctime>
+
 const char argp_program_doc[] ="\
 Call several LTL/PSL translators and cross-compare their output to detect \
 bugs, or to gather statistics.  The list of formulas to use should be \
@@ -725,7 +727,13 @@ namespace
         std::cerr << '\n';
       }
 
+    auto start = std::clock();
     auto w = aut_i->intersecting_word(aut_j);
+    auto end = std::clock();
+
+    std::cerr << "bench: intersecting_word() took "
+              << (end - start) * 1000000. / double(CLOCKS_PER_SEC) << "µs\n";
+
     if (w)
       {
         std::ostream& err = global_error();
