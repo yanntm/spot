@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import csv
 import multiprocessing
@@ -14,33 +14,66 @@ auts = list()
 done = multiprocessing.Value('i', 0)
 done_lock = multiprocessing.Lock()
 
-# aut1, aut2, time tae, time otf, time prd, res tae, res otf, res prd, states, trans
+# aut1, aut2, time prd+ec tae, time prd otf, time ec otf, time prd exp, time ec exp, res tae, res otf, res exp, states prd, trans prd, time ar tae, time ar otf, time ar exp
 
 def comp(ids):
     id1, id2 = ids
     aut1 = auts[id1]
     aut2 = auts[id2]
 
-    start_tae = time.perf_counter()
+    start = time.perf_counter()
     res_tae = spot.two_aut_ec(aut1, aut2)
-    end_tae = time.perf_counter()
+    end = time.perf_counter()
+    time_prd_ec_tae = end - start
 
-    start_otf = time.perf_counter()
-    res_otf = spot.otf_product(aut1, aut2).is_empty()
-    end_otf = time.perf_counter()
+    start = time.perf_counter()
+    prd_otf = spot.otf_product(aut1, aut2)
+    end = time.perf_counter()
+    time_prd_otf = end - start
 
-    start_prd = time.perf_counter()
-    prd = spot.product(aut1, aut2)
-    res_prd = prd.is_empty()
-    end_prd = time.perf_counter()
+    start = time.perf_counter()
+    res_otf = prd_otf.is_empty()
+    end = time.perf_counter()
+    time_ec_otf = end - start
+
+    start = time.perf_counter()
+    prd_exp = spot.product(aut1, aut2)
+    end = time.perf_counter()
+    time_prd_exp = end - start
+
+    start = time.perf_counter()
+    res_exp = prd_exp.is_empty()
+    end = time.perf_counter()
+    time_ec_exp = end - start
+
+    time_ar_tae = None
+    time_ar_otf = None
+    time_ar_exp = None
+
+    if res_tae is not None:
+        start = time.perf_counter()
+        ar_tae = res_tae.left_accepting_run()
+        end = time.perf_counter()
+        time_ar_tae = end - start
+
+        start = time.perf_counter()
+        ar_otf = prd_otf.accepting_run()
+        end = time.perf_counter()
+        time_ar_otf = end - start
+
+        start = time.perf_counter()
+        ar_exp = prd_exp.accepting_run()
+        end = time.perf_counter()
+        time_ar_exp = end - start
 
     with done_lock:
         done.value += 1
     print("{}/{}".format(done.value, todo))
     return (id1, id2,
-            end_tae - start_tae, end_otf - start_otf, end_prd - start_prd,
-            res_tae, res_otf, res_prd,
-            prd.num_states(), prd.num_edges())
+            time_prd_ec_tae, time_prd_otf, time_ec_otf, time_prd_exp, time_ec_exp,
+            not bool(res_tae), res_otf, res_exp,
+            prd_exp.num_states(), prd_exp.num_edges(),
+            time_ar_tae, time_ar_otf, time_ar_exp)
 
 if __name__ == '__main__':
     if len(sys.argv) < 4:
