@@ -734,7 +734,13 @@ namespace
         std::cerr << '\n';
       }
 
+    auto start = std::clock();
     auto w = aut_i->intersecting_word(aut_j);
+    auto end = std::clock();
+
+    std::cerr << "bench: intersecting_word() took "
+              << (end - start) * 1000000. / double(CLOCKS_PER_SEC) << "µs\n";
+
     if (w)
       {
         std::ostream& err = global_error();
@@ -1598,8 +1604,7 @@ print_stats_json(const char* filename)
 int
 main(int argc, char** argv)
 {
-  auto start = std::clock();
-  int p = protected_main(argv, [&]() -> unsigned {
+  return protected_main(argv, [&]() -> unsigned {
       const argp ap = { options, parse_opt, "[COMMANDFMT...]",
                         argp_program_doc, children, nullptr, nullptr };
 
@@ -1704,7 +1709,4 @@ main(int argc, char** argv)
 
       return global_error_flag;
     });
-  auto end = std::clock();
-  std::cout << "CPU Time: " << (end - start) * 1000000000L / CLOCKS_PER_SEC << "ns" << std::endl;
-  return p;
 }
