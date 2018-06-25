@@ -314,23 +314,13 @@ $txt
 #+RESULTS:
 [[file:hier-oblig-1.svg]]
 
-Note that the above automaton uses transition-based acceptance, but
-since it is an obligation, using transition-based acceptance will not
-improve anything, so we might as well require a Büchi automaton with
-=-B= or just state-based acceptance with =-S=:
-
-#+NAME: hier-oblig-1b
-#+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba -B 'Fa R b' | autfilt --highlight-nondet -d
-#+END_SRC
-
-#+BEGIN_SRC dot :file hier-oblig-1b.svg :var txt=hier-oblig-1b :exports results
-$txt
-#+END_SRC
-
-#+RESULTS:
-[[file:hier-oblig-1b.svg]]
-
+Note that the default translation used by =ltl2tgba= will turn any
+syntactic persistence formulas (this includes obligations formulas)
+into a weak automaton.  In a weak automaton, the acceptance condition
+could be defined in term of SCCs, i.e., the cycles of some SCCs are
+either all accepting, or all rejecting.  As a consequence, it there is
+no incentive to use transition-based acceptance; instead, state-based
+acceptance is output by default.
 
 With =ltl2tgba -D= we get a (minimal) deterministic weak Büchi
 automaton instead.
@@ -358,12 +348,13 @@ by =autfilt= when simplifying deterministic automata (they need to be
 deterministic so that =autfilt= can easily compute their complement).
 
 For instance, let us use =ltl2dstar= to construct a Streett automaton
-for the obligation property =a <-> GXa=:
+for the obligation property =Ga | XFb=.
 
 #+NAME: hier-oblig-3
 #+BEGIN_SRC sh :results verbatim :exports code
-ltldo 'ltl2dstar --automata=streett' -f 'a <-> GXa' -d
+ltldo 'ltl2dstar --automata=streett' -f 'Ga | XFb' -d
 #+END_SRC
+
 #+BEGIN_SRC dot :file hier-oblig-3.svg :var txt=hier-oblig-3 :exports results
 $txt
 #+END_SRC
@@ -375,7 +366,7 @@ We can now minimize this automaton with:
 
 #+NAME: hier-oblig-4
 #+BEGIN_SRC sh :results verbatim :exports code
-ltldo 'ltl2dstar --automata=streett' -f 'a <-> GXa' | autfilt -D -C -d
+ltldo 'ltl2dstar --automata=streett' -f 'Ga | XFb' | autfilt -D -C -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-oblig-4.svg :var txt=hier-oblig-4 :exports results
 $txt
@@ -597,12 +588,12 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
 
  1. Determinize the non-deterministic automaton to obtain a
     deterministic automaton with parity acceptance: this is done by
-    using =ltl2tgba -G -D=, with option =-G= indicating that any
-    acceptance condition may be used.
+    using =ltl2tgba -P -D=, with option =-P= indicating that parity
+    acceptance is desired.
 
     #+NAME: hier-recurrence-4
     #+BEGIN_SRC sh :results verbatim :exports code
-    ltl2tgba -G -D 'G(Gb | Fa)' -d
+    ltl2tgba -P -D 'G(Gb | Fa)' -d
     #+END_SRC
     #+BEGIN_SRC dot :file hier-recurrence-4.svg :var txt=hier-recurrence-4 :exports results
     $txt
@@ -617,7 +608,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
 
     #+NAME: hier-recurrence-5
     #+BEGIN_SRC sh :results verbatim :exports code
-    ltl2tgba -G -D 'G(Gb | Fa)' |
+    ltl2tgba -P -D 'G(Gb | Fa)' |
       autfilt --generalized-rabin -d
     #+END_SRC
     #+BEGIN_SRC dot :file hier-recurrence-5.svg :var txt=hier-recurrence-5 :exports results
@@ -636,7 +627,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
 
     #+NAME: hier-recurrence-6
     #+BEGIN_SRC sh :results verbatim :exports code
-    ltl2tgba -G -D 'G(Gb | Fa)' |
+    ltl2tgba -P -D 'G(Gb | Fa)' |
       autfilt -S --generalized-rabin -d
     #+END_SRC
 
@@ -659,7 +650,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
 
     #+NAME: hier-recurrence-7
     #+BEGIN_SRC sh :results verbatim :exports code
-    ltl2tgba -G -D 'G(Gb | Fa)' |
+    ltl2tgba -P -D 'G(Gb | Fa)' |
       autfilt -S --generalized-rabin |
       autfilt -B -D -d
     #+END_SRC
@@ -678,7 +669,7 @@ helps producing a smaller automaton.  Here is what we get without it:
 
 #+NAME: hier-recurrence-8
 #+BEGIN_SRC sh :results verbatim :exports code
-ltl2tgba -G -D 'G(Gb | Fa)' |
+ltl2tgba -P -D 'G(Gb | Fa)' |
   autfilt --generalized-rabin |
   autfilt -B -D -d
 #+END_SRC
@@ -690,8 +681,9 @@ $txt
 #+RESULTS:
 [[file:hier-recurrence-8.svg]]
 
-It is likely that =ltl2tgba= will implement all this processing chain
-in the future.
+It is likely that =ltl2tgba -B -D= will implement all this processing
+chain in the future, but so originally =-D= was only expressing a
+preference not a requirement.
 
 ** Persistence
 
@@ -735,13 +727,13 @@ Note that in this example, we know that =GFa= is trivial enough that
 general case we might have to determinize the automaton as we did in
 the previous section (we will do it again below).
 
-/Persistence/ properties can be represented by weak Büchi automata.  The
-translator is aware of that, so when it detects that the input formula
-is a syntactic-persistence, it simplifies its translation slightly to
-ensure that the output will use at most one acceptance set.  (It is
-possible to define a persistence properties using an LTL formula that
-is not a syntactic-persistance, this optimization is simply not
-applied.)
+/Persistence/ properties can be represented by weak Büchi automata.
+The translator is aware of that, so when it detects that the input
+formula is a syntactic-persistence, it simplifies its translation
+slightly to ensure that the output will use at most one acceptance
+set.  (It is possible to define a persistence properties using an LTL
+formula that is not a syntactic-persistance, in that case this
+optimization is simply not applied.)
 
 If the input is a weak property that is not syntactically weak, the
 output will not necessarily be weak.  One costly way to obtain a weak
@@ -751,7 +743,8 @@ complement the acceptance of the resulting automaton, yielding a
 deterministic co-Büchi automaton, and then transform that into a Büchi
 automaton.
 
-Let's do that on the persistence formula =F(G!a | G(b U a))=
+Let's do that on the persistence formula =F(G!a | G(b U a))=, just for
+the fun of it.
 
 #+BEGIN_SRC sh :results verbatim :exports both
 ltlfilt -f 'F(G!a | G(b U a))' --format='%[v]h'
@@ -772,7 +765,7 @@ $txt
 #+RESULTS:
 [[file:hier-persistence-3.svg]]
 
-Furthermore it appears that =ltl2tgba= does generate a deterministic
+Furthermore it appears that =ltl2tgba -D= does generate a deterministic
 Büchi automaton for the complement, instead we get a non-deterministic
 generalized Büchi automaton:
 
@@ -796,7 +789,7 @@ deterministic Büchi:
 #+NAME: hier-persistence-5
 #+BEGIN_SRC sh :results verbatim :exports code
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
-  ltl2tgba -G -D |
+  ltl2tgba -P -D |
   autfilt --generalized-rabin |
   autfilt --tgba -D -d
 #+END_SRC
@@ -813,7 +806,7 @@ Now we can complement it to obtain a deterministic co-Büchi automaton for =F(G!
 #+NAME: hier-persistence-6
 #+BEGIN_SRC sh :results verbatim :exports code
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
-  ltl2tgba -G -D |
+  ltl2tgba -P -D |
   autfilt --generalized-rabin |
   autfilt --tgba -D |
   autfilt --complement -d
@@ -831,7 +824,7 @@ And finally we convert the result back to Büchi:
 #+NAME: hier-persistence-7
 #+BEGIN_SRC sh :results verbatim :exports code
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
-  ltl2tgba -G -D |
+  ltl2tgba -P -D |
   autfilt --generalized-rabin |
   autfilt --tgba -D |
   autfilt --complement -B -d
