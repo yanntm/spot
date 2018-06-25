@@ -64,10 +64,11 @@ New in spot 2.5.3.dev  (not yet released)
 
     These are now used by the main translation routine, and can be
     disabled by passing -x '!gf-guarantee' to ltl2tgba.  For example,
-    here are the size of deterministic transition-based Büchi automata
-    constructed from four GF(guarantee) formulas with two versions of
-    Spot, and converted to other types of deterministic automata by
-    other tools.  "x(y)" means x states and y acceptance sets.
+    here are the size of deterministic transition-based generalized
+    Büchi automata constructed from four GF(guarantee) formulas with
+    two versions of Spot, and converted to other types of
+    deterministic automata by other tools.  "x(y)" means x states and
+    y acceptance sets.
 
                                ltl2tgba -D   rabinizer 4
                                 2.5   2.6   delag ltl2dra
@@ -101,7 +102,7 @@ New in spot 2.5.3.dev  (not yet released)
     sizes of deterministic automata produced with generic acceptance
     using two versions of ltl2tgba and delag for reference.
 
-                                             ltl2tgba -GD  rabinizer 4
+                                             ltl2tgba -DG  rabinizer 4
                                               2.5     2.6     delag
                                              ------------- -----------
     FGa0&GFb0                                 2(2)    1(2)    1(2)
@@ -120,9 +121,22 @@ New in spot 2.5.3.dev  (not yet released)
     FG(a|b)|FG(!a|Xb)|FG(a|XXb)              21(2)    4(3)    4(3)
     FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb) 170(2)    8(4)    8(4)
 
+  - For 'parity' output, the 'ltl-split' optimization just separate
+    obligation subformulas from the rest, where a determinization is
+    still performed.
+                                 ltl2tgba -DP  ltl3dra  rabinizer 4
+                                   2.5   2.6    0.2.3     ltl2dpa
+                                -------------- -------  -----------
+    FGp0 & (Gp1 | XFp2)           6(2)  4(1)     4(1)      4(2)
+    G!p0 | F(p0 & (!p1 W p2))     5(2)  4(2)     n/a       5(2)
+    (p0 W XXGp0) & GFp1 & FGp2    6(2)  5(2)     n/a       6(3)
+
+    (The above just show a few cases that were improved.  There are
+    many cases where ltl2dpa still produces smaller automata.)
+
   - The automaton postprocessor will now simplify acceptance
     conditions more aggressively, calling spot::simplify_acceptance()
-    or spot::cleanup_acceptance() depanding on the optimization level.
+    or spot::cleanup_acceptance() depending on the optimization level.
 
   - print_dot(), used to print automata in GraphViz's format,
     underwent several changes:

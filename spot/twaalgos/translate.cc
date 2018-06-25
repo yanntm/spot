@@ -168,7 +168,8 @@ namespace spot
     twa_graph_ptr aut;
     twa_graph_ptr aut2 = nullptr;
 
-    if (ltl_split_ && type_ == Generic && !r.is_syntactic_obligation())
+    if (ltl_split_ && (type_ == Generic
+                       || (type_ & Parity)) && !r.is_syntactic_obligation())
       {
         formula r2 = r;
         unsigned leading_x = 0;
@@ -177,28 +178,31 @@ namespace spot
             r2 = r2[0];
             ++leading_x;
           }
-        // F(q|u|f) = q|F(u)|F(f)
-        // G(q&e&f) = q&G(e)&G(f)
-        bool want_u = r2.is({op::F, op::Or});
-        if (want_u || r2.is({op::G, op::And}))
+        if (type_ == Generic)
           {
-            std::vector<formula> susp;
-            std::vector<formula> rest;
-            auto op1 = r2.kind();
-            auto op2 = r2[0].kind();
-            for (formula child: r2[0])
+            // F(q|u|f) = q|F(u)|F(f)
+            // G(q&e&f) = q&G(e)&G(f)
+            bool want_u = r2.is({op::F, op::Or});
+            if (want_u || r2.is({op::G, op::And}))
               {
-                bool u = child.is_universal();
-                bool e = child.is_eventual();
-                if (u && e)
-                  susp.push_back(child);
-                else if ((want_u && u) || (!want_u && e))
-                  susp.push_back(formula::unop(op1, child));
-                else
-                  rest.push_back(child);
+                std::vector<formula> susp;
+                std::vector<formula> rest;
+                auto op1 = r2.kind();
+                auto op2 = r2[0].kind();
+                for (formula child: r2[0])
+                  {
+                    bool u = child.is_universal();
+                    bool e = child.is_eventual();
+                    if (u && e)
+                      susp.push_back(child);
+                    else if ((want_u && u) || (!want_u && e))
+                      susp.push_back(formula::unop(op1, child));
+                    else
+                      rest.push_back(child);
+                  }
+                susp.push_back(formula::unop(op1, formula::multop(op2, rest)));
+                r2 = formula::multop(op2, susp);
               }
-            susp.push_back(formula::unop(op1, formula::multop(op2, rest)));
-            r2 = formula::multop(op2, susp);
           }
         if (r2.is_syntactic_obligation() || !r2.is(op::And, op::Or))
           goto nosplit;
@@ -212,7 +216,8 @@ namespace spot
           {
             if (child.is_syntactic_obligation())
               oblg.push_back(child);
-            else if (child.is_eventual() && child.is_universal())
+            else if (child.is_eventual() && child.is_universal()
+                     && (type_ == Generic))
               susp.push_back(child);
             else
               rest.push_back(child);
@@ -243,13 +248,24 @@ namespace spot
         if (!rest.empty())
           {
             formula rest_f = formula::multop(r2.kind(), rest);
-            twa_graph_ptr rest_aut = transrun(rest_f);
-            if (aut == nullptr)
-              aut = rest_aut;
-            else if (is_and)
-              aut = product(aut, rest_aut);
+            // In case type_ is Parity, all suspendable formulas have
+            // been put into rest_f.  But if the entire rest_f is
+            // suspendable, we want to handle it like so.
+            if (rest_f.is_eventual() && rest_f.is_universal())
+              {
+                assert(susp.empty());
+                susp.push_back(rest_f);
+              }
             else
-              aut = product_or(aut, rest_aut);
+              {
+                twa_graph_ptr rest_aut = transrun(rest_f);
+                if (aut == nullptr)
+                  aut = rest_aut;
+                else if (is_and)
+                  aut = product(aut, rest_aut);
+                else
+                  aut = product_or(aut, rest_aut);
+              }
           }
         if (!susp.empty())
           {
