@@ -80,3 +80,4 @@ GTAGS
 *.changes
 *.dsc
 *.gcov
+spot.spec
