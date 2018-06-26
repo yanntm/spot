@@ -54,7 +54,10 @@ org: $(PICTURES_EXTRA)
 	  cat $(builddir)/org/org.errors; exit 1; \
         else :; fi
 
-PLANTUML_URL = https://sourceforge.net/projects/plantuml/files/latest/download
+# We mirror the SourceForge URL here, because we have too many issues
+# with these automated download otherwise (mainly SSL issues and down
+# time), and failing to download those breaks our automated builds.
+PLANTUML_URL = https://www.lrde.epita.fr/dload/spot/deps/plantuml.jar
 org/plantuml.jar:
 	wget $(PLANTUML_URL) -O org/plantuml.jar || curl -L $(PLANTUML_URL) -o org/plantuml.jar
 
