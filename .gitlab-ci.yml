@@ -200,6 +200,28 @@ debpkg-unstable:
     paths:
       - _build_unstable/
 
+rpm-pkg:
+  stage: build
+  only:
+    - /-rpm$/
+    - master
+    - next
+    - stable
+  image: registry.lrde.epita.fr/spot-rpm
+  script:
+    - autoreconf -vfi
+    - ./configure
+    - make
+    - make dist
+    - cp spot-*.tar.gz ~/rpmbuild/SOURCES/
+    - cp spot.spec ~/rpmbuild/SPECS/
+    - rpmbuild -bb ~/rpmbuild/SPECS/spot.spec
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm .
+  artifacts:
+    when: always
+    paths:
+      - ./*.rpm
+
 publish-stable:
   only:
     - stable

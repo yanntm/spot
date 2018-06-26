@@ -68,7 +68,8 @@ debian/changelog: configure.ac
 EXTRA_DIST = HACKING ChangeLog.1 tools/gitlog-to-changelog	\
 	     tools/help2man tools/man2html.pl			\
 	     tools/test-driver-teamcity $(UTF8) $(DEBIAN)	\
-	     m4/gnulib-cache.m4 .dir-locals.el
+	     m4/gnulib-cache.m4 .dir-locals.el			\
+	     spot.spec spot.spec.in
 
 dist-hook: gen-ChangeLog
 
@@ -111,3 +112,6 @@ deb: dist
 	tar Jcvf spot_$(VERSION)$(GITPATCH).orig.tar.xz \
 	         spot-$(VERSION)$(GITPATCH)
 	cd spot-$(VERSION)$(GITPATCH) && debuild $(DEBUILDFLAGS) -us -uc
+
+spot.spec: configure.ac spot.spec.in
+	sed 's/[@]VERSION[@]/$(VERSION)/;s/[@]GITPATCH[@]/@@@$(GITPATCH)/;s/@@@\.//' spot.spec.in > $@.tmp && mv $@.tmp $@
