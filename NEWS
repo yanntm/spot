@@ -70,8 +70,8 @@ New in spot 2.5.3.dev  (not yet released)
     deterministic automata by other tools.  "x(y)" means x states and
     y acceptance sets.
 
-                               ltl2tgba -D   rabinizer 4
-                                2.5   2.6   delag ltl2dra
+                               ltl2tgba -D  delag ltl2dra
+                                2.5   2.6    rabinizer 4
     -------------------------  -----------  -------------
     GF(a <-> XXa)               9(1)  4(1)   4(2)   9(4)
     GF(a <-> XXXa)             27(1)  8(1)   8(2)  25(4)
@@ -99,33 +99,34 @@ New in spot 2.5.3.dev  (not yet released)
     product()/product_susp().  This is inspired by the ways things are
     done in ltl2dstar or delag, and can be disabled by passing option
     -xltl-split=0, as in ltl2tgba -G -D -xltl-split=0.  Here are the
-    sizes of deterministic automata produced with generic acceptance
-    using two versions of ltl2tgba and delag for reference.
+    sizes of deterministic automata (except for ltl2tela which produces
+    non-deterministic automata) produced with generic acceptance
+    using two versions of ltl2tgba and other tools for reference.
 
-                                             ltl2tgba -DG  rabinizer 4
-                                              2.5     2.6     delag
-                                             ------------- -----------
-    FGa0&GFb0                                 2(2)    1(2)    1(2)
-    (FGa1&GFb1)|FGa0|GFb0                    16(6)    1(4)    1(4)
-    (FGa2&GFb2)|((FGa1|GFb1)&FGa0&GFb0)      29(8)    1(6)    1(6)
-    FGa0|GFb0                                 5(4)    1(2)    1(2)
-    (FGa1|GFb1)&FGa0&GFb0                     8(4)    1(4)    1(4)
-    (FGa2|GFb2)&((FGa1&GFb1)|FGa0|GFb0)     497(14)   1(6)    1(6)
-    GFa1 <-> GFz                              4(6)    1(3)    1(4)
-    (GFa1 & GFa2) <-> GFz                     8(4)    1(3)    1(6)
-    (GFa1 & GFa2 & GFa3) <-> GFz             21(4)    1(4)    1(8)
-    GFa1 -> GFz                               5(4)    1(2)    1(2)
-    (GFa1 & GFa2) -> GFz                     12(4)    1(3)    1(3)
-    (GFa1 & GFa2 & GFa3) -> GFz              41(4)    1(4)    1(4)
-    FG(a|b)|FG(!a|Xb)                         4(2)    2(2)    2(2)
-    FG(a|b)|FG(!a|Xb)|FG(a|XXb)              21(2)    4(3)    4(3)
-    FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb) 170(2)    8(4)    8(4)
+                                             ltl2tgba -DG  delag  ltl3tela
+                                              2.5    2.6  rabi. 4  1.1.2
+                                             ------------ ------- --------
+    FGa0&GFb0                                 2(2)   1(2)   1(2)    1(2)
+    (FGa1&GFb1)|FGa0|GFb0                    16(6)   1(4)   1(4)    1(9)
+    (FGa2&GFb2)|((FGa1|GFb1)&FGa0&GFb0)      29(8)   1(6)   1(6)    3(11)
+    FGa0|GFb0                                 5(4)   1(2)   1(2)    1(5)
+    (FGa1|GFb1)&FGa0&GFb0                     8(4)   1(4)   1(4)    1(7)
+    (FGa2|GFb2)&((FGa1&GFb1)|FGa0|GFb0)     497(14)  1(6)   1(6)    1(14)
+    GFa1 <-> GFz                              4(6)   1(3)   1(4)    1(7)
+    (GFa1 & GFa2) <-> GFz                     8(4)   1(3)   1(6)    3(10)
+    (GFa1 & GFa2 & GFa3) <-> GFz             21(4)   1(4)   1(8)    3(13)
+    GFa1 -> GFz                               5(4)   1(2)   1(2)    1(5)
+    (GFa1 & GFa2) -> GFz                     12(4)   1(3)   1(3)    1(6)
+    (GFa1 & GFa2 & GFa3) -> GFz              41(4)   1(4)   1(4)    1(7)
+    FG(a|b)|FG(!a|Xb)                         4(2)   2(2)   2(2)    2(3)
+    FG(a|b)|FG(!a|Xb)|FG(a|XXb)              21(2)   4(3)   4(3)    4(4)
+    FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb) 170(2)   8(4)   8(4)    8(5)
 
-  - For 'parity' output, the 'ltl-split' optimization just separate
+  - For 'parity' output, the 'ltl-split' optimization just separates
     obligation subformulas from the rest, where a determinization is
     still performed.
-                                 ltl2tgba -DP  ltl3dra  rabinizer 4
-                                   2.5   2.6    0.2.3     ltl2dpa
+                                 ltl2tgba -DP  ltl3dra   ltl2ldpa
+                                   2.5   2.6    0.2.3   rabinizer 4
                                 -------------- -------  -----------
     FGp0 & (Gp1 | XFp2)           6(2)  4(1)     4(1)      4(2)
     G!p0 | F(p0 & (!p1 W p2))     5(2)  4(2)     n/a       5(2)
