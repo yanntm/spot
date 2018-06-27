@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015, 2016, 2017 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -41,7 +41,7 @@ static const argp_option options[] =
     { DOC("randaut", "Generate random ω-automata.") },
     { DOC("genaut", "Generate ω-automata from scalable patterns.") },
     { DOC("ltl2tgba", "Convert LTL or PSL into variants of Transition-based "
-          "Generalized Büchi Automata.") },
+          "Generalized Büchi Automata, and to other types of automata.") },
     { DOC("ltl2tgta", "Convert LTL or PSL into variants of Transition-based "
           "Generalized Testing Automata.") },
     { DOC("autfilt", "Filter, convert, and transform ω-automata.") },

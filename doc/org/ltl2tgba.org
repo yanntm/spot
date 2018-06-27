@@ -8,7 +8,7 @@ This tool translates LTL or PSL formulas into different types of
 automata.
 
 The inner algorithm produces Transition-based Generalized Büchi
-Automata, hence the name of the tools, but =ltl2tgba= has grown and
+Automata, hence the name of the tool, but =ltl2tgba= has grown and
 now offers several options to adjust the type of automaton output.
 Those options will be covered in more detail below, but here is
 a quick summary:
@@ -22,6 +22,9 @@ a quick summary:
   condition
 - =--parity --deterministic= (or =-DP=) will produce a deterministic
   automaton with parity acceptance.
+
+(The latter two can also be used with =--deterministic=, but that is
+less frequent.)
 
 * TGBA and BA
 

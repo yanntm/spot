@@ -40,10 +40,10 @@
 #include <spot/misc/timer.hh>
 
 static const char argp_program_doc[] ="\
-Translate linear-time formulas (LTL/PSL) into Büchi automata.\n\n\
+Translate linear-time formulas (LTL/PSL) into various types of automata.\n\n\
 By default it will apply all available optimizations to output \
 the smallest Transition-based Generalized Büchi Automata, \
-in GraphViz's format.\n\
+output in the HOA format.\n\
 If multiple formulas are supplied, several automata will be output.";
 
 

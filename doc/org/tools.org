@@ -42,8 +42,8 @@ corresponding commands are hidden.
 - [[file:randltl.org][=randltl=]] Generate random LTL/PSL formulas.
 - [[file:ltlfilt.org][=ltlfilt=]] Filter, convert, and transform LTL/PSL formulas.
 - [[file:genltl.org][=genltl=]] Generate LTL formulas from scalable patterns.
-- [[file:ltl2tgba.org][=ltl2tgba=]] Translate LTL/PSL formulas into Büchi automata.
-- [[file:ltl2tgta.org][=ltl2tgta=]] Translate LTL/PSL formulas into Testing automata.
+- [[file:ltl2tgba.org][=ltl2tgba=]] Translate LTL/PSL formulas into various types of automata.
+- [[file:ltl2tgta.org][=ltl2tgta=]] Translate LTL/PSL formulas into testing automata.
 - [[file:ltlcross.org][=ltlcross=]] Cross-compare LTL/PSL-to-automata translators.
 - [[file:ltlgrind.org][=ltlgrind=]] List formulas similar to but simpler than a given LTL/PSL
   formula.
