@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Translating an LTL formula into a never claim
 #+DESCRIPTION: Code example for translating formulas in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 Here is how to translate an LTL (or PSL) formula into a never claim.

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Custom print of an automaton
 #+DESCRIPTION: Code example for iterating over ω-automata in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 This example demonstrates how to iterate over an automaton in C++ and

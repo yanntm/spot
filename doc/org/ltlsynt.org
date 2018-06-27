@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =ltlsynt=
 #+DESCRIPTION: Spot command-line tool for synthesizing AIGER circuits from LTL/PSL formulas.
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 * Basic usage

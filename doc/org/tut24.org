@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Iterating over alternating automata
 #+DESCRIPTION: Code example for iterating of alternating ω-automata in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 Alternating automata can be explored in a very similar way as

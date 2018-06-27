@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Creating an alternating automaton by adding states and transitions
 #+DESCRIPTION: Code example for constructing alternating ω-automata in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 This example demonstrates how to create the following alternating

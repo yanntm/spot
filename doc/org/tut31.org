@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Alternation removal
 #+DESCRIPTION: Code example for removing alternation in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 Consider the following alternating co-Büchi automaton (see [[file:tut23.org][how to

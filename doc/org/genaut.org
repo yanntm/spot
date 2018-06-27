@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =genaut=
 #+DESCRIPTION: Spot command-line tool that generates ω-automata from known patterns
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 This tool outputs ω-automata generated from scalable patterns.

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Common output options for automata
 #+DESCRIPTION: Options for input and output of ω-automata in Spot's command-line tools
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 Spot supports different output syntaxes for automata.  This page

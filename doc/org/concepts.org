@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Concepts
 #+DESCRIPTION: Informal explanation of various concepts used in Spot.
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: index.html
 
 This page documents some of the concepts used in Spot, and whose

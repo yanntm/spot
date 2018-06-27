@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =autcross=
 #+DESCRIPTION: Spot command-line tool for cross-comparing the output of automaton processors.
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 =autcross= is a tool for cross-comparing the output of tools that

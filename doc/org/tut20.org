@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Converting a never claim into HOA
 #+DESCRIPTION: Code example for parsing and printing ω-automata in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 The goal is to start from a never claim, as produced by Spin, e.g.:

@@ -116,7 +116,8 @@ ORG_FILES = \
   org/upgrade2.org \
   org/satmin.org \
   org/satmin.tex \
-  org/setup.org
+  org/setup.org \
+  org/spot2.svg
 
 PICTURES_EXTRA = \
   $(srcdir)/org/arch.svg \

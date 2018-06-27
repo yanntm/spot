@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Parsing and Printing LTL Formulas
 #+DESCRIPTION: Code example for parsing and printing formulas in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 Our first task is to read formulas and print them in another syntax.

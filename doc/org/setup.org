@@ -6,3 +6,6 @@
 #+MACRO: LASTTARBALL [[http://www.lrde.epita.fr/dload/spot/spot-2.5.3.tar.gz][=spot-2.5.3.tar.gz=]]
 #+MACRO: LASTNEWS [[https://gitlab.lrde.epita.fr/spot/spot/blob/spot-2-5-3/NEWS][summary of the changes]]
 #+MACRO: LASTDATE 2018-04-20
+
+#+ATTR_HTML: :id spotlogo
+[[file:spot2.svg]]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Testing the equivalence of two formulas
 #+DESCRIPTION: Code example for testing the equivalence of two LTL or PSL formulas
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 This page shows how to test whether two LTL/PSL formulas are

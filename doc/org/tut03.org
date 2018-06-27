@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Constructing and transforming formulas
 #+DESCRIPTION: Code example for constructing and transforming formulas in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 This page explains how to build formulas and how to iterate over their

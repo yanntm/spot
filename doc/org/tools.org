@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Command-line tools installed by Spot {{{SPOTVERSION}}}
 #+DESCRIPTION: List of all the command-line tools installed by Spot {{{SPOTVERSION}}}
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: index.html
 
 This document introduces command-line tools that are installed with

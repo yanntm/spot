@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =ltlgrind=
 #+DESCRIPTION: Spot command-line tool for mutating LTL formulas.
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 This tool lists formulas that are similar to but simpler than a given

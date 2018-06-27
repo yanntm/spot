@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =ltl2tgba=
 #+DESCRIPTION: Spot command-line tool for translating LTL into Transition-based Generalized Büchi Automata.
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 This tool translates LTL or PSL formulas into different types of

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Creating an automaton by adding states and transitions
 #+DESCRIPTION: Code example for constructing ω-automata in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 This example demonstrates how to create an automaton and then print it.

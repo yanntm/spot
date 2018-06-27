@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Exploring the temporal hierarchy of Manna & Pnueli
 #+DESCRIPTION: Spot command-line tools for exploring the temporal hierarchy of Manna & Pnueli
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 /A hierarchy of temporal properties/ was defined by Manna & Pnueli in

@@ -2,7 +2,7 @@
 a{color:inherit;background-color:inherit;font:inherit;text-decoration:inherit}
 a:hover{text-decoration:underline}
 /* http://paletton.com/#uid=33i0X0kz3BrkeHdpSD1C7r1FAlb */
-body{font-family:Lato, sans-serif;font-size:12pt;font-weight:normal;max-width:62em;margin:auto;padding:0 .5em;background-image:url(/img/spot64.png);background-repeat:no-repeat;background-position:.5em .5em}
+body{font-family:Lato, sans-serif;font-size:12pt;font-weight:normal;max-width:62em;margin:auto;padding:0 .5em}
 body.man{padding:0 .5em 3em .5em}
 body #content{padding-top:45px}
 body pre{background:#fbfbfb;border:none;font-family:monospace, courier}
@@ -29,17 +29,19 @@ svg.org-svg{width:auto;max-width:100%}
 #table-of-contents{position:fixed;right:0em;top:0em;max-width:50%;max-height:80%;overflow:auto;z-index:10}
 #table-of-contents #text-table-of-contents{display:none}
 #table-of-contents:hover #text-table-of-contents{display:block;padding:0.5em;margin-top:-1.5em}
+#spotlogo{position:absolute;top:10px;left:10px;z-index:-1}
 }
 @media print{
 #table-of-contents{border:1px solid #ffd300}
 #org-div-home-and-up{visibility:hidden}
+#spotlogo{width:2cm;position:absolute;top:0px;left:0px;z-index:-1}
 }
-thead tr {background: #ffe35e;}
-#content tbody:nth-child(odd) tr:nth-child(even) {background: #fff0a6;}
-#content tbody:nth-child(odd) tr:nth-child(odd) {background: #fff7cf;}
-#content tbody:nth-child(even) tr:nth-child(even) {background: #fff3bc;}
-#content tbody:nth-child(even) tr:nth-child(odd) {background: #fffbe0;}
-.org-svg {max-width:100%;width:auto;}
+thead tr{background:#ffe35e}
+#content tbody:nth-child(odd) tr:nth-child(even){background:#fff0a6}
+#content tbody:nth-child(odd) tr:nth-child(odd){background:#fff7cf}
+#content tbody:nth-child(even) tr:nth-child(even){background:#fff3bc}
+#content tbody:nth-child(even) tr:nth-child(odd){background:#fffbe0}
+.org-svg{max-width:100%;width:auto}
 .org-keyword{font-weight:bold}
 .org-builtin{font-weight:bold}
 .org-preprocessor{font-weight:bold}
@@ -59,3 +61,24 @@ thead tr {background: #ffe35e;}
 .implem:before{background:#ffe35e;content:"Implementation detail";padding:.5ex;position:relative;top:0;left:0;font-weight:bold}
 .caveat{background:#ef99c9;padding:0.5ex 1ex 0.5ex 1ex;margin:1ex;border-color:#d70079;border-style:solid none}
 .caveat:before{background:#d70079;content:"Caveat";padding:.5ex;position:relative;top:0;left:0;font-weight:bold}
+.spotlogo{transform-origin:50% 50%;animation-duration:2s;animation-name:animspotlogo}
+g.spotlogobg{transform-origin:50% 50%;animation-duration:2s;animation-name:animspotlogobg}
+g#version{transform-origin:50% 50%;animation-duration:3s;animation-name:animspotlogover}
+@keyframes animspotlogo{
+0%{transform:rotateY(90deg)}
+80%{transform:rotateY(0deg)}
+100%{transform:rotateY(0deg)}
+}
+@keyframes animspotlogobg{
+0%{transform:rotateY(90deg)}
+50%{transform:rotate(0deg)rotateY(0deg)}
+100%{transform:rotate(360deg)rotateY(0deg)}
+}
+@keyframes animspotlogover{
+0%{transform:scale(.9)}
+50%{transform:scale(.9)}
+62%{transform:scale(1.1)}
+75%{transform:scale(.9)}
+88%{transform:scale(1.1)}
+100%{transform:scale(1)}
+}

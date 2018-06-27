@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Compiling against Spot
 #+DESCRIPTION: How to compile C++14 programs using Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 This page is not about compiling Spot itself (for this, please refer

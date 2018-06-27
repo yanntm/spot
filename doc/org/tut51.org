@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Implementing an on-the-fly Kripke structure
 #+DESCRIPTION: Implementing an Kripke structure in C++, allowing on-the-fly exploration
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 

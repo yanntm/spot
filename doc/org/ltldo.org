@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =ltldo=
 #+DESCRIPTION: Spot's wrapper for third-party LTL translators
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 This tool is a wrapper for tools that read LTL/PSL formulas and

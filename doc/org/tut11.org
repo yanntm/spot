@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Translating an LTL formula into a monitor
 #+DESCRIPTION: Code example for using Spot to translating formulas in monitors
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 A monitor is a special type of automaton that is supposed to /monitor/

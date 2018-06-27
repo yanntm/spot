@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =autfilt=
 #+DESCRIPTION: Spot command-line tool for filtering, tranforming, and converting ω-automata.
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 
 The =autfilt= tool can filter, transform, and convert a stream of automata.

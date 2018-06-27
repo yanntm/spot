@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Explicit vs. on-the-fly: two interfaces for exploring automata
 #+DESCRIPTION: Explanation of the explicit and on-the-fly automata interfaces in Spot
-#+SETUPFILE: setup.org
+#+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 
 
