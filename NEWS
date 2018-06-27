@@ -79,7 +79,7 @@ New in spot 2.5.3.dev  (not yet released)
     GF((b | Fa) & (b R Xb))     6(2)  2(1)   3(4)   3(4)
 
     Note that in the above the automata produced by 'ltl2tgba -D' in
-    version 2.5 were not nodeterministic (because -D is only a
+    version 2.5 were not deterministic (because -D is only a
     preference).  They are deterministic in 2.6 and other tools.
 
   - spot::product() and spot::product_or() learned to produce an
@@ -99,7 +99,7 @@ New in spot 2.5.3.dev  (not yet released)
     product()/product_susp().  This is inspired by the ways things are
     done in ltl2dstar or delag, and can be disabled by passing option
     -xltl-split=0, as in ltl2tgba -G -D -xltl-split=0.  Here are the
-    sizes of deterministic automata (except for ltl2tela which produces
+    sizes of deterministic automata (except for ltl3tela which produces
     non-deterministic automata) produced with generic acceptance
     using two versions of ltl2tgba and other tools for reference.
 
@@ -125,7 +125,7 @@ New in spot 2.5.3.dev  (not yet released)
   - For 'parity' output, the 'ltl-split' optimization just separates
     obligation subformulas from the rest, where a determinization is
     still performed.
-                                 ltl2tgba -DP  ltl3dra   ltl2ldpa
+                                 ltl2tgba -DP  ltl3dra    ltl2dpa
                                    2.5   2.6    0.2.3   rabinizer 4
                                 -------------- -------  -----------
     FGp0 & (Gp1 | XFp2)           6(2)  4(1)     4(1)      4(2)
