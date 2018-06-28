@@ -105,7 +105,8 @@ namespace spot
     simpl_owned_ = simpl_ = new tl_simplifier(options, dict);
   }
 
-  twa_graph_ptr translator::run(formula* f)
+
+  twa_graph_ptr translator::run_aux(formula r)
   {
 #define PREF_ (pref_ & (Small | Deterministic))
 
@@ -118,49 +119,6 @@ namespace spot
         set_pref(pref_ | postprocessor::Deterministic);
       }
 
-    // Do we want to relabel Boolean subformulas?
-    // If we have a huge formula such as
-    //  (a1 & a2 & ... & an) U (b1 | b2 | ... | bm)
-    // then it is more efficient to translate
-    //  a U b
-    // and then fix the automaton.  We use relabel_bse() to find
-    // sub-formulas that are Boolean but do not have common terms.
-    //
-    // This rewriting is enabled only if the formula
-    //  1) has some Boolean subformula
-    //  2) has more than relabel_bool_ atomic propositions (the default
-    //     is 4, but this can be changed)
-    //  3) relabel_bse() actually reduces the number of atomic
-    //     propositions.
-    relabeling_map m;
-    formula to_work_on = *f;
-    if (relabel_bool_ > 0)
-      {
-        bool has_boolean_sub = false; // that is not atomic
-        std::set<formula> aps;
-        to_work_on.traverse([&](const formula& f)
-                            {
-                              if (f.is(op::ap))
-                                aps.insert(f);
-                              else if (f.is_boolean())
-                                has_boolean_sub = true;
-                              return false;
-                            });
-        unsigned atomic_props = aps.size();
-        if (has_boolean_sub && (atomic_props >= (unsigned) relabel_bool_))
-          {
-            formula relabeled = relabel_bse(to_work_on, Pnn, &m);
-            if (m.size() < atomic_props)
-              to_work_on = relabeled;
-            else
-              m.clear();
-          }
-      }
-
-    formula r = simpl_->simplify(to_work_on);
-    if (to_work_on == *f)
-      *f = r;
-
     // This helps ltl_to_tgba_fm() to order BDD variables in a more
     // natural way (improving the degeneralization).
     simpl_->clear_as_bdd_cache();
@@ -168,8 +126,7 @@ namespace spot
     twa_graph_ptr aut;
     twa_graph_ptr aut2 = nullptr;
 
-    if (ltl_split_ && (type_ == Generic
-                       || (type_ & Parity)) && !r.is_syntactic_obligation())
+    if (ltl_split_ && !r.is_syntactic_obligation())
       {
         formula r2 = r;
         unsigned leading_x = 0;
@@ -178,11 +135,11 @@ namespace spot
             r2 = r2[0];
             ++leading_x;
           }
-        if (type_ == Generic)
+        if (type_ == Generic || type_ == TGBA)
           {
-            // F(q|u|f) = q|F(u)|F(f)
+            // F(q|u|f) = q|F(u)|F(f)  only for generic acceptance
             // G(q&e&f) = q&G(e)&G(f)
-            bool want_u = r2.is({op::F, op::Or});
+            bool want_u = r2.is({op::F, op::Or}) && (type_ == Generic);
             if (want_u || r2.is({op::G, op::And}))
               {
                 std::vector<formula> susp;
@@ -204,7 +161,12 @@ namespace spot
                 r2 = formula::multop(op2, susp);
               }
           }
-        if (r2.is_syntactic_obligation() || !r2.is(op::And, op::Or))
+        if (r2.is_syntactic_obligation() || !r2.is(op::And, op::Or) ||
+            // For TGBA/BA we only do conjunction.  There is nothing wrong
+            // with disjunction, but it seems to generated larger automata
+            // in many cases and it needs to be further investigated.  Maybe
+            // this could be relaxed in the case of deterministic output.
+            (r2.is(op::Or) && (type_ == TGBA || type_ == BA)))
           goto nosplit;
 
         bool is_and = r2.is(op::And);
@@ -212,16 +174,38 @@ namespace spot
         std::vector<formula> oblg;
         std::vector<formula> susp;
         std::vector<formula> rest;
+        bool want_g = type_ == TGBA || type_ == BA;
         for (formula child: r2)
           {
             if (child.is_syntactic_obligation())
               oblg.push_back(child);
             else if (child.is_eventual() && child.is_universal()
-                     && (type_ == Generic))
+                     && (!want_g || child.is(op::G)))
               susp.push_back(child);
             else
               rest.push_back(child);
           }
+
+        if (!susp.empty())
+          {
+            // The only cases where we accept susp and rest to be both
+            // non-empty is when doing arbitrary acceptance, or when doing
+            // Generic or TGBA.
+            if (!rest.empty() && !(type_ == Generic || type_ == TGBA))
+              {
+                rest.insert(rest.end(), susp.begin(), susp.end());
+                susp.clear();
+              }
+            // For Parity, we want to translate all suspendable
+            // formulas at once.
+            if (rest.empty() && type_ & Parity)
+              susp = { formula::multop(r2.kind(), susp) };
+          }
+        // For TGBA and BA, we only split if there is something to
+        // suspend.
+        if (susp.empty() && (type_ == TGBA || type_ == BA))
+          goto nosplit;
+
         option_map om;
         if (opt_)
           om = *opt_;
@@ -238,34 +222,26 @@ namespace spot
               return run(f);
           };
 
+        // std::cerr << "splitting\n";
         aut = nullptr;
         // All obligations can be converted into a minimal WDBA.
         if (!oblg.empty())
           {
             formula oblg_f = formula::multop(r2.kind(), oblg);
+            //std::cerr << "oblg: " << oblg_f << '\n';
             aut = transrun(oblg_f);
           }
         if (!rest.empty())
           {
             formula rest_f = formula::multop(r2.kind(), rest);
-            // In case type_ is Parity, all suspendable formulas have
-            // been put into rest_f.  But if the entire rest_f is
-            // suspendable, we want to handle it like so.
-            if (rest_f.is_eventual() && rest_f.is_universal())
-              {
-                assert(susp.empty());
-                susp.push_back(rest_f);
-              }
+            //std::cerr << "rest: " << rest_f << '\n';
+            twa_graph_ptr rest_aut = transrun(rest_f);
+            if (aut == nullptr)
+              aut = rest_aut;
+            else if (is_and)
+              aut = product(aut, rest_aut);
             else
-              {
-                twa_graph_ptr rest_aut = transrun(rest_f);
-                if (aut == nullptr)
-                  aut = rest_aut;
-                else if (is_and)
-                  aut = product(aut, rest_aut);
-                else
-                  aut = product_or(aut, rest_aut);
-              }
+              aut = product_or(aut, rest_aut);
           }
         if (!susp.empty())
           {
@@ -273,6 +249,7 @@ namespace spot
             // Each suspendable formula separately
             for (formula f: susp)
               {
+                //std::cerr << "susp: " << f << '\n';
                 twa_graph_ptr one = transrun(f);
                 if (!susp_aut)
                   susp_aut = one;
@@ -369,6 +346,56 @@ namespace spot
                 && ((aut2->num_sets() < aut2->num_sets()) || d2_more_det)))
           aut = std::move(aut2);
       }
+
+    return aut;
+  }
+
+  twa_graph_ptr translator::run(formula* f)
+  {
+    // Do we want to relabel Boolean subformulas?
+    // If we have a huge formula such as
+    //  (a1 & a2 & ... & an) U (b1 | b2 | ... | bm)
+    // then it is more efficient to translate
+    //  a U b
+    // and then fix the automaton.  We use relabel_bse() to find
+    // sub-formulas that are Boolean but do not have common terms.
+    //
+    // This rewriting is enabled only if the formula
+    //  1) has some Boolean subformula
+    //  2) has more than relabel_bool_ atomic propositions (the default
+    //     is 4, but this can be changed)
+    //  3) relabel_bse() actually reduces the number of atomic
+    //     propositions.
+    relabeling_map m;
+    formula to_work_on = *f;
+    if (relabel_bool_ > 0)
+      {
+        bool has_boolean_sub = false; // that is not atomic
+        std::set<formula> aps;
+        to_work_on.traverse([&](const formula& f)
+                            {
+                              if (f.is(op::ap))
+                                aps.insert(f);
+                              else if (f.is_boolean())
+                                has_boolean_sub = true;
+                              return false;
+                            });
+        unsigned atomic_props = aps.size();
+        if (has_boolean_sub && (atomic_props >= (unsigned) relabel_bool_))
+          {
+            formula relabeled = relabel_bse(to_work_on, Pnn, &m);
+            if (m.size() < atomic_props)
+              to_work_on = relabeled;
+            else
+              m.clear();
+          }
+      }
+
+    formula r = simpl_->simplify(to_work_on);
+    if (to_work_on == *f)
+      *f = r;
+
+    auto aut = run_aux(r);
 
     if (!m.empty())
       relabel_here(aut, &m);

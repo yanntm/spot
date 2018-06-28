@@ -418,7 +418,7 @@ namespace spot
         if (!is_terminal_automaton(aut, &si2, true))
           return reduced;
         do_g_f_terminal_inplace(si2, state_based);
-        if (aut->num_states() <= reduced->num_states())
+        if (aut->num_states() < reduced->num_states())
           return aut;
       }
     return reduced;

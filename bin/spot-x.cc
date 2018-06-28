@@ -46,8 +46,7 @@ more rules based on automata-based implication checks.  The default value \
 depends on the --low/--medium/--high settings.") },
     { nullptr, 0, nullptr, 0, "Translation options:", 0 },
     { DOC("ltl-split", "Set to 0 to disable the translation of automata \
-as product or sum of subformulas.  This is currently used only when \
-building automata with generic acceptance conditions.") },
+as product or sum of subformulas.") },
     { DOC("comp-susp", "Set to 1 to enable compositional suspension, \
 as described in our SPIN'13 paper (see Bibliography below).  Set to 2, \
 to build only the skeleton TGBA without composing it.  Set to 0 (the \

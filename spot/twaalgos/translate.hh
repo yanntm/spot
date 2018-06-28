@@ -138,6 +138,7 @@ namespace spot
   protected:
     void setup_opt(const option_map* opt);
     void build_simplifier(const bdd_dict_ptr& dict);
+    twa_graph_ptr run_aux(formula f);
 
   private:
     tl_simplifier* simpl_;
