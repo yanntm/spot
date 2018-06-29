@@ -33,7 +33,7 @@ static void
 display_version(FILE *stream, struct argp_state*)
 {
   fputs(program_name, stream);
-  fputs(" (" PACKAGE_STRING ")\n\
+  fputs(" (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\
 \n\
 Copyright (C) 2018  Laboratoire de Recherche et Développement de l'Epita.\n\
 License GPLv3+: \
