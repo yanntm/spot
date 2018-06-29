@@ -28,6 +28,9 @@
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/alternation.hh>
 #include <spot/twa/twaproduct.hh>
+#include <spot/twaalgos/dualize.hh>
+#include <spot/twaalgos/postproc.hh>
+#include <spot/twaalgos/isdet.hh>
 #include <utility>
 
 namespace spot
@@ -117,7 +120,7 @@ namespace spot
   twa::intersecting_run(const_twa_ptr other, bool from_other) const
   {
     auto a = shared_from_this();
-    if (from_other)
+    if (!from_other)
       other = remove_fin_maybe(other);
     else
       a = remove_fin_maybe(a);
@@ -133,6 +136,57 @@ namespace spot
     auto a1 = remove_fin_maybe(shared_from_this());
     auto a2 = remove_fin_maybe(other);
     return otf_product(a1, a2)->accepting_word();
+  }
+
+  namespace
+  {
+    static const_twa_graph_ptr
+    ensure_deterministic(const const_twa_ptr& aut_in)
+    {
+      const_twa_graph_ptr aut =
+        std::dynamic_pointer_cast<const twa_graph>(aut_in);
+      if (!aut)
+        aut = make_twa_graph(aut_in, twa::prop_set::all());
+
+      if (is_deterministic(aut))
+        return aut;
+      postprocessor p;
+      p.set_type(postprocessor::Generic);
+      p.set_pref(postprocessor::Deterministic);
+      p.set_level(postprocessor::Low);
+      return p.run(std::const_pointer_cast<twa_graph>(aut));
+    }
+  }
+  twa_run_ptr
+  twa::exclusive_run(const_twa_ptr other) const
+  {
+    const_twa_ptr a = shared_from_this();
+    const_twa_ptr b = other;
+
+    // We have to find a run in A\B or in B\A.  When possible, let's
+    // make sure the first automaton we complement is deterministic.
+    if (auto aa = std::dynamic_pointer_cast<const twa_graph>(a))
+      if (is_deterministic(aa))
+        std::swap(a, b);
+    if (auto run = a->intersecting_run(dualize(ensure_deterministic(b))))
+      return run;
+    return b->intersecting_run(dualize(ensure_deterministic(a)));
+  }
+
+  twa_word_ptr
+  twa::exclusive_word(const_twa_ptr other) const
+  {
+    const_twa_ptr a = shared_from_this();
+    const_twa_ptr b = other;
+
+    // We have to find a word in A\B or in B\A.  When possible, let's
+    // make sure the first automaton we complement is deterministic.
+    if (auto aa = std::dynamic_pointer_cast<const twa_graph>(a))
+      if (is_deterministic(aa))
+        std::swap(a, b);
+    if (auto word = a->intersecting_word(dualize(ensure_deterministic(b))))
+      return word;
+    return b->intersecting_word(dualize(ensure_deterministic(a)));
   }
 
   void

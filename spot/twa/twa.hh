@@ -888,6 +888,30 @@ namespace spot
     /// Return nullptr if no accepting word were found.
     virtual twa_word_ptr intersecting_word(const_twa_ptr other) const;
 
+    /// \brief Return an accepting run recognizing a word accepted by
+    /// exactly one of the two automata.
+    ///
+    /// If \a from_other is true, the returned run will be over the
+    /// \a other automaton.  Otherwise, the run will be over this
+    /// automaton.
+    ///
+    /// Note that this method currently only works if the automaton
+    /// from which the accepting run is extracted uses Fin-less acceptance.
+    /// (The other automaton can have any acceptance condition.)
+    ///
+    /// Return nullptr iff the two automata recognize the same
+    /// language.
+    virtual twa_run_ptr exclusive_run(const_twa_ptr other) const;
+
+    /// \brief Return a word accepted by exactly one of the two
+    /// automata.
+    ///
+    /// Note that this method DOES works with Fin acceptance.
+    ///
+    /// Return nullptr iff the two automata recognize the same
+    /// language.
+    virtual twa_word_ptr exclusive_word(const_twa_ptr other) const;
+
   private:
     acc_cond acc_;
 

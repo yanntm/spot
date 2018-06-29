@@ -192,7 +192,14 @@ New in spot 2.5.3.dev  (not yet released)
   - spot::contains() and spot::are_equivalent() can be used to
     check language containement between two automata or formulas.
     They are most welcome in Python, since we used to redefine
-    them every now and them.
+    them every now and them.  Some examples are shown in
+    https://spot.lrde.epita.fr/ipynb/contains.html
+
+  - aut1->exclusive_word(aut2) is a new method that returns a word
+    accepted by aut1 or aut2 but not both.  The exclusive_run()
+    variant will return.  This is useful when comparing automata and
+    looking for differences.  See also
+    https://spot.lrde.epita.fr/ipynb/contains.html
 
   - spot::remove_alternation() was slightly improved on very-weak
     alternating automata: the labeling of the outgoing transitions in
