@@ -67,11 +67,11 @@ New in spot 2.5.3.dev  (not yet released)
     here are the size of deterministic transition-based generalized
     Büchi automata constructed from four GF(guarantee) formulas with
     two versions of Spot, and converted to other types of
-    deterministic automata by other tools.  "x(y)" means x states and
-    y acceptance sets.
+    deterministic automata by other tools distributed with Owl 18.06.
+    "x(y)" means x states and y acceptance sets.
 
                                ltl2tgba -D  delag ltl2dra
-                                2.5   2.6    rabinizer 4
+                                2.5   2.6   18.06  18.06
     -------------------------  -----------  -------------
     GF(a <-> XXa)               9(1)  4(1)   4(2)   9(4)
     GF(a <-> XXXa)             27(1)  8(1)   8(2)  25(4)
@@ -104,7 +104,7 @@ New in spot 2.5.3.dev  (not yet released)
     using two versions of ltl2tgba and other tools for reference.
 
                                              ltl2tgba -DG  delag  ltl3tela
-                                              2.5    2.6  rabi. 4  1.1.2
+                                              2.5    2.6   18.06    1.1.2
                                              ------------ ------- --------
     FGa0&GFb0                                 2(2)   1(2)   1(2)    1(2)
     (FGa1&GFb1)|FGa0|GFb0                    16(6)   1(4)   1(4)    1(9)
@@ -125,12 +125,12 @@ New in spot 2.5.3.dev  (not yet released)
   - For 'parity' output, the 'ltl-split' optimization just separates
     obligation subformulas from the rest, where a determinization is
     still performed.
-                                 ltl2tgba -DP  ltl3dra    ltl2dpa
-                                   2.5   2.6    0.2.3   rabinizer 4
-                                -------------- -------  -----------
-    FGp0 & (Gp1 | XFp2)           6(2)  4(1)     4(1)      4(2)
-    G!p0 | F(p0 & (!p1 W p2))     5(2)  4(2)     n/a       5(2)
-    (p0 W XXGp0) & GFp1 & FGp2    6(2)  5(2)     n/a       6(3)
+                                 ltl2tgba -DP  ltl3dra  ltl2dpa
+                                   2.5   2.6    0.2.3    18.06
+                                -------------- -------  -------
+    FGp0 & (Gp1 | XFp2)           6(2)  4(1)     4(1)     4(2)
+    G!p0 | F(p0 & (!p1 W p2))     5(2)  4(2)     n/a      5(2)
+    (p0 W XXGp0) & GFp1 & FGp2    6(2)  5(2)     n/a      6(3)
 
     (The above just show a few cases that were improved.  There are
     many cases where ltl2dpa still produces smaller automata.)
