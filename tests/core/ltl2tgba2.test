@@ -364,12 +364,14 @@ diff output expected
 
 # The first four formulas appear in a NEWS entry for Spot 2.6
 # The 5th one is from issue #267.
+# The 6th one is from issue #358.
 cat >formulas <<EOF
 GF((a & XXa) | (!a & XX!a)), 4,8, 4,8, 6,14, 7,14
 GF((a & XXXa) | (!a & XXX!a)), 7,14, 8,16, 8,18, 15,30
 GF(((a & Xb) | XXc) & Xd), 4,64, 4,64, 5,80, 5,80
 GF((b | Fa) & (b R Xb)), 2,4, 2,4, 3,6, 3,12
 G(F(a & Xa) & F(a & X!a)), 2,4, 2,4, 4,8, 4,8
+G(!p0 & F(p1 & XG!p1)), 1,0, 1,0, 1,0, 1,0
 EOF
 
 ltl2tgba -Fformulas/1 --stats='%f, %s,%t' |

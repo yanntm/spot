@@ -266,8 +266,14 @@ namespace spot
                 scc_info si(susp_aut, scc_info_options::NONE);
                 if (si.is_trivial(si.scc_of(susp_aut->get_init_state_number())))
                   {
-                    assert(!si.is_trivial(0));
-                    susp_aut->set_init_state(si.one_state_of(0));
+                    unsigned st = si.one_state_of(0);
+                    // The bottom SCC can actually be trivial if it
+                    // has no successor because the formula is
+                    // equivalent to false.
+                    assert(!si.is_trivial(0) ||
+                           susp_aut->out(st).begin()
+                           == susp_aut->out(st).end());
+                    susp_aut->set_init_state(st);
                     susp_aut->purge_unreachable_states();
                   }
               }
