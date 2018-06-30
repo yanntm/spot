@@ -378,3 +378,13 @@ ltl2tgba -Fformulas/1 --stats='%f, %s,%t' |
     ltl2tgba -BD -F-/1 --stats='%f,%>, %s,%t' > output
 
 diff formulas output
+
+# Regression test for issue #357.  The second formula used to
+# incorrectly produce 13 edges when translated after the first one
+# because the transition were explored in a different order.
+ltl2tgba -D 'a | Fb' 'GF(d & (!c | XXc))' --stats=%s,%e,%d >out
+cat >expected <<EOF
+3,5,1
+4,12,1
+EOF
+diff out expected

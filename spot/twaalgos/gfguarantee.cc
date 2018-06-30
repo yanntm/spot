@@ -255,11 +255,22 @@ namespace spot
                             moved:
                               continue;
                             }
+
+                          // Make sure no successor of the new initial
+                          // state will reach a terminal state; if
+                          // that is the case, we have to shorten the
+                          // history further.
+                          if (hlen > 0)
+                            for (auto& ei: aut->out(moved_init))
+                              if ((ei.cond & econd) != bddfalse
+                                  && term[si.scc_of(ei.dst)])
+                                goto failed;
+
                           // we have successfully played all history
                           // to a non-terminal state.
                           //
-                          // Combine this edge with any compatible edge from
-                          // the initial state.
+                          // Combine this edge with any compatible
+                          // edge from the initial state.
                           first = true;
                           for (auto& ei: aut->out(moved_init))
                             {
@@ -272,10 +283,11 @@ namespace spot
                                   // the initial state without any
                                   // combination.
                                   bool ts = term[si.scc_of(ei.dst)];
-                                  if (ts && hlen > 0)
-                                    goto failed;
                                   if (ts)
-                                    want_merge_edges = true;
+                                    {
+                                      assert(hlen == 0);
+                                      want_merge_edges = true;
+                                    }
                                   if (first)
                                     {
                                       e.acc = {0};
