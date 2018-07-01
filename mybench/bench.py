@@ -116,6 +116,13 @@ if __name__ == '__main__':
 
         with open(name, 'w') as f:
             writer = csv.writer(f)
+            writer.writerow(['id1','id2',
+                             'strength1','strength2',
+                             'time_both_tae','time_prd_otf','time_ec_otf',
+                               'time_prd_exp','time_ec_exp',
+                             'res_tae','res_otf','res_exp',
+                             'states_prd','trans_prd',
+                             'time_ar_tae','time_ar_otf','time_ar_exp'])
             writer.writerows(times)
         print("Dumped CSV as", name)
 
