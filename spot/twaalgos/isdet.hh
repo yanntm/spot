@@ -83,7 +83,7 @@ namespace spot
   /// In the case of a semideterministic automaton, highlights the
   /// states reachable from any accepting SCC.
   ///
-  /// \param aut the automaton to process
+  /// \param si the SCC information of the automaton to process
   /// \param color the color to give to states reachable from accepting SCCs.
   SPOT_API void
   highlight_semidet_sccs(scc_info& si, unsigned color);
