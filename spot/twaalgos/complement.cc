@@ -310,22 +310,8 @@ namespace spot
                       }
                   }
                 else
-                  {
-                    auto it = succs.begin();
-                    while (it != succs.end())
-                      {
-                        // remove state if it should stay in s or c
-                        if ((*it)[t.dst] == ncsb_s
-                            || (*it)[t.dst] == ncsb_c)
-                          {
-                            std::iter_swap(it, succs.end() - 1);
-                            succs.pop_back();
-                            continue;
-                          }
-                        (*it)[t.dst] = ncsb_n;
-                        ++it;
-                      }
-                  }
+                  for (auto& succ: succs)
+                    succ[t.dst] = ncsb_n;
               }
           }
 

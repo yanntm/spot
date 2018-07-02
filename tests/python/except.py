@@ -152,3 +152,10 @@ except RuntimeError as e:
     assert "bit index is out of bounds" in str(e)
 else:
     report_missing_exception()
+
+try:
+    spot.complement_semidet(spot.translate('Gb R a', 'ba'))
+except RuntimeError as e:
+    assert "requires a semi-deterministic input" in str(e)
+else:
+    report_missing_exception()
