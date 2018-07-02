@@ -233,7 +233,7 @@ publish-rpm:
   dependencies:
     - rpm-pkg
   script:
-    - case $CI_COMMIT_REF_NAME in stable) rput fedora stable *.rpm;; next) rput fedora unstable *.rpm;; e
+    - case $CI_COMMIT_REF_NAME in stable) rput fedora stable *.rpm;; next) rput fedora unstable *.rpm;; esac
 
 publish-stable:
   only:
