@@ -222,6 +222,19 @@ rpm-pkg:
     paths:
       - ./*.rpm
 
+publish-rpm:
+  stage: publish
+  only:
+    - /-rpm$/
+    - next
+    - stable
+  tags:
+    - dput
+  dependencies:
+    - rpm-pkg
+  script:
+    - case $CI_COMMIT_REF_NAME in stable) rput fedora stable *.rpm;; next) rput fedora unstable *.rpm;; e
+
 publish-stable:
   only:
     - stable
