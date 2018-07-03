@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2016 Laboratoire de Recherche et Développement de
+# Copyright (C) 2016, 2018 Laboratoire de Recherche et Développement de
 # l'EPITA.
 #
 # This file is part of Spot, a model checking library.
@@ -22,5 +22,6 @@
 import spot
 a = spot.make_twa_graph(spot._bdd_dict)
 a.set_acceptance(0, spot.acc_code("t"))
+assert(a.prop_state_acc() == True);
 a.set_acceptance(1, spot.acc_code("Fin(0)"))
-assert(a.prop_state_acc() == 0);
+assert(a.prop_state_acc() == spot.trival.maybe());

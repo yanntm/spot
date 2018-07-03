@@ -681,6 +681,16 @@ def state_is_accepting(self, src) -> "bool":
   {
     return *self || other;
   }
+
+  bool __eq__(spot::trival other)
+  {
+    return self->val() == other.val();
+  }
+
+  bool __ne__(spot::trival other)
+  {
+    return self->val() != other.val();
+  }
 }
 
 

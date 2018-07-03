@@ -1203,8 +1203,8 @@ namespace spot
     trival prop_state_acc() const
     {
       if (num_sets() == 0)
-        return true;
-      return is.state_based_acc;
+        return trival(true);
+      return trival::from_repr_t(is.state_based_acc);
     }
 
     /// \brief Set the state-based-acceptance property.
@@ -1235,7 +1235,7 @@ namespace spot
     /// \see prop_terminal()
     trival prop_inherently_weak() const
     {
-      return is.inherently_weak;
+      return trival::from_repr_t(is.inherently_weak);
     }
 
     /// \brief Set the "inherently weak" property.
@@ -1265,7 +1265,7 @@ namespace spot
     /// \see prop_inherently_weak()
     trival prop_terminal() const
     {
-      return is.terminal;
+      return trival::from_repr_t(is.terminal);
     }
 
     /// \brief Set the terminal property.
@@ -1291,7 +1291,7 @@ namespace spot
     /// \see prop_inherently_weak()
     trival prop_weak() const
     {
-      return is.weak;
+      return trival::from_repr_t(is.weak);
     }
 
     /// \brief Set the weak property.
@@ -1321,7 +1321,7 @@ namespace spot
     /// \see prop_weak()
     trival prop_very_weak() const
     {
-      return is.very_weak;
+      return trival::from_repr_t(is.very_weak);
     }
 
     /// \brief Set the very-weak property.
@@ -1352,7 +1352,7 @@ namespace spot
     /// \see is_complete()
     trival prop_complete() const
     {
-      return is.complete;
+      return trival::from_repr_t(is.complete);
     }
 
     /// \brief Set the complete property.
@@ -1376,7 +1376,7 @@ namespace spot
     /// \see is_universal()
     trival prop_universal() const
     {
-      return is.universal;
+      return trival::from_repr_t(is.universal);
     }
 
     /// \brief Set the universal property.
@@ -1427,7 +1427,7 @@ namespace spot
     /// \see is_unambiguous()
     trival prop_unambiguous() const
     {
-      return is.unambiguous;
+      return trival::from_repr_t(is.unambiguous);
     }
 
     /// \brief Set the unambiguous property
@@ -1457,7 +1457,7 @@ namespace spot
     /// \see is_semi_deterministic()
     trival prop_semi_deterministic() const
     {
-      return is.semi_deterministic;
+      return trival::from_repr_t(is.semi_deterministic);
     }
 
     /// \brief Set the semi-deterministic property
@@ -1487,7 +1487,7 @@ namespace spot
     /// \see is_stutter_invariant
     trival prop_stutter_invariant() const
     {
-      return is.stutter_invariant;
+      return trival::from_repr_t(is.stutter_invariant);
     }
 
     /// \brief Set the stutter-invariant property

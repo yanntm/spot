@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016 Laboratoire de Recherche et Developpement de
-// l'Epita (LRDE).
+// Copyright (C) 2016, 2018 Laboratoire de Recherche et Developpement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -50,12 +50,16 @@ namespace spot
     {
     }
 
-    trival(repr_t v)
+#ifndef SWIG
+    // This is needed internally by Spot to work around the bitfield
+    // issue mentioned earlier, it makes no sense to use it in Python.
+    static trival from_repr_t(repr_t v)
     {
-      val_ = static_cast<value_t>(v);
+      return trival(static_cast<value_t>(v));
     }
+#endif
 
-    constexpr trival(value_t v)
+    constexpr explicit trival(value_t v)
       : val_(v)
     {
     }
@@ -86,16 +90,6 @@ namespace spot
       return val_ == no_value;
     }
 
-    constexpr bool operator==(trival o) const
-    {
-      return val_ == o.val_;
-    }
-
-    constexpr bool operator!=(trival o) const
-    {
-      return val_ != o.val_;
-    }
-
     constexpr value_t val() const
     {
       return val_;
@@ -118,15 +112,24 @@ namespace spot
     }
   };
 
-  constexpr bool operator==(bool a, trival b)
+  // We prefer a global version of the operator so that the left
+  // argument can be promoted (think "bool == trival" being promoted
+  // to "trival == trival").  However Swig's generated Python bindings
+  // cannot deal with operators in the global namespace, so we use an
+  // in-class version (coded in impl.i) in this case.  This will fail
+  // on a "bool == trival" comparison in Python, but we usually write
+  // "trival == bool" and that works.
+#ifndef SWIG
+  constexpr bool operator==(trival a, trival b)
   {
-    return b == trival(a);
+    return a.val() == b.val();
   }
 
-  constexpr bool operator!=(bool a, trival b)
+  constexpr bool operator!=(trival a, trival b)
   {
-    return b != trival(a);
+    return !(a == b);
   }
+#endif
 
   constexpr trival operator&&(trival a, trival b)
   {

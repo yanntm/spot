@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2016  Laboratoire de Recherche et Développement
+# Copyright (C) 2016, 2018  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -26,11 +26,16 @@ v4 = spot.trival_maybe()
 assert v1 != v2
 assert v1 != v3
 assert v2 != v3
+assert v2 == spot.trival(spot.trival.no_value)
+assert v2 != spot.trival(spot.trival.yes_value)
 assert v4 != v2
 assert v4 != v3
 assert v2 == False
 assert True == v3
+assert v2 != True
+assert False != v3
 assert v4 == spot.trival_maybe()
+assert v4 == spot.trival(spot.trival.maybe_value)
 assert v3
 assert -v2
 assert not -v1
