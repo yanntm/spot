@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -72,7 +72,7 @@ namespace spot
     bool push_state(product_state, unsigned dfsnum, acc_cond::mark_t cond)
     {
       uf_.makeset(dfsnum);
-      roots_.push_back({dfsnum, cond, 0U});
+      roots_.push_back({dfsnum, cond, {}});
       return true;
     }
 
@@ -146,7 +146,7 @@ namespace spot
       };
       std::queue<ctrx_element*> bfs;
 
-      acc_cond::mark_t acc = 0U;
+      acc_cond::mark_t acc = {};
 
       bfs.push(new ctrx_element({&this->todo.back().st, nullptr,
               this->sys_.succ(this->todo.back().st.st_kripke, this->tid_),

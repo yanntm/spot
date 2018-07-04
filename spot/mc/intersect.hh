@@ -89,7 +89,7 @@ namespace spot
     {
       self().setup();
       product_state initial = {sys_.initial(tid_), twa_->get_initial()};
-      if (SPOT_LIKELY(self().push_state(initial, dfs_number+1, 0U)))
+      if (SPOT_LIKELY(self().push_state(initial, dfs_number+1, {})))
         {
           todo.push_back({initial, sys_.succ(initial.st_kripke, tid_),
                 twa_->succ(initial.st_prop)});
