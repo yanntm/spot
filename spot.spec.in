@@ -147,7 +147,7 @@ HTML and PDF documentation for Spot.
 
 
 %build
-%configure
+%configure --disable-devel --enable-optimizations
 %make_build
 
 
