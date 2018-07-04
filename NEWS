@@ -46,6 +46,9 @@ New in spot 2.5.3.dev  (not yet released)
     is still 32, but this limit is no longer hardcoded.  Larger values
     will cost additional memory and time.
 
+  - We know distribute RPM packages for Fedora 28.  See
+    file:///home/adl/git/spot/doc/userdoc/install.html#Fedora
+
   Library:
 
   - The PSL/LTL simplification routine learned the following:
@@ -257,7 +260,7 @@ New in spot 2.5.3.dev  (not yet released)
   - Converting generalized-co-Büchi to Streett using dnf_to_nca()
     could produce bogus automata if the input had rejecting SCCs.
 
-  Deprecation notice:
+  Deprecation notices:
 
   - The type spot::acc_cond::mark_t has been overhauled and uses
     a custom bit-vector to represent acceptance sets instead of
