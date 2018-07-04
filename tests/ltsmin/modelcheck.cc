@@ -123,7 +123,7 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       mc_options.model = arg;
       break;
     case 'p':
-      mc_options.nb_threads = to_unsigned(arg);
+      mc_options.nb_threads = to_unsigned(arg, "-p/--parallel");
       break;
     case 's':
       mc_options.dead_ap = arg;
@@ -132,7 +132,7 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       mc_options.use_timer = true;
       break;
     case 'z':
-      mc_options.compress = to_unsigned(arg);
+      mc_options.compress = to_unsigned(arg, "-z/--compress");
       break;
     default:
       return ARGP_ERR_UNKNOWN;
