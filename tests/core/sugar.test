@@ -1,0 +1,187 @@
+#! /bin/sh
+# -*- coding: utf-8 -*-
+# Copyright (C) 2018 Laboratoire de Recherche et Développement de
+# l'Epita (LRDE).
+#
+# This file is part of Spot, a model checking library.
+#
+# Spot is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Spot is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+# License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# Syntactic sugar X[n] F[n:m] G[n:m]
+. ./defs || exit 1
+
+set -e
+
+cat >ok.in <<EOF
+X[4]a
+G[2:4]a
+G[4:2]a
+F[2:4]a
+F[4:2]a
+X [4]a | b
+G [2:4] a | b
+G [4:2] a | b
+F [2:4] a |  b
+F [4:2]a | F[2:2]b
+F[]a|G[]b|X[]c
+EOF
+
+ltlfilt -F ok.in > ok.out
+
+cat >expect <<EOF
+XXXXa
+XX(a & X(a & Xa))
+XX(a & X(a & Xa))
+XX(a | X(a | Xa))
+XX(a | X(a | Xa))
+b | XXXXa
+b | XX(a & X(a & Xa))
+b | XX(a & X(a & Xa))
+b | XX(a | X(a | Xa))
+XX(a | X(a | Xa)) | XXb
+FGa | Gb | XGc
+EOF
+diff ok.out expect
+
+
+
+cat >err.in <<EOF
+F[
+F[3:1]
+F[3:1][2:1]
+F[a
+G[2:4]
+G[2:]a
+G[4]a
+G[a
+X[2
+X[2]
+X[2:4]a
+X[a
+EOF
+
+num="number for square bracket operator"
+numoreof="$num or end of formula"
+sep="separator for square bracket operator"
+undefined='$undefined'
+
+ltlfilt -F err.in 2>err && exit 1
+cat >expect2 <<EOF
+ltlfilt:err.in:1: parse error:
+>>> F[
+    ^^
+missing closing bracket for F[.]
+
+ltlfilt:err.in:2: parse error:
+>>> F[3:1]
+          ^
+syntax error, unexpected end of formula
+
+>>> F[3:1]
+    ^^^^^^
+missing right operand for "F[.] operator"
+
+ltlfilt:err.in:3: parse error:
+>>> F[3:1][2:1]
+          ^
+syntax error, unexpected $undefined
+
+>>> F[3:1][2:1]
+    ^^^^^^
+missing right operand for "F[.] operator"
+
+>>> F[3:1][2:1]
+          ^^^^^
+ignoring trailing garbage
+
+ltlfilt:err.in:4: parse error:
+>>> F[a
+      ^
+syntax error, unexpected $undefined, expecting $numoreof
+
+>>> F[a
+    ^^^
+missing closing bracket for F[.]
+
+ltlfilt:err.in:5: parse error:
+>>> G[2:4]
+          ^
+syntax error, unexpected end of formula
+
+>>> G[2:4]
+    ^^^^^^
+missing right operand for "G[.] operator"
+
+ltlfilt:err.in:6: parse error:
+>>> G[2:]a
+        ^
+syntax error, unexpected closing bracket, expecting $num
+
+>>> G[2:]a
+    ^^^^^
+treating this G[.] as a simple G
+
+ltlfilt:err.in:7: parse error:
+>>> G[4]a
+    ^^^^
+G[n:m] expects two parameters
+
+ltlfilt:err.in:8: parse error:
+>>> G[a
+      ^
+syntax error, unexpected $undefined, expecting $numoreof
+
+>>> G[a
+    ^^^
+missing closing bracket for G[.]
+
+ltlfilt:err.in:9: parse error:
+>>> X[2
+       ^
+syntax error, unexpected end of formula, expecting closing bracket
+
+>>> X[2
+    ^^^
+missing closing bracket for X[.]
+
+ltlfilt:err.in:10: parse error:
+>>> X[2]
+        ^
+syntax error, unexpected end of formula
+
+>>> X[2]
+    ^^^^
+missing right operand for "X[.] operator"
+
+ltlfilt:err.in:11: parse error:
+>>> X[2:4]a
+       ^
+syntax error, unexpected $sep, expecting closing bracket
+
+>>> X[2:4]a
+    ^^^^^^^
+treating this X[.] as a simple X
+
+ltlfilt:err.in:12: parse error:
+>>> X[a
+      ^
+syntax error, unexpected $undefined, expecting $numoreof
+
+>>> X[a
+    ^^^
+missing closing bracket for X[.]
+
+EOF
+diff err expect2

@@ -264,6 +264,7 @@ TESTS_twa = \
   core/sccsimpl.test \
   core/sepsets.test \
   core/split.test \
+  core/sugar.test \
   core/dbacomp.test \
   core/obligation.test \
   core/wdba.test \

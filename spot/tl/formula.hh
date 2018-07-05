@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017 Laboratoire de Recherche et Développement de
-// l'Epita (LRDE).
+// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -154,6 +154,10 @@ namespace spot
       /// \see formula::bunop
       static const fnode* bunop(op o, const fnode* f,
           uint8_t min, uint8_t max = unbounded());
+
+      /// \see formula::nested_unop_range
+      static const fnode* nested_unop_range(op uo, op bo, unsigned min,
+                                            unsigned max, const fnode* f);
 
       /// \see formula::kind
       op kind() const
@@ -887,10 +891,38 @@ namespace spot
     SPOT_DEF_UNOP(X);
     /// @}
 
+    /// \brief Construct an X[n]
+    ///
+    /// X[3]f = XXXf
+    static formula X(unsigned level, const formula& f)
+    {
+      return nested_unop_range(op::X, op::Or /* unused */, level, level, f);
+    }
+
     /// \brief Construct an F
     /// @{
     SPOT_DEF_UNOP(F);
     /// @}
+
+    /// \brief Construct F[n:m]
+    ///
+    /// F[2:3] = XX(a | Xa)
+    ///
+    /// This syntax is from TSLF; the operator is called next_e![n..m] in PSL.
+    static formula F(unsigned min_level, unsigned max_level, const formula& f)
+    {
+      return nested_unop_range(op::X, op::Or, min_level, max_level, f);
+    }
+
+    /// \brief Construct G[n:m]
+    ///
+    /// G[2:3] = XX(a & Xa)
+    ///
+    /// This syntax is from TSLF; the operator is called next_a![n..m] in PSL.
+    static formula G(unsigned min_level, unsigned max_level, const formula& f)
+    {
+      return nested_unop_range(op::X, op::And, min_level, max_level, f);
+    }
 
     /// \brief Construct a G
     /// @{
@@ -1172,6 +1204,20 @@ namespace spot
     SPOT_DEF_BUNOP(FStar);
     /// @}
 #undef SPOT_DEF_BUNOP
+
+    /// \brief Nested operator construction (syntactic sugar).
+    ///
+    /// Build between min and max nested uo, and chose between the
+    /// different numbers with bo.
+    ///
+    /// For instance nested_unup_range(op::X, op::Or, 2, 4, a) returns
+    /// XX(a | X(a | Xa)).
+    static const formula nested_unop_range(op uo, op bo, unsigned min,
+                                           unsigned max, formula f)
+    {
+      return formula(fnode::nested_unop_range(uo, bo, min, max,
+                                              f.ptr_->clone()));
+    }
 
     /// \brief Create a SERE equivalent to b[->min..max]
     ///

@@ -206,6 +206,7 @@ using namespace spot;
 %token OP_W "weak until operator" OP_M "strong release operator"
 %token OP_F "sometimes operator" OP_G "always operator"
 %token OP_X "next operator" OP_NOT "not operator"
+%token OP_XREP "X[.] operator" OP_FREP "F[.] operator" OP_GREP "G[.] operator"
 %token OP_STAR "star operator" OP_BSTAR "bracket star operator"
 %token OP_BFSTAR "bracket fusion-star operator"
 %token OP_PLUS "plus operator"
@@ -250,8 +251,8 @@ using namespace spot;
 
 /* LTL operators.  */
 %right OP_U OP_R OP_M OP_W
-%nonassoc OP_F OP_G
-%nonassoc OP_X
+%nonassoc OP_F OP_G OP_FREP OP_GREP
+%nonassoc OP_X OP_XREP
 
 /* High priority regex operator. */
 %nonassoc OP_BSTAR OP_STAR_OPEN OP_PLUS
@@ -822,14 +823,60 @@ subformula: booleanatom
 	      { $$ = fnode::unop(op::F, $2); }
 	    | OP_F error
 	      { missing_right_op($$, @1, "sometimes operator"); }
+	    | OP_FREP OP_SQBKT_NUM OP_SQBKT_CLOSE subformula %prec OP_FREP
+              { $$ = fnode::nested_unop_range(op::X, op::Or, $2, $2, $4);
+                error_list.emplace_back(@1 + @3,
+                                        "F[n:m] expects two parameters");
+              }
+	    | OP_FREP OP_SQBKT_NUM OP_SQBKT_SEP OP_SQBKT_NUM OP_SQBKT_CLOSE
+              subformula %prec OP_FREP
+              { $$ = fnode::nested_unop_range(op::X, op::Or, $2, $4, $6); }
+	    | OP_FREP OP_SQBKT_NUM OP_SQBKT_SEP OP_SQBKT_NUM OP_SQBKT_CLOSE
+              error
+	      { missing_right_op($$, @1 + @5, "F[.] operator"); }
+            | OP_FREP error_opt END_OF_INPUT
+              { error_list.emplace_back(@$, "missing closing bracket for F[.]");
+                $$ = fnode::ff(); }
+            | OP_FREP error OP_SQBKT_CLOSE subformula %prec OP_FREP
+              { error_list.emplace_back(@1 + @3,
+                                        "treating this F[.] as a simple F");
+                $$ = fnode::unop(op::F, $4); }
 	    | OP_G subformula
 	      { $$ = fnode::unop(op::G, $2); }
 	    | OP_G error
 	      { missing_right_op($$, @1, "always operator"); }
+	    | OP_GREP OP_SQBKT_NUM OP_SQBKT_SEP OP_SQBKT_NUM OP_SQBKT_CLOSE
+              subformula %prec OP_GREP
+              { $$ = fnode::nested_unop_range(op::X, op::And, $2, $4, $6); }
+	    | OP_GREP OP_SQBKT_NUM OP_SQBKT_CLOSE subformula %prec OP_GREP
+              { $$ = fnode::nested_unop_range(op::X, op::And, $2, $2, $4);
+                error_list.emplace_back(@1 + @3,
+                                        "G[n:m] expects two parameters");
+              }
+	    | OP_GREP OP_SQBKT_NUM OP_SQBKT_SEP OP_SQBKT_NUM OP_SQBKT_CLOSE
+              error
+	      { missing_right_op($$, @1 + @5, "G[.] operator"); }
+            | OP_GREP error_opt END_OF_INPUT
+              { error_list.emplace_back(@$, "missing closing bracket for G[.]");
+                $$ = fnode::ff(); }
+            | OP_GREP error OP_SQBKT_CLOSE subformula %prec OP_GREP
+              { error_list.emplace_back(@1 + @3,
+                                        "treating this G[.] as a simple G");
+                $$ = fnode::unop(op::F, $4); }
 	    | OP_X subformula
 	      { $$ = fnode::unop(op::X, $2); }
 	    | OP_X error
 	      { missing_right_op($$, @1, "next operator"); }
+	    | OP_XREP OP_SQBKT_NUM OP_SQBKT_CLOSE subformula %prec OP_XREP
+              { $$ = fnode::nested_unop_range(op::X, op::Or, $2, $2, $4); }
+	    | OP_XREP OP_SQBKT_NUM OP_SQBKT_CLOSE error
+	      { missing_right_op($$, @1 + @3, "X[.] operator"); }
+            | OP_XREP error OP_SQBKT_CLOSE subformula %prec OP_XREP
+              { error_list.emplace_back(@$, "treating this X[.] as a simple X");
+                $$ = fnode::unop(op::X, $4); }
+            | OP_XREP error_opt END_OF_INPUT
+              { error_list.emplace_back(@$, "missing closing bracket for X[.]");
+                $$ = fnode::ff(); }
 	    | OP_NOT subformula
 	      { $$ = fnode::unop(op::Not, $2); }
 	    | OP_NOT error

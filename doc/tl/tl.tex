@@ -55,12 +55,15 @@
 
 \DeclareMathOperator{\F}{\texttt{F}}
 \DeclareMathOperator{\FALT}{\texttt{<>}}
+\newcommand{\FREP}[1]{\texttt{F[#1]}}
 \DeclareMathOperator{\G}{\texttt{G}}
 \DeclareMathOperator{\GALT}{\texttt{[]}}
+\newcommand{\GREP}[1]{\texttt{G[#1]}}
 \newcommand{\U}{\mathbin{\texttt{U}}}
 \newcommand{\R}{\mathbin{\texttt{R}}}
 \newcommand{\RALT}{\mathbin{\texttt{V}}}
 \DeclareMathOperator{\X}{\texttt{X}}
+\newcommand{\XREP}[1]{\texttt{X[#1]}}
 \DeclareMathOperator{\XALT}{\texttt{()}}
 \newcommand{\M}{\mathbin{\texttt{M}}}
 \newcommand{\W}{\mathbin{\texttt{W}}}
@@ -511,6 +514,23 @@ Appendix~\ref{sec:ltl-equiv} explains how to rewrite the above LTL
 operators using only $\X$ and one operator chosen among $\U$, $\W$,
 $\M$,and $\R$.  This could be useful to understand the operators $\R$,
 $\M$, and $\W$ if you are only familiar with $\X$ and $\U$.
+
+\subsection{Syntactic Sugar}
+
+The syntax on the left is equivalent to the syntax on the right.
+These rewritings taken from the syntax of TSLF~\citep{jacobs.16.synt}
+are performed from left to right when parsing a formula.  They express
+the fact that some formula $f$ has to be true in $n$ steps, or at some
+or all times between $n$ and $m$ steps.
+
+\begin{align*}
+  \XREP{\mvar{n}} f
+  & \equiv \underbrace{\X\X\ldots\X}_{\mathclap{\text{\mvar{n} occurrences of~}\X}} f \\
+  \FREP{\mvar{n}:\mvar{m}}f
+  & \equiv \underbrace{\vphantom{(}\X\X\ldots\X}_{\mathclap{\text{\mvar{n} occ. of~}\X}} (f \OR \underbrace{\X(f \OR \X(\ldots \OR \X f))}_{\mathclap{\mvar{m}-\mvar{n}\text{~occ. of~}\X}}) \\
+  \GREP{\mvar{n}:\mvar{m}}f
+  & \equiv \underbrace{\vphantom{(}\X\X\ldots\X}_{\mathclap{\text{\mvar{n} occ. of~}\X}} (f \AND \underbrace{\X(f \AND \X(\ldots \AND \X f))}_{\mathclap{\mvar{m}-\mvar{n}\text{~occ. of~}\X}}) \\
+\end{align*}
 
 \subsection{Trivial Identities (Occur Automatically)}
 

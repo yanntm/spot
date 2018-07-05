@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017 Laboratoire de Recherche et Développement de
-// l'Epita (LRDE).
+// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -1621,6 +1621,22 @@ namespace spot
       }
   }
 
+  const fnode*
+  fnode::nested_unop_range(op uo, op bo, unsigned min, unsigned max,
+                           const fnode* f)
+  {
+    const fnode* res = f;
+    if (max < min)
+      std::swap(min, max);
+    for (unsigned i = min; i < max; ++i)
+      {
+        const fnode* a = f->clone();
+        res = fnode::multop(bo, {a, fnode::unop(uo, res)});
+      }
+    for (unsigned i = 0; i < min; ++i)
+      res = fnode::unop(uo, res);
+    return res;
+  }
 
   std::ostream& fnode::dump(std::ostream& os) const
   {

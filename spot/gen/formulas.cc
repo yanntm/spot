@@ -261,10 +261,7 @@ namespace spot
       X_n(formula p, int n)
       {
         assert(n >= 0);
-        formula res = p;
-        while (n--)
-          res = X_(res);
-        return res;
+        return formula::X(n, p);
       }
 
       static formula

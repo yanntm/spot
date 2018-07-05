@@ -273,7 +273,21 @@ eol2        (\n\r)+|(\r\n)+
 {ARROWL}|{DARROWL}		BEGIN(0); return token::OP_IMPLIES;
 {ARROWLR}|{DARROWLR}		BEGIN(0); return token::OP_EQUIV;
 
-  /* <>, [], and () are used in Spin.  */
+ /* TSLF-like syntactic sugar:
+    X[3]f = XXXf
+    F[2..4]f = XX(f | X(f | Xf))
+    G[2..4]f = XX(f & X(f & Xf))
+    We also have to deal with the Spin-like notation for G.
+    X[]f = XGf
+ */
+"X"[ \t\n]*"[]"                 yyless(1); return token::OP_X;
+"F"[ \t\n]*"[]"                 yyless(1); return token::OP_F;
+"G"[ \t\n]*"[]"                 yyless(1); return token::OP_G;
+"X"[ \t\n]*"["                  BEGIN(sqbracket); return token::OP_XREP;
+"F"[ \t\n]*"["                  BEGIN(sqbracket); return token::OP_FREP;
+"G"[ \t\n]*"["                  BEGIN(sqbracket); return token::OP_GREP;
+  /* <> (DIAMOND) and [] (BOX), are used in Spin.
+     () (CIRCLE) is not, but would make sense.  */
 "F"|{DIAMOND}			BEGIN(0); return token::OP_F;
 "G"|{BOX}			BEGIN(0); return token::OP_G;
 "U"				BEGIN(0); return token::OP_U;

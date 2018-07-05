@@ -1,6 +1,18 @@
 New in spot 2.6.0.dev  (not yet released)
 
-  Nothing yet.
+  - The LTL parser learned syntactic sugar for nested ranges of X
+    using the X[n], F[n:m], and G[n:m] syntax of TSLF.  (These
+    correspond to the next!, next_e!, and next_a! operators of PSL,
+    but we do not support those under these names currently.)
+
+      X[6]a = XXXXXXa
+      F[2:4]a = XX(a | X(a | Xa))
+      G[2:4]a = XX(a & X(a & Xa))
+
+    The corresponding constructors (for C++ and Python) are
+      formula::X(unsigned, formula)
+      formula::F(unsigned, unsigned, formula)
+      formula::G(unsigned, unsigned, formula)
 
 New in spot 2.6  (2018-07-04)
 
