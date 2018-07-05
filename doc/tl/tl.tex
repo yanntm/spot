@@ -2,7 +2,7 @@
 \documentclass[a4paper,twoside,10pt,DIV=12]{scrreprt}
 \usepackage[stretch=10]{microtype}
 \usepackage[american]{babel}
-\usepackage[latin1]{inputenc}
+\usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage[sc]{mathpazo}
@@ -1003,7 +1003,7 @@ right   & $\U,\,\W,\,\M,\,\R$                                                   
 Beware that not all tools agree on the associativity of these
 operators.  For instance Spin, ltl2ba (same parser as spin), Wring,
 psl2ba, Modella, and NuSMV all have $\U$ and $\R$ as left-associative,
-while Goal (hence Büchi store), LTL2AUT, and LTL2Büchi (from
+while Goal (hence BÃ¼chi store), LTL2AUT, and LTL2BÃ¼chi (from
 JavaPathFinder) have $\U$ and $\R$ as right-associative.  Vis and LBTT
 have these two operators as non-associative (parentheses required).
 Similarly the tools do not aggree on the associativity of $\IMPLIES$
@@ -1157,13 +1157,13 @@ rules:
     \node[align=center] (saf) at (1,1) {Safety\\ $\G p$};
     \node[align=center] (gua) at (5,1) {Guarantee\\ $\F p$};
 
-    \node[align=right,below left] (det) at (-.2,6.7) {Deterministic\\Büchi\\Automata};
-    \node[align=left,below right](weak) at (6.2,6.7) {Weak Büchi\\Automata};
-    \node[align=left,right](wdba) at (6.2,4.3) {Weak\\Deterministic\\Büchi\\Automata};
-    \node[align=left,above right](ter) at (6.2,1.7) {Terminal\\Büchi\\Automata};
-    \node[align=right,above left](occ) at (-.2,2) {Terminal\\co-Büchi\\Automata};
+    \node[align=right,below left] (det) at (-.2,6.7) {Deterministic\\BÃ¼chi\\Automata};
+    \node[align=left,below right](weak) at (6.2,6.7) {Weak BÃ¼chi\\Automata};
+    \node[align=left,right](wdba) at (6.2,4.3) {Weak\\Deterministic\\BÃ¼chi\\Automata};
+    \node[align=left,above right](ter) at (6.2,1.7) {Terminal\\BÃ¼chi\\Automata};
+    \node[align=right,above left](occ) at (-.2,2) {Terminal\\co-BÃ¼chi\\Automata};
 
-    \node[above right] (buc) at (3.35,7) {General Büchi Automata};
+    \node[above right] (buc) at (3.35,7) {General BÃ¼chi Automata};
 
     \draw[annote] (rec) -- (det);
     \draw[annote] (per) -- (weak);
@@ -1981,4 +1981,5 @@ $f_1\AND f_2$ & \bor{f_1}{g}{f_2}{g}  &              &              &           
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: t
+%%% coding: utf-8
 %%% End:
