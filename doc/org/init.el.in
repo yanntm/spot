@@ -114,7 +114,7 @@
 	:sitemap-title "Sitemap for Spot"
         :sitemap-function spot-publish-sitemap
 	:publishing-function org-html-publish-to-html
-	:html-head "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"spot.css\" />"
+	:html-head "<link rel=\"stylesheet\" type=\"text/css\" href=\"spot.css\" />"
 	:auto-preamble t)
        ("spot-static"
 	:base-directory "@abs_top_srcdir@/doc/org/"
