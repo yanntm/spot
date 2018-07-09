@@ -12,9 +12,9 @@ The GIT repository can be cloned with
   git clone https://gitlab.lrde.epita.fr/spot/spot.git
 
 Some files in SPOT's source tree are generated.  They are distributed
-so that users do not need to tools to rebuild them, but we don't keep
-all of them under GIT because it can generate lots of changes or
-conflicts.
+so that users do not need to install tools to rebuild them, but we
+don't keep all of them under GIT because it can generate lots of
+changes or conflicts.
 
 Here are the tools you need to bootstrap the GIT tree, or more
 generally if you plan to regenerate some of the generated files.
@@ -613,7 +613,7 @@ SPOT macros
     some header file.  See "Assertions" above.
 
   * Use SPOT_LIKELY / SPOT_UNLIKELY in case you need to help the
-    compiler figure out the commont output of a test.  Do not abuse
+    compiler figure out the common output of a test.  Do not abuse
     this without checking the assembly output to make sure the effect
     is what you desired.
 
@@ -624,7 +624,7 @@ Other style recommandations
     Feel free to replace these by uses of C++11's nullptr instead.
 
   * Limit the scope of local variables by defining them as late as
-    possible.  Do not reuse a local variables for two different things.
+    possible.  Do not reuse a local variable for two different things.
 
   * Do not systematically initialize local variables with 0 or other
     meaningless values.  This hides errors to valgrind.
