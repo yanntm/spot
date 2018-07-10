@@ -1067,6 +1067,7 @@ automaton, and that can be queried or set by algorithms:
 | =weak=               | transitions of an SCC all belong to the same acceptance sets                                 |
 | =very_weak=          | weak automaton where all SCCs have size 1                                                    |
 | =terminal=           | automaton is weak, accepting SCCs are complete, accepting edges may not go to rejecting SCCs |
+| =complete=           | for any letter ℓ, each state has is at least one outgoing transition compatible with ℓ       |
 | =deterministic=      | there is at most one run *recognizing* a word, but not necessarily accepting it              |
 | =semi_deterministic= | any nondeterminism occurs before entering an accepting SCC                                   |
 | =unambiguous=        | there is at most one run *accepting* a word (but it might be recognized several time)        |
