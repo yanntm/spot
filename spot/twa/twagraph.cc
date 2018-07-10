@@ -21,6 +21,8 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/tl/print.hh>
 #include <spot/misc/bddlt.hh>
+#include <spot/twa/bddprint.hh>
+#include <spot/misc/escape.hh>
 #include <vector>
 #include <deque>
 
@@ -762,6 +764,141 @@ namespace spot
       }
 
     set_named_prop("state-names", names.release());
+  }
+
+  void twa_graph::dump_storage_as_dot(std::ostream& out,
+                                      const char* opt) const
+  {
+    bool want_vectors = false;
+    bool want_data = false;
+    bool want_properties = false;
+    if (!opt || !*opt)
+      {
+        want_vectors = want_data = want_properties = true;
+      }
+    else
+      {
+        while (*opt)
+          switch (*opt++)
+            {
+            case 'v':
+              want_vectors = true;
+              break;
+            case 'd':
+              want_data = true;
+              break;
+            case 'p':
+              want_properties = true;
+              break;
+            default:
+              throw std::runtime_error(std::string("dump_storage_as_dow(): "
+                                                   "unsupported option '")
+                                       + opt[-1] +"'");
+            }
+      }
+
+    const graph_t& g = get_graph();
+
+    g.dump_storage_as_dot(out, graph_t::DSI_GraphHeader);
+    out << "rankdir=BT\n";
+
+    if (want_vectors)
+      {
+        out << "{rank=same;\n";
+
+        g.dump_storage_as_dot(out, graph_t::DSI_States |
+                              graph_t::DSI_EdgesHeader);
+
+        auto edges = g.edge_vector();
+        unsigned eend = edges.size();
+        out << "<tr><td>cond</td>\n";
+        for (unsigned e = 1; e < eend; ++e)
+          {
+            out << "<td>";
+            std::string f = bdd_format_formula(get_dict(), edges[e].cond);
+            escape_html(out, f);
+            out << "</td>\n";
+          }
+        out << "</tr>\n<tr><td>acc</td>\n";
+        for (unsigned e = 1; e < eend; ++e)
+          out << "<td>" << edges[e].acc << "</td>\n";
+        out << "</tr>\n";
+
+        g.dump_storage_as_dot(out, graph_t::DSI_EdgesBody
+                              | graph_t::DSI_EdgesFooter
+                              | graph_t::DSI_Dests);
+        out << "}\n";
+      }
+    if (want_data || want_properties)
+      {
+        out << "{rank=same;\n";
+
+        if (want_data)
+          {
+            out << ("meta [label=<\n"
+                    "<table border='0' cellborder='0' cellspacing='0'>\n");
+            unsigned d = get_init_state_number();
+            out << ("<tr><td align='left'>init_state:</td>"
+                    "<td align='left' bgcolor='");
+            if ((int)d < 0)
+              out << "pink'>~" << ~d;
+            else
+              out << "yellow'>" << d;
+            out << ("</td></tr><tr><td align='left'>num_sets:</td>"
+                    "<td align='left' >")
+                << num_sets()
+                << ("</td></tr><tr><td align='left'>acceptance:</td>"
+                    "<td align='left' >");
+            get_acceptance().to_html(out);
+            out << ("</td></tr><tr><td align='left'>ap_vars:</td>"
+                    "<td align='left'>");
+            escape_html(out, bdd_format_sat(get_dict(), ap_vars()));
+            out << "</td></tr></table>>]\n";
+          }
+        if (want_properties)
+          {
+            out << ("props [label=<\n"
+                    "<table border='0' cellborder='0' cellspacing='0'>\n");
+#define print_prop(name)                                                \
+            out << ("<tr><td align='left'>" #name ":</td>"              \
+                    "<td align='left' >") << name() << "</td></tr>\n";
+            print_prop(prop_state_acc);
+            print_prop(prop_inherently_weak);
+            print_prop(prop_terminal);
+            print_prop(prop_weak);
+            print_prop(prop_very_weak);
+            print_prop(prop_complete);
+            print_prop(prop_universal);
+            print_prop(prop_unambiguous);
+            print_prop(prop_semi_deterministic);
+            print_prop(prop_stutter_invariant);
+#undef print_prop
+            out << "</table>>]\n";
+
+            if (!named_prop_.empty())
+              {
+                out << "namedprops [label=\"named properties:\n";
+                for (auto p: named_prop_)
+                  escape_html(out, p.first) << '\n';
+                out << "\"]\n";
+              }
+          }
+        out << "}\n";
+      }
+
+    if (want_data && want_vectors)
+      out << "meta -> states [style=invis]\n";
+    if (want_properties && want_vectors)
+      {
+        out << "props -> edges [style=invis]\n";
+        if (!named_prop_.empty())
+          {
+            out << "namedprops -> edges [style=invis]\n";
+            if (!is_existential())
+              out << "namedprops -> dests [style=invis]\n";
+          }
+      }
+    g.dump_storage_as_dot(out, graph_t::DSI_GraphFooter);
   }
 
   namespace

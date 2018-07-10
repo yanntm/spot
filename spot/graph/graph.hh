@@ -1059,6 +1059,156 @@ namespace spot
         }
     }
 
+    enum dump_storage_items {
+      DSI_GraphHeader = 1,
+      DSI_GraphFooter = 2,
+      DSI_StatesHeader = 4,
+      DSI_StatesBody = 8,
+      DSI_StatesFooter = 16,
+      DSI_States = DSI_StatesHeader | DSI_StatesBody | DSI_StatesFooter,
+      DSI_EdgesHeader = 32,
+      DSI_EdgesBody = 64,
+      DSI_EdgesFooter = 128,
+      DSI_Edges = DSI_EdgesHeader | DSI_EdgesBody | DSI_EdgesFooter,
+      DSI_DestsHeader = 256,
+      DSI_DestsBody = 512,
+      DSI_DestsFooter = 1024,
+      DSI_Dests = DSI_DestsHeader | DSI_DestsBody | DSI_DestsFooter,
+      DSI_All =
+      DSI_GraphHeader | DSI_States | DSI_Edges | DSI_Dests | DSI_GraphFooter,
+    };
+
+    /// Dump the state and edge storage for debugging
+    void dump_storage_as_dot(std::ostream& o, int dsi = DSI_All) const
+    {
+      if (dsi & DSI_GraphHeader)
+        o << "digraph g { \nnode [shape=plaintext]\n";
+      unsigned send = states_.size();
+      if (dsi & DSI_StatesHeader)
+        {
+          o << ("states [label=<\n"
+                "<table border='0' cellborder='1' cellspacing='0'>\n"
+                "<tr><td sides='b' bgcolor='yellow' port='s'>states</td>\n");
+          for (unsigned s = 0; s < send; ++s)
+            o << "<td sides='b' bgcolor='yellow' port='s" << s << "'>"
+              << s << "</td>\n";
+          o << "</tr>\n";
+        }
+      if (dsi & DSI_StatesBody)
+        {
+          o << "<tr><td port='ss'>succ</td>\n";
+          for (unsigned s = 0; s < send; ++s)
+            {
+              o << "<td port='ss" << s;
+              if (states_[s].succ)
+                o << "' bgcolor='cyan";
+              o << "'>" << states_[s].succ << "</td>\n";
+            }
+          o << "</tr><tr><td port='st'>succ_tail</td>\n";
+          for (unsigned s = 0; s < send; ++s)
+            {
+              o << "<td port='st" << s;
+              if (states_[s].succ_tail)
+                o << "' bgcolor='cyan";
+              o << "'>" << states_[s].succ_tail << "</td>\n";
+            }
+          o << "</tr>\n";
+        }
+      if (dsi & DSI_StatesFooter)
+        o << "</table>>]\n";
+      unsigned eend = edges_.size();
+      if (dsi & DSI_EdgesHeader)
+        {
+          o << ("edges [label=<\n"
+                "<table border='0' cellborder='1' cellspacing='0'>\n"
+                "<tr><td sides='b' bgcolor='cyan' port='e'>edges</td>\n");
+          for (unsigned e = 1; e < eend; ++e)
+            {
+              o << "<td sides='b' bgcolor='"
+                << (e != edges_[e].next_succ ? "cyan" : "gray")
+                << "' port='e" << e << "'>" << e << "</td>\n";
+            }
+          o << "</tr>";
+        }
+      if (dsi & DSI_EdgesBody)
+        {
+          o << "<tr><td port='ed'>dst</td>\n";
+          for (unsigned e = 1; e < eend; ++e)
+            {
+              o << "<td port='ed" << e;
+              int d = edges_[e].dst;
+              if (d < 0)
+                o << "' bgcolor='pink'>~" << ~d;
+              else
+                o << "' bgcolor='yellow'>" << d;
+              o << "</td>\n";
+            }
+          o << "</tr><tr><td port='en'>next_succ</td>\n";
+          for (unsigned e = 1; e < eend; ++e)
+            {
+              o << "<td port='en" << e;
+              if (edges_[e].next_succ)
+                {
+                  if (edges_[e].next_succ != e)
+                    o << "' bgcolor='cyan";
+                  else
+                    o << "' bgcolor='gray";
+                }
+              o << "'>" << edges_[e].next_succ << "</td>\n";
+            }
+          o << "</tr><tr><td port='es'>src</td>\n";
+          for (unsigned e = 1; e < eend; ++e)
+            o << "<td port='es" << e << "' bgcolor='yellow'>"
+              << edges_[e].src << "</td>\n";
+          o << "</tr>\n";
+        }
+      if (dsi & DSI_EdgesFooter)
+        o << "</table>>]\n";
+      if (!dests_.empty())
+        {
+          unsigned dend = dests_.size();
+          if (dsi & DSI_DestsHeader)
+            {
+              o << ("dests [label=<\n"
+                    "<table border='0' cellborder='1' cellspacing='0'>\n"
+                    "<tr><td sides='b' bgcolor='pink' port='d'>dests</td>\n");
+              unsigned d = 0;
+              while (d < dend)
+                {
+                  o << "<td sides='b' bgcolor='pink' port='d"
+                    << d << "'>~" << d << "</td>\n";
+                  unsigned cnt = dests_[d];
+                  d += cnt + 1;
+                  while (cnt--)
+                    o << "<td sides='b'></td>\n";
+                }
+              o << "</tr>\n";
+            }
+          if (dsi & DSI_DestsBody)
+            {
+              o << "<tr><td port='dd'>#cnt/dst</td>\n";
+              unsigned d = 0;
+              while (d < dend)
+                {
+                  unsigned cnt = dests_[d];
+                  o << "<td port='d'>#" << cnt << "</td>\n";
+                  ++d;
+                  while (cnt--)
+                    {
+                      o << "<td bgcolor='yellow' port='dd"
+                        << d << "'>" << dests_[d] << "</td>\n";
+                      ++d;
+                    }
+                }
+              o << "</tr>\n";
+            }
+          if (dsi & DSI_DestsFooter)
+            o << "</table>>]\n";
+        }
+      if (dsi & DSI_GraphFooter)
+        o << "}\n";
+    }
+
     /// \brief Remove all dead edges.
     ///
     /// The edges_ vector is left in a state that is incorrect and

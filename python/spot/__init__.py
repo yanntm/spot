@@ -175,6 +175,13 @@ class twa:
                 f.write('\n')
         return a
 
+@_extend(twa_graph)
+class twa_graph:
+    def show_storage(self, opt=None):
+        ostr = ostringstream()
+        self.dump_storage_as_dot(ostr, opt)
+        from IPython.display import SVG
+        return SVG(_ostream_to_svg(ostr))
 
 @_extend(formula)
 class formula:
@@ -760,6 +767,7 @@ def postprocess(automaton, *args, formula=None):
 
 
 twa.postprocess = postprocess
+
 
 # Wrap C++-functions into lambdas so that they get converted into
 # instance methods (i.e., self passed as first argument

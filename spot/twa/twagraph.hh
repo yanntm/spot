@@ -471,6 +471,12 @@ namespace spot
       return g_.out(src);
     }
 
+    internal::killer_edge_iterator<graph_t>
+    out_iteraser(unsigned src)
+    {
+      return g_.out_iteraser(src);
+    }
+
     internal::const_universal_dests
     univ_dests(unsigned d) const noexcept
     {
@@ -525,10 +531,17 @@ namespace spot
       SPOT_RETURN(g_.edge_vector());
     auto edge_vector()
       SPOT_RETURN(g_.edge_vector());
-
-    auto is_dead_edge(const graph_t::edge_storage_t& t) const
-      SPOT_RETURN(g_.is_dead_edge(t));
 #endif
+
+    bool is_dead_edge(unsigned t) const
+    {
+      return g_.is_dead_edge(t);
+    }
+
+    bool is_dead_edge(const graph_t::edge_storage_t& t) const
+    {
+      return g_.is_dead_edge(t);
+    }
 
     /// \brief Merge edges that can be merged.
     ///
@@ -682,6 +695,14 @@ namespace spot
     /// Use -1U to erase a state.
     /// \param used_states the number of states used (after renumbering)
     void defrag_states(std::vector<unsigned>&& newst, unsigned used_states);
+
+    /// \brief Print the data structures used to represent the
+    /// automaton in dot's format.
+    ///
+    /// \a opt should be a substring of "vdp" if you want to print
+    /// only the vectors, data, or properties.
+    void dump_storage_as_dot(std::ostream& out,
+                             const char* opt = nullptr) const;
   };
 
   /// \ingroup twa_representation

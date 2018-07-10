@@ -14,6 +14,11 @@ New in spot 2.6.0.dev  (not yet released)
       formula::F(unsigned, unsigned, formula)
       formula::G(unsigned, unsigned, formula)
 
+  - The twa_graph class has a new dump_storage_as_dot() method
+    to show its data structure.  This is more conveniently used
+    as aut.show_storage() in a Jupyter notebook.  See
+    https://spot.lrde.epita.fr/ipynb/twagraph-internals.html
+
 New in spot 2.6  (2018-07-04)
 
   Command-line tools:

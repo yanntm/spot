@@ -1071,6 +1071,7 @@ namespace spot
       bprop is;
     };
 
+  protected:
 #ifndef SWIG
     // Dynamic properties, are given with a name and a destructor function.
     std::unordered_map<std::string,
@@ -1686,6 +1687,10 @@ namespace spot
         prop_stutter_invariant(trival::maybe());
     }
 
+    void prop_reset()
+    {
+      prop_keep({});
+    }
   };
 
 #ifndef SWIG

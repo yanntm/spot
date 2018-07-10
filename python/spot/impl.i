@@ -509,6 +509,7 @@ namespace std {
 %include <spot/graph/graph.hh>
 %nodefaultctor spot::digraph;
 %nodefaultctor spot::internal::state_out;
+%nodefaultctor spot::internal::killer_edge_iterator;
 %nodefaultctor spot::internal::all_trans;
 %nodefaultctor spot::internal::universal_dests;
 %traits_swigtype(spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<spot::twa_graph_edge_data, false> >);
@@ -556,6 +557,7 @@ def state_is_accepting(self, src) -> "bool":
 
 %include <spot/twa/twagraph.hh>
 %template(twa_graph_state_out) spot::internal::state_out<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>>;
+%template(twa_graph_killer_edge_iterator) spot::internal::killer_edge_iterator<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>>;
 %template(twa_graph_all_trans) spot::internal::all_trans<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>>;
 %template(twa_graph_edge_boxed_data) spot::internal::boxed_label<spot::twa_graph_edge_data, false>;
 %template(twa_graph_edge_storage) spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<spot::twa_graph_edge_data, false> >;
@@ -797,6 +799,23 @@ def state_is_accepting(self, src) -> "bool":
       return swig::make_forward_iterator(self->begin(), self->begin(),
 				         self->end(), *PYTHON_SELF);
    }
+}
+
+%extend spot::internal::killer_edge_iterator<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>> {
+
+  spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<spot::twa_graph_edge_data, false> >& current()
+  {
+    return **self;
+  }
+
+  void advance()
+  {
+    ++*self;
+  }
+  bool __bool__()
+  {
+    return *self;
+  }
 }
 
 %extend spot::internal::all_trans<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>> {

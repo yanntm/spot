@@ -351,6 +351,7 @@ TESTS_ipython = \
   python/satmin.ipynb \
   python/stutter-inv.ipynb \
   python/testingaut.ipynb \
+  python/twagraph-internals.ipynb \
   python/word.ipynb
 
 # TESTS_python contains all tests.  It may includes notebooks we
