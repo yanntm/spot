@@ -20,6 +20,8 @@
 #pragma once
 
 #include <spot/misc/common.hh>
+#include <climits>
+#include <cstddef>
 
 #if SPOT_DEBUG && defined(HAVE_VALGRIND_MEMCHECK_H)
 #include <valgrind/memcheck.h>
@@ -27,12 +29,108 @@
 
 namespace spot
 {
+  namespace
+  {
+// use gcc and clang built-in functions
+// both compilers use the same function names, and define __GNUC__
+#if __GNUC__
+    template<class T>
+    struct _clz;
+
+    template<>
+    struct _clz<unsigned>
+    {
+      unsigned
+      operator()(unsigned n) const noexcept
+      {
+        return __builtin_clz(n);
+      }
+    };
+
+    template<>
+    struct _clz<unsigned long>
+    {
+      unsigned long
+      operator()(unsigned long n) const noexcept
+      {
+        return __builtin_clzl(n);
+      }
+    };
+
+    template<>
+    struct _clz<unsigned long long>
+    {
+      unsigned long long
+      operator()(unsigned long long n) const noexcept
+      {
+        return __builtin_clzll(n);
+      }
+    };
+
+    static
+    size_t
+    clz(size_t n)
+    {
+      return _clz<size_t>()(n);
+    }
+
+#else
+    size_t
+    clz(size_t n)
+    {
+      size_t res = CHAR_BIT*sizeof(size_t);
+      while (n)
+        {
+          --res;
+          n >>= 1;
+        }
+      return res;
+    }
+#endif
+  }
+
+  /// A enum class to define the policy of the fixed_sized_pool.
+  /// We propose 2 policies for the pool:
+  ///   - Safe: ensure (when used with memcheck) that each allocation
+  ///     is deallocated one at a time
+  ///   - Unsafe: rely on the fact that deallocating the pool also release
+  ///     all elements it contains. This case is usefull in a multithreaded
+  ///     environnement with multiple fixed_sized_pool allocating the same
+  ///     ressource. In this case it's hard to detect wich pool has allocated
+  ///     some ressource.
+  enum class pool_type { Safe , Unsafe };
+
   /// A fixed-size memory pool implementation.
+  template<pool_type Kind>
   class SPOT_API fixed_size_pool
   {
   public:
     /// Create a pool allocating objects of \a size bytes.
-    fixed_size_pool(size_t size);
+    fixed_size_pool(size_t size)
+      : size_(
+          [](size_t size)
+          {
+            // to properly store chunks and freelist, we need size to be at
+            // least the size of a block_
+            if (size < sizeof(block_))
+                size = sizeof(block_);
+            // powers of 2 are a good alignment
+            if (!(size & (size-1)))
+              return size;
+            // small numbers are best aligned to the next power of 2
+            else if (size < alignof(std::max_align_t))
+              return size_t{1} << (CHAR_BIT*sizeof(size_t) - clz(size));
+            else
+              {
+                size_t mask = alignof(std::max_align_t)-1;
+                return (size + mask) & ~mask;
+              }
+          }(size)),
+      freelist_(nullptr),
+      chunklist_(nullptr)
+    {
+       new_chunk_();
+    }
 
     /// Free any memory allocated by this pool.
     ~fixed_size_pool()
@@ -54,10 +152,13 @@ namespace spot
       if (f)
         {
 #if SPOT_DEBUG && defined(HAVE_VALGRIND_MEMCHECK_H)
-          VALGRIND_MALLOCLIKE_BLOCK(f, size_, 0, false);
-          // field f->next is initialized: prevents valgrind from complaining
-          // about jumps depending on uninitialized memory
-          VALGRIND_MAKE_MEM_DEFINED(f, sizeof(block_*));
+          if (Kind == pool_type::Safe)
+            {
+              VALGRIND_MALLOCLIKE_BLOCK(f, size_, 0, false);
+              // field f->next is initialized: prevents valgrind from
+              // complaining about jumps depending on uninitialized memory
+              VALGRIND_MAKE_MEM_DEFINED(f, sizeof(block_*));
+            }
 #endif
           freelist_ = f->next;
           return f;
@@ -73,7 +174,10 @@ namespace spot
       void* res = free_start_;
       free_start_ += size_;
 #if SPOT_DEBUG && defined(HAVE_VALGRIND_MEMCHECK_H)
-      VALGRIND_MALLOCLIKE_BLOCK(res, size_, 0, false);
+      if (Kind == pool_type::Safe)
+        {
+          VALGRIND_MALLOCLIKE_BLOCK(res, size_, 0, false);
+        }
 #endif
       return res;
     }
@@ -92,12 +196,25 @@ namespace spot
       b->next = freelist_;
       freelist_ = b;
 #if SPOT_DEBUG && defined(HAVE_VALGRIND_MEMCHECK_H)
-      VALGRIND_FREELIKE_BLOCK(ptr, 0);
+      if (Kind == pool_type::Safe)
+        {
+          VALGRIND_FREELIKE_BLOCK(ptr, 0);
+        }
 #endif
     }
 
   private:
-    void new_chunk_();
+    void new_chunk_()
+    {
+     const size_t requested = (size_ > 128 ? size_ : 128) * 8192 - 64;
+     chunk_* c = reinterpret_cast<chunk_*>(::operator new(requested));
+     c->prev = chunklist_;
+     chunklist_ = c;
+
+     free_start_ = c->data_ + size_;
+     free_end_ = c->data_ + requested;
+    }
+
 
     const size_t size_;
     struct block_ { block_* next; }* freelist_;
@@ -106,5 +223,4 @@ namespace spot
     // chunk = several agglomerated blocks
     union chunk_ { chunk_* prev; char data_[1]; }* chunklist_;
   };
-
 }
