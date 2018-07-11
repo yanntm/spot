@@ -285,7 +285,7 @@ def test_notebook(ipynb):
             print("output length mismatch (expected {}, got {})".format(
                   len(cell.outputs), len(outs)))
             failed = True
-        if not compare_outputs(outs, cell.outputs):
+        if not compare_outputs(cell.outputs, outs):
             failed = True
         print("cell %d: " % i, end="")
         if failed:
