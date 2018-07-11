@@ -64,7 +64,6 @@ libmisc_la_SOURCES = \
   bitset.cc \
   bitvect.cc \
   escape.cc \
-  fixpool.cc \
   formater.cc \
   game.cc \
   intvcomp.cc \

@@ -53,7 +53,8 @@ namespace spot
   const state*
   tgta_product::get_init_state() const
   {
-    fixed_size_pool* p = const_cast<fixed_size_pool*> (&pool_);
+    fixed_size_pool<pool_type::Safe>* p =
+      const_cast<fixed_size_pool<pool_type::Safe>*> (&pool_);
     return new (p->allocate()) state_product(left_->get_init_state(),
         right_->get_init_state(), p);
   }
@@ -63,7 +64,8 @@ namespace spot
   {
     const state_product* s = down_cast<const state_product*> (state);
 
-    fixed_size_pool* p = const_cast<fixed_size_pool*> (&pool_);
+    fixed_size_pool<pool_type::Safe>* p =
+      const_cast<fixed_size_pool<pool_type::Safe>*> (&pool_);
 
     auto l = std::static_pointer_cast<const kripke>(left_);
     auto r = std::static_pointer_cast<const tgta>(right_);
@@ -75,7 +77,7 @@ namespace spot
   tgta_succ_iterator_product::tgta_succ_iterator_product(
       const state_product* s,
       const const_kripke_ptr& k, const const_tgta_ptr& t,
-      fixed_size_pool* pool)
+      fixed_size_pool<pool_type::Safe>* pool)
     : source_(s), tgta_(t), kripke_(k), pool_(pool)
   {
 
