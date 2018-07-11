@@ -44,7 +44,7 @@ namespace spot
     /// be destroyed on destruction.
     state_product(const state* left,
                   const state* right,
-                  fixed_size_pool* pool)
+                  fixed_size_pool<pool_type::Safe>* pool)
       :        left_(left), right_(right), count_(1), pool_(pool)
     {
     }
@@ -71,7 +71,7 @@ namespace spot
     const state* left_;                ///< State from the left automaton.
     const state* right_;        ///< State from the right automaton.
     mutable unsigned count_;
-    fixed_size_pool* pool_;
+    fixed_size_pool<pool_type::Safe>* pool_;
 
     virtual ~state_product();
     state_product(const state_product& o) = delete;
@@ -107,7 +107,7 @@ namespace spot
     const_twa_ptr left_;
     const_twa_ptr right_;
     bool left_kripke_;
-    fixed_size_pool pool_;
+    fixed_size_pool<pool_type::Safe> pool_;
 
   private:
     // Disallow copy.

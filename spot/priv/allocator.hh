@@ -46,10 +46,11 @@ namespace spot
   class pool_allocator
   {
     static
-    fixed_size_pool&
+    fixed_size_pool<pool_type::Safe>&
     pool()
     {
-      static fixed_size_pool p = fixed_size_pool(sizeof(T));
+      static fixed_size_pool<pool_type::Safe> p =
+        fixed_size_pool<pool_type::Safe>(sizeof(T));
       return p;
     }
 
