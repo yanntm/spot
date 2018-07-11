@@ -226,8 +226,10 @@ namespace spot
       stats.push_back(swarmed[i]->stats());
 
     for (unsigned i = 0; i < nbth; ++i)
-      delete swarmed[i];
-
+      {
+        delete swarmed[i];
+        delete ufs[i];
+      }
     return std::make_pair(stats, tm);
   }
 }
