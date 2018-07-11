@@ -247,7 +247,7 @@ namespace spot
     unsigned dfs_ = 0;                     ///< \brief Maximum DFS stack size
     /// \brief Maximum number of threads that can be handled by this algorithm
     unsigned nb_th_ = 0;
-    fixed_size_pool p_;                    ///< \brief State Allocator
+    fixed_size_pool<pool_type::Unsafe> p_;  ///< \brief State Allocator
     bool deadlock_ = false;                ///< \brief Deadlock detected?
     std::atomic<bool>& stop_;              ///< \brief Stop-the-world boolean
     /// \brief Stack that grows according to the todo stack. It avoid multiple

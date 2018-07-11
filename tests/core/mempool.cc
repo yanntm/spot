@@ -49,9 +49,9 @@ namespace
   {
     int i;
 
-    static spot::fixed_size_pool& pool()
+    static spot::fixed_size_pool<spot::pool_type::Safe>& pool()
     {
-      static spot::fixed_size_pool p{sizeof(bar)};
+      static spot::fixed_size_pool<spot::pool_type::Safe> p{sizeof(bar)};
       return p;
     }
 
@@ -108,7 +108,7 @@ int main()
 #endif
 
   {
-    spot::fixed_size_pool p(sizeof(foo));
+    spot::fixed_size_pool<spot::pool_type::Safe> p(sizeof(foo));
 
     foo* a = new (p.allocate()) foo(1);
     a->incr();
