@@ -106,6 +106,11 @@ namespace spot
 
     virtual ~swarmed_deadlock()
     {
+      while (!todo_.empty())
+        {
+          sys_.recycle(todo_.back().it, tid_);
+          todo_.pop_back();
+        }
     }
 
     void setup()
