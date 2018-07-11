@@ -93,7 +93,8 @@ namespace spot
 
     iterable_uf(shared_map& map, unsigned tid):
       map_(map), tid_(tid), size_(std::thread::hardware_concurrency()),
-      nb_th_(std::thread::hardware_concurrency()), inserted_(0)
+      nb_th_(std::thread::hardware_concurrency()), inserted_(0),
+      p_(sizeof(uf_element))
     {
     }
 
@@ -105,7 +106,7 @@ namespace spot
       unsigned w_id = (1U << tid_);
 
       // Setup and try to insert the new state in the shared map.
-      uf_element* v = new uf_element();
+      uf_element* v = (uf_element*) p_.allocate();
       v->st_ = a;
       v->parent = v;
       v->next_ = v;
@@ -119,7 +120,7 @@ namespace spot
       // Insertion failed, delete element
       // FIXME Should we add a local cache to avoid useless allocations?
       if (!b)
-        delete v;
+        p_.deallocate(v);
       else
         ++inserted_;
 
@@ -393,6 +394,7 @@ namespace spot
     unsigned size_;       ///< \brief Maximum number of thread
     unsigned nb_th_;      ///< \brief Current number of threads
     unsigned inserted_;   ///< \brief The number of insert succes
+    fixed_size_pool<pool_type::Unsafe> p_; ///< \brief The allocator
   };
 
   /// \brief This object is returned by the algorithm below
@@ -461,6 +463,7 @@ namespace spot
                       todo_.push_back(w.second);
                       Rp_.push_back(w.second);
                       ++states_;
+                      sys_.recycle(it, tid_);
                       goto bloemen_recursive_start;
                     }
                   else if (w.first == uf::claim_status::CLAIM_FOUND)
