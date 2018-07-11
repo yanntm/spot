@@ -29,66 +29,6 @@
 
 namespace spot
 {
-  namespace
-  {
-// use gcc and clang built-in functions
-// both compilers use the same function names, and define __GNUC__
-#if __GNUC__
-    template<class T>
-    struct _clz;
-
-    template<>
-    struct _clz<unsigned>
-    {
-      unsigned
-      operator()(unsigned n) const noexcept
-      {
-        return __builtin_clz(n);
-      }
-    };
-
-    template<>
-    struct _clz<unsigned long>
-    {
-      unsigned long
-      operator()(unsigned long n) const noexcept
-      {
-        return __builtin_clzl(n);
-      }
-    };
-
-    template<>
-    struct _clz<unsigned long long>
-    {
-      unsigned long long
-      operator()(unsigned long long n) const noexcept
-      {
-        return __builtin_clzll(n);
-      }
-    };
-
-    static
-    size_t
-    clz(size_t n)
-    {
-      return _clz<size_t>()(n);
-    }
-
-#else
-    size_t
-    clz(size_t n)
-    {
-      size_t res = CHAR_BIT*sizeof(size_t);
-      while (n)
-        {
-          --res;
-          n >>= 1;
-        }
-      return res;
-    }
-#endif
-  }
-
   /// A enum class to define the policy of the fixed_sized_pool.
   /// We propose 2 policies for the pool:
   ///   - Safe: ensure (when used with memcheck) that each allocation
@@ -119,7 +59,8 @@ namespace spot
               return size;
             // small numbers are best aligned to the next power of 2
             else if (size < alignof(std::max_align_t))
-              return size_t{1} << (CHAR_BIT*sizeof(size_t) - clz(size));
+              return size_t{1} << (CHAR_BIT*sizeof(size_t) -
+                                   __builtin_clz(size));
             else
               {
                 size_t mask = alignof(std::max_align_t)-1;
