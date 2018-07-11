@@ -54,7 +54,7 @@ namespace spot
     tgta_succ_iterator_product(const state_product* s,
                                const const_kripke_ptr& k,
                                const const_tgta_ptr& tgta,
-                               fixed_size_pool* pool);
+                               fixed_size_pool<pool_type::Safe>* pool);
 
     virtual
     ~tgta_succ_iterator_product();
@@ -85,7 +85,7 @@ namespace spot
     const state_product* source_;
     const_tgta_ptr tgta_;
     const_kripke_ptr kripke_;
-    fixed_size_pool* pool_;
+    fixed_size_pool<pool_type::Safe>* pool_;
     twa_succ_iterator* tgta_succ_it_;
     twa_succ_iterator* kripke_succ_it_;
     state_product* current_state_;
