@@ -94,7 +94,7 @@ namespace spot
     unsigned int size() const;
 
   private:
-    fixed_size_pool p_;
+    fixed_size_pool<pool_type::Unsafe> p_;
     multiple_size_pool msp_;
     bool compress_;
     const unsigned int state_size_;
@@ -121,6 +121,8 @@ namespace spot
   class cspins_iterator final
   {
   public:
+    cspins_iterator(const cspins_iterator&) = delete;
+    cspins_iterator(cspins_iterator&) = delete;
     cspins_iterator(cspins_state s,
                     const spot::spins_interface* d,
                     cspins_state_manager& manager,

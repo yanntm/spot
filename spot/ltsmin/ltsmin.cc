@@ -51,7 +51,7 @@ namespace spot
 
     struct spins_state final: public state
     {
-      spins_state(int s, fixed_size_pool* p)
+      spins_state(int s, fixed_size_pool<pool_type::Safe>* p)
         : pool(p), size(s), count(1)
       {
       }
@@ -100,7 +100,7 @@ namespace spot
       }
 
     public:
-      fixed_size_pool* pool;
+      fixed_size_pool<pool_type::Safe>* pool;
       size_t hash_value: 32;
       int size: 16;
       mutable unsigned count: 16;
@@ -195,7 +195,8 @@ namespace spot
     void transition_callback(void* arg, transition_info_t*, int *dst)
     {
       callback_context* ctx = static_cast<callback_context*>(arg);
-      fixed_size_pool* p = static_cast<fixed_size_pool*>(ctx->pool);
+      fixed_size_pool<pool_type::Safe>* p =
+        static_cast<fixed_size_pool<pool_type::Safe>*>(ctx->pool);
       spins_state* out =
         new(p->allocate()) spins_state(ctx->state_size, p);
       SPOT_ASSUME(out != nullptr);
@@ -684,7 +685,8 @@ namespace spot
           }
         else
           {
-            fixed_size_pool* p = const_cast<fixed_size_pool*>(&statepool_);
+            fixed_size_pool<pool_type::Safe>* p =
+              const_cast<fixed_size_pool<pool_type::Safe>*>(&statepool_);
             spins_state* res = new(p->allocate()) spins_state(state_size_, p);
             SPOT_ASSUME(res != nullptr);
             d_->get_initial_state(res->vars);
@@ -893,7 +895,7 @@ namespace spot
       void (*decompress_)(const int*, size_t, int*, size_t);
       int* uncompressed_;
       int* compressed_;
-      fixed_size_pool statepool_;
+      fixed_size_pool<pool_type::Safe> statepool_;
       multiple_size_pool compstatepool_;
 
       // This cache is used to speedup repeated calls to state_condition()

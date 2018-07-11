@@ -44,7 +44,7 @@ namespace spot
   {
     if (--count_)
       return;
-    fixed_size_pool* p = pool_;
+    fixed_size_pool<pool_type::Safe>* p = pool_;
     this->~state_product();
     p->deallocate(const_cast<state_product*>(this));
   }
@@ -83,9 +83,9 @@ namespace spot
     {
     public:
       twa_succ_iterator_product_common(twa_succ_iterator* left,
-                                        twa_succ_iterator* right,
-                                        const twa_product* prod,
-                                        fixed_size_pool* pool)
+                                       twa_succ_iterator* right,
+                                       const twa_product* prod,
+                                       fixed_size_pool<pool_type::Safe>* pool)
         : left_(left), right_(right), prod_(prod), pool_(pool)
       {
       }
@@ -141,7 +141,7 @@ namespace spot
       twa_succ_iterator* left_;
       twa_succ_iterator* right_;
       const twa_product* prod_;
-      fixed_size_pool* pool_;
+      fixed_size_pool<pool_type::Safe>* pool_;
       friend class spot::twa_product;
     };
 
@@ -152,9 +152,9 @@ namespace spot
     {
     public:
       twa_succ_iterator_product(twa_succ_iterator* left,
-                                 twa_succ_iterator* right,
-                                 const twa_product* prod,
-                                 fixed_size_pool* pool)
+                                twa_succ_iterator* right,
+                                const twa_product* prod,
+                                fixed_size_pool<pool_type::Safe>* pool)
         : twa_succ_iterator_product_common(left, right, prod, pool)
       {
       }
@@ -218,9 +218,9 @@ namespace spot
     {
     public:
       twa_succ_iterator_product_kripke(twa_succ_iterator* left,
-                                        twa_succ_iterator* right,
-                                        const twa_product* prod,
-                                        fixed_size_pool* pool)
+                                       twa_succ_iterator* right,
+                                       const twa_product* prod,
+                                       fixed_size_pool<pool_type::Safe>* pool)
         : twa_succ_iterator_product_common(left, right, prod, pool)
       {
       }
@@ -327,7 +327,8 @@ namespace spot
   const state*
   twa_product::get_init_state() const
   {
-    fixed_size_pool* p = const_cast<fixed_size_pool*>(&pool_);
+    fixed_size_pool<pool_type::Safe>* p =
+      const_cast<fixed_size_pool<pool_type::Safe>*>(&pool_);
     return new(p->allocate()) state_product(left_->get_init_state(),
                                             right_->get_init_state(), p);
   }
@@ -348,7 +349,8 @@ namespace spot
         return it;
       }
 
-    fixed_size_pool* p = const_cast<fixed_size_pool*>(&pool_);
+    fixed_size_pool<pool_type::Safe>* p =
+      const_cast<fixed_size_pool<pool_type::Safe>*>(&pool_);
     if (left_kripke_)
       return new twa_succ_iterator_product_kripke(li, ri, this, p);
     else
@@ -403,7 +405,8 @@ namespace spot
   const state*
   twa_product_init::get_init_state() const
   {
-    fixed_size_pool* p = const_cast<fixed_size_pool*>(&pool_);
+    fixed_size_pool<pool_type::Safe>* p =
+      const_cast<fixed_size_pool<pool_type::Safe>*>(&pool_);
     return new(p->allocate()) state_product(left_init_->clone(),
                                             right_init_->clone(), p);
   }
