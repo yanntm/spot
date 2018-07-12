@@ -20,8 +20,8 @@
 #pragma once
 
 #include <algorithm>
-#include <bricks/brick-hash>
-#include <bricks/brick-hashset>
+#include <spot/bricks/brick-hash>
+#include <spot/bricks/brick-hashset>
 #include <spot/ltsmin/spins_interface.hh>
 #include <spot/misc/fixpool.hh>
 #include <spot/misc/mspool.hh>

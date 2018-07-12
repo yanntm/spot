@@ -22,6 +22,11 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
+nobase_include_HEADERS= bricks/brick-assert bricks/brick-bitlevel \
+	bricks/brick-hash bricks/brick-hashset  bricks/brick-shmem \
+	bricks/brick-types
+
+
 # List directories in the order they must be built.  Keep tests at the
 # end, after building '.' (since the current directory contains
 # libspot.la needed by the tests)
