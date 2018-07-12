@@ -22,7 +22,8 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS) \
-              $(BRICKS_CPPFLAGS) -I$(top_builddir)/lib -I$(top_srcdir)/lib
+              -I$(top_srcdir)/spot/bricks -I$(top_builddir)/lib \
+	      -I$(top_srcdir)/lib
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 LDADD = $(top_builddir)/spot/libspot.la \
        $(top_builddir)/buddy/src/libbddx.la \
