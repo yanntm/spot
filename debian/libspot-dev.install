@@ -1,5 +1,5 @@
 usr/include/spot
-usr/include/bricks
+usr/include/spot/bricks
 usr/lib/*-*/libspot.so
 usr/lib/*-*/libspot.a
 usr/lib/*-*/pkgconfig/libspot.pc
