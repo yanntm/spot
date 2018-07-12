@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <bricks/brick-hash>
-#include <bricks/brick-hashset>
+#include <spot/bricks/brick-hash>
+#include <spot/bricks/brick-hashset>
 #include <spot/kripke/kripke.hh>
 #include <spot/ltsmin/spins_interface.hh>
 #include <spot/misc/fixpool.hh>
