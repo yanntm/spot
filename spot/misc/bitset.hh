@@ -22,6 +22,7 @@
 #include <array>
 #include <spot/misc/hashfunc.hh>
 #include <spot/misc/common.hh>
+#include <spot/misc/clz.hh>
 
 namespace spot
 {
@@ -362,7 +363,7 @@ namespace spot
               continue;
             }
 #ifdef __GNUC__
-          res += 8*sizeof(word_t) - __builtin_clz(v);
+          res += 8*sizeof(word_t) - clz(v);
 #else
           while (v)
             {
