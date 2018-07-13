@@ -20,8 +20,7 @@
 #pragma once
 
 #include <spot/misc/common.hh>
-#include <climits>
-#include <cstddef>
+#include <spot/misc/clz.hh>
 
 #if SPOT_DEBUG && defined(HAVE_VALGRIND_MEMCHECK_H)
 #include <valgrind/memcheck.h>
@@ -59,8 +58,7 @@ namespace spot
               return size;
             // small numbers are best aligned to the next power of 2
             else if (size < alignof(std::max_align_t))
-              return size_t{1} << (CHAR_BIT*sizeof(size_t) -
-                                   __builtin_clz(size));
+              return size_t{1} << (CHAR_BIT*sizeof(size_t) - clz(size));
             else
               {
                 size_t mask = alignof(std::max_align_t)-1;
