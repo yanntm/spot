@@ -36,6 +36,7 @@ misc_HEADERS = \
   bitvect.hh \
   casts.hh \
   common.hh \
+  clz.hh \
   escape.hh \
   fixpool.hh \
   formater.hh \
@@ -63,6 +64,7 @@ libmisc_la_SOURCES = \
   bareword.cc \
   bitset.cc \
   bitvect.cc \
+  clz.cc \
   escape.cc \
   formater.cc \
   game.cc \
