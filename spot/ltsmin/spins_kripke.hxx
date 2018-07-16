@@ -203,8 +203,15 @@ namespace spot
   {
     if (SPOT_UNLIKELY(!tid_))
       return successors_[current_];
-    return  successors_[(((current_+1)*primes[tid_])
-                         % ((int)successors_.size()))];
+    return   successors_[compute_index()];
+  }
+
+  unsigned cspins_iterator::compute_index() const
+  {
+    unsigned long long c = current_ + 1;
+    unsigned long long p = primes[tid_];
+    unsigned long long s = successors_.size();
+    return (unsigned)  ((c*p) % s);
   }
 
   cube cspins_iterator::condition() const
