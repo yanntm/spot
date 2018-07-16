@@ -149,6 +149,9 @@ namespace spot
     cube condition() const;
 
   private:
+    /// Compute the real index in the successor vector
+    unsigned compute_index() const;
+
     std::vector<cspins_state> successors_;
     unsigned int current_;
     cube cond_;
