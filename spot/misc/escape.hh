@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2013, 2015 Laboratoire de Recherche et
+// Copyright (C) 2011-2013, 2015, 2018 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE).
 // Copyright (C) 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -35,6 +35,15 @@ namespace spot
   ///
   /// In CSV files, as defined by RFC4180, double-quoted string that
   /// contain double-quotes should simply duplicate those quotes.
+  ///
+  /// Note that in C++14,
+  /// ```
+  /// os << std::quoted(str, '"', '"');
+  /// ```
+  /// outputs the same result as
+  /// ```
+  /// escape_rfc4180(os << '"', str) << '"';
+  /// ```
   SPOT_API std::ostream&
   escape_rfc4180(std::ostream& os, const std::string& str);
 
