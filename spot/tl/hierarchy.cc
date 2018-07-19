@@ -32,6 +32,7 @@
 #include <spot/twaalgos/totgba.hh>
 #include <spot/twaalgos/cobuchi.hh>
 
+using namespace std::string_literals;
 
 namespace spot
 {
@@ -460,7 +461,7 @@ namespace spot
           goto break2;
         default:
           throw std::runtime_error
-            (std::string("nesting_depth(): unknown operator '") + c + '\'');
+            ("nesting_depth(): unknown operator '"s + c + '\'');
         }
   break2:
     if (want_nnf)

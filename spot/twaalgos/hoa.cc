@@ -32,6 +32,8 @@
 #include <spot/tl/formula.hh>
 #include <spot/kripke/fairkripke.hh>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   namespace
@@ -318,8 +320,7 @@ namespace spot
               verbose = true;
               break;
             default:
-              throw std::runtime_error
-                (std::string("unknown option for print_hoa(): ") + c);
+              throw std::runtime_error("unknown option for print_hoa(): "s + c);
             }
         }
 

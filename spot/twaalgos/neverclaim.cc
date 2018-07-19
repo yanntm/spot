@@ -29,6 +29,8 @@
 #include <spot/tl/print.hh>
 #include <spot/twa/formula2bdd.hh>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   namespace
@@ -61,8 +63,7 @@ namespace spot
                 break;
               default:
                 throw std::runtime_error
-                  (std::string("unknown option for print_never_claim(): ")
-                   + c);
+                  ("unknown option for print_never_claim(): "s + c);
               }
       }
 

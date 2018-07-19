@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2015, 2017 Laboratoire de Recherche et
+// Copyright (C) 2013, 2015, 2017, 2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -23,6 +23,8 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <string.h>
+
+using namespace std::string_literals;
 
 namespace spot
 {
@@ -73,7 +75,7 @@ namespace spot
           fd = mkstemp(*name);
         }
       if (fd < 0)
-        throw std::runtime_error(std::string("failed to create ") + *name);
+        throw std::runtime_error("failed to create "s + *name);
       return fd;
     }
   }
@@ -109,7 +111,7 @@ namespace spot
     if (fd_ < 0)
       return;
     if (::close(fd_))
-      throw std::runtime_error(std::string("failed to close ") + name_);
+      throw std::runtime_error("failed to close "s + name_);
     fd_ = -1;
   }
 
@@ -119,7 +121,7 @@ namespace spot
     char* name;
     int fd = create_temporary_file(prefix, suffix, &name);
     if (close(fd))
-      throw std::runtime_error(std::string("failed to close ") + name);
+      throw std::runtime_error("failed to close "s + name);
     auto cp = to_clean.insert(to_clean.end(), nullptr);
     *cp = new temporary_file(name, cp);
     return *cp;

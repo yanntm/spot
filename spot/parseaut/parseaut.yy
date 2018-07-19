@@ -43,6 +43,8 @@
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/alternation.hh>
 
+using namespace std::string_literals;
+
 #ifndef HAVE_STRVERSCMP
 // If the libc does not have this, a version is compiled in lib/.
 extern "C" int strverscmp(const char *s1, const char *s2);
@@ -877,11 +879,10 @@ properties: | properties IDENTIFIER
 		if (pos.first->second.val != val)
 		  {
 		    std::ostringstream out(std::ios_base::ate);
-		    error(@2, std::string("'properties: ")
-			  + (val ? "" : "!") + *$2 + "' contradicts...");
+		    error(@2, "'properties: "s + (val ? "" : "!")
+                          + *$2 + "' contradicts...");
 		    error(pos.first->second.loc,
-			  std::string("... 'properties: ")
-                          + (val ? "!" : "") + *$2
+			  "... 'properties: "s + (val ? "!" : "") + *$2
 			  + "' previously given here.");
 		  }
 		delete $2;
@@ -894,11 +895,9 @@ properties: | properties IDENTIFIER
 		if (pos.first->second.val)
 		  {
 		    std::ostringstream out(std::ios_base::ate);
-		    error(loc, std::string("'properties: !")
-			  + *$3 + "' contradicts...");
-		    error(pos.first->second.loc,
-			  std::string("... 'properties: ") + *$3
-			  + "' previously given here.");
+		    error(loc, "'properties: !"s + *$3 + "' contradicts...");
+		    error(pos.first->second.loc, "... 'properties: "s + *$3
+                          + "' previously given here.");
 		  }
 		delete $3;
 	      }
@@ -1058,7 +1057,7 @@ acceptance-cond: IDENTIFIER '(' acc-set ')'
                          }
                        else
                          {
-                           error(@1, std::string("unknown acceptance '") + *$1
+                           error(@1, "unknown acceptance '"s + *$1
                                  + "', expected Fin or Inf");
                            $$ = new spot::acc_cond::acc_code;
                          }
@@ -1837,9 +1836,8 @@ nc-one-ident: IDENTIFIER ':'
       auto r = res.labels.insert(std::make_pair(*$1, @1));
       if (!r.second)
 	{
-	  error(@1, std::string("redefinition of ") + *$1 + "...");
-	  error(r.first->second, std::string("... ")  + *$1
-		+ " previously defined here");
+	  error(@1, "redefinition of "s + *$1 + "...");
+	  error(r.first->second, "... "s + *$1 + " previously defined here");
 	}
       $$ = $1;
     }
@@ -2507,7 +2505,7 @@ namespace spot
     : filename_(name), opts_(opt)
   {
     if (hoayyopen(name, &scanner_))
-      throw std::runtime_error(std::string("Cannot open file ") + name);
+      throw std::runtime_error("Cannot open file "s + name);
   }
   catch (...)
   {
@@ -2522,7 +2520,7 @@ namespace spot
     : filename_(name), opts_(opt)
   {
     if (hoayyopen(fd, &scanner_))
-      throw std::runtime_error(std::string("Cannot open file ") + name);
+      throw std::runtime_error("Cannot open file "s + name);
   }
   catch (...)
   {

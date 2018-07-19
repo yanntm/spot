@@ -31,6 +31,8 @@
 #include "spot/priv/accmap.hh"
 #include <spot/tl/print.hh>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   namespace
@@ -142,8 +144,7 @@ namespace spot
           sba = false;
           break;
         default:
-          throw std::runtime_error
-            (std::string("unknown option for print_lbtt(): ") + c);
+          throw std::runtime_error("unknown option for print_lbtt(): "s + c);
         }
 
     lbtt_bfs b(g, os, sba);

@@ -27,6 +27,8 @@
 #include <cstdlib>
 #include <cstring>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   namespace
@@ -55,7 +57,7 @@ namespace spot
                 // Prevent infinite recursions...
                 if (orig == def.c_str())
                   throw std::runtime_error
-                    (std::string("SPOT_DOTDEFAULT should not contain '.'"));
+                    ("SPOT_DOTDEFAULT should not contain '.'");
                 if (!def.empty())
                   parse_opts(def.c_str());
                 break;
@@ -85,12 +87,12 @@ namespace spot
             case 'f':
               if (*options != '(')
                 throw std::runtime_error
-                  (std::string("invalid font specification for dotty()"));
+                  ("invalid font specification for dotty()");
               {
                 auto* end = strchr(++options, ')');
                 if (!end)
                   throw std::runtime_error
-                    (std::string("invalid font specification for dotty()"));
+                    ("invalid font specification for dotty()");
                 opt_font_ = std::string(options, end - options);
                 options = end + 1;
               }
@@ -128,8 +130,7 @@ namespace spot
               // SPOT_DEFAULT would be annoying.
               break;
             default:
-              throw std::runtime_error
-                (std::string("unknown option for dotty(): ") + c);
+              throw std::runtime_error("unknown option for dotty(): "s + c);
             }
       }
 

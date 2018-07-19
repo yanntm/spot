@@ -23,6 +23,8 @@
 #include <spot/twaalgos/isweakscc.hh>
 #include <spot/twaalgos/mask.hh>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   namespace
@@ -206,7 +208,7 @@ namespace spot
   {
     if (keep_opt == nullptr || *keep_opt == 0)
       throw std::runtime_error
-        (std::string("option for decompose_scc() should not be empty"));
+        ("option for decompose_scc() should not be empty");
 
     enum strength {
       Ignore = 0,
@@ -247,7 +249,7 @@ namespace spot
             if ((long unsigned) scc >= n)
               {
                 throw std::runtime_error
-                  (std::string("decompose_scc(): there is no SCC ")
+                  ("decompose_scc(): there is no SCC "s
                    + std::to_string(scc) + " in this automaton");
               }
             keep_opt = endptr;
@@ -272,7 +274,7 @@ namespace spot
             if (j != scc + 1)
               {
                 throw std::runtime_error
-                  (std::string("decompose_scc(): there is no SCC 'a")
+                  ("decompose_scc(): there is no SCC 'a"s
                    + std::to_string(scc) + "' in this automaton");
               }
             keep_opt = endptr;
@@ -289,7 +291,7 @@ namespace spot
           break;
         default:
           throw std::runtime_error
-            (std::string("unknown option for decompose_scc(): ") + c);
+            ("unknown option for decompose_scc(): "s + c);
         }
 
     auto p = aut->acc().unsat_mark();

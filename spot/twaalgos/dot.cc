@@ -39,6 +39,7 @@
 #include <ctype.h>
 #include <utility>
 
+using namespace std::string_literals;
 
 namespace spot
 {
@@ -176,7 +177,7 @@ namespace spot
                 // Prevent infinite recursions...
                 if (orig == def.c_str())
                   throw std::runtime_error
-                    (std::string("SPOT_DOTDEFAULT should not contain '.'"));
+                    ("SPOT_DOTDEFAULT should not contain '.'");
                 if (!def.empty())
                   parse_opts(def.c_str());
                 break;
@@ -312,7 +313,7 @@ namespace spot
               break;
             default:
               throw std::runtime_error
-                (std::string("unknown option for print_dot(): ") + c);
+                ("unknown option for print_dot(): "s + c);
             }
         if (opt_color_sets_ && !opt_latex_)
           opt_html_labels_ = true;

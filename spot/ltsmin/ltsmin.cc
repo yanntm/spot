@@ -38,6 +38,8 @@
 #include <spot/misc/intvcomp.hh>
 #include <spot/misc/intvcmp2.hh>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   namespace
@@ -972,15 +974,15 @@ namespace spot
         }
       else
         {
-          throw std::runtime_error(std::string("Unknown extension '")
-                                   + ext + "'.  Use '.prom', '.pm', '.pml', "
+          throw std::runtime_error("Unknown extension '"s + ext +
+                                   "'.  Use '.prom', '.pm', '.pml', "
                                    "'.dve', '.dve2C', '.gal', '.gal2C' or "
                                    "'.prom.spins'.");
         }
 
       struct stat s;
       if (stat(filename.c_str(), &s) != 0)
-        throw std::runtime_error(std::string("Cannot open ") + filename);
+        throw std::runtime_error("Cannot open "s + filename);
 
       filename += compiled_ext;
 
@@ -998,7 +1000,7 @@ namespace spot
 
       int res = system(command.c_str());
       if (res)
-        throw std::runtime_error(std::string("Execution of '")
+        throw std::runtime_error("Execution of '"s
                                  + command.c_str() + "' returned exit code "
                                  + std::to_string(WEXITSTATUS(res)));
     }
@@ -1029,7 +1031,7 @@ namespace spot
       {
         std::string lt_error = lt_dlerror();
         lt_dlexit();
-        throw std::runtime_error(std::string("Failed to load '")
+        throw std::runtime_error("Failed to load '"s
                                  + file + "'.\n" + lt_error);
       }
 
@@ -1046,7 +1048,7 @@ namespace spot
         // assume they can for POSIX).
         *reinterpret_cast<void**>(dst) = lt_dlsym(h, name);
         if (dst == nullptr)
-          throw std::runtime_error(std::string("Failed to resolve symbol '")
+          throw std::runtime_error("Failed to resolve symbol '"s
                                    + name + "' in '" + file + "'.");
       };
 

@@ -26,6 +26,8 @@
 #include <vector>
 #include <deque>
 
+using namespace std::string_literals;
+
 namespace spot
 {
 
@@ -791,9 +793,8 @@ namespace spot
               want_properties = true;
               break;
             default:
-              throw std::runtime_error(std::string("dump_storage_as_dow(): "
-                                                   "unsupported option '")
-                                       + opt[-1] +"'");
+              throw std::runtime_error
+                ("dump_storage_as_dow(): unsupported option '"s + opt[-1] +"'");
             }
       }
 

@@ -25,6 +25,8 @@
 #include <spot/tl/simplify.hh>
 #include <spot/tl/apcollect.hh>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   twa_word::twa_word(const twa_run_ptr& run)
@@ -185,7 +187,7 @@ namespace spot
       };
 
     // Parse the prefix part. Can be empty.
-    while (word.substr(i, 6) != std::string("cycle{"))
+    while (word.substr(i, 6) != "cycle{"s)
       {
         ind = skip_next_formula(word, i);
         if (ind == std::string::npos)

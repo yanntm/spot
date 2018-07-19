@@ -30,6 +30,8 @@
 #include <spot/misc/minato.hh>
 #include <spot/misc/random.hh>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   void acc_cond::report_too_many_sets()
@@ -1654,7 +1656,7 @@ namespace spot
             break;
           default:
             throw std::runtime_error
-              (std::string("unknown option for acc_cond::name(): ") + c);
+              ("unknown option for acc_cond::name(): "s + c);
           }
 
     std::ostringstream os;

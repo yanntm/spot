@@ -21,6 +21,8 @@
 #include "config.h"
 #include <spot/tl/unabbrev.hh>
 
+using namespace std::string_literals;
+
 namespace spot
 {
   unabbreviator::unabbreviator(const char* opt)
@@ -61,9 +63,7 @@ namespace spot
           re_some_bool_ = true;
           break;
         default:
-          throw std::runtime_error
-            (std::string("unknown unabbreviation option: ")
-             + c);
+          throw std::runtime_error("unknown unabbreviation option: "s + c);
         }
   }
 
