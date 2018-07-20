@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2012, 2013, 2014, 2015, 2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -24,8 +24,6 @@
 
 namespace spot
 {
-  class bdd_dict;
-
   /// \brief Compositional translation algorithm with resetable
   /// suspension.
   ///
