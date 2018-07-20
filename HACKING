@@ -350,7 +350,7 @@ Exporting symbols
   * If a symbol could be used by several modules of the library but
     should still be private to the library, use a *.hh/*.cc pair of
     files, but list both files in the _SOURCES variable of that
-    directory (see for instance weight.hh in tgbaalgos/Makefile.am).
+    directory (see for instance weight.hh in priv/Makefile.am).
     This will ensure that the header is not installed.
     Needless to say, no public header should include such a private
     header.
