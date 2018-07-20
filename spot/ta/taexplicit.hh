@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire
+// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Laboratoire
 // de Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -32,7 +32,6 @@ namespace spot
 {
   // Forward declarations.  See below.
   class state_ta_explicit;
-  class ta_explicit_succ_iterator;
   class ta_explicit;
 
   /// Explicit representation of a spot::ta.
