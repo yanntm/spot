@@ -29,7 +29,6 @@
 #include <spot/twaalgos/dot.hh>
 #include <spot/twa/bddprint.hh>
 #include <spot/misc/escape.hh>
-#include <spot/twa/twagraph.hh>
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/kripke/fairkripke.hh>

@@ -29,7 +29,6 @@
 
 #include <spot/twa/formula2bdd.hh>
 #include <cassert>
-#include <iostream>
 #include <spot/twa/bddprint.hh>
 #include <stack>
 #include <spot/taalgos/tgba2ta.hh>

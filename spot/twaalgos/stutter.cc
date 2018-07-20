@@ -32,8 +32,6 @@
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/postproc.hh>
 #include <spot/twaalgos/sccinfo.hh>
-#include <spot/twaalgos/postproc.hh>
-#include <spot/twaalgos/dualize.hh>
 #include <spot/twa/twaproduct.hh>
 #include <spot/twa/bddprint.hh>
 #include <deque>

@@ -28,7 +28,6 @@
 #include <spot/tl/print.hh>
 #include <spot/tl/apcollect.hh>
 #include <spot/tl/mark.hh>
-#include <spot/tl/print.hh>
 #include <cassert>
 #include <memory>
 #include <utility>
