@@ -55,7 +55,6 @@
 #include <sstream>
 #include <list>
 #include <cstddef>
-#include <initializer_list>
 #include <limits>
 
 namespace spot

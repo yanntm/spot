@@ -38,8 +38,6 @@
 #include <spot/twaalgos/emptiness.hh>
 #include <spot/twaalgos/emptiness_stats.hh>
 #include <spot/twaalgos/bfssteps.hh>
-#include <spot/misc/hash.hh>
-
 
 namespace spot
 {

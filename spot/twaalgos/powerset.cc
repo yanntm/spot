@@ -26,13 +26,11 @@
 #include <vector>
 #include <spot/twaalgos/powerset.hh>
 #include <spot/misc/hash.hh>
-#include <spot/twaalgos/powerset.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twaalgos/cycles.hh>
 #include <spot/twaalgos/gtec/gtec.hh>
 #include <spot/twaalgos/product.hh>
 #include <spot/twa/bddprint.hh>
-#include <spot/twaalgos/gtec/gtec.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twaalgos/dualize.hh>

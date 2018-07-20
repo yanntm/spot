@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <map>
 #include <iostream>
-#include <type_traits>
 
 namespace spot
 {
