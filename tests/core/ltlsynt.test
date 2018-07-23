@@ -184,7 +184,7 @@ for i in 0 1 7 8 9; do
   OUT=$(eval echo \$OUT$i)
   EXP=$(eval echo \$EXP$i)
 
-  for algo in sd ds; do
+  for algo in sd ds lar; do
     test $EXP = $(ltlsynt -f "$F" --ins="$IN" --outs="$OUT" --realizability \
     --algo=$algo)
   done
@@ -199,7 +199,7 @@ for i in 2 3 4 5 6 10; do
   ltl2tgba -f "!($F)" > negf_aut$i
 
   # test ltlsynt
-  for algo in sd ds; do
+  for algo in sd ds lar; do
     ltlsynt -f "$F" --ins="$IN" --outs="$OUT" --algo=$algo > out$i || true
     REAL=`head -1 out$i`
     test $REAL = $EXP

@@ -46,6 +46,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/split.hh>
+#include <spot/twaalgos/toparity.hh>
 
 enum
 {
@@ -72,8 +73,11 @@ static const argp_option options[] =
     { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
     { "algo", OPT_ALGO, "ds|sd", 0,
       "choose the algorithm for synthesis:\n"
-      " - sd: split then determinize (default)\n"
-      " - ds: determinize then split", 0 },
+      " - sd:   split then determinize with Safra (default)\n"
+      " - ds:   determinize (Safra) then split\n"
+      " - lar:  translate to a deterministic automaton with arbitrary"
+      "         acceptance condition, then use LAR to turn to parity,"
+      "         then split", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
@@ -115,19 +119,22 @@ bool opt_print_aiger(false);
 enum solver
 {
   DET_SPLIT,
-  SPLIT_DET
+  SPLIT_DET,
+  LAR,
 };
 
 static char const *const solver_args[] =
 {
   "detsplit", "ds",
   "splitdet", "sd",
+  "lar",
   nullptr
 };
 static solver const solver_types[] =
 {
   DET_SPLIT, DET_SPLIT,
-  SPLIT_DET, SPLIT_DET
+  SPLIT_DET, SPLIT_DET,
+  LAR,
 };
 ARGMATCH_VERIFY(solver_args, solver_types);
 
@@ -194,9 +201,13 @@ namespace
     spot::colorize_parity_here(dpa, true);
     spot::change_parity_here(dpa, spot::parity_kind_max,
                              spot::parity_style_odd);
-    bool max, odd;
-    dpa->acc().is_parity(max, odd);
-    assert(max && odd);
+    assert((
+      [&dpa]() -> bool
+        {
+          bool max, odd;
+          dpa->acc().is_parity(max, odd);
+          return max && odd;
+        }()));
     assert(spot::is_deterministic(dpa));
     return dpa;
   }
@@ -271,6 +282,12 @@ namespace
       spot::process_timer timer;
       timer.start();
 
+      if (opt_solver == LAR)
+        {
+          trans_.set_type(spot::postprocessor::Generic);
+          trans_.set_pref(spot::postprocessor::Deterministic);
+        }
+
       auto aut = trans_.run(&f);
       if (verbose)
         std::cerr << "translating formula done" << std::endl;
@@ -294,38 +311,61 @@ namespace
         }
 
       spot::twa_graph_ptr dpa = nullptr;
-      if (opt_solver == DET_SPLIT)
+      switch (opt_solver)
         {
-          auto tmp = to_dpa(aut);
-          if (verbose)
-            std::cerr << "determinization done\n"
-              << "dpa has " << tmp->num_states() << " states" << std::endl;
-          tmp->merge_states();
-          if (verbose)
-            std::cerr << "simulation done\n"
-              << "dpa has " << tmp->num_states() << " states" << std::endl;
-          dpa = split_2step(tmp, all_inputs);
-          if (verbose)
-            std::cerr << "split inputs and outputs done\n"
-              << "automaton has " << dpa->num_states() << " states"
-              << std::endl;
-          spot::colorize_parity_here(dpa, true);
-        }
-      else
-        {
-          auto split = split_2step(aut, all_inputs);
-          if (verbose)
-            std::cerr << "split inputs and outputs done\n"
-              << "automaton has " << split->num_states() << " states"
-              << std::endl;
-          dpa = to_dpa(split);
-          if (verbose)
-            std::cerr << "determinization done\n"
-              << "dpa has " << dpa->num_states() << " states" << std::endl;
-          dpa->merge_states();
-          if (verbose)
-            std::cerr << "simulation done\n"
-              << "dpa has " << dpa->num_states() << " states" << std::endl;
+          case DET_SPLIT:
+            {
+              auto tmp = to_dpa(aut);
+              if (verbose)
+                std::cerr << "determinization done\n"
+                  << "dpa has " << tmp->num_states() << " states" << std::endl;
+              tmp->merge_states();
+              if (verbose)
+                std::cerr << "simulation done\n"
+                  << "dpa has " << tmp->num_states() << " states" << std::endl;
+              dpa = split_2step(tmp, all_inputs);
+              if (verbose)
+                std::cerr << "split inputs and outputs done\n"
+                  << "automaton has " << dpa->num_states() << " states"
+                  << std::endl;
+              spot::colorize_parity_here(dpa, true);
+              break;
+            }
+          case SPLIT_DET:
+            {
+              auto split = split_2step(aut, all_inputs);
+              if (verbose)
+                std::cerr << "split inputs and outputs done\n"
+                  << "automaton has " << split->num_states() << " states"
+                  << std::endl;
+              dpa = to_dpa(split);
+              if (verbose)
+                std::cerr << "determinization done\n"
+                  << "dpa has " << dpa->num_states() << " states" << std::endl;
+              dpa->merge_states();
+              if (verbose)
+                std::cerr << "simulation done\n"
+                  << "dpa has " << dpa->num_states() << " states" << std::endl;
+              break;
+            }
+          case LAR:
+            {
+              dpa = split_2step(aut, all_inputs);
+              dpa->merge_states();
+              if (verbose)
+                std::cerr << "split inputs and outputs done\n"
+                  << "automaton has " << dpa->num_states() << " states"
+                  << std::endl;
+              dpa = spot::to_parity(dpa);
+              spot::cleanup_parity_here(dpa);
+              spot::change_parity_here(dpa, spot::parity_kind_max,
+                                       spot::parity_style_odd);
+              if (verbose)
+                std::cerr << "LAR construction done\n"
+                  << "dpa has " << dpa->num_states() << " states" << std::endl;
+              spot::colorize_parity_here(dpa, true);
+              break;
+            }
         }
       auto owner = complete_env(dpa);
       auto pg = spot::parity_game(dpa, owner);
