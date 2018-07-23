@@ -233,6 +233,12 @@ namespace spot
               }
           }
           break;
+        case acc_cond::acc_op::NegSlack:
+          os << '!';
+          SPOT_FALLTHROUGH;
+        case acc_cond::acc_op::Slack:
+          os << "Sl(" << code[pos - 1].var << ')';
+          break;
         }
     }
 
@@ -257,14 +263,25 @@ namespace spot
         case acc_cond::acc_op::Or:
           {
             auto sub = pos - pos->sub.size;
+            if (sub == pos)
+              return false;
+            bool defaultres = true;
             while (sub < pos)
               {
                 --pos;
-                if (eval(inf, pos))
-                  return true;
+                // We want to ignore slack variables in Disjunction,
+                // but a disjunction full of slack variables should be
+                // considered true.
+                if (pos->sub.op != acc_cond::acc_op::Slack
+                    && pos->sub.op != acc_cond::acc_op::NegSlack)
+                  {
+                    if (eval(inf, pos))
+                      return true;
+                    defaultres = false;
+                  }
                 pos -= pos->sub.size;
               }
-            return false;
+            return defaultres;
           }
         case acc_cond::acc_op::Inf:
           return (pos[-1].mark & inf) == pos[-1].mark;
@@ -273,6 +290,9 @@ namespace spot
         case acc_cond::acc_op::FinNeg:
         case acc_cond::acc_op::InfNeg:
           SPOT_UNREACHABLE();
+        case acc_cond::acc_op::Slack:
+        case acc_cond::acc_op::NegSlack:
+          return false;
         }
       SPOT_UNREACHABLE();
       return false;
@@ -324,6 +344,9 @@ namespace spot
             return true;
           else
             return trival::maybe();
+        case acc_cond::acc_op::Slack:
+        case acc_cond::acc_op::NegSlack:
+          return true;
         case acc_cond::acc_op::FinNeg:
         case acc_cond::acc_op::InfNeg:
           SPOT_UNREACHABLE();
@@ -372,6 +395,8 @@ namespace spot
         case acc_cond::acc_op::Fin:
         case acc_cond::acc_op::FinNeg:
         case acc_cond::acc_op::InfNeg:
+        case acc_cond::acc_op::Slack:
+        case acc_cond::acc_op::NegSlack:
           SPOT_UNREACHABLE();
         }
       SPOT_UNREACHABLE();
@@ -426,6 +451,8 @@ namespace spot
             break;
           case acc_cond::acc_op::Inf:
           case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
             pos -= 2;
             break;
           case acc_cond::acc_op::Fin:
@@ -946,6 +973,8 @@ namespace spot
           }
         case acc_cond::acc_op::InfNeg:
         case acc_cond::acc_op::FinNeg:
+        case acc_cond::acc_op::Slack:
+        case acc_cond::acc_op::NegSlack:
           SPOT_UNREACHABLE();
           return bddfalse;
         }
@@ -1332,6 +1361,8 @@ namespace spot
             SPOT_FALLTHROUGH;
           case acc_cond::acc_op::Inf:
           case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
             pos -= 2;
             break;
           }
@@ -1365,6 +1396,8 @@ namespace spot
             SPOT_FALLTHROUGH;
           case acc_cond::acc_op::Fin:
           case acc_cond::acc_op::FinNeg:
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
             pos -= 2;
             break;
           }
@@ -1413,6 +1446,10 @@ namespace spot
           return acc_cond::acc_code::inf_neg(pos[-1].mark);
         case acc_cond::acc_op::InfNeg:
           return acc_cond::acc_code::fin_neg(pos[-1].mark);
+        case acc_cond::acc_op::Slack:
+          return acc_cond::acc_code::neg_slack(pos[-1].var);
+        case acc_cond::acc_op::NegSlack:
+          return acc_cond::acc_code::slack(pos[-1].var);
         }
       SPOT_UNREACHABLE();
       return {};
@@ -1473,6 +1510,10 @@ namespace spot
           return acc_cond::acc_code::inf(strip
                                          ? pos[-1].mark.strip(rem)
                                          : pos[-1].mark - rem);
+        case acc_cond::acc_op::Slack:
+          return acc_cond::acc_code::slack(pos[-1].var);
+        case acc_cond::acc_op::NegSlack:
+          return acc_cond::acc_code::neg_slack(pos[-1].var);
         case acc_cond::acc_op::FinNeg:
         case acc_cond::acc_op::InfNeg:
           SPOT_UNREACHABLE();
@@ -1520,6 +1561,9 @@ namespace spot
           case acc_cond::acc_op::FinNeg:
           case acc_cond::acc_op::InfNeg:
             used_in_cond |= pos[-1].mark;
+            SPOT_FALLTHROUGH;
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
             pos -= 2;
             break;
           }
@@ -1555,6 +1599,9 @@ namespace spot
             used_inf |= pos[-1].mark;
             pos -= 2;
             break;
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
+            pos -= 2;
           }
       }
     return {used_inf, used_fin};
@@ -2121,6 +2168,313 @@ namespace spot
 
     std::swap(c, *this);
   }
+
+
+  namespace
+  {
+    acc_cond::acc_code slack_maybe(const acc_cond::acc_word* begin,
+                                   const acc_cond::acc_word* pos)
+    {
+      int var = pos - begin;
+      switch (pos->sub.op)
+        {
+        case acc_cond::acc_op::And:
+        case acc_cond::acc_op::Or:
+          return acc_cond::acc_code::slack(var);
+        case acc_cond::acc_op::Fin:
+          return acc_cond::acc_code::fin(pos[-1].mark);
+        case acc_cond::acc_op::Inf:
+          return acc_cond::acc_code::inf(pos[-1].mark);
+        case acc_cond::acc_op::FinNeg:
+          return acc_cond::acc_code::fin_neg(pos[-1].mark);
+        case acc_cond::acc_op::InfNeg:
+          return acc_cond::acc_code::inf_neg(pos[-1].mark);
+        case acc_cond::acc_op::Slack:
+        case acc_cond::acc_op::NegSlack:
+          SPOT_UNREACHABLE();
+        }
+      SPOT_UNREACHABLE();
+      return {};
+
+    }
+
+    void
+    tseytin_rec(const acc_cond::acc_word* begin, const acc_cond::acc_word* pos,
+                acc_cond::acc_code& result)
+    {
+      auto start = pos - pos->sub.size;
+      int var = pos - begin;
+      switch (pos->sub.op)
+        {
+        case acc_cond::acc_op::And:
+          {
+            --pos;
+            do
+              {
+                tseytin_rec(begin, pos, result);
+                result &=
+                  acc_cond::acc_code::neg_slack(var) | slack_maybe(begin, pos);
+                pos -= pos->sub.size + 1;
+              }
+            while (pos > start);
+            return;
+          }
+        case acc_cond::acc_op::Or:
+          {
+            --pos;
+            auto res = acc_cond::acc_code::neg_slack(var);
+            do
+              {
+                tseytin_rec(begin, pos, result);
+                res |= slack_maybe(begin, pos);
+                pos -= pos->sub.size + 1;
+              }
+            while (pos > start);
+            result &= res;
+            return;
+          }
+        case acc_cond::acc_op::Fin:
+        case acc_cond::acc_op::Inf:
+        case acc_cond::acc_op::FinNeg:
+        case acc_cond::acc_op::InfNeg:
+        case acc_cond::acc_op::Slack:
+        case acc_cond::acc_op::NegSlack:
+          return;
+        }
+      SPOT_UNREACHABLE();
+      return;
+    }
+
+    // This is almost like is_cnf(), except we allow Inf() with more
+    // than one sets.  So basically all we have to do is make sure
+    // that And can only occur at the top level.
+    bool is_tseytin(const acc_cond::acc_code& code)
+    {
+      if (code.empty() || code.size() == 2)
+        return true;
+      auto pos = &code.back();
+      auto start = &code.front();
+      if (pos->sub.op == acc_cond::acc_op::And)
+        --pos;
+      while (pos > start)
+        {
+          switch (pos->sub.op)
+            {
+            case acc_cond::acc_op::And:
+              return false;
+            case acc_cond::acc_op::Or:
+              --pos;
+              break;
+            case acc_cond::acc_op::Inf:
+            case acc_cond::acc_op::InfNeg:
+            case acc_cond::acc_op::Fin:
+            case acc_cond::acc_op::FinNeg:
+            case acc_cond::acc_op::Slack:
+            case acc_cond::acc_op::NegSlack:
+              pos -= 2;
+              break;
+            }
+        }
+      return true;
+    }
+  }
+
+  acc_cond::acc_code acc_cond::acc_code::tseytin() const
+  {
+    if (is_tseytin(*this))
+      return *this;
+    const acc_cond::acc_word* pos = &back();
+    const acc_cond::acc_word* begin = &front();
+    switch (pos->sub.op)
+      {
+        case acc_cond::acc_op::And:
+        case acc_cond::acc_op::Or:
+          {
+            acc_cond::acc_code code = slack(pos - begin);
+            tseytin_rec(begin, pos, code);
+            return code;
+          }
+      default:
+        return *this;
+      }
+  }
+
+
+  namespace
+  {
+    acc_cond::acc_code
+    cleanup_slack_rec(const acc_cond::acc_word *pos,
+                      const std::vector<unsigned char>& slacks)
+    {
+      auto start = pos - pos->sub.size;
+      switch (pos->sub.op)
+        {
+        case acc_cond::acc_op::And:
+          {
+            --pos;
+            auto res = acc_cond::acc_code::t();
+            do
+              {
+                auto tmp = cleanup_slack_rec(pos, slacks) & std::move(res);
+                std::swap(tmp, res);
+                pos -= pos->sub.size + 1;
+              }
+            while (pos > start);
+            return res;
+          }
+        case acc_cond::acc_op::Or:
+          {
+            --pos;
+            auto res = acc_cond::acc_code::f();
+            do
+              {
+                auto tmp = cleanup_slack_rec(pos, slacks) | std::move(res);
+                std::swap(tmp, res);
+                pos -= pos->sub.size + 1;
+              }
+            while (pos > start);
+            return res;
+          }
+        case acc_cond::acc_op::Fin:
+          return acc_cond::acc_code::fin(pos[-1].mark);
+        case acc_cond::acc_op::Inf:
+          return acc_cond::acc_code::inf(pos[-1].mark);
+        case acc_cond::acc_op::FinNeg:
+          return acc_cond::acc_code::fin_neg(pos[-1].mark);
+        case acc_cond::acc_op::InfNeg:
+          return acc_cond::acc_code::inf_neg(pos[-1].mark);
+        case acc_cond::acc_op::Slack:
+          {
+            unsigned var = pos[-1].var;
+            unsigned val = var < slacks.size() ? slacks[var] : 0;
+            if (val == 1 || (val & 4))
+              return acc_cond::acc_code::t();
+            else if (val == 2 || (val & 8))
+              return acc_cond::acc_code::f();
+            else
+              return acc_cond::acc_code::slack(pos[-1].var);
+          }
+        case acc_cond::acc_op::NegSlack:
+          {
+            unsigned var = pos[-1].var;
+            unsigned val = var < slacks.size() ? slacks[var] : 0;
+            if (val == 1 || (val & 4))
+              return acc_cond::acc_code::f();
+            else if (val == 2 || (val & 8))
+              return acc_cond::acc_code::t();
+            else
+              return acc_cond::acc_code::neg_slack(pos[-1].var);
+          }
+        }
+      SPOT_UNREACHABLE();
+      return {};
+    }
+  }
+
+
+  void acc_cond::acc_code::slack_cleanup()
+  {
+    for (;;)
+      {
+        if (empty())
+          return;
+
+        std::vector<unsigned char> slacks;
+        acc_cond::acc_word* lowest_disjunct = &back();
+
+        // Check Slack variables usage.  We store 1 for positive use, and
+        // 2 for negative use, 4 for unit positive use, and 8 for unit
+        // negative use.
+        acc_cond::acc_word* pos = &back();
+        do
+          {
+            switch (pos->sub.op)
+              {
+              case acc_cond::acc_op::And:
+                --pos;
+                break;
+              case acc_cond::acc_op::Or:
+                lowest_disjunct = pos - pos->sub.size;
+                --pos;
+                break;
+              case acc_cond::acc_op::Inf:
+              case acc_cond::acc_op::InfNeg:
+              case acc_cond::acc_op::Fin:
+              case acc_cond::acc_op::FinNeg:
+                pos -= 2;
+                break;
+              case acc_cond::acc_op::Slack:
+                {
+                  unsigned var = pos[-1].var;
+                  if (slacks.size() <= var)
+                    slacks.resize(var + 1);
+                  slacks[var] |= (pos < lowest_disjunct) ? 5 : 1;
+                  pos -= 2;
+                  break;
+                }
+              case acc_cond::acc_op::NegSlack:
+                {
+                  unsigned var = pos[-1].var;
+                  if (slacks.size() <= var)
+                    slacks.resize(var + 1);
+                  slacks[var] |= (pos < lowest_disjunct) ? 10 : 2;
+                  pos -= 2;
+                  break;
+                }
+              }
+          }
+        while (pos >= &front());
+
+        // We only need to update if some slack variables
+        // are pure (i.e., 1 or 2).
+        bool rewrite_needed = false;
+        for (unsigned char s: slacks)
+          {
+            if ((s & 5) != ((s & 10) >> 1))
+              rewrite_needed = true;
+            if ((s&4) && (s&8))     // Two incompatible unit slack variables
+              {
+                *this = f();
+                return;
+              }
+          }
+
+        if (!rewrite_needed)
+          return;
+
+        auto tmp = cleanup_slack_rec(&back(), slacks);
+        *this = std::move(tmp);
+      }
+  }
+
+  int acc_cond::acc_code::slack_one() const
+  {
+    if (empty())
+      return -1;
+    const acc_cond::acc_word* pos = &back();
+    do
+      {
+        switch (pos->sub.op)
+          {
+          case acc_cond::acc_op::And:
+          case acc_cond::acc_op::Or:
+            --pos;
+            break;
+          case acc_cond::acc_op::Inf:
+          case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::Fin:
+          case acc_cond::acc_op::FinNeg:
+            pos -= 2;
+            break;
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
+            return pos[-1].var;
+          }
+      }
+    while (pos >= &front());
+    return -1;
+  }
+
   int acc_cond::acc_code::fin_one() const
   {
     if (empty() || is_f())
@@ -2137,6 +2491,8 @@ namespace spot
           case acc_cond::acc_op::Inf:
           case acc_cond::acc_op::InfNeg:
           case acc_cond::acc_op::FinNeg:
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
             pos -= 2;
             break;
           case acc_cond::acc_op::Fin:
@@ -2145,6 +2501,13 @@ namespace spot
       }
     while (pos >= &front());
     return -1;
+  }
+
+  acc_cond::acc_code acc_cond::acc_code::slack_set(int var, bool val) const
+  {
+    std::vector<unsigned char> slacks(var + 1, 0);
+    slacks[var] = val ? 1 : 2;
+    return cleanup_slack_rec(&back(), slacks);
   }
 
   acc_cond::mark_t acc_cond::acc_code::fin_unit() const
@@ -2165,6 +2528,8 @@ namespace spot
             break;
           case acc_cond::acc_op::Inf:
           case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
           case acc_cond::acc_op::FinNeg:
             pos -= 2;
             break;
@@ -2179,4 +2544,6 @@ namespace spot
     while (pos >= &front());
     return res;
   }
+
+
 }

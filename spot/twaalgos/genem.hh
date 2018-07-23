@@ -26,10 +26,26 @@ namespace spot
   /// \ingroup emptiness_check_algorithms
   /// \brief Emptiness check of on automaton, for any acceptance condition.
   SPOT_API bool
+  generic_emptiness_check_copy(const const_twa_graph_ptr& aut);
+
+  SPOT_API bool
+  generic_emptiness_check_nodj(const const_twa_graph_ptr& aut);
+
+  SPOT_API bool
   generic_emptiness_check(const const_twa_graph_ptr& aut);
 
   /// \ingroup emptiness_check_algorithms
   /// \brief Emptiness check of one SCC, for any acceptance condition.
   SPOT_API bool
   generic_emptiness_check_for_scc(const scc_info& si, unsigned scc);
+
+  SPOT_API bool
+  generic_emptiness_check_tseytin_copy(const const_twa_graph_ptr& aut);
+
+  SPOT_API bool
+  generic_emptiness_check_tseytin_nodj(const const_twa_graph_ptr& aut);
+
+  SPOT_API bool
+  generic_emptiness_check_tseytin(const const_twa_graph_ptr& aut);
+
 }

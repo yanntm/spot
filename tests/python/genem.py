@@ -107,6 +107,76 @@ HOA: v1 States: 2 Acceptance: 6 (Fin(0)|Fin(1))&(Fin(2)|Fin(3))&
 1 {1 4} State: 1 [t] 0 {2 5} [t] 1 {3 0 1} --END--""")
 
 
+def generic_emptiness1_rec(aut):
+    spot.cleanup_acceptance_here(aut, False)
+    aut.acc().slack_cleanup()
+    # Catching 'false' acceptance here is an optimization that could be removed.
+    if aut.acc().is_f():
+        return True
+    # Catching Fin-less acceptance here to use a regular emptiness check is an
+    # optimization.  This "if" block could be removed without breaking the
+    # algorithm.
+    if (not aut.acc().uses_fin_acceptance()) and (aut.acc().slack_one() < 0):
+        return aut.is_empty()
+    si = spot.scc_info(aut, True)
+    acc_scc = si.one_accepting_scc()
+    if acc_scc >= 0:
+        return False
+    nscc = si.scc_count()
+    # Now recurse in all non-rejecting SCC
+    for scc in range(nscc):
+        if not si.is_rejecting_scc(scc):
+            acc = aut.acc()
+            sets = si.acc_sets_of(scc)
+            acc = acc.restrict_to(sets)
+            acc.slack_cleanup()
+            if acc.is_f():
+                continue
+            elif not acc.uses_fin_acceptance():
+                if not generic_emptiness1_rec(si.split_on_sets(scc, [])[0]):
+                    return False
+                continue
+            # Do we have any unit Fin?
+            fu = acc.fin_unit()
+            if fu:
+                for part in si.split_on_sets(scc, fu):
+                    if not generic_emptiness1_rec(part):
+                        return False
+            else:
+                # Do we have a slack variable?
+                sl = acc.slack_one()
+                if sl >= 0:
+                    for val in (True, False):
+                        saut = si.split_on_sets(scc, [])[0]
+                        saut.set_acceptance(saut.acc().slack_set(sl, val))
+                        if not generic_emptiness1_rec(saut):
+                            return False
+                else:
+                    # Find some Fin set, we necessarily have one, otherwise the
+                    # SCC would have been found to be either rejecting or
+                    # accepting.
+                    fo = acc.fin_one()
+                    assert fo >= 0, acc
+                    for part in si.split_on_sets(scc, [fo]):
+                        if not generic_emptiness1_rec(part):
+                            return False
+                    whole = si.split_on_sets(scc, [])[0]
+                    whole.set_acceptance(acc.remove([fo], False))
+                    if not generic_emptiness1_rec(whole):
+                        return False
+    return True
+
+# The python version of spot.generic_emptiness_check_tseytin()
+def generic_emptiness1(aut):
+    old_a = spot.acc_cond(aut.acc())
+    a = old_a.tseytin()
+    a.slack_cleanup()
+    aut.set_acceptance(a)
+    res = generic_emptiness1_rec(aut)
+    # Restore the original acceptance condition
+    aut.set_acceptance(old_a)
+    return res
+
 def generic_emptiness2_rec(aut):
     spot.cleanup_acceptance_here(aut, False)
     # Catching 'false' acceptance here is an optimization that could be removed.
@@ -158,12 +228,20 @@ def generic_emptiness2(aut):
 
 def run_bench(automata):
     for aut in automata:
-        # Make sure our three implementation behave identically
-        res3 = spot.generic_emptiness_check(aut)
-        res2 = spot.remove_fin(aut).is_empty()
-        res1 = generic_emptiness2(aut)
-        res = str(res1)[0] + str(res2)[0] + str(res3)[0]
+        # Make sure our five implementation behave identically
+        res9 = spot.generic_emptiness_check_tseytin(aut)
+        res8 = spot.generic_emptiness_check_tseytin_nodj(aut)
+        res7 = spot.generic_emptiness_check_tseytin_copy(aut)
+        res6 = spot.generic_emptiness_check(aut)
+        res5 = spot.generic_emptiness_check_nodj(aut)
+        res4 = spot.generic_emptiness_check_copy(aut)
+        res3 = spot.remove_fin(aut).is_empty()
+        res2 = generic_emptiness2(aut)
+        res1 = generic_emptiness1(aut)
+        res = (str(res1)[0] + str(res2)[0] + str(res3)[0] +
+               str(res4)[0] + str(res5)[0] + str(res6)[0] +
+               str(res7)[0] + str(res8)[0] + str(res9)[0])
         print(res)
-        assert res in ('TTT', 'FFF')
+        assert res in ('TTTTTTTTT', 'FFFFFFFFF')
 
 run_bench([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a11])

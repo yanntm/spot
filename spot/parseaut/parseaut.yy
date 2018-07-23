@@ -2265,6 +2265,9 @@ fix_acceptance_aux(spot::acc_cond& acc,
 	  c &= acc.inf(tmp);
 	return c;
       }
+    case spot::acc_cond::acc_op::Slack:
+    case spot::acc_cond::acc_op::NegSlack:
+      SPOT_UNREACHABLE();
     }
   SPOT_UNREACHABLE();
   return {};

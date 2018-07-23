@@ -80,6 +80,8 @@ namespace spot
             SPOT_FALLTHROUGH;
           case acc_cond::acc_op::Inf:
           case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::Slack:
+          case acc_cond::acc_op::NegSlack:
             pos -= 2;
             break;
           }

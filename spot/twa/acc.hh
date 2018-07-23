@@ -364,10 +364,11 @@ namespace spot
 
     // This encodes either an operator or set of acceptance sets.
     enum class acc_op : unsigned short
-    { Inf, Fin, InfNeg, FinNeg, And, Or };
+    { Inf, Fin, InfNeg, FinNeg, And, Or, Slack, NegSlack };
     union acc_word
     {
       mark_t mark;
+      unsigned var;
       struct {
         acc_op op;             // Operator
         unsigned short size; // Size of the subtree (number of acc_word),
@@ -401,6 +402,12 @@ namespace spot
               case acc_cond::acc_op::FinNeg:
                 pos -= 2;
                 if (other[pos].mark != (*this)[pos].mark)
+                  return false;
+                break;
+              case acc_cond::acc_op::Slack:
+              case acc_cond::acc_op::NegSlack:
+                pos -= 2;
+                if (other[pos].var != (*this)[pos].var)
                   return false;
                 break;
               }
@@ -447,6 +454,18 @@ namespace spot
                   if (m < om)
                     return true;
                   if (m > om)
+                    return false;
+                  break;
+                }
+              case acc_cond::acc_op::Slack:
+              case acc_cond::acc_op::NegSlack:
+                {
+                  pos -= 2;
+                  unsigned v = (*this)[pos].var;
+                  unsigned ov = other[pos].var;
+                  if (v < ov)
+                    return true;
+                  if (v > ov)
                     return false;
                   break;
                 }
@@ -562,6 +581,26 @@ namespace spot
       static acc_code inf_neg(std::initializer_list<unsigned> vals)
       {
         return inf_neg(mark_t(vals));
+      }
+
+      static acc_code slack(unsigned var)
+      {
+        acc_code res;
+        res.resize(2);
+        res[0].var = var;
+        res[1].sub.op = acc_op::Slack;
+        res[1].sub.size = 1;
+        return res;
+      }
+
+      static acc_code neg_slack(unsigned var)
+      {
+        acc_code res;
+        res.resize(2);
+        res[0].var = var;
+        res[1].sub.op = acc_op::NegSlack;
+        res[1].sub.size = 1;
+        return res;
       }
 
       static acc_code buchi()
@@ -865,6 +904,9 @@ namespace spot
                 pos -= 2;
                 (*this)[pos].mark <<= sets;
                 break;
+              case acc_cond::acc_op::Slack:
+              case acc_cond::acc_op::NegSlack:
+                SPOT_UNREACHABLE();
               }
           }
         while (pos > 0);
@@ -886,6 +928,10 @@ namespace spot
 
       acc_code complement() const;
 
+      acc_code tseytin() const;
+      void slack_cleanup();
+      int slack_one() const;
+      acc_code slack_set(int var, bool val) const;
       mark_t fin_unit() const;
       int fin_one() const;
 
@@ -1407,6 +1453,28 @@ namespace spot
     /// (p) no parity parameter, (o) name unknown acceptance as
     /// 'other', (s) shorthand for 'lo0'.
     std::string name(const char* fmt = "alo") const;
+
+    acc_cond tseytin() const
+    {
+      return {num_sets(), code_.tseytin()};
+    }
+
+    void slack_cleanup()
+    {
+      code_.slack_cleanup();
+      if (uses_fin_acceptance_)
+        uses_fin_acceptance_ = check_fin_acceptance();
+    }
+
+    int slack_one() const
+    {
+      return code_.slack_one();
+    }
+
+    acc_cond slack_set(int var, bool val) const
+    {
+      return {num_sets(), code_.slack_set(var, val)};
+    }
 
     mark_t fin_unit() const
     {

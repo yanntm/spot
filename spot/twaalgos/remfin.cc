@@ -410,6 +410,8 @@ namespace spot
                     case acc_cond::acc_op::FinNeg:
                     case acc_cond::acc_op::InfNeg:
                     case acc_cond::acc_op::Or:
+                    case acc_cond::acc_op::Slack:
+                    case acc_cond::acc_op::NegSlack:
                       SPOT_UNREACHABLE();
                       break;
                     }
@@ -575,6 +577,8 @@ namespace spot
                       case acc_cond::acc_op::Fin:
                       case acc_cond::acc_op::FinNeg:
                       case acc_cond::acc_op::InfNeg:
+                      case acc_cond::acc_op::Slack:
+                      case acc_cond::acc_op::NegSlack:
                         SPOT_UNREACHABLE();
                         break;
                       }
