@@ -92,6 +92,7 @@ twaalgos_HEADERS = \
   sum.hh \
   tau03.hh \
   tau03opt.hh \
+  toparity.hh \
   totgba.hh \
   toweak.hh \
   translate.hh \
@@ -161,6 +162,7 @@ libtwaalgos_la_SOURCES = \
   sum.cc \
   tau03.cc \
   tau03opt.cc \
+  toparity.cc \
   totgba.cc \
   toweak.cc \
   translate.cc \

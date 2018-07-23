@@ -409,6 +409,7 @@ TESTS_python = \
   python/streett_totgba2.py \
   python/rs_like.py \
   python/sum.py \
+  python/toparity.py \
   python/trival.py \
   python/tra2tba.py \
   python/twagraph.py \
