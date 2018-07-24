@@ -100,6 +100,7 @@ enum {
   OPT_SIZE_MIN,
   OPT_SKIP_ERRORS,
   OPT_STUTTER_INSENSITIVE,
+  OPT_SUSPENDABLE,
   OPT_SYNTACTIC_GUARANTEE,
   OPT_SYNTACTIC_OBLIGATION,
   OPT_SYNTACTIC_PERSISTENCE,
@@ -167,6 +168,8 @@ static const argp_option options[] =
     { "eventual", OPT_EVENTUAL, nullptr, 0, "match pure eventualities", 0 },
     { "universal", OPT_UNIVERSAL, nullptr, 0,
       "match purely universal formulas", 0 },
+    { "suspendable", OPT_SUSPENDABLE, nullptr, 0,
+      "synonym for --universal --eventual", 0 },
     { "syntactic-safety", OPT_SYNTACTIC_SAFETY, nullptr, 0,
       "match syntactic-safety formulas", 0 },
     { "syntactic-guarantee", OPT_SYNTACTIC_GUARANTEE, nullptr, 0,
@@ -506,6 +509,10 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_AP_N:
       ap_n = parse_range(arg, 0, std::numeric_limits<int>::max());
+      break;
+    case OPT_SUSPENDABLE:
+      universal = true;
+      eventual = true;
       break;
     case OPT_SYNTACTIC_SAFETY:
       syntactic_safety = true;

@@ -84,6 +84,11 @@ GFa | FGb
 F(GFa | Gb)
 EOF
 
+checkopt --suspendable <<EOF
+GFa | FGb
+F(GFa | Gb)
+EOF
+
 checkopt --stutter-invariant <<EOF
 GFa | FGb
 F(GFa | Gb)
