@@ -31,6 +31,9 @@ New in spot 2.6.0.dev  (not yet released)
     with arbitrary acceptance condition into a parity automaton,
     based on a last-appearance record (LAR) construction.
 
+  - "ltlfilt --suspendable" is now a synonym for
+    "ltlfilt --universal --eventual".
+
 New in spot 2.6  (2018-07-04)
 
   Command-line tools:
