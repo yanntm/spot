@@ -592,10 +592,8 @@ namespace spot
     /// \brief Recompute whether an SCC is accepting or not.
     ///
     /// This is an internal function of
-    /// determine_unknown_acceptance().  The Boolean vector k will be
-    /// used by the method to mark the state that belong to the SCC.
-    /// It can be shared between multiple calls.
-    bool check_scc_emptiness(unsigned n, std::vector<bool>* k);
+    /// determine_unknown_acceptance().
+    bool check_scc_emptiness(unsigned n);
 
     bool is_useful_scc(unsigned scc) const
     {

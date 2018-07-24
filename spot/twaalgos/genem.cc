@@ -207,6 +207,9 @@ namespace spot
 
   bool generic_emptiness_check(const const_twa_graph_ptr& aut)
   {
+    if (SPOT_UNLIKELY(!aut->is_existential()))
+      throw std::runtime_error("generic_emptiness_check() "
+                               "does not support alternating automata");
     auto aut_ = std::const_pointer_cast<twa_graph>(aut);
     acc_cond old = aut_->acc();
     bool res = generic_emptiness_check_main_nocopy<true>(aut_);
@@ -217,6 +220,9 @@ namespace spot
   bool generic_emptiness_check_for_scc(const scc_info& si,
                                        unsigned scc)
   {
+    if (SPOT_UNLIKELY(!si.get_aut()->is_existential()))
+      throw std::runtime_error("generic_emptiness_check_for_scc() "
+                               "does not support alternating automata");
     return generic_emptiness_check_for_scc_nocopy<true>(si, scc);
   }
 }

@@ -23,7 +23,9 @@ New in spot 2.6.0.dev  (not yet released)
     emptiness checks of twa_graph_ptr (i.e., automata not built
     on-the-fly) with an *arbitrary* acceptance condition.  Its sister
     spot::generic_emptiness_check_scc() can be used to decide the
-    emptiness of an SCC.
+    emptiness of an SCC.  This is now used by
+    twa_graph_ptr::is_empty(), twa_graph_ptr::intersects(), and
+    scc_info::determine_unknown_acceptance().
 
 New in spot 2.6  (2018-07-04)
 

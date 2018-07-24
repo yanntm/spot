@@ -118,9 +118,8 @@ namespace spot
             if (!accepting)
               continue;
             // We can't avoid it any more, we have to check the
-            // acceptance if the SCC.
-            std::vector<bool> k;
-            useful[n] = !sccmap_prod.check_scc_emptiness(n, &k);
+            // acceptance of the SCC.
+            useful[n] = !sccmap_prod.check_scc_emptiness(n);
           }
       }
 

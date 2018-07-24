@@ -31,6 +31,8 @@
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/postproc.hh>
 #include <spot/twaalgos/isdet.hh>
+#include <spot/twaalgos/product.hh>
+#include <spot/twaalgos/genem.hh>
 #include <utility>
 
 namespace spot
@@ -53,10 +55,26 @@ namespace spot
 
   namespace
   {
+    const_twa_graph_ptr is_twa_graph(const const_twa_ptr& a)
+    {
+      return std::dynamic_pointer_cast<const twa_graph>(a);
+    }
+
+    // Make sure automata using Fin acceptance are twa_graph_ptr
+    const_twa_graph_ptr fin_to_twa_graph_maybe(const const_twa_ptr& a)
+    {
+      if (!a->acc().uses_fin_acceptance())
+        return nullptr;
+      auto aa = is_twa_graph(a);
+      if (!aa)
+        aa = make_twa_graph(a, twa::prop_set::all());
+      return remove_alternation(aa);
+    }
+
     // Remove Fin-acceptance and alternation.
     const_twa_ptr remove_fin_maybe(const const_twa_ptr& a)
     {
-      auto aa = std::dynamic_pointer_cast<const twa_graph>(a);
+      auto aa = is_twa_graph(a);
       if ((!aa || aa->is_existential()) && !a->acc().uses_fin_acceptance())
         return a;
       if (!aa)
@@ -77,6 +95,9 @@ namespace spot
   bool
   twa::is_empty() const
   {
+    const_twa_ptr a = shared_from_this();
+    if (const_twa_graph_ptr ag = fin_to_twa_graph_maybe(a))
+      return generic_emptiness_check(ag);
     return !couvreur99_new_check(remove_fin_maybe(shared_from_this()));
   }
 
@@ -111,7 +132,18 @@ namespace spot
   bool
   twa::intersects(const_twa_ptr other) const
   {
-    auto a1 = remove_fin_maybe(shared_from_this());
+    auto self = shared_from_this();
+    // If the two operands are explicit automata (twa_graph_ptr) and one
+    // of them uses Fin acceptance, make a regular product and check it
+    // with the generic emptiness.
+    if (acc().uses_fin_acceptance() || other->acc().uses_fin_acceptance())
+      {
+        const_twa_graph_ptr g1 = is_twa_graph(self);
+        const_twa_graph_ptr g2 = is_twa_graph(other);
+        if (g1 && g2 && g1->is_existential() && g2->is_existential())
+          return !generic_emptiness_check(product(g1, g2));
+      }
+    auto a1 = remove_fin_maybe(self);
     auto a2 = remove_fin_maybe(other);
     return !otf_product(a1, a2)->is_empty();
   }

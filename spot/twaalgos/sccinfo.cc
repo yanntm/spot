@@ -24,6 +24,7 @@
 #include <queue>
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/mask.hh>
+#include <spot/twaalgos/genem.hh>
 #include <spot/misc/escape.hh>
 
 
@@ -423,23 +424,18 @@ namespace spot
     return support;
   }
 
-  bool scc_info::check_scc_emptiness(unsigned n, std::vector<bool>* k)
+  bool scc_info::check_scc_emptiness(unsigned n)
   {
     if (SPOT_UNLIKELY(!aut_->is_existential()))
       throw std::runtime_error("scc_info::check_scc_emptiness() "
                                "does not support alternating automata");
     if (SPOT_UNLIKELY(!(options_ & scc_info_options::TRACK_STATES)))
       report_need_track_states();
-    k->assign(aut_->num_states(), false);
-    auto& node = node_[n];
-    for (auto i: node.states_)
-      (*k)[i] = true;
-    return mask_keep_accessible_states(aut_, *k, node.one_state_)->is_empty();
+    return generic_emptiness_check_for_scc(*this, n);
   }
 
   void scc_info::determine_unknown_acceptance()
   {
-    std::vector<bool> k;
     unsigned s = scc_count();
     bool changed = false;
     // iterate over SCCs in topological order
@@ -453,7 +449,7 @@ namespace spot
                   "scc_info::determine_unknown_acceptance() "
                   "does not support alternating automata");
             auto& node = node_[s];
-            if (check_scc_emptiness(s, &k))
+            if (check_scc_emptiness(s))
               node.rejecting_ = true;
             else
               node.accepting_ = true;
