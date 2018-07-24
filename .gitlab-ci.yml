@@ -164,7 +164,7 @@ debpkg-stable:
     - docker volume create $vol
     - exitcode=0
     - docker run --rm=true -v $vol:/build/result gadl/spot-debuild:stable ./build-spot.sh $CI_COMMIT_REF_NAME -j${NBPROC-1} || exitcode=$?
-    - docker run --rm=true -v $vol:/build/result gadl/spot-debuild-i386:stable ./bin-spot.sh -j${NBPROC-1} || exitcode=$
+    - docker run --rm=true -v $vol:/build/result gadl/spot-debuild-i386:stable ./bin-spot.sh -j${NBPROC-1} || exitcode=$?
     - docker run -v $vol:/build/result --name helper-$vol gadl/spot-debuild:stable true || exitcode=$?
     - docker cp helper-$vol:/build/result _build_stable || exitcode=$?
     - docker rm helper-$vol || exitcode=$?
