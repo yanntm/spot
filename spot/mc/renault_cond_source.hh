@@ -21,7 +21,7 @@
 
 #include <atomic>
 #include <chrono>
-#include <bricks/brick-hashset>
+#include <spot/bricks/brick-hashset>
 #include <stdlib.h>
 #include <thread>
 #include <vector>
