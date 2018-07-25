@@ -904,6 +904,12 @@ namespace spot
       trival maybe_accepting(mark_t infinitely_often,
                              mark_t always_present) const;
 
+      // Return all symmetric marks of the condition.
+      // If two marks x and y are symmetric, it means that swapping them does
+      // not change (logically) the acc_code.
+      // In the returned vector, each mark points to the "root" of its symmetry
+      // class.
+      std::vector<unsigned> symmetries() const;
 
       // Remove all the acceptance sets in rem.
       //

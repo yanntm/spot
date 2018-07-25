@@ -958,7 +958,6 @@ namespace spot
                 const acc_cond::acc_code& rhs)
     {
       auto used = lhs.used_sets() | rhs.used_sets();
-
       unsigned c = used.count();
       unsigned umax = used.max_set();
 
@@ -973,6 +972,54 @@ namespace spot
           r.emplace_back(bddfalse);
       return to_bdd_rec(&lhs.back(), &r[0]) == to_bdd_rec(&rhs.back(), &r[0]);
     }
+  }
+
+  std::vector<unsigned>
+  acc_cond::acc_code::symmetries() const
+  {
+    auto used = used_sets();
+    unsigned umax = used.max_set();
+
+    bdd_allocator ba;
+    int base = ba.allocate_variables(umax+2);
+    assert(base == 0);
+    std::vector<bdd> r;
+    for (unsigned i = 0; r.size() < umax; ++i)
+      r.emplace_back(bdd_ithvar(base++));
+    bdd bddcode = to_bdd_rec(&back(), &r[0]);
+    bdd tmp;
+
+    std::vector<unsigned> res(umax);
+    for (unsigned x = 0; x < umax; ++x)
+      res[x] = x;
+
+    for (unsigned x : used.sets())
+      for (unsigned y : used.sets())
+        {
+          if (x >= y)
+            continue;
+          if (res[x] != x)
+            continue;
+
+          {
+            bddPair* p = bdd_newpair();
+            bdd_setpair(p, x, umax + 0);
+            bdd_setpair(p, y, umax + 1);
+            tmp = bdd_replace(bddcode, p);
+            bdd_freepair(p);
+
+            p = bdd_newpair();
+            bdd_setpair(p, umax + 0, y);
+            bdd_setpair(p, umax + 1, x);
+            tmp = bdd_replace(tmp, p);
+            bdd_freepair(p);
+          }
+
+          if (tmp == bddcode)
+            res[y] = x;
+        }
+
+    return res;
   }
 
   bool acc_cond::is_parity(bool& max, bool& odd, bool equiv) const

@@ -34,10 +34,19 @@ namespace spot
     {
       unsigned state;
       std::vector<unsigned> perm;
+      std::vector<unsigned> count;
 
       bool operator<(const lar_state& s) const
       {
-        return state == s.state ? perm < s.perm : state < s.state;
+        if (state == s.state)
+          {
+            if (perm == s.perm)
+              return count < s.count;
+            else
+              return perm < s.perm;
+          }
+        else
+          return state < s.state;
       }
 
       std::string to_string() const
@@ -46,11 +55,12 @@ namespace spot
         s << state << " [";
         for (unsigned i = 0; i != perm.size(); ++i)
           {
-            s << perm[i];
+            s << perm[i] << '@' << count[i];
             if (i < perm.size() - 1)
-              s << ',';
+              s << ", ";
           }
         s << ']';
+
         return s.str();
       }
     };
@@ -71,10 +81,42 @@ namespace spot
 
       twa_graph_ptr run()
       {
+        auto symm = aut_->acc().get_acceptance().symmetries();
+        // we need to know for each symmetry class:
+        //  - its id
+        //  - its elements in order (any arbitrary order will do)
+        //  - its size
+        std::vector<acc_cond::mark_t> classes;
+        std::vector<unsigned> acc2class(aut_->num_sets(), -1U);
+        std::vector<unsigned> accpos(aut_->num_sets(), -1U);
+        for (unsigned k : aut_->acc().all_sets().sets())
+          {
+            unsigned r = symm[k];
+            if (k == r) // new class
+              {
+                acc2class[k] = classes.size();
+                accpos[k] = 0;
+                classes.push_back({k});
+              }
+            else
+              {
+                unsigned c = acc2class[r];
+                acc2class[k] = c;
+                accpos[k] = classes[c].count();
+                classes[c].set(k);
+              }
+          }
+
+        // create resulting automaton
         res_ = make_twa_graph(aut_->get_dict());
         res_->copy_ap_of(aut_);
 
-        std::deque<lar_state> todo;
+        struct stack_elem
+        {
+          unsigned num;
+          lar_state s;
+        };
+        std::deque<stack_elem> todo;
         auto get_state = [this, &todo](const lar_state& s)
           {
             auto it = lar2num.emplace(s, -1U);
@@ -82,16 +124,21 @@ namespace spot
               {
                 unsigned nb = res_->new_state();
                 it.first->second = nb;
-                todo.push_back(s);
+                todo.push_back({nb, s});
               }
             return it.first->second;
           };
 
+        // initial state
         {
           std::vector<unsigned> p0;
-          for (unsigned k : aut_->acc().all_sets().sets())
-            p0.push_back(k);
-          lar_state s0{aut_->get_init_state_number(), p0};
+          std::vector<unsigned> c0;
+          for (unsigned i = 0; i < classes.size(); ++i)
+            {
+              p0.push_back(i);
+              c0.push_back(0);
+            }
+          lar_state s0{aut_->get_init_state_number(), p0, c0};
           unsigned init = get_state(s0); // put s0 in todo
           res_->set_init_state(init);
         }
@@ -99,39 +146,67 @@ namespace spot
         // main loop
         while (!todo.empty())
           {
-            lar_state current = todo.front();
+            lar_state current = std::move(todo.front().s);
+            unsigned src_num = todo.front().num;
             todo.pop_front();
-
-            // TODO todo could store this number to avoid one lookup
-            unsigned src_num = get_state(current);
 
             for (const auto& e : aut_->out(current.state))
               {
                 // find the new permutation
                 std::vector<unsigned> new_perm = current.perm;
+                std::vector<unsigned> new_count = current.count;
+                std::vector<unsigned> hits(new_count.size(), 0);
                 unsigned h = 0;
                 for (unsigned k : e.acc.sets())
                   {
-                    auto it = std::find(new_perm.begin(), new_perm.end(), k);
-                    h = std::max(h, unsigned(new_perm.end() - it));
-                    std::rotate(it, it+1, new_perm.end());
+                    unsigned c = acc2class[k];
+                    if (accpos[k] == new_count[c])
+                      new_count[c] += 1;
+                    else
+                      ++hits[c];
+                    if (new_count[c] == classes[c].count())
+                      {
+                        new_count[c] = 0;
+                        auto it =
+                          std::find(new_perm.begin(), new_perm.end(), c);
+                        assert(it != new_perm.end());
+                        h = std::max(h, unsigned(new_perm.end() - it));
+                        std::rotate(it, it+1, new_perm.end());
+                      }
                   }
 
-                lar_state dst{e.dst, new_perm};
+                lar_state dst{e.dst, new_perm, new_count};
                 unsigned dst_num = get_state(dst);
 
                 // do the h last elements satisfy the acceptance condition?
-                acc_cond::mark_t m(new_perm.end() - h, new_perm.end());
+                acc_cond::mark_t m({});
+                for (auto c = new_perm.end() - h; c != new_perm.end(); ++c)
+                  m |= classes[*c];
+                for (auto c = new_perm.begin(); c != new_perm.end() - h; ++c)
+                  {
+                    for (unsigned k : classes[*c].sets())
+                      {
+                        if (hits[*c] == 0)
+                          break;
+                        m.set(k);
+                        --hits[*c];
+                      }
+                  }
+
                 if (aut_->acc().accepting(m))
-                  res_->new_edge(src_num, dst_num, e.cond, {2*h});
+                  res_->new_edge(src_num, dst_num, e.cond, {2*m.count()});
                 else
-                  res_->new_edge(src_num, dst_num, e.cond, {2*h+1});
+                  res_->new_edge(src_num, dst_num, e.cond, {2*m.count()+1});
               }
           }
 
         // parity max even
-        res_->set_acceptance(2*aut_->num_sets() + 2,
-            acc_cond::acc_code::parity(true, false, 2*aut_->num_sets() + 2));
+        unsigned nb_colors = 2*aut_->num_sets() + 2;
+        res_->set_acceptance(nb_colors,
+            acc_cond::acc_code::parity(true, false, nb_colors));
+
+        // inherit properties of the input automaton
+        res_->prop_copy(aut_, { false, false, true, false, true, true });
 
         if (pretty_print)
           {

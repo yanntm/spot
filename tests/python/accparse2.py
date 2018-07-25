@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2015, 2017  Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2017-2018  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -107,3 +107,10 @@ assert(a.is_streett() == -1)
 a.set_acceptance('(Fin(0)|Inf(1))&(Inf(1)|Fin(0))&(Inf(3)|Fin(2))')
 assert(a.is_rabin() == -1)
 assert(a.is_streett() == 2)
+
+a = spot.acc_code('Inf(0)&Inf(1)&Inf(3) | Fin(0)&(Fin(1)|Fin(3))')
+u = a.symmetries()
+assert u[0] == 0
+assert u[1] == 1
+assert u[2] == 2
+assert u[3] == 1

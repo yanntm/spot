@@ -20,6 +20,21 @@
 
 import spot
 
+a = spot.automaton("""HOA: v1
+States: 1
+Start: 0
+AP: 2 "a" "b"
+Acceptance: 2 Inf(0)|Inf(1)
+--BODY--
+State: 0
+[0&1] 0 {0 1}
+[0&!1] 0 {0}
+[!0&1] 0 {1}
+[!0&!1] 0
+--END--""")
+p = spot.to_parity(a)
+assert spot.are_equivalent(a, p)
+
 for f in spot.randltl(4, 400):
     d = spot.translate(f, "det", "G")
     p = spot.to_parity(d)
