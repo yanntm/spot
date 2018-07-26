@@ -106,6 +106,30 @@ HOA: v1 States: 2 Acceptance: 6 (Fin(0)|Fin(1))&(Fin(2)|Fin(3))&
 (Fin(4)|Fin(5)) Start: 0 AP: 0 --BODY-- State: 0 [t] 0 {0 2 3} [t]
 1 {1 4} State: 1 [t] 0 {2 5} [t] 1 {3 0 1} --END--""")
 
+# From issue #360.
+a360 = spot.automaton("""HOA: v1
+States: 2
+Start: 0
+AP: 2 "a" "b"
+Acceptance: 8 Fin(5) & (Inf(4) | (Fin(3) & (Inf(2) | (Fin(1) & Inf(0))))) &
+              (Inf(6) | Inf(7)) & (Fin(6)|Fin(7))
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic
+--BODY--
+State: 0
+[0&1] 0 {4 6 7}
+[0&!1] 1 {0 6}
+[!0&1] 0 {3 7}
+[!0&!1] 0 {0}
+State: 1
+[0&1] 0 {4 6 7}
+[0&!1] 1 {3 6}
+[!0&1] 0 {4 7}
+[!0&!1] 1 {0}
+--END--""")
+
+
+
 
 def generic_emptiness2_rec(aut):
     spot.cleanup_acceptance_here(aut, False)
@@ -143,7 +167,7 @@ def generic_emptiness2_rec(aut):
                     if not generic_emptiness2(part):
                         return False
                 whole = si.split_on_sets(scc, [])[0]
-                whole.set_acceptance(acc.remove([fo], False))
+                whole.set_acceptance(acc.force_inf([fo]))
                 if not generic_emptiness2(whole):
                     return False
     return True
@@ -166,4 +190,4 @@ def run_bench(automata):
         print(res)
         assert res in ('TTT', 'FFF')
 
-run_bench([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a11])
+run_bench([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a11, a360])

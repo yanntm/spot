@@ -921,6 +921,8 @@ namespace spot
       acc_code remove(acc_cond::mark_t rem, bool missing) const;
       // Same as remove, but also shift numbers
       acc_code strip(acc_cond::mark_t rem, bool missing) const;
+      // for all x in m, this replaces Fin(x) by false.
+      acc_code force_inf(mark_t m) const;
 
       // Return the set of sets appearing in the condition.
       acc_cond::mark_t used_sets() const;
@@ -1386,6 +1388,12 @@ namespace spot
     {
       return
         { num_sets() - (all_sets() & rem).count(), code_.strip(rem, missing) };
+    }
+
+    // For all x in m, this replaces Fin(x) by false.
+    acc_cond force_inf(mark_t m) const
+    {
+      return {num_sets(), code_.force_inf(m)};
     }
 
     // Restrict an acceptance condition to a subset of set numbers

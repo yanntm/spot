@@ -175,7 +175,7 @@ namespace spot
            <deal_with_disjunct>))
         return false;
       // Try to accept when Fin(fo) == false
-      tmp.set(acc.remove({(unsigned) fo}, false));
+      tmp.set(acc.force_inf({(unsigned) fo}));
       return generic_emptiness_check_for_scc_nocopy
         <deal_with_disjunct>(si, scc, tocut);
       return true;

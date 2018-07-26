@@ -1481,6 +1481,51 @@ namespace spot
       SPOT_UNREACHABLE();
       return {};
     }
+
+    static acc_cond::acc_code
+    force_inf_rec(const acc_cond::acc_word* pos, acc_cond::mark_t rem)
+    {
+      auto start = pos - pos->sub.size;
+      switch (pos->sub.op)
+        {
+        case acc_cond::acc_op::And:
+          {
+            --pos;
+            auto res = acc_cond::acc_code::t();
+            do
+              {
+                auto tmp = force_inf_rec(pos, rem) & std::move(res);
+                std::swap(tmp, res);
+                pos -= pos->sub.size + 1;
+              }
+            while (pos > start);
+            return res;
+          }
+        case acc_cond::acc_op::Or:
+          {
+            --pos;
+            auto res = acc_cond::acc_code::f();
+            do
+              {
+                auto tmp = force_inf_rec(pos, rem) | std::move(res);
+                std::swap(tmp, res);
+                pos -= pos->sub.size + 1;
+              }
+            while (pos > start);
+            return res;
+          }
+        case acc_cond::acc_op::Fin:
+          return acc_cond::acc_code::fin(pos[-1].mark - rem);
+        case acc_cond::acc_op::Inf:
+          return acc_cond::acc_code::inf(pos[-1].mark);
+        case acc_cond::acc_op::FinNeg:
+        case acc_cond::acc_op::InfNeg:
+          SPOT_UNREACHABLE();
+          return {};
+        }
+      SPOT_UNREACHABLE();
+      return {};
+    }
   }
 
   acc_cond::acc_code
@@ -1497,6 +1542,14 @@ namespace spot
     if (is_t() || is_f())
       return *this;
     return strip_rec(&back(), rem, missing, false);
+  }
+
+  acc_cond::acc_code
+  acc_cond::acc_code::force_inf(mark_t rem) const
+  {
+    if (is_t() || is_f())
+      return *this;
+    return force_inf_rec(&back(), rem);
   }
 
   acc_cond::mark_t
