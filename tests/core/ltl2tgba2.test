@@ -390,3 +390,13 @@ cat >expected <<EOF
 4,12,1
 EOF
 diff out expected
+
+# This was reported by Maximilien: in Spot 2.6, ltl2tgba "$f" has 8
+# states, but the automaton is larger with -GD because of ltl-split.
+# This is a case were we want (a R !b) & (c R !d) to be translated
+# along the rest of the formula, i.e., ltl-split should not translate
+# it separately.
+f='(a R !b) & (c R !d) & G((!b | !d) & (!a | Fb) & (!c | Fd) '
+f=$f'& (!b | X(b | (a R !b))) & (!d | X(d | (c R !d))) & F(a | !b) & F(c | !d))'
+test '8,1' = `ltl2tgba "$f" --stats=%s,%d`
+test '8,1' = `ltl2tgba -GD "$f" --stats=%s,%d`

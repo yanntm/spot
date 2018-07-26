@@ -186,6 +186,21 @@ namespace spot
               rest.push_back(child);
           }
 
+        // Safety formulas are quite easy to translate since they do
+        // not introduce marks.  If rest is non-empty, it seems
+        // preferable to translate the safety inside rest, as this may
+        // constrain the translation.
+        if (!rest.empty() && !oblg.empty())
+          {
+            auto safety = [](formula f)
+              {
+                return f.is_syntactic_safety();
+              };
+            auto i = std::remove_if(oblg.begin(), oblg.end(), safety);
+            rest.insert(rest.end(), i, oblg.end());
+            oblg.erase(i, oblg.end());
+          }
+
         if (!susp.empty())
           {
             // The only cases where we accept susp and rest to be both
