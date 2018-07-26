@@ -163,7 +163,7 @@ namespace spot
           }
         if (r2.is_syntactic_obligation() || !r2.is(op::And, op::Or) ||
             // For TGBA/BA we only do conjunction.  There is nothing wrong
-            // with disjunction, but it seems to generated larger automata
+            // with disjunction, but it seems to generate larger automata
             // in many cases and it needs to be further investigated.  Maybe
             // this could be relaxed in the case of deterministic output.
             (r2.is(op::Or) && (type_ == TGBA || type_ == BA)))
@@ -189,8 +189,7 @@ namespace spot
         if (!susp.empty())
           {
             // The only cases where we accept susp and rest to be both
-            // non-empty is when doing arbitrary acceptance, or when doing
-            // Generic or TGBA.
+            // non-empty is when doing Generic acceptance or TGBA.
             if (!rest.empty() && !(type_ == Generic || type_ == TGBA))
               {
                 rest.insert(rest.end(), susp.begin(), susp.end());
