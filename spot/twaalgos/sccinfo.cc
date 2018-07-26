@@ -528,6 +528,7 @@ namespace spot
         cur.assign(aut_->num_states(), false);
 
         auto copy = make_twa_graph(aut_->get_dict());
+        copy->copy_ap_of(aut_);
         copy->copy_acceptance_of(aut_);
         copy->prop_state_acc(aut_->prop_state_acc());
         transform_accessible(aut_, copy, [&](unsigned src,
