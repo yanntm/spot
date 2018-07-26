@@ -397,6 +397,7 @@ TESTS_python = \
   python/sbacc.py \
   python/sccfilter.py \
   python/sccinfo.py \
+  python/sccsplit.py \
   python/semidet.py \
   python/setacc.py \
   python/setxor.py \

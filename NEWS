@@ -5,6 +5,11 @@ New in spot 2.6.0.dev  (not yet released)
   - "ltlfilt --suspendable" is now a synonym for
     "ltlfilt --universal --eventual".
 
+  Bugs fixed:
+
+  - scc_info::split_on_sets() did not correctly register the
+    atomic propositions of the returned automata.
+
 New in spot 2.6  (2018-07-04)
 
   Command-line tools:
