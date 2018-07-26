@@ -27,7 +27,8 @@ namespace spot
   /// \brief Take an automaton with any acceptance condition and return an
   /// equivalent parity automaton.
   ///
-  /// The parity condition of the returned automaton is max even.
+  /// The parity condition of the returned automaton is max even if the empty
+  /// mark_t satisfies the acceptance condition, and max odd otherwise.
   SPOT_API twa_graph_ptr
   to_parity(const const_twa_graph_ptr& aut, bool pretty_print=false);
 }

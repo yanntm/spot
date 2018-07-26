@@ -27,9 +27,123 @@
 
 namespace spot
 {
-
   namespace
   {
+    // a class to store xor normal forms
+    // a formula is in XNF if it is a xor of positive (Fin-less) formulas
+    class xnf final
+    {
+      std::set<acc_cond::acc_code> terms;
+
+      void insert(const acc_cond::acc_code& f)
+      {
+        if (terms.count(f))
+          terms.erase(f);
+        else
+          terms.insert(f);
+      }
+    public:
+      xnf() = default;
+      xnf(const acc_cond::acc_code& f): xnf() { insert(f); }
+
+      unsigned size() const { return terms.size(); }
+
+      unsigned nb_sat(const acc_cond::mark_t& m) const
+      {
+        unsigned r = 0;
+        for (const auto& phi : terms)
+          if (phi.accepting(m))
+            ++r;
+        return r;
+      }
+
+      static xnf ff() { return xnf(); }
+      static xnf tt() { return !ff(); }
+
+      // not
+      void neg()
+      {
+        insert(acc_cond::acc_code::t());
+      }
+      xnf operator!() const
+      {
+        auto res = *this;
+        res.neg();
+        return res;
+      }
+
+      // xor
+      xnf operator+(const xnf& o) const
+      {
+        xnf res = *this;
+        res += o;
+        return res;
+      }
+      xnf& operator+=(const xnf& o)
+      {
+        for (const auto& f : o.terms)
+          insert(f);
+        return *this;
+      }
+
+      // and
+      xnf operator&(const xnf& o) const
+      {
+        xnf res = *this;
+        res &= o;
+        return res;
+      }
+      xnf& operator&=(const xnf& o)
+      {
+        decltype(terms) tmp;
+        std::swap(terms, tmp);
+
+        for (const auto& f1 : tmp)
+          for (const auto& f2 : o.terms)
+            insert(f1 & f2);
+        return *this;
+      }
+
+      // or
+      xnf operator|(const xnf& o) const
+      {
+        xnf res = *this;
+        res |= o;
+        return res;
+      }
+      xnf& operator|=(const xnf& o)
+      {
+        *this += o & *this;
+        *this += o;
+        return *this;
+      }
+
+      std::string to_string() const
+      {
+        std::stringstream s;
+        for (const auto& f : terms)
+          s << f << " + ";
+        return s.str();
+      }
+    };
+
+    static xnf acc2xnf(const acc_cond::acc_code& acc)
+    {
+      auto marks = acc.used_inf_fin_sets();
+      if (marks.second.count())
+        {
+          unsigned k = *marks.second.sets().begin();
+          acc_cond::mark_t m({k});
+          auto neg = acc2xnf(acc.remove(m, true));
+          auto pos = acc2xnf(acc.remove(m, false));
+          auto v = xnf(acc_cond::acc_code::inf(m));
+          pos &= v;
+          neg &= !v;
+          return pos + neg;
+        }
+      return xnf(acc);
+    }
+
     struct lar_state
     {
       unsigned state;
@@ -71,24 +185,35 @@ namespace spot
       twa_graph_ptr res_;
       const bool pretty_print;
 
+      // map lar_state to states in result automaton
       std::map<lar_state, unsigned> lar2num;
+      // symmetry informations
+      // we need to know for each symmetry class:
+      //  - its id
+      //  - its elements in order (any arbitrary order will do)
+      //  - its size
+      std::vector<acc_cond::mark_t> classes;
+      std::vector<unsigned> acc2class;
+      std::vector<unsigned> accpos;
+
+      // algebraic normal form (xor of and's of positive litterals)
+      const xnf accxnf;
+
+      struct stack_elem
+      {
+        unsigned num;
+        lar_state s;
+      };
     public:
       explicit lar_generator(const const_twa_graph_ptr& a, bool pretty_print)
       : aut_(a)
       , res_(nullptr)
       , pretty_print(pretty_print)
-      {}
-
-      twa_graph_ptr run()
+      , acc2class(aut_->num_sets(), -1U)
+      , accpos(aut_->num_sets(), -1U)
+      , accxnf(acc2xnf(aut_->acc().get_acceptance()))
       {
-        auto symm = aut_->acc().get_acceptance().symmetries();
-        // we need to know for each symmetry class:
-        //  - its id
-        //  - its elements in order (any arbitrary order will do)
-        //  - its size
-        std::vector<acc_cond::mark_t> classes;
-        std::vector<unsigned> acc2class(aut_->num_sets(), -1U);
-        std::vector<unsigned> accpos(aut_->num_sets(), -1U);
+        const auto symm = aut_->acc().get_acceptance().symmetries();
         for (unsigned k : aut_->acc().all_sets().sets())
           {
             unsigned r = symm[k];
@@ -106,16 +231,15 @@ namespace spot
                 classes[c].set(k);
               }
           }
+      }
 
+      twa_graph_ptr run()
+      {
+        const bool even = aut_->acc().accepting(acc_cond::mark_t({}));
         // create resulting automaton
         res_ = make_twa_graph(aut_->get_dict());
         res_->copy_ap_of(aut_);
 
-        struct stack_elem
-        {
-          unsigned num;
-          lar_state s;
-        };
         std::deque<stack_elem> todo;
         auto get_state = [this, &todo](const lar_state& s)
           {
@@ -157,6 +281,7 @@ namespace spot
                 std::vector<unsigned> new_count = current.count;
                 std::vector<unsigned> hits(new_count.size(), 0);
                 unsigned h = 0;
+
                 for (unsigned k : e.acc.sets())
                   {
                     unsigned c = acc2class[k];
@@ -193,17 +318,15 @@ namespace spot
                       }
                   }
 
-                if (aut_->acc().accepting(m))
-                  res_->new_edge(src_num, dst_num, e.cond, {2*m.count()});
-                else
-                  res_->new_edge(src_num, dst_num, e.cond, {2*m.count()+1});
+                res_->new_edge(src_num, dst_num, e.cond,
+                               {accxnf.nb_sat(m) - even});
               }
           }
 
-        // parity max even
-        unsigned nb_colors = 2*aut_->num_sets() + 2;
+        // parity max odd
+        unsigned nb_colors = accxnf.size() + 1 - even;
         res_->set_acceptance(nb_colors,
-            acc_cond::acc_code::parity(true, false, nb_colors));
+            acc_cond::acc_code::parity(true, !even, nb_colors));
 
         // inherit properties of the input automaton
         res_->prop_copy(aut_, { false, false, true, false, true, true });
@@ -218,6 +341,7 @@ namespace spot
 
         return res_;
       }
+
     };
   }
 

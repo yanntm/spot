@@ -32,13 +32,37 @@ State: 0
 [!0&1] 0 {1}
 [!0&!1] 0
 --END--""")
-p = spot.to_parity(a)
+p = spot.to_parity(a, True)
 assert spot.are_equivalent(a, p)
+assert p.to_str() == """HOA: v1
+States: 2
+Start: 0
+AP: 2 "a" "b"
+acc-name: Streett 1
+Acceptance: 2 Fin(0) | Inf(1)
+properties: trans-labels explicit-labels trans-acc colored complete
+properties: deterministic
+--BODY--
+State: 0 "0 [0@0]"
+[0&1] 0 {1}
+[0&!1] 1 {0}
+[!0&1] 0 {1}
+[!0&!1] 0 {0}
+State: 1 "0 [0@1]"
+[0&1] 0 {1}
+[0&!1] 1 {1}
+[!0&1] 0 {1}
+[!0&!1] 1 {0}
+--END--"""
 
 for f in spot.randltl(4, 400):
     d = spot.translate(f, "det", "G")
     p = spot.to_parity(d)
-    assert spot.are_equivalent(p, d)
+    #assert spot.are_equivalent(p, d)
+    if not spot.are_equivalent(p, d):
+        print(f)
+        print(p.to_str())
+        assert False
 
 for f in spot.randltl(5, 2000):
     n = spot.translate(f)
