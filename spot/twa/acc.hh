@@ -729,14 +729,14 @@ namespace spot
         return *this;
       }
 
-      acc_code operator&(const acc_code& r)
+      acc_code operator&(const acc_code& r) const
       {
         acc_code res = *this;
         res &= r;
         return res;
       }
 
-      acc_code operator&(acc_code&& r)
+      acc_code operator&(acc_code&& r) const
       {
         acc_code res = *this;
         res &= r;
@@ -829,14 +829,14 @@ namespace spot
         return *this;
       }
 
-      acc_code operator|(acc_code&& r)
+      acc_code operator|(acc_code&& r) const
       {
         acc_code res = *this;
         res |= r;
         return res;
       }
 
-      acc_code operator|(const acc_code& r)
+      acc_code operator|(const acc_code& r) const
       {
         acc_code res = *this;
         res |= r;
