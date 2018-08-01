@@ -1411,7 +1411,7 @@ namespace
         matched &= !aut->intersects(opt->included_in);
       if (opt->equivalent_pos)
         matched &= !aut->intersects(opt->equivalent_neg)
-          && spot::contains(opt->equivalent_pos, aut);
+          && spot::contains(aut, opt->equivalent_pos);
 
       if (matched && !opt->acc_words.empty())
         for (auto& word_aut: opt->acc_words)
