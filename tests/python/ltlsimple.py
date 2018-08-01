@@ -1,6 +1,6 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2009, 2010, 2012, 2015 Laboratoire de Recherche et Développement
-# de l'Epita (LRDE).
+# Copyright (C) 2009, 2010, 2012, 2015, 2018 Laboratoire de Recherche et
+# Développement de l'Epita (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systemes Répartis Coopératifs (SRC), Université Pierre
 # et Marie Curie.
@@ -116,3 +116,21 @@ Default for shell: echo 'a U (b U "$strange[0]=name")' | ...
 LBT for shell:     echo 'U "a" U "b" "$strange[0]=name"' | ...
 Default for CSV:   ...,"a U (b U ""$strange[0]=name"")",...
 Wring, centered:   ~~~~~(a=1) U ((b=1) U ("$strange[0]=name"=1))~~~~~"""
+
+
+opt = spot.tl_simplifier_options(False, True, True,
+                                 True, True, True,
+                                 False, False, False)
+
+for (input, output) in [('(a&b)<->b', 'b->(a&b)'),
+                        ('b<->(a&b)', 'b->(a&b)'),
+                        ('(a&b)->b', '1'),
+                        ('b->(a&b)', 'b->(a&b)'),
+                        ('(!(a&b)) xor b', 'b->(a&b)'),
+                        ('(a&b) xor !b', 'b->(a&b)'),
+                        ('b xor (!(a&b))', 'b->(a&b)'),
+                        ('!b xor (a&b)', 'b->(a&b)')]:
+    f = spot.tl_simplifier(opt).simplify(input)
+    print(input, f, output)
+    assert(f == output)
+    assert(spot.are_equivalent(input, output))

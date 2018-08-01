@@ -52,6 +52,13 @@ New in spot 2.6.0.dev  (not yet released)
   - scc_info::split_on_sets() did not correctly register the
     atomic propositions of the returned automata.
 
+  - The spot::tl_simplifier class could raise an exception while
+    attempting to reduce formulas containing unsimplified <->, -> or
+    xor, if options nenoform_stop_on_boolean and synt_impl are both
+    set.  (This combinations of options is not available from
+    command-line tools.)
+
+
 New in spot 2.6  (2018-07-04)
 
   Command-line tools:
