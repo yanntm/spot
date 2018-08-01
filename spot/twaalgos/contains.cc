@@ -49,25 +49,25 @@ namespace spot
 
   bool contains(const_twa_graph_ptr left, const_twa_graph_ptr right)
   {
-    return !left->intersects(dualize(ensure_deterministic(right)));
+    return !right->intersects(dualize(ensure_deterministic(left)));
   }
 
   bool contains(const_twa_graph_ptr left, formula right)
   {
-    return !left->intersects(translate(formula::Not(right), left->get_dict()));
+    auto right_aut = translate(right, left->get_dict());
+    return !right_aut->intersects(dualize(ensure_deterministic(left)));
   }
 
   bool contains(formula left, const_twa_graph_ptr right)
   {
-    auto left_aut = translate(left, right->get_dict());
-    return !left_aut->intersects(dualize(ensure_deterministic(right)));
+    return !right->intersects(translate(formula::Not(left), right->get_dict()));
   }
 
   bool contains(formula left, formula right)
   {
     auto dict = make_bdd_dict();
-    auto left_aut = translate(left, dict);
-    return !left_aut->intersects(translate(formula::Not(right), dict));
+    auto right_aut = translate(right, dict);
+    return !right_aut->intersects(translate(formula::Not(left), dict));
   }
 
   bool are_equivalent(const_twa_graph_ptr left, const_twa_graph_ptr right)

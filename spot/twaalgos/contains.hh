@@ -28,14 +28,14 @@
 namespace spot
 {
   /// \ingroup containment
-  /// \brief Test if the language of \a left is included in that of \a right.
+  /// \brief Test if the language of \a right is included in that of \a left.
   ///
   /// Both arguments can be either formulas or automata.  Formulas
   /// will be converted into automata.
   ///
   /// The inclusion check if performed by ensuring that the automaton
-  /// associated to \a left does not intersect the automaton
-  /// associated to the complement of \a right.  It helps if \a right
+  /// associated to \a right does not intersect the automaton
+  /// associated to the complement of \a left.  It helps if \a left
   /// is a deterministic automaton or a formula (because in both cases
   /// complementation is easier).
   /// @{

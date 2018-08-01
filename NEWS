@@ -58,6 +58,11 @@ New in spot 2.6.0.dev  (not yet released)
     set.  (This combinations of options is not available from
     command-line tools.)
 
+  - The spot::contains(a, b) function introduced in 2.6 was testing
+    a⊆b instead of a⊇b as one would expect.  Infortunately the
+    documentation was also matching the code, so this is a backward
+    incompatible change.
+
 
 New in spot 2.6  (2018-07-04)
 

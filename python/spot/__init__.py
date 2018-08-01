@@ -1047,7 +1047,7 @@ def bdd_to_formula(b, dic=_bdd_dict):
 
 def language_containment_checker(dic=_bdd_dict):
     from spot.impl import language_containment_checker as c
-    c.contains = c.contained
+    c.contains = lambda this, a, b: c.contained(this, b, a)
     c.are_equivalent = c.equal
     return c(dic)
 
