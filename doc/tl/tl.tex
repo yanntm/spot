@@ -1744,58 +1744,62 @@ are counted as one.
 \begingroup
 \allowdisplaybreaks
 \begin{alignat*}{3}
-\text{if~} & f\simp \NOT g   && \text{~then~} & f\OR g              & \equiv \1              \\
-\text{if~} & f\simp \NOT g   && \text{~then~} & f\AND g             & \equiv \0              \\
-\text{if~} & \flessg         && \text{~then~} & f\OR g              & \equiv f               \\
-\text{if~} & f\simp g        && \text{~then~} & f\OR g              & \equiv g               \\
-\text{if~} & \glessf         && \text{~then~} & f\AND g             & \equiv g               \\
-\text{if~} & f\simp g        && \text{~then~} & f\AND g             & \equiv f               \\
-\text{if~} & \flessg         && \text{~then~} & f\U g               & \equiv f               \\
-\text{if~} & f\simp g        && \text{~then~} & f\U g               & \equiv g               \\
-\text{if~} & (f\U g)\Simp g  && \text{~then~} & f\U g               & \equiv g               \\
-\text{if~} & (\NOT f)\simp g && \text{~then~} & f\U g               & \equiv \F g            \\
-\text{if~} & g\simp e        && \text{~then~} & e\U g               & \equiv \F g            \\
-\text{if~} & f\simp g        && \text{~then~} & f\U (g \U h)        & \equiv g \U h          \\
-\text{if~} & f\simp g        && \text{~then~} & f\U (g \W h)        & \equiv g \W h          \\
-\text{if~} & g\simp f        && \text{~then~} & f\U (g \U h)        & \equiv f \U h          \\
-\text{if~} & f\simp h        && \text{~then~} & f\U (g \R (h \U k)) & \equiv g \R (h \U k)   \\
-\text{if~} & f\simp h        && \text{~then~} & f\U (g \R (h \W k)) & \equiv g \R (h \W k)   \\
-\text{if~} & f\simp h        && \text{~then~} & f\U (g \M (h \U k)) & \equiv g \M (h \U k)   \\
-\text{if~} & f\simp h        && \text{~then~} & f\U (g \M (h \W k)) & \equiv g \M (h \W k)   \\
-\text{if~} & f\simp h        && \text{~then~} & (f\U g) \U h        & \equiv g \U h          \\
-\text{if~} & f\simp h        && \text{~then~} & (f\W g) \U h        & \equiv g \U h          \\
-\text{if~} & g\simp h        && \text{~then~} & (f\U g) \U h        & \equiv (f \U g) \OR h  \\
-\text{if~} & (\NOT f)\simp g && \text{~then~} & f\W g               & \equiv \1              \\
-\text{if~} & \flessg         && \text{~then~} & f\W g               & \equiv f               \\
-\text{if~} & f\simp g        && \text{~then~} & f\W g               & \equiv g               \\
-\text{if~} & (f\W g)\Simp g  && \text{~then~} & f\W g               & \equiv g               \\
-\text{if~} & f\simp g        && \text{~then~} & f\W (g \W h)        & \equiv g \W h          \\
-\text{if~} & g\simp f        && \text{~then~} & f\W (g \U h)        & \equiv f \W h          \\
-\text{if~} & g\simp f        && \text{~then~} & f\W (g \W h)        & \equiv f \W h          \\
-\text{if~} & f\simp h        && \text{~then~} & (f\U g) \W h        & \equiv g \W h          \\
-\text{if~} & f\simp h        && \text{~then~} & (f\W g) \W h        & \equiv g \W h          \\
-\text{if~} & g\simp h        && \text{~then~} & (f\W g) \W h        & \equiv (f \W g) \OR h  \\
-\text{if~} & g\simp h        && \text{~then~} & (f\U g) \W h        & \equiv (f \U g) \OR h  \\
-\text{if~} & \flessg         && \text{~then~} & f\R g               & \equiv f               \\
-\text{if~} & g\simp f        && \text{~then~} & f\R g               & \equiv g               \\
-\text{if~} & g\simp \NOT f   && \text{~then~} & f\R g               & \equiv \G g            \\
-\text{if~} & u\simp g        && \text{~then~} & u\R g               & \equiv \G g            \\
-\text{if~} & g\simp f        && \text{~then~} & f\R (g \R h)        & \equiv g \R h          \\
-\text{if~} & g\simp f        && \text{~then~} & f\R (g \M h)        & \equiv g \M h          \\
-\text{if~} & f\simp g        && \text{~then~} & f\R (g \R h)        & \equiv f \R h          \\
-\text{if~} & h\simp f        && \text{~then~} & (f\R g) \R h        & \equiv g \R h          \\
-\text{if~} & h\simp f        && \text{~then~} & (f\M g) \R h        & \equiv g \R h          \\
-\text{if~} & g\simp h        && \text{~then~} & (f\R g) \R h        & \equiv (f \AND g) \R h \\
-\text{if~} & g\simp h        && \text{~then~} & (f\M g) \R h        & \equiv (f \AND g) \R h \\
-\text{if~} & \flessg         && \text{~then~} & f\M g               & \equiv f               \\
-\text{if~} & g\simp f        && \text{~then~} & f\M g               & \equiv g               \\
-\text{if~} & g\simp \NOT f   && \text{~then~} & f\M g               & \equiv \0              \\
-\text{if~} & g\simp f        && \text{~then~} & f\M (g \M h)        & \equiv g \M h          \\
-\text{if~} & f\simp g        && \text{~then~} & f\M (g \M h)        & \equiv f \M h          \\
-\text{if~} & f\simp g        && \text{~then~} & f\M (g \R h)        & \equiv f \M h          \\
-\text{if~} & h\simp f        && \text{~then~} & (f\M g) \M h        & \equiv g \M h          \\
-\text{if~} & h\simp f        && \text{~then~} & (f\R g) \M h        & \equiv g \M h          \\
-\text{if~} & g\simp h        && \text{~then~} & (f\M g) \M h        & \equiv (f \AND g) \M h \\
+\text{if~} & f\simp \NOT g   &  & \text{~then~} & f\OR g              & \equiv \1                 \\
+\text{if~} & f\simp \NOT g   &  & \text{~then~} & f\AND g             & \equiv \0                 \\
+\text{if~} & \flessg         &  & \text{~then~} & f\OR g              & \equiv f                  \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\OR g              & \equiv g                  \\
+\text{if~} & \glessf         &  & \text{~then~} & f\AND g             & \equiv g                  \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\AND g             & \equiv f                  \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\EQUIV g           & \equiv g\IMPLIES f        \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\IMPLIES g         & \equiv \1                 \\
+\text{if~} & (\NOT f)\simp g &  & \text{~then~} & f\XOR g             & \equiv g\IMPLIES \NOT f   \\
+\text{if~} & f\simp\NOT g    &  & \text{~then~} & f\XOR g             & \equiv (\NOT g)\IMPLIES f \\
+\text{if~} & \flessg         &  & \text{~then~} & f\U g               & \equiv f                  \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\U g               & \equiv g                  \\
+\text{if~} & (f\U g)\Simp g  &  & \text{~then~} & f\U g               & \equiv g                  \\
+\text{if~} & (\NOT f)\simp g &  & \text{~then~} & f\U g               & \equiv \F g               \\
+\text{if~} & g\simp e        &  & \text{~then~} & e\U g               & \equiv \F g               \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\U (g \U h)        & \equiv g \U h             \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\U (g \W h)        & \equiv g \W h             \\
+\text{if~} & g\simp f        &  & \text{~then~} & f\U (g \U h)        & \equiv f \U h             \\
+\text{if~} & f\simp h        &  & \text{~then~} & f\U (g \R (h \U k)) & \equiv g \R (h \U k)      \\
+\text{if~} & f\simp h        &  & \text{~then~} & f\U (g \R (h \W k)) & \equiv g \R (h \W k)      \\
+\text{if~} & f\simp h        &  & \text{~then~} & f\U (g \M (h \U k)) & \equiv g \M (h \U k)      \\
+\text{if~} & f\simp h        &  & \text{~then~} & f\U (g \M (h \W k)) & \equiv g \M (h \W k)      \\
+\text{if~} & f\simp h        &  & \text{~then~} & (f\U g) \U h        & \equiv g \U h             \\
+\text{if~} & f\simp h        &  & \text{~then~} & (f\W g) \U h        & \equiv g \U h             \\
+\text{if~} & g\simp h        &  & \text{~then~} & (f\U g) \U h        & \equiv (f \U g) \OR h     \\
+\text{if~} & (\NOT f)\simp g &  & \text{~then~} & f\W g               & \equiv \1                 \\
+\text{if~} & \flessg         &  & \text{~then~} & f\W g               & \equiv f                  \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\W g               & \equiv g                  \\
+\text{if~} & (f\W g)\Simp g  &  & \text{~then~} & f\W g               & \equiv g                  \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\W (g \W h)        & \equiv g \W h             \\
+\text{if~} & g\simp f        &  & \text{~then~} & f\W (g \U h)        & \equiv f \W h             \\
+\text{if~} & g\simp f        &  & \text{~then~} & f\W (g \W h)        & \equiv f \W h             \\
+\text{if~} & f\simp h        &  & \text{~then~} & (f\U g) \W h        & \equiv g \W h             \\
+\text{if~} & f\simp h        &  & \text{~then~} & (f\W g) \W h        & \equiv g \W h             \\
+\text{if~} & g\simp h        &  & \text{~then~} & (f\W g) \W h        & \equiv (f \W g) \OR h     \\
+\text{if~} & g\simp h        &  & \text{~then~} & (f\U g) \W h        & \equiv (f \U g) \OR h     \\
+\text{if~} & \flessg         &  & \text{~then~} & f\R g               & \equiv f                  \\
+\text{if~} & g\simp f        &  & \text{~then~} & f\R g               & \equiv g                  \\
+\text{if~} & g\simp \NOT f   &  & \text{~then~} & f\R g               & \equiv \G g               \\
+\text{if~} & u\simp g        &  & \text{~then~} & u\R g               & \equiv \G g               \\
+\text{if~} & g\simp f        &  & \text{~then~} & f\R (g \R h)        & \equiv g \R h             \\
+\text{if~} & g\simp f        &  & \text{~then~} & f\R (g \M h)        & \equiv g \M h             \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\R (g \R h)        & \equiv f \R h             \\
+\text{if~} & h\simp f        &  & \text{~then~} & (f\R g) \R h        & \equiv g \R h             \\
+\text{if~} & h\simp f        &  & \text{~then~} & (f\M g) \R h        & \equiv g \R h             \\
+\text{if~} & g\simp h        &  & \text{~then~} & (f\R g) \R h        & \equiv (f \AND g) \R h    \\
+\text{if~} & g\simp h        &  & \text{~then~} & (f\M g) \R h        & \equiv (f \AND g) \R h    \\
+\text{if~} & \flessg         &  & \text{~then~} & f\M g               & \equiv f                  \\
+\text{if~} & g\simp f        &  & \text{~then~} & f\M g               & \equiv g                  \\
+\text{if~} & g\simp \NOT f   &  & \text{~then~} & f\M g               & \equiv \0                 \\
+\text{if~} & g\simp f        &  & \text{~then~} & f\M (g \M h)        & \equiv g \M h             \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\M (g \M h)        & \equiv f \M h             \\
+\text{if~} & f\simp g        &  & \text{~then~} & f\M (g \R h)        & \equiv f \M h             \\
+\text{if~} & h\simp f        &  & \text{~then~} & (f\M g) \M h        & \equiv g \M h             \\
+\text{if~} & h\simp f        &  & \text{~then~} & (f\R g) \M h        & \equiv g \M h             \\
+\text{if~} & g\simp h        &  & \text{~then~} & (f\M g) \M h        & \equiv (f \AND g) \M h    \\
 \end{alignat*}
 \endgroup
 

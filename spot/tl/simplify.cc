@@ -1775,12 +1775,38 @@ namespace spot
             trace << "bo: trying inclusion-based rules" << std::endl;
             switch (o)
               {
-              case op::Xor:
               case op::Equiv:
+                {
+                  if (c_->implication(a, b))
+                    return recurse(formula::Implies(b, a));
+                  if (c_->implication(b, a))
+                    return recurse(formula::Implies(a, b));
+                  break;
+                }
               case op::Implies:
-                SPOT_UNIMPLEMENTED();
-                break;
-
+                {
+                  if (c_->implication(a, b))
+                    return formula::tt();
+                  break;
+                }
+              case op::Xor:
+                {
+                  // if (!a)->b then a xor b = b->!a = a->!b
+                  if (c_->implication_neg(a, b, false))
+                    {
+                      if (b.is(op::Not))
+                        return recurse(formula::Implies(a, b[0]));
+                      return recurse(formula::Implies(b, formula::Not(a)));
+                    }
+                  // if a->!b then a xor b = (!b)->a = (!a)->b
+                  if (c_->implication_neg(a, b, true))
+                    {
+                      if (b.is(op::Not))
+                        return recurse(formula::Implies(b[0], a));
+                      return recurse(formula::Implies(formula::Not(a), b));
+                    }
+                  break;
+                }
               case op::U:
                 // if a => b, then a U b = b
                 if (c_->implication(a, b))
