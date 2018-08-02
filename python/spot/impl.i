@@ -386,6 +386,15 @@ namespace swig
                                          SWIG_POINTER_IMPLICIT_CONV));
 }
 
+// Access to stucture members, such as spot::parsed_formula::f are done via
+// the pointer typemap.  We want to enforce a copy.
+%typemap(out) spot::formula* {
+  if (!*$1)
+    $result = SWIG_Py_Void();
+  else
+    $result = SWIG_NewPointerObj(new spot::formula(*$1), $descriptor(spot::formula*), SWIG_POINTER_OWN);
+}
+
 %typemap(out) spot::formula {
   if (!$1)
     $result = SWIG_Py_Void();
