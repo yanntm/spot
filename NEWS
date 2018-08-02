@@ -21,6 +21,10 @@ New in spot 2.6.0.dev  (not yet released)
     documentation was also matching the code, so this is a backward
     incompatible change.
 
+  - The Python binding of the getter of spot::parsed_formula::f was
+    returning a reference instead of a copy, causing issues if the
+    reference outlasted the parsed_formula struct.
+
 
 New in spot 2.6  (2018-07-04)
 

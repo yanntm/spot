@@ -134,3 +134,11 @@ for (input, output) in [('(a&b)<->b', 'b->(a&b)'),
     print(input, f, output)
     assert(f == output)
     assert(spot.are_equivalent(input, output))
+
+def myparse(input):
+    env = spot.default_environment.instance()
+    pf = spot.parse_infix_psl(input, env)
+    return pf.f
+# This used to fail, because myparse would return a pointer
+# to pf.f inside the destroyed pf.
+assert myparse('a U b') == spot.formula('a U b')
