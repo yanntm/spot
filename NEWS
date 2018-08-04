@@ -1,4 +1,4 @@
-New in spot 2.6.0.dev  (not yet released)
+New in spot 2.6.1  (2018-08-04)
 
   Command-line tools:
 
@@ -13,13 +13,13 @@ New in spot 2.6.0.dev  (not yet released)
   - The spot::tl_simplifier class could raise an exception while
     attempting to reduce formulas containing unsimplified <->, -> or
     xor, if options nenoform_stop_on_boolean and synt_impl are both
-    set.  (This combinations of options is not available from
+    set.  (This combination of options is not available from
     command-line tools.)
 
   - The spot::contains(a, b) function introduced in 2.6 was testing
     a⊆b instead of a⊇b as one would expect.  Infortunately the
     documentation was also matching the code, so this is a backward
-    incompatible change.
+    incompatible change, but a short-lived one.
 
   - The Python binding of the getter of spot::parsed_formula::f was
     returning a reference instead of a copy, causing issues if the
