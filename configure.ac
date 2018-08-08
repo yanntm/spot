@@ -250,6 +250,7 @@ AC_CONFIG_FILES([
   spot/twa/Makefile
   spot/gen/Makefile
   spot/twacube/Makefile
+  spot/dmc/Makefile
   python/ajax/Makefile
   python/Makefile
   tests/core/defs
