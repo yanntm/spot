@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2011, 2012, 2014, 2015, 2016, 2017 Laboratoire de Recherche
+# Copyright (C) 2011, 2012, 2014, 2015, 2016, 2017, 2019 Laboratoire de Recherche
 # et Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -91,3 +91,5 @@ run 0 ../modelcheck --model beem-peterson.4.dve2C \
     --csv --bloemen -p 3 >stdout
 test `grep "#" stdout | awk -F',' '{print $7}'` -eq 29115
 
+run 0 ../modelcheck --model beem-peterson.4.dve2C \
+    --formula '!GF(P_0.CS|P_1.CS|P_2.CS|P_3.CS)' --csv --bloemen-ec -p 3 >stdout
