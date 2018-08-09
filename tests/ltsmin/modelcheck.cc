@@ -58,10 +58,9 @@ const char argp_program_doc[] =
     "Process model and formula to check wether a "
     "model meets a specification.\v\
 Exit status:\n\
-  0  No errors occurs during processing\n\
-  1  No counterexample found\n\
-  2  A counterexample has been found\n\
-  3  Errors occurs during processing";
+  0  No counterexample found\n\
+  1  A counterexample has been found\n\
+  2  Errors occurs during processing";
 
 const unsigned DOT_MODEL = 1;
 const unsigned DOT_PRODUCT = 2;
@@ -236,7 +235,7 @@ static int checked_main()
   spot::const_twa_graph_ptr prop = nullptr;
   spot::const_twa_ptr product = nullptr;
   spot::emptiness_check_instantiator_ptr echeck_inst = nullptr;
-  int exit_code = 1;
+  int exit_code = 0;
   spot::postprocessor post;
   spot::formula deadf = spot::formula::tt();
   spot::formula f = nullptr;
@@ -258,7 +257,7 @@ static int checked_main()
       tm.start("parsing formula");
       {
         auto pf = spot::parse_infix_psl(mc_options.formula, env, false);
-        exit_code = pf.format_errors(std::cerr) + 1;
+        exit_code = pf.format_errors(std::cerr);
         f = pf.f;
       }
       tm.stop("parsing formula");
@@ -298,7 +297,7 @@ static int checked_main()
 
       if (!model)
         {
-          exit_code = 3;
+          exit_code = 2;
           goto safe_exit;
         }
 
@@ -328,7 +327,7 @@ static int checked_main()
           if (!echeck_inst)
             {
               std::cerr << "Unknown emptiness check algorihm `" << err << "'\n";
-              exit_code = 2;
+              exit_code = 1;
               goto safe_exit;
             }
 
@@ -347,7 +346,7 @@ static int checked_main()
               if (!mc_options.compress)
                 std::cerr << "Try option -z for state compression."
                           << std::endl;
-              exit_code = 3;
+              exit_code = 2;
               exit(exit_code);
             }
           tm.stop("running emptiness check");
@@ -365,11 +364,11 @@ static int checked_main()
             {
               std::cout << "an accepting run exists "
                         << "(use -c to print it)" << std::endl;
-              exit_code = 2;
+              exit_code = 1;
             }
           else
             {
-              exit_code = 2;
+              exit_code = 1;
               spot::twa_run_ptr run;
               tm.start("computing accepting run");
               try
@@ -380,7 +379,7 @@ static int checked_main()
                 {
                   std::cerr << "Out of memory while looking for counterexample."
                             << std::endl;
-                  exit_code = 3;
+                  exit_code = 2;
                   exit(exit_code);
                 }
               tm.stop("computing accepting run");
@@ -462,7 +461,7 @@ static int checked_main()
 
       if (!modelcube)
         {
-          exit_code = 3;
+          exit_code = 2;
           goto safe_exit;
         }
 
@@ -506,7 +505,7 @@ static int checked_main()
             {
               std::cout << "an accepting run exists "
                         << "(use -c to print it)" << std::endl;
-              exit_code = 2;
+              exit_code = 1;
             }
           else
             std::cout << "an accepting run exists!\n"
@@ -562,7 +561,7 @@ static int checked_main()
 
           if (!modelcube)
             {
-              exit_code = 3;
+              exit_code = 2;
               goto safe_exit;
             }
 
@@ -606,7 +605,7 @@ static int checked_main()
               else
                 {
                   std::cout << "A deadlock exists!\n";
-                  exit_code = 2;
+                  exit_code = 1;
                 }
 
               std::cout << "Find following the csv: "
@@ -655,7 +654,7 @@ static int checked_main()
 
       if (!modelcube)
         {
-          exit_code = 3;
+          exit_code = 2;
           goto safe_exit;
         }
 
@@ -713,20 +712,107 @@ static int checked_main()
   if (mc_options.distribute)
     {
       spot::process* proc = new spot::process(mc_options.nb_threads);
-      int size = proc->get_size();
-      int rank = proc->get_rank();
-      char* host_name = proc->get_host_name();
 
-      proc->out << "We are " << size << " running process" << std::endl;
-      proc->out << "I am following process " << rank << " on host " << host_name
-               << std::endl;
+      if (mc_options.has_deadlock && mc_options.model != nullptr)
+        {
+          assert(!mc_options.selfloopize);
+          unsigned int hc = std::thread::hardware_concurrency();
+          if (mc_options.nb_threads > hc)
+            proc->err << "Warning: you require " << mc_options.nb_threads
+                      << " threads, but your computer only support " << hc
+                      << ". This could slow down parallel algorithms.\n";
+
+          tm.start("load kripkecube");
+          spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+          try
+            {
+              modelcube = spot::ltsmin_model::load(mc_options.model)
+                              .kripkecube({}, deadf, mc_options.compress,
+                                          mc_options.nb_threads);
+            }
+          catch (const std::runtime_error& e)
+            {
+              proc->err << e.what() << '\n';
+            }
+          tm.stop("load kripkecube");
+
+          int memused = spot::memusage();
+          tm.start("deadlock check");
+          auto res =
+              spot::has_deadlock<spot::ltsmin_kripkecube_ptr,
+                                 spot::cspins_state, spot::cspins_iterator,
+                                 spot::cspins_state_hash,
+                                 spot::cspins_state_equal>(modelcube);
+          tm.stop("deadlock check");
+          memused = spot::memusage() - memused;
+
+          if (!modelcube)
+            {
+              exit_code = 2;
+              goto safe_exit_mpi;
+            }
+
+          // Display statistics
+          unsigned smallest = 0;
+          for (unsigned i = 0; i < std::get<1>(res).size(); ++i)
+            {
+              if (std::get<1>(res)[i].states <
+                  std::get<1>(res)[smallest].states)
+                smallest = i;
+
+              proc->out << "\n---- Thread number : " << i << '\n';
+              proc->out << std::get<1>(res)[i].states
+                        << " unique states visited\n";
+              proc->out << std::get<1>(res)[i].transitions
+                        << " transitions explored\n";
+              proc->out << std::get<1>(res)[i].instack_dfs
+                        << " items max in DFS search stack\n";
+              proc->out << std::get<1>(res)[i].walltime << " milliseconds\n";
+
+              if (mc_options.csv)
+                {
+                  proc->out << "Find following the csv: "
+                            << "thread_id,walltimems,type,"
+                            << "states,transitions\n";
+                  proc->out
+                      << "@th_" << i << ',' << std::get<1>(res)[i].walltime
+                      << ','
+                      << (std::get<1>(res)[i].has_deadlock ? "DEADLOCK,"
+                                                           : "NO-DEADLOCK,")
+                      << std::get<1>(res)[i].states << ','
+                      << std::get<1>(res)[i].transitions << std::endl;
+                }
+            }
+
+          if (mc_options.csv)
+            {
+              proc->out << "\nSummary :\n";
+              if (!std::get<0>(res))
+                proc->out << "No no deadlock found!\n";
+              else
+                {
+                  proc->out << "A deadlock exists!\n";
+                  exit_code = 1;
+                }
+
+              proc->out << "Find following the csv: "
+                        << "model,walltimems,memused,type,"
+                        << "states,transitions\n";
+
+              proc->out << '#' << split_filename(mc_options.model) << ','
+                        << tm.timer("deadlock check").walltime() << ','
+                        << memused << ','
+                        << (std::get<0>(res) ? "DEADLOCK," : "NO-DEADLOCK,")
+                        << std::get<1>(res)[smallest].states << ','
+                        << std::get<1>(res)[smallest].transitions << '\n';
+            }
+        }
+
       proc->print();
-      exit_code = 0;
-      goto safe_exit_mpi;
 
     safe_exit_mpi:
       delete proc;
-      return exit_code;
+      return exit_code = 0;
     }
 
 safe_exit:
