@@ -13,7 +13,7 @@ The main differences with LBTT are:
   - *support for PSL formulas in addition to LTL*
   - support for (non-alternating) automata with *any type of acceptance condition*,
   - support for *weak alternating automata*,
-  - additional intersection *checks with the complement*, allowing
+  - additional intersection *checks with the complement* (option =-D=), allowing
     to check equivalence of automata more precisely,
   - *more statistics*, especially:
     - the number of logical transitions represented by each physical edge,
@@ -21,7 +21,7 @@ The main differences with LBTT are:
     - the number of SCCs with their various strengths (nonaccepting, terminal, weak, strong)
     - the number of terminal, weak, and strong automata
   - an option to *reduce counterexample* by attempting to mutate and
-    shorten troublesome formulas,
+    shorten troublesome formulas (option =--grind=),
   - statistics output in *CSV* for easier post-processing,
   - *more precise time measurement* (LBTT was only precise to
     1/100 of a second, reporting most times as "0.00s").
@@ -228,6 +228,131 @@ Consequently, the number of test performed is now linear in the number
 of untrusted references.  The easiest way to observe the effect of
 =--reference= is to run the =ltlcross= with the [[#verbose][=--verbose= option]],
 with and without some =--reference= translators.
+
+* Detecting problems
+   :PROPERTIES:
+   :CUSTOM_ID: checks
+   :END:
+
+If a translator exits with a non-zero status code, or fails to output
+an automaton =ltlcross= can read, and error will be displayed and the
+result of the translation will be discarded.
+
+Otherwise =ltlcross= performs the following checks on all translated
+formulas ($P_i$ and $N_i$ designate respectively the translation of
+positive and negative formulas by the ith translator).
+
+  - Intersection check: $P_i\otimes N_j$ must be empty for all
+    pairs of $(i,j)$.
+
+    A single failing translator might generate a lot of lines of
+    the form:
+
+    : error: P0*N1 is nonempty; both automata accept the infinite word:
+    :        cycle{p0 & !p1}
+    : error: P1*N0 is nonempty; both automata accept the infinite word:
+    :        p0; !p1; cycle{p0 & p1}
+    : error: P1*N1 is nonempty; both automata accept the infinite word:
+    :        p0; cycle{!p1 & !p0}
+    : error: P1*N2 is nonempty; both automata accept the infinite word:
+    :        p0; !p1; cycle{p0 & p1}
+    : error: P1*N3 is nonempty; both automata accept the infinite word:
+    :        p0; !p1; cycle{p0 & p1}
+    : error: P1*N4 is nonempty; both automata accept the infinite word:
+    :        p0; cycle{!p1 & !p0}
+    : error: P2*N1 is nonempty; both automata accept the infinite word:
+    :        p0; !p1; !p0; cycle{!p1 & !p0; p0 & !p1; !p1; !p1; p0 & !p1}
+    : error: P3*N1 is nonempty; both automata accept the infinite word:
+    :        p0; !p1; !p1 & !p0; cycle{p0 & !p1}
+    : error: P4*N1 is nonempty; both automata accept the infinite word:
+    :        p0; !p1; !p1 & !p0; cycle{p0 & !p1}
+
+    In this example, translator number =1= looks clearly faulty
+    (at least the other 4 translators do not contradict each other).
+
+    Examples of infinite words that are accepted by both automata
+    always have the form of a lasso: a (possibly empty) finite prefix
+    followed by a cycle that should be repeated infinitely often.
+    The cycle part is denoted by =cycle{...}=.
+
+  - Complemented intersection check.  If $P_i$ and $N_i$ are
+    deterministic, =ltlcross= builds their complements, $Comp(P_i)$
+    and $Comp(N_i)$, and then ensures that $Comp(P_i)\otimes
+    Comp(N_i)$ is empty.  If only one of them is deterministic, for
+    instance $P_i$, we check that $P_j\otimes Comp(P_i)$ for all $j
+    \ne i$; likewise if it's $N_i$ that is deterministic.
+
+    By default this check is only done for deterministic automata,
+    because complementation is relatively cheap is that case (at least
+    it is cheap for simple acceptance conditions).  Using option
+    =--determinize=, =ltlcross= can be instructed to perform
+    complementation of non-deterministic automata as well, ensuring
+    precise equivalence checks between all automata.  However be aware
+    that this determinization + complementation may generate large
+    automata.
+
+    When validating a translator with =ltlcross= without using the
+    =--determinize= option we highly recommend to include a translator
+    with good deterministic output to augment test coverage.  Using
+    '=ltl2tgba -lD %f >%O=' will produce deterministic automata for
+    all obligation properties and many recurrence properties.  Using
+    '=ltl2dstar --ltl2nba=spin:pathto/ltl2tgba@-Ds %L %O=' will
+    systematically produce a deterministic Rabin automaton (that
+    =ltlcross= can complement easily).
+
+  - Cross-comparison checks: for some state-space $S$,
+    all $P_i\otimes S$ are either all empty, or all non-empty.
+    Similarly all $N_i\otimes S$ are either all empty, or all non-empty.
+
+    A cross-comparison failure could be displayed as:
+
+    : error: {P0,P2} disagree with {P1} when evaluating the state-space
+    :        the following word(s) are not accepted by {P1}:
+    :  P0 accepts: p0 & !p1 & !p2 & p3; p0 & p1 & !p2 & p3; p0 & p1 & p2 & p3; cycle{p0 & p1 & p2 & p3; p0 & p1 & !p2 & !p3; p0 & p1 & p2 & !p3; p0 & p1 & !p2 & !p3}
+    :  P2 accepts: p0 & !p1 & !p2 & p3; cycle{p0 & p1 & !p2 & !p3; p0 & p1 & p2 & p3; p0 & p1 & !p2 & p3}
+
+    If =--products=N= is used with =N= greater than one, the number of
+    the state-space is also printed.  This number is of no use by
+    itself, except to explain why you may get multiple disagreement
+    between the same sets of automata.
+
+    These products tests may sometime catch errors that were not
+    captured by the first two tests if one non-deterministic automaton
+    recognize less words than what it should.  If the input automata
+    are deterministic or the =--determinize= option is used, this test
+    is redundant and can be disabled.  (In fact, the =--determinize=
+    option implies option =--product=0= to do so.)
+
+  - Consistency check:
+
+    For each $i$, the products $P_i\otimes S$ and $N_i\otimes S$
+    actually cover all states of $S$.  Because $S$ does not have any
+    deadlock, any of its infinite path must be accepted by $P_i$ or
+    $N_i$ (or both).
+
+    An error in that case is displayed as
+
+    : error: inconsistency between P1 and N1
+
+    If =--products=N= is used with =N= greater than one, the number of
+    the state-space in which the inconsistency was detected is also
+    printed.
+
+    This test may catch errors that were not captured by the first two
+    tests if one non-deterministic automaton recognize less words than
+    what it should.  If the input automata are deterministic or the
+    =--determinize= option is used, this test is redundant and can be
+    disabled.  (In fact, the =--determinize= option implies option
+    =--product=0= to do so.)
+
+The above checks are similar to those that are performed by [[http://www.tcs.hut.fi/Software/lbtt/][LBTT]],
+except for the complemented intersection check, which is only done in
+=ltlcross=.
+
+If any problem was reported during the translation of one of the
+formulas, =ltlcheck= will exit with an exit status of =1=.  Statistics
+(if requested) are output nonetheless, and include any faulty
+automaton as well.
 
 * Getting statistics
 
@@ -592,15 +717,15 @@ configurations, and the strings =ltl2tgba -s --small %f >%O= and
 ltlcross -f a -f Ga 'ltl2tgba -s --small %f >%O' 'ltl2tgba -s --deter %f >%O' --csv
 #+END_SRC
 #+RESULTS:
-: "formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nonacc_scc","terminal_scc","weak_scc","strong_scc","nondet_states","nondet_aut","terminal_aut","weak_aut","strong_aut","product_states","product_transitions","product_scc"
-: "(a)","ltl2tgba -s --small %f >%O","ok",0,0.043876,2,2,3,1,2,1,1,0,0,0,0,1,0,0,201,4208,2
-: "(a)","ltl2tgba -s --deter %f >%O","ok",0,0.0432137,2,2,3,1,2,1,1,0,0,0,0,1,0,0,201,4208,2
-: "(!(a))","ltl2tgba -s --small %f >%O","ok",0,0.0400653,2,2,3,1,2,1,1,0,0,0,0,1,0,0,201,4205,2
-: "(!(a))","ltl2tgba -s --deter %f >%O","ok",0,0.0450417,2,2,3,1,2,1,1,0,0,0,0,1,0,0,201,4205,2
-: "(G(a))","ltl2tgba -s --small %f >%O","ok",0,0.0429628,1,1,1,1,1,0,0,1,0,0,0,0,1,0,200,2077,1
-: "(G(a))","ltl2tgba -s --deter %f >%O","ok",0,0.0478663,1,1,1,1,1,0,0,1,0,0,0,0,1,0,200,2077,1
-: "(!(G(a)))","ltl2tgba -s --small %f >%O","ok",0,0.0436822,2,3,4,1,2,1,1,0,0,0,0,1,0,0,400,8442,2
-: "(!(G(a)))","ltl2tgba -s --deter %f >%O","ok",0,0.039919,2,3,4,1,2,1,1,0,0,0,0,1,0,0,400,8442,2
+: "formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nondet_states","nondet_aut","complete_aut","product_states","product_transitions","product_scc"
+: "a","ltl2tgba -s --small %f >%O","ok",0,0.0129968,2,2,3,1,2,0,0,0,201,4144,2
+: "a","ltl2tgba -s --deter %f >%O","ok",0,0.0116347,2,2,3,1,2,0,0,0,201,4144,2
+: "!(a)","ltl2tgba -s --small %f >%O","ok",0,0.0127019,2,2,3,1,2,0,0,0,201,4149,2
+: "!(a)","ltl2tgba -s --deter %f >%O","ok",0,0.0117374,2,2,3,1,2,0,0,0,201,4149,2
+: "G(a)","ltl2tgba -s --small %f >%O","ok",0,0.0126186,1,1,1,1,1,0,0,0,200,2059,1
+: "G(a)","ltl2tgba -s --deter %f >%O","ok",0,0.011645,1,1,1,1,1,0,0,0,200,2059,1
+: "!(G(a))","ltl2tgba -s --small %f >%O","ok",0,0.0129519,2,3,4,1,2,0,0,1,400,8264,2
+: "!(G(a))","ltl2tgba -s --deter %f >%O","ok",0,0.0129941,2,3,4,1,2,0,0,1,400,8264,2
 
 To present these results graphically, or even when analyzing these
 data, it might be convenient to give each configured tool a shorter
@@ -610,143 +735,149 @@ form "={short name}actual command=".
 
 For instance:
 #+BEGIN_SRC sh :results verbatim :exports both
-ltlcross -f a -f Ga '{small} ltl2tgba -s --small %f >%O' '{deter} ltl2tgba -s --deter %f >%O' --csv
+genltl --and-f=1..5 |
+ltlcross '{small} ltl2tgba -s --small %f >%O' \
+         '{deter} ltl2tgba -s --deter %f >%O' --csv=ltlcross.csv
+cat ltlcross.csv
 #+END_SRC
 #+RESULTS:
-: "formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nonacc_scc","terminal_scc","weak_scc","strong_scc","nondet_states","nondet_aut","terminal_aut","weak_aut","strong_aut","product_states","product_transitions","product_scc"
-: "(a)","small","ok",0,0.0433468,2,2,3,1,2,1,1,0,0,0,0,1,0,0,201,4208,2
-: "(a)","deter","ok",0,0.0429179,2,2,3,1,2,1,1,0,0,0,0,1,0,0,201,4208,2
-: "(!(a))","small","ok",0,0.0400513,2,2,3,1,2,1,1,0,0,0,0,1,0,0,201,4205,2
-: "(!(a))","deter","ok",0,0.040167,2,2,3,1,2,1,1,0,0,0,0,1,0,0,201,4205,2
-: "(G(a))","small","ok",0,0.0447826,1,1,1,1,1,0,0,1,0,0,0,0,1,0,200,2077,1
-: "(G(a))","deter","ok",0,0.0439892,1,1,1,1,1,0,0,1,0,0,0,0,1,0,200,2077,1
-: "(!(G(a)))","small","ok",0,0.0444007,2,3,4,1,2,1,1,0,0,0,0,1,0,0,400,8442,2
-: "(!(G(a)))","deter","ok",0,0.0396312,2,3,4,1,2,1,1,0,0,0,0,1,0,0,400,8442,2
+#+begin_example
+"formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nondet_states","nondet_aut","complete_aut","product_states","product_transitions","product_scc"
+"F(p1)","small","ok",0,0.0138108,2,3,4,1,2,0,0,1,400,8272,3
+"F(p1)","deter","ok",0,0.0142178,2,3,4,1,2,0,0,1,400,8272,3
+"!(F(p1))","small","ok",0,0.013972,1,1,1,1,1,0,0,0,200,2055,2
+"!(F(p1))","deter","ok",0,0.0139471,1,1,1,1,1,0,0,0,200,2055,2
+"(F(p1)) & (F(p2))","small","ok",0,0.0136648,4,9,16,1,4,0,0,1,798,16533,5
+"(F(p1)) & (F(p2))","deter","ok",0,0.0140229,4,9,16,1,4,0,0,1,798,16533,5
+"!((F(p1)) & (F(p2)))","small","ok",0,0.0144659,3,5,7,1,3,0,0,0,598,7367,4
+"!((F(p1)) & (F(p2)))","deter","ok",0,0.0143098,3,5,7,1,3,0,0,0,598,7367,4
+"(F(p1)) & (F(p2)) & (F(p3))","small","ok",0,0.0142109,8,27,64,1,8,0,0,1,1587,33068,34
+"(F(p1)) & (F(p2)) & (F(p3))","deter","ok",0,0.0149064,8,27,64,1,8,0,0,1,1587,33068,34
+"!((F(p1)) & (F(p2)) & (F(p3)))","small","ok",0,0.0159551,4,6,24,1,4,1,1,0,601,6171,4
+"!((F(p1)) & (F(p2)) & (F(p3)))","deter","ok",0,0.0143288,7,19,37,1,7,0,0,0,1387,18792,33
+"(F(p1)) & (F(p2)) & (F(p3)) & (F(p4))","small","ok",0,0.0152539,16,81,256,1,16,0,0,1,2727,57786,74
+"(F(p1)) & (F(p2)) & (F(p3)) & (F(p4))","deter","ok",0,0.0155381,16,81,256,1,16,0,0,1,2727,57786,74
+"!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))","small","ok",0,0.015231,5,8,64,1,5,1,1,0,801,8468,5
+"!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))","deter","ok",0,0.0157937,15,65,175,1,15,0,0,0,2527,37226,73
+"(F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))","small","ok",0,0.017919,32,243,1024,1,32,0,0,1,5330,114068,350
+"(F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))","deter","ok",0,0.0167644,32,243,1024,1,32,0,0,1,5330,114068,350
+"!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5)))","small","ok",0,0.0187427,6,10,160,1,6,1,1,0,1000,10707,6
+"!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5)))","deter","ok",0,0.0183562,31,211,781,1,31,0,0,0,5130,82897,349
+#+end_example
 
-* Detecting problems
-   :PROPERTIES:
-   :CUSTOM_ID: checks
-   :END:
+In this last example, we saved the CSV output to =ltlcross.csv= so we
+can play with it in the next section.
 
-If a translator exits with a non-zero status code, or fails to output
-an automaton =ltlcross= can read, and error will be displayed and the
-result of the translation will be discarded.
+** Working with these CSV files in R
 
-Otherwise =ltlcross= performs the following checks on all translated
-formulas ($P_i$ and $N_i$ designate respectively the translation of
-positive and negative formulas by the ith translator).
+The produced CSV should be directly readable by R's CSV input functions like
+=read.csv()=, =readr::read_csv()=, or =data.table::fread()=.
 
-  - Intersection check: $P_i\otimes N_j$ must be empty for all
-    pairs of $(i,j)$.
+#+BEGIN_SRC R :session :results output :exports both
+library(data.table)
+dt <- fread('ltlcross.csv')
+str(dt)
+#+END_SRC
+#+RESULTS:
+#+begin_example
+Classes ‘data.table’ and 'data.frame':	20 obs. of  16 variables:
+ $ formula            : chr  "F(p1)" "F(p1)" "!(F(p1))" "!(F(p1))" ...
+ $ tool               : chr  "small" "deter" "small" "deter" ...
+ $ exit_status        : chr  "ok" "ok" "ok" "ok" ...
+ $ exit_code          : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ time               : num  0.0133 0.0133 0.0139 0.0128 0.0144 ...
+ $ states             : int  2 2 1 1 4 4 3 3 8 8 ...
+ $ edges              : int  3 3 1 1 9 9 5 5 27 27 ...
+ $ transitions        : int  4 4 1 1 16 16 7 7 64 64 ...
+ $ acc                : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ scc                : int  2 2 1 1 4 4 3 3 8 8 ...
+ $ nondet_states      : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ nondet_aut         : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ complete_aut       : int  1 1 0 0 1 1 0 0 1 1 ...
+ $ product_states     : int  400 400 200 200 798 798 598 598 1587 1587 ...
+ $ product_transitions: int  8272 8272 2055 2055 16533 16533 7367 7367 33068 33068 ...
+ $ product_scc        : int  3 3 2 2 5 5 4 4 34 34 ...
+ - attr(*, ".internal.selfref")=<externalptr>
+#+end_example
 
-    A single failing translator might generate a lot of lines of
-    the form:
+Currently the data frame shows one line per couple (formula, tool).
+This makes comparing tools quite difficult, as their results are on
+different lines.
 
-    : error: P0*N1 is nonempty; both automata accept the infinite word:
-    :        cycle{p0 & !p1}
-    : error: P1*N0 is nonempty; both automata accept the infinite word:
-    :        p0; !p1; cycle{p0 & p1}
-    : error: P1*N1 is nonempty; both automata accept the infinite word:
-    :        p0; cycle{!p1 & !p0}
-    : error: P1*N2 is nonempty; both automata accept the infinite word:
-    :        p0; !p1; cycle{p0 & p1}
-    : error: P1*N3 is nonempty; both automata accept the infinite word:
-    :        p0; !p1; cycle{p0 & p1}
-    : error: P1*N4 is nonempty; both automata accept the infinite word:
-    :        p0; cycle{!p1 & !p0}
-    : error: P2*N1 is nonempty; both automata accept the infinite word:
-    :        p0; !p1; !p0; cycle{!p1 & !p0; p0 & !p1; !p1; !p1; p0 & !p1}
-    : error: P3*N1 is nonempty; both automata accept the infinite word:
-    :        p0; !p1; !p1 & !p0; cycle{p0 & !p1}
-    : error: P4*N1 is nonempty; both automata accept the infinite word:
-    :        p0; !p1; !p1 & !p0; cycle{p0 & !p1}
+A common transformation is to group the results of all tools on the
+same line: using exactly one line per formula.  This is easily
+achieved using =dcast()= from the =data.table= library.
 
-    In this example, translator number =1= looks clearly faulty
-    (at least the other 4 translators do not contradict each other).
+#+BEGIN_SRC R :session :results output :exports both
+dt2 <- dcast(dt, formula ~ tool, value.var=names(dt)[-(1:2)], sep=".")
+str(dt2)
+#+END_SRC
 
-    Examples of infinite words that are accepted by both automata
-    always have the form of a lasso: a (possibly empty) finite prefix
-    followed by a cycle that should be repeated infinitely often.
-    The cycle part is denoted by =cycle{...}=.
+#+RESULTS:
+#+begin_example
+Classes ‘data.table’ and 'data.frame':	10 obs. of  29 variables:
+ $ formula                  : chr  "!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5)))" "!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))" "!((F(p1)) & (F(p2)) & (F(p3)))" "!((F(p1)) & (F(p2)))" ...
+ $ exit_status.deter        : chr  "ok" "ok" "ok" "ok" ...
+ $ exit_status.small        : chr  "ok" "ok" "ok" "ok" ...
+ $ exit_code.deter          : int  0 0 0 0 0 0 0 0 0 0
+ $ exit_code.small          : int  0 0 0 0 0 0 0 0 0 0
+ $ time.deter               : num  0.0174 0.0149 0.0141 0.0136 0.0128 ...
+ $ time.small               : num  0.0171 0.0155 0.0152 0.0146 0.0139 ...
+ $ states.deter             : int  31 15 7 3 1 4 8 16 32 2
+ $ states.small             : int  6 5 4 3 1 4 8 16 32 2
+ $ edges.deter              : int  211 65 19 5 1 9 27 81 243 3
+ $ edges.small              : int  10 8 6 5 1 9 27 81 243 3
+ $ transitions.deter        : int  781 175 37 7 1 16 64 256 1024 4
+ $ transitions.small        : int  160 64 24 7 1 16 64 256 1024 4
+ $ acc.deter                : int  1 1 1 1 1 1 1 1 1 1
+ $ acc.small                : int  1 1 1 1 1 1 1 1 1 1
+ $ scc.deter                : int  31 15 7 3 1 4 8 16 32 2
+ $ scc.small                : int  6 5 4 3 1 4 8 16 32 2
+ $ nondet_states.deter      : int  0 0 0 0 0 0 0 0 0 0
+ $ nondet_states.small      : int  1 1 1 0 0 0 0 0 0 0
+ $ nondet_aut.deter         : int  0 0 0 0 0 0 0 0 0 0
+ $ nondet_aut.small         : int  1 1 1 0 0 0 0 0 0 0
+ $ complete_aut.deter       : int  0 0 0 0 0 1 1 1 1 1
+ $ complete_aut.small       : int  0 0 0 0 0 1 1 1 1 1
+ $ product_states.deter     : int  5130 2527 1387 598 200 798 1587 2727 5330 400
+ $ product_states.small     : int  1000 801 601 598 200 798 1587 2727 5330 400
+ $ product_transitions.deter: int  82897 37226 18792 7367 2055 16533 33068 57786 114068 8272
+ $ product_transitions.small: int  10707 8468 6171 7367 2055 16533 33068 57786 114068 8272
+ $ product_scc.deter        : int  349 73 33 4 2 5 34 74 350 3
+ $ product_scc.small        : int  6 5 4 4 2 5 34 74 350 3
+ - attr(*, ".internal.selfref")=<externalptr>
+ - attr(*, "sorted")= chr "formula"
+#+end_example
 
-  - Complemented intersection check.  If $P_i$ and $N_i$ are
-    deterministic, =ltlcross= builds their complements, $Comp(P_i)$
-    and $Comp(N_i)$, and then ensures that $Comp(P_i)\otimes
-    Comp(N_i)$ is empty.  If only one of them is deterministic, for
-    instance $P_i$, we check that $P_j\otimes Comp(P_i)$ for all $j
-    \ne i$; likewise if it's $N_i$ that is deterministic.
+Using the above form, it is easy to compare two tools on some given
+measurement, as we just need to plot two columns.  For example to
+compare the number of states produced by the two configurations of
+=ltl2tgba= for each formula, we just need to plot column
+=dt2$state.small= against =dt2$state.deter=.
 
-    By default this check is only done for deterministic automata,
-    because complementation is relatively cheap is that case (at least
-    it is cheap for simple acceptance conditions).  Using option
-    =--determinize=, =ltlcross= can be instructed to perform
-    complementation of non-deterministic automata as well, ensuring
-    precise equivalence checks between all automata.  However be aware
-    that this determinization + complementation may generate large
-    automata.
+#+BEGIN_SRC R :session :results output graphics :width 5 :height 5 :file ltlcross-r.svg :exports both
+library(ggplot2)
+ggplot(dt2, aes(x=states.small, y=states.deter)) +
+   geom_abline(colour='white') + geom_point()
+#+END_SRC
 
-    When validating a translator with =ltlcross= without using the
-    =--determinize= option we highly recommend to include a translator
-    with good deterministic output to augment test coverage.  Using
-    '=ltl2tgba -lD %f >%O=' will produce deterministic automata for
-    all obligation properties and many recurrence properties.  Using
-    '=ltl2dstar --ltl2nba=spin:pathto/ltl2tgba@-Ds %L %O=' will
-    systematically produce a deterministic Rabin automaton (that
-    =ltlcross= can complement easily).
+#+RESULTS:
+[[file:ltlcross-r.svg]]
 
-  - Cross-comparison checks: for some state-space $S$,
-    all $P_i\otimes S$ are either all empty, or all non-empty.
-    Similarly all $N_i\otimes S$ are either all empty, or all non-empty.
 
-    A cross-comparison failure could be displayed as:
+We should probably print the formulas for the cases where the two
+sizes differ.
 
-    : error: {P0,P2} disagree with {P1} when evaluating the state-space
-    :        the following word(s) are not accepted by {P1}:
-    :  P0 accepts: p0 & !p1 & !p2 & p3; p0 & p1 & !p2 & p3; p0 & p1 & p2 & p3; cycle{p0 & p1 & p2 & p3; p0 & p1 & !p2 & !p3; p0 & p1 & p2 & !p3; p0 & p1 & !p2 & !p3}
-    :  P2 accepts: p0 & !p1 & !p2 & p3; cycle{p0 & p1 & !p2 & !p3; p0 & p1 & p2 & p3; p0 & p1 & !p2 & p3}
+#+BEGIN_SRC R :session :results output graphics :width 5 :height 5 :file ltlcross-r2.svg :exports both
+ggplot(dt2, aes(x=states.small, y=states.deter)) +
+   geom_abline(colour='white') + geom_point() +
+   geom_text(data=subset(df2, states.small != states.deter),
+             aes(label=formula), hjust=0, nudge_x=.5)
+#+END_SRC
 
-    If =--products=N= is used with =N= greater than one, the number of
-    the state-space is also printed.  This number is of no use by
-    itself, except to explain why you may get multiple disagreement
-    between the same sets of automata.
+#+RESULTS:
+[[file:ltlcross-r2.svg]]
 
-    These products tests may sometime catch errors that were not
-    captured by the first two tests if one non-deterministic automaton
-    recognize less words than what it should.  If the input automata
-    are deterministic or the =--determinize= option is used, this test
-    is redundant and can be disabled.  (In fact, the =--determinize=
-    option implies option =--product=0= to do so.)
-
-  - Consistency check:
-
-    For each $i$, the products $P_i\otimes S$ and $N_i\otimes S$
-    actually cover all states of $S$.  Because $S$ does not have any
-    deadlock, any of its infinite path must be accepted by $P_i$ or
-    $N_i$ (or both).
-
-    An error in that case is displayed as
-
-    : error: inconsistency between P1 and N1
-
-    If =--products=N= is used with =N= greater than one, the number of
-    the state-space in which the inconsistency was detected is also
-    printed.
-
-    This test may catch errors that were not captured by the first two
-    tests if one non-deterministic automaton recognize less words than
-    what it should.  If the input automata are deterministic or the
-    =--determinize= option is used, this test is redundant and can be
-    disabled.  (In fact, the =--determinize= option implies option
-    =--product=0= to do so.)
-
-The above checks are similar to those that are performed by [[http://www.tcs.hut.fi/Software/lbtt/][LBTT]],
-except for the complemented intersection check, which is only done in
-=ltlcross=.
-
-If any problem was reported during the translation of one of the
-formulas, =ltlcheck= will exit with an exit status of =1=.  Statistics
-(if requested) are output nonetheless, and include any faulty
-automaton as well.
 
 * Miscellaneous options
 

@@ -29,11 +29,17 @@
   (let ((org-p-c (cadr (assq 'org-plus-contrib package-archive-contents))))
     (package-install org-p-c)))
 
-(unless (require 'htmlize nil t)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-  (package-refresh-contents)
-  (let ((htmlize (cadr (assq 'htmlize package-archive-contents))))
-    (package-install htmlize)))
+(let ((have-htmlize (require 'htmlize nil t))
+      (have-ess (require 'ess nil t)))
+  (unless (and have-htmlize have-ess)
+    (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+    (package-refresh-contents)
+    (unless have-htmlize
+      (let ((htmlize (cadr (assq 'htmlize package-archive-contents))))
+        (package-install htmlize)))
+    (unless have-ess
+      (let ((ess (cadr (assq 'ess package-archive-contents))))
+        (package-install ess)))))
 
 (require 'ox-publish)
 (require 'org-install)
@@ -54,6 +60,7 @@
    (dot . t)
    (python . t)
    (plantuml . t)
+   (R . t)
    (C . t)))
 (setq org-confirm-babel-evaluate nil)
 (setq org-plantuml-jar-path "@abs_top_builddir@/doc/org/plantuml.jar")
@@ -65,6 +72,7 @@
 (setq org-babel-python-command "@PYTHON@")
 (setq org-babel-C++-compiler "./g++wrap")
 (setq shell-file-name "@SHELL@")
+(setq ess-ask-for-ess-directory nil)
 
 (setq org-babel-default-header-args:plantuml
       '((:results . "file")
