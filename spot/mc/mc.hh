@@ -277,7 +277,7 @@ distributed_has_deadlock(kripke_ptr sys, spot::process* proc)
             // Wait all threads to be instanciated.
             while (barrier)
               continue;
-            swarmed[i]->run();
+            swarmed[i]->distributed_run(proc);
           });
 
 #if defined(unix) || defined(__unix__) || defined(__unix)
@@ -325,7 +325,7 @@ distributed_has_deadlock(kripke_ptr sys, spot::process* proc)
       proc->out << "Thread #" << 0 << ": on CPU " << sched_getcpu() << '\n';
       proc->barrier();  // Wait all processes are ready to launch the search
       tm.start("Run");
-      swarmed->run();
+      swarmed->distributed_run(proc);
       proc->barrier();
       tm.stop("Run");
       has_deadlock |= swarmed->has_deadlock();
