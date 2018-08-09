@@ -738,11 +738,10 @@ static int checked_main()
 
           int memused = spot::memusage();
           tm.start("deadlock check");
-          auto res =
-              spot::has_deadlock<spot::ltsmin_kripkecube_ptr,
-                                 spot::cspins_state, spot::cspins_iterator,
-                                 spot::cspins_state_hash,
-                                 spot::cspins_state_equal>(modelcube);
+          auto res = spot::distributed_has_deadlock<
+              spot::ltsmin_kripkecube_ptr, spot::cspins_state,
+              spot::cspins_iterator, spot::cspins_state_hash,
+              spot::cspins_state_equal>(modelcube, proc);
           tm.stop("deadlock check");
           memused = spot::memusage() - memused;
 
