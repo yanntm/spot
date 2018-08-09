@@ -42,6 +42,7 @@ class SPOT_API process
   int get_rank(void);
   char* get_host_name(void);
   void print(void);
+  int barrier(void);
 
   // Uses string streams to synchronize outputs between processes.
   std::stringstream out;

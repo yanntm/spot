@@ -87,10 +87,10 @@ void process::print(void)
       const char* cstr_out = str_out.c_str();
 
       if (!str_err.empty())
-        MPI_Send(cstr_err, str_err.size(), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(cstr_err, str_err.size() + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 
       if (!str_out.empty())
-        MPI_Send(cstr_out, str_out.size(), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(cstr_out, str_out.size() + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
     }
 
   // Wait until everything is sent to them to be treated.
@@ -162,5 +162,11 @@ void process::print(void)
             }
         }
     }
+}
+
+// Synchronization between MPI processes in a group
+int process::barrier(void)
+{
+  return MPI_Barrier(MPI_COMM_WORLD);
 }
 }  // namespace spot
