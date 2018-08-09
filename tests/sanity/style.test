@@ -258,7 +258,7 @@ for dir in "$TOP/spot" "$TOP/bin" "$TOP/tests"; do
       $GREP 'return[	 ]*[(][^(]*[)];' $tmp &&
 	diag 'No useless parentheses after return.'
 
-      $GREP 'NULL' $tmp &&
+      $GREP '\bNULL\b' $tmp &&
 	diag 'Use nullptr instead of NULL.'
 
       # std::list::size() can be O(n).  Better use empty() whenever
