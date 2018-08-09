@@ -53,6 +53,7 @@ process::process(int nb_threads)
   this->err.str("");
 }
 
+// Ends the communication context.
 process::~process(void)
 {
   MPI_Finalize();
@@ -103,7 +104,11 @@ void process::print(void)
       char* cstr_out = nullptr;
 
       if (!str_err.empty())
-        std::cerr << str_err << std::endl;
+        {
+          std::cerr << "I am following process " << this->rank << " on host "
+                    << this->host_name << std::endl;
+          std::cerr << str_err << std::endl;
+        }
 
       for (int id = 1; id < this->size; id++)
         {
@@ -112,7 +117,7 @@ void process::print(void)
           int flag = 0;
           int lenght = 0;
 
-          /* This function acts like a mailbox. 
+          /* This function acts like a mailbox.
              It notifies the arrival of a message by putting the flag at 1. */
           MPI_Improbe(id, 0, MPI_COMM_WORLD, &flag, &message, &status);
 
@@ -121,13 +126,19 @@ void process::print(void)
               MPI_Get_count(&status, MPI_CHAR, &lenght);
               cstr_err = new char[lenght];
               MPI_Mrecv(cstr_err, lenght, MPI_CHAR, &message, &status);
+              std::cerr << "I am following process " << id << " on host "
+                        << this->host_name << std::endl;
               std::cerr << cstr_err << std::endl;
               delete[] cstr_err;
             }
         }
 
       if (!str_out.empty())
-        std::cout << str_out << std::endl;
+        {
+          std::cout << "I am following process " << this->rank << " on host "
+                    << this->host_name << std::endl;
+          std::cout << str_out << std::endl;
+        }
 
       for (int id = 1; id < size; id++)
         {
@@ -143,6 +154,8 @@ void process::print(void)
               MPI_Get_count(&status, MPI_CHAR, &lenght);
               cstr_out = new char[lenght];
               MPI_Mrecv(cstr_out, lenght, MPI_CHAR, &message, &status);
+              std::cout << "I am following process " << id << " on host "
+                        << this->host_name << std::endl;
               std::cout << cstr_out << std::endl;
               delete[] cstr_out;
             }
