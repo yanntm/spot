@@ -808,9 +808,12 @@ static int checked_main()
             }
         }
 
-      proc->print();
-
     safe_exit_mpi:
+      if (mc_options.use_timer)
+        tm.print(proc->out);
+      tm.reset_all();  // This helps valgrind.
+      proc->print();   // Displays all displays in writing order.
+
       delete proc;
       return exit_code = 0;
     }
