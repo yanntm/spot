@@ -77,7 +77,7 @@ namespace spot
       virtual
       state_tgbasl* clone() const override
       {
-        return new state_tgbasl(*this);
+        return new state_tgbasl(s_, cond_);
       }
 
       const state*

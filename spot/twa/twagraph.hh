@@ -42,6 +42,15 @@ namespace spot
     {
     }
 
+    twa_graph_state(const twa_graph_state&) noexcept
+    {
+    }
+
+    twa_graph_state& operator=(const twa_graph_state&) noexcept
+    {
+      return *this;
+    }
+
     virtual ~twa_graph_state() noexcept
     {
     }

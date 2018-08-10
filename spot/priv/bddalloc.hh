@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2016 Laboratoire de Recherche et Développement
+// Copyright (C) 2013, 2016, 2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 // Copyright (C) 2003, 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -35,6 +35,19 @@ namespace spot
   public:
     /// Default constructor.
     bdd_allocator();
+
+    bdd_allocator(const bdd_allocator& other)
+      : free_list(other), lvarnum(other.lvarnum)
+    {
+    }
+
+    bdd_allocator& operator=(const bdd_allocator& other)
+    {
+      free_list::operator=(other);
+      lvarnum = other.lvarnum;
+      return *this;
+    }
+
     /// Initialize the BDD library.
     static void initialize();
     /// Allocate \a n BDD variables.

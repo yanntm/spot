@@ -233,11 +233,6 @@ namespace spot
       trimming_map ref_inf_trim_map;
       trimming_map cand_inf_trim_map;
 
-      ~dict()
-      {
-        aut->get_dict()->unregister_all_my_variables(this);
-      }
-
       int
       transid(unsigned src, unsigned cond, unsigned dst)
       {

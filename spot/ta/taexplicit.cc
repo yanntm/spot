@@ -260,7 +260,10 @@ namespace spot
   state_ta_explicit*
   state_ta_explicit::clone() const
   {
-    return new state_ta_explicit(*this);
+    return new state_ta_explicit(tgba_state_, tgba_condition_,
+                                 is_initial_state_,
+                                 is_accepting_state_,
+                                 is_livelock_accepting_state_, transitions_);
   }
 
   void

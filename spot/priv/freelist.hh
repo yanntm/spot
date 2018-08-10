@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008,2013 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2008,2013,2018 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2006 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
 // et Marie Curie.
@@ -35,6 +35,21 @@ namespace spot
   {
   public:
     virtual ~free_list();
+
+    free_list()
+    {
+    }
+
+    free_list(const free_list& other)
+      : fl(other.fl)
+    {
+    }
+
+    free_list& operator=(const free_list& other)
+    {
+      fl = other.fl;
+      return *this;
+    }
 
     /// \brief Find \a n consecutive integers.
     ///

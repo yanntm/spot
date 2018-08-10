@@ -345,6 +345,19 @@ public:
   {
   }
 
+  my_state() noexcept
+  {
+  }
+
+  my_state(const my_state&) noexcept
+  {
+  }
+
+  my_state& operator=(const my_state&) noexcept
+  {
+    return *this;
+  }
+
   int compare(const spot::state* other) const override
   {
     auto o = spot::down_cast<const my_state*>(other);

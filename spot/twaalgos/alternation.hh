@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016 Laboratoire de Recherche et Développement de
-// l'Epita (LRDE).
+// Copyright (C) 2016, 2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -114,6 +114,10 @@ namespace spot
 
   public:
     univ_remover_state(const std::set<unsigned>& states);
+    univ_remover_state(const univ_remover_state& other)
+      : states_(other.states_), is_reset_(other.is_reset_)
+    {
+    }
     int compare(const state* other) const override;
     size_t hash() const override;
     state* clone() const override;
