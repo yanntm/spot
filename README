@@ -228,7 +228,6 @@ bench/            Benchmarks for ...
    stutter/       ... stutter-invariance checking algorithms,
    wdba/          ... WDBA minimization (for obligation properties).
 python/           Python bindings for Spot and BuDDy
-   ajax/          LTL-to-TGBA translator with web interface, using Javascript.
 
 Third party software
 --------------------

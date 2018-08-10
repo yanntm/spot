@@ -15,6 +15,12 @@ New in spot 2.6.1.dev (not yet released)
     Zielonka algorithm. Calude's quasi-polynomial time algorithm has
     been dropped as it was not used.
 
+  Build:
+
+  - We no longer distribute the Python-based CGI script + javascript
+    code for the online translator.  Its replacement has its own
+    repository: https://gitlab.lrde.epita.fr/spot/spot-web-app/
+
   Library:
 
   - The LTL parser learned syntactic sugar for nested ranges of X
