@@ -315,217 +315,225 @@ static int checked_main()
         }
     }
 
-  if (mc_options.nb_threads == 1 && mc_options.formula != nullptr &&
-      mc_options.model != nullptr)
+  if (!mc_options.distribute)
     {
-      product = spot::otf_product(model, prop);
-
-      if (mc_options.is_empty)
+      if (mc_options.nb_threads == 1 && mc_options.formula != nullptr &&
+          mc_options.model != nullptr)
         {
-          const char* err;
-          echeck_inst = spot::make_emptiness_check_instantiator("Cou99", &err);
-          if (!echeck_inst)
-            {
-              std::cerr << "Unknown emptiness check algorihm `" << err << "'\n";
-              exit_code = 1;
-              goto safe_exit;
-            }
+          product = spot::otf_product(model, prop);
 
-          auto ec = echeck_inst->instantiate(product);
-          assert(ec);
-          int memused = spot::memusage();
-          tm.start("running emptiness check");
-          spot::emptiness_check_result_ptr res;
-          try
+          if (mc_options.is_empty)
             {
-              res = ec->check();
-            }
-          catch (const std::bad_alloc&)
-            {
-              std::cerr << "Out of memory during emptiness check." << std::endl;
-              if (!mc_options.compress)
-                std::cerr << "Try option -z for state compression."
-                          << std::endl;
-              exit_code = 2;
-              exit(exit_code);
-            }
-          tm.stop("running emptiness check");
-          memused = spot::memusage() - memused;
+              const char* err;
+              echeck_inst =
+                  spot::make_emptiness_check_instantiator("Cou99", &err);
+              if (!echeck_inst)
+                {
+                  std::cerr << "Unknown emptiness check algorihm `" << err
+                            << "'\n";
+                  exit_code = 1;
+                  goto safe_exit;
+                }
 
-          ec->print_stats(std::cout);
-          std::cout << memused << " pages allocated for emptiness check"
-                    << std::endl;
-
-          if (!res)
-            {
-              std::cout << "no accepting run found" << std::endl;
-            }
-          else if (!mc_options.compute_counterexample)
-            {
-              std::cout << "an accepting run exists "
-                        << "(use -c to print it)" << std::endl;
-              exit_code = 1;
-            }
-          else
-            {
-              exit_code = 1;
-              spot::twa_run_ptr run;
-              tm.start("computing accepting run");
+              auto ec = echeck_inst->instantiate(product);
+              assert(ec);
+              int memused = spot::memusage();
+              tm.start("running emptiness check");
+              spot::emptiness_check_result_ptr res;
               try
                 {
-                  run = res->accepting_run();
+                  res = ec->check();
                 }
               catch (const std::bad_alloc&)
                 {
-                  std::cerr << "Out of memory while looking for counterexample."
+                  std::cerr << "Out of memory during emptiness check."
                             << std::endl;
+                  if (!mc_options.compress)
+                    std::cerr << "Try option -z for state compression."
+                              << std::endl;
                   exit_code = 2;
                   exit(exit_code);
                 }
-              tm.stop("computing accepting run");
+              tm.stop("running emptiness check");
+              memused = spot::memusage() - memused;
 
-              if (!run)
+              ec->print_stats(std::cout);
+              std::cout << memused << " pages allocated for emptiness check"
+                        << std::endl;
+
+              if (!res)
                 {
-                  std::cout << "an accepting run exists" << std::endl;
+                  std::cout << "no accepting run found" << std::endl;
+                }
+              else if (!mc_options.compute_counterexample)
+                {
+                  std::cout << "an accepting run exists "
+                            << "(use -c to print it)" << std::endl;
+                  exit_code = 1;
                 }
               else
                 {
-                  tm.start("reducing accepting run");
-                  run = run->reduce();
-                  tm.stop("reducing accepting run");
-                  tm.start("printing accepting run");
-                  std::cout << *run;
-                  tm.stop("printing accepting run");
+                  exit_code = 1;
+                  spot::twa_run_ptr run;
+                  tm.start("computing accepting run");
+                  try
+                    {
+                      run = res->accepting_run();
+                    }
+                  catch (const std::bad_alloc&)
+                    {
+                      std::cerr
+                          << "Out of memory while looking for counterexample."
+                          << std::endl;
+                      exit_code = 2;
+                      exit(exit_code);
+                    }
+                  tm.stop("computing accepting run");
+
+                  if (!run)
+                    {
+                      std::cout << "an accepting run exists" << std::endl;
+                    }
+                  else
+                    {
+                      tm.start("reducing accepting run");
+                      run = run->reduce();
+                      tm.stop("reducing accepting run");
+                      tm.start("printing accepting run");
+                      std::cout << *run;
+                      tm.stop("printing accepting run");
+                    }
+                }
+
+              if (mc_options.csv)
+                {
+                  std::cout << "\nFind following the csv: "
+                            << "model,formula,walltimems,memused,type,"
+                            << "states,transitions\n";
+                  std::cout
+                      << '#' << split_filename(mc_options.model) << ','
+                      << mc_options.formula << ','
+                      << tm.timer("running emptiness check").walltime() << ','
+                      << memused << ',' << (!res ? "EMPTY," : "NONEMPTY,")
+                      << ec->statistics()->get("states") << ','
+                      << ec->statistics()->get("transitions") << std::endl;
+                }
+            }
+
+          if (mc_options.dot_output & DOT_PRODUCT)
+            {
+              tm.start("dot output");
+              spot::print_dot(std::cout, product);
+              tm.stop("dot output");
+            }
+        }
+
+      if (mc_options.nb_threads != 1 && mc_options.formula != nullptr &&
+          mc_options.model != nullptr)
+        {
+          unsigned int hc = std::thread::hardware_concurrency();
+          if (mc_options.nb_threads > hc)
+            std::cerr << "Warning: you require " << mc_options.nb_threads
+                      << " threads, but your computer only support " << hc
+                      << ". This could slow down parallel algorithms.\n";
+
+          tm.start("twa to twacube");
+          auto propcube = spot::twa_to_twacube(prop);
+          tm.stop("twa to twacube");
+
+          tm.start("load kripkecube");
+          spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+          try
+            {
+              modelcube =
+                  spot::ltsmin_model::load(mc_options.model)
+                      .kripkecube(propcube->get_ap(), deadf,
+                                  mc_options.compress, mc_options.nb_threads);
+            }
+          catch (const std::runtime_error& e)
+            {
+              std::cerr << e.what() << '\n';
+            }
+          tm.stop("load kripkecube");
+
+          int memused = spot::memusage();
+          tm.start("emptiness check");
+          auto res =
+              spot::modelcheck<spot::ltsmin_kripkecube_ptr, spot::cspins_state,
+                               spot::cspins_iterator, spot::cspins_state_hash,
+                               spot::cspins_state_equal>(
+                  modelcube, propcube, mc_options.compute_counterexample);
+          tm.stop("emptiness check");
+          memused = spot::memusage() - memused;
+
+          if (!modelcube)
+            {
+              exit_code = 2;
+              goto safe_exit;
+            }
+
+          // Display statistics
+          unsigned smallest = 0;
+          for (unsigned i = 0; i < std::get<2>(res).size(); ++i)
+            {
+              if (std::get<2>(res)[i].states <
+                  std::get<2>(res)[smallest].states)
+                smallest = i;
+
+              std::cout << "\n---- Thread number : " << i << '\n';
+              std::cout << std::get<2>(res)[i].states
+                        << " unique states visited\n";
+              std::cout << std::get<2>(res)[i].instack_sccs
+                        << " strongly connected components in search stack\n";
+              std::cout << std::get<2>(res)[i].transitions
+                        << " transitions explored\n";
+              std::cout << std::get<2>(res)[i].instack_item
+                        << " items max in DFS search stack\n";
+
+              // FIXME: produce walltime for each threads.
+              if (mc_options.csv)
+                {
+                  std::cout << "Find following the csv: "
+                            << "thread_id,walltimems,type,"
+                            << "states,transitions\n";
+                  std::cout << "@th_" << i << ','
+                            << tm.timer("emptiness check").walltime() << ','
+                            << (!std::get<2>(res)[i].is_empty ? "EMPTY,"
+                                                              : "NONEMPTY,")
+                            << std::get<2>(res)[i].states << ','
+                            << std::get<2>(res)[i].transitions << std::endl;
                 }
             }
 
           if (mc_options.csv)
             {
-              std::cout << "\nFind following the csv: "
-                        << "model,formula,walltimems,memused,type,"
+              std::cout << "\nSummary :\n";
+              if (!std::get<0>(res))
+                std::cout << "no accepting run found\n";
+              else if (!mc_options.compute_counterexample)
+                {
+                  std::cout << "an accepting run exists "
+                            << "(use -c to print it)" << std::endl;
+                  exit_code = 1;
+                }
+              else
+                std::cout << "an accepting run exists!\n"
+                          << std::get<1>(res) << '\n';
+
+              std::cout << "Find following the csv: "
+                        << "model,formula,walltimems,memused,type"
                         << "states,transitions\n";
+
               std::cout << '#' << split_filename(mc_options.model) << ','
                         << mc_options.formula << ','
-                        << tm.timer("running emptiness check").walltime() << ','
-                        << memused << ',' << (!res ? "EMPTY," : "NONEMPTY,")
-                        << ec->statistics()->get("states") << ','
-                        << ec->statistics()->get("transitions") << std::endl;
-            }
-        }
-
-      if (mc_options.dot_output & DOT_PRODUCT)
-        {
-          tm.start("dot output");
-          spot::print_dot(std::cout, product);
-          tm.stop("dot output");
-        }
-    }
-
-  if (mc_options.nb_threads != 1 && mc_options.formula != nullptr &&
-      mc_options.model != nullptr)
-    {
-      unsigned int hc = std::thread::hardware_concurrency();
-      if (mc_options.nb_threads > hc)
-        std::cerr << "Warning: you require " << mc_options.nb_threads
-                  << " threads, but your computer only support " << hc
-                  << ". This could slow down parallel algorithms.\n";
-
-      tm.start("twa to twacube");
-      auto propcube = spot::twa_to_twacube(prop);
-      tm.stop("twa to twacube");
-
-      tm.start("load kripkecube");
-      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
-      try
-        {
-          modelcube =
-              spot::ltsmin_model::load(mc_options.model)
-                  .kripkecube(propcube->get_ap(), deadf, mc_options.compress,
-                              mc_options.nb_threads);
-        }
-      catch (const std::runtime_error& e)
-        {
-          std::cerr << e.what() << '\n';
-        }
-      tm.stop("load kripkecube");
-
-      int memused = spot::memusage();
-      tm.start("emptiness check");
-      auto res =
-          spot::modelcheck<spot::ltsmin_kripkecube_ptr, spot::cspins_state,
-                           spot::cspins_iterator, spot::cspins_state_hash,
-                           spot::cspins_state_equal>(
-              modelcube, propcube, mc_options.compute_counterexample);
-      tm.stop("emptiness check");
-      memused = spot::memusage() - memused;
-
-      if (!modelcube)
-        {
-          exit_code = 2;
-          goto safe_exit;
-        }
-
-      // Display statistics
-      unsigned smallest = 0;
-      for (unsigned i = 0; i < std::get<2>(res).size(); ++i)
-        {
-          if (std::get<2>(res)[i].states < std::get<2>(res)[smallest].states)
-            smallest = i;
-
-          std::cout << "\n---- Thread number : " << i << '\n';
-          std::cout << std::get<2>(res)[i].states << " unique states visited\n";
-          std::cout << std::get<2>(res)[i].instack_sccs
-                    << " strongly connected components in search stack\n";
-          std::cout << std::get<2>(res)[i].transitions
-                    << " transitions explored\n";
-          std::cout << std::get<2>(res)[i].instack_item
-                    << " items max in DFS search stack\n";
-
-          // FIXME: produce walltime for each threads.
-          if (mc_options.csv)
-            {
-              std::cout << "Find following the csv: "
-                        << "thread_id,walltimems,type,"
-                        << "states,transitions\n";
-              std::cout << "@th_" << i << ','
                         << tm.timer("emptiness check").walltime() << ','
-                        << (!std::get<2>(res)[i].is_empty ? "EMPTY,"
-                                                          : "NONEMPTY,")
-                        << std::get<2>(res)[i].states << ','
-                        << std::get<2>(res)[i].transitions << std::endl;
+                        << memused << ','
+                        << (!std::get<0>(res) ? "EMPTY," : "NONEMPTY,")
+                        << std::get<2>(res)[smallest].states << ','
+                        << std::get<2>(res)[smallest].transitions << '\n';
             }
         }
 
-      if (mc_options.csv)
-        {
-          std::cout << "\nSummary :\n";
-          if (!std::get<0>(res))
-            std::cout << "no accepting run found\n";
-          else if (!mc_options.compute_counterexample)
-            {
-              std::cout << "an accepting run exists "
-                        << "(use -c to print it)" << std::endl;
-              exit_code = 1;
-            }
-          else
-            std::cout << "an accepting run exists!\n"
-                      << std::get<1>(res) << '\n';
-
-          std::cout << "Find following the csv: "
-                    << "model,formula,walltimems,memused,type"
-                    << "states,transitions\n";
-
-          std::cout << '#' << split_filename(mc_options.model) << ','
-                    << mc_options.formula << ','
-                    << tm.timer("emptiness check").walltime() << ',' << memused
-                    << ',' << (!std::get<0>(res) ? "EMPTY," : "NONEMPTY,")
-                    << std::get<2>(res)[smallest].states << ','
-                    << std::get<2>(res)[smallest].transitions << '\n';
-        }
-    }
-
-  if (!mc_options.distribute)
-    {
       if (mc_options.has_deadlock && mc_options.model != nullptr)
         {
           assert(!mc_options.selfloopize);
@@ -620,88 +628,91 @@ static int checked_main()
                         << std::get<1>(res)[smallest].transitions << '\n';
             }
         }
-    }
 
-  if (mc_options.bloemen && mc_options.model != nullptr)
-    {
-      unsigned int hc = std::thread::hardware_concurrency();
-      if (mc_options.nb_threads > hc)
-        std::cerr << "Warning: you require " << mc_options.nb_threads
-                  << " threads, but your computer only support " << hc
-                  << ". This could slow down parallel algorithms.\n";
-
-      tm.start("load kripkecube");
-      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
-      try
+      if (mc_options.bloemen && mc_options.model != nullptr)
         {
-          modelcube = spot::ltsmin_model::load(mc_options.model)
-                          .kripkecube({}, deadf, mc_options.compress,
-                                      mc_options.nb_threads);
-        }
-      catch (const std::runtime_error& e)
-        {
-          std::cerr << e.what() << '\n';
-        }
-      tm.stop("load kripkecube");
+          unsigned int hc = std::thread::hardware_concurrency();
+          if (mc_options.nb_threads > hc)
+            std::cerr << "Warning: you require " << mc_options.nb_threads
+                      << " threads, but your computer only support " << hc
+                      << ". This could slow down parallel algorithms.\n";
 
-      int memused = spot::memusage();
-      tm.start("bloemen");
-      auto res = spot::bloemen<spot::ltsmin_kripkecube_ptr, spot::cspins_state,
-                               spot::cspins_iterator, spot::cspins_state_hash,
-                               spot::cspins_state_equal>(modelcube);
-      tm.stop("bloemen");
-      memused = spot::memusage() - memused;
+          tm.start("load kripkecube");
+          spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+          try
+            {
+              modelcube = spot::ltsmin_model::load(mc_options.model)
+                              .kripkecube({}, deadf, mc_options.compress,
+                                          mc_options.nb_threads);
+            }
+          catch (const std::runtime_error& e)
+            {
+              std::cerr << e.what() << '\n';
+            }
+          tm.stop("load kripkecube");
 
-      if (!modelcube)
-        {
-          exit_code = 2;
-          goto safe_exit;
-        }
+          int memused = spot::memusage();
+          tm.start("bloemen");
+          auto res =
+              spot::bloemen<spot::ltsmin_kripkecube_ptr, spot::cspins_state,
+                            spot::cspins_iterator, spot::cspins_state_hash,
+                            spot::cspins_state_equal>(modelcube);
+          tm.stop("bloemen");
+          memused = spot::memusage() - memused;
 
-      // Display statistics
-      unsigned sccs = 0;
-      unsigned st = 0;
-      unsigned tr = 0;
-      unsigned inserted = 0;
-      for (unsigned i = 0; i < res.first.size(); ++i)
-        {
-          std::cout << "\n---- Thread number : " << i << '\n';
-          std::cout << res.first[i].states << " unique states visited\n";
-          std::cout << res.first[i].inserted << " unique states inserted\n";
-          std::cout << res.first[i].transitions << " transitions explored\n";
-          std::cout << res.first[i].sccs << " sccs found\n";
-          std::cout << res.first[i].walltime << " milliseconds\n";
+          if (!modelcube)
+            {
+              exit_code = 2;
+              goto safe_exit;
+            }
 
-          sccs += res.first[i].sccs;
-          st += res.first[i].states;
-          tr += res.first[i].transitions;
-          inserted += res.first[i].inserted;
+          // Display statistics
+          unsigned sccs = 0;
+          unsigned st = 0;
+          unsigned tr = 0;
+          unsigned inserted = 0;
+          for (unsigned i = 0; i < res.first.size(); ++i)
+            {
+              std::cout << "\n---- Thread number : " << i << '\n';
+              std::cout << res.first[i].states << " unique states visited\n";
+              std::cout << res.first[i].inserted << " unique states inserted\n";
+              std::cout << res.first[i].transitions
+                        << " transitions explored\n";
+              std::cout << res.first[i].sccs << " sccs found\n";
+              std::cout << res.first[i].walltime << " milliseconds\n";
+
+              sccs += res.first[i].sccs;
+              st += res.first[i].states;
+              tr += res.first[i].transitions;
+              inserted += res.first[i].inserted;
+
+              if (mc_options.csv)
+                {
+                  std::cout << "Find following the csv: "
+                            << "thread_id,walltimems,"
+                            << "states,transitions,sccs\n";
+                  std::cout << "@th_" << i << ',' << res.first[i].walltime
+                            << ',' << res.first[i].states << ','
+                            << res.first[i].inserted << ','
+                            << res.first[i].transitions << ','
+                            << res.first[i].sccs << std::endl;
+                }
+            }
 
           if (mc_options.csv)
             {
+              std::cout << "\nSummary :\n";
               std::cout << "Find following the csv: "
-                        << "thread_id,walltimems,"
-                        << "states,transitions,sccs\n";
-              std::cout << "@th_" << i << ',' << res.first[i].walltime << ','
-                        << res.first[i].states << ',' << res.first[i].inserted
-                        << ',' << res.first[i].transitions << ','
-                        << res.first[i].sccs << std::endl;
+                        << "model,walltimems,memused,"
+                        << "inserted_states,"
+                        << "cumulated_states,cumulated_transitions,"
+                        << "cumulated_sccs\n";
+
+              std::cout << '#' << split_filename(mc_options.model) << ','
+                        << tm.timer("bloemen").walltime() << ',' << memused
+                        << ',' << inserted << ',' << st << ',' << tr << ','
+                        << sccs << '\n';
             }
-        }
-
-      if (mc_options.csv)
-        {
-          std::cout << "\nSummary :\n";
-          std::cout << "Find following the csv: "
-                    << "model,walltimems,memused,"
-                    << "inserted_states,"
-                    << "cumulated_states,cumulated_transitions,"
-                    << "cumulated_sccs\n";
-
-          std::cout << '#' << split_filename(mc_options.model) << ','
-                    << tm.timer("bloemen").walltime() << ',' << memused << ','
-                    << inserted << ',' << st << ',' << tr << ',' << sccs
-                    << '\n';
         }
     }
 
