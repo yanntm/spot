@@ -37,6 +37,7 @@ class SPOT_API message
   message(T*, T*, int, int, MPI_Datatype);
   ~message(void);
 
+  int get_size(void);
   int get_flag(void);
   int async_send(int);
   int async_probe(int);

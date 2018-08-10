@@ -46,6 +46,12 @@ template <class T>
 message<T>::~message(void)
 {}
 
+template <class T>
+int message<T>::get_size(void)
+{
+  return this->size;
+}
+
 // Returns the flag updated by a call to a function of the probe family.
 template <class T>
 int message<T>::get_flag(void)
