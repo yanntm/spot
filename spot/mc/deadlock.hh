@@ -43,6 +43,8 @@
 #include <mpi.h>
 #pragma GCC diagnostic pop
 
+#define TRESHOLD 1000
+
 namespace spot
 {
 /// \brief This object is returned by the algorithm below
@@ -251,15 +253,96 @@ class swarmed_deadlock
    *                                MPI                                     *
    **************************************************************************/
 
+  /* This function directly marks the states as closed
+     and does not increase the number of states visited.
+     Moreover it does not update the refs stack */
+  bool push_and_close(State s)
+  {
+    // Prepare data for a newer allocation
+    int* ref = (int*)p_.allocate();
+    for (unsigned i = 0; i < nb_th_; ++i)
+      ref[i] = UNKNOWN;
+
+    // Try to insert the new state in the shared map.
+    auto it = map_.insert({s, ref});
+    bool b = it.isnew();
+
+    // Insertion failed, delete element
+    // FIXME Should we add a local cache to avoid useless allocations?
+    if (!b)
+      p_.deallocate(ref);
+
+    // The state has been mark dead by another thread
+    for (unsigned i = 0; !b && i < nb_th_; ++i)
+      if (it->colors[i] == static_cast<int>(CLOSED))
+        return false;
+
+    // The state has already been visited by the current thread
+    if (it->colors[tid_] == static_cast<int>(OPEN))
+      return false;
+
+    // Mark state as visited.
+    it->colors[tid_] = CLOSED;
+    return true;
+  }
+
+  /* Given that we only receive the last state we have pop,
+     this function marks all successor states as dead. */
+  void recurssively_close(State s)
+  {
+    // The new DFS stack
+    std::vector<todo__element> todo;
+
+    if (SPOT_LIKELY(push_and_close(s)))
+      {
+        /* Do not use to make benchmarks.
+           Commenting this line allows to decrease the treshold. */
+        // shared_states_.push_back(s);
+        todo.push_back({s, sys_.succ(s, tid_), 0});
+
+        /* Launches a second DFS course
+           to close all successors from the state received. */
+        state while (!todo.empty())
+        {
+          // No need for pop since we don't keep a ptr over the array of colors.
+          if (todo.back().it->done())
+            {
+              sys_.recycle(todo.back().it, tid_);
+              todo.pop_back();
+            }
+
+          else
+            {
+              State dst = todo.back().it->state();
+
+              if (SPOT_LIKELY(push_and_close(dst)))
+                {
+                  todo.back().it->next();
+                  todo.push_back({dst, sys_.succ(dst, tid_), 0});
+                }
+
+              else
+                {
+                  todo.back().it->next();
+                }
+            }
+        }
+      }
+  }
+
   void distributed_run(spot::process* proc)
   {
     int size = proc->get_size();
     int rank = proc->get_rank();
-    unsigned deadlock_msg = 0;
+    unsigned deadlock = 0;
     int deadlock_tag = 1;
+    int* state_recv = nullptr;
+    int state_tag = 2;
+    int cpt_pop = 0;
 
-    spot::message<unsigned>* msg = new spot::message<unsigned>(
-        &deadlock_msg, nullptr, 1, deadlock_tag, MPI_UNSIGNED);
+    spot::message<unsigned>* deadlock_msg = new spot::message<unsigned>(
+        &deadlock, nullptr, 1, deadlock_tag, MPI_UNSIGNED);
+    spot::message<int>* state_msg = nullptr;
 
     setup();
     State initial = sys_.initial(tid_);
@@ -273,15 +356,32 @@ class swarmed_deadlock
       {
         /* This function acts like a mailbox.
            It notifies the arrival of a message by putting the flag at 1. */
-        msg->async_probe(MPI_ANY_SOURCE);
+        deadlock_msg->async_probe(MPI_ANY_SOURCE);
 
-        if (msg->get_flag())
+        if (deadlock_msg->get_flag())
           {
             /* This function retrieves the message
                associated with the notification. */
-            msg->match_recv();
+            deadlock_msg->match_recv();
             deadlock_ = true;
             break;
+          }
+
+        if (state_msg != nullptr)
+          {
+            state_msg->async_probe(MPI_ANY_SOURCE);
+
+            if (state_msg->get_flag())
+              {
+                state_msg->match_recv();
+                recurssively_close((State)state_recv);
+
+                /* As a message contains the necessary information to send and
+                   receive a new message
+                   is created that after the recepetion. */
+                delete state_msg;
+                state_msg = nullptr;
+              }
           }
 
         if (todo_.back().it->done())
@@ -295,8 +395,27 @@ class swarmed_deadlock
                     /* Asynchronously notify
                        the other processes of the deadlock detection. */
                     for (int id = rank + 1; (id % size) != rank; id = id + 1)
-                      msg->async_send(id);
+                      deadlock_msg->async_send(id % size);
                     break;
+                  }
+
+                cpt_pop++;
+
+                /* Sends the last state up according to the threshold
+                   in order to limit the number of messages sent. */
+                if (cpt_pop >= TRESHOLD)
+                  {
+                    int* current = (int*)todo_.back().s;
+                    int lenght = current[1] + 2;
+
+                    state_recv = new int[lenght];
+                    state_msg = new spot::message<int>(
+                        current, state_recv, lenght, state_tag, MPI_INT);
+
+                    for (int id = rank + 1; (id % size) != rank; id = id + 1)
+                      state_msg->async_send(id % size);
+
+                    cpt_pop = 0;
                   }
 
                 sys_.recycle(todo_.back().it, tid_);
@@ -348,5 +467,10 @@ class swarmed_deadlock
   /// \brief Stack that grows according to the todo stack. It avoid multiple
   /// concurent access to the shared map.
   std::vector<int*> refs_;
-};  // namespace spot
+
+  ///< \brief Keep a copy of the storage addresses of the received states
+  /// to be able to free the memory.
+  /// Please comment if you plan to do benchmarking.
+  // std::vector<int*> shared_states_;
+};
 }  // namespace spot
