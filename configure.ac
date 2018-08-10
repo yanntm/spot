@@ -244,7 +244,6 @@ AC_CONFIG_FILES([
   spot/twaalgos/Makefile
   spot/twa/Makefile
   spot/gen/Makefile
-  python/ajax/Makefile
   python/Makefile
   tests/core/defs
   tests/ltsmin/defs:tests/core/defs.in

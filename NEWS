@@ -1,6 +1,10 @@
 New in spot 2.6.1.dev (not yet released)
 
-  Nothing yet.
+  Build:
+
+  - We no longer distribute the Python-based CGI script + javascript
+    code for the online translator.  Its replacement has its own
+    repository: https://gitlab.lrde.epita.fr/spot/spot-web-app/
 
 New in spot 2.6.1  (2018-08-04)
 
