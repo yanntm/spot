@@ -41,10 +41,6 @@ namespace spot
       {
       }
 
-      ~ltl2taa_visitor()
-      {
-      }
-
       taa_tgba_formula_ptr&
       result()
       {

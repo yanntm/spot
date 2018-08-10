@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2011-2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -33,6 +33,17 @@ namespace spot
     kripke_graph_state(bdd cond = bddfalse) noexcept
       : cond_(cond)
     {
+    }
+
+    kripke_graph_state(const kripke_graph_state& other) noexcept
+      : cond_(other.cond_)
+    {
+    }
+
+    kripke_graph_state& operator=(const kripke_graph_state& other) noexcept
+    {
+      cond_ = other.cond_;
+      return *this;
     }
 
     virtual ~kripke_graph_state() noexcept

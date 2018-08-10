@@ -55,6 +55,19 @@ namespace spot
       {
       }
 
+      anon_free_list(const anon_free_list& other) noexcept
+        : free_list(other), priv_(other.priv_)
+      {
+      }
+
+      spot::bdd_dict_priv::anon_free_list&
+      operator=(const anon_free_list& other) noexcept
+      {
+        spot::free_list::operator=(other);
+        priv_ = other.priv_;
+        return *this;
+      }
+
       virtual int
       extend(int n) override
       {

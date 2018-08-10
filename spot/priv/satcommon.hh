@@ -106,10 +106,6 @@ public:
 #endif
     }
 
-    ~vars_helper()
-    {
-    }
-
     /// \brief Save all different sizes and precompute some values.
     void
     init(unsigned size_src, unsigned size_cond, unsigned size_dst,
