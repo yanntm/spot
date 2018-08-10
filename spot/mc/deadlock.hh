@@ -302,7 +302,7 @@ class swarmed_deadlock
 
         /* Launches a second DFS course
            to close all successors from the state received. */
-        state while (!todo.empty())
+        while (!todo.empty())
         {
           // No need for pop since we don't keep a ptr over the array of colors.
           if (todo.back().it->done())
