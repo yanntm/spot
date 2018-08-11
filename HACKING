@@ -34,6 +34,7 @@ since the generated files they produce are distributed.)
   Groff (a.k.a. GNU troff) >= 1.20
   SWIG >= 3.0 (for its better C++11/C++14 support)
   Doxygen >= 1.4.0
+  R   used by some examples in the documentation
   Perl, with its Gettext module (it might be called something like
     liblocale-gettext-perl or p5-locale-gettext in your distribution)
   A complete LaTeX distribution, including latexmk and extra fonts
@@ -50,9 +51,6 @@ only for certain operations (like releases):
 
   pandoc    used during Debian packaging for the conversion of
             IPython notebooks to html
-  R         used by some example in the documentation (the
-            documentation will still compile without R, but that
-            example will appear broken)
   ltl2ba    used in the generated documentation and the test suite
   ltl2dstar likewise
   ltl3dra   likewise
