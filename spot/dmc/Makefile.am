@@ -23,7 +23,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 dmcdir = $(pkgincludedir)/dmc
 
-dmc_HEADERS = process.hh message.hh message.hxx
+dmc_HEADERS = process.hh process.hxx message.hh message.hxx
 
 noinst_LTLIBRARIES = libdmc.la
 libdmc_la_SOURCES = process.cc

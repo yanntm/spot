@@ -41,7 +41,8 @@ class SPOT_API process
   int get_size(void);
   int get_rank(void);
   char* get_host_name(void);
-  void print(void);
+  template <typename T>
+  void print(T&, T&);
   int barrier(void);
 
   // Uses string streams to synchronize outputs between processes.
@@ -56,3 +57,5 @@ class SPOT_API process
   char host_name[MPI_MAX_PROCESSOR_NAME];
 };
 }  // namespace spot
+
+#include <spot/dmc/process.hxx>
