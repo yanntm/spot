@@ -43,11 +43,16 @@ message<T>::message(int rank, T* send, T* recv, int size, int tag,
   this->persistent_request = new MPI_Request[size];
   this->request = MPI_REQUEST_NULL;
   this->msg = MPI_MESSAGE_NULL;
+
+  for (int i = 0; i < size; i++)
+  this->persistent_request[i] = MPI_REQUEST_NULL;
 }
 
 template <class T>
 message<T>::~message(void)
-{}
+{
+  delete[] this->persistent_request;
+}
 
 template <class T>
 int message<T>::get_size(void)
