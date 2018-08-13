@@ -30,6 +30,7 @@
 #include <thread>
 #include <vector>
 
+#include <algorithm>
 #include <functional>
 #include <string>
 
@@ -303,30 +304,31 @@ class swarmed_deadlock
         /* Launches a second DFS course
            to close all successors from the state received. */
         while (!todo.empty())
-        {
-          // No need for pop since we don't keep a ptr over the array of colors.
-          if (todo.back().it->done())
-            {
-              sys_.recycle(todo.back().it, tid_);
-              todo.pop_back();
-            }
+          {
+            // No need for pop since we don't keep a ptr over the array of
+            // colors.
+            if (todo.back().it->done())
+              {
+                sys_.recycle(todo.back().it, tid_);
+                todo.pop_back();
+              }
 
-          else
-            {
-              State dst = todo.back().it->state();
+            else
+              {
+                State dst = todo.back().it->state();
 
-              if (SPOT_LIKELY(push_and_close(dst)))
-                {
-                  todo.back().it->next();
-                  todo.push_back({dst, sys_.succ(dst, tid_), 0});
-                }
+                if (SPOT_LIKELY(push_and_close(dst)))
+                  {
+                    todo.back().it->next();
+                    todo.push_back({dst, sys_.succ(dst, tid_), 0});
+                  }
 
-              else
-                {
-                  todo.back().it->next();
-                }
-            }
-        }
+                else
+                  {
+                    todo.back().it->next();
+                  }
+              }
+          }
       }
   }
 
@@ -336,12 +338,15 @@ class swarmed_deadlock
     int rank = proc->get_rank();
     unsigned deadlock = 0;
     int deadlock_tag = 1;
+    int* persistent_send_buffer = nullptr;
+    int* persistent_recv_buffer = nullptr;
+    int lenght = 0;
     int* state_recv = nullptr;
     int state_tag = 2;
     int cpt_pop = 0;
 
     spot::message<unsigned>* deadlock_msg = new spot::message<unsigned>(
-        &deadlock, nullptr, 1, deadlock_tag, MPI_UNSIGNED);
+        rank, &deadlock, nullptr, 1, deadlock_tag, MPI_UNSIGNED);
     spot::message<int>* state_msg = nullptr;
 
     setup();
@@ -362,7 +367,7 @@ class swarmed_deadlock
           {
             /* This function retrieves the message
                associated with the notification. */
-            deadlock_msg->match_recv();
+            deadlock_msg->match_async_recv();
             deadlock_ = true;
             break;
           }
@@ -373,14 +378,10 @@ class swarmed_deadlock
 
             if (state_msg->get_flag())
               {
-                state_msg->match_recv();
+                state_msg->match_async_recv();
+                state_recv = new int[lenght];
+                std::copy_n(persistent_recv_buffer, lenght, state_recv);
                 recurssively_close((State)state_recv);
-
-                /* As a message contains the necessary information to send and
-                   receive a new message
-                   is created that after the recepetion. */
-                delete state_msg;
-                state_msg = nullptr;
               }
           }
 
@@ -405,15 +406,37 @@ class swarmed_deadlock
                    in order to limit the number of messages sent. */
                 if (cpt_pop >= TRESHOLD)
                   {
-                    int* current = (int*)todo_.back().s;
-                    int lenght = current[1] + 2;
+                    if (lenght == 0)
+                      lenght = todo_.back().s[1] + 2;
 
-                    state_recv = new int[lenght];
-                    state_msg = new spot::message<int>(
-                        current, state_recv, lenght, state_tag, MPI_INT);
+                    if (persistent_send_buffer == nullptr)
+                      persistent_send_buffer = new int[lenght];
 
+                    if (persistent_recv_buffer == nullptr)
+                      persistent_recv_buffer = new int[lenght];
+
+                    /* We have a unique message structure. each send/receive is
+                       done in a persistent buffer which allows to have
+                       a single object and to use persistent communication.
+                       The result is then copied into a new buffer and 
+                       stored in the hash table. */
+                    if (state_msg == nullptr)
+                      {
+                        state_msg = new spot::message<int>(
+                            rank, persistent_send_buffer,
+                            persistent_recv_buffer, lenght, state_tag, MPI_INT);
+
+                        for (int id = rank + 1; (id % size) != rank;
+                             id = id + 1)
+                          state_msg->init_persistent_send(id % size);
+                      }
+
+                    std::copy_n(todo_.back().s, lenght, persistent_send_buffer);
+
+                    /* As we send a lot of data I use a communication request by
+                       neighbors which allows not to congest the request. */
                     for (int id = rank + 1; (id % size) != rank; id = id + 1)
-                      state_msg->async_send(id % size);
+                      state_msg->start_persistent_send(id % size);
 
                     cpt_pop = 0;
                   }
