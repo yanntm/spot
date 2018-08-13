@@ -72,6 +72,8 @@ const unsigned DOT_FORMULA = 4;
 const unsigned CSV = 8;
 
 const unsigned DISTRIBUTE = 16;
+const unsigned ERROR = 32;
+const unsigned OUTPUT = 64;
 
 // Handle all options specified in the command line
 struct mc_options_
@@ -92,6 +94,10 @@ struct mc_options_
   bool bloemen = false;
 
   bool distribute = false;
+  bool output = false;
+  bool error = false;
+  char* out = nullptr;
+  char* err = nullptr;
 } mc_options;
 
 static int parse_opt_finput(int key, char* arg, struct argp_state*)
@@ -105,6 +111,16 @@ static int parse_opt_finput(int key, char* arg, struct argp_state*)
 
       case DISTRIBUTE:
         mc_options.distribute = true;
+        break;
+
+      case ERROR:
+        mc_options.error = true;
+        mc_options.err = arg;
+        break;
+
+      case OUTPUT:
+        mc_options.output = true;
+        mc_options.out = arg;
         break;
 
       case 'b':
@@ -191,6 +207,10 @@ static const argp_option options[] = {
 
     {"distribute", DISTRIBUTE, nullptr, 0,
      "use distributed algorithms instead of sequential/parallel version", 0},
+    {"err", ERROR, "STRING", 0,
+     "use STRING error file as error standard output", 0},
+    {"out", OUTPUT, "STRING", 0,
+     "use STRING output file as standard output", 0},
 
     // ------------------------------------------------------------
     {nullptr, 0, nullptr, 0, "Output options:", 3},
@@ -834,14 +854,15 @@ static int checked_main()
         tm.print(proc->out);
       tm.reset_all();  // This helps valgrind.
 
-      if (BENCH)
+      // Displays the result in files.
+      if (mc_options.output && mc_options.error)
         {
           std::ofstream outputs;
           std::ofstream errors;
 
-          outputs.open("/home/alexis/benchmarks_out.txt",
+          outputs.open(mc_options.out,
                        std::fstream::out | std::fstream::trunc);
-          errors.open("/home/alexis/benchmarks_err.txt",
+          errors.open(mc_options.err,
                       std::fstream::out | std::fstream::trunc);
           proc->print<std::ofstream>(outputs, errors);
           outputs.close();
@@ -856,6 +877,7 @@ static int checked_main()
       return exit_code = 0;
     }
 
+  // Execute only the deadlock search algorithm in parallel.
   if (BENCH)
     {
       if (mc_options.has_deadlock && mc_options.model != nullptr)
