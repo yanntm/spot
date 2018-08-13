@@ -259,7 +259,7 @@ class swarmed_deadlock
     int deadlock_tag = 1;
 
     spot::message<unsigned>* msg = new spot::message<unsigned>(
-        &deadlock_msg, nullptr, 1, deadlock_tag, MPI_UNSIGNED);
+        rank, &deadlock_msg, nullptr, 1, deadlock_tag, MPI_UNSIGNED);
 
     setup();
     State initial = sys_.initial(tid_);
@@ -279,7 +279,7 @@ class swarmed_deadlock
           {
             /* This function retrieves the message
                associated with the notification. */
-            msg->match_recv();
+            msg->match_async_recv();
             deadlock_ = true;
             break;
           }
