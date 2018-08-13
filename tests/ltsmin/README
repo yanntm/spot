@@ -269,3 +269,161 @@ $ ./modelcheck --model beem-peterson.4.dve   --has-deadlock  --csv -p 3
 
 One can observe that when possible (i.e., if the OS allows it) we try
 has much as possible to pin threads to a CPU.
+
+The distributed deadlock detection is being developed :
+
+To use this algorithm it is necessary that openmpi (a message passing library 
+for distributed computing) is installed on your machine. you can download it 
+at this address https://www.open-mpi.org/software/ompi/v3.1/.
+It is also necessary to configure your environment according to your network
+ports (but we let you look at the doc https://www.open-mpi.org/doc/current/)
+
+For example we use the bond0 port for communication between our machines and 
+configure the network port with --mca btl_tcp_if_include bond0
+
+The full command to run is
+
+$ mpirun --mca orte_abort_on_non_zero_status 0 --mca btl_if_include --hostfile hostfile -np 3 modelcheck --model beem-peterson.4.dve2C --has-deadlock --timer --csv --distribute
+
+with :
+    mpirun an application launcher
+
+    <--mca [parameter name] [value]> to configure the environment
+    (by default mpi's behavior is to stop the application if a process returns
+    a non null value --mca orte_abort_on_non_zero_status 0 avoids this)
+
+    -np [number of processus] defines the number of processes to start
+    
+    <--hostfile [path to the hostfile] allows you to use a hostfile>
+    (if no hostfile is specified the processes are run 
+    in pseudo-distributed mode)
+
+if we run the parallel version we get :
+
+$ mpirun --mca orte_abort_on_non_zero_status 0 -np 1 modelcheck --model beem-peterson.4.dve2C --has-deadlock --timer --csv -p 3
+
+Thread #1: on CPU 1
+Thread #0: on CPU 0
+Thread #2: on CPU 2
+
+---- Thread number : 0
+426216 unique states visited
+1446736 transitions explored
+55158 items max in DFS search stack
+694 milliseconds
+Find following the csv: thread_id,walltimems,type,states,transitions
+@th_0,694,NO-DEADLOCK,426216,1446736
+
+---- Thread number : 1
+392567 unique states visited
+1362020 transitions explored
+62114 items max in DFS search stack
+694 milliseconds
+Find following the csv: thread_id,walltimems,type,states,transitions
+@th_1,694,NO-DEADLOCK,392567,1362020
+
+---- Thread number : 2
+522904 unique states visited
+1808831 transitions explored
+69562 items max in DFS search stack
+694 milliseconds
+Find following the csv: thread_id,walltimems,type,states,transitions
+@th_2,694,NO-DEADLOCK,522904,1808831
+
+Summary :
+No no deadlock found!
+Find following the csv: model,walltimems,memused,type,states,transitions
+#beem-peterson.4.dve2C,703,157955,NO-DEADLOCK,392567,1362020
+                       |    user time   |    sys. time   |      total     |
+                  name | ticks        % | ticks        % | ticks        % |   n
+-------------------------------------------------------------------------------
+        deadlock check |   189    100.0 |    19    100.0 |   208    100.0 |   1
+       load kripkecube |     0      0.0 |     0      0.0 |     0      0.0 |   1
+  loading ltsmin model |     0      0.0 |     0      0.0 |     0      0.0 |   1
+-------------------------------------------------------------------------------
+                 TOTAL |   189    100.0 |    19    100.0 |   208    100.0 |
+
+
+
+and distributed we have :
+
+$ mpirun --mca orte_abort_on_non_zero_status 0 --mca btl_if_include --hostfile hostfile -np 3 modelcheck --model beem-peterson.4.dve2C --has-deadlock --timer --csv --distribute
+
+I am following process 0 on host archlinux
+Thread #0: on CPU 6
+
+---- Thread number : 0
+320070 unique states visited
+1087814 transitions explored
+28466 items max in DFS search stack
+1462 milliseconds
+Find following the csv: thread_id,walltimems,type,states,transitions
+@th_0,1462,NO-DEADLOCK,320070,1087814
+
+Summary :
+No no deadlock found!
+Find following the csv: model,walltimems,memused,type,states,transitions
+#beem-peterson.4.dve2C,1803,103152,NO-DEADLOCK,320070,1087814
+                       |    user time   |    sys. time   |      total     |
+                  name | ticks        % | ticks        % | ticks        % |   n
+-------------------------------------------------------------------------------
+        deadlock check |   165      100 |    14      100 |   179      100 |   1
+       load kripkecube |     0        0 |     0        0 |     0        0 |   1
+  loading ltsmin model |     0        0 |     0        0 |     0        0 |   1
+-------------------------------------------------------------------------------
+                 TOTAL |   165      100 |    14      100 |   179      100 |
+
+I am following process 1 on host archlinux
+Thread #0: on CPU 3
+
+---- Thread number : 0
+329191 unique states visited
+1134868 transitions explored
+28465 items max in DFS search stack
+1461 milliseconds
+Find following the csv: thread_id,walltimems,type,states,transitions
+@th_0,1461,NO-DEADLOCK,329191,1134868
+
+Summary :
+No no deadlock found!
+Find following the csv: model,walltimems,memused,type,states,transitions
+#beem-peterson.4.dve2C,1803,103125,NO-DEADLOCK,329191,1134868
+                       |    user time   |    sys. time   |      total     |
+                  name | ticks        % | ticks        % | ticks        % |   n
+-------------------------------------------------------------------------------
+        deadlock check |   166      100 |    15      100 |   181      100 |   1
+       load kripkecube |     0        0 |     0        0 |     0        0 |   1
+  loading ltsmin model |     0        0 |     0        0 |     0        0 |   1
+-------------------------------------------------------------------------------
+                 TOTAL |   166      100 |    15      100 |   181      100 |
+
+I am following process 2 on host archlinux
+Thread #0: on CPU 0
+
+---- Thread number : 0
+727716 unique states visited
+2461362 transitions explored
+78157 items max in DFS search stack
+1793 milliseconds
+Find following the csv: thread_id,walltimems,type,states,transitions
+@th_0,1793,NO-DEADLOCK,727716,2461362
+
+Summary :
+No no deadlock found!
+Find following the csv: model,walltimems,memused,type,states,transitions
+#beem-peterson.4.dve2C,1802,103597,NO-DEADLOCK,727716,2461362
+                       |    user time   |    sys. time   |      total     |
+                  name | ticks        % | ticks        % | ticks        % |   n
+-------------------------------------------------------------------------------
+        deadlock check |   166      100 |    14      100 |   180      100 |   1
+       load kripkecube |     0        0 |     0        0 |     0        0 |   1
+  loading ltsmin model |     0        0 |     0        0 |     0        0 |   1
+-------------------------------------------------------------------------------
+                 TOTAL |   166      100 |    14      100 |   180      100 |
+
+
+as you can see the total execution time is slower (about double) but it is 
+necessary to understand that these are processes in the fork sense 
+and not threads which can explain this shift. The time spent searching for 
+deadlock is shorter as shown in the table above. These tests were performed in 
+a distributed pseudo context.
