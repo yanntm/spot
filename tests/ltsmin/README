@@ -427,3 +427,14 @@ necessary to understand that these are processes in the fork sense
 and not threads which can explain this shift. The time spent searching for 
 deadlock is shorter as shown in the table above. These tests were performed in 
 a distributed pseudo context.
+
+An example of a hostfile is given below for execution in distributed mode :
+
+# This is a single processor node:
+
+# This is a dual-processor node:
+ 
+# These are twelve-processor nodes. Oversubscribing 
+# to it is prevented by setting max-slots=12:
+node12 slots=12 max-slots=12
+node13 slots=12 max-slots=12
