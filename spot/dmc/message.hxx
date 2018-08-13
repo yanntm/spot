@@ -30,14 +30,17 @@
 namespace spot
 {
 template <class T>
-message<T>::message(T* send, T* recv, int size, int tag, MPI_Datatype type)
+message<T>::message(int rank, T* send, T* recv, int size, int tag,
+                    MPI_Datatype type)
 {
   this->send_buffer = send;
   this->recv_buffer = recv;
   this->size = size;
+  this->rank = rank;
   this->tag = tag;
   this->flag = 0;
   this->type = type;
+  this->persistent_request = new MPI_Request[size];
   this->request = MPI_REQUEST_NULL;
   this->msg = MPI_MESSAGE_NULL;
 }
@@ -69,16 +72,23 @@ int message<T>::async_send(int dest)
 /* This function acts like a mailbox.
    It notifies the arrival of a message by putting the flag at 1. */
 template <class T>
-int message<T>::async_probe(int from)
+int message<T>::async_probe(int src)
 {
+  int ret_val = 0;
+  MPI_Status status;
   this->flag = 0;
-  return MPI_Improbe(from, this->tag, MPI_COMM_WORLD, &this->flag, &this->msg,
-                     &this->status);
+  this->msg = MPI_MESSAGE_NULL;
+
+  ret_val = MPI_Improbe(src, this->tag, MPI_COMM_WORLD, &this->flag, &this->msg,
+                        &status);
+  this->status = status;
+
+  return ret_val;
 }
 
 // This function retrieves the message associated with the notification.
 template <class T>
-int message<T>::match_recv(void)
+int message<T>::match_async_recv(void)
 {
   /* If the user did not voluntarily provide a buffer to retrieve the message,
      a temporary buffer is used.
@@ -86,13 +96,27 @@ int message<T>::match_recv(void)
   if (this->recv_buffer == nullptr)
     {
       T* recv_buf = new T[this->size];
-      return MPI_Mrecv(recv_buf, this->size, this->type, &this->msg,
-                       &this->status);
+      return MPI_Imrecv(recv_buf, this->size, this->type, &this->msg,
+                        &this->request);
       delete[] recv_buf;
     }
 
   else
-    return MPI_Mrecv(this->recv_buffer, this->size, this->type, &this->msg,
-                     &this->status);
+    return MPI_Imrecv(this->recv_buffer, this->size, this->type, &this->msg,
+                      &this->request);
+}
+
+template <class T>
+int message<T>::init_persistent_send(int dest)
+{
+  return MPI_Send_init(this->send_buffer, this->size, this->type, dest,
+                       this->tag, MPI_COMM_WORLD,
+                       &this->persistent_request[dest]);
+}
+
+template <class T>
+int message<T>::start_persistent_send(int dest)
+{
+  return MPI_Start(&this->persistent_request[dest]);
 }
 }  // namespace spot
