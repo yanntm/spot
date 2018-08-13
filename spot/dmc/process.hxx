@@ -32,6 +32,9 @@
 
 namespace spot
 {
+/* This function retrieves the output stream of all processes and displays
+   them in a file or stream. Only the master process (rank 0)
+   makes the final display. This method allows to synchronize the displays. */
 template <typename T>
 void process::print(T& out, T& err)
 {

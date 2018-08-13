@@ -106,6 +106,8 @@ int message<T>::match_async_recv(void)
                       &this->request);
 }
 
+/* Initializes a persistent communication. This last one is associated
+   to a request. each request corresponds to a persistent communication. */
 template <class T>
 int message<T>::init_persistent_send(int dest)
 {
@@ -114,6 +116,7 @@ int message<T>::init_persistent_send(int dest)
                        &this->persistent_request[dest]);
 }
 
+// Start sending a message via a persistent channel
 template <class T>
 int message<T>::start_persistent_send(int dest)
 {
