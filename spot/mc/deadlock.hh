@@ -340,13 +340,13 @@ class swarmed_deadlock
     int deadlock_tag = 1;
     int* persistent_send_buffer = nullptr;
     int* persistent_recv_buffer = nullptr;
-    int lenght = 0;
+    int lenght = -1;
     int* state_recv = nullptr;
     int state_tag = 2;
     int cpt_pop = 0;
 
     spot::message<unsigned>* deadlock_msg = new spot::message<unsigned>(
-        rank, &deadlock, nullptr, 1, deadlock_tag, MPI_UNSIGNED);
+        &deadlock, nullptr, 1, deadlock_tag, MPI_UNSIGNED, size);
     spot::message<int>* state_msg = nullptr;
 
     setup();
@@ -365,9 +365,6 @@ class swarmed_deadlock
 
         if (deadlock_msg->get_flag())
           {
-            /* This function retrieves the message
-               associated with the notification. */
-            deadlock_msg->match_async_recv();
             deadlock_ = true;
             break;
           }
@@ -378,7 +375,13 @@ class swarmed_deadlock
 
             if (state_msg->get_flag())
               {
+                /* This function retrieves the message
+                  associated with the notification. */
                 state_msg->match_async_recv();
+
+                /* do not release because the pointer is stored directly
+                   in the shared table. Instead use the shared_states_ vector to
+                   store a copy of the pointer and release the memory later */
                 state_recv = new int[lenght];
                 std::copy_n(persistent_recv_buffer, lenght, state_recv);
                 recurssively_close((State)state_recv);
@@ -406,7 +409,7 @@ class swarmed_deadlock
                    in order to limit the number of messages sent. */
                 if (cpt_pop >= TRESHOLD)
                   {
-                    if (lenght == 0)
+                    if (lenght == -1)
                       lenght = todo_.back().s[1] + 2;
 
                     if (persistent_send_buffer == nullptr)
@@ -418,20 +421,21 @@ class swarmed_deadlock
                     /* We have a unique message structure. each send/receive is
                        done in a persistent buffer which allows to have
                        a single object and to use persistent communication.
-                       The result is then copied into a new buffer and 
+                       The result is then copied into a new buffer and
                        stored in the hash table. */
                     if (state_msg == nullptr)
                       {
                         state_msg = new spot::message<int>(
-                            rank, persistent_send_buffer,
-                            persistent_recv_buffer, lenght, state_tag, MPI_INT);
+                            persistent_send_buffer, persistent_recv_buffer,
+                            lenght, state_tag, MPI_INT, size);
 
                         for (int id = rank + 1; (id % size) != rank;
                              id = id + 1)
                           state_msg->init_persistent_send(id % size);
                       }
 
-                    std::copy_n(todo_.back().s, lenght, persistent_send_buffer);
+                    std::copy_n(todo_.back().s, lenght,
+                                persistent_send_buffer);
 
                     /* As we send a lot of data I use a communication request by
                        neighbors which allows not to congest the request. */
