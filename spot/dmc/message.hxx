@@ -30,22 +30,21 @@
 namespace spot
 {
 template <class T>
-message<T>::message(int rank, T* send, T* recv, int size, int tag,
-                    MPI_Datatype type)
+message<T>::message(T* send, T* recv, int message_size, int tag,
+                    MPI_Datatype type, int network_size)
 {
   this->send_buffer = send;
   this->recv_buffer = recv;
-  this->size = size;
-  this->rank = rank;
+  this->message_size = message_size;
   this->tag = tag;
   this->flag = 0;
   this->type = type;
-  this->persistent_request = new MPI_Request[size];
+  this->persistent_request = new MPI_Request[network_size];
   this->request = MPI_REQUEST_NULL;
   this->msg = MPI_MESSAGE_NULL;
 
-  for (int i = 0; i < size; i++)
-  this->persistent_request[i] = MPI_REQUEST_NULL;
+  for (int i = 0; i < network_size; i++)
+    this->persistent_request[i] = MPI_REQUEST_NULL;
 }
 
 template <class T>
@@ -55,9 +54,9 @@ message<T>::~message(void)
 }
 
 template <class T>
-int message<T>::get_size(void)
+int message<T>::get_message_size(void)
 {
-  return this->size;
+  return this->message_size;
 }
 
 // Returns the flag updated by a call to a function of the probe family.
@@ -70,8 +69,8 @@ int message<T>::get_flag(void)
 template <class T>
 int message<T>::async_send(int dest)
 {
-  return MPI_Isend(this->send_buffer, this->size, this->type, dest, this->tag,
-                   MPI_COMM_WORLD, &this->request);
+  return MPI_Isend(this->send_buffer, this->message_size, this->type, dest,
+                   this->tag, MPI_COMM_WORLD, &this->request);
 }
 
 /* This function acts like a mailbox.
@@ -79,36 +78,19 @@ int message<T>::async_send(int dest)
 template <class T>
 int message<T>::async_probe(int src)
 {
-  int ret_val = 0;
-  MPI_Status status;
   this->flag = 0;
   this->msg = MPI_MESSAGE_NULL;
 
-  ret_val = MPI_Improbe(src, this->tag, MPI_COMM_WORLD, &this->flag, &this->msg,
+  return MPI_Improbe(src, this->tag, MPI_COMM_WORLD, &this->flag, &this->msg,
                         &status);
-  this->status = status;
-
-  return ret_val;
 }
 
 // This function retrieves the message associated with the notification.
 template <class T>
 int message<T>::match_async_recv(void)
 {
-  /* If the user did not voluntarily provide a buffer to retrieve the message,
-     a temporary buffer is used.
-     Retrieving a message is cheaper than cancelling a request. */
-  if (this->recv_buffer == nullptr)
-    {
-      T* recv_buf = new T[this->size];
-      return MPI_Imrecv(recv_buf, this->size, this->type, &this->msg,
-                        &this->request);
-      delete[] recv_buf;
-    }
-
-  else
-    return MPI_Imrecv(this->recv_buffer, this->size, this->type, &this->msg,
-                      &this->request);
+    return MPI_Imrecv(this->recv_buffer, this->message_size, this->type,
+                      &this->msg, &this->request);
 }
 
 /* Initializes a persistent communication. This last one is associated
@@ -116,7 +98,7 @@ int message<T>::match_async_recv(void)
 template <class T>
 int message<T>::init_persistent_send(int dest)
 {
-  return MPI_Send_init(this->send_buffer, this->size, this->type, dest,
+  return MPI_Send_init(this->send_buffer, this->message_size, this->type, dest,
                        this->tag, MPI_COMM_WORLD,
                        &this->persistent_request[dest]);
 }

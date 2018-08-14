@@ -34,10 +34,10 @@ template <class T>
 class SPOT_API message
 {
  public:
-  message(int, T*, T*, int, int, MPI_Datatype);
+  message(T*, T*, int, int, MPI_Datatype, int);
   ~message(void);
 
-  int get_size(void);
+  int get_message_size(void);
   int get_flag(void);
   int async_send(int);
   int async_probe(int);
@@ -48,8 +48,7 @@ class SPOT_API message
  private:
   T* send_buffer;
   T* recv_buffer;
-  int size;
-  int rank;
+  int message_size;
   int tag;
   int flag;
   MPI_Datatype type;
