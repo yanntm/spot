@@ -42,7 +42,7 @@ Suggests: libbddx-dev
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: alternate version of BuDDy
  An alternate version of BuDDy with slightly different
- different data structures and additional functions.
+ data structures and additional functions.
 
 Package: libbddx-dev
 Architecture: any
