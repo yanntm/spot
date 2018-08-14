@@ -347,7 +347,7 @@ Find following the csv: model,walltimems,memused,type,states,transitions
 
 and distributed we have :
 
-$ mpirun --mca orte_abort_on_non_zero_status 0 --mca btl_if_include --hostfile hostfile -np 3 modelcheck --model beem-peterson.4.dve2C --has-deadlock --timer --csv --distribute
+$ mpirun --mca orte_abort_on_non_zero_status 0 -np 3 modelcheck --model beem-peterson.4.dve2C --has-deadlock --timer --csv --distribute
 
 I am following process 0 on host archlinux
 Thread #0: on CPU 6
@@ -422,7 +422,7 @@ Find following the csv: model,walltimems,memused,type,states,transitions
                  TOTAL |   166      100 |    14      100 |   180      100 |
 
 
-as you can see the total execution time is slower (about double) but it is 
+as you can see the total execution time is slower but it is 
 necessary to understand that these are processes in the fork sense 
 and not threads which can explain this shift. The time spent searching for 
 deadlock is shorter as shown in the table above. These tests were performed in 
