@@ -114,5 +114,5 @@ override_dh_compress:
 fix-js:
 	perl -pi -e 's|http://orgmode.org/mathjax/MathJax.js|file:///usr/share/javascript/mathjax/MathJax.js|' doc/userdoc/*.html
 	perl -pi -e 's|https://cdn.mathjax.org/mathjax/.*/MathJax.js|file:///usr/share/javascript/mathjax/MathJax.js|' tests/python/*.html doc/userdoc/*.html
-	perl -pi -e 's|https://cdnjs.cloudflare.com/ajax/libs/mathjax/.*/mathjax.js|file:///usr/share/javascript/mathjax/MathJax.js|' tests/python/*.html doc/userdoc/*.html
+	perl -pi -e 's|https://cdnjs.cloudflare.com/ajax/libs/mathjax/.*/MathJax.js|file:///usr/share/javascript/mathjax/MathJax.js|' tests/python/*.html doc/userdoc/*.html
 	perl -pi -e 's|https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js|file:///usr/share/javascript/jquery/jquery.min.js|' tests/python/*.html
