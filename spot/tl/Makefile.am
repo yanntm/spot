@@ -42,6 +42,7 @@ tl_HEADERS =					\
   randomltl.hh					\
   relabel.hh					\
   remove_x.hh					\
+  rewrite.hh					\
   simplify.hh					\
   snf.hh					\
   unabbrev.hh
@@ -66,6 +67,7 @@ libtl_la_SOURCES =				\
   randomltl.cc					\
   relabel.cc					\
   remove_x.cc					\
+  rewrite.cc					\
   simplify.cc					\
   snf.cc					\
   unabbrev.cc

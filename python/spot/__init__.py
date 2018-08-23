@@ -1194,3 +1194,216 @@ class twa_word:
         """
         from IPython.display import SVG
         return SVG(self.as_svg())
+
+
+def _get_pattern_mapper(mapper):
+    if mapper is None:
+        return None
+
+    if isinstance(mapper, rewriting_pattern_mapper):
+        return mapper
+
+    if callable(mapper):
+        # Mapper is a lambda, wrap it
+        class Mapper(rewriting_pattern_mapper):
+            def map(self, f):
+                r = mapper(f)
+                r.thisown = False
+                return r
+        
+        return Mapper()
+    else:
+        # Mapper is hopefully a dictionary, wrap it
+        class Mapper(rewriting_pattern_mapper):
+            def map(self, f):
+                r = mapper[f]
+                r.thisown = False
+                return r
+        
+        return Mapper()
+
+def _get_output_mapper(mapper):
+    if mapper is None:
+        return None
+
+    if isinstance(mapper, rewriting_output_mapper):
+        return mapper
+
+    if callable(mapper):
+        # Mapper is a lambda, wrap it
+        class Mapper(rewriting_output_mapper):
+            def map(self, f):
+                r = mapper(f)
+                r.thisown = False
+                return r
+        
+        return Mapper()
+    else:
+        # Mapper is hopefully a dictionary, wrap it
+        class Mapper(rewriting_output_mapper):
+            def map(self, f):
+                r = mapper[f]
+                r.thisown = False
+                return r
+        
+        return Mapper()
+
+def _get_pattern_predicate(predicate):
+    if predicate is None:
+        return None
+
+    if isinstance(predicate, rewriting_pattern_predicate):
+        return predicate
+    
+    if callable(predicate):
+        # Predicate is a lambda, wrap it
+        class Predicate(rewriting_pattern_predicate):
+            def is_match(self, match):
+                return predicate(match)
+        
+        return Predicate()
+    else:
+        # Predicate is a dictionary of lambdas, wrap it
+        class Predicate(rewriting_pattern_predicate):
+            def is_match(self, match):
+                for key in predicate:
+                    has_formula, f = match.try_get_formula(key)
+
+                    if not has_formula or not predicate[key](f):
+                        return False
+                
+                return True
+
+        return Predicate()
+
+
+def parse_rewriting_pattern(pattern, mapper = None, predicate = None):
+    r"""Parse a rewriting pattern.
+
+    See \ref parse_rewriting_recipe() for details about the syntax and
+    parameters.
+    """
+    from spot.impl import _parse_rewriting_pattern
+
+    mapper = _get_pattern_mapper(mapper)
+    predicate = _get_pattern_predicate(predicate)
+
+    pattern = _parse_rewriting_pattern(pattern, mapper, predicate)
+
+    setattr(pattern, 'mapper', mapper)
+    setattr(pattern, 'predicate', predicate)
+
+    return pattern
+
+def parse_rewriting_output(replacement, mapper = None):
+    r"""Parse a rewriting output.
+
+    See \ref parse_rewriting_recipe() for details about the syntax and
+    parameters.
+    """
+    from spot.impl import _parse_rewriting_output
+
+    mapper = _get_output_mapper(mapper)
+    output = _parse_rewriting_output(replacement, mapper)
+
+    setattr(output, 'mapper', mapper)
+
+    return output
+
+def parse_rewriting_recipe(recipe, pattern_mapper = None, output_mapper = None,
+                           predicate = None):
+    r"""Parse a rewriting recipe, according to the syntax described in the
+    Doxygen documentation for the C++ function having the same name.
+
+    Parameters
+    ----------
+    pattern_mapper : dict or callable, optional
+        Either a function that maps a string into a rewriting_pattern, or
+        a (string, rewriting_pattern) dictionary.
+    output_mapper : dict or callable, optional
+        Either a function that maps a string into a rewriting_output, or
+        a (string, rewriting_output) dictionary.
+    predicate : dict or callable, optional
+        Either a function that maps a rewriting_match to a boolean, or a
+        (string, callable) dictionary, where the string is the name of the
+        formula specified in the pattern, and the callable is a function
+        that maps a formula (with the previously described name) into a boolean.
+    """
+    from spot.impl import _parse_rewriting_recipe
+
+    pattern_mapper = _get_pattern_mapper(pattern_mapper)
+    output_mapper  = _get_output_mapper(output_mapper)
+    predicate      = _get_pattern_predicate(predicate)
+
+    recipe = _parse_rewriting_recipe(recipe, pattern_mapper, output_mapper,
+                                     predicate)
+    
+    # Save references to avoid a garbage collection
+    setattr(recipe, 'pattern_mapper', pattern_mapper)
+    setattr(recipe, 'output_mapper', output_mapper)
+    setattr(recipe, 'predicate', predicate)
+
+    return recipe
+
+@_extend(rewriting_output)
+class rewriting_output:
+    def map(self, mapper):
+        """Indicate that any formula returned by this output should be mapped
+           according to the given function."""
+        from spot.impl import _map_rewriting_output
+
+        class Mapper(formula_mapper):
+            def map(self, f):
+                return mapper(f)
+
+        if not hasattr(self, 'mappers'):
+            setattr(self, 'mappers', [])
+        
+        m = Mapper()
+
+        self.mappers.append(m)
+        self.this = _map_rewriting_output(self.this, m)
+
+    def compute_hash(self):
+        return hash(self)
+
+@_extend(rewriting_pattern)
+class rewriting_pattern:
+    def filter(self, predicate):
+        """Add a predicate that must be satisfied for this pattern to be
+           considered matched."""
+        from spot.impl import _condition_rewriting_pattern
+
+        if not hasattr(self, 'predicates'):
+            setattr(self, 'predicates', [])
+        
+        p = _get_pattern_predicate(predicate)
+
+        self.predicates.append(p)
+        self.this = _condition_rewriting_pattern(self.this, p)
+
+@_extend(rewriting_match)
+class rewriting_match:
+    def __getattr__(self, attr):
+        """Return the formula with the given name."""
+        has, value = self.try_get_formula(attr)
+
+        return value if has else None
+    
+    def __getitem__(self, item):
+        """Return the value with the given name."""
+        has, value = self.try_get_value(item)
+
+        return value if has else None
+    
+    def formulas(self, name):
+        """Return all the formulas in the current scope with the given name."""
+        from spot.impl import _rewriting_match_formulas
+
+        return _rewriting_match_formulas(self, name)
+
+    def values(self, name):
+        """Return all the values in the current scope with the given name."""
+        from spot.impl import _rewriting_match_values
+
+        return _rewriting_match_values(self, name)

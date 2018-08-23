@@ -388,6 +388,7 @@ TESTS_python = \
   python/randgen.py \
   python/relabel.py \
   python/remfin.py \
+  python/rewrite.py \
   python/satmin.py \
   python/sbacc.py \
   python/sccfilter.py \

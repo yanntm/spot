@@ -27,7 +27,8 @@
 %}
 
 
-%module(package="spot", director="1") impl
+%module(package="spot", directors="1") impl
+
 
 %include "std_shared_ptr.i"
 %include "std_vector.i"
@@ -101,6 +102,7 @@
 #include <spot/tl/nenoform.hh>
 #include <spot/tl/print.hh>
 #include <spot/tl/simplify.hh>
+#include <spot/tl/rewrite.hh>
 #include <spot/tl/unabbrev.hh>
 #include <spot/tl/randomltl.hh>
 #include <spot/tl/length.hh>
@@ -436,12 +438,14 @@ namespace swig
 namespace std {
   %template(liststr) list<std::string>;
   %template(pairunsigned) pair<unsigned, unsigned>;
+  %template(pairboolformula) pair<bool, spot::formula>;
   %template(vectorformula) vector<spot::formula>;
   %template(vectorunsigned) vector<unsigned>;
   %template(vectorpairunsigned) vector<pair<unsigned, unsigned>>;
   %template(vectorbool) vector<bool>;
   %template(vectorbdd) vector<bdd>;
   %template(vectorstring) vector<string>;
+  %template(vectorsize) vector<size_t>;
   %template(atomic_prop_set) set<spot::formula>;
   %template(relabeling_map) map<spot::formula, spot::formula>;
 }
@@ -487,6 +491,237 @@ namespace std {
     }
 %}
 
+%nodefaultctor spot::rewriting_recipe;
+%feature("novaluewrapper") spot::rewriting_recipe;
+%typemap(out, optimal="1") spot::rewriting_recipe {
+  $result = SWIG_NewPointerObj(new $1_ltype(std::move($1)),
+                               $&1_descriptor, SWIG_POINTER_OWN);
+}
+
+%feature("director") spot::python_rewriting_pattern;
+%feature("director") spot::python_rewriting_output;
+
+%feature("director") rewriting_pattern_mapper;
+%feature("director") rewriting_output_mapper;
+%feature("director") formula_mapper;
+%feature("director") rewriting_pattern_predicate;
+
+%ignore rewriting_pattern_mapper::operator();
+%ignore rewriting_output_mapper::operator();
+%ignore formula_mapper::operator();
+%ignore rewriting_pattern_predicate::operator();
+
+%{
+  struct wrapping_output final : spot::rewriting_output
+  {
+    const std::shared_ptr<spot::rewriting_output> inner;
+
+    wrapping_output(std::shared_ptr<spot::rewriting_output> i)
+      : inner(std::move(i))
+    {}
+
+    std::vector<formula> create(const rewriting_match& previous) const override
+    {
+      return inner->create(previous);
+    }
+
+    std::ostream& dump(std::ostream& os, bool parens) const override
+    {
+      return inner->dump(os, parens);
+    }
+
+    size_t compute_hash() const override
+    {
+      return inner->hash();
+    }
+  };
+
+  struct wrapping_pattern final : spot::rewriting_pattern
+  {
+    const std::shared_ptr<spot::rewriting_pattern> inner;
+
+    wrapping_pattern(std::shared_ptr<spot::rewriting_pattern> i)
+      : inner(std::move(i))
+    {}
+
+    rewriting_match match(const rewriting_match& s, const formula& f) const override
+    {
+      return inner->match(s, f);
+    }
+
+    bool try_merge(rewriting_pattern& other) override
+    {
+      return inner->try_merge(other);
+    }
+
+    void associate(std::shared_ptr<spot::rewriting_output> output) override
+    {
+      return inner->associate(output);
+    }
+
+    std::ostream& dump(std::ostream& os, unsigned depth, bool is_unique_child) const override
+    {
+      return inner->dump(os, depth, is_unique_child);
+    }
+  };
+%}
+
+%inline %{
+  struct rewriting_pattern_predicate
+  {
+    virtual bool is_match(const spot::rewriting_match& match) const = 0;
+
+    bool operator()(const spot::rewriting_match& match) const
+    {
+      return is_match(match);
+    }
+
+    virtual ~rewriting_pattern_predicate() = default;
+  };
+
+  struct rewriting_pattern_mapper
+  {
+    virtual spot::rewriting_pattern* map(const char* name) const = 0;
+
+    std::unique_ptr<spot::rewriting_pattern> operator()(const char* name) const
+    {
+      return std::make_unique<wrapping_pattern>(std::shared_ptr<spot::rewriting_pattern>(map(name)));
+    }
+
+    virtual ~rewriting_pattern_mapper() = default;
+  };
+
+  struct rewriting_output_mapper
+  {
+    virtual spot::rewriting_output* map(const char* name) const = 0;
+
+    std::unique_ptr<spot::rewriting_output> operator()(const char* name) const
+    {
+      return std::make_unique<wrapping_output>(std::shared_ptr<spot::rewriting_output>(map(name)));
+    }
+
+    virtual ~rewriting_output_mapper() = default;
+  };
+
+  struct formula_mapper
+  {
+    virtual spot::formula map(formula& f) const = 0;
+
+    inline spot::formula operator()(formula& f) const
+    {
+      return map(f);
+    }
+
+    virtual ~formula_mapper() = default;
+  };
+%}
+
+// Unfortunately we can't shadow functions in Swig (https://github.com/swig/swig/issues/980),
+// therefore we have a wrapper here that converts a *_mapper to an std::function,
+// and another wrapper in __init__.py that converts Python lambdas to *_mapper classes
+
+%ignore spot::parse_rewriting_pattern;
+%ignore spot::parse_rewriting_output;
+%ignore spot::parse_rewriting_recipe;
+%ignore spot::rewriting_pattern::condition;
+%ignore spot::rewriting_output::map;
+
+%ignore spot::rewriting_match::formulas;
+%ignore spot::rewriting_match::values;
+
+%inline %{
+  spot::rewriting_pattern* _parse_rewriting_pattern(const char* pattern, rewriting_pattern_mapper* mapper = nullptr, rewriting_pattern_predicate* predicate = nullptr)
+  {
+    rewriting_pattern::mapper wrapped_mapper;
+    rewriting_pattern::predicate wrapped_predicate;
+
+    if (mapper)
+      wrapped_mapper = std::bind(&rewriting_pattern_mapper::operator(), mapper, std::placeholders::_1);
+    if (predicate)
+      wrapped_predicate = std::bind(&rewriting_pattern_predicate::operator(), predicate, std::placeholders::_1);
+    
+    return spot::parse_rewriting_pattern(pattern, wrapped_mapper, wrapped_predicate).release();
+  }
+
+  spot::rewriting_output* _parse_rewriting_output(const char* output, rewriting_output_mapper* mapper = nullptr)
+  {
+    rewriting_output::mapper wrapped_mapper;
+
+    if (mapper)
+      wrapped_mapper = std::bind(&rewriting_output_mapper::operator(), mapper, std::placeholders::_1);
+    
+    return spot::parse_rewriting_output(output, wrapped_mapper).release();
+  }
+
+  spot::rewriting_recipe
+  _parse_rewriting_recipe(const char* recipe,
+                          rewriting_pattern_mapper* pattern_mapper = nullptr,
+                          rewriting_output_mapper* output_mapper = nullptr,
+                          rewriting_pattern_predicate* predicate = nullptr)
+  {
+    rewriting_pattern::mapper wrapped_pattern_mapper;
+    rewriting_output::mapper wrapped_output_mapper;
+    rewriting_pattern::predicate wrapped_predicate;
+
+    if (pattern_mapper)
+      wrapped_pattern_mapper = std::bind(&rewriting_pattern_mapper::operator(), pattern_mapper, std::placeholders::_1);
+    if (output_mapper)
+      wrapped_output_mapper = std::bind(&rewriting_output_mapper::operator(), output_mapper, std::placeholders::_1);
+    if (predicate)
+      wrapped_predicate = std::bind(&rewriting_pattern_predicate::operator(), predicate, std::placeholders::_1);
+
+    return spot::parse_rewriting_recipe(recipe, wrapped_pattern_mapper, wrapped_output_mapper, wrapped_predicate);
+  }
+
+  spot::rewriting_output* _map_rewriting_output(spot::rewriting_output* inner, formula_mapper* mapper)
+  {
+    std::function<formula(formula&)> wrapped_mapper = std::bind(&formula_mapper::operator(), mapper, std::placeholders::_1);
+
+    return spot::rewriting_output::map(std::unique_ptr<spot::rewriting_output>(inner), wrapped_mapper).release();
+  }
+
+  spot::rewriting_pattern* _condition_rewriting_predicate(spot::rewriting_pattern* inner, rewriting_pattern_predicate* predicate)
+  {
+    rewriting_pattern::predicate wrapped_predicate = std::bind(&rewriting_pattern_predicate::operator(), predicate, std::placeholders::_1);
+
+    return spot::rewriting_pattern::condition(std::unique_ptr<spot::rewriting_pattern>(inner), wrapped_predicate).release();
+  }
+
+  std::vector<size_t> _rewriting_match_values(spot::rewriting_match* match, const char* name)
+  {
+    std::vector<size_t> values;
+    auto it = match->values(name);
+
+    while (++it != match->end<size_t>())
+      values.push_back(*it);
+    
+    return values;
+  }
+
+  std::vector<spot::formula> _rewriting_match_formulas(spot::rewriting_match* match, const char* name)
+  {
+    std::vector<spot::formula> formulas;
+    auto it = match->formulas(name);
+
+    while (++it != match->end<spot::formula>())
+      formulas.push_back(*it);
+    
+    return formulas;
+  }
+%}
+
+%extend spot::rewriting_pattern {
+  std::string __str__() const { return $self->to_string(); }
+  std::string __repr__() const { return $self->to_string(); }
+}
+
+%extend spot::rewriting_output {
+  std::string __str__() const { return $self->to_string(); }
+  std::string __repr__() const { return $self->to_string(); }
+}
+
+
+
 %include <spot/twa/twa.hh>
 
 %include <spot/tl/apcollect.hh>
@@ -495,6 +730,7 @@ namespace std {
 %include <spot/tl/nenoform.hh>
 %include <spot/tl/print.hh>
 %include <spot/tl/simplify.hh>
+%include <spot/tl/rewrite.hh>
 %include <spot/tl/unabbrev.hh>
 %include <spot/tl/randomltl.hh>
 %include <spot/tl/length.hh>
@@ -523,6 +759,7 @@ namespace std {
   $result = SWIG_NewPointerObj(new $1_ltype($1), $&1_descriptor,
                                SWIG_POINTER_OWN);
 }
+
 
 %noexception spot::twa_graph::edges;
 %noexception spot::twa_graph::univ_dests;
@@ -1054,4 +1291,36 @@ __bool__()
   return !self->empty();
 }
 
+}
+
+%extend spot::rewriting_match {
+  std::string __repr__()
+  {
+    std::ostringstream os;
+    self->dump(os);
+    return os.str();
+  }
+
+  std::string __str__()
+  {
+    std::ostringstream os;
+    self->dump(os);
+    return os.str();
+  }
+}
+
+%extend spot::rewriting_recipe {
+  std::string __repr__()
+  {
+    std::ostringstream os;
+    self->dump(os);
+    return os.str();
+  }
+
+  std::string __str__()
+  {
+    std::ostringstream os;
+    self->dump(os);
+    return os.str();
+  }
 }
