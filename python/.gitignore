@@ -9,7 +9,6 @@ buddy.py*
 *_wrap.*
 *.pyc
 */spotimg
-ajax/*.py
 spot/impl.py
 spot/ltsmin.py
 spot/gen.py
