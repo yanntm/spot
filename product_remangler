@@ -1,0 +1,39 @@
+#!/bin/sh
+
+sed 's/(spot::<unnamed>::aut_type)0/EXPLICIT/g' | \
+sed 's/(spot::<unnamed>::aut_type)1/OTF/g' | \
+sed 's/(spot::<unnamed>::aut_type)2/KRIPKE/g' | \
+sed 's/(spot::(anonymous namespace)::aut_type)0/EXPLICIT/g' | \
+sed 's/(spot::(anonymous namespace)::aut_type)1/OTF/g' | \
+sed 's/(spot::(anonymous namespace)::aut_type)2/KRIPKE/g' | \
+sed 's/(spot::<unnamed>::aut_strength)0/STRONG/g' | \
+sed 's/(spot::<unnamed>::aut_strength)1/WEAK_L/g' | \
+sed 's/(spot::<unnamed>::aut_strength)2/WEAK/g' | \
+sed 's/(spot::(anonymous namespace)::aut_strength)0/STRONG/g' | \
+sed 's/(spot::(anonymous namespace)::aut_strength)1/WEAK_L/g' | \
+sed 's/(spot::(anonymous namespace)::aut_strength)2/WEAK/g' | \
+sed 's/spot::{anonymous}::product_state/p_state/g' | \
+sed 's/spot::{anonymous}::product_iterator/p_iterator/g' | \
+sed 's/typename spot::{anonymous}::operand<aut_type_l>::aut_t/aut_t_l/g' | \
+sed 's/typename spot::{anonymous}::operand<aut_type_r>::aut_t/aut_t_r/g' | \
+sed 's/typename spot::{anonymous}::operand<aut_type_l>::state_t/state_t_l/g' | \
+sed 's/typename spot::{anonymous}::operand<aut_type_r>::state_t/state_t_r/g' | \
+sed 's/spot::{anonymous}::aut_type aut_type_l/aut_type_l/g' | \
+sed 's/spot::{anonymous}::aut_type aut_type_r/aut_type_r/g' | \
+sed 's/spot::{anonymous}::aut_strength strength/strength/g' | \
+sed 's/spot::{anonymous}::product_emptiness_check_impl/product_emptiness_check_impl/g' | \
+sed 's/spot::{anonymous}::product_emptiness_check_displatch strength/product_emptiness_check_displatch strength/g' | \
+
+sed 's/std::shared_ptr<product_emptiness_res>/product_emptiness_res_ptr/g' | \
+sed 's/std::shared_ptr<spot::product_emptiness_res>/product_emptiness_res_ptr/g' | \
+sed 's/std::shared_ptr<twa>/twa_ptr/g' | \
+sed 's/std::shared_ptr<const twa>/const_twa_ptr/g' | \
+sed 's/std::shared_ptr<spot::twa const>/const_twa_ptr/g' | \
+sed 's/std::shared_ptr<twa_graph>/twa_graph_ptr/g' | \
+sed 's/std::shared_ptr<const twa_graph>/const_twa_graph_ptr/g' | \
+sed 's/std::shared_ptr<spot::twa_graph const>/const_twa_graph_ptr/g' | \
+sed 's/std::shared_ptr<twa_run>/twa_run_ptr/g' | \
+
+sed 's/spot::(anonymous namespace):://g' | \
+sed 's/spot::{anonymous}:://g' | \
+cat
