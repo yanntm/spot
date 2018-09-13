@@ -199,7 +199,7 @@ namespace spot
       static
       size_t state_hash(state_t s)
       {
-        return wang32_hash(s);
+        return s;
       }
 
       static
@@ -289,8 +289,9 @@ namespace spot
 
       size_t hash() const
       {
-        return wang32_hash(operand<aut_type_l>::state_hash(left_)
-                         ^ operand<aut_type_r>::state_hash(right_));
+        return
+          wang32_hash(operand<aut_type_l>::state_hash(left_)
+                      ^ wang32_hash(operand<aut_type_r>::state_hash(right_)));
       }
 
       const state_l_t get_left() const
