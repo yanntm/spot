@@ -297,6 +297,40 @@ namespace spot
     return res;
   }
 
+  std::string
+  kripkecube<cspins_state, cspins_iterator>::to_header(const cspins_state s)
+                                                                          const
+  {
+    std::string res = "";
+    if (compress_)
+      {
+        manager_[0].decompress(s, inner_[0].uncompressed_,
+                                 manager_[0].size());
+      }
+    for (int i = 0; i < d_->get_state_size(); ++i)
+      res += (std::string)(d_->get_state_variable_name(i)) + ",";
+    res.pop_back();
+    return res;
+  }
+
+  std::string
+  kripkecube<cspins_state, cspins_iterator>::to_csv(const cspins_state s) const
+  {
+    std::string res = "";
+    cspins_state out = manager_[0].unbox_state(s);
+    cspins_state ref = out;
+    if (compress_)
+      {
+        manager_[0].decompress(s, inner_[0].uncompressed_,
+                                 manager_[0].size());
+        ref = inner_[0].uncompressed_;
+      }
+    for (int i = 0; i < d_->get_state_size(); ++i)
+      res += std::to_string(ref[i]) + ",";
+    res.pop_back();
+    return res;
+  }
+
   cspins_iterator*
   kripkecube<cspins_state, cspins_iterator>::succ(const cspins_state s,
                                                   unsigned tid)

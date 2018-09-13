@@ -29,6 +29,7 @@
 #include <spot/mc/ec.hh>
 #include <spot/mc/deadlock.hh>
 #include <spot/mc/bloemen.hh>
+#include <spot/mc/print_states.hh>
 #include <spot/misc/common.hh>
 #include <spot/misc/timer.hh>
 
@@ -77,7 +78,7 @@ namespace spot
     return std::make_tuple(has_ctrx, trace, stats);
   }
 
-  /// \bief Check wether the system contains a deadlock. The algorithm
+  /// \brief Check wether the system contains a deadlock. The algorithm
   /// spawns multiple threads performing a classical swarming DFS. As
   /// soon one thread detects a deadlock all the other threads are stopped.
   template<typename kripke_ptr, typename State,
@@ -153,6 +154,42 @@ namespace spot
       delete swarmed[i];
 
     return std::make_tuple(has_deadlock, stats, tm);
+  }
+
+  /// \brief Print the states of the system in csv format.
+  /// Use a DFS and only one thread.
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::tuple<spot::timer_map>
+  print_states(kripke_ptr sys)
+  {
+    spot::timer_map tm;
+    using algo_name = spot::state_printer<State, Iterator, Hash, Equal>;
+
+    typename algo_name::shared_map map;
+
+    tm.start("Initialisation");
+    algo_name* swarmed;
+    swarmed = new algo_name(*sys, map);
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::thread thread;
+    thread = std::thread ([&swarmed, &iomutex, i = 0, & barrier]
+    {
+      swarmed->run();
+    });
+
+    tm.start("Run");
+    barrier.store(false);
+
+    thread.join();
+    tm.stop("Run");
+
+    delete swarmed;
+
+    return std::make_tuple(tm);
   }
 
   /// \brief Perform the SCC computation algorithm of bloemen.16.ppopp

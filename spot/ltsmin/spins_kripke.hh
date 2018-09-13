@@ -191,6 +191,8 @@ namespace spot
     ~kripkecube();
     cspins_state initial(unsigned tid);
     std::string to_string(const cspins_state s, unsigned tid = 0) const;
+    std::string to_header(const cspins_state s) const;
+    std::string to_csv(const cspins_state s) const;
     cspins_iterator* succ(const cspins_state s, unsigned tid);
     void recycle(cspins_iterator* it, unsigned tid);
     const std::vector<std::string> get_ap();

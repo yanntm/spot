@@ -74,6 +74,7 @@ struct mc_options_
   bool csv = false;
   bool has_deadlock = false;
   bool bloemen = false;
+  bool print_states = false;
 } mc_options;
 
 
@@ -115,6 +116,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 'h':
       mc_options.has_deadlock = true;
       mc_options.selfloopize = false;
+      break;
+    case 'i':
+      mc_options.print_states = true;
       break;
     case 'k':
       mc_options.kripke_output = true;
@@ -162,6 +166,7 @@ static const argp_option options[] =
       "check if the model has a deadlock. "
       "Return 1 if the model contains a deadlock."
       , 0 },
+    { "print-states", 'i', nullptr, 0, "print the states", 0 },
     { "parallel", 'p', "INT", 0, "use INT threads (when possible)", 0 },
     { "selfloopize", 's', "STRING", 0,
       "use STRING as property for marking deadlock "
@@ -612,6 +617,38 @@ static int checked_main()
                     << std::get<1>(res)[smallest].states << ','
                     << std::get<1>(res)[smallest].transitions
                     << '\n';
+        }
+    }
+
+    if (mc_options.print_states &&  mc_options.model != nullptr)
+    {
+      tm.start("load kripkecube");
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      try
+        {
+           modelcube = spot::ltsmin_model::load(mc_options.model)
+             .kripkecube({}, deadf, mc_options.compress, 1);
+        }
+      catch (const std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      int memused = spot::memusage();
+      tm.start("print states");
+      auto res = spot::print_states<spot::ltsmin_kripkecube_ptr,
+                                    spot::cspins_state,
+                                    spot::cspins_iterator,
+                                    spot::cspins_state_hash,
+                                    spot::cspins_state_equal>(modelcube);
+      tm.stop("print states");
+      memused = spot::memusage() - memused;
+
+      if (!modelcube)
+        {
+          exit_code = 2;
+          goto safe_exit;
         }
     }
 
