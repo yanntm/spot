@@ -42,6 +42,7 @@ class SPOT_API message
   int async_send(int);
   int async_probe(int);
   int match_async_recv(void);
+  int sync_recv(int);
   int init_persistent_send(int);
   int start_persistent_send(int);
 

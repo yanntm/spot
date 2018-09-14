@@ -1,0 +1,8 @@
+# This is a single processor node:
+
+# This is a dual-processor node:
+ 
+# These are height-processor nodes. Oversubscribing 
+# to it is prevented by setting max-slots=8:
+node7 slots=8 max-slots=8
+node8 slots=8 max-slots=8

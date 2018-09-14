@@ -82,7 +82,7 @@ int message<T>::async_probe(int src)
   this->msg = MPI_MESSAGE_NULL;
 
   return MPI_Improbe(src, this->tag, MPI_COMM_WORLD, &this->flag, &this->msg,
-                        &status);
+                        &this->status);
 }
 
 // This function retrieves the message associated with the notification.
@@ -91,6 +91,12 @@ int message<T>::match_async_recv(void)
 {
     return MPI_Imrecv(this->recv_buffer, this->message_size, this->type,
                       &this->msg, &this->request);
+}
+
+template <class T>
+int message<T>::sync_recv(int src)
+{
+  return MPI_Recv(this->recv_buffer,this->message_size,this->type,src,this->tag,MPI_COMM_WORLD,&this->status);
 }
 
 /* Initializes a persistent communication. This last one is associated

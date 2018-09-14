@@ -92,11 +92,12 @@ has_deadlock(kripke_ptr sys)
   unsigned nbth = sys->get_threads();
   typename algo_name::shared_map map;
   std::atomic<bool> stop(false);
+  std::atomic<bool> finale(false);
 
   tm.start("Initialisation");
   std::vector<algo_name*> swarmed(nbth);
   for (unsigned i = 0; i < nbth; ++i)
-    swarmed[i] = new algo_name(*sys, map, i, stop);
+    swarmed[i] = new algo_name(*sys, map, i, stop, finale);
   tm.stop("Initialisation");
 
   std::mutex iomutex;
@@ -249,6 +250,7 @@ distributed_has_deadlock(kripke_ptr sys, spot::process* proc)
   unsigned nbth = sys->get_threads();
   typename algo_name::shared_map map;
   std::atomic<bool> stop(false);
+  std::atomic<bool> finale(false);
   std::vector<deadlock_stats> stats;
   bool has_deadlock = false;
 
@@ -257,12 +259,13 @@ distributed_has_deadlock(kripke_ptr sys, spot::process* proc)
       tm.start("Initialisation");
       std::vector<algo_name*> swarmed(nbth);
       for (unsigned i = 0; i < nbth; ++i)
-        swarmed[i] = new algo_name(*sys, map, i, stop);
+        swarmed[i] = new algo_name(*sys, map, i, stop, finale);
       tm.stop("Initialisation");
 
       std::mutex iomutex;
       std::atomic<bool> barrier(true);
       std::vector<std::thread> threads(nbth);
+      proc->barrier();  // Wait all processes are ready to launch the search
       for (unsigned i = 0; i < nbth; ++i)
         {
           threads[i] = std::thread([&swarmed, &iomutex, i, &barrier, &proc] {
@@ -301,6 +304,7 @@ distributed_has_deadlock(kripke_ptr sys, spot::process* proc)
 
       for (auto& t : threads)
         t.join();
+      proc->barrier();
       tm.stop("Run");
 
       for (unsigned i = 0; i < sys->get_threads(); ++i)
@@ -319,7 +323,7 @@ distributed_has_deadlock(kripke_ptr sys, spot::process* proc)
   if (nbth == 1)
     {
       tm.start("Initialisation");
-      algo_name* swarmed = new algo_name(*sys, map, 0, stop);
+      algo_name* swarmed = new algo_name(*sys, map, 0, stop, finale);
       tm.stop("Initialisation");
 
       proc->out << "Thread #" << 0 << ": on CPU " << sched_getcpu() << '\n';

@@ -44,7 +44,9 @@
 #include <mpi.h>
 #pragma GCC diagnostic pop
 
-#define TRESHOLD 1000
+#define TRESHOLD 10
+
+#define SEND_ALL_STATES 0
 
 namespace spot
 {
@@ -108,13 +110,15 @@ class swarmed_deadlock
   using shared_map = brick::hashset::FastConcurrent<deadlock_pair, pair_hasher>;
 
   swarmed_deadlock(kripkecube<State, SuccIterator>& sys, shared_map& map,
-                   unsigned tid, std::atomic<bool>& stop)
+                   unsigned tid, std::atomic<bool>& stop,
+                   std::atomic<bool>& finale)
       : sys_(sys),
         tid_(tid),
         map_(map),
         nb_th_(std::thread::hardware_concurrency()),
         p_(sizeof(int) * std::thread::hardware_concurrency()),
-        stop_(stop)
+        stop_(stop),
+        finale_(finale)
   {
     SPOT_ASSERT(is_a_kripkecube(sys));
   }
@@ -278,10 +282,6 @@ class swarmed_deadlock
       if (it->colors[i] == static_cast<int>(CLOSED))
         return false;
 
-    // The state has already been visited by the current thread
-    if (it->colors[tid_] == static_cast<int>(OPEN))
-      return false;
-
     // Mark state as visited.
     it->colors[tid_] = CLOSED;
     return true;
@@ -291,45 +291,51 @@ class swarmed_deadlock
      this function marks all successor states as dead. */
   void recurssively_close(State s)
   {
-    // The new DFS stack
-    std::vector<todo__element> todo;
-
-    if (SPOT_LIKELY(push_and_close(s)))
+    if (!SEND_ALL_STATES)
       {
-        /* Do not use to make benchmarks.
-           Commenting this line allows to decrease the treshold. */
-        // shared_states_.push_back(s);
-        todo.push_back({s, sys_.succ(s, tid_), 0});
+        // The new DFS stack
+        std::vector<todo__element> todo;
 
-        /* Launches a second DFS course
-           to close all successors from the state received. */
-        while (!todo.empty())
+        if (SPOT_LIKELY(push_and_close(s)))
           {
-            // No need for pop since we don't keep a ptr over the array of
-            // colors.
-            if (todo.back().it->done())
-              {
-                sys_.recycle(todo.back().it, tid_);
-                todo.pop_back();
-              }
+            /* Do not use to make benchmarks.
+               Commenting this line allows to decrease the treshold. */
+            // shared_states_.push_back(s);
+            todo.push_back({s, sys_.succ(s, tid_), 0});
 
-            else
+            /* Launches a second DFS course
+               to close all successors from the state received. */
+            while (!todo.empty())
               {
-                State dst = todo.back().it->state();
-
-                if (SPOT_LIKELY(push_and_close(dst)))
+                // No need for pop since we don't keep a ptr over the array of
+                // colors.
+                if (todo.back().it->done())
                   {
-                    todo.back().it->next();
-                    todo.push_back({dst, sys_.succ(dst, tid_), 0});
+                    sys_.recycle(todo.back().it, tid_);
+                    todo.pop_back();
                   }
 
                 else
                   {
-                    todo.back().it->next();
+                    State dst = todo.back().it->state();
+
+                    if (SPOT_LIKELY(push_and_close(dst)))
+                      {
+                        todo.back().it->next();
+                        todo.push_back({dst, sys_.succ(dst, tid_), 0});
+                      }
+
+                    else
+                      {
+                        todo.back().it->next();
+                      }
                   }
               }
           }
       }
+
+    else
+      push_and_close(s);
   }
 
   void distributed_run(spot::process* proc)
@@ -337,17 +343,23 @@ class swarmed_deadlock
     int size = proc->get_size();
     int rank = proc->get_rank();
     unsigned deadlock = 0;
+    /*unsigned end = 1;*/
     int deadlock_tag = 1;
+    /*int end_tag = 3;*/
     int* persistent_send_buffer = nullptr;
     int* persistent_recv_buffer = nullptr;
     int lenght = -1;
     int* state_recv = nullptr;
+    /*int* end_buf = new int[100]();*/
     int state_tag = 2;
-    int cpt_pop = 0;
+    /*int cpt = 0;*/
+    // int cpt_pop = 0;
 
     spot::message<unsigned>* deadlock_msg = new spot::message<unsigned>(
         &deadlock, nullptr, 1, deadlock_tag, MPI_UNSIGNED, size);
     spot::message<int>* state_msg = nullptr;
+    /*spot::message<unsigned>* end_msg =
+        new spot::message<unsigned>(&end, nullptr, 1, end_tag, MPI_UNSIGNED, size);*/
 
     setup();
     State initial = sys_.initial(tid_);
@@ -355,22 +367,53 @@ class swarmed_deadlock
     if (SPOT_LIKELY(push(initial)))
       {
         todo_.push_back({initial, sys_.succ(initial, tid_), transitions_});
+        lenght = todo_.back().s[1] + 2;
+        persistent_send_buffer = new int[lenght];
+        persistent_recv_buffer = new int[lenght];
+
+        /* We have a unique message structure. each send/receive is
+           done in a persistent buffer which allows to have
+           a single object and to use persistent communication.
+           The result is then copied into a new buffer and
+           stored in the hash table. */
+        state_msg = new spot::message<int>(persistent_send_buffer,
+                                           persistent_recv_buffer, lenght,
+                                           state_tag, MPI_INT, size);
+
+        for (int id = rank + 1; (id % size) != rank; id = id + 1)
+          state_msg->init_persistent_send(id % size);
       }
 
     while (!todo_.empty() && !stop_.load(std::memory_order_relaxed))
       {
+        /*         end_msg->async_probe(MPI_ANY_SOURCE);
+
+                if (end_msg->get_flag())
+                  {
+                    goto safe_exit;
+                  }
+         */
         /* This function acts like a mailbox.
            It notifies the arrival of a message by putting the flag at 1. */
-        deadlock_msg->async_probe(MPI_ANY_SOURCE);
 
-        if (deadlock_msg->get_flag())
+        if (tid_ == 0)
           {
-            deadlock_ = true;
-            break;
-          }
+            deadlock_msg->async_probe(MPI_ANY_SOURCE);
 
-        if (state_msg != nullptr)
-          {
+            if (deadlock_msg->get_flag())
+              {
+                deadlock_ = true;
+                goto safe_exit;
+              }
+
+            /*             end_msg->async_probe(MPI_ANY_SOURCE);
+
+                        if (end_msg->get_flag())
+                          {
+                            cpt++;
+                            goto safe_exit;
+                          } */
+
             state_msg->async_probe(MPI_ANY_SOURCE);
 
             if (state_msg->get_flag())
@@ -384,8 +427,10 @@ class swarmed_deadlock
                    store a copy of the pointer and release the memory later */
                 state_recv = new int[lenght];
                 std::copy_n(persistent_recv_buffer, lenght, state_recv);
-                recurssively_close((State)state_recv);
+                push_and_close((State)state_recv);
               }
+
+            continue;
           }
 
         if (todo_.back().it->done())
@@ -403,46 +448,20 @@ class swarmed_deadlock
                     break;
                   }
 
-                cpt_pop++;
+                // cpt_pop++;
 
                 /* Sends the last state up according to the threshold
                    in order to limit the number of messages sent. */
-                if (cpt_pop >= TRESHOLD)
+                if ((todo_.size() % TRESHOLD == 0) || SEND_ALL_STATES)
                   {
-                    if (lenght == -1)
-                      lenght = todo_.back().s[1] + 2;
-
-                    if (persistent_send_buffer == nullptr)
-                      persistent_send_buffer = new int[lenght];
-
-                    if (persistent_recv_buffer == nullptr)
-                      persistent_recv_buffer = new int[lenght];
-
-                    /* We have a unique message structure. each send/receive is
-                       done in a persistent buffer which allows to have
-                       a single object and to use persistent communication.
-                       The result is then copied into a new buffer and
-                       stored in the hash table. */
-                    if (state_msg == nullptr)
-                      {
-                        state_msg = new spot::message<int>(
-                            persistent_send_buffer, persistent_recv_buffer,
-                            lenght, state_tag, MPI_INT, size);
-
-                        for (int id = rank + 1; (id % size) != rank;
-                             id = id + 1)
-                          state_msg->init_persistent_send(id % size);
-                      }
-
-                    std::copy_n(todo_.back().s, lenght,
-                                persistent_send_buffer);
+                    std::copy_n(todo_.back().s, lenght, persistent_send_buffer);
 
                     /* As we send a lot of data I use a communication request by
                        neighbors which allows not to congest the request. */
                     for (int id = rank + 1; (id % size) != rank; id = id + 1)
                       state_msg->start_persistent_send(id % size);
 
-                    cpt_pop = 0;
+                    // cpt_pop = 0;
                   }
 
                 sys_.recycle(todo_.back().it, tid_);
@@ -468,7 +487,20 @@ class swarmed_deadlock
           }
       }
 
+    for (int id = rank + 1; (id % size) != rank; id = id + 1)
+      deadlock_msg->async_send(id % size);
+
+  safe_exit:
     finalize();
+
+    while (finale_.load() == false)
+      {
+        if (tid_ == 0)
+          {
+            proc->barrier();
+            finale_= true;
+          }
+      }
   }
 
  private:
@@ -491,6 +523,7 @@ class swarmed_deadlock
   fixed_size_pool<pool_type::Unsafe> p_;  ///< \brief State Allocator
   bool deadlock_ = false;                 ///< \brief Deadlock detected?
   std::atomic<bool>& stop_;               ///< \brief Stop-the-world boolean
+  std::atomic<bool>& finale_;
   /// \brief Stack that grows according to the todo stack. It avoid multiple
   /// concurent access to the shared map.
   std::vector<int*> refs_;
