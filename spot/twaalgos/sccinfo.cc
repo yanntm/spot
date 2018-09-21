@@ -185,7 +185,7 @@ namespace spot
             if (accept)
               one_acc_scc_ = num;
             bool reject = triv ||
-            aut->acc().maybe_accepting(acc, common).is_false();
+              aut->acc().maybe_accepting(acc, common).is_false();
             node_.back().rejecting_ = reject;
             root_.pop_back();
           }
