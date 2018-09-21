@@ -290,7 +290,7 @@ namespace spot
     tm_type tm;
   };
 
-  /// \brief Struct used to start and stop  both timer and stopwatch clocks.
+  /// \brief Struct used to start and stop both timer and stopwatch clocks.
   typedef struct process_timer
   {
     void start()
