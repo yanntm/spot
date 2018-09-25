@@ -74,6 +74,7 @@ namespace spot
       std::vector<std::string>* sn_ = nullptr;
       std::map<unsigned, unsigned>* highlight_edges_ = nullptr;
       std::map<unsigned, unsigned>* highlight_states_ = nullptr;
+      bool highlight_states_show_num_ = false;
       std::vector<std::pair<unsigned, unsigned>>* sprod_ = nullptr;
       std::vector<unsigned>* orig_ = nullptr;
       std::set<unsigned>* incomplete_ = nullptr;
@@ -553,6 +554,8 @@ namespace spot
           }
         if (!opt_vertical_)
           os_ << "  rankdir=LR\n";
+        if (highlight_states_show_num_)
+          os_ << "  forcelabels=true\n";
         if (name_ || opt_show_acc_)
           {
             os_ << "  " << label_pre_;
@@ -703,6 +706,8 @@ namespace spot
                   os_ << ",filled";
                 os_ << "\", color=\"" << palette[iter->second % palette_mod]
                     << '"';
+                if (highlight_states_show_num_)
+                  os_ << ", xlabel=\"[" << iter->second << "]\"";
               }
           }
         if (!inline_state_names_ && (sn_ || sprod_ || opt_state_labels_)
@@ -847,6 +852,17 @@ namespace spot
           aut->get_named_prop<std::map<unsigned, unsigned>>("highlight-edges");
         highlight_states_ =
           aut->get_named_prop<std::map<unsigned, unsigned>>("highlight-states");
+        if (highlight_states_)
+          {
+            // If we use more than palette_mod/2 colors, we will use
+            // some extra markers to distinguish colors.
+            auto e = highlight_states_->end();
+            highlight_states_show_num_ =
+              std::find_if(highlight_states_->begin(), e,
+                           [](auto p){
+                             return p.second >= palette_mod / 2;
+                           }) != e;
+          }
         incomplete_ =
           aut->get_named_prop<std::set<unsigned>>("incomplete-states");
         graph_name_ = aut_->get_named_prop<std::string>("automaton-name");

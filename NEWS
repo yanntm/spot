@@ -54,6 +54,12 @@ New in spot 2.6.1.dev (not yet released)
     with arbitrary acceptance condition into a parity automaton,
     based on a last-appearance record (LAR) construction.
 
+  - When states are highlighted with more than 8 colors, print_dot()
+    will add some extra markers to help distinguishing the colors.
+    This helps with the fact that colors 8-15 are lighter versions of
+    colors 0-7, and that higher color numbers cycle into this 16-color
+    palette.
+
 New in spot 2.6.1  (2018-08-04)
 
   Command-line tools:
