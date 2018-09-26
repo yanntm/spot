@@ -14,6 +14,12 @@ New in spot 2.6.1.dev (not yet released)
     colors 0-7, and that higher color numbers cycle into this 16-color
     palette.
 
+  Bugs fixed:
+
+  - exclusive_ap::constrain() (called by autfilt --exclusive-ap=...)
+    would incorrectly copy the "universal" property of the input
+    automaton, causing print_hoa() to fail.
+
 New in spot 2.6.1  (2018-08-04)
 
   Command-line tools:
