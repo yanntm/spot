@@ -20,6 +20,10 @@ New in spot 2.6.1.dev (not yet released)
     would incorrectly copy the "universal" property of the input
     automaton, causing print_hoa() to fail.
 
+  - configure --disable-doxygen would actually enable it.
+
+  - Fix several warnings emited by the development version of GCC.
+
 New in spot 2.6.1  (2018-08-04)
 
   Command-line tools:
