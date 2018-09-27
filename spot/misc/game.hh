@@ -166,6 +166,19 @@ public:
 
   int compare(const state* other) const override;
 
+  reachability_state& operator=(const reachability_state& other)
+  {
+    num_ = other.num_;
+    b_ = other.b_;
+    anke_ = other.anke_;
+    return *this;
+  }
+
+  reachability_state(const reachability_state& other)
+    : num_(other.num_), b_(other.b_), anke_(other.anke_)
+  {
+  }
+
   bool operator==(const reachability_state& o) const
   {
     return compare(&o) == 0;
