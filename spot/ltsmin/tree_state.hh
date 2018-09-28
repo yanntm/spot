@@ -23,17 +23,19 @@
 #include <unordered_set>
 #include <utility>
 
+#define TSM_LEAF_NUM 2
+
 namespace std
 {
   /// \brief Hash function for unordered_set of pairs
   template<>
-  struct hash<std::pair<std::intptr_t,std::intptr_t>>
+  struct hash<std::pair<std::intptr_t, std::intptr_t>>
   {
     size_t operator()(std::pair<std::intptr_t,std::intptr_t> const& p) const noexcept
     {
       std::hash<int> hash_int;
       // Change this (really ugly)
-      size_t res = hash_int(std::get<0>(p) + hash_int(std::get<1>(p)));
+      size_t res = hash_int(p.first + hash_int(p.second));
       return res;
     }
   };
@@ -58,7 +60,10 @@ namespace spot
   class SPOT_API tree_state_manager final
   {
   public:
-    tree_state_manager(unsigned int state_size);
+    using int_pair = std::pair<std::intptr_t, std::intptr_t>;
+    using int_pair_set = std::unordered_set<int_pair>;
+
+    tree_state_manager(unsigned state_size);
     ~tree_state_manager();
 
     /// \brief Find or put a value in the tree
@@ -66,7 +71,7 @@ namespace spot
     /// \return A pair containing the reference to the found or inserted value
     /// and a boolean at true if the value has been inserted, or false if it
     /// has been found.
-    std::pair<const void*,bool> find_or_put(int *state, size_t size);
+    std::pair<const void*, bool> find_or_put(int *state, size_t size);
 
     /// \bief Get a state from a reference to a root of a state tree
     int* get_state(const void* ref);
@@ -79,10 +84,10 @@ namespace spot
     {
       tree* left_;
       tree* right_;
-      std::unordered_set<std::pair<std::intptr_t,std::intptr_t>> table_;
+      int_pair_set table_;
       int k;
 
-      node(unsigned int size);
+      node(unsigned size);
       ~node();
     };
 
@@ -92,18 +97,18 @@ namespace spot
       node* node_;
       bool leaf_;
 
-      tree(unsigned int size);
+      tree(unsigned size);
       ~tree();
     };
 
-    /// \brief Recursive find_or_put function with the tree in added parameter
-    std::pair<const void*,bool>
+    /// \brief Recursive \cr find_or_put function with the tree in added parameter
+    std::pair<const void*, bool>
       rec_find_or_put(int *state, size_t size, tree* t);
-    /// \brief find_or_put function for the table
-    std::pair<const void*,bool> table_find_or_put(
-        std::pair<std::intptr_t,std::intptr_t> element,
-        std::unordered_set<std::pair<std::intptr_t,std::intptr_t>>& table);
-    /// \brief Recursive get_state function
+    /// \brief \cr find_or_put function for the table
+    std::pair<const void*, bool> table_find_or_put(
+        int_pair element,
+        int_pair_set& table);
+    /// \brief Recursive \cr get_state function
     void rec_get_state(const void* ref, int* res, tree* t, size_t s);
 
     size_t state_size_;

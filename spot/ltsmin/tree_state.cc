@@ -25,7 +25,7 @@
 
 namespace spot
 {
-  tree_state_manager::tree_state_manager(unsigned int state_size)
+  tree_state_manager::tree_state_manager(unsigned state_size)
     : state_size_(state_size), tree_(state_size)
   {}
 
@@ -34,49 +34,45 @@ namespace spot
     /* FIXME */
   }
 
-  std::pair<const void*,bool>
+  std::pair<const void*, bool>
   tree_state_manager::find_or_put(int *state, size_t size)
   {
     return rec_find_or_put(state, size, &tree_);
   }
 
-  std::pair<const void*,bool>
+  std::pair<const void*, bool>
   tree_state_manager::rec_find_or_put(int* state, size_t size, tree* t)
   {
-    if (size == 0)
+    if (!size)
       return std::make_pair(nullptr, false);
     else if (size == 1)
       {
-        std::pair<std::intptr_t,std::intptr_t> elt =
-            std::make_pair(*state, 0);
+        int_pair elt = std::make_pair(*state, 0);
         return table_find_or_put(elt, t->node_->table_);
       }
     else if (size == 2)
       {
-        std::pair<std::intptr_t,std::intptr_t> elt =
-            std::make_pair(*state, *(state + 1));
+        int_pair elt = std::make_pair(*state, *(state + 1));
         return table_find_or_put(elt, t->node_->table_);
       }
 
-    size_t right_size = size / 2;
+    size_t right_size = size / TSM_LEAF_NUM;
     size_t left_size = size - right_size;
     int* right_state = state + left_size;
     int* left_state = state;
     auto left_res = rec_find_or_put(left_state, left_size, t->node_->left_);
     auto right_res = rec_find_or_put(right_state, right_size, t->node_->right_);
 
-    std::pair<std::intptr_t,std::intptr_t> element =
-        std::make_pair(reinterpret_cast<intptr_t>(std::get<0>(left_res)),
-                       reinterpret_cast<intptr_t>(std::get<0>(right_res)));
+    int_pair element =
+      std::make_pair(reinterpret_cast<intptr_t>(left_res.first),
+                     reinterpret_cast<intptr_t>(right_res.first));
     return table_find_or_put(element, t->node_->table_);
   }
 
-  std::pair<const void*,bool>
-  tree_state_manager::table_find_or_put(
-      std::pair<std::intptr_t,std::intptr_t> element,
-      std::unordered_set<std::pair<std::intptr_t,std::intptr_t>>& table)
+  std::pair<const void*, bool>
+  tree_state_manager::table_find_or_put(int_pair element, int_pair_set& table)
   {
-    auto search = table.find(element);
+    auto&& search = table.find(element);
     if (search != table.end())
       {
         const void* res_ptr = &(*(search));
@@ -85,7 +81,7 @@ namespace spot
     else
       {
         auto res = table.insert(element);
-        const void* res_ptr = &(*(std::get<0>(res)));
+        const void* res_ptr = &(*(res.first));
         return std::make_pair(res_ptr, true);
       }
   }
@@ -96,7 +92,7 @@ namespace spot
     int hash_value = 0;
     rec_get_state(ref, res + 2, &tree_, state_size_);
 
-    for (unsigned int i = 2; i < state_size_ + 2; i++)
+    for (unsigned i = 2; i < state_size_ + 2; i++)
       hash_value = wang32_hash(hash_value ^ res[i]);
     res[0] = hash_value;
     res[1] = state_size_;
@@ -107,47 +103,49 @@ namespace spot
   void tree_state_manager::rec_get_state(const void* ref, int* res,
                                          tree* t, size_t s)
   {
-    if (t->leaf_ && s <= 2)
+    while (!t->leaf_ || s > TSM_LEAF_NUM)
+      {
+        size_t l_s = s - s / TSM_LEAF_NUM;
+        void* ref2 = const_cast<void*>(ref);
+        int_pair ref_pair = *(static_cast<int_pair*>(ref2));
+        rec_get_state((void*)(ref_pair.second), res + l_s,
+                      t->node_->right_, s / TSM_LEAF_NUM);
+
+        ref = (void*)(ref_pair.first);
+        t = t->node_->left_;
+        s = l_s;
+      }
+
+    if (t->leaf_ && s <= TSM_LEAF_NUM)
       {
         void* ref2 = const_cast<void*>(ref);
-        std::pair<std::intptr_t,std::intptr_t> ref_pair =
-          *(static_cast<std::pair<std::intptr_t,std::intptr_t>*>(ref2));
+        int_pair ref_pair = *(static_cast<int_pair*>(ref2));
         if (s == 1)
           {
-            *res = std::get<0>(ref_pair);
+            *res = ref_pair.first;
           }
-        else if (s == 2)
+        else if (s == TSM_LEAF_NUM)
           {
-            *res = std::get<0>(ref_pair);
-            *(res + 1) = std::get<1>(ref_pair);
+            *res = ref_pair.first;
+            *(res + 1) = ref_pair.second;
           }
       }
-    else if (t->leaf_ || s <= 2)
-      throw std::runtime_error("Invalid leaf or size in tree_state\n");
-    else
-      {
-        size_t l_s = s - s / 2;
-        void* ref2 = const_cast<void*>(ref);
-        std::pair<std::intptr_t,std::intptr_t> ref_pair =
-          *(static_cast<std::pair<std::intptr_t,std::intptr_t>*>(ref2));
-        rec_get_state((void*)(std::get<0>(ref_pair)), res, t->node_->left_, l_s);
-        rec_get_state((void*)(std::get<1>(ref_pair)), res + l_s,
-                      t->node_->right_, s / 2);
-      }
+    else if (t->leaf_ || s <= TSM_LEAF_NUM)
+      SPOT_UNREACHABLE();
   }
 
-  tree_state_manager::node::node(unsigned int size)
+  tree_state_manager::node::node(unsigned size)
     : table_(size)
   {
-    if (size <= 2)
+    if (size <= TSM_LEAF_NUM)
       {
         left_ = nullptr;
         right_ = nullptr;
       }
     else
       {
-        left_ = new tree(size - size / 2);
-        right_ = new tree(size / 2);
+        left_ = new tree(size - size / TSM_LEAF_NUM);
+        right_ = new tree(size / TSM_LEAF_NUM);
       }
     k = size;
   }
@@ -158,11 +156,11 @@ namespace spot
     delete(right_);
   }
 
-  tree_state_manager::tree::tree(unsigned int size)
+  tree_state_manager::tree::tree(unsigned size)
   {
     assert(size != 0);
     this->node_ = new node(size);
-    this->leaf_ = size <= 2;
+    this->leaf_ = size <= TSM_LEAF_NUM;
   }
 
   tree_state_manager::tree::~tree()

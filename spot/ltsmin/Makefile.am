@@ -39,7 +39,9 @@ libspotltsmin_la_LIBADD = \
   $(top_builddir)/lib/libgnu.la \
   $(LIBLTDL) -lpthread
 libspotltsmin_la_LDFLAGS = -no-undefined $(SYMBOLIC_LDFLAGS)
-libspotltsmin_la_SOURCES = ltsmin.cc tree_state.cc
+libspotltsmin_la_SOURCES = \
+  ltsmin.cc \
+  tree_state.cc
 
 EXTRA_DIST = $(srcdir)/libspotltsmin.pc.in
 pkgconfigdir = $(libdir)/pkgconfig
