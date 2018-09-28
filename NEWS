@@ -1,4 +1,4 @@
-New in spot 2.6.1.dev (not yet released)
+New in spot 2.6.2.dev (not yet released)
 
   Command-line tools:
 
@@ -65,6 +65,32 @@ New in spot 2.6.1.dev (not yet released)
   - exclusive_ap::constrain() (called by autfilt --exclusive-ap=...)
     would incorrectly copy the "universal" property of the input
     automaton, causing print_hoa() to fail.
+
+New in spot 2.6.2 (2018-09-28)
+
+  Build:
+
+  - We no longer distribute the Python-based CGI script + javascript
+    code for the online translator.  Its replacement has its own
+    repository: https://gitlab.lrde.epita.fr/spot/spot-web-app/
+
+  Library:
+
+  - When states are highlighted with more than 8 colors, print_dot()
+    will add some extra markers to help distinguishing the colors.
+    This helps with the fact that colors 8-15 are lighter versions of
+    colors 0-7, and that higher color numbers cycle into this 16-color
+    palette.
+
+  Bugs fixed:
+
+  - exclusive_ap::constrain() (called by autfilt --exclusive-ap=...)
+    would incorrectly copy the "universal" property of the input
+    automaton, causing print_hoa() to fail.
+
+  - configure --disable-doxygen would actually enable it.
+
+  - Fix several warnings emited by the development version of GCC.
 
 New in spot 2.6.1  (2018-08-04)
 
