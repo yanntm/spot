@@ -37,6 +37,16 @@ New in spot 2.6.2.dev (not yet released)
       formula::F(unsigned, unsigned, formula)
       formula::G(unsigned, unsigned, formula)
 
+  - spot::unabbreviate(), used to rewrite away operators such as M or
+    W, learned to use some shorter rewritings when an argument (e) is
+    a pure eventuality or (u) is purely universal:
+
+      Fe = e
+      Gu = u
+      f R u = u
+      f M e = F(f & e)
+      f W u = G(f | u)
+
   - The twa_graph class has a new dump_storage_as_dot() method
     to show its data structure.  This is more conveniently used
     as aut.show_storage() in a Jupyter notebook.  See

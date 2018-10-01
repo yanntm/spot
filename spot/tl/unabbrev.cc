@@ -115,18 +115,30 @@ namespace spot
       case op::FStar:
         break;
       case op::F:
+        //  F e = e    if e eventual
         //  F f = true U f
         if (!re_f_)
           break;
+        if (out[0].is_eventual())
+          {
+            out = out[0];
+            break;
+          }
         out = formula::U(formula::tt(), out[0]);
         break;
       case op::G:
+        //  G u = u   if u universal
         //  G f = false R f
         //  G f = f W false
         //  G f = !F!f
         //  G f = !(true U !f)
         if (!re_g_)
           break;
+        if (out[0].is_universal())
+          {
+            out = out[0];
+            break;
+          }
         if (!re_r_)
           {
             out = formula::R(formula::ff(), out[0]);
@@ -188,6 +200,7 @@ namespace spot
           break;
         }
       case op::R:
+        // f1 R u = u   if u universal
         // f1 R f2 = f2 W (f1 & f2)
         // f1 R f2 = f2 U ((f1 & f2) | Gf2)
         // f1 R f2 = f2 U ((f1 & f2) | !F!f2)
@@ -195,8 +208,13 @@ namespace spot
         if (!re_r_)
           break;
         {
-          auto f1 = out[0];
           auto f2 = out[1];
+          if (f2.is_universal())
+            {
+              out = f2;
+              break;
+            }
+          auto f1 = out[0];
           auto f12 = formula::And({f1, f2});
           if (!re_w_)
             {
@@ -210,6 +228,7 @@ namespace spot
           break;
         }
       case op::W:
+        // f1 W u = G(f1 | u)   if u universal
         // f1 W f2 = f2 R (f2 | f1)
         // f1 W f2 = f1 U (f2 | G f1)
         // f1 W f2 = f1 U (f2 | !F !f1)
@@ -219,9 +238,15 @@ namespace spot
         {
           auto f1 = out[0];
           auto f2 = out[1];
+          if (f2.is_universal())
+            {
+              auto g = formula::G(formula::Or({f1, f2}));
+              out = re_g_ ? run(g) : g;
+              break;
+            }
           if (!re_r_)
             {
-              out = formula::R(f2, formula::Or({f2, f1}));
+              out = formula::R(f2, formula::Or({f1, f2}));
               break;
             }
           auto gf1 = formula::G(f1);
@@ -231,12 +256,21 @@ namespace spot
           break;
         }
       case op::M:
+        // f1 M e = F(f1 & e)   if e eventual
         // f1 M f2 = f2 U (g2 & f1)
         if (!re_m_)
           break;
         {
+          auto f1 = out[0];
           auto f2 = out[1];
-          out = formula::U(f2, formula::And({f2, out[0]}));
+          auto andf = formula::And({f1, f2});
+          if (f2.is_eventual())
+            {
+              auto f = formula::F(andf);
+              out = re_f_ ? run(f) : f;
+              break;
+            }
+          out = formula::U(f2, andf);
           break;
         }
       }

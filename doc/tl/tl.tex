@@ -1272,18 +1272,23 @@ instance passing the string \texttt{"\^{}ei"} will rewrite all
 occurrences of $\XOR$, $\EQUIV$ and $\IMPLIES$.
 
 \[
-\begin{array}{l@{\qquad}r@{\;}c@{\;}l}
+\begin{array}{l@{\qquad}r@{\;}c@{\;}ll}
 ``\texttt{i}" & f\IMPLIES g &\equiv&  (\NOT f)\OR g\\
 ``\texttt{e}" & f\EQUIV g &\equiv&  (f\AND g)\OR ((\NOT g)\AND(\NOT f))\\
 ``\texttt{\^{}e}" & f\XOR g &\equiv&  (f\AND\NOT g)\OR (g\AND\NOT f)\\
 ``\texttt{\^{}}"\text{~without~}``\texttt{e}" & f\XOR g &\equiv&  \NOT(f\EQUIV g)\\
+``\texttt{F}" & \F e&\equiv& e & \text{when $e$ is a pure eventuality}\\
 ``\texttt{F}" & \F f&\equiv& \1\U f\\
+``\texttt{G}" & \G u&\equiv& u & \text{when $u$ is purely universal}\\
 ``\texttt{G}"\text{~without~}``\texttt{R}" & \G f&\equiv& \0\R f \\
 ``\texttt{GR}"\text{~without~}``\texttt{W}" & \G f&\equiv& f \W \0 \\
 ``\texttt{GRW}" & \G f&\equiv& \NOT\F\NOT f \\
+``\texttt{M}" & f \M e&\equiv& \F(f\AND e) & \text{when $e$ is a pure eventuality} \\
 ``\texttt{M}" & f \M g&\equiv& g \U (g \AND f) \\
+``\texttt{R}" & f \R u&\equiv& u & \text{when $u$ is purely universal} \\
 ``\texttt{R}"\text{~without~}``\texttt{W}" & f \R g&\equiv&  g\W (f \AND g)\\
 ``\texttt{RW}" & f \R g&\equiv&  g\U ((f \AND g) \OR \G g) \\
+``\texttt{W}" & f \W u&\equiv& \G(f \OR u) & \text{when $u$ is purely universal} \\
 ``\texttt{W}"\text{~without~}``\texttt{R}" & f \W g&\equiv& g \R (g \OR f)\\
 ``\texttt{WR}" & f \W g&\equiv& f \U (g \OR \G f)\\
 \end{array}
