@@ -201,11 +201,11 @@ namespace spot
     std::vector<algo_name*> swarmed(nbth);
     for (unsigned i = 0; i < nbth; ++i)
       {
-        if (i % (init.size() - 2) == 0)
+        if (i % (init.size() + 1) == 0)
           swarmed[i] = new algo_name(*sys, map, i, stop, nullptr);
         else
           swarmed[i] = new algo_name(*sys, map, i, stop,
-                                     init[i % init.size() - 2]);
+                                     init[i % init.size()]);
       }
     tm.stop("Initialisation");
 

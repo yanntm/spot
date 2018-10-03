@@ -678,6 +678,8 @@ static int checked_main()
 
       // Display statistics
       unsigned smallest = 0;
+      unsigned total_unique = 0;
+      unsigned total = 0;
       for (unsigned i = 0; i < std::get<0>(res).size(); ++i)
         {
           if (std::get<0>(res)[i].states < std::get<0>(res)[smallest].states)
@@ -694,6 +696,8 @@ static int checked_main()
 
           if (mc_options.csv)
             {
+              total += std::get<0>(res)[i].states;
+              total_unique += std::get<0>(res)[i].unique_states;
               std::cout << "Find following the csv: "
                         << "thread_id,walltimems,type,"
                         << "states,transitions\n";
@@ -711,14 +715,15 @@ static int checked_main()
 
           std::cout << "Find following the csv: "
                     << "model,walltimems,memused,type,"
-                    << "states,transitions\n";
+                    << "states,unique states,transitions\n";
 
           std::cout << '#'
                     << split_filename(mc_options.model)
                     << ','
                     << tm.timer("traversal").walltime() << ','
                     << memused << ','
-                    << std::get<0>(res)[smallest].states << ','
+                    << total << ','
+                    << total_unique << ','
                     << std::get<0>(res)[smallest].transitions
                     << '\n';
         }

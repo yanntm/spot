@@ -36,6 +36,7 @@ namespace spot
   struct SPOT_API gs_stats
   {
     unsigned states;            ///< \brief Number of states visited
+    unsigned unique_states;     ///< \brief Number of unique states visited
     unsigned transitions;       ///< \brief Number of transitions visited
     unsigned instack_dfs;       ///< \brief Maximum DFS stack
     unsigned walltime;          ///< \brief Walltime for this thread in ms
@@ -132,6 +133,8 @@ namespace spot
       // FIXME Should we add a local cache to avoid useless allocations?
       if (!b)
         p_.deallocate(ref);
+      else
+        ++unique_states_;
 
       // The state has been mark dead by another thread
       for (unsigned i = 0; !b && i < nb_th_; ++i)
@@ -165,13 +168,21 @@ namespace spot
 
     void finalize()
     {
-      stop_ = true;
+      if (!init_)
+        stop_ = true;
+      else
+        stop_ = false;
       tm_.stop("DFS thread " + std::to_string(tid_));
     }
 
     unsigned states()
     {
       return states_;
+    }
+
+    unsigned unique_states()
+    {
+      return unique_states_;
     }
 
     unsigned transitions()
@@ -227,7 +238,7 @@ namespace spot
 
     gs_stats stats()
     {
-      return {states(), transitions(), dfs_, walltime()};
+      return {states(), unique_states(), transitions(), dfs_, walltime()};
     }
 
   private:
@@ -244,6 +255,7 @@ namespace spot
     shared_map map_;                       ///< \brief Map shared by threads
     spot::timer_map tm_;                   ///< \brief Time execution
     unsigned states_ = 0;                  ///< \brief Number of states
+    unsigned unique_states_ = 0;           ///< \brief Number of unique states
     unsigned dfs_ = 0;                     ///< \brief Maximum DFS stack size
     /// \brief Maximum number of threads that can be handled by this algorithm
     unsigned nb_th_ = 0;
