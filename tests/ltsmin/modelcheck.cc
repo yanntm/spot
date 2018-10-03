@@ -75,6 +75,7 @@ struct mc_options_
   bool has_deadlock = false;
   bool bloemen = false;
   bool print_states = false;
+  char* generated_states = nullptr;
 } mc_options;
 
 
@@ -112,6 +113,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case 'f':
       mc_options.formula = arg;
+      break;
+    case 'g':
+      mc_options.generated_states = arg;
       break;
     case 'h':
       mc_options.has_deadlock = true;
@@ -162,6 +166,8 @@ static const argp_option options[] =
       "check if the model meets its specification. "
       "Return 1 if a counterexample is found."
       , 0 },
+    { "generated-states", 'g', "STRING", 0,
+      "start threads on states in given file", 0},
     { "has-deadlock", 'h', nullptr, 0,
       "check if the model has a deadlock. "
       "Return 1 if the model contains a deadlock."
@@ -616,6 +622,99 @@ static int checked_main()
                     << (std::get<0>(res) ? "DEADLOCK," : "NO-DEADLOCK,")
                     << std::get<1>(res)[smallest].states << ','
                     << std::get<1>(res)[smallest].transitions
+                    << '\n';
+        }
+    }
+
+    if (mc_options.generated_states &&  mc_options.model != nullptr)
+    {
+      std::ifstream file(mc_options.generated_states, std::ios::in);
+      if (!file)
+        {
+          exit_code = 2;
+          goto safe_exit;
+        }
+      unsigned int hc = std::thread::hardware_concurrency();
+      if (mc_options.nb_threads > hc)
+        std::cerr << "Warning: you require " << mc_options.nb_threads
+                  << " threads, but your computer only support " << hc
+                  << ". This could slow down parallel algorithms.\n";
+
+      tm.start("load kripkecube");
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      try
+        {
+           modelcube = spot::ltsmin_model::load(mc_options.model)
+             .kripkecube({}, deadf, mc_options.compress,
+                         mc_options.nb_threads);
+        }
+      catch (const std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      int memused = spot::memusage();
+      tm.start("traversal");
+      auto res = spot::generated_states<spot::ltsmin_kripkecube_ptr,
+                                        spot::cspins_state,
+                                        spot::cspins_iterator,
+                                        spot::cspins_state_hash,
+                                        spot::cspins_state_equal>(modelcube,
+                                                                  file);
+      tm.stop("traversal");
+      memused = spot::memusage() - memused;
+
+      if (!modelcube)
+        {
+          exit_code = 2;
+          goto safe_exit;
+        }
+
+      // Display statistics
+      unsigned smallest = 0;
+      for (unsigned i = 0; i < std::get<0>(res).size(); ++i)
+        {
+          if (std::get<0>(res)[i].states < std::get<0>(res)[smallest].states)
+            smallest = i;
+
+          std::cout << "\n---- Thread number : " << i << '\n';
+          std::cout << std::get<0>(res)[i].states << " unique states visited\n";
+          std::cout << std::get<0>(res)[i].transitions
+                    << " transitions explored\n";
+          std::cout << std::get<0>(res)[i].instack_dfs
+                    << " items max in DFS search stack\n";
+          std::cout << std::get<0>(res)[i].walltime
+                    << " milliseconds\n";
+
+          if (mc_options.csv)
+            {
+              std::cout << "Find following the csv: "
+                        << "thread_id,walltimems,type,"
+                        << "states,transitions\n";
+              std::cout << "@th_" << i << ','
+                        << std::get<0>(res)[i].walltime << ','
+                        << std::get<0>(res)[i].states << ','
+                        << std::get<0>(res)[i].transitions
+                        << std::endl;
+            }
+        }
+
+      if (mc_options.csv)
+        {
+          std::cout << "\nSummary :\n";
+
+          std::cout << "Find following the csv: "
+                    << "model,walltimems,memused,type,"
+                    << "states,transitions\n";
+
+          std::cout << '#'
+                    << split_filename(mc_options.model)
+                    << ','
+                    << tm.timer("traversal").walltime() << ','
+                    << memused << ','
+                    << std::get<0>(res)[smallest].states << ','
+                    << std::get<0>(res)[smallest].transitions
                     << '\n';
         }
     }

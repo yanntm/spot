@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -27,6 +27,7 @@
 #include <utility>
 #include <spot/kripke/kripke.hh>
 #include <spot/mc/ec.hh>
+#include <spot/mc/generated_states.hh>
 #include <spot/mc/deadlock.hh>
 #include <spot/mc/bloemen.hh>
 #include <spot/mc/print_states.hh>
@@ -154,6 +155,112 @@ namespace spot
       delete swarmed[i];
 
     return std::make_tuple(has_deadlock, stats, tm);
+  }
+
+  /// \brief Apply a DFS to the model with given initial states
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::tuple<std::vector<gs_stats>, spot::timer_map>
+  generated_states(kripke_ptr sys, std::ifstream& file)
+  {
+    std::vector<int*> init;
+    int* v;
+    int i = 2;
+    int size = 3;
+    std::string token;
+    std::getline(file, token);
+    for (unsigned j = 0; j < token.size(); ++j)
+      if (token[j] == ',')
+        ++size;
+    while (std::getline(file, token))
+      {
+        i = 2;
+        v = new int[size];
+        v[1] = size;
+        std::stringstream ss(token);
+        std::string token2;
+        while (std::getline(ss, token2, ','))
+          {
+            v[i] = std::atoi(token2.c_str());
+            ++i;
+          }
+        int hash_value = 0;
+        for (int i = 2; i < size; ++i)
+          hash_value = wang32_hash(hash_value ^ v[i]);
+        v[0] = hash_value;
+        init.push_back(v);
+      }
+    spot::timer_map tm;
+    using algo_name = spot::generated_state<State, Iterator, Hash, Equal>;
+    unsigned  nbth = sys->get_threads();
+    typename algo_name::shared_map map;
+    std::atomic<bool> stop(false);
+
+    tm.start("Initialisation");
+    std::vector<algo_name*> swarmed(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        if (i % (init.size() - 2) == 0)
+          swarmed[i] = new algo_name(*sys, map, i, stop, nullptr);
+        else
+          swarmed[i] = new algo_name(*sys, map, i, stop,
+                                     init[i % init.size() - 2]);
+      }
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+        {
+#if defined(unix) || defined(__unix__) || defined(__unix)
+            {
+              std::lock_guard<std::mutex> iolock(iomutex);
+              std::cout << "Thread #" << i
+                        << ": on CPU " << sched_getcpu() << '\n';
+            }
+#endif
+
+            // Wait all threads to be instanciated.
+            while (barrier)
+              continue;
+            swarmed[i]->run();
+         });
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+        //  Pins threads to a dedicated core.
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(i, &cpuset);
+        int rc = pthread_setaffinity_np(threads[i].native_handle(),
+                                        sizeof(cpu_set_t), &cpuset);
+        if (rc != 0)
+          {
+            std::lock_guard<std::mutex> iolock(iomutex);
+            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
+          }
+#endif
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
+    tm.stop("Run");
+
+    std::vector<gs_stats> stats;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      {
+        stats.push_back(swarmed[i]->stats());
+      }
+
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
+
+    return std::make_tuple(stats, tm);
   }
 
   /// \brief Print the states of the system in csv format.
