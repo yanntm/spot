@@ -30,6 +30,7 @@
 #include <spot/mc/generated_states.hh>
 #include <spot/mc/deadlock.hh>
 #include <spot/mc/bloemen.hh>
+#include <spot/mc/scc.hh>
 #include <spot/mc/print_states.hh>
 #include <spot/misc/common.hh>
 #include <spot/misc/timer.hh>
@@ -298,6 +299,40 @@ namespace spot
 
     return std::make_tuple(tm);
   }
+
+  /// \brief Print the states/scc of the system.
+  /// Use a DFS and only one thread.
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::tuple<spot::timer_map>
+  print_states_scc(kripke_ptr sys)
+  {
+    spot::timer_map tm;
+    using algo_name = spot::display_scc<State, Iterator, Hash, Equal>;
+    using uf_name = spot::scc_uf<State, Hash, Equal>;
+
+    typename uf_name::shared_map map;
+
+    tm.start("Initialisation");
+    algo_name* swarmed;
+    uf_name uf(map, 0);
+    swarmed = new algo_name(*sys, uf, 0);
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::thread thread;
+    thread = std::thread ([&swarmed, &iomutex]
+    {
+      swarmed->run();
+    });
+
+
+    thread.join();
+    swarmed->print();
+    delete swarmed;
+    return std::make_tuple(tm);
+  }
+
 
   /// \brief Perform the SCC computation algorithm of bloemen.16.ppopp
   template<typename kripke_ptr, typename State,

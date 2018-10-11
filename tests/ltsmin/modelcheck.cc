@@ -75,6 +75,7 @@ struct mc_options_
   bool has_deadlock = false;
   bool bloemen = false;
   bool print_states = false;
+  bool display_scc = false;
   char* generated_states = nullptr;
 } mc_options;
 
@@ -124,6 +125,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 'i':
       mc_options.print_states = true;
       break;
+    case 'j':
+      mc_options.display_scc = true;
+      break;
     case 'k':
       mc_options.kripke_output = true;
       break;
@@ -162,6 +166,7 @@ static const argp_option options[] =
       "run the SCC computation of Bloemen et al. (PPOPP'16)", 0 },
     { "counterexample", 'c', nullptr, 0,
       "compute an accepting counterexample (if it exists)", 0 },
+    { "display-scc", 'j', nullptr, 0, "print the states", 0 },
     { "is-empty", 'e', nullptr, 0,
       "check if the model meets its specification. "
       "Return 1 if a counterexample is found."
@@ -750,6 +755,46 @@ static int checked_main()
           goto safe_exit;
         }
     }
+
+
+    if (mc_options.display_scc &&  mc_options.model != nullptr)
+    {
+      tm.start("load kripkecube");
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      try
+        {
+           modelcube = spot::ltsmin_model::load(mc_options.model)
+             .kripkecube({}, deadf, mc_options.compress, 1);
+        }
+      catch (const std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      int memused = spot::memusage();
+      tm.start("print states/scc");
+      auto res = spot::print_states_scc<spot::ltsmin_kripkecube_ptr,
+                                        spot::cspins_state,
+                                        spot::cspins_iterator,
+                                        spot::cspins_state_hash,
+                                        spot::cspins_state_equal>(modelcube);
+      tm.stop("print states/scc");
+      memused = spot::memusage() - memused;
+
+      if (!modelcube)
+        {
+          exit_code = 2;
+          goto safe_exit;
+        }
+    }
+
+
+
+
+
+
+
 
     if (mc_options.bloemen &&  mc_options.model != nullptr)
       {

@@ -19,6 +19,7 @@
 
 
 #include "config.h"
+#include <iostream>
 #include <spot/mc/unionfind.hh>
 #include <assert.h>
 
