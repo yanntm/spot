@@ -26,6 +26,7 @@ for f in 'Ga' \
          'Ga | Gb' \
          'Ga | GFb' \
          'Ga | FGb' \
+         'F(Ga | Gb)' \
          'XFGa | GFb | Gc' \
          '(Ga -> Gb) W c' \
 	 'F(a & !b & (!c W b))' \
@@ -33,6 +34,8 @@ for f in 'Ga' \
 do
   ltl2tgba -UH "$f" | autfilt -q --is-unambiguous
   ltl2tgba -UH "!($f)" | autfilt -q --is-unambiguous
+  ltl2tgba -BUH "$f" | autfilt -q --is-unambiguous
+  ltl2tgba -BUH "!($f)" | autfilt -q --is-unambiguous
   ltl2tgba -UH "$f" | autfilt --check |
       grep -E 'properties:.* (unambiguous|deterministic)'
   ltl2tgba -UH "!($f)" | autfilt --check |
