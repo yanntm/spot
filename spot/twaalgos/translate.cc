@@ -337,7 +337,8 @@ namespace spot
                 if (aut2 && ((type_ == BA) || (type_ & Parity))
                     && (pref_ & Deterministic))
                   return finalize(aut2);
-                if (!aut2 && (type_ & (Generic | Parity | CoBuchi)))
+                if (!aut2 && (type_ == Generic
+                              || type_ & (Parity | CoBuchi)))
                   {
                     aut2 = fg_safety_to_dca_maybe(r, simpl_->get_dict(), sba);
                     if (aut2

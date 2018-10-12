@@ -64,6 +64,13 @@ New in spot 2.6.2.dev (not yet released)
     with arbitrary acceptance condition into a parity automaton,
     based on a last-appearance record (LAR) construction.
 
+  Bugs fixed:
+
+  - Running "ltl2tgba -B" on formulas of the type FG(safety) would
+    unexpectedly use a co-Büchi automaton as an intermediate step.
+    This in turn caused "ltl2tgba -U -B" to not produce unambiguous
+    automata.
+
 New in spot 2.6.2 (2018-09-28)
 
   Build:
