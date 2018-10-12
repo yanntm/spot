@@ -381,6 +381,12 @@ ltl2tgba -Fformulas/1 --stats='%f, %s,%t' |
 
 diff formulas output
 
+# Issue #367.
+test 4 = `ltl2tgba 'GF(a<->XXa)' --stats=%s`
+test 9 = `ltl2tgba --low 'GF(a<->XXa)' --stats=%s`
+test 9 = `ltl2tgba -x gf-guarantee=0 'GF(a<->XXa)' --stats=%s`
+test 4 = `ltl2tgba --low -x gf-guarantee=1 'GF(a<->XXa)' --stats=%s`
+
 # Regression test for issue #357.  The second formula used to
 # incorrectly produce 13 edges when translated after the first one
 # because the transition were explored in a different order.

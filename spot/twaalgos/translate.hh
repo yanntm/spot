@@ -119,6 +119,8 @@ namespace spot
           delete simpl_owned_;
           build_simplifier(d);
         }
+      if (!gf_guarantee_set_)
+        gf_guarantee_ = level != Low;
     }
 
     /// \brief Convert \a f into an automaton.
@@ -149,7 +151,8 @@ namespace spot
     int skel_simul_;
     int relabel_bool_;
     int tls_impl_;
-    bool gf_guarantee_;
+    bool gf_guarantee_ = true;
+    bool gf_guarantee_set_ = false;
     bool ltl_split_;
     const option_map* opt_;
   };
