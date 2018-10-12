@@ -36,7 +36,6 @@ namespace spot
   {
     comp_susp_ = early_susp_ = skel_wdba_ = skel_simul_ = 0;
     relabel_bool_ = tls_impl_ = -1;
-    gf_guarantee_ = level_ != Low;
     ltl_split_ = true;
 
     opt_ = opt;
@@ -52,7 +51,12 @@ namespace spot
         skel_simul_ = opt->get("skel-simul", 1);
       }
     tls_impl_ = opt->get("tls-impl", -1);
-    gf_guarantee_ = opt->get("gf-guarantee", gf_guarantee_);
+    int gfg = opt->get("gf-guarantee", -1);
+    if (gfg >= 0)
+      {
+        gf_guarantee_ = !!gfg;
+        gf_guarantee_set_ = true;
+      }
     ltl_split_ = opt->get("ltl-split", 1);
   }
 
