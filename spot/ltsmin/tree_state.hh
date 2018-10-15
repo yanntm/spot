@@ -64,6 +64,8 @@ namespace spot
     using int_pair_set = std::unordered_set<int_pair>;
 
     tree_state_manager(unsigned state_size);
+    tree_state_manager(const tree_state_manager&) = delete;
+    tree_state_manager& operator=(const tree_state_manager&) = delete;
     ~tree_state_manager();
 
     /// \brief Find or put a value in the tree
@@ -75,6 +77,8 @@ namespace spot
 
     /// \bief Get a state from a reference to a root of a state tree
     int* get_state(const void* ref);
+
+    size_t get_state_size();
 
   private:
     /// \brief Node structure for the tree of the state

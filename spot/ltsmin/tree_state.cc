@@ -34,6 +34,11 @@ namespace spot
     /* FIXME */
   }
 
+  size_t tree_state_manager::get_state_size()
+  {
+    return this->state_size_;
+  }
+
   std::pair<const void*, bool>
   tree_state_manager::find_or_put(int *state, size_t size)
   {
