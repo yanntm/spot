@@ -72,7 +72,8 @@ bin_PROGRAMS = \
   ltlgrind \
   ltlsynt \
   randaut \
-  randltl
+  randltl \
+  treetest
 
 # Dummy programs used just to generate man/spot-x.7 and man/spot.7 in
 # a way that is consistent with the other man pages (e.g., with a
@@ -88,6 +89,8 @@ genltl_SOURCES = genltl.cc
 genltl_LDADD = $(top_builddir)/spot/gen/libspotgen.la $(LDADD)
 randaut_SOURCES = randaut.cc
 randltl_SOURCES = randltl.cc
+treetest_SOURCES = treetest.cc
+treetest_LDADD = $(top_builddir)/spot/ltsmin/libspotltsmin.la $(LDADD)
 ltl2tgba_SOURCES = ltl2tgba.cc
 ltl2tgta_SOURCES = ltl2tgta.cc
 ltlcross_SOURCES = ltlcross.cc
