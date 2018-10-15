@@ -83,6 +83,7 @@ enum {
   OPT_IGNORE_ERRORS,
   OPT_IMPLIED_BY,
   OPT_IMPLY,
+  OPT_LIVENESS,
   OPT_LTL,
   OPT_NEGATE,
   OPT_NNF,
@@ -183,6 +184,8 @@ static const argp_option options[] =
     { "syntactic-stutter-invariant", OPT_SYNTACTIC_SI, nullptr, 0,
       "match stutter-invariant formulas syntactically (LTL-X or siPSL)", 0 },
     { "nox", 0, nullptr, OPTION_ALIAS, nullptr, 0 },
+    { "liveness", OPT_LIVENESS, nullptr, 0,
+      "match liveness properties", 0 },
     { "safety", OPT_SAFETY, nullptr, 0,
       "match safety formulas (even pathological)", 0 },
     { "guarantee", OPT_GUARANTEE, nullptr, 0,
@@ -281,6 +284,7 @@ static bool negate = false;
 static bool boolean_to_isop = false;
 static bool unique = false;
 static bool psl = false;
+static bool liveness = false;
 static bool ltl = false;
 static bool invert = false;
 static bool boolean = false;
@@ -432,6 +436,9 @@ parse_opt(int key, char* arg, struct argp_state*)
         opt->imply = spot::formula::And({opt->imply, i});
         break;
       }
+    case OPT_LIVENESS:
+      liveness = true;
+      break;
     case OPT_LTL:
       ltl = true;
       break;
@@ -697,7 +704,7 @@ namespace
         {
           spot::twa_graph_ptr aut = nullptr;
 
-          if (!opt->acc_words.empty() && !opt->rej_words.empty())
+          if (!opt->acc_words.empty() || !opt->rej_words.empty())
             {
               aut = ltl_to_tgba_fm(f, simpl.get_dict(), true);
 
