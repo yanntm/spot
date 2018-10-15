@@ -74,6 +74,9 @@ New in spot 2.6.2.dev (not yet released)
   - ltl2tgba --low now disables the "gf-guarantee" feature, as
     documented.
 
+  - ltlfilt's --accept-word and --reject-word options were ignored
+    unless used together.
+
 New in spot 2.6.2 (2018-09-28)
 
   Build:
