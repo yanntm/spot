@@ -469,4 +469,9 @@ namespace spot
     const op* vd = v.data();
     return nesting_depth(f, vd, vd + v.size());
   }
+
+  bool is_liveness(formula f)
+  {
+    return is_liveness_automaton(ltl_to_tgba_fm(f, spot::make_bdd_dict()));
+  }
 }

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2013, 2014, 2015, 2016, 2017 Laboratoire
+// Copyright (C) 2010, 2011, 2013, 2014, 2015, 2016, 2017, 2018 Laboratoire
 // de Recherche et Développement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -104,7 +104,7 @@ namespace spot
   /// SCCs).
   ///
   /// A minimized WDBA (as returned by a successful run of
-  /// minimize_obligation()) represent safety property if it is a
+  /// minimize_obligation()) represents safety property if it is a
   /// safety automaton.
   ///
   /// \param aut the automaton to check
@@ -114,6 +114,15 @@ namespace spot
   SPOT_API bool
   is_safety_automaton(const const_twa_graph_ptr& aut,
                       scc_info* sm = nullptr);
+
+  /// \brief Whether the automaton represents a liveness property.
+  ///
+  /// An automaton represents a liveness property if after forcing the
+  /// acceptance condition to true, the resulting automaton accepts
+  /// all words.  In other words, there is no prefix that cannot be
+  /// extended into an accepting word.
+  SPOT_API bool
+  is_liveness_automaton(const const_twa_graph_ptr& aut);
 
   /// \brief Check whether an automaton is weak or terminal.
   ///

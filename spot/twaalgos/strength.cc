@@ -22,6 +22,9 @@
 #include <spot/misc/hash.hh>
 #include <spot/twaalgos/isweakscc.hh>
 #include <spot/twaalgos/mask.hh>
+#include <spot/twaalgos/minimize.hh>
+#include <spot/twaalgos/isdet.hh>
+#include <spot/twaalgos/sccfilter.hh>
 
 using namespace std::string_literals;
 
@@ -401,4 +404,13 @@ namespace spot
     std::string num = std::to_string(scc_num);
     return decompose_scc(sm, (accepting ? ('a' + num) : num).c_str());
   }
+
+  bool
+  is_liveness_automaton(const const_twa_graph_ptr& aut)
+  {
+    auto mon = minimize_monitor(scc_filter_states(aut));
+    return mon->num_states() == 1 && is_complete(mon);
+  }
+
+
 }

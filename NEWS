@@ -15,11 +15,8 @@ New in spot 2.6.2.dev (not yet released)
     Zielonka algorithm. Calude's quasi-polynomial time algorithm has
     been dropped as it was not used.
 
-  Build:
-
-  - We no longer distribute the Python-based CGI script + javascript
-    code for the online translator.  Its replacement has its own
-    repository: https://gitlab.lrde.epita.fr/spot/spot-web-app/
+  - ltlfilt learned --liveness to match formulas representing liveness
+    properties.
 
   Library:
 
@@ -63,6 +60,10 @@ New in spot 2.6.2.dev (not yet released)
   - The new function spot::to_parity() translates an automaton
     with arbitrary acceptance condition into a parity automaton,
     based on a last-appearance record (LAR) construction.
+
+  - The new function is_liveness() and is_liveness_automaton() can be
+    used to check whether a formula or an automaton represents a
+    liveness property.
 
   Bugs fixed:
 

@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
-// l'Epita (LRDE)
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
 //
@@ -184,4 +184,14 @@ namespace spot
   ///
   /// The string should be terminated by '\0' or ']'.
   SPOT_API unsigned nesting_depth(formula f, const char* opers);
+
+
+  /// \brief Check whether a formula represents a liveness property.
+  ///
+  /// A formula represents a liveness property if any finite prefix
+  /// can be extended into a word accepted by the formula.
+  ///
+  /// The test is done by conversion to automaton.  If you already
+  /// have an automaton, use spot::is_liveness_automaton() instead.
+  SPOT_API bool is_liveness(formula f);
 }

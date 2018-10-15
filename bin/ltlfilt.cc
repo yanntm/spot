@@ -700,11 +700,12 @@ namespace
 
       if (matched && (obligation || recurrence || persistence
                       || !opt->acc_words.empty()
-                      || !opt->rej_words.empty()))
+                      || !opt->rej_words.empty()
+                      || liveness))
         {
           spot::twa_graph_ptr aut = nullptr;
 
-          if (!opt->acc_words.empty() || !opt->rej_words.empty())
+          if (!opt->acc_words.empty() || !opt->rej_words.empty() || liveness)
             {
               aut = ltl_to_tgba_fm(f, simpl.get_dict(), true);
 
@@ -724,6 +725,7 @@ namespace
                       break;
                     }
 
+              matched &= !liveness || is_liveness_automaton(aut);
             }
 
           // Some combinations of options can be simplified.

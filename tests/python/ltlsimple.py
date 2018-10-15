@@ -142,3 +142,6 @@ def myparse(input):
 # This used to fail, because myparse would return a pointer
 # to pf.f inside the destroyed pf.
 assert myparse('a U b') == spot.formula('a U b')
+
+assert spot.is_liveness('a <-> GFb')
+assert not spot.is_liveness('a & GFb')

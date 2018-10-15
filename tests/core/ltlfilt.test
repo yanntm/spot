@@ -127,6 +127,16 @@ Fb
 F(a & X(!a & b))
 EOF
 
+checkopt --liveness <<EOF
+GFa | FGb
+F(GFa | Gb)
+F(b W GFa)
+GFa | Gb
+b W GFa
+a U Fb
+F(a & !Xa & Xb)
+EOF
+
 checkopt --safety <<EOF
 !({a;b[*];c}!)
 G(a & Xb)
