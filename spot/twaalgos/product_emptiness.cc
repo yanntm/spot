@@ -53,7 +53,7 @@ namespace spot
     public:
       operand_iterator(const const_twa_graph_ptr& aut, const unsigned s)
       {
-        auto out = aut->get_graph().out(s);
+        auto out = aut->out(s);
         begin_ = out.begin();
         end_ = out.end();
         it_ = begin_;
