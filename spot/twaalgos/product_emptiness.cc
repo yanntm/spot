@@ -197,7 +197,7 @@ namespace spot
       }
 
       static
-      size_t state_hash(state_t s)
+      size_t state_hash(state_t s) noexcept
       {
         return s;
       }
@@ -229,7 +229,7 @@ namespace spot
       }
 
       static
-      size_t state_hash(state_t s)
+      size_t state_hash(state_t s) noexcept
       {
         return s->hash();
       }
@@ -287,7 +287,7 @@ namespace spot
             && operand<aut_type_r>::state_equals(right_, other.right_);
       }
 
-      size_t hash() const
+      size_t hash() const noexcept
       {
         return
           wang32_hash(operand<aut_type_l>::state_hash(left_)
@@ -331,7 +331,7 @@ namespace spot
     struct product_state_hash
     {
       size_t
-      operator()(const product_state<aut_type_l, aut_type_r>& s) const
+      operator()(const product_state<aut_type_l, aut_type_r>& s) const noexcept
       {
         return s.hash();
       }
