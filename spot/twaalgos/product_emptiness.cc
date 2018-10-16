@@ -51,6 +51,8 @@ namespace spot
     class operand_iterator<EXPLICIT>
     {
     public:
+      operand_iterator() = default;
+
       operand_iterator(const const_twa_graph_ptr& aut, const unsigned s)
       {
         auto out = aut->out(s);
@@ -58,6 +60,10 @@ namespace spot
         end_ = out.end();
         it_ = begin_;
       }
+
+      operand_iterator(const twa_graph::graph_t::const_iterator it)
+        : it_(it)
+      {}
 
       void release(const const_twa_graph_ptr&)
       {}
@@ -480,6 +486,67 @@ namespace spot
 
       iterator_l_t left;
       iterator_r_t right;
+    };
+
+    // Specialization for EXPLICIT-EXPLICIT pairs
+    template<>
+    class product_iterator<EXPLICIT, EXPLICIT>
+    {
+    public:
+      product_iterator(const const_twa_graph_ptr& l_aut, unsigned l_state,
+                       const const_twa_graph_ptr& r_aut, unsigned r_state)
+        : i_(0)
+      {
+        const auto& l_out = l_aut->out(l_state);
+        const auto& r_out = r_aut->out(r_state);
+        for (auto l = l_out.begin(); l != l_out.end(); ++l)
+          for (auto r = r_out.begin(); r != r_out.end(); ++r)
+            {
+              auto cond = l->cond & r->cond;
+              if (cond == bddfalse)
+                continue;
+              dests_.emplace_back(l, r);
+            }
+        if (!done())
+        {
+          left = dests_[0].first;
+          right = dests_[0].second;
+        }
+      }
+
+      bool next()
+      {
+        if (done())
+          return false;
+        ++i_;
+        std::tie(left, right) = dests_[i_];
+        return true;
+      }
+
+      bool done() const
+      {
+        return i_ == dests_.size();
+      }
+
+      product_mark<STRONG> acc() const
+      {
+        return product_mark<STRONG>(left.acc(), right.acc());
+      }
+
+      void release(const const_twa_graph_ptr&, const const_twa_graph_ptr&)
+      {}
+
+    private:
+      using transition_pair_ = std::pair<operand_iterator<EXPLICIT>,
+                                         operand_iterator<EXPLICIT>>;
+      using transition_array_ = std::vector<transition_pair_>;
+
+    public:
+      operand_iterator<EXPLICIT> left, right;
+
+    private:
+      transition_array_ dests_;
+      unsigned i_;
     };
 
     // Represents an SCC
