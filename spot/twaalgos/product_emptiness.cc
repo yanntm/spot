@@ -803,10 +803,11 @@ namespace spot
 
       // number of visited nodes ; order/id of the next node to be created
       unsigned num = 1;
-      // the result of the product emptiness check. Contains the `Hash`
-      // structure of Couvreur's algorithm.
+      // the result of the product emptiness check
       auto res = std::make_shared<product_res<aut_type_l, aut_type_r>>
         (left, right, left_init, right_init, swapped);
+      // the `Hash` structure of Couvreur's algorithm
+      order_map<aut_type_l, aut_type_r>& states = res->states;
       // the roots of our SCCs
       std::stack<scc<strength>> root;
       // states yet to explore
@@ -822,7 +823,7 @@ namespace spot
             typename operand<aut_type_r>::state_t right_state)
         {
           p_state x(left_state, right_state);
-          auto p = res->states.emplace(x, 0);
+          auto p = states.emplace(x, 0);
           if (p.second)
             // This is a new state
             {
@@ -858,7 +859,7 @@ namespace spot
               todo.pop();
 
               assert(!root.empty());
-              if (root.top().index == res->states[curr])
+              if (root.top().index == states[curr])
                 // We are backtracking the root of an SCC
                 {
                   if (strength != WEAK)
@@ -872,7 +873,7 @@ namespace spot
                     {
                       assert(!live.empty());
                       s = live.top();
-                      res->states[s] = 0;
+                      states[s] = 0;
                       live.pop();
                     }
                   while (!(curr == s));
