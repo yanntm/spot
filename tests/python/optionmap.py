@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2010, 2012 Laboratoire de Recherche et Développement
+# Copyright (C) 2010, 2012, 2018 Laboratoire de Recherche et Développement
 # de l'EPITA.
 # Copyright (C) 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -57,3 +57,29 @@ assert res == "opt == 1"
 
 res = o.parse_options("foo=3opt == 1")
 assert res == "3opt == 1"
+
+aut1 = spot.translate('GF(a <-> XXa)', 'det')
+assert aut1.num_states() == 4
+aut2 = spot.translate('GF(a <-> XXa)', 'det', xargs='gf-guarantee=0')
+assert aut2.num_states() == 9
+
+try:
+    spot.translate('GF(a <-> XXa)', 'det', xargs='foobar=1')
+except RuntimeError as e:
+    assert "option 'foobar' was not used" in str(e)
+else:
+    raise RuntimeError("missing exception")
+
+try:
+    spot.translate('GF(a <-> XXa)').postprocess('det', xargs='gf-guarantee=0')
+except RuntimeError as e:
+    assert "option 'gf-guarantee' was not used" in str(e)
+else:
+    raise RuntimeError("missing exception")
+
+try:
+    spot.translate('GF(a <-> XXa)').postprocess('det', xargs='gf-guarantee=x')
+except RuntimeError as e:
+    assert "failed to parse option at: 'gf-guarantee=x'" in str(e)
+else:
+    raise RuntimeError("missing exception")

@@ -101,6 +101,17 @@ if 'op_ff' not in globals():
 _bdd_dict = make_bdd_dict()
 
 
+
+__om_init_tmp = option_map.__init__
+def __om_init_new(self, str=None):
+    __om_init_tmp(self)
+    if str:
+        res = self.parse_options(str)
+        if res:
+            raise RuntimeError("failed to parse option at: '" + str +"'")
+option_map.__init__ = __om_init_new
+
+
 @_extend(twa, ta)
 class twa:
     def _repr_svg_(self, opt=None):
@@ -688,7 +699,7 @@ def _postproc_translate_options(obj, default_type, *args):
     obj.set_level(optm_)
 
 
-def translate(formula, *args, dict=_bdd_dict):
+def translate(formula, *args, dict=_bdd_dict, xargs=None):
     """Translate a formula into an automaton.
 
     Keep in mind that 'Deterministic' expresses just a preference that
@@ -708,12 +719,22 @@ def translate(formula, *args, dict=_bdd_dict):
       'Colored' (only for parity acceptance)
 
     The default corresponds to 'tgba', 'small' and 'high'.
+
+    Additional options can be supplied using a `spot.option_map`, or a
+    string (that will be converted to `spot.option_map`), as the `xargs`
+    argument.  This is similar to the `-x` option of command-line tools;
+    so check out the spot-x(7) man page for details.
     """
-    a = translator(dict)
+    if type(xargs) is str:
+        xargs = option_map(xargs)
+    a = translator(dict, xargs)
     _postproc_translate_options(a, postprocessor.TGBA, *args)
     if type(formula) == str:
         formula = parse_formula(formula)
-    return a.run(formula)
+    result = a.run(formula)
+    if xargs:
+        xargs.report_unused_options()
+    return result
 
 
 formula.translate = translate
@@ -732,7 +753,7 @@ _add_formula('contains')
 _add_formula('are_equivalent', 'equivalent_to')
 
 
-def postprocess(automaton, *args, formula=None):
+def postprocess(automaton, *args, formula=None, xargs=None):
     """Post process an automaton.
 
     This applies a number of simlification algorithms, depending on
@@ -758,12 +779,22 @@ def postprocess(automaton, *args, formula=None):
     If a formula denoted by this automaton is known, pass it to as the
     optional `formula` argument; it can help some algorithms by
     providing an easy way to complement the automaton.
-    """
-    p = postprocessor()
+
+    Additional options can be supplied using a `spot.option_map`, or a
+    string (that will be converted to `spot.option_map`), as the `xargs`
+    argument.  This is similar to the `-x` option of command-line tools;
+    so check out the spot-x(7) man page for details.
+"""
+    if type(xargs) is str:
+        xargs = option_map(xargs)
+    p = postprocessor(xargs)
     if type(automaton) == str:
         automaton = globals()['automaton'](automaton)
     _postproc_translate_options(p, postprocessor.Generic, *args)
-    return p.run(automaton, formula)
+    result = p.run(automaton, formula)
+    if xargs:
+        xargs.report_unused_options()
+    return result
 
 
 twa.postprocess = postprocess

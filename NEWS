@@ -18,6 +18,16 @@ New in spot 2.6.3.dev (not yet released)
   - ltlfilt learned --liveness to match formulas representing liveness
     properties.
 
+  Python:
+
+  - spot.translate() and spot.postprocess() now take an xargs=
+    argument similar to the -x option of ltl2tgba and autfilt, making
+    it easier to fine tune these operations.  For instance
+        ltl2tgba 'GF(a <-> XXa)' --det -x gf-guarantee=0
+    would be written in Python as
+        spot.translate('GF(a <-> XXa)', 'det', xargs='gf-guarantee=0')
+    (Note: those extra options are documented in the spot-x(7) man page.)
+
   Library:
 
   - The LTL parser learned syntactic sugar for nested ranges of X
