@@ -128,7 +128,6 @@ namespace spot
 
       // Keep a ptr over the array of colors
       refs_.push_back(it->colors);
-      std::cout << sys_.to_csv(s) << std::endl;
 
       // Mark state as visited.
       it->colors[0] = OPEN;
@@ -146,12 +145,13 @@ namespace spot
 
     void run()
     {
+      int depth = 1;
       tm_.start("Print states");
       State initial = sys_.initial(0);
-      std::cout << sys_.to_header(initial) << std::endl;
       if (SPOT_LIKELY(push(initial)))
         {
           todo_.push_back({initial, sys_.succ(initial, 0)});
+          std::cout << depth << std::endl;
         }
       while (!todo_.empty())
         {
@@ -159,6 +159,7 @@ namespace spot
             {
               if (SPOT_LIKELY(pop()))
                 {
+                  depth --;
                   sys_.recycle(todo_.back().it, 0);
                   todo_.pop_back();
                 }
@@ -169,6 +170,8 @@ namespace spot
 
               if (SPOT_LIKELY(push(dst)))
                 {
+                  depth ++;
+                  std::cout << depth << std::endl;
                   todo_.back().it->next();
                   todo_.push_back({dst, sys_.succ(dst, 0)});
                 }
