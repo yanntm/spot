@@ -1,4 +1,4 @@
-New in spot 2.6.2.dev (not yet released)
+New in spot 2.6.3.dev (not yet released)
 
   Command-line tools:
 
@@ -64,6 +64,8 @@ New in spot 2.6.2.dev (not yet released)
   - The new function is_liveness() and is_liveness_automaton() can be
     used to check whether a formula or an automaton represents a
     liveness property.
+
+New in spot 2.6.3 (2019-10-17)
 
   Bugs fixed:
 
