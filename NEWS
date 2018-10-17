@@ -65,7 +65,7 @@ New in spot 2.6.3.dev (not yet released)
     used to check whether a formula or an automaton represents a
     liveness property.
 
-New in spot 2.6.3 (2019-10-17)
+New in spot 2.6.3 (2018-10-17)
 
   Bugs fixed:
 
