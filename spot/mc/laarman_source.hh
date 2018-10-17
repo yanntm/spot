@@ -26,6 +26,7 @@
 #include <thread>
 #include <vector>
 #include <utility>
+#include <spot/mc/cond_dest.hh>
 #include <spot/misc/common.hh>
 #include <spot/kripke/kripke.hh>
 #include <spot/misc/fixpool.hh>
@@ -33,134 +34,9 @@
 
 namespace spot
 {
-  template<typename State,
-           typename StateHash,
-           typename StateEqual>
-  class store
-  {
-  public:
-    enum class st_status  { LIVE, DEAD };
-    enum class claim_status  { CLAIM_FOUND, CLAIM_NEW, CLAIM_DEAD };
-
-    /// \brief Represents a Union-Find element
-    struct store_element
-    {
-      /// \brief the state handled by the element
-      State st_;
-      /// The set of worker for a given state
-      std::atomic<unsigned> worker_;
-      /// The set of worker for which this state is on DFS
-      std::atomic<unsigned> onstack_;
-      /// \brief current status for the element
-      std::atomic<st_status> st_status_;
-      /// \brief The state has been expanded by some thread
-      std::atomic<bool> expanded_;
-
-      std::atomic<bool> not_to_expand_;
-
-      /// \brief the reduced set has been computed by some thread
-      std::atomic<bool> ok_reduced_;
-      /// \brief the mutex for updating the reduced set
-      std::mutex m_reduced_;
-      /// \brief the shared reduced set.
-      std::vector<bool> reduced_;
-
-    };
-
-    /// \brief The haser for the previous store_element.
-    struct store_element_hasher
-    {
-      store_element_hasher(const store_element*)
-      { }
-
-      store_element_hasher() = default;
-
-      brick::hash::hash128_t
-      hash(const store_element* lhs) const
-      {
-        StateHash hash;
-        // Not modulo 31 according to brick::hashset specifications.
-        unsigned u = hash(lhs->st_) % (1<<30);
-        return {u, u};
-      }
-
-      bool equal(const store_element* lhs,
-                 const store_element* rhs) const
-      {
-        StateEqual equal;
-        return equal(lhs->st_, rhs->st_);
-      }
-    };
-
-    ///< \brief Shortcut to ease shared map manipulation
-    using shared_map = brick::hashset::FastConcurrent <store_element*,
-                                                       store_element_hasher>;
-
-
-    store(shared_map& map, unsigned tid):
-      map_(map), tid_(tid),
-      size_(std::thread::hardware_concurrency()),
-      nb_th_(std::thread::hardware_concurrency()), inserted_(0)
-    {
-    }
-
-    ~store() {}
-
-    std::pair<claim_status, store_element*>
-    make_claim(State a)
-    {
-      unsigned w_id = (1U << tid_);
-
-      // Setup and try to insert the new state in the shared map.
-      store_element* v = new store_element();
-      v->st_ = a;
-      v->worker_ = 0;
-      v->st_status_ = st_status::LIVE;
-      v->expanded_ = false;
-      v->not_to_expand_ = false;
-
-      auto it = map_.insert({v});
-      bool b = it.isnew();
-
-      // Insertion failed, delete element
-      // FIXME Should we add a local cache to avoid useless allocations?
-      if (!b)
-        delete v;
-      else
-        ++inserted_;
-
-      if ((*it)->st_status_.load() == st_status::DEAD)
-        return {claim_status::CLAIM_DEAD, *it};
-
-      if (((*it)->worker_.load() & w_id) != 0)
-        return {claim_status::CLAIM_FOUND, *it};
-
-      atomic_fetch_or(&((*it)->onstack_), w_id);
-      atomic_fetch_or(&((*it)->worker_), w_id);
-
-      return {claim_status::CLAIM_NEW, *it};
-    }
-
-    void make_dead(store_element* a)
-    {
-      a->st_status_.store(st_status::DEAD);
-    }
-
-    unsigned inserted()
-    {
-      return inserted_;
-    }
-
-  private:
-    shared_map map_;      ///< \brief Map shared by threads copy!
-    unsigned tid_;        ///< \brief The Id of the current thread
-    unsigned size_;       ///< \brief Maximum number of thread
-    unsigned nb_th_;      ///< \brief Current number of threads
-    unsigned inserted_;   ///< \brief The number of insert succes
-  };
 
   /// \brief This object is returned by the algorithm below
-  struct SPOT_API cond_dest_stats
+  struct SPOT_API laarman_source_stats
   {
     unsigned inserted;          ///< \brief Number of states inserted
     unsigned states;            ///< \brief Number of states visited
@@ -169,15 +45,15 @@ namespace spot
     unsigned walltime;          ///< \brief Walltime for this thread in ms
   };
 
-  /// \brief This class implements a swarmed cond_dest as described in
+  /// \brief This class implements a swarmed laarman_source as described in
   // ATVA'16. It uses a shared store to share information between threads.
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class swarmed_cond_dest
+  class swarmed_laarman_source
   {
   public:
 
-    swarmed_cond_dest(kripkecube<State, SuccIterator>& sys,
+    swarmed_laarman_source(kripkecube<State, SuccIterator>& sys,
                     store<State, StateHash, StateEqual>& store,
                     unsigned tid):
       sys_(sys),  store_(store), tid_(tid),
@@ -212,7 +88,7 @@ namespace spot
             pair.second->ok_reduced_ = true;
             pair.second->m_reduced_.unlock();
           }
-        todo_.push_back({pair.second, it});
+        todo_.push_back({pair.second, it, false});
         Rp_.emplace_back(pair.second);
         ++states_;
       }
@@ -226,6 +102,22 @@ namespace spot
 
           if (todo_.back().it->done())
             {
+              if (todo_.back().cyan_succ &&
+                  !todo_.back().e->expanded_ &&
+                  !todo_.back().e->not_to_expand_)
+                {
+                  // Systematic expansion
+                  todo_.back().e->expanded_.store(true);
+                  todo_.back().it->fireall();
+                  continue;
+                }
+
+              if (!todo_.back().e->expanded_)
+                {
+                  todo_.back().e->not_to_expand_.store(true);
+                }
+
+              // Useless ? This test is always true?
               if (todo_.back().e == Rp_.back())
                 {
                   Rp_.pop_back();
@@ -260,16 +152,15 @@ namespace spot
                       w.second->ok_reduced_ = true;
                       w.second->m_reduced_.unlock();
                     }
-                  todo_.push_back({w.second, it});
+                  todo_.push_back({w.second, it, false});
                   Rp_.emplace_back(w.second);
                   ++states_;
                 }
               else if (w.first == st_store::claim_status::CLAIM_FOUND)
                 {
-                  // An expansion is required
-                  if ((w.second->onstack_.load() & w_id) &&
-                      !todo_.back().e->expanded_.load())
-                    w.second->expanded_.store(true);
+                  // Collect if we have one cyan successor
+                  if (w.second->onstack_.load() & w_id)
+                    todo_.back().cyan_succ = true;
                 }
             }
         }
@@ -281,7 +172,7 @@ namespace spot
       return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
     }
 
-    cond_dest_stats stats()
+    laarman_source_stats stats()
     {
       return {store_.inserted(), states_, transitions_, sccs_, walltime()};
     }
@@ -291,9 +182,8 @@ namespace spot
     {
       store_element* e;
       SuccIterator* it;
+      bool cyan_succ;
     };
-
-
 
     kripkecube<State, SuccIterator>& sys_;   ///< \brief The system to check
     std::vector<todo_element> todo_;          ///< \brief The "recursive" stack
