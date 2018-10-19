@@ -147,6 +147,7 @@ namespace spot
     bool done() const;
     cspins_state state() const;
     cube condition() const;
+    size_t size() const;
 
   private:
     /// Compute the real index in the successor vector

@@ -214,6 +214,11 @@ namespace spot
     return (unsigned)  ((c*p) % s);
   }
 
+  size_t cspins_iterator::size() const
+  {
+    return successors_.size();
+  }
+
   cube cspins_iterator::condition() const
   {
     return cond_;
