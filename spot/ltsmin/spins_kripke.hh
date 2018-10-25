@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -59,23 +59,6 @@ namespace spot
     size_t operator()(const cspins_state that) const
     {
       return that[0];
-    }
-  };
-
-  /// \brief This class provides a hasher as required by the bricks classes
-  struct cspins_state_hasher
-  {
-    cspins_state_hasher(cspins_state&) { }
-    cspins_state_hasher() = default;
-    brick::hash::hash128_t hash(cspins_state t) const
-    {
-      // FIXME we should compute a better hash value for this particular
-      // case. Shall we use two differents hash functions?
-      return std::make_pair(t[0], t[0]);
-    }
-    bool equal(cspins_state lhs, cspins_state rhs) const
-    {
-      return 0 == memcmp(lhs, rhs, (2+rhs[1])* sizeof(int));
     }
   };
 
