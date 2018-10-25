@@ -113,6 +113,7 @@ namespace spot
     int* uncompressed_;
     bool compress;
     bool selfloopize;
+    std::vector<unsigned>* transitions_id;
   };
 
   // This class provides an iterator over the successors of a state.
@@ -145,6 +146,7 @@ namespace spot
     ~cspins_iterator();
     void next();
     bool done() const;
+		unsigned get_transition_id() const;
     cspins_state state() const;
     cube condition() const;
 
@@ -153,6 +155,7 @@ namespace spot
     unsigned compute_index() const;
 
     std::vector<cspins_state> successors_;
+    std::vector<unsigned> transitions_id_;
     unsigned int current_;
     cube cond_;
     unsigned tid_;
@@ -163,7 +166,6 @@ namespace spot
   template<>
   class kripkecube<cspins_state, cspins_iterator> final
   {
-
     typedef enum {
       OP_EQ_VAR, OP_NE_VAR, OP_LT_VAR, OP_GT_VAR, OP_LE_VAR, OP_GE_VAR,
       VAR_OP_EQ, VAR_OP_NE, VAR_OP_LT, VAR_OP_GT, VAR_OP_LE, VAR_OP_GE,
@@ -184,7 +186,7 @@ namespace spot
     prop_set pset_;
 
   public:
-    kripkecube(spins_interface_ptr sip, bool compress,
+    kripkecube(spins_interface_ptr sip, bool compress, std::string progress,
                std::vector<std::string> visible_aps,
                bool selfloopize, std::string dead_prop,
                unsigned int nb_threads);
@@ -195,6 +197,7 @@ namespace spot
     void recycle(cspins_iterator* it, unsigned tid);
     const std::vector<std::string> get_ap();
     unsigned get_threads();
+		bool is_progress_tr(unsigned tr);
 
   private:
     /// Parse the set of atomic proposition to have a more
@@ -205,10 +208,14 @@ namespace spot
     /// will then be given to all iterators.
     void compute_condition(cube c, cspins_state s, unsigned tid = 0);
 
+		/// Compute the list of progress transitions.
+		void compute_progress_tr();
+
     spins_interface_ptr sip_;
     const spot::spins_interface* d_; // To avoid numerous sip_.get()
     cspins_state_manager* manager_;
     bool compress_;
+		std::string progress_;
     std::vector<std::vector<cspins_iterator*>> recycle_;
     inner_callback_parameters* inner_;
     cubeset cubeset_;
@@ -216,6 +223,7 @@ namespace spot
     int dead_idx_;
     std::vector<std::string> aps_;
     unsigned int nb_threads_;
+		std::vector<int> progress_tr_;
   };
 
   /// \brief shortcut to manipulate the kripke below

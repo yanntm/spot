@@ -1040,11 +1040,14 @@ namespace spot
         sym(&d->get_successors, "get_successors");
         sym(&d->get_state_size, "get_state_variable_count");
         sym(&d->get_state_variable_name, "get_state_variable_name");
+        sym(&d->get_state_variable_count, "get_state_variable_count");
         sym(&d->get_state_variable_type, "get_state_variable_type");
         sym(&d->get_type_count, "get_state_variable_type_count");
+        sym(&d->get_transition_count, "get_transition_count");
         sym(&d->get_type_name, "get_state_variable_type_name");
         sym(&d->get_type_value_count, "get_state_variable_type_value_count");
         sym(&d->get_type_value_name, "get_state_variable_type_value");
+        sym(&d->get_transition_read_dependencies, "get_transition_read_dependencies");
       }
 
     if (d->have_property && d->have_property())
@@ -1058,7 +1061,7 @@ namespace spot
   ltsmin_kripkecube_ptr
   ltsmin_model::kripkecube(std::vector<std::string> to_observe,
                            const formula dead, int compress,
-                           unsigned int nb_threads) const
+                           unsigned int nb_threads, const std::string progress) const
   {
     // Register the "dead" proposition.  There are three cases to
     // consider:
@@ -1088,7 +1091,7 @@ namespace spot
     // Finally build the system.
     return std::make_shared<spot::kripkecube<spot::cspins_state,
                                              spot::cspins_iterator>>
-      (iface, compress, to_observe, selfloopize, dead_ap, nb_threads);
+      (iface, compress, progress, to_observe, selfloopize, dead_ap, nb_threads);
   }
 
   kripke_ptr

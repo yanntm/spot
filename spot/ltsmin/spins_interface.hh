@@ -47,11 +47,14 @@ namespace spot
     int (*get_successors)(void* m, int *in, TransitionCB, void *arg);
     int (*get_state_size)();
     const char* (*get_state_variable_name)(int var);
+    int (*get_state_variable_count)();
+    int (*get_transition_count)();
     int (*get_state_variable_type)(int var);
     int (*get_type_count)();
     const char* (*get_type_name)(int type);
     int (*get_type_value_count)(int type);
     const char* (*get_type_value_name)(int type, int value);
+    int* (*get_transition_read_dependencies)(int transition);
     ~spins_interface()
     {
       lt_dlhandle h = (lt_dlhandle) handle;

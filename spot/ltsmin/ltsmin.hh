@@ -79,7 +79,8 @@ namespace spot
     ltsmin_kripkecube_ptr kripkecube(std::vector<std::string> to_observe,
                                      formula dead = formula::tt(),
                                      int compress = 0,
-                                     unsigned int nb_threads = 1) const;
+                                     unsigned int nb_threads = 1,
+																		 const std::string progress = "progress") const;
 
     /// Number of variables in a state
     int state_size() const;

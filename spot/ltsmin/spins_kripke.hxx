@@ -95,7 +95,6 @@ namespace spot
     return state_size_;
   }
 
-
   // This class provides an iterator over the successors of a state.
   // All successors are computed once when an iterator is recycled or
   // created.
@@ -113,6 +112,7 @@ namespace spot
     successors_.reserve(10);
     inner.manager = &manager;
     inner.succ = &successors_;
+    inner.transitions_id = &transitions_id_;
     inner.compress = compress;
     inner.selfloopize = selfloopize;
     int* ref = s;
@@ -123,13 +123,14 @@ namespace spot
 
     int n = d->get_successors
       (nullptr, manager.unbox_state(ref),
-       [](void* arg, transition_info_t*, int *dst){
+       [](void* arg, transition_info_t* t, int *dst){
         inner_callback_parameters* inner =
         static_cast<inner_callback_parameters*>(arg);
         cspins_state s =
         inner->manager->alloc_setup(dst, inner->compressed_,
                                     inner->manager->size() * 2);
         inner->succ->push_back(s);
+				inner->transitions_id->push_back(t->group);
        },
        &inner);
     if (!n && selfloopize)
@@ -156,6 +157,7 @@ namespace spot
     successors_.clear();
     inner.manager = &manager;
     inner.succ = &successors_;
+    inner.transitions_id = &transitions_id_;
     inner.compress = compress;
     inner.selfloopize = selfloopize;
     int* ref  = s;
@@ -166,13 +168,14 @@ namespace spot
 
     int n = d->get_successors
       (nullptr, manager.unbox_state(ref),
-       [](void* arg, transition_info_t*, int *dst){
+       [](void* arg, transition_info_t* t, int *dst){
         inner_callback_parameters* inner =
         static_cast<inner_callback_parameters*>(arg);
         cspins_state s =
         inner->manager->alloc_setup(dst, inner->compressed_,
                                     inner->manager->size() * 2);
         inner->succ->push_back(s);
+				inner->transitions_id->push_back(t->group);
        },
        &inner);
     if (!n && selfloopize)
@@ -199,11 +202,22 @@ namespace spot
     return current_ >= successors_.size();
   }
 
+	unsigned cspins_iterator::get_transition_id() const
+	{
+		unsigned index;
+    if (SPOT_UNLIKELY(!tid_))
+      index = current_;
+		else
+			index = compute_index();
+		//std::cout << "get_transition_id() : index = " << index << ", transition_id_.size() = " << transitions_id_.size() << std::endl;
+		return transitions_id_[index];
+	}
+
   cspins_state cspins_iterator::state() const
   {
     if (SPOT_UNLIKELY(!tid_))
       return successors_[current_];
-    return   successors_[compute_index()];
+    return successors_[compute_index()];
   }
 
   unsigned cspins_iterator::compute_index() const
@@ -219,15 +233,14 @@ namespace spot
     return cond_;
   }
 
-
   kripkecube<cspins_state, cspins_iterator>
   ::kripkecube (spins_interface_ptr sip,
-                bool compress,
+                bool compress, std::string progress,
                 std::vector<std::string> visible_aps,
                 bool selfloopize, std::string dead_prop,
                 unsigned int nb_threads)
     : sip_(sip), d_(sip.get()),
-      compress_(compress), cubeset_(visible_aps.size()),
+      compress_(compress), progress_(progress), cubeset_(visible_aps.size()),
       selfloopize_(selfloopize), aps_(visible_aps),
       nb_threads_(nb_threads)
   {
@@ -245,8 +258,31 @@ namespace spot
       }
     dead_idx_ = -1;
     match_aps(visible_aps, dead_prop);
-
+		if (!progress_.empty())
+			compute_progress_tr();
   }
+
+	void kripkecube<cspins_state, cspins_iterator>::compute_progress_tr()
+	{
+		unsigned vc = d_->get_state_variable_count();
+		int var = -1;
+		for (unsigned i = 0; i < vc; i++)
+		{
+			if (progress_.compare(d_->get_state_variable_name(i)) == 0)
+				var = i;
+		}
+
+		SPOT_ASSERT(var != -1);
+
+		unsigned tc = d_->get_transition_count();
+		progress_tr_.resize(tc);
+
+		for (unsigned i = 0; i < tc; i++)
+			{
+				int* v_write = d_->get_transition_read_dependencies(i);
+				progress_tr_[i] = v_write[var];
+			}
+	}
 
   kripkecube<cspins_state, cspins_iterator>::~kripkecube()
   {
@@ -335,6 +371,12 @@ namespace spot
   {
     return nb_threads_;
   }
+
+	bool kripkecube<cspins_state, cspins_iterator>::is_progress_tr(unsigned tr)
+	{
+		//std::cout << "is_progress_tr(" << tr << ") : " << progress_tr_[tr] << std::endl;
+		return progress_tr_[tr];
+	}
 
   void
   kripkecube<cspins_state, cspins_iterator>::compute_condition

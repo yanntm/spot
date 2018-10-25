@@ -155,7 +155,7 @@ namespace spot
     bool pop()
     {
       // Track maximum dfs size
-      dfs_ = todo_.size()  > dfs_ ? todo_.size() : dfs_;
+      dfs_ = todo_.size() > dfs_ ? todo_.size() : dfs_;
 
       // Don't avoid pop but modify the status of the state
       // during backtrack
