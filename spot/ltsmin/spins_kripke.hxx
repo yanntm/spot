@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -95,22 +95,35 @@ namespace spot
     return state_size_;
   }
 
-
-  // This class provides an iterator over the successors of a state.
-  // All successors are computed once when an iterator is recycled or
-  // created.
-  cspins_iterator::cspins_iterator(cspins_state s,
-                                   const spot::spins_interface* d,
-                                   cspins_state_manager& manager,
-                                   inner_callback_parameters& inner,
-                                   cube cond,
-                                   bool compress,
-                                   bool selfloopize,
-                                   cubeset& cubeset,
-                                   int dead_idx, unsigned tid)
-    :  current_(0), cond_(cond), tid_(tid)
+  cspins_iterator::cspins_iterator(cspins_iterator_param& p)
+    :  current_(0), cond_(p.cond), tid_(p.tid)
   {
     successors_.reserve(10);
+    setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
+                   p.selfloopize, p.cubeset, p.dead_idx);
+  }
+
+  void cspins_iterator::recycle(cspins_iterator_param& p)
+  {
+    tid_ = p.tid;
+    cond_ = p.cond;
+    current_ = 0;
+    // Constant time since int* is is_trivially_destructible
+    successors_.clear();
+    setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
+                   p.selfloopize, p.cubeset, p.dead_idx);
+  }
+
+  void cspins_iterator::setup_iterator(cspins_state s,
+                                       const spot::spins_interface* d,
+                                       cspins_state_manager& manager,
+                                       inner_callback_parameters& inner,
+                                       cube& cond,
+                                       bool compress,
+                                       bool selfloopize,
+                                       cubeset& cubeset,
+                                       int dead_idx)
+  {
     inner.manager = &manager;
     inner.succ = &successors_;
     inner.compress = compress;
@@ -119,7 +132,7 @@ namespace spot
 
     if (compress)
       // already filled by compute_condition
-      ref = inner.uncompressed_;
+      ref = inner.uncompressed;
 
     int n = d->get_successors
       (nullptr, manager.unbox_state(ref),
@@ -127,7 +140,7 @@ namespace spot
         inner_callback_parameters* inner =
         static_cast<inner_callback_parameters*>(arg);
         cspins_state s =
-        inner->manager->alloc_setup(dst, inner->compressed_,
+        inner->manager->alloc_setup(dst, inner->compressed,
                                     inner->manager->size() * 2);
         inner->succ->push_back(s);
        },
@@ -138,49 +151,7 @@ namespace spot
         if (dead_idx != -1)
           cubeset.set_true_var(cond, dead_idx);
       }
-  }
 
-  void cspins_iterator::recycle(cspins_state s,
-                                const spot::spins_interface* d,
-                                cspins_state_manager& manager,
-                                inner_callback_parameters& inner,
-                                cube cond,
-                                bool compress,
-                                bool selfloopize,
-                                cubeset& cubeset, int dead_idx, unsigned tid)
-  {
-    tid_ = tid;
-    cond_ = cond;
-    current_ = 0;
-    // Constant time since int* is is_trivially_destructible
-    successors_.clear();
-    inner.manager = &manager;
-    inner.succ = &successors_;
-    inner.compress = compress;
-    inner.selfloopize = selfloopize;
-    int* ref  = s;
-
-    if (compress)
-      // Already filled by compute_condition
-      ref = inner.uncompressed_;
-
-    int n = d->get_successors
-      (nullptr, manager.unbox_state(ref),
-       [](void* arg, transition_info_t*, int *dst){
-        inner_callback_parameters* inner =
-        static_cast<inner_callback_parameters*>(arg);
-        cspins_state s =
-        inner->manager->alloc_setup(dst, inner->compressed_,
-                                    inner->manager->size() * 2);
-        inner->succ->push_back(s);
-       },
-       &inner);
-    if (!n && selfloopize)
-      {
-        successors_.push_back(s);
-        if (dead_idx != -1)
-          cubeset.set_true_var(cond, dead_idx);
-      }
   }
 
   cspins_iterator::~cspins_iterator()
@@ -240,8 +211,8 @@ namespace spot
         recycle_.back().reserve(2000000);
         new (&manager_[i])
           cspins_state_manager(d_->get_state_size(), compress);
-        inner_[i].compressed_ = new int[d_->get_state_size() * 2];
-        inner_[i].uncompressed_ = new int[d_->get_state_size()+30];
+        inner_[i].compressed = new int[d_->get_state_size() * 2];
+        inner_[i].uncompressed = new int[d_->get_state_size()+30];
       }
     dead_idx_ = -1;
     match_aps(visible_aps, dead_prop);
@@ -262,8 +233,8 @@ namespace spot
     for (unsigned i = 0; i < nb_threads_; ++i)
       {
         manager_[i].~cspins_state_manager();
-        delete[] inner_[i].compressed_;
-        delete[] inner_[i].uncompressed_;
+        delete[] inner_[i].compressed;
+        delete[] inner_[i].uncompressed;
       }
     ::operator delete(manager_);
     delete[] inner_;
@@ -271,9 +242,9 @@ namespace spot
 
   cspins_state kripkecube<cspins_state, cspins_iterator>::initial(unsigned tid)
   {
-    d_->get_initial_state(inner_[tid].uncompressed_);
-    return manager_[tid].alloc_setup(inner_[tid].uncompressed_,
-                                     inner_[tid].compressed_,
+    d_->get_initial_state(inner_[tid].uncompressed);
+    return manager_[tid].alloc_setup(inner_[tid].uncompressed,
+                                     inner_[tid].compressed,
                                      manager_[tid].size() * 2);
   }
 
@@ -286,9 +257,9 @@ namespace spot
     cspins_state ref = out;
     if (compress_)
       {
-        manager_[tid].decompress(s, inner_[tid].uncompressed_,
+        manager_[tid].decompress(s, inner_[tid].uncompressed,
                                  manager_[tid].size());
-        ref = inner_[tid].uncompressed_;
+        ref = inner_[tid].uncompressed;
       }
     for (int i = 0; i < d_->get_state_size(); ++i)
       res += (d_->get_state_variable_name(i)) +
@@ -301,21 +272,26 @@ namespace spot
   kripkecube<cspins_state, cspins_iterator>::succ(const cspins_state s,
                                                   unsigned tid)
   {
+    cspins_iterator::cspins_iterator_param p =
+      {
+        s, d_, manager_[tid], inner_[tid],
+        nullptr, compress_, selfloopize_,
+        cubeset_, dead_idx_, tid
+      };
+
     if (SPOT_LIKELY(!recycle_[tid].empty()))
       {
         auto tmp  = recycle_[tid].back();
         recycle_[tid].pop_back();
-        compute_condition(tmp->condition(), s, tid);
-        tmp->recycle(s, d_, manager_[tid], inner_[tid],
-                     tmp->condition(), compress_, selfloopize_,
-                     cubeset_, dead_idx_, tid);
+        p.cond = tmp->condition();
+        compute_condition(p.cond, s, tid);
+        tmp->recycle(p);
         return tmp;
       }
     cube cond = cubeset_.alloc();
+    p.cond = cond;
     compute_condition(cond, s, tid);
-    return new cspins_iterator(s, d_, manager_[tid], inner_[tid],
-                               cond, compress_, selfloopize_,
-                               cubeset_, dead_idx_, tid);
+    return new cspins_iterator(p);
   }
 
   void
@@ -346,9 +322,9 @@ namespace spot
     // State is compressed, uncompress it
     if (compress_)
       {
-        manager_[tid].decompress(s, inner_[tid].uncompressed_+2,
+        manager_[tid].decompress(s, inner_[tid].uncompressed+2,
                                  manager_[tid].size());
-        vars = inner_[tid].uncompressed_ + 2;
+        vars = inner_[tid].uncompressed + 2;
       }
 
     for (auto& ap: pset_)
@@ -357,61 +333,61 @@ namespace spot
         bool cond = false;
         switch (ap.op)
           {
-          case OP_EQ_VAR:
+          case relop::OP_EQ_VAR:
             cond = (ap.lval == vars[ap.rval]);
             break;
-          case OP_NE_VAR:
+          case relop::OP_NE_VAR:
             cond = (ap.lval != vars[ap.rval]);
             break;
-          case OP_LT_VAR:
+          case relop::OP_LT_VAR:
             cond = (ap.lval < vars[ap.rval]);
             break;
-          case OP_GT_VAR:
+          case relop::OP_GT_VAR:
             cond = (ap.lval > vars[ap.rval]);
             break;
-          case OP_LE_VAR:
+          case relop::OP_LE_VAR:
             cond = (ap.lval <= vars[ap.rval]);
             break;
-          case OP_GE_VAR:
+          case relop::OP_GE_VAR:
             cond = (ap.lval >= vars[ap.rval]);
             break;
-          case VAR_OP_EQ:
+          case relop::VAR_OP_EQ:
             cond = (vars[ap.lval] == ap.rval);
             break;
-          case VAR_OP_NE:
+          case relop::VAR_OP_NE:
             cond = (vars[ap.lval] != ap.rval);
             break;
-          case VAR_OP_LT:
+          case relop::VAR_OP_LT:
             cond = (vars[ap.lval] < ap.rval);
             break;
-          case VAR_OP_GT:
+          case relop::VAR_OP_GT:
             cond = (vars[ap.lval] > ap.rval);
             break;
-          case VAR_OP_LE:
+          case relop::VAR_OP_LE:
             cond = (vars[ap.lval] <= ap.rval);
             break;
-          case VAR_OP_GE:
+          case relop::VAR_OP_GE:
             cond = (vars[ap.lval] >= ap.rval);
             break;
-          case VAR_OP_EQ_VAR:
+          case relop::VAR_OP_EQ_VAR:
             cond = (vars[ap.lval] == vars[ap.rval]);
             break;
-          case VAR_OP_NE_VAR:
+          case relop::VAR_OP_NE_VAR:
             cond = (vars[ap.lval] != vars[ap.rval]);
             break;
-          case VAR_OP_LT_VAR:
+          case relop::VAR_OP_LT_VAR:
             cond = (vars[ap.lval] < vars[ap.rval]);
             break;
-          case VAR_OP_GT_VAR:
+          case relop::VAR_OP_GT_VAR:
             cond = (vars[ap.lval] > vars[ap.rval]);
             break;
-          case VAR_OP_LE_VAR:
+          case relop::VAR_OP_LE_VAR:
             cond = (vars[ap.lval] <= vars[ap.rval]);
             break;
-          case VAR_OP_GE_VAR:
+          case relop::VAR_OP_GE_VAR:
             cond = (vars[ap.lval] >= vars[ap.rval]);
             break;
-          case VAR_DEAD:
+          case relop::VAR_DEAD:
             break;
           default:
             SPOT_ASSERT(false);
@@ -465,7 +441,7 @@ namespace spot
         if (ap.compare(dead_prop) == 0)
           {
             dead_idx_ = i;
-            pset_.push_back({i , VAR_DEAD, 0});
+            pset_.push_back({i , relop::VAR_DEAD, 0});
             continue;
           }
 
@@ -483,7 +459,7 @@ namespace spot
             // The aps is directly an AP of the system, we will just
             // have to detect if the variable is 0 or not.
             pset_.push_back({(int)std::distance(k_aps.begin(), it),
-                  VAR_OP_NE, 0});
+                  relop::VAR_OP_NE, 0});
             continue;
           }
 
@@ -533,7 +509,6 @@ namespace spot
 
         // And finally the operator
         relop oper;
-
 
         // Now, left and (possibly) right may refer atomic
         // propositions or specific state inside of a process.
@@ -586,7 +561,7 @@ namespace spot
                     (int) std::distance(k_aps.begin(),
                                         std::find(k_aps.begin(),
                                                   k_aps.end(), proc_name)),
-                      VAR_OP_EQ,  ei->second});
+                      relop::VAR_OP_EQ,  ei->second});
                 continue;
               }
             else
@@ -631,7 +606,7 @@ namespace spot
                         (int) std::distance(k_aps.begin(),
                                             std::find(k_aps.begin(),
                                                       k_aps.end(), right)),
-                          VAR_OP_EQ,  ei->second});
+                          relop::VAR_OP_EQ,  ei->second});
                     continue;
                   }
               }
@@ -711,7 +686,7 @@ namespace spot
                         (int) std::distance(k_aps.begin(),
                                             std::find(k_aps.begin(),
                                                       k_aps.end(), left)),
-                          VAR_OP_EQ,  ei->second});
+                          relop::VAR_OP_EQ,  ei->second});
                     continue;
                   }
               }
@@ -729,23 +704,23 @@ namespace spot
 
         // Left and Right are know, just analyse the operator.
         if (op.compare("==") == 0)
-          oper = !left_is_digit && !right_is_digit? VAR_OP_EQ_VAR :
-            (left_is_digit? OP_EQ_VAR : VAR_OP_EQ);
+          oper = !left_is_digit && !right_is_digit? relop::VAR_OP_EQ_VAR :
+            (left_is_digit? relop::OP_EQ_VAR : relop::VAR_OP_EQ);
         else if (op.compare("!=") == 0)
-          oper = !left_is_digit && !right_is_digit? VAR_OP_NE_VAR :
-            (left_is_digit? OP_NE_VAR : VAR_OP_NE);
+          oper = !left_is_digit && !right_is_digit? relop::VAR_OP_NE_VAR :
+            (left_is_digit? relop::OP_NE_VAR : relop::VAR_OP_NE);
         else if (op.compare("<") == 0)
-          oper = !left_is_digit && !right_is_digit? VAR_OP_LT_VAR :
-            (left_is_digit? OP_LT_VAR : VAR_OP_LT);
+          oper = !left_is_digit && !right_is_digit? relop::VAR_OP_LT_VAR :
+            (left_is_digit? relop::OP_LT_VAR : relop::VAR_OP_LT);
         else if (op.compare(">") == 0)
-          oper = !left_is_digit && !right_is_digit? VAR_OP_GT_VAR :
-            (left_is_digit? OP_GT_VAR : VAR_OP_GT);
+          oper = !left_is_digit && !right_is_digit? relop::VAR_OP_GT_VAR :
+            (left_is_digit? relop::OP_GT_VAR : relop::VAR_OP_GT);
         else if (op.compare("<=") == 0)
-          oper = !left_is_digit && !right_is_digit? VAR_OP_LE_VAR :
-            (left_is_digit? OP_LE_VAR : VAR_OP_LE);
+          oper = !left_is_digit && !right_is_digit? relop::VAR_OP_LE_VAR :
+            (left_is_digit? relop::OP_LE_VAR : relop::VAR_OP_LE);
         else if (op.compare(">=") == 0)
-          oper = !left_is_digit && !right_is_digit? VAR_OP_GE_VAR :
-            (left_is_digit? OP_GE_VAR : VAR_OP_GE);
+          oper = !left_is_digit && !right_is_digit? relop::VAR_OP_GE_VAR :
+            (left_is_digit? relop::OP_GE_VAR : relop::VAR_OP_GE);
         else
           {
             err << "\nOperation \"" << op
