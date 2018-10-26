@@ -345,13 +345,66 @@ namespace spot
     {
       int cpt = 0;
       std::unordered_map<scc_uf_element*, unsigned> mapping;
+      //map to store the scc the state belong to
+      std::unordered_map<State, unsigned, StateHash, StateEqual> s_map;
+      //map to store the number of states per scc
+      std::unordered_map<unsigned, unsigned> nb_states;
       for (auto state: dfs_)
         {
           scc_uf_element* root = scc_uf_.find(state);
           if (mapping.find(root) == mapping.end())
-            mapping[root] = ++cpt;
+            {
+              mapping[root] = ++cpt;
+              nb_states[cpt] = 1;
+            }
+          else
+            nb_states[mapping[root]]++;
+          s_map[state->st_] = mapping[root];
           std::cout << mapping[root] << std::endl;
         }
+
+      //map to store the scc graph
+      std::unordered_map<unsigned, std::set<unsigned>> map;
+      for (auto state: dfs_)
+        {
+          std::set<unsigned> set;
+          scc_uf_element* root = scc_uf_.find(state);
+          if (map.find(mapping[root]) == map.end())
+              map[mapping[root]] = set;
+          auto iter = sys_.succ(state->st_, 0);
+          while (!iter->done())
+            {
+              if (s_map[iter->state()] != mapping[root])
+                map[mapping[root]].emplace(s_map[iter->state()]);
+              iter->next();
+            }
+        }
+
+      //FIXME: save the graph here
+
+      add_states(&map, 1);
+
+      auto cpy = nb_states;
+
+      unsigned m = 0;
+      for (auto tuple: map)
+        if (m < std::get<0>(tuple))
+          m = std::get<0>(tuple);
+
+      for (unsigned i = 1; i <= m; ++i)
+        for (unsigned scc: map[i])
+          nb_states[i] += cpy[scc];
+    }
+
+    /// \brief Recursively add the accessible scc in the scc graph
+    std::set<unsigned> add_states(std::unordered_map<unsigned,
+                                                     std::set<unsigned>> *map,
+                                  unsigned state)
+    {
+      for (auto scc: (*map)[state])
+        for (auto scc2: add_states(map, scc))
+          (*map)[state].emplace(scc2);
+      return (*map)[state];
     }
 
   private:
