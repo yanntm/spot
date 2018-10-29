@@ -716,7 +716,7 @@ aps: "AP:" INT
                  if (i != res.ap[i])
                    bdd_setbddpair(pair, i, res.ap[i]);
                bdd extra = bddtrue;
-               for (unsigned i = apsize; i <= res.unknown_ap_max; ++i)
+               for (int i = apsize; i <= res.unknown_ap_max; ++i)
                  extra &= bdd_ithvar(i);
                for (auto& p: res.alias)
                  p.second = bdd_restrict(bdd_replace(p.second, pair), extra);
