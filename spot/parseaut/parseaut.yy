@@ -17,6 +17,7 @@
 ** You should have received a copy of the GNU General Public License
 ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+%require "3.0"
 %language "C++"
 %locations
 %defines
@@ -26,7 +27,7 @@
 %error-verbose
 %parse-param {void* scanner}
 %lex-param {void* scanner} { PARSE_ERROR_LIST }
-%define api.location.type "spot::location"
+%define api.location.type {spot::location}
 
 %code requires
 {
