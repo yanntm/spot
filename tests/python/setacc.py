@@ -18,10 +18,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Test case reduced from a report from Juraj Major <major@fi.muni.cz>.
 import spot
+
+
+# Test case reduced from a report from Juraj Major <major@fi.muni.cz>.
 a = spot.make_twa_graph(spot._bdd_dict)
 a.set_acceptance(0, spot.acc_code("t"))
 assert(a.prop_state_acc() == True);
 a.set_acceptance(1, spot.acc_code("Fin(0)"))
 assert(a.prop_state_acc() == spot.trival.maybe());
+
+
+# Some tests for used_inf_fin_sets(), which return a pair of mark_t.
+(inf, fin) = a.get_acceptance().used_inf_fin_sets()
+assert inf == []
+assert fin == [0]
+(inf, fin) = spot.acc_code("(Fin(0)|Inf(1))&Fin(2)&Inf(0)").used_inf_fin_sets()
+assert inf == [0,1]
+assert fin == [0,2]

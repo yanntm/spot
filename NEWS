@@ -75,6 +75,11 @@ New in spot 2.6.3.dev (not yet released)
     used to check whether a formula or an automaton represents a
     liveness property.
 
+  Bugs fixed:
+
+  - The pair of acc_cond::mark_t returned by
+    acc_code::used_inf_fin_sets() was not usable in Python.
+
 New in spot 2.6.3 (2018-10-17)
 
   Bugs fixed:
