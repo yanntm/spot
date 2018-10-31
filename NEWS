@@ -78,7 +78,9 @@ New in spot 2.6.3.dev (not yet released)
   Bugs fixed:
 
   - The pair of acc_cond::mark_t returned by
-    acc_code::used_inf_fin_sets() was not usable in Python.
+    acc_code::used_inf_fin_sets(), and the pair (bool,
+    vector_rs_pairs) by acc_cond::is_rabin_like() and
+    acc_cond::is_streett_like() were not usable in Python.
 
 New in spot 2.6.3 (2018-10-17)
 

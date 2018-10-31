@@ -36,3 +36,22 @@ assert fin == [0]
 (inf, fin) = spot.acc_code("(Fin(0)|Inf(1))&Fin(2)&Inf(0)").used_inf_fin_sets()
 assert inf == [0,1]
 assert fin == [0,2]
+
+# is_rabin_like() returns (bool, [(inf, fin), ...])
+(b, v) = spot.acc_cond("(Fin(0)&Inf(1))|(Fin(2)&Inf(0))").is_rabin_like()
+assert b == True
+assert len(v) == 2
+assert v[0].fin == [0]
+assert v[0].inf == [1]
+assert v[1].fin == [2]
+assert v[1].inf == [0]
+(b, v) = spot.acc_cond("(Fin(0)|Inf(1))&(Fin(2)|Inf(0))").is_rabin_like()
+assert b == False
+assert len(v) == 0
+(b, v) = spot.acc_cond("(Fin(0)|Inf(1))&(Fin(2)|Inf(0))").is_streett_like()
+assert b == True
+assert len(v) == 2
+assert v[0].fin == [0]
+assert v[0].inf == [1]
+assert v[1].fin == [2]
+assert v[1].inf == [0]
