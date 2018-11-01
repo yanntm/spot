@@ -1135,8 +1135,10 @@ namespace spot
     /// false in Streett, and true in Rabin.
     struct SPOT_API rs_pair
     {
+#ifndef SWIG
       rs_pair() = default;
       rs_pair(const rs_pair&) = default;
+#endif
 
       rs_pair(acc_cond::mark_t fin, acc_cond::mark_t inf):
         fin(fin),

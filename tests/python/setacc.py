@@ -50,8 +50,7 @@ assert b == False
 assert len(v) == 0
 (b, v) = spot.acc_cond("(Fin(0)|Inf(1))&(Fin(2)|Inf(0))").is_streett_like()
 assert b == True
-assert len(v) == 2
-assert v[0].fin == [0]
-assert v[0].inf == [1]
-assert v[1].fin == [2]
-assert v[1].inf == [0]
+assert repr(v) == \
+  '(spot.rs_pair(fin=[0], inf=[1]), spot.rs_pair(fin=[2], inf=[0]))'
+v2 = (spot.rs_pair(fin=[0], inf=[1]), spot.rs_pair(fin=[2], inf=[0]))
+assert v == v2

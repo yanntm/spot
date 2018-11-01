@@ -670,6 +670,29 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/taalgos/minimize.hh>
 
 
+%extend spot::acc_cond::rs_pair {
+  std::string __repr__()
+  {
+    std::ostringstream os;
+    os << "spot.rs_pair(fin=[";
+    char* sep = "";
+    for (unsigned s: self->fin.sets())
+      {
+        os << sep << s;
+        sep = ", ";
+      }
+    os << "], inf=[";
+    sep = "";
+    for (unsigned s: self->inf.sets())
+      {
+        os << sep << s;
+        sep = ", ";
+      }
+    os << "])";
+    return os.str();
+  }
+}
+
 %extend spot::trival {
   std::string __repr__()
   {
