@@ -352,19 +352,6 @@ class formula:
 
 @_extend(atomic_prop_set)
 class atomic_prop_set:
-    def __repr__(self):
-        res = '{'
-        comma = ''
-        for ap in self:
-            res += comma
-            comma = ', '
-            res += '"' + ap.ap_name() + '"'
-        res += '}'
-        return res
-
-    def __str__(self):
-        return self.__repr__()
-
     def _repr_latex_(self):
         res = '$\{'
         comma = ''
@@ -1147,6 +1134,22 @@ formula.show_mp_hierarchy = show_mp_hierarchy
 
 @_extend(twa_word)
 class twa_word:
+    def _repr_latex_(self):
+        bd = self.get_dict()
+        res = '$'
+        for idx, letter in enumerate(self.prefix):
+            if idx:
+                res += '; '
+            res += bdd_to_formula(letter, bd).to_str('j')
+        if len(res) > 1:
+            res += '; ';
+        res += '\\mathsf{cycle}\\{';
+        for idx, letter in enumerate(self.cycle):
+            if idx:
+                res += '; '
+            res += bdd_to_formula(letter, bd).to_str('j')
+        return res + '\\}$'
+
     def as_svg(self):
         """
         Build an SVG picture representing the word as a collection of

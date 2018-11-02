@@ -669,13 +669,42 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/taalgos/stats.hh>
 %include <spot/taalgos/minimize.hh>
 
+%extend std::set<spot::formula> {
+  std::string __str__()
+  {
+    std::ostringstream os;
+    os << '{';
+    const char* sep = "";
+    for (spot::formula s: *self)
+      {
+        os << sep << '"' << spot::escape_str(spot::str_psl(s)) << '"';
+        sep = ", ";
+      }
+    os << '}';
+    return os.str();
+  }
+  std::string __repr__()
+  {
+    std::ostringstream os;
+    os << "spot.atomic_prop_set([";
+    const char* sep = "";
+    for (spot::formula s: *self)
+      {
+        os << sep
+           << "spot.formula(\"" << spot::escape_str(spot::str_psl(s)) << "\")";
+        sep = ", ";
+      }
+    os << "])";
+    return os.str();
+  }
+}
 
 %extend spot::acc_cond::rs_pair {
   std::string __repr__()
   {
     std::ostringstream os;
     os << "spot.rs_pair(fin=[";
-    char* sep = "";
+    const char* sep = "";
     for (unsigned s: self->fin.sets())
       {
         os << sep << s;
@@ -696,9 +725,11 @@ def state_is_accepting(self, src) -> "bool":
 %extend spot::trival {
   std::string __repr__()
   {
-    std::ostringstream os;
-    os << *self;
-    return os.str();
+    if (self->is_true())
+      return "spot.trival(True)";
+    if (self->is_false())
+      return "spot.trival(False)";
+    return "spot.trival_maybe()";
   }
 
   std::string __str__()
@@ -752,7 +783,9 @@ def state_is_accepting(self, src) -> "bool":
   unsigned __len__() { return self->size(); }
   formula __getitem__(unsigned pos) { return (*self)[pos]; }
 
-  std::string __repr__() { return spot::str_psl(*self); }
+  std::string __repr__() {
+    return "spot.formula(\"" + spot::escape_str(spot::str_psl(*self)) + "\")";
+  }
   std::string __str__() { return spot::str_psl(*self); }
 }
 
@@ -929,7 +962,7 @@ def state_is_accepting(self, src) -> "bool":
   std::string __repr__()
   {
     std::ostringstream os;
-    os << *self;
+    os << "spot.acc_code(\"" << *self << "\")";
     return os.str();
   }
 
@@ -951,7 +984,14 @@ def state_is_accepting(self, src) -> "bool":
   std::string __repr__()
   {
     std::ostringstream os;
-    os << *self;
+    os << "spot.mark_t([";
+    const char* sep = "";
+    for (unsigned s: self->sets())
+      {
+        os << sep << s;
+        sep = ", ";
+      }
+    os << "])";
     return os.str();
   }
 
@@ -967,7 +1007,8 @@ def state_is_accepting(self, src) -> "bool":
   std::string __repr__()
   {
     std::ostringstream os;
-    os << *self;
+    os << "spot.acc_cond(" << self->num_sets() << ", \""
+       << self->get_acceptance() << "\")";
     return os.str();
   }
 
@@ -980,13 +1021,6 @@ def state_is_accepting(self, src) -> "bool":
 }
 
 %extend spot::twa_run {
-  std::string __repr__()
-  {
-    std::ostringstream os;
-    os << *self;
-    return os.str();
-  }
-
   std::string __str__()
   {
     std::ostringstream os;
@@ -996,13 +1030,6 @@ def state_is_accepting(self, src) -> "bool":
 }
 
 %extend spot::twa_word {
-  std::string __repr__()
-  {
-    std::ostringstream os;
-    os << *self;
-    return os.str();
-  }
-
   std::string __str__()
   {
     std::ostringstream os;

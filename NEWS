@@ -82,6 +82,22 @@ New in spot 2.6.3.dev (not yet released)
     vector_rs_pairs) by acc_cond::is_rabin_like() and
     acc_cond::is_streett_like() were not usable in Python.
 
+  - Many object types had __repr__() methods that would return the
+    same string as __str__(), contrary to Python usage where repr(x)
+    should try to show how to rebuild x.  The following types have
+    been changed to follow this convention:
+       spot.acc_code
+       spot.acc_cond
+       spot.atomic_prop_set
+       spot.formula
+       spot.mark_t
+       spot.twa_run (__repr__ shows type and address)
+       spot.twa_word (likewise, but _repr_latex_ used in notebooks)
+
+    Note that this you were relying on the fact that Jupyter calls
+    repr() to display returned values, you may want to call print()
+    explicitely if you prefer the old representation.
+
 New in spot 2.6.3 (2018-10-17)
 
   Bugs fixed:

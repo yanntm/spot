@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2015, 2017  Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2017, 2018  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -34,7 +34,8 @@ GFp0 -> (FGp0 & Gp1)""")
 
 autg = g.translate()
 spot.relabel_here(autg, m)
-assert str(autg.ap()) == '(a, b, c)'
+assert str(autg.ap()) == \
+  '(spot.formula("a"), spot.formula("b"), spot.formula("c"))'
 assert spot.isomorphism_checker.are_isomorphic(autg, f.translate())
 
 a = spot.formula('a')

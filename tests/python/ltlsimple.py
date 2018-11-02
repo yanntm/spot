@@ -73,7 +73,7 @@ del a, b, c, T, F, f1, f2, f4, f5
 assert spot.fnode_instances_check()
 
 #----------------------------------------------------------------------
-assert str([x for x in spot.formula('a &b & c')]) == '[a, b, c]'
+assert str([str(x) for x in spot.formula('a &b & c')]) == "['a', 'b', 'c']"
 
 
 def switch_g_f(x):

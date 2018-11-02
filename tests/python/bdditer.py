@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de l'Epita
+# Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de l'Epita
 # (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -44,8 +44,8 @@ assert res == [0, -1]
 
 res2 = []
 for i in run.aut.ap():
-    res2.append((i, run.aut.register_ap(i)))
-assert str(res2) == '[(a, 0), (b, 1)]'
+    res2.append((str(i), run.aut.register_ap(i)))
+assert str(res2) == "[('a', 0), ('b', 1)]"
 
 
 f = spot.bdd_to_formula(b)
