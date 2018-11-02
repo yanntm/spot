@@ -44,10 +44,11 @@ std::pair<std::vector<const void*>, time_list>
         }
 
       t.start();
-      const void* res = std::get<0>(tree.find_or_put(r, tree.get_state_size()));
+      auto&& res = tree.find_or_put(r, tree.get_state_size());
+      if (res.second)
+        roots.push_back(res.first);
       t.stop();
       insert_times.push_back(t.utime());
-      roots.push_back(res);
       delete r;
     }
 
@@ -60,6 +61,7 @@ std::pair<std::vector<spot::cspins_state>, time_list>
   spot::timer t;
   std::vector<clock_t> insert_times;
   std::string line;
+  cspins_map map;
   std::vector<spot::cspins_state> states;
   int* cmp = new int[manager.size() * 2];
 
@@ -76,9 +78,15 @@ std::pair<std::vector<spot::cspins_state>, time_list>
 
       t.start();
       spot::cspins_state res = manager.alloc_setup(r, cmp, manager.size() * 2);
+      auto tmp = map.insert(res);
+      bool b = tmp.isnew();
+      if (!b)
+        manager.dealloc(res);
+      else
+        states.push_back(res);
+
       t.stop();
       insert_times.push_back(t.utime());
-      states.push_back(res);
       delete r;
     }
 

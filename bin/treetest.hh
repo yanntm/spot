@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "common_file.hh"
+#include "spot/bricks/brick-hashset"
 #include "spot/ltsmin/tree_state.hh"
 #include "spot/ltsmin/spins_kripke.hh"
 #include "spot/misc/timer.hh"
@@ -17,6 +18,30 @@
 
 using time_list = std::pair<std::vector<clock_t>, clock_t>;
 using tree_list = std::pair<spot::tree_state_manager, std::vector<const void*>>;
+struct cspins_test_hasher
+{
+  cspins_test_hasher(int*) { }
+  cspins_test_hasher() = default;
+
+  brick::hash::hash128_t hash(int* n) const
+  {
+    // Not modulo 31 according to brick::hashset specifications, and unsigned.
+   unsigned m = (unsigned)n[0] % (1<<30);
+    return {m, m};
+  }
+
+  bool equal(int* a, int* b) const
+  {
+    bool res = a[1] == b[1];
+    int i = 0;
+    for (i = 0; res && i < a[1]; i++)
+      res = a[i + 2] == b[i + 2];
+    return res;
+  }
+};
+
+using cspins_map = brick::hashset::FastConcurrent <int*,
+                                                   cspins_test_hasher>;
 
 /// \brief Generate files contaning states
 int generate_states(const std::string filename, int nb_var, int nb_state);
