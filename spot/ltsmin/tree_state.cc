@@ -75,7 +75,7 @@ namespace spot
   }
 
   std::pair<const void*, bool>
-  tree_state_manager::table_find_or_put(int_pair element, int_pair_set& table)
+  tree_state_manager::table_find_or_put(int_pair& element, int_pair_set& table)
   {
     auto&& search = table.find(element);
     if (search != table.end())

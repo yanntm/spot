@@ -110,7 +110,7 @@ namespace spot
       rec_find_or_put(int *state, size_t size, tree* t);
     /// \brief \cr find_or_put function for the table
     std::pair<const void*, bool> table_find_or_put(
-        int_pair element,
+        int_pair& element,
         int_pair_set& table);
     /// \brief Recursive \cr get_state function
     void rec_get_state(const void* ref, int* res, tree* t, size_t s);

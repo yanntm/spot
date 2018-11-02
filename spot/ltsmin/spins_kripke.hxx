@@ -79,7 +79,10 @@ namespace spot
   void cspins_state_manager::decompress(cspins_state s, int* uncompressed,
                                         unsigned size) const
   {
-    fn_decompress_(s+2, s[1], uncompressed, size);
+    if (compress_)
+      fn_decompress_(s+2, s[1], uncompressed, size);
+    else
+      memcpy(uncompressed, s+2, s[1] * sizeof(int));
   }
 
   void cspins_state_manager::dealloc(cspins_state s)
