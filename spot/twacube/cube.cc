@@ -34,9 +34,6 @@ namespace spot
       ++uint_size_;
   }
 
-  cubeset::~cubeset()
-  { }
-
   cube cubeset::alloc() const
   {
     auto* res = new unsigned int[2*uint_size_];
