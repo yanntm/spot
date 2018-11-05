@@ -33,11 +33,12 @@ namespace spot
   class SPOT_API cstate
   {
   public:
-    cstate() {}
+    cstate() = default;
     cstate(const cstate& s) = delete;
     cstate(cstate&& s) noexcept;
     cstate(unsigned id);
-    virtual ~cstate();
+    ~cstate() = default;
+
     unsigned label();
   private:
     unsigned id_;
@@ -47,13 +48,14 @@ namespace spot
   class SPOT_API transition
   {
   public:
-    cube cube_;
-    acc_cond::mark_t acc_;
-    transition();
+    transition() = default;
     transition(const transition& t) = delete;
     transition(transition&& t) noexcept;
     transition(const cube& cube, acc_cond::mark_t acc);
-    virtual ~transition();
+    ~transition() = default;
+
+    cube cube_;
+    acc_cond::mark_t acc_;
   };
 
   /// \brief Class for iterators over transitions
@@ -119,7 +121,7 @@ namespace spot
     const graph_t::state_storage_t& st_; ///< The underlying states
   };
 
-  /// \brief Class for representign
+  /// \brief Class for representing a thread-safe twa.
   class SPOT_API twacube final: public std::enable_shared_from_this<twacube>
   {
   public:

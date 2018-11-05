@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016 Laboratoire de Recherche et Developpement de
+// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Developpement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -77,13 +77,12 @@ namespace spot
     size_t nb_bits_;
 
   public:
-    // Some deleted constructor
+    // Some default/deleted constructor/destructors
     cubeset() = delete;
+    ~cubeset() = default;
 
     /// \brief Build the cubeset manager for \a aps variables
     cubeset(int aps);
-
-    virtual ~cubeset();
 
     /// \brief Allocate a new cube
     cube alloc() const;
