@@ -30,9 +30,6 @@ namespace spot
   {
   }
 
-  cstate::~cstate()
-  { }
-
   unsigned cstate::label()
   {
     return id_;
@@ -47,12 +44,6 @@ namespace spot
     cube_(cube),  acc_(acc)
   { }
 
-  transition::~transition()
-  { }
-
-  transition::transition()
-  { }
-
   twacube::twacube(const std::vector<std::string> aps):
     init_(0U), aps_(aps), cubeset_(aps.size())
   {
@@ -60,7 +51,7 @@ namespace spot
 
   twacube::~twacube()
   {
-    spot::cubeset cs = get_cubeset();
+    const spot::cubeset cs = get_cubeset();
     for (unsigned i = 1; i <= theg_.num_edges(); ++i)
       cs.release(theg_.edge_data(i).cube_);
   }
