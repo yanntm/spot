@@ -218,6 +218,10 @@ static const argp_option io_options[] =
       "1 if the automaton is complete, 0 otherwise", 0 },
     { "%r", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
       "wall-clock time elapsed in seconds (excluding parsing)", 0 },
+    { "%U, %u, %[LETTER]U, %[LETTER]u", 0, nullptr,
+      OPTION_DOC | OPTION_NO_USAGE,
+      "1 if the automaton contains some universal branching "
+      "(or a number of [s]tates or [e]dges with universal branching)", 0 },
     { "%W, %w", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
       "one word accepted by the automaton", 0 },
     { "%X, %x, %[LETTERS]X, %[LETTERS]x", 0, nullptr,
@@ -272,6 +276,11 @@ static const argp_option o_options[] =
       "or (c) children processes.", 0 },
     { "%n", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
       "number of nondeterministic states in output", 0 },
+    { "%u, %[LETTER]u", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
+      "1 if the automaton contains some universal branching "
+      "(or a number of [s]tates or [e]dges with universal branching)", 0 },
+    { "%u, %[e]u", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
+      "number of states (or [e]dges) with universal branching", 0 },
     { "%d", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
       "1 if the output is deterministic, 0 otherwise", 0 },
     { "%p", 0, nullptr, OPTION_DOC | OPTION_NO_USAGE,
@@ -393,6 +402,7 @@ hoa_stat_printer::hoa_stat_printer(std::ostream& os, const char* format,
       declare('P', &haut_complete_);
       declare('S', &haut_states_);
       declare('T', &haut_trans_);
+      declare('U', &haut_univbranch_);
       declare('W', &haut_word_);
       declare('X', &haut_ap_);
     }
@@ -406,6 +416,7 @@ hoa_stat_printer::hoa_stat_printer(std::ostream& os, const char* format,
     declare('f', &filename_);        // Override the formula printer.
   declare('h', &output_aut_);
   declare('m', &aut_name_);
+  declare('u', &aut_univbranch_);
   declare('w', &aut_word_);
   declare('x', &aut_ap_);
 }
@@ -478,6 +489,8 @@ hoa_stat_printer::print(const spot::const_parsed_aut_ptr& haut,
           // This is more efficient than calling count_nondet_state().
           haut_deterministic_ = is_deterministic(haut->aut);
         }
+      if (has('U'))
+        haut_univbranch_ = haut->aut;
 
       if (has('P'))
         haut_complete_ = is_complete(haut->aut);
@@ -509,6 +522,8 @@ hoa_stat_printer::print(const spot::const_parsed_aut_ptr& haut,
       else
         aut_name_.val().clear();
     }
+  if (has('u'))
+    aut_univbranch_ = aut;
   if (has('w'))
     {
       if (auto word = aut->accepting_word())
@@ -532,6 +547,8 @@ hoa_stat_printer::print(const spot::const_parsed_aut_ptr& haut,
   output_aut_ = nullptr;
   input_aut_ = nullptr;
   haut_scc_.reset();
+  aut_univbranch_ = nullptr;
+  haut_univbranch_ = nullptr;
   aut_ap_.clear();
   haut_ap_.clear();
   return res;
@@ -659,6 +676,26 @@ namespace
         << std::string(beg, end + 2) << '\'';
     throw std::runtime_error(tmp.str());
   }
+}
+
+void printable_univbranch::print(std::ostream& os, const char* pos) const
+{
+  std::string options = "l";
+  if (pos[0] == '[' && pos[1] != ']')
+    {
+      if (pos[1] == 'e' && pos[2] == ']')
+        {
+          os << spot::count_univbranch_edges(val_);
+          return;
+        }
+      else if (pos[1] == 's' && pos[2] == ']')
+        {
+          os << spot::count_univbranch_states(val_);
+          return;
+        }
+      percent_error(pos, pos + 1);
+    }
+  os << (spot::count_univbranch_edges(val_) ? 1 : 0);
 }
 
 void printable_timer::print(std::ostream& os, const char* pos) const

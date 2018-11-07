@@ -53,6 +53,8 @@ State: 6 "t"
 --END--
 EOF
 
+test "1 2 4" = "`autfilt --stats='%u %[s]u %[e]u' alt.hoa`"
+
 autfilt --has-univ-branch --has-exist-branch --dot=bans alt.hoa >alt.dot
 
 cat >expect.dot <<EOF
@@ -986,4 +988,9 @@ State: 2 {0}
 [t] 2&1
 --END--
 EOF
-test '2 0 1 1 1'  = "`autfilt --stats='%[iw]c %[W]c %[c]c %[C]c %[t]c' in`"
+stats='%[iw]c_%[W]c_%[c]c_%[C]c_%[t]c_%U_%[e]U_%[s]U'
+test '2_0_1_1_1_1_3_3' = "`autfilt --stats=$stats in`"
+
+
+autfilt --stats='%[x]U' in 2>stderr && exit2
+grep '%\[x\]U' stderr

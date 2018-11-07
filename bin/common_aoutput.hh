@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2017 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -73,6 +73,14 @@ struct printable_automaton final:
   using spot::printable_value<spot::const_twa_graph_ptr>::operator=;
   void print(std::ostream& os, const char* pos) const override;
 };
+
+struct printable_univbranch final:
+  public spot::printable_value<spot::const_twa_graph_ptr>
+{
+  using spot::printable_value<spot::const_twa_graph_ptr>::operator=;
+  void print(std::ostream& os, const char* pos) const override;
+};
+
 
 struct printable_timer final: public spot::printable
 {
@@ -169,6 +177,8 @@ private:
   spot::printable_value<unsigned> haut_complete_;
   spot::printable_value<const char*> csv_prefix_;
   spot::printable_value<const char*> csv_suffix_;
+  printable_univbranch haut_univbranch_;
+  printable_univbranch aut_univbranch_;
   printable_timer timer_;
   printable_automaton input_aut_;
   printable_automaton output_aut_;

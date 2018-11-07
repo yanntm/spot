@@ -18,6 +18,11 @@ New in spot 2.6.3.dev (not yet released)
   - ltlfilt learned --liveness to match formulas representing liveness
     properties.
 
+  - the --stats= option of tools producing automata learned how to
+    tell if an automaton uses universal branching (%u), or more
+    precisely how many states (%[s]u) or edges (%[e]u) use universal
+    branching.
+
   Python:
 
   - spot.translate() and spot.postprocess() now take an xargs=
@@ -74,6 +79,10 @@ New in spot 2.6.3.dev (not yet released)
   - The new function is_liveness() and is_liveness_automaton() can be
     used to check whether a formula or an automaton represents a
     liveness property.
+
+  - Two new functions count_univbranch_states() and
+    count_univbranch_edges() can help measuring the amount of
+    universal branching in alternating automata.
 
   Bugs fixed:
 

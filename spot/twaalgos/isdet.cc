@@ -310,4 +310,33 @@ namespace spot
     check_semi_determism(aut, true);
   }
 
+  unsigned
+  count_univbranch_states(const const_twa_graph_ptr& aut)
+  {
+    if (aut->is_existential())
+      return 0;
+    unsigned res = 0;
+    unsigned ns = aut->num_states();
+    for (unsigned s = 0; s < ns; ++s)
+      for (auto& e: aut->out(s))
+        if (aut->is_univ_dest(e))
+          {
+            ++res;
+            break;
+          }
+    return res;
+  }
+
+  unsigned
+  count_univbranch_edges(const const_twa_graph_ptr& aut)
+  {
+    if (aut->is_existential())
+      return 0;
+    unsigned res = aut->is_univ_dest(aut->get_init_state_number());
+    for (auto& e: aut->edges())
+      if (aut->is_univ_dest(e))
+        ++res;
+    return res;
+  }
+
 }
