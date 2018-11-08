@@ -33,6 +33,10 @@ New in spot 2.6.3.dev (not yet released)
         spot.translate('GF(a <-> XXa)', 'det', xargs='gf-guarantee=0')
     (Note: those extra options are documented in the spot-x(7) man page.)
 
+  - spot.is_generalized_rabin() and spot.is_generalized_streett() now return
+    a tuple (b, v) where b is a Boolean, and v is the vector of the sizes
+    of each generalized pair.  This is a backward incompatible change.
+
   Library:
 
   - The LTL parser learned syntactic sugar for nested ranges of X
@@ -85,6 +89,10 @@ New in spot 2.6.3.dev (not yet released)
     universal branching in alternating automata.
 
   Bugs fixed:
+
+  - acc_cond::is_generalized_rabin() and
+    acc_cond::is_generalized_streett() did not recognize the cases
+    were a single generalized pair is used.
 
   - The pair of acc_cond::mark_t returned by
     acc_code::used_inf_fin_sets(), and the pair (bool,

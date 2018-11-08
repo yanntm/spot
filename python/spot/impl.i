@@ -478,6 +478,7 @@ namespace std {
 namespace std {
   %template(vector_rs_pair) vector<spot::acc_cond::rs_pair>;
 }
+%apply std::vector<unsigned> &OUTPUT {std::vector<unsigned>& pairs}
 %apply std::vector<spot::acc_cond::rs_pair> &OUTPUT {std::vector<spot::acc_cond::rs_pair>& pairs}
 %include <spot/twa/acc.hh>
 %template(pair_bool_mark) std::pair<bool, spot::acc_cond::mark_t>;

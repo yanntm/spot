@@ -672,14 +672,25 @@ namespace spot
       }
     // "Acceptance: 0 f" is caught by is_generalized_rabin() above.
     // Therefore is_f() below catches "Acceptance: n f" with n>0.
-    if (code_.is_f()
-        || code_.is_t()
-        || code_.back().sub.op != acc_op::Or)
+    if (code_.is_f() || code_.is_t())
       return false;
 
     auto s = code_.back().sub.size;
     acc_cond::mark_t seen_fin = {};
     acc_cond::mark_t seen_inf = {};
+
+    // generalized Rabin should start with Or, unless
+    // it has a single pair.
+    {
+      auto topop = code_.back().sub.op;
+      if (topop == acc_op::And)
+        // Probably single-pair generalized-Rabin.  Shift the source
+        // by one position as if we had an invisible Or in front.
+        ++s;
+      else if (topop != acc_op::Or)
+        return false;
+    }
+
     // Each pair is the position of a Fin followed
     // by the number of Inf.
     std::map<unsigned, unsigned> p;
@@ -756,14 +767,26 @@ namespace spot
       }
     // "Acceptance: 0 t" is caught by is_generalized_buchi() above.
     // Therefore is_t() below catches "Acceptance: n t" with n>0.
-    if (code_.is_t()
-        || code_.is_f()
-        || code_.back().sub.op != acc_op::And)
+    if (code_.is_t() || code_.is_f())
       return false;
 
     auto s = code_.back().sub.size;
     acc_cond::mark_t seen_fin = {};
     acc_cond::mark_t seen_inf = {};
+
+    // generalized Streett should start with And, unless
+    // it has a single pair.
+    {
+      auto topop = code_.back().sub.op;
+      if (topop == acc_op::Or)
+        // Probably single-pair generalized-Streett.  Shift the source
+        // by one position as if we had an invisible And in front.
+        ++s;
+      else if (topop != acc_op::And)
+        return false;
+    }
+
+
     // Each pairs is the position of a Inf followed
     // by the number of Fin.
     std::map<unsigned, unsigned> p;

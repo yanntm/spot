@@ -54,3 +54,31 @@ assert repr(v) == \
   '(spot.rs_pair(fin=[0], inf=[1]), spot.rs_pair(fin=[2], inf=[0]))'
 v2 = (spot.rs_pair(fin=[0], inf=[1]), spot.rs_pair(fin=[2], inf=[0]))
 assert v == v2
+
+acc = spot.acc_cond("generalized-Rabin 1 2")
+(b, v) = acc.is_generalized_rabin()
+assert b == True
+assert v == (2,)
+(b, v) = acc.is_generalized_streett()
+assert b == False
+assert v == ()
+(b, v) = acc.is_streett_like()
+assert b == True
+ve = (spot.rs_pair([0], []), spot.rs_pair([], [1]), spot.rs_pair([], [2]))
+assert v == ve
+assert acc.name() == "generalized-Rabin 1 2"
+
+# At the time of writting, acc_cond does not yet recognize
+# "generalized-Streett", as there is no definition for that in the HOA format,
+# and defining it as follows (dual for gen.Rabin) would prevent Streett from
+# being a generalized-Streett.  See issue #249.
+acc = spot.acc_cond("Inf(0)|Fin(1)|Fin(2)")
+(b, v) = acc.is_generalized_streett()
+assert b == True
+assert v == (2,)
+(b, v) = acc.is_generalized_rabin()
+assert b == False
+assert v == ()
+# FIXME: We should have a way to disable the following output, as it is not
+# part of HOA v1.
+assert acc.name() == "generalized-Streett 1 2"
