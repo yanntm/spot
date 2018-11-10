@@ -20,7 +20,7 @@
 #include "config.h"
 #include <spot/misc/tmpfile.hh>
 #include <errno.h>
-#include <cstdlib>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
