@@ -70,6 +70,24 @@ debian-gcc-snapshot:
       - doc/userdoc/
       - ./*.tar.gz
 
+alpine-gcc:
+  stage: build
+  only:
+    - branches
+  except:
+    - /wip/
+  image: registry.lrde.epita.fr/spot-alpine
+  script:
+    - autoreconf -vfi
+    - ./configure
+    - make
+    - make check
+  artifacts:
+    when: always
+    paths:
+      - tests/*/*.log
+      - ./*.log
+
 arch-clang:
   stage: build
   only:
