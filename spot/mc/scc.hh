@@ -363,6 +363,8 @@ namespace spot
           std::cout << mapping[root] << std::endl;
         }
 
+      std::cout << "Computing scc graph..." << std::endl;
+
       //map to store the scc graph
       std::unordered_map<unsigned, std::set<unsigned>> map;
       for (auto state: dfs_)
@@ -382,7 +384,14 @@ namespace spot
 
       //FIXME: save the graph here
 
-      add_states(&map, 1);
+      std::cout << "Add accessible sccs in graph..." << std::endl;
+
+      std::vector<std::set<unsigned>> *tab =
+        new std::vector<std::set<unsigned>>(map.size() + 1);
+
+      add_states(&map, 1, tab);
+
+      std::cout << "Computing number of states per scc..." << std::endl;
 
       auto cpy = nb_states;
 
@@ -392,18 +401,60 @@ namespace spot
           m = std::get<0>(tuple);
 
       for (unsigned i = 1; i <= m; ++i)
-        for (unsigned scc: map[i])
-          nb_states[i] += cpy[scc];
+        {
+          for (unsigned scc: map[i])
+            nb_states[i] += cpy[scc];
+          std::cout << "scc: " << i << " nb_st: " << nb_states[i] << std::endl;
+        }
+
+      std::cout << "Computing the mid scc..." << std::endl;
+
+      unsigned nb_s = nb_states[1];
+      nb_s /= 2;
+      unsigned scc = 0;
+      int val = nb_s;
+      for (auto tuple: nb_states)
+        {
+          int v = std::get<1>(tuple) - nb_s;
+          v = std::abs(v);
+          if (v < val)
+            {
+              val = v;
+              scc = std::get<0>(tuple);
+            }
+        }
+      std::cout << "Scc: " << scc << std::endl;
+
+      for (auto tuple: s_map)
+          if (std::get<1>(tuple) == scc)
+            {
+              std::cout << sys_.to_header(std::get<0>(tuple)) << std::endl;
+              std::cout << sys_.to_csv(std::get<0>(tuple)) << std::endl;
+              break;
+            }
     }
 
     /// \brief Recursively add the accessible scc in the scc graph
     std::set<unsigned> add_states(std::unordered_map<unsigned,
                                                      std::set<unsigned>> *map,
-                                  unsigned state)
+                                  unsigned state,
+                                  std::vector<std::set<unsigned>> *tab)
     {
       for (auto scc: (*map)[state])
-        for (auto scc2: add_states(map, scc))
-          (*map)[state].emplace(scc2);
+        {
+          if ((*tab)[scc].empty())
+            {
+              for (unsigned scc2: add_states(map, scc, tab))
+                (*map)[state].emplace(scc2);
+            }
+          else
+            {
+              for (unsigned scc2: (*tab)[scc])
+                (*map)[state].emplace(scc2);
+            }
+        }
+
+      (*tab)[state] = (*map)[state];
       return (*map)[state];
     }
 
