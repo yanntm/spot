@@ -8,7 +8,7 @@ New in spot 2.6.3.dev (not yet released)
                   determinized (with Safra construction).
     --algo=ds     the automaton of the formula is determinized (Safra),
                   then split to separate inputs and outputs.
-    --alog=lar    translate the formula to a deterministic automaton
+    --algo=lar    translate the formula to a deterministic automaton
                   with an arbitrary acceptance condition, then turn it
                   into a parity automaton using LAR, and split it.
     In all three cases, the obtained parity game is solved using
@@ -114,6 +114,9 @@ New in spot 2.6.3.dev (not yet released)
     Note that this you were relying on the fact that Jupyter calls
     repr() to display returned values, you may want to call print()
     explicitely if you prefer the old representation.
+
+  - Fix compilation under Cygwin and Alpine Linux, both choking
+    on undefined secure_getenv().
 
 New in spot 2.6.3 (2018-10-17)
 
