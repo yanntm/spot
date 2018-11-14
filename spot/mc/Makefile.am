@@ -25,7 +25,8 @@ mc_HEADERS = reachability.hh intersect.hh ec.hh unionfind.hh utils.hh\
 	mc.hh deadlock.hh bloemen.hh cond_dest.hh cond_source.hh 		 \
 	renault_cond_dest.hh renault_cond_source.hh none.hh 			 \
 	renault_safety.hh bloemen_safety.hh laarman_source.hh            \
-	laarman_safety.hh
+	laarman_safety.hh cond_dest_liveness.hh cond_dest_safety.hh      \
+	rsscc_nosharing.hh
 
 noinst_LTLIBRARIES = libmc.la
 
