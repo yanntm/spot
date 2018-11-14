@@ -154,6 +154,7 @@ namespace spot
     cube condition() const;
     void fireall();
     bool naturally_expanded() const;
+    bool already_fired() const;
     const std::vector<bool>& reduced() const;
 
   private:

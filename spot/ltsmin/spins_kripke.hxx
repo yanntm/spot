@@ -252,6 +252,11 @@ namespace spot
     return !use_por_;
   }
 
+  bool cspins_iterator::already_fired() const
+  {
+    return naturally_expanded() || fireall_;
+  }
+
   const std::vector<bool>& cspins_iterator::reduced() const
   {
     return reduced_;

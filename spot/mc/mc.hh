@@ -41,6 +41,12 @@
 #include <spot/misc/common.hh>
 #include <spot/misc/timer.hh>
 
+#include <spot/mc/cond_dest_liveness.hh>
+#include <spot/mc/cond_dest_safety.hh>
+#include <spot/mc/rsscc_nosharing.hh>
+#include <spot/mc/rsscc.hh>
+
+
 namespace spot
 {
   /// \brief Check for the emptiness between a system and a twa.
@@ -932,6 +938,321 @@ namespace spot
     tm.stop("Run");
 
     std::vector<bloemen_safety_stats> stats;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      stats.push_back(swarmed[i]->stats());
+
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
+
+    return std::make_pair(stats, tm);
+  }
+
+
+  /// \brief Perform a cond_dest_liveness POR exploration
+  /// (duret.16.atva) with swarming
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::pair<std::vector<cond_dest_liveness_stats>, spot::timer_map>
+  cond_dest_liveness(kripke_ptr sys)
+  {
+    spot::timer_map tm;
+    using algo_name =
+      spot::swarmed_cond_dest_liveness<State, Iterator, Hash, Equal>;
+    using store_name = spot::store<State, Hash, Equal>;
+
+    unsigned  nbth = sys->get_threads();
+    typename store_name::shared_map map;
+
+    tm.start("Initialisation");
+    std::vector<algo_name*> swarmed(nbth);
+    std::vector<store_name*> stores(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        stores[i] = new store_name(map, i);
+        swarmed[i] = new algo_name(*sys, *stores[i], i);
+      }
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+        {
+#if defined(unix) || defined(__unix__) || defined(__unix)
+            {
+              std::lock_guard<std::mutex> iolock(iomutex);
+              std::cout << "Thread #" << i
+                        << ": on CPU " << sched_getcpu() << '\n';
+            }
+#endif
+
+            // Wait all threads to be instanciated.
+            while (barrier)
+              continue;
+            swarmed[i]->run();
+         });
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+        //  Pins threads to a dedicated core.
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(i, &cpuset);
+        int rc = pthread_setaffinity_np(threads[i].native_handle(),
+                                        sizeof(cpu_set_t), &cpuset);
+        if (rc != 0)
+          {
+            std::lock_guard<std::mutex> iolock(iomutex);
+            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
+          }
+#endif
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
+    tm.stop("Run");
+
+    std::vector<cond_dest_liveness_stats> stats;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      stats.push_back(swarmed[i]->stats());
+
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
+
+    return std::make_pair(stats, tm);
+  }
+
+  /// \brief Perform a cond_dest_safety POR exploration
+  /// with swarming
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::pair<std::vector<cond_dest_safety_stats>, spot::timer_map>
+  cond_dest_safety(kripke_ptr sys)
+  {
+    spot::timer_map tm;
+    using algo_name =
+      spot::swarmed_cond_dest_safety<State, Iterator, Hash, Equal>;
+    using store_name = spot::store<State, Hash, Equal>;
+
+    unsigned  nbth = sys->get_threads();
+    typename store_name::shared_map map;
+
+    tm.start("Initialisation");
+    std::vector<algo_name*> swarmed(nbth);
+    std::vector<store_name*> stores(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        stores[i] = new store_name(map, i);
+        swarmed[i] = new algo_name(*sys, *stores[i], i);
+      }
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+        {
+#if defined(unix) || defined(__unix__) || defined(__unix)
+            {
+              std::lock_guard<std::mutex> iolock(iomutex);
+              std::cout << "Thread #" << i
+                        << ": on CPU " << sched_getcpu() << '\n';
+            }
+#endif
+
+            // Wait all threads to be instanciated.
+            while (barrier)
+              continue;
+            swarmed[i]->run();
+         });
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+        //  Pins threads to a dedicated core.
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(i, &cpuset);
+        int rc = pthread_setaffinity_np(threads[i].native_handle(),
+                                        sizeof(cpu_set_t), &cpuset);
+        if (rc != 0)
+          {
+            std::lock_guard<std::mutex> iolock(iomutex);
+            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
+          }
+#endif
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
+    tm.stop("Run");
+
+    std::vector<cond_dest_safety_stats> stats;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      stats.push_back(swarmed[i]->stats());
+
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
+
+    return std::make_pair(stats, tm);
+  }
+
+
+  /// \brief Perform a rsscc_nosharing POR exploration
+  /// with swarming
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::pair<std::vector<rsscc_nosharing_stats>, spot::timer_map>
+  rsscc_nosharing(kripke_ptr sys)
+  {
+    spot::timer_map tm;
+    using algo_name =
+      spot::swarmed_rsscc_nosharing<State, Iterator, Hash, Equal>;
+    using uf_name = spot::uf<State, Hash, Equal>;
+
+    unsigned  nbth = sys->get_threads();
+    typename uf_name::shared_map map;
+
+    tm.start("Initialisation");
+    std::vector<algo_name*> swarmed(nbth);
+    std::vector<uf_name*> ufs(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        ufs[i] = new uf_name(map, i);
+        swarmed[i] = new algo_name(*sys, *ufs[i], i);
+      }
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+        {
+#if defined(unix) || defined(__unix__) || defined(__unix)
+            {
+              std::lock_guard<std::mutex> iolock(iomutex);
+              std::cout << "Thread #" << i
+                        << ": on CPU " << sched_getcpu() << '\n';
+            }
+#endif
+
+            // Wait all threads to be instanciated.
+            while (barrier)
+              continue;
+            swarmed[i]->run();
+         });
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+        //  Pins threads to a dedicated core.
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(i, &cpuset);
+        int rc = pthread_setaffinity_np(threads[i].native_handle(),
+                                        sizeof(cpu_set_t), &cpuset);
+        if (rc != 0)
+          {
+            std::lock_guard<std::mutex> iolock(iomutex);
+            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
+          }
+#endif
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
+    tm.stop("Run");
+
+    std::vector<rsscc_nosharing_stats> stats;
+    for (unsigned i = 0; i < sys->get_threads(); ++i)
+      stats.push_back(swarmed[i]->stats());
+
+    for (unsigned i = 0; i < nbth; ++i)
+      delete swarmed[i];
+
+    return std::make_pair(stats, tm);
+  }
+
+
+/// \brief Perform a rsscc POR exploration
+  /// with swarming
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::pair<std::vector<rsscc_stats>, spot::timer_map>
+  rsscc(kripke_ptr sys)
+  {
+    spot::timer_map tm;
+    using algo_name =
+      spot::swarmed_rsscc<State, Iterator, Hash, Equal>;
+    using uf_name = spot::uf<State, Hash, Equal>;
+
+    unsigned  nbth = sys->get_threads();
+    typename uf_name::shared_map map;
+
+    tm.start("Initialisation");
+    std::vector<algo_name*> swarmed(nbth);
+    std::vector<uf_name*> ufs(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        ufs[i] = new uf_name(map, i);
+        swarmed[i] = new algo_name(*sys, *ufs[i], i);
+      }
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::atomic<bool> barrier(true);
+    std::vector<std::thread> threads(nbth);
+    for (unsigned i = 0; i < nbth; ++i)
+      {
+        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
+        {
+#if defined(unix) || defined(__unix__) || defined(__unix)
+            {
+              std::lock_guard<std::mutex> iolock(iomutex);
+              std::cout << "Thread #" << i
+                        << ": on CPU " << sched_getcpu() << '\n';
+            }
+#endif
+
+            // Wait all threads to be instanciated.
+            while (barrier)
+              continue;
+            swarmed[i]->run();
+         });
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+        //  Pins threads to a dedicated core.
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(i, &cpuset);
+        int rc = pthread_setaffinity_np(threads[i].native_handle(),
+                                        sizeof(cpu_set_t), &cpuset);
+        if (rc != 0)
+          {
+            std::lock_guard<std::mutex> iolock(iomutex);
+            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
+          }
+#endif
+      }
+
+    tm.start("Run");
+    barrier.store(false);
+
+    for (auto& t : threads)
+      t.join();
+    tm.stop("Run");
+
+    std::vector<rsscc_stats> stats;
     for (unsigned i = 0; i < sys->get_threads(); ++i)
       stats.push_back(swarmed[i]->stats());
 
