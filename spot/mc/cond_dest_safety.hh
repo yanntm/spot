@@ -90,7 +90,6 @@ namespace spot
             pair.second->m_reduced_.unlock();
           }
         todo_.push_back({pair.second, it, true, nullptr});
-        Rp_.emplace_back(pair.second);
 
         // The state is naturally expanded
         if (todo_.back().it->naturally_expanded())
@@ -122,12 +121,10 @@ namespace spot
                   continue;
                 }
 
-              if (todo_.back().e == Rp_.back())
-                Rp_.pop_back();
-
               // The state is no longer on thread's stack
               atomic_fetch_and(&(todo_.back().e->onstack_), ~w_id);
               sys_.recycle(todo_.back().it, tid_);
+              store_.make_dead(todo_.back().e);
               todo_.pop_back();
             }
           else
@@ -157,7 +154,6 @@ namespace spot
                       w.second->m_reduced_.unlock();
                     }
                   todo_.push_back({w.second, it, true, nullptr});
-                  Rp_.emplace_back(w.second);
 
                   // The state is naturally expanded
                   if (todo_.back().it->naturally_expanded())
@@ -205,7 +201,6 @@ namespace spot
 
     kripkecube<State, SuccIterator>& sys_;   ///< \brief The system to check
     std::vector<todo_element> todo_;          ///< \brief The "recursive" stack
-    std::vector<store_element*> Rp_;            ///< \brief The DFS stack
     st_store store_; ///< Copy!
     unsigned tid_;
     unsigned nb_th_;
