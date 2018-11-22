@@ -77,6 +77,7 @@ struct mc_options_
   bool print_states = false;
   bool display_scc = false;
   char* generated_states = nullptr;
+  char* csv_output = nullptr;
 } mc_options;
 
 
@@ -134,6 +135,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 'm':
       mc_options.model = arg;
       break;
+    case 'o':
+      mc_options.csv_output = arg;
+      break;
     case 'p':
       mc_options.nb_threads = to_unsigned(arg, "-p/--parallel");
       break;
@@ -178,6 +182,7 @@ static const argp_option options[] =
       "Return 1 if the model contains a deadlock."
       , 0 },
     { "print-states", 'i', nullptr, 0, "print the states", 0 },
+    { "csv_output", 'o', "STRING", 0, "output csv in the given file", 0},
     { "parallel", 'p', "INT", 0, "use INT threads (when possible)", 0 },
     { "selfloopize", 's', "STRING", 0,
       "use STRING as property for marking deadlock "
@@ -726,6 +731,37 @@ static int checked_main()
                     << total_unique << ','
                     << std::get<0>(res)[smallest].transitions
                     << '\n';
+        }
+    }
+
+    if (mc_options.csv_output &&  mc_options.model != nullptr)
+    {
+      tm.start("load kripkecube");
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      try
+        {
+           modelcube = spot::ltsmin_model::load(mc_options.model)
+             .kripkecube({}, deadf, mc_options.compress, 1);
+        }
+      catch (const std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      tm.start("csv");
+      auto res = spot::csv_output<spot::ltsmin_kripkecube_ptr,
+                                    spot::cspins_state,
+                                    spot::cspins_iterator,
+                                    spot::cspins_state_hash,
+                                    spot::cspins_state_equal>(modelcube,
+                                        mc_options.csv_output);
+      tm.stop("csv");
+
+      if (!modelcube)
+        {
+          exit_code = 2;
+          goto safe_exit;
         }
     }
 

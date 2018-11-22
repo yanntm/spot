@@ -37,7 +37,7 @@ namespace spot
   template<typename State,
            typename StateHash,
            typename StateEqual>
-  class scc_uf
+  class scc_uf_csv
   {
 
   public:
@@ -94,19 +94,17 @@ namespace spot
                                                        scc_uf_element_hasher>;
 
 
-    scc_uf(shared_map& map, unsigned tid):
-      map_(map), tid_(tid),
-      size_(std::thread::hardware_concurrency()),
-      nb_th_(std::thread::hardware_concurrency()), inserted_(0)
+    scc_uf_csv(shared_map& map):
+      map_(map), inserted_(0)
     {
     }
 
-    ~scc_uf() {}
+    ~scc_uf_csv() {}
 
     std::pair<claim_status, scc_uf_element*>
     make_claim(State a)
     {
-      unsigned w_id = (1U << tid_);
+      unsigned w_id = (1U << 0);
 
       // Setup and try to insert the new state in the shared map.
       scc_uf_element* v = new scc_uf_element();
@@ -220,60 +218,50 @@ namespace spot
 
   private:
     shared_map map_;      ///< \brief Map shared by threads copy!
-    unsigned tid_;        ///< \brief The Id of the current thread
-    unsigned size_;       ///< \brief Maximum number of thread
-    unsigned nb_th_;      ///< \brief Current number of threads
     unsigned inserted_;   ///< \brief The number of insert succes
-  };
-
-  /// \brief This object is returned by the algorithm below
-  struct SPOT_API display_scc_stats
-  {
-    unsigned inserted;          ///< \brief Number of states inserted
-    unsigned states;            ///< \brief Number of states visited
-    unsigned transitions;       ///< \brief Number of transitions visited
-    unsigned sccs;              ///< \brief Number of SCCs visited
-    unsigned walltime;          ///< \brief Walltime for this thread in ms
   };
 
   /// \brief This class implements the SCC decomposition algorithm inspired
   /// inspired from STTT'16.
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class display_scc
+  class csv_maker
   {
   public:
 
-    display_scc(kripkecube<State, SuccIterator>& sys,
-                    scc_uf<State, StateHash, StateEqual>& scc_uf,
-                    unsigned tid):
-      sys_(sys),  scc_uf_(scc_uf), tid_(tid),
-      nb_th_(std::thread::hardware_concurrency())
+    csv_maker(kripkecube<State, SuccIterator>& sys,
+                    scc_uf_csv<State, StateHash, StateEqual>& scc_uf,
+                    std::string file):
+      sys_(sys),  scc_uf_(scc_uf), file_(file)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
     }
 
-    using st_scc_uf = scc_uf<State, StateHash, StateEqual>;
+    using st_scc_uf = scc_uf_csv<State, StateHash, StateEqual>;
     using scc_uf_element = typename st_scc_uf::scc_uf_element;
 
     void run()
     {
-      tm_.start("DFS thread " + std::to_string(tid_));
-      unsigned w_id = (1U << tid_);
-
+      unsigned w_id = (1U << 0);
+      int depth = 1;
 
       // Insert the initial state
       {
-        State init = sys_.initial(tid_);
+        State init = sys_.initial(0);
         auto pair = scc_uf_.make_claim(init);
 
-        auto it = sys_.succ(pair.second->st_, tid_);
+        auto it = sys_.succ(pair.second->st_, 0);
         unsigned p = livenum_.size();
         livenum_.insert({pair.second, p});
         Rp_.push_back({pair.second, todo_.size()});
         dfs_.push_back(pair.second);
         todo_.push_back({pair.second, it, p});
         ++states_;
+
+        v_names_ = sys_.to_header(init);
+        v_values_.push_back(sys_.to_csv(init));
+        succ_labels_.push_back(todo_.back().it->size());
+        depth_labels_.push_back(depth);
       }
 
       while (!todo_.empty())
@@ -283,7 +271,7 @@ namespace spot
               bool sccfound = false;
               // The state is no longer on thread's stack
               atomic_fetch_and(&(todo_.back().e->onstack_), ~w_id);
-              sys_.recycle(todo_.back().it, tid_);
+              sys_.recycle(todo_.back().it, 0);
 
               scc_uf_element* s = todo_.back().e;
               todo_.pop_back();
@@ -293,6 +281,7 @@ namespace spot
                   scc_uf_.make_dead(s, &sccfound);
                   sccs_ += sccfound;
                 }
+              --depth;
             }
           else
             {
@@ -306,13 +295,18 @@ namespace spot
               if (w.first == st_scc_uf::claim_status::CLAIM_NEW)
                 {
                   // ... and insert the new state
-                  auto it = sys_.succ(w.second->st_, tid_);
+                  auto it = sys_.succ(w.second->st_, 0);
                   unsigned p = livenum_.size();
                   livenum_.insert({w.second, p});
                   Rp_.push_back({w.second, todo_.size()});
                   dfs_.push_back(w.second);
                   todo_.push_back({w.second, it, p});
                   ++states_;
+
+                  v_values_.push_back(sys_.to_csv(dst));
+                  succ_labels_.push_back(todo_.back().it->size());
+                  ++depth;
+                  depth_labels_.push_back(depth);
                 }
               else if (w.first == st_scc_uf::claim_status::CLAIM_FOUND)
                 {
@@ -328,142 +322,68 @@ namespace spot
                 }
             }
         }
-      tm_.stop("DFS thread " + std::to_string(tid_));
+      scc();
+      print();
     }
 
-    unsigned walltime()
-    {
-      return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
-    }
-
-    display_scc_stats stats()
-    {
-      return {scc_uf_.inserted(), states_, transitions_, sccs_, walltime()};
-    }
-
-    void print()
+    void scc()
     {
       int cpt = 0;
       std::unordered_map<scc_uf_element*, unsigned> mapping;
-      //map to store the scc the state belong to
-      std::unordered_map<State, unsigned, StateHash, StateEqual> s_map;
-      //map to store the number of states per scc
-      std::unordered_map<unsigned, unsigned> nb_states;
       for (auto state: dfs_)
         {
           scc_uf_element* root = scc_uf_.find(state);
           if (mapping.find(root) == mapping.end())
-            {
-              mapping[root] = ++cpt;
-              nb_states[cpt] = 1;
-            }
-          else
-            nb_states[mapping[root]]++;
-          s_map[state->st_] = mapping[root];
-          //std::cout << mapping[root] << std::endl;
+            mapping[root] = ++cpt;
+          scc_labels_.push_back(mapping[root]);
         }
-      unsigned m = 0;
-      for (auto tuple: mapping)
-        {
-          if (m < std::get<1>(tuple))
-            m = std::get<1>(tuple);
-        }
-      std::cout << m << std::endl;
-
-/*
-      std::cout << "Computing scc graph..." << std::endl;
-
-      //map to store the scc graph
-      std::unordered_map<unsigned, std::set<unsigned>> map;
-      for (auto state: dfs_)
-        {
-          std::set<unsigned> set;
-          scc_uf_element* root = scc_uf_.find(state);
-          if (map.find(mapping[root]) == map.end())
-              map[mapping[root]] = set;
-          auto iter = sys_.succ(state->st_, 0);
-          while (!iter->done())
-            {
-              if (s_map[iter->state()] != mapping[root])
-                map[mapping[root]].emplace(s_map[iter->state()]);
-              iter->next();
-            }
-        }
-
-      //FIXME: save the graph here
-
-      std::cout << "Add accessible sccs in graph..." << std::endl;
-
-      std::vector<std::set<unsigned>> *tab =
-        new std::vector<std::set<unsigned>>(map.size() + 1);
-
-      add_states(&map, 1, tab);
-
-      std::cout << "Computing number of states per scc..." << std::endl;
-
-      auto cpy = nb_states;
-
-      unsigned m = 0;
-      for (auto tuple: map)
-        if (m < std::get<0>(tuple))
-          m = std::get<0>(tuple);
-
-      for (unsigned i = 1; i <= m; ++i)
-        {
-          for (unsigned scc: map[i])
-            nb_states[i] += cpy[scc];
-          std::cout << "scc: " << i << " nb_st: " << nb_states[i] << std::endl;
-        }
-
-      std::cout << "Computing the mid scc..." << std::endl;
-
-      unsigned nb_s = nb_states[1];
-      nb_s /= 2;
-      unsigned scc = 0;
-      int val = nb_s;
-      for (auto tuple: nb_states)
-        {
-          int v = std::get<1>(tuple) - nb_s;
-          v = std::abs(v);
-          if (v < val)
-            {
-              val = v;
-              scc = std::get<0>(tuple);
-            }
-        }
-      std::cout << "Scc: " << scc << std::endl;
-
-      for (auto tuple: s_map)
-          if (std::get<1>(tuple) == scc)
-            {
-              std::cout << sys_.to_header(std::get<0>(tuple)) << std::endl;
-              std::cout << sys_.to_csv(std::get<0>(tuple)) << std::endl;
-              break;
-            }*/
     }
 
-    /// \brief Recursively add the accessible scc in the scc graph
-    std::set<unsigned> add_states(std::unordered_map<unsigned,
-                                                     std::set<unsigned>> *map,
-                                  unsigned state,
-                                  std::vector<std::set<unsigned>> *tab)
+    void print()
     {
-      for (auto scc: (*map)[state])
+      std::ofstream ofs;
+      ofs.open(file_);
+      ofs << "#states:" << states_ << std::endl;
+      ofs << "#transitions:" << transitions_ << std::endl;
+      ofs << "#sccs:" << sccs_ << std::endl;
+      ofs << "#exploration:" << "DFS" << std::endl;
+      ofs << "#variables_names:" << v_names_ << std::endl;
+      ofs << "#variables_types:";
+      std::string token;
+      std::stringstream ss(v_names_);
+      int c = 0;
+      std::string str;
+      while (std::getline(ss, token, ','))
         {
-          if ((*tab)[scc].empty())
+          if (token.find('.') != std::string::npos)
             {
-              for (unsigned scc2: add_states(map, scc, tab))
-                (*map)[state].emplace(scc2);
+              if (token.find('[') != std::string::npos)
+                str.append("la");
+              else
+                str.append("l");
             }
+          else if (token.find('[') != std::string::npos)
+            str.append("sa");
+          else if (sys_.type_name(c).compare("int") == 0
+              || sys_.type_name(c).compare("byte") == 0)
+            str.append("s");
           else
-            {
-              for (unsigned scc2: (*tab)[scc])
-                (*map)[state].emplace(scc2);
-            }
+            str.append("p");
+          c++;
+          str.append(",");
         }
-
-      (*tab)[state] = (*map)[state];
-      return (*map)[state];
+      str.erase(str.end() - 1);
+      ofs << str << std::endl;
+      ofs << "#labels:" << c << "," << c + 1 << "," << c + 2 << "," << c + 3;
+      ofs << std::endl;
+      int count = 0;
+      for (std::string s: v_values_)
+        {
+          ofs << s << "," << count << "," << depth_labels_[count] << ","
+              << succ_labels_[count] << "," << scc_labels_[count] << std::endl;
+          ++count;
+        }
+      ofs.close();
     }
 
   private:
@@ -479,14 +399,17 @@ namespace spot
     std::vector<std::pair<scc_uf_element*,
                           unsigned>> Rp_;  ///< \brief The root stack
     st_scc_uf scc_uf_; ///< Copy!
-    unsigned tid_;
-    unsigned nb_th_;
     unsigned inserted_ = 0;           ///< \brief Number of states inserted
     unsigned states_  = 0;            ///< \brief Number of states visited
     unsigned transitions_ = 0;        ///< \brief Number of transitions visited
     unsigned sccs_ = 0;               ///< \brief Number of SCC visited
-    spot::timer_map tm_;              ///< \brief Time execution
     std::unordered_map<scc_uf_element*, unsigned> livenum_;
     std::vector<scc_uf_element*> dfs_; ///< \brief Handle all states
+    std::string file_; ///< \brief The path to the csv file
+    std::string v_names_; ///< \brief The name of the variables
+    std::vector<std::string> v_values_; ///< \brief The values of the variables
+    std::vector<int> scc_labels_; ///< \brief The scc per state
+    std::vector<int> depth_labels_; ///< \brief The depth per state
+    std::vector<int> succ_labels_; ///< \brief The number of successors
   };
 }

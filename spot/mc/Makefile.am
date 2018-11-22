@@ -22,7 +22,8 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 mcdir = $(pkgincludedir)/mc
 mc_HEADERS = reachability.hh intersect.hh ec.hh unionfind.hh utils.hh\
-	mc.hh deadlock.hh bloemen.hh print_states.hh generated_states.hh scc.hh
+	mc.hh deadlock.hh bloemen.hh print_states.hh generated_states.hh scc.hh\
+	csv_output.hh
 
 noinst_LTLIBRARIES = libmc.la
 

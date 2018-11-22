@@ -375,6 +375,11 @@ namespace spot
     return nb_threads_;
   }
 
+  std::string kripkecube<cspins_state, cspins_iterator>::type_name(unsigned pos)
+  {
+    return d_->get_type_name(d_->get_state_variable_type(pos));
+  }
+
   void
   kripkecube<cspins_state, cspins_iterator>::compute_condition
   (cube c, cspins_state s, unsigned tid)

@@ -34,6 +34,7 @@
 #include <spot/mc/print_states.hh>
 #include <spot/misc/common.hh>
 #include <spot/misc/timer.hh>
+#include <spot/mc/csv_output.hh>
 
 namespace spot
 {
@@ -201,7 +202,7 @@ namespace spot
     std::vector<algo_name*> swarmed(nbth);
     for (unsigned i = 0; i < nbth; ++i)
       {
-        if (i % (init.size() + 1) == 0)
+        if (i % (init.size() + 1) == 1)
           swarmed[i] = new algo_name(*sys, map, i, stop, nullptr);
         else
           swarmed[i] = new algo_name(*sys, map, i, stop,
@@ -294,6 +295,38 @@ namespace spot
 
     thread.join();
     tm.stop("Run");
+
+    delete swarmed;
+
+    return std::make_tuple(tm);
+  }
+
+  /// \brief Create a csv file with informations about the model.
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+  static std::tuple<spot::timer_map>
+  csv_output(kripke_ptr sys, std::string file)
+  {
+    spot::timer_map tm;
+    using algo_name = spot::csv_maker<State, Iterator, Hash, Equal>;
+    using uf_name = spot::scc_uf_csv<State, Hash, Equal>;
+
+    typename uf_name::shared_map map;
+
+    tm.start("Initialisation");
+    algo_name* swarmed;
+    uf_name uf(map);
+    swarmed = new algo_name(*sys, uf, file);
+    tm.stop("Initialisation");
+
+    std::mutex iomutex;
+    std::thread thread;
+    thread = std::thread ([&swarmed, &iomutex]
+    {
+      swarmed->run();
+    });
+
+    thread.join();
 
     delete swarmed;
 
