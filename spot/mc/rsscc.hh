@@ -137,10 +137,10 @@ namespace spot
                   if (todo_.size())
                     todo_.back().isterm &= isterm;
 
-                    bool sccfound = false;
-                    Rp_.pop_back();
-                    uf_.make_dead(s, &sccfound);
-                    sccs_ += sccfound;
+                  bool sccfound = false;
+                  Rp_.pop_back();
+                  uf_.make_dead(s, &sccfound);
+                  sccs_ += sccfound;
                 }
             }
           else
