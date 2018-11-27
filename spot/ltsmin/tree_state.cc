@@ -26,76 +26,83 @@
 namespace spot
 {
   tree_state_manager::tree_state_manager(unsigned state_size)
-    : state_size_(state_size), tree_(state_size)
+    : state_size_(state_size), table_(state_size_)
   {}
-
-  tree_state_manager::~tree_state_manager()
-  {
-    /* FIXME */
-  }
 
   size_t tree_state_manager::get_state_size()
   {
     return this->state_size_;
   }
 
-  std::pair<const void*, bool>
-  tree_state_manager::find_or_put(int *state, size_t size)
+  std::pair<unsigned, bool>
+  tree_state_manager::find_or_put(int *state)
   {
-    return rec_find_or_put(state, size, &tree_);
+    table_.check_size();
+    if (state_size_ > 2u)
+      return rec_find_or_put(state, state_size_);
+    else if (state_size_ == 1u)
+      return table_.find_or_put_root(std::make_pair((unsigned)(*state), 0u),
+                                     true);
+    else if (state_size_ == 2u)
+      return table_.find_or_put_root(std::make_pair((unsigned)(*state),
+                                                    (unsigned)(*(state + 1))),
+                                     true);
+    else
+      return std::make_pair(0u, false);
   }
 
-  std::pair<const void*, bool>
-  tree_state_manager::rec_find_or_put(int* state, size_t size, tree* t)
+  std::pair<unsigned, bool>
+  tree_state_manager::rec_find_or_put(int* state, size_t size)
   {
     if (!size)
-      return std::make_pair(nullptr, false);
+      return std::make_pair(0u, false);
     else if (size == 1)
       {
-        int_pair elt = std::make_pair(*state, 0);
-        return table_find_or_put(elt, t->node_->table_);
+        int_pair elt = std::make_pair((unsigned)(*state), 0u);
+        return table_.find_or_put(elt, true);
       }
     else if (size == 2)
       {
-        int_pair elt = std::make_pair(*state, *(state + 1));
-        return table_find_or_put(elt, t->node_->table_);
+        int_pair elt = std::make_pair((unsigned)(*state),
+                                      (unsigned)(*(state + 1)));
+        return table_.find_or_put(elt, true);
       }
 
     size_t right_size = size / TSM_LEAF_NUM;
     size_t left_size = size - right_size;
     int* right_state = state + left_size;
     int* left_state = state;
-    auto left_res = rec_find_or_put(left_state, left_size, t->node_->left_);
-    auto right_res = rec_find_or_put(right_state, right_size, t->node_->right_);
+    auto left_res = rec_find_or_put(left_state, left_size);
+    auto right_res = rec_find_or_put(right_state, right_size);
 
     int_pair element =
-      std::make_pair(reinterpret_cast<intptr_t>(left_res.first),
-                     reinterpret_cast<intptr_t>(right_res.first));
-    return table_find_or_put(element, t->node_->table_);
-  }
-
-  std::pair<const void*, bool>
-  tree_state_manager::table_find_or_put(int_pair& element, int_pair_set& table)
-  {
-    auto&& search = table.find(element);
-    if (search != table.end())
-      {
-        const void* res_ptr = &(*(search));
-        return std::make_pair(res_ptr, false);
-      }
+      std::make_pair(left_res.first, right_res.first);
+    if (size == state_size_)
+      return table_.find_or_put_root(element, false);
     else
-      {
-        auto res = table.insert(element);
-        const void* res_ptr = &(*(res.first));
-        return std::make_pair(res_ptr, true);
-      }
+      return table_.find_or_put(element, false);
   }
 
-  int* tree_state_manager::get_state(const void* ref)
+  int* tree_state_manager::get_state(unsigned idx)
   {
     int* res = new int[state_size_ + 2];
     int hash_value = 0;
-    rec_get_state(ref, res + 2, &tree_, state_size_);
+    int_pair root = table_.get_root(idx);
+    if (state_size_ > TSM_LEAF_NUM)
+      {
+        rec_get_state(root.first, res + 2,
+                      state_size_ - state_size_ / TSM_LEAF_NUM);
+        rec_get_state(root.second,
+                      res + 2 + state_size_ - state_size_ / TSM_LEAF_NUM,
+                      state_size_ / TSM_LEAF_NUM);
+      }
+    else if (state_size_ == 2)
+      {
+        res[2] = root.first;
+        res[3] = root.second;
+      }
+    else
+      res[2] = root.first;
 
     for (unsigned i = 2; i < state_size_ + 2; i++)
       hash_value = wang32_hash(hash_value ^ res[i]);
@@ -105,26 +112,21 @@ namespace spot
     return res;
   }
 
-  void tree_state_manager::rec_get_state(const void* ref, int* res,
-                                         tree* t, size_t s)
+  void tree_state_manager::rec_get_state(unsigned ref, int* res, size_t s)
   {
-    while (!t->leaf_ || s > TSM_LEAF_NUM)
+    while (s > TSM_LEAF_NUM)
       {
         size_t l_s = s - s / TSM_LEAF_NUM;
-        void* ref2 = const_cast<void*>(ref);
-        int_pair ref_pair = *(static_cast<int_pair*>(ref2));
-        rec_get_state((void*)(ref_pair.second), res + l_s,
-                      t->node_->right_, s / TSM_LEAF_NUM);
+        int_pair ref_pair = table_.get_pair(ref);
+        rec_get_state(ref_pair.second, res + l_s, s / TSM_LEAF_NUM);
 
-        ref = (void*)(ref_pair.first);
-        t = t->node_->left_;
+        ref = ref_pair.first;
         s = l_s;
       }
 
-    if (t->leaf_ && s <= TSM_LEAF_NUM)
+    if (s <= TSM_LEAF_NUM)
       {
-        void* ref2 = const_cast<void*>(ref);
-        int_pair ref_pair = *(static_cast<int_pair*>(ref2));
+        int_pair ref_pair = table_.get_pair(ref);
         if (s == 1)
           {
             *res = ref_pair.first;
@@ -135,41 +137,5 @@ namespace spot
             *(res + 1) = ref_pair.second;
           }
       }
-    else if (t->leaf_ || s <= TSM_LEAF_NUM)
-      SPOT_UNREACHABLE();
-  }
-
-  tree_state_manager::node::node(unsigned size)
-    : table_(size)
-  {
-    if (size <= TSM_LEAF_NUM)
-      {
-        left_ = nullptr;
-        right_ = nullptr;
-      }
-    else
-      {
-        left_ = new tree(size - size / TSM_LEAF_NUM);
-        right_ = new tree(size / TSM_LEAF_NUM);
-      }
-    k = size;
-  }
-
-  tree_state_manager::node::~node()
-  {
-    delete(left_);
-    delete(right_);
-  }
-
-  tree_state_manager::tree::tree(unsigned size)
-  {
-    assert(size != 0);
-    this->node_ = new node(size);
-    this->leaf_ = size <= TSM_LEAF_NUM;
-  }
-
-  tree_state_manager::tree::~tree()
-  {
-    delete(node_);
   }
 }

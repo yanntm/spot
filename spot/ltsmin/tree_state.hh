@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "spot/ltsmin/indexed_table.hh"
 #include "spot/misc/common.hh"
 #include <unordered_set>
 #include <utility>
@@ -60,62 +61,33 @@ namespace spot
   class SPOT_API tree_state_manager final
   {
   public:
-    using int_pair = std::pair<std::intptr_t, std::intptr_t>;
+    using int_pair = std::pair<unsigned, unsigned>;
     using int_pair_set = std::unordered_set<int_pair>;
 
     tree_state_manager(unsigned state_size);
     tree_state_manager(const tree_state_manager&) = delete;
     tree_state_manager& operator=(const tree_state_manager&) = delete;
-    ~tree_state_manager();
 
     /// \brief Find or put a value in the tree
     ///
     /// \return A pair containing the reference to the found or inserted value
     /// and a boolean at true if the value has been inserted, or false if it
     /// has been found.
-    std::pair<const void*, bool> find_or_put(int *state, size_t size);
+    std::pair<unsigned, bool> find_or_put(int *state);
 
     /// \bief Get a state from a reference to a root of a state tree
-    int* get_state(const void* ref);
+    int* get_state(unsigned ref);
 
     size_t get_state_size();
 
   private:
-    /// \brief Node structure for the tree of the state
-    struct tree;
-
-    struct node
-    {
-      tree* left_;
-      tree* right_;
-      int_pair_set table_;
-      int k;
-
-      node(unsigned size);
-      ~node();
-    };
-
-    /// \brief Tree structure to register the state
-    struct tree
-    {
-      node* node_;
-      bool leaf_;
-
-      tree(unsigned size);
-      ~tree();
-    };
-
     /// \brief Recursive \cr find_or_put function with the tree in added parameter
-    std::pair<const void*, bool>
-      rec_find_or_put(int *state, size_t size, tree* t);
-    /// \brief \cr find_or_put function for the table
-    std::pair<const void*, bool> table_find_or_put(
-        int_pair& element,
-        int_pair_set& table);
+    std::pair<unsigned, bool>
+      rec_find_or_put(int *state, size_t size);
     /// \brief Recursive \cr get_state function
-    void rec_get_state(const void* ref, int* res, tree* t, size_t s);
+    void rec_get_state(unsigned ref, int* res, size_t s);
 
     size_t state_size_;
-    tree tree_;
+    indexed_table table_;
   };
 }
