@@ -122,6 +122,8 @@ namespace spot
       v->expanded_ = false;
       v->not_to_expand_ = false;
       v->por_status_ = por_status::UNKNOWN;
+      v->ok_reduced_ = false;
+      v->onstack_ = 0;
 
       auto it = map_.insert({v});
       bool b = it.isnew();

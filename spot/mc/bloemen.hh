@@ -132,6 +132,7 @@ namespace spot
       v->list_status_ = list_status::BUSY;
       v->wip_ = 0;
       v->expanded_ = false;
+      v->ok_reduced_ = false;
 
       auto it = map_.insert({v});
       bool b = it.isnew();
