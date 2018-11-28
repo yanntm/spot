@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -67,39 +67,41 @@ namespace spot
     /// \brief The haser for the previous state.
     struct pair_hasher
     {
-      pair_hasher(const deadlock_pair&)
+      pair_hasher(const deadlock_pair*)
       { }
 
       pair_hasher() = default;
 
       brick::hash::hash128_t
-      hash(const deadlock_pair& lhs) const
+      hash(const deadlock_pair* lhs) const
       {
         StateHash hash;
         // Not modulo 31 according to brick::hashset specifications.
-        unsigned u = hash(lhs.st) % (1<<30);
+        unsigned u = hash(lhs->st) % (1<<30);
         return {u, u};
       }
 
-      bool equal(const deadlock_pair& lhs,
-                 const deadlock_pair& rhs) const
+      bool equal(const deadlock_pair* lhs,
+                 const deadlock_pair* rhs) const
       {
         StateEqual equal;
-        return equal(lhs.st, rhs.st);
+        return equal(lhs->st, rhs->st);
       }
     };
 
   public:
 
     ///< \brief Shortcut to ease shared map manipulation
-    using shared_map = brick::hashset::FastConcurrent <deadlock_pair,
+    using shared_map = brick::hashset::FastConcurrent <deadlock_pair*,
                                                        pair_hasher>;
 
     swarmed_deadlock(kripkecube<State, SuccIterator>& sys,
                      shared_map& map, unsigned tid, std::atomic<bool>& stop):
       sys_(sys), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
-      p_(sizeof(int)*std::thread::hardware_concurrency()), stop_(stop)
+      p_(sizeof(int)*std::thread::hardware_concurrency()),
+      p_pair_(sizeof(deadlock_pair)),
+      stop_(stop)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
     }
@@ -126,7 +128,10 @@ namespace spot
         ref[i] = UNKNOWN;
 
       // Try to insert the new state in the shared map.
-      auto it = map_.insert({s, ref});
+      deadlock_pair* v = (deadlock_pair*) p_pair_.allocate();
+      v->st = s;
+      v->colors = ref;
+      auto it = map_.insert(v);
       bool b = it.isnew();
 
       // Insertion failed, delete element
@@ -136,18 +141,18 @@ namespace spot
 
       // The state has been mark dead by another thread
       for (unsigned i = 0; !b && i < nb_th_; ++i)
-        if (it->colors[i] == static_cast<int>(CLOSED))
+        if ((*it)->colors[i] == static_cast<int>(CLOSED))
           return false;
 
       // The state has already been visited by the current thread
-      if (it->colors[tid_] == static_cast<int>(OPEN))
+      if ((*it)->colors[tid_] == static_cast<int>(OPEN))
         return false;
 
       // Keep a ptr over the array of colors
-      refs_.push_back(it->colors);
+      refs_.push_back((*it)->colors);
 
       // Mark state as visited.
-      it->colors[tid_] = OPEN;
+      (*it)->colors[tid_] = OPEN;
       ++states_;
       return true;
     }
@@ -252,7 +257,8 @@ namespace spot
     unsigned dfs_ = 0;                     ///< \brief Maximum DFS stack size
     /// \brief Maximum number of threads that can be handled by this algorithm
     unsigned nb_th_ = 0;
-    fixed_size_pool<pool_type::Unsafe> p_;  ///< \brief State Allocator
+    fixed_size_pool<pool_type::Unsafe> p_;  ///< \brief Color Allocator
+    fixed_size_pool<pool_type::Unsafe> p_pair_;  ///< \brief State Allocator
     bool deadlock_ = false;                ///< \brief Deadlock detected?
     std::atomic<bool>& stop_;              ///< \brief Stop-the-world boolean
     /// \brief Stack that grows according to the todo stack. It avoid multiple
