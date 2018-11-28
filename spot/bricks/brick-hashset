@@ -43,7 +43,7 @@ using hash::hash128_t;
 
 struct DefaultHasher
 {
-    auto hash( int64_t v ) const -> std::pair<int64_t, int64_t>
+    auto hash( int64_t v ) const
     {
         return std::make_pair( v, ~v );
     }
@@ -153,7 +153,8 @@ struct FastAtomicCell : CellBase< T, Hasher >
         return true;
     }
 
-    bool tryStore( T v, hash32_t hash ) {
+    bool tryStore( T v, hash32_t hash )
+    {
         hash |= 0x1;
         hash32_t chl = 0;
         if ( _hashlock.compare_exchange_strong( chl, (hash << 2) | 1 ) ) {
@@ -163,6 +164,8 @@ struct FastAtomicCell : CellBase< T, Hasher >
         }
         return false;
     }
+
+    void store( T v, hash32_t hash ) { tryStore( v, hash ); }
 
     template< typename Value >
     bool is( const Value &v, hash64_t hash, Hasher &h ) {
@@ -209,9 +212,9 @@ struct AtomicCell : CellBase< T, Hasher >
 {
     std::atomic< Tagged< T > > value;
 
-    static_assert( sizeof( std::atomic< Tagged< T > > ) == sizeof( Tagged< T > ),
-                   "std::atomic< Tagged< T > > must be lock-free" );
-    static_assert( Tagged< T >::tag_bits > 0, "T has at least a one-bit tagspace" );
+    // static_assert( sizeof( std::atomic< Tagged< T > > ) == sizeof( Tagged< T > ),
+    //                "std::atomic< Tagged< T > > must be lock-free" );
+    // static_assert( Tagged< T >::tag_bits > 0, "T has at least a one-bit tagspace" );
 
     bool empty() { return !value.load().t; }
     bool invalid() {
@@ -226,20 +229,19 @@ struct AtomicCell : CellBase< T, Hasher >
         return AtomicCell( value.exchange( v ) );
     }
 
-    Tagged< T > &deatomize() {
-        value.load(); // fence
-        return *reinterpret_cast< Tagged< T > * >( &value );
-    }
-
-    T &fetch() { return deatomize().t; }
+    T fetch() { return value.load().t; }
     T copy() { Tagged< T > v = value; v.tag( 0 ); return v.t; }
     bool wait() { return !invalid(); }
 
-    void store( T bn, hash64_t hash ) {
-        return tryStore( bn, hash );
+    void store( T bn, hash64_t hash )
+    {
+        Tagged< T > next( bn );
+        next.tag( highbits( hash, Tagged< T >::tag_bits ) | 1 );
+        value.store( next );
     }
 
-    bool tryStore( T b, hash64_t hash ) {
+    bool tryStore( T b, hash64_t hash )
+    {
         Tagged< T > zero;
         Tagged< T > next( b );
         next.tag( highbits( hash, Tagged< T >::tag_bits ) | 1 );
@@ -299,13 +301,25 @@ struct HashSetBase
 
     Hasher hasher;
 
-    struct iterator {
+    struct proxy
+    {
+        value_type v;
+        value_type *operator->() { return &v; }
+    };
+
+    struct iterator
+    {
         Cell *_cell;
+        value_type _value;
         bool _new;
-        iterator( Cell *c = nullptr, bool n = false ) : _cell( c ), _new( n ) {}
-        value_type *operator->() { return &(_cell->fetch()); }
-        value_type &operator*() { return _cell->fetch(); }
+
+        iterator( Cell *c = nullptr, bool n = false )
+            : _cell( c ), _value( c ? c->fetch() : value_type() ), _new( n )
+        {}
+        proxy operator->() { return proxy( _value ); }
+        value_type operator*() { return _value; }
         value_type copy() { return _cell->copy(); }
+        void update( value_type v ) { _cell->store( v ); }
         bool valid() { return _cell; }
         bool isnew() { return _new; }
     };
@@ -355,13 +369,16 @@ struct _HashSet : HashSetBase< Cell >
     size_t _maxsize;
     bool _growing;
 
-    size_t size() const { return _table.size(); }
+    size_t capacity() const { return _table.size(); }
     bool empty() const { return !_used; }
 
     int count( const value_type &i ) { return find( i ).valid(); }
     hash64_t hash( const value_type &i ) { return hash128( i ).first; }
     hash128_t hash128( const value_type &i ) { return this->hasher.hash( i ); }
-    iterator insert( value_type i ) { return insertHinted( i, hash( i ) ); }
+    iterator insert( value_type i, bool replace = false )
+    {
+        return insertHinted( i, hash( i ), replace );
+    }
 
     template< typename T >
     iterator find( const T &i ) {
@@ -387,27 +404,35 @@ struct _HashSet : HashSetBase< Cell >
         return this->end();
     }
 
-    iterator insertHinted( const value_type &i, hash64_t h ) {
-        return insertHinted( i, h, _table, _used );
+    iterator insertHinted( const value_type &i, hash64_t h, bool replace = false )
+    {
+        return insertHinted( i, h, _table, _used, replace );
     }
 
-    iterator insertHinted( const value_type &item, hash64_t h, Table &table, int &used )
+    iterator insertHinted( const value_type &item, hash64_t h, Table &table, int &used,
+                           bool replace = false )
     {
-        if ( !_growing && size_t( _used ) > (size() / 100) * 75 )
+        if ( !_growing && size_t( _used ) > ( capacity() / 100 ) * 75 )
             grow();
 
         size_t idx;
-        for ( size_t i = 0; i < this->maxcollisions; ++i ) {
+        for ( size_t i = 0; i < this->maxcollisions; ++i )
+        {
             idx = this->index( h, i, _bits );
 
-            if ( table[ idx ].empty() ) {
+            if ( table[ idx ].empty() )
+            {
                 ++ used;
                 table[ idx ].store( item, h );
                 return iterator( &table[ idx ], true );
             }
 
             if ( table[ idx ].is( item, h, this->hasher ) )
+            {
+                if ( replace )
+                    table[ idx ].store( item, h );
                 return iterator( &table[ idx ], false );
+            }
         }
 
         grow();
@@ -416,7 +441,7 @@ struct _HashSet : HashSetBase< Cell >
     }
 
     void grow() {
-        if ( 2 * size() >= _maxsize )
+        if ( 2 * capacity() >= _maxsize )
             UNREACHABLE( "ran out of space in the hash table" );
 
         if( _growing )
@@ -428,7 +453,7 @@ struct _HashSet : HashSetBase< Cell >
 
         Table table;
 
-        table.resize( 2 * size(), Cell() );
+        table.resize( 2 * capacity(), Cell() );
         _bits |= (_bits << 1); // unmask more
 
         for ( auto cell : _table ) {
@@ -444,7 +469,7 @@ struct _HashSet : HashSetBase< Cell >
         _growing = false;
     }
 
-    void setSize( size_t s )
+    void reserve( size_t s )
     {
         _bits = 0;
         while ((s = s >> 1))
@@ -454,7 +479,7 @@ struct _HashSet : HashSetBase< Cell >
 
     void clear() {
         _used = 0;
-        std::fill( _table.begin(), _table.end(), value_type() );
+        std::fill( _table.begin(), _table.end(), Cell() );
     }
 
     Cell &cellAt( size_t idx ) { return _table[ idx ]; }
@@ -467,7 +492,7 @@ struct _HashSet : HashSetBase< Cell >
     _HashSet( Hasher h, int initial )
         : Base( h ), _used( 0 ), _maxsize( -1 ), _growing( false )
     {
-        setSize( initial );
+        reserve( initial );
     }
 };
 
@@ -595,28 +620,29 @@ struct _ConcurrentHashSet : HashSetBase< Cell >
         return s * 2;
     }
 
-    size_t size() { return current().size(); }
+    size_t capacity() { return current().size(); }
     Row &current() { return _s->table[ _s->currentRow ]; }
     Row &current( unsigned index ) { return _s->table[ index ]; }
     bool changed( unsigned row ) { return row < _s->currentRow || _s->growing; }
 
-    iterator insert( value_type x )
+    iterator insert( value_type x, bool replace = false )
     {
-        return insertHinted( x, hasher.hash( x ).first );
+        return insertHinted( x, hasher.hash( x ).first, replace );
     }
 
     template< typename T >
-    iterator find( const T &x ) {
+    iterator find( const T &x )
+    {
         return findHinted( x, hasher.hash( x ).first );
     }
 
     int count( value_type x ) { return find( x ).valid() ? 1 : 0; }
 
-    iterator insertHinted( value_type x, hash64_t h )
+    iterator insertHinted( value_type x, hash64_t h, bool replace = false )
     {
         while ( true ) {
             Row &row = current( _l.currentRow );
-            Insert ir = insertCell< false >( row, x, h );
+            Insert ir = insertCell< false >( row, x, h, replace );
             switch ( ir.r ) {
                 case Resolution::Success:
                     increaseUsage();
@@ -689,7 +715,7 @@ struct _ConcurrentHashSet : HashSetBase< Cell >
     }
 
     template< bool force >
-    Insert insertCell( Row &row, value_type x, hash64_t h )
+    Insert insertCell( Row &row, value_type x, hash64_t h, bool replace = false )
     {
         if ( !force ) {
             // read usage first to guarantee usage <= size
@@ -709,14 +735,20 @@ struct _ConcurrentHashSet : HashSetBase< Cell >
         {
             Cell &cell = row[ Base::index( h, i, mask ) ];
 
-            if ( cell.empty() ) {
+            if ( cell.empty() )
+            {
                 if ( cell.tryStore( x, h ) )
                     return Insert( Resolution::Success, &cell );
                 if ( !force && changed( _l.currentRow ) )
                     return Insert( Resolution::Growing );
             }
+
             if ( cell.is( x, h, hasher ) )
+            {
+                if ( replace )
+                    cell.store( x, h );
                 return Insert( Resolution::Found, &cell );
+            }
 
             if ( !force && changed( _l.currentRow ) )
                 return Insert( Resolution::Growing );
@@ -932,7 +964,7 @@ struct Sequential
         ASSERT( set.count( 1 ) );
 
         unsigned count = 0;
-        for ( unsigned i = 0; i != set.size(); ++i )
+        for ( unsigned i = 0; i != set.capacity(); ++i )
             if ( set.valueAt( i ) )
                 ++count;
 
@@ -1024,7 +1056,7 @@ struct Parallel
     static HS< int > _multi( std::size_t count, int from, int to )
     {
         shmem::ThreadSet< Insert > arr;
-        arr.resize( count, Insert() );
+        arr.resize( count );
         arr[ 0 ].set.initialSize( isize );
 
         for ( std::size_t i = 0; i < count; ++i )
@@ -1049,7 +1081,7 @@ struct Parallel
 
         int count = 0;
         std::set< int > s;
-        for ( size_t i = 0; i != set.size(); ++i ) {
+        for ( size_t i = 0; i != set.capacity(); ++i ) {
             if ( set.valueAt( i ) ) {
                 if ( s.find( set.valueAt( i ) ) == s.end() )
                     s.insert( set.valueAt( i ) );
@@ -1395,7 +1427,7 @@ struct RandomInsert {
         : insert( true ), max( max )
     {
         if ( bg->reserve() > 0 )
-            t.setSize( bg->items() * bg->reserve() );
+            t.reserve( bg->items() * bg->reserve() );
     }
 
     template< typename BG >
@@ -1478,7 +1510,7 @@ struct wrap_set {
         C< T > *t;
         struct ThreadData {};
         HashTable< T > withTD( ThreadData & ) { return *this; }
-        void setSize( int s ) { t->rehash( s ); }
+        void reserve( int s ) { t->rehash( s ); }
         void insert( T i ) { t->insert( i ); }
         int count( T i ) { return t->count( i ); }
         HashTable() : t( new C< T > ) {}
