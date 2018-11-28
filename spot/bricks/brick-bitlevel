@@ -28,7 +28,7 @@
 #include <limits>
 
 #ifdef __linux
-#include <asm/byteorder.h>
+#include <sys/types.h>
 #include <byteswap.h>
 #elif !defined LITTLE_ENDIAN // if defined _WIN32
 #define BYTE_ORDER 1234
@@ -53,6 +53,28 @@ constexpr inline T1 align( T1 v, T2 a ) {
 template< typename T1, typename T2 >
 constexpr inline T1 downalign( T1 v, T2 a ) {
     return v - (v % T1(a));
+}
+
+template< typename F, typename T >
+void maybe_bitcast( F f, T &t )
+{
+    ASSERT( sizeof( T ) == sizeof( F ) );
+    memcpy( &t, &f, sizeof( T ) );
+}
+
+template< typename F, typename T >
+void bitcast( F f, T &t )
+{
+    //static_assert( sizeof( F ) == sizeof( T ) );
+    maybe_bitcast( f, t );
+}
+
+template< typename T, typename F >
+T bitcast( F f )
+{
+    T t;
+    bitcast( f, t );
+    return t;
 }
 
 namespace compiletime {
@@ -89,10 +111,7 @@ struct bvpair
     constexpr bvpair( L l, H h = 0 ) : low( l ), high( h ) {}
     constexpr bvpair() = default;
     explicit constexpr operator bool() const { return low || high; }
-#if ((__GNUC__ >= 4 && __GNUC_MINOR__ > 9) || (__clang_major__ == 3 && __clang_minor__ >= 6))
-    constexpr
-#endif
-    bvpair operator<<( int s ) const
+    constexpr bvpair operator<<( int s ) const
     {
         int rem = 8 * sizeof( low ) - s;
         int unshift = std::max( rem, 0 );
@@ -100,10 +119,7 @@ struct bvpair
         H carry = ( low & ~ones< L >( unshift ) ) >> unshift;
         return bvpair( low << s, ( high << s ) | ( carry << shift ) );
     }
-#if ((__GNUC__ >= 4 && __GNUC_MINOR__ > 9) || (__clang_major__ == 3 && __clang_minor__ >= 6))
-    constexpr
-#endif
-    bvpair operator>>( int s ) const
+    constexpr bvpair operator>>( int s ) const
     {
         int rem = 8 * sizeof( low ) - s;
         int unshift = std::max( rem, 0 );
@@ -133,21 +149,44 @@ template< int i > using bitvec = typename _bitvec< i >::T;
 
 namespace {
 
-uint32_t mixdown( uint64_t i ) /* due to Thomas Wang */
+template< typename T >
+union Cast
 {
-    i = (~i) + (i << 18);
-    i =   i  ^ (i >> 31);
-    i =   i  * 21;
-    i =   i  ^ (i >> 11);
-    i =   i  + (i << 6);
-    i =   i  ^ (i >> 22);
-    return i;
+    bitvec< sizeof( T ) * 8 > r;
+    T c;
+    Cast( T c ) : c( c ) {}
+    Cast( bitvec< sizeof( T ) * 8 > r ) : r( r ) {}
+};
+
+template< typename T >
+bitvec< sizeof( T ) * 8 > raw( T t )
+{
+    Cast< T > c( t );
+    return c.r;
 }
 
-__attribute__((unused)) uint32_t mixdown( uint32_t a, uint32_t b )
+template< typename T >
+T unraw( bitvec< sizeof( T ) * 8 > r )
 {
-    return mixdown( ( uint64_t( a ) << 32 ) | uint64_t( b ) );
+    Cast< T > c( r );
+    return c.c;
 }
+
+// uint32_t mixdown( uint64_t i ) /* due to Thomas Wang */
+// {
+//     i = (~i) + (i << 18);
+//     i =   i  ^ (i >> 31);
+//     i =   i  * 21;
+//     i =   i  ^ (i >> 11);
+//     i =   i  + (i << 6);
+//     i =   i  ^ (i >> 22);
+//     return i;
+// }
+
+// uint32_t mixdown( uint32_t a, uint32_t b )
+// {
+//     return mixdown( ( uint64_t( a ) << 32 ) | uint64_t( b ) );
+// }
 
 }
 
@@ -367,13 +406,13 @@ struct BitField
             return *this; \
         }
 
-        OP(+=)
-        OP(-=)
-        OP(*=)
-        OP(/=)
-        OP(%=)
-        OP(|=)
-        OP(&=)
+        OP(+=);
+        OP(-=);
+        OP(*=);
+        OP(/=);
+        OP(%=);
+        OP(|=);
+        OP(&=);
 #undef OP
     };
 };
@@ -654,7 +693,8 @@ struct BitTupleTest {
         ASSERT( !get< 0 >( bt ).word() );
     }
 
-    TEST(assign) {
+    TEST(assign) /* TODO fails in DIVINE */
+    {
         bitlevel::BitTuple<
             BitField< bool, 1 >,
             BitField< int, 6 >,

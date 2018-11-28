@@ -42,10 +42,10 @@
 #include <iostream>
 #include <typeinfo>
 
-#include <mutex>
 #include <atomic>
 #include <thread>
 #include <mutex>
+#include <future>
 
 #include <unistd.h> // alarm
 #include <vector>
@@ -54,18 +54,21 @@
 #define BRICK_SHMEM_H
 
 #ifndef BRICKS_CACHELINE
-#if (__GNUC__ >= 7) // Please new Versions of GCC
-#define	BRICKS_CACHELINE 16
-#else
 #define BRICKS_CACHELINE 64
-#endif
 #endif
 
 namespace brick {
 namespace shmem {
 
+struct ThreadBase
+{
+    virtual void start() = 0;
+    virtual void stop() = 0;
+    virtual ~ThreadBase() {}
+};
+
 template< typename T >
-struct Thread : T
+struct Thread : T, ThreadBase
 {
     std::unique_ptr< std::thread > _thread;
     bool _start_on_move; // :-(
@@ -89,9 +92,9 @@ struct Thread : T
             start();
     }
 
-    virtual void start() noexcept
+    virtual void start()
     {
-        _thread.reset( new std::thread( [this]() noexcept { this->main(); } ) );
+        _thread.reset( new std::thread( [this]() { this->main(); } ) );
     }
 
     virtual void stop()
@@ -116,13 +119,6 @@ struct Thread : T
             _thread->detach();
             _thread.reset();
         }
-    }
-
-    const Thread& operator=(const Thread& other)
-    {
-        std::cerr << "FIXME Added by us (Spot) to avoid compilation warnings\n";
-        std::cerr << "      Should not pass here.\n";
-        return other;
     }
 };
 
@@ -178,13 +174,13 @@ struct AsyncLoop : Thread< LoopWrapper< T > >
         stop(); /* call the correct stop(), with interrupt() */
     }
 
-    void start() noexcept override
+    void start()
     {
         this->_interrupted.store( false, std::memory_order_relaxed );
         Super::start();
     }
 
-    void stop() override
+    void stop()
     {
         this->interrupt();
         Super::stop();
@@ -192,19 +188,22 @@ struct AsyncLoop : Thread< LoopWrapper< T > >
 };
 
 template< typename L >
-auto async_loop( L &&l ) -> AsyncLoop< LambdaWrapper< L > >&&
+using AsyncLambdaLoop = AsyncLoop< LambdaWrapper< L > >;
+
+template< typename L >
+auto async_loop( L &&l )
 {
-    AsyncLoop< LambdaWrapper< L > > al( std::forward< L >( l ) );
+    AsyncLambdaLoop< L > al( std::forward< L >( l ) );
     al._start_on_move = true;
     return std::move( al );
 }
 
 template< typename L >
-auto thread( L &&l ) -> Thread< LambdaWrapper< L > >
+auto thread( L &&l )
 {
     Thread< LambdaWrapper< L > > thr( std::forward< L >( l ) );
     thr._start_on_move = true;
-    return thr;
+    return std::move( thr );
 }
 
 template< typename T >
@@ -213,7 +212,7 @@ struct ThreadSet : std::vector< Thread< T > >
     template< typename... Args >
     ThreadSet( Args&&... args ) : std::vector< Thread< T > >( std::forward< Args >( args )... ) {}
 
-    void start() noexcept { for ( auto &t : *this ) t.start(); }
+    void start() { for ( auto &t : *this ) t.start(); }
     void join() { for ( auto &t : *this ) t.join(); }
 };
 
@@ -637,6 +636,41 @@ struct Chunked
 
 template< typename T >
 using SharedQueue = Chunked< LockedQueue, T >;
+
+namespace
+{
+
+using steady_time = std::chrono::time_point< std::chrono::steady_clock >;
+
+// steady_time later( int ms )
+// {
+//     return std::chrono::steady_clock::now() + std::chrono::milliseconds( ms );
+// }
+
+template< typename I, typename F >
+std::future_status wait( I b, I e, F cleanup,
+                         steady_time until /*= 0 later( 500 )*/ ) try
+{
+    int total = 0, ready = 0;
+    for ( auto i = b; i != e; ++i )
+    {
+        if ( !i->valid() ) continue;
+        ++ total;
+        if ( i->wait_until( until ) == std::future_status::ready )
+        {
+            ++ ready;
+            i->get(); /* throw any exceptions */
+        }
+    }
+    if ( total == ready )
+    {
+        cleanup();
+        return std::future_status::ready;
+    }
+    return std::future_status::timeout;
+} catch ( ... ) { cleanup(); throw; };
+
+}
 
 }
 
