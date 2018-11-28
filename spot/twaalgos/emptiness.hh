@@ -379,13 +379,11 @@ namespace spot
       bdd label;
       acc_cond::mark_t acc;
 
-      step(const state* s, bdd label, acc_cond::mark_t acc)
+      step(const state* s, bdd label, acc_cond::mark_t acc) noexcept
         : s(s), label(label), acc(acc)
       {
       }
-      step()
-      {
-      }
+      step() = default;
     };
 
     typedef std::list<step> steps;
@@ -395,7 +393,7 @@ namespace spot
     const_twa_ptr aut;
 
     ~twa_run();
-    twa_run(const const_twa_ptr& aut)
+    twa_run(const const_twa_ptr& aut) noexcept
       : aut(aut)
     {
     }

@@ -229,15 +229,15 @@ namespace spot
     bool rejecting_:1;        // Necessarily rejecting
     bool useful_:1;
   public:
-    scc_info_node():
+    scc_info_node() noexcept:
       acc_({}), trivial_(true), accepting_(false),
       rejecting_(false), useful_(false)
     {
     }
 
     scc_info_node(acc_cond::mark_t acc,
-                  acc_cond::mark_t common, bool trivial):
-      acc_(acc), common_(common),
+                  acc_cond::mark_t common, bool trivial) noexcept
+      : acc_(acc), common_(common),
       trivial_(trivial), accepting_(false),
       rejecting_(false), useful_(false)
     {

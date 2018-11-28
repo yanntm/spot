@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2012, 2013, 2014, 2015, 2018 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -116,7 +116,8 @@ namespace spot
       unsigned s;
       unsigned succ = 0U;
       bool f = false;
-      dfs_entry(unsigned s): s(s)
+      dfs_entry(unsigned s) noexcept
+        : s(s)
       {
       }
     };

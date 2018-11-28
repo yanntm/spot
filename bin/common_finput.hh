@@ -30,7 +30,7 @@ struct job
   const char* str;
   bool file_p;        // true if str is a filename, false if it is a formula
 
-  job(const char* str, bool file_p)
+  job(const char* str, bool file_p) noexcept
     : str(str), file_p(file_p)
   {
   }

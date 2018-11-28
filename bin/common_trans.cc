@@ -88,7 +88,7 @@ static void show_shorthands(shorthands_t* begin, shorthands_t* end)
 
 
 tool_spec::tool_spec(const char* spec, shorthands_t* begin, shorthands_t* end,
-                     bool is_ref)
+                     bool is_ref) noexcept
   : spec(spec), cmd(spec), name(spec), reference(is_ref)
 {
   if (*cmd == '{')
@@ -150,7 +150,7 @@ tool_spec::tool_spec(const char* spec, shorthands_t* begin, shorthands_t* end,
     cmd = strdup(cmd);
 }
 
-tool_spec::tool_spec(const tool_spec& other)
+tool_spec::tool_spec(const tool_spec& other) noexcept
   : spec(other.spec), cmd(other.cmd), name(other.name),
     reference(other.reference)
 {

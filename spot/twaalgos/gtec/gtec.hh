@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2013, 2014, 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2008, 2013, 2014, 2015, 2016, 2018 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -197,7 +197,8 @@ namespace spot
     struct successor {
       acc_cond::mark_t acc;
       const spot::state* s;
-      successor(acc_cond::mark_t acc, const spot::state* s): acc(acc), s(s) {}
+      successor(acc_cond::mark_t acc, const spot::state* s) noexcept
+        : acc(acc), s(s) {}
     };
 
     // We use five main data in this algorithm:

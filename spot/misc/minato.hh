@@ -90,7 +90,7 @@ namespace spot
       bdd f0_min, f0_max;
       bdd f1_min, f1_max;
       bdd g0, g1;
-      local_vars(bdd f_min, bdd f_max, bdd vars)
+      local_vars(bdd f_min, bdd f_max, bdd vars) noexcept
         : f_min(f_min), f_max(f_max), step(FirstStep), vars(vars) {}
     };
     std::stack<local_vars> todo_;

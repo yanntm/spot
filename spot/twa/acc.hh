@@ -1140,7 +1140,7 @@ namespace spot
       rs_pair(const rs_pair&) = default;
 #endif
 
-      rs_pair(acc_cond::mark_t fin, acc_cond::mark_t inf):
+      rs_pair(acc_cond::mark_t fin, acc_cond::mark_t inf) noexcept:
         fin(fin),
         inf(inf)
         {}

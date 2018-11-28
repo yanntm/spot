@@ -29,7 +29,7 @@ using namespace std::string_literals;
 
 namespace spot
 {
-  twa_word::twa_word(const twa_run_ptr& run)
+  twa_word::twa_word(const twa_run_ptr& run) noexcept
     : dict_(run->aut->get_dict())
   {
     for (auto& i: run->prefix)
@@ -39,7 +39,7 @@ namespace spot
     dict_->register_all_variables_of(run->aut, this);
   }
 
-  twa_word::twa_word(const bdd_dict_ptr& dict)
+  twa_word::twa_word(const bdd_dict_ptr& dict) noexcept
     : dict_(dict)
   {
   }

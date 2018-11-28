@@ -44,7 +44,7 @@ namespace spot
   struct stack_item
   {
     stack_item(const state* n, twa_succ_iterator* i, bdd l, acc_cond::mark_t a)
-      : s(n), it(i), label(l), acc(a) {};
+      noexcept : s(n), it(i), label(l), acc(a) {};
     /// The visited state.
     const state* s;
     /// Design the next successor of \a s which has to be visited.

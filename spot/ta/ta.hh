@@ -211,7 +211,7 @@ namespace spot
     struct connected_component
     {
     public:
-      connected_component(int index = -1);
+      connected_component(int index = -1) noexcept;
 
       /// Index of the SCC.
       int index;

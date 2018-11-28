@@ -51,8 +51,8 @@ struct tool_spec
   bool reference;
 
   tool_spec(const char* spec, shorthands_t* begin, shorthands_t* end,
-            bool is_ref);
-  tool_spec(const tool_spec& other);
+            bool is_ref) noexcept;
+  tool_spec(const tool_spec& other) noexcept;
   tool_spec& operator=(const tool_spec& other);
   ~tool_spec();
 };

@@ -33,8 +33,8 @@ namespace spot
   /// BDDs: one list of the prefix, one list for the cycle.
   struct SPOT_API twa_word final
   {
-    twa_word(const bdd_dict_ptr& dict);
-    twa_word(const twa_run_ptr& run);
+    twa_word(const bdd_dict_ptr& dict) noexcept;
+    twa_word(const twa_run_ptr& run) noexcept;
     ~twa_word()
     {
       dict_->unregister_all_my_variables(this);

@@ -25,7 +25,7 @@ namespace spot
 {
 
 
-  scc_stack_ta::connected_component::connected_component(int i)
+  scc_stack_ta::connected_component::connected_component(int i) noexcept
   {
     index = i;
     is_accepting = false;
