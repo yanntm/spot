@@ -532,7 +532,7 @@ static int checked_main()
       try
         {
            modelcube = spot::ltsmin_model::load(mc_options.model)
-             .kripkecube({}, deadf, mc_options.compress,
+             .kripkecube({}, spot::formula::ff(), mc_options.compress,
                          mc_options.nb_threads);
         }
       catch (const std::runtime_error& e)
