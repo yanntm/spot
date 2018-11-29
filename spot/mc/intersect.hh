@@ -59,6 +59,9 @@ namespace spot
   class SPOT_API intersect
   {
   public:
+    intersect(const intersect<State, SuccIterator, StateHash,
+                              StateEqual, EmptinessCheck>& i) = default;
+
     intersect(kripkecube<State, SuccIterator>& sys,
               twacube_ptr twa, unsigned tid, bool& stop):
       sys_(sys), twa_(twa), tid_(tid), stop_(stop)

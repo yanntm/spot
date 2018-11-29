@@ -44,6 +44,13 @@ namespace spot
                                               StateEqual>>::product_state;
 
   public:
+
+    ec_renault13lpar() = delete;
+    ec_renault13lpar(const ec_renault13lpar<State, SuccIterator,
+                                            StateHash, StateEqual>&) = default;
+    ec_renault13lpar(ec_renault13lpar<State, SuccIterator,
+                                      StateHash, StateEqual>&) = delete;
+
     ec_renault13lpar(kripkecube<State, SuccIterator>& sys,
                      twacube_ptr twa, unsigned tid, bool stop)
       : intersect<State, SuccIterator, StateHash, StateEqual,
