@@ -70,7 +70,7 @@ int main()
     t.join();
 
   // Display the whole table.
-  for (unsigned i = 0; i < ht2.size(); ++ i)
+  for (unsigned i = 0; i < ht2.capacity(); ++ i)
     if (ht2.valid(i))
       std::cout << i << ": {"
                 << ht2.valueAt(i).x << ','
