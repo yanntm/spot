@@ -172,22 +172,6 @@ T unraw( bitvec< sizeof( T ) * 8 > r )
     return c.c;
 }
 
-// uint32_t mixdown( uint64_t i ) /* due to Thomas Wang */
-// {
-//     i = (~i) + (i << 18);
-//     i =   i  ^ (i >> 31);
-//     i =   i  * 21;
-//     i =   i  ^ (i >> 11);
-//     i =   i  + (i << 6);
-//     i =   i  ^ (i >> 22);
-//     return i;
-// }
-
-// uint32_t mixdown( uint32_t a, uint32_t b )
-// {
-//     return mixdown( ( uint64_t( a ) << 32 ) | uint64_t( b ) );
-// }
-
 }
 
 /*
@@ -352,6 +336,9 @@ struct BitField
     static const int bitwidth = width;
     struct Virtual : BitPointer
     {
+        Virtual() = default;
+        Virtual(const Virtual& ) = default;
+
         T set( T t ) { bitcopy( BitPointer( &t ), *this, bitwidth ); return t; }
         Virtual operator=( T t ) {
             set( t );
@@ -406,13 +393,13 @@ struct BitField
             return *this; \
         }
 
-        OP(+=);
-        OP(-=);
-        OP(*=);
-        OP(/=);
-        OP(%=);
-        OP(|=);
-        OP(&=);
+        OP(+=)
+        OP(-=)
+        OP(*=)
+        OP(/=)
+        OP(%=)
+        OP(|=)
+        OP(&=)
 #undef OP
     };
 };

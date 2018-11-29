@@ -90,6 +90,12 @@ namespace spot
     using shared_map = brick::hashset::FastConcurrent <uf_element*,
                                                        uf_element_hasher>;
 
+    iterable_uf(const iterable_uf<State, StateHash, StateEqual>& uf):
+      map_(uf.map_), tid_(uf.tid_), size_(std::thread::hardware_concurrency()),
+      nb_th_(std::thread::hardware_concurrency()), inserted_(0),
+      p_(sizeof(uf_element))
+    {  }
+
 
     iterable_uf(shared_map& map, unsigned tid):
       map_(map), tid_(tid), size_(std::thread::hardware_concurrency()),
@@ -389,6 +395,8 @@ namespace spot
     }
 
   private:
+    iterable_uf() = default;
+
     shared_map map_;      ///< \brief Map shared by threads copy!
     unsigned tid_;        ///< \brief The Id of the current thread
     unsigned size_;       ///< \brief Maximum number of thread
@@ -414,8 +422,10 @@ namespace spot
            typename StateHash, typename StateEqual>
   class swarmed_bloemen
   {
-  public:
+  private:
+    swarmed_bloemen() = delete;
 
+  public:
     swarmed_bloemen(kripkecube<State, SuccIterator>& sys,
                     iterable_uf<State, StateHash, StateEqual>& uf,
                     unsigned tid):

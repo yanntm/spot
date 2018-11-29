@@ -165,6 +165,8 @@ struct Maybe : Comparable {
     Maybe( bool n, const T &v ) : m_nothing( n ), m_value( v ) {}
     Maybe( const T &df = T() )
        : m_nothing( true ), m_value( df ) {}
+    Maybe() = default;
+    Maybe(const Maybe&) = default;
     static Maybe Just( const T &t ) { return Maybe( false, t ); }
     static Maybe Nothing( const T &df = T() ) {
         return Maybe( true, df ); }
@@ -1194,8 +1196,19 @@ struct Mixins {
 #if __cplusplus >= 201103L
 
 struct A { };
-struct B { B() { }; ~B() { } };
-struct C { int x; C( int x ) : x( x ) {} C() : x( 0 ) {} };
+struct B {
+    B() = default;
+    B(const B&) = default;
+    ~B() { }
+};
+struct C {
+    int x;
+    C(C&) = default;
+    C(const C&) = default;
+    C( int x ) : x( x ) {}
+    C() : x( 0 ) {}
+    ~C() { }
+};
 
 static_assert( _impl::In< int, int >::value, "" );
 static_assert( _impl::In< A, A, B >::value, "" );
@@ -1278,25 +1291,6 @@ struct UnionTest {
     static C constC( B ) { return C( 32 ); }
     static C refC( C &c ) { return c; }
 
-    TEST(apply) {
-        Union< B, C > u;
-        u = B();
-
-        Maybe< C > result = u.match( idC, constC );
-        ASSERT( !result.isNothing() );
-        ASSERT_EQ( result.value().x, 32 );
-
-        u = C( 12 );
-        result = u.match( idC, constC );
-        ASSERT( !result.isNothing() );
-        ASSERT_EQ( result.value().x, 12 );
-
-        result = u.match( constC );
-        ASSERT( result.isNothing() );
-
-        result = u.match( refC );
-        ASSERT_EQ( result.value().x, 12 );
-    }
 
     TEST(eq) {
         Union< int, long > u{ 1 };
@@ -1344,31 +1338,6 @@ struct UnionTest {
         ASSERT( u < 2l );
         ASSERT( v < 2l );
         ASSERT( w <= 2l );
-    }
-
-    struct TrackDtor {
-        TrackDtor( int *cnt ) : cnt( cnt ) { }
-        ~TrackDtor() { ++*cnt; }
-        int *cnt;
-    };
-
-    TEST(dtor) {
-        int cnt = 0;
-        {
-            Union< int, TrackDtor > u;
-            u = TrackDtor( &cnt );
-            cnt = 0;
-        }
-        ASSERT_EQ( cnt, 1 );
-    }
-
-    TEST(assing_dtor) {
-        int cnt = 0;
-        Union< int, TrackDtor > u;
-        u = TrackDtor( &cnt );
-        cnt = 0;
-        u = 1;
-        ASSERT_EQ( cnt, 1 );
     }
 };
 

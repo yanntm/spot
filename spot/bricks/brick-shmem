@@ -71,10 +71,11 @@ template< typename T >
 struct Thread : T, ThreadBase
 {
     std::unique_ptr< std::thread > _thread;
-    bool _start_on_move; // :-(
+    bool _start_on_move = false; // :-(
 
     template< typename... Args >
-    Thread( Args&&... args ) : T( std::forward< Args >( args )... ), _start_on_move( false ) {}
+    Thread( Args&&... args ) : T( std::forward< Args >( args )... )
+    {}
     virtual ~Thread() { stop(); }
 
     Thread( const Thread &other ) : T( other )
@@ -84,20 +85,22 @@ struct Thread : T, ThreadBase
     }
 
     Thread( Thread &&other )
-        : T( other._thread ? throw std::logic_error( "cannot move a running thread" ) : other ),
-          _thread( std::move( other._thread ) ),
-          _start_on_move( false )
+        : T(other)
     {
+        if (other._thread)
+            throw std::logic_error( "cannot move a running thread" );
+        
+        _thread =  std::move( other._thread );
         if ( other._start_on_move )
             start();
     }
 
-    virtual void start()
+    virtual void start() override
     {
-        _thread.reset( new std::thread( [this]() { this->main(); } ) );
+        _thread.reset( new std::thread( [this]() noexcept { this->main(); } ) );
     }
 
-    virtual void stop()
+    virtual void stop() override
     {
         if ( _thread && _thread->joinable() )
             join();
@@ -174,13 +177,13 @@ struct AsyncLoop : Thread< LoopWrapper< T > >
         stop(); /* call the correct stop(), with interrupt() */
     }
 
-    void start()
+    void start() override
     {
         this->_interrupted.store( false, std::memory_order_relaxed );
         Super::start();
     }
 
-    void stop()
+    void stop() override
     {
         this->interrupt();
         Super::stop();
@@ -195,7 +198,7 @@ auto async_loop( L &&l )
 {
     AsyncLambdaLoop< L > al( std::forward< L >( l ) );
     al._start_on_move = true;
-    return std::move( al );
+    return al;
 }
 
 template< typename L >
@@ -203,7 +206,7 @@ auto thread( L &&l )
 {
     Thread< LambdaWrapper< L > > thr( std::forward< L >( l ) );
     thr._start_on_move = true;
-    return std::move( thr );
+    return thr;
 }
 
 template< typename T >
@@ -412,117 +415,6 @@ constexpr int defaultNodeSize() { return 3; }
  * to give good cache usage.
  */
 
-template< typename T, int NodeSize = defaultNodeSize< T >() >
-struct Fifo {
-protected:
-    // the Node layout puts read and write counters far apart to avoid
-    // them sharing a cache line, since they are always written from
-    // different threads
-    struct Node {
-        T *read               __attribute__((__aligned__(BRICKS_CACHELINE)));
-        T buffer[ NodeSize ]  __attribute__((__aligned__(BRICKS_CACHELINE)));
-        T * volatile write;
-        Node *next;
-        Node() {
-            read = write = buffer;
-            next = nullptr;
-        }
-    };
-
-    // pad the fifo object to ensure that head/tail pointers never
-    // share a cache line with anyone else
-    Node *head            __attribute__((__aligned__(BRICKS_CACHELINE)));
-    Node * volatile tail  __attribute__((__aligned__(BRICKS_CACHELINE)));
-
-public:
-    Fifo() {
-        head = tail = new Node();
-        ASSERT( empty() );
-    }
-
-    // copying a fifo is not allowed
-    Fifo( const Fifo & ) {
-        head = tail = new Node();
-        ASSERT( empty() );
-    }
-
-    ~Fifo() {
-        while ( head != tail ) {
-            Node *next = head->next;
-            ASSERT( next != nullptr );
-            delete head;
-            head = next;
-        }
-        delete head;
-    }
-
-    void push( const T&x ) {
-        Node *t;
-        if ( tail->write == tail->buffer + NodeSize )
-            t = new Node();
-        else
-            t = tail;
-
-        *t->write = x;
-        ++ t->write;
-        __sync_synchronize();
-
-        if ( tail != t ) {
-            tail->next = t;
-            __sync_synchronize();
-            tail = t;
-        }
-    }
-
-    bool empty() {
-        return head == tail && head->read >= head->write;
-    }
-
-    int size() {
-    	int size = 0;
-    	Node *n = head;
-    	do {
-            size += n->write - n->read;
-            n = n->next;
-        } while (n);
-        return size;
-    }
-
-    void dropHead() {
-        Node *old = head;
-        head = head->next;
-        ASSERT( head );
-        delete old;
-    }
-
-    void pop() {
-        ASSERT( !empty() );
-        ++ head->read;
-        if ( head->read == head->buffer + NodeSize ) {
-            if ( head != tail ) {
-                dropHead();
-            }
-        }
-        // the following can happen when head->next is 0 even though head->read
-        // has reached NodeSize, *and* no front() has been called in the meantime
-        if ( head != tail && head->read > head->buffer + NodeSize ) {
-            dropHead();
-            pop();
-        }
-    }
-
-    T &front( bool wait = false ) {
-        while ( wait && empty() ) ;
-        ASSERT( head );
-        ASSERT( !empty() );
-        // last pop could have left us with empty queue exactly at an
-        // edge of a block, which leaves head->read == NodeSize
-        if ( head->read == head->buffer + NodeSize ) {
-            dropHead();
-        }
-        return *head->read;
-    }
-};
 
 /*
  * A very simple spinlock-protected queue based on std::deque.
@@ -642,11 +534,6 @@ namespace
 
 using steady_time = std::chrono::time_point< std::chrono::steady_clock >;
 
-// steady_time later( int ms )
-// {
-//     return std::chrono::steady_clock::now() + std::chrono::milliseconds( ms );
-// }
-
 template< typename I, typename F >
 std::future_status wait( I b, I e, F cleanup,
                          steady_time until /*= 0 later( 500 )*/ ) try
@@ -668,7 +555,7 @@ std::future_status wait( I b, I e, F cleanup,
         return std::future_status::ready;
     }
     return std::future_status::timeout;
-} catch ( ... ) { cleanup(); throw; };
+} catch ( ... ) { cleanup(); throw; }
 
 }
 
@@ -712,52 +599,6 @@ struct ThreadTest
     }
 };
 
-struct FifoTest {
-    template< typename T >
-    struct Checker
-    {
-        Fifo< T > fifo;
-        int terminate;
-        int n;
-
-        void main()
-        {
-            std::vector< int > x;
-            x.resize( n );
-            for ( int i = 0; i < n; ++i )
-                x[ i ] = 0;
-
-            while (true) {
-                while ( !fifo.empty() ) {
-                    int i = fifo.front();
-                    ASSERT_EQ( x[i % n], i / n );
-                    ++ x[ i % n ];
-                    fifo.pop();
-                }
-                if ( terminate > 1 )
-                    break;
-                if ( terminate )
-                    ++terminate;
-            }
-            terminate = 0;
-            for ( int i = 0; i < n; ++i )
-                ASSERT_EQ( x[ i ], size );
-        }
-
-        Checker( int _n = 1 ) : terminate( 0 ), n( _n ) {}
-    };
-
-    TEST(stress) {
-        Thread< Checker< int > > c;
-        for ( int j = 0; j < 5; ++j ) {
-            c.start();
-            for( int i = 0; i < size; ++i )
-                c.fifo.push( i );
-            c.terminate = true;
-            c.join();
-        }
-    }
-};
 
 namespace { const int peers = 12; }
 
@@ -1228,7 +1069,7 @@ struct FIFO : BenchmarkGroup
             case 1: return length_< LockedQueue< T > >();
             case 2: return length_< Linked< T > >();
             case 3: return length_< Ring< T  > >();
-            case 4: return length_< Fifo< T > >();
+                //            case 4: return length_< Fifo< T > >();
             case 5: return length_< Student< T > >();
             default: ASSERT_UNREACHABLE_F( "bad q = %d", q );
         }
