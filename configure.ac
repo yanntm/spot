@@ -77,8 +77,6 @@ fi
 # Activate C11 for gnulib tests
 AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
 
-AX_CHECK_COMPILE_FLAG([-lpthread], [CFLAGS="$CFLAGS -lpthread"])
-
 gl_INIT
 
 # Use -Werror since using -fvisibility under MinGW is only a warning.

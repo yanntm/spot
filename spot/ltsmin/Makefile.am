@@ -20,7 +20,7 @@
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) \
               $(BUDDY_CPPFLAGS) $(LTDLINCL) \
               -I$(top_builddir)/lib -I$(top_srcdir)/lib
-AM_CXXFLAGS = $(WARNING_CXXFLAGS)
+AM_CXXFLAGS = $(WARNING_CXXFLAGS) -pthread
 
 ltsmindir = $(pkgincludedir)/ltsmin
 
