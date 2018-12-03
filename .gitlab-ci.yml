@@ -58,7 +58,7 @@ debian-gcc-snapshot:
   script:
     - export PATH="/usr/lib/gcc-snapshot/bin:$PATH" LD_LIBRARY_PATH="/usr/lib/gcc-snapshot/lib:$LD_LIBRARY_PATH"
     - autoreconf -vfi
-    - ./configure CXX='g++'
+    - ./configure --with-included-ltdl CXX='g++'
     - make
     - make distcheck
   artifacts:
