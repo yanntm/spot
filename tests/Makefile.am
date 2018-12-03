@@ -454,6 +454,7 @@ if USE_LTSMIN
 check_PROGRAMS += ltsmin/modelcheck
 ltsmin_modelcheck_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) \
 	$(BUDDY_CPPFLAGS) \-I$(top_builddir)/lib -I$(top_srcdir)/lib
+ltsmin_modelcheck_CXXFLAGS = $(CXXFLAGS) -pthread
 ltsmin_modelcheck_SOURCES = ltsmin/modelcheck.cc
 ltsmin_modelcheck_LDADD =  \
   $(top_builddir)/bin/libcommon.a		\
