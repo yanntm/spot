@@ -60,7 +60,7 @@ debian-gcc-snapshot:
     - autoreconf -vfi
     - ./configure --with-included-ltdl CXX='g++'
     - make
-    - make distcheck
+    - make distcheck  DISTCHECK_CONFIGURE_FLAGS='--with-included-ltdl'
   artifacts:
     when: always
     paths:
