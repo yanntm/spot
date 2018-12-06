@@ -47,6 +47,8 @@ namespace spot
     /// \brief Represents a Union-Find element
     struct uf_element
     {
+      uf_element() = default;
+
       /// \brief the state handled by the element
       State st_;
       /// \brief reference to the pointer
@@ -69,7 +71,6 @@ namespace spot
       std::mutex m_reduced_;
       /// \brief the shared reduced set.
       std::vector<bool> reduced_;
-
     };
 
     /// \brief The haser for the previous uf_element.
@@ -124,6 +125,7 @@ namespace spot
 
       // Setup and try to insert the new state in the shared map.
       uf_element* v = (uf_element*) p_.allocate();
+      new (v) (uf_element); // required, otherwise the mutex is unitialized
       v->st_ = a;
       v->parent = v;
       v->next_ = v;
