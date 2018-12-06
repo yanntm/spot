@@ -392,6 +392,7 @@ namespace spot
       }
     ::operator delete(manager_);
     delete[] inner_;
+    delete porinfos_;
   }
 
   cspins_state kripkecube<cspins_state, cspins_iterator>::initial(unsigned tid)

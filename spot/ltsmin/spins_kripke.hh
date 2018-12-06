@@ -137,7 +137,7 @@ namespace spot
       int dead_idx;
       unsigned tid;
       bool use_por;
-      porinfos* porinfos;
+      spot::porinfos* porinfos;
       std::vector<bool>* reduced;
     };
 
