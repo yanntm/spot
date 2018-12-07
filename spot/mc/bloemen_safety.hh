@@ -111,7 +111,8 @@ namespace spot
     iterable_uf_safety(shared_map& map, unsigned tid):
       map_(map), tid_(tid),
       size_(std::thread::hardware_concurrency()),
-      nb_th_(std::thread::hardware_concurrency()), inserted_(0)
+      nb_th_(std::thread::hardware_concurrency()), inserted_(0),
+      p_(sizeof(uf_element_s))
     {
     }
 
@@ -123,7 +124,8 @@ namespace spot
       unsigned w_id = (1U << tid_);
 
       // Setup and try to insert the new state in the shared map.
-      uf_element_s* v = new uf_element_s();
+      uf_element_s* v = (uf_element_s*) p_.allocate();
+      new (v) (uf_element_s); // required, otherwise the mutex is unitialized
       v->st_ = a;
       v->size_ = 1;
       v->done_ = 0;
@@ -144,7 +146,7 @@ namespace spot
       // Insertion failed, delete element
       // FIXME Should we add a local cache to avoid useless allocations?
       if (!b)
-        delete v;
+	p_.deallocate(v);
       else
         ++inserted_;
 
@@ -464,6 +466,7 @@ namespace spot
     unsigned size_;       ///< \brief Maximum number of thread
     unsigned nb_th_;      ///< \brief Current number of threads
     unsigned inserted_;   ///< \brief The number of insert succes
+    fixed_size_pool<pool_type::Unsafe> p_; ///< \brief The allocator
   };
 
   /// \brief This object is returned by the algorithm below
