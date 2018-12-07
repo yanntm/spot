@@ -90,6 +90,10 @@ New in spot 2.6.3.dev (not yet released)
 
   Bugs fixed:
 
+  - translate() would incorrectly mark as stutter-invariant
+    some automata produced from formulas of the form X(f...)
+    where f... is syntactically stutter-invariant.
+
   - acc_cond::is_generalized_rabin() and
     acc_cond::is_generalized_streett() did not recognize the cases
     were a single generalized pair is used.

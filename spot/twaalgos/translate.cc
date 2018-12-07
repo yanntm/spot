@@ -313,6 +313,10 @@ namespace spot
               }
             while (--leading_x);
             aut->set_init_state(init);
+            // Adding initial edges is very likely to kill stutter
+            // invariance (and it certainly cannot fix it).
+            if (aut->prop_stutter_invariant().is_true())
+              aut->prop_stutter_invariant(trival::maybe());
           }
       }
     else
