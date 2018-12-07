@@ -44,16 +44,42 @@ namespace spot
     };
   }
 
+  /// \ingroup twa_essentials
+  /// @{
+
+  /// \brief An acceptance condition
+  ///
+  /// This represent an acceptance condition in the HOA sense, that
+  /// is, an acceptance formula plus a number of acceptance sets.  The
+  /// acceptance formula is expected to use a subset of the acceptance
+  /// sets.  (It usually uses *all* sets, otherwise that means that
+  /// some of the sets have no influence on the automaton language and
+  /// could be removed.)
   class SPOT_API acc_cond
   {
 
 #ifndef SWIG
   private:
-      [[noreturn]] static void report_too_many_sets();
+    [[noreturn]] static void report_too_many_sets();
 #endif
   public:
+
+    /// \brief An acceptance mark
+    ///
+    /// This type is used to represent a set of acceptance sets.  It
+    /// works (and is implemented) like a bit vector where bit at
+    /// index i represents the membership to the i-th acceptance set.
+    ///
+    /// Typically, each transition of an automaton is labeled by a
+    /// mark_t that represents the membership of the transition to
+    /// each of the acceptance sets.
+    ///
+    /// For efficiency reason, the maximum number of acceptance sets
+    /// (i.e., the size of the bit vector) supported is a compile-time
+    /// constant.  It can be changed by passing an option to the
+    /// configure script of Spot.
     struct mark_t :
-    public internal::_32acc<SPOT_MAX_ACCSETS == 8*sizeof(unsigned)>
+      public internal::_32acc<SPOT_MAX_ACCSETS == 8*sizeof(unsigned)>
     {
     private:
       // configure guarantees that SPOT_MAX_ACCSETS % (8*sizeof(unsigned)) == 0
@@ -66,9 +92,11 @@ namespace spot
       }
 
     public:
+      /// Initialize an empty mark_t.
       mark_t() = default;
 
 #ifndef SWIG
+      /// Create a mark_t from a range of set numbers.
       template<class iterator>
       mark_t(const iterator& begin, const iterator& end)
         : mark_t(_value_t::zero())
@@ -77,6 +105,7 @@ namespace spot
           set(*i);
       }
 
+      /// Create a mark_t from a list of set numbers.
       mark_t(std::initializer_list<unsigned> vals)
         : mark_t(vals.begin(), vals.end())
       {
@@ -106,6 +135,11 @@ namespace spot
         return SPOT_MAX_ACCSETS;
       }
 
+      /// \brief A mark_t with all bits set to one.
+      ///
+      /// Beware that *all* bits are sets, not just the bits used in
+      /// the acceptance condition.  This class is unaware of the
+      /// acceptance condition.
       static mark_t all()
       {
         return mark_t(_value_t::mone());
@@ -289,25 +323,30 @@ namespace spot
         return xv;
       }
 
+      /// \brief Whether the set of bits represented by *this is a
+      /// subset of those represented by \a m.
       bool subset(mark_t m) const
       {
         return !((*this) - m);
       }
 
+      /// \brief Whether the set of bits represented by *this is a
+      /// proper subset of those represented by \a m.
       bool proper_subset(mark_t m) const
       {
         return *this != m && this->subset(m);
       }
 
-      // Number of bits sets.
+      /// \brief Number of bits sets.
       unsigned count() const
       {
         return id.count();
       }
 
-      // Return the number of the highest set used plus one.
-      // If no set is used, this returns 0,
-      // If the sets {1,3,8} are used, this returns 9.
+      /// \brief The number of the highest set used plus one.
+      ///
+      /// If no set is used, this returns 0,
+      /// If the sets {1,3,8} are used, this returns 9.
       unsigned max_set() const
       {
         if (id)
@@ -316,9 +355,10 @@ namespace spot
           return 0;
       }
 
-      // Return the number of the lowest set used plus one.
-      // If no set is used, this returns 0.
-      // If the sets {1,3,8} are used, this returns 2.
+      /// \brief The number of the lowest set used plus one.
+      ///
+      /// If no set is used, this returns 0.
+      /// If the sets {1,3,8} are used, this returns 2.
       unsigned min_set() const
       {
         if (id)
@@ -327,13 +367,18 @@ namespace spot
           return 0;
       }
 
-      // Return the lowest acceptance mark
+      /// \brief A mark_t where all bits have been removed except the
+      /// lowest one.
+      ///
+      /// For instance if this contains {1,3,8}, the output is {1}.
       mark_t lowest() const
       {
         return id & -id;
       }
 
-      // Remove n bits that where set
+      /// \brief Remove n bits that where set.
+      ///
+      /// If there are less than n bits set, the output is empty.
       mark_t& remove_some(unsigned n)
       {
         while (n--)
@@ -341,6 +386,7 @@ namespace spot
         return *this;
       }
 
+      /// \brief Fill a container with the indices of the bits that are set.
       template<class iterator>
       void fill(iterator here) const
       {
@@ -355,16 +401,24 @@ namespace spot
           }
       }
 
-      // Returns some iterable object that contains the used sets.
+      /// Returns some iterable object that contains the used sets.
       spot::internal::mark_container sets() const;
 
       SPOT_API
       friend std::ostream& operator<<(std::ostream& os, mark_t m);
     };
 
-    // This encodes either an operator or set of acceptance sets.
+    /// \brief Operators for acceptance formulas.
     enum class acc_op : unsigned short
     { Inf, Fin, InfNeg, FinNeg, And, Or };
+
+    /// \brief A "node" in an acceptance formulas.
+    ///
+    /// Acceptance formulas are stored as a vector of acc_word in a
+    /// kind of reverse polish notation.  Each acc_word is either an
+    /// operator, or a set of acceptance sets.  Operators come with a
+    /// size that represent the number of words in the subtree,
+    /// current operator excluded.
     union acc_word
     {
       mark_t mark;
@@ -375,6 +429,18 @@ namespace spot
       } sub;
     };
 
+    /// \brief An acceptance formulas.
+    ///
+    /// Acceptance formulas are stored as a vector of acc_word in a
+    /// kind of reverse polish notation.  The motivation for this
+    /// design was that we could evaluate the acceptance condition
+    /// using a very simple stack-based interpreter; however it turned
+    /// out that such a stack-based interpretation would prevent us
+    /// from doing short-circuit evaluation, so we are not evaluating
+    /// acceptance conditions this way, and maybe the implementation
+    /// of acc_code could change in the future.  It's best not to rely
+    /// on the fact that formulas are stored as vectors.  Use the
+    /// provided methods instead.
     struct SPOT_API acc_code: public std::vector<acc_word>
     {
       bool operator==(const acc_code& other) const
@@ -475,20 +541,38 @@ namespace spot
         return !(*this == other);
       }
 
+      /// \brief Is this the "true" acceptance condition?
+      ///
+      /// This corresponds to "t" in the HOA format.  Under this
+      /// acceptance condition, all runs are accepting.
       bool is_t() const
       {
+        // We store "t" as an empty condition, or as Inf({}).
         unsigned s = size();
         return s == 0 || ((*this)[s - 1].sub.op == acc_op::Inf
                           && !((*this)[s - 2].mark));
       }
 
+      /// \brief Is this the "false" acceptance condition?
+      ///
+      /// This corresponds to "f" in the HOA format.  Under this
+      /// acceptance condition, no runs is accepting.  Obviously, this
+      /// has very few practical application, except as neutral
+      /// element in some construction.
       bool is_f() const
       {
+        // We store "f" as Fin({}).
         unsigned s = size();
         return s > 1
           && (*this)[s - 1].sub.op == acc_op::Fin && !((*this)[s - 2].mark);
       }
 
+      /// \brief Construct the "false" acceptance condition.
+      ///
+      /// This corresponds to "f" in the HOA format.  Under this
+      /// acceptance condition, no runs is accepting.  Obviously, this
+      /// has very few practical application, except as neutral
+      /// element in some construction.
       static acc_code f()
       {
         acc_code res;
@@ -499,11 +583,22 @@ namespace spot
         return res;
       }
 
+      /// \brief Construct the "true" acceptance condition.
+      ///
+      /// This corresponds to "t" in the HOA format.  Under this
+      /// acceptance condition, all runs are accepting.
       static acc_code t()
       {
         return {};
       }
 
+      /// \brief Construct a generalized co-Büchi acceptance
+      ///
+      /// For the input m={1,8,9}, this constructs Fin(1)|Fin(8)|Fin(9).
+      ///
+      /// Internally, such a formula is stored using a single word
+      /// Fin({1,8,9}).
+      /// @{
       static acc_code fin(mark_t m)
       {
         acc_code res;
@@ -518,7 +613,24 @@ namespace spot
       {
         return fin(mark_t(vals));
       }
+      /// @}
 
+      /// \brief Construct a generalized co-Büchi acceptance for
+      /// complemented sets.
+      ///
+      /// For the input `m={1,8,9}`, this constructs
+      /// `Fin(!1)|Fin(!8)|Fin(!9)`.
+      ///
+      /// Internally, such a formula is stored using a single word
+      /// `FinNeg({1,8,9})`.
+      ///
+      /// Note that `FinNeg` formulas are not supported by most methods
+      /// of this class, and not supported by algorithms in Spot.
+      /// This is mostly used in the parser for HOA files: if the
+      /// input file uses `Fin(!0)` as acceptance condition, the
+      /// condition will eventually be rewritten as `Fin(0)` by toggling
+      /// the membership to set 0 of each transition.
+      /// @{
       static acc_code fin_neg(mark_t m)
       {
         acc_code res;
@@ -533,7 +645,16 @@ namespace spot
       {
         return fin_neg(mark_t(vals));
       }
+      /// @}
 
+      /// \brief Construct a generalized Büchi acceptance
+      ///
+      /// For the input `m={1,8,9}`, this constructs
+      /// `Inf(1)&Inf(8)&Inf(9)`.
+      ///
+      /// Internally, such a formula is stored using a single word
+      /// `Inf({1,8,9})`.
+      /// @{
       static acc_code inf(mark_t m)
       {
         acc_code res;
@@ -548,7 +669,24 @@ namespace spot
       {
         return inf(mark_t(vals));
       }
+      /// @}
 
+      /// \brief Construct a generalized Büchi acceptance for
+      /// complemented sets.
+      ///
+      /// For the input `m={1,8,9}`, this constructs
+      /// `Inf(!1)&Inf(!8)&Inf(!9)`.
+      ///
+      /// Internally, such a formula is stored using a single word
+      /// `InfNeg({1,8,9})`.
+      ///
+      /// Note that `InfNeg` formulas are not supported by most methods
+      /// of this class, and not supported by algorithms in Spot.
+      /// This is mostly used in the parser for HOA files: if the
+      /// input file uses `Inf(!0)` as acceptance condition, the
+      /// condition will eventually be rewritten as `Inf(0)` by toggling
+      /// the membership to set 0 of each transition.
+      /// @{
       static acc_code inf_neg(mark_t m)
       {
         acc_code res;
@@ -563,17 +701,29 @@ namespace spot
       {
         return inf_neg(mark_t(vals));
       }
+      /// @}
 
+      /// \brief Build a Büchi acceptance condition.
+      ///
+      /// This builds the formula `Inf(0)`.
       static acc_code buchi()
       {
         return inf({0});
       }
 
+      /// \brief Build a co-Büchi acceptance condition.
+      ///
+      /// This builds the formula `Fin(0)`.
       static acc_code cobuchi()
       {
         return fin({0});
       }
 
+      /// \brief Build a generalized-Büchi acceptance condition with n sets
+      ///
+      /// This builds the formula `Inf(0)&Inf(1)&...&Inf(n-1)`.
+      ///
+      /// When n is zero, the acceptance condition reduces to true.
       static acc_code generalized_buchi(unsigned n)
       {
         if (n == 0)
@@ -583,6 +733,11 @@ namespace spot
         return inf(m);
       }
 
+      /// \brief Build a generalized-co-Büchi acceptance condition with n sets
+      ///
+      /// This builds the formula `Fin(0)|Fin(1)|...|Fin(n-1)`.
+      ///
+      /// When n is zero, the acceptance condition reduces to false.
       static acc_code generalized_co_buchi(unsigned n)
       {
         if (n == 0)
@@ -592,7 +747,10 @@ namespace spot
         return fin(m);
       }
 
-      // n is a number of pairs.
+      /// \brief Build a Rabin condition with n pairs.
+      ///
+      /// This builds the formula
+      /// `(Fin(0)&Inf(1))|(Fin(2)&Inf(3))|...|(Fin(2n-2)&Inf(2n-1))`
       static acc_code rabin(unsigned n)
       {
         acc_cond::acc_code res = f();
@@ -604,7 +762,10 @@ namespace spot
         return res;
       }
 
-       // n is a number of pairs.
+      /// \brief Build a Streett condition with n pairs.
+      ///
+      /// This builds the formula
+      /// `(Fin(0)|Inf(1))&(Fin(2)|Inf(3))&...&(Fin(2n-2)|Inf(2n-1))`
       static acc_code streett(unsigned n)
       {
         acc_cond::acc_code res = t();
@@ -616,6 +777,18 @@ namespace spot
         return res;
       }
 
+      /// \brief Build a generalized Rabin condition.
+      ///
+      /// The two iterators should point to a range of integers, each
+      /// integer being the number of Inf term in a generalized Rabin pair.
+      ///
+      /// For instance if the input is `[2,3,0]`, the output
+      /// will have three clauses (=generalized pairs), with 2 Inf terms in
+      /// the first clause, 3 in the second, and 0 in the last:
+      ///   `(Fin(0)&Inf(1)&Inf(2))|Fin(3)&Inf(4)&Inf(5)&Inf(6)|Fin(7)`.
+      ///
+      /// Since set numbers are not reused, the number of sets used is
+      /// the sum of all input integers plus their count.
       template<class Iterator>
       static acc_code generalized_rabin(Iterator begin, Iterator end)
       {
@@ -634,13 +807,33 @@ namespace spot
         return res;
       }
 
+      /// \brief Build a parity acceptance condition
+      ///
+      /// In parity acceptance a word is accepting if the maximum (or
+      /// minimum) set number that is seen infinitely often is odd (or
+      /// even).  This function will build a formula for that, as
+      /// specified in the HOA format.
       static acc_code parity(bool max, bool odd, unsigned sets);
 
-      // Number of acceptance sets to use, and probability to reuse
-      // each set another time after it has been used in the
-      // acceptance formula.
+      /// \brief Build a random acceptance condition
+      ///
+      /// If \a n is 0, this will always generate the true acceptance,
+      /// because working with false acceptance is somehow pointless.
+      ///
+      /// For \a n>0, we randomly create a term Fin(i) or Inf(i) for
+      /// each set 0≤i<n.  If \a reuse>0.0, it gives the probability
+      /// that a set i can generate more than one Fin(i)/Inf(i) term.
+      /// Set i will be reused as long as our [0,1) random number
+      /// generator gives a value ≤reuse.  (Do not set reuse≥1.0 as
+      /// that will give an infinite loop.)
+      ///
+      /// All these Fin/Inf terms are the leaves of the tree we are
+      /// building.  That tree is then build by picking two random
+      /// subtrees, and joining them with & and | randomly, until we
+      /// are left with a single tree.
       static acc_code random(unsigned n, double reuse = 0.0);
 
+      /// \brief Conjunct the current condition in place with \a r.
       acc_code& operator&=(const acc_code& r)
       {
         if (is_t() || r.is_f())
@@ -729,6 +922,7 @@ namespace spot
         return *this;
       }
 
+      /// \brief Conjunct the current condition with \a r.
       acc_code operator&(const acc_code& r) const
       {
         acc_code res = *this;
@@ -736,6 +930,7 @@ namespace spot
         return res;
       }
 
+      /// \brief Conjunct the current condition with \a r.
       acc_code operator&(acc_code&& r) const
       {
         acc_code res = *this;
@@ -743,6 +938,7 @@ namespace spot
         return res;
       }
 
+      /// \brief Disjunct the current condition in place with \a r.
       acc_code& operator|=(const acc_code& r)
       {
         if (is_t() || r.is_f())
@@ -829,6 +1025,7 @@ namespace spot
         return *this;
       }
 
+      /// \brief Disjunct the current condition with \a r.
       acc_code operator|(acc_code&& r) const
       {
         acc_code res = *this;
@@ -836,6 +1033,7 @@ namespace spot
         return res;
       }
 
+      /// \brief Disjunct the current condition with \a r.
       acc_code operator|(const acc_code& r) const
       {
         acc_code res = *this;
@@ -843,6 +1041,11 @@ namespace spot
         return res;
       }
 
+      /// \brief Apply a left shift to all mark_t that appear in the condition.
+      ///
+      /// Shifting `Fin(0)&Inf(3)` by 2 will give `Fin(2)&Inf(5)`.
+      ///
+      /// The result is modified in place.
       acc_code& operator<<=(unsigned sets)
       {
         if (SPOT_UNLIKELY(sets >= mark_t::max_accsets()))
@@ -871,6 +1074,9 @@ namespace spot
         return *this;
       }
 
+      /// \brief Apply a left shift to all mark_t that appear in the condition.
+      ///
+      /// Shifting `Fin(0)&Inf(3)` by 2 will give `Fin(2)&Inf(5)`.
       acc_code operator<<(unsigned sets) const
       {
         acc_code res = *this;
@@ -878,80 +1084,176 @@ namespace spot
         return res;
       }
 
+      /// \brief Whether the acceptance formula is in disjunctive normal form.
+      ///
+      /// The formula is in DNF if it is either:
+      /// - one of `t`, `f`, `Fin(i)`, `Inf(i)`
+      /// - a conjunction of any of the above
+      /// - a disjunction of any of the above (including the conjunctions).
       bool is_dnf() const;
+
+      /// \brief Whether the acceptance formula is in conjunctive normal form.
+      ///
+      /// The formula is in DNF if it is either:
+      /// - one of `t`, `f`, `Fin(i)`, `Inf(i)`
+      /// - a disjunction of any of the above
+      /// - a conjunction of any of the above (including the disjunctions).
       bool is_cnf() const;
 
+      /// \brief Convert the acceptance formula into disjunctive normal form
+      ///
+      /// This works by distributing `&` over `|`, resulting in a formula that
+      /// can be exponentially larger than the input.
+      ///
+      /// The implementation works by converting the formula into a
+      /// BDD where `Inf(i)` is encoded by vᵢ and `Fin(i)` is encoded
+      /// by !vᵢ, and then finding prime implicants to build an
+      /// irredundant sum-of-products.  In practice, the results are
+      /// usually better than what we would expect by hand.
       acc_code to_dnf() const;
+
+      /// \brief Convert the acceptance formula into disjunctive normal form
+      ///
+      /// This works by distributing `|` over `&`, resulting in a formula that
+      /// can be exponentially larger than the input.
+      ///
+      /// This implementation is the dual of `to_dnf()`.
       acc_code to_cnf() const;
 
+      /// \brief Complement an acceptance formula.
+      ///
+      /// Also known as "dualizing the acceptance condition" since
+      /// this replaces `Fin` ↔ `Inf`, and `&` ↔ `|`.
+      ///
+      /// Not that dualizing the acceptance condition on a
+      /// deterministic automaton is enough to complement that
+      /// automaton.  On a non-deterministic automaton, you should
+      /// also replace existential choices by universal choices,
+      /// as done by the dualize() function.
       acc_code complement() const;
 
+      /// \brief Find a `Fin(i)` that is a unit clause.
+      ///
+      /// This return a mark_t `{i}` such that `Fin(i)` appears as a
+      /// unit clause in the acceptance condition.  I.e., either the
+      /// condition is exactly `Fin(i)`, or the condition has the form
+      /// `...&Fin(i)&...`.  If there is no such `Fin(i)`, an empty
+      /// mark_t is returned.
+      ///
+      /// If multiple unit-Fin appear as unit-clauses, the set of
+      /// those will be returned.  For instance applied to
+      /// `Fin(0)&Fin(1)&(Inf(2)|Fin(3))``, this will return `{0,1}`.
       mark_t fin_unit() const;
+
+      /// \brief Return one acceptance set i that appear as `Fin(i)`
+      /// in the condition.
+      ///
+      /// Return -1 if no such set exist.
       int fin_one() const;
 
-      // Return a list of acceptance marks needed to close a cycle
-      // that already visit INF infinitely often, so that the cycle is
-      // accepting (ACCEPTING=true) or rejecting (ACCEPTING=false).
-      // Positive values describe positive set.
-      // A negative value x means the set -x-1 must be absent.
+      /// \brief Help closing accepting or rejecting cycle.
+      ///
+      /// Assuming you have a partial cycle visiting all acceptance
+      /// sets in \a inf, this returns the combination of set you
+      /// should see or avoid when closing the cycle to make it
+      /// accepting or rejecting (as specified with \a accepting).
+      ///
+      /// The result is a vector of vectors of integers.
+      /// A positive integer x denote a set that should be seen,
+      /// a negative value x means the set -x-1 must be absent.
+      /// The different inter vectors correspond to different
+      /// solutions satisfying the \a accepting criterion.
       std::vector<std::vector<int>>
         missing(mark_t inf, bool accepting) const;
 
+      /// \brief Check whether visiting *exactly* all sets \a inf
+      /// infinitely often satisfies the acceptance condition.
       bool accepting(mark_t inf) const;
 
+      /// \brief Assuming that we will visit at least all sets in \a
+      /// inf, is there any chance that we will satisfy the condition?
+      ///
+      /// This return false only when it is sure that visiting more
+      /// set will never make the condition satisfiable.
       bool inf_satisfiable(mark_t inf) const;
 
+      /// \brief Check potential acceptance of an SCC.
+      ///
+      /// Assuming that an SCC intersects all sets in \a
+      /// infinitely_often (i.e., for each set in \a infinetely_often,
+      /// there exist one marked transition in the SCC), and is
+      /// included in all sets in \a always_present (i.e., all
+      /// transitions are marked with \a always_present), this returns
+      /// one tree possible results:
+      /// - trival::yes() the SCC is necessarily accepting,
+      /// - trival::no() the SCC is necessarily rejecting,
+      /// - trival::maybe() the SCC could contain an accepting cycle.
       trival maybe_accepting(mark_t infinitely_often,
                              mark_t always_present) const;
 
-      // Return all symmetric marks of the condition.
-      // If two marks x and y are symmetric, it means that swapping them does
-      // not change (logically) the acc_code.
-      // In the returned vector, each mark points to the "root" of its symmetry
-      // class.
+      /// \brief compute the symmetry class of the acceptance sets.
+      ///
+      /// Two sets x and y are symmetric if swapping them in the
+      /// acceptance condition produces an equivalent formula.
+      /// For instance 0 and 2 are symmetric in Inf(0)&Fin(1)&Inf(2).
+      ///
+      /// The returned vector is indexed by set numbers, and each
+      /// entry points to the "root" (or representative element) of
+      /// its symmetry class.  In the above example the result would
+      /// be [0,1,0], showing that 0 and 2 are in the same class.
       std::vector<unsigned> symmetries() const;
 
-      // Remove all the acceptance sets in rem.
-      //
-      // If MISSING is set, the acceptance sets are assumed to be
-      // missing from the automaton, and the acceptance is updated to
-      // reflect this.  For instance (Inf(1)&Inf(2))|Fin(3) will
-      // become Fin(3) if we remove 2 because it is missing from this
-      // automaton, because there is no way to fulfill Inf(1)&Inf(2)
-      // in this case.  So essentially MISSING causes Inf(rem) to
-      // become f, and Fin(rem) to become t.
-      //
-      // If MISSING is unset, Inf(rem) become t while Fin(rem) become
-      // f.  Removing 2 from (Inf(1)&Inf(2))|Fin(3) would then give
-      // Inf(1)|Fin(3).
+      /// \brief Remove all the acceptance sets in \a rem.
+      ///
+      /// If \a missing is set, the acceptance sets are assumed to be
+      /// missing from the automaton, and the acceptance is updated to
+      /// reflect this.  For instance `(Inf(1)&Inf(2))|Fin(3)` will
+      /// become `Fin(3)` if we remove `2` because it is missing from this
+      /// automaton.  Indeed there is no way to fulfill `Inf(1)&Inf(2)`
+      /// in this case.  So essentially `missing=true` causes Inf(rem) to
+      /// become `f`, and `Fin(rem)` to become `t`.
+      ///
+      /// If \a missing is unset, `Inf(rem)` become `t` while
+      /// `Fin(rem)` become `f`.  Removing `2` from
+      /// `(Inf(1)&Inf(2))|Fin(3)` would then give `Inf(1)|Fin(3)`.
       acc_code remove(acc_cond::mark_t rem, bool missing) const;
-      // Same as remove, but also shift numbers
+
+      /// \brief Remove acceptance sets, and shift set numbers
+      ///
+      /// Same as remove, but also shift set numbers in the result so
+      /// that all used set numbers are continuous.
       acc_code strip(acc_cond::mark_t rem, bool missing) const;
-      // for all x in m, this replaces Fin(x) by false.
+      /// \brief For all `x` in \a m, replaces `Fin(x)` by `false`.
       acc_code force_inf(mark_t m) const;
 
-      // Return the set of sets appearing in the condition.
+      /// \brief Return the set of sets appearing in the condition.
       acc_cond::mark_t used_sets() const;
 
-      // Return the sets used as Inf or Fin in the acceptance condition
+      /// \brief  Return the sets used as Inf or Fin in the acceptance condition
       std::pair<acc_cond::mark_t, acc_cond::mark_t> used_inf_fin_sets() const;
 
-      // Print the acceptance as HTML.  The set_printer function can
-      // be used to implement customized output for set numbers.
+      /// \brief Print the acceptance formula as HTML.
+      ///
+      /// The set_printer function can be used to customize the output
+      /// of set numbers.
       std::ostream&
       to_html(std::ostream& os,
               std::function<void(std::ostream&, int)>
               set_printer = nullptr) const;
 
-      // Print the acceptance as text.  The set_printer function can
-      // be used to implement customized output for set numbers.
+      /// \brief Print the acceptance formula as text.
+      ///
+      /// The set_printer function can be used to customize the output
+      /// of set numbers.
       std::ostream&
       to_text(std::ostream& os,
               std::function<void(std::ostream&, int)>
               set_printer = nullptr) const;
 
-      // Print the acceptance as Latex.  The set_printer function can
-      // be used to implement customized output for set numbers.
+      /// \brief Print the acceptance formula as LaTeX.
+      ///
+      /// The set_printer function can be used to customize the output
+      /// of set numbers.
       std::ostream&
       to_latex(std::ostream& os,
                std::function<void(std::ostream&, int)>
@@ -959,7 +1261,7 @@ namespace spot
 
       /// \brief Construct an acc_code from a string.
       ///
-      /// The string can follow the following grammar:
+      /// The string should either follow the following grammar:
       ///
       /// <pre>
       ///   acc ::= "t"
@@ -974,31 +1276,38 @@ namespace spot
       /// Where num is an integer and "&" has priority over "|".  Note that
       /// "Fin(!x)" and "Inf(!x)" are not supported by this parser.
       ///
-      /// Or the string can be the name of an acceptance condition, as
+      /// Or the string could be the name of an acceptance condition, as
       /// speficied in the HOA format.  (E.g. "Rabin 2", "parity max odd 3",
       /// "generalized-Rabin 4 2 1", etc.).
       ///
       /// A spot::parse_error is thrown on syntax error.
       acc_code(const char* input);
 
-      /// \brief Build an empty acceptance condition.
+      /// \brief Build an empty acceptance formula.
       ///
       /// This is the same as t().
       acc_code()
       {
       }
 
-      /// \brief Copy a part of another acceptance condition
+      /// \brief Copy a part of another acceptance formula
       acc_code(const acc_word* other)
         : std::vector<acc_word>(other - other->sub.size, other + 1)
       {
       }
 
-      // Calls to_text
+      /// \brief prints the acceptance formula as text
       SPOT_API
       friend std::ostream& operator<<(std::ostream& os, const acc_code& code);
     };
 
+    /// \brief Build an acceptance condition
+    ///
+    /// This takes a number of sets \a n_sets, and an acceptance
+    /// formula (\a code) over those sets.
+    ///
+    /// The number of sets should be at least cover all the sets used
+    /// in \a code.
     acc_cond(unsigned n_sets = 0, const acc_code& code = {})
       : num_(0U), all_({}), code_(code)
     {
@@ -1006,6 +1315,10 @@ namespace spot
       uses_fin_acceptance_ = check_fin_acceptance();
     }
 
+    /// \brief Build an acceptance condition
+    ///
+    /// In this version, the number of sets is set the the smallest
+    /// number necessary for \a code.
     acc_cond(const acc_code& code)
       : num_(0U), all_({}), code_(code)
     {
@@ -1013,12 +1326,14 @@ namespace spot
       uses_fin_acceptance_ = check_fin_acceptance();
     }
 
+    /// \brief Copy an acceptance condition
     acc_cond(const acc_cond& o)
       : num_(o.num_), all_(o.all_), code_(o.code_),
         uses_fin_acceptance_(o.uses_fin_acceptance_)
     {
     }
 
+    /// \brief Copy an acceptance condition
     acc_cond& operator=(const acc_cond& o)
     {
       num_ = o.num_;
@@ -1032,17 +1347,22 @@ namespace spot
     {
     }
 
+    /// \brief Change the acceptance formula.
+    ///
+    /// Beware, this does not change the number of declared sets.
     void set_acceptance(const acc_code& code)
     {
       code_ = code;
       uses_fin_acceptance_ = check_fin_acceptance();
     }
 
+    /// \brief Retrieve teh acceptance formula
     const acc_code& get_acceptance() const
     {
       return code_;
     }
 
+    /// \brief Retrieve teh acceptance formula
     acc_code& get_acceptance()
     {
       return code_;
@@ -1058,31 +1378,46 @@ namespace spot
       return !(*this == other);
     }
 
+    /// \brief Whether the acceptance condition uses Fin terms
     bool uses_fin_acceptance() const
     {
       return uses_fin_acceptance_;
     }
 
+    /// \brief Whether the acceptance formula is "t" (true)
     bool is_t() const
     {
       return code_.is_t();
     }
 
+    /// \brief Whether the acceptance condition is "all"
+    ///
+    /// In the HOA format, the acceptance condition "all" correspond
+    /// to the formula "t" with 0 declared acceptance sets.
     bool is_all() const
     {
       return num_ == 0 && is_t();
     }
 
+    /// \brief Whether the acceptance formula is "f" (false)
     bool is_f() const
     {
       return code_.is_f();
     }
 
+    /// \brief Whether the acceptance condition is "none"
+    ///
+    /// In the HOA format, the acceptance condition "all" correspond
+    /// to the formula "f" with 0 declared acceptance sets.
     bool is_none() const
     {
       return num_ == 0 && is_f();
     }
 
+    /// \brief Whether the acceptance condition is "Büchi"
+    ///
+    /// The acceptance condition is Büchi if its formula is Inf(0) and
+    /// only 1 set is used.
     bool is_buchi() const
     {
       unsigned s = code_.size();
@@ -1090,21 +1425,33 @@ namespace spot
         s == 2 && code_[1].sub.op == acc_op::Inf && code_[0].mark == all_sets();
     }
 
+    /// \brief Whether the acceptance condition is "co-Büchi"
+    ///
+    /// The acceptance condition is co-Büchi if its formula is Fin(0) and
+    /// only 1 set is used.
     bool is_co_buchi() const
     {
       return num_ == 1 && is_generalized_co_buchi();
     }
 
+    /// \brief Change the acceptance condition to generalized-Büchi,
+    /// over all declared sets.
     void set_generalized_buchi()
     {
       set_acceptance(inf(all_sets()));
     }
 
+    /// \brief Change the acceptance condition to
+    /// generalized-co-Büchi, over all declared sets.
     void set_generalized_co_buchi()
     {
       set_acceptance(fin(all_sets()));
     }
 
+    /// \brief Whether the acceptance condition is "generalized-Büchi"
+    ///
+    /// The acceptance condition with n sets is generalized-Büchi if its
+    /// formula is Inf(0)&Inf(1)&...&Inf(n-1).
     bool is_generalized_buchi() const
     {
       unsigned s = code_.size();
@@ -1112,6 +1459,10 @@ namespace spot
                                        && code_[0].mark == all_sets());
     }
 
+    /// \brief Whether the acceptance condition is "generalized-co-Büchi"
+    ///
+    /// The acceptance condition with n sets is generalized-co-Büchi if its
+    /// formula is Fin(0)|Fin(1)|...|Fin(n-1).
     bool is_generalized_co_buchi() const
     {
       unsigned s = code_.size();
@@ -1119,14 +1470,35 @@ namespace spot
               code_[1].sub.op == acc_op::Fin && code_[0].mark == all_sets());
     }
 
-    // Returns a number of pairs (>=0) if Rabin, or -1 else.
+    /// \brief Check if the acceptance condition matches the Rabin
+    /// acceptance of the HOA format
+    ///
+    /// Rabin acceptance over 2n sets look like
+    /// `(Fin(0)&Inf(1))|...|(Fin(2n-2)&Inf(2n-1))`; i.e., a
+    /// disjunction of n pairs of the form `Fin(2i)&Inf(2i+1)`.
+    ///
+    /// `f` is a special kind of Rabin acceptance with 0 pairs.
+    ///
+    /// This function returns a number of pairs (>=0) or -1 if the
+    /// acceptance condition is not Rabin.
     int is_rabin() const;
-    // Returns a number of pairs (>=0) if Streett, or -1 else.
+
+    /// \brief Check if the acceptance condition matches the Streett
+    /// acceptance of the HOA format
+    ///
+    /// Streett acceptance over 2n sets look like
+    /// `(Fin(0)|Inf(1))&...&(Fin(2n-2)|Inf(2n-1))`; i.e., a
+    /// conjunction of n pairs of the form `Fin(2i)|Inf(2i+1)`.
+    ///
+    /// `t` is a special kind of Streett acceptance with 0 pairs.
+    ///
+    /// This function returns a number of pairs (>=0) or -1 if the
+    /// acceptance condition is not Streett.
     int is_streett() const;
 
     /// \brief Rabin/streett pairs used by is_rabin_like and is_streett_like.
     ///
-    /// These pairs hold two marks which can each contain one or no set.
+    /// These pairs hold two marks which can each contain one or no set number.
     ///
     /// For instance is_streett_like() rewrites  Inf(0)&(Inf(2)|Fin(1))&Fin(3)
     /// as three pairs: [(fin={},inf={0}),(fin={1},inf={2}),(fin={3},inf={})].
@@ -1196,18 +1568,44 @@ namespace spot
     /// -It is false (0 pairs)
     bool is_rabin_like(std::vector<rs_pair>& pairs) const;
 
-    // Return the number of Inf in each pair.
+    /// \brief Is the acceptance condition generalized-Rabin?
+    ///
+    /// Check if the condition follows the generalized-Rabin
+    /// definition of the HOA format.  So one Fin should be in front
+    /// of each generalized pair, and set numbers should all be used
+    /// once.
+    ///
+    /// When true is returned, the \a pairs vector contains the number
+    /// of `Inf` term in each pair.  Otherwise, \a pairs is emptied.
     bool is_generalized_rabin(std::vector<unsigned>& pairs) const;
 
-    // Return the number of Inf in each pair.
+    /// \brief Is the acceptance condition generalized-Streett?
+    ///
+    /// There is no definition of generalized Streett in HOA v1,
+    /// so this uses the definition from the development version
+    /// of the HOA format, that should eventually become HOA v1.1 or
+    /// HOA v2.
+    ///
+    /// One Inf should be in front of each generalized pair, and
+    /// set numbers should all be used once.
+    ///
+    /// When true is returned, the \a pairs vector contains the number
+    /// of `Fin` term in each pair.  Otherwise, \a pairs is emptied.
     bool is_generalized_streett(std::vector<unsigned>& pairs) const;
 
-    // If EQUIV is false, this return true iff the acceptance
-    // condition is a parity condition written in the canonical way
-    // given in the HOA specifications.  If EQUIV is true, then we
-    // check whether the condition is logically equivalent to some
-    // parity acceptance condition.
+    /// \brief check is the acceptance condition matches one of the
+    /// four type of parity acceptance defined in the HOA format.
+    ///
+    /// On success, this return true and sets \a max, and \a odd to
+    /// the type of parity acceptance detected.  By default \a equiv =
+    /// false, and the parity acceptance should match exactly the
+    /// order of operators given in the HOA format.  If \a equiv is
+    /// set, any formula that this logically equivalent to one of the
+    /// HOA format will be accepted.
     bool is_parity(bool& max, bool& odd, bool equiv = false) const;
+
+    /// \brief check is the acceptance condition matches one of the
+    /// four type of parity acceptance defined in the HOA format.
     bool is_parity() const
     {
       bool max;
@@ -1235,6 +1633,14 @@ namespace spot
     std::pair<bool, acc_cond::mark_t> sat_unsat_mark(bool) const;
 
   public:
+    /// \brief Construct a generalized Büchi acceptance
+    ///
+    /// For the input `m={1,8,9}`, this constructs
+    /// `Inf(1)&Inf(8)&Inf(9)`.
+    ///
+    /// Internally, such a formula is stored using a single word
+    /// `Inf({1,8,9})`.
+    /// @{
     static acc_code inf(mark_t mark)
     {
       return acc_code::inf(mark);
@@ -1244,7 +1650,24 @@ namespace spot
     {
       return inf(mark_t(vals.begin(), vals.end()));
     }
+    /// @}
 
+    /// \brief Construct a generalized Büchi acceptance for
+    /// complemented sets.
+    ///
+    /// For the input `m={1,8,9}`, this constructs
+    /// `Inf(!1)&Inf(!8)&Inf(!9)`.
+    ///
+    /// Internally, such a formula is stored using a single word
+    /// `InfNeg({1,8,9})`.
+    ///
+    /// Note that `InfNeg` formulas are not supported by most methods
+    /// of this class, and not supported by algorithms in Spot.
+    /// This is mostly used in the parser for HOA files: if the
+    /// input file uses `Inf(!0)` as acceptance condition, the
+    /// condition will eventually be rewritten as `Inf(0)` by toggling
+    /// the membership to set 0 of each transition.
+    /// @{
     static acc_code inf_neg(mark_t mark)
     {
       return acc_code::inf_neg(mark);
@@ -1254,7 +1677,15 @@ namespace spot
     {
       return inf_neg(mark_t(vals.begin(), vals.end()));
     }
+    /// @}
 
+    /// \brief Construct a generalized co-Büchi acceptance
+    ///
+    /// For the input m={1,8,9}, this constructs Fin(1)|Fin(8)|Fin(9).
+    ///
+    /// Internally, such a formula is stored using a single word
+    /// Fin({1,8,9}).
+    /// @{
     static acc_code fin(mark_t mark)
     {
       return acc_code::fin(mark);
@@ -1264,7 +1695,24 @@ namespace spot
     {
       return fin(mark_t(vals.begin(), vals.end()));
     }
+    /// @}
 
+    /// \brief Construct a generalized co-Büchi acceptance for
+    /// complemented sets.
+    ///
+    /// For the input `m={1,8,9}`, this constructs
+    /// `Fin(!1)|Fin(!8)|Fin(!9)`.
+    ///
+    /// Internally, such a formula is stored using a single word
+    /// `FinNeg({1,8,9})`.
+    ///
+    /// Note that `FinNeg` formulas are not supported by most methods
+    /// of this class, and not supported by algorithms in Spot.
+    /// This is mostly used in the parser for HOA files: if the
+    /// input file uses `Fin(!0)` as acceptance condition, the
+    /// condition will eventually be rewritten as `Fin(0)` by toggling
+    /// the membership to set 0 of each transition.
+    /// @{
     static acc_code fin_neg(mark_t mark)
     {
       return acc_code::fin_neg(mark);
@@ -1274,7 +1722,12 @@ namespace spot
     {
       return fin_neg(mark_t(vals.begin(), vals.end()));
     }
+    /// @}
 
+    /// \brief Add more sets to the acceptance condition.
+    ///
+    /// This simply augment the number of sets, without changing the
+    /// acceptance formula.
     unsigned add_sets(unsigned num)
     {
       if (num == 0)
@@ -1289,52 +1742,95 @@ namespace spot
       return j;
     }
 
+    /// \brief Add a single set to the acceptance condition.
+    ///
+    /// This simply augment the number of sets, without changing the
+    /// acceptance formula.
     unsigned add_set()
     {
       return add_sets(1);
     }
 
+    /// \brief Build a mark_t with a single set
     mark_t mark(unsigned u) const
     {
       SPOT_ASSERT(u < num_sets());
-      return mark_t({0}) << u;
+      return mark_t({u});
     }
 
+    /// \brief Complement a mark_t
+    ///
+    /// Complementation is done with respect to the number of sets
+    /// declared.
     mark_t comp(const mark_t& l) const
     {
       return all_ ^ l;
     }
 
+    /// \brief Construct a mark_t with all declared sets.
     mark_t all_sets() const
     {
       return all_;
     }
 
+    /// \brief Check whether visiting *exactly* all sets \a inf
+    /// infinitely often satisfies the acceptance condition.
     bool accepting(mark_t inf) const
     {
       return code_.accepting(inf);
     }
 
+    /// \brief Assuming that we will visit at least all sets in \a
+    /// inf, is there any chance that we will satisfy the condition?
+    ///
+    /// This return false only when it is sure that visiting more
+    /// set will never make the condition satisfiable.
     bool inf_satisfiable(mark_t inf) const
     {
       return code_.inf_satisfiable(inf);
     }
 
+    /// \brief Check potential acceptance of an SCC.
+    ///
+    /// Assuming that an SCC intersects all sets in \a
+    /// infinitely_often (i.e., for each set in \a infinetely_often,
+    /// there exist one marked transition in the SCC), and is
+    /// included in all sets in \a always_present (i.e., all
+    /// transitions are marked with \a always_present), this returns
+    /// one tree possible results:
+    /// - trival::yes() the SCC is necessarily accepting,
+    /// - trival::no() the SCC is necessarily rejecting,
+    /// - trival::maybe() the SCC could contain an accepting cycle.
     trival maybe_accepting(mark_t infinitely_often, mark_t always_present) const
     {
       return code_.maybe_accepting(infinitely_often, always_present);
     }
 
+    /// \brief Return an accepting subset of \a inf
+    ///
+    /// This function works only on Fin-less acceptance, and returns a
+    /// subset of \a inf that is enough to satisfies the acceptance
+    /// condition.  This is typically used when an accepting SCC that
+    /// visits all sets in \a inf has been found, and we want to find
+    /// an accepting cycle: maybe it is not necessary for the accepting
+    /// cycle to intersect all sets in \a inf.
+    ///
+    /// This returns `mark_t({})` if \a inf does not satisfies the
+    /// acceptance condition, or if the acceptance condition is `t`.
+    /// So usually you should only use this method in cases you know
+    /// that the condition is satisfied.
     mark_t accepting_sets(mark_t inf) const;
 
+    // FIXME: deprecate?
     std::ostream& format(std::ostream& os, mark_t m) const
     {
-      auto a = m;
+      auto a = m; // ???
       if (!a)
         return os;
       return os << m;
     }
 
+    // FIXME: deprecate?
     std::string format(mark_t m) const
     {
       std::ostringstream os;
@@ -1342,26 +1838,35 @@ namespace spot
       return os.str();
     }
 
+    /// \brief The number of sets used in the acceptance condition.
     unsigned num_sets() const
     {
       return num_;
     }
 
+    /// \brief Compute useless acceptance sets given a list of mark_t
+    /// that occur in an SCC.
+    ///
+    /// Assuming that the condition is generalized Büchi using all
+    /// declared sets, this scans all the mark_t between \a begin and
+    /// \a end, and return the set of acceptance sets that are useless
+    /// because they are always implied by other sets.
     template<class iterator>
     mark_t useless(iterator begin, iterator end) const
     {
-      mark_t u = {};        // The set of useless marks
-      const mark_t one = {0};
+      mark_t u = {};        // The set of useless sets
       for (unsigned x = 0; x < num_; ++x)
         {
-          // Skip marks that are already known to be useless.
-          if (u & (one << x))
+          // Skip sets that are already known to be useless.
+          if (u.has(x))
             continue;
-          auto all = all_ ^ (u | (one << x));
+          auto all = comp(u | mark_t({x}));
+          // Iterate over all mark_t, and keep track of
+          // set numbers that always appear with x.
           for (iterator y = begin; y != end; ++y)
             {
               const mark_t& v = *y;
-              if (!!(v & (one << x)))
+              if (v.has(x))
                 {
                   all &= v;
                   if (!all)
@@ -1373,39 +1878,42 @@ namespace spot
       return u;
     }
 
-    // Remove all the acceptance sets in rem.
-    //
-    // If MISSING is set, the acceptance sets are assumed to be
-    // missing from the automaton, and the acceptance is updated to
-    // reflect this.  For instance (Inf(1)&Inf(2))|Fin(3) will
-    // become Fin(3) if we remove 2 because it is missing from this
-    // automaton, because there is no way to fulfill Inf(1)&Inf(2)
-    // in this case.  So essentially MISSING causes Inf(rem) to
-    // become f, and Fin(rem) to become t.
-    //
-    // If MISSING is unset, Inf(rem) become t while Fin(rem) become
-    // f.  Removing 2 from (Inf(1)&Inf(2))|Fin(3) would then give
-    // Inf(1)|Fin(3).
+    /// \brief Remove all the acceptance sets in \a rem.
+    ///
+    /// If \a missing is set, the acceptance sets are assumed to be
+    /// missing from the automaton, and the acceptance is updated to
+    /// reflect this.  For instance `(Inf(1)&Inf(2))|Fin(3)` will
+    /// become `Fin(3)` if we remove `2` because it is missing from this
+    /// automaton.  Indeed there is no way to fulfill `Inf(1)&Inf(2)`
+    /// in this case.  So essentially `missing=true` causes Inf(rem) to
+    /// become `f`, and `Fin(rem)` to become `t`.
+    ///
+    /// If \a missing is unset, `Inf(rem)` become `t` while
+    /// `Fin(rem)` become `f`.  Removing `2` from
+    /// `(Inf(1)&Inf(2))|Fin(3)` would then give `Inf(1)|Fin(3)`.
     acc_cond remove(mark_t rem, bool missing) const
     {
       return {num_sets(), code_.remove(rem, missing)};
     }
 
-    // Same as remove, but also shift the set numbers
+    /// \brief Remove acceptance sets, and shift set numbers
+    ///
+    /// Same as remove, but also shift set numbers in the result so
+    /// that all used set numbers are continuous.
     acc_cond strip(mark_t rem, bool missing) const
     {
       return
         { num_sets() - (all_sets() & rem).count(), code_.strip(rem, missing) };
     }
 
-    // For all x in m, this replaces Fin(x) by false.
+    /// \brief For all `x` in \a m, replaces `Fin(x)` by `false`.
     acc_cond force_inf(mark_t m) const
     {
       return {num_sets(), code_.force_inf(m)};
     }
 
-    // Restrict an acceptance condition to a subset of set numbers
-    // that are occurring at some point.
+    /// \brief Restrict an acceptance condition to a subset of set
+    /// numbers that are occurring at some point.
     acc_cond restrict_to(mark_t rem) const
     {
       return {num_sets(), code_.remove(all_sets() - rem, true)};
@@ -1424,11 +1932,26 @@ namespace spot
     /// 'other', (s) shorthand for 'lo0'.
     std::string name(const char* fmt = "alo") const;
 
+    /// \brief Find a `Fin(i)` that is a unit clause.
+    ///
+    /// This return a mark_t `{i}` such that `Fin(i)` appears as a
+    /// unit clause in the acceptance condition.  I.e., either the
+    /// condition is exactly `Fin(i)`, or the condition has the form
+    /// `...&Fin(i)&...`.  If there is no such `Fin(i)`, an empty
+    /// mark_t is returned.
+    ///
+    /// If multiple unit-Fin appear as unit-clauses, the set of
+    /// those will be returned.  For instance applied to
+    /// `Fin(0)&Fin(1)&(Inf(2)|Fin(3))``, this will return `{0,1}`.
     mark_t fin_unit() const
     {
       return code_.fin_unit();
     }
 
+    /// \brief Return one acceptance set i that appear as `Fin(i)`
+    /// in the condition.
+    ///
+    /// Return -1 if no such set exist.
     int fin_one() const
     {
       return code_.fin_one();
@@ -1528,6 +2051,8 @@ namespace spot
 
   SPOT_API
   std::ostream& operator<<(std::ostream& os, const acc_cond& acc);
+
+  /// @}
 
   namespace internal
   {
