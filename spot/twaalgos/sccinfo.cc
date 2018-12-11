@@ -23,10 +23,10 @@
 #include <algorithm>
 #include <queue>
 #include <spot/twa/bddprint.hh>
+#include <spot/twaalgos/bfssteps.hh>
 #include <spot/twaalgos/mask.hh>
 #include <spot/twaalgos/genem.hh>
 #include <spot/misc/escape.hh>
-
 
 namespace spot
 {
@@ -459,6 +459,141 @@ namespace spot
     while (s);
     if (changed && !!(options_ & scc_info_options::TRACK_SUCCS))
       determine_usefulness();
+  }
+
+  // Describes an explicit spot::twa_run::step
+  struct exp_step
+  {
+    unsigned src;
+    bdd cond;
+    acc_cond::mark_t acc;
+  };
+
+  // A reimplementation of spot::bfs_steps for explicit automata.
+  // bool filter(const twa_graph::edge_storage_t&) returns true if the
+  // transition has to be filtered out.
+  // bool match(struct exp_step&, unsigned dest) returns true if the BFS has to
+  // stop after this transition.
+  // Returns the destination of the matched transition, or -1 if no match has
+  // been found.
+  static int explicit_bfs_steps(const const_twa_graph_ptr aut, unsigned start,
+      twa_run::steps& steps,
+      std::function<bool(const twa_graph::edge_storage_t&)> filter,
+      std::function<bool(exp_step&, unsigned)> match)
+  {
+    std::unordered_map<unsigned, exp_step> backlinks;
+    std::deque<unsigned> bfs_queue;
+    bfs_queue.emplace_back(start);
+
+    while (!bfs_queue.empty())
+    {
+      unsigned src = bfs_queue.front();
+      bfs_queue.pop_front();
+      for (auto& t: aut->out(src))
+      {
+        if (filter(t))
+          continue;
+
+        exp_step s = { src, t.cond, t.acc };
+        if (match(s, t.dst))
+        {
+          twa_run::steps path;
+          for (;;)
+          {
+            path.emplace_front(aut->state_from_number(s.src), s.cond, s.acc);
+            if (s.src == start)
+              break;
+            const auto& i = backlinks.find(s.src);
+            assert(i != backlinks.end());
+            s = i->second;
+          }
+          steps.splice(steps.end(), path);
+          return t.dst;
+        }
+
+        if (backlinks.emplace(t.dst, s).second)
+          bfs_queue.push_back(t.dst);
+      }
+    }
+    return -1;
+  }
+
+  void scc_info::get_accepting_run(unsigned scc, twa_run_ptr r) const
+  {
+    const scc_info::scc_node& node = node_[scc];
+
+    if (!node.is_accepting())
+      throw std::runtime_error("scc_info::get_accepting_cycle needs to be "
+                               "called on an accepting scc");
+    acc_cond actual_cond = aut_->acc().restrict_to(node.acc_marks())
+      .force_inf(node.acc_marks());
+    assert(!actual_cond.uses_fin_acceptance());
+
+    // List of states of the SCC
+    const std::set<unsigned> scc_states(node.states().cbegin(),
+                                        node.states().cend());
+
+    // Prefix search
+
+    r->prefix.clear();
+
+    int init = aut_->get_init_state_number();
+    int substart;
+
+    if (scc_states.find(init) != scc_states.end())
+      {
+        // The initial state is in the SCC
+        substart = init;
+      }
+    else
+      {
+        substart = explicit_bfs_steps(aut_, init, r->prefix,
+            [](const twa_graph::edge_storage_t&)
+            {
+              return false; // Do not filter.
+            },
+            [&](exp_step&, unsigned dst)
+            {
+              // Match any state in the SCC.
+              return scc_states.find(dst) != scc_states.end();
+            });
+      }
+
+    const unsigned start = (unsigned)substart;
+
+    // Cycle search
+
+    acc_cond::mark_t acc_to_see = actual_cond.accepting_sets(node.acc_marks());
+
+    r->cycle.clear();
+
+    do
+      {
+        substart = explicit_bfs_steps(aut_, substart, r->cycle,
+            [&](const twa_graph::edge_storage_t& t)
+            {
+              if (scc_states.find(t.dst) == scc_states.end())
+                return true; // Destination is not in the SCC.
+              if (filter_)
+                // Filter out ignored and cut transitions.
+                return filter_(t, t.dst, filter_data_)
+                  != edge_filter_choice::keep;
+              return false;
+            },
+            [&](exp_step& st, unsigned dst)
+            {
+              if (!acc_to_see) // We have seen all the marks, go back to start.
+                return dst == start;
+              if (st.acc & acc_to_see)
+                {
+                  acc_to_see -= st.acc;
+                  return true;
+                }
+              return false;
+            });
+        assert(0 <= substart);
+      }
+    while (acc_to_see || (unsigned)substart != start);
   }
 
   std::ostream&

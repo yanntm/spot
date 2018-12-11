@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/emptiness.hh>
 
 namespace spot
 {
@@ -594,6 +595,11 @@ namespace spot
     /// This is an internal function of
     /// determine_unknown_acceptance().
     bool check_scc_emptiness(unsigned n);
+
+    /// \brief Retrieves an accepting run of the automaton whose cycle is in the
+    /// SCC.
+    /// \param scc an accepting scc
+    void get_accepting_run(unsigned scc, twa_run_ptr r) const;
 
     bool is_useful_scc(unsigned scc) const
     {

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <spot/twaalgos/emptiness.hh>
 #include <spot/twaalgos/sccinfo.hh>
 
 namespace spot
@@ -27,6 +28,13 @@ namespace spot
   /// \brief Emptiness check of an automaton, for any acceptance condition.
   SPOT_API bool
   generic_emptiness_check(const const_twa_graph_ptr& aut);
+
+  /// \ingroup emptiness_check_algorithms
+  /// \brief Accepting run search in an automaton, for any acceptance condition.
+  /// \return An accepting run over the automaton, or nullptr if the language is
+  /// empty.
+  SPOT_API twa_run_ptr
+  generic_accepting_run(const const_twa_graph_ptr& aut);
 
   /// \ingroup emptiness_check_algorithms
   /// \brief Emptiness check of one SCC, for any acceptance condition.
