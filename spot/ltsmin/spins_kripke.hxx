@@ -380,6 +380,11 @@ namespace spot
     return d_->get_type_name(d_->get_state_variable_type(pos));
   }
 
+  int kripkecube<cspins_state, cspins_iterator>::type_count(unsigned pos)
+  {
+    return d_->get_type_value_count(d_->get_state_variable_type(pos));
+  }
+
   void
   kripkecube<cspins_state, cspins_iterator>::compute_condition
   (cube c, cspins_state s, unsigned tid)

@@ -199,6 +199,7 @@ namespace spot
     const std::vector<std::string> get_ap();
     unsigned get_threads();
     std::string type_name(unsigned pos);
+    int type_count(unsigned pos);
 
   private:
     /// Parse the set of atomic proposition to have a more

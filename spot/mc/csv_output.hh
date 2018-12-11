@@ -258,6 +258,25 @@ namespace spot
         todo_.push_back({pair.second, it, p});
         ++states_;
 
+        delta_var_.push_back(0);
+        delta_bits_.push_back(0);
+        auto iter = sys_.succ(pair.second->st_, 0);
+        while (!iter->done())
+          {
+            for (int i = 2; i < init[1] + 2; ++i)
+              {
+                if (iter->state()[i] != init[i])
+                  delta_var_[0] += 1;
+                int bitdiff = iter->state()[i] xor init[i];
+                while (bitdiff)
+                  {
+                    delta_bits_[0] += bitdiff & 1;
+                    bitdiff >>= 1;
+                  }
+              }
+            iter->next();
+          }
+
         v_names_ = sys_.to_header(init);
         v_values_.push_back(sys_.to_csv(init));
         succ_labels_.push_back(todo_.back().it->size());
@@ -303,14 +322,34 @@ namespace spot
                   todo_.push_back({w.second, it, p});
                   ++states_;
 
+                  delta_var_.push_back(0);
+                  delta_bits_.push_back(0);
+                  auto iter = sys_.succ(w.second->st_, 0);
+                  while (!iter->done())
+                    {
+                      for (int i = 2; i < dst[1] + 2; ++i)
+                        {
+                          if (iter->state()[i] != dst[i])
+                            delta_var_.back() += 1;
+                          int bitdiff = iter->state()[i] xor dst[i];
+                          while (bitdiff)
+                            {
+                              delta_bits_.back() += bitdiff & 1;
+                              bitdiff >>= 1;
+                            }
+                        }
+                      iter->next();
+                    }
+
                   v_values_.push_back(sys_.to_csv(dst));
                   succ_labels_.push_back(todo_.back().it->size());
                   ++depth;
                   depth_labels_.push_back(depth);
+                  delta_var_.back() /= todo_.back().it->size();
+                  delta_bits_.back() /= todo_.back().it->size();
                 }
               else if (w.first == st_scc_uf::claim_status::CLAIM_FOUND)
                 {
-
                   unsigned dpos = livenum_[w.second];
                   unsigned r = Rp_.back().second;
                   while (dpos < todo_[r].pos)
@@ -330,13 +369,53 @@ namespace spot
     {
       int cpt = 0;
       std::unordered_map<scc_uf_element*, unsigned> mapping;
+      //map to store the scc the state belong to
+      std::unordered_map<State, unsigned, StateHash, StateEqual> s_map;
+      //map to store the number of states per scc
+      std::unordered_map<unsigned, unsigned> nb_states;
       for (auto state: dfs_)
         {
           scc_uf_element* root = scc_uf_.find(state);
           if (mapping.find(root) == mapping.end())
-            mapping[root] = ++cpt;
+            {
+              mapping[root] = ++cpt;
+              nb_states[cpt] = 1;
+            }
+          else
+            nb_states[mapping[root]]++;
+          s_map[state->st_] = mapping[root];
           scc_labels_.push_back(mapping[root]);
         }
+
+      //map to store the scc graph
+      std::unordered_map<unsigned, std::set<unsigned>> map;
+      for (auto state: dfs_)
+        {
+          std::set<unsigned> set;
+          scc_uf_element* root = scc_uf_.find(state);
+          if (map.find(mapping[root]) == map.end())
+            map[mapping[root]] = set;
+          auto iter = sys_.succ(state->st_, 0);
+          while (!iter->done())
+            {
+              if (s_map[iter->state()] != mapping[root])
+                map[mapping[root]].emplace(s_map[iter->state()]);
+              iter->next();
+            }
+        }
+
+      unsigned m = 0;
+      for (auto tuple: map)
+        if (m < std::get<0>(tuple))
+          m = std::get<0>(tuple);
+
+      for (unsigned i = 1; i < m + 1; ++i)
+        {
+          scc_succ_.append(std::to_string(map[i].size()) + ",");
+          scc_size_.append(std::to_string(nb_states[i]) + ",");
+        }
+      scc_succ_.erase(scc_succ_.end() - 1);
+      scc_size_.erase(scc_size_.end() - 1);
     }
 
     void print()
@@ -347,7 +426,10 @@ namespace spot
       ofs << "#transitions:" << transitions_ << std::endl;
       ofs << "#sccs:" << sccs_ << std::endl;
       ofs << "#exploration:" << "DFS" << std::endl;
+      ofs << "#scc_size:" << scc_size_ << std::endl;
+      ofs << "#scc_successors:" << scc_succ_ << std::endl;
       ofs << "#variables_names:" << v_names_ << std::endl;
+
       ofs << "#variables_types:";
       std::string token;
       std::stringstream ss(v_names_);
@@ -365,22 +447,41 @@ namespace spot
           else if (token.find('[') != std::string::npos)
             str.append("sa");
           else if (sys_.type_name(c).compare("int") == 0
-              || sys_.type_name(c).compare("byte") == 0)
+                   || sys_.type_name(c).compare("byte") == 0)
             str.append("s");
           else
             str.append("p");
-          c++;
           str.append(",");
+          if (sys_.type_name(c).compare("int") == 0)
+            v_intervals_.append("[0;65535],");
+          else if (sys_.type_name(c).compare("byte") == 0)
+            v_intervals_.append("[0;255],");
+          else
+            {
+              v_intervals_.append("[0;");
+              v_intervals_.append(std::to_string(sys_.type_count(c) - 1));
+              v_intervals_.append("],");
+            }
+          ++c;
         }
       str.erase(str.end() - 1);
       ofs << str << std::endl;
-      ofs << "#labels:" << c << "," << c + 1 << "," << c + 2 << "," << c + 3;
-      ofs << std::endl;
+
+      v_intervals_.erase(v_intervals_.end() - 1);
+      ofs << "#intervals:" << v_intervals_ << std::endl;
+
+      ofs << "#labels:" << c << "," << c + 1 << "," << c + 2 << "," << c + 3
+        << "," << c + 4 << "," << c + 5 << std::endl;
+
+      ofs << "#color_by:" << c << "," << c + 1 << "," << c + 2 << "," << c + 3
+        << std::endl;
+
       int count = 0;
       for (std::string s: v_values_)
         {
           ofs << s << "," << count << "," << depth_labels_[count] << ","
-              << succ_labels_[count] << "," << scc_labels_[count] << std::endl;
+              << succ_labels_[count] << "," << scc_labels_[count] << ","
+              << delta_var_[count] << "," << delta_bits_[count] << std::endl;
           ++count;
         }
       ofs.close();
@@ -400,7 +501,7 @@ namespace spot
                           unsigned>> Rp_;  ///< \brief The root stack
     st_scc_uf scc_uf_; ///< Copy!
     unsigned inserted_ = 0;           ///< \brief Number of states inserted
-    unsigned states_  = 0;            ///< \brief Number of states visited
+    unsigned states_ = 0;            ///< \brief Number of states visited
     unsigned transitions_ = 0;        ///< \brief Number of transitions visited
     unsigned sccs_ = 0;               ///< \brief Number of SCC visited
     std::unordered_map<scc_uf_element*, unsigned> livenum_;
@@ -411,5 +512,10 @@ namespace spot
     std::vector<int> scc_labels_; ///< \brief The scc per state
     std::vector<int> depth_labels_; ///< \brief The depth per state
     std::vector<int> succ_labels_; ///< \brief The number of successors
+    std::vector<float> delta_var_; /// < \brief The average delta var
+    std::vector<float> delta_bits_; /// < \brief The average delta bits
+    std::string v_intervals_; /// < \brief The min and max values of variables
+    std::string scc_succ_; /// < \brief The number of successors per scc
+    std::string scc_size_; /// < \brief The number of states per scc
   };
 }
