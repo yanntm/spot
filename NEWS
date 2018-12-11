@@ -1,4 +1,4 @@
-New in spot 2.6.3.dev (not yet released)
+New in spot 2.7 (2018-12-11)
 
   Command-line tools:
 
@@ -76,9 +76,10 @@ New in spot 2.6.3.dev (not yet released)
     twa_graph_ptr::is_empty(), twa_graph_ptr::intersects(), and
     scc_info::determine_unknown_acceptance().
 
-  - The new function spot::to_parity() translates an automaton
-    with arbitrary acceptance condition into a parity automaton,
-    based on a last-appearance record (LAR) construction.
+  - The new function spot::to_parity() translates an automaton with
+    arbitrary acceptance condition into a parity automaton, based on a
+    last-appearance record (LAR) construction.  (It is used by ltlsynt
+    but not yet by autfilt or ltl2tgba.)
 
   - The new function is_liveness() and is_liveness_automaton() can be
     used to check whether a formula or an automaton represents a
