@@ -1,6 +1,9 @@
-New in spot 2.7.0.dev (not yet release)
+New in spot 2.7.0.dev (not yet released)
 
-  Nothing yet.
+  Library:
+
+  - fix a bug in spot::to_parity(). Acceptance marks were incorrect, so
+    the function could output an automaton not equivalent to its input.
 
 New in spot 2.7 (2018-12-11)
 

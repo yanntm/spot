@@ -55,7 +55,8 @@ namespace spot
         s << state << " [";
         for (unsigned i = 0; i != perm.size(); ++i)
           {
-            s << perm[i] << '@' << count[i];
+            auto c = perm[i];
+            s << c << '@' << count[c];
             if (i < perm.size() - 1)
               s << ", ";
           }
@@ -82,11 +83,13 @@ namespace spot
       twa_graph_ptr run()
       {
         auto symm = aut_->acc().get_acceptance().symmetries();
+
         // we need to know for each symmetry class:
         //  - its id
         //  - its elements in order (any arbitrary order will do)
         //  - its size
         std::vector<acc_cond::mark_t> classes;
+        // invariant: i \in classes[acc2class[i]]
         std::vector<unsigned> acc2class(aut_->num_sets(), -1U);
         std::vector<unsigned> accpos(aut_->num_sets(), -1U);
         for (unsigned k : aut_->acc().all_sets().sets())
@@ -113,7 +116,9 @@ namespace spot
 
         struct stack_elem
         {
+          // state number
           unsigned num;
+          // corresponding lar state
           lar_state s;
         };
         std::deque<stack_elem> todo;
@@ -156,14 +161,20 @@ namespace spot
                 std::vector<unsigned> new_perm = current.perm;
                 std::vector<unsigned> new_count = current.count;
                 std::vector<unsigned> hits(new_count.size(), 0);
+                // at the end of the loop, consider the h last marks in new_perm
+                // to compute the mark of the transition
                 unsigned h = 0;
                 for (unsigned k : e.acc.sets())
                   {
                     unsigned c = acc2class[k];
+                    // k is the next in order
                     if (accpos[k] == new_count[c])
                       new_count[c] += 1;
                     else
                       ++hits[c];
+
+                    // we have now seen the whole class
+                    // consider the whole class as hit, and reset the count
                     if (new_count[c] == classes[c].count())
                       {
                         new_count[c] = 0;
@@ -179,24 +190,26 @@ namespace spot
                 unsigned dst_num = get_state(dst);
 
                 // do the h last elements satisfy the acceptance condition?
-                acc_cond::mark_t m({});
+                acc_cond::mark_t w({});
                 for (auto c = new_perm.end() - h; c != new_perm.end(); ++c)
-                  m |= classes[*c];
+                  w |= classes[*c];
+                acc_cond::mark_t allhits({});
                 for (auto c = new_perm.begin(); c != new_perm.end() - h; ++c)
                   {
                     for (unsigned k : classes[*c].sets())
                       {
                         if (hits[*c] == 0)
                           break;
-                        m.set(k);
+                        allhits.set(k);
                         --hits[*c];
                       }
                   }
+                acc_cond::mark_t m = w | allhits;
 
                 if (aut_->acc().accepting(m))
                   res_->new_edge(src_num, dst_num, e.cond, {2*m.count()});
                 else
-                  res_->new_edge(src_num, dst_num, e.cond, {2*m.count()+1});
+                  res_->new_edge(src_num, dst_num, e.cond, {2*w.count()+1});
               }
           }
 
