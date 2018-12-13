@@ -101,7 +101,7 @@ New in spot 2.7 (2018-12-11)
 
   - acc_cond::is_generalized_rabin() and
     acc_cond::is_generalized_streett() did not recognize the cases
-    were a single generalized pair is used.
+    where a single generalized pair is used.
 
   - The pair of acc_cond::mark_t returned by
     acc_code::used_inf_fin_sets(), and the pair (bool,
