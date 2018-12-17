@@ -1,6 +1,10 @@
 New in spot 2.7.0.dev (not yet release)
 
-  Nothing yet.
+  Bugs fixed:
+
+  - The print_dot_psl() function would incorrectly number all but the
+    first children of commutative n-ary operators: in this case no
+    numbering was expected.
 
 New in spot 2.7 (2018-12-11)
 

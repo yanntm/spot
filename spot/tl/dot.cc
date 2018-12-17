@@ -122,7 +122,8 @@ namespace spot
             else if (childnum == -1)
               os_ << " [taillabel=\"R\"]";
             os_ << ";\n";
-            ++childnum;
+            if (childnum)
+              ++childnum;
           }
 
         return src;
