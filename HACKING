@@ -354,7 +354,7 @@ Exporting symbols
     header.
 
   * The directory src/priv/ can be used to store files that are
-    globaly private the library, and that do not really belongs to
+    globaly private to the library, and that do not really belong to
     other directories.
 
   * Functions and classes that are public should be marked with

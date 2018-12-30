@@ -24,7 +24,7 @@
 namespace spot
 {
   /// \ingroup emptiness_check_algorithms
-  /// \brief Emptiness check of on automaton, for any acceptance condition.
+  /// \brief Emptiness check of an automaton, for any acceptance condition.
   SPOT_API bool
   generic_emptiness_check(const const_twa_graph_ptr& aut);
 

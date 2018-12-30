@@ -429,7 +429,7 @@ namespace spot
       } sub;
     };
 
-    /// \brief An acceptance formulas.
+    /// \brief An acceptance formula.
     ///
     /// Acceptance formulas are stored as a vector of acc_word in a
     /// kind of reverse polish notation.  The motivation for this
@@ -1356,13 +1356,13 @@ namespace spot
       uses_fin_acceptance_ = check_fin_acceptance();
     }
 
-    /// \brief Retrieve teh acceptance formula
+    /// \brief Retrieve the acceptance formula
     const acc_code& get_acceptance() const
     {
       return code_;
     }
 
-    /// \brief Retrieve teh acceptance formula
+    /// \brief Retrieve the acceptance formula
     acc_code& get_acceptance()
     {
       return code_;
@@ -1793,7 +1793,7 @@ namespace spot
     /// \brief Check potential acceptance of an SCC.
     ///
     /// Assuming that an SCC intersects all sets in \a
-    /// infinitely_often (i.e., for each set in \a infinetely_often,
+    /// infinitely_often (i.e., for each set in \a infinitely_often,
     /// there exist one marked transition in the SCC), and is
     /// included in all sets in \a always_present (i.e., all
     /// transitions are marked with \a always_present), this returns
@@ -1809,7 +1809,7 @@ namespace spot
     /// \brief Return an accepting subset of \a inf
     ///
     /// This function works only on Fin-less acceptance, and returns a
-    /// subset of \a inf that is enough to satisfies the acceptance
+    /// subset of \a inf that is enough to satisfy the acceptance
     /// condition.  This is typically used when an accepting SCC that
     /// visits all sets in \a inf has been found, and we want to find
     /// an accepting cycle: maybe it is not necessary for the accepting

@@ -364,7 +364,7 @@ namespace spot
   ///
   /// Additionally this class can be used on alternating automata, but
   /// in this case, universal transitions are handled like existential
-  /// transitions.  It still make sense to check which states belong
+  /// transitions.  It still makes sense to check which states belong
   /// to the same SCC, but the acceptance information computed by
   /// this class is meaningless.
   class SPOT_API scc_info
