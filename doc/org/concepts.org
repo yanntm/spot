@@ -21,7 +21,7 @@ true if the light is on and the door open, and false otherwise.
 
 Atomic propositions are used to construct temporal logic formulas (see
 below) to specify properties of the system: for instance we might want
-to state that /whenever the the door is open, the light should be on/.
+to state that /whenever the door is open, the light should be on/.
 We could write that as the [[#ltl][LTL formula]] =G(door_open -> light_on)= in
 which =G= is a temporal operator that means /always/.
 
