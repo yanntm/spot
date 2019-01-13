@@ -32,6 +32,7 @@
 #include <spot/twaalgos/postproc.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/product.hh>
+#include <spot/twaalgos/product_emptiness.hh>
 #include <spot/twaalgos/genem.hh>
 #include <utility>
 
@@ -145,7 +146,7 @@ namespace spot
       }
     auto a1 = remove_fin_maybe(self);
     auto a2 = remove_fin_maybe(other);
-    return !otf_product(a1, a2)->is_empty();
+    return bool(product_emptiness_check(a1, a2));
   }
 
   twa_run_ptr
@@ -156,9 +157,10 @@ namespace spot
       other = remove_fin_maybe(other);
     else
       a = remove_fin_maybe(a);
-    auto run = otf_product(a, other)->accepting_run();
-    if (!run)
+    auto res = product_emptiness_check(a, other);
+    if (!res)
       return nullptr;
+    auto run = res->left_accepting_run();
     return run->project(from_other ? other : a);
   }
 
@@ -167,7 +169,16 @@ namespace spot
   {
     auto a1 = remove_fin_maybe(shared_from_this());
     auto a2 = remove_fin_maybe(other);
-    return otf_product(a1, a2)->accepting_word();
+    if (auto run = a1->intersecting_run(a2))
+      {
+        auto w = make_twa_word(run->reduce());
+        w->simplify();
+        return w;
+      }
+    else
+      {
+        return nullptr;
+      }
   }
 
   namespace
