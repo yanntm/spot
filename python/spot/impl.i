@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2009-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 // Copyright (C) 2003-2006 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -409,23 +409,45 @@ namespace swig
     $result = SWIG_FromCharPtr($1->c_str());
 }
 
-%exception {
+%{
+// This function is called whenever an exception has been caught.
+// Doing all the conversion in a separate function (rather than
+// in the %exception statement) saves a lot of space.
+//
+// The technique is also called "Lippincott function".
+static void handle_any_exception()
+{
   try {
-    $action
+    throw;
   }
   catch (const spot::parse_error& e)
   {
     std::string er("\n");
     er += e.what();
-    SWIG_exception(SWIG_SyntaxError, er.c_str());
+    SWIG_Error(SWIG_SyntaxError, er.c_str());
   }
   catch (const std::invalid_argument& e)
   {
-    SWIG_exception(SWIG_ValueError, e.what());
+    SWIG_Error(SWIG_ValueError, e.what());
   }
   catch (const std::runtime_error& e)
   {
-    SWIG_exception(SWIG_RuntimeError, e.what());
+    SWIG_Error(SWIG_RuntimeError, e.what());
+  }
+  catch (const std::out_of_range& e)
+  {
+    SWIG_Error(SWIG_IndexError, e.what());
+  }
+}
+%}
+
+%exception {
+  try {
+    $action
+  }
+  catch (...) {
+    handle_any_exception();
+    SWIG_fail;
   }
 }
 
@@ -790,6 +812,31 @@ def state_is_accepting(self, src) -> "bool":
   std::string __str__() { return spot::str_psl(*self); }
 }
 
+
+%runtime %{
+#include <memory>
+
+// The bdd_dict object stores pointers to keep track of who
+// uses which BDD variables.  If this is a C++ object, we
+// would like to use its this pointer (not the Python pointer).
+// If this is a shared_ptr, we would like to use the address of
+// of the pointed object, not that of the shared ptr.  Finally,
+// we also want to allow Python objects in there,
+
+static void* ptr_for_bdddict(PyObject* obj)
+{
+  void* ptr = obj;
+  if (SwigPyObject* swig_obj = SWIG_Python_GetSwigThis(obj))
+    {
+      ptr = swig_obj->ptr;
+      const char *type = SWIG_TypePrettyName(swig_obj->ty);
+      if (strncmp(type, "std::shared_ptr<", 16) == 0)
+        ptr = reinterpret_cast<std::shared_ptr<void>*>(ptr)->get();
+    }
+  return ptr;
+}
+%}
+
 %extend spot::bdd_dict {
   bool operator==(const spot::bdd_dict& b) const
   {
@@ -800,6 +847,33 @@ def state_is_accepting(self, src) -> "bool":
   {
     return self != &b;
   }
+
+  int register_proposition(formula f, PyObject* for_me)
+  {
+    return $self->register_proposition(f, ptr_for_bdddict(for_me));
+  }
+
+  void unregister_all_my_variables(PyObject* me)
+  {
+    return $self->unregister_all_my_variables(ptr_for_bdddict(me));
+  }
+
+  void unregister_variable(int var, PyObject* me)
+  {
+    return $self->unregister_variable(var, ptr_for_bdddict(me));
+  }
+
+  void register_all_variables_of(PyObject* from_other, PyObject* for_me)
+  {
+    return $self->register_all_variables_of(ptr_for_bdddict(from_other),
+                                            ptr_for_bdddict(for_me));
+  }
+
+  int register_anonymous_variables(int n, PyObject* for_me)
+  {
+    return $self->register_anonymous_variables(n, ptr_for_bdddict(for_me));
+  }
+
 }
 
 %extend spot::twa {
