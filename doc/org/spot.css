@@ -19,6 +19,7 @@ body a{color:#008181}
 pre.src{padding-top:8px;border-left-style:solid;border-color:#00adad;overflow:auto}
 pre.src-hoa{padding-top:8px;border-left-style:solid;border-color:#d70079;overflow:auto}
 pre.example{border-left-style:solid;border-color:#d70079}
+pre.src-text{border-left-style:solid;border-color:#d70079}
 pre.src:before{border:none;border-bottom-style:solid;border-color:#00adad;top:0px;}
 pre.src-python:before{content:'Python'}
 pre.src-C\+\+:before{content:'C++'}
