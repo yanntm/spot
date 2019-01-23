@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009-2011, 2013-2018 Laboratoire de Recherche et
+// Copyright (C) 2009-2011, 2013-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -73,14 +73,6 @@ namespace spot
   twa_graph_ptr
   tgba_powerset(const const_twa_graph_ptr& aut, power_map& pm, bool merge)
   {
-    {
-      typedef std::set<bdd, bdd_less_than> sup_map;
-      sup_map sup;
-      // Record occurrences of all guards
-      for (auto& t: aut->edges())
-        sup.emplace(t.cond);
-    }
-
     unsigned ns = aut->num_states();
     unsigned nap = aut->ap().size();
 
@@ -105,7 +97,8 @@ namespace spot
     size_t nc = num2bdd.size();        // number of conditions
     assert(nc == (1UL << nap));
 
-    // An array of bit vectors of size 'ns'.  Each original state is
+    // Conceptually, we represent the automaton as an array 'bv' of
+    // ns*nc bit vectors of size 'ns'.  Each original state is
     // represented by 'nc' consecutive bitvectors representing the
     // possible destinations for each condition.
     //
@@ -124,7 +117,7 @@ namespace spot
     //       a&b    [...bit vector of size ns...]
     //  ...
     //
-    // since there are nc possible "cond" value, ans ns sources, the
+    // Since there are nc possible "cond" value, and ns sources, the
     // ns*nc bitvectors of ns bits each can take a lot of space.  In
     // issue #302, we had the case of an automaton with ns=8777
     // states, and 8 atomic propositions (nc=256): this large array
@@ -134,7 +127,7 @@ namespace spot
     // To work around this, we reduce the number of states we store in
     // this array to reduced_ns, which we currently limit to 512
     // (chosen arbitrarily), and use it as a least-recently-used
-    // cache.  A separate vector of size ns, contains pointer
+    // cache.  A separate vector of size ns, contains pointers
     // (i.e. iterators) to a list cell that gives an index in this
     // cache.  The purpose of the list is to maintain the
     // least-recently-used order.
@@ -283,11 +276,11 @@ namespace spot
     protected:
       const_twa_graph_ptr ref_;
       power_map& refmap_;
-      edge_set reject_;        // set of rejecting edges
-      set_set accept_;                // set of cycles that are accepting
-      edge_set all_;                // all non rejecting edges
-      unsigned threshold_;        // maximum count of enumerated cycles
-      unsigned cycles_left_;         // count of cycles left to explore
+      edge_set reject_;         // set of rejecting edges
+      set_set accept_;          // set of cycles that are accepting
+      edge_set all_;            // all non rejecting edges
+      unsigned threshold_;      // maximum count of enumerated cycles
+      unsigned cycles_left_;    // count of cycles left to explore
 
     public:
       fix_scc_acceptance(const scc_info& sm, const_twa_graph_ptr ref,
@@ -362,15 +355,15 @@ namespace spot
         return accepting;
       }
 
-      std::ostream&
-      print_set(std::ostream& o, const edge_set& s) const
-      {
-        o << "{ ";
-        for (auto i: s)
-          o << i << ' ';
-        o << '}';
-        return o;
-      }
+//      std::ostream&
+//      print_set(std::ostream& o, const edge_set& s) const
+//      {
+//        o << "{ ";
+//        for (auto i: s)
+//          o << i << ' ';
+//        o << '}';
+//        return o;
+//      }
 
       virtual bool
       cycle_found(unsigned start) override
@@ -399,7 +392,7 @@ namespace spot
               }
           }
 
-        // Abort this algorithm if we have seen too much cycles, i.e.,
+        // Abort this algorithm if we have seen too many cycles, i.e.,
         // when cycle_left_ *reaches* 0.  (If cycle_left_ == 0, that
         // means we had no limit.)
         return (cycles_left_ == 0) || --cycles_left_;
