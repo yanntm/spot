@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016 Laboratoire de Recherche et Développement de l'Epita
+# Copyright (C) 2016, 2019 Laboratoire de Recherche et Développement de l'Epita
 # (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -51,10 +51,17 @@ def str_to_svg(str):
     """
     Send some text to dot for conversion to SVG.
     """
-    dot = subprocess.Popen(['dot', '-Tsvg'],
-                           stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
+    try:
+        dot = subprocess.Popen(['dot', '-Tsvg'],
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        print("The command 'dot' seems to be missing on your system.\n"
+              "Please install the GraphViz package "
+              "and make sure 'dot' is in your PATH.", file=sys.stderr)
+        raise
+
     stdout, stderr = dot.communicate(str)
     if stderr:
         print("Calling 'dot' for the conversion to SVG produced the message:\n"
