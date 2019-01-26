@@ -44,16 +44,6 @@ an idea about how to generate a manual for the Python bindings
 automatically, please do contribute!
 
 
-History
-=======
-
-This project started in 2003 at LIP6 (www.lip6.fr).  The main author
-moved to LRDE (www.lrde.epita.fr) in 2007, and all regular
-contributors are now at LRDE.  The web site was moved from
-spot.lip6.fr to spot.lrde.epita.fr in 2015, so do not be surprised if
-you find links to the old site.
-
-
 Keeping in touch
 ================
 
@@ -65,6 +55,16 @@ but you should feel free to post without subscribing.
 We also run a low-traffic and read-only list for announcements of new
 releases of Spot.  You may subscribe to that list at
 https://www.lrde.epita.fr/mailman/listinfo/spot-announce
+
+
+History
+=======
+
+This project started in 2003 at LIP6 (www.lip6.fr).  The main author
+moved to LRDE (www.lrde.epita.fr) in 2007, and all regular
+contributors are now at LRDE.  The web site was moved from
+spot.lip6.fr to spot.lrde.epita.fr in 2015, so do not be surprised if
+you find links to the old site.
 
 
 Installation
@@ -81,8 +81,14 @@ Especially, Python's headers files should be installed.  If you don't
 have Python installed, and do NOT want to install it, you should run
 configure with the --disable-python option (see below).
 
+
 Optional third-party dependencies
 ----------------------------------
+
+Several tools and functions output automata as "dot files", to be
+rendered graphically by tools from the GraphViz package.  Installing
+GraphViz is therefore highly recommended if you plan to display
+automata.
 
 If the SAT-solver glucose is found on your system, it will be used by
 our test suite to test our SAT-based minimization algorithm.
@@ -103,6 +109,17 @@ Building and installing
 Spot follows the traditional `./configure && make && make check &&
 make install' process.  People unfamiliar with the GNU Build System
 should read the file INSTALL for generic instructions.
+
+If you plan to use the Python binding, we recommend you use one
+of the following --prefix options when calling configure:
+
+  --prefix /usr
+  --prefix /usr/local  (the default)
+  --prefix ~/.local    (if you do not have root permissions)
+
+The reason is that all these locations are usually automatically
+searched by Python.  If you use a different prefix directory, you may
+have to tune the PYTHONPATH environment variable.
 
 In addition to its usual options, ./configure will accept some
 flags specific to Spot:
@@ -184,6 +201,76 @@ Here are the meaning of the fine-tuning options, in case
     flags from a built-in list.
 
 
+Troubleshooting installations
+-----------------------------
+
+Spot installs five types of files, in different locations.  It the
+following, $prefix refers to the directory that was selected using
+the --prefix option of configure (the default is /usr/local/).
+
+1) command-line tools go into $prefix/bin/
+2) shared or static libraries (depending on configure options)
+   are installed into $prefix/lib/
+3) Python bindings (if not disabled with --disable-python) typically
+   go into a directory like $prefix/lib/pythonX.Y/site-packages/
+   where X.Y is the version of Python found during configure.
+4) man pages go into $prefix/man
+5) header files go into $prefix/include
+
+Depending on how you plan to use Spot, you may have to adjust some
+variables such that all these files can be found by the other programs
+that look for them.
+
+To test if command-line tools are correctly installed, try running
+
+  % ltl2tgba --version
+
+If your shell reports that ltl2tgba is not found, add $prefix/bin
+to you $PATH environment variable.
+
+If the dynamic linker reports that some library (usually libspot.so or
+libbddx.so) is not found, you probably have to instruct it to look into
+some new directory.  If you installed Spot as root into a classical
+system prefix such as /usr or /usr/local/ it may be the case that you
+simply have to refresh the cache.  In GNU/Linux this is done by
+running "ldconfig -v".  If you installed Spot into a non-standard
+directory, you may have to add $prefix/lib some some environment
+variable: that variable is called LD_LIBRARY_PATH in GNU/Linux, and
+its DYLD_LIBRARY_PATH in Darwin.
+
+To test the Python bindings, try running
+
+  % python3
+  >>> import spot
+  >>> print(spot.version())
+
+If you installed Spot with a prefix that is not one of those suggested
+in the "Building and installing" section, it is likely that the above
+import statement will fail to locate the spot package.  You can show
+the list of directories that are searched by Python using:
+
+  % python3
+  >>> import sys
+  >>> print(sys.path)
+
+And you can modify that list of searched directories using the
+PYTHONPATH environment variable.
+
+To test if man pages can be found, simply try:
+
+  % man spot
+
+If man reports a message like "No manual entry for spot", add
+$prefix/man to the MANPATH environment variable.
+
+Finally header files are needed if you write some C++ that uses Spot.
+In that case you may need to pass some -I option to the compiler to
+add some "include" directory.  At link time, you may also need to add
+some -L option if the libraries are not in some location that is
+already searched by the linker.  The file doc/userdoc/compile.html (or
+its on-line version at https://spot.lrde.epita.fr/compile.html)
+discusses this topic a bit more.
+
 
 Layout of the source tree
 =========================
@@ -204,7 +291,7 @@ spot/             Sources for libspot.
    taalgos/       Algorithms on TA/TGTA.
    twa/           TωA objects and cousins (Transition-based ω-Automata).
    twaalgos/      Algorithms on TωA.
-      gtec/       Couvreur's Emptiness-Check.
+      gtec/       Couvreur's Emptiness-Check (old version).
    gen/           Sources for libspotgen.
 bin/              Command-line tools built on top of libspot.
    man/           Man pages for the above tools.

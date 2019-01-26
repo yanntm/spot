@@ -52,7 +52,8 @@ make install
 
 Files =INSTALL= and =README= included in the tarball contains more
 explanations about the various options you can use during this
-process.
+process.  Also note that =README= has a section about troubleshooting
+installations.
 
 * Installing the Debian packages
    :PROPERTIES:
