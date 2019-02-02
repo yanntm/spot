@@ -28,6 +28,12 @@ New in spot 2.7.0.dev (not yet release)
   - The core translation for unambiguous automata was incorrectly
     tagging some non-weak automata as weak.
 
+  - The product_susp() function used to multiply an automaton with a
+    suspendable automaton could incorrectly build transition-based
+    automata when multipliying two state-based automata.  This caused
+    ltl2tgba to emit error messages such as: "automaton has
+    transition-based acceptance despite prop_state_acc()==true"
+
 New in spot 2.7 (2018-12-11)
 
   Command-line tools:

@@ -273,6 +273,7 @@ TESTS_twa = \
   core/monitor.test \
   core/dra2dba.test \
   core/unambig.test \
+  core/unambig2.test \
   core/ltlcross4.test \
   core/ltl3ba.test \
   core/streett.test \

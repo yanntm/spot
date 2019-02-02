@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -367,7 +367,7 @@ namespace spot
       auto target_scc = [&](unsigned scc) -> bool
         {
           return (!si.is_trivial(scc)
-                  && (sync_all ||si.is_accepting_scc(scc) == and_acc));
+                  && (sync_all || si.is_accepting_scc(scc) == and_acc));
         };
 
       if (target_scc(si.scc_of(left_init)))
@@ -385,20 +385,15 @@ namespace spot
           for (auto& l: left->out(top.first.first))
             if (!target_scc(si.scc_of(l.dst)))
               {
-                if (!sbacc || top.first.second == -1U)
-                  {
-                    res->new_edge(top.second, new_state(l.dst, -1U), l.cond,
-                                  merge_acc(l.acc, rejmark));
-                  }
-                else
-                  {
-                    // This edge leaves a target SCC, but we build a
-                    // state-based automaton, so make sure we still
-                    // use the same acceptance marks as in the SCC.
-                    auto rm = right->state_acc_sets(top.first.second);
-                    res->new_edge(top.second, new_state(l.dst, -1U), l.cond,
-                                  merge_acc(l.acc, rm));
-                  }
+                acc_cond::mark_t right_acc =
+                  (sbacc && top.first.second != -1U)
+                  // This edge leaves a target SCC, but we build a
+                  // state-based automaton, so make sure we still use
+                  // the same acceptance marks as in the SCC we leave.
+                  ? right->state_acc_sets(top.first.second)
+                  : rejmark;
+                res->new_edge(top.second, new_state(l.dst, -1U), l.cond,
+                              merge_acc(l.acc, right_acc));
               }
             else
               {
@@ -411,8 +406,15 @@ namespace spot
                     if (cond == bddfalse)
                       continue;
                     auto dst = new_state(l.dst, r.dst);
+
+                    // For state-based automata, we cannot use the
+                    // right-mark when entering a target SCC, because
+                    // another sibling transition might be going to a
+                    // non-target SCC without this mark.
+                    acc_cond::mark_t right_acc =
+                      (sbacc && top.first.second == -1U) ? rejmark : r.acc;
                     res->new_edge(top.second, dst, cond,
-                                  merge_acc(l.acc, r.acc));
+                                  merge_acc(l.acc, right_acc));
                   }
               }
         }
