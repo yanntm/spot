@@ -1,9 +1,9 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2010-2015, 2017, 2018, Laboratoire de Recherche et
+** Copyright (C) 2010-2015, 2017-2019, Laboratoire de Recherche et
 ** Développement de l'Epita (LRDE).
-** Copyright (C) 2003, 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
-** département Systèmes Répartis Coopératifs (SRC), Université Pierre
-** et Marie Curie.
+** Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6
+** (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
+** Pierre et Marie Curie.
 **
 ** This file is part of Spot, a model checking library.
 **
@@ -169,7 +169,7 @@ eol2        (\n\r)+|(\r\n)+
 				  ++parent_level;
 				  yylval->str->append(yytext, yyleng);
 				}
-         "}"[ \t\n]*"!"         {
+         "}"[ \t]*"!"           {
 				  if (--parent_level)
 				    {
                                       yylval->str->append(yytext, yyleng);
@@ -205,7 +205,7 @@ eol2        (\n\r)+|(\r\n)+
 }
 
 ")"				BEGIN(not_prop); return token::PAR_CLOSE;
-"}"[ \t\n]*"!"			BEGIN(not_prop); return token::BRACE_BANG_CLOSE;
+"}"[ \t]*"!"			BEGIN(not_prop); return token::BRACE_BANG_CLOSE;
 "}"				BEGIN(not_prop); return token::BRACE_CLOSE;
 
   /* Must go before the other operators, because the F of FALSE
@@ -280,12 +280,12 @@ eol2        (\n\r)+|(\r\n)+
     We also have to deal with the Spin-like notation for G.
     X[]f = XGf
  */
-"X"[ \t\n]*"[]"                 yyless(1); return token::OP_X;
-"F"[ \t\n]*"[]"                 yyless(1); return token::OP_F;
-"G"[ \t\n]*"[]"                 yyless(1); return token::OP_G;
-"X"[ \t\n]*"["                  BEGIN(sqbracket); return token::OP_XREP;
-"F"[ \t\n]*"["                  BEGIN(sqbracket); return token::OP_FREP;
-"G"[ \t\n]*"["                  BEGIN(sqbracket); return token::OP_GREP;
+"X"[ \t\n\r]*"[]"               yyless(1); return token::OP_X;
+"F"[ \t\n\r]*"[]"               yyless(1); return token::OP_F;
+"G"[ \t\n\r]*"[]"               yyless(1); return token::OP_G;
+"X"[ \t\n\r]*"["                BEGIN(sqbracket); return token::OP_XREP;
+"F"[ \t\n\r]*"["                BEGIN(sqbracket); return token::OP_FREP;
+"G"[ \t\n\r]*"["                BEGIN(sqbracket); return token::OP_GREP;
   /* <> (DIAMOND) and [] (BOX), are used in Spin.
      () (CIRCLE) is not, but would make sense.  */
 "F"|{DIAMOND}			BEGIN(0); return token::OP_F;
@@ -301,7 +301,7 @@ eol2        (\n\r)+|(\r\n)+
 "=0"|"̅"|"̄"			return token::OP_POST_NEG;
 "=1"				return token::OP_POST_POS;
 
-<*>[ \t\n]+			/* discard whitespace */ yylloc->step ();
+<*>[ \t\n\r]+			/* discard whitespace */ yylloc->step ();
 
   /* An Atomic proposition cannot start with the letter
      used by a unary operator (F,G,X), unless this
