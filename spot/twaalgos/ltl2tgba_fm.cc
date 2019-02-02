@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2008-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 // Copyright (C) 2003-2006 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -1926,14 +1926,14 @@ namespace spot
     twa_graph_ptr a = make_twa_graph(dict);
     auto namer = a->create_namer<formula>();
 
-    // Translating syntactic persistence will give a weak automaton, unless
-    // the unambiguous option is used.  In the "unambiguous" case, formulas
+    // Even if the input is a persistence formula, the unambiguous option might
+    // cause the resulting automaton not to be weak.  For instance formulas
     // such as "FGa | FGb" (note: not "F(Ga | Gb)") will introduce terms like
     // "FGb&GF!a" that are not syntactic persistence.
-    bool will_be_weak = (unambiguous
-                         ? f2.is_syntactic_obligation()
-                         : f2.is_syntactic_persistence());
-    translate_dict d(a, s, exprop, will_be_weak, unambiguous);
+    bool one_set_enough = (unambiguous
+                            ? f2.is_syntactic_obligation()
+                            : f2.is_syntactic_persistence());
+    translate_dict d(a, s, exprop, one_set_enough, unambiguous);
 
     // Compute the set of all promises that can possibly occur inside
     // the formula.  These are the right-hand sides of U or F
@@ -2198,21 +2198,29 @@ namespace spot
 
     acc.set_generalized_buchi();
 
-    // The unambiguous option can introduce sub-terms that are not
-    // persistence, hence the resulting automaton might not be weak.
-    if (will_be_weak)
-      a->prop_weak(true);
-    if (f2.is_syntactic_stutter_invariant())
+    if (orig_f.is_syntactic_stutter_invariant())
       a->prop_stutter_invariant(true);
-    if (orig_f.is_syntactic_guarantee())
-      {
-        a->prop_terminal(true);
-        assert(a->num_sets() <= 1);
-      }
-
+    // We cannot assume weak automata if the unambibuous construction
+    // is used.
+    //
+    // In an obligation formula such as (b W Ga)&F!a, initial state is
+    // not accepting and goes to a state (b W Ga) that is accepting.
+    // Adding the unambiguous option will add a back-edge between
+    // these two states, creating an non-weak SCC.
+    //
+    // For guarantee formulas, X(G(b))) -> (!((a) W (G(b)))) has a
+    // non-weak output.
     if (unambiguous)
-      a->prop_unambiguous(true);
-
+      {
+        a->prop_unambiguous(true);
+      }
+    else
+      {
+        if (orig_f.is_syntactic_persistence())
+          a->prop_weak(true);
+        if (orig_f.is_syntactic_guarantee())
+          a->prop_terminal(true);
+      }
     // Set the following to true to preserve state names.
     a->release_formula_namer(namer, false);
 

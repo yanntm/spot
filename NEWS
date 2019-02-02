@@ -25,6 +25,9 @@ New in spot 2.7.0.dev (not yet release)
     tools such as ltlfilt, ltlcross, or ltl2tgba were run on files of
     formulas with MS-DOS line endings.
 
+  - The core translation for unambiguous automata was incorrectly
+    tagging some non-weak automata as weak.
+
 New in spot 2.7 (2018-12-11)
 
   Command-line tools:
