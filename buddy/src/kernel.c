@@ -276,6 +276,7 @@ void bdd_done(void)
    free(bddvarset);
    free(bddvar2level);
    free(bddlevel2var);
+   free(bddhash);
 
    bddnodes = NULL;
    bddrefstack = NULL;
