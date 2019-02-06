@@ -104,11 +104,10 @@ namespace spot
   twa_run_ptr
   twa::accepting_run() const
   {
-    if (acc().uses_fin_acceptance())
-      throw std::runtime_error("twa::accepting_run() does not work with "
-                               "Fin acceptance (but twa::is_empty() and "
-                               "twa::accepting_word() can)");
-    auto res = couvreur99_new_check(shared_from_this());
+    const_twa_ptr a = shared_from_this();
+    if (const_twa_graph_ptr ag = fin_to_twa_graph_maybe(a))
+      return generic_accepting_run(ag);
+    auto res = couvreur99_new_check(a);
     if (!res)
       return nullptr;
     return res->accepting_run();
@@ -117,7 +116,7 @@ namespace spot
   twa_word_ptr
   twa::accepting_word() const
   {
-    if (auto run = remove_fin_maybe(shared_from_this())->accepting_run())
+    if (auto run = shared_from_this()->accepting_run())
       {
         auto w = make_twa_word(run->reduce());
         w->simplify();
