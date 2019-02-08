@@ -632,20 +632,29 @@ namespace spot
           return start;
         };
 
-      // ##### Prefix search V3 #####
+      // ##### Prefix search #####
 
-      p_state substart =
-        product_bfs_steps(init,
-                          [&](p_step&, p_state& dest)
-                          {
-                            return states.at(dest) == order;
-                          },
-                          [&](p_state&)
-                          {
-                            return false; // Do not filter states
-                          },
-                          ar_l ? &(ar_l->prefix) : nullptr,
-                          ar_r ? &(ar_r->prefix) : nullptr);
+      p_state substart;
+
+      if (states.at(init) == order)
+        {
+          // init is already in SCC
+          substart = init;
+        }
+      else
+        {
+          substart = product_bfs_steps(init,
+                                       [&](p_step&, p_state& dest)
+                                       {
+                                         return states.at(dest) == order;
+                                       },
+                                       [&](p_state&)
+                                       {
+                                         return false; // Do not filter states
+                                       },
+                                       ar_l ? &(ar_l->prefix) : nullptr,
+                                       ar_r ? &(ar_r->prefix) : nullptr);
+        }
 
       // ##### Accepting Marks search #####
 
