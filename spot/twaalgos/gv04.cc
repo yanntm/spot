@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2010, 2011, 2013-2018 Laboratoire de
+// Copyright (C) 2008, 2010, 2011, 2013-2019 Laboratoire de
 // recherche et développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -411,6 +411,6 @@ namespace spot
   emptiness_check_ptr
   explicit_gv04_check(const const_twa_ptr& a, option_map o)
   {
-    return std::make_shared<gv04>(a, o);
+    return SPOT_make_shared_enabled__(gv04, a, o);
   }
 }

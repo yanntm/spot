@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2014-2018 Laboratoire de
+// Copyright (C) 2011, 2012, 2014-2019 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -1106,7 +1106,8 @@ namespace spot
         dict->unregister_all_my_variables(iface.get());
         throw;
       }
-    auto res = std::make_shared<spins_kripke>(iface, dict, ps, dead, compress);
+    auto res = SPOT_make_shared_enabled__(spins_kripke,
+                                          iface, dict, ps, dead, compress);
     // All atomic propositions have been registered to the bdd_dict
     // for iface, but we also need to add them to the automaton so
     // twa::ap() works.

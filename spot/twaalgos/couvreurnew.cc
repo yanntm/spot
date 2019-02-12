@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2016-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -850,29 +850,38 @@ namespace spot
 
   } // anonymous namespace
 
+  template<twa_strength strength>
+  using cna = couvreur99_new<false, strength>;
+  template<twa_strength strength>
+  using cne = couvreur99_new<true, strength>;
+
+  emptiness_check_ptr
+  get_couvreur99_new_abstract(const const_twa_ptr& a, option_map o)
+  {
+    // NB: The order of the if's matter.
+    if (a->prop_terminal())
+      return SPOT_make_shared_enabled__(cna<TERMINAL>, a, o);
+    if (a->prop_weak())
+      return SPOT_make_shared_enabled__(cna<WEAK>, a, o);
+    return SPOT_make_shared_enabled__(cna<STRONG>, a, o);
+  }
+
   emptiness_check_ptr
   get_couvreur99_new(const const_twa_ptr& a, spot::option_map o)
   {
     const_twa_graph_ptr ag = std::dynamic_pointer_cast<const twa_graph>(a);
-    if (ag)
-      // the automaton is explicit
+    if (ag) // the automaton is explicit
       {
         // NB: The order of the if's matter.
         if (a->prop_terminal())
-          return std::make_shared<couvreur99_new<true, TERMINAL>>(ag, o);
+          return SPOT_make_shared_enabled__(cne<TERMINAL>, ag, o);
         if (a->prop_weak())
-          return std::make_shared<couvreur99_new<true, WEAK>>(ag, o);
-        return std::make_shared<couvreur99_new<true, STRONG>>(ag, o);
+          return SPOT_make_shared_enabled__(cne<WEAK>, ag, o);
+        return SPOT_make_shared_enabled__(cne<STRONG>, ag, o);
       }
-    else
-      // the automaton is abstract
+    else // the automaton is abstract
       {
-        // NB: The order of the if's matter.
-        if (a->prop_terminal())
-          return std::make_shared<couvreur99_new<false, TERMINAL>>(a, o);
-        if (a->prop_weak())
-          return std::make_shared<couvreur99_new<false, WEAK>>(a, o);
-        return std::make_shared<couvreur99_new<false, STRONG>>(a, o);
+        return get_couvreur99_new_abstract(a, o);
       }
   }
 
@@ -880,16 +889,6 @@ namespace spot
   couvreur99_new_check(const const_twa_ptr& a)
   {
     return get_couvreur99_new(a, spot::option_map())->check();
-  }
-
-  emptiness_check_ptr
-  get_couvreur99_new_abstract(const const_twa_ptr& a, option_map o)
-  {
-    if (a->prop_terminal())
-      return std::make_shared<couvreur99_new<false, TERMINAL>>(a, o);
-    if (a->prop_weak())
-      return std::make_shared<couvreur99_new<false, WEAK>>(a, o);
-    return std::make_shared<couvreur99_new<false, STRONG>>(a, o);
   }
 
 } // namespace spot

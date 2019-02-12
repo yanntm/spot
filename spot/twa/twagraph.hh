@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement de l'Epita.
+// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -714,11 +714,20 @@ namespace spot
                              const char* opt = nullptr) const;
   };
 
+  // This is a workaround for
+#if __GNUC__ == 8 && __GNUC_MINOR__ == 2
+#  define SPOT_make_twa_graph__(...) \
+   std::shared_ptr<twa_graph>(new twa_graph(__VA_ARGS__))
+#else
+#  define SPOT_make_twa_graph__(...) \
+   std::make_shared<twa_graph>(__VA_ARGS__)
+#endif
+
   /// \ingroup twa_representation
   /// \brief Build an explicit automaton from all states of \a aut,
   inline twa_graph_ptr make_twa_graph(const bdd_dict_ptr& dict)
   {
-    return std::make_shared<twa_graph>(dict);
+    return SPOT_make_shared_enabled__(twa_graph, dict);
   }
 
   /// \ingroup twa_representation
@@ -726,7 +735,7 @@ namespace spot
   inline twa_graph_ptr make_twa_graph(const twa_graph_ptr& aut,
                                       twa::prop_set p)
   {
-    return std::make_shared<twa_graph>(aut, p);
+    return SPOT_make_shared_enabled__(twa_graph, aut, p);
   }
 
   /// \ingroup twa_representation
@@ -734,7 +743,7 @@ namespace spot
   inline twa_graph_ptr make_twa_graph(const const_twa_graph_ptr& aut,
                                       twa::prop_set p)
   {
-    return std::make_shared<twa_graph>(aut, p);
+    return SPOT_make_shared_enabled__(twa_graph, aut, p);
   }
 
   /// \ingroup twa_representation

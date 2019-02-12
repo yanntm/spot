@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -176,3 +176,26 @@ namespace spot
       }
   };
 }
+
+// This is a workaround for the issue described in GNU GCC bug 89303.
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89303
+//
+// In brief: with some version of gcc distributed by Debian unstable
+// and that correspond to something a bit newer than 8.2.1 (Debian is
+// tracking the gcc-8-branch instead of following releases), mixing
+// make_shared with enable_shared_from_this produces memory leaks or
+// bad_weak_ptr exceptions.
+//
+// Our workaround is simply to avoid calling make_shared in those
+// cases.
+//
+// The use of "enabled" in the macro name is just here to remember
+// that we only need this macro for classes that inherit from
+// enable_shared_from_this.
+#if __GNUC__ == 8 && __GNUC_MINOR__ == 2
+#  define SPOT_make_shared_enabled__(TYPE, ...) \
+   std::shared_ptr<TYPE>(new TYPE(__VA_ARGS__))
+#else
+#  define SPOT_make_shared_enabled__(TYPE, ...)  \
+   std::make_shared<TYPE>(__VA_ARGS__)
+#endif

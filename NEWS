@@ -1,5 +1,11 @@
 New in spot 2.7.0.dev (not yet release)
 
+  Build
+
+  - Work around GCC bug #89303, that causes memory leaks and std::weak_bad_ptr
+    exceptions when Spot is compiled with the version of g++ 8.2 currently
+    distributed with Debian (starting with 8.2.0-15).
+
   Python:
 
   - The following methods of spot::bdd_dict are now usable in Python when

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011-2018 Laboratoire de Recherche et Développement de
+// Copyright (C) 2009, 2011-2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -319,7 +319,7 @@ namespace spot
 
   inline taa_tgba_string_ptr make_taa_tgba_string(const bdd_dict_ptr& dict)
   {
-    return std::make_shared<taa_tgba_string>(dict);
+    return SPOT_make_shared_enabled__(taa_tgba_string, dict);
   }
 
   class SPOT_API taa_tgba_formula final:
@@ -344,6 +344,6 @@ namespace spot
 
   inline taa_tgba_formula_ptr make_taa_tgba_formula(const bdd_dict_ptr& dict)
   {
-    return std::make_shared<taa_tgba_formula>(dict);
+    return SPOT_make_shared_enabled__(taa_tgba_formula, dict);
   }
 }

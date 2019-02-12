@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013-2018  Laboratoire de Recherche et
+// Copyright (C) 2011, 2013-2019  Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -680,14 +680,18 @@ namespace spot
   emptiness_check_ptr
   explicit_se05_search(const const_twa_ptr& a, option_map o)
   {
-    return std::make_shared<se05_search<explicit_se05_search_heap>>(a, 0, o);
+    return
+       SPOT_make_shared_enabled__(se05_search<explicit_se05_search_heap>,
+                                 a, 0, o);
   }
 
   emptiness_check_ptr
   bit_state_hashing_se05_search(const const_twa_ptr& a,
                                 size_t size, option_map o)
   {
-    return std::make_shared<se05_search<bsh_se05_search_heap>>(a, size, o);
+    return
+      SPOT_make_shared_enabled__(se05_search<bsh_se05_search_heap>,
+                                 a, size, o);
   }
 
   emptiness_check_ptr

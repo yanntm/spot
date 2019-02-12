@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2011, 2014-2016, 2018 Laboratoire de Recherche
-// et Développement de l'Epita (LRDE).
+// Copyright (C) 2008, 2011, 2014-2016, 2018-2019 Laboratoire de
+// Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
 // Université Pierre et Marie Curie.
@@ -613,8 +613,8 @@ namespace spot
   couvreur99(const const_twa_ptr& a, option_map o)
   {
     if (o.get("shy"))
-      return std::make_shared<couvreur99_check_shy>(a, o);
-    return std::make_shared<couvreur99_check>(a, o);
+      return SPOT_make_shared_enabled__(couvreur99_check_shy, a, o);
+    return SPOT_make_shared_enabled__(couvreur99_check, a, o);
   }
 
 }

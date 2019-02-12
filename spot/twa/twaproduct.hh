@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013, 2014, 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2011, 2013, 2014, 2015, 2016, 2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2006 Laboratoire d'Informatique de Paris
 // 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -131,7 +131,7 @@ namespace spot
   inline twa_product_ptr otf_product(const const_twa_ptr& left,
                                       const const_twa_ptr& right)
   {
-    return std::make_shared<twa_product>(left, right);
+    return SPOT_make_shared_enabled__(twa_product, left, right);
   }
 
   /// \brief on-the-fly TGBA product with forced initial states
@@ -140,7 +140,7 @@ namespace spot
                                         const state* left_init,
                                         const state* right_init)
   {
-    return std::make_shared<twa_product_init>(left, right,
-                                              left_init, right_init);
+    return SPOT_make_shared_enabled__(twa_product_init,
+                                      left, right, left_init, right_init);
   }
 }

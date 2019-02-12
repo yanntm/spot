@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -1031,7 +1031,7 @@ namespace spot
   {
     if (max_states == -1U && !preserve_names)
       if (auto a = std::dynamic_pointer_cast<const twa_graph>(aut))
-        return std::make_shared<twa_graph>(a, p);
+        return SPOT_make_shared_enabled__(twa_graph, a, p);
     return copy(aut, p, preserve_names, max_states);
   }
 }
