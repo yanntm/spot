@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2018 Laboratoire de Recherche et Développement de
+// Copyright (C) 2011-2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -239,9 +239,11 @@ namespace spot
 
     std::string format_state(unsigned n) const
     {
-      std::stringstream ss;
-      ss << n;
-      return ss.str();
+      auto named = get_named_prop<std::vector<std::string>>("state-names");
+      if (named && n < named->size())
+        return (*named)[n];
+
+      return std::to_string(n);
     }
 
     virtual std::string format_state(const state* st) const override

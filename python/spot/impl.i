@@ -47,7 +47,6 @@
 %shared_ptr(spot::fair_kripke)
 %shared_ptr(spot::kripke)
 %shared_ptr(spot::kripke_graph)
-%shared_ptr(spot::kripke)
 %shared_ptr(spot::ta)
 %shared_ptr(spot::ta_explicit)
 %shared_ptr(spot::ta_product)
@@ -172,8 +171,9 @@
 
 #include <spot/parseaut/public.hh>
 
-#include <spot/kripke/kripke.hh>
 #include <spot/kripke/fairkripke.hh>
+#include <spot/kripke/kripke.hh>
+#include <spot/kripke/kripkegraph.hh>
 
 #include <spot/ta/ta.hh>
 #include <spot/ta/tgta.hh>
@@ -678,10 +678,11 @@ def state_is_accepting(self, src) -> "bool":
 
 %include <spot/twaalgos/complement.hh>
 
-%include <spot/parseaut/public.hh>
-
 %include <spot/kripke/fairkripke.hh>
 %include <spot/kripke/kripke.hh>
+%include <spot/kripke/kripkegraph.hh>
+
+%include <spot/parseaut/public.hh>
 
 %include <spot/ta/ta.hh>
 %include <spot/ta/tgta.hh>

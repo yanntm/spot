@@ -4,7 +4,7 @@ New in spot 2.7.0.dev (not yet release)
 
   - Work around GCC bug #89303, that causes memory leaks and std::weak_bad_ptr
     exceptions when Spot is compiled with the version of g++ 8.2 currently
-    distributed with Debian (starting with 8.2.0-15).
+    distributed by Debian unstable (starting with g++ 8.2.0-15).
 
   Python:
 
@@ -16,6 +16,20 @@ New in spot 2.7.0.dev (not yet release)
     - register_all_propositions_of(other, for_me)
     - unregister_all_my_variables(for_me)
     - unregister_variable(var, for_me)
+
+  - Better support for explicit Kripke structures
+    - the kripke_graph type now has bindings
+    - spot.automaton() and spot.automata() now support a want_kripke=True
+      to return a kripke_graph
+      See the bottom of https://spot.lrde.epita.fr/ipynb/ltsmin-dve.html
+      for some examples.
+
+  Library:
+
+  - Printing Kripke structures via print_hoa() will save state names.
+
+  - kripke_graph_ptr objects now honnor any "state-names" property
+    when formating states.
 
   Bugs fixed:
 
@@ -38,7 +52,7 @@ New in spot 2.7.0.dev (not yet release)
     suspendable automaton could incorrectly build transition-based
     automata when multipliying two state-based automata.  This caused
     ltl2tgba to emit error messages such as: "automaton has
-    transition-based acceptance despite prop_state_acc()==true"
+    transition-based acceptance despite prop_state_acc()==true".
 
 New in spot 2.7 (2018-12-11)
 

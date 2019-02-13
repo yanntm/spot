@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014-2018  Laboratoire de
+# Copyright (C) 2014-2019  Laboratoire de
 # Recherche et Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -367,7 +367,8 @@ class atomic_prop_set:
 
 
 def automata(*sources, timeout=None, ignore_abort=True,
-             trust_hoa=True, no_sid=False, debug=False):
+             trust_hoa=True, no_sid=False, debug=False,
+             want_kripke=False):
     """Read automata from a list of sources.
 
     Parameters
@@ -386,6 +387,10 @@ def automata(*sources, timeout=None, ignore_abort=True,
     trust_hoa : bool, optional
         If True (the default), supported HOA properies that
         cannot be easily verified are trusted.
+    want_kripke : bool, optional
+        If True, the input is expected to discribe Kripke
+        structures, in the HOA format, and the returned type
+        will be of type kripke_graph_ptr.
     no_sid : bool, optional
         When an automaton is obtained from a subprocess, this
         subprocess is started from a shell with its own session
@@ -445,6 +450,8 @@ def automata(*sources, timeout=None, ignore_abort=True,
     o.ignore_abort = ignore_abort
     o.trust_hoa = trust_hoa
     o.raise_errors = True
+    o.want_kripke = want_kripke
+
     for filename in sources:
         try:
             p = None
@@ -496,8 +503,9 @@ def automata(*sources, timeout=None, ignore_abort=True,
             mgr = proc if proc else _supress()
             with mgr:
                 while a:
-                    # This returns None when we reach the end of the file.
-                    a = p.parse(_bdd_dict).aut
+                    # the automaton is None when we reach the end of the file.
+                    res = p.parse(_bdd_dict)
+                    a = res.ks if want_kripke else res.aut
                     if a:
                         yield a
         finally:

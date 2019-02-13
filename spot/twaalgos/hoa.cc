@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et
+// Copyright (C) 2014-2019 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -303,6 +303,9 @@ namespace spot
               break;
             case 'k':
               state_labels = true;
+              break;
+            case 'K':
+              state_labels = false;
               break;
             case 'l':
               newline = false;
@@ -732,14 +735,12 @@ namespace spot
             const const_twa_ptr& aut,
             const char* opt)
   {
-
-    auto a = std::dynamic_pointer_cast<const twa_graph>(aut);
-    if (!a)
-      a = make_twa_graph(aut, twa::prop_set::all());
-
+    bool preserve_names = false;
     // for Kripke structures, automatically append "k" to the options.
+    // (Unless "K" was given.)
     char* tmpopt = nullptr;
-    if (std::dynamic_pointer_cast<const fair_kripke>(aut))
+    if (std::dynamic_pointer_cast<const fair_kripke>(aut) &&
+        (!opt || (strchr(opt, 'K') == nullptr)))
       {
         unsigned n = opt ? strlen(opt) : 0;
         tmpopt = new char[n + 2];
@@ -747,7 +748,13 @@ namespace spot
           strcpy(tmpopt, opt);
         tmpopt[n] = 'k';
         tmpopt[n + 1] = 0;
+        preserve_names = true;
       }
+
+    auto a = std::dynamic_pointer_cast<const twa_graph>(aut);
+    if (!a)
+      a = make_twa_graph(aut, twa::prop_set::all(), preserve_names);
+
     print_hoa(os, a, tmpopt ? tmpopt : opt);
     delete[] tmpopt;
     return os;
