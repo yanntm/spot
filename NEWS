@@ -1,15 +1,15 @@
-New in spot 2.7.0.dev (not yet release)
+New in spot 2.7.1 (2019-02-14)
 
   Build
 
-  - Work around GCC bug #89303, that causes memory leaks and std::weak_bad_ptr
+  - Work around GCC bug #89303 that causes memory leaks and std::weak_bad_ptr
     exceptions when Spot is compiled with the version of g++ 8.2 currently
     distributed by Debian unstable (starting with g++ 8.2.0-15).
 
   Python:
 
   - The following methods of spot::bdd_dict are now usable in Python when
-    fine controle over the lifetime of associations between BDD variable
+    fine control over the lifetime of associations between BDD variables
     and atomic propositions is needed.
     - register_proposition(formula, for_me)
     - register_anonymous_variables(count, for_me)
@@ -17,8 +17,8 @@ New in spot 2.7.0.dev (not yet release)
     - unregister_all_my_variables(for_me)
     - unregister_variable(var, for_me)
 
-  - Better support for explicit Kripke structures
-    - the kripke_graph type now has bindings
+  - Better support for explicit Kripke structures:
+    - the kripke_graph type now has Python bindings
     - spot.automaton() and spot.automata() now support a want_kripke=True
       to return a kripke_graph
       See the bottom of https://spot.lrde.epita.fr/ipynb/ltsmin-dve.html
