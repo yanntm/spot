@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2011, 2013, 2014, 2015, 2016, 2017, 2018 Laboratoire de
+## Copyright (C) 2011, 2013, 2014, 2015, 2016, 2017, 2018, 2019 Laboratoire de
 ## Recherche et Developpement de l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
@@ -39,7 +39,7 @@ libspotltsmin_la_LIBADD = \
   $(top_builddir)/lib/libgnu.la \
   $(LIBLTDL) -lpthread
 libspotltsmin_la_LDFLAGS = -no-undefined $(SYMBOLIC_LDFLAGS)
-libspotltsmin_la_SOURCES = ltsmin.cc
+libspotltsmin_la_SOURCES = spins_interface.cc ltsmin.cc
 
 
 EXTRA_DIST = $(srcdir)/libspotltsmin.pc.in

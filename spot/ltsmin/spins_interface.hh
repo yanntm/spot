@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -20,7 +20,6 @@
 #pragma once
 
 #include <memory>
-#include <ltdl.h>
 
 namespace spot
 {
@@ -52,13 +51,7 @@ namespace spot
     const char* (*get_type_name)(int type);
     int (*get_type_value_count)(int type);
     const char* (*get_type_value_name)(int type, int value);
-    ~spins_interface()
-    {
-      lt_dlhandle h = (lt_dlhandle) handle;
-      if (h)
-        lt_dlclose(h);
-      lt_dlexit();
-    }
+    ~spins_interface();
   };
 
   using spins_interface_ptr = std::shared_ptr<const spins_interface>;
