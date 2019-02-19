@@ -20,6 +20,7 @@
 #pragma once
 
 #include <memory>
+#include <spot/misc/common.hh>
 
 namespace spot
 {
@@ -36,11 +37,19 @@ namespace spot
                                transition_info_t *transition_info,
                                int *dst);
 
-  struct spins_interface
+  /// \brief Implementation of the PINS interface. This class
+  /// is a wrapper that, given a file, will compile it w.r.t
+  /// the PINS interface. The class can then be menipulated
+  /// transparently whatever the input format considered.
+  class SPOT_API spins_interface
   {
-    // handle to the dynamic library. The variable is of type lt_dlhandle, but
-    // we need this trick since we cannot put ltdl.h in public headers
-    void* handle;
+  public:
+    spins_interface() = default;
+    spins_interface(const std::string& file_arg);
+    ~spins_interface();
+
+    // The various functions that can be called once the object
+    // has been instanciated.
     void (*get_initial_state)(void *to);
     int (*have_property)();
     int (*get_successors)(void* m, int *in, TransitionCB, void *arg);
@@ -51,7 +60,11 @@ namespace spot
     const char* (*get_type_name)(int type);
     int (*get_type_value_count)(int type);
     const char* (*get_type_value_name)(int type, int value);
-    ~spins_interface();
+
+  private:
+    // handle to the dynamic library. The variable is of type lt_dlhandle, but
+    // we need this trick since we cannot put ltdl.h in public headers
+    void* handle;
   };
 
   using spins_interface_ptr = std::shared_ptr<const spins_interface>;
