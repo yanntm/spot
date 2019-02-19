@@ -26,11 +26,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-// MinGW does not define this.
-#ifndef WEXITSTATUS
-# define WEXITSTATUS(x) ((x) & 0xff)
-#endif
-
 #include <spot/ltsmin/ltsmin.hh>
 #include <spot/misc/hashfunc.hh>
 #include <spot/misc/fixpool.hh>
@@ -909,151 +904,13 @@ namespace spot
       mutable bdd state_condition_last_cond_;
       mutable callback_context* state_condition_last_cc_;
     };
-
-
-    //////////////////////////////////////////////////////////////////////////
-    // LOADER
-
-    // Call spins to compile "foo.prom" as "foo.prom.spins" if the latter
-    // does not exist already or is older.
-    static void
-    compile_model(std::string& filename, const std::string& ext)
-    {
-      std::string command;
-      std::string compiled_ext;
-
-      if (ext == ".gal")
-        {
-          command = "gal2c " + filename;
-          compiled_ext = "2C";
-        }
-      else if (ext == ".prom" || ext == ".pm" || ext == ".pml")
-        {
-          command = "spins " + filename;
-          compiled_ext = ".spins";
-        }
-      else if (ext == ".dve")
-        {
-          command = "divine compile --ltsmin " + filename;
-          command += " 2> /dev/null"; // FIXME needed for Clang on MacOSX
-          compiled_ext = "2C";
-        }
-      else
-        {
-          throw std::runtime_error("Unknown extension '"s + ext +
-                                   "'.  Use '.prom', '.pm', '.pml', "
-                                   "'.dve', '.dve2C', '.gal', '.gal2C' or "
-                                   "'.prom.spins'.");
-        }
-
-      struct stat s;
-      if (stat(filename.c_str(), &s) != 0)
-        throw std::runtime_error("Cannot open "s + filename);
-
-      filename += compiled_ext;
-
-      // Remove any directory, because the new file will
-      // be compiled in the current directory.
-      size_t pos = filename.find_last_of("/\\");
-      if (pos != std::string::npos)
-        filename = "./" + filename.substr(pos + 1);
-
-      struct stat d;
-      if (stat(filename.c_str(), &d) == 0)
-        if (s.st_mtime < d.st_mtime)
-          // The .spins or .dve2C or .gal2C is up-to-date, no need to compile.
-          return;
-
-      int res = system(command.c_str());
-      if (res)
-        throw std::runtime_error("Execution of '"s
-                                 + command.c_str() + "' returned exit code "
-                                 + std::to_string(WEXITSTATUS(res)));
-    }
   }
 
   ltsmin_model
   ltsmin_model::load(const std::string& file_arg)
   {
-    std::string file;
-    if (file_arg.find_first_of("/\\") != std::string::npos)
-      file = file_arg;
-    else
-      file = "./" + file_arg;
-
-    std::string ext = file.substr(file.find_last_of("."));
-    if (ext != ".spins" && ext != ".dve2C" && ext != ".gal2C")
-      {
-        compile_model(file, ext);
-        ext = file.substr(file.find_last_of("."));
-      }
-
-    if (lt_dlinit())
-      throw std::runtime_error("Failed to initialize libltldl.");
-
-    lt_dlhandle h = lt_dlopen(file.c_str());
-    if (!h)
-      {
-        std::string lt_error = lt_dlerror();
-        lt_dlexit();
-        throw std::runtime_error("Failed to load '"s
-                                 + file + "'.\n" + lt_error);
-      }
-
-    auto d = std::make_shared<spins_interface>();
-    assert(d); // Superfluous, but Debian's GCC 7 snapshot 20161207-1 warns
-               // about potential null pointer dereference on the next line.
-    d->handle = h;
-
-
-    auto sym = [&](auto* dst, const char* name)
-      {
-        // Work around -Wpendantic complaining that pointer-to-objects
-        // should not be converted to pointer-to-functions (we have to
-        // assume they can for POSIX).
-        *reinterpret_cast<void**>(dst) = lt_dlsym(h, name);
-        if (dst == nullptr)
-          throw std::runtime_error("Failed to resolve symbol '"s
-                                   + name + "' in '" + file + "'.");
-      };
-
-    // SpinS interface.
-    if (ext == ".spins")
-      {
-        sym(&d->get_initial_state, "spins_get_initial_state");
-        d->have_property = nullptr;
-        sym(&d->get_successors, "spins_get_successor_all");
-        sym(&d->get_state_size, "spins_get_state_size");
-        sym(&d->get_state_variable_name, "spins_get_state_variable_name");
-        sym(&d->get_state_variable_type, "spins_get_state_variable_type");
-        sym(&d->get_type_count, "spins_get_type_count");
-        sym(&d->get_type_name, "spins_get_type_name");
-        sym(&d->get_type_value_count, "spins_get_type_value_count");
-        sym(&d->get_type_value_name, "spins_get_type_value_name");
-      }
-    // dve2 and gal2C interfaces.
-    else
-      {
-        sym(&d->get_initial_state, "get_initial_state");
-        *reinterpret_cast<void**>(&d->have_property) =
-          lt_dlsym(h, "have_property");
-        sym(&d->get_successors, "get_successors");
-        sym(&d->get_state_size, "get_state_variable_count");
-        sym(&d->get_state_variable_name, "get_state_variable_name");
-        sym(&d->get_state_variable_type, "get_state_variable_type");
-        sym(&d->get_type_count, "get_state_variable_type_count");
-        sym(&d->get_type_name, "get_state_variable_type_name");
-        sym(&d->get_type_value_count, "get_state_variable_type_value_count");
-        sym(&d->get_type_value_name, "get_state_variable_type_value");
-      }
-
-    if (d->have_property && d->have_property())
-      throw std::runtime_error("Models with embedded properties "
-                               "are not supported.");
-
-    return { d };
+    return {std::make_shared<spins_interface>(file_arg)};
   }
-
 
   ltsmin_kripkecube_ptr
   ltsmin_model::kripkecube(std::vector<std::string> to_observe,
