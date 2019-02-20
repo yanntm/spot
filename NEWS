@@ -1,6 +1,12 @@
 New in spot 2.7.1.dev  (not yet released)
 
-  Nothing yet.
+  Library:
+
+  - Add generic_accepting_run() as a variant of generic_emptiness_check() that
+    returns an accepting run in an automaton with any acceptance condition.
+
+  - twa::accepting_run() now works on automata using Fin in
+    their acceptance condition.
 
 New in spot 2.7.1 (2019-02-14)
 

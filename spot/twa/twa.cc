@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2014-2018 Laboratoire de Recherche et Developpement de
+// Copyright (C) 2011, 2014-2019 Laboratoire de Recherche et Developpement de
 // l'EPITA (LRDE).
 // Copyright (C) 2003, 2004, 2005 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Developpement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -255,12 +255,9 @@ namespace spot
                                "does not support alternating automata");
     auto aut_ = std::const_pointer_cast<twa_graph>(aut);
     acc_cond old = aut_->acc();
-
     twa_run_ptr run = std::make_shared<twa_run>(aut_);
     bool res = generic_emptiness_check_main_nocopy<true>(aut_, run);
-
     aut_->set_acceptance(old);
-
     if (!res)
       return run;
     return nullptr;

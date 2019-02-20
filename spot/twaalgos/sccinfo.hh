@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -598,7 +598,11 @@ namespace spot
 
     /// \brief Retrieves an accepting run of the automaton whose cycle is in the
     /// SCC.
+    ///
     /// \param scc an accepting scc
+    /// \param r a run to fill
+    ///
+    /// This method needs the STOP_ON_ACC option.
     void get_accepting_run(unsigned scc, twa_run_ptr r) const;
 
     bool is_useful_scc(unsigned scc) const

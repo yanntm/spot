@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -46,6 +46,13 @@ namespace spot
   {
     throw std::runtime_error
       ("scc_info was run with option STOP_ON_ACC");
+  }
+
+  // this one is not yet needed in the hh file
+  static void report_need_stop_on_acc()
+  {
+    throw std::runtime_error
+      ("scc_info was not run with option STOP_ON_ACC");
   }
 
   namespace
@@ -461,88 +468,128 @@ namespace spot
       determine_usefulness();
   }
 
-  // Describes an explicit spot::twa_run::step
-  struct exp_step
-  {
-    unsigned src;
-    bdd cond;
-    acc_cond::mark_t acc;
-  };
-
   // A reimplementation of spot::bfs_steps for explicit automata.
   // bool filter(const twa_graph::edge_storage_t&) returns true if the
   // transition has to be filtered out.
-  // bool match(struct exp_step&, unsigned dest) returns true if the BFS has to
-  // stop after this transition.
+  // bool match(const twa_graph::edge_storage_t&) returns true if the BFS
+  // has to stop after this transition.
   // Returns the destination of the matched transition, or -1 if no match has
   // been found.
+  template <typename edge_filter_type,
+            typename step_matcher_type>
   static int explicit_bfs_steps(const const_twa_graph_ptr aut, unsigned start,
-      twa_run::steps& steps,
-      std::function<bool(const twa_graph::edge_storage_t&)> filter,
-      std::function<bool(exp_step&, unsigned)> match)
+                                twa_run::steps& steps,
+                                edge_filter_type filter,
+                                step_matcher_type match)
   {
-    std::unordered_map<unsigned, exp_step> backlinks;
+    auto& gr = aut->get_graph();
+    // The backlink of each state is the index of the edge that
+    // discovered it in the BFS, so BACKLINKS effectively describes a
+    // tree rooted at START.
+    std::vector<unsigned> backlinks(aut->num_states(), 0);
     std::deque<unsigned> bfs_queue;
     bfs_queue.emplace_back(start);
-
     while (!bfs_queue.empty())
-    {
-      unsigned src = bfs_queue.front();
-      bfs_queue.pop_front();
-      for (auto& t: aut->out(src))
       {
-        if (filter(t))
-          continue;
-
-        exp_step s = { src, t.cond, t.acc };
-        if (match(s, t.dst))
-        {
-          twa_run::steps path;
-          for (;;)
+        unsigned src = bfs_queue.front();
+        bfs_queue.pop_front();
+        for (auto& t: aut->out(src))
           {
-            path.emplace_front(aut->state_from_number(s.src), s.cond, s.acc);
-            if (s.src == start)
-              break;
-            const auto& i = backlinks.find(s.src);
-            assert(i != backlinks.end());
-            s = i->second;
-          }
-          steps.splice(steps.end(), path);
-          return t.dst;
-        }
+            if (filter(t))
+              continue;
 
-        if (backlinks.emplace(t.dst, s).second)
-          bfs_queue.push_back(t.dst);
+            if (match(t))
+              {
+                // Build the path from START to T.DST by following the
+                // backlinks, starting at the end.
+                twa_run::steps path;
+                path.emplace_front(aut->state_from_number(t.src),
+                                   t.cond, t.acc);
+                unsigned src = t.src;
+                while (src != start)
+                  {
+                    unsigned bl_num = backlinks[src];
+                    assert(bl_num);
+                    auto& bl_edge = gr.edge_storage(bl_num);
+                    src = bl_edge.src;
+                    path.emplace_front(aut->state_from_number(src),
+                                       bl_edge.cond, bl_edge.acc);
+                  }
+                steps.splice(steps.end(), path);
+                return t.dst;
+              }
+
+            if (!backlinks[t.dst])
+              {
+                backlinks[t.dst] = aut->edge_number(t);
+                bfs_queue.push_back(t.dst);
+              }
+          }
       }
-    }
     return -1;
   }
 
   void scc_info::get_accepting_run(unsigned scc, twa_run_ptr r) const
   {
     const scc_info::scc_node& node = node_[scc];
-
     if (!node.is_accepting())
       throw std::runtime_error("scc_info::get_accepting_cycle needs to be "
                                "called on an accepting scc");
-    acc_cond actual_cond = aut_->acc().restrict_to(node.acc_marks())
-      .force_inf(node.acc_marks());
-    assert(!actual_cond.uses_fin_acceptance());
+    if (SPOT_UNLIKELY(!(options_ & scc_info_options::STOP_ON_ACC)))
+      report_need_stop_on_acc();
 
-    // List of states of the SCC
-    const std::set<unsigned> scc_states(node.states().cbegin(),
-                                        node.states().cend());
+    unsigned init = aut_->get_init_state_number();
+
+    // The accepting cycle should honor any edge filter we have.
+    auto filter = [this](const twa_graph::edge_storage_t& t)
+                  {
+                    if (!filter_)
+                      return false;
+                    // Filter out ignored and cut transitions.
+                    return filter_(t, t.dst, filter_data_)
+                      != edge_filter_choice::keep;
+                  };
+
+    // The SCC exploration has a small optimization that can flag SCCs
+    // has accepting if they contain accepting self-loops, even if the
+    // SCC itself has some Fin acceptance to check.  So we have to
+    // deal with this situation before we look for the more complex
+    // case of satisfying the condition with a larger cycle.  We do
+    // this first, because it's good to return a small cycle if we
+    // can.
+    const acc_cond& acccond = aut_->acc();
+    for (unsigned s: node.states())
+      for (auto& e: aut_->out(s))
+        if (e.src == e.dst && !filter(e) && acccond.accepting(e.acc))
+          {
+            // We have found an accepting self-loop.  That's the cycle
+            // part of our accepting run.
+            r->cycle.clear();
+            r->cycle.emplace_front(aut_->state_from_number(e.src),
+                                   e.cond, e.acc);
+            // Add the prefix.
+            r->prefix.clear();
+            if (e.src != init)
+              explicit_bfs_steps(aut_, init, r->prefix,
+                                 [](const twa_graph::edge_storage_t&)
+                                 {
+                                   return false; // Do not filter.
+                                 },
+                                 [&](const twa_graph::edge_storage_t& t)
+                                 {
+                                   return t.dst == e.src;
+                                 });
+            return;
+          }
+
 
     // Prefix search
 
     r->prefix.clear();
-
-    int init = aut_->get_init_state_number();
     int substart;
-
-    if (scc_states.find(init) != scc_states.end())
+    if (scc_of(init) == scc)
       {
-        // The initial state is in the SCC
+        // The initial state is in the target SCC: no prefix needed.
         substart = init;
       }
     else
@@ -552,19 +599,21 @@ namespace spot
             {
               return false; // Do not filter.
             },
-            [&](exp_step&, unsigned dst)
+            [&](const twa_graph::edge_storage_t& t)
             {
               // Match any state in the SCC.
-              return scc_states.find(dst) != scc_states.end();
+              return scc_of(t.dst) == scc;
             });
       }
 
     const unsigned start = (unsigned)substart;
 
     // Cycle search
-
+    acc_cond actual_cond = acccond.restrict_to(node.acc_marks())
+      .force_inf(node.acc_marks());
+    assert(!actual_cond.uses_fin_acceptance());
+    assert(!actual_cond.is_f());
     acc_cond::mark_t acc_to_see = actual_cond.accepting_sets(node.acc_marks());
-
     r->cycle.clear();
 
     do
@@ -572,21 +621,16 @@ namespace spot
         substart = explicit_bfs_steps(aut_, substart, r->cycle,
             [&](const twa_graph::edge_storage_t& t)
             {
-              if (scc_states.find(t.dst) == scc_states.end())
-                return true; // Destination is not in the SCC.
-              if (filter_)
-                // Filter out ignored and cut transitions.
-                return filter_(t, t.dst, filter_data_)
-                  != edge_filter_choice::keep;
-              return false;
+              // Stay in the specified SCC.
+              return scc_of(t.dst) != scc || filter(t);
             },
-            [&](exp_step& st, unsigned dst)
+            [&](const twa_graph::edge_storage_t& t)
             {
               if (!acc_to_see) // We have seen all the marks, go back to start.
-                return dst == start;
-              if (st.acc & acc_to_see)
+                return t.dst == start;
+              if (t.acc & acc_to_see)
                 {
-                  acc_to_see -= st.acc;
+                  acc_to_see -= t.acc;
                   return true;
                 }
               return false;
