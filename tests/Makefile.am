@@ -372,7 +372,6 @@ TESTS_python = \
   python/bugdet.py \
   python/complement_semidet.py \
   python/declenv.py \
-  python/_word.ipynb \
   python/decompose_scc.py \
   python/dualize.py \
   python/except.py \
@@ -380,6 +379,7 @@ TESTS_python = \
   python/genem.py \
   python/implies.py \
   python/interdep.py \
+  python/kripke.py \
   python/ltl2tgba.test \
   python/ltlf.py \
   python/ltlparse.py \
@@ -417,6 +417,7 @@ TESTS_python = \
   python/tra2tba.py \
   python/twagraph.py \
   python/toweak.py \
+  python/_word.ipynb \
   $(TESTS_ipython)
 endif
 

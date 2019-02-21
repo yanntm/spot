@@ -152,7 +152,28 @@ namespace spot
   {
   public:
     typedef digraph<kripke_graph_state, void> graph_t;
-    typedef graph_t::edge_storage_t edge_storage_t;
+    // We avoid using graph_t::edge_storage_t because graph_t is not
+    // instantiated in the SWIG bindings, and SWIG would therefore
+    // handle graph_t::edge_storage_t as an abstract type.
+    typedef internal::edge_storage<unsigned, unsigned, unsigned,
+                                         internal::boxed_label
+                                         <void, true>>
+      edge_storage_t;
+    static_assert(std::is_same<typename graph_t::edge_storage_t,
+                  edge_storage_t>::value, "type mismatch");
+
+    typedef internal::distate_storage<unsigned,
+            internal::boxed_label<kripke_graph_state, false>>
+      state_storage_t;
+    static_assert(std::is_same<typename graph_t::state_storage_t,
+                  state_storage_t>::value, "type mismatch");
+    typedef std::vector<state_storage_t> state_vector;
+
+    // We avoid using graph_t::state for the very same reason.
+    typedef unsigned state_num;
+    static_assert(std::is_same<typename graph_t::state, state_num>::value,
+                  "type mismatch");
+
   protected:
     graph_t g_;
     mutable unsigned init_number_;
@@ -177,7 +198,7 @@ namespace spot
       return g_.num_edges();
     }
 
-    void set_init_state(graph_t::state s)
+    void set_init_state(state_num s)
     {
       if (SPOT_UNLIKELY(s >= num_states()))
         throw std::invalid_argument
@@ -185,7 +206,7 @@ namespace spot
       init_number_ = s;
     }
 
-    graph_t::state get_init_state_number() const
+    state_num get_init_state_number() const
     {
       // If the kripke has no state, it has no initial state.
       if (num_states() == 0)
@@ -218,7 +239,7 @@ namespace spot
 
     }
 
-    graph_t::state
+    state_num
     state_number(const state* st) const
     {
       auto s = down_cast<const typename graph_t::state_storage_t*>(st);
@@ -226,13 +247,13 @@ namespace spot
     }
 
     const kripke_graph_state*
-    state_from_number(graph_t::state n) const
+    state_from_number(state_num n) const
     {
       return &g_.state_data(n);
     }
 
     kripke_graph_state*
-    state_from_number(graph_t::state n)
+    state_from_number(state_num n)
     {
       return &g_.state_data(n);
     }
@@ -282,6 +303,48 @@ namespace spot
     {
       return g_.new_edge(src, dst);
     }
+
+
+#ifndef SWIG
+    const state_vector& states() const
+    {
+      return g_.states();
+    }
+#endif
+
+    state_vector& states()
+    {
+      return g_.states();
+    }
+
+#ifndef SWIG
+    internal::all_trans<const graph_t>
+    edges() const noexcept
+    {
+      return g_.edges();
+    }
+#endif
+
+    internal::all_trans<graph_t>
+    edges() noexcept
+    {
+      return g_.edges();
+    }
+
+#ifndef SWIG
+    internal::state_out<const graph_t>
+    out(unsigned src) const
+    {
+      return g_.out(src);
+    }
+#endif
+
+    internal::state_out<graph_t>
+    out(unsigned src)
+    {
+      return g_.out(src);
+    }
+
   };
 
   typedef std::shared_ptr<kripke_graph> kripke_graph_ptr;
