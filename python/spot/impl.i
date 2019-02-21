@@ -549,10 +549,19 @@ namespace std {
 %nodefaultctor spot::internal::killer_edge_iterator;
 %nodefaultctor spot::internal::all_trans;
 %nodefaultctor spot::internal::universal_dests;
+%traits_swigtype(spot::internal::distate_storage<unsigned int, spot::internal::boxed_label<spot::kripke_graph_state, false> >);
+%fragment(SWIG_Traits_frag(spot::internal::distate_storage<unsigned int, spot::internal::boxed_label<spot::kripke_graph_state, false> >));
 %traits_swigtype(spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<spot::twa_graph_edge_data, false> >);
 %fragment(SWIG_Traits_frag(spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<spot::twa_graph_edge_data, false> >));
+%traits_swigtype(spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<void, true> >);
+%fragment(SWIG_Traits_frag(spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<void, true> >));
 
 %typemap(out, optimal="1") spot::internal::all_trans<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>> {
+  $result = SWIG_NewPointerObj(new $1_ltype($1), $&1_descriptor,
+			       SWIG_POINTER_OWN);
+}
+
+%typemap(out, optimal="1") spot::internal::all_trans<spot::digraph<spot::kripke_graph_state, void>> {
   $result = SWIG_NewPointerObj(new $1_ltype($1), $&1_descriptor,
 			       SWIG_POINTER_OWN);
 }
@@ -562,6 +571,7 @@ namespace std {
                                SWIG_POINTER_OWN);
 }
 
+%noexception spot::kripke_graph::edges;
 %noexception spot::twa_graph::edges;
 %noexception spot::twa_graph::univ_dests;
 
@@ -681,6 +691,13 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/kripke/fairkripke.hh>
 %include <spot/kripke/kripke.hh>
 %include <spot/kripke/kripkegraph.hh>
+%template(kripke_graph_state_out) spot::internal::state_out<spot::digraph<spot::kripke_graph_state, void>>;
+%template(kripke_graph_all_trans) spot::internal::all_trans<spot::digraph<spot::kripke_graph_state, void>>;
+%template(kripke_graph_edge_boxed_data) spot::internal::boxed_label<void, true>;
+%template(kripke_graph_edge_storage) spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<void, true> >;
+%template(kripke_graph_state_boxed_data) spot::internal::boxed_label<spot::kripke_graph_state, false>;
+%template(kripke_graph_state_storage) spot::internal::distate_storage<unsigned int, spot::internal::boxed_label<spot::kripke_graph_state, false> >;
+%template(kripke_graph_state_vector) std::vector<spot::internal::distate_storage<unsigned, internal::boxed_label<kripke_graph_state, false>>>;
 
 %include <spot/parseaut/public.hh>
 
@@ -949,6 +966,14 @@ static void* ptr_for_bdddict(PyObject* obj)
    }
 }
 
+%extend spot::internal::state_out<spot::digraph<spot::kripke_graph_state, void>> {
+  swig::SwigPyIterator* __iter__(PyObject **PYTHON_SELF)
+   {
+      return swig::make_forward_iterator(self->begin(), self->begin(),
+				         self->end(), *PYTHON_SELF);
+   }
+}
+
 %extend spot::internal::killer_edge_iterator<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>> {
 
   spot::internal::edge_storage<unsigned int, unsigned int, unsigned int, spot::internal::boxed_label<spot::twa_graph_edge_data, false> >& current()
@@ -964,6 +989,14 @@ static void* ptr_for_bdddict(PyObject* obj)
   {
     return *self;
   }
+}
+
+%extend spot::internal::all_trans<spot::digraph<spot::kripke_graph_state, void>> {
+  swig::SwigPyIterator* __iter__(PyObject **PYTHON_SELF)
+   {
+      return swig::make_forward_iterator(self->begin(), self->begin(),
+				         self->end(), *PYTHON_SELF);
+   }
 }
 
 %extend spot::internal::all_trans<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data>> {

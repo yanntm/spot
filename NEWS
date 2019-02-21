@@ -1,5 +1,11 @@
 New in spot 2.7.1.dev  (not yet released)
 
+  Python:
+
+  - Improved support for explicit Kripke structure.  It is now
+    possible to iterate over a kripke_graph object in a way similar to
+    twa_graph.
+
   Library:
 
   - Add generic_accepting_run() as a variant of generic_emptiness_check() that
