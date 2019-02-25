@@ -1,5 +1,10 @@
 New in spot 2.7.1.dev  (not yet released)
 
+  Documentation:
+
+  - A new page shows how to create explicit Kripke structures in C++
+    and Python.  See https://spot.lrde.epita.fr/tut52.html
+
   Python:
 
   - Improved support for explicit Kripke structure.  It is now
