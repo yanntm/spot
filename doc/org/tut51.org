@@ -13,11 +13,14 @@ represent the state space of the model to verify.
 * Implementing a toy Kripke structure
 
 In this example, our goal is to implement a Kripke structure that
-constructs its state space on the fly.  The states of our toy model
-will consist of a pair of modulo-3 integers $(x,y)$; and at any state
-the possible actions will be to increment any one of the two integer
-(nondeterministicaly).  That increment is obviously done modulo 3.
-For instance state $(1,2)$ has two possible successors:
+constructs its state space on the fly. ([[file:tut52.org][Another page]] shows how to
+implement this Kripke structure using an explicit graph instead.)
+
+The states of our toy model will consist of a pair of modulo-3
+integers $(x,y)$; and at any state the possible actions will be to
+increment any one of the two integer (nondeterministicaly).  That
+increment is obviously done modulo 3.  For instance state $(1,2)$ has
+two possible successors:
   - $(2,2)$ if =x= was incremented, or
   - $(1,0)$ if =y= was incremented.
 Initially both variables will be 0.  The complete state space is
@@ -396,6 +399,9 @@ $txt
 [[file:kripke-1.svg]]
 
 * Checking a property on this state space
+   :PROPERTIES:
+   :CUSTOM_ID: prop-check
+   :END:
 
 Let us pretend that we want to verify the following property: if
 =odd_x= infinitely often holds, then =odd_y= infinitely often holds.
@@ -412,7 +418,6 @@ counterexample:
 #+BEGIN_SRC C++ :exports code :noweb strip-export :results verbatim
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/translate.hh>
-#include <spot/twa/twaproduct.hh>
 #include <spot/twaalgos/emptiness.hh>
 <<demo-1-aux>>
 int main()
@@ -469,7 +474,6 @@ We also pass option "~A~" to hide the acceptance condition (which is
   #include <spot/twaalgos/dot.hh>
   #include <spot/tl/parse.hh>
   #include <spot/twaalgos/translate.hh>
-  #include <spot/twa/twaproduct.hh>
   #include <spot/twaalgos/emptiness.hh>
   <<demo-3-aux>>
   int main()
@@ -521,7 +525,6 @@ figure:
   #include <spot/twaalgos/dot.hh>
   #include <spot/tl/parse.hh>
   #include <spot/twaalgos/translate.hh>
-  #include <spot/twa/twaproduct.hh>
   #include <spot/twaalgos/emptiness.hh>
   <<demo-3-aux>>
   int main()
