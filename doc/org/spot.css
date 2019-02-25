@@ -43,18 +43,14 @@ thead tr{background:#ffe35e}
 #content tbody:nth-child(even) tr:nth-child(even){background:#fff3bc}
 #content tbody:nth-child(even) tr:nth-child(odd){background:#fffbe0}
 .org-svg{max-width:100%;width:auto}
-.org-keyword{font-weight:bold}
-.org-builtin{font-weight:bold}
-.org-preprocessor{font-weight:bold}
+.org-keyword,.org-builtin,.org-preprocessor,.org-py-import-from,.org-py-def-class{font-weight:bold}
 .org-string{font-weight:bold;color:#00adad}
 .src-hoa .org-string{font-weight:bold;color:#d70079}
 .org-function-name{font-weight:bold;color:#d70079}
 .org-type{font-weight:bold;color:#00adad}
 .org-comment-delimiter{font-weight:bold;color:#a13672}
 .org-comment{font-style:italic;color:#a13672}
-.org-hoa-keyword{font-weight:bold}
-.org-hoa-builtin{font-weight:bold}
-.org-hoa-acceptance-set{font-weight:bold}
+.org-hoa-keyword,.org-hoa-builtin,.org-hoa-acceptance-set{font-weight:bold}
 .org-hoa-header-uppercase{font-weight:bold;color:#00adad}
 .org-hoa-header-lowercase{color:#00adad}
 .org-hoa-ap-number{color:#d70079}

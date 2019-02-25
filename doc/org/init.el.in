@@ -54,6 +54,9 @@
 ;; conditions when doing concurrent builds.
 (setq org-publish-timestamp-directory "@abs_top_builddir@/.org-timestamps/")
 
+;; Prevent tabs from being inserted when org-mode reindent some code.
+(setq-default indent-tabs-mode nil)
+
 (org-babel-do-load-languages
  'org-babel-load-languages
  `((,(if (version< org-version "8.3") 'sh 'shell) . t)
