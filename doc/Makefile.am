@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2010-2011, 2013-2018 Laboratoire de Recherche et
+## Copyright (C) 2010-2011, 2013-2019 Laboratoire de Recherche et
 ## Développement de l'Epita (LRDE).
 ## Copyright (C) 2003-2005 Laboratoire d'Informatique de Paris 6
 ## (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -113,6 +113,7 @@ ORG_FILES = \
   org/tut31.org \
   org/tut50.org \
   org/tut51.org \
+  org/tut52.org \
   org/upgrade2.org \
   org/satmin.org \
   org/satmin.tex \
