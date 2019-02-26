@@ -19,6 +19,13 @@ New in spot 2.7.1.dev  (not yet released)
   - twa::accepting_run() now works on automata using Fin in
     their acceptance condition.
 
+  - simulation-based reductions have learned a trick that sometimes
+    improve transition-based output when the input is state-based.
+    (The automaton output by 'ltl2tgba -B GFa | autfilt --small' now
+    has 1 state instead of 2 in previous versions.  Similarly,
+    'ltldo ltl2dstar -f 'GFa -> GFb' | autfilt --small' produces 1
+    state instead of 4.)
+
 New in spot 2.7.1 (2019-02-14)
 
   Build

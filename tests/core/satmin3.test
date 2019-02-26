@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement
+# Copyright (C) 2017, 2019 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -24,7 +24,8 @@ set -e
 
 # Make sure the SPOT_SATSOLVER envar works.
 
-# DRA produced by ltl2dstar for GFp0 -> GFp1
+# DRA produced by ltl2dstar for GFp0 -> GFp1, but manually modified
+# so that simulation-based reduction do not reduce it to 1 state right away.
 cat >test.hoa <<EOF
 HOA: v1
 States: 4
@@ -35,7 +36,7 @@ Start: 0
 AP: 2 "p0" "p1"
 --BODY--
 State: 0 {0}
-1
+1  {1}  /* manual addition */
 0
 3
 2

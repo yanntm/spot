@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -30,6 +30,7 @@
 #include <spot/twaalgos/sepsets.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/misc/bddlt.hh>
+#include <spot/twaalgos/hoa.hh>
 
 //  Simulation-based reduction, implemented using bdd-based signatures.
 //
@@ -151,10 +152,12 @@ namespace spot
         return acc_cond::mark_t(res.begin(), res.end());
       }
 
-      direct_simulation(const const_twa_graph_ptr& in)
+      direct_simulation(const const_twa_graph_ptr& in,
+                        std::vector<bdd>* implications = nullptr)
         : po_size_(0),
           all_class_var_(bddtrue),
-          original_(in)
+          original_(in),
+          record_implications_(implications)
       {
         if (!has_separate_sets(in))
           throw std::runtime_error
@@ -211,8 +214,62 @@ namespace spot
         else
           {
             a_ = make_twa_graph(in, twa::prop_set::all());
-            for (auto& t: a_->edges())
-              t.acc ^= all_inf;
+
+            // When we reduce automata with state-based acceptance to
+            // obtain transition-based acceptance, it helps to pull
+            // the state-based acceptance on the incoming edges
+            // instead of the outgoing edges.  A typical example
+            //
+            // ltl2tgba -B GFa | autfilt --small
+            //
+            // The two-state Büchi automaton generated for GFa will
+            // not be reduced to one state if we push the acceptance
+            // marks to the outgoing edges.  However it will be
+            // reduced to one state if we pull the acceptance to the
+            // incoming edges.
+            if (!Sba && !in->prop_state_acc().is_false()
+                && !record_implications_)
+              {
+                // common_out[i] is the set of acceptance set numbers common to
+                // all outgoing edges of state i.
+                std::vector<acc_cond::mark_t> common_out(ns);
+                scc_info si(a_, scc_info_options::NONE);
+                for (unsigned s = 0; s < ns; ++s)
+                  {
+                    bool first = true;
+                    for (auto& e : a_->out(s))
+                      {
+                        if (first)
+                          {
+                            common_out[s] = e.acc;
+                            first = false;
+                          }
+                        else if (common_out[s] != e.acc)
+                          {
+                            // If the automaton does not have
+                            // state-based acceptance, do not change
+                            // pull the marks.  Mark the input as
+                            // "not-state-acc" so that we remember
+                            // that.
+                            std::const_pointer_cast<twa_graph>(in)
+                              ->prop_state_acc(false);
+                            goto donotpull;
+                          }
+                      }
+                  }
+                // Pull the common outgoing sets to the incoming
+                // edges.  Doing so seems to favor cases where states
+                // can be merged.
+                for (auto& e : a_->edges())
+                  e.acc = ((e.acc - common_out[e.src]) | common_out[e.dst])
+                    ^ all_inf;
+              }
+            else
+              {
+              donotpull:
+                for (auto& t: a_->edges())
+                  t.acc ^= all_inf;
+              }
           }
         assert(a_->num_states() == size_a_);
 
@@ -310,10 +367,10 @@ namespace spot
       }
 
       // The core loop of the algorithm.
-      twa_graph_ptr run(std::vector<bdd>* implications = nullptr)
+      twa_graph_ptr run()
       {
         main_loop();
-        return build_result(implications);
+        return build_result();
       }
 
       // Take a state and compute its signature.
@@ -440,7 +497,7 @@ namespace spot
       }
 
       // Build the minimal resulting automaton.
-      twa_graph_ptr build_result(std::vector<bdd>* implications = nullptr)
+      twa_graph_ptr build_result()
       {
         twa_graph_ptr res = make_twa_graph(a_->get_dict());
         res->copy_ap_of(a_);
@@ -455,8 +512,8 @@ namespace spot
 
         auto* gb = res->create_namer<int>();
 
-        if (implications)
-          implications->resize(bdd_lstate_.size());
+        if (record_implications_)
+          record_implications_->resize(bdd_lstate_.size());
         // Create one state per class.
         for (auto& p: sorted_classes_)
           {
@@ -468,8 +525,8 @@ namespace spot
             // update state_mapping
             for (auto& st : p->second)
               (*state_mapping)[st] = s;
-            if (implications)
-              (*implications)[s] = relation_[cl];
+            if (record_implications_)
+              (*record_implications_)[s] = relation_[cl];
           }
 
         // Acceptance of states.  Only used if Sba && Cosimulation.
@@ -597,13 +654,30 @@ namespace spot
                   t.acc = acc;
               }
           }
+        if (!Sba && !Cosimulation && original_->prop_state_acc()
+            && !record_implications_)
+          {
+            // common_in[i] is the set of acceptance set numbers
+            // common to all incoming edges of state i.
+            std::vector<acc_cond::mark_t>
+              common_in(res->num_states(), res->acc().all_sets());
+            for (auto& e : res->edges())
+              common_in[e.dst] &= e.acc;
+            // Push the common incoming sets to the outgoing edges.
+            // Doing so cancels the preprocessing we did in the other
+            // direction, to prevent marks from moving around the
+            // automaton if we apply simulation several times, and to
+            // favor state-based acceptance.
+            for (auto& e : res->edges())
+              e.acc = (e.acc - common_in[e.dst]) | common_in[e.src];
+          }
 
         // If we recorded implications for the determinization
         // procedure, we should not remove unreachable states, as that
         // will invalidate the contents of the IMPLICATIONS vector.
         // It's OK not to purge the result, as the determinization
         // will only explore the reachable part anyway.
-        if (!implications)
+        if (!record_implications_)
           res->purge_unreachable_states();
 
         delete gb;
@@ -708,6 +782,8 @@ namespace spot
       automaton_size stat;
 
       const const_twa_graph_ptr original_;
+
+      std::vector<bdd>* record_implications_;
     };
 
   } // End namespace anonymous.
@@ -724,8 +800,8 @@ namespace spot
   simulation(const const_twa_graph_ptr& t,
              std::vector<bdd>* implications)
   {
-    direct_simulation<false, false> simul(t);
-    return simul.run(implications);
+    direct_simulation<false, false> simul(t, implications);
+    return simul.run();
   }
 
   twa_graph_ptr

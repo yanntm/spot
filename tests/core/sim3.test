@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015, 2018 Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2018, 2019 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -47,7 +47,7 @@ State: 6 {0 3}
 --END--
 EOF
 
-test "`autfilt --small input --stats=%S,%s`" = 7,5
+test "`autfilt --small input --stats=%S,%s`" = 7,2
 
 autfilt -S --high --small input -H > out
 cat >expected <<EOF
