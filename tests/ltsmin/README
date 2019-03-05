@@ -27,10 +27,10 @@ Installation of DiVinE
 Use the following commands to compile and install the patched version
 of DiVinE.
 
-  git clone https://github.com/utwente-fmt/divine2.git
-  cd divine2
-  mkdir _build && cd _build
-  cmake .. -DMURPHI=OFF -DHOARD=OFF -DGUI=OFF -DRX_PATH= -DCMAKE_INSTALL_PREFIX=$HOME/usr
+  git clone https://gitlab.lrde.epita.fr/spot/divine-ltsmin-deb.git
+  cd divine-ltsmin-deb
+  ./configure -DMURPHI=OFF -DHOARD=OFF -DGUI=OFF -DRX_PATH= -DCMAKE_INSTALL_PREFIX=$HOME/usr
+  cd _build
   make
   make install
 
@@ -39,7 +39,7 @@ option of configure scripts.  If you decide to install in $HOME/usr
 like I do, make sure that $HOME/usr/bin is in your PATH.  If you omit
 the CMAKE_INSTALL_PREFIX setting, it will default to /usr/local.
 
-If you are using MacOS, you must add option -DHOARD=OF to the cmake
+If you are using MacOS, you must add option -DHOARD=OFF to the cmake
 command line in order to  make it compile without errors. Also,
 DiVinE 2 only compiles with the GNU std C++ library; as a consequence,
 you must provide the option -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" to
