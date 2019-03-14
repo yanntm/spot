@@ -4,6 +4,9 @@ New in spot 2.7.1.dev  (not yet released)
 
   - A new page shows how to create explicit Kripke structures in C++
     and Python.  See https://spot.lrde.epita.fr/tut52.html
+  - Another new page shows how to deal with LTLf formulas (i.e., LTL
+    with finite semantics) and how to translate those.
+    See https://spot.lrde.epita.fr/tut12.html
 
   Python:
 
