@@ -285,6 +285,9 @@ ltldo ltl3ba -f '"proc@loc1" U "proc@loc2"' --spin
 This case also relabels the formula before calling =ltl3ba=, and it
 then rename all the atomic propositions in the output.
 
+An example showing how to use the =--from-ltlf= option is on [[file:tut12.org][a
+separate page]].
+
 * Filtering
 
 =ltlfilt= supports many ways to filter formulas:
