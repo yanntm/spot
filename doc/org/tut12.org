@@ -60,8 +60,13 @@ initially, as required in the first paper...
 * Shell version
 
 The first four steps of the the above sequence of operations can be
-executed as follows.  Interpreting the resulting Büchi automaton as a
-finite automaton is out of scope for Spot.
+executed as follows.  Transforming LTLf to LTL can be done using
+[[file:ltlfilt.org][=ltlfilt=]]'s =--from-ltlf= option, translating the resulting formula
+into a Büchi automaton is obviously done with [[file:ltl2tgba.org][=ltl2tgba=]], and removing
+an atomic proposition from an automaton can be done using [[file:autfilt.org][=autfilt=]]'s
+=--remove-ap= option (adding =--small= will also simplify the
+automaton).  Interpreting the resulting Büchi automaton as a finite
+automaton is out of scope for Spot.
 
 #+begin_src sh :exports both :results verbatim
 ltlfilt --from-ltlf -f "(a U b) & Fc" |
@@ -101,9 +106,14 @@ automaton is output.
 
 * Python version
 
-In Python, we need to the =remove_ap()= object, which we must first
-setup with some atomic propositions to remove.
-
+In Python, we use the =from_ltlf()= function to convert from LTLf to
+LTL and translate the result into a Büchi automaton using
+=translate()= [[file:tut10.org][as usual]]. Then we need to use the =remove_ap()= object,
+which we must first setup with some atomic propositions to remove.
+Finally we call the =postprocess()= function for automata
+simplifications.  (Note that =postprocess()= is already called by
+=translate()=, but in this case removing the atomic proposition allows
+more simplification opportunities.)
 
 #+begin_src python :results output :exports both
 import spot
@@ -147,6 +157,11 @@ State: 3 {0}
 #+end_example
 
 * C++ version
+
+The C++ version is straightforward adaptation of the Python version.
+The Python functions =translate()= and =postprocess()= are convenient
+wrappers around the =spot::translator= and =spot::postprocessor=
+objects that we need to use here.
 
 #+begin_src cpp :results verbatim :exports both
     #include <iostream>
