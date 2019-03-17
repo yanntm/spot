@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009-2010, 2012-2016, 2018 Laboratoire de Recherche
-// et Développement de l'Epita (LRDE).
+// Copyright (C) 2009-2010, 2012-2016, 2018-2019 Laboratoire de
+// Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -20,6 +20,7 @@
 #include "config.h"
 #include <utility>
 #include <algorithm>
+#include <cassert>
 #include <spot/tl/unabbrev.hh>
 #include <spot/tl/nenoform.hh>
 #include <spot/tl/contain.hh>
@@ -340,6 +341,10 @@ namespace spot
         for (unsigned i = 0; i < vs.size(); ++i)
           pos[i] = vs[i].succ_.size();
 
+        // g++ (Debian 8.3.0-3) 8.3.0 in --coverage mode,
+        // reports a "potential null pointer dereference" on the next
+        // line without this assert...
+        assert(pos.size() > 0);
         while (pos[0] != 0)
         {
           std::vector<formula> u; // Union
