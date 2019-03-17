@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#+TITLE: Working with LTL formula with finite semantics
+#+TITLE: Working with LTL formulas with finite semantics
 #+DESCRIPTION: Code example for using Spot to translate LTLf formulas
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
