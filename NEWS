@@ -1,18 +1,4 @@
-New in spot 2.7.1.dev  (not yet released)
-
-  Documentation:
-
-  - A new page shows how to create explicit Kripke structures in C++
-    and Python.  See https://spot.lrde.epita.fr/tut52.html
-  - Another new page shows how to deal with LTLf formulas (i.e., LTL
-    with finite semantics) and how to translate those.
-    See https://spot.lrde.epita.fr/tut12.html
-
-  Python:
-
-  - Improved support for explicit Kripke structure.  It is now
-    possible to iterate over a kripke_graph object in a way similar to
-    twa_graph.
+New in spot 2.7.2.dev (not yet released)
 
   Library:
 
@@ -28,6 +14,27 @@ New in spot 2.7.1.dev  (not yet released)
     has 1 state instead of 2 in previous versions.  Similarly,
     'ltldo ltl2dstar -f 'GFa -> GFb' | autfilt --small' produces 1
     state instead of 4.)
+
+New in spot 2.7.2 (2019-03-17)
+
+  Python:
+
+  - Improved support for explicit Kripke structures.  It is now
+    possible to iterate over a kripke_graph object in a way similar to
+    twa_graph.
+
+  Documentation:
+
+  - A new page shows how to create explicit Kripke structures in C++
+    and Python.  See https://spot.lrde.epita.fr/tut52.html
+  - Another new page shows how to deal with LTLf formulas (i.e., LTL
+    with finite semantics) and how to translate those.
+    See https://spot.lrde.epita.fr/tut12.html
+
+  Build:
+
+  - Work around a spurious null dereference warning when compiling
+    with --coverage and g++ 8.3.0-3 from Debian unstable.
 
 New in spot 2.7.1 (2019-02-14)
 
