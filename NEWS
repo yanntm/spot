@@ -1,4 +1,10 @@
-New in spot 2.7.1.dev  (not yet released)
+New in spot 2.7.2 (2019-03-17)
+
+  Python:
+
+  - Improved support for explicit Kripke structures.  It is now
+    possible to iterate over a kripke_graph object in a way similar to
+    twa_graph.
 
   Documentation:
 
@@ -7,12 +13,6 @@ New in spot 2.7.1.dev  (not yet released)
   - Another new page shows how to deal with LTLf formulas (i.e., LTL
     with finite semantics) and how to translate those.
     See https://spot.lrde.epita.fr/tut12.html
-
-  Python:
-
-  - Improved support for explicit Kripke structure.  It is now
-    possible to iterate over a kripke_graph object in a way similar to
-    twa_graph.
 
   Build:
 
