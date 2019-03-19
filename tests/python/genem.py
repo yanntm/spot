@@ -141,7 +141,7 @@ def generic_emptiness2_rec(aut):
     # algorithm.
     if not aut.acc().uses_fin_acceptance():
         return aut.is_empty()
-    si = spot.scc_info(aut, True)
+    si = spot.scc_info(aut, spot.scc_info_options_STOP_ON_ACC)
     acc_scc = si.one_accepting_scc()
     if acc_scc >= 0:
         return False

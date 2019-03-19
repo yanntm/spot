@@ -86,8 +86,7 @@ namespace spot
       acc = acc.remove(si.common_sets_of(scc), false);
       temporary_acc_set tmp(si.get_aut(), acc);
       scc_info upper_si(si.get_aut(), si.one_state_of(scc), filter, &data,
-                        scc_info_options::STOP_ON_ACC
-                        | scc_info_options::TRACK_STATES);
+                        scc_info_options::STOP_ON_ACC);
 
       const int accepting_scc = upper_si.one_accepting_scc();
       if (accepting_scc >= 0)
@@ -144,22 +143,21 @@ namespace spot
               do
                 {
                   --pos;
-                  if (pos->sub.op != acc_cond::acc_op::Inf)
-                    {
-                      acc_cond::acc_code one(pos);
-                      tmp.set(one);
-                      if (si.get_aut()->acc().uses_fin_acceptance())
-                        {
-                          acc_cond::mark_t plus = {};
-                          if (acc_cond::mark_t fu = one.fin_unit())
-                            plus = fu;
-                          if (!scc_split_check
-                              (si, scc, run, tocut | plus,
-                               generic_emptiness_check_for_scc_nocopy
-                               <deal_with_disjunct>))
-                            return false;
-                        }
-                    }
+                  acc_cond::acc_code one(pos);
+                  // This sets the acceptance of the automaton we
+                  // are working on.
+                  tmp.set(one);
+                  // Because we use scc_info with STOP_ON_ACC and test
+                  // for this, every clauses should contain a Fin.  Also
+                  assert(si.get_aut()->acc().uses_fin_acceptance());
+                  acc_cond::mark_t plus = {};
+                  if (acc_cond::mark_t fu = one.fin_unit())
+                    plus = fu;
+                  if (!scc_split_check
+                      (si, scc, run, tocut | plus,
+                       generic_emptiness_check_for_scc_nocopy
+                       <deal_with_disjunct>))
+                    return false;
                   pos -= pos->sub.size;
                 }
               while (pos > start);
@@ -216,8 +214,7 @@ namespace spot
         return aut->is_empty();
       }
 
-      scc_info si(aut, scc_info_options::STOP_ON_ACC
-                  | scc_info_options::TRACK_STATES);
+      scc_info si(aut, scc_info_options::STOP_ON_ACC);
 
       const int accepting_scc = si.one_accepting_scc();
       if (accepting_scc >= 0)
