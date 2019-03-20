@@ -154,6 +154,11 @@ job_processor::process_stream(std::istream& is,
           }
         else // We are reading column COL_TO_READ in a CSV file.
           {
+            // Some people save CSV files with MSDOS encoding, and
+            // we don't want to include the \r in any %> output.
+            if (*line.rbegin() == '\r')
+              line.pop_back();
+
             // If the line we have read contains an odd number
             // of double-quotes, then it is an incomplete CSV line
             // that should be completed by the next lines.

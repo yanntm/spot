@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2009-2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2009-2019 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -374,8 +374,11 @@ G(F(a & Xa) & F(a & X!a)), 2,4, 2,4, 4,8, 4,8
 G(!p0 & F(p1 & XG!p1)), 1,0, 1,0, 1,0, 1,0
 EOF
 
+# Call perl in the middle of all this to make sure
+# \r is removed fom %>.  Issue #380.
 ltl2tgba -Fformulas/1 --stats='%f, %s,%t' |
     ltl2tgba -D -F-/1 --stats='%f,%>, %s,%t' |
+    perl -pi -e 's/$/\r/' |
     ltl2tgba -B -F-/1 --stats='%f,%>, %s,%t' |
     ltl2tgba -BD -F-/1 --stats='%f,%>, %s,%t' > output
 
