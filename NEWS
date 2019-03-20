@@ -24,6 +24,11 @@ New in spot 2.7.2.dev (not yet released)
     acc_cond::acc_code::top_conjuncts() can be used to split an
     acceptance condition on the top-level & or |.
 
+  - minimize_obligation() learned to work on very weak automata even
+    if the formula or negated automaton are not supplied.  (This
+    allows "autfilt [-D] --small" to minimize very-weak automata
+    whenever they are found to represent obligation properties.)
+
   Bugs fixed:
 
   - When processing CSV files with MSDOS-style \r\n line endings,

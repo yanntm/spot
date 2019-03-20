@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2010-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -45,6 +45,7 @@
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/remfin.hh>
+#include <spot/twaalgos/alternation.hh>
 #include <spot/tl/hierarchy.hh>
 
 namespace spot
@@ -570,8 +571,12 @@ namespace spot
         ("minimize_obligation() does not support alternation");
 
     // FIXME: We should build scc_info once, pass it to minimize_wdba
-    // and reuse it for is_terminal_automaton(), and
-    // is_weak_automaton().
+    // and reuse it for is_terminal_automaton(),
+    // is_weak_automaton(), and is_very_weak_automaton().
+    // FIXME: we should postpone the call to minimize_wdba() until
+    // we know for sure that we can verify (or that we do not need
+    // to verify) its output, rather than computing in cases where
+    // we may discard it.
     auto min_aut_f = minimize_wdba(aut_f);
 
     if (reject_bigger)
@@ -614,9 +619,15 @@ namespace spot
             // Remove useless SCCs.
             aut_neg_f = scc_filter(aut_neg_f, true);
           }
+        else if (is_very_weak_automaton(aut_f))
+          {
+            // Very weak automata are easy to complement.
+            aut_neg_f = remove_alternation(dualize(aut_f));
+          }
         else
           {
-            // Otherwise, we cannot check if the minimization is safe.
+            // Otherwise, we don't try to complement the automaton and
+            // therefore we cannot check if the minimization is safe.
             return nullptr;
           }
       }
