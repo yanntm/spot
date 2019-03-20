@@ -1,6 +1,10 @@
 New in spot 2.7.2.dev (not yet released)
 
-  Nothing yet.
+  Bugs fixed:
+
+  - When processing CSV files with MSDOS-style \r\n line endings,
+    --stats would output the \r as part of the %> sequence instead
+    of ignoring it.
 
 New in spot 2.7.2 (2019-03-17)
 
