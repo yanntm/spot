@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -110,6 +110,7 @@ enum {
   OPT_HIGHLIGHT_NONDET_EDGES,
   OPT_HIGHLIGHT_NONDET_STATES,
   OPT_HIGHLIGHT_WORD,
+  OPT_HIGHLIGHT_ACCEPTING_RUN,
   OPT_HIGHLIGHT_LANGUAGES,
   OPT_INSTUT,
   OPT_INCLUDED_IN,
@@ -373,6 +374,8 @@ static const argp_option options[] =
       "(see spot-x)."
       , 0 },
     { nullptr, 0, nullptr, 0, "Decorations (for -d and -H1.1 output):", 9 },
+    { "highlight-accepting-run", OPT_HIGHLIGHT_ACCEPTING_RUN, "NUM",
+      OPTION_ARG_OPTIONAL, "highlight one accepting run using color NUM", 0},
     { "highlight-nondet-states", OPT_HIGHLIGHT_NONDET_STATES, "NUM",
       OPTION_ARG_OPTIONAL, "highlight nondeterministic states with color NUM",
       0 },
@@ -628,6 +631,7 @@ static bool opt_split_edges = false;
 static const char* opt_sat_minimize = nullptr;
 static int opt_highlight_nondet_states = -1;
 static int opt_highlight_nondet_edges = -1;
+static int opt_highlight_accepting_run = -1;
 static bool opt_highlight_languages = false;
 static bool opt_dca = false;
 static bool opt_streett_like = false;
@@ -843,6 +847,10 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_HAS_UNIV_BRANCHING:
       opt_has_univ_branching = true;
+      break;
+    case OPT_HIGHLIGHT_ACCEPTING_RUN:
+      opt_highlight_accepting_run =
+        arg ? to_pos_int(arg, "--highlight-accepting-run") : 1;
       break;
     case OPT_HIGHLIGHT_NONDET:
       {
@@ -1527,6 +1535,9 @@ namespace
 
       if (opt_highlight_languages)
         spot::highlight_languages(aut);
+
+      if (opt_highlight_accepting_run >= 0)
+        aut->accepting_run()->highlight(opt_highlight_accepting_run);
 
       if (!opt->hl_words.empty())
         for (auto& word_aut: opt->hl_words)

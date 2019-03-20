@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016, 2017, 2018 Laboratoire de Recherche et Développement
+# Copyright (C) 2016-2019 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -191,3 +191,43 @@ grep forcelabels output.dot && exit 1
 autfilt --dot input2.hoa > output2.dot
 grep xlabel output2.dot
 grep forcelabels output2.dot
+
+
+cat >case5.hoa <<EOF
+HOA: v1
+name: "case5"
+States: 7
+Start: 0
+AP: 2 "a" "b"
+Acceptance: 8
+  ((Fin(0)&Inf(1))|(Fin(2)&Inf(3)))&(Fin(4)|Inf(5))&(Fin(6)|Inf(7))
+properties: trans-labels explicit-labels trans-acc
+--BODY--
+State: 0
+[0&1] 1 {2}
+[0&1] 2 {2}
+State: 1
+[0&1] 3 {1 5}
+State: 2
+[0&1] 3 {1}
+[0&1] 4 {1}
+State: 3
+[0&1] 1 {0 2 3 5}
+[!0&!1] 5 {5 6}
+State: 4
+[0&1] 1 {0 2 3}
+[0&1] 2 {0 2 3}
+[!0&!1] 6 {4 5}
+State: 5
+[0&1] 3
+[0&1] 4
+State: 6
+[!0&1] 0 {2 3}
+[!0&1] 2 {0}
+--END--
+EOF
+autfilt --highlight-accepting-run=2 case5.hoa -H1.1 | grep highlight >out
+cat >expect.hoa <<EOF
+spot.highlight.edges: 2 2 5 2 10 2 13 2
+EOF
+diff out expect.hoa

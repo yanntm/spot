@@ -1,5 +1,10 @@
 New in spot 2.7.2.dev (not yet released)
 
+  Command-line tools:
+
+  - autfilt learned --highlight-accepting-run=NUM to highlight some
+    accepting run with color NUM.
+
   Library:
 
   - Add generic_accepting_run() as a variant of generic_emptiness_check() that
@@ -44,7 +49,7 @@ New in spot 2.7.2 (2019-03-17)
 
 New in spot 2.7.1 (2019-02-14)
 
-  Build
+  Build:
 
   - Work around GCC bug #89303 that causes memory leaks and std::weak_bad_ptr
     exceptions when Spot is compiled with the version of g++ 8.2 currently
