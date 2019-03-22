@@ -30,6 +30,9 @@ New in spot 2.7.2.dev (not yet released)
     --stats would output the \r as part of the %> sequence instead
     of ignoring it.
 
+  - Fix serious typo in removel_alternation() causing incorrect
+    output for some VWAA.  Bug introduced in Spot 2.6.
+
 New in spot 2.7.2 (2019-03-17)
 
   Python:
