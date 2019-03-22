@@ -233,7 +233,7 @@ namespace spot
               {
                 int v = d->register_anonymous_variables(1, this);
                 scc_to_var_.emplace_back(v);
-                mark_to_state_.push_back(si_.one_state_of(c));
+                mark_to_state_.push_back(si_.one_state_of(s));
                 var_to_mark_.emplace(v, acc_cond::mark_t({mark_pos++}));
                 bdd bv = bdd_ithvar(v);
                 all_marks &= bv;
@@ -449,7 +449,6 @@ namespace spot
             for (unsigned se: s_to_ss[s])
               bs &= state_as_bdd(se);
 
-
             bdd ap = bdd_exist(bdd_support(bs), all_vars_);
             bdd all_letters = bdd_exist(bs, all_vars_);
 
@@ -468,7 +467,7 @@ namespace spot
                     v.clear();
                     acc_cond::mark_t m = bdd_to_state(dest, v);
 
-                    // if there is no promise "f" is between a state
+                    // if there is no promise "f" between a state
                     // that does not have f, and a state that have
                     // "f", we can add one.  Doing so will help later
                     // simplifications performed by postprocessor.  An
