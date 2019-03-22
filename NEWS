@@ -20,6 +20,10 @@ New in spot 2.7.2.dev (not yet released)
     'ltldo ltl2dstar -f 'GFa -> GFb' | autfilt --small' produces 1
     state instead of 4.)
 
+  - acc_cond::acc_code::top_disjuncts() and
+    acc_cond::acc_code::top_conjuncts() can be used to split an
+    acceptance condition on the top-level & or |.
+
   Bugs fixed:
 
   - When processing CSV files with MSDOS-style \r\n line endings,

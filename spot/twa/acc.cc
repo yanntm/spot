@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -1230,6 +1230,74 @@ namespace spot
         rescode = (fin(m) | i) & rescode;
       }
     return rescode;
+  }
+
+  namespace
+  {
+    static std::vector<acc_cond::acc_code>
+    top_clauses(const acc_cond::acc_code& code,
+                acc_cond::acc_op connect, acc_cond::acc_op inf_fin)
+    {
+      std::vector<acc_cond::acc_code> res;
+
+      if (!code.empty())
+        {
+          auto pos = &code.back();
+          auto start = &code.front();
+          assert(pos - pos->sub.size == start);
+          if (pos->sub.op == connect)
+            {
+              do
+                {
+                  --pos;
+                  if (pos->sub.op == inf_fin)
+                    {
+                      for (unsigned d: pos[-1].mark.sets())
+                        {
+                          acc_cond::acc_code tmp;
+                          tmp.resize(2);
+                          tmp[0].mark = {d};
+                          tmp[1].sub.op = inf_fin;
+                          tmp[1].sub.size = 1;
+                          res.emplace_back(tmp);
+                        }
+                    }
+                  else
+                    {
+                      res.emplace_back(pos);
+                    }
+                  pos -= pos->sub.size;
+                }
+              while (pos > start);
+              return res;
+            }
+          if (pos->sub.op == inf_fin)
+            {
+              for (unsigned d: pos[-1].mark.sets())
+                {
+                  acc_cond::acc_code tmp;
+                  tmp.resize(2);
+                  tmp[0].mark = {d};
+                  tmp[1].sub.op = inf_fin;
+                  tmp[1].sub.size = 1;
+                  res.emplace_back(tmp);
+                }
+              return res;
+            }
+        }
+      res.emplace_back(code);
+      return res;
+    }
+  }
+
+  std::vector<acc_cond::acc_code> acc_cond::acc_code::top_disjuncts() const
+  {
+    return top_clauses(*this, acc_cond::acc_op::Or, acc_cond::acc_op::Fin);
+  }
+
+  std::vector<acc_cond::acc_code> acc_cond::acc_code::top_conjuncts() const
+  {
+    return top_clauses(*this, acc_cond::acc_op::And, acc_cond::acc_op::Inf);
   }
 
   std::pair<bool, acc_cond::mark_t>

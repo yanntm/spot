@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -1119,6 +1119,27 @@ namespace spot
       ///
       /// This implementation is the dual of `to_dnf()`.
       acc_code to_cnf() const;
+
+
+      /// \brief Return the top-level disjuncts.
+      ///
+      /// For instance, if the formula is
+      /// Fin(0)|Fin(1)|(Fin(2)&(Inf(3)|Fin(4))), this returns
+      /// [Fin(0), Fin(1), Fin(2)&(Inf(3)|Fin(4))].
+      ///
+      /// If the formula is not a disjunction, this returns
+      /// a vector with the formula as only element.
+      std::vector<acc_code> top_disjuncts() const;
+
+      /// \brief Return the top-level conjuncts.
+      ///
+      /// For instance, if the formula is
+      /// Fin(0)|Fin(1)|(Fin(2)&(Inf(3)|Fin(4))), this returns
+      /// [Fin(0), Fin(1), Fin(2)&(Inf(3)|Fin(4))].
+      ///
+      /// If the formula is not a conjunction, this returns
+      /// a vector with the formula as only element.
+      std::vector<acc_code> top_conjuncts() const;
 
       /// \brief Complement an acceptance formula.
       ///
