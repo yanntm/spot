@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include <spot/kripke/kripke.hh>
 
 namespace spot
@@ -59,6 +61,7 @@ namespace spot
         {
           todo.push_back({initial, sys_.succ(initial, tid_)});
           visited[initial] = ++dfs_number;
+          std::cout << initial[0] << std::endl;
         }
       while (!todo.empty())
         {
@@ -77,6 +80,7 @@ namespace spot
               auto it  = visited.insert({dst, dfs_number+1});
               if (it.second)
                 {
+                  std::cout << dst[0] << std::endl;
                   ++dfs_number;
                   if (SPOT_LIKELY(self().push(dst, dfs_number)))
                     {

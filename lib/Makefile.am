@@ -49,7 +49,7 @@ libgnu_la_LIBADD = $(gl_LTLIBOBJS)
 libgnu_la_DEPENDENCIES = $(gl_LTLIBOBJS)
 EXTRA_libgnu_la_SOURCES =
 libgnu_la_LDFLAGS = $(AM_LDFLAGS)
-libgnu_la_LDFLAGS += -no-undefined
+libgnu_la_LDFLAGS += -no-undefined -pthread -Wl,-rpath -Wl,/usr/lib/openmpi -Wl,--enable-new-dtags -L/usr/lib/openmpi -lmpi_cxx -lmpi
 libgnu_la_LDFLAGS += $(LTLIBINTL)
 
 ## begin gnulib module absolute-header
