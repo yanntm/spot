@@ -19,6 +19,7 @@
 #pragma once
 
 #include <spot/mc/mpi/dfs_cep.hh>
+#include <spot/mc/mpi/dfs_sync.hh>
 
 namespace spot
 {
@@ -27,6 +28,17 @@ namespace spot
    bool distribute_dfs(kripke_ptr sys)
    {
      using algo_name = spot::dfs_cep<State, Iterator, Hash>;
+     algo_name *dfs = new algo_name(*sys);
+     dfs->run();
+     delete dfs;
+     return true;
+   }
+
+  template<typename kripke_ptr, typename State, typename Iterator,
+           typename Hash>
+   bool sync_dfs(kripke_ptr sys)
+   {
+     using algo_name = spot::dfs_sync<State, Iterator, Hash>;
      algo_name *dfs = new algo_name(*sys);
      dfs->run();
      delete dfs;

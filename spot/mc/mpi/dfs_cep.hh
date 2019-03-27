@@ -33,7 +33,7 @@ namespace spot
   template<typename State, typename SuccIterator, typename StateHash>
   class SPOT_API dfs_cep
   {
-    const int BUFFER_SIZE = 8;
+    const int BUFFER_SIZE = 16;
     const int STATE_HEADER = 2;
     spot::SpotMPI mpi_;
     kripkecube<State, SuccIterator>& sys_;
@@ -168,7 +168,8 @@ namespace spot
     bool check_invariant(State state)
     {
         //std::cout << "check_invariant(" << state[0] << ", " << state[1] << ")" << std::endl;
-        std::cout << state[0] << state << std::endl;
+        //std::cout << state[0] << state << std::endl;
+        std::cout << (size_t) state[0] << std::endl;
         return true;
     }
 
