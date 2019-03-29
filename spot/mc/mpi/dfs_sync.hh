@@ -29,14 +29,15 @@
 
 namespace spot
 {
-  template<typename State, typename SuccIterator, typename StateHash>
+  template<typename State, typename SuccIterator, typename StateHash, typename StateEqual>
   class SPOT_API dfs_sync
   {
     const int STATE_HEADER = 2;
 
     spot::SpotMPI mpi_;
     kripkecube<State, SuccIterator>& sys_;
-    std::unordered_set<State> q_, r_;
+    std::unordered_set<State, StateHash, StateEqual> q_, r_;
+    int tmp_count = 0;
 
     size_t state_size_;
 
@@ -100,7 +101,7 @@ namespace spot
         //std::cout << "check_invariant(" << state[0] << ", " << state[1] << ")" << std::endl;
         //std::cout << state[0] << state << std::endl;
         StateHash hash;
-        std::cout << hash(state) << "@" << hash(state) % mpi_.world_size << std::endl;
+        std::cout << mpi_.world_rank << "->" << ++tmp_count << " : " << hash(state) << "@" << hash(state) % mpi_.world_size << std::endl;
         return true;
     }
 

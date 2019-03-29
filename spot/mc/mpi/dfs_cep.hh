@@ -30,14 +30,14 @@
 
 namespace spot
 {
-  template<typename State, typename SuccIterator, typename StateHash>
+  template<typename State, typename SuccIterator, typename StateHash, typename StateEqual>
   class SPOT_API dfs_cep
   {
     const int BUFFER_SIZE = 16;
     const int STATE_HEADER = 2;
     spot::SpotMPI mpi_;
     kripkecube<State, SuccIterator>& sys_;
-    std::unordered_set<State> q_, r_;
+    std::unordered_set<State, StateHash, StateEqual> q_, r_;
     std::vector<std::vector<State>> sbuf_;
     spot::mpi_window win_free_;
     std::vector<spot::mpi_window> win_buf_;

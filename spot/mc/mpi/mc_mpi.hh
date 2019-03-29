@@ -24,10 +24,10 @@
 namespace spot
 {
   template<typename kripke_ptr, typename State, typename Iterator,
-           typename Hash>
+           typename Hash, typename Equal>
    bool distribute_dfs(kripke_ptr sys)
    {
-     using algo_name = spot::dfs_cep<State, Iterator, Hash>;
+     using algo_name = spot::dfs_cep<State, Iterator, Hash, Equal>;
      algo_name *dfs = new algo_name(*sys);
      dfs->run();
      delete dfs;
@@ -35,10 +35,10 @@ namespace spot
    }
 
   template<typename kripke_ptr, typename State, typename Iterator,
-           typename Hash>
+           typename Hash, typename Equal>
    bool sync_dfs(kripke_ptr sys)
    {
-     using algo_name = spot::dfs_sync<State, Iterator, Hash>;
+     using algo_name = spot::dfs_sync<State, Iterator, Hash, Equal>;
      algo_name *dfs = new algo_name(*sys);
      dfs->run();
      delete dfs;
