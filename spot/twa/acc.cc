@@ -1234,12 +1234,12 @@ namespace spot
 
   namespace
   {
-    static std::vector<acc_cond::acc_code>
+    template<typename Fun>
+    static void
     top_clauses(const acc_cond::acc_code& code,
-                acc_cond::acc_op connect, acc_cond::acc_op inf_fin)
+                acc_cond::acc_op connect, acc_cond::acc_op inf_fin,
+                Fun store)
     {
-      std::vector<acc_cond::acc_code> res;
-
       if (!code.empty())
         {
           auto pos = &code.back();
@@ -1259,17 +1259,17 @@ namespace spot
                           tmp[0].mark = {d};
                           tmp[1].sub.op = inf_fin;
                           tmp[1].sub.size = 1;
-                          res.emplace_back(tmp);
+                          store(tmp);
                         }
                     }
                   else
                     {
-                      res.emplace_back(pos);
+                      store(pos);
                     }
                   pos -= pos->sub.size;
                 }
               while (pos > start);
-              return res;
+              return;
             }
           if (pos->sub.op == inf_fin)
             {
@@ -1280,24 +1280,48 @@ namespace spot
                   tmp[0].mark = {d};
                   tmp[1].sub.op = inf_fin;
                   tmp[1].sub.size = 1;
-                  res.emplace_back(tmp);
+                  store(tmp);
                 }
-              return res;
+              return;
             }
         }
-      res.emplace_back(code);
-      return res;
+      store(code);
+      return;
     }
   }
 
   std::vector<acc_cond::acc_code> acc_cond::acc_code::top_disjuncts() const
   {
-    return top_clauses(*this, acc_cond::acc_op::Or, acc_cond::acc_op::Fin);
+    std::vector<acc_cond::acc_code> res;
+    top_clauses(*this, acc_cond::acc_op::Or, acc_cond::acc_op::Fin,
+                [&](const acc_cond::acc_code& c) { res.emplace_back(c); });
+    return res;
   }
 
   std::vector<acc_cond::acc_code> acc_cond::acc_code::top_conjuncts() const
   {
-    return top_clauses(*this, acc_cond::acc_op::And, acc_cond::acc_op::Inf);
+    std::vector<acc_cond::acc_code> res;
+    top_clauses(*this, acc_cond::acc_op::And, acc_cond::acc_op::Inf,
+                [&](const acc_cond::acc_code& c) { res.emplace_back(c); });
+    return res;
+  }
+
+  std::vector<acc_cond> acc_cond::top_disjuncts() const
+  {
+    std::vector<acc_cond> res;
+    top_clauses(code_, acc_cond::acc_op::Or, acc_cond::acc_op::Fin,
+                [&](const acc_cond::acc_code& c)
+                { res.emplace_back(num_, c); });
+    return res;
+  }
+
+  std::vector<acc_cond> acc_cond::top_conjuncts() const
+  {
+    std::vector<acc_cond> res;
+    top_clauses(code_, acc_cond::acc_op::And, acc_cond::acc_op::Inf,
+                [&](const acc_cond::acc_code& c)
+                { res.emplace_back(num_, c); });
+    return res;
   }
 
   std::pair<bool, acc_cond::mark_t>

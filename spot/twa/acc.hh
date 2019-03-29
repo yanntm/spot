@@ -1978,6 +1978,26 @@ namespace spot
       return code_.fin_one();
     }
 
+    /// \brief Return the top-level disjuncts.
+    ///
+    /// For instance, if the formula is
+    /// (5, Fin(0)|Fin(1)|(Fin(2)&(Inf(3)|Fin(4)))), this returns
+    /// [(5, Fin(0)), (5, Fin(1)), (5, Fin(2)&(Inf(3)|Fin(4)))].
+    ///
+    /// If the formula is not a disjunction, this returns
+    /// a vector with the formula as only element.
+    std::vector<acc_cond> top_disjuncts() const;
+
+    /// \brief Return the top-level conjuncts.
+    ///
+    /// For instance, if the formula is
+    /// (5, Fin(0)|Fin(1)|(Fin(2)&(Inf(3)|Fin(4)))), this returns
+    /// [(5, Fin(0)), (5, Fin(1)), (5, Fin(2)&(Inf(3)|Fin(4)))].
+    ///
+    /// If the formula is not a conjunction, this returns
+    /// a vector with the formula as only element.
+    std::vector<acc_cond> top_conjuncts() const;
+
   protected:
     mark_t all_sets_() const
     {

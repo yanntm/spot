@@ -473,6 +473,7 @@ namespace std {
   %template(vectorformula) vector<spot::formula>;
   %template(vectorunsigned) vector<unsigned>;
   %template(vectorpairunsigned) vector<pair<unsigned, unsigned>>;
+  %template(vectoracccond) vector<spot::acc_cond>;
   %template(vectoracccode) vector<spot::acc_cond::acc_code>;
   %template(vectorbool) vector<bool>;
   %template(vectorbdd) vector<bdd>;
