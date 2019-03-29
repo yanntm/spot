@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <numeric>
+#include <chrono>
 #include <iostream> // TODO remove
 
 #include <vector>
@@ -26,6 +28,7 @@
 #include <spot/kripke/kripke.hh>
 #include <spot/mc/mpi/mc_mpi.hh>
 #include <spot/mc/mpi/spot_mpi.hh>
+#include <spot/mc/mpi/mpi_window.hh>
 
 namespace spot
 {
@@ -37,7 +40,9 @@ namespace spot
     spot::SpotMPI mpi_;
     kripkecube<State, SuccIterator>& sys_;
     std::unordered_set<State, StateHash, StateEqual> q_, r_;
+    mpi_window win_finish;
     int tmp_count = 0;
+    std::chrono::time_point<std::chrono::steady_clock> finish_time = std::chrono::time_point<std::chrono::steady_clock>::max();
 
     size_t state_size_;
 
@@ -55,6 +60,9 @@ namespace spot
     {
       State s0 = sys_.initial(/* mpi_.world_rank */0);
       state_size_ = s0[1] + STATE_HEADER;
+
+      win_finish.init(mpi_.world_size);
+
       return s0;
     }
 
@@ -64,6 +72,28 @@ namespace spot
 
     bool termination()
     {
+      auto current = std::chrono::steady_clock::now();
+      if (finish_time > current)
+      {
+        finish_time = current;
+        return false;
+      }
+      auto milli = std::chrono::duration_cast<std::chrono::milliseconds>(current - finish_time).count();
+      if (milli > 100)
+      {
+        win_finish.put(0, mpi_.world_rank, 1);
+        if (mpi_.world_rank == 0)
+        {
+          auto f = win_finish.get(0, 0, mpi_.world_size);
+          if (std::accumulate(f.cbegin(), f.cend(), 0) == mpi_.world_size)
+          {
+            for (int i = 1; i < mpi_.world_size; ++i)
+              win_finish.put(i, 0, true);
+            return true;
+          }
+        }
+        return win_finish.get(0, 0);
+      }
       return false;
     }
 
@@ -76,13 +106,16 @@ namespace spot
         q_.insert(s0);
         r_.insert(s0);
       }
-      while (!termination())
+      bool work = true;
+      while (work || !termination())
       {
+        work = false;
         int state_received;
         MPI_Status status;
         MPI_Iprobe(MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &state_received, &status);
         if (state_received)
         {
+          work = true;
           int* state = (int *) malloc(state_size_ * sizeof (int));
           MPI_Recv(state, state_size_, MPI_INT, status.MPI_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
           if (r_.find(state) == r_.end())
@@ -92,7 +125,12 @@ namespace spot
           }
         }
         if (!q_.empty())
+        {
+          work = true;
           process_queue();
+        }
+        if (work)
+          finish_time = std::chrono::time_point<std::chrono::steady_clock>::max();
       }
     }
 

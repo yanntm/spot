@@ -24,7 +24,7 @@ namespace spot
 
     ~mpi_window()
     {
-      MPI_Free_mem(&data_);
+      MPI_Free_mem(data_);
     }
 
     int get(int rank, size_t index)
