@@ -25,189 +25,102 @@ namespace spot
 {
   namespace
   {
-    class temporary_acc_set
+    static bool
+    is_scc_empty(const scc_info& si, unsigned scc,
+                 const acc_cond& autacc, twa_run_ptr run,
+                 acc_cond::mark_t tocut = {});
+
+    static bool
+    scc_split_check(const scc_info& si, unsigned scc, const acc_cond& acc,
+                    twa_run_ptr run, acc_cond::mark_t tocut)
     {
-      twa_graph_ptr aut_;
-      acc_cond old_acc_;
-
-    public:
-      temporary_acc_set(const const_twa_graph_ptr& aut,
-                        acc_cond new_acc)
-        : aut_(std::const_pointer_cast<twa_graph>(aut)),
-          old_acc_(aut->acc())
-      {
-        set(new_acc);
-      }
-
-      void set(acc_cond new_acc)
-      {
-        aut_->set_acceptance(new_acc);
-      }
-
-      ~temporary_acc_set()
-      {
-        aut_->set_acceptance(old_acc_);
-      }
-    };
-
-    bool scc_split_check(const scc_info& si, unsigned scc, twa_run_ptr run,
-                         acc_cond::mark_t tocut,
-                         bool (*ec_scc)(const scc_info& si,
-                                        unsigned scc,
-                                        twa_run_ptr run,
-                                        acc_cond::mark_t tocut))
-    {
-      // We want to remove tocut from the acceptance condition right
-      // now, because hopefully this will convert the acceptance
-      // condition into a Fin-less one, and then we do not have to
-      // recurse it.
-      auto& autacc = si.get_aut()->acc();
-      acc_cond acc = autacc.restrict_to(si.acc_sets_of(scc) - tocut);
-      acc = acc.remove(si.common_sets_of(scc), false);
       scc_and_mark_filter filt(si, scc, tocut);
       filt.override_acceptance(acc);
       scc_info upper_si(filt, scc_info_options::STOP_ON_ACC);
 
       const int accepting_scc = upper_si.one_accepting_scc();
       if (accepting_scc >= 0)
-      {
-        if (run)
-          upper_si.get_accepting_run(accepting_scc, run);
-        return false;
-      }
+        {
+          if (run)
+            upper_si.get_accepting_run(accepting_scc, run);
+          return false;
+        }
       if (!acc.uses_fin_acceptance())
         return true;
       unsigned nscc = upper_si.scc_count();
       for (unsigned scc = 0; scc < nscc; ++scc)
-        if (!ec_scc(upper_si, scc, run, tocut))
+        if (!is_scc_empty(upper_si, scc, acc, run, tocut))
           return false;
       return true;
     }
 
-    template <bool deal_with_disjunct>
-    bool generic_emptiness_check_for_scc_nocopy(const scc_info& si,
-                                                unsigned scc,
-                                                twa_run_ptr run,
-                                                acc_cond::mark_t
-                                                tocut = {})
+    static bool
+    is_scc_empty(const scc_info& si, unsigned scc,
+                 const acc_cond& autacc, twa_run_ptr run,
+                 acc_cond::mark_t tocut)
     {
       if (si.is_rejecting_scc(scc))
         return true;
       acc_cond::mark_t sets = si.acc_sets_of(scc);
-      auto& autacc = si.get_aut()->acc();
       acc_cond acc = autacc.restrict_to(sets);
       acc = acc.remove(si.common_sets_of(scc), false);
-      if (acc.is_f())
-        return true;
-      if (acc.is_t())
-      {
-        if (run)
-          si.get_accepting_run(scc, run);
-        return false;
-      }
-      temporary_acc_set tmp(si.get_aut(), acc);
-      if (acc_cond::mark_t fu = acc.fin_unit())
-        return scc_split_check
-          (si, scc, run, tocut | fu,
-           generic_emptiness_check_for_scc_nocopy<deal_with_disjunct>);
 
-      if (deal_with_disjunct)
-        {
-          acc_cond::acc_code& code = acc.get_acceptance();
-          assert(!code.empty());
-          auto pos = &code.back();
-          auto start = &code.front();
-          assert(pos - pos->sub.size == start);
-          if (pos->sub.op == acc_cond::acc_op::Or)
-            {
-              do
-                {
-                  --pos;
-                  acc_cond::acc_code one(pos);
-                  // This sets the acceptance of the automaton we
-                  // are working on.
-                  tmp.set(one);
-                  // Because we use scc_info with STOP_ON_ACC and test
-                  // for this, every clauses should contain a Fin.  Also
-                  assert(si.get_aut()->acc().uses_fin_acceptance());
-                  acc_cond::mark_t plus = {};
-                  if (acc_cond::mark_t fu = one.fin_unit())
-                    plus = fu;
-                  if (!scc_split_check
-                      (si, scc, run, tocut | plus,
-                       generic_emptiness_check_for_scc_nocopy
-                       <deal_with_disjunct>))
-                    return false;
-                  pos -= pos->sub.size;
-                }
-              while (pos > start);
-              return true;
-            }
-          if (pos->sub.op == acc_cond::acc_op::Fin)
-            {
-              tmp.set(acc_cond::acc_code());
-              for (unsigned d: pos[-1].mark.sets())
-                if (!scc_split_check
-                    (si, scc, run,
-                     tocut | acc_cond::mark_t({d}),
-                     generic_emptiness_check_for_scc_nocopy
-                     <deal_with_disjunct>))
-                  return false;
-              return true;
-            }
-        }
-
-      int fo = acc.fin_one();
-      assert(fo >= 0);
-      // Try to accept when Fin(fo) == true
-      if (!scc_split_check
-          (si, scc, run, tocut | acc_cond::mark_t({(unsigned) fo}),
-           generic_emptiness_check_for_scc_nocopy
-           <deal_with_disjunct>))
-        return false;
-      // Try to accept when Fin(fo) == false
-      tmp.set(acc.force_inf({(unsigned) fo}));
-      return generic_emptiness_check_for_scc_nocopy
-        <deal_with_disjunct>(si, scc, run, tocut);
+      for (const acc_cond& disjunct: acc.top_disjuncts())
+        if (acc_cond::mark_t fu = disjunct.fin_unit())
+          {
+            if (!scc_split_check
+                (si, scc, disjunct.remove(fu, true), run, fu))
+              return false;
+          }
+        else
+          {
+            int fo = acc.fin_one();
+            assert(fo >= 0);
+            // Try to accept when Fin(fo) == true
+            acc_cond::mark_t fo_m = {(unsigned) fo};
+            if (!scc_split_check
+                (si, scc, disjunct.remove(fo_m, true), run, fo_m))
+              return false;
+            // Try to accept when Fin(fo) == false
+            if (!is_scc_empty(si, scc, disjunct.force_inf(fo_m), run, tocut))
+              return false;
+          }
+      return true;
     }
 
-    template <bool deal_with_disjunct>
-    bool generic_emptiness_check_main_nocopy(const twa_graph_ptr& aut,
-                                             twa_run_ptr run)
+    static bool
+    generic_emptiness_check_main(const twa_graph_ptr& aut,
+                                 twa_run_ptr run)
     {
       cleanup_acceptance_here(aut, false);
       auto& aut_acc = aut->acc();
       if (aut_acc.is_f())
         return true;
-      if (!aut->acc().uses_fin_acceptance())
-      {
-        if (run)
+      if (!aut_acc.uses_fin_acceptance())
         {
-          auto p = aut->accepting_run();
-          if (p)
-          {
-            *run = *p;
-            return false;
-          }
+          if (!run)
+            return aut->is_empty();
+          if (auto p = aut->accepting_run())
+            {
+              *run = *p;
+              return false;
+            }
           return true;
         }
-        return aut->is_empty();
-      }
 
       scc_info si(aut, scc_info_options::STOP_ON_ACC);
 
       const int accepting_scc = si.one_accepting_scc();
       if (accepting_scc >= 0)
-      {
-        if (run)
-          si.get_accepting_run(accepting_scc, run);
-        return false;
-      }
+        {
+          if (run)
+            si.get_accepting_run(accepting_scc, run);
+          return false;
+        }
 
       unsigned nscc = si.scc_count();
       for (unsigned scc = 0; scc < nscc; ++scc)
-        if (!generic_emptiness_check_for_scc_nocopy
-            <deal_with_disjunct>(si, scc, run))
+        if (!is_scc_empty(si, scc, aut_acc, run))
           return false;
       return true;
     }
@@ -220,7 +133,7 @@ namespace spot
                                "does not support alternating automata");
     auto aut_ = std::const_pointer_cast<twa_graph>(aut);
     acc_cond old = aut_->acc();
-    bool res = generic_emptiness_check_main_nocopy<true>(aut_, nullptr);
+    bool res = generic_emptiness_check_main(aut_, nullptr);
     aut_->set_acceptance(old);
     return res;
   }
@@ -233,7 +146,7 @@ namespace spot
     auto aut_ = std::const_pointer_cast<twa_graph>(aut);
     acc_cond old = aut_->acc();
     twa_run_ptr run = std::make_shared<twa_run>(aut_);
-    bool res = generic_emptiness_check_main_nocopy<true>(aut_, run);
+    bool res = generic_emptiness_check_main(aut_, run);
     aut_->set_acceptance(old);
     if (!res)
       return run;
@@ -246,6 +159,6 @@ namespace spot
     if (SPOT_UNLIKELY(!si.get_aut()->is_existential()))
       throw std::runtime_error("generic_emptiness_check_for_scc() "
                                "does not support alternating automata");
-    return generic_emptiness_check_for_scc_nocopy<true>(si, scc, nullptr);
+    return is_scc_empty(si, scc, si.get_aut()->acc(), nullptr);
   }
 }
