@@ -29,6 +29,12 @@ New in spot 2.7.2.dev (not yet released)
     allows "autfilt [-D] --small" to minimize very-weak automata
     whenever they are found to represent obligation properties.)
 
+  - There is a new spot::scc_and_mark_filter objet that simplify the
+    creation of filters to restrict spot::scc_info to some particular
+    SCC while cutting new SCCs on given acceptance sets.  This is used
+    by spot::generic_emptiness_check() when processing SCCs
+    recursively, and makes it easier to write similar code in Python.
+
   Bugs fixed:
 
   - When processing CSV files with MSDOS-style \r\n line endings,

@@ -832,7 +832,6 @@ def state_is_accepting(self, src) -> "bool":
   std::string __str__() { return spot::str_psl(*self); }
 }
 
-
 %runtime %{
 #include <memory>
 

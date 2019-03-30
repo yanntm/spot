@@ -75,6 +75,12 @@ namespace spot
     };
   }
 
+  scc_info::scc_info(scc_and_mark_filter& filt, scc_info_options options)
+    : scc_info(filt.get_aut(), filt.start_state(),
+               filt.get_filter(), &filt, options)
+  {
+  }
+
   scc_info::scc_info(const_twa_graph_ptr aut,
                      unsigned initial_state,
                      edge_filter filter,
@@ -716,6 +722,19 @@ namespace spot
                                              unsigned dst)
                              {
                                cur[src] = seen[src] = true;
+                               // if (filter_)
+                               //   {
+                               //     twa_graph::edge_storage_t e;
+                               //     e.cond = cond;
+                               //     e.src = src;
+                               //     e.dst = dst;
+                               //     if (filter_(e, dst, filter_data_)
+                               //         != edge_filter_choice::keep)
+                               //       {
+                               //         cond = bddfalse;
+                               //         return;
+                               //       }
+                               //   }
                                if (scc_of(dst) != scc
                                    || (m & sets)
                                    || (seen[dst] && !cur[dst]))

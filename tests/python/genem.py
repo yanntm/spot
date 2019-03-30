@@ -107,25 +107,12 @@ HOA: v1 States: 2 Acceptance: 6 (Fin(0)|Fin(1))&(Fin(2)|Fin(3))&
 1 {1 4} State: 1 [t] 0 {2 5} [t] 1 {3 0 1} --END--""")
 
 # From issue #360.
-a360 = spot.automaton("""HOA: v1
-States: 2
-Start: 0
-AP: 2 "a" "b"
-Acceptance: 8 Fin(5) & (Inf(4) | (Fin(3) & (Inf(2) | (Fin(1) & Inf(0))))) &
-              (Inf(6) | Inf(7)) & (Fin(6)|Fin(7))
-properties: trans-labels explicit-labels trans-acc complete
-properties: deterministic
---BODY--
-State: 0
-[0&1] 0 {4 6 7}
-[0&!1] 1 {0 6}
-[!0&1] 0 {3 7}
-[!0&!1] 0 {0}
-State: 1
-[0&1] 0 {4 6 7}
-[0&!1] 1 {3 6}
-[!0&1] 0 {4 7}
-[!0&!1] 1 {0}
+a360 = spot.automaton("""HOA: v1 States: 2 Start: 0 AP: 2 "a"
+"b" Acceptance: 8 Fin(5) & (Inf(4) | (Fin(3) & (Inf(2) | (Fin(1) &
+Inf(0))))) & (Inf(6) | Inf(7)) & (Fin(6)|Fin(7)) properties: trans-labels
+explicit-labels trans-acc complete properties: deterministic --BODY--
+State: 0 [0&1] 0 {4 6 7} [0&!1] 1 {0 6} [!0&1] 0 {3 7} [!0&!1] 0 {0}
+State: 1 [0&1] 0 {4 6 7} [0&!1] 1 {3 6} [!0&1] 0 {4 7} [!0&!1] 1 {0}
 --END--""")
 
 
@@ -172,7 +159,7 @@ def generic_emptiness2_rec(aut):
                     return False
     return True
 
-# The python version of spot.generic_emptiness_check()
+# A very old python version of spot.generic_emptiness_check()
 def generic_emptiness2(aut):
     old_a = spot.acc_cond(aut.acc())
     res = generic_emptiness2_rec(aut)
@@ -180,16 +167,97 @@ def generic_emptiness2(aut):
     aut.set_acceptance(old_a)
     return res
 
+# A more modern python version of spot.generic_emptiness_check()
+def is_empty1(g):
+    si = spot.scc_info(g, spot.scc_info_options_NONE)
+    for scc_num in range(si.scc_count()):
+        if si.is_trivial(scc_num):
+            continue
+        if not is_scc_empty1(si, scc_num):
+            return False
+    return True
+
+def is_scc_empty1(si, scc_num, acc=None):
+    if acc is None: # acceptance isn't forced, get it from the automaton
+        acc = si.get_aut().acc()
+    occur, common = si.acc_sets_of(scc_num), si.common_sets_of(scc_num)
+    acc = acc.restrict_to(occur)
+    acc = acc.remove(common, False)
+    if acc.is_t(): return False
+    if acc.is_f(): return True
+    if acc.accepting(occur): return False
+    for cl in acc.top_disjuncts():
+        fu = cl.fin_unit() # Is there Fin at the top level
+        if fu:
+            with spot.scc_and_mark_filter(si, scc_num, fu) as filt:
+                filt.override_acceptance(cl.remove(fu, True))
+                if not is_empty1(filt):
+                    return False
+        else:
+            # Pick some Fin term anywhere in the formula
+            fo = cl.fin_one()
+            # Try to solve assuming Fin(fo)=True
+            with spot.scc_and_mark_filter(si, scc_num, [fo]) as filt:
+                filt.override_acceptance(cl.remove([fo], True))
+                if not is_empty1(filt):
+                    return False
+            # Try to solve assuming Fin(fo)=False
+            if not is_scc_empty1(si, scc_num, acc.force_inf([fo])):
+                return False
+    return True
+
+def is_empty2(g):
+    si = spot.scc_info(g, spot.scc_info_options_STOP_ON_ACC)
+    if si.one_accepting_scc() >= 0:
+        return False
+    for scc_num in range(si.scc_count()):
+        if si.is_rejecting_scc(scc_num): # this includes trivial SCCs
+            continue
+        if not is_scc_empty2(si, scc_num):
+            return False
+    return True
+
+def is_scc_empty2(si, scc_num, acc=None):
+    if acc is None: # acceptance isn't forced, get it from the automaton
+        acc = si.get_aut().acc()
+    occur, common = si.acc_sets_of(scc_num), si.common_sets_of(scc_num)
+    acc = acc.restrict_to(occur)
+    acc = acc.remove(common, False)
+    # 3 stop conditions removed here, because they are caught by
+    # one_accepting_scc() or is_rejecting_scc() in is_empty2()
+    for cl in acc.top_disjuncts():
+        fu = cl.fin_unit() # Is there Fin at the top level
+        if fu:
+            with spot.scc_and_mark_filter(si, scc_num, fu) as filt:
+                filt.override_acceptance(cl.remove(fu, True))
+                if not is_empty1(filt):
+                    return False
+        else:
+            # Pick some Fin term anywhere in the formula
+            fo = cl.fin_one()
+            # Try to solve assuming Fin(fo)=True
+            with spot.scc_and_mark_filter(si, scc_num, [fo]) as filt:
+                filt.override_acceptance(cl.remove([fo], True))
+                if not is_empty2(filt):
+                    return False
+            # Try to solve assuming Fin(fo)=False
+            if not is_scc_empty2(si, scc_num, acc.force_inf([fo])):
+                return False
+    return True
+
 def run_bench(automata):
     for aut in automata:
         # Make sure our three implementation behave identically
+        res5 = is_empty2(aut)
+        res4 = is_empty1(aut)
         res3 = spot.generic_emptiness_check(aut)
         res2 = spot.remove_fin(aut).is_empty()
         res1 = generic_emptiness2(aut)
-        res = str(res1)[0] + str(res2)[0] + str(res3)[0]
+        res = (str(res1)[0] + str(res2)[0] + str(res3)[0]
+               + str(res4)[0] + str(res5)[0])
         print(res)
-        assert res in ('TTT', 'FFF')
-        if res == 'FFF':
+        assert res in ('TTTTT', 'FFFFF')
+        if res == 'FFFFF':
             run3 = spot.generic_accepting_run(aut)
             assert run3.replay(spot.get_cout()) is True
 

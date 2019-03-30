@@ -1244,3 +1244,12 @@ class twa_word:
         """
         from IPython.display import SVG
         return SVG(self.as_svg())
+
+
+# Make scc_and_mark filter usable as context manager
+@_extend(scc_and_mark_filter)
+class scc_and_mark_filter:
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.restore_acceptance()

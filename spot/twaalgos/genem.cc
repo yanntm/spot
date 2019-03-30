@@ -57,36 +57,16 @@ namespace spot
                                         twa_run_ptr run,
                                         acc_cond::mark_t tocut))
     {
-      struct filter_data_t {
-        const scc_info& lower_si;
-        unsigned lower_scc;
-        acc_cond::mark_t cut_sets;
-      }
-      data = {si, scc, tocut};
-
-      scc_info::edge_filter filter =
-        [](const twa_graph::edge_storage_t& e, unsigned dst,
-           void* filter_data) -> scc_info::edge_filter_choice
-        {
-          auto& data = *reinterpret_cast<filter_data_t*>(filter_data);
-          if (data.lower_si.scc_of(dst) != data.lower_scc)
-            return scc_info::edge_filter_choice::ignore;
-          if (data.cut_sets & e.acc)
-            return scc_info::edge_filter_choice::cut;
-          return scc_info::edge_filter_choice::keep;
-        };
-
       // We want to remove tocut from the acceptance condition right
       // now, because hopefully this will convert the acceptance
       // condition into a Fin-less one, and then we do not have to
       // recurse it.
-      acc_cond::mark_t sets = si.acc_sets_of(scc) - tocut;
       auto& autacc = si.get_aut()->acc();
-      acc_cond acc = autacc.restrict_to(sets);
+      acc_cond acc = autacc.restrict_to(si.acc_sets_of(scc) - tocut);
       acc = acc.remove(si.common_sets_of(scc), false);
-      temporary_acc_set tmp(si.get_aut(), acc);
-      scc_info upper_si(si.get_aut(), si.one_state_of(scc), filter, &data,
-                        scc_info_options::STOP_ON_ACC);
+      scc_and_mark_filter filt(si, scc, tocut);
+      filt.override_acceptance(acc);
+      scc_info upper_si(filt, scc_info_options::STOP_ON_ACC);
 
       const int accepting_scc = upper_si.one_accepting_scc();
       if (accepting_scc >= 0)

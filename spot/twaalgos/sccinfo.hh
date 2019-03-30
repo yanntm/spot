@@ -350,6 +350,8 @@ namespace spot
                                          | static_cast<ut>(right));
   }
 
+  class SPOT_API scc_and_mark_filter;
+
   /// \ingroup twa_misc
   /// \brief Compute an SCC map and gather assorted information.
   ///
@@ -449,9 +451,29 @@ namespace spot
       }
     /// @}
 
+    /// @{
+    /// \brief Create an scc_info map from some filter.
+    ///
+    /// This is usually used to prevent some edges from being
+    /// considered as part of cycles, and can additionally restrict
+    /// to exploration to some SCC discovered by another SCC.
+    scc_info(scc_and_mark_filter& filt,
+             scc_info_options options = scc_info_options::ALL);
+    /// @}
+
     const_twa_graph_ptr get_aut() const
     {
       return aut_;
+    }
+
+    scc_info_options get_options() const
+    {
+      return options_;
+    }
+
+    const void* get_filter_data() const
+    {
+      return filter_data_;
     }
 
     unsigned scc_count() const
@@ -684,6 +706,111 @@ namespace spot
     /// acceptance condition.
     std::vector<unsigned>
     states_on_acc_cycle_of(unsigned scc) const;
+  };
+
+
+  /// \brief Create a filter for SCC and marks.
+  ///
+  /// An scc_and_mark_filter can be passed to scc_info to explore only
+  /// a specific SCC of the original automaton, and to prevent some
+  /// acceptance sets from being considered as part of SCCs.
+  class SPOT_API scc_and_mark_filter
+  {
+  protected:
+    const scc_info* lower_si_;
+    unsigned lower_scc_;
+    acc_cond::mark_t cut_sets_;
+    const_twa_graph_ptr aut_;
+    acc_cond old_acc_;
+    bool restore_old_acc_ = false;
+
+    static scc_info::edge_filter_choice
+    filter_scc_and_mark_(const twa_graph::edge_storage_t& e,
+                         unsigned dst, void* data)
+    {
+      auto& d = *reinterpret_cast<scc_and_mark_filter*>(data);
+      if (d.lower_si_->scc_of(dst) != d.lower_scc_)
+        return scc_info::edge_filter_choice::ignore;
+      if (d.cut_sets_ & e.acc)
+        return scc_info::edge_filter_choice::cut;
+      return scc_info::edge_filter_choice::keep;
+    };
+
+    static scc_info::edge_filter_choice
+    filter_mark_(const twa_graph::edge_storage_t& e, unsigned, void* data)
+    {
+      auto& d = *reinterpret_cast<scc_and_mark_filter*>(data);
+      if (d.cut_sets_ & e.acc)
+        return scc_info::edge_filter_choice::cut;
+      return scc_info::edge_filter_choice::keep;
+    };
+
+  public:
+    /// \brief Specify how to restrict scc_info to some SCC and acceptance sets
+    ///
+    /// \param lower_si the original scc_info that specifies the SCC
+    /// \param lower_scc the SCC number in lower_si
+    /// \param cut_sets the acceptance sets that should not be part of SCCs.
+    scc_and_mark_filter(const scc_info& lower_si,
+                        unsigned lower_scc,
+                        acc_cond::mark_t cut_sets)
+      : lower_si_(&lower_si), lower_scc_(lower_scc), cut_sets_(cut_sets),
+        aut_(lower_si_->get_aut()), old_acc_(aut_->get_acceptance())
+    {
+      const void* data = lower_si.get_filter_data();
+      if (data)
+        {
+          auto& d = *reinterpret_cast<const scc_and_mark_filter*>(data);
+          cut_sets_ |= d.cut_sets_;
+        }
+    }
+
+    /// \brief Specify how to restrict scc_info to some acceptance sets
+    ///
+    /// \param aut the automaton to filter
+    /// \param cut_sets the acceptance sets that should not be part of SCCs.
+    scc_and_mark_filter(const const_twa_graph_ptr& aut,
+                        acc_cond::mark_t cut_sets)
+      : lower_si_(nullptr), cut_sets_(cut_sets), aut_(aut),
+        old_acc_(aut_->get_acceptance())
+    {
+    }
+
+    ~scc_and_mark_filter()
+    {
+      restore_acceptance();
+    }
+
+    void override_acceptance(const acc_cond& new_acc)
+    {
+      std::const_pointer_cast<twa_graph>(aut_)->set_acceptance(new_acc);
+      restore_old_acc_ = true;
+    }
+
+    void restore_acceptance()
+    {
+      if (!restore_old_acc_)
+        return;
+      std::const_pointer_cast<twa_graph>(aut_)->set_acceptance(old_acc_);
+      restore_old_acc_ = false;
+    }
+
+    const_twa_graph_ptr get_aut() const
+    {
+      return aut_;
+    }
+
+    unsigned start_state() const
+    {
+      if (lower_si_)
+        return lower_si_->one_state_of(lower_scc_);
+      return aut_->get_init_state_number();
+    }
+
+    scc_info::edge_filter get_filter()
+    {
+      return lower_si_ ? filter_scc_and_mark_ : filter_mark_;
+    }
   };
 
 
