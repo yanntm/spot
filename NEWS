@@ -35,6 +35,10 @@ New in spot 2.7.2.dev (not yet released)
     by spot::generic_emptiness_check() when processing SCCs
     recursively, and makes it easier to write similar code in Python.
 
+  - print_dot has a new option 'g', to hide edge labels.  This is
+    helpful to display automata as "graphs", e.g., when illustrating
+    algorithms that do not care about labels.
+
   Bugs fixed:
 
   - When processing CSV files with MSDOS-style \r\n line endings,

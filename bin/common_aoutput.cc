@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -101,6 +101,7 @@ static const argp_option options[] =
       "(d) show origins when known, "
       "(e) force elliptic nodes, "
       "(f(FONT)) use FONT, "
+      "(g) hide edge labels, "
       "(h) horizontal layout, "
       "(k) use state labels when possible, "
       "(K) use transition labels (default), "

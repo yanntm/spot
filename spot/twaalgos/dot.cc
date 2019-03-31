@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2014-2018 Laboratoire de Recherche
+// Copyright (C) 2011, 2012, 2014-2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -108,6 +108,7 @@ namespace spot
       bool opt_orig_show_ = false;
       bool max_states_given_ = false; // related to max_states_
       bool opt_latex_ = false;
+      bool opt_showlabel_ = true;
       const char* nl_ = "\\n";
       const char* label_pre_ = "label=\"";
       char label_post_ = '"';
@@ -265,6 +266,9 @@ namespace spot
                 opt_font_ = std::string(options, end - options);
                 options = end + 1;
               }
+              break;
+            case 'g':           // "graphs" are unlabeled automata
+              opt_showlabel_ = false;
               break;
             case 'h':
               opt_vertical_ = false;
@@ -756,12 +760,12 @@ namespace spot
                   os_ << '.' << iter->second % palette_mod;
               }
             os_ << " [" << label_pre_;
-            if (!opt_state_labels_)
+            if (!opt_state_labels_ && opt_showlabel_)
               format_label(os_, t.cond);
             if (!mark_states_)
               if (auto a = t.acc)
                 {
-                  if (!opt_state_labels_)
+                  if (!opt_state_labels_ && opt_showlabel_)
                     os_ << nl_;
                   output_mark(a);
                 }
