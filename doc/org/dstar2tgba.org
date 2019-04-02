@@ -211,9 +211,7 @@ $txt
 
 
 
-And now its conversion by =dstar2tgba= to a 4-state TGBA.
-We don't pass any option to =dstar2tgba= because converting to TGBA is
-the default:
+And now its conversion by =dstar2tgba= to a 1-state TGBA.
 
 #+NAME: gfagfb2ba
 #+BEGIN_SRC sh :results verbatim :exports code
@@ -221,35 +219,23 @@ dstar2tgba gfagfb -d
 #+END_SRC
 #+RESULTS: gfagfb2ba
 #+begin_example
-digraph G {
+digraph "" {
   rankdir=LR
+  label=<Inf(<font color="#1F78B4">⓿</font>)&amp;Inf(<font color="#FF4DA0">❶</font>)<br/>[gen. Büchi 2]>
+  labelloc="t"
   node [shape="circle"]
+  node [style="filled", fillcolor="#ffffa0"]
   fontname="Lato"
   node [fontname="Lato"]
   edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
+  node[fontsize=12] fontsize=12 stylesheet="spot.css" edge[arrowhead=vee, arrowsize=.7, fontsize=12]
   I [label="", style=invis, width=0]
   I -> 0
-  0 [label="0"]
-  0 -> 0 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  0 -> 1 [label=<!a &amp; b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  0 -> 2 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  0 -> 3 [label=<!a &amp; !b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  1 [label="1"]
-  1 -> 0 [label=<a &amp; b<br/><font color="#F17CB0">❶</font>>]
-  1 -> 1 [label=<!a &amp; b<br/><font color="#F17CB0">❶</font>>]
-  1 -> 2 [label=<a &amp; !b<br/><font color="#F17CB0">❶</font>>]
-  1 -> 3 [label=<!a &amp; !b<br/><font color="#F17CB0">❶</font>>]
-  2 [label="2"]
-  2 -> 0 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 1 [label=<!a &amp; b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 2 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 3 [label=<!a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  3 [label="3"]
-  3 -> 0 [label=<a &amp; b>]
-  3 -> 1 [label=<!a &amp; b>]
-  3 -> 2 [label=<a &amp; !b>]
-  3 -> 3 [label=<!a &amp; !b>]
+  0 [label=<0>]
+  0 -> 0 [label=<!a &amp; !b>]
+  0 -> 0 [label=<!a &amp; b<br/><font color="#FF4DA0">❶</font>>]
+  0 -> 0 [label=<a &amp; !b<br/><font color="#1F78B4">⓿</font>>]
+  0 -> 0 [label=<a &amp; b<br/><font color="#1F78B4">⓿</font><font color="#FF4DA0">❶</font>>]
 }
 #+end_example
 
@@ -258,10 +244,6 @@ $txt
 #+END_SRC
 #+RESULTS:
 [[file:gfagfb2ba.svg]]
-
-Obviously the resulting automaton could be simplified further, as the
-minimal TGBA for this formula has a single state.  (Patches
-welcome...)
 
 * Details
 
