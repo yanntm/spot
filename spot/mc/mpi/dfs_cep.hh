@@ -42,6 +42,8 @@ namespace spot
     spot::mpi_window win_free_;
     std::vector<spot::mpi_window> win_buf_;
 
+    int tmp_count = 0;
+
     size_t state_size_;
 
   public:
@@ -169,7 +171,9 @@ namespace spot
     {
         //std::cout << "check_invariant(" << state[0] << ", " << state[1] << ")" << std::endl;
         //std::cout << state[0] << state << std::endl;
-        std::cout << (size_t) state[0] << std::endl;
+        //std::cout << (size_t) state[0] << std::endl;
+        StateHash hash;
+        std::cout << mpi_.world_rank << "->" << ++tmp_count << " : " << hash(state) << "@" << hash(state) % mpi_.world_size << std::endl;
         return true;
     }
 

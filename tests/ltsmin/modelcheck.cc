@@ -114,7 +114,7 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case 'h':
       mc_options.has_deadlock = true;
-      mc_options.selfloopize = false;
+      mc_options.selfloopize = false; 
       break;
     case 'k':
       mc_options.kripke_output = true;

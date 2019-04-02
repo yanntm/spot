@@ -32,12 +32,12 @@ namespace spot
 
       ~SpotMPI()
       {
-        MPI_Finalize();
+        // MPI_Finalize(); TODO it segfault sometime for some unknow reason
       }
 
       void abort(int status)
       {
-          MPI_Abort(MPI_COMM_WORLD, status);
+        MPI_Abort(MPI_COMM_WORLD, status);
       }
   };
 }

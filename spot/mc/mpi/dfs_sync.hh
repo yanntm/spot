@@ -136,10 +136,6 @@ namespace spot
 
     bool check_invariant(State state)
     {
-        //std::cout << "check_invariant(" << state[0] << ", " << state[1] << ")" << std::endl;
-        //std::cout << state[0] << state << std::endl;
-        StateHash hash;
-        std::cout << mpi_.world_rank << "->" << ++tmp_count << " : " << hash(state) << "@" << hash(state) % mpi_.world_size << std::endl;
         return true;
     }
 
@@ -168,7 +164,9 @@ namespace spot
     void run()
     {
       State s0 = setup();
+      check_invariant(s0);
       explore(s0);
+      std::cout << "unique state explored : " << r_.size() << "\n";
       finalize();
     }
   };
