@@ -4172,7 +4172,7 @@ New in spot 1.0 (2012-10-27):
                 output more statistics.
 
     An introduction to these tools can be found on-line at
-      http://spot.lrde.lip6.fr/tools.html
+      http://spot.lrde.epita.fr/tools.html
 
     The former test versions of genltl and randltl have been removed
     from the source tree.  The old version of ltl2tgba with its
