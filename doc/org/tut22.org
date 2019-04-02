@@ -194,6 +194,7 @@ whenever possible".
 
     // Set the acceptance condition of the automaton to Inf(0)
     aut->set_buchi();
+    // Pretend this is state-based acceptance
     aut->prop_state_acc(true);
 
     // States are numbered from 0.
@@ -258,6 +259,8 @@ State: 2
 
   # Set the acceptance condition of the automaton to Inf(0)
   aut.set_buchi()
+  # Pretend this is state-based acceptance
+  aut.prop_state_acc(True);
 
   # States are numbered from 0.
   aut.new_states(3)
@@ -278,6 +281,26 @@ State: 2
   # Print the resulting automaton.
   print(aut.to_str('hoa'))
 #+END_SRC
+
+#+RESULTS:
+#+begin_SRC hoa
+HOA: v1
+States: 3
+Start: 0
+AP: 2 "p1" "p2"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc
+--BODY--
+State: 0
+[0] 1
+State: 1 {0}
+[0&1] 1
+[1] 2
+State: 2
+[0 | 1] 1
+--END--
+#+end_SRC
 
 * Automaton with arbitrary acceptance condition
   :PROPERTIES:
