@@ -475,10 +475,13 @@ SCC-based optimizations described in our [[https://www.lrde.epita.fr/~adl/dl/adl
 This generalized case is specialized for two types of acceptances that
 are common (Rabin and Streett).
 
-*** State-based Rabin to BA
+*** Rabin to BA
 
-For state-based Rabin automata, and dedicated conversion to BA is
-used.
+When the input is a Rabin automaton, a dedicated conversion to BA is
+used.  This procedure actually works for input that is called
+Rabin-like, i.e., any acceptance formula that can easily be converted
+to Rabin by adding some extra Fin or Inf terms to the acceptance
+conditions and ensuring that those terms are always true.
 
 The conversion implemented is a variation of Krishnan et al.'s
 "Deterministic ω-Automata vis-a-vis Deterministic Büchi Automata"
@@ -493,7 +496,8 @@ SCC-wise: any DRA will be converted into a BA, and the determinism
 will be conserved only for strongly connected components where
 determinism can be conserved.  (If some SCC is not DBA-realizable, it
 will be cloned into several deterministic SCC, but the jumps between
-these SCCs will be nondeterministic.)
+these SCCs will be nondeterministic.)  Our implementation also work on
+automata with transition-based acceptance.
 
 This specialized conversion is built in the =remove_fin()= procedure
 described above.
