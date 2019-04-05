@@ -39,6 +39,10 @@ New in spot 2.7.2.dev (not yet released)
     helpful to display automata as "graphs", e.g., when illustrating
     algorithms that do not care about labels.
 
+  - A new complement() function that return automata with unspecified
+    acceptance condition.  The output can be alternating only if the
+    input was alternating.
+
   Bugs fixed:
 
   - When processing CSV files with MSDOS-style \r\n line endings,

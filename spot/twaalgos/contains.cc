@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2018 Laboratoire de Recherche et Développement de
+// Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement de
 // l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -19,27 +19,14 @@
 
 #include "config.h"
 #include <spot/twaalgos/contains.hh>
-#include <spot/twaalgos/postproc.hh>
+#include <spot/twaalgos/complement.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twaalgos/isdet.hh>
-#include <spot/twaalgos/dualize.hh>
 
 namespace spot
 {
   namespace
   {
-    static spot::const_twa_graph_ptr
-    ensure_deterministic(const spot::const_twa_graph_ptr& aut)
-    {
-      if (spot::is_deterministic(aut))
-        return aut;
-      spot::postprocessor p;
-      p.set_type(spot::postprocessor::Generic);
-      p.set_pref(spot::postprocessor::Deterministic);
-      p.set_level(spot::postprocessor::Low);
-      return p.run(std::const_pointer_cast<twa_graph>(aut));
-    }
-
     static spot::const_twa_graph_ptr
     translate(formula f, const bdd_dict_ptr& dict)
     {
@@ -49,25 +36,22 @@ namespace spot
 
   bool contains(const_twa_graph_ptr left, const_twa_graph_ptr right)
   {
-    return !right->intersects(dualize(ensure_deterministic(left)));
+    return !complement(left)->intersects(right);
   }
 
   bool contains(const_twa_graph_ptr left, formula right)
   {
-    auto right_aut = translate(right, left->get_dict());
-    return !right_aut->intersects(dualize(ensure_deterministic(left)));
+    return contains(left, translate(right, left->get_dict()));
   }
 
   bool contains(formula left, const_twa_graph_ptr right)
   {
-    return !right->intersects(translate(formula::Not(left), right->get_dict()));
+    return !translate(formula::Not(left), right->get_dict())->intersects(right);
   }
 
   bool contains(formula left, formula right)
   {
-    auto dict = make_bdd_dict();
-    auto right_aut = translate(right, dict);
-    return !right_aut->intersects(translate(formula::Not(left), dict));
+    return contains(left, translate(right, make_bdd_dict()));
   }
 
   bool are_equivalent(const_twa_graph_ptr left, const_twa_graph_ptr right)

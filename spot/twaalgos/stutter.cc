@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement de
+// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -28,9 +28,8 @@
 #include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twaalgos/isdet.hh>
-#include <spot/twaalgos/dualize.hh>
+#include <spot/twaalgos/complement.hh>
 #include <spot/twaalgos/remfin.hh>
-#include <spot/twaalgos/postproc.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twa/twaproduct.hh>
 #include <spot/twa/bddprint.hh>
@@ -602,16 +601,7 @@ namespace spot
       bool own_nf = false;
       if (!aut_nf)
         {
-          twa_graph_ptr tmp = aut_f;
-          if (!is_deterministic(aut_f))
-            {
-              spot::postprocessor p;
-              p.set_type(spot::postprocessor::Generic);
-              p.set_pref(spot::postprocessor::Deterministic);
-              p.set_level(spot::postprocessor::Low);
-              tmp = p.run(aut_f);
-            }
-          aut_nf = dualize(std::move(tmp));
+          aut_nf = complement(aut_f);
           own_nf = true;
         }
       bool res = do_si_check(aut_f, own_f,
@@ -709,13 +699,7 @@ namespace spot
       return res;
 
     if (neg == nullptr)
-      {
-        spot::postprocessor p;
-        p.set_type(spot::postprocessor::Generic);
-        p.set_pref(spot::postprocessor::Deterministic);
-        p.set_level(spot::postprocessor::Low);
-        neg = dualize(p.run(std::const_pointer_cast<twa_graph>(pos)));
-      }
+      neg = complement(pos);
 
     auto product_states = [](const const_twa_graph_ptr& a)
       {
@@ -782,13 +766,7 @@ namespace spot
       return res;
 
     if (neg == nullptr)
-      {
-        spot::postprocessor p;
-        p.set_type(spot::postprocessor::Generic);
-        p.set_pref(spot::postprocessor::Deterministic);
-        p.set_level(spot::postprocessor::Low);
-        neg = dualize(p.run(std::const_pointer_cast<twa_graph>(pos)));
-      }
+      neg = complement(pos);
 
     auto product_states = [](const const_twa_graph_ptr& a)
       {

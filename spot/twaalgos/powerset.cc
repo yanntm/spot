@@ -463,12 +463,9 @@ namespace spot
         neg_aut = scc_filter(neg_aut, true);
       }
 
-    if (product(det, neg_aut)->is_empty())
-      // Complement the DBA.
-      if (product(aut, remove_fin(dualize(det)))->is_empty())
-        // Finally, we are now sure that it was safe
-        // to determinize the automaton.
-        return det;
+    if (!det->intersects(neg_aut) && !aut->intersects(dualize(det)))
+      // Determinization was safe.
+      return det;
 
     return aut;
   }

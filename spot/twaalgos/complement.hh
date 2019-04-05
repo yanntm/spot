@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2015, 2017 Laboratoire de Recherche et
+// Copyright (C) 2013-2015, 2017, 2019 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -52,4 +52,26 @@ namespace spot
   /// S. Schewe, J. Strejček, and MH. Tsai (TACAS'16).
   SPOT_API twa_graph_ptr
   complement_semidet(const const_twa_graph_ptr& aut, bool show_names = false);
+
+
+  /// \brief Complement a TωA
+  ///
+  /// This employs different complementation strategies depending
+  /// on the type of the automaton.
+  ///
+  /// If the input is alternating, the output may be alternating and
+  /// is simply the result of calling dualize().
+  ///
+  /// If the input is not alternating, the output will not be
+  /// alternating, but could have any acceptance condition.
+  /// - deterministic inputs are passed to dualize()
+  /// - very weak automata are also dualized, and then
+  ///   passed to remove_alternation() to obtain a TGBA
+  /// - any other type of input is determized before
+  ///   complementation.
+  ///
+  /// complement_semidet() is not yet used.
+  SPOT_API twa_graph_ptr
+  complement(const const_twa_graph_ptr& aut);
+
 }

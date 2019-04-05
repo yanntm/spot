@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2015, 2017-2018 Laboratoire de Recherche et
+// Copyright (C) 2013-2015, 2017-2019 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -23,6 +23,9 @@
 #include <spot/twaalgos/complement.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/isdet.hh>
+#include <spot/twaalgos/alternation.hh>
+#include <spot/twaalgos/postproc.hh>
+#include <spot/twaalgos/strength.hh>
 #include <spot/twaalgos/sccinfo.hh>
 
 namespace spot
@@ -505,5 +508,20 @@ namespace spot
 
     auto ncsb = ncsb_complementation(aut, show_names);
     return ncsb.run();
+  }
+
+  twa_graph_ptr
+  complement(const const_twa_graph_ptr& aut)
+  {
+    if (!aut->is_existential() || is_universal(aut))
+      return dualize(aut);
+    if (is_very_weak_automaton(aut))
+      return remove_alternation(dualize(aut));
+    // Determinize
+    spot::postprocessor p;
+    p.set_type(spot::postprocessor::Generic);
+    p.set_pref(spot::postprocessor::Deterministic);
+    p.set_level(spot::postprocessor::Low);
+    return dualize(p.run(std::const_pointer_cast<twa_graph>(aut)));
   }
 }

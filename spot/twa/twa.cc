@@ -28,8 +28,7 @@
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/alternation.hh>
 #include <spot/twa/twaproduct.hh>
-#include <spot/twaalgos/dualize.hh>
-#include <spot/twaalgos/postproc.hh>
+#include <spot/twaalgos/complement.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/genem.hh>
@@ -172,20 +171,13 @@ namespace spot
   namespace
   {
     static const_twa_graph_ptr
-    ensure_deterministic(const const_twa_ptr& aut_in)
+    ensure_graph(const const_twa_ptr& aut_in)
     {
       const_twa_graph_ptr aut =
         std::dynamic_pointer_cast<const twa_graph>(aut_in);
-      if (!aut)
-        aut = make_twa_graph(aut_in, twa::prop_set::all());
-
-      if (is_deterministic(aut))
+      if (aut)
         return aut;
-      postprocessor p;
-      p.set_type(postprocessor::Generic);
-      p.set_pref(postprocessor::Deterministic);
-      p.set_level(postprocessor::Low);
-      return p.run(std::const_pointer_cast<twa_graph>(aut));
+      return make_twa_graph(aut_in, twa::prop_set::all());
     }
   }
   twa_run_ptr
@@ -199,9 +191,9 @@ namespace spot
     if (auto aa = std::dynamic_pointer_cast<const twa_graph>(a))
       if (is_deterministic(aa))
         std::swap(a, b);
-    if (auto run = a->intersecting_run(dualize(ensure_deterministic(b))))
+    if (auto run = a->intersecting_run(complement(ensure_graph(b))))
       return run;
-    return b->intersecting_run(dualize(ensure_deterministic(a)));
+    return b->intersecting_run(complement(ensure_graph(a)));
   }
 
   twa_word_ptr
@@ -215,9 +207,9 @@ namespace spot
     if (auto aa = std::dynamic_pointer_cast<const twa_graph>(a))
       if (is_deterministic(aa))
         std::swap(a, b);
-    if (auto word = a->intersecting_word(dualize(ensure_deterministic(b))))
+    if (auto word = a->intersecting_word(complement(ensure_graph(b))))
       return word;
-    return b->intersecting_word(dualize(ensure_deterministic(a)));
+    return b->intersecting_word(complement(ensure_graph(a)));
   }
 
   void
