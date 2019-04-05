@@ -18,8 +18,7 @@
 
 #pragma once
 
-#include <iostream> // TODO remove
-
+#include <iostream>
 #include <vector>
 #include <unordered_set>
 
@@ -30,180 +29,203 @@
 
 namespace spot
 {
-  template<typename State, typename SuccIterator, typename StateHash, typename StateEqual>
+  template<typename State, typename SuccIterator,
+           typename StateHash, typename StateEqual>
   class SPOT_API dfs_cep
   {
     const int BUFFER_SIZE = 16;
-    const int STATE_HEADER = 2;
-    spot::SpotMPI mpi_;
+    const int STATE_HEADER_SIZE = 2;
+    const int CHECK_ALL_BUFFERS = 1;
+
+    SpotMPI mpi_;
+    mpi_window win_free_;
+    std::vector<mpi_window> win_buf_;
+
     kripkecube<State, SuccIterator>& sys_;
     std::unordered_set<State, StateHash, StateEqual> q_, r_;
-    std::vector<std::vector<State>> sbuf_;
-    spot::mpi_window win_free_;
-    std::vector<spot::mpi_window> win_buf_;
-
-    int tmp_count = 0;
+    std::vector<std::vector<std::vector<int>>> sbuf_;
+    std::vector<size_t> sbuf_size_;
 
     size_t state_size_;
+    size_t processed_states_;
 
-  public:
-    dfs_cep(kripkecube<State, SuccIterator>& sys) : sys_(sys), mpi_()
-    {
+    public:
+      dfs_cep(kripkecube<State, SuccIterator>& sys)
+        : sys_(sys),
+          mpi_(),
+          processed_states_(0)
+      { }
 
-    }
+      virtual ~dfs_cep() { }
 
-    virtual ~dfs_cep()
-    {
-    }
-
-    State setup()
-    {
-      State s0 = sys_.initial(/* mpi_.world_rank */0);
-      state_size_ = s0[1] + STATE_HEADER;
-      sbuf_.resize(mpi_.world_size);
-      win_free_.init(mpi_.world_size);
-      win_buf_.resize(mpi_.world_size);
-      for (int rank = 0; rank < mpi_.world_size; ++rank)
-        win_buf_[rank].init(BUFFER_SIZE * state_size_);
-      return s0;
-    }
-
-    void finalize()
-    {
-    }
-
-    bool termination()
-    {
-      return false;
-    }
-
-    bool incoming_states()
-    {
-      return !win_free_.get(mpi_.world_rank, mpi_.world_rank);
-    }
-
-    std::vector<State> get_states(mpi_window& win, int rank, int index, int size)
-    {
-        std::vector<int> raw = win.get(rank, 0, size * state_size_);
-        std::vector<State> values(size);
-        for (int i = 0; i < size; ++i)
-            values[i] = raw.data() + (i * state_size_);
-        return values;
-    }
-
-    void put_states(mpi_window& win, int rank, int index, std::vector<State> states, int size)
-    {
-        std::vector<int> raw(states.size() * state_size_);
-        for (int i = 0; i < states.size(); ++i)
-            for (int u = 0; u < state_size_; ++u)
-                raw[i * state_size_ + u] = states[i][u];
-        win.put(rank, index, raw, size * state_size_);
-    }
-
-    void process_in_states()
-    {
-      //std::cout << "process_in_states()" << std::endl;
-      for (int rank = 0; rank < mpi_.world_size; ++rank)
+      State setup()
       {
-        if (rank == mpi_.world_rank)
-          continue;
-        std::vector<State> buf = get_states(win_buf_[rank], mpi_.world_rank, 0, BUFFER_SIZE);
-        if (!buf[0][1])
-          continue;
-        win_free_.put(rank, mpi_.world_rank, true);
-        for (int i = 0; i < BUFFER_SIZE && buf[i][1]; ++i)
-          if (r_.find(buf[i]) == r_.end())
-          {
-            q_.insert(buf[i]);
-            r_.insert(buf[i]);
-          }
-        // should I clear the buffer ?
-        win_buf_[rank].put(mpi_.world_rank, 0, { 0, 0 }, 2);
+        State s0 = sys_.initial(0);
+        state_size_ = s0[STATE_HEADER_SIZE - 1] + STATE_HEADER_SIZE;
+
+        sbuf_.resize(mpi_.world_size,
+                     std::vector<std::vector<int>>(BUFFER_SIZE,
+                     std::vector<int>(state_size_)));
+        sbuf_size_.resize(mpi_.world_size);
+
+        win_free_.init(mpi_.world_size, true);
+        win_buf_.resize(mpi_.world_size);
+        for (int rank = 0; rank < mpi_.world_size; ++rank)
+          win_buf_[rank].init(BUFFER_SIZE * state_size_, 0);
+
+        return s0;
       }
-    }
 
-    void flush_out_buffer(int rank)
-    {
-      //std::cout << "flush_out_buffer(" << rank << ")" << std::endl;
-      while (!win_free_.get(mpi_.world_rank, rank))
-        process_in_states();
-      //std::cout << "flush_out_buffer(" << rank << ")" << std::endl;
-      win_free_.put(mpi_.world_rank, rank, false);
-      put_states(win_buf_[mpi_.world_rank], rank, 0, sbuf_[rank], BUFFER_SIZE);
-      sbuf_[rank].clear();
-    }
-
-    void flush_out_buffers()
-    {
-      for (int rank = 0; rank < mpi_.world_size; ++rank)
-        if (rank != mpi_.world_rank && sbuf_[rank].size())
-          flush_out_buffer(rank);
-    }
-
-    void explore(State s0)
-    {
-      StateHash hash;
-      size_t s0_hash = hash(s0);
-      if (s0_hash % mpi_.world_size == mpi_.world_rank)
+      size_t get_hash(State state)
       {
-        q_.insert(s0);
-        r_.insert(s0);
-      }
-      while (!termination())
-      {
-        if (incoming_states() || true) //TODO improve incoming_states
-          process_in_states();
-        if (q_.empty())
-          flush_out_buffers();
-        else
-          process_queue();
-      }
-    }
-
-    void process_out_state(int rank, State state)
-    {
-      sbuf_[rank].push_back(state);
-      if (sbuf_[rank].size() == BUFFER_SIZE)
-        flush_out_buffer(rank);
-    }
-
-    bool check_invariant(State state)
-    {
-        //std::cout << "check_invariant(" << state[0] << ", " << state[1] << ")" << std::endl;
-        //std::cout << state[0] << state << std::endl;
-        //std::cout << (size_t) state[0] << std::endl;
         StateHash hash;
-        std::cout << mpi_.world_rank << "->" << ++tmp_count << " : " << hash(state) << "@" << hash(state) % mpi_.world_size << std::endl;
+        return hash(state);
+      }
+
+      bool termination()
+      {
+        return false;
+      }
+
+      bool incoming_states()
+      {
         return true;
-    }
-
-    void process_queue()
-    {
-      State s = *q_.begin();
-      q_.erase(s);
-      auto i = sys_.succ(s, /* mpi_.world_rank */0);
-      for (; !i->done(); i->next())
-      {
-        State ns = i->state();
-        StateHash hash;
-        size_t ns_hash = hash(ns);
-        if (!check_invariant(ns))
-          mpi_.abort(1);
-        else if (ns_hash % mpi_.world_size != mpi_.world_rank)
-          process_out_state(ns_hash % mpi_.world_size, ns);
-        else if (r_.find(ns) == r_.end())
+        /* FIXME
+        if (processed_states_ % CHECK_ALL_BUFFERS)
+          return false;
+        for (int rank = 0; rank < mpi_.world_size; ++rank)
         {
-          q_.insert(ns);
-          r_.insert(ns);
+          if (rank == mpi_.world_rank)
+            continue;
+          if (win_buf_[rank].get(mpi_.world_rank, STATE_HEADER_SIZE - 1))
+            return true;
+        }
+        return false; */
+      }
+
+      void explore(State s0)
+      {
+        size_t s0_hash = get_hash(s0);
+        if (s0_hash % mpi_.world_size == mpi_.world_rank)
+        {
+          q_.insert(s0);
+          r_.insert(s0);
+        }
+        while (!termination())
+        {
+          if (incoming_states())
+            process_in_states();
+          if (q_.empty())
+            flush_out_buffers();
+          else
+            process_queue();
         }
       }
-    }
 
-    void run()
-    {
-      State s0 = setup();
-      explore(s0);
-      finalize();
-    }
+      void process_queue()
+      {
+        State s = *q_.begin();
+        q_.erase(s);
+        auto i = sys_.succ(s, 0);
+        for (; !i->done(); i->next())
+        {
+          State next = i->state();
+          size_t hash = get_hash(next);
+          if (!check_invariant(next))
+            mpi_.abort(1);
+          else if (hash % mpi_.world_size != mpi_.world_rank)
+            process_out_state(hash % mpi_.world_size, next);
+          else if (r_.find(next) == r_.end())
+          {
+            q_.insert(next);
+            r_.insert(next);
+          }
+        }
+      }
+
+      void process_out_state(int target, State next)
+      {
+        std::cout << "send " << next[3] << next[4] << std::endl;
+        for (int i = 0; i < state_size_; ++i)
+          sbuf_[target][sbuf_size_[target]][i] = next[i];
+        ++sbuf_size_[target];
+        if (sbuf_size_[target] == BUFFER_SIZE)
+          flush_out_buffer(target);
+      }
+
+      void flush_out_buffers()
+      {
+        for (int rank = 0; rank < mpi_.world_size; ++rank)
+          if (rank != mpi_.world_rank && sbuf_size_[rank])
+            flush_out_buffer(rank);
+      }
+
+      void flush_out_buffer(int target)
+      {
+        while (!win_free_.get(mpi_.world_rank, target))
+          process_in_states();
+        win_free_.put(mpi_.world_rank, target, true);
+        for (int i = 0; i < sbuf_size_[target]; ++i)
+          win_buf_[mpi_.world_rank].put(target, i * state_size_,
+                                        sbuf_[target][i], state_size_);
+        sbuf_size_[target] = 0;
+      }
+
+      void process_in_states()
+      {
+        for (int rank = 0; rank < mpi_.world_size; ++rank)
+        {
+          if (rank == mpi_.world_rank)
+            continue;
+          std::vector<int> buf = win_buf_[rank].get(mpi_.world_rank, 0,
+                                                    BUFFER_SIZE * state_size_);
+          if (!buf[STATE_HEADER_SIZE - 1])
+            continue;
+          win_buf_[rank].put(mpi_.world_rank, 1, { 0 }, 1);
+          win_free_.put(rank, mpi_.world_rank, true);
+          for (int i = 0; i < BUFFER_SIZE && buf[i * state_size_
+                                                 + STATE_HEADER_SIZE - 1]; ++i)
+          {
+            int *state = (int *) malloc(state_size_ * sizeof (int));
+            for (int u = 0; u < state_size_; ++u)
+              state[u] = buf[i * state_size_ + u];
+            std::cout << "\t\trecv " << state[3] << state[4] << std::endl;
+            if (r_.find(state) == r_.end())
+            {
+              q_.insert(state);
+              r_.insert(state);
+            }
+          }
+        }
+      }
+
+      void finalize()
+      {
+      }
+
+      void print_visited()
+      {
+        std::cout << "[";
+        for (State state : r_)
+          std::cout << state[3] << state[4] << ", ";
+        std::cout << "]" << std::endl;
+      }
+
+      bool check_invariant(State state)
+      {
+        std::cout << r_.size() << " -> ";
+        print_visited();
+        ++processed_states_;
+        return true;
+      }
+
+      void run()
+      {
+        State s0 = setup();
+        check_invariant(s0);
+        explore(s0);
+        std::cout << "unique state explored : " << r_.size() << "\n";
+        finalize();
+      }
   };
 }

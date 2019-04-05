@@ -32,7 +32,8 @@
 
 namespace spot
 {
-  template<typename State, typename SuccIterator, typename StateHash, typename StateEqual>
+  template<typename State, typename SuccIterator,
+           typename StateHash, typename StateEqual>
   class SPOT_API dfs_sync
   {
     const int STATE_HEADER = 2;
@@ -40,9 +41,10 @@ namespace spot
     spot::SpotMPI mpi_;
     kripkecube<State, SuccIterator>& sys_;
     std::unordered_set<State, StateHash, StateEqual> q_, r_;
+
     mpi_window win_finish;
-    int tmp_count = 0;
-    std::chrono::time_point<std::chrono::steady_clock> finish_time = std::chrono::time_point<std::chrono::steady_clock>::max();
+    std::chrono::time_point<std::chrono::steady_clock> finish_time
+      = std::chrono::time_point<std::chrono::steady_clock>::max();
 
     size_t state_size_;
 
@@ -58,10 +60,10 @@ namespace spot
 
     State setup()
     {
-      State s0 = sys_.initial(/* mpi_.world_rank */0);
+      State s0 = sys_.initial(0);
       state_size_ = s0[1] + STATE_HEADER;
 
-      win_finish.init(mpi_.world_size);
+      win_finish.init(mpi_.world_size, false);
 
       return s0;
     }
@@ -78,7 +80,8 @@ namespace spot
         finish_time = current;
         return false;
       }
-      auto milli = std::chrono::duration_cast<std::chrono::milliseconds>(current - finish_time).count();
+      auto milli = std::chrono::duration_cast<std::chrono::milliseconds>
+                   (current - finish_time).count();
       if (milli > 100)
       {
         win_finish.put(0, mpi_.world_rank, 1);
@@ -117,7 +120,8 @@ namespace spot
         {
           work = true;
           int* state = (int *) malloc(state_size_ * sizeof (int));
-          MPI_Recv(state, state_size_, MPI_INT, status.MPI_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+          MPI_Recv(state, state_size_, MPI_INT, status.MPI_SOURCE, 0, 
+                   MPI_COMM_WORLD, MPI_STATUS_IGNORE);
           if (r_.find(state) == r_.end())
           {
             q_.insert(state);
@@ -130,7 +134,8 @@ namespace spot
           process_queue();
         }
         if (work)
-          finish_time = std::chrono::time_point<std::chrono::steady_clock>::max();
+          finish_time = std::chrono::time_point<std::chrono::steady_clock>
+                        ::max();
       }
     }
 
@@ -152,7 +157,8 @@ namespace spot
         if (!check_invariant(ns))
           mpi_.abort(1);
         else if (ns_hash % mpi_.world_size != mpi_.world_rank)
-          MPI_Send(ns, state_size_, MPI_INT, ns_hash % mpi_.world_size, 0, MPI_COMM_WORLD);
+          MPI_Send(ns, state_size_, MPI_INT, ns_hash % mpi_.world_size, 0,
+                   MPI_COMM_WORLD);
         else if (r_.find(ns) == r_.end())
         {
           q_.insert(ns);

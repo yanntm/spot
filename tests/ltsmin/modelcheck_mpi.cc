@@ -69,7 +69,8 @@ int main(int argc, char** argv)
     std::cout << "dfs_sync" << std::endl;
     tm.start("dfs_sync");
     auto res = spot::sync_dfs<spot::ltsmin_kripkecube_ptr, spot::cspins_state,
-                              spot::cspins_iterator, spot::cspins_state_hash, spot::cspins_state_equal>(modelcube);
+                              spot::cspins_iterator, spot::cspins_state_hash, 
+                              spot::cspins_state_equal>(modelcube);
     tm.stop("dfs_sync");
   }
 

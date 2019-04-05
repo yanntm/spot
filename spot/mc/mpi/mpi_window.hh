@@ -12,10 +12,10 @@ namespace spot
     MPI_Win win_;
 
   public:
-    void init(size_t size)
+    void init(size_t size, int default_value)
     {
       MPI_Alloc_mem(size * sizeof (int), MPI_INFO_NULL, &data_);
-      memset(data_, 0, size * sizeof (int));
+      memset(data_, default_value, size * sizeof (int));
       MPI_Win_create(data_, size * sizeof (int), sizeof (int), MPI_INFO_NULL,
                      MPI_COMM_WORLD, &win_);
     }
