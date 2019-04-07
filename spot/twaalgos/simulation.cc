@@ -233,29 +233,26 @@ namespace spot
                 // common_out[i] is the set of acceptance set numbers common to
                 // all outgoing edges of state i.
                 std::vector<acc_cond::mark_t> common_out(ns);
-                scc_info si(a_, scc_info_options::NONE);
                 for (unsigned s = 0; s < ns; ++s)
                   {
                     bool first = true;
                     for (auto& e : a_->out(s))
-                      {
-                        if (first)
-                          {
-                            common_out[s] = e.acc;
-                            first = false;
-                          }
-                        else if (common_out[s] != e.acc)
-                          {
-                            // If the automaton does not have
-                            // state-based acceptance, do not change
-                            // pull the marks.  Mark the input as
-                            // "not-state-acc" so that we remember
-                            // that.
-                            std::const_pointer_cast<twa_graph>(in)
-                              ->prop_state_acc(false);
-                            goto donotpull;
-                          }
-                      }
+                      if (first)
+                        {
+                          common_out[s] = e.acc;
+                          first = false;
+                        }
+                      else if (common_out[s] != e.acc)
+                        {
+                          // If the automaton does not have
+                          // state-based acceptance, do not change
+                          // pull the marks.  Mark the input as
+                          // "not-state-acc" so that we remember
+                          // that.
+                          std::const_pointer_cast<twa_graph>(in)
+                            ->prop_state_acc(false);
+                          goto donotpull;
+                        }
                   }
                 // Pull the common outgoing sets to the incoming
                 // edges.  Doing so seems to favor cases where states
@@ -654,23 +651,6 @@ namespace spot
                   t.acc = acc;
               }
           }
-        if (!Sba && !Cosimulation && original_->prop_state_acc()
-            && !record_implications_)
-          {
-            // common_in[i] is the set of acceptance set numbers
-            // common to all incoming edges of state i.
-            std::vector<acc_cond::mark_t>
-              common_in(res->num_states(), res->acc().all_sets());
-            for (auto& e : res->edges())
-              common_in[e.dst] &= e.acc;
-            // Push the common incoming sets to the outgoing edges.
-            // Doing so cancels the preprocessing we did in the other
-            // direction, to prevent marks from moving around the
-            // automaton if we apply simulation several times, and to
-            // favor state-based acceptance.
-            for (auto& e : res->edges())
-              e.acc = (e.acc - common_in[e.dst]) | common_in[e.src];
-          }
 
         // If we recorded implications for the determinization
         // procedure, we should not remove unreachable states, as that
@@ -679,6 +659,43 @@ namespace spot
         // will only explore the reachable part anyway.
         if (!record_implications_)
           res->purge_unreachable_states();
+
+        // Push the common incoming sets to the outgoing edges.
+        // Doing so cancels the preprocessing we did in the other
+        // direction, to prevent marks from moving around the
+        // automaton if we apply simulation several times, and to
+        // favor state-based acceptance.
+        if (!Sba && !Cosimulation && !record_implications_
+            && original_->prop_state_acc())
+          {
+            // common_in[i] is the set of acceptance set numbers
+            // common to all incoming edges of state i.  Only edges
+            // inside one SCC matter.
+            unsigned ns = res->num_states();
+            std::vector<acc_cond::mark_t> common_in(ns);
+            scc_info si(res, scc_info_options::NONE);
+            for (unsigned s = 0; s < ns; ++s)
+              {
+                unsigned s_scc = si.scc_of(s);
+                bool first = true;
+                for (auto& e: res->out(s))
+                  {
+                    if (si.scc_of(e.dst) != s_scc)
+                      continue;
+                    if (first)
+                      {
+                        common_in[s] = e.acc;
+                        first = false;
+                      }
+                    else
+                      {
+                        common_in[s] &= e.acc;
+                      }
+                  }
+              }
+            for (auto& e : res->edges())
+              e.acc = (e.acc - common_in[e.dst]) | common_in[e.src];
+          }
 
         delete gb;
         res->prop_copy(original_,

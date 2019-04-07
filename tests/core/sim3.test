@@ -86,3 +86,76 @@ State: 4 {0}
 --END--
 EOF
 diff out expected
+
+# This is a case where the "pull-mark in simulation" optimization
+# introduced by 8959eabad caused the output automaton to be declared
+# weak although it was only inherently weak.
+cat >input <<EOF
+HOA: v1
+States: 8
+Start: 0
+AP: 2 "p0" "p1"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc weak
+--BODY--
+State: 0
+[0&1] 1
+State: 1
+[1] 2
+[!0&1] 3
+State: 2
+[!0&1] 5
+[0&1] 7
+State: 3
+[0&1] 4
+[1] 5
+State: 4 {0}
+[0&1] 4
+[1] 5
+[!0&!1] 6
+State: 5 {0}
+[0&1] 4
+[1] 5
+State: 6 {0}
+[!0&!1] 6
+State: 7
+[!0&1] 5
+[!0&!1] 6
+[0&1] 7
+--END--
+EOF
+cat >expect <<EOF
+HOA: v1
+States: 7
+Start: 0
+AP: 2 "p0" "p1"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc deterministic weak
+--BODY--
+State: 0
+[0&1] 1
+State: 1
+[0&1] 2
+[!0&1] 3
+State: 2
+[!0&1] 3
+[0&1] 6
+State: 3 {0}
+[!0&1] 3
+[0&1] 4
+State: 4 {0}
+[!0&1] 3
+[0&1] 4
+[!0&!1] 5
+State: 5 {0}
+[!0&!1] 5
+State: 6
+[!0&1] 3
+[!0&!1] 5
+[0&1] 6
+--END--
+EOF
+autfilt --small --low input > output
+diff expect output
