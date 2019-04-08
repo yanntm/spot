@@ -20,7 +20,9 @@
 
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include <unordered_set>
+#include <numeric>
 
 #include <spot/kripke/kripke.hh>
 #include <spot/mc/mpi/mc_mpi.hh>
@@ -49,6 +51,10 @@ namespace spot
     size_t state_size_;
     size_t processed_states_;
 
+    mpi_window win_finish;
+    std::chrono::time_point<std::chrono::steady_clock> finish_time
+      = std::chrono::time_point<std::chrono::steady_clock>::max();
+
     public:
       dfs_cep(kripkecube<State, SuccIterator>& sys)
         : sys_(sys),
@@ -73,6 +79,8 @@ namespace spot
         for (int rank = 0; rank < mpi_.world_size; ++rank)
           win_buf_[rank].init(BUFFER_SIZE * state_size_, 0);
 
+        win_finish.init(mpi_.world_size, false);
+
         return s0;
       }
 
@@ -84,13 +92,35 @@ namespace spot
 
       bool termination()
       {
+        auto current = std::chrono::steady_clock::now();
+        if (finish_time > current)
+        {
+          finish_time = current;
+          return false;
+        }
+        auto milli = std::chrono::duration_cast<std::chrono::milliseconds>
+          (current - finish_time).count();
+        if (milli > 100)
+        {
+          win_finish.put(0, mpi_.world_rank, true);
+          if (mpi_.world_rank == 0)
+          {
+            auto f = win_finish.get(0, 0, mpi_.world_size);
+            if (std::accumulate(f.cbegin(), f.cend(), 0) == mpi_.world_size)
+            {
+              for (int i = 1; i < mpi_.world_size; ++i)
+                win_finish.put(i, 0, true);
+              return true;
+            }
+          }
+          return win_finish.get(0, 0);
+        }
         return false;
       }
 
       bool incoming_states()
       {
         return true;
-        /* FIXME
         if (processed_states_ % CHECK_ALL_BUFFERS)
           return false;
         for (int rank = 0; rank < mpi_.world_size; ++rank)
@@ -100,7 +130,7 @@ namespace spot
           if (win_buf_[rank].get(mpi_.world_rank, STATE_HEADER_SIZE - 1))
             return true;
         }
-        return false; */
+        return false;
       }
 
       void explore(State s0)
@@ -111,14 +141,22 @@ namespace spot
           q_.insert(s0);
           r_.insert(s0);
         }
-        while (!termination())
+        bool work = true;
+        while (work || !termination())
         {
+          work = false;
           if (incoming_states())
             process_in_states();
           if (q_.empty())
             flush_out_buffers();
           else
+          {
+            work = true;
             process_queue();
+          }
+          if (work)
+            finish_time = std::chrono::time_point<std::chrono::steady_clock>
+              ::max();
         }
       }
 
@@ -145,7 +183,6 @@ namespace spot
 
       void process_out_state(int target, State next)
       {
-        std::cout << "send " << next[3] << next[4] << std::endl;
         for (int i = 0; i < state_size_; ++i)
           sbuf_[target][sbuf_size_[target]][i] = next[i];
         ++sbuf_size_[target];
@@ -164,10 +201,15 @@ namespace spot
       {
         while (!win_free_.get(mpi_.world_rank, target))
           process_in_states();
-        win_free_.put(mpi_.world_rank, target, true);
+        win_free_.put(mpi_.world_rank, target, false);
+        std::vector<int> out_buf(state_size_ * sbuf_size_[target]);
         for (int i = 0; i < sbuf_size_[target]; ++i)
-          win_buf_[mpi_.world_rank].put(target, i * state_size_,
-                                        sbuf_[target][i], state_size_);
+        {
+          for (int u = 0; u < state_size_; ++u)
+            out_buf[i * state_size_ + u] = sbuf_[target][i][u];
+        }
+        win_buf_[mpi_.world_rank].put(target, 0, out_buf,
+                                      sbuf_size_[target] * state_size_);
         sbuf_size_[target] = 0;
       }
 
@@ -183,13 +225,13 @@ namespace spot
             continue;
           win_buf_[rank].put(mpi_.world_rank, 1, { 0 }, 1);
           win_free_.put(rank, mpi_.world_rank, true);
-          for (int i = 0; i < BUFFER_SIZE && buf[i * state_size_
-                                                 + STATE_HEADER_SIZE - 1]; ++i)
+          for (int i = 0; i < BUFFER_SIZE; ++i)
           {
+            if (!buf[i * state_size_ + STATE_HEADER_SIZE - 1])
+              break;
             int *state = (int *) malloc(state_size_ * sizeof (int));
             for (int u = 0; u < state_size_; ++u)
               state[u] = buf[i * state_size_ + u];
-            std::cout << "\t\trecv " << state[3] << state[4] << std::endl;
             if (r_.find(state) == r_.end())
             {
               q_.insert(state);
