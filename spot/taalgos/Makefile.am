@@ -31,6 +31,7 @@ taalgos_HEADERS = \
   stats.hh \
   statessetbuilder.hh \
   minimize.hh \
+  hoa.hh \
   emptinessta.hh
 
 noinst_LTLIBRARIES = libtaalgos.la
@@ -41,4 +42,5 @@ libtaalgos_la_SOURCES = \
   stats.cc \
   statessetbuilder.cc \
   minimize.cc \
+  hoa.cc \
   emptinessta.cc

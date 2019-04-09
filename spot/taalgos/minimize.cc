@@ -526,9 +526,8 @@ namespace spot
   {
 
     auto tgba = make_twa_graph(tgta_->get_dict());
-    auto res = make_tgta_explicit(tgba, tgta_->acc().num_sets(), nullptr);
-
     auto ta = tgta_->get_ta();
+    auto res = make_tgta_explicit(tgba, ta->acc().num_sets(), nullptr);
 
     partition_t partition = build_partition(ta);
 

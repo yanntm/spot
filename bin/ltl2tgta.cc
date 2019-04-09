@@ -37,12 +37,14 @@
 #include <spot/tl/print.hh>
 #include <spot/tl/simplify.hh>
 #include <spot/twaalgos/dot.hh>
+#include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/twa/bddprint.hh>
 
 #include <spot/taalgos/tgba2ta.hh>
 #include <spot/taalgos/dot.hh>
+#include <spot/taalgos/hoa.hh>
 #include <spot/taalgos/minimize.hh>
 #include <spot/misc/optionmap.hh>
 
@@ -85,7 +87,9 @@ static const argp_option options[] =
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },
     { "extra-options", 'x', "OPTS", 0,
       "fine-tuning options (see spot-x (7))", 0 },
+    { "hoa", 'H', nullptr, 0, "print the hoa format", 0 },
     { nullptr, 0, nullptr, 0, nullptr, 0 }
+
   };
 
 const struct argp_child children[] =
@@ -105,6 +109,7 @@ spot::option_map extra_options;
 bool opt_with_artificial_initial_state = true;
 bool opt_single_pass_emptiness_check = false;
 bool opt_with_artificial_livelock = false;
+bool opt_print_hoa = false;
 
 static int
 parse_opt(int key, char* arg, struct argp_state*)
@@ -114,6 +119,9 @@ parse_opt(int key, char* arg, struct argp_state*)
     {
     case '8':
       spot::enable_utf8();
+      break;
+    case 'H':
+      opt_print_hoa = true;
       break;
     case 'x':
       {
@@ -199,14 +207,30 @@ namespace
                        opt_with_artificial_livelock);
           if (level != spot::postprocessor::Low)
             testing_automaton = spot::minimize_ta(testing_automaton);
-          spot::print_dot(std::cout, testing_automaton);
+          if (opt_print_hoa)
+            {
+                if (ta_type == TGTA)
+                    spot::print_hoa(std::cout, testing_automaton, "TGTA");
+                else
+                    spot::print_hoa(std::cout, testing_automaton);
+            }
+          else
+            spot::print_dot(std::cout, testing_automaton);
         }
       else
         {
           auto tgta = tgba_to_tgta(aut, ap_set);
           if (level != spot::postprocessor::Low)
             tgta = spot::minimize_tgta(tgta);
-          spot::print_dot(std::cout, tgta->get_ta());
+          if (opt_print_hoa)
+            {
+                if (ta_type == TGTA)
+                    spot::print_hoa(std::cout, tgta->get_ta(), "c");
+                else
+                    spot::print_hoa(std::cout, tgta->get_ta(), "A");
+            }
+          else
+            spot::print_dot(std::cout, tgta->get_ta());
         }
       // If we keep simplification caches around, atomic propositions
       // will still be defined, and one translation may influence the
