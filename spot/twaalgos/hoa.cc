@@ -438,6 +438,9 @@ namespace spot
     os << "Acceptance: " << num_acc << ' ';
     os << acc_c;
     os << nl;
+
+    if (aut->get_named_prop<bool>("testing-automaton"))
+        os << "Spot.Testing\n";
     os << "properties:";
     // Make sure the property line is not too large,
     // otherwise our test cases do not fit in 80 columns...

@@ -109,6 +109,7 @@ namespace spot
       bool max_states_given_ = false; // related to max_states_
       bool opt_latex_ = false;
       bool opt_showlabel_ = true;
+      bool is_init_state_ = true;
       const char* nl_ = "\\n";
       const char* label_pre_ = "label=\"";
       char label_post_ = '"';
@@ -432,6 +433,8 @@ namespace spot
           return escape_html(os, s);
         if (opt_latex_)
           return escape_latex(os, s);
+        if (aut_->get_named_prop<bool>("testing-automaton") && !is_init_state_)
+            return escape_str(os, s) << '}';
         return escape_str(os, s);
       }
 
@@ -439,7 +442,9 @@ namespace spot
       format_label(std::ostream& os, bdd label) const
       {
         formula f = bdd_to_formula(label, aut_->get_dict());
-        if (opt_latex_)
+        if (aut_->get_named_prop<bool>("testing-automaton") && !is_init_state_)
+            os << '{';
+        else if (opt_latex_)
           {
             print_sclatex_psl(os << '$', f) << '$';
             return os;
@@ -526,6 +531,8 @@ namespace spot
         std::string accstr = aut_->acc().name("d");
         if (accstr.empty())
           return;
+        if (aut_->get_named_prop<bool>("testing-automaton"))
+            accstr = "testing";
         os_ << nl_ << '[' << accstr << ']';
       }
 
@@ -671,6 +678,9 @@ namespace spot
       process_state(unsigned s)
       {
         os_ << "  " << s << " [" << label_pre_;
+
+        if (s != 0)
+            is_init_state_ = false;
 
         if (!(inline_state_names_ && print_state_name(os_, s)))
           os_ << s;
