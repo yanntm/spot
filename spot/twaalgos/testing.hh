@@ -19,12 +19,13 @@
 
 #pragma once
 
-#include <spot/ta/ta.hh>
-#include <iosfwd>
+#include <spot/twa/twa.hh>
+#include <vector>
+#include <iostream>
 
 namespace spot
 {
-  SPOT_API std::ostream&
-  print_hoa(std::ostream& os, const const_ta_ptr& a,
-                  const char* opt = nullptr);
+  typedef std::vector<std::pair<unsigned, unsigned>> diff_states;
+  SPOT_API
+  twa_graph_ptr statelabeldiff(const const_twa_graph_ptr& i_twa);
 }

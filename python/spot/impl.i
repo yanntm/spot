@@ -159,6 +159,7 @@
 #include <spot/twaalgos/postproc.hh>
 #include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/stutter.hh>
+#include <spot/twaalgos/testing.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/toweak.hh>
 #include <spot/twaalgos/hoa.hh>
@@ -678,6 +679,7 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/twaalgos/split.hh>
 %include <spot/twaalgos/sum.hh>
 %include <spot/twaalgos/stutter.hh>
+%include <spot/twaalgos/testing.hh>
 %include <spot/twaalgos/translate.hh>
 %include <spot/twaalgos/toweak.hh>
 %include <spot/twaalgos/hoa.hh>
