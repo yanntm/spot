@@ -127,6 +127,7 @@ identifier  [[:alpha:]_][[:alnum:]_.-]*
   "tool:"               return token::TOOL;
   "name:"               return token::NAME;
   "properties:"         return token::PROPERTIES;
+  "Spot.Testing:"       return token::SPOT_TESTING;
   "spot.highlight.states:" return token::SPOT_HIGHLIGHT_STATES;
   "spot.highlight.edges:"  return token::SPOT_HIGHLIGHT_EDGES;
   "--BODY--"		return token::BODY;

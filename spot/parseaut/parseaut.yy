@@ -236,6 +236,7 @@ extern "C" int strverscmp(const char *s1, const char *s2);
 %token BODY "--BODY--"
 %token END "--END--"
 %token STATE "State:";
+%token SPOT_TESTING "Spot.Testing:"
 %token SPOT_HIGHLIGHT_EDGES "spot.highlight.edges:";
 %token SPOT_HIGHLIGHT_STATES "spot.highlight.states:";
 %token <str> IDENTIFIER "identifier";  // also used by neverclaim
@@ -815,6 +816,10 @@ header-item: "States:" INT
 	       res.aut_or_ks->set_named_prop("automaton-name", $2);
 	     }
            | "properties:" properties
+       | "Spot.Testing:"
+       {
+        res.aut_or_ks->set_named_prop("testing-automaton", new bool(true));
+       }
 	   | "spot.highlight.edges:"
 	     { res.highlight_edges = new std::map<unsigned, unsigned>; }
              highlight-edges
