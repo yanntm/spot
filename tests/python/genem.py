@@ -169,7 +169,7 @@ def generic_emptiness2(aut):
 
 # A more modern python version of spot.generic_emptiness_check()
 def is_empty1(g):
-    si = spot.scc_info(g, spot.scc_info_options_NONE)
+    si = spot.scc_info_with_options(g, spot.scc_info_options_NONE)
     for scc_num in range(si.scc_count()):
         if si.is_trivial(scc_num):
             continue
@@ -207,7 +207,7 @@ def is_scc_empty1(si, scc_num, acc=None):
     return True
 
 def is_empty2(g):
-    si = spot.scc_info(g, spot.scc_info_options_STOP_ON_ACC)
+    si = spot.scc_info_with_options(g, spot.scc_info_options_STOP_ON_ACC)
     if si.one_accepting_scc() >= 0:
         return False
     for scc_num in range(si.scc_count()):

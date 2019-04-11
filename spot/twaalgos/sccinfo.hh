@@ -457,8 +457,15 @@ namespace spot
     /// This is usually used to prevent some edges from being
     /// considered as part of cycles, and can additionally restrict
     /// to exploration to some SCC discovered by another SCC.
-    scc_info(scc_and_mark_filter& filt,
-             scc_info_options options = scc_info_options::ALL);
+    scc_info(scc_and_mark_filter& filt, scc_info_options options);
+    // we separate the two functions so that we can rename
+    // scc_info(x,options) into scc_info_with_options(x,options) in Python.
+    // Otherwrise calling scc_info(aut,options) can be confused with
+    // scc_info(aut,initial_state).
+    scc_info(scc_and_mark_filter& filt)
+    : scc_info(filt, scc_info_options::ALL)
+    {
+    }
     /// @}
 
     const_twa_graph_ptr get_aut() const
