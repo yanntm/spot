@@ -26,6 +26,10 @@
 namespace spot
 {
   typedef std::vector<std::pair<unsigned, unsigned>> diff_states;
+
   SPOT_API
-  twa_graph_ptr statelabeldiff(const const_twa_graph_ptr& i_twa);
+  twa_graph_ptr statelabeldiff(const const_twa_graph_ptr& input_twa);
+
+  SPOT_API
+  twa_graph_ptr remove_testing(const const_twa_graph_ptr& input_diff_twa);
 }

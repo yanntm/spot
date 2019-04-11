@@ -30,7 +30,6 @@ namespace spot
 
   typedef std::pair<unsigned, bdd> diff_state;
 
-
   struct diff_state_hash
   {
     size_t
@@ -40,19 +39,19 @@ namespace spot
       }
   };
 
-  twa_graph_ptr statelabeldiff(const const_twa_graph_ptr& i_twa)
+  twa_graph_ptr statelabeldiff(const const_twa_graph_ptr& input_twa)
   {
-    if (SPOT_UNLIKELY(!(i_twa->is_existential())))
+    if (SPOT_UNLIKELY(!(input_twa->is_existential())))
       throw std::runtime_error
         ("statelabeldiff() does not support alternating automata");
 
-    auto res = make_twa_graph(i_twa->get_dict());
-    res->copy_ap_of(i_twa);
+    auto res = make_twa_graph(input_twa->get_dict());
+    res->copy_ap_of(input_twa);
 
     auto v = new std::vector<std::string>;
     res->set_named_prop("state-names", v);
     res->set_named_prop("testing-automaton", new bool);
-    res->copy_acceptance_of(i_twa);
+    res->copy_acceptance_of(input_twa);
 
     std::unordered_map<diff_state, unsigned, diff_state_hash> seen;
     std::deque<std::pair<diff_state, unsigned>> todo;
@@ -68,21 +67,21 @@ namespace spot
           todo.emplace_back(x, p.first->second);
           std::stringstream ss;
           ss << twa_state << ',';
-          bdd_print_formula(ss, i_twa->get_dict(), cond);
+          bdd_print_formula(ss, input_twa->get_dict(), cond);
           v->emplace_back(ss.str());
         }
         return p.first->second;
       };
 
-    res->set_init_state(new_state(i_twa->get_init_state_number(), bddtrue));
+    res->set_init_state(new_state(input_twa->get_init_state_number(), bddtrue));
 
-    bdd allap = i_twa->ap_vars();
+    bdd allap = input_twa->ap_vars();
 
     while (!todo.empty())
     {
       auto top = todo.front();
       todo.pop_front();
-      for (auto& e : i_twa->out(top.first.first))
+      for (auto& e : input_twa->out(top.first.first))
       {
         bdd sup = e.cond;
         //create the diff_link
@@ -96,6 +95,62 @@ namespace spot
       }
     }
 
+    return res;
+  }
+
+  twa_graph_ptr remove_testing(const const_twa_graph_ptr& input_diff_twa)
+  {
+    if (SPOT_UNLIKELY(!(input_diff_twa->is_existential())))
+      throw std::runtime_error
+        ("remove_testing() does not support alternating automata");
+
+    if (!input_diff_twa->get_named_prop<bool>("testing-automaton"))
+      throw std::runtime_error
+        ("remove_testing() need a testing automata");
+
+    auto res = make_twa_graph(input_diff_twa->get_dict());
+    res->copy_ap_of(input_diff_twa);
+    res->copy_acceptance_of(input_diff_twa);
+
+    auto v = new std::vector<std::string>;
+    res->set_named_prop("state-names", v);
+
+
+    std::unordered_map<diff_state, unsigned, diff_state_hash> seen;
+    std::deque<std::pair<diff_state, unsigned>> todo;
+
+    auto new_state =
+      [&](unsigned input_state, bdd cond) -> unsigned
+      {
+        diff_state x(input_state, cond);
+        auto p = seen.emplace(x, 0);
+        if (p.second)
+        {
+          p.first->second = res->new_state();
+          todo.emplace_back(x, p.first->second);
+
+          std::stringstream ss;
+          ss << input_state << ',';
+          bdd_print_formula(ss, input_diff_twa->get_dict(), cond);
+          v->emplace_back(ss.str());
+        }
+        return p.first->second;
+      };
+
+    res->set_init_state(new_state(input_diff_twa->get_init_state_number(),
+          bddtrue));
+
+    while (!todo.empty())
+    {
+      auto top = todo.front();
+      todo.pop_front();
+
+      for (auto& e : input_diff_twa->out(top.first.first))
+      {
+        auto cond = bdd_setxor(e.cond, top.first.second);
+        res->new_edge(top.second, new_state(e.dst, cond), cond, e.acc);
+      }
+    }
     return res;
   }
 }
