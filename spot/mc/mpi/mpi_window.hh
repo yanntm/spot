@@ -22,11 +22,6 @@ namespace spot
 
     mpi_window() = default;
 
-    ~mpi_window()
-    {
-      MPI_Free_mem(data_);
-    }
-
     int get(int rank, size_t index)
     {
       return get(rank, index, 1)[0];

@@ -63,6 +63,7 @@ int main(int argc, char** argv)
                                     spot::cspins_state_hash,
                                     spot::cspins_state_equal>(modelcube);
     tm.stop("dfs_cep");
+    std::cout << "walltime: " << tm.timer("dfs_cep").walltime() << '\n';
   }
   if (!strcmp(argv[1], "dfs_sync"))
   {
@@ -72,6 +73,7 @@ int main(int argc, char** argv)
                               spot::cspins_iterator, spot::cspins_state_hash, 
                               spot::cspins_state_equal>(modelcube);
     tm.stop("dfs_sync");
+    std::cout << "walltime: " << tm.timer("dfs_sync").walltime() << '\n';
   }
 
   tm.reset_all();

@@ -20,7 +20,7 @@
 
 #include <numeric>
 #include <chrono>
-#include <iostream> // TODO remove
+#include <iostream>
 
 #include <vector>
 #include <unordered_set>
@@ -183,7 +183,7 @@ namespace spot
       State s0 = setup();
       check_invariant(s0);
       explore(s0);
-      std::cout << "unique state explored : " << r_.size() << "\n";
+      std::cout << "unique state explored: " << r_.size() << "\n";
       finalize();
     }
   };

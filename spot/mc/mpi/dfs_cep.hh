@@ -35,9 +35,10 @@ namespace spot
            typename StateHash, typename StateEqual>
   class SPOT_API dfs_cep
   {
-    const int BUFFER_SIZE = 16;
     const int STATE_HEADER_SIZE = 2;
-    const int CHECK_ALL_BUFFERS = 1;
+    const int MTU = 1500;
+
+    const int CHECK_ALL_BUFFERS = 10000;
 
     SpotMPI mpi_;
     mpi_window win_free_;
@@ -49,6 +50,7 @@ namespace spot
     std::vector<size_t> sbuf_size_;
 
     size_t state_size_;
+    int buffer_size_;
     size_t processed_states_;
 
     bool has_finish;
@@ -69,9 +71,10 @@ namespace spot
       {
         State s0 = sys_.initial(0);
         state_size_ = s0[STATE_HEADER_SIZE - 1] + STATE_HEADER_SIZE;
+        buffer_size_ = MTU / (state_size_ * sizeof (int));
 
         sbuf_.resize(mpi_.world_size,
-                     std::vector<std::vector<int>>(BUFFER_SIZE,
+                     std::vector<std::vector<int>>(buffer_size_,
                      std::vector<int>(state_size_)));
         sbuf_size_.resize(mpi_.world_size);
         has_finish = false;
@@ -79,7 +82,7 @@ namespace spot
         win_free_.init(mpi_.world_size, true);
         win_buf_.resize(mpi_.world_size);
         for (int rank = 0; rank < mpi_.world_size; ++rank)
-          win_buf_[rank].init(BUFFER_SIZE * state_size_, 0);
+          win_buf_[rank].init(buffer_size_ * state_size_, 0);
 
         win_finish.init(mpi_.world_size, false);
 
@@ -122,10 +125,9 @@ namespace spot
         return false;
       }
 
-      bool incoming_states()
+      bool incoming_states(bool work)
       {
-        return true;
-        if (processed_states_ % CHECK_ALL_BUFFERS)
+        if (processed_states_ % CHECK_ALL_BUFFERS && work)
           return false;
         for (int rank = 0; rank < mpi_.world_size; ++rank)
         {
@@ -148,16 +150,13 @@ namespace spot
         bool work = true;
         while (work || !termination())
         {
-          work = false;
-          if (incoming_states())
+          if (incoming_states(work))
             process_in_states();
+          work = !q_.empty();
           if (q_.empty())
             flush_out_buffers();
           else
-          {
-            work = true;
             process_queue();
-          }
           if (work)
           {
             if (has_finish)
@@ -197,7 +196,7 @@ namespace spot
         for (int i = 0; i < state_size_; ++i)
           sbuf_[target][sbuf_size_[target]][i] = next[i];
         ++sbuf_size_[target];
-        if (sbuf_size_[target] == BUFFER_SIZE)
+        if (sbuf_size_[target] == buffer_size_)
           flush_out_buffer(target);
       }
 
@@ -231,12 +230,12 @@ namespace spot
           if (rank == mpi_.world_rank)
             continue;
           std::vector<int> buf = win_buf_[rank].get(mpi_.world_rank, 0,
-                                                    BUFFER_SIZE * state_size_);
+                                                    buffer_size_ * state_size_);
           if (!buf[STATE_HEADER_SIZE - 1])
             continue;
           win_buf_[rank].put(mpi_.world_rank, 1, { 0 }, 1);
           win_free_.put(rank, mpi_.world_rank, true);
-          for (int i = 0; i < BUFFER_SIZE; ++i)
+          for (int i = 0; i < buffer_size_; ++i)
           {
             if (!buf[i * state_size_ + STATE_HEADER_SIZE - 1])
               break;
@@ -267,7 +266,7 @@ namespace spot
         State s0 = setup();
         check_invariant(s0);
         explore(s0);
-        std::cout << "unique state explored : " << r_.size() << "\n";
+        std::cout << "unique state explored: " << r_.size() << "\n";
         finalize();
       }
   };
