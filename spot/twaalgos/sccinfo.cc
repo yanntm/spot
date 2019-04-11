@@ -722,19 +722,20 @@ namespace spot
                                              unsigned dst)
                              {
                                cur[src] = seen[src] = true;
-                               // if (filter_)
-                               //   {
-                               //     twa_graph::edge_storage_t e;
-                               //     e.cond = cond;
-                               //     e.src = src;
-                               //     e.dst = dst;
-                               //     if (filter_(e, dst, filter_data_)
-                               //         != edge_filter_choice::keep)
-                               //       {
-                               //         cond = bddfalse;
-                               //         return;
-                               //       }
-                               //   }
+                               if (filter_)
+                                 {
+                                   twa_graph::edge_storage_t e;
+                                   e.cond = cond;
+                                   e.acc = m;
+                                   e.src = src;
+                                   e.dst = dst;
+                                   if (filter_(e, dst, filter_data_)
+                                       != edge_filter_choice::keep)
+                                     {
+                                       cond = bddfalse;
+                                       return;
+                                     }
+                                 }
                                if (scc_of(dst) != scc
                                    || (m & sets)
                                    || (seen[dst] && !cur[dst]))
