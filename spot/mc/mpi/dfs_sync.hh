@@ -42,6 +42,7 @@ namespace spot
     kripkecube<State, SuccIterator>& sys_;
     std::unordered_set<State, StateHash, StateEqual> q_, r_;
 
+    bool has_finish;
     mpi_window win_finish;
     std::chrono::time_point<std::chrono::steady_clock> finish_time
       = std::chrono::time_point<std::chrono::steady_clock>::max();
@@ -64,6 +65,7 @@ namespace spot
       state_size_ = s0[1] + STATE_HEADER;
 
       win_finish.init(mpi_.world_size, false);
+      has_finish = false;
 
       return s0;
     }
@@ -85,6 +87,7 @@ namespace spot
       if (milli > 100)
       {
         win_finish.put(0, mpi_.world_rank, 1);
+        has_finish = true;
         if (mpi_.world_rank == 0)
         {
           auto f = win_finish.get(0, 0, mpi_.world_size);
@@ -94,8 +97,9 @@ namespace spot
               win_finish.put(i, 0, true);
             return true;
           }
+          return false;
         }
-        return win_finish.get(0, 0);
+        return win_finish.get(mpi_.world_rank, 0);
       }
       return false;
     }
@@ -134,8 +138,15 @@ namespace spot
           process_queue();
         }
         if (work)
+        {
+          if (has_finish)
+          {
+            has_finish = false;
+            win_finish.put(0, mpi_.world_rank, 0);
+          }
           finish_time = std::chrono::time_point<std::chrono::steady_clock>
                         ::max();
+        }
       }
     }
 

@@ -51,6 +51,7 @@ namespace spot
     size_t state_size_;
     size_t processed_states_;
 
+    bool has_finish;
     mpi_window win_finish;
     std::chrono::time_point<std::chrono::steady_clock> finish_time
       = std::chrono::time_point<std::chrono::steady_clock>::max();
@@ -73,6 +74,7 @@ namespace spot
                      std::vector<std::vector<int>>(BUFFER_SIZE,
                      std::vector<int>(state_size_)));
         sbuf_size_.resize(mpi_.world_size);
+        has_finish = false;
 
         win_free_.init(mpi_.world_size, true);
         win_buf_.resize(mpi_.world_size);
@@ -102,6 +104,7 @@ namespace spot
           (current - finish_time).count();
         if (milli > 100)
         {
+          has_finish = true;
           win_finish.put(0, mpi_.world_rank, true);
           if (mpi_.world_rank == 0)
           {
@@ -112,8 +115,9 @@ namespace spot
                 win_finish.put(i, 0, true);
               return true;
             }
+            return false;
           }
-          return win_finish.get(0, 0);
+          return win_finish.get(mpi_.world_rank, 0);
         }
         return false;
       }
@@ -155,8 +159,15 @@ namespace spot
             process_queue();
           }
           if (work)
+          {
+            if (has_finish)
+            {
+              win_finish.put(0, mpi_.world_rank, false);
+              has_finish = false;
+            }
             finish_time = std::chrono::time_point<std::chrono::steady_clock>
               ::max();
+          }
         }
       }
 
@@ -245,18 +256,8 @@ namespace spot
       {
       }
 
-      void print_visited()
-      {
-        std::cout << "[";
-        for (State state : r_)
-          std::cout << state[3] << state[4] << ", ";
-        std::cout << "]" << std::endl;
-      }
-
       bool check_invariant(State state)
       {
-        std::cout << r_.size() << " -> ";
-        print_visited();
         ++processed_states_;
         return true;
       }
