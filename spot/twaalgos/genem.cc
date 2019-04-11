@@ -92,7 +92,8 @@ namespace spot
     generic_emptiness_check_main(const twa_graph_ptr& aut,
                                  twa_run_ptr run)
     {
-      cleanup_acceptance_here(aut, false);
+      // We used to call cleanup_acceptance_here(aut, false),
+      // but it turns out this is usually a waste of time.
       auto& aut_acc = aut->acc();
       if (aut_acc.is_f())
         return true;
@@ -107,7 +108,8 @@ namespace spot
             }
           return true;
         }
-
+      // FIXME: If there is acc.fin_unit() it, is
+      // probably a good idea to filter right away.
       scc_info si(aut, scc_info_options::STOP_ON_ACC);
 
       const int accepting_scc = si.one_accepting_scc();
