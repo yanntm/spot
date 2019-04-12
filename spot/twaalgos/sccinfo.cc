@@ -75,9 +75,10 @@ namespace spot
     };
   }
 
-  scc_info::scc_info(scc_and_mark_filter& filt, scc_info_options options)
+  scc_info::scc_info(const scc_and_mark_filter& filt, scc_info_options options)
     : scc_info(filt.get_aut(), filt.start_state(),
-               filt.get_filter(), &filt, options)
+               filt.get_filter(),
+               const_cast<scc_and_mark_filter*>(&filt), options)
   {
   }
 

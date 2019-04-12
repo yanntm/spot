@@ -207,6 +207,9 @@ def is_scc_empty1(si, scc_num, acc=None):
     return True
 
 def is_empty2(g):
+    return is_empty2_rec(spot.scc_and_mark_filter(g, g.acc().fin_unit()))
+
+def is_empty2_rec(g):
     si = spot.scc_info_with_options(g, spot.scc_info_options_STOP_ON_ACC)
     if si.one_accepting_scc() >= 0:
         return False
@@ -224,13 +227,13 @@ def is_scc_empty2(si, scc_num, acc=None):
     acc = acc.restrict_to(occur)
     acc = acc.remove(common, False)
     # 3 stop conditions removed here, because they are caught by
-    # one_accepting_scc() or is_rejecting_scc() in is_empty2()
+    # one_accepting_scc() or is_rejecting_scc() in is_empty2_rec()
     for cl in acc.top_disjuncts():
         fu = cl.fin_unit() # Is there Fin at the top level
         if fu:
             with spot.scc_and_mark_filter(si, scc_num, fu) as filt:
                 filt.override_acceptance(cl.remove(fu, True))
-                if not is_empty1(filt):
+                if not is_empty2_rec(filt):
                     return False
         else:
             # Pick some Fin term anywhere in the formula
@@ -238,7 +241,7 @@ def is_scc_empty2(si, scc_num, acc=None):
             # Try to solve assuming Fin(fo)=True
             with spot.scc_and_mark_filter(si, scc_num, [fo]) as filt:
                 filt.override_acceptance(cl.remove([fo], True))
-                if not is_empty2(filt):
+                if not is_empty2_rec(filt):
                     return False
             # Try to solve assuming Fin(fo)=False
             if not is_scc_empty2(si, scc_num, acc.force_inf([fo])):

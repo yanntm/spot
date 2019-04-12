@@ -457,12 +457,12 @@ namespace spot
     /// This is usually used to prevent some edges from being
     /// considered as part of cycles, and can additionally restrict
     /// to exploration to some SCC discovered by another SCC.
-    scc_info(scc_and_mark_filter& filt, scc_info_options options);
+    scc_info(const scc_and_mark_filter& filt, scc_info_options options);
     // we separate the two functions so that we can rename
     // scc_info(x,options) into scc_info_with_options(x,options) in Python.
     // Otherwrise calling scc_info(aut,options) can be confused with
     // scc_info(aut,initial_state).
-    scc_info(scc_and_mark_filter& filt)
+    scc_info(const scc_and_mark_filter& filt)
     : scc_info(filt, scc_info_options::ALL)
     {
     }
@@ -814,9 +814,13 @@ namespace spot
       return aut_->get_init_state_number();
     }
 
-    scc_info::edge_filter get_filter()
+    scc_info::edge_filter get_filter() const
     {
-      return lower_si_ ? filter_scc_and_mark_ : filter_mark_;
+      if (lower_si_)
+        return filter_scc_and_mark_;
+      if (cut_sets_)
+        return filter_mark_;
+      return nullptr;
     }
   };
 

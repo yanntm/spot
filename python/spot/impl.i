@@ -654,7 +654,7 @@ def state_is_accepting(self, src) -> "bool":
 %noexception spot::scc_info::edges_of;
 %noexception spot::scc_info::inner_edges_of;
 %rename(scc_info_with_options) spot::scc_info::scc_info(const_twa_graph_ptr aut, scc_info_options options);
-%rename(scc_info_with_options) spot::scc_info::scc_info(scc_and_mark_filter& filt, scc_info_options options);
+%rename(scc_info_with_options) spot::scc_info::scc_info(const scc_and_mark_filter& filt, scc_info_options options);
 
 %include <spot/twaalgos/sccinfo.hh>
 %template(scc_info_scc_edges) spot::internal::scc_edges<spot::digraph<spot::twa_graph_state, spot::twa_graph_edge_data> const, spot::internal::keep_all>;

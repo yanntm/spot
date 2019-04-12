@@ -108,9 +108,8 @@ namespace spot
             }
           return true;
         }
-      // FIXME: If there is acc.fin_unit() it, is
-      // probably a good idea to filter right away.
-      scc_info si(aut, scc_info_options::STOP_ON_ACC);
+      scc_info si(scc_and_mark_filter(aut, aut_acc.fin_unit()),
+                  scc_info_options::STOP_ON_ACC);
 
       const int accepting_scc = si.one_accepting_scc();
       if (accepting_scc >= 0)
