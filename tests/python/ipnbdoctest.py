@@ -206,19 +206,19 @@ def _wait_for_ready_backport(kc):
     # Flush IOPub channel
     while True:
         try:
-            msg = kc.get_iopub_msg(block=True, timeout=0.2)
+            msg = kc.get_iopub_msg(block=True, timeout=1)
         except Empty:
             break
 
 def run_cell(kc, cell):
     kc.execute(cell.source)
-    # wait for finish, maximum 20s
-    reply = kc.get_shell_msg(timeout=20)
+    # wait for finish, maximum 30s
+    reply = kc.get_shell_msg(timeout=30)
     outs = []
 
     while True:
         try:
-            msg = kc.get_iopub_msg(timeout=0.2)
+            msg = kc.get_iopub_msg(timeout=1)
         except Empty:
             break
 
