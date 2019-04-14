@@ -5,6 +5,9 @@ New in spot 2.7.2.dev (not yet released)
   - autfilt learned --highlight-accepting-run=NUM to highlight some
     accepting run with color NUM.
 
+  - ltldo, ltlcross, and autcross are now preferring posix_spawn()
+    over fork()+exec() when available.
+
   Library:
 
   - Add generic_accepting_run() as a variant of generic_emptiness_check() that

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -26,6 +26,9 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <iomanip>
+#ifdef HAVE_SPAWN_H
+#include <spawn.h>
+#endif
 
 #include "error.h"
 
@@ -603,13 +606,40 @@ skip_ws(const char*& cmd)
 // redirections (>& and such) are not support.  Chains of commands
 // (pipes, semi-colons, etc.) are not supported.  Envvar definitions
 // before the command are not supported.
-static void
-exec_command(const char* cmd)
+
+struct simple_command
 {
-  std::vector<char*> result;
+  std::vector<char*> args;
+  char* stdin_filename = nullptr;
+  char* stdout_filename = nullptr;
+
+  simple_command(const simple_command& other) = delete;
+  simple_command& operator=(const simple_command& other) = delete;
+  simple_command() = default;
+  simple_command(simple_command&& other) = default;
+
+  void clear()
+  {
+    for (auto arg: args)
+      free(arg);
+    args.clear();
+    free(stdin_filename);
+    free(stdout_filename);
+    stdin_filename = nullptr;
+    stdout_filename = nullptr;
+  }
+
+  ~simple_command()
+  {
+    clear();
+  }
+};
+
+static simple_command
+parse_simple_command(const char* cmd)
+{
+  simple_command res;
   const char* start = cmd;
-  char* stdin = nullptr;
-  char* stdout = nullptr;
 
   while (*cmd)
     {
@@ -623,10 +653,10 @@ exec_command(const char* cmd)
               goto use_shell;
             ++cmd;
             skip_ws(cmd);
-            if (stdin)
-              free(stdin);
-            stdin = get_arg(cmd);
-            if (stdin == nullptr)
+            if (res.stdin_filename)
+              free(res.stdin_filename);
+            res.stdin_filename = get_arg(cmd);
+            if (res.stdin_filename == nullptr)
               goto use_shell;
             break;
           }
@@ -636,10 +666,10 @@ exec_command(const char* cmd)
               goto use_shell;
             ++cmd;
             skip_ws(cmd);
-            if (stdout)
-              free(stdout);
-            stdout = get_arg(cmd);
-            if (stdout == nullptr)
+            if (res.stdout_filename)
+              free(res.stdout_filename);
+            res.stdout_filename = get_arg(cmd);
+            if (res.stdout_filename == nullptr)
               goto use_shell;
             break;
           }
@@ -648,58 +678,74 @@ exec_command(const char* cmd)
             char* tmp = get_arg(cmd);
             if (tmp == nullptr)
               goto use_shell;
-            result.push_back(tmp);
+            res.args.push_back(tmp);
             break;
           }
         }
     }
   // If result is empty, we failed to found the command; let's see if
   // the shell is smarter.  If the command contains '=', it's unlikely
-  // to be a command, but probably an environment variable defintion
+  // to be a command, but probably an environment variable definition
   // as in
   //    FOO=1 command args..
-  if (result.empty() || strchr(result[0], '='))
+  if (res.args.empty() || strchr(res.args[0], '='))
     goto use_shell;
-  {
-    if (stdin)
-      {
-        int fd0 = open(stdin, O_RDONLY, 0644);
-        if (fd0 < 0)
-          error(2, errno, "failed to open '%s'", stdin);
-        if (dup2(fd0, STDIN_FILENO) < 0)
-          error(2, errno, "dup2() failed");
-        if (close(fd0) < 0)
-          error(2, errno, "close() failed");
-      }
-    if (stdout)
-      {
-        int fd1 = creat(stdout, 0644);
-        if (fd1 < 0)
-          error(2, errno, "failed to open '%s'", stdout);
-        if (dup2(fd1, STDOUT_FILENO) < 0)
-          error(2, errno, "dup2() failed");
-        if (close(fd1) < 0)
-          error(2, errno, "close() failed");
-      }
+  res.args.push_back(nullptr);
+  return res;
 
-    result.push_back(nullptr);
-    execvp(result[0], result.data());
-    error(2, errno, "failed to run '%s'", result[0]);
-    SPOT_UNREACHABLE();
-    return;
-  }
  use_shell:
+  res.clear();
+  return res;
+}
+
+#ifndef HAVE_SPAWN_H
+static void
+exec_command(const char* cmd)
+{
+  simple_command res = parse_simple_command(cmd);
+
+  if (!res.args.empty())
+    {
+      if (res.stdin_filename)
+        {
+          int fd0 = open(res.stdin_filename, O_RDONLY, 0644);
+          if (fd0 < 0)
+            error(2, errno, "failed to open '%s'", res.stdin_filename);
+          if (dup2(fd0, STDIN_FILENO) < 0)
+            error(2, errno, "dup2() failed");
+          if (close(fd0) < 0)
+            error(2, errno, "close() failed");
+        }
+      if (res.stdout_filename)
+        {
+          int fd1 = creat(res.stdout_filename, 0644);
+          if (fd1 < 0)
+            error(2, errno, "failed to open '%s'", res.stdout_filename);
+          if (dup2(fd1, STDOUT_FILENO) < 0)
+            error(2, errno, "dup2() failed");
+          if (close(fd1) < 0)
+            error(2, errno, "close() failed");
+        }
+
+      execvp(res.args[0], res.args.data());
+      error(2, errno, "failed to run '%s'", res.args[0]);
+      SPOT_UNREACHABLE();
+      return;
+    }
   // Try /bin/sh first, because it is faster to not do any PATH
   // lookup.
   static bool has_bin_sh = true;
   if (has_bin_sh)
-    execl("/bin/sh", "sh", "-c", start, nullptr);
+    execl("/bin/sh", "sh", "-c", cmd, nullptr);
   has_bin_sh = false;
-  execlp("sh", "sh", "-c", start, nullptr);
-  error(2, errno, "failed to run 'sh'");
+  execlp("sh", "sh", "-c", cmd, nullptr);
+  error(2, errno, "failed to run '%s' via 'sh'", cmd);
   SPOT_UNREACHABLE();
   return;
 }
+#else
+extern char **environ;
+#endif
 
 int
 exec_with_timeout(const char* cmd)
@@ -708,6 +754,71 @@ exec_with_timeout(const char* cmd)
 
   timed_out = false;
 
+#ifdef HAVE_SPAWN_H
+  simple_command res = parse_simple_command(cmd);
+
+  // Using posix_spawn should be preferred over fork()/exec().  It can
+  // be implemented in more systems.  Since 2016, posix_spawn()
+  // should be faster than fork()/exec() on Linux.  See also
+  // https://www.microsoft.com/en-us/research/publication/a-fork-in-the-road/
+  posix_spawnattr_t attr;
+  if (int err = posix_spawnattr_init(&attr))
+    error(2, err, "posix_spawnattr_init() failed");
+  if (int err = posix_spawnattr_setpgroup(&attr, 0))
+    error(2, err, "posix_spawnattr_setpgroup() failed");
+  if (int err = posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP))
+    error(2, err, "posix_spawnattr_setflags() failed");
+  posix_spawn_file_actions_t actions;
+  if (int err = posix_spawn_file_actions_init(&actions))
+    error(2, err, "posix_spawn_file_actions_init() failed");
+  // Close stdin so that children may not read our input.  We had this
+  // nice surprise with Seminator, who greedily consumes its stdin
+  // (which was also ours) even if it does not use it because it was
+  // given a file.
+  if (int err = posix_spawn_file_actions_addclose(&actions, STDIN_FILENO))
+    error(2, err, "posix_spawn_file_actions_addclose() failed");
+  if (!res.args.empty())
+    {
+      if (res.stdin_filename)
+        if (int err = posix_spawn_file_actions_addopen(&actions, STDIN_FILENO,
+                                                       res.stdin_filename,
+                                                       O_RDONLY, 0644))
+          error(2, err, "posix_spawn_file_actions_addopen() failed");
+      if (res.stdout_filename)
+        if (int err = posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO,
+                                                       res.stdout_filename,
+                                                       O_CREAT | O_WRONLY |
+                                                       O_TRUNC, 0644))
+          error(2, err, "posix_spawn_file_actions_addopen() failed");
+      if (int err = posix_spawnp(&child_pid, res.args[0], &actions, &attr,
+                                 res.args.data(), environ))
+        error(2, err, "failed to run '%s'", res.args[0]);
+    }
+  else
+    {
+      // Try /bin/sh first, because it is faster to not do any PATH
+      // lookup.
+      static bool has_bin_sh = true;
+      if (has_bin_sh)
+        {
+          const char* args[] = { "/bin/sh", "-c", cmd, nullptr };
+          if (posix_spawn(&child_pid, args[0], &actions, &attr,
+                          const_cast<char **>(args), environ))
+            has_bin_sh = false;
+        }
+      if (!has_bin_sh)
+        {
+          const char* args[] = { "sh", "-c", cmd, nullptr };
+          if (int err = posix_spawnp(&child_pid, args[0], &actions, &attr,
+                                     const_cast<char **>(args), environ))
+            error(2, err, "failed to run '%s' via 'sh'", cmd);
+        }
+    }
+  if (int err = posix_spawn_file_actions_destroy(&actions))
+    error(2, err, "posix_spawn_file_actions_destroy() failed");
+  if (int err = posix_spawnattr_destroy(&attr))
+    error(2, err, "posix_spawnattr_destroy() failed");
+#else
   child_pid = fork();
   if (child_pid == -1)
     error(2, errno, "failed to fork()");
@@ -724,20 +835,18 @@ exec_with_timeout(const char* cmd)
       // never reached
       return -1;
     }
-  else
-    {
-      alarm(timeout);
-      // Upon SIGALRM, the child will receive up to 3
-      // signals: SIGTERM, SIGTERM, SIGKILL.
-      alarm_on = 3;
-      int w = waitpid(child_pid, &status, 0);
-      alarm_on = 0;
+#endif
+  alarm(timeout);
+  // Upon SIGALRM, the child will receive up to 3
+  // signals: SIGTERM, SIGTERM, SIGKILL.
+  alarm_on = 3;
+  int w = waitpid(child_pid, &status, 0);
+  alarm_on = 0;
 
-      if (w == -1)
-        error(2, errno, "error during wait()");
+  if (w == -1)
+    error(2, errno, "error during wait()");
 
-      alarm(0);
-    }
+  alarm(0);
   return status;
 }
 #endif // ENABLE_TIMEOUT
