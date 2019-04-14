@@ -108,8 +108,11 @@ namespace spot
             }
           return true;
         }
-      scc_info si(scc_and_mark_filter(aut, aut_acc.fin_unit()),
-                  scc_info_options::STOP_ON_ACC);
+      // Filter with fin_unit() right away if possible.
+      // scc_and_mark_filter will have no effect if fin_unit() is
+      // empty.
+      scc_and_mark_filter filt(aut, aut_acc.fin_unit());
+      scc_info si(filt, scc_info_options::STOP_ON_ACC);
 
       const int accepting_scc = si.one_accepting_scc();
       if (accepting_scc >= 0)
