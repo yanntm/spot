@@ -3,6 +3,7 @@
 #+DESCRIPTION: Spot's wrapper for third-party LTL translators
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 This tool is a wrapper for tools that read LTL/PSL formulas and
 (optionally) output automata.
@@ -26,7 +27,7 @@ Büchi automaton produced by =ltl3ba=.
 
 Here is the input file:
 
-#+BEGIN_SRC sh :results silent :exports both
+#+BEGIN_SRC sh :results silent
 cat >sample.ltl <<EOF
 1
 1 U a
@@ -58,7 +59,7 @@ is to pipe the output of =ltl3ba= through [[file:autfilt.org][=autfilt=]].
 
 Here is how the shell command could look like:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -F sample.ltl -s |
 while read f; do
   ltl3ba -f "$f" | autfilt --stats="$f,%s,%t"
@@ -81,7 +82,7 @@ X[]!<>((a && ![]b) || (!a && []b)),4,10
 
 Using =ltldo= the above command can be reduced to this:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo 'ltl3ba -f %s>%O' -F sample.ltl --stats='%f,%s,%t'
 #+END_SRC
 #+RESULTS:
@@ -106,7 +107,7 @@ In fact, as we will discuss below, =ltl3ba= is a tool that =ltldo=
 already knows about, so there is a shorter way to run the above
 command:
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltldo ltl3ba -F sample.ltl --stats='%f,%s,%t'
 #+END_SRC
 #+RESULTS:
@@ -129,8 +130,8 @@ Here is another example, where we use Spin to produce two automata in
 the [[http://adl.github.io/hoaf/][HOA format]].  Spin has no support for HOA, but =ltldo= simply
 converts the never claim produced by =spin= into this format.
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
-ltldo -f a -f GFa 'spin -f %s>%O'
+#+BEGIN_SRC sh :wrap SRC hoa
+ltldo 'spin -f %s>%O' -f a -f GFa
 #+END_SRC
 
 #+RESULTS:
@@ -177,7 +178,7 @@ simplified to just this:
 The syntax for specifying how a tool should be called is the same as
 in [[file:ltlcross.org][=ltlcross=]].  Namely, the following sequences are available.
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltldo --help | sed -n '/character sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 
@@ -195,7 +196,7 @@ filename using one of the sequence for that last line.  For instance
 we could simply run a formula though =echo= to compare different
 output syntaxes:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo -f 'p0 U p1' -f 'GFp0' 'echo %f, %s, %l, %w'
 #+END_SRC
 #+RESULTS:
@@ -211,7 +212,7 @@ executed on each formula in the same order.
 
 A typical use-case is to compare statistics of different tools:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo -F sample.ltl 'spin -f %s>%O' 'ltl3ba -f %s>%O' --stats=%T,%f,%s,%e
 #+END_SRC
 
@@ -248,7 +249,7 @@ In the following example, we moved the formula used on its own line
 using the trick that the command =echo %f= will not be subject to
 =--stats= (since it does not declare any output automaton).
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo -F sample.ltl  --stats=%T,%s,%e \
       'echo "#" %f' '{spin}spin -f %s>%O' '{ltl3ba}ltl3ba -f %s>%O'
 #+END_SRC
@@ -299,7 +300,7 @@ There is a list of existing tools for which =ltldo= (and =ltlcross=)
 have built-in specifications.  This list can be printed using the
 =--list-shorthands= option:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo --list-shorthands
 #+END_SRC
 #+RESULTS:
@@ -327,22 +328,18 @@ will changed into
   '{DRA} ~/mytools/ltl2dstar-0.5.2 --output-format=hoa %[MR]L %O'
 #+end_example
 
-Therefore you can type just
+Therefore you can type the following to obtain a Dot output (as
+requested with =-d=) for the neverclaim produced by =ltl2ba -f a=.
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue export SPOT_DOTEXTRA= SPOT_DOTDEFAULT=
 ltldo ltl2ba -f a -d
-#+END_SRC
-
-to obtain a Dot output (as requested with =-d=) for the neverclaim
-produced by =ltl2ba -f a=.
-
-#+BEGIN_SRC sh :results verbatim :exports results
-SPOT_DOTEXTRA= ltldo ltl2ba -f a --dot=
 #+END_SRC
 #+RESULTS:
 #+begin_example
-digraph G {
+digraph "" {
   rankdir=LR
+  label="\n[Büchi]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
   I -> 0
@@ -356,14 +353,13 @@ digraph G {
 The =ltl2ba= argument passed to =ltldo= was interpreted as if you had
 typed ={ltl2ba}ltl2ba -f %s>%O=.
 
-The shorthand is only used if it is the first word of an command
+The shorthand is only used if it is the first word of a command
 string that does not use any =%= character.  This makes it possible to
 add options:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo ltl3ba 'ltl3ba -H2' -f GFa --stats='%T, %s states, %e edges'
 #+END_SRC
-
 #+RESULTS:
 : ltl3ba, 2 states, 4 edges
 : ltl3ba -H2, 1 states, 2 edges
@@ -373,13 +369,8 @@ ltldo ltl3ba 'ltl3ba -H2' -f GFa --stats='%T, %s states, %e edges'
 If you have ever tried to use =spin=, =ltl2ba=, or =ltl3ba=, to translate
 a formula such as =[]!Error=, you have noticed that it does not work:
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue "exec 2>&1" :epilogue true
 spin -f '[]!Error'
-#+END_SRC
-#+RESULTS:
-
-#+BEGIN_SRC sh :results verbatim :exports results
-spin -f '[]!Error' 2>&1 || exit 0
 #+END_SRC
 #+RESULTS:
 : tl_spin: expected predicate, saw 'E'
@@ -391,14 +382,14 @@ only atomic propositions starting with a lowercase letter.
 
 Running the same command through =ltldo= will work:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo spin -f '[]!Error' -s
 #+END_SRC
 #+RESULTS:
 : never {
 : accept_init:
 :   if
-:   :: ((!(Error))) -> goto accept_init
+:   :: (!(Error)) -> goto accept_init
 :   fi;
 : }
 
@@ -428,7 +419,7 @@ an LTL formula).  In the following example, you can see that the
 automaton uses the atomic proposition =Error=, but its name contains a
 reference to =p0=.
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltldo 'ltl3ba -H' -f '[]!Error'
 #+END_SRC
 #+RESULTS:
@@ -451,7 +442,7 @@ State: 0 "accept_init" {0}
 If this is a problem, you can always force a new name with the
 =--name= option:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltldo 'ltl3ba -H' -f '[]!Error' --name='BA for %f'
 #+END_SRC
 
@@ -480,7 +471,7 @@ State: 0 "accept_init" {0}
 Here is a formula on which different translators produce Büchi automata of
 different sizes (states and edges):
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo ltl2ba ltl3ba 'ltl2tgba -s' -f 'F(a & Xa | FGa)' \
       --stats='%T: %s st. (%n non-det.), %e ed.'
 #+END_SRC
@@ -494,7 +485,7 @@ Instead of outputting the result of the translation of each formula by each
 translator, =ltldo= can also be configured to output the smallest
 automaton obtained for each formula:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo ltl2ba ltl3ba 'ltl2tgba -s' -f 'F(a & Xa | FGa)' --smallest
 #+END_SRC
 
@@ -530,7 +521,7 @@ edges.  If we desire the automaton that has the fewest states, and in
 case of equality the smallest number of non-deterministic states, we
 can use the following command instead.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo ltl2ba ltl3ba 'ltl2tgba -s' -f 'F(a & Xa | FGa)' --smallest=%s,%n
 #+END_SRC
 
@@ -563,7 +554,7 @@ from Dwyer et al. (FMSP'98), and print which translator among
 =ltl2ba=, =ltl3ba=, and =ltl2tgba -s= would produce the smallest
 automaton.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 genltl --dac=10..20 --format=%F:%L,%f |
   ltldo -F-/2 ltl2ba ltl3ba 'ltl2tgba -s' --smallest --stats='%<,%T'
 #+END_SRC
@@ -589,7 +580,7 @@ or =ltl2tgba -s= are also producing automata of equal size.
 To understand the above pipeline, remove the =ltldo= invocation.  The
 [[file:genltl.org][=genltl=]] command outputs this:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 genltl --dac=10..20 --format=%F:%L,%f
 #+END_SRC
 #+RESULTS:

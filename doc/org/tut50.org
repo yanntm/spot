@@ -3,6 +3,7 @@
 #+DESCRIPTION: Explanation of the explicit and on-the-fly automata interfaces in Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
+#+PROPERTY: header-args:C+++ :results verbatim :exports both
 
 
 When exploring automata (i.e., following its transition structure),
@@ -164,7 +165,7 @@ just an index into the state vector of the underlying graph.
 From a state number =s=, it is possible to iterate over all successors
 by doing a =for= loop on =out(s)=, as in:
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/twa/twagraph.hh>
   #include <spot/tl/parse.hh>
@@ -188,9 +189,9 @@ by doing a =for= loop on =out(s)=, as in:
 #+END_SRC
 
 #+RESULTS:
-: 2->0
-: 2->1
-: 2->2
+: 0->0
+: 0->1
+: 0->2
 
 In the above lines, =aut->out(s)= delegates to
 =aut->get_graphs().out(s)= and returns a =state_out<graph_t>=
@@ -198,7 +199,7 @@ instance, which is a small temporary object masquerading as an STL
 container with =begin()= and =end()= methods.  The ranged-for loop
 syntax of C++ works exactly as if we had typed
 
-#+BEGIN_SRC C++
+#+BEGIN_SRC C++ :exports code
   // You could write this, but why not let the compiler do it for you?
   // In any case, do not spell out the types of tmp and i, as those
   // should be considered internal details.
@@ -221,7 +222,7 @@ because the compiler will optimize this away.
 In fact after operators are inlined and useless temporary variables
 removed, the above loop compiles to something equivalent to this:
 
-#+BEGIN_SRC C++
+#+BEGIN_SRC C++ :exports code
   // You could also write this lower-level version, and that sometimes
   // helps (e.g., if you want to pause the loop and then resume it, as
   // we will do later).
@@ -252,7 +253,7 @@ we call =dfs_rec()= from the initial state, that function updates a
 vector of visited states in order to not visit them twice, and recurse
 on all successors of the given state.
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/twa/twagraph.hh>
   #include <spot/tl/parse.hh>
@@ -301,7 +302,7 @@ on all successors of the given state.
  accessible transitions in a "DFS-ish" way, but without producing
  exactly the same output as above.
 
- #+BEGIN_SRC C++ :results verbatim :exports both
+ #+BEGIN_SRC C++
    #include <iostream>
    #include <stack>
    #include <spot/twa/twagraph.hh>
@@ -379,7 +380,7 @@ to maintain a stack of edge numbers.  Indeed, each edge
 stores the number of the next edge leaving the same source
 state, so this is enough to remember where we are.
 
- #+BEGIN_SRC C++ :results verbatim :exports both
+ #+BEGIN_SRC C++
    #include <iostream>
    #include <stack>
    #include <spot/twa/twagraph.hh>
@@ -576,7 +577,7 @@ saving a =delete= and =new= pair.
 To summarize, here is a crude loop over the successors of the initial
 state:
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/twa/twa.hh>
   #include <spot/tl/parse.hh>
@@ -608,9 +609,9 @@ state:
 #+END_SRC
 
 #+RESULTS:
-: 2->0
-: 2->1
-: 2->2
+: 0->0
+: 0->1
+: 0->2
 
 Notice that a =twa_succ_iterator= allows iterating over outgoing
 edges, but only offers access to =dst()=, =acc()=, and =cond()= for
@@ -628,7 +629,7 @@ However =first()= and =next()= also return a Boolean stating whether
 the loop could continue.  This allows rewriting the above code as
 follows:
 
-#+BEGIN_SRC C++
+#+BEGIN_SRC C++ :exports code
   void example(spot::const_twa_ptr aut)
   {
     const spot::state* s = aut->get_init_state();
@@ -653,7 +654,7 @@ so we halved to number of virtual calls.
 Using C++11's ranged =for= loop, this example can be reduced to the
 following equivalent code:
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/twa/twa.hh>
   #include <spot/tl/parse.hh>
@@ -683,9 +684,9 @@ following equivalent code:
 #+END_SRC
 
 #+RESULTS:
-: 2->0
-: 2->1
-: 2->2
+: 0->0
+: 0->1
+: 0->2
 
 This works in a similar way as =out(s)= in the explicit interface.
 Calling =aut->succ(s)= creates a fake container
@@ -703,7 +704,7 @@ track of the states to =destroy()= them only after we do not need them
 anymore.  This tracking can be done using the data structure we use to
 remember what states we have already seen.
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <unordered_set>
   #include <spot/twa/twa.hh>
@@ -754,10 +755,10 @@ remember what states we have already seen.
 #+END_SRC
 
 #+RESULTS:
-: 2->0
 : 0->0
-: 2->1
+: 0->1
 : 1->1
+: 0->2
 : 2->2
 
 ** Recursive DFS (v2)
@@ -772,7 +773,7 @@ previously (in that case the passed state is destroyed).  The
 
 With this class, the recursive code can be simplified down to this:
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/twa/twa.hh>
   #include <spot/tl/parse.hh>
@@ -809,10 +810,10 @@ With this class, the recursive code can be simplified down to this:
 #+END_SRC
 
 #+RESULTS:
-: 2->0
 : 0->0
-: 2->1
+: 0->1
 : 1->1
+: 0->2
 : 2->2
 
 Note how this completely hides all the calls to =state::destroy()=.
@@ -826,7 +827,7 @@ For a non-recursive version, let us use a stack of
 source, so we better store that in the stack as well if we want to
 print it.
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <stack>
   #include <spot/twa/twa.hh>
@@ -883,8 +884,8 @@ print it.
 #+END_SRC
 
 #+RESULTS:
-: 2->0
 : 0->0
-: 2->1
+: 0->1
 : 1->1
+: 0->2
 : 2->2

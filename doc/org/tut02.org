@@ -3,6 +3,9 @@
 #+DESCRIPTION: Code example for relabeling formulas in Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
+#+PROPERTY: header-args:python :results output :exports both
+#+PROPERTY: header-args:C+++ :results verbatim :exports both
 
 The task is to read an LTL formula, relabel all (possibly
 double-quoted) atomic propositions, and provide =#define= statements
@@ -10,7 +13,7 @@ for each of these renamings, writing everything in Spin's syntax.
 
 * Shell
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -ps --relabel=pnn --define -f '"Proc@Here" U ("var > 10" | "var < 4")'
 #+END_SRC
 
@@ -26,7 +29,7 @@ translator) using a formula with complex atomic propositions it cannot
 parse.  Then you can pass the rewritten formula to =ltl2ba=, and
 prepend all those =#define= to its output.  For instance:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -ps --relabel=pnn --define=tmp.defs -f '"Proc@Here" U ("var > 10" | "var < 4")' >tmp.ltl
 cat tmp.defs; ltl2ba -F tmp.ltl
 rm tmp.defs tmp.ltl
@@ -38,7 +41,7 @@ rm tmp.defs tmp.ltl
 #define p1 (var < 4)
 #define p2 (var > 10)
 never { /* (p0) U ((p1) || (p2))
- */
+ ,*/
 T0_init:
 	if
 	:: (p0) -> goto T0_init
@@ -51,8 +54,8 @@ accept_all:
 
 Aside: another way to work around syntax limitations of tools is to
 use [[file:ltldo.org][=ltldo=]].  On the above example, =ltldo ltl2ba -f '"Proc@Here" U
-("var > 10" | "var < 4")' -s= would produce a never clam with the
-correct atomic proposition, even though =ltl2ba= cannot parse them.
+("var > 10" | "var < 4")' -s= would produce a never claim with the
+correct atomic propositions, even though =ltl2ba= cannot parse them.
 
 * Python
 
@@ -60,13 +63,13 @@ The =spot.relabel= function takes an optional third parameter that
 should be a =relabeling_map=.  If supplied, this map is filled with
 pairs of atomic propositions of the form (new-name, old-name).
 
-#+BEGIN_SRC python :results output :exports both
+#+BEGIN_SRC python
 import spot
 m = spot.relabeling_map()
 g = spot.relabel('"Proc@Here" U ("var > 10" | "var < 4")', spot.Pnn, m)
 for newname, oldname in m.items():
-  print("#define {} ({})".format(newname.to_str(), oldname.to_str('spin', True)))
-print(g.to_str('spin', True))
+    print("#define {} ({})".format(newname.to_str(), oldname.to_str('spin', True)))
+    print(g.to_str('spin', True))
 #+END_SRC
 
 #+RESULTS:
@@ -79,7 +82,7 @@ print(g.to_str('spin', True))
 
 The =spot::relabeling_map= is just implemented as a =std::map=.
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <string>
   #include <iostream>
   #include <spot/tl/parse.hh>
@@ -124,7 +127,7 @@ The =spot::relabeling_map= is just implemented as a =std::map=.
    Instead of relabeling each atomic proposition, you could decide to
    relabel each Boolean sub-expression:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -ps --relabel-bool=pnn --define -f '"Proc@Here" U ("var > 10" | "var < 4")'
 #+END_SRC
 
@@ -140,7 +143,7 @@ ltlfilt -ps --relabel-bool=pnn --define -f '"Proc@Here" U ("var > 10" | "var < 4
    because that would hide the fact that both =p0= and =p1= check for
    =a=.  Instead we get this:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -ps --relabel-bool=pnn --define -f 'a U (a & b)'
 #+END_SRC
 

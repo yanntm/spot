@@ -3,6 +3,8 @@
 #+DESCRIPTION: Spot command-line tool for cross-comparing the output of LTL translators.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
+#+PROPERTY: header-args:R :session :results output :exports both
 
 =ltlcross= is a tool for cross-comparing the output of LTL-to-automata
 translators.  It is actually a Spot-based clone of [[http://www.tcs.hut.fi/Software/lbtt/][LBTT]], the
@@ -58,7 +60,7 @@ and no =-f= or =-F= options are given.
 Each translator should be specified as a string that use some of the
 following character sequences:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
   ltlcross --help | sed -n '/character sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -73,7 +75,7 @@ following character sequences:
 For instance here is how we could cross-compare the never claims
 output by =spin= and =ltl2tgba= for the formulas =GFa= and =X(a U b)=.
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltlcross -f 'GFa' -f 'X(a U b)' 'ltl2tgba -s %s >%O' 'spin -f %s >%O'
 #+END_SRC
 #+RESULTS:
@@ -83,7 +85,7 @@ by the formula in Spin's syntax, and =%O= will be replaced by a
 temporary file into which the output of the translator is redirected
 before it is read back by =ltlcross=.
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltlcross -f 'GFa' -f 'X(a U b)' 'ltl2tgba -s %s >%O' 'spin -f %s >%O' 2>&1
 #+END_SRC
 #+RESULTS:
@@ -174,7 +176,7 @@ To simplify the use of some of the above tools, a set of predefined
 shorthands are available.  Those can be listed with the
 =--list-shorthands= option.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlcross --list-shorthands
 #+END_SRC
 #+RESULTS:
@@ -182,24 +184,28 @@ ltlcross --list-shorthands
 If a COMMANDFMT does not use any %-sequence, and starts with one of
 the following words, then the string on the right is appended.
 
+  delag        %f>%O
   lbt          <%L>%O
   ltl2ba       -f %s>%O
   ltl2da       %f>%O
+  ltl2dgra     %f>%O
   ltl2dpa      %f>%O
+  ltl2dra      %f>%O
   ltl2ldba     %f>%O
   ltl2dstar    --output-format=hoa %[MW]L %O
   ltl2tgba     -H %f>%O
   ltl3ba       -f %s>%O
   ltl3dra      -f %s>%O
   ltl3hoa      -f %f>%O
+  ltl3tela     -f %f>%O
   modella      %[MWei^]L %O
   spin         -f %s>%O
 
 Any {name} and directory component is skipped for the purpose of
 matching those prefixes.  So for instance
   '{DRA} ~/mytools/ltl2dstar-0.5.2'
-will changed into
-  '{DRA} ~/mytools/ltl2dstar-0.5.2 --output-format=hoa %[MR]L %O'
+will be changed into
+  '{DRA} ~/mytools/ltl2dstar-0.5.2 --output-format=hoa %[MW]L %O'
 #+end_example
 
 What this implies is that running =ltlcross ltl2ba ltl3ba ...= is
@@ -381,67 +387,45 @@ randltl -n 3 a b | ltlfilt --remove-wm |
 ltlcross --csv=results.csv --json=results.json \
          'ltl2tgba -s %f >%O' \
          'spin -f %s >%O' \
-         'lbt < %L >%O' --csv=results.csv 2>&1
+         'lbt < %L >%O' 2>&1
 #+END_SRC
-#+RESULTS:
-#+begin_example
--:1: 0
-Running [P0]: ltl2tgba -s '0' >'lcr-o0-HIoc9n'
-Running [P1]: spin -f 'false' >'lcr-o1-69Gi3B'
-Running [P2]: lbt < 'lcr-i0-cYhaYP' >'lcr-o2-CZe2S3'
-Running [N0]: ltl2tgba -s '1' >'lcr-o0-9YEpOh'
-Running [N1]: spin -f 'true' >'lcr-o1-exCCOv'
-Running [N2]: lbt < 'lcr-i0-DMSnRJ' >'lcr-o2-E0H9TX'
-Performing sanity checks and gathering statistics...
-
--:2: !((1) U (F(!(p0))))
-Running [P0]: ltl2tgba -s '!((1) U (F(!(p0))))' >'lcr-o0-ubhgZb'
-Running [P1]: spin -f '!((true) U (<>(!(p0))))' >'lcr-o1-wBnwcq'
-Running [P2]: lbt < 'lcr-i1-D3WcqE' >'lcr-o2-i3VTDS'
-Running [N0]: ltl2tgba -s '(1) U (F(!(p0)))' >'lcr-o0-8F2eS6'
-Running [N1]: spin -f '(true) U (<>(!(p0)))' >'lcr-o1-focrcl'
-Running [N2]: lbt < 'lcr-i1-VgW9wz' >'lcr-o2-GbdTRN'
-Performing sanity checks and gathering statistics...
-
--:3: (1) U ((G(p0)) | (F(p1)))
-Running [P0]: ltl2tgba -s '(1) U ((G(p0)) | (F(p1)))' >'lcr-o0-jj8Ih2'
-Running [P1]: spin -f '(true) U (([](p0)) || (<>(p1)))' >'lcr-o1-JarYMg'
-Running [P2]: lbt < 'lcr-i2-yq4yiv' >'lcr-o2-Lw29NJ'
-Running [N0]: ltl2tgba -s '!((1) U ((G(p0)) | (F(p1))))' >'lcr-o0-mHp6jY'
-Running [N1]: spin -f '!((true) U (([](p0)) || (<>(p1))))' >'lcr-o1-pA7KVc'
-Running [N2]: lbt < 'lcr-i2-ZxXHBr' >'lcr-o2-YadFhG'
-Performing sanity checks and gathering statistics...
-
-No problem detected.
-#+end_example
 
 After this execution, the file =results.csv= contains the following:
 
-#+BEGIN_SRC sh :results verbatim :exports results
-cat results.csv
+#+BEGIN_SRC sh :results output raw :exports results
+sed 's/"//g
+s/|/\\vert{}/g
+s/--/@@html:--@@/g
+1a\
+|-|
+s/^/| /
+s/$/ |/
+s/,/|/g
+' results.csv
 #+END_SRC
+
+#+ATTR_HTML: :class csv-table
 #+RESULTS:
-#+begin_example
-"formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nondet_states","nondet_aut","complete_aut","product_states","product_transitions","product_scc"
-"0","ltl2tgba -s %f >%O","ok",0,0.0299298,1,1,0,1,1,0,0,0,1,0,1
-"0","spin -f %s >%O","ok",0,0.00396246,2,2,1,1,2,0,0,0,1,0,1
-"0","lbt < %L >%O","ok",0,0.00262385,1,0,0,0,1,0,0,0,1,0,1
-"1","ltl2tgba -s %f >%O","ok",0,0.0261614,1,1,1,1,1,0,0,1,200,4199,1
-"1","spin -f %s >%O","ok",0,0.0137128,2,2,2,1,2,0,0,1,201,4220,2
-"1","lbt < %L >%O","ok",0,0.00792516,3,3,3,0,3,0,0,1,222,4653,23
-"!((1) U (F(!(p0))))","ltl2tgba -s %f >%O","ok",0,0.043858,1,1,1,1,1,0,0,0,200,2059,1
-"!((1) U (F(!(p0))))","spin -f %s >%O","ok",0,0.00202537,1,1,1,1,1,0,0,0,200,2059,1
-"!((1) U (F(!(p0))))","lbt < %L >%O","ok",0,0.00331618,2,2,2,0,2,0,0,0,201,2071,2
-"(1) U (F(!(p0)))","ltl2tgba -s %f >%O","ok",0,0.031689,2,3,4,1,2,0,0,1,400,8264,2
-"(1) U (F(!(p0)))","spin -f %s >%O","ok",0,0.0026263,2,3,5,1,2,1,1,1,400,10337,2
-"(1) U (F(!(p0)))","lbt < %L >%O","ok",0,0.00266354,7,13,22,2,7,4,1,1,1201,35191,604
-"(1) U ((G(p0)) | (F(p1)))","ltl2tgba -s %f >%O","ok",0,0.0287222,3,5,11,1,3,1,1,0,600,11358,3
-"(1) U ((G(p0)) | (F(p1)))","spin -f %s >%O","ok",0,0.00167423,4,8,24,1,4,2,1,0,800,24920,4
-"(1) U ((G(p0)) | (F(p1)))","lbt < %L >%O","ok",0,0.0016987,9,17,52,2,9,4,1,0,1601,41559,805
-"!((1) U ((G(p0)) | (F(p1))))","ltl2tgba -s %f >%O","ok",0,0.0308937,2,4,4,1,1,0,0,0,395,3964,1
-"!((1) U ((G(p0)) | (F(p1))))","spin -f %s >%O","ok",0,0.0230605,6,18,17,1,4,5,1,0,592,8891,1
-"!((1) U ((G(p0)) | (F(p1))))","lbt < %L >%O","ok",0,0.00280787,3,6,9,1,2,3,1,0,397,5957,2
-#+end_example
+| formula                       | tool               | exit_status | exit_code |       time | states | edges | transitions | acc | scc | nondet_states | nondet_aut | complete_aut | product_states | product_transitions | product_scc |
+|-------------------------------+--------------------+-------------+-----------+------------+--------+-------+-------------+-----+-----+---------------+------------+--------------+----------------+---------------------+-------------|
+| 0                             | ltl2tgba -s %f >%O | ok          |         0 |  0.0269145 |      1 |     1 |           0 |   1 |   1 |             0 |          0 |            0 |              1 |                   0 |           1 |
+| 0                             | spin -f %s >%O     | ok          |         0 | 0.00112819 |      2 |     2 |           1 |   1 |   2 |             0 |          0 |            0 |              1 |                   0 |           1 |
+| 0                             | lbt < %L >%O       | ok          |         0 | 0.00228413 |      1 |     0 |           0 |   0 |   1 |             0 |          0 |            0 |              1 |                   0 |           1 |
+| 1                             | ltl2tgba -s %f >%O | ok          |         0 |  0.0269548 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            1 |            200 |                4199 |           1 |
+| 1                             | spin -f %s >%O     | ok          |         0 | 0.00121962 |      2 |     2 |           2 |   1 |   2 |             0 |          0 |            1 |            201 |                4220 |           2 |
+| 1                             | lbt < %L >%O       | ok          |         0 | 0.00206923 |      3 |     3 |           3 |   0 |   3 |             0 |          0 |            1 |            222 |                4653 |          23 |
+| !(F(!(p0)))                   | ltl2tgba -s %f >%O | ok          |         0 |  0.0293213 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2059 |           1 |
+| !(F(!(p0)))                   | spin -f %s >%O     | ok          |         0 | 0.00114213 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2059 |           1 |
+| !(F(!(p0)))                   | lbt < %L >%O       | ok          |         0 | 0.00281165 |      2 |     2 |           2 |   0 |   2 |             0 |          0 |            0 |            201 |                2071 |           2 |
+| F(!(p0))                      | ltl2tgba -s %f >%O | ok          |         0 |  0.0273697 |      2 |     3 |           4 |   1 |   2 |             0 |          0 |            1 |            400 |                8264 |           2 |
+| F(!(p0))                      | spin -f %s >%O     | ok          |         0 | 0.00110435 |      2 |     3 |           5 |   1 |   2 |             1 |          1 |            1 |            400 |               10337 |           2 |
+| F(!(p0))                      | lbt < %L >%O       | ok          |         0 | 0.00205025 |      4 |     6 |          10 |   1 |   4 |             2 |          1 |            1 |            601 |               14497 |         203 |
+| F((G(p0)) \vert{} (F(p1)))    | ltl2tgba -s %f >%O | ok          |         0 |  0.0283784 |      3 |     5 |          11 |   1 |   3 |             1 |          1 |            0 |            600 |               11358 |           3 |
+| F((G(p0)) \vert{} (F(p1)))    | spin -f %s >%O     | ok          |         0 | 0.00144813 |      4 |     8 |          24 |   1 |   4 |             2 |          1 |            0 |            800 |               24920 |           4 |
+| F((G(p0)) \vert{} (F(p1)))    | lbt < %L >%O       | ok          |         0 | 0.00218541 |      9 |    17 |          52 |   2 |   9 |             4 |          1 |            0 |           1601 |               41559 |         805 |
+| !(F((G(p0)) \vert{} (F(p1)))) | ltl2tgba -s %f >%O | ok          |         0 |   0.026898 |      2 |     4 |           4 |   1 |   1 |             0 |          0 |            0 |            395 |                3964 |           1 |
+| !(F((G(p0)) \vert{} (F(p1)))) | spin -f %s >%O     | ok          |         0 | 0.00365003 |      2 |     3 |           5 |   1 |   1 |             1 |          1 |            0 |            396 |                4964 |           1 |
+| !(F((G(p0)) \vert{} (F(p1)))) | lbt < %L >%O       | ok          |         0 | 0.00184477 |      3 |     6 |           9 |   1 |   2 |             3 |          1 |            0 |            397 |                5957 |           2 |
 
 This file can be loaded in any spreadsheet or statistical application.
 
@@ -453,11 +437,11 @@ If we had used the option =--json=results.json= instead of (or in
 addition to) =--cvs=results.csv=, the file =results.json= would have
 contained the following [[http://www.json.org/][JSON]] output.
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results :wrap SRC json
 cat results.json
 #+END_SRC
 #+RESULTS:
-#+begin_example
+#+begin_SRC json
 {
   "tool": [
     "ltl2tgba -s %f >%O",
@@ -467,37 +451,37 @@ cat results.json
   "formula": [
     "0",
     "1",
-    "!((1) U (F(!(p0))))",
-    "(1) U (F(!(p0)))",
-    "(1) U ((G(p0)) | (F(p1)))",
-    "!((1) U ((G(p0)) | (F(p1))))"
+    "!(F(!(p0)))",
+    "F(!(p0))",
+    "F((G(p0)) | (F(p1)))",
+    "!(F((G(p0)) | (F(p1))))"
   ],
   "fields":  [
   "formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nondet_states","nondet_aut","complete_aut","product_states","product_transitions","product_scc"
   ],
   "inputs":  [ 0, 1 ],
   "results": [
-    [ 0,0,"ok",0,0.0299298,1,1,0,1,1,0,0,0,1,0,1 ],
-    [ 0,1,"ok",0,0.00396246,2,2,1,1,2,0,0,0,1,0,1 ],
-    [ 0,2,"ok",0,0.00262385,1,0,0,0,1,0,0,0,1,0,1 ],
-    [ 1,0,"ok",0,0.0261614,1,1,1,1,1,0,0,1,200,4199,1 ],
-    [ 1,1,"ok",0,0.0137128,2,2,2,1,2,0,0,1,201,4220,2 ],
-    [ 1,2,"ok",0,0.00792516,3,3,3,0,3,0,0,1,222,4653,23 ],
-    [ 2,0,"ok",0,0.043858,1,1,1,1,1,0,0,0,200,2059,1 ],
-    [ 2,1,"ok",0,0.00202537,1,1,1,1,1,0,0,0,200,2059,1 ],
-    [ 2,2,"ok",0,0.00331618,2,2,2,0,2,0,0,0,201,2071,2 ],
-    [ 3,0,"ok",0,0.031689,2,3,4,1,2,0,0,1,400,8264,2 ],
-    [ 3,1,"ok",0,0.0026263,2,3,5,1,2,1,1,1,400,10337,2 ],
-    [ 3,2,"ok",0,0.00266354,7,13,22,2,7,4,1,1,1201,35191,604 ],
-    [ 4,0,"ok",0,0.0287222,3,5,11,1,3,1,1,0,600,11358,3 ],
-    [ 4,1,"ok",0,0.00167423,4,8,24,1,4,2,1,0,800,24920,4 ],
-    [ 4,2,"ok",0,0.0016987,9,17,52,2,9,4,1,0,1601,41559,805 ],
-    [ 5,0,"ok",0,0.0308937,2,4,4,1,1,0,0,0,395,3964,1 ],
-    [ 5,1,"ok",0,0.0230605,6,18,17,1,4,5,1,0,592,8891,1 ],
-    [ 5,2,"ok",0,0.00280787,3,6,9,1,2,3,1,0,397,5957,2 ]
+    [ 0,0,"ok",0,0.0137672,1,1,0,1,1,0,0,0,1,0,1 ],
+    [ 0,1,"ok",0,0.000908285,2,2,1,1,2,0,0,0,1,0,1 ],
+    [ 0,2,"ok",0,0.00133153,1,0,0,0,1,0,0,0,1,0,1 ],
+    [ 1,0,"ok",0,0.0135283,1,1,1,1,1,0,0,1,200,4199,1 ],
+    [ 1,1,"ok",0,0.000828822,2,2,2,1,2,0,0,1,201,4220,2 ],
+    [ 1,2,"ok",0,0.00134064,3,3,3,0,3,0,0,1,222,4653,23 ],
+    [ 2,0,"ok",0,0.0140072,1,1,1,1,1,0,0,0,200,2059,1 ],
+    [ 2,1,"ok",0,0.00081293,1,1,1,1,1,0,0,0,200,2059,1 ],
+    [ 2,2,"ok",0,0.00134737,2,2,2,0,2,0,0,0,201,2071,2 ],
+    [ 3,0,"ok",0,0.0137064,2,3,4,1,2,0,0,1,400,8264,2 ],
+    [ 3,1,"ok",0,0.000911401,2,3,5,1,2,1,1,1,400,10337,2 ],
+    [ 3,2,"ok",0,0.00130378,4,6,10,1,4,2,1,1,601,14497,203 ],
+    [ 4,0,"ok",0,0.0144879,3,5,11,1,3,1,1,0,600,11358,3 ],
+    [ 4,1,"ok",0,0.00103421,4,8,24,1,4,2,1,0,800,24920,4 ],
+    [ 4,2,"ok",0,0.0013883,9,17,52,2,9,4,1,0,1601,41559,805 ],
+    [ 5,0,"ok",0,0.0142669,2,4,4,1,1,0,0,0,395,3964,1 ],
+    [ 5,1,"ok",0,0.00240013,2,3,5,1,1,1,1,0,396,4964,1 ],
+    [ 5,2,"ok",0,0.00134713,3,6,9,1,2,3,1,0,397,5957,2 ]
   ]
 }
-#+end_example
+#+end_SRC
 
 Here the =fields= table describes the columns of the =results= table.
 The =inputs= tables lists the columns that are considered as inputs
@@ -535,8 +519,8 @@ for i in range(0, len(data["tool"])):
 #+RESULTS:
 : tool               & count & time & states & edges & transitions & acc & scc & nondet_states & nondet_aut & complete_aut & product_states & product_transitions & product_scc \\
 : ltl2tgba -s %f >%O &   6 &    0.0 &    1.7 &    2.5 &    3.5 &    1.0 &    1.5 &    0.2 &    0.2 &    0.3 &  299.3 & 4974.0 &    1.5 \\
-: spin -f %s >%O     &   6 &    0.0 &    2.8 &    5.7 &    8.3 &    1.0 &    2.5 &    1.3 &    0.5 &    0.3 &  365.7 & 8404.5 &    1.8 \\
-: lbt < %L >%O       &   6 &    0.0 &    4.2 &    6.8 &   14.7 &    0.8 &    4.0 &    1.8 &    0.5 &    0.3 &  603.8 & 14905.2 &  239.5 \\
+: spin -f %s >%O     &   6 &    0.0 &    2.2 &    3.2 &    6.3 &    1.0 &    2.0 &    0.7 &    0.5 &    0.3 &  333.0 & 7750.0 &    1.8 \\
+: lbt < %L >%O       &   6 &    0.0 &    3.7 &    5.7 &   12.7 &    0.7 &    3.5 &    1.5 &    0.5 &    0.3 &  503.8 & 11456.2 &  172.7 \\
 
 The script =bench/ltl2tgba/sum.py= is a more evolved version of the
 above script that generates two kinds of LaTeX tables.
@@ -589,43 +573,14 @@ sets.  When building (degeneralized) Büchi automata, it will always be
 =1=, so its value is meaningful only when evaluating translations to
 generalized Büchi automata.  =edges= counts the actual number of edges
 in the graph supporting the automaton; an edge (labeled by a Boolean
-formula) might actually represent several transitions (each labeled by
+formula) [[file:concepts.org::#trans-edge][might actually represent several transitions]] (each labeled by
 assignment of all atomic propositions).  For instance in an automaton
 where the atomic proposition are $a$ and $b$, one edge labeled by
 $a\lor b$ actually represents three transitions $a b$, $a\bar b$, and
 $\bar a b$.
 
-The following picture displays two automata for the LTL formula =a U
-b=.  They both have 2 states and 3 edges, however they differ in the
-number of transitions (7 versus 8), because the initial self-loop is
-more constrained in the first automaton.  A smaller number of
-transition is therefore an indication of a more constrained automaton.
-
-#+BEGIN_SRC dot :file edges.svg :exports results
-digraph G {
-  0 [label="", style=invis, height=0]
-  0 -> 1
-  1 [label="A1"]
-  1 -> 2 [label="b\n"]
-  1 -> 1 [label="a & !b\n"]
-  2 [label="B1", peripheries=2]
-  2 -> 2 [label="1"]
-
-  3 [label="", style=invis, height=0]
-  3 -> 4
-  4 [label="A2"]
-  4 -> 5 [label="b\n"]
-  4 -> 4 [label="a\n"]
-  5 [label="B2", peripheries=2]
-  5 -> 5 [label="1"]
-}
-#+END_SRC
-
-#+RESULTS:
-[[file:edges.svg]]
-
-
-=scc= counts the number of strongly-connected components in the automaton.
+=scc= counts the number of strongly-connected components in the
+automaton.
 
 If option =--strength= is passed to =ltlcross=, these SCCs are
 also partitioned on four sets based on their strengths:
@@ -713,19 +668,38 @@ For instance in the following, =ltl2tgba= is run in two
 configurations, and the strings =ltl2tgba -s --small %f >%O= and
 =ltl2tgba -s --deter %f >%O= appear verbatim in the output:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+NAME: ltlcross-unnamed
+#+BEGIN_SRC sh :exports code
 ltlcross -f a -f Ga 'ltl2tgba -s --small %f >%O' 'ltl2tgba -s --deter %f >%O' --csv
 #+END_SRC
+
+#+BEGIN_SRC sh :results output raw :exports results :noweb yes
+sed 's/"//g
+s/|/\\vert{}/g
+s/--/@@html:--@@/g
+s/^/| /
+s/$/ |/
+s/,/|/g
+$d
+1a\
+|-|
+' <<EOF
+<<ltlcross-unnamed()>>
+EOF
+#+END_SRC
+
+#+ATTR_HTML: :class csv-table
 #+RESULTS:
-: "formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nondet_states","nondet_aut","complete_aut","product_states","product_transitions","product_scc"
-: "a","ltl2tgba -s --small %f >%O","ok",0,0.0129968,2,2,3,1,2,0,0,0,201,4144,2
-: "a","ltl2tgba -s --deter %f >%O","ok",0,0.0116347,2,2,3,1,2,0,0,0,201,4144,2
-: "!(a)","ltl2tgba -s --small %f >%O","ok",0,0.0127019,2,2,3,1,2,0,0,0,201,4149,2
-: "!(a)","ltl2tgba -s --deter %f >%O","ok",0,0.0117374,2,2,3,1,2,0,0,0,201,4149,2
-: "G(a)","ltl2tgba -s --small %f >%O","ok",0,0.0126186,1,1,1,1,1,0,0,0,200,2059,1
-: "G(a)","ltl2tgba -s --deter %f >%O","ok",0,0.011645,1,1,1,1,1,0,0,0,200,2059,1
-: "!(G(a))","ltl2tgba -s --small %f >%O","ok",0,0.0129519,2,3,4,1,2,0,0,1,400,8264,2
-: "!(G(a))","ltl2tgba -s --deter %f >%O","ok",0,0.0129941,2,3,4,1,2,0,0,1,400,8264,2
+| formula | tool                                | exit_status | exit_code |      time | states | edges | transitions | acc | scc | nondet_states | nondet_aut | complete_aut | product_states | product_transitions | product_scc |
+|---------+-------------------------------------+-------------+-----------+-----------+--------+-------+-------------+-----+-----+---------------+------------+--------------+----------------+---------------------+-------------|
+| a       | ltl2tgba -s @@html:--@@small %f >%O | ok          |         0 |  0.045425 |      2 |     2 |           3 |   1 |   2 |             0 |          0 |            0 |            201 |                4144 |           2 |
+| a       | ltl2tgba -s @@html:--@@deter %f >%O | ok          |         0 | 0.0452103 |      2 |     2 |           3 |   1 |   2 |             0 |          0 |            0 |            201 |                4144 |           2 |
+| !(a)    | ltl2tgba -s @@html:--@@small %f >%O | ok          |         0 | 0.0475807 |      2 |     2 |           3 |   1 |   2 |             0 |          0 |            0 |            201 |                4149 |           2 |
+| !(a)    | ltl2tgba -s @@html:--@@deter %f >%O | ok          |         0 | 0.0441754 |      2 |     2 |           3 |   1 |   2 |             0 |          0 |            0 |            201 |                4149 |           2 |
+| G(a)    | ltl2tgba -s @@html:--@@small %f >%O | ok          |         0 | 0.0453961 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2059 |           1 |
+| G(a)    | ltl2tgba -s @@html:--@@deter %f >%O | ok          |         0 | 0.0467509 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2059 |           1 |
+| !(G(a)) | ltl2tgba -s @@html:--@@small %f >%O | ok          |         0 | 0.0459274 |      2 |     3 |           4 |   1 |   2 |             0 |          0 |            1 |            400 |                8264 |           2 |
+| !(G(a)) | ltl2tgba -s @@html:--@@deter %f >%O | ok          |         0 |   0.04534 |      2 |     3 |           4 |   1 |   2 |             0 |          0 |            1 |            400 |                8264 |           2 |
 
 To present these results graphically, or even when analyzing these
 data, it might be convenient to give each configured tool a shorter
@@ -733,37 +707,50 @@ name.  =ltlcross= supports the specification of such short names by
 looking whether the command specification for a translator has the
 form "={short name}actual command=".
 
-For instance:
-#+BEGIN_SRC sh :results verbatim :exports both
+For instance, after
+#+BEGIN_SRC sh :exports code
 genltl --and-f=1..5 |
 ltlcross '{small} ltl2tgba -s --small %f >%O' \
          '{deter} ltl2tgba -s --deter %f >%O' --csv=ltlcross.csv
-cat ltlcross.csv
 #+END_SRC
+
+The file =ltlcross.csv= now contains:
+#+BEGIN_SRC sh :results output raw :exports results
+sed 's/"//g
+s/|/\\vert{}/g
+s/--/@@html:--@@/g
+s/^/| /
+s/$/ |/
+s/,/|/g
+$d
+1a\
+|-|
+' ltlcross.csv
+#+END_SRC
+
+#+ATTR_HTML: :class csv-table
 #+RESULTS:
-#+begin_example
-"formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nondet_states","nondet_aut","complete_aut","product_states","product_transitions","product_scc"
-"F(p1)","small","ok",0,0.0138108,2,3,4,1,2,0,0,1,400,8272,3
-"F(p1)","deter","ok",0,0.0142178,2,3,4,1,2,0,0,1,400,8272,3
-"!(F(p1))","small","ok",0,0.013972,1,1,1,1,1,0,0,0,200,2055,2
-"!(F(p1))","deter","ok",0,0.0139471,1,1,1,1,1,0,0,0,200,2055,2
-"(F(p1)) & (F(p2))","small","ok",0,0.0136648,4,9,16,1,4,0,0,1,798,16533,5
-"(F(p1)) & (F(p2))","deter","ok",0,0.0140229,4,9,16,1,4,0,0,1,798,16533,5
-"!((F(p1)) & (F(p2)))","small","ok",0,0.0144659,3,5,7,1,3,0,0,0,598,7367,4
-"!((F(p1)) & (F(p2)))","deter","ok",0,0.0143098,3,5,7,1,3,0,0,0,598,7367,4
-"(F(p1)) & (F(p2)) & (F(p3))","small","ok",0,0.0142109,8,27,64,1,8,0,0,1,1587,33068,34
-"(F(p1)) & (F(p2)) & (F(p3))","deter","ok",0,0.0149064,8,27,64,1,8,0,0,1,1587,33068,34
-"!((F(p1)) & (F(p2)) & (F(p3)))","small","ok",0,0.0159551,4,6,24,1,4,1,1,0,601,6171,4
-"!((F(p1)) & (F(p2)) & (F(p3)))","deter","ok",0,0.0143288,7,19,37,1,7,0,0,0,1387,18792,33
-"(F(p1)) & (F(p2)) & (F(p3)) & (F(p4))","small","ok",0,0.0152539,16,81,256,1,16,0,0,1,2727,57786,74
-"(F(p1)) & (F(p2)) & (F(p3)) & (F(p4))","deter","ok",0,0.0155381,16,81,256,1,16,0,0,1,2727,57786,74
-"!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))","small","ok",0,0.015231,5,8,64,1,5,1,1,0,801,8468,5
-"!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))","deter","ok",0,0.0157937,15,65,175,1,15,0,0,0,2527,37226,73
-"(F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))","small","ok",0,0.017919,32,243,1024,1,32,0,0,1,5330,114068,350
-"(F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))","deter","ok",0,0.0167644,32,243,1024,1,32,0,0,1,5330,114068,350
-"!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5)))","small","ok",0,0.0187427,6,10,160,1,6,1,1,0,1000,10707,6
-"!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5)))","deter","ok",0,0.0183562,31,211,781,1,31,0,0,0,5130,82897,349
-#+end_example
+| formula                                            | tool  | exit_status | exit_code |      time | states | edges | transitions | acc | scc | nondet_states | nondet_aut | complete_aut | product_states | product_transitions | product_scc |
+|----------------------------------------------------+-------+-------------+-----------+-----------+--------+-------+-------------+-----+-----+---------------+------------+--------------+----------------+---------------------+-------------|
+| F(p1)                                              | small | ok          |         0 | 0.0143077 |      2 |     3 |           4 |   1 |   2 |             0 |          0 |            1 |            400 |                8272 |           3 |
+| F(p1)                                              | deter | ok          |         0 | 0.0143547 |      2 |     3 |           4 |   1 |   2 |             0 |          0 |            1 |            400 |                8272 |           3 |
+| !(F(p1))                                           | small | ok          |         0 | 0.0146721 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2055 |           2 |
+| !(F(p1))                                           | deter | ok          |         0 | 0.0145825 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2055 |           2 |
+| (F(p1)) & (F(p2))                                  | small | ok          |         0 | 0.0147275 |      4 |     9 |          16 |   1 |   4 |             0 |          0 |            1 |            798 |               16533 |           5 |
+| (F(p1)) & (F(p2))                                  | deter | ok          |         0 | 0.0144936 |      4 |     9 |          16 |   1 |   4 |             0 |          0 |            1 |            798 |               16533 |           5 |
+| !((F(p1)) & (F(p2)))                               | small | ok          |         0 | 0.0147704 |      3 |     5 |           7 |   1 |   3 |             0 |          0 |            0 |            598 |                7367 |           4 |
+| !((F(p1)) & (F(p2)))                               | deter | ok          |         0 | 0.0146198 |      3 |     5 |           7 |   1 |   3 |             0 |          0 |            0 |            598 |                7367 |           4 |
+| (F(p1)) & (F(p2)) & (F(p3))                        | small | ok          |         0 | 0.0153116 |      8 |    27 |          64 |   1 |   8 |             0 |          0 |            1 |           1587 |               33068 |          34 |
+| (F(p1)) & (F(p2)) & (F(p3))                        | deter | ok          |         0 | 0.0156095 |      8 |    27 |          64 |   1 |   8 |             0 |          0 |            1 |           1587 |               33068 |          34 |
+| !((F(p1)) & (F(p2)) & (F(p3)))                     | small | ok          |         0 |  0.015041 |      4 |     6 |          24 |   1 |   4 |             1 |          1 |            0 |            601 |                6171 |           4 |
+| !((F(p1)) & (F(p2)) & (F(p3)))                     | deter | ok          |         0 | 0.0151199 |      7 |    19 |          37 |   1 |   7 |             0 |          0 |            0 |           1387 |               18792 |          33 |
+| (F(p1)) & (F(p2)) & (F(p3)) & (F(p4))              | small | ok          |         0 | 0.0166691 |     16 |    81 |         256 |   1 |  16 |             0 |          0 |            1 |           2727 |               57786 |          74 |
+| (F(p1)) & (F(p2)) & (F(p3)) & (F(p4))              | deter | ok          |         0 | 0.0161634 |     16 |    81 |         256 |   1 |  16 |             0 |          0 |            1 |           2727 |               57786 |          74 |
+| !((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))           | small | ok          |         0 | 0.0167047 |      5 |     8 |          64 |   1 |   5 |             1 |          1 |            0 |            801 |                8468 |           5 |
+| !((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))           | deter | ok          |         0 | 0.0160785 |     15 |    65 |         175 |   1 |  15 |             0 |          0 |            0 |           2527 |               37226 |          73 |
+| (F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))    | small | ok          |         0 |  0.018485 |     32 |   243 |        1024 |   1 |  32 |             0 |          0 |            1 |           5330 |              114068 |         350 |
+| (F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))    | deter | ok          |         0 | 0.0209914 |     32 |   243 |        1024 |   1 |  32 |             0 |          0 |            1 |           5330 |              114068 |         350 |
+| !((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))) | small | ok          |         0 | 0.0196063 |      6 |    10 |         160 |   1 |   6 |             1 |          1 |            0 |           1000 |               10707 |           6 |
 
 In this last example, we saved the CSV output to =ltlcross.csv= so we
 can play with it in the next section.
@@ -773,19 +760,21 @@ can play with it in the next section.
 The produced CSV should be directly readable by R's CSV input functions like
 =read.csv()=, =readr::read_csv()=, or =data.table::fread()=.
 
-#+BEGIN_SRC R :session :results output :exports both
+#+BEGIN_SRC R
 library(data.table)
 dt <- fread('ltlcross.csv')
 str(dt)
 #+END_SRC
 #+RESULTS:
 #+begin_example
+data.table 1.12.0  Latest news: r-datatable.com
+
 Classes ‘data.table’ and 'data.frame':	20 obs. of  16 variables:
  $ formula            : chr  "F(p1)" "F(p1)" "!(F(p1))" "!(F(p1))" ...
  $ tool               : chr  "small" "deter" "small" "deter" ...
  $ exit_status        : chr  "ok" "ok" "ok" "ok" ...
  $ exit_code          : int  0 0 0 0 0 0 0 0 0 0 ...
- $ time               : num  0.0133 0.0133 0.0139 0.0128 0.0144 ...
+ $ time               : num  0.0284 0.0283 0.0283 0.0282 0.029 ...
  $ states             : int  2 2 1 1 4 4 3 3 8 8 ...
  $ edges              : int  3 3 1 1 9 9 5 5 27 27 ...
  $ transitions        : int  4 4 1 1 16 16 7 7 64 64 ...
@@ -808,21 +797,22 @@ A common transformation is to group the results of all tools on the
 same line: using exactly one line per formula.  This is easily
 achieved using =dcast()= from the =data.table= library.
 
-#+BEGIN_SRC R :session :results output :exports both
+#+BEGIN_SRC R
 dt2 <- dcast(dt, formula ~ tool, value.var=names(dt)[-(1:2)], sep=".")
 str(dt2)
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
+
 Classes ‘data.table’ and 'data.frame':	10 obs. of  29 variables:
  $ formula                  : chr  "!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5)))" "!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))" "!((F(p1)) & (F(p2)) & (F(p3)))" "!((F(p1)) & (F(p2)))" ...
  $ exit_status.deter        : chr  "ok" "ok" "ok" "ok" ...
  $ exit_status.small        : chr  "ok" "ok" "ok" "ok" ...
  $ exit_code.deter          : int  0 0 0 0 0 0 0 0 0 0
  $ exit_code.small          : int  0 0 0 0 0 0 0 0 0 0
- $ time.deter               : num  0.0174 0.0149 0.0141 0.0136 0.0128 ...
- $ time.small               : num  0.0171 0.0155 0.0152 0.0146 0.0139 ...
+ $ time.deter               : num  0.0172 0.0212 0.02 0.0191 0.0282 ...
+ $ time.small               : num  0.0172 0.0221 0.0203 0.0195 0.0283 ...
  $ states.deter             : int  31 15 7 3 1 4 8 16 32 2
  $ states.small             : int  6 5 4 3 1 4 8 16 32 2
  $ edges.deter              : int  211 65 19 5 1 9 27 81 243 3
@@ -855,7 +845,7 @@ compare the number of states produced by the two configurations of
 =ltl2tgba= for each formula, we just need to plot column
 =dt2$state.small= against =dt2$state.deter=.
 
-#+BEGIN_SRC R :session :results output graphics :width 5 :height 5 :file ltlcross-r.svg :exports both
+#+BEGIN_SRC R :results output graphics :width 5 :height 5 :file ltlcross-r.svg
 library(ggplot2)
 ggplot(dt2, aes(x=states.small, y=states.deter)) +
    geom_abline(colour='white') + geom_point()
@@ -868,10 +858,10 @@ ggplot(dt2, aes(x=states.small, y=states.deter)) +
 We should probably print the formulas for the cases where the two
 sizes differ.
 
-#+BEGIN_SRC R :session :results output graphics :width 5 :height 5 :file ltlcross-r2.svg :exports both
+#+BEGIN_SRC R :results output graphics :width 5 :height 5 :file ltlcross-r2.svg
 ggplot(dt2, aes(x=states.small, y=states.deter)) +
    geom_abline(colour='white') + geom_point() +
-   geom_text(data=subset(df2, states.small != states.deter),
+   geom_text(data=subset(dt2, states.small != states.deter),
              aes(label=formula), hjust=0, nudge_x=.5)
 #+END_SRC
 
@@ -942,52 +932,47 @@ If =--save-bogus=OTHERFILENAME= is provided, every bogus formula found
 during the process will be saved in =OTHERFILENAME=.
 
 Example:
-#+BEGIN_SRC sh :exports code :results verbatim
+#+BEGIN_SRC sh :prologue "exec 2>&1" :epilogue true
 ltlcross -f '(G!b & (!c | F!a)) | (c & Ga & Fb)' "modella %L %O" \
   --save-bogus=bogus \
   --grind=bogus-grind
 #+END_SRC
-#+BEGIN_SRC sh :exports results :results verbatim
-ltlcross -f '(G!b & (!c | F!a)) | (c & Ga & Fb)' "modella %L %O" \
-  --save-bogus=bogus --grind=bogus-grind 2>&1
-true
-#+END_SRC
 #+RESULTS:
 #+begin_example
 | & G ! p0 | ! p1 F ! p2 & & p1 G p2 F p0
-Running [P0]: modella 'lcr-i0-FUPmeY' 'lcr-o0-F3bZRp'
-Running [N0]: modella 'lcr-i0-ebjQwR' 'lcr-o0-20eIbj'
+Running [P0]: modella 'lcr-i0-Nc8B1P' 'lcr-o0-CDjvYF'
+Running [N0]: modella 'lcr-i0-Io4LVv' 'lcr-o0-C482Sl'
 Performing sanity checks and gathering statistics...
 error: P0*N0 is nonempty; both automata accept the infinite word:
        cycle{!p0 & !p1}
 
 Trying to find a bogus mutation of (G!b & (!c | F!a)) | (c & Ga & Fb)...
 Mutation 1/22: & & p0 G p1 F p2
-Running [P0]: modella 'lcr-i1-zXEyXK' 'lcr-o0-RsypJc'
-Running [N0]: modella 'lcr-i1-Ux7xvE' 'lcr-o0-x19Gh6'
+Running [P0]: modella 'lcr-i1-EmhjSb' 'lcr-o0-q1GzR1'
+Running [N0]: modella 'lcr-i1-mwR1QR' 'lcr-o0-gEcuQH'
 Performing sanity checks and gathering statistics...
 
 Mutation 2/22: & G ! p0 | ! p1 F ! p2
-Running [P0]: modella 'lcr-i2-syS74x' 'lcr-o0-wPRySZ'
-Running [N0]: modella 'lcr-i2-x9DdGr' 'lcr-o0-fgHStT'
+Running [P0]: modella 'lcr-i2-4UoNQx' 'lcr-o0-W9W6Qn'
+Running [N0]: modella 'lcr-i2-h5IDRd' 'lcr-o0-VDFaS3'
 Performing sanity checks and gathering statistics...
 
 Mutation 3/22: | G ! p0 & & p1 G p2 F p0
-Running [P0]: modella 'lcr-i3-rVOAil' 'lcr-o0-jU2i7M'
-Running [N0]: modella 'lcr-i3-KATfWe' 'lcr-o0-2UOcLG'
+Running [P0]: modella 'lcr-i3-bkvvTT' 'lcr-o0-wMAQUJ'
+Running [N0]: modella 'lcr-i3-qoYoWz' 'lcr-o0-ILwXXp'
 Performing sanity checks and gathering statistics...
 error: P0*N0 is nonempty; both automata accept the infinite word:
        cycle{!p0 & !p1}
 
 Trying to find a bogus mutation of G!b | (c & Ga & Fb)...
 Mutation 1/16: t
-Running [P0]: modella 'lcr-i4-OJk2B8' 'lcr-o0-VVCSsA'
-Running [N0]: modella 'lcr-i4-nKwTj2' 'lcr-o0-npMUau'
+Running [P0]: modella 'lcr-i4-avS30f' 'lcr-o0-MYCa45'
+Running [N0]: modella 'lcr-i4-vJss7V' 'lcr-o0-ItCKaM'
 Performing sanity checks and gathering statistics...
 
 Mutation 2/16: G ! p0
-Running [P0]: modella 'lcr-i5-Waoe2V' 'lcr-o0-9wsyTn'
-Running [N0]: modella 'lcr-i5-M0R2KP' 'lcr-o0-uhmxCh'
+Running [P0]: modella 'lcr-i5-TG7leC' 'lcr-o0-N6UXhs'
+Running [N0]: modella 'lcr-i5-KwJJli' 'lcr-o0-kbRvp8'
 Performing sanity checks and gathering statistics...
 
 Mutation 3/16: & & p0 G p1 F p2
@@ -995,8 +980,8 @@ warning: This formula or its negation has already been checked.
          Use --allow-dups if it should not be ignored.
 
 Mutation 4/16: | G ! p0 & p1 F p0
-Running [P0]: modella 'lcr-i6-OtIGuJ' 'lcr-o0-qBEQmb'
-Running [N0]: modella 'lcr-i6-MGbcfD' 'lcr-o0-t93x74'
+Running [P0]: modella 'lcr-i6-otaRtY' 'lcr-o0-bRLcyO'
+Running [N0]: modella 'lcr-i6-3DMJCE' 'lcr-o0-v04gHu'
 Performing sanity checks and gathering statistics...
 error: P0*N0 is nonempty; both automata accept the infinite word:
        cycle{!p0 & !p1}
@@ -1011,38 +996,38 @@ warning: This formula or its negation has already been checked.
          Use --allow-dups if it should not be ignored.
 
 Mutation 3/10: & p0 F p1
-Running [P0]: modella 'lcr-i7-4oa00w' 'lcr-o0-3IEsUY'
-Running [N0]: modella 'lcr-i7-vyy5Nq' 'lcr-o0-nXOIHS'
+Running [P0]: modella 'lcr-i7-gKcHMk' 'lcr-o0-UPD7Ra'
+Running [N0]: modella 'lcr-i7-4HUKX0' 'lcr-o0-Dpno3Q'
 Performing sanity checks and gathering statistics...
 
 Mutation 4/10: | p0 G ! p1
-Running [P0]: modella 'lcr-i8-Kt48Bk' 'lcr-o0-xeIzwM'
-Running [N0]: modella 'lcr-i8-ye5are' 'lcr-o0-3QMMlG'
+Running [P0]: modella 'lcr-i8-H6GH9G' 'lcr-o0-xyO1fx'
+Running [N0]: modella 'lcr-i8-w3vxmn' 'lcr-o0-wgw3sd'
 Performing sanity checks and gathering statistics...
 
 Mutation 5/10: | G ! p0 F p0
-Running [P0]: modella 'lcr-i9-Bpmah8' 'lcr-o0-38lycA'
-Running [N0]: modella 'lcr-i9-cQJ771' 'lcr-o0-yUcH3t'
+Running [P0]: modella 'lcr-i9-vt8eA3' 'lcr-o0-982qHT'
+Running [N0]: modella 'lcr-i9-qrbNOJ' 'lcr-o0-ceD9Vz'
 Performing sanity checks and gathering statistics...
 
 Mutation 6/10: | ! p0 & p1 F p0
-Running [P0]: modella 'lcr-i10-mYtDZV' 'lcr-o0-nCdAVn'
-Running [N0]: modella 'lcr-i10-d1fIRP' 'lcr-o0-oAsQNh'
+Running [P0]: modella 'lcr-i10-6upQ3p' 'lcr-o0-EStxbg'
+Running [N0]: modella 'lcr-i10-7nUoj6' 'lcr-o0-e4DgrW'
 Performing sanity checks and gathering statistics...
 
 Mutation 7/10: | & p1 F p0 G p0
-Running [P0]: modella 'lcr-i11-petsKJ' 'lcr-o0-Z3U4Gb'
-Running [N0]: modella 'lcr-i11-bmFSDD' 'lcr-o0-P1DGA5'
+Running [P0]: modella 'lcr-i11-ohXyzM' 'lcr-o0-bozRHC'
+Running [N0]: modella 'lcr-i11-6wYkQs' 'lcr-o0-TCxOYi'
 Performing sanity checks and gathering statistics...
 
 Mutation 8/10: | & p0 p1 G ! p0
-Running [P0]: modella 'lcr-i12-eUjByx' 'lcr-o0-DZAwwZ'
-Running [N0]: modella 'lcr-i12-v3JCur' 'lcr-o0-IzWIsT'
+Running [P0]: modella 'lcr-i12-51Vd88' 'lcr-o0-uWKDhZ'
+Running [N0]: modella 'lcr-i12-0OkfrP' 'lcr-o0-aEdRAF'
 Performing sanity checks and gathering statistics...
 
 Mutation 9/10: | G ! p0 & p0 F p0
-Running [P0]: modella 'lcr-i13-Sb2Arl' 'lcr-o0-kBwtqN'
-Running [N0]: modella 'lcr-i13-Tctwpf' 'lcr-o0-hvIzoH'
+Running [P0]: modella 'lcr-i13-vy57Kv' 'lcr-o0-lcfpVl'
+Running [N0]: modella 'lcr-i13-D7SQ5b' 'lcr-o0-k8Hig2'
 Performing sanity checks and gathering statistics...
 error: P0*N0 is nonempty; both automata accept the infinite word:
        cycle{!p0}
@@ -1057,13 +1042,13 @@ warning: This formula or its negation has already been checked.
          Use --allow-dups if it should not be ignored.
 
 Mutation 3/7: & p0 F p0
-Running [P0]: modella 'lcr-i14-iDAoo9' 'lcr-o0-6vSdoB'
-Running [N0]: modella 'lcr-i14-WMIdo3' 'lcr-o0-NxEdov'
+Running [P0]: modella 'lcr-i14-AvSorS' 'lcr-o0-AZkvCI'
+Running [N0]: modella 'lcr-i14-Hd7LNy' 'lcr-o0-pM82Yo'
 Performing sanity checks and gathering statistics...
 
 Mutation 4/7: | p0 G ! p0
-Running [P0]: modella 'lcr-i15-lS5FoX' 'lcr-o0-XFX8op'
-Running [N0]: modella 'lcr-i15-8IdNpR' 'lcr-o0-0Bxrqj'
+Running [P0]: modella 'lcr-i15-tygKaf' 'lcr-o0-YHFrm5'
+Running [N0]: modella 'lcr-i15-GL9iyV' 'lcr-o0-riOaKL'
 Performing sanity checks and gathering statistics...
 
 Mutation 5/7: | G ! p0 F p0
@@ -1071,13 +1056,13 @@ warning: This formula or its negation has already been checked.
          Use --allow-dups if it should not be ignored.
 
 Mutation 6/7: | ! p0 & p0 F p0
-Running [P0]: modella 'lcr-i16-7boQrL' 'lcr-o0-wsIftd'
-Running [N0]: modella 'lcr-i16-tk8OuF' 'lcr-o0-9wQow7'
+Running [P0]: modella 'lcr-i16-M0RHWB' 'lcr-o0-iVlf9r'
+Running [N0]: modella 'lcr-i16-WD4Xli' 'lcr-o0-Ez6Gy8'
 Performing sanity checks and gathering statistics...
 
 Mutation 7/7: | G p0 & p0 F p0
-Running [P0]: modella 'lcr-i17-wnlkyz' 'lcr-o0-MAjgA1'
-Running [N0]: modella 'lcr-i17-qFLnCt' 'lcr-o0-45gvEV'
+Running [P0]: modella 'lcr-i17-F1BLLY' 'lcr-o0-Z9nQYO'
+Running [N0]: modella 'lcr-i17-efo5bF' 'lcr-o0-fFzkpv'
 Performing sanity checks and gathering statistics...
 
 Smallest bogus mutation found for (G!b & (!c | F!a)) | (c & Ga & Fb) is G!c | (c & Fc).
@@ -1086,7 +1071,7 @@ error: some error was detected during the above runs.
        Check file bogus for problematic formulas.
 #+end_example
 
-#+BEGIN_SRC sh :exports both :results verbatim
+#+BEGIN_SRC sh
 cat bogus
 #+END_SRC
 
@@ -1096,7 +1081,7 @@ cat bogus
 : G!b | (c & Fb)
 : G!c | (c & Fc)
 
-#+BEGIN_SRC sh :exports both :results verbatim
+#+BEGIN_SRC sh
 cat bogus-grind
 #+END_SRC
 
@@ -1112,15 +1097,6 @@ When checks are enabled, the negated formulas are intermixed with the
 positives ones in the results.  Therefore the =--no-check= option can
 be used to gather statistics about a specific set of formulas.
 
-
-#  LocalWords:  ltlcross num toc LTL Büchi LBTT Testbench PSL SRC sed
-#  LocalWords:  automata LBT LBTT's ltl tgba GFa lck iDGV sA FYp BYY
-#  LocalWords:  ClVQg wyErP UNE dQ coM tH eHPoQy goto ba lbt modella
-#  LocalWords:  lbtt csv json randltl ltlfilt wm eGEYaZ nYpFBX fGdZQ
-#  LocalWords:  CPs kXiZZS ILLzR wU CcMCaQ IOckzW tsT RZ TJXmT jb XRO
-#  LocalWords:  nxqfd hS vNItGg acc scc nondetstates nondeterministic
-#  LocalWords:  cvs LaTeX datacols len ith otimes ltlcheck eval setq
-#  LocalWords:  setenv concat getenv
 ** =--verbose=
    :PROPERTIES:
    :CUSTOM_ID: verbose
@@ -1134,21 +1110,17 @@ and =ltl3ba -H1= on the formula =FGa=.  Note that =ltl2tgba= will
 produce transition-based generalized Büchi automata, while =ltl3ba
 -H1= produces co-Büchi alternating automata.
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue "export SPOT_HOA_TOLERANT=1; exec 2>&1"
 ltlcross -f 'FGa' ltl2tgba 'ltl3ba -H1' --determinize --verbose
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :exports results
-SPOT_HOA_TOLERANT=1 ltlcross -f 'FGa' ltl2tgba 'ltl3ba -H1' --determinize --verbose 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 F(G(a))
-Running [P0]: ltl2tgba -H 'F(G(a))'>'lcr-o0-opbyhq'
-Running [P1]: ltl3ba -H1 -f '<>([](a))'>'lcr-o1-aP47sS'
-Running [N0]: ltl2tgba -H '!(F(G(a)))'>'lcr-o0-UV1eFk'
-Running [N1]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o1-bFSrTM'
+Running [P0]: ltl2tgba -H 'F(G(a))'>'lcr-o0-cNwEjy'
+Running [P1]: ltl3ba -H1 -f '<>([](a))'>'lcr-o1-WQo28q'
+Running [N0]: ltl2tgba -H '!(F(G(a)))'>'lcr-o0-KT96Zj'
+Running [N1]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o1-WE1RXc'
 info: collected automata:
 info:   P0	(2 st.,3 ed.,1 sets)
 info:   N0	(1 st.,2 ed.,1 sets) deterministic complete
@@ -1214,21 +1186,17 @@ that the automaton =N0= is really the complement of =P0=.  Similarly
 Note that if we had not used the =--determinize= option, the procedure
 would look slightly more complex:
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue "export SPOT_HOA_TOLERANT=1; exec 2>&1"
 ltlcross -f 'FGa' ltl2tgba 'ltl3ba -H1' --verbose
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :exports results
-SPOT_HOA_TOLERANT=1 ltlcross -f 'FGa' ltl2tgba 'ltl3ba -H1' --verbose 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 F(G(a))
-Running [P0]: ltl2tgba -H 'F(G(a))'>'lcr-o0-cq9s5c'
-Running [P1]: ltl3ba -H1 -f '<>([](a))'>'lcr-o1-Fb0iii'
-Running [N0]: ltl2tgba -H '!(F(G(a)))'>'lcr-o0-X5dGvn'
-Running [N1]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o1-tLO5Ks'
+Running [P0]: ltl2tgba -H 'F(G(a))'>'lcr-o0-Ot1KDa'
+Running [P1]: ltl3ba -H1 -f '<>([](a))'>'lcr-o1-Kvzdfm'
+Running [N0]: ltl2tgba -H '!(F(G(a)))'>'lcr-o0-X2dURx'
+Running [N1]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o1-wuLpzJ'
 info: collected automata:
 info:   P0	(2 st.,3 ed.,1 sets)
 info:   N0	(1 st.,2 ed.,1 sets) deterministic complete
@@ -1288,21 +1256,17 @@ implementation that should not be checked, and we just want to check
 the output of =ltl2tgba= against this reference.  See how the number
 of tests performed has been reduced.
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh  :prologue "export SPOT_HOA_TOLERANT=1; exec 2>&1"
 ltlcross -f 'FGa' ltl2tgba --reference 'ltl3ba -H1' --verbose
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :exports results
-SPOT_HOA_TOLERANT=1 ltlcross -f 'FGa' ltl2tgba --reference 'ltl3ba -H1' --verbose 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 F(G(a))
-Running [P0]: ltl3ba -H1 -f '<>([](a))'>'lcr-o0-UanRv9'
-Running [P1]: ltl2tgba -H 'F(G(a))'>'lcr-o1-43jbVn'
-Running [N0]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o0-TUeymC'
-Running [N1]: ltl2tgba -H '!(F(G(a)))'>'lcr-o1-5PYsOQ'
+Running [P0]: ltl3ba -H1 -f '<>([](a))'>'lcr-o0-hsnlkV'
+Running [P1]: ltl2tgba -H 'F(G(a))'>'lcr-o1-R0jOmP'
+Running [N0]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o0-7GwxvJ'
+Running [N1]: ltl2tgba -H '!(F(G(a)))'>'lcr-o1-5sgPFD'
 info: collected automata:
 info:   P0	(2 st.,3 ed.,1 sets)
 info:   N0	(3 st.,5 ed.,1 sets) univ-edges complete
@@ -1339,3 +1303,16 @@ info: consistency_check (P1,N1), state-space #0/1
 
 No problem detected.
 #+end_example
+
+#+BEGIN_SRC sh :results silent :exports results
+rm -f results.csv results.json ltlcross.csv bogus-grind bogus
+#+END_SRC
+
+#  LocalWords:  ltlcross num toc LTL Büchi LBTT Testbench PSL SRC sed
+#  LocalWords:  automata LBT LBTT's ltl tgba GFa lck iDGV sA FYp BYY
+#  LocalWords:  ClVQg wyErP UNE dQ coM tH eHPoQy goto ba lbt modella
+#  LocalWords:  lbtt csv json randltl ltlfilt wm eGEYaZ nYpFBX fGdZQ
+#  LocalWords:  CPs kXiZZS ILLzR wU CcMCaQ IOckzW tsT RZ TJXmT jb XRO
+#  LocalWords:  nxqfd hS vNItGg acc scc nondetstates nondeterministic
+#  LocalWords:  cvs LaTeX datacols len ith otimes ltlcheck eval setq
+#  LocalWords:  setenv concat getenv

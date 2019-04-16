@@ -3,6 +3,7 @@
 #+DESCRIPTION: Spot command-line tool for translating LTL into Transition-based Generalized Testing Automata.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports code
 
 This tool generates various form of Testing Automata, i.e., automata
 that observe the /changes/ of atomic propositions, not their values.
@@ -18,38 +19,9 @@ Here is the output on =a U Gb= (we omit the call to =dot=, as shown while
 discussing [[file:ltl2tgba.org][=ltl2tgba=]]).
 
 #+NAME: augb-ta
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 ltl2tgta --ta --multiple-init 'a U Gb'
 #+END_SRC
-
-#+RESULTS: augb-ta
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [style="filled", fillcolor="#ffffa0"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  edge[arrowhead=vee, arrowsize=.7]
-  -1  [label="", style=invis, height=0]
-  -1 -> 1 [label="!a & b"]
-  -2  [label="", style=invis, height=0]
-  -2 -> 2 [label="a & !b"]
-  -3  [label="", style=invis, height=0]
-  -3 -> 3 [label="a & b"]
-  1 [label="2\n!a & b",shape=box]
-  1 -> 4 [label="{a}\n"]
-  2 [label="1\na & !b"]
-  2 -> 3 [label="{b}\n"]
-  2 -> 1 [label="{a, b}\n"]
-  3 [label="0\na & b",shape=box]
-  3 -> 4 [label="{a}\n"]
-  3 -> 1 [label="{a}\n"]
-  3 -> 2 [label="{b}\n"]
-  4 [label="3",peripheries=2,shape=box]
-  4 -> 4 [label="{a}\n{0}"]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file augb-ta.svg :var txt=augb-ta :exports results
 $txt
@@ -78,31 +50,9 @@ Without the =--multiple-init= option, a fake initial state is added.
 This is the default since it often makes the result more readable.
 
 #+NAME: augb-ta2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 ltl2tgta --ta 'a U Gb'
 #+END_SRC
-#+RESULTS:
-#+begin_example
-digraph G {
-  0 [label="", style=invis, height=0]
-  0 -> 1
-  1 [label=init]
-  1 -> 2 [label="!a & b\n"]
-  1 -> 3 [label="a & b\n"]
-  1 -> 4 [label="a & !b\n"]
-  2 [label="2",shape=box]
-  2 -> 5 [label="{a}\n"]
-  3 [label="3",shape=box]
-  3 -> 5 [label="{a}\n"]
-  3 -> 2 [label="{a}\n"]
-  3 -> 4 [label="{b}\n"]
-  4 [label="1"]
-  4 -> 3 [label="{b}\n"]
-  4 -> 2 [label="{a, b}\n"]
-  5 [label="4",peripheries=2,shape=box]
-  5 -> 5 [label="{a}\n{0}"]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file augb-ta2.svg :var txt=augb-ta2 :exports results
 $txt
@@ -117,37 +67,9 @@ Büchi accepting transitions are marked with the same ={0,1}=
 notation used in TGBA.
 
 #+NAME: gfagfb-gta
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 ltl2tgta --gta 'GFa & GFb'
 #+END_SRC
-#+RESULTS:
-#+begin_example
-digraph G {
-  0 [label="", style=invis, height=0]
-  0 -> 1
-  1 [label=init]
-  1 -> 2 [label="a & b\n"]
-  1 -> 3 [label="!a & b\n"]
-  1 -> 4 [label="a & !b\n"]
-  1 -> 5 [label="!a & !b\n"]
-  2 [label="1",shape=box]
-  2 -> 3 [label="{a}\n{0,1}"]
-  2 -> 4 [label="{b}\n{0,1}"]
-  2 -> 5 [label="{a, b}\n{0,1}"]
-  3 [label="3"]
-  3 -> 2 [label="{a}\n{1}"]
-  3 -> 4 [label="{a, b}\n{1}"]
-  3 -> 5 [label="{b}\n{1}"]
-  4 [label="2"]
-  4 -> 2 [label="{b}\n{0}"]
-  4 -> 3 [label="{a, b}\n{0}"]
-  4 -> 5 [label="{a}\n{0}"]
-  5 [label="4"]
-  5 -> 2 [label="{a, b}\n"]
-  5 -> 3 [label="{b}\n"]
-  5 -> 4 [label="{a}\n"]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file gfagfb-gta.svg :var txt=gfagfb-gta :exports results
 $txt
@@ -167,41 +89,9 @@ made explicit with ={}= self-loops.  Since these self-loop can be in
 acceptance sets, livelock acceptance states are no longer needed.
 
 #+NAME: gfagfb-tgta
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 ltl2tgta 'GFa & GFb'
 #+END_SRC
-#+RESULTS:
-#+begin_example
-digraph G {
-  0 [label="", style=invis, height=0]
-  0 -> 1
-  1 [label=init]
-  1 -> 2 [label="a & b\n"]
-  1 -> 3 [label="!a & b\n"]
-  1 -> 4 [label="a & !b\n"]
-  1 -> 5 [label="!a & !b\n"]
-  2 [label="3"]
-  2 -> 3 [label="{a}\n{0,1}"]
-  2 -> 4 [label="{b}\n{0,1}"]
-  2 -> 5 [label="{a, b}\n{0,1}"]
-  2 -> 2 [label="{}\n{0,1}"]
-  3 [label="2"]
-  3 -> 2 [label="{a}\n{1}"]
-  3 -> 4 [label="{a, b}\n{1}"]
-  3 -> 5 [label="{b}\n{1}"]
-  3 -> 3 [label="{}\n"]
-  4 [label="4"]
-  4 -> 2 [label="{b}\n{0}"]
-  4 -> 3 [label="{a, b}\n{0}"]
-  4 -> 5 [label="{a}\n{0}"]
-  4 -> 4 [label="{}\n"]
-  5 [label="1"]
-  5 -> 2 [label="{a, b}\n"]
-  5 -> 3 [label="{b}\n"]
-  5 -> 4 [label="{a}\n"]
-  5 -> 5 [label="{}\n"]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file gfagfb-tgta.svg :var txt=gfagfb-tgta :exports results
 $txt
@@ -210,10 +100,12 @@ $txt
 [[file:gfagfb-tgta.svg]]
 
 
-[fn:topnoc]: This new class of automaton, as well as the
-implementation of the previous testing automata classes, is part of
-Ala Eddine BEN SALEM's PhD work, and should appear in a future edition
-of ToPNoC (LNCS 7400).
+[fn:topnoc]: This new class of automata, as well as the implementation
+of the previous testing automata classes, is part of Ala Eddine BEN
+SALEM's PhD work, and is discussed in [[https://www.lrde.epita.fr/~adl/dl/adl/bensalem.12.topnoc.pdf][*Model checking using
+generalized testing automata*]], /Ala Eddine Ben Salem/, /Alexandre
+Duret-Lutz/, and /Fabrice Kordon/, in Transactions on Petri Nets and
+Other Models of Concurrency (ToPNoC VI), LNCS 7400, p. 94--112, 2012.
 
 
 #  LocalWords:  ltl tgta num toc Automata automata GraphViz UTF Gb na

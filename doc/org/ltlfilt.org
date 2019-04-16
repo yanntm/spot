@@ -3,6 +3,7 @@
 #+DESCRIPTION: Spot command-line tool for filtering, tranforming, and converting LTL formulas.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 This tool is a filter for LTL formulas.  (It will also work with PSL
 formulas.)  It can be used to perform a number of tasks.  Essentially:
@@ -23,7 +24,7 @@ For instance the following will convert two LTL formulas expressed
 using infix notation (with different names supported for the same
 operators) and convert it into LBT's syntax.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -l -f 'p1 U (p2 & GFp3)' -f 'X<>[]p4'
 #+END_SRC
 #+RESULTS:
@@ -33,7 +34,7 @@ ltlfilt -l -f 'p1 U (p2 & GFp3)' -f 'X<>[]p4'
 Conversely, here is how to rewrite formulas expressed using the
 LBT's Polish notation.  Let's take the following four formulas
 taken from examples distributed with =scheck=:
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 cat >scheck.ltl<<EOF
 ! | G p0 & G p1 F p3
 | | X p7 F p6 & | | t p3 p7 U | f p3 p3
@@ -44,7 +45,7 @@ EOF
 #+RESULTS:
 
 These can be turned into something easier to read (to the human) with:
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --lbt-input -F scheck.ltl
 #+END_SRC
 #+RESULTS:
@@ -58,7 +59,7 @@ ltlfilt --lbt-input -F scheck.ltl
 The following options can be used to modify the formulas that have
 been read.
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltlfilt --help | sed -n '/Transformation options.*:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -95,7 +96,7 @@ ltlfilt --help | sed -n '/Transformation options.*:/,/^$/p' | sed '1d;$d'
 
 As with [[file:randltl.org][=randltl=]], the =-r= option can be used to simplify formulas.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --lbt-input -F scheck.ltl -r
 #+END_SRC
 #+RESULTS:
@@ -123,7 +124,7 @@ uses.  The =--relabel=abc= will relabel all atomic propositions using
 letters of the alphabet, while =--relabel=pnn= will use =p0=, =p1=,
 etc. as in LBT's syntax.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --lbt-input -F scheck.ltl -r --relabel=abc
 #+END_SRC
 #+RESULTS:
@@ -138,7 +139,7 @@ Note that the relabeling is reset between each formula: =p3= became
 Another use of relabeling is to get rid of complex atomic propositions
 such as the one shown when [[file:ioltl.org][presenting lenient mode]]:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --lenient --relabel=pnn -f '(a < b) U (process[2]@ok)'
 #+END_SRC
 #+RESULTS:
@@ -150,7 +151,7 @@ enabled by =--relabel-bool=abc= or =--relabel-book=pnn=.  With this
 option, Boolean subformulas that do not interfere with other
 subformulas will be changed into atomic propositions.  For instance:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f '(a & !b) & GF(a & !b) & FG(!c)' --relabel-bool=pnn
 ltlfilt -f '(a & !b) & GF(a & !b) & FG(!c & a)' --relabel-bool=pnn
 #+END_SRC
@@ -176,7 +177,7 @@ to use =--nnf= so that =!FG(a -> b)= would become =GF(p0)=
 as well.  For instance here are some LTL formulas extracted from an
 [[http://www.fi.muni.cz/~xrehak/publications/verificationresults.ps.gz][industrial project]]:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --nnf -u --relabel-bool <<EOF
 G (hfe_rdy -> F !hfe_req)
 G (lup_sr_valid -> F lup_sr_clean )
@@ -230,7 +231,7 @@ An option that can be used in combination with =--relabel= or
 between old and new names to be printed as a set of =#define=
 statements.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f '(a & !b) & GF(a & !b) & FG(!c)' --relabel-bool=pnn --define --spin
 #+END_SRC
 
@@ -245,7 +246,7 @@ For instance the following sequence show how to use =ltl3ba= to create
 a neverclaim for an LTL formula containing atomic propositions that
 =ltl3ba= cannot parse:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f '"proc@loc1" U "proc@loc2"' --relabel=pnn --define=ltlex.def --spin |
   ltl3ba -F - >ltlex.never
 cat ltlex.def ltlex.never
@@ -268,7 +269,7 @@ accept_all:
 
 As a side note, the tool [[file:ltldo.org][=ltldo=]] might be a simpler answer to this syntactic problem:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltldo ltl3ba -f '"proc@loc1" U "proc@loc2"' --spin
 #+END_SRC
 #+RESULTS:
@@ -292,7 +293,7 @@ separate page]].
 
 =ltlfilt= supports many ways to filter formulas:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltlfilt --help | sed -n '/Filtering options.*:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -332,7 +333,7 @@ Most of the above options should be self-explanatory.  For instance
 the following command will extract all formulas from =scheck.ltl=
 which do not represent guarantee properties.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --lbt-input -F scheck.ltl -v --guarantee
 #+END_SRC
 #+RESULTS:
@@ -342,7 +343,7 @@ Combining =ltlfilt= with [[file:randltl.org][=randltl=]] makes it easier to gene
 formulas that respect certain constraints.  For instance let us
 generate 10 formulas that are equivalent to =a U b=:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n -1 a b | ltlfilt --equivalent-to 'a U b' -n 10
 #+END_SRC
 #+RESULTS:
@@ -375,7 +376,7 @@ syntactically.  We can generate some starting again with =randltl=,
 then ignoring all syntactic safety formulas, and keeping only the
 safety formulas in the remaining list.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -r -n -1 a b | ltlfilt -v --syntactic-safety | ltlfilt --safety -n 10
 #+END_SRC
 #+RESULTS:
@@ -397,7 +398,7 @@ Ga | (!b U !a)
 about a single formula.  For instance is =a U (b U a)= equivalent to
 =b U a=?
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'a U (b U a)' --equivalent-to 'b U a'
 #+END_SRC
 #+RESULTS:
@@ -410,7 +411,7 @@ status to 1, were the two formulas not equivalent.
 
 Is the formula =F(a & X(!a & Gb))= stutter-invariant?
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'F(a & X(!a & Gb))' --stutter-invariant
 #+END_SRC
 #+RESULTS:
@@ -420,7 +421,7 @@ Yes it is.  And since it is stutter-invariant, there exist some
 equivalent formulas that do not use =X= operator.  The =--remove-x=
 option gives one:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'F(a & X(!a & Gb))' --remove-x
 #+END_SRC
 #+RESULTS:
@@ -429,7 +430,7 @@ ltlfilt -f 'F(a & X(!a & Gb))' --remove-x
 We could even verify that the resulting horrible formula is equivalent
 to the original one:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'F(a & X(!a & Gb))' --remove-x | ltlfilt --equivalent-to 'F(a & X(!a & Gb))'
 #+END_SRC
 #+RESULTS:
@@ -447,7 +448,7 @@ the formula generated randomly can be reduced by trivial
 simplifications such as =!!f= being rewritten to =f=, yielding
 formulas of smaller sizes).
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n -1 --tree-size=8 a b | ltlfilt --size=5 -n 10
 #+END_SRC
 
@@ -473,7 +474,7 @@ formulas: the complexity of the Boolean subformulas has little
 influence on the overall translation.  Here are 10 random formula with
 Boolean-size 5:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n -1 --tree-size=12 a b | ltlfilt --bsize=5 -n 10
 #+END_SRC
 
@@ -495,7 +496,7 @@ GF(1 U b)
 
 The =--format= option can be used the alter the way formulas are output.
 The list of supported =%=-escape sequences are recalled in the =--help= output:
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltlfilt --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -544,7 +545,7 @@ you could print only the line numbers containing formulas matching
 some criterion.  In the following, we print only the numbers of the
 lines of =scheck.ltl= that contain guarantee formulas:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --lbt-input -F scheck.ltl --guarantee --format=%L
 #+END_SRC
 #+RESULTS:
@@ -555,7 +556,7 @@ ltlfilt --lbt-input -F scheck.ltl --guarantee --format=%L
 We could also prefix each formula by its size, in order to sort
 the file by formula size:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --lbt-input scheck.ltl --format='%s,%f' | sort -n
 #+END_SRC
 
@@ -575,7 +576,7 @@ makes it very easy to partition a list of formulas in different files.
 For instance here is how to split =scheck.ltl= according to formula
 sizes.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --lbt-input scheck.ltl --output='scheck-%s.ltl'
 wc -l scheck*.ltl
 #+END_SRC
@@ -587,7 +588,7 @@ wc -l scheck*.ltl
 :   4 scheck.ltl
 :   8 total
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 rm -f ltlex.def ltlex.never scheck.ltl
 #+END_SRC
 

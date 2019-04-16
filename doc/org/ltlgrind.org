@@ -3,17 +3,21 @@
 #+DESCRIPTION: Spot command-line tool for mutating LTL formulas.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
-This tool lists formulas that are similar to but simpler than a given
-formula by applying simple mutations to it, like removing operands or
+:results scalar: Is the same as :results verbatim.
+
+:results table: Interprets the results as an Org This tool lists
+formulas that are similar to but simpler than a given formula by
+applying simple mutations to it, like removing operands or
 operators. This is meant to be used with ltlcross to simplify a
 formula that caused a problem before trying to debug it (see also
 =ltlcross --grind=FILENAME=).
 
-Here is a list of the different kind of mutations that can be applied:
+Here is a list of the different kinds of mutations that can be applied:
 
-#+BEGIN_SRC sh :results verbatim :exports results
-ltlgrind --help | sed -n '/Transformation rules:/,/^$/p' | sed '1d;$d'
+#+BEGIN_SRC sh :exports results
+ltlgrind --help | sed -n '/Mutation rules.*:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 
 #+RESULTS:
@@ -28,7 +32,7 @@ ltlgrind --help | sed -n '/Transformation rules:/,/^$/p' | sed '1d;$d'
       --rewrite-ops          rewrite operators that have a semantically simpler
                              form: a U b becomes a W b, etc.
       --simplify-bounds      on a bounded unary operator, decrement one of the
-                             bounds, or set min to 0 or max to unbounded.
+                             bounds, or set min to 0 or max to unbounded
       --split-ops            when an operator can be expressed as a
                              conjunction/disjunction using simpler operators,
                              each term of the conjunction/disjunction is a
@@ -40,7 +44,7 @@ ltlgrind --help | sed -n '/Transformation rules:/,/^$/p' | sed '1d;$d'
 By default, all rules are applied. But if one or more rules are
 specified, only those will be applied.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlgrind -f 'a U G(b <-> c)' --split-ops --rewrite-ops --remove-ops
 #+END_SRC
 

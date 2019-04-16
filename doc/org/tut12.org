@@ -3,19 +3,22 @@
 #+DESCRIPTION: Code example for using Spot to translate LTLf formulas
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
+#+PROPERTY: header-args:python :results output :exports both
+#+PROPERTY: header-args:C+++ :results verbatim :exports both
 
 The LTL operators used by Spot are defined over infinite words, and
 the various type of automata supported are all \omega-automata, i.e.,
 automata over infinite words.
 
+#+name: from_ltlf
+#+begin_src sh :exports none :var f="bug"
+ltlfilt --from-ltlf -f "$f"
+#+end_src
+
 However there is a trick we can use in case we want to use Spot to
 build a finite automaton that recognize some LTLf (i.e. LTL with
 finite semantics) property.  The plan is as follows:
-
-#+name: from_ltlf
-#+begin_src sh :results verbatim :exports none :var f="bug"
-ltlfilt --from-ltlf -f "$f"
-#+end_src
 
 1. Have Spot read the input formula as if it were LTL.
 2. Rewrite this formula in a way that embeds the semantics of LTLf in
@@ -27,7 +30,7 @@ ltlfilt --from-ltlf -f "$f"
    call_from_ltlf(f="(a U b) & Fc").
 3. Convert the resulting formula into a Büchi automaton:
    #+name: tut12a
-   #+begin_src sh :results verbatim :exports none
+   #+begin_src sh :exports none
    ltlfilt --from-ltlf -f "(a U b) & Fc" | ltl2tgba -B -d
    #+end_src
    #+BEGIN_SRC dot :file tut12a.svg :var txt=tut12a :exports results
@@ -38,7 +41,7 @@ ltlfilt --from-ltlf -f "$f"
 4. Remove the =alive= property, and, while we are at it, simplify the
    Büchi automaton:
    #+name: tut12b
-   #+begin_src sh :results verbatim :exports none
+   #+begin_src sh :exports none
    ltlfilt --from-ltlf -f "(a U b) & Fc" | ltl2tgba -B | autfilt --remove-ap=alive -B --small -d
    #+end_src
    #+BEGIN_SRC dot :file tut12b.svg :var txt=tut12b :exports results
@@ -68,7 +71,7 @@ an atomic proposition from an automaton can be done using [[file:autfilt.org][=a
 automaton).  Interpreting the resulting Büchi automaton as a finite
 automaton is out of scope for Spot.
 
-#+begin_src sh :exports both :results verbatim
+#+begin_src sh
 ltlfilt --from-ltlf -f "(a U b) & Fc" |
   ltl2tgba -B |
   autfilt --remove-ap=alive -B --small
@@ -115,7 +118,7 @@ simplifications.  (Note that =postprocess()= is already called by
 =translate()=, but in this case removing the atomic proposition allows
 more simplification opportunities.)
 
-#+begin_src python :results output :exports both
+#+begin_src python
 import spot
 # Translate LTLf to Büchi.
 aut = spot.from_ltlf('(a U b) & Fc').translate('ba')
@@ -163,37 +166,37 @@ The Python functions =translate()= and =postprocess()= are convenient
 wrappers around the =spot::translator= and =spot::postprocessor=
 objects that we need to use here.
 
-#+begin_src cpp :results verbatim :exports both
-    #include <iostream>
-    #include <spot/tl/parse.hh>
-    #include <spot/tl/ltlf.hh>
-    #include <spot/twaalgos/translate.hh>
-    #include <spot/twaalgos/hoa.hh>
-    #include <spot/twaalgos/remprop.hh>
+#+begin_src C++
+#include <iostream>
+#include <spot/tl/parse.hh>
+#include <spot/tl/ltlf.hh>
+#include <spot/twaalgos/translate.hh>
+#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/remprop.hh>
 
-    int main()
-    {
-      spot::parsed_formula pf = spot::parse_infix_psl("(a U b) & Fc");
-      if (pf.format_errors(std::cerr))
-        return 1;
+int main()
+{
+  spot::parsed_formula pf = spot::parse_infix_psl("(a U b) & Fc");
+  if (pf.format_errors(std::cerr))
+    return 1;
 
-      spot::translator trans;
-      trans.set_type(spot::postprocessor::BA);
-      trans.set_pref(spot::postprocessor::Small);
-      spot::twa_graph_ptr aut = trans.run(spot::from_ltlf(pf.f));
+  spot::translator trans;
+  trans.set_type(spot::postprocessor::BA);
+  trans.set_pref(spot::postprocessor::Small);
+  spot::twa_graph_ptr aut = trans.run(spot::from_ltlf(pf.f));
 
-      spot::remove_ap rem;
-      rem.add_ap("alive");
-      aut = rem.strip(aut);
+  spot::remove_ap rem;
+  rem.add_ap("alive");
+  aut = rem.strip(aut);
 
-      spot::postprocessor post;
-      post.set_type(spot::postprocessor::BA);
-      post.set_pref(spot::postprocessor::Small); // or ::Deterministic
-      aut = post.run(aut);
+  spot::postprocessor post;
+  post.set_type(spot::postprocessor::BA);
+  post.set_pref(spot::postprocessor::Small); // or ::Deterministic
+  aut = post.run(aut);
 
-      print_hoa(std::cout, aut) << '\n';
-      return 0;
-    }
+  print_hoa(std::cout, aut) << '\n';
+  return 0;
+}
 #+end_src
 
 #+RESULTS:
