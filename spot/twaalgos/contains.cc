@@ -22,6 +22,7 @@
 #include <spot/twaalgos/complement.hh>
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twaalgos/isdet.hh>
+#include <spot/twaalgos/testing.hh>
 
 namespace spot
 {
@@ -61,6 +62,13 @@ namespace spot
     // fails).
     if (!is_deterministic(right))
       std::swap(left, right);
+
+    if (left->get_named_prop<bool>("testing-automaton"))
+      left = remove_testing(left);
+
+    if (right->get_named_prop<bool>("testing-automaton"))
+      right = remove_testing(right);
+
     return contains(left, right) && contains(right, left);
   }
 
