@@ -107,6 +107,8 @@
 </div>")
 
 (setq org-export-html-postamble nil)
+(setq org-html-table-header-tags
+      '("<th scope=\"%s\"%s><div><span>" . "</span></div></th>"))
 
 (defun spot-publish-sitemap (title list)
   "Same as org-publish-sitemap-default except it adds the SETUPFILE."
