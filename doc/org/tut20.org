@@ -3,12 +3,15 @@
 #+DESCRIPTION: Code example for parsing and printing ω-automata in Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
+#+PROPERTY: header-args:python :results output :exports both
+#+PROPERTY: header-args:C+++ :results verbatim :exports both
 
 The goal is to start from a never claim, as produced by Spin, e.g.:
 
-#+BEGIN_SRC sh :results verbatim :exports both
-spin -f '[]<>foo U bar' > tut20.never
-cat tut20.never
+#+BEGIN_SRC sh
+  spin -f '[]<>foo U bar' > tut20.never
+  cat tut20.never
 #+END_SRC
 
 #+RESULTS:
@@ -52,12 +55,12 @@ write will read any of those formats.
 This is very simple: [[file:autfilt.org][=autfilt=]] can read automata in any of the
 supported formats, and outputs it in the HOA format by default:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 autfilt tut20.never
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_SRC hoa
+#+begin_SRC hoa
 HOA: v1
 States: 5
 Start: 0
@@ -81,7 +84,7 @@ State: 4
 [1] 3
 [t] 4
 --END--
-#+END_SRC
+#+end_SRC
 
 * Python
 
@@ -89,13 +92,13 @@ Another one-liner.  The =spot.automaton()= function reads a single
 automaton, and each automaton has a =to_str()= method that can print
 in =hoa=, =lbtt=, =spin= (for never claim) or =dot=.
 
-#+BEGIN_SRC python :results output :exports both :wrap SRC hoa
+#+BEGIN_SRC python :wrap SRC hoa
 import spot
 print(spot.automaton('tut20.never').to_str('hoa'))
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_SRC hoa
+#+begin_SRC hoa
 HOA: v1
 States: 5
 Start: 0
@@ -119,7 +122,7 @@ State: 4
 [1] 3
 [t] 4
 --END--
-#+END_SRC
+#+end_SRC
 
 * C++
 
@@ -134,7 +137,7 @@ you), and =aut= is the actual automaton.  The parser usually tries to
 recover from errors, so =aut= may not be null even if =errors= is
 non-empty.
 
-#+BEGIN_SRC C++ :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC C++ :wrap SRC hoa
   #include <string>
   #include <iostream>
   #include <spot/parseaut/public.hh>
@@ -159,7 +162,7 @@ non-empty.
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_SRC hoa
+#+begin_SRC hoa
 HOA: v1
 States: 5
 Start: 0
@@ -183,7 +186,7 @@ State: 4
 [1] 3
 [t] 4
 --END--
-#+END_SRC
+#+end_SRC
 
 In the Spot representation of automata, transitions guards are
 represented by BDDs.  The role of the =bdd_dict= object is to keep
@@ -222,14 +225,14 @@ wrapper that instantiates an =automaton_stream_parser= and calls its
 In Python, you can easily iterate over a file containing multiple
 automata by doing:
 
-#+BEGIN_SRC python :results output :exports code :wrap SRC hoa
+#+BEGIN_SRC python :wrap SRC hoa
 import spot
 for aut in spot.automata('tut20.never'):
     print(aut.to_str('hoa'))
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_SRC hoa
+#+begin_SRC hoa
 HOA: v1
 States: 5
 Start: 0
@@ -253,7 +256,7 @@ State: 4
 [1] 3
 [t] 4
 --END--
-#+END_SRC
+#+end_SRC
 
 In fact =spot.automaton()= is just a wrapper around =spot.automata()=
 to return only the first automaton.
@@ -265,7 +268,7 @@ accept three types of arguments:
   be any shell expression, and must have '=|=' as their last
   character.  For instance here is how to convert Spin's output into
   LBTT's formula without using temporary files.
-#+BEGIN_SRC python :results output :exports both
+#+BEGIN_SRC python
 import spot
 print(spot.automaton('spin -f "[]<>p0" |').to_str('lbtt'))
 #+END_SRC
@@ -285,7 +288,7 @@ print(spot.automaton('spin -f "[]<>p0" |').to_str('lbtt'))
   to describe an automaton (or multiple automata) and is
   passed directly to the parser:
 
-#+BEGIN_SRC python :results output :exports both
+#+BEGIN_SRC python
 import spot
 print(spot.automaton("""
 HOA: v1
@@ -306,7 +309,7 @@ State: 1 {0}
 : never {
 : T0_init:
 :   if
-:   :: ((a)) -> goto accept_all
+:   :: (a) -> goto accept_all
 :   fi;
 : accept_all:
 :   skip

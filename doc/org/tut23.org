@@ -3,12 +3,15 @@
 #+DESCRIPTION: Code example for constructing alternating ω-automata in Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
+#+PROPERTY: header-args:python :results output :exports both
+#+PROPERTY: header-args:C+++ :results verbatim :exports both
 
 This example demonstrates how to create the following alternating
 co-Büchi automaton (recognizing =GFa=) and then print it.
 
 #+NAME: tut23-dot
-#+BEGIN_SRC sh :results verbatim :exports none :var txt=tut23-cpp
+#+BEGIN_SRC sh :exports none :var txt=tut23-cpp
 autfilt --dot <<EOF
 $txt
 EOF
@@ -33,7 +36,7 @@ edges (declared with =new_edge()=) and universal edges (declared with
   :END:
 
 #+NAME: tut23-cpp
-#+BEGIN_SRC C++ :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC C++ :wrap SRC hoa
   #include <iostream>
   #include <spot/twaalgos/hoa.hh>
   #include <spot/twa/twagraph.hh>
@@ -80,15 +83,15 @@ edges (declared with =new_edge()=) and universal edges (declared with
 #+END_SRC
 
 #+RESULTS: tut23-cpp
-#+BEGIN_SRC hoa
+#+begin_SRC hoa
 HOA: v1
 States: 3
 Start: 0
 AP: 1 "a"
 acc-name: co-Buchi
 Acceptance: 1 Fin(0)
-properties: univ-branch trans-labels explicit-labels trans-acc complete
-properties: deterministic
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic univ-branch
 --BODY--
 State: 0
 [0] 0
@@ -99,11 +102,11 @@ State: 1
 State: 2
 [t] 2
 --END--
-#+END_SRC
+#+end_SRC
 
 * Python
 
-#+BEGIN_SRC python :results output :exports both :wrap SRC hoa
+#+BEGIN_SRC python :wrap SRC hoa
   import spot
   import buddy
 

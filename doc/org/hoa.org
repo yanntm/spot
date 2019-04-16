@@ -2,6 +2,7 @@
 #+DESCRIPTION: Details about support of the HOA format in Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 
 The [[http://adl.github.io/hoaf/][Hanoi Omega-Automa format]] is a textual representation of
@@ -150,7 +151,7 @@ EOF
 
 #+RESULTS:
 
-#+BEGIN_SRC sh :results verbatim :exports results :wrap SRC hoa
+#+BEGIN_SRC sh :exports results :wrap SRC hoa
 sed -n '/--BODY/,/--END/p' stvstracc.hoa | grep -v -- --
 #+END_SRC
 
@@ -173,7 +174,7 @@ State: 2
 
 will always be stored as a TωA with this transition structure:
 
-#+BEGIN_SRC sh :results verbatim :exports results :wrap SRC hoa
+#+BEGIN_SRC sh :exports results :wrap SRC hoa
 autfilt -Ht stvstracc.hoa | sed -n '/--BODY/,/--END/p' | grep -v -- --
 #+END_SRC
 
@@ -208,7 +209,7 @@ For instance in the following automaton, the outgoing transitions of
 each states belong to the same sets:
 
 #+NAME: state-based-example
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 cat >sba.hoa <<EOF_HOA
 HOA: v1
 States: 3
@@ -272,7 +273,7 @@ Nevertheless, should you really insist on having an output with
 transition-based acceptance, you can do so by passing the option =t=
 to the HOA printer:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 autfilt -Ht sba.hoa
 #+END_SRC
 
@@ -305,7 +306,7 @@ format to prevents mixing the two: if you use =-Hm=, the decision of
 using state or transition-based acceptance will be made for each state
 separately.  For instance:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba -Hm 'GFa | Fb'
 #+END_SRC
 
@@ -345,7 +346,7 @@ when necessary.  Most tools have a =-S= option (or
 =--state-based-acceptance=) for this purpose.  Compare the following
 output with the previous one.
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba -S -Hm 'GFa | Fb'
 #+END_SRC
 
@@ -434,7 +435,7 @@ In the following example, you can see =autfilt= removing the duplicate
 Rabin pair, and reordering the remaining pair to fit the syntax
 corresponding to =Rabin 1=.
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 autfilt <<EOF
 HOA: v1
 States: 3
@@ -501,7 +502,7 @@ When you look at an acceptance condition output by Spot, you can
 actually spot the terms that have been grouped together internally by
 looking at the spacing around operators =&= and =|=.  For instance:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 randaut -A"Fin(0)|Fin(1)|Fin(2)&Fin(3)&Inf(4)&Inf(5)" 0 | grep Acceptance:
 #+END_SRC
 
@@ -541,7 +542,7 @@ EOF
 
 #+RESULTS:
 
-#+BEGIN_SRC sh :results verbatim :exports results :wrap SRC hoa
+#+BEGIN_SRC sh :exports results :wrap SRC hoa
 sed -n '/--BODY/,/--END/p' stvstrlab.hoa | grep -v -- --
 #+END_SRC
 
@@ -559,7 +560,7 @@ will always be stored as an automaton with the following transition
 structure
 
 
-#+BEGIN_SRC sh :results verbatim :exports results :wrap SRC hoa
+#+BEGIN_SRC sh :exports results :wrap SRC hoa
 autfilt -Ht stvstrlab.hoa | sed -n '/--BODY/,/--END/p' | grep -v -- --
 #+END_SRC
 
@@ -701,7 +702,7 @@ There are currently two [[file:concepts.org::#named-properties][named properties
 You can see these properties being preserved when an automaton is read and then immediately output:
 
 #+NAME: hello-world
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 cat >hw.hoa <<EOF
 HOA: v1
 name: "hello world!"
@@ -760,7 +761,7 @@ the old states and the new ones.
 Here is for instance the result when =autfilt= is instructed to
 simplify the automaton:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 autfilt --small hw.hoa
 #+END_SRC
 
@@ -793,7 +794,7 @@ fixed via the =--name= option.  For instance =--name=%M= will
 construct the new name by simply copying the one of the original
 automaton.
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 autfilt --small hw.hoa --name=%M
 #+END_SRC
 
@@ -838,7 +839,7 @@ in the HOA format, and then read those automata with =autfilt= to
 randomize the order of their transitions and states before printing
 them in HOA format.
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 genltl --and-gf=1..3 | ltl2tgba -B | autfilt --randomize
 #+END_SRC
 
@@ -972,7 +973,7 @@ HOA format.  These are =spot.highlight.states= and
 with colors.
 
 #+NAME: decorate
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 cat >decorate.hoa <<EOF
 HOA: v1.1
 States: 3
@@ -997,21 +998,23 @@ autfilt decorate.hoa -d'.#'
 
 #+RESULTS: decorate
 #+begin_example
-digraph G {
+digraph "" {
   rankdir=LR
+  label=<t<br/>[all]>
+  labelloc="t"
   node [shape="circle"]
   node [style="filled", fillcolor="#ffffa0"]
   fontname="Lato"
   node [fontname="Lato"]
   edge [fontname="Lato"]
-  edge[arrowhead=vee, arrowsize=.7]
+  node[fontsize=12] fontsize=12 stylesheet="spot.css" edge[arrowhead=vee, arrowsize=.7, fontsize=12]
   I [label="", style=invis, width=0]
   I -> 1
   0 [label=<0>]
-  0 -> 0 [label=<1>, taillabel="#1", style=bold, color="#F17CB0"]
-  1 [label=<1>, style="bold,filled", color="#5DA5DA"]
-  1 -> 2 [label=<1>, taillabel="#2", style=bold, color="#FAA43A"]
-  2 [label=<2>, style="bold,filled", color="#B276B2"]
+  0 -> 0 [label=<1>, taillabel="#1", style=bold, color="#FF4DA0"]
+  1 [label=<1>, style="bold,filled", color="#1F78B4"]
+  1 -> 2 [label=<1>, taillabel="#2", style=bold, color="#FF7F00"]
+  2 [label=<2>, style="bold,filled", color="#6A3D9A"]
   2 -> 0 [label=<b>, taillabel="#3"]
   2 -> 2 [label=<a &amp; !b>, taillabel="#4"]
 }
@@ -1031,7 +1034,7 @@ headers ~spot.highlight.states:~ and ~spot.highlight.edges:~ are both
 followed by a list of alternating state/edges numbers and color numbers.
 
 So in the above file,
-#+BEGIN_SRC sh :results verbatim :exports results :wrap SRC hoa
+#+BEGIN_SRC sh :exports results :wrap SRC hoa
 grep spot.highlight decorate.hoa
 #+END_SRC
 #+RESULTS:
@@ -1058,7 +1061,7 @@ these lines when version 1.1 is selected.
 
 Compare:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 autfilt -H1 decorate.hoa; echo
 autfilt -H1.1 decorate.hoa
 #+END_SRC

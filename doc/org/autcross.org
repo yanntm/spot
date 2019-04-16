@@ -3,6 +3,7 @@
 #+DESCRIPTION: Spot command-line tool for cross-comparing the output of automaton processors.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 =autcross= is a tool for cross-comparing the output of tools that
 transform automata.   It works similarly to [[file:ltlcross.org][=ltlcross=]] except that
@@ -33,7 +34,7 @@ and will appear in the CSV file if such a file is output.
 Each tool should be specified as a string that uses some of the
 following character sequences:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
   autcross --help | sed -n '/character sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -55,31 +56,26 @@ Another tool that can complement automata is =ltl2dstar=, using
 the syntax =ltl2dstar -B --complement-input=yes %H %O=.  So to
 compare the results of these two tools we could use:
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue "exec 2>&1"
 randaut -B -n 3 a b |
 autcross 'autfilt --complement %H >%O' 'ltl2dstar --complement-input=yes -B %H %O'
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :exports output
-randaut -B -n 3 a b |
-autcross 'autfilt --complement %H >%O' 'ltl2dstar --complement-input=yes -B %H %O' 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 -:1.1-45.7
-Running [A0]: autfilt --complement 'lcr-i0-Nr1xZO' >'lcr-o0-urHakt'
-Running [A1]: ltl2dstar -B --complement-input=yes 'lcr-i0-mmkgH7' 'lcr-o1-ABdm4L'
+Running [A0]: autfilt --complement 'lcr-i0-lOYLT5' >'lcr-o0-HB5WGO'
+Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i0-UIX3wx' 'lcr-o1-f8abng'
 Performing sanity checks and gathering statistics...
 
 -:46.1-92.7
-Running [A0]: autfilt --complement 'lcr-i1-5kMYrq' >'lcr-o0-9kvBP4'
-Running [A1]: ltl2dstar -B --complement-input=yes 'lcr-i1-lVlGfJ' 'lcr-o1-BexLFn'
+Running [A0]: autfilt --complement 'lcr-i1-Eq2WdZ' >'lcr-o0-CvfJ4H'
+Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i1-736tYq' 'lcr-o1-YvkfS9'
 Performing sanity checks and gathering statistics...
 
 -:93.1-137.7
-Running [A0]: autfilt --complement 'lcr-i2-rjvy61' >'lcr-o0-rKKlxG'
-Running [A1]: ltl2dstar -B --complement-input=yes 'lcr-i2-Musr0k' 'lcr-o1-LyAxtZ'
+Running [A0]: autfilt --complement 'lcr-i2-6ahOMS' >'lcr-o0-HdynHB'
+Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i2-9PcREk' 'lcr-o1-XcblC3'
 Performing sanity checks and gathering statistics...
 
 No problem detected.
@@ -87,12 +83,12 @@ No problem detected.
 
 In this example, we generate 3 random Büchi automata (because
 =ltl2dstar= expects Büchi automata as input) using [[file:randaut.org][=randaut=]], and pipe
-them to =autcross=.  For each of those automata, =autcross= display
+them to =autcross=.  For each of those automata, =autcross= displays
 the source location of that automaton (here =-= indicates that the
 automaton is read from standard input, and this is followed by
 =beginline.column-endline.colum= specifying the position of that
-automaton in the input.   If the automata had names, they would
-be displayed as well.
+automaton in the input.  If the automata had names, they would be
+displayed as well.
 
 Then, each tool is called using temporary files to exchange the
 automata, and the resulting automata are then compared.  The last line
@@ -103,7 +99,7 @@ To simplify the use of some known tools, a set of predefined
 shorthands are available.  Those can be listed with the
 =--list-shorthands= option.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 autcross --list-shorthands
 #+END_SRC
 #+RESULTS:
@@ -112,9 +108,11 @@ If a COMMANDFMT does not use any %-sequence, and starts with one of
 the following words, then the string on the right is appended.
 
   autfilt      %H>%O
-  seminator    %H>%O
+  dstar2tgba   %H>%O
   ltl2dstar    -B %H %O
+  nba2dpa      <%H>%O
   nba2ldpa     <%H>%O
+  seminator    %H>%O
 
 Any {name} and directory component is skipped for the purpose of
 matching those prefixes.  So for instance
@@ -125,7 +123,7 @@ will be changed into
 
 What this implies is our previous example could be shortened to:
 
-#+BEGIN_SRC sh :results silent :exports code
+#+BEGIN_SRC sh :exports code
 randaut -B -n 3 a b |
 autcross 'autfilt --complement' 'ltl2dstar --complement-input=yes'
 #+END_SRC
@@ -146,31 +144,26 @@ Second, we pass a =--csv= option to =autcross= to save statistics in a
 file.
 
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue "exec 2>&1"
 randaut -B -n 3 a b --name="automaton %L" |
 autcross 'autfilt --complement' 'ltl2dstar --complement-input=yes' --csv=autcross.csv
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :exports results
-randaut -B -n 3 a b --name="automaton %L" |
-autcross 'autfilt --complement' 'ltl2dstar --complement-input=yes' --csv=autcross.csv 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 -:1.1-46.7	automaton 0
-Running [A0]: autfilt --complement 'lcr-i0-QHReWu'>'lcr-o0-0eTOmZ'
-Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i0-jsoPPt' 'lcr-o1-66bQiY'
+Running [A0]: autfilt --complement 'lcr-i0-YPfmR5'>'lcr-o0-Z1bT0A'
+Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i0-DpL2i6' 'lcr-o1-gpYcBB'
 Performing sanity checks and gathering statistics...
 
 -:47.1-94.7	automaton 1
-Running [A0]: autfilt --complement 'lcr-i1-IubpMs'>'lcr-o0-dfmYfX'
-Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i1-13NXLr' 'lcr-o1-zSwXhW'
+Running [A0]: autfilt --complement 'lcr-i1-mxsGU6'>'lcr-o0-fPCaeC'
+Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i1-2hgYD7' 'lcr-o1-S4xM3C'
 Performing sanity checks and gathering statistics...
 
 -:95.1-140.7	automaton 2
-Running [A0]: autfilt --complement 'lcr-i2-g5bDOq'>'lcr-o0-X71ilV'
-Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i2-og1mUp' 'lcr-o1-QVurtU'
+Running [A0]: autfilt --complement 'lcr-i2-YU1Qu8'>'lcr-o0-hwVVVD'
+Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i2-MLmVq9' 'lcr-o1-edfVVE'
 Performing sanity checks and gathering statistics...
 
 No problem detected.
@@ -178,17 +171,27 @@ No problem detected.
 
 After this execution, the file =autcross.csv= contains the following:
 
-#+BEGIN_SRC sh :results verbatim :exports results
-cat autcross.csv
+#+BEGIN_SRC sh :results output raw :exports results
+sed 's/"//g
+1a\
+|-|
+s/--/@@html:--@@/g
+s/^/| /
+s/$/ |/
+s/,/|/g
+' autcross.csv
 #+END_SRC
+
+#+ATTR_HTML: :class csv-table
 #+RESULTS:
-: "input.source","input.name","input.ap","input.states","input.edges","input.transitions","input.acc_sets","input.scc","input.nondetstates","input.nondeterministic","input.alternating","tool","exit_status","exit_code","time","output.ap","output.states","output.edges","output.transitions","output.acc_sets","output.scc","output.nondetstates","output.nondeterministic","output.alternating"
-: "-:1.1-46.7","automaton 0",2,10,26,26,1,1,6,0,0,"autfilt --complement","ok",0,0.0129685,2,27,95,108,3,2,0,0,0
-: "-:1.1-46.7","automaton 0",2,10,26,26,1,1,6,0,0,"ltl2dstar --complement-input=yes","ok",0,0.00202496,2,34,121,136,6,2,0,9,0
-: "-:47.1-94.7","automaton 1",2,10,28,28,1,1,4,0,0,"autfilt --complement","ok",0,0.0128458,2,58,216,232,3,2,0,9,0
-: "-:47.1-94.7","automaton 1",2,10,28,28,1,1,4,0,0,"ltl2dstar --complement-input=yes","ok",0,0.0026184,2,74,268,296,6,2,0,8,0
-: "-:95.1-140.7","automaton 2",2,10,26,26,1,2,6,0,0,"autfilt --complement","ok",0,0.0127144,2,21,69,84,2,4,0,20,0
-: "-:95.1-140.7","automaton 2",2,10,26,26,1,2,6,0,0,"ltl2dstar --complement-input=yes","ok",0,0.00180888,2,24,74,96,2,4,0,35,0
+| input.source | input.name  | input.ap | input.states | input.edges | input.transitions | input.acc_sets | input.scc | input.nondetstates | input.nondeterministic | input.alternating | tool                                      | exit_status | exit_code |       time | output.ap | output.states | output.edges | output.transitions | output.acc_sets | output.scc | output.nondetstates | output.nondeterministic | output.alternating |
+|--------------+-------------+----------+--------------+-------------+-------------------+----------------+-----------+--------------------+------------------------+-------------------+-------------------------------------------+-------------+-----------+------------+-----------+---------------+--------------+--------------------+-----------------+------------+---------------------+-------------------------+--------------------|
+| -:1.1-46.7   | automaton 0 |        2 |           10 |          26 |                26 |              1 |         1 |                  6 |                      1 |                 0 | autfilt @@html:--@@complement             | ok          |         0 |  0.0217727 |         2 |            26 |           91 |                104 |               5 |          2 |                   0 |                       0 |                  0 |
+| -:1.1-46.7   | automaton 0 |        2 |           10 |          26 |                26 |              1 |         1 |                  6 |                      1 |                 0 | ltl2dstar @@html:--@@complement-input=yes | ok          |         0 | 0.00293471 |         2 |            34 |          121 |                136 |               6 |          2 |                   0 |                       0 |                  0 |
+| -:47.1-94.7  | automaton 1 |        2 |           10 |          28 |                28 |              1 |         1 |                  4 |                      1 |                 0 | autfilt @@html:--@@complement             | ok          |         0 |  0.0212838 |         2 |            54 |          197 |                216 |               3 |          2 |                   0 |                       0 |                  0 |
+| -:47.1-94.7  | automaton 1 |        2 |           10 |          28 |                28 |              1 |         1 |                  4 |                      1 |                 0 | ltl2dstar @@html:--@@complement-input=yes | ok          |         0 | 0.00403921 |         2 |            74 |          268 |                296 |               6 |          2 |                   0 |                       0 |                  0 |
+| -:95.1-140.7 | automaton 2 |        2 |           10 |          26 |                26 |              1 |         2 |                  6 |                      1 |                 0 | autfilt @@html:--@@complement             | ok          |         0 |  0.0205316 |         2 |            21 |           66 |                 84 |               2 |          4 |                   0 |                       0 |                  0 |
+| -:95.1-140.7 | automaton 2 |        2 |           10 |          26 |                26 |              1 |         2 |                  6 |                      1 |                 0 | ltl2dstar @@html:--@@complement-input=yes | ok          |         0 | 0.00263697 |         2 |            24 |           74 |                 96 |               2 |          4 |                   0 |                       0 |                  0 |
 
 This file can then be loaded in any spreadsheet or statistical application.
 
@@ -213,21 +216,37 @@ tools are the command specified on the command line.  Like with
 =ltlcross=, this can be adjusted by using a command specification of
 the form ={short name}actual command=.
 
-For instance
-
-#+BEGIN_SRC sh :results verbatim :exports both
+For instance:
+#+NAME: autcross2
+#+BEGIN_SRC sh :exports code
 randaut -B -n 3 a b --name="automaton %L" |
 autcross '{AF}autfilt --complement' '{L2D}ltl2dstar --complement-input=yes' --csv
 #+END_SRC
 
+#+BEGIN_SRC sh :results output raw :exports results :noweb yes
+sed 's/"//g
+s/--/@@html:--@@/g
+s/^/| /
+s/$/ |/
+s/,/|/g
+$d
+1a\
+|-|
+' <<EOF
+<<autcross2()>>
+EOF
+#+END_SRC
+
+#+ATTR_HTML: :class csv-table
 #+RESULTS:
-: "input.source","input.name","input.ap","input.states","input.edges","input.transitions","input.acc_sets","input.scc","input.nondetstates","input.nondeterministic","input.alternating","tool","exit_status","exit_code","time","output.ap","output.states","output.edges","output.transitions","output.acc_sets","output.scc","output.nondetstates","output.nondeterministic","output.alternating"
-: "-:1.1-46.7","automaton 0",2,10,26,26,1,1,6,0,0,"AF","ok",0,0.039722,2,27,95,108,3,2,0,0,0
-: "-:1.1-46.7","automaton 0",2,10,26,26,1,1,6,0,0,"L2D","ok",0,0.00640371,2,34,121,136,6,2,0,9,0
-: "-:47.1-94.7","automaton 1",2,10,28,28,1,1,4,0,0,"AF","ok",0,0.0400776,2,58,216,232,3,2,0,9,0
-: "-:47.1-94.7","automaton 1",2,10,28,28,1,1,4,0,0,"L2D","ok",0,0.00489558,2,74,268,296,6,2,0,20,0
-: "-:95.1-140.7","automaton 2",2,10,26,26,1,2,6,0,0,"AF","ok",0,0.0220585,2,21,69,84,2,4,0,7,0
-: "-:95.1-140.7","automaton 2",2,10,26,26,1,2,6,0,0,"L2D","ok",0,0.00329786,2,24,74,96,2,4,0,23,0
+| input.source | input.name  | input.ap | input.states | input.edges | input.transitions | input.acc_sets | input.scc | input.nondetstates | input.nondeterministic | input.alternating | tool | exit_status | exit_code |       time | output.ap | output.states | output.edges | output.transitions | output.acc_sets | output.scc | output.nondetstates | output.nondeterministic | output.alternating |
+|--------------+-------------+----------+--------------+-------------+-------------------+----------------+-----------+--------------------+------------------------+-------------------+------+-------------+-----------+------------+-----------+---------------+--------------+--------------------+-----------------+------------+---------------------+-------------------------+--------------------|
+| -:1.1-46.7   | automaton 0 |        2 |           10 |          26 |                26 |              1 |         1 |                  6 |                      1 |                 0 | AF   | ok          |         0 |  0.0239042 |         2 |            26 |           91 |                104 |               5 |          2 |                   0 |                       0 |                  0 |
+| -:1.1-46.7   | automaton 0 |        2 |           10 |          26 |                26 |              1 |         1 |                  6 |                      1 |                 0 | L2D  | ok          |         0 | 0.00315407 |         2 |            34 |          121 |                136 |               6 |          2 |                   0 |                       0 |                  0 |
+| -:47.1-94.7  | automaton 1 |        2 |           10 |          28 |                28 |              1 |         1 |                  4 |                      1 |                 0 | AF   | ok          |         0 |  0.0218867 |         2 |            54 |          197 |                216 |               3 |          2 |                   0 |                       0 |                  0 |
+| -:47.1-94.7  | automaton 1 |        2 |           10 |          28 |                28 |              1 |         1 |                  4 |                      1 |                 0 | L2D  | ok          |         0 | 0.00413592 |         2 |            74 |          268 |                296 |               6 |          2 |                   0 |                       0 |                  0 |
+| -:95.1-140.7 | automaton 2 |        2 |           10 |          26 |                26 |              1 |         2 |                  6 |                      1 |                 0 | AF   | ok          |         0 |  0.0211636 |         2 |            21 |           66 |                 84 |               2 |          4 |                   0 |                       0 |                  0 |
+| -:95.1-140.7 | automaton 2 |        2 |           10 |          26 |                26 |              1 |         2 |                  6 |                      1 |                 0 | L2D  | ok          |         0 |  0.0028508 |         2 |            24 |           74 |                 96 |               2 |          4 |                   0 |                       0 |                  0 |
 
 * Language preserving transformation
 
@@ -264,28 +283,23 @@ To simulate a problem, let's compare pretend we want verify that
 =autfilt --complement= preserves the input language (clearly it does
 not, since it actually complement the language of the automaton).
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue "exec 2>&1" :epilogue true
 randaut -B -n 3 a b --name="automaton %L" |
 autcross --language-preserved 'autfilt --complement'
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :exports output
-randaut -B -n 3 a b --name="automaton %L" |
-autcross --language-preserved 'autfilt --complement' 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 -:1.1-46.7	automaton 0
-Running [A0]: autfilt --complement 'lcr-i0-3gRqrd'>'lcr-o0-ubUpHb'
+Running [A0]: autfilt --complement 'lcr-i0-ttpQt9'>'lcr-o0-elszrt'
 Performing sanity checks and gathering statistics...
 error: A0*Comp(input) is nonempty; both automata accept the infinite word:
-       !a & !b; a & !b; cycle{!a & !b; a & !b; !a & b; !a & b; !a & !b; !a & b; !a & b; !a & !b}
+       cycle{!a & !b; a & !b}
 error: input*Comp(A0) is nonempty; both automata accept the infinite word:
        !a & !b; !a & !b; cycle{!a & !b; !a & b; a & b}
 
 -:47.1-94.7	automaton 1
-Running [A0]: autfilt --complement 'lcr-i1-JxFi09'>'lcr-o0-oQGbj8'
+Running [A0]: autfilt --complement 'lcr-i1-rFJYtN'>'lcr-o0-66sow7'
 Performing sanity checks and gathering statistics...
 error: A0*Comp(input) is nonempty; both automata accept the infinite word:
        !a & b; cycle{a & !b}
@@ -293,10 +307,10 @@ error: input*Comp(A0) is nonempty; both automata accept the infinite word:
        !a & b; a & !b; cycle{!a & b; a & b}
 
 -:95.1-140.7	automaton 2
-Running [A0]: autfilt --complement 'lcr-i2-SQT7E6'>'lcr-o0-kWt404'
+Running [A0]: autfilt --complement 'lcr-i2-00isDr'>'lcr-o0-R6BwKL'
 Performing sanity checks and gathering statistics...
 error: A0*Comp(input) is nonempty; both automata accept the infinite word:
-       a & !b; !a & !b; cycle{a & !b; !a & b}
+       !a & b; cycle{!a & !b}
 error: input*Comp(A0) is nonempty; both automata accept the infinite word:
        cycle{!a & b; !a & b; !a & !b; a & !b; a & !b; !a & !b}
 
@@ -349,29 +363,24 @@ makes sense if you only care about the output of =--csv=.
 The verbose option can be useful to troubleshoot problems or simply
 follow the list of transformations and tests performed by =autcross=.
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue "exec 2>&1" :epilogue true
 randaut -B -n 1 a b --name="automaton %L" |
 autcross 'autfilt --complement' 'ltl2dstar --complement-input=yes' --verbose
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :exports results
-randaut -B -n 1 a b --name="automaton %L" |
-autcross 'autfilt --complement' 'ltl2dstar --complement-input=yes' --verbose 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 -:1.1-46.7	automaton 0
 info: input	(10 st.,26 ed.,1 sets)
-Running [A0]: autfilt --complement 'lcr-i0-oZm5P2'>'lcr-o0-O4P0IB'
-Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i0-gEwlJa' 'lcr-o1-wSaHJJ'
+Running [A0]: autfilt --complement 'lcr-i0-KHA9NI'>'lcr-o0-BSYDwC'
+Running [A1]: ltl2dstar --complement-input=yes -B 'lcr-i0-DjL8hw' 'lcr-o1-PASD3p'
 info: collected automata:
-info:   A0	(27 st.,95 ed.,3 sets) deterministic complete
+info:   A0	(26 st.,91 ed.,5 sets) deterministic complete
 info:   A1	(34 st.,121 ed.,6 sets) deterministic complete
 Performing sanity checks and gathering statistics...
 info: getting rid of any Fin acceptance...
-info:         A0	(27 st.,95 ed.,3 sets) -> (58 st.,203 ed.,2 sets)
-info:   Comp(A0)	(27 st.,95 ed.,3 sets) -> (51 st.,188 ed.,1 sets)
+info:         A0	(26 st.,91 ed.,5 sets) -> (83 st.,287 ed.,2 sets)
+info:   Comp(A0)	(26 st.,91 ed.,5 sets) -> (76 st.,281 ed.,3 sets)
 info:         A1	(34 st.,121 ed.,6 sets) -> (64 st.,228 ed.,3 sets)
 info:   Comp(A1)	(34 st.,121 ed.,6 sets) -> (34 st.,121 ed.,1 sets)
 info: check_empty A0*Comp(A1)
@@ -380,14 +389,6 @@ info: check_empty A1*Comp(A0)
 No problem detected.
 #+end_example
 
-#  LocalWords:  utf autcross SETUPFILE html HOA neverclaim dstar's Nr
-#  LocalWords:  autfilt dstar randaut lcr xZO urHakt mmkgH ABdm kMYrq
-#  LocalWords:  kvBP lVlGfJ BexLFn rjvy rKKlxG Musr LyAxtZ shorthands
-#  LocalWords:  COMMANDFMT seminator nba ldpa QHReWu eTOmZ jsoPPt ilV
-#  LocalWords:  bQiY IubpMs dfmYfX NXLr zSwXhW bDOq og mUp QVurtU ap
-#  LocalWords:  ok complementation Ai Aj gRqrd ubUpHb JxFi oQGbj SQT
-#  LocalWords:  kWt Eo Xsc WXgCB vLwKMQ tI SXF qqlE KXplk ZFTCz PNY
-#  LocalWords:  hUAK IjnFhD cWys ZqjdQh
 * Use-cases for =%M=
 
 If the input automata are named, it is possible to use =%M= in some
@@ -404,70 +405,60 @@ LTL formula encoded in the name of the automaton).  That LTL formula
 is not in a syntax supported by =ltl2dstar=, so we call =ltl2dstar=
 via [[file:ltldo.org][=ltldo=]] to arrange that.
 
-#+BEGIN_SRC sh :results silent :export code
+#+BEGIN_SRC sh :prologue "exec 2>&1" :epilogue true
 genltl --eh-patterns=1..3 | ltl2tgba |
   autcross 'autfilt -P -D' 'ltldo ltl2dstar -f %M >%O'
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :export results
-genltl --eh-patterns=1..3 | ltl2tgba |
-  autcross 'autfilt -P -D' 'ltldo ltl2dstar -f %M >%O' 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 -:1.1-16.7	p0 U (p1 & Gp2)
-Running [A0]: autfilt -P -D 'lcr-i0-rBSCo9'>'lcr-o0-xyRJhy'
-Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & Gp2)' >'lcr-o1-9uDUjX'
+Running [A0]: autfilt -P -D 'lcr-i0-VyvQVJ'>'lcr-o0-fVtUyh'
+Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & Gp2)' >'lcr-o1-4e57fP'
 Performing sanity checks and gathering statistics...
 
 -:17.1-34.7	p0 U (p1 & X(p2 U p3))
-Running [A0]: autfilt -P -D 'lcr-i1-LFDrvm'>'lcr-o0-6fBZGL'
-Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & X(p2 U p3))' >'lcr-o1-AUXx0a'
+Running [A0]: autfilt -P -D 'lcr-i1-cNgs1m'>'lcr-o0-MWSMMU'
+Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & X(p2 U p3))' >'lcr-o1-2oVyBs'
 Performing sanity checks and gathering statistics...
 
 -:35.1-64.7	p0 U (p1 & X(p2 & F(p3 & XF(p4 & XF(p5 & XFp6)))))
-Running [A0]: autfilt -P -D 'lcr-i2-UaZCtA'>'lcr-o0-hhbJWZ'
-Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & X(p2 & F(p3 & XF(p4 & XF(p5 & XFp6)))))' >'lcr-o1-xhS4Ap'
+Running [A0]: autfilt -P -D 'lcr-i2-Tgzsu0'>'lcr-o0-aOBmny'
+Running [A1]: ltldo ltl2dstar -f 'p0 U (p1 & X(p2 & F(p3 & XF(p4 & XF(p5 & XFp6)))))' >'lcr-o1-Sg7al6'
 Performing sanity checks and gathering statistics...
 
 No problem detected.
 #+end_example
 
-This example is a bit contrived, and in this case, an alternative would
-be to use [[file:ltlcross.org][=ltlcross=]], as in:
+The previous example was a bit contrived, and in this case, a saner
+alternative would be to use [[file:ltlcross.org][=ltlcross=]], as in:
 
-#+BEGIN_SRC sh :results silent :export code
+#+BEGIN_SRC sh :prologue "exec 2>&1" :epilogue true
 genltl --eh-patterns=1..3 |
   ltlcross 'ltl2tgba %f | autfilt -P -D > %O' 'ltl2dstar'
-#+END_SRC
-
-#+BEGIN_SRC sh :results verbatim :export results
-genltl --eh-patterns=1..3 |
-  ltlcross 'ltl2tgba %f | autfilt -P -D > %O' 'ltl2dstar' 2>&1
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 -:1: (p0) U ((p1) & (G(p2)))
-Running [P0]: ltl2tgba '(p0) U ((p1) & (G(p2)))' | autfilt -P -D > 'lcr-o0-DnV1rm'
-Running [P1]: ltl2dstar --output-format=hoa 'lcr-i0-jBLulv' 'lcr-o1-epwYeE'
-Running [N0]: ltl2tgba '!((p0) U ((p1) & (G(p2))))' | autfilt -P -D > 'lcr-o0-8bVQ9M'
-Running [N1]: ltl2dstar --output-format=hoa 'lcr-i0-5oAAdW' 'lcr-o1-W7elh5'
+Running [P0]: ltl2tgba '(p0) U ((p1) & (G(p2)))' | autfilt -P -D > 'lcr-o0-6iPt1N'
+Running [P1]: ltl2dstar --output-format=hoa 'lcr-i0-iZ22aA' 'lcr-o1-xyBCkm'
+Running [N0]: ltl2tgba '!((p0) U ((p1) & (G(p2))))' | autfilt -P -D > 'lcr-o0-UL2Ju8'
+Running [N1]: ltl2dstar --output-format=hoa 'lcr-i0-FyS5HU' 'lcr-o1-Xy3rVG'
 Performing sanity checks and gathering statistics...
 
 -:2: (p0) U ((p1) & (X((p2) U (p3))))
-Running [P0]: ltl2tgba '(p0) U ((p1) & (X((p2) U (p3))))' | autfilt -P -D > 'lcr-o0-xMdCve'
-Running [P1]: ltl2dstar --output-format=hoa 'lcr-i1-OJU1Sn' 'lcr-o1-wOCsgx'
-Running [N0]: ltl2tgba '!((p0) U ((p1) & (X((p2) U (p3)))))' | autfilt -P -D > 'lcr-o0-SzgmFG'
-Running [N1]: ltl2dstar --output-format=hoa 'lcr-i1-8iIddQ' 'lcr-o1-zBV5KZ'
+Running [P0]: ltl2tgba '(p0) U ((p1) & (X((p2) U (p3))))' | autfilt -P -D > 'lcr-o0-3veUbt'
+Running [P1]: ltl2dstar --output-format=hoa 'lcr-i1-Rceyvf' 'lcr-o1-YXtcP1'
+Running [N0]: ltl2tgba '!((p0) U ((p1) & (X((p2) U (p3)))))' | autfilt -P -D > 'lcr-o0-imCn9N'
+Running [N1]: ltl2dstar --output-format=hoa 'lcr-i1-Q49LwA' 'lcr-o1-xF2aUm'
 Performing sanity checks and gathering statistics...
 
 -:3: (p0) U ((p1) & (X((p2) & (F((p3) & (X(F((p4) & (X(F((p5) & (X(F(p6))))))))))))))
-Running [P0]: ltl2tgba '(p0) U ((p1) & (X((p2) & (F((p3) & (X(F((p4) & (X(F((p5) & (X(F(p6))))))))))))))' | autfilt -P -D > 'lcr-o0-FEA6s9'
-Running [P1]: ltl2dstar --output-format=hoa 'lcr-i2-E0Ikpj' 'lcr-o1-ppDzlt'
-Running [N0]: ltl2tgba '!((p0) U ((p1) & (X((p2) & (F((p3) & (X(F((p4) & (X(F((p5) & (X(F(p6)))))))))))))))' | autfilt -P -D > 'lcr-o0-jqlelD'
-Running [N1]: ltl2dstar --output-format=hoa 'lcr-i2-IwU1uN' 'lcr-o1-6YdQEX'
+Running [P0]: ltl2tgba '(p0) U ((p1) & (X((p2) & (F((p3) & (X(F((p4) & (X(F((p5) & (X(F(p6))))))))))))))' | autfilt -P -D > 'lcr-o0-xdVyk9'
+Running [P1]: ltl2dstar --output-format=hoa 'lcr-i2-UpeRPV' 'lcr-o1-4GM9kI'
+Running [N0]: ltl2tgba '!((p0) U ((p1) & (X((p2) & (F((p3) & (X(F((p4) & (X(F((p5) & (X(F(p6)))))))))))))))' | autfilt -P -D > 'lcr-o0-J9yARu'
+Running [N1]: ltl2dstar --output-format=hoa 'lcr-i2-1IDzrh' 'lcr-o1-Ck5y13'
 Performing sanity checks and gathering statistics...
 
 No problem detected.
@@ -476,3 +467,16 @@ No problem detected.
 However in practice you could also use the =name:= field of the input
 automaton, combined with =%M= in the tool specification, to designate
 an alternate filename to load, or some key to look up somewhere.
+
+#+BEGIN_SRC sh :results silent :exports results
+rm -f autcross.csv
+#+END_SRC
+
+#  LocalWords:  utf autcross SETUPFILE html HOA neverclaim dstar's Nr
+#  LocalWords:  autfilt dstar randaut lcr xZO urHakt mmkgH ABdm kMYrq
+#  LocalWords:  kvBP lVlGfJ BexLFn rjvy rKKlxG Musr LyAxtZ shorthands
+#  LocalWords:  COMMANDFMT seminator nba ldpa QHReWu eTOmZ jsoPPt ilV
+#  LocalWords:  bQiY IubpMs dfmYfX NXLr zSwXhW bDOq og mUp QVurtU ap
+#  LocalWords:  ok complementation Ai Aj gRqrd ubUpHb JxFi oQGbj SQT
+#  LocalWords:  kWt Eo Xsc WXgCB vLwKMQ tI SXF qqlE KXplk ZFTCz PNY
+#  LocalWords:  hUAK IjnFhD cWys ZqjdQh

@@ -3,6 +3,7 @@
 #+DESCRIPTION: Spot command-line tool for filtering, tranforming, and converting ω-automata.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 The =autfilt= tool can filter, transform, and convert a stream of automata.
 
@@ -32,7 +33,7 @@ By default the output uses the HOA format.  This can be changed using
 [[file:oaut.org][the common output options]] like =--spin=, =--lbtt=, =--dot=,
 =--stats=...
 
-#+BEGIN_SRC sh :results silent :exports both
+#+BEGIN_SRC sh :results silent
 cat >example.hoa <<EOF
 HOA: v1
 States: 1
@@ -48,7 +49,7 @@ EOF
 autfilt example.hoa --dot
 #+END_SRC
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 SPOT_DOTEXTRA= autfilt example.hoa --dot
 #+END_SRC
 
@@ -65,7 +66,7 @@ SPOT_DOTEXTRA= autfilt example.hoa --dot
 
 The =--spin= option implicitly requires a degeneralization:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 autfilt example.hoa --spin
 #+END_SRC
 
@@ -87,7 +88,7 @@ T0_S2:
 
 Option =--lbtt= only works for Büchi or generalized Büchi acceptance.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 autfilt example.hoa --lbtt
 #+END_SRC
 
@@ -106,7 +107,7 @@ automata, and pipe the result into =autfilt= to display various
 statistics.
 
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randaut -n 10 -A0..2 -Q10..20 -e0.05 2 |
 autfilt --stats='%s states, %e edges, %a acc-sets, %c SCCs, det=%d'
 #+END_SRC
@@ -126,7 +127,7 @@ autfilt --stats='%s states, %e edges, %a acc-sets, %c SCCs, det=%d'
 #+end_example
 
 The following =%= sequences are available:
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltl2tgba --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -171,6 +172,11 @@ ltl2tgba --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
                              processes.
   %s                         number of reachable states
   %t                         number of reachable transitions
+  %u, %[e]u                  number of states (or [e]dges) with universal
+                             branching
+  %u, %[LETTER]u             1 if the automaton contains some universal
+                             branching (or a number of [s]tates or [e]dges with
+                             universal branching)
   %w                         one word accepted by the output automaton
   %x, %[LETTERS]x            number of atomic propositions declared in the
                              automaton;  add LETTERS to list atomic
@@ -193,7 +199,7 @@ automaton.
 =autfilt= offers multiple options to filter automata based on
 different characteristics of the automaton.
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 autfilt --help | sed -n '/Filtering options.*:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -204,13 +210,19 @@ autfilt --help | sed -n '/Filtering options.*:/,/^$/p' | sed '1d;$d'
       --acc-sets=RANGE       keep automata whose number of acceptance sets is
                              in RANGE
       --accept-word=WORD     keep automata that accept WORD
+      --acceptance-is=NAME|FORMULA
+                             match automata with given accetance condition
       --ap=RANGE             match automata with a number of (declared) atomic
                              propositions in RANGE
       --are-isomorphic=FILENAME   keep automata that are isomorphic to the
                              automaton in FILENAME
       --edges=RANGE          keep automata whose number of edges is in RANGE
-      --equivalent-to=FILENAME   keep automata thare are equivalent
+      --equivalent-to=FILENAME   keep automata that are equivalent
                              (language-wise) to the automaton in FILENAME
+      --has-exist-branching  keep automata that use existential branching
+                             (i.e., make non-deterministic choices)
+      --has-univ-branching   keep alternating automata that use universal
+                             branching
       --included-in=FILENAME keep automata whose languages are included in that
                              of the automaton from FILENAME
       --inherently-weak-sccs=RANGE
@@ -220,14 +232,19 @@ autfilt --help | sed -n '/Filtering options.*:/,/^$/p' | sed '1d;$d'
                              rejecting cycle.
       --intersect=FILENAME   keep automata whose languages have an non-empty
                              intersection with the automaton from FILENAME
+      --is-alternating       keep only automata using universal branching
+      --is-colored           keep colored automata (i.e., exactly one
+                             acceptance mark per transition or state)
       --is-complete          keep complete automata
       --is-deterministic     keep deterministic automata
       --is-empty             keep automata with an empty language
       --is-inherently-weak   keep only inherently weak automata
+      --is-semi-deterministic   keep semi-deterministic automata
       --is-stutter-invariant keep automata representing stutter-invariant
                              properties
       --is-terminal          keep only terminal automata
       --is-unambiguous       keep only unambiguous automata
+      --is-very-weak         keep only very-weak automata
       --is-weak              keep only weak automata
       --nondet-states=RANGE  keep automata whose number of nondeterministic
                              states is in RANGE
@@ -264,6 +281,9 @@ that use 3 acceptance sets and that have between 2 and 5 states, and
 keep the others.
 
 * Simplifying automata
+   :PROPERTIES:
+   :header-args:sh: :results verbatim :exports results
+   :END:
 
 The standard set of automata simplification routines (these are often
 referred to as the "post-processing" routines, because these are the
@@ -272,12 +292,15 @@ TGBA) are available through the following options.
 
 This set of options controls the desired type of output automaton:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh
 autfilt --help | sed -n '/Output automaton type:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
 #+begin_example
   -B, --ba                   Büchi Automaton (with state-based acceptance)
+      --cobuchi, --coBuchi   automaton with co-Büchi acceptance (will
+                             recognize a superset of the input language if not
+                             co-Büchi realizable)
   -C, --complete             output a complete automaton
   -G, --generic              any acceptance is allowed (default)
   -M, --monitor              Monitor (accepts all finite prefixes of the given
@@ -293,19 +316,21 @@ autfilt --help | sed -n '/Output automaton type:/,/^$/p' | sed '1d;$d'
 
 These options specify any simplification goal:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh
 autfilt --help | sed -n '/Simplification goal:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
 :   -a, --any                  no preference, do not bother making it small or
 :                              deterministic
-:   -D, --deterministic        prefer deterministic automata
+:   -D, --deterministic        prefer deterministic automata (combine with
+:                              --generic to be sure to obtain a deterministic
+:                              automaton)
 :       --small                prefer small automata
 
 Finally, the following switches control the amount of effort applied
 toward the desired goal:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh
 autfilt --help | sed -n '/Simplification level:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -374,7 +399,7 @@ set.
 
 The following transformations are available:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 autfilt --help | sed -n '/Transformations:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 
@@ -383,16 +408,20 @@ autfilt --help | sed -n '/Transformations:/,/^$/p' | sed '1d;$d'
       --cleanup-acceptance   remove unused acceptance sets from the automaton
       --cnf-acceptance       put the acceptance condition in Conjunctive Normal
                              Form
-      --complement           complement each automaton (currently support only
-                             deterministic automata)
+      --complement           complement each automaton (different strategies
+                             are used)
       --complement-acceptance   complement the acceptance condition (without
                              touching the automaton)
-      --decompose-strength=t|w|s   extract the (t) terminal, (w) weak, or (s)
-                             strong part of an automaton (letters may be
-                             combined to combine more strengths in the output)
+      --decompose-scc=t|w|s|N|aN, --decompose-strength=t|w|s|N|aN
+                             extract the (t) terminal, (w) weak, or (s) strong
+                             part of an automaton or (N) the subautomaton
+                             leading to the Nth SCC, or (aN) to the Nth
+                             accepting SCC (option can be combined with commas
+                             to extract multiple parts)
       --destut               allow less stuttering
       --dnf-acceptance       put the acceptance condition in Disjunctive Normal
                              Form
+      --dualize              dualize each automaton
       --exclusive-ap=AP,AP,...   if any of those APs occur in the automaton,
                              restrict all edges to ensure two of them may not
                              be true at the same time.  Use this option
@@ -429,24 +458,44 @@ autfilt --help | sed -n '/Transformations:/,/^$/p' | sed '1d;$d'
                              quantification, or by assigning them 0 or 1
       --remove-dead-states   remove states that are unreachable, or that cannot
                              belong to an infinite path
-      --remove-fin           rewrite the automaton without using Fin
-                             acceptance
+      --remove-fin           rewrite the automaton without using Fin acceptance
+
       --remove-unreachable-states
                              remove states that are unreachable from the
                              initial state
       --remove-unused-ap     remove declared atomic propositions that are not
                              used
       --sat-minimize[=options]   minimize the automaton using a SAT solver
-                             (only works for deterministic automata)
+                             (only works for deterministic automata). Supported
+                             options are acc=STRING, states=N, max-states=N,
+                             sat-incr=N, sat-incr-steps=N, sat-langmap,
+                             sat-naive, colored, preproc=N. Spot uses by
+                             default its PicoSAT distribution but an external
+                             SATsolver can be set thanks to the SPOT_SATSOLVER
+                             environment variable(see spot-x).
       --separate-sets        if both Inf(x) and Fin(x) appear in the acceptance
                              condition, replace Fin(x) by a new Fin(y) and
                              adjust the automaton
+      --simplify-acceptance  simplify the acceptance condition by merging
+                             identical acceptance sets and by simplifying some
+                             terms containing complementary sets
       --simplify-exclusive-ap   if --exclusive-ap is used, assume those AP
                              groups are actually exclusive in the system to
                              simplify the expression of transition labels
                              (implies --merge-transitions)
+      --split-edges          split edges into transitions labeled by
+                             conjunctions of all atomic propositions, so they
+                             can be read as letters
+      --streett-like         convert to an automaton with Streett-like
+                             acceptance. Works only with acceptance condition
+                             in DNF
       --strip-acceptance     remove the acceptance condition and all acceptance
                              sets
+      --sum=FILENAME, --sum-or=FILENAME
+                             build the sum with the automaton in FILENAME to
+                             sum languages
+      --sum-and=FILENAME     build the sum with the automaton in FILENAME to
+                             intersect languages
 #+end_example
 
 * Decorations
@@ -455,19 +504,25 @@ Decorations work by coloring some states or edges in the automaton.
 They are only useful when the automaton is output in Dot format (with
 =--dot= or =-d=) or HOA v1.1 format (with =-H1.1= or =--hoa=1.1=).
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 autfilt --help | sed -n '/^ *Decorations.*:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 
 #+RESULTS:
-:       --highlight-nondet[=NUM]   highlight nondeterministic states and edges
-:                              with color NUM
-:       --highlight-nondet-edges[=NUM]
-:                              highlight nondeterministic edges with color NUM
-:       --highlight-nondet-states[=NUM]
-:                              highlight nondeterministic states with color NUM
-:       --highlight-word=[NUM,]WORD
-:                              highlight one run matching WORD using color NUM
+#+begin_example
+      --highlight-accepting-run[=NUM]
+                             highlight one accepting run using color NUM
+      --highlight-languages  highlight states that recognize identical
+                             languages
+      --highlight-nondet[=NUM]   highlight nondeterministic states and edges
+                             with color NUM
+      --highlight-nondet-edges[=NUM]
+                             highlight nondeterministic edges with color NUM
+      --highlight-nondet-states[=NUM]
+                             highlight nondeterministic states with color NUM
+      --highlight-word=[NUM,]WORD
+                             highlight one run matching WORD using color NUM
+#+end_example
 
 Color numbers are indices in some hard-coded color palette.  It is the
 same palette that is currently used to display colored acceptance
@@ -476,10 +531,13 @@ sets, but this might change in the future.
 * Examples
 
 ** Acceptance transformations
+   :PROPERTIES:
+   :header-args:sh: :results verbatim :exports code
+   :END:
 
 Here is an automaton with transition-based acceptance:
 
-#+BEGIN_SRC sh :results silent :exports both
+#+BEGIN_SRC sh :results silent
 cat >aut-ex1.hoa<<EOF
 HOA: v1
 States: 3
@@ -507,98 +565,23 @@ EOF
 discussed [[file:oaut.org::#default-dot][on another page]].)
 
 #+NAME: autfilt-ex1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 autfilt aut-ex1.hoa --dot
 #+END_SRC
-
-#+RESULTS: autfilt-ex1
-#+begin_example
-digraph G {
-  rankdir=LR
-  label=<(Fin(<font color="#F17CB0">❶</font>) &amp; Fin(<font color="#B276B2">❸</font>) &amp; Inf(<font color="#5DA5DA">⓿</font>)) | (Inf(<font color="#FAA43A">❷</font>)&amp;Inf(<font color="#B276B2">❸</font>)) | Inf(<font color="#F17CB0">❶</font>)>
-  labelloc="t"
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label="0"]
-  0 -> 0 [label=<1<br/><font color="#B276B2">❸</font>>]
-  0 -> 1 [label=<a<br/><font color="#F17CB0">❶</font><font color="#B276B2">❸</font>>]
-  0 -> 2 [label=<!a<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  1 [label="1"]
-  1 -> 0 [label=<b<br/><font color="#B276B2">❸</font>>]
-  1 -> 1 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  1 -> 2 [label=<!a &amp; b<br/><font color="#FAA43A">❷</font><font color="#B276B2">❸</font>>]
-  2 [label="2"]
-  2 -> 0 [label=<!b>]
-  2 -> 1 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 2 [label=<!a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-ex1.svg :var txt=autfilt-ex1 :exports results
   $txt
 #+END_SRC
 
 #+RESULTS:
-[[file:autfilt-ex1.svgz]]
+[[file:autfilt-ex1.svg]]
 
 Using =-S= will "push" the acceptance membership of the transitions to the states:
 
 #+NAME: autfilt-ex2
-#+BEGIN_SRC sh :results verbatim :exports code
-autfilt -S aut-ex1.hoa --dot=
+#+BEGIN_SRC sh
+autfilt -S aut-ex1.hoa --dot
 #+END_SRC
-
-#+RESULTS: autfilt-ex2
-#+begin_example
-digraph G {
-  rankdir=LR
-  label=<(Fin(<font color="#F17CB0">❶</font>) &amp; Fin(<font color="#B276B2">❸</font>) &amp; Inf(<font color="#5DA5DA">⓿</font>)) | (Inf(<font color="#FAA43A">❷</font>)&amp;Inf(<font color="#B276B2">❸</font>)) | Inf(<font color="#F17CB0">❶</font>)>
-  labelloc="t"
-  node [shape="circle"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label=<0<br/><font color="#B276B2">❸</font>>]
-  0 -> 0 [label=<1>]
-  0 -> 1 [label=<a>]
-  0 -> 2 [label=<!a>]
-  1 [label=<1<br/><font color="#F17CB0">❶</font><font color="#B276B2">❸</font>>]
-  1 -> 0 [label=<b>]
-  1 -> 6 [label=<a &amp; b>]
-  1 -> 7 [label=<!a &amp; b>]
-  2 [label=<2<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  2 -> 3 [label=<!b>]
-  2 -> 4 [label=<a &amp; !b>]
-  2 -> 5 [label=<!a &amp; !b>]
-  3 [label=<3>]
-  3 -> 0 [label=<1>]
-  3 -> 1 [label=<a>]
-  3 -> 2 [label=<!a>]
-  4 [label=<4<br/><font color="#5DA5DA">⓿</font>>]
-  4 -> 0 [label=<b>]
-  4 -> 6 [label=<a &amp; b>]
-  4 -> 7 [label=<!a &amp; b>]
-  5 [label=<5<br/><font color="#5DA5DA">⓿</font>>]
-  5 -> 3 [label=<!b>]
-  5 -> 4 [label=<a &amp; !b>]
-  5 -> 5 [label=<!a &amp; !b>]
-  6 [label=<6<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  6 -> 0 [label=<b>]
-  6 -> 6 [label=<a &amp; b>]
-  6 -> 7 [label=<!a &amp; b>]
-  7 [label=<7<br/><font color="#FAA43A">❷</font><font color="#B276B2">❸</font>>]
-  7 -> 3 [label=<!b>]
-  7 -> 4 [label=<a &amp; !b>]
-  7 -> 5 [label=<!a &amp; !b>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-ex2.svg :var txt=autfilt-ex2 :exports results
 $txt
@@ -610,36 +593,9 @@ $txt
 Using =--cnf-acceptance= simply rewrites the acceptance condition in Conjunctive Normal Form:
 
 #+NAME: autfilt-ex3
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 autfilt --cnf-acceptance aut-ex1.hoa --dot
 #+END_SRC
-
-#+RESULTS: autfilt-ex3
-#+begin_example
-digraph G {
-  rankdir=LR
-  label=<(Inf(<font color="#5DA5DA">⓿</font>) | Inf(<font color="#F17CB0">❶</font>) | Inf(<font color="#B276B2">❸</font>)) &amp; (Fin(<font color="#B276B2">❸</font>) | Inf(<font color="#F17CB0">❶</font>) | Inf(<font color="#FAA43A">❷</font>))>
-  labelloc="t"
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label="0"]
-  0 -> 0 [label=<1<br/><font color="#B276B2">❸</font>>]
-  0 -> 1 [label=<a<br/><font color="#F17CB0">❶</font><font color="#B276B2">❸</font>>]
-  0 -> 2 [label=<!a<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  1 [label="1"]
-  1 -> 0 [label=<b<br/><font color="#B276B2">❸</font>>]
-  1 -> 1 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  1 -> 2 [label=<!a &amp; b<br/><font color="#FAA43A">❷</font><font color="#B276B2">❸</font>>]
-  2 [label="2"]
-  2 -> 0 [label=<!b>]
-  2 -> 1 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 2 [label=<!a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-ex3.svg :var txt=autfilt-ex3 :exports results
 $txt
@@ -654,39 +610,9 @@ of Fin-acceptance: this usually requires adding non-deterministic jumps to
 altered copies of strongly-connected components.
 
 #+NAME: autfilt-ex4
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 autfilt --remove-fin aut-ex1.hoa --dot
 #+END_SRC
-
-#+RESULTS: autfilt-ex4
-#+begin_example
-digraph G {
-  rankdir=LR
-  label=<Inf(<font color="#5DA5DA">⓿</font>) | Inf(<font color="#F17CB0">❶</font>) | (Inf(<font color="#FAA43A">❷</font>)&amp;Inf(<font color="#B276B2">❸</font>))>
-  labelloc="t"
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label="0"]
-  0 -> 0 [label=<1<br/><font color="#B276B2">❸</font>>]
-  0 -> 1 [label=<a<br/><font color="#F17CB0">❶</font><font color="#B276B2">❸</font>>]
-  0 -> 2 [label=<!a<br/><font color="#B276B2">❸</font>>]
-  1 [label="1"]
-  1 -> 0 [label=<b<br/><font color="#B276B2">❸</font>>]
-  1 -> 1 [label=<a &amp; b<br/><font color="#B276B2">❸</font>>]
-  1 -> 2 [label=<!a &amp; b<br/><font color="#FAA43A">❷</font><font color="#B276B2">❸</font>>]
-  2 [label="2"]
-  2 -> 0 [label=<!b>]
-  2 -> 1 [label=<a &amp; !b>]
-  2 -> 2 [label=<!a &amp; !b>]
-  2 -> 3 [label=<!a &amp; !b>]
-  3 [label="3"]
-  3 -> 3 [label=<!a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-ex4.svg :var txt=autfilt-ex4 :exports results
 $txt
@@ -700,34 +626,9 @@ transitions they contain.  The acceptance condition will be updated to
 reflect the fact that these sets can never be visited.
 
 #+NAME: autfilt-ex5
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 autfilt --mask-acc=1,2 aut-ex1.hoa --dot
 #+END_SRC
-
-#+RESULTS: autfilt-ex5
-#+begin_example
-digraph G {
-  rankdir=LR
-  label=<Fin(<font color="#F17CB0">❶</font>) &amp; Inf(<font color="#5DA5DA">⓿</font>)>
-  labelloc="t"
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label="0"]
-  0 -> 0 [label=<1<br/><font color="#F17CB0">❶</font>>]
-  0 -> 1 [label=<!a<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  1 [label="1"]
-  1 -> 0 [label=<!b>]
-  1 -> 2 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  1 -> 1 [label=<!a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  2 [label="2"]
-  2 -> 0 [label=<b<br/><font color="#F17CB0">❶</font>>]
-  2 -> 2 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-ex5.svg :var txt=autfilt-ex5 :exports results
 $txt
@@ -737,6 +638,9 @@ $txt
 [[file:autfilt-ex5.svg]]
 
 ** Atomic proposition removal
+   :PROPERTIES:
+   :header-args:sh: :results verbatim :exports code
+   :END:
 
 Atomic propositions can be removed from an automaton in three ways:
 - use ~--remove-ap=a~ to remove =a= by existential quantification, i.e., both =a= and its negation will be replaced by true.
@@ -747,36 +651,9 @@ Atomic propositions can be removed from an automaton in three ways:
 Here are the results of these three options on our example:
 
 #+NAME: autfilt-ex6a
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 autfilt --remove-ap=a aut-ex1.hoa --dot
 #+END_SRC
-
-#+RESULTS: autfilt-ex6a
-#+begin_example
-digraph G {
-  rankdir=LR
-  label=<(Fin(<font color="#F17CB0">❶</font>) &amp; Fin(<font color="#B276B2">❸</font>) &amp; Inf(<font color="#5DA5DA">⓿</font>)) | (Inf(<font color="#FAA43A">❷</font>)&amp;Inf(<font color="#B276B2">❸</font>)) | Inf(<font color="#F17CB0">❶</font>)>
-  labelloc="t"
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label="0"]
-  0 -> 0 [label=<1<br/><font color="#B276B2">❸</font>>]
-  0 -> 1 [label=<1<br/><font color="#F17CB0">❶</font><font color="#B276B2">❸</font>>]
-  0 -> 2 [label=<1<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  1 [label="1"]
-  1 -> 0 [label=<b<br/><font color="#B276B2">❸</font>>]
-  1 -> 1 [label=<b<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  1 -> 2 [label=<b<br/><font color="#FAA43A">❷</font><font color="#B276B2">❸</font>>]
-  2 [label="2"]
-  2 -> 0 [label=<!b>]
-  2 -> 1 [label=<!b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 2 [label=<!b<br/><font color="#5DA5DA">⓿</font>>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-ex6a.svg :var txt=autfilt-ex6a :exports results
 $txt
@@ -786,30 +663,9 @@ $txt
 [[file:autfilt-ex6a.svg]]
 
 #+NAME: autfilt-ex6b
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 autfilt --remove-ap=a=0 aut-ex1.hoa --dot
 #+END_SRC
-
-#+RESULTS: autfilt-ex6b
-#+begin_example
-digraph G {
-  rankdir=LR
-  label=<(Fin(<font color="#F17CB0">❶</font>) &amp; Fin(<font color="#B276B2">❸</font>) &amp; Inf(<font color="#5DA5DA">⓿</font>)) | (Inf(<font color="#FAA43A">❷</font>)&amp;Inf(<font color="#B276B2">❸</font>)) | Inf(<font color="#F17CB0">❶</font>)>
-  labelloc="t"
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label="0"]
-  0 -> 0 [label=<1<br/><font color="#B276B2">❸</font>>]
-  0 -> 1 [label=<1<br/><font color="#5DA5DA">⓿</font><font color="#B276B2">❸</font>>]
-  1 [label="1"]
-  1 -> 0 [label=<!b>]
-  1 -> 1 [label=<!b<br/><font color="#5DA5DA">⓿</font>>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-ex6b.svg :var txt=autfilt-ex6b :exports results
 $txt
@@ -819,11 +675,9 @@ $txt
 [[file:autfilt-ex6b.svg]]
 
 #+NAME: autfilt-ex6c
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 autfilt --remove-ap=a=1 aut-ex1.hoa --dot
 #+END_SRC
-
-#+RESULTS: autfilt-ex6c
 
 #+BEGIN_SRC dot :file autfilt-ex6c.svg :var txt=autfilt-ex6c :exports results
 $txt
@@ -833,11 +687,15 @@ $txt
 [[file:autfilt-ex6c.svg]]
 
 ** Testing word acceptance
+   :PROPERTIES:
+   :header-args:sh: :results verbatim :exports both
+   :END:
+
 
 The following example checks whether the formula ~a U b U c~ accepts
 the word ~a&!b&!c; cycle{!a&!b&c}~.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba 'a U b U c' |
   autfilt --accept-word 'a&!b&!c; cycle{!a&!b&c}' -q  && echo "word accepted"
 #+END_SRC
@@ -851,7 +709,7 @@ words =a&!b;cycle{!a&!b}= and =!a&!b;cycle{a&b}= yet reject any word
 of the form =cycle{b}=, and display the associated formula (which was
 stored as the name of the automaton by =ltl2tgba=).
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n -1 a b | ltlfilt --simplify --uniq | ltl2tgba |
   autfilt --accept-word='a&!b;cycle{!a&!b}' --accept-word='!a&!b;cycle{a&b}' \
           --reject-word='cycle{b}' --stats=%M -n 10
@@ -881,7 +739,7 @@ in a pipeline and preserve the formula name in the HOA output.  For
 example Here is a list of 5 LTL formulas that =ltl2dstar= converts to
 Rabin automata that have exactly 4 states:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n -1 a b | ltlfilt --simplify --remove-wm |
     ltldo ltl2dstar --name=%f | autfilt --states=4 --stats=%M -n 5
 #+END_SRC
@@ -895,7 +753,7 @@ randltl -n -1 a b | ltlfilt --simplify --remove-wm |
 
 ** Decorations
    :PROPERTIES:
-   :CUSTOM_ID: decorations
+   :header-args:sh: :results verbatim :exports code
    :END:
 
 We know from a previous exemple that formula =a U b U c= accepts the
@@ -903,7 +761,7 @@ word =b; cycle{c}=.  We can actually highlight the corresponding
 run in the automaton:
 
 #+NAME: highlight-word
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 ltl2tgba 'a U b U c' | autfilt --highlight-word='a&!b&!c; cycle{!a&!b&c}' -d
 #+END_SRC
 
@@ -945,7 +803,7 @@ transition may only have one color so late highlights will overwrite
 previous ones.
 
 #+NAME: highlight-word2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 ltl2tgba 'a U b U c' |
   autfilt --highlight-word=5,'a&!b&!c; cycle{!a&!b&c}' \
           --highlight-word=4,'!a&b&!c; cycle{!a&!b&c}' -d
@@ -989,39 +847,10 @@ highlight states or edges where nondeterministic choices need to be
 made.
 
 #+NAME: highlight-nondet
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh
 ltl2tgba 'F((b R a) W Gb)' |
     autfilt --highlight-nondet-states=5 --highlight-nondet-edges=1 -d
 #+END_SRC
-
-#+RESULTS: highlight-nondet
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [shape="circle"]
-  node [style="filled", fillcolor="#ffffa0"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 1
-  0 [label="0"]
-  0 -> 0 [label=<b<br/><font color="#5DA5DA">⓿</font>>]
-  1 [label="1", style="bold,filled", color="#F15854"]
-  1 -> 0 [label=<!a &amp; b>, style=bold, color="#5DA5DA"]
-  1 -> 1 [label=<1>, style=bold, color="#5DA5DA"]
-  1 -> 2 [label=<a &amp; b>]
-  1 -> 3 [label=<a &amp; !b>]
-  2 [label="2"]
-  2 -> 0 [label=<!a &amp; b>]
-  2 -> 2 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 3 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  3 [label="3"]
-  3 -> 2 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font>>]
-  3 -> 3 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-hlnondet.svg :var txt=highlight-nondet :exports results
   $txt

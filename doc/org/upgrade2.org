@@ -114,7 +114,7 @@ experience of updating a couple of projects that are using Spot.
 If Spot 1.2.6 was installed in =/usr/local=, its headers are
 in =/usr/local/include/spot=.   One would to write include statements
 such as
-#+BEGIN_SRC c++
+#+BEGIN_SRC C++
   #include <tgba/tgba.hh>
   #include <ltl/formula.hh>
 #+END_SRC
@@ -126,7 +126,7 @@ directory.
 If Spot 2.0 is installed in =/usr/local=, its headers are still in
 =/usr/local/include/spot= however the =spot/= directory is and should
 always be used to refer to the header:
-#+BEGIN_SRC c++
+#+BEGIN_SRC C++
   #include <spot/twa/twa.hh>      // the new name of tgba/tgba.hh
   #include <spot/tl/formula.hh>   // the new name of ltl/formula.hh
 #+END_SRC
@@ -454,7 +454,7 @@ name:
   handle those larger acceptance conditions, or restricted to
   generalized Büchi acceptance.   The typical way to ensure
   that an =input= automaton has generalized Büchi acceptance is
-#+BEGIN_SRC c++
+#+BEGIN_SRC C++
      if (!input->acc().is_generalized_buchi())
         throw std::runtime_error
           ("myalgorithm() can only works with generalized Büchi acceptance");
@@ -600,7 +600,6 @@ for (auto i: aut->succ(s))
 
 
 * Various renamings
-
   :PROPERTIES:
   :CUSTOM_ID: renamings
   :END:
@@ -611,7 +610,7 @@ for (auto i: aut->succ(s))
 | old name                                                    | new name                                    | comment                                                   |
 |-------------------------------------------------------------+---------------------------------------------+-----------------------------------------------------------|
 | ~dstar_parse()~                                             | ~parse_aut()~                               | single parser for all automata                            |
-| ~dtgba_complement()~                                        | ~dtwa_complement()~                         |                                                           |
+| ~dtgba_complement()~                                        | ~dualize()~                                 |                                                           |
 | ~dupexp_bfs()~                                              |                                             | deleted                                                   |
 | ~dupexp_dfs()~                                              | ~make_twa_graph()~                          |                                                           |
 | ~format_parse_aut_errors()~                                 | ~parsed_aut::format_errors()~               |                                                           |

@@ -3,6 +3,7 @@
 #+DESCRIPTION: How to compile C++14 programs using Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
+#+PROPERTY: header-args:C+++ :results verbatim :exports both
 
 This page is not about compiling Spot itself (for this, please refer
 to the [[file:install.org][installation instructions]]), but about how to compile and
@@ -14,7 +15,7 @@ As an example we will take the following simple program, stored in a
 file called =hello.cc=:
 
 #+NAME: hello-word
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/misc/version.hh>
 
@@ -30,7 +31,7 @@ greetings and the Spot version:
 
 #+RESULTS: hello-word
 : Hello world!
-: This is Spot 1.99.6a.
+: This is Spot 2.7.2.dev.
 
 
 To successfully compile this example program, we need a C++ compiler,

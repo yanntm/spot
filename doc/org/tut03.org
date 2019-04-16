@@ -3,6 +3,8 @@
 #+DESCRIPTION: Code example for constructing and transforming formulas in Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
+#+PROPERTY: header-args:python :results output :exports both
+#+PROPERTY: header-args:C+++ :results verbatim :exports both
 
 This page explains how to build formulas and how to iterate over their
 syntax trees.
@@ -29,7 +31,7 @@ as in =formula::And({arg1, arg2, arg3})=.
 
 Here is the list of supported operators:
 
-#+BEGIN_SRC C++
+#+BEGIN_SRC C++ :exports code
   // atomic proposition
   formula::ap(string)
   // constants
@@ -88,7 +90,7 @@ Building a formula using these operators is quite straightforward.
 The second part of the following example shows how to print some
 detail of the top-level operator in the formula.
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/tl/formula.hh>
   #include <spot/tl/print.hh>
@@ -136,7 +138,7 @@ detail of the top-level operator in the formula.
 
 The Python equivalent is similar:
 
-#+BEGIN_SRC python :results output :exports both
+#+BEGIN_SRC python
   import spot
 
   # Build FGa -> (GFb & GFc)
@@ -199,7 +201,7 @@ that tells whether a formula contains a =F= or =G= operator) to save
 time time by not exploring further.
 
 #+NAME: gcount_cpp
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/tl/formula.hh>
   #include <spot/tl/print.hh>
@@ -247,7 +249,7 @@ Here is a demonstration of how to exchange all =F= and =G= operators
 in a formula:
 
 #+NAME: xchg_fg_cpp
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/tl/formula.hh>
   #include <spot/tl/print.hh>
@@ -275,7 +277,7 @@ in a formula:
   }
 #+END_SRC
 
-#+RESULTS:
+#+RESULTS: xchg_fg_cpp
 : before: FGa -> (GFb & GF(b & c & d))
 : after:  GFa -> (FGb & FG(b & c & d))
 
@@ -292,7 +294,7 @@ For instance instead of having a lambda capturing the [[gcount_cpp][=gcount=
 variable in the first example]], we could pass a reference to this
 variable:
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/tl/formula.hh>
   #include <spot/tl/print.hh>
@@ -327,7 +329,7 @@ the case of =map=.  Let's write a variant of our [[xchg_fg_cpp][=xchg_fg()= exam
 that counts the number of exchanges performed.  First, we do it
 without lambda:
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/tl/formula.hh>
   #include <spot/tl/print.hh>
@@ -372,7 +374,7 @@ capture itself.  A solution is to use =std::function= but that has a
 large penalty cost.  We can work around that by assuming that that
 address will be passed as an argument (=self=) to the lambda:
 
-#+BEGIN_SRC C++ :results verbatim :exports both
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/tl/formula.hh>
   #include <spot/tl/print.hh>
@@ -416,7 +418,7 @@ The Python version of the above two examples uses a very similar
 syntax.  Python only supports a very limited form of lambda
 expressions, so we have to write a standard function instead:
 
-#+BEGIN_SRC python :results output :exports both
+#+BEGIN_SRC python
   import spot
 
   gcount = 0
@@ -450,7 +452,7 @@ b & c & d
 
 Here is the =F= and =G= exchange:
 
-#+BEGIN_SRC python :results output :exports both
+#+BEGIN_SRC python
   import spot
 
   def xchg_fg(i):

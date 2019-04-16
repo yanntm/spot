@@ -3,6 +3,8 @@
 #+DESCRIPTION: Code example for constructing ω-automata in Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
+#+PROPERTY: header-args:python :results output :exports both :wrap SRC hoa
+#+PROPERTY: header-args:C+++ :results verbatim :exports both :wrap SRC hoa
 
 This example demonstrates how to create an automaton and then print it.
 
@@ -19,7 +21,7 @@ automata in Spot.
   :CUSTOM_ID: cpp
   :END:
 
-#+BEGIN_SRC C++ :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/twaalgos/hoa.hh>
   #include <spot/twa/twagraph.hh>
@@ -63,7 +65,7 @@ automata in Spot.
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_SRC hoa
+#+begin_SRC hoa
 HOA: v1
 States: 3
 Start: 0
@@ -80,11 +82,11 @@ State: 1
 State: 2
 [0 | 1] 1 {0 1}
 --END--
-#+END_SRC
+#+end_SRC
 
 ** Python
 
-#+BEGIN_SRC python :results output :exports both :wrap SRC hoa
+#+BEGIN_SRC python
   import spot
   import buddy
 
@@ -124,7 +126,7 @@ State: 2
 #+END_SRC
 
 #+RESULTS:
-#+BEGIN_SRC hoa
+#+begin_SRC hoa
 HOA: v1
 States: 3
 Start: 0
@@ -141,7 +143,7 @@ State: 1
 State: 2
 [0 | 1] 1 {0 1}
 --END--
-#+END_SRC
+#+end_SRC
 
 * Büchi automaton, with state-based acceptance
   :PROPERTIES:
@@ -172,7 +174,7 @@ whenever possible".
 
 ** C++
 
-#+BEGIN_SRC C++ :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/twaalgos/hoa.hh>
   #include <spot/twa/twagraph.hh>
@@ -240,7 +242,7 @@ State: 2
 
 ** Python
 
-#+BEGIN_SRC python :results output :exports both :wrap SRC hoa
+#+BEGIN_SRC python
   import spot
   import buddy
 
@@ -313,7 +315,7 @@ Arbitrary acceptance condition can be set with =set_acceptance=.
 
 ** C++
 
-#+BEGIN_SRC C++ :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC C++
   #include <iostream>
   #include <spot/twaalgos/hoa.hh>
   #include <spot/twa/twagraph.hh>
@@ -362,7 +364,7 @@ State: 2
 
 ** Python
 
-#+BEGIN_SRC python :results output :exports both :wrap SRC hoa
+#+BEGIN_SRC python
   import spot
   import buddy
 
@@ -384,3 +386,22 @@ State: 2
 
   print(aut.to_str('hoa'))
 #+END_SRC
+
+#+RESULTS:
+#+begin_SRC hoa
+HOA: v1
+States: 3
+Start: 0
+AP: 2 "p1" "p2"
+Acceptance: 3 (Inf(0) & Fin(1)) | Fin(2)
+properties: trans-labels explicit-labels trans-acc
+--BODY--
+State: 0
+[0] 1
+State: 1
+[0&1] 1 {0}
+[1] 2 {1}
+State: 2
+[0 | 1] 1 {0 2}
+--END--
+#+end_SRC

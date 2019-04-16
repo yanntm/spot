@@ -3,6 +3,7 @@
 #+DESCRIPTION: Spot command-line tool for translating LTL into Transition-based Generalized Büchi Automata.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 This tool translates LTL or PSL formulas into different types of
 automata.
@@ -31,7 +32,7 @@ less frequent.)
 Formulas to translate may be specified using [[file:ioltl.org][common input options for
 LTL/PSL formulas]].
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba -f 'Fa & GFb'
 #+END_SRC
 
@@ -69,7 +70,7 @@ can easily be piped to other tools.
 To convert the automaton into a picture, or into vectorial format, use
 =--dot= or =-d= to request [[http://www.graphviz.org/][GraphViz output]] and process the result with
 =dot= or =dotty=.  Typically, you could get a =pdf= of this TGBA using
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "Fa & GFb" -d | dot -Tpdf > tgba.pdf
 #+END_SRC
 #+RESULTS:
@@ -78,7 +79,7 @@ The result would look like this (note that in this documentation
 we use some [[file:oaut.org::#default-dot][environment variables]] to produce a more colorful
 output by default)
 #+NAME: dotex
-#+BEGIN_SRC sh :results verbatim :exports none
+#+BEGIN_SRC sh :exports none
 ltl2tgba "Fa & GFb" -d
 #+END_SRC
 #+RESULTS: dotex
@@ -123,7 +124,7 @@ Here is a TGBA with multiple acceptance sets (we omit the call to
 =dot= to render the output of =ltl2tgba= from now on):
 
 #+NAME: dotex2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "GFa & GFb" -d
 #+END_SRC
 #+RESULTS: dotex2
@@ -158,7 +159,7 @@ A Büchi automaton for the previous formula can be obtained with the
 =-B= option:
 
 #+NAME: dotex2ba
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -B 'GFa & GFb' -d
 #+END_SRC
 #+RESULTS: dotex2ba
@@ -200,12 +201,12 @@ can see this underlying TGBA if you pass the =--dot=t= option (the =t=
 requests the use of transition-based acceptance as it is done
 internally):
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba --dot=t -B 'GFa & GFb'
 #+END_SRC
 
 #+NAME: dotex2ba-t
-#+BEGIN_SRC sh :results verbatim :exports none
+#+BEGIN_SRC sh :exports none
 ltl2tgba --dot=.t -B 'GFa & GFb'
 #+END_SRC
 
@@ -244,7 +245,7 @@ Büchi automata with state-based acceptance.  Here is the same formula
 as above, for comparison.
 
 #+NAME: dotex2gba
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -S 'GFa & GFb' -d
 #+END_SRC
 
@@ -297,7 +298,7 @@ than the BA produced by =-B=.
 As already discussed on the page about [[file:oaut.org][common output options]], various
 options controls the output format of =ltl2tgba=:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltl2tgba --help | sed -n '/Output format:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -346,7 +347,7 @@ Option =-8= can be used to improve the readability of the output
 if your system can display UTF-8 correctly.
 
 #+NAME: dotex2ba8
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -B8 "GFa & GFb" -d
 #+END_SRC
 #+RESULTS: dotex2ba8
@@ -386,7 +387,7 @@ Using the =--spin= or =-s= option, =ltl2tgba= will produce a Büchi automaton
 =ltl2tgba -s= is therefore a drop-in replacement for =spin -f=.
 
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba -s 'GFa & GFb'
 #+END_SRC
 #+RESULTS:
@@ -416,14 +417,14 @@ Since Spin 6 extended its syntax to support arbitrary atomic
 propositions, you may also need put the parser in =--lenient= mode to
 support these:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba -s --lenient '(a < b) U (process[2]@ok)'
 #+END_SRC
 #+RESULTS:
 : never { /* "a < b" U "process[2]@ok" */
 : T0_init:
 :   if
-:   :: ((process[2]@ok)) -> goto accept_all
+:   :: (process[2]@ok) -> goto accept_all
 :   :: ((a < b) && (!(process[2]@ok))) -> goto T0_init
 :   fi;
 : accept_all:
@@ -437,13 +438,15 @@ set of options specifies the goal of the simplification routines:
 whenever possible, would you prefer a small automaton (=--small=) or a
 deterministic (=--deterministic=) automaton?
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltl2tgba --help | sed -n '/Simplification goal:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
 :   -a, --any                  no preference, do not bother making it small or
 :                              deterministic
-:   -D, --deterministic        prefer deterministic automata
+:   -D, --deterministic        prefer deterministic automata (combine with
+:                              --generic to be sure to obtain a deterministic
+:                              automaton)
 :       --small                prefer small automata (default)
 
 The =--any= option tells the translator that it should attempt to
@@ -475,7 +478,7 @@ An example formula where the difference between =-D= and =--small= is
 flagrant is =Ga|Gb|Gc=:
 
 #+NAME: gagbgc1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba 'Ga|Gb|Gc' -d
 #+END_SRC
 #+RESULTS: gagbgc1
@@ -509,7 +512,7 @@ $txt
 [[file:gagbgc1.svg]]
 
 #+NAME: gagbgc2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -D 'Ga|Gb|Gc' -d
 #+END_SRC
 #+RESULTS: gagbgc2
@@ -577,7 +580,7 @@ two ways to accept a run that repeats continuously the configuration
 $\bar ab$.
 
 #+NAME: ambig1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -B 'GFa -> GFb' -d
 #+END_SRC
 #+RESULTS: ambig1
@@ -616,7 +619,7 @@ Here is an unambiguous automaton for the same formula, in which there
 is only one run that recognizes this example word:
 
 #+NAME: ambig2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -B -U 'GFa -> GFb' -d
 #+END_SRC
 
@@ -670,7 +673,7 @@ will be complete and unambiguous.
 A last parameter that can be used to tune the translation is the amount
 of pre- and post-processing performed.  These two steps can be adjusted
 via a common set of switches:
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltl2tgba --help | sed -n '/Simplification level:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -740,7 +743,7 @@ expectations.
    deterministic TGBA exists.
 
 #+NAME: ltl2tgba-fga
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "FGa" -D -d
 #+END_SRC
 
@@ -754,7 +757,7 @@ ltl2tgba "FGa" -D -d
    But with =--generic=, =ltl2tgba= will output the following co-Büchi automaton:
 
 #+NAME: ltl2tgba-fga-D
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "FGa" -G -D -d
 #+END_SRC
 
@@ -770,7 +773,7 @@ If we translate =Fb|Gc= as a deterministic automaton with any
 acceptance condition, we get a weak and deterministic Büchi automaton:
 
 #+NAME: ltl2tgba-fbgc-D
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "Fb|Gc" -G -D -d
 #+END_SRC
 
@@ -786,7 +789,7 @@ Finally if we translate the conjunction of these two subformulas, a
 product of these two automata will be made, producing:
 
 #+NAME: ltl2tgba-fbgcfga-D
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "(Fb|Gc)&FGa" -G -D -d
 #+END_SRC
 
@@ -804,7 +807,7 @@ TGBA is non-deterministic, it will then be determinized into an
 automaton with parity acceptance:
 
 #+NAME: ltl2tgba-fbgcfga-nosplit-D
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "(Fb|Gc)&FGa" -G -D -xltl-split=0 -d
 #+END_SRC
 #+BEGIN_SRC dot :file ltl2tgba-fbgcfga-nosplit-D.svg :var txt=ltl2tgba-fbgcfga-nosplit-D :exports results
@@ -823,7 +826,7 @@ purpose.
 For instance the following deterministic automaton
 
 #+NAME: ltl2tgba-det1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "F(a W FGb)" -G -D -d
 #+END_SRC
 
@@ -837,7 +840,7 @@ ltl2tgba "F(a W FGb)" -G -D -d
 would be larger if SCC-based optimizations were disabled:
 
 #+NAME: ltl2tgba-det2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "F(a W FGb)" -xdet-scc=0 -G -D -d
 #+END_SRC
 
@@ -882,7 +885,7 @@ For instance, =FGa= gets translated into an automaton with =Rabin 1=
 acceptance (another name for =parity min odd 2=):
 
 #+NAME: ltl2tgba-dp1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "FGa" -D -P -d
 #+END_SRC
 
@@ -897,7 +900,7 @@ And =GFa & GFb= gets translated into a =Büchi= automaton (another name
 for =parity min even 1=):
 
 #+NAME: ltl2tgba-dp2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "GFa & GFb" -D -P -d
 #+END_SRC
 
@@ -912,7 +915,7 @@ If we really want to use the same style of parity acceptance for all outputs,
 we can specify it as an argument to the =--parity= option.  For instance
 
 #+NAME: ltl2tgba-dp3
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "GFa & GFb" -D -P'min odd' -d
 #+END_SRC
 
@@ -930,7 +933,7 @@ I.e., each transition (or state if state-based acceptance is
 requested) should belong to exactly one acceptance set.
 
 #+NAME: ltl2tgba-dp4
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "GFa & GFb" -D -p -d
 #+END_SRC
 
@@ -942,7 +945,7 @@ ltl2tgba "GFa & GFb" -D -p -d
 [[file:ltl2tgba-dp4.svg]]
 
 #+NAME: ltl2tgba-dp5
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "GFa & GFb" -D -p'min odd' -d
 #+END_SRC
 
@@ -957,7 +960,7 @@ Note that all these options can be combined with state-based
 acceptance if needed:
 
 #+NAME: ltl2tgba-dp6
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba "GFa & GFb" -D -S -p'max even' -d
 #+END_SRC
 
@@ -983,7 +986,7 @@ automata themselves.  The =FORMAT= string should indicate which
 statistics should be output, and how they should be output using the
 following sequence of characters (other characters are output as-is):
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltl2tgba --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -1042,7 +1045,7 @@ ltl2tgba --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
 For instance we can study the size of the automata generated for the
 right-nested =U= formulas as follows:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 genltl --u-right=1..8 | ltl2tgba --stats '%s states and %e edges for "%f"'
 #+END_SRC
 #+RESULTS:
@@ -1093,7 +1096,7 @@ compatible outgoing transition exist.
 deterministic monitor for the given formula.
 
 #+NAME: monitor1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -M '(Xa & Fb) | Gc' -d
 #+END_SRC
 
@@ -1128,7 +1131,7 @@ $txt
 [[file:monitor1.svg]]
 
 #+NAME: monitor2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -MD '(Xa & Fb) | Gc' -d
 #+END_SRC
 
@@ -1155,7 +1158,7 @@ if) a sink state had to be added.  For instance, here is the
 "complete" version of the previous monitor.
 
 #+NAME: monitor3
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -C -M -D '(Xa & Fb) | Gc' -d
 #+END_SRC
 

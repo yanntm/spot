@@ -3,6 +3,7 @@
 #+DESCRIPTION: Spot command-line tools for exploring the temporal hierarchy of Manna & Pnueli
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 /A hierarchy of temporal properties/ was defined by Manna & Pnueli in
 their [[ftp://www-cs.stanford.edu/cs/theory/amir/hierarchy.ps][PODC'90 paper]].
@@ -83,7 +84,7 @@ Spot to denote the classes.
 The =--format=%h= option can be used to display the "class key" of the
 most precise class to which a formula belongs.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'a U b' --format=%h
 #+END_SRC
 #+RESULTS:
@@ -92,7 +93,7 @@ ltlfilt -f 'a U b' --format=%h
 If you find hard to remember the class name corresponding to the class
 keys, you can request verbose output with =%[v]h=:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'a U b' --format='%[v]h'
 #+END_SRC
 #+RESULTS:
@@ -102,7 +103,7 @@ But actually any /guarantee/ property is also an /obligation/, a
 /recurrence/, a /persistence/, and a /reactivity/ property.  You can
 get the complete list of classes using =%[w]h= or =%[vw]h=:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'a U b' --format='%[w]h = %[vw]h'
 #+END_SRC
 #+RESULTS:
@@ -112,7 +113,7 @@ This =--format= option is also supported by =randltl=, =genltl=, and
 =ltlgrind=.  So for instance if you want to classify the 55 LTL
 patterns of [[http://patterns.projects.cs.ksu.edu/documentation/patterns/ltl.shtml][Dwyers et al. (FMSP'98)]] using this hierarchy, try:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 genltl --dac-patterns --format='%[v]h' | sort | uniq -c
 #+END_SRC
 
@@ -139,7 +140,7 @@ three non-recurrence formulas, we can use =ltlfilt -v --recurrence= to
 remove all recurrence properties from the =genltl --dac-pattern=
 output:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 genltl --dac-patterns |
   ltlfilt -v --recurrence --format='%[v]h, %f'
 #+END_SRC
@@ -154,7 +155,7 @@ are automata-based, they work with PSL formulas as well. For instance,
 here is how to generate 10 random recurrence PSL formulas that are
 not LTL formulas, and that are not obligations:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl --psl -n -1 a b |
    ltlfilt -v --ltl |
    ltlfilt -v --obligation |
@@ -193,18 +194,18 @@ sequences, we can use it with =%h= to split a list of formulas in 7
 possible files.  Here is a generation of 200 random LTL formulas
 binned into aptly named files:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n 200 a b -o random-%h.ltl
 wc -l random-?.ltl
 #+END_SRC
 
 #+RESULTS:
-:   40 random-B.ltl
+:   45 random-B.ltl
 :   49 random-G.ltl
 :   12 random-O.ltl
 :   21 random-P.ltl
 :   18 random-R.ltl
-:   51 random-S.ltl
+:   46 random-S.ltl
 :    9 random-T.ltl
 :  200 total
 
@@ -229,7 +230,7 @@ is in class syntactic-C).
 Here is how to generate 10 random LTL formulas that describe safety
 properties but that are not in the syntactic-safety class:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n-1 a b |
   ltlfilt -v --syntactic-safety |
   ltlfilt --safety -n10
@@ -255,7 +256,7 @@ fragment.  For instance =b M Gb= can be rewritten as just =Gb=, which
 belongs to this fragment.  In this particular case, =ltlfilt
 --simplify= recognizes this:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt --simplify -f 'b M Gb'
 #+END_SRC
 #+RESULTS:
@@ -291,7 +292,7 @@ the translator could produce before determinization and minimization.
 
 For instance =Fa R b= is an obligation:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'Fa R b' --format='%[v]h'
 #+END_SRC
 
@@ -303,7 +304,7 @@ automaton (here we use =autfilt --highlight-nondet= to show where the
 non-determinism occurs):
 
 #+NAME: hier-oblig-1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba 'Fa R b' | autfilt --highlight-nondet -d
 #+END_SRC
 
@@ -351,7 +352,7 @@ For instance, let us use =ltl2dstar= to construct a Streett automaton
 for the obligation property =Ga | XFb=.
 
 #+NAME: hier-oblig-3
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltldo 'ltl2dstar --automata=streett' -f 'Ga | XFb' -d
 #+END_SRC
 
@@ -365,7 +366,7 @@ $txt
 We can now minimize this automaton with:
 
 #+NAME: hier-oblig-4
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltldo 'ltl2dstar --automata=streett' -f 'Ga | XFb' | autfilt -D -C -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-oblig-4.svg :var txt=hier-oblig-4 :exports results
@@ -390,7 +391,7 @@ The output should be a terminal automaton in either case,
 
 An example is =a U Xb=:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'a U Xb' --format='%[v]h'
 #+END_SRC
 
@@ -399,7 +400,7 @@ ltlfilt -f 'a U Xb' --format='%[v]h'
 
 
 #+NAME: hier-guarantee-1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba 'a U Xb' | autfilt --highlight-nondet -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-guarantee-1.svg :var txt=hier-guarantee-1 :exports results
@@ -410,7 +411,7 @@ $txt
 [[file:hier-guarantee-1.svg]]
 
 #+NAME: hier-guarantee-2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -D 'a U Xb' -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-guarantee-2.svg :var txt=hier-guarantee-2 :exports results
@@ -440,7 +441,7 @@ run are accepting.
 
 Here is an example:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f '(a W Gb) M b' --format='%[v]h'
 #+END_SRC
 
@@ -449,7 +450,7 @@ ltlfilt -f '(a W Gb) M b' --format='%[v]h'
 
 
 #+NAME: hier-safety-1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba '(a W Gb) M b' | autfilt --highlight-nondet -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-safety-1.svg :var txt=hier-safety-1 :exports results
@@ -466,7 +467,7 @@ Using =-D= will fix that: it then produces a deterministic automaton
 that is guaranteed to be minimal, and where all runs are accepting.
 
 #+NAME: hier-safety-2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -D '(a W Gb) M b' -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-safety-2.svg :var txt=hier-safety-2 :exports results
@@ -485,7 +486,7 @@ acceptance (i.e. =t=).  You can interpret this output as a monitor
 extended into valid ω-words).
 
 #+NAME: hier-safety-1m
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -M '(a W Gb) M b' | autfilt --highlight-nondet -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-safety-1m.svg :var txt=hier-safety-1m :exports results
@@ -496,7 +497,7 @@ ltl2tgba -M '(a W Gb) M b' | autfilt --highlight-nondet -d
 [[file:hier-safety-1m.svg]]
 
 #+NAME: hier-safety-2m
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -M -D '(a W Gb) M b' -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-safety-2m.svg :var txt=hier-safety-2m :exports results
@@ -530,7 +531,7 @@ transition-based acceptance will often produce shorter automata.
 The typical example is =GFa=, which can be translated into a 1-state
 transition-based Büchi automaton:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'GFa' --format='%[v]h'
 #+END_SRC
 
@@ -538,7 +539,7 @@ ltlfilt -f 'GFa' --format='%[v]h'
 : recurrence
 
 #+NAME: hier-recurrence-1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba 'GFa' -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-recurrence-1.svg :var txt=hier-recurrence-1 :exports results
@@ -551,7 +552,7 @@ $txt
 Using state-based acceptance, at least two states are required.  For instance:
 
 #+NAME: hier-recurrence-2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -S 'GFa' -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-recurrence-2.svg :var txt=hier-recurrence-2 :exports results
@@ -565,7 +566,7 @@ $txt
 Here is an example of a formula for which =ltl2tgba= does not produce a
 deterministic automaton, even with =-D=.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'G(Gb | Fa)' --format='%[v]h'
 #+END_SRC
 
@@ -573,7 +574,7 @@ ltlfilt -f 'G(Gb | Fa)' --format='%[v]h'
 : recurrence
 
 #+NAME: hier-recurrence-3
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -D 'G(Gb | Fa)' | autfilt --highlight-nondet -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-recurrence-3.svg :var txt=hier-recurrence-3 :exports results
@@ -592,7 +593,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
     acceptance is desired.
 
     #+NAME: hier-recurrence-4
-    #+BEGIN_SRC sh :results verbatim :exports code
+    #+BEGIN_SRC sh :exports code
     ltl2tgba -P -D 'G(Gb | Fa)' -d
     #+END_SRC
     #+BEGIN_SRC dot :file hier-recurrence-4.svg :var txt=hier-recurrence-4 :exports results
@@ -607,7 +608,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
     generalized Rabin.
 
     #+NAME: hier-recurrence-5
-    #+BEGIN_SRC sh :results verbatim :exports code
+    #+BEGIN_SRC sh :exports code
     ltl2tgba -P -D 'G(Gb | Fa)' |
       autfilt --generalized-rabin -d
     #+END_SRC
@@ -649,7 +650,7 @@ a /recurrence/ property), is to chain a few algorithms implemented in Spot:
     simply get a larger deterministic automaton).
 
     #+NAME: hier-recurrence-7
-    #+BEGIN_SRC sh :results verbatim :exports code
+    #+BEGIN_SRC sh :exports code
     ltl2tgba -P -D 'G(Gb | Fa)' |
       autfilt -S --generalized-rabin |
       autfilt -B -D -d
@@ -668,7 +669,7 @@ passing =-S= to the first =autfilt= was optional, but in this case it
 helps producing a smaller automaton.  Here is what we get without it:
 
 #+NAME: hier-recurrence-8
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -P -D 'G(Gb | Fa)' |
   autfilt --generalized-rabin |
   autfilt -B -D -d
@@ -692,7 +693,7 @@ they cannot be represented by deterministic Büchi automata.  The typical
 persistence formula is =FGa=, and using =-D= on this is hopeless.
 
 #+NAME: hier-persistence-1
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba -D FGa -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-persistence-1.svg :var txt=hier-persistence-1 :exports results
@@ -710,7 +711,7 @@ that =FGa= could be represented by a deterministic co-Büchi automaton.
 complementation ourselves:
 
 #+NAME: hier-persistence-2
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltlfilt --negate -f FGa |
   ltl2tgba -D |
   autfilt --complement -d
@@ -746,7 +747,7 @@ automaton.
 Let's do that on the persistence formula =F(G!a | G(b U a))=, just for
 the fun of it.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltlfilt -f 'F(G!a | G(b U a))' --format='%[v]h'
 #+END_SRC
 #+RESULTS:
@@ -755,7 +756,7 @@ ltlfilt -f 'F(G!a | G(b U a))' --format='%[v]h'
 Unfortunately the default output of the translation is not weak:
 
 #+NAME: hier-persistence-3
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba 'F(G!a | G(b U a))' -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-persistence-3.svg :var txt=hier-persistence-3 :exports results
@@ -770,7 +771,7 @@ Büchi automaton for the complement, instead we get a non-deterministic
 generalized Büchi automaton:
 
 #+NAME: hier-persistence-4
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
   ltl2tgba -D |
   autfilt --highlight-nondet=5 -d
@@ -787,7 +788,7 @@ determinizing this automaton into a Rabin automaton, and then back to
 deterministic Büchi:
 
 #+NAME: hier-persistence-5
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
   ltl2tgba -P -D |
   autfilt --generalized-rabin |
@@ -804,7 +805,7 @@ This is a deterministic Büchi automaton for the negation of our formula.
 Now we can complement it to obtain a deterministic co-Büchi automaton for =F(G!a | G(b U a))=:
 
 #+NAME: hier-persistence-6
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
   ltl2tgba -P -D |
   autfilt --generalized-rabin |
@@ -822,7 +823,7 @@ $txt
 And finally we convert the result back to Büchi:
 
 #+NAME: hier-persistence-7
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltlfilt --negate -f 'F(G!a | G(b U a))' |
   ltl2tgba -P -D |
   autfilt --generalized-rabin |

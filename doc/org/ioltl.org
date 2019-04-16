@@ -3,6 +3,7 @@
 #+DESCRIPTION: Options for input and output of temporal logic formulas in Spot's command-line tools
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 Spot supports different syntaxes for LTL/PSL formulas.  This page
 documents the options, common to all tools where it makes sense, that
@@ -12,14 +13,14 @@ are used to specify input and output of formula.
 
 All tools that read LTL/PSL formulas implement the following options:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltl2tgba --help | sed -n '/Input options:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
 :   -f, --formula=STRING       process the formula STRING
 :   -F, --file=FILENAME[/COL]  process each line of FILENAME as a formula; if COL
 :                              is a positive integer, assume a CSV file and read
-:                              column COL; usea negative COL to drop the first
+:                              column COL; use a negative COL to drop the first
 :                              line of the CSV file
 :       --lbt-input            read all formulas using LBT's prefix syntax
 :       --lenient              parenthesized blocks that cannot be parsed as
@@ -97,21 +98,18 @@ consider =a + b < 2= as an atomic proposition.
 An unfortunate side-effect of =--lenient= parsing is that many syntax
 errors will not be caught.  Compare the following syntax error:
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :prologue "exec 2>&1" :epilogue true
 ltlfilt -f '(a U b U) U c'
-#+END_SRC
-#+RESULTS:
-
-#+BEGIN_SRC sh :results verbatim :exports results
-(ltlfilt -f '(a U b U) U c' 2>&1 | cat) | sed '/^$/d'
 #+END_SRC
 #+RESULTS:
 : >>> (a U b U) U c
 :             ^
 : syntax error, unexpected closing parenthesis
+:
 : >>> (a U b U) U c
 :            ^
 : missing right operand for "until operator"
+:
 
 With the same command in =--lenient= mode:
 
@@ -146,7 +144,7 @@ used by [[http://www.ltl2dstar.de][ltl2dstar]].
 
 All tools that output LTL/PSL formulas implement the following options:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 genltl --help | sed -n '/Output options:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -154,14 +152,18 @@ genltl --help | sed -n '/Output options:/,/^$/p' | sed '1d;$d'
   -0, --zero-terminated-output   separate output formulas with \0 instead of \n
                              (for use with xargs -0)
   -8, --utf8                 output using UTF-8 characters
-      --csv-escape           quote the formula for use in a CSV file
-      --format=FORMAT        specify how each line should be output (default:
+      --format=FORMAT, --stats=FORMAT
+                             specify how each line should be output (default:
                              "%f")
   -l, --lbt                  output in LBT's syntax
       --latex                output using LaTeX macros
+      --negative, --negated  output the negated versions of all formulas
   -o, --output=FORMAT        send output to a file named FORMAT instead of
                              standard output.  The first formula sent to a file
                              truncates it unless FORMAT starts with '>>'.
+      --positive             output the positive versions of all formulas (done
+                             by default, unless --negative is specified without
+                             --positive)
   -p, --full-parentheses     output fully-parenthesized formulas
   -s, --spin                 output in Spin's syntax
       --spot                 output in Spot's syntax (default)
@@ -218,7 +220,7 @@ the above =%=-sequences.
 For instance the following invocation of [[file:randltl.org][=randltl=]] will create 5
 random formulas, but in 5 different files:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n5 a b -o example-%L.ltl
 wc -l example-*.ltl
 #+END_SRC
@@ -241,7 +243,7 @@ in LTL formulas), but you can use =xargs -0= to split the input on
 null characters.   So for instance the following two invocations have
 nearly the same output:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 genltl -0 --gh-q=1..4 | xargs -0 ltl2tgba --stats='%F,%f,%s'
 genltl --gh-q=1..4 | ltl2tgba -F- --stats='%F,%f,%s'
 #+END_SRC

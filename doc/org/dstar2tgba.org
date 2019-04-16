@@ -3,6 +3,7 @@
 #+DESCRIPTION: Spot command-line tool for converting automata into Transition-based Generalized Büchi Automata.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 This tool converts automata into transition-based generalized Büchi
 automata, a.k.a., TGBA.  It can also produce Büchi automata on request
@@ -35,84 +36,56 @@ The following command instructs =ltl2dstar= to:
 Additionally we use =ltlfilt= to convert our formula to the
 prefix format used by =ltl2dstar=.
 
-#+BEGIN_SRC sh :results silent :exports both
+#+BEGIN_SRC sh :results silent
 ltlfilt -f '(a U b) & GFb' -l | ltl2dstar --ltl2nba=spin:ltl2tgba@-Ds - fagfb
 #+END_SRC
 
 By looking at the file =fagfb= you can see the =ltl2dsar= actually
 produced a 4-state DRA:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 cat fagfb
 #+END_SRC
 #+RESULTS:
 #+begin_example
 DRA v2 explicit
-Comment: "Safra[NBA=3]"
+Comment: "DBA2DRA[NBA=3]"
 States: 4
 Acceptance-Pairs: 1
-Start: 2
+Start: 1
 AP: 2 "a" "b"
 ---
 State: 0
-Acc-Sig: +0
-3
-3
+Acc-Sig:
+0
+0
 0
 0
 State: 1
-Acc-Sig: -0
+Acc-Sig:
+0
 1
-1
-1
-1
+3
+3
 State: 2
 Acc-Sig:
-1
 2
-0
-0
+2
+3
+3
 State: 3
-Acc-Sig:
+Acc-Sig: +0
+2
+2
 3
 3
-0
-0
 #+end_example
 
 Let's display this automaton with =autfilt=:
 #+NAME: fagfb
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 autfilt fagfb --dot
 #+END_SRC
-
-#+RESULTS: fagfb
-#+begin_example
-digraph G {
-  rankdir=LR
-  label=<Fin(<font color="#5DA5DA">⓿</font>) &amp; Inf(<font color="#F17CB0">❶</font>)>
-  labelloc="t"
-  node [shape="circle"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 2
-  0 [label=<0<br/><font color="#F17CB0">❶</font>>]
-  0 -> 0 [label=<b>]
-  0 -> 3 [label=<!b>]
-  1 [label=<1<br/><font color="#5DA5DA">⓿</font>>]
-  1 -> 1 [label=<1>]
-  2 [label=<2>]
-  2 -> 0 [label=<b>]
-  2 -> 1 [label=<!a &amp; !b>]
-  2 -> 2 [label=<a &amp; !b>]
-  3 [label=<3>]
-  3 -> 0 [label=<b>]
-  3 -> 3 [label=<!b>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file fagfb.svg :var txt=fagfb :exports results
 $txt
@@ -127,31 +100,9 @@ a Monitor, using the same options as [[file:ltl2tgba.org][=ltl2tgba=]].
 For instance here is the conversion to a Büchi automaton (=-B=):
 
 #+NAME: fagfb2ba
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 dstar2tgba -B fagfb -d
 #+END_SRC
-#+RESULTS: fagfb2ba
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [shape="circle"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 1
-  0 [label="0", peripheries=2]
-  0 -> 0 [label=<b>]
-  0 -> 2 [label=<!b>]
-  1 [label="1"]
-  1 -> 0 [label=<b>]
-  1 -> 1 [label=<a &amp; !b>]
-  2 [label="2"]
-  2 -> 0 [label=<b>]
-  2 -> 2 [label=<!b>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file fagfb2ba.svg :var txt=fagfb2ba :exports results
 $txt
@@ -165,7 +116,7 @@ a complete automaton.
 
 But we could as well require the output as a never claim for Spin (option =-s=):
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 dstar2tgba -s fagfb
 #+END_SRC
 #+RESULTS:
@@ -173,18 +124,18 @@ dstar2tgba -s fagfb
 never {
 T0_init:
   if
-  :: (b) -> goto accept_S0
   :: ((a) && (!(b))) -> goto T0_init
+  :: (b) -> goto accept_S2
   fi;
-accept_S0:
+T0_S1:
   if
-  :: (b) -> goto accept_S0
-  :: (!(b)) -> goto T0_S2
+  :: (!(b)) -> goto T0_S1
+  :: (b) -> goto accept_S2
   fi;
-T0_S2:
+accept_S2:
   if
-  :: (b) -> goto accept_S0
-  :: (!(b)) -> goto T0_S2
+  :: (!(b)) -> goto T0_S1
+  :: (b) -> goto accept_S2
   fi;
 }
 #+end_example
@@ -197,7 +148,7 @@ T0_S2:
 Here is the translation of =GFa | GFb= to a 4-state Streett automaton:
 
 #+NAME: gfafgb
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltlfilt -f 'GFa & GFb' -l | ltl2dstar --automata=streett --ltl2nba=spin:ltl2tgba@-Ds - gfagfb
 autfilt --dot gfagfb
 #+END_SRC
@@ -216,42 +167,9 @@ We don't pass any option to =dstar2tgba= because converting to TGBA is
 the default:
 
 #+NAME: gfagfb2ba
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 dstar2tgba gfagfb -d
 #+END_SRC
-#+RESULTS: gfagfb2ba
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [shape="circle"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label="0"]
-  0 -> 0 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  0 -> 1 [label=<!a &amp; b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  0 -> 2 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  0 -> 3 [label=<!a &amp; !b<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  1 [label="1"]
-  1 -> 0 [label=<a &amp; b<br/><font color="#F17CB0">❶</font>>]
-  1 -> 1 [label=<!a &amp; b<br/><font color="#F17CB0">❶</font>>]
-  1 -> 2 [label=<a &amp; !b<br/><font color="#F17CB0">❶</font>>]
-  1 -> 3 [label=<!a &amp; !b<br/><font color="#F17CB0">❶</font>>]
-  2 [label="2"]
-  2 -> 0 [label=<a &amp; b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 1 [label=<!a &amp; b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 2 [label=<a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  2 -> 3 [label=<!a &amp; !b<br/><font color="#5DA5DA">⓿</font>>]
-  3 [label="3"]
-  3 -> 0 [label=<a &amp; b>]
-  3 -> 1 [label=<!a &amp; b>]
-  3 -> 2 [label=<a &amp; !b>]
-  3 -> 3 [label=<!a &amp; !b>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file gfagfb2ba.svg :var txt=gfagfb2ba :exports results
 $txt
@@ -260,8 +178,8 @@ $txt
 [[file:gfagfb2ba.svg]]
 
 Obviously the resulting automaton could be simplified further, as the
-minimal TGBA for this formula has a single state.  (Patches
-welcome...)
+minimal TGBA for this formula has a single state.  (This will be fixed
+in Spot 2.8.)
 
 * Details
 
@@ -285,7 +203,7 @@ The last two steps are shared with =ltl2tgba= and use the same options.
 
 The type of automaton to produce can be selected using the =-B= or =-M=
 switches:
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 dstar2tgba --help | sed -n '/Output automaton type:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 
@@ -301,7 +219,7 @@ dstar2tgba --help | sed -n '/Output automaton type:/,/^$/p' | sed '1d;$d'
 
 And these may be refined by a simplification goal, should the
 post-processor routine had a choice to make:
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 dstar2tgba --help | sed -n '/Simplification goal:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -313,7 +231,7 @@ dstar2tgba --help | sed -n '/Simplification goal:/,/^$/p' | sed '1d;$d'
 The effort put into post-processing can be limited with the =--low= or
 =--medium= options:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 dstar2tgba --help | sed -n '/Simplification level:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -326,7 +244,7 @@ should you find =dstar2tgba= too slow.
 
 Finally, the output format can be changed with the following
 [[file:oaut.org][common ouput options]]:
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 dstar2tgba --help | sed -n '/Output format:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -395,7 +313,7 @@ of the input (Rabin) automaton, =%s=, the number of states of the
 output (Büchi) automaton, =%d=, whether the output automaton is
 deterministic, and =%p= whether the automaton is complete.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n -1 --tree-size=10..14 a b c |
 ltlfilt --remove-wm -r -u --size-min=3 -n 10 |
 while read f; do
@@ -410,20 +328,20 @@ done
 #+begin_example
 (b | Fa) R Fc
   DRA: 9st.; BA: 9st.; det.? 1; complete? 1
-Ga U (Gc R (!a | Gc))
+Ga U G(!a | Gc)
   DRA: 7st.; BA: 7st.; det.? 0; complete? 0
 GFc
-  DRA: 3st.; BA: 3st.; det.? 1; complete? 1
+  DRA: 2st.; BA: 2st.; det.? 1; complete? 1
 !a | (a R b)
   DRA: 3st.; BA: 2st.; det.? 1; complete? 0
-Xc R (G!c R (b | G!c))
-  DRA: 4st.; BA: 2st.; det.? 1; complete? 0
+Xc R G(b | G!c)
+  DRA: 3st.; BA: 2st.; det.? 1; complete? 0
 c & G(b | F(a & c))
   DRA: 4st.; BA: 3st.; det.? 1; complete? 0
 XXFc
   DRA: 4st.; BA: 4st.; det.? 1; complete? 1
 XFc | Gb
-  DRA: 5st.; BA: 4st.; det.? 1; complete? 1
+  DRA: 4st.; BA: 4st.; det.? 1; complete? 1
 G(((!a & Gc) | (a & F!c)) U (!a | Ga))
   DRA: 6st.; BA: 5st.; det.? 1; complete? 1
 a & !b

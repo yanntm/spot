@@ -3,6 +3,7 @@
 #+DESCRIPTION: Options for input and output of ω-automata in Spot's command-line tools
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
+#+PROPERTY: header-args:sh :results verbatim :exports both
 
 Spot supports different output syntaxes for automata.  This page
 documents the options, common to all tools where it makes sense, that
@@ -12,7 +13,7 @@ are used to specify how to output of automata.
 
 All tools that can output automata implement the following options:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 ltl2tgba --help | sed -n '/Output format:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -86,7 +87,7 @@ printer.
 Here is an example where [[file:ltl2tgba.org][=ltl2tgba=]] is used to construct two automata:
 one for =a U b= and one for =(Ga -> Gb) W c=.
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba 'a U b' '(Ga -> Gb) W c'
 #+END_SRC
 #+RESULTS:
@@ -140,7 +141,7 @@ The above output contains two automata, named after the formulas they
 represent.  Here is a picture of these two automata:
 
 #+NAME: hoafex
-#+BEGIN_SRC sh :results verbatim :exports none
+#+BEGIN_SRC sh :exports none
 ltl2tgba --dot=.cn '(Ga -> Gb) W c' 'a U b' | dot | gvpack |
 perl -pe 's/\\\n//g;s/\\/\\\\/g;s/graph G/graph cluster/g'
 #+END_SRC
@@ -317,7 +318,7 @@ to use state-based acceptance whenever possible.  Option =t= forces
 transition-based acceptance.  For instance compare this output to the
 previous one:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba -Ht 'a U b'
 #+END_SRC
 #+RESULTS:
@@ -343,7 +344,7 @@ State: 1
 Option =m= uses mixed acceptance, i.e, some states might use
 state-based acceptance while other will not:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba -Hm '(Ga -> Gb) W c'
 #+END_SRC
 #+RESULTS:
@@ -383,7 +384,7 @@ the result should be used with line-based tools or embedded into a CSV
 file...  Here is an example using both transition-based acceptance,
 and single-line output:
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba -Htl 'a U b' '(Ga -> Gb) W c'
 #+END_SRC
 #+RESULTS:
@@ -398,7 +399,7 @@ be requested explicitly using =-H1=.  The main advantage of version
 1.1, as far as Spot is concerned, is that some of negated properties
 can be transmitted.  For instance, compare
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba -f GFa -f FGa -H1 --check | grep -E '^(HOA|properties|name):'
 #+END_SRC
 
@@ -416,7 +417,7 @@ properties: weak
 
 versus
 
-#+BEGIN_SRC sh :results verbatim :exports both :wrap SRC hoa
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba -f GFa -f FGa -H1.1 --check | grep -E '^(HOA|properties|name):'
 #+END_SRC
 
@@ -444,7 +445,7 @@ represented in the first version.
 The [[http://www.tcs.hut.fi/Software/lbtt/doc/html/Format-for-automata.html][LBTT]] output has two flavors: state-based (which is used to output
 Büchi automata or monitors) or transition-based (for TGBA).
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba --ba --lbtt 'p0 U p1'
 #+END_SRC
 #+RESULTS:
@@ -460,7 +461,7 @@ ltl2tgba --ba --lbtt 'p0 U p1'
 If you want to request transition-based output even for Büchi automata,
 use =--lbtt=t=.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba --ba --lbtt=t 'p0 U p1'
 #+END_SRC
 
@@ -481,7 +482,7 @@ case other atomic propositions are used, Spot output them in double
 quotes.  This other extension of the format is also supported by
 [[http://www.ltl2dstar.de/][ltl2dstar]].
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba --ba --lbtt 'a U b'
 #+END_SRC
 
@@ -500,7 +501,7 @@ ltl2tgba --ba --lbtt 'a U b'
 Spin [[http://spinroot.com/spin/Man/never.html][never claims]] can be requested using =-s= or =--spin=.  They can only
 represent Büchi automata, so these options imply =--ba=.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba -s 'a U b'
 #+END_SRC
 
@@ -519,7 +520,7 @@ Recent versions of Spin (starting with Spin 6.2.4) output never claims
 in a slightly different style that can be requested using either
 =-s6= or =--spin=6=:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 ltl2tgba -s6 'a U b'
 #+END_SRC
 
@@ -543,38 +544,35 @@ of Promela syntax.)
 The =-d= or =--dot= option causes automata to be output in GraphViz's
 format.
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+NAME: oaut-dot1
+#+BEGIN_SRC sh :prologue export SPOT_DOTEXTRA= SPOT_DOTDEFAULT=
 ltl2tgba '(Ga -> Gb) W c' -d
 #+END_SRC
-
-#+NAME: oaut-dot1
-#+BEGIN_SRC sh :results verbatim :exports results
-SPOT_DOTEXTRA= ltl2tgba '(Ga -> Gb) W c' --dot=
-#+END_SRC
-
 #+RESULTS: oaut-dot1
 #+begin_example
-digraph G {
+digraph "(Gb | F!a) W c" {
   rankdir=LR
+  label="Inf(0)\n[Büchi]"
+  labelloc="t"
   node [shape="circle"]
   I [label="", style=invis, width=0]
-  I -> 1
+  I -> 0
   0 [label="0"]
-  0 -> 0 [label="b\n{0}"]
+  0 -> 0 [label="!a & !c\n{0}"]
+  0 -> 1 [label="c"]
+  0 -> 2 [label="a & b & !c"]
+  0 -> 3 [label="a & !c"]
   1 [label="1"]
-  1 -> 0 [label="a & b & !c"]
-  1 -> 1 [label="!a & !c\n{0}"]
-  1 -> 2 [label="a & !c"]
-  1 -> 3 [label="c"]
+  1 -> 1 [label="1\n{0}"]
   2 [label="2"]
-  2 -> 1 [label="!a & !c\n{0}"]
-  2 -> 2 [label="a & !c"]
-  2 -> 3 [label="!a & c"]
-  2 -> 4 [label="a & c"]
+  2 -> 2 [label="b\n{0}"]
   3 [label="3"]
-  3 -> 3 [label="1\n{0}"]
+  3 -> 0 [label="!a & !c\n{0}"]
+  3 -> 1 [label="!a & c"]
+  3 -> 3 [label="a & !c"]
+  3 -> 4 [label="a & c"]
   4 [label="4"]
-  4 -> 3 [label="!a"]
+  4 -> 1 [label="!a"]
   4 -> 4 [label="a"]
 }
 #+end_example
@@ -609,62 +607,13 @@ option =f(FONT)= is used to select a fontname: it is often necessary
 when =b= is used to ensure the characters ⓿, ❶, etc. are all selected
 from the same font.
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+NAME: oaut-dot2
+#+BEGIN_SRC sh :prologue export SPOT_DOTEXTRA=
 ltl2tgba --dot=vcsna '(Ga -> Gb) W c'
 #+END_SRC
-#+RESULTS:
-#+begin_example
-digraph G {
-  label="(Gb | F!a) W c\nInf(0)\n[Büchi]"
-  labelloc="t"
-  node [shape="circle"]
-  edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, height=0]
-  I -> 0
-  subgraph cluster_0 {
-  color=green
-  label=""
-  1 [label="1"]
-  }
-  subgraph cluster_1 {
-  color=green
-  label=""
-  2 [label="2"]
-  }
-  subgraph cluster_2 {
-  color=red
-  label=""
-  4 [label="4"]
-  }
-  subgraph cluster_3 {
-  color=green
-  label=""
-  0 [label="0"]
-  3 [label="3"]
-  }
-  0 -> 0 [label="!a & !c\n{0}"]
-  0 -> 1 [label="c"]
-  0 -> 2 [label="a & b & !c"]
-  0 -> 3 [label="a & !c"]
-  1 -> 1 [label="1\n{0}"]
-  2 -> 2 [label="b\n{0}"]
-  3 -> 0 [label="!a & !c\n{0}"]
-  3 -> 1 [label="!a & c"]
-  3 -> 3 [label="a & !c"]
-  3 -> 4 [label="a & c"]
-  4 -> 1 [label="!a"]
-  4 -> 4 [label="a"]
-}
-#+end_example
-
-#+NAME: oaut-dot2
-#+BEGIN_SRC sh :results verbatim :exports none
-SPOT_DOTEXTRA= ltl2tgba --dot=vcsna '(Ga -> Gb) W c'
-#+END_SRC
-
 #+RESULTS: oaut-dot2
 #+begin_example
-digraph G {
+digraph "(Gb | F!a) W c" {
   label="(Gb | F!a) W c\nInf(0)\n[Büchi]"
   labelloc="t"
   node [shape="circle"]
@@ -728,7 +677,7 @@ The strongly connected components are displayed using the following colors:
 Here is an example involving all colors:
 
 #+NAME: oaut-dot3
-#+BEGIN_SRC sh :results verbatim :exports none
+#+BEGIN_SRC sh :exports none
 SPOT_DOTEXTRA= autfilt --dot=cas <<EOF
 HOA: v1
 States: 10
@@ -866,7 +815,7 @@ The dot output can also be customized via two environment variables:
   this documentation are generated with the following environment
   variables set:
 
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 export SPOT_DOTDEFAULT='Brf(Lato)C(#ffffa0)'
 export SPOT_DOTEXTRA='edge[arrowhead=vee, arrowsize=.7]'
 #+END_SRC
@@ -936,7 +885,7 @@ Caveats:
   of =dot2tex= was fixed in 2014, but at the time of writing
   (summer 2017) no new release of =dot2tex= has been made.  To work around this,
   make sure you install =dot2tex= from its git repository:
-  #+BEGIN_SRC sh
+  #+BEGIN_SRC sh :exports code
   git clone https://github.com/kjellmf/dot2tex.git
   cd dot2tex
   sudo python setup.py install
@@ -963,7 +912,7 @@ displayed when a tool is run with =--help=.
 
 For instance here are the statistics available in [[file:randaut.org][=randaut=]]:
 
-#+BEGIN_SRC sh :results verbatim :exports results
+#+BEGIN_SRC sh :exports results
 randaut --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 #+RESULTS:
@@ -972,13 +921,22 @@ randaut --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
   %a                         number of acceptance sets
   %c, %[LETTERS]c            number of SCCs; you may filter the SCCs to count
                              using the following LETTERS, possibly
-                             concatenated: (a) accepting, (r) rejecting, (v)
-                             trivial, (t) terminal, (w) weak, (iw) inherently
-                             weak. Use uppercase letters to negate them.
+                             concatenated: (a) accepting, (r) rejecting, (c)
+                             complete, (v) trivial, (t) terminal, (w) weak,
+                             (iw) inherently weak. Use uppercase letters to
+                             negate them.
   %d                         1 if the output is deterministic, 0 otherwise
-  %e                         number of edges
+  %e                         number of reachable edges
   %F                         seed number
-  %g                         acceptance condition (in HOA syntax)
+  %g, %[LETTERS]g            acceptance condition (in HOA syntax); add brackets
+                             to print an acceptance name instead and LETTERS to
+                             tweak the format: (0) no parameters, (a)
+                             accentuated, (b) abbreviated, (d) style used in
+                             dot output, (g) no generalized parameter, (l)
+                             recognize Street-like and Rabin-like, (m) no main
+                             parameter, (p) no parity parameter, (o) name
+                             unknown acceptance as 'other', (s) shorthand for
+                             'lo0'.
   %h                         the automaton in HOA format on a single line (use
                              %[opt]h to specify additional options as in
                              --hoa=opt)
@@ -992,9 +950,22 @@ randaut --help | sed -n '/ sequences:/,/^$/p' | sed '1d;$d'
                              LETTERS to restrict to(u) user time, (s) system
                              time, (p) parent process, or (c) children
                              processes.
-  %s                         number of states
-  %t                         number of transitions
+  %s                         number of reachable states
+  %t                         number of reachable transitions
+  %u, %[e]u                  number of states (or [e]dges) with universal
+                             branching
+  %u, %[LETTER]u             1 if the automaton contains some universal
+                             branching (or a number of [s]tates or [e]dges with
+                             universal branching)
   %w                         one word accepted by the output automaton
+  %x, %[LETTERS]x            number of atomic propositions declared in the
+                             automaton;  add LETTERS to list atomic
+                             propositions with (n) no quoting, (s) occasional
+                             double-quotes with C-style escape, (d)
+                             double-quotes with C-style escape, (c)
+                             double-quotes with CSV-style escape, (p) between
+                             parentheses, any extra non-alphanumeric character
+                             will be used to separate propositions
 #+end_example
 
 In most tools =%F= and =%L= are the input filename and line number,
@@ -1005,7 +976,7 @@ For instance let's generate 1000 random automata with 100 states and
 density 0.2, and just count the number of edges in each automaton. Then
 use =R= to summarize the distribution of these values:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randaut -e0.2 -Q100 -n1000 a --stats %e > size.csv
 Rscript -e "summary(read.csv('size.csv', header=FALSE, col.names='edges'))"
 #+END_SRC
@@ -1031,19 +1002,19 @@ edges should be $20.8\times100=2080$.
 Two of the statistics are related to time: =%r= displays wall-clock
 time, while =%R= displays CPU-time.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 genltl --or-gf=1..8 | ltl2tgba --high --stats='%f,%r,%R'
 #+END_SRC
 
 #+RESULTS:
-: GFp1,0.000502296,0
-: GF(p1 | p2),0.000796475,0
-: GF(p1 | p2 | p3),0.00215579,0
-: GF(p1 | p2 | p3 | p4),0.00441474,0
-: GF(p1 | p2 | p3 | p4 | p5),0.00980961,0.01
-: GF(p1 | p2 | p3 | p4 | p5 | p6),0.0255462,0.03
-: GF(p1 | p2 | p3 | p4 | p5 | p6 | p7),0.121033,0.12
-: GF(p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8),0.624101,0.62
+: GFp1,0.00100355,0
+: GF(p1 | p2),0.00137515,0
+: GF(p1 | p2 | p3),0.00331282,0.01
+: GF(p1 | p2 | p3 | p4),0.00526782,0
+: GF(p1 | p2 | p3 | p4 | p5),0.00895499,0.01
+: GF(p1 | p2 | p3 | p4 | p5 | p6),0.0223277,0.02
+: GF(p1 | p2 | p3 | p4 | p5 | p6 | p7),0.0936452,0.09
+: GF(p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8),0.480063,0.48
 
 Note that =%r= is implemented using the most precise clock available
 and usually has nano-second precision, while =%R= uses the =times()=
@@ -1070,29 +1041,28 @@ Here is an example where we use =ltldo= to benchmark the (default)
 each option the overall wall-clock time, CPU-time spent in =ltldo=,
 and CPU-time spent in =ltl2tgba=:
 
-#+BEGIN_SRC  sh :results verbatim :exports both
+#+BEGIN_SRC sh
 genltl --or-gf=1..8 |
 ltldo '{high}ltl2tgba' '{low}ltl2tgba --low' --stats='%T,%f,%r,%[p]R,%[c]R'
 #+END_SRC
-
 #+RESULTS:
 #+begin_example
-high,GFp1,0.0495443,0,0.02
-low,GFp1,0.0427718,0,0.03
-high,GFp1 | GFp2,0.0449237,0,0.03
-low,GFp1 | GFp2,0.0429886,0,0.03
-high,GFp1 | GFp2 | GFp3,0.0477704,0.01,0.03
-low,GFp1 | GFp2 | GFp3,0.0294271,0,0.01
-high,GFp1 | GFp2 | GFp3 | GFp4,0.0250874,0,0.02
-low,GFp1 | GFp2 | GFp3 | GFp4,0.0203729,0,0.01
-high,GFp1 | GFp2 | GFp3 | GFp4 | GFp5,0.0318887,0,0.03
-low,GFp1 | GFp2 | GFp3 | GFp4 | GFp5,0.0207457,0,0.01
-high,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6,0.0612968,0,0.05
-low,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6,0.0145482,0,0.01
-high,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6 | GFp7,0.130631,0,0.12
-low,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6 | GFp7,0.0151502,0,0.01
-high,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6 | GFp7 | GFp8,0.595865,0,0.59
-low,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6 | GFp7 | GFp8,0.0160234,0,0.01
+high,GFp1,0.0409265,0,0.05
+low,GFp1,0.0199356,0,0.02
+high,GFp1 | GFp2,0.0145994,0,0.02
+low,GFp1 | GFp2,0.0143211,0,0.01
+high,GFp1 | GFp2 | GFp3,0.0155654,0,0.03
+low,GFp1 | GFp2 | GFp3,0.014428,0,0.01
+high,GFp1 | GFp2 | GFp3 | GFp4,0.0173471,0,0.02
+low,GFp1 | GFp2 | GFp3 | GFp4,0.0143645,0,0.02
+high,GFp1 | GFp2 | GFp3 | GFp4 | GFp5,0.0214066,0,0.03
+low,GFp1 | GFp2 | GFp3 | GFp4 | GFp5,0.0147305,0,0
+high,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6,0.0386194,0,0.05
+low,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6,0.0140456,0,0.02
+high,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6 | GFp7,0.108726,0,0.1
+low,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6 | GFp7,0.0137925,0,0.02
+high,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6 | GFp7 | GFp8,0.49704,0,0.5
+low,GFp1 | GFp2 | GFp3 | GFp4 | GFp5 | GFp6 | GFp7 | GFp8,0.0218286,0,0.03
 #+end_example
 
 * Naming automata
@@ -1106,17 +1076,18 @@ tools have no default name.  This name can be changed using the
 =--stats=.
 
 #+NAME: oaut-name
-#+BEGIN_SRC sh :results verbatim :exports code
+#+BEGIN_SRC sh :exports code
 ltl2tgba --name='TGBA for %f' --dot=n 'a U b'
 #+END_SRC
 
 #+RESULTS: oaut-name
 #+begin_example
-digraph G {
+digraph "TGBA for a U b" {
   rankdir=LR
-  label="TGBA for a U b"
+  label="TGBA for a U b\n[Büchi]"
   labelloc="t"
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
+  node [shape="circle"]
+  node[fontsize=12] fontsize=12 stylesheet="spot.css" edge[arrowhead=vee, arrowsize=.7, fontsize=12]
   I [label="", style=invis, width=0]
   I -> 1
   0 [label="0", peripheries=2]
@@ -1150,7 +1121,7 @@ retaining only the names (i.e. formulas) of the automata with 3
 states, and finally restricting the output to the first 5 matches
 using =autfilt -n5=.
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randltl -n -1 a b |
 ltl2tgba |
 autfilt --states=3 --stats='!(%M)' |
@@ -1172,13 +1143,13 @@ capable of [[file:csv.org][reading from a CSV file]] (=-F-/2= instructs =ltl2tgb
 read the standard input as if it was a CSV file, and to process its
 second column):
 
-#+BEGIN_SRC sh :results verbatim :exports both
-randltl -n -1 a b |                 # generate a stream of random LTL formulas
-ltl2tgba -F- --stats='%s,!(%f)' |   # for each formula output "states,negated formula"
-grep '^3,' |                        # keep only formulas with 3 states
-ltl2tgba -F-/2 --stats='%s,%f' |    # for each negated formula output "states,formula"
-grep '^3,' |                        # keep only negated formulas with 3 states
-head -n5 | cut -d, -f2              # return the five first formulas
+#+BEGIN_SRC sh
+randltl -n -1 a b |                # generate a stream of random LTL formulas
+ltl2tgba -F- --stats='%s,!(%f)' |  # for each formula output "states,negated formula"
+grep '^3,' |                       # keep only formulas with 3 states
+ltl2tgba -F-/2 --stats='%s,%f' |   # for each negated formula output "states,formula"
+grep '^3,' |                       # keep only negated formulas with 3 states
+head -n5 | cut -d, -f2             # return the five first formulas
 #+END_SRC
 
 #+RESULTS:
@@ -1192,13 +1163,6 @@ Note that the =-F-= argument in the first call to =ltl2tgba= is
 superfluous as the tool default to reading from its standard input.
 But we put it there for symmetry with the second call.
 
-#  LocalWords:  num toc html syntaxes ltl tgba sed utf UTF lbtt SCCs
-#  LocalWords:  GraphViz's hoaf HOA LBTT's neverclaim ba SPOT's Gb cn
-#  LocalWords:  GraphViz autfilt acc Buchi hoafex gvpack perl pe bb
-#  LocalWords:  labelloc rankdir subgraph lp pos invis gv png cmdline
-#  LocalWords:  Tpng txt Hs Hm CSV Htl LBT dstar init goto fi Tpdf XF
-#  LocalWords:  oaut vcsn randaut nondeterministic filename csv hoa
-#  LocalWords:  varphi lnot GFb FG
 * Naming output
 
 By default, all output is sent to standard output, so you can either
@@ -1212,7 +1176,7 @@ For instance =%d= is replaced by 0 or 1 depending on whether the
 automaton is deterministic.  We can generate 20 random automata, and
 output them in two files depending on their determinism:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randaut -n 20 -Q2 -e1 1 -o out-det%d.hoa
 autfilt -c out-det0.hoa    # Count of non-deterministic automata
 autfilt -c out-det1.hoa    # Count of deterministic automata
@@ -1229,7 +1193,7 @@ untouched.  For instance if we run the above commands again, but
 forcing [[file:randaut.org][=randaut=]] to output 20 *deterministic* automata, it may look
 like we produced more than 20 automata:
 
-#+BEGIN_SRC sh :results verbatim :exports both
+#+BEGIN_SRC sh
 randaut -D -n 20 -Q2 -e1 1 -o out-det%d.hoa
 autfilt -c out-det0.hoa    # Count of non-deterministic automata
 autfilt -c out-det1.hoa    # Count of deterministic automata
@@ -1245,10 +1209,20 @@ previous execution, while =out-det1.hoa= has been overwritten.
 In the case where you want to append to a file instead of overwriting
 it, prefix the output filename with =>>= as in
 
-: randaut -D -n 20 -Q2 1 -o '>>out-det%d.hoa'
+#+BEGIN_SRC sh :exports code
+randaut -D -n 20 -Q2 1 -o '>>out-det%d.hoa'
+#+END_SRC
 
 (You need the quotes so that the shell does not interpret =>>=.)
 
 #+BEGIN_SRC sh :results silent :exports results
 rm -f out-det0.hoa out-det1.hoa
 #+END_SRC
+
+#  LocalWords:  num toc html syntaxes ltl tgba sed utf UTF lbtt SCCs
+#  LocalWords:  GraphViz's hoaf HOA LBTT's neverclaim ba SPOT's Gb cn
+#  LocalWords:  GraphViz autfilt acc Buchi hoafex gvpack perl pe bb
+#  LocalWords:  labelloc rankdir subgraph lp pos invis gv png cmdline
+#  LocalWords:  Tpng txt Hs Hm CSV Htl LBT dstar init goto fi Tpdf XF
+#  LocalWords:  oaut vcsn randaut nondeterministic filename csv hoa
+#  LocalWords:  varphi lnot GFb FG
