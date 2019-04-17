@@ -574,8 +574,9 @@ dac-patterns:20,ltl2ba
 #+end_example
 
 Note that in case of equality, only the first translator is returned.
-So when =ltl2ba= is output above, it could be the case that =ltl3ba=
-or =ltl2tgba -s= are also producing automata of equal size.
+So when =ltl2ba= is output above, it could be (and it probably is, see
+below) the case that =ltl3ba= or =ltl2tgba -s= are also producing
+automata of equal size.
 
 To understand the above pipeline, remove the =ltldo= invocation.  The
 [[file:genltl.org][=genltl=]] command outputs this:
@@ -606,6 +607,65 @@ formula through the three translator, pick the smallest automaton
 (=--smallest=), and for this automaton, it display the translator that
 was used (=%T=) along with the portion of the CSV file that was before
 the input column (=%<=).
+
+
+If you are curious about the actually size of the automata produced by
+=ltl2ba=, =ltl3ba=, and =ltl2tgba -s= in the above example, you can
+quickly build a CSV file using the following pipeline where each
+command append a new column.  We wrap =ltl2ba= and =ltl3ba= with
+=ltldo= so that they can process one column of the CSV that is input,
+and output statistics in CSV as output.  =ltl2tgba= does not need
+that, as it already supports those features. In the resulting CSV
+file, displayed as a table below, entries like =2s 4e 0d= represent an
+automaton with 2 states, 4 edges, and that is not deterministic.  .
+(We have a [[file:csv.org][separate page]] with more examples of reading and writing CSV
+files.)
+
+#+NAME: small-bench
+#+BEGIN_SRC sh :exports code
+echo input,ltl2ba,ltl3ba,ltl2tgba -s
+genltl --dac=10..20 --format=%F:%L,%f |
+  ltldo -F-/2 ltl2ba --stats '%<,%f,%ss %ee %dd' |
+  ltldo -F-/2 ltl3ba --stats '%<,%f,%>,%ss %ee %dd' |
+  ltl2tgba -s -F-/2 --stats '%<,%>,%ss %ee %dd'
+#+END_SRC
+
+#+BEGIN_SRC sh :results output raw :exports results :noweb yes
+sed '
+$d
+s/|/\\vert{}/g
+s/--/@@html:--@@/g
+s/^/| /
+s/$/ |/
+s/,/|/g
+s/"//g
+1a\
+|-|\
+|<c>|<r>|<r>|<r>|
+' <<EOF
+<<small-bench()>>
+EOF
+#+END_SRC
+
+#+ATTR_HTML: :class table-pre
+#+RESULTS:
+|      input      |     ltl2ba |     ltl3ba | ltl2tgba -s |
+|-----------------+------------+------------+-------------|
+|       <c>       |        <r> |        <r> |         <r> |
+| dac-patterns:10 |   2s 4e 0d |   2s 4e 1d |    2s 4e 1d |
+| dac-patterns:11 |   5s 9e 1d |   5s 9e 1d |    5s 9e 1d |
+| dac-patterns:12 |  8s 29e 0d |  8s 20e 0d |   7s 17e 1d |
+| dac-patterns:13 |  8s 17e 0d |  8s 17e 0d |   6s 12e 1d |
+| dac-patterns:14 | 16s 62e 0d | 11s 33e 0d |   7s 19e 1d |
+| dac-patterns:15 | 10s 47e 0d | 10s 41e 0d |   6s 17e 1d |
+| dac-patterns:16 |   1s 1e 1d |   1s 1e 1d |    1s 1e 1d |
+| dac-patterns:17 |   4s 7e 0d |   4s 7e 0d |    3s 5e 1d |
+| dac-patterns:18 |   2s 3e 0d |   2s 3e 1d |    2s 3e 1d |
+| dac-patterns:19 |   4s 8e 0d |   3s 6e 0d |    3s 7e 1d |
+| dac-patterns:20 |   2s 4e 0d |   2s 4e 1d |    2s 4e 1d |
+
+#+ATTR_HTML: :class table-pre
+#+RESULTS:
 
 * Controlling and measuring time
 
