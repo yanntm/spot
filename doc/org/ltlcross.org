@@ -708,7 +708,7 @@ looking whether the command specification for a translator has the
 form "={short name}actual command=".
 
 For instance, after
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC sh :results silent
 genltl --and-f=1..5 |
 ltlcross '{small} ltl2tgba -s --small %f >%O' \
          '{deter} ltl2tgba -s --deter %f >%O' --csv=ltlcross.csv
