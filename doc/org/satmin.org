@@ -600,9 +600,9 @@ s/"HOA:.*--END--"/HOA:.../' stats.csv
 #+RESULTS:
 | input.states | target.states | reachable.states | edges | transitions | variables | clauses | enc.user | enc.sys | sat.user | sat.sys | automaton |
 |--------------+---------------+------------------+-------+-------------+-----------+---------+----------+---------+----------+---------+-----------|
-|            8 |             4 |                  |       |             |      5120 |  446320 |       22 |       1 |       17 |       0 |           |
-|            8 |             6 |                6 |    29 |          48 |     11520 | 1515749 |       50 |       4 |      234 |       0 | HOA:...   |
-|            8 |             5 |                  |       |             |      8000 |  874992 |       29 |       0 |       67 |       0 |           |
+|           10 |             5 |                  |       |             |     13600 | 1543042 |       47 |       4 |      129 |       0 |           |
+|           10 |             7 |                7 |    33 |          56 |     26656 | 4247441 |      110 |       6 |      479 |       0 | HOA:...   |
+|            7 |             6 |                6 |    26 |          48 |     10512 | 1376507 |       35 |       0 |      154 |       0 | HOA:...   |
 
 The generated CSV file use the following columns:
 - =input.states=: the number of states of the reference automaton at this step
@@ -622,17 +622,14 @@ file follows RFC4180 in escaping double-quote by doubling them.
 
 In the above example, the DRA produced by =ltl2dstar= had 11 states.
 In the first line of the =stats.csv= file, you can see the
-minimization function had a 8-state input, which means that
-=dstar2tgba= first reduced the 11-state (complete) DRA into a 8-state
-(complete) DBA before calling the SAT-based minimization (the fact
-that the input was reduced to a *DBA* is not very obvious from this
-trace), This first line shows the SAT-based minimization for a
-(complete) 5-state DTGBA and failing to find one.  Then on the next
-line it looks for a 6-state solution, finds one.  Finally, it looks
-for a 5-state solution, and cannot find one.  The reason the 5-state
-attempt uses the 8-state automaton as input rather than the 6-state
-automaton is because the 8-state automaton uses 1 acceptance states
-(it's a DBA) while the 6-state automaton uses 2.
+minimization function had a 10-state input, which means that
+=dstar2tgba= first reduced the 11-state (complete) DRA into a 10-state
+(complete) DBA before calling the SAT-based minimization.  This first
+line shows the SAT-based minimization for a (complete) 5-state DTGBA
+and failing to find one.  Then on the next line it looks for a 7-state
+solution, finds one.  Finally, it finds a (complete) 6-state solution,
+now using the 7-state version as reference automaton to further
+simplify the problem.
 
 The final output is reported with 5 states, because by default we
 output trim automata. If the =--complete= option had been given, the
