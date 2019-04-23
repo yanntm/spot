@@ -55,17 +55,15 @@ convenient when chaining tools in a pipe.  Set this variable to
 passed to the printer by suffixing the output format with
 \fB=\fR and the options.  For instance running
 .in +4n
-.nf
-.ft C
+.EX
 % SPOT_DEFAULT_FORMAT=dot=bar autfilt ...
-.fi
+.EN
 .in -4n
 is the same as running
 .in +4n
-.nf
-.ft C
+.EX
 % autfilt --dot=bar ...
-.fi
+.EE
 .in -4n
 but the use of the environment variable makes more sense if you set
 it up once for many commands.
@@ -105,6 +103,7 @@ Specifies the default algorithm that should be used
 by the \f(CWis_obligation()\fR function.  The value should
 be one of the following:
 .RS
+.RS
 .IP 1
 Make sure that the formula and its negation are
 realizable by non-deterministic co-Büchi automata.
@@ -114,6 +113,7 @@ realizable by deterministic Büchi automata.
 .IP 3
 Make sure that the formula is realizable
 by a weak and deterministic Büchi automata.
+.RE
 .RE
 
 .TP
@@ -134,9 +134,12 @@ ignoring them), and setting this variable will interfer with that.
 Select the default algorithm that must be used to check the persistence
 or recurrence property of a formula f. The values it can take are 1
 or 2. Both methods work either on f or !f thanks to the duality of
-persistence and recurrence classes.
-See "https://spot.lrde.epita.fr/hierarchy.html" for more details. If
-it is set to:
+persistence and recurrence classes.  See
+.UR https://spot.lrde.epita.fr/hierarchy.html
+this page
+.UE
+for more details. If it is set to:
+.RS
 .RS
 .IP 1
 It will try to check if f (or !f) is co-Büchi realizable in order to
@@ -144,6 +147,7 @@ tell if f belongs to the persistence (or the recurrence) class.
 .IP 2
 It checks if f (or !f) is det-Büchi realizable to tell if f belongs
 to the recurrence (or the persistence) class.
+.RE
 .RE
 
 .TP
@@ -202,6 +206,7 @@ variable should hold a value between 1 and 8, corresponding to the
 following tests described in our Spin'15 paper (see the BIBLIOGRAPHY
 section).  The default is 8.
 .RS
+.RS
 .IP 1
 sl(a) x sl(!a)
 .IP 2
@@ -218,6 +223,7 @@ cl(sl2(a)) x !a
 sl(a) x sl(!a), performed on-the-fly
 .IP 8
 cl(a) x cl(!a)
+.RE
 .RE
 
 .TP
