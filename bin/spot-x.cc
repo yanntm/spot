@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015, 2016, 2017, 2018 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -43,7 +43,7 @@ static const argp_option options[] =
 (0) disables it, (1) enables rules based on syntactic implications, \
 (2) additionally allows automata-based implication checks, (3) enables \
 more rules based on automata-based implication checks.  The default value \
-depends on the --low/--medium/--high settings.") },
+depends on the --low, --medium, or --high settings.") },
     { nullptr, 0, nullptr, 0, "Translation options:", 0 },
     { DOC("ltl-split", "Set to 0 to disable the translation of automata \
 as product or sum of subformulas.") },

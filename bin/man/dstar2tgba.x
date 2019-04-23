@@ -60,9 +60,13 @@ would make more sense.
 [BIBLIOGRAPHY]
 .TP
 1.
-<http://www.ltl2dstar.de/docs/ltl2dstar.html>
+.UR http://www.ltl2dstar.de/docs/ltl2dstar.html
+The
+.BR ltl2dstar manual
+.UE .
 
-Documents the output format of ltl2dstar.
+Documents the output format of
+.BR ltl2dstar .
 
 .TP
 2.
