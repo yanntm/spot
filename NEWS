@@ -13,8 +13,8 @@ New in spot 2.7.3.dev (not yet released)
   - Add generic_accepting_run() as a variant of generic_emptiness_check() that
     returns an accepting run in an automaton with any acceptance condition.
 
-  - twa::accepting_run() now works on automata using Fin in
-    their acceptance condition.
+  - twa::accepting_run() and twa::intersecting_run() now work on
+    automata using Fin in their acceptance condition.
 
   - simulation-based reductions have learned a trick that sometimes
     improve transition-based output when the input is state-based.

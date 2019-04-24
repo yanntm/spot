@@ -59,6 +59,14 @@ namespace spot
       return std::dynamic_pointer_cast<const twa_graph>(a);
     }
 
+    const_twa_graph_ptr ensure_twa_graph(const const_twa_ptr& a)
+    {
+      if (auto aa = is_twa_graph(a))
+        return aa;
+      return make_twa_graph(a, twa::prop_set::all());
+    }
+
+
     // Make sure automata using Fin acceptance are twa_graph_ptr
     const_twa_graph_ptr fin_to_twa_graph_maybe(const const_twa_ptr& a)
     {
@@ -70,15 +78,19 @@ namespace spot
       return remove_alternation(aa);
     }
 
+    // Remove alternation.
+    const_twa_graph_ptr ensure_existential_twa_graph(const const_twa_ptr& a)
+    {
+      return remove_alternation(ensure_twa_graph(a));
+    }
+
     // Remove Fin-acceptance and alternation.
     const_twa_ptr remove_fin_maybe(const const_twa_ptr& a)
     {
       auto aa = is_twa_graph(a);
       if ((!aa || aa->is_existential()) && !a->acc().uses_fin_acceptance())
         return a;
-      if (!aa)
-        aa = make_twa_graph(a, twa::prop_set::all());
-      return remove_fin(remove_alternation(aa));
+      return remove_fin(ensure_existential_twa_graph(a));
     }
   }
 
@@ -97,7 +109,7 @@ namespace spot
     const_twa_ptr a = shared_from_this();
     if (const_twa_graph_ptr ag = fin_to_twa_graph_maybe(a))
       return generic_emptiness_check(ag);
-    return !couvreur99_new_check(remove_fin_maybe(shared_from_this()));
+    return !couvreur99_new_check(ensure_existential_twa_graph(a));
   }
 
   twa_run_ptr
@@ -115,7 +127,7 @@ namespace spot
   twa_word_ptr
   twa::accepting_word() const
   {
-    if (auto run = shared_from_this()->accepting_run())
+    if (auto run = accepting_run())
       {
         auto w = make_twa_word(run->reduce());
         w->simplify();
@@ -136,36 +148,49 @@ namespace spot
     // with the generic emptiness.
     if (acc().uses_fin_acceptance() || other->acc().uses_fin_acceptance())
       {
-        const_twa_graph_ptr g1 = is_twa_graph(self);
-        const_twa_graph_ptr g2 = is_twa_graph(other);
-        if (g1 && g2 && g1->is_existential() && g2->is_existential())
-          return !generic_emptiness_check(product(g1, g2));
+        const_twa_graph_ptr g1 = ensure_existential_twa_graph(self);
+        const_twa_graph_ptr g2 = ensure_existential_twa_graph(other);
+        return !generic_emptiness_check(product(g1, g2));
       }
-    auto a1 = remove_fin_maybe(self);
-    auto a2 = remove_fin_maybe(other);
-    return !otf_product(a1, a2)->is_empty();
+    self = remove_fin_maybe(self); // remove alternation, not Fin
+    other = remove_fin_maybe(other);
+    return !otf_product(self, other)->is_empty();
   }
 
   twa_run_ptr
   twa::intersecting_run(const_twa_ptr other, bool from_other) const
   {
-    auto a = shared_from_this();
-    if (!from_other)
-      other = remove_fin_maybe(other);
-    else
-      a = remove_fin_maybe(a);
-    auto run = otf_product(a, other)->accepting_run();
+    auto self = shared_from_this();
+    if (acc().uses_fin_acceptance() || other->acc().uses_fin_acceptance())
+      {
+        const_twa_graph_ptr g1 = ensure_existential_twa_graph(self);
+        const_twa_graph_ptr g2 = ensure_existential_twa_graph(other);
+        auto run = generic_accepting_run(product(g1, g2));
+        if (!run)
+          return nullptr;
+        return run->reduce()->project(from_other ? g2 : g1);
+      }
+    self = remove_fin_maybe(self); // remove alternation, not Fin
+    other = remove_fin_maybe(other);
+    auto run = otf_product(self, other)->accepting_run();
     if (!run)
       return nullptr;
-    return run->project(from_other ? other : a);
+    return run->reduce()->project(from_other ? other : self);
   }
 
   twa_word_ptr
   twa::intersecting_word(const_twa_ptr other) const
   {
-    auto a1 = remove_fin_maybe(shared_from_this());
-    auto a2 = remove_fin_maybe(other);
-    return otf_product(a1, a2)->accepting_word();
+    if (auto run = intersecting_run(other))
+      {
+        auto w = make_twa_word(run);
+        w->simplify();
+        return w;
+      }
+    else
+      {
+        return nullptr;
+      }
   }
 
   namespace
