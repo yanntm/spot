@@ -122,7 +122,10 @@ simulation. Set to 3 to iterate both direct and reverse simulations. \
 The default is 3, except when option --low is specified, in which case \
 the default is 1.") },
     { DOC("ba-simul", "Set to 0 to disable simulation-based reductions \
-on the Büchi automaton (i.e., after degeneralization has been performed). \
+on automata where state-based acceptance must be preserved (e.g., \
+after degeneralization has been performed).   The name suggests this applies \
+only to Büchi automata for historical reasons; it really applies to any \
+state-based acceptance nowadays. \
 Set to 1 to use only direct simulation.  Set to 2 to use only reverse \
 simulation.  Set to 3 to iterate both direct and reverse simulations.   \
 The default is 3 in --high mode, and 0 otherwise.") },
