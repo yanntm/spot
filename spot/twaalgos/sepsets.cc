@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et
+// Copyright (C) 2015-2019 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -56,7 +56,7 @@ namespace spot
     // Fix the acceptance condition
     auto& code = aut->acc().get_acceptance();
     // If code were empty, then common would have been 0.
-    assert (!code.empty());
+    assert(!code.empty());
     acc_cond::acc_word* pos = &code.back();
     acc_cond::acc_word* start = &code.front();
     while (pos > start)
@@ -69,14 +69,13 @@ namespace spot
             break;
           case acc_cond::acc_op::Fin:
           case acc_cond::acc_op::FinNeg:
-            if (!(pos[-1].mark & common))
-              break;
-            for (auto p: map)
-              if (pos[-1].mark & p.first)
-                {
-                  pos[-1].mark -= p.first;
-                  pos[-1].mark |= p.second;
-                }
+            if (pos[-1].mark & common)
+              for (auto p: map)
+                if (pos[-1].mark & p.first)
+                  {
+                    pos[-1].mark -= p.first;
+                    pos[-1].mark |= p.second;
+                  }
             SPOT_FALLTHROUGH;
           case acc_cond::acc_op::Inf:
           case acc_cond::acc_op::InfNeg:
