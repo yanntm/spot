@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2017, 2018 Laboratoire de Recherche et
+// Copyright (C) 2015, 2017-2019 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -23,37 +23,33 @@
 
 namespace spot
 {
+  /// @{
   /// \ingroup twa_acc_transform
   /// \brief Remove useless acceptance sets
   ///
-  /// This removes from the automaton the acceptance marks that are
-  /// not used in the acceptance condition.  This also removes from
-  /// the acceptance conditions the terms that corresponds to empty
-  /// or full sets.
+  /// Removes from \a aut the acceptance marks that are not used
+  /// in its acceptance condition.  Also removes from the acceptance
+  /// conditions the terms that corresponds to empty or full sets.
   ///
   /// If \a strip is true (the default), the remaining acceptance set
-  /// numbers will be shifted down to reduce maximal number of
+  /// numbers will be shifted down to reduce the maximal number of
   /// acceptance sets used.
+  ///
+  /// cleanup_acceptance_here() works in place, cleanup_acceptance()
+  /// returns a new automaton that has been simplified.
   SPOT_API twa_graph_ptr
   cleanup_acceptance_here(twa_graph_ptr aut, bool strip = true);
 
-  /// \ingroup twa_acc_transform
-  /// \brief Remove useless acceptance sets
-  ///
-  /// This removes from the automaton the acceptance marks that are
-  /// not used in the acceptance condition.  This also removes from
-  /// the acceptance conditions the terms that corresponds to empty
-  /// or full sets.
-  ///
   SPOT_API twa_graph_ptr
-  cleanup_acceptance(const_twa_graph_ptr aut);
+  cleanup_acceptance(const_twa_graph_ptr aut, bool strip = true);
+  /// @}
 
   /// @{
   /// \ingroup twa_acc_transform
   /// \brief Simplify an acceptance condition
   ///
-  /// Does evereything cleanup_acceptance() does, but additionally:
-  /// merge identical sets, detect whether to sets i and j are
+  /// Does everything cleanup_acceptance() does, but additionally:
+  /// merge identical sets, detect whether two sets i and j are
   /// complementary to apply the following reductions:
   ///   - `Fin(i) & Inf(j) = Fin(i)`
   ///   - `Fin(i) & Fin(j) = f`
@@ -61,6 +57,9 @@ namespace spot
   ///   - `Fin(i) | Inf(j) = Inf(j)`
   ///   - `Inf(i) | Inf(j) = t`
   ///   - `Fin(i) | Inf(i) = t`
+  ///
+  /// simplify_acceptance_here() works in place, simplify_acceptance()
+  /// returns a new automaton that has been simplified.
   SPOT_API twa_graph_ptr
   simplify_acceptance_here(twa_graph_ptr aut);
 

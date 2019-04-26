@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2017, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015, 2017-2019 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -68,9 +68,10 @@ namespace spot
     return cleanup_acceptance_here(aut, strip);
   }
 
-  twa_graph_ptr cleanup_acceptance(const_twa_graph_ptr aut)
+  twa_graph_ptr cleanup_acceptance(const_twa_graph_ptr aut, bool strip)
   {
-    return cleanup_acceptance_here(make_twa_graph(aut, twa::prop_set::all()));
+    return cleanup_acceptance_here(make_twa_graph(aut, twa::prop_set::all()),
+                                   strip);
   }
 
   namespace
