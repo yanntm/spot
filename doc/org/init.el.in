@@ -110,11 +110,43 @@
 (setq org-html-table-header-tags
       '("<th scope=\"%s\"%s><div><span>" . "</span></div></th>"))
 
-(defun spot-publish-sitemap (title list)
-  "Same as org-publish-sitemap-default except it adds the SETUPFILE."
-  (concat "#+TITLE: " title
-          "\n#+SETUPFILE: setup.org\n#+HTML_LINK_UP: index.html\n\n"
-          (org-list-to-org list)))
+(defun spot-sitemap-format-entry (entry style project)
+  "Export a sitemap entry in a why that we can order them meaningfully.
+If file ENTRY has HTML_LINK_UP pointing to file up.html, and file
+up.html points to index.html, then the result is:
+      index.org/up.org/entry.org/ [[entry.org][TITLE]]"
+  (let ((linkup (org-publish-find-property entry :html-link-up project 'html))
+        (trail (concat entry "/ ")))
+    (while (and linkup (string-match "^\\(.*\\)\.html$" linkup))
+      (let ((match (concat (match-string 1 linkup) ".org")))
+        (if (string= match entry)
+            (setq linkup nil)
+          (setq linkup (org-publish-find-property match :html-link-up
+                                                  project 'html)
+                trail (concat match "/" trail)))))
+    (concat trail (org-publish-sitemap-default-entry entry style project))))
+
+(defun spot-sitemap-reorder (entries)
+  (sort entries (lambda (a b) (string< (car a) (car b)))))
+
+(defun spot-publish-sitemap (title thelist)
+  "Build Spot's sitemap.
+
+  This is done by sorting all lines, and then replacing
+  - index.org/up.org/entry.org/ [[entry.org][TITLE]]
+  by
+  - [[entry.org][TITLE]]
+  but indented according to the number of 'fake directory' parts."
+  (let ((body (org-list-to-org (cons 'unordered
+                                 (spot-sitemap-reorder (cdr thelist))))))
+    (while
+        (let* ((res (replace-regexp-in-string "\\([:space:]*\\)- [^/[:space:]]+/" "  \\1- " body))
+               (cmp (string= res body)))
+          (setq body res)
+          (not cmp)))
+    (concat "#+TITLE: " title
+            "\n#+SETUPFILE: setup.org\n#+HTML_LINK_UP: index.html\n\n"
+            body)))
 
 (setq org-publish-project-alist
       '(("spot-html"
@@ -126,6 +158,7 @@
 	:auto-sitemap t
 	:sitemap-title "Sitemap for Spot"
         :sitemap-function spot-publish-sitemap
+        :sitemap-format-entry spot-sitemap-format-entry
 	:publishing-function org-html-publish-to-html
 	:html-head "<link rel=\"stylesheet\" type=\"text/css\" href=\"spot.css\" />"
 	:auto-preamble t)
