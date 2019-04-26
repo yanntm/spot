@@ -135,7 +135,7 @@ Fa  M b,&!xLPgopra
 {p[+]:p[+]},&!xfPsoprla
 (!p W Gp) | ({(!p[*];(p[+]:(p[*];!p[+])))[:*4][:+]}<>-> (!p W Gp)),&!xPpla
 {b[+][:*0..3]},&!fPsopra
-{a->c[*]},fPsopra
+{a->c[*]},xfPsopra
 EOF
 
 run 0 ../kind input

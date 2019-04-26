@@ -1549,7 +1549,8 @@ namespace spot
           // concatenation, it means all arguments should be of the
           // form b*, except one that is siSERE (i.e., a sub-formula
           // that verify is_syntactic_stutter_invariant() and
-          // !is_boolean());
+          // !is_boolean()).   Since b* is siSERE, that means we
+          // want at least s-1 operands of the form b*.
           if (op_ == op::Concat)
             {
               unsigned sb = 0; // stared Boolean formulas seen
@@ -1567,7 +1568,7 @@ namespace spot
                       break;
                     }
                 }
-              is_.syntactic_si = sb == s - 1;
+              is_.syntactic_si = sb >= s - 1;
             }
           break;
         }
@@ -1594,7 +1595,7 @@ namespace spot
               if (max_ == unbounded())
                 {
                   is_.finite = false;
-                  is_.syntactic_si = min_ == 1 && children[0]->is_boolean();
+                  is_.syntactic_si = min_ <= 1 && children[0]->is_boolean();
                 }
               else
                 {
