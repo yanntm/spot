@@ -56,6 +56,10 @@ New in spot 2.7.3.dev (not yet released)
     was fixed by teaching simulation-based reductions how to deal
     with such cases.
 
+  - The code for detecting syntactically stutter-invariant PSL
+    formulas was incorrectly handling the ";" operator, causing some
+    stutter-sensitive formulas to be flagged a stutter-invariant.
+
 New in spot 2.7.3 (2019-04-19)
 
   Bugs fixed:

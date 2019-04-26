@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2010, 2011, 2012, 2015, 2017 Laboratoire de Recherche
+# Copyright (C) 2010-2012, 2015, 2017, 2019 Laboratoire de Recherche
 # et Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -59,12 +59,13 @@ Fa -> Gb,xLPsopra
 {a;c*;b}|->F!b,&!Pra
 {a;c*;b}|->GFa,&!Pra
 {a;c*;b}|->FGa,&!Pa
-{a[+];c[+];b*}|->!Fb,&xPsopra
-{a[+];c*;b[+]}|->G!b,&!xPsopra
-{a*;c[+];b[+]}|->!Gb,&xPra
-{a[+];c*;b[+]}|->F!b,&!xPra
-{a[+];c[+];b*}|->GFa,&!xPra
-{a*;c[+];b[+]}|->FGa,&!xPa
+{a[+];c[+];b*}|->!Fb,&Psopra
+{a*;c[+];b*}|->!Fb,&xPsopra
+{a[+];c*;b[+]}|->G!b,&!Psopra
+{a*;c[+];b[+]}|->!Gb,&Pra
+{a[+];c*;b[+]}|->F!b,&!Pra
+{a[+];c[+];b*}|->GFa,&!Pra
+{a*;c[+];b[+]}|->FGa,&!Pa
 {a;c;b|(d;e)}|->!Xb,&fPFsgopra
 {a;c;b|(d;e)}|->X!b,&!fPFsgopra
 {a;c;b|(d;e)}|->!Fb,&Psopra
@@ -87,7 +88,7 @@ Fa -> Gb,xLPsopra
 {a;c*;b}<>->!GFb,&Ppa
 {a;c*;b}<>->GFb,&!Pa
 {a;c*;b}<>->!FGb,&Pa
-{a*;c[+];b[+]}<>->!FGb,&xPa
+{a*;c[+];b[+]}<>->!FGb,&Pa
 {a;c|d;b}<>->!Gb,&Pgopra
 {a;c|d;b}<>->G!b,&!Psopra
 {a;c|d;b}<>->FGb,&!Ppa
@@ -126,8 +127,9 @@ Fa  M b,&!xLPgopra
 !{a;b*;c}!,&fPsopra
 {a;b*;p112}[]->0,&!fPsopra
 !{a;b*;c.2},&!fPgopr
-!{a[+];b*;c[+]},&!xfPgopra
-{a[+];b*;c[+]},&!xfPsopra
+!{a[+];b*;c[+]},&!fPgopra
+!{a[+];b*;c*},&!xfPgopra
+{a[+];b*;c[+]},&!fPsopra
 {a[+] && b || c[+]},&!fPsopra
 {a[+] && b[+] || c[+]},&!xfPsopra
 {p[+]:p[+]},&!xfPsoprla
