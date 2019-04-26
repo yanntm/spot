@@ -30,7 +30,7 @@
 #include <spot/twaalgos/sepsets.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/misc/bddlt.hh>
-#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/cleanacc.hh>
 
 //  Simulation-based reduction, implemented using bdd-based signatures.
 //
@@ -803,43 +803,70 @@ namespace spot
       std::vector<bdd>* record_implications_;
     };
 
+    template<typename Fun, typename Aut>
+    twa_graph_ptr
+    wrap_simul(Fun f, const Aut& a)
+    {
+      if (has_separate_sets(a))
+        return f(a);
+      // If the input has acceptance sets common to Fin and Inf,
+      // separate them before doing the simulation, and merge them
+      // back afterwards.  Doing will temporarily introduce more sets
+      // and may exceed the number of sets we support.  But it's
+      // better than refusing to apply simulation-based reductions to
+      // automata sharing Fin/Inf sets.
+      auto b = make_twa_graph(a, twa::prop_set::all());
+      separate_sets_here(b);
+      return simplify_acceptance_here(f(b));
+    }
+
   } // End namespace anonymous.
 
 
   twa_graph_ptr
   simulation(const const_twa_graph_ptr& t)
   {
-    direct_simulation<false, false> simul(t);
-    return simul.run();
+    return wrap_simul([](const const_twa_graph_ptr& t) {
+                        direct_simulation<false, false> simul(t);
+                        return simul.run();
+                      }, t);
   }
 
   twa_graph_ptr
   simulation(const const_twa_graph_ptr& t,
              std::vector<bdd>* implications)
   {
-    direct_simulation<false, false> simul(t, implications);
-    return simul.run();
+    return wrap_simul([implications](const const_twa_graph_ptr& t) {
+                        direct_simulation<false, false> simul(t, implications);
+                        return simul.run();
+                      }, t);
   }
 
   twa_graph_ptr
   simulation_sba(const const_twa_graph_ptr& t)
   {
-    direct_simulation<false, true> simul(t);
-    return simul.run();
+    return wrap_simul([](const const_twa_graph_ptr& t) {
+                        direct_simulation<false, true> simul(t);
+                        return simul.run();
+                      }, t);
   }
 
   twa_graph_ptr
   cosimulation(const const_twa_graph_ptr& t)
   {
-    direct_simulation<true, false> simul(t);
-    return simul.run();
+    return wrap_simul([](const const_twa_graph_ptr& t) {
+                        direct_simulation<true, false> simul(t);
+                        return simul.run();
+                      }, t);
   }
 
   twa_graph_ptr
   cosimulation_sba(const const_twa_graph_ptr& t)
   {
-    direct_simulation<true, true> simul(t);
-    return simul.run();
+    return wrap_simul([](const const_twa_graph_ptr& t) {
+                        direct_simulation<true, true> simul(t);
+                        return simul.run();
+                      }, t);
   }
 
 
@@ -876,13 +903,13 @@ namespace spot
   twa_graph_ptr
   iterated_simulations(const const_twa_graph_ptr& t)
   {
-    return iterated_simulations_<false>(t);
+    return wrap_simul(iterated_simulations_<false>, t);
   }
 
   twa_graph_ptr
   iterated_simulations_sba(const const_twa_graph_ptr& t)
   {
-    return iterated_simulations_<true>(t);
+    return wrap_simul(iterated_simulations_<true>, t);
   }
 
 } // End namespace spot.
