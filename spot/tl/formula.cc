@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -1125,10 +1125,9 @@ namespace spot
         is_.boolean = true;
         is_.sugar_free_boolean = true;
         is_.in_nenoform = true;
-        is_.syntactic_si = true;        // Assuming LTL (for PSL a Boolean
-        // term is not stared will be regarded
-        // as not stuttering were this
-        // matters.)
+        is_.syntactic_si = true;        // Assuming LTL (for PSL, a Boolean
+        // term that is not stared will be regarded as non-SI where
+        // this matters.)
         is_.sugar_free_ltl = true;
         is_.ltl_formula = true;
         is_.psl_formula = true;
@@ -1544,9 +1543,12 @@ namespace spot
           is_.syntactic_si = syntactic_si;
           if (op_ == op::Fusion)
             is_.accepting_eword = false;
-          // A concatenation is an siSERE if it contains one stared
-          // Boolean, and the other operands are siSERE (i.e.,
-          // sub-formulas that verify is_syntactic_stutter_invariant() and
+          // A concatenation is an siSERE if looks like
+          //    r;b*  or  b*;r
+          // where b is Boolean and r is siSERE.  generalized to n-ary
+          // concatenation, it means all arguments should be of the
+          // form b*, except one that is siSERE (i.e., a sub-formula
+          // that verify is_syntactic_stutter_invariant() and
           // !is_boolean());
           if (op_ == op::Concat)
             {
@@ -1554,22 +1556,18 @@ namespace spot
               for (unsigned i = 0; i < s; ++i)
                 {
                   auto ci = children[i];
-                  if (ci->is_syntactic_stutter_invariant()
-                      && !ci->is_boolean())
-                    continue;
-                  if (ci->is(op::Star))
+                  if (ci->is_Kleene_star())
                     {
                       sb += ci->nth(0)->is_boolean();
-                      if (sb > 1)
-                        break;
                     }
-                  else
+                  else if (!ci->is_syntactic_stutter_invariant()
+                           || ci->is_boolean())
                     {
                       sb = 0;
                       break;
                     }
                 }
-              is_.syntactic_si = sb == 1;
+              is_.syntactic_si = sb == s - 1;
             }
           break;
         }

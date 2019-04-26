@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013-2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2013-2019 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -29,7 +29,7 @@ checkopt()
 {
   cat >exp
   run 0 ltlfilt "$@" formulas > out
-  diff exp out
+  diff -u exp out
 }
 
 # The empty lines in the file are meant, we want to make sure that
@@ -48,6 +48,16 @@ G(a & Xb)
 Xa
 F(a & !Xa & Xb)
 {a & {b|c} }
+
+{a[=2:3]}|->b
+{a[->2:3]}|->b
+{a[->1];a*}|->b  /* becomes {(!a)*;a[+]}|->b */
+{a*;(!a)*;a*}|->b
+{a*;(!a)[+];a*}|->b
+{a[+];(!a)*;a*}|->b
+{a*;(!a)*;a[+]}|->b
+{a*;(!a)[+];a[+]}|->b
+{a*;(!c)[+];a[+]}|->b
 EOF
 
 checkopt --boolean <<EOF
@@ -99,10 +109,30 @@ b W GFa
 a U Fb
 F(a & !Xa & Xb)
 a & (b | c)
+{{!a}[*];a[+]}[]-> b
+{a[*];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[+];a[*]}[]-> b
+{a[+];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[*];a[+]}[]-> b
+{a[*];{!a}[+];a[+]}[]-> b
 EOF
 
 checkopt -c --stutter-invariant <<EOF
-9
+15
+EOF
+
+checkopt --syntactic-stutter-invariant <<EOF
+GFa | FGb
+F(GFa | Gb)
+F(b W GFa)
+GFa | Gb
+b W GFa
+a U Fb
+a & (b | c)
+{{!a}[*];a[+]}[]-> b
+{a[*];{!a}[+];a[*]}[]-> b
+{a[+];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[*];a[+]}[]-> b
 EOF
 
 checkopt --simplify <<EOF
@@ -118,6 +148,15 @@ G(a & Xb)
 Xa
 F(a & X(!a & b))
 a & (b | c)
+a R (!a | X({a[->1..2]}[]-> (b & X(b W a))))
+a R (!a | X({a[->1..2]}[]-> b))
+a R (b W !a)
+{a[*];{!a}[*];a[*]}[]-> b
+!a R ((b & X(b W !a)) W a)
+(b & X((b W !a) & ((b & X(b W !a)) W a))) W !a
+!a R (a R (b W !a))
+!a R (a | X(a R (b W !a)))
+!a R (c | X(c R (b W !a)))
 EOF
 
 checkopt --simplify --eventual --unique <<EOF
@@ -142,6 +181,15 @@ checkopt --safety <<EOF
 G(a & Xb)
 Xa
 a & (b | c)
+{a[=2..3]}[]-> b
+{a[->2..3]}[]-> b
+{{!a}[*];a[+]}[]-> b
+{a[*];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[+];a[*]}[]-> b
+{a[+];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[*];a[+]}[]-> b
+{a[*];{!a}[+];a[+]}[]-> b
+{a[*];{!c}[+];a[+]}[]-> b
 EOF
 
 checkopt --obligation <<EOF
@@ -152,6 +200,15 @@ G(a & Xb)
 Xa
 F(a & !Xa & Xb)
 a & (b | c)
+{a[=2..3]}[]-> b
+{a[->2..3]}[]-> b
+{{!a}[*];a[+]}[]-> b
+{a[*];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[+];a[*]}[]-> b
+{a[+];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[*];a[+]}[]-> b
+{a[*];{!a}[+];a[+]}[]-> b
+{a[*];{!c}[+];a[+]}[]-> b
 EOF
 
 checkopt --guarantee <<EOF
@@ -165,6 +222,15 @@ EOF
 checkopt -v --ltl <<EOF
 !({a;b[*];c}!)
 !{a:b[*]:c}
+{a[=2..3]}[]-> b
+{a[->2..3]}[]-> b
+{{!a}[*];a[+]}[]-> b
+{a[*];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[+];a[*]}[]-> b
+{a[+];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[*];a[+]}[]-> b
+{a[*];{!a}[+];a[+]}[]-> b
+{a[*];{!c}[+];a[+]}[]-> b
 EOF
 
 checkopt -v --ap=3 <<EOF
@@ -177,6 +243,14 @@ a U Fb
 G(a & Xb)
 Xa
 F(a & !Xa & Xb)
+{a[=2..3]}[]-> b
+{a[->2..3]}[]-> b
+{{!a}[*];a[+]}[]-> b
+{a[*];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[+];a[*]}[]-> b
+{a[+];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[*];a[+]}[]-> b
+{a[*];{!a}[+];a[+]}[]-> b
 EOF
 
 checkopt --ap=2..3 <<EOF
@@ -191,12 +265,24 @@ a U Fb
 G(a & Xb)
 F(a & !Xa & Xb)
 a & (b | c)
+{a[=2..3]}[]-> b
+{a[->2..3]}[]-> b
+{{!a}[*];a[+]}[]-> b
+{a[*];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[+];a[*]}[]-> b
+{a[+];{!a}[*];a[*]}[]-> b
+{a[*];{!a}[*];a[+]}[]-> b
+{a[*];{!a}[+];a[+]}[]-> b
+{a[*];{!c}[+];a[+]}[]-> b
 EOF
 
 checkopt -v --stutter-invariant <<EOF
 !({a;b[*];c}!)
 G(a & Xb)
 Xa
+{a[=2..3]}[]-> b
+{a[->2..3]}[]-> b
+{a[*];{!c}[+];a[+]}[]-> b
 EOF
 
 checkopt --equivalent-to 'GFa | FGb' <<EOF
