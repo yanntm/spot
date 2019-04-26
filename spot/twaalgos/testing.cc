@@ -19,6 +19,8 @@
 
 #include "config.h"
 #include <spot/twaalgos/testing.hh>
+#include <spot/twaalgos/sccinfo.hh>
+#include <spot/twaalgos/mask.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twa/bddprint.hh>
 #include <deque>
@@ -151,6 +153,59 @@ namespace spot
         res->new_edge(top.second, new_state(e.dst, cond), cond, e.acc);
       }
     }
+    return res;
+  }
+
+  twa_graph_ptr remove_stuttering(const const_twa_graph_ptr& input_twa)
+  {
+    if (SPOT_UNLIKELY(!(input_twa->is_existential())))
+      throw std::runtime_error
+        ("remove_testing() does not support alternating automata");
+
+    auto filter_edge = [](const twa_graph::edge_storage_t& e, unsigned,
+        void* filter_data)
+    {
+      auto allap = static_cast<bdd*>(filter_data);
+
+      if (&e.cond != allap)
+        return scc_info::edge_filter_choice::cut;
+      return scc_info::edge_filter_choice::keep;
+    };
+
+    bdd empty = bdd_satoneset(bddtrue, input_twa->ap_vars(), bddfalse);
+    scc_info r_scc = scc_info(input_twa, ~0U, filter_edge, &empty);
+
+    unsigned nb_scc = r_scc.scc_count();
+    std::vector<bool> is_livelock(nb_scc, false);
+    for (unsigned n = 0; n < nb_scc; ++n)
+    {
+      if (r_scc.is_accepting_scc(n))
+      {
+        is_livelock[n] = true;
+        continue;
+      }
+
+      for (unsigned u : r_scc.succ(n))
+      {
+        if (is_livelock[u])
+        {
+          is_livelock[n] = true;
+          break;
+        }
+      }
+    }
+
+    twa_graph_ptr res = make_twa_graph(input_twa->get_dict());
+    transform_accessible(input_twa, res, [&](unsigned src, bdd& cond,
+          acc_cond::mark_t&, unsigned dst)
+        {
+          //acc.set();
+          if (cond != empty)
+            return;
+
+          if (is_livelock[r_scc.scc_of(src)] || is_livelock[r_scc.scc_of(dst)])
+            cond = bddfalse;
+        });
     return res;
   }
 }

@@ -32,4 +32,7 @@ namespace spot
 
   SPOT_API
   twa_graph_ptr remove_testing(const const_twa_graph_ptr& input_diff_twa);
+
+  SPOT_API
+  twa_graph_ptr remove_stuttering(const const_twa_graph_ptr& input_twa);
 }

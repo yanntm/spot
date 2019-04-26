@@ -441,10 +441,14 @@ namespace spot
       std::ostream&
       format_label(std::ostream& os, bdd label) const
       {
-        formula f = bdd_to_formula(label, aut_->get_dict());
+        //FIXME format latex unsupported
         if (aut_->get_named_prop<bool>("testing-automaton") && !is_init_state_)
-            os << '{';
-        else if (opt_latex_)
+        {
+            bdd_print_accset(os, aut_->get_dict(), label);
+            return os;
+        }
+        formula f = bdd_to_formula(label, aut_->get_dict());
+        if (opt_latex_)
           {
             print_sclatex_psl(os << '$', f) << '$';
             return os;
