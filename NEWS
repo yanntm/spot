@@ -5,6 +5,11 @@ New in spot 2.7.3.dev (not yet released)
   - separate_sets_here() (and therefore autfilt --separate-sets) could
     loop infinitely on some inputs.
 
+  - In some situation, ltl2tgba -G could abort with
+    "direct_simulation() requires separate Inf and Fin sets".  This
+    was fixed by teaching simulation-based reductions how to deal
+    with such cases.
+
 New in spot 2.7.3 (2019-04-19)
 
   Bugs fixed:

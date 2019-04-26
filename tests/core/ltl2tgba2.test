@@ -409,3 +409,16 @@ f='(a R !b) & (c R !d) & G((!b | !d) & (!a | Fb) & (!c | Fd) '
 f=$f'& (!b | X(b | (a R !b))) & (!d | X(d | (c R !d))) & F(a | !b) & F(c | !d))'
 test '8,1' = `ltl2tgba "$f" --stats=%s,%d`
 test '8,1' = `ltl2tgba -GD "$f" --stats=%s,%d`
+
+
+# Two formulas for which ltl2tgba 2.7.3 was raising an error with -GDS
+# Reported by David Müller.
+cat >in <<EOF
+& | G F p0 F G p1 | G F ! p1 F G p2
+& & | G F p0 F G p1 | G F ! p1 F G p2 | G F ! p2 F G ! p0
+EOF
+ltl2tgba --lbt-input -GDS -Fin --stats='%s,%g' >out
+cat >expected <<EOF
+8,(Fin(1) | Inf(0)) & (Fin(2) | Inf(1))
+8,(Fin(1) | Inf(0)) & (Fin(2) | Inf(1)) & (Fin(0) | Inf(2))
+EOF
