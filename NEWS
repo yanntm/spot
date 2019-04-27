@@ -1,4 +1,4 @@
-New in spot 2.7.3.dev (not yet released)
+New in spot 2.7.4.dev (not yet released)
 
   Command-line tools:
 
@@ -45,6 +45,8 @@ New in spot 2.7.3.dev (not yet released)
   - A new complement() function that return automata with unspecified
     acceptance condition.  The output can be alternating only if the
     input was alternating.
+
+New in spot 2.7.4 (2019-04-27)
 
   Bugs fixed:
 
