@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017, 2018 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -47,7 +47,7 @@ namespace spot
   /// sharing information shared among multiple threads.
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class swarmed_deadlock
+  class SPOT_API swarmed_deadlock
   {
     /// \brief Describes the status of a state
     enum st_status

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017, 2018 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -36,7 +36,7 @@ namespace spot
   template<typename State,
            typename StateHash,
            typename StateEqual>
-  class iterable_uf
+  class SPOT_API iterable_uf
   {
 
   public:
@@ -436,7 +436,7 @@ namespace spot
   /// work stealing between threads.
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class swarmed_bloemen
+  class SPOT_API swarmed_bloemen
   {
   private:
     swarmed_bloemen() = delete;

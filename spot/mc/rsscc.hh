@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2018 Laboratoire de Recherche et
+// Copyright (C) 2018, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -47,7 +47,7 @@ namespace spot
 
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class swarmed_rsscc
+  class SPOT_API swarmed_rsscc
   {
   public:
 

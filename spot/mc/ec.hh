@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2018, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -32,7 +32,7 @@ namespace spot
   /// the Gabow's one.
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class ec_renault13lpar  : public intersect<State, SuccIterator,
+  class SPOT_API ec_renault13lpar  : public intersect<State, SuccIterator,
                                        StateHash, StateEqual,
                                        ec_renault13lpar<State, SuccIterator,
                                                         StateHash, StateEqual>>
