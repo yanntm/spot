@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2015, 2016, 2017, 2018 Laboratoire de Recherche et
+## Copyright (C) 2015, 2016, 2017, 2018, 2019 Laboratoire de Recherche et
 ## Développement de l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
@@ -27,7 +27,7 @@ mc_HEADERS = reachability.hh intersect.hh ec.hh unionfind.hh utils.hh\
 	renault_safety.hh bloemen_safety.hh laarman_source.hh            \
 	laarman_safety.hh cond_dest_liveness.hh cond_dest_safety.hh      \
 	rsscc_nosharing.hh bloemen_nosharing.hh bloemen_none.hh          \
-	rsscc_none.hh
+	rsscc_none.hh rsscc.hh
 
 noinst_LTLIBRARIES = libmc.la
 
