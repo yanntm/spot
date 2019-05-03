@@ -194,6 +194,7 @@ namespace spot
             r_.insert(next);
           }
         }
+        sys_.recycle(i, 0);
       }
 
       void process_out_state(int target, State next)
