@@ -237,7 +237,7 @@ namespace spot
           win_buf_[rank].get(mpi_.world_rank, 0, local_buf_);
           if (!local_buf_[STATE_HEADER_SIZE - 1])
             continue;
-          win_buf_[rank].put(mpi_.world_rank, 1, { 0 }, 1);
+          win_buf_[rank].put(mpi_.world_rank, 1, 0);
           win_free_.put(rank, mpi_.world_rank, true);
           for (int i = 0; i < buffer_size_; ++i)
           {

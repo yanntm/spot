@@ -41,12 +41,14 @@ namespace spot
 
     void put(int rank, size_t index, int value)
     {
-      put(rank, index, std::vector<int>(1, value), 1);
+      MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win_);
+      MPI_Put(&value, 1, MPI_INT, rank, index, 1, MPI_INT, win_);
+      MPI_Win_unlock(rank, win_);
     }
 
-    void put(int rank, size_t index, std::vector<int> values, size_t size)
+    void put(int rank, size_t index, std::vector<int>& values, size_t size)
     {
-      assert(values.size() <= size);
+      assert(values.size() == size);
       while (values.size() < size)
         values.push_back(0);
       MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win_);
