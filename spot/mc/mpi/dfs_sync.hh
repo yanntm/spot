@@ -90,7 +90,8 @@ namespace spot
         has_finish = true;
         if (mpi_.world_rank == 0)
         {
-          auto f = win_finish.get(0, 0, mpi_.world_size);
+          std::vector<int> f(mpi_.world_size, 0);
+          win_finish.get(0, 0, f);
           if (std::accumulate(f.cbegin(), f.cend(), 0) == mpi_.world_size)
           {
             for (int i = 1; i < mpi_.world_size; ++i)

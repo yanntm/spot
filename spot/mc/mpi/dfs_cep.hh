@@ -58,6 +58,8 @@ namespace spot
     std::chrono::time_point<std::chrono::steady_clock> finish_time
       = std::chrono::time_point<std::chrono::steady_clock>::max();
 
+    std::vector<int> local_buf_;
+
     public:
       dfs_cep(kripkecube<State, SuccIterator>& sys)
         : sys_(sys),
@@ -86,6 +88,8 @@ namespace spot
 
         win_finish.init(mpi_.world_size, false);
 
+        local_buf_ = std::vector<int>(buffer_size_ * state_size_);
+
         return s0;
       }
 
@@ -111,7 +115,8 @@ namespace spot
           win_finish.put(0, mpi_.world_rank, true);
           if (mpi_.world_rank == 0)
           {
-            auto f = win_finish.get(0, 0, mpi_.world_size);
+            std::vector<int> f(mpi_.world_size, 0);
+            win_finish.get(0, 0, f);
             if (std::accumulate(f.cbegin(), f.cend(), 0) == mpi_.world_size)
             {
               for (int i = 1; i < mpi_.world_size; ++i)
@@ -229,19 +234,18 @@ namespace spot
         {
           if (rank == mpi_.world_rank)
             continue;
-          std::vector<int> buf = win_buf_[rank].get(mpi_.world_rank, 0,
-                                                    buffer_size_ * state_size_);
-          if (!buf[STATE_HEADER_SIZE - 1])
+          win_buf_[rank].get(mpi_.world_rank, 0, local_buf_);
+          if (!local_buf_[STATE_HEADER_SIZE - 1])
             continue;
           win_buf_[rank].put(mpi_.world_rank, 1, { 0 }, 1);
           win_free_.put(rank, mpi_.world_rank, true);
           for (int i = 0; i < buffer_size_; ++i)
           {
-            if (!buf[i * state_size_ + STATE_HEADER_SIZE - 1])
+            if (!local_buf_[i * state_size_ + STATE_HEADER_SIZE - 1])
               break;
             int *state = (int *) malloc(state_size_ * sizeof (int));
             for (int u = 0; u < state_size_; ++u)
-              state[u] = buf[i * state_size_ + u];
+              state[u] = local_buf_[i * state_size_ + u];
             if (r_.find(state) == r_.end())
             {
               q_.insert(state);

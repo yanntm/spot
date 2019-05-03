@@ -31,13 +31,12 @@ namespace spot
       return value;
     }
 
-    std::vector<int> get(int rank, size_t index, size_t size)
+    void get(int rank, size_t index, std::vector<int>& values)
     {
-      std::vector<int> values(size);
       MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win_);
-      MPI_Get(values.data(), size, MPI_INT, rank, index, size, MPI_INT, win_);
+      MPI_Get(values.data(), values.size(), MPI_INT, rank, index, values.size(),
+              MPI_INT, win_);
       MPI_Win_unlock(rank, win_);
-      return values;
     }
 
     void put(int rank, size_t index, int value)
