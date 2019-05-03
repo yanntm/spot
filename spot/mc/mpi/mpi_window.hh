@@ -24,13 +24,17 @@ namespace spot
 
     int get(int rank, size_t index)
     {
-      return get(rank, index, 1)[0];
+      int value;
+      MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win_);
+      MPI_Get(&value, 1, MPI_INT, rank, index, 1, MPI_INT, win_);
+      MPI_Win_unlock(rank, win_);
+      return value;
     }
 
     std::vector<int> get(int rank, size_t index, size_t size)
     {
-      MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win_);
       std::vector<int> values(size);
+      MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win_);
       MPI_Get(values.data(), size, MPI_INT, rank, index, size, MPI_INT, win_);
       MPI_Win_unlock(rank, win_);
       return values;
