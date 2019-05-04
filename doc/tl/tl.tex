@@ -86,6 +86,8 @@
 \newcommand{\ANDALTT}{\mathbin{\texttt{/\char`\\}}}
 \newcommand{\FUSION}{\mathbin{\texttt{:}}}
 \newcommand{\CONCAT}{\mathbin{\texttt{;}}}
+\newcommand{\DELAY}[1]{\mathbin{\texttt{\#\##1}}}
+\newcommand{\DELAYR}[1]{\mathbin{\texttt{\#\#[#1]}}}
 \newcommand{\0}{\texttt{0}}
 \newcommand{\1}{\texttt{1}}
 \newcommand{\STAR}[1]{\texttt{[*#1]}}
@@ -754,6 +756,21 @@ it for output.  $b$ must be a Boolean formula.
 \PLUS{}    &\equiv \1\STAR{1..}
 \end{align*}
 
+The following adds input support for the SVA concatenation (or delay)
+operator.  The simplest equivalence are that $f \DELAY{0} g$,
+$f \DELAY{1} g$, $f \DELAY{2} g$ mean respectively $f \FUSION g$,
+$f \CONCAT g$, and $f \CONCAT \1\CONCAT g$, but the delay can be a
+range, and $f$ can be omitted.
+
+\begin{align*}
+  f\DELAY{\mvar{i}} g &\equiv f\DELAYR{\mvar{i}..\mvar{i}} g & {}\DELAY{\mvar{i}} g &\equiv {}\DELAYR{\mvar{i}..\mvar{i}} g\\
+  f\DELAYR{..} g &\equiv f\FUSION\{\STAR{}\CONCAT g\} & f\DELAYR{\mvar{i}..} g &\equiv f\FUSION\{\STAR{\mvar{i}..}\CONCAT g\} \\
+  f\DELAYR{..\mvar{j}} g &\equiv f\FUSION\{\STAR{0..\mvar{j}}\CONCAT g\} &
+  f\DELAYR{\mvar{i}..\mvar{j}} g &\equiv f\FUSION\{\STAR{\mvar{i}..\mvar{j}}\CONCAT g\} \\
+  {}\DELAYR{..} g &\equiv \STAR{}\CONCAT g & {}\DELAYR{\mvar{i}..} g &\equiv \STAR{\mvar{i}..}\CONCAT g \\
+  {}\DELAYR{..\mvar{j}} g &\equiv \STAR{0..\mvar{j}}\CONCAT g &
+  {}\DELAYR{\mvar{i}..\mvar{j}} g &\equiv \STAR{\mvar{i}..\mvar{j}}\CONCAT g
+\end{align*}
 \subsection{Trivial Identities (Occur Automatically)}
 
 The following identities also hold if $j$ or $l$ are missing (assuming
@@ -979,21 +996,22 @@ to the PSL standard~\cite{psl.04.lrm,eisner.06.psl}.
 
 \begin{center}
 \begin{tabular}{clc}
- assoc. & operators                                                                                    & priority                                                  \\
+ assoc. & operators                                                                                                                          & priority                                                  \\
 \midrule
-right   & $\Asuffix,\,\AsuffixEQ,\,\Esuffix,\,\EsuffixEQ$                                              & \tikz[remember picture,baseline]\node (lowest){lowest};   \\
-left    & $\CONCAT$                                                                                    &                                                           \\
-left    & $\FUSION$                                                                                    &                                                           \\
-right   & $\IMPLIES,\,\EQUIV$                                                                          &                                                           \\
-left    & $\XOR$                                                                                       &                                                           \\
-left    & $\OR$                                                                                        &                                                           \\
-left    & $\AND,\,\ANDALT$                                                                             &                                                           \\
-right   & $\U,\,\W,\,\M,\,\R$                                                                          &                                                           \\
-        & $\F,\,\G$                                                                                    &                                                           \\
-        & $\X$                                                                                         &                                                           \\
-        & $\STAR{\mvar{i}..\mvar{j}},\,\PLUS,\,\FSTAR{\mvar{i}..\mvar{j}},\,\FPLUS,\,\EQUAL{\mvar{i}..\mvar{j}},\,\GOTO{\mvar{i}..\mvar{j}}$ &                     \\
-        & $\NOT$                                                                                       &                                                           \\
-        & $\code{=0},\,\code{=1}$                                                                      & \tikz[remember picture,baseline]\node (highest){highest}; \\
+right   & $\Asuffix,\,\AsuffixEQ,\,\Esuffix,\,\EsuffixEQ$                                                                                    & \tikz[remember picture,baseline]\node (lowest){lowest};   \\
+left    & $\CONCAT$                                                                                                                          &                                                           \\
+left    & $\FUSION$                                                                                                                          &                                                           \\
+left    & $\DELAY{\mvar{i}},\,\DELAYR{\mvar{i}..\mvar{j}}$                                                                                   &                                                           \\
+right   & $\IMPLIES,\,\EQUIV$                                                                                                                &                                                           \\
+left    & $\XOR$                                                                                                                             &                                                           \\
+left    & $\OR$                                                                                                                              &                                                           \\
+left    & $\AND,\,\ANDALT$                                                                                                                   &                                                           \\
+right   & $\U,\,\W,\,\M,\,\R$                                                                                                                &                                                           \\
+        & $\F,\,\G$                                                                                                                          &                                                           \\
+        & $\X$                                                                                                                               &                                                           \\
+        & $\STAR{\mvar{i}..\mvar{j}},\,\PLUS,\,\FSTAR{\mvar{i}..\mvar{j}},\,\FPLUS,\,\EQUAL{\mvar{i}..\mvar{j}},\,\GOTO{\mvar{i}..\mvar{j}}$ &                                                           \\
+        & $\NOT$                                                                                                                             &                                                           \\
+        & $\code{=0},\,\code{=1}$                                                                                                            & \tikz[remember picture,baseline]\node (highest){highest}; \\
 \end{tabular}
 \end{center}
 \begin{tikzpicture}[remember picture,overlay,>=stealth',semithick]

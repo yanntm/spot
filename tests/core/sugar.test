@@ -1,7 +1,7 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2018 Laboratoire de Recherche et Développement de
-# l'Epita (LRDE).
+# Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement
+# de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -19,7 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Syntactic sugar X[n] F[n:m] G[n:m]
+# Syntactic sugar X[n] F[n:m] G[n:m]  ##n ##[i..j]
 . ./defs || exit 1
 
 set -e
@@ -36,6 +36,13 @@ G [4:2] a | b
 F [2:4] a |  b
 F [4:2]a | F[2:2]b
 F[]a|G[]b|X[]c
+{a ##0 b ##1 c ##2 d}|->e
+{(##2 a)[*] ##1 b}|->e
+{a ##[0:3] b}|->e
+{a ##[1..] b}|->e
+{a ##[:] b}|->e
+{a ##[:1] b}|->e
+{##[..3] b}|->e
 EOF
 
 ltlfilt -F ok.in > ok.out
@@ -52,6 +59,13 @@ b | XX(a & X(a & Xa))
 b | XX(a | X(a | Xa))
 XX(a | X(a | Xa)) | XXb
 FGa | Gb | XGc
+{{a && b};c;1;d}[]-> e
+{{[*2];a}[*];b}[]-> e
+{a:{[*0..3];b}}[]-> e
+{a;[*];b}[]-> e
+{a:{[*];b}}[]-> e
+{a:{[*0..1];b}}[]-> e
+{[*0..3];b}[]-> e
 EOF
 diff ok.out expect
 
@@ -70,12 +84,20 @@ X[2
 X[2]
 X[2:4]a
 X[a
+{a ## b}
+{a ##7}
+{a ##[::] b}
+{a ##[2:1] b}
+{a ##[1:2]}
+{##[1:2]}
 EOF
 
+# Work around our 80col restriction.
 num="number for square bracket operator"
 numoreof="$num or end of formula"
 sep="separator for square bracket operator"
 undefined='$undefined'
+closingbkt='square bracket operator, expecting closing bracket'
 
 ltlfilt -F err.in 2>err && exit 1
 cat >expect2 <<EOF
@@ -182,6 +204,56 @@ syntax error, unexpected $undefined, expecting $numoreof
 >>> X[a
     ^^^
 missing closing bracket for X[.]
+
+ltlfilt:err.in:13: parse error:
+>>> {a ## b}
+       ^
+syntax error, unexpected $undefined
+
+>>> {a ## b}
+       ^^^^
+ignoring this
+
+ltlfilt:err.in:14: parse error:
+>>> {a ##7}
+          ^
+syntax error, unexpected closing brace
+
+>>> {a ##7}
+       ^^^
+missing right operand for "SVA delay operator"
+
+ltlfilt:err.in:15: parse error:
+>>> {a ##[::] b}
+           ^
+syntax error, unexpected separator for $closingbkt
+
+>>> {a ##[::] b}
+       ^^^^^^
+treating this delay block as ##1
+
+ltlfilt:err.in:16: parse error:
+>>> {a ##[2:1] b}
+     ^
+reversed range
+
+ltlfilt:err.in:17: parse error:
+>>> {a ##[1:2]}
+              ^
+syntax error, unexpected closing brace
+
+>>> {a ##[1:2]}
+       ^^^^^^^
+missing right operand for "SVA delay operator"
+
+ltlfilt:err.in:18: parse error:
+>>> {##[1:2]}
+            ^
+syntax error, unexpected closing brace
+
+>>> {##[1:2]}
+     ^^^^^^^
+missing right operand for "SVA delay operator"
 
 EOF
 diff err expect2

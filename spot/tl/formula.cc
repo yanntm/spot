@@ -1743,6 +1743,21 @@ namespace spot
     return Concat({Star(Concat({s, b}), min, max), s});
   }
 
+  formula formula::sugar_delay(const formula& a, const formula& b,
+                               unsigned min, unsigned max)
+  {
+    // In general
+    //   a ##[min:max] b  = a:(1[*min:max];b)
+    // however if min>=1 we prefer the following rule
+    //   a ##[min:max] b  = a;1[*min-1:max-1];b
+    if (min == 0)
+      return Fusion({a, Concat({Star(tt(), min, max), b})});
+    --min;
+    if (max != unbounded())
+      --max;
+    return Concat({a, Star(tt(), min, max), b});
+  }
+
   int atomic_prop_cmp(const fnode* f, const fnode* g)
   {
     return strverscmp(f->ap_name().c_str(), g->ap_name().c_str());

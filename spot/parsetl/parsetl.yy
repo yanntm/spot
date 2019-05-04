@@ -1,6 +1,6 @@
 /* -*- coding: utf-8 -*-
 
-** Copyright (C) 2009-2018 Laboratoire de Recherche et Développement
+** Copyright (C) 2009-2019 Laboratoire de Recherche et Développement
 ** de l'Epita (LRDE).
 ** Copyright (C) 2003-2006 Laboratoire d'Informatique de Paris 6
 ** (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -229,6 +229,8 @@ using namespace spot;
 %token CONST_TRUE "constant true" CONST_FALSE "constant false"
 %token END_OF_INPUT "end of formula"
 %token OP_POST_NEG "negative suffix" OP_POST_POS "positive suffix"
+%token <num> OP_DELAY_N "SVA delay operator"
+%token OP_DELAY_OPEN "opening bracket for SVA delay operator"
 
 /* Priorities.  */
 
@@ -237,6 +239,7 @@ using namespace spot;
 
 %left OP_CONCAT
 %left OP_FUSION
+%left OP_DELAY_N OP_DELAY_OPEN
 
 /* Logical operators.  */
 %right OP_IMPLIES OP_EQUIV
@@ -244,7 +247,8 @@ using namespace spot;
 %left OP_XOR
 %left OP_AND OP_SHORT_AND
 
-/* OP_STAR can be used as an AND when occurring in some LTL formula in
+
+ /* OP_STAR can be used as an AND when occurring in some LTL formula in
    Wring's syntax (so it has to be close to OP_AND), and as a Kleen
    Star in SERE (so it has to be close to OP_BSTAR -- luckily
    U/R/M/W/F/G/X are not used in SERE). */
@@ -267,7 +271,7 @@ using namespace spot;
 
 %type <ltl> subformula atomprop booleanatom sere lbtformula boolformula
 %type <ltl> bracedsere parenthesedsubformula
-%type <minmax> starargs fstarargs equalargs sqbracketargs gotoargs
+%type <minmax> starargs fstarargs equalargs sqbracketargs gotoargs delayargs
 
 %destructor { delete $$; } <str>
 %destructor { $$->destroy(); } <ltl>
@@ -437,6 +441,16 @@ equalargs: OP_EQUAL_OPEN sqbracketargs
 		emplace_back(@$, "missing closing bracket for equal operator");
 	      $$.min = $$.max = 0U; }
 
+delayargs: OP_DELAY_OPEN sqbracketargs
+	    { $$ = $2; }
+	| OP_DELAY_OPEN error OP_SQBKT_CLOSE
+            { error_list.emplace_back(@$, "treating this delay block as ##1");
+              $$.min = $$.max = 1U; }
+        | OP_DELAY_OPEN error_opt END_OF_INPUT
+	    { error_list.
+		emplace_back(@$, "missing closing bracket for ##[");
+	      $$.min = $$.max = 1U; }
+
 
 atomprop: ATOMIC_PROP
           {
@@ -520,6 +534,40 @@ sere: booleanatom
 	      { $$ = fnode::multop(op::Fusion, {$1, $3}); }
 	    | sere OP_FUSION error
               { missing_right_binop($$, $1, @2, "fusion operator"); }
+	    | OP_DELAY_N sere
+              { $$ = formula::sugar_delay(formula::tt(), formula($2),
+                                          $1, $1).to_node_(); }
+	    | OP_DELAY_N error
+              { missing_right_binop($$, fnode::tt(), @1, "SVA delay operator"); }
+	    | sere OP_DELAY_N sere
+              { $$ = formula::sugar_delay(formula($1), formula($3),
+                                          $2, $2).to_node_(); }
+	    | sere OP_DELAY_N error
+              { missing_right_binop($$, $1, @2, "SVA delay operator"); }
+	    | delayargs sere %prec OP_DELAY_OPEN
+              {
+		if ($1.max < $1.min)
+		  {
+		    error_list.emplace_back(@1, "reversed range");
+		    std::swap($1.max, $1.min);
+		  }
+                $$ = formula::sugar_delay(formula::tt(), formula($2),
+                                          $1.min, $1.max).to_node_();
+              }
+	    | delayargs error
+              { missing_right_binop($$, fnode::tt(), @1, "SVA delay operator"); }
+	    | sere delayargs sere %prec OP_DELAY_OPEN
+              {
+		if ($2.max < $2.min)
+		  {
+		    error_list.emplace_back(@1, "reversed range");
+		    std::swap($2.max, $2.min);
+		  }
+                $$ = formula::sugar_delay(formula($1), formula($3),
+                                          $2.min, $2.max).to_node_();
+              }
+	    | sere delayargs error
+              { missing_right_binop($$, $1, @2, "SVA delay operator"); }
 	    | starargs
 	      {
 		if ($1.max < $1.min)

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -1220,17 +1220,28 @@ namespace spot
 
     /// \brief Create a SERE equivalent to b[->min..max]
     ///
-    /// The operator does not exist: it is handled as sugar by the parser
-    /// and the printer.  This functions is used by the parser to create
-    /// the equivalent SERE.
+    /// The operator does not exist: it is handled as syntactic sugar
+    /// by the parser and the printer.  This function is used by the
+    /// parser to create the equivalent SERE.
     static formula sugar_goto(const formula& b, uint8_t min, uint8_t max);
 
     /// Create the SERE b[=min..max]
     ///
-    /// The operator does not exist: it is handled as sugar by the parser
-    /// and the printer.  This functions is used by the parser to create
-    /// the equivalent SERE.
+    /// The operator does not exist: it is handled as syntactic sugar
+    /// by the parser and the printer.  This function is used by the
+    /// parser to create the equivalent SERE.
     static formula sugar_equal(const formula& b, uint8_t min, uint8_t max);
+
+    /// Create the SERE a ##[n:m] b
+    ///
+    /// This ##[n:m] operator comes from SVA.  When n=m, it is simply
+    /// written ##n.
+    ///
+    /// The operator does not exist in Spot it is handled as syntactic
+    /// sugar by the parser.  This function is used by the parser to
+    /// create the equivalent SERE.
+    static formula sugar_delay(const formula& a, const formula& b,
+                               unsigned min, unsigned max);
 
 #ifndef SWIG
     /// \brief Return the underlying pointer to the formula.

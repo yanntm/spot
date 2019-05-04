@@ -217,6 +217,22 @@ eol2        (\n\r)+|(\r\n)+
   /* ~ comes from Goal, ! from everybody else */
 {NOT}				BEGIN(0); return token::OP_NOT;
 
+  /* SVA operators */
+"##"[0-9]+                      {
+				  errno = 0;
+				  unsigned long n = strtoul(yytext + 2, 0, 10);
+                                  yylval->num = n;
+				  if (errno || yylval->num != n)
+				    {
+                                      error_list.push_back(
+				        spot::one_parse_error(*yylloc,
+					  "value too large ignored"));
+                                      yylval->num = 1;
+                                    }
+                                  return token::OP_DELAY_N;
+                                }
+"##["                           BEGIN(sqbracket); return token::OP_DELAY_OPEN;
+
   /* PSL operators */
 {BOXARROW}			BEGIN(0); return token::OP_UCONCAT;
 {DIAMOND}{ARROWL}		BEGIN(0); return token::OP_ECONCAT;
