@@ -966,24 +966,31 @@ operator, even if the operator has multiple synonyms (like \samp{|},
   \mid{}&\mathit{atomic\_prop}\code{=1}                         &   \mid{}&\mathit{tformula}\,\msamp{\IMPLIES}\,\mathit{tformula} \\
   \mid{}&\tsamp{(}\,\mathit{bformula}\,\tsamp{)}                &   \mid{}&\mathit{tformula}\,\msamp{\XOR}\,\mathit{tformula} \\
   \mid{}&\msamp{\NOT}\,\mathit{bformula}                        &   \mid{}&\mathit{tformula}\,\msamp{\EQUIV}\,\mathit{tformula} \\
-  \mid{}&\mathit{bformula}\,\msamp{\AND}\,\mathit{bformula}     &   \mid{}&\msamp{\X}\,\mathit{tformula}\\
-  \mid{}&\mathit{bformula}\,\msamp{\OR}\,\mathit{bformula}      &   \mid{}&\msamp{\F}\,\mathit{tformula}\\
-  \mid{}&\mathit{bformula}\,\msamp{\IMPLIES}\,\mathit{bformula} &   \mid{}&\msamp{\G}\,\mathit{tformula}\\
-  \mid{}&\mathit{bformula}\,\msamp{\XOR}\,\mathit{bformula}     &   \mid{}&\mathit{tformula}\,\msamp{\U}\,\mathit{tformula} \\
-  \mid{}&\mathit{bformula}\,\msamp{\EQUIV}\,\mathit{bformula}   &   \mid{}&\mathit{tformula}\,\msamp{\W}\,\mathit{tformula} \\
-\mathit{sere} ::={}&\mathit{bformula}                           &   \mid{}&\mathit{tformula}\,\msamp{\R}\,\mathit{tformula} \\
-  \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}                      &   \mid{}&\mathit{tformula}\,\msamp{\M}\,\mathit{tformula} \\
-  \mid{}&\mathit{sere}\msamp{\OR}\mathit{sere}                  &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Asuffix}\,\mathit{tformula}\\
-  \mid{}&\mathit{sere}\msamp{\AND}\mathit{sere}                 &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\AsuffixEQ}\,\mathit{tformula}\\
-  \mid{}&\mathit{sere}\msamp{\ANDALT}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Esuffix}\,\mathit{tformula}\\
-  \mid{}&\mathit{sere}\msamp{\CONCAT}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\EsuffixEQ}\,\mathit{tformula} \\
-  \mid{}&\mathit{sere}\msamp{\FUSION}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}} \\
+  \mid{}&\mathit{bformula}\,\msamp{\AND}\,\mathit{bformula}     &   \mid{}&\msamp{\X}\,\mathit{tformula} \\
+  \mid{}&\mathit{bformula}\,\msamp{\OR}\,\mathit{bformula}      &   \mid{}&\msamp{\XREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} \\
+  \mid{}&\mathit{bformula}\,\msamp{\IMPLIES}\,\mathit{bformula} &   \mid{}&\msamp{\F}\,\mathit{tformula}\\
+  \mid{}&\mathit{bformula}\,\msamp{\XOR}\,\mathit{bformula}     &   \mid{}&\msamp{\FREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} \\
+  \mid{}&\mathit{bformula}\,\msamp{\EQUIV}\,\mathit{bformula}   &   \mid{}&\msamp{\G}\,\mathit{tformula}\\
+\mathit{sere} ::={}&\mathit{bformula}                           &   \mid{}&\msamp{\GREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} \\
+  \mid{}&\tsamp{\{}\,\mathit{sere}\,\tsamp{\}}                  &   \mid{}&\mathit{tformula}\,\msamp{\U}\,\mathit{tformula} \\
+  \mid{}&\tsamp{(}\,\mathit{sere}\,\tsamp{)}                    &   \mid{}&\mathit{tformula}\,\msamp{\W}\,\mathit{tformula} \\
+  \mid{}&\mathit{sere}\msamp{\OR}\mathit{sere}                  &   \mid{}&\mathit{tformula}\,\msamp{\R}\,\mathit{tformula} \\
+  \mid{}&\mathit{sere}\msamp{\AND}\mathit{sere}                 &   \mid{}&\mathit{tformula}\,\msamp{\M}\,\mathit{tformula} \\
+  \mid{}&\mathit{sere}\msamp{\ANDALT}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Asuffix}\,\mathit{tformula}\\
+  \mid{}&\mathit{sere}\msamp{\CONCAT}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\AsuffixEQ}\,\mathit{tformula}\\
+  \mid{}&\mathit{sere}\msamp{\FUSION}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Esuffix}\,\mathit{tformula}\\
+  \mid{}&\msamp{\STAR{\mvar{i}..\mvar{j}}}                      &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\EsuffixEQ}\,\mathit{tformula} \\
+  \mid{}&\msamp{\PLUS{}}                                        &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}} \\
   \mid{}&\mathit{sere}\msamp{\STAR{\mvar{i}..\mvar{j}}}         &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\msamp{\NOT} \\
-  \mid{}&\mathit{sere}\msamp{\PLUS}                      \\
+  \mid{}&\mathit{sere}\msamp{\PLUS} \\
   \mid{}&\mathit{sere}\msamp{\FSTAR{\mvar{i}..\mvar{j}}} \\
-  \mid{}&\mathit{sere}\msamp{\FPLUS}                     \\
+  \mid{}&\mathit{sere}\msamp{\FPLUS} \\
   \mid{}&\mathit{sere}\msamp{\EQUAL{\mvar{i}..\mvar{j}}} \\
   \mid{}&\mathit{sere}\msamp{\GOTO{\mvar{i}..\mvar{j}}}  \\
+  \mid{}&\DELAY{\mvar{i}}\mathit{sere} \\
+  \mid{}&\DELAYR{\mvar{i}..\mvar{j}}\mathit{sere} \\
+  \mid{}&\mathit{sere}\DELAY{\mvar{i}}\mathit{sere} \\
+  \mid{}&\mathit{sere}\DELAYR{\mvar{i}..\mvar{j}}\mathit{sere} \\
 \end{align*}
 
 \section{Operator precedence}
@@ -1007,8 +1014,8 @@ left    & $\XOR$                                                                
 left    & $\OR$                                                                                                                              &                                                           \\
 left    & $\AND,\,\ANDALT$                                                                                                                   &                                                           \\
 right   & $\U,\,\W,\,\M,\,\R$                                                                                                                &                                                           \\
-        & $\F,\,\G$                                                                                                                          &                                                           \\
-        & $\X$                                                                                                                               &                                                           \\
+        & $\F,\,\G,\,\FREP{\mvar{i}..\mvar{j}},\,\GREP{\mvar{i}..\mvar{j}}$                                                                  &                                                           \\
+        & $\X,\,\XREP{\mvar{i}..\mvar{j}}$                                                                                                   &                                                           \\
         & $\STAR{\mvar{i}..\mvar{j}},\,\PLUS,\,\FSTAR{\mvar{i}..\mvar{j}},\,\FPLUS,\,\EQUAL{\mvar{i}..\mvar{j}},\,\GOTO{\mvar{i}..\mvar{j}}$ &                                                           \\
         & $\NOT$                                                                                                                             &                                                           \\
         & $\code{=0},\,\code{=1}$                                                                                                            & \tikz[remember picture,baseline]\node (highest){highest}; \\
