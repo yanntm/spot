@@ -41,10 +41,14 @@ Here is the list of supported operators:
   // unary operators
   formula::Not(arg);
   formula::X(arg);
+  formula::X(arg, min, max);     // X[min..max] arg
   formula::F(arg);
+  formula::F(arg, min, max);     // F[min..max] arg
   formula::G(arg);
+  formula::G(arg, min, max);     // G[min..max] arg
   formula::Closure(arg);
   formula::NegClosure(arg);
+  formula::first_match(arg);      // SVA's first match opetaror
   // binary operators
   formula::Xor(left, right);
   formula::Implies(left, right);
@@ -66,6 +70,10 @@ Here is the list of supported operators:
   // star-like operators
   formula::Star(arg, min, max);   // Star (for a Kleene star, set min=0 and omit max)
   formula::FStar(arg, min, max);  // Fusion Star
+  // syntactic sugar built on top of previous operators
+  formula::sugar_goto(arg, min, max); // arg[->min..max]
+  formula::sugar_equal(arg, min, max); // arg[=min..max]
+  formula::sugar_delay(left, right, min, max); // left ##[min..max] right
 #+END_SRC
 
 These functions implement some very limited type of automatic
