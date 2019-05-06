@@ -136,6 +136,8 @@ Fa  M b,&!xLPgopra
 (!p W Gp) | ({(!p[*];(p[+]:(p[*];!p[+])))[:*4][:+]}<>-> (!p W Gp)),&!xPpla
 {b[+][:*0..3]},&!fPsopra
 {a->c[*]},xfPsopra
+{(a[+];b*);c*}<>->d,&!xfPgopra
+{first_match(a[+];b*);c*}<>->d,&!fPgopra
 EOF
 
 run 0 ../kind input

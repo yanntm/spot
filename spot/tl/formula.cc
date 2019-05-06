@@ -1632,10 +1632,10 @@ namespace spot
         break;
       case op::first_match:
         props = children[0]->props;
-        // If first_match(r) == r && !(r;[*]), then it should follow
-        // that if r is stutter-inv, then first_match(r) is
-        // stutter-inv, so we do not reset the syntactic_si bit.
         assert(is_.sere_formula);
+        // {(a[+];b*);c*}<>->d is stutter invariant
+        // {first_match(a[+];b*);c*}<>->d is NOT.
+        is_.syntactic_si = false;
         is_.boolean = false;
         is_.ltl_formula = false;
         is_.psl_formula = false;
