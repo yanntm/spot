@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2018 Laboratoire de Recherche et Developpement
+// Copyright (C) 2011-2019 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -498,6 +498,7 @@ namespace spot
             case op::Fusion:
             case op::Star:
             case op::FStar:
+            case op::first_match:
               // !(a*) etc. should never occur.
               {
                 assert(!negated);
@@ -855,6 +856,7 @@ namespace spot
           case op::ap:
           case op::Not:
           case op::FStar:
+          case op::first_match:
             return f;
           case op::X:
             {

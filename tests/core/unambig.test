@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013, 2015-2018 Laboratoire de Recherche et
+# Copyright (C) 2013, 2015-2019 Laboratoire de Recherche et
 # Developpement de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -152,7 +152,7 @@ run 0 autfilt --check input > output
 test `grep -c unambiguous output` = 0
 
 # Check 1000 random PSL formulas
-randltl --psl -n 1000 3 | ltl2tgba -U -H |
+randltl --seed=12 --psl -n 1000 3 | ltl2tgba -U -H |
   autfilt -v --is-unamb --stats=%M && exit 1
 
 cat >input <<EOF

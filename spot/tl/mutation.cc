@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2014-2016, 2018-2019 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -83,6 +83,7 @@ namespace spot
           case op::X:
           case op::F:
           case op::G:
+          case op::first_match:
             if ((opts_ & Mut_Remove_Ops)
                 && mutation_counter_-- == 0)
               return f[0];

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009-2015, 2018 Laboratoire de Recherche et
+// Copyright (C) 2009-2015, 2018-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -88,6 +88,7 @@ namespace spot
           case op::AndNLM:
           case op::Star:
           case op::FStar:
+          case op::first_match:
             childnum = 0;                // No number for children
             break;
           case op::Xor:

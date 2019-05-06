@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014, 2015, 2017, 2018 Laboratoire de Recherche et
+# Copyright (C) 2014, 2015, 2017, 2018, 2019 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -34,6 +34,7 @@ star	1
 star_b	1
 fstar	1
 fstar_b	1
+first_match	1
 and	0
 andNLM	0
 or	1
@@ -54,7 +55,7 @@ diff stdout expected
 
 
 sere='eword=0,and=0,andNLM=0,fusion=0,star=0,star_b=0'
-sere="$sere,or=0,concat=0,fstar=0,fstar_b=0"
+sere="$sere,or=0,concat=0,fstar=0,fstar_b=0,first_match=0"
 
 run 0 randltl -S -n 10000 a b c --tree-size=10..20 \
    --sere-p=$sere \
@@ -69,6 +70,7 @@ star	0
 star_b	0
 fstar	0
 fstar_b	0
+first_match	0
 and	0
 andNLM	0
 or	0

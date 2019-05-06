@@ -46,6 +46,13 @@ New in spot 2.7.4.dev (not yet released)
     acceptance condition.  The output can be alternating only if the
     input was alternating.
 
+  - SVA's first_match operator can now be used in SERE formulas and
+    that is supported by the ltl_to_tgba_fm() translation.  See
+    doc/tl/tl.pdf for the semantics.  *WARNING* Because this adds a
+    new operator, any code that switches over the spot::op type may
+    need a new case for op::first_match.  Furthermore, the output of
+    "randltl --psl" will be different from previous releases.
+
   - The parser for SERE learned to recognize the ##n and ##[i:j]
     operators from SVA.  So {##2 a ##0 b[+] ##1 c ##2 e} is another
     way to write {[*2];a:b[+];c;1;e}, and {a ##[i:j] b} is parsed as

@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016, 2017, 2018 Laboratoire de Recherche et Développement
+# Copyright (C) 2016, 2017, 2018, 2019 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -141,3 +141,22 @@ grep 'highlight-word.*Fin' stderr
 
 ltlfilt -f 'GFa' --accept-word 'cycle{!a}' && exit 1
 ltlfilt -f 'GF!a' --accept-word 'cycle{!a}'
+
+cat >input <<EOF
+{a ##[2:3] b} |-> c
+{first_match(a ##[2:3] b)} |-> c
+EOF
+test 2 = `ltlfilt -c input --accept-word 'a;!b&!c;!b&!c;b&c;cycle{1}'`
+test 2 = `ltlfilt -c input --accept-word 'a;!b&!c;b&c;cycle{1}'`
+test 0 = `ltlfilt -c input --accept-word 'a;!b;b&!c;b&c;cycle{1}'`
+test 2 = `ltlfilt -c input --accept-word 'a;!b;b&c;b&c;cycle{1}'`
+test 1 = `ltlfilt -c input --accept-word 'a;!b;b&c;b&!c;cycle{1}'`
+
+L='ltlfilt -c input --accept-word'
+cat >input <<EOF
+{(a ##[2:3] b):(c ##[1:2] d)} |-> e
+{first_match(a ##[2:3] b):first_match(c ##[1:2] d)} |-> e
+EOF
+test 2 = `$L 'a;!b&!c;!b&!c;b&c;b&c&d&e;cycle{1}'`
+test 1 = `$L 'a;!b&!c;!b&!c;b&c;b&c&d&e;b&c&d&!e;cycle{1}'`
+test 1 = `$L 'a;!b&!c;b&c;b&c&d&e;b&c&d&!e;cycle{1}'`

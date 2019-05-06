@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008-2012, 2014-2016, 2018 Laboratoire de Recherche
+// Copyright (C) 2008-2012, 2014-2016, 2018-2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2005 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -311,7 +311,7 @@ namespace spot
 
   // SEREs
   random_sere::random_sere(const atomic_prop_set* ap)
-    : random_formula(11, ap), rb(ap)
+    : random_formula(12, ap), rb(ap)
   {
     proba_[0].setup("eword",   1, eword_builder);
     proba_2_ = proba_ + 1;
@@ -321,11 +321,12 @@ namespace spot
     proba_[3].setup("star_b",  2, bunop_bounded_builder<op::Star>);
     proba_[4].setup("fstar",   2, bunop_unbounded_builder<op::FStar>);
     proba_[5].setup("fstar_b", 2, bunop_bounded_builder<op::FStar>);
-    proba_[6].setup("and",     3, multop_builder<op::AndRat>);
-    proba_[7].setup("andNLM",  3, multop_builder<op::AndNLM>);
-    proba_[8].setup("or",      3, multop_builder<op::OrRat>);
-    proba_[9].setup("concat",  3, multop_builder<op::Concat>);
-    proba_[10].setup("fusion",  3, multop_builder<op::Fusion>);
+    proba_[6].setup("first_match", 2, unop_builder<op::first_match>);
+    proba_[7].setup("and",     3, multop_builder<op::AndRat>);
+    proba_[8].setup("andNLM",  3, multop_builder<op::AndNLM>);
+    proba_[9].setup("or",      3, multop_builder<op::OrRat>);
+    proba_[10].setup("concat",  3, multop_builder<op::Concat>);
+    proba_[11].setup("fusion",  3, multop_builder<op::Fusion>);
 
     update_sums();
   }

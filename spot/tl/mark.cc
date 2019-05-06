@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2012, 2014, 2015, 2018 Laboratoire de Recherche
-// et Développement de l'Epita (LRDE).
+// Copyright (C) 2010, 2012, 2014-2015, 2018-2019 Laboratoire de
+// Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -59,6 +59,7 @@ namespace spot
       case op::UConcat:
       case op::Concat:
       case op::Fusion:
+      case op::first_match:
         res = f;
         break;
       case op::NegClosure:
@@ -120,6 +121,7 @@ namespace spot
       case op::EConcat:
       case op::EConcatMarked:
       case op::UConcat:
+      case op::first_match:
         res = f;
         break;
       case op::Or:

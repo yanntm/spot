@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2010, 2012-2016, 2018 Laboratoire de
+// Copyright (C) 2008, 2010, 2012-2016, 2018, 2019 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE)
 // Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -71,6 +71,7 @@ namespace spot
       KFPlusBunop,
       KEqualBunop,
       KGotoBunop,
+      KFirstMatch,
     };
 
     const char* spot_kw[] = {
@@ -110,6 +111,7 @@ namespace spot
       "[:+]",
       "[=",
       "[->",
+      "first_match",
     };
 
     const char* spin_kw[] = {
@@ -149,6 +151,7 @@ namespace spot
       "[:+]",                        // not supported
       "[=",                        // not supported
       "[->",                        // not supported
+      "first_match",                // not supported
     };
 
     const char* wring_kw[] = {
@@ -188,6 +191,7 @@ namespace spot
       "[:+]",                        // not supported
       "[=",                        // not supported
       "[->",                        // not supported
+      "first_match",                // not supported
     };
 
     const char* utf8_kw[] = {
@@ -227,6 +231,7 @@ namespace spot
       "[:+]",
       "[=",
       "[->",
+      "first_match",
     };
 
     const char* latex_kw[] = {
@@ -266,6 +271,7 @@ namespace spot
       "\\SereFPlus{}",
       "\\SereEqual{",
       "\\SereGoto{",
+      "\\FirstMatch",
     };
 
     const char* sclatex_kw[] = {
@@ -309,6 +315,7 @@ namespace spot
       "^{\\mathsf{:}+}",
       "^{=",
       "^{\\to",
+      "\\mathsf{first\\_match}",
     };
 
     static bool
@@ -840,6 +847,13 @@ namespace spot
                 }
             }
             break;
+          case op::first_match:
+            emit(KFirstMatch);
+            os_ << '(';
+            top_level_ = true;
+            visit(f[0]);
+            os_ << ')';
+            break;
           }
         if (want_par)
           closep();
@@ -1113,6 +1127,7 @@ namespace spot
           case op::Fusion:
           case op::Star:
           case op::FStar:
+          case op::first_match:
             SPOT_UNIMPLEMENTED();
           }
         for (auto c: f)

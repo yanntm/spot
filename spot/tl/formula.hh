@@ -97,6 +97,7 @@ namespace spot
     // star-like operators
     Star,                      ///< Star
     FStar,                     ///< Fustion Star
+    first_match,               ///< first_match(sere)
   };
 
 #ifndef SWIG
@@ -942,6 +943,11 @@ namespace spot
     /// @{
     SPOT_DEF_UNOP(NegClosureMarked);
     /// @}
+
+    /// \brief Construct first_match(sere)
+    /// @{
+    SPOT_DEF_UNOP(first_match);
+    /// @}
 #undef SPOT_DEF_UNOP
 
     /// @{
@@ -1680,6 +1686,7 @@ namespace spot
           case op::Closure:
           case op::NegClosure:
           case op::NegClosureMarked:
+          case op::first_match:
             return unop(o, trans((*this)[0], std::forward<Args>(args)...));
           case op::Xor:
           case op::Implies:

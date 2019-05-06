@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2018 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2015, 2018-2019 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -113,6 +113,7 @@ namespace spot
       case op::Fusion:
       case op::Star:
       case op::FStar:
+      case op::first_match:
         break;
       case op::F:
         //  F e = e    if e eventual

@@ -217,6 +217,8 @@ eol2        (\n\r)+|(\r\n)+
   /* ~ comes from Goal, ! from everybody else */
 {NOT}				BEGIN(0); return token::OP_NOT;
 
+"first_match"                   BEGIN(0); return token::OP_FIRST_MATCH;
+
   /* SVA operators */
 "##"[0-9]+                      {
 				  errno = 0;

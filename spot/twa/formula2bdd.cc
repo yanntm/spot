@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2009-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 // Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris
 // 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -99,6 +99,7 @@ namespace spot
       case op::AndNLM:
       case op::OrRat:
       case op::AndRat:
+      case op::first_match:
         SPOT_UNIMPLEMENTED();
       case op::ap:
         return bdd_ithvar(d->register_proposition(f, owner));

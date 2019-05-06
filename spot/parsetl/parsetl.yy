@@ -224,6 +224,7 @@ using namespace spot;
 %token OP_ECONCAT "existential concat operator"
 %token OP_UCONCAT_NONO "universal non-overlapping concat operator"
 %token OP_ECONCAT_NONO "existential non-overlapping concat operator"
+%token OP_FIRST_MATCH "first_match"
 %token <str> ATOMIC_PROP "atomic proposition"
 %token OP_CONCAT "concat operator" OP_FUSION "fusion operator"
 %token CONST_TRUE "constant true" CONST_FALSE "constant false"
@@ -678,6 +679,8 @@ sere: booleanatom
 	      }
 	    | sere OP_EQUIV error
 	      { missing_right_binop($$, $1, @2, "equivalent operator"); }
+            | OP_FIRST_MATCH PAR_OPEN sere PAR_CLOSE
+              { $$ = fnode::unop(op::first_match, $3); }
 
 bracedsere: BRACE_OPEN sere BRACE_CLOSE
               { $$ = $2; }

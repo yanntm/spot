@@ -867,6 +867,35 @@ namespace spot
                 }
               return res;
             }
+          case op::first_match:
+            {
+              assert(f.size() == 1);
+              assert(!f.accepts_eword());
+              // Build deterministic successors, and
+              // rewrite each destination D as first_match(D).
+              // This will handle the semantic of the operator automatically,
+              // since first_match(D) = [*0] if D accepts [*0].
+              bdd res_ndet = recurse(f[0]);
+              bdd res_det = bddfalse;
+              bdd var_set = bdd_existcomp(bdd_support(res_ndet), dict_.var_set);
+              bdd all_props = bdd_existcomp(res_ndet, dict_.var_set);
+              while (all_props != bddfalse)
+                {
+                  bdd label = bdd_satoneset(all_props, var_set, bddtrue);
+                  all_props -= label;
+
+                  formula dest =
+                    dict_.bdd_to_sere(bdd_appex(res_ndet, label, bddop_and,
+                                                dict_.var_set));
+                  dest = formula::first_match(dest);
+                  if (to_concat_)
+                    dest = formula::Concat({dest, to_concat_});
+                  if (!dest.is_ff())
+                    res_det |= label
+                      & bdd_ithvar(dict_.register_next_variable(dest));
+                }
+              return res_det;
+            }
           }
         SPOT_UNREACHABLE();
       }
@@ -1311,6 +1340,7 @@ namespace spot
             }
           case op::Star:
           case op::FStar:
+          case op::first_match:
             SPOT_UNREACHABLE();         // Not an LTL operator
             // r(f1 logical-op f2) = r(f1) logical-op r(f2)
           case op::Xor:

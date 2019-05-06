@@ -241,6 +241,7 @@ namespace spot
         C(Fusion);
         C(Star);
         C(FStar);
+        C(first_match);
 #undef C
       }
     SPOT_UNREACHABLE();
@@ -825,6 +826,18 @@ namespace spot
         // {b} = !b
         if (f->is_boolean())
           return unop(op::Not, f);
+        break;
+      case op::first_match:
+        // first_match(first_match(sere)) = first_match(sere);
+        // first_match(b) = b
+        if (f->is(o) || f->is_boolean())
+          return f;
+        // first_match(r*) = [*0]
+        if (f->accepts_eword())
+          {
+            f->destroy();
+            return eword();
+          }
         break;
       default:
         SPOT_UNREACHABLE();
@@ -1616,6 +1629,23 @@ namespace spot
               SPOT_UNREACHABLE();
             }
         }
+        break;
+      case op::first_match:
+        props = children[0]->props;
+        // If first_match(r) == r && !(r;[*]), then it should follow
+        // that if r is stutter-inv, then first_match(r) is
+        // stutter-inv, so we do not reset the syntactic_si bit.
+        assert(is_.sere_formula);
+        is_.boolean = false;
+        is_.ltl_formula = false;
+        is_.psl_formula = false;
+        is_.eventual = false;
+        is_.universal = false;
+        is_.syntactic_safety = false;
+        is_.syntactic_guarantee = false;
+        is_.syntactic_obligation = false;
+        is_.syntactic_recurrence = false;
+        is_.syntactic_persistence = false;
         break;
       }
   }

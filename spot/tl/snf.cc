@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2014, 2015, 2016, 2018 Laboratoire de Recherche
+// Copyright (C) 2012, 2014, 2015, 2016, 2018, 2019 Laboratoire de Recherche
 // et Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -35,7 +35,6 @@ namespace spot
     class snf_visitor final
     {
     protected:
-      formula result_;
       snf_cache* cache_;
     public:
       snf_visitor(snf_cache* c)
@@ -125,6 +124,7 @@ namespace spot
             SPOT_UNREACHABLE();
           case op::AndRat:        // Can AndRat be handled better?
           case op::FStar:        // Can FStar be handled better?
+          case op::first_match:  // Can first_match be handled better?
             out = f;
             break;
           }

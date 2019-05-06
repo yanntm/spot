@@ -98,6 +98,7 @@
 \newcommand{\GOTO}[1]{\texttt{[->#1]}}
 \newcommand{\PLUS}{\texttt{[+]}}
 \newcommand{\FPLUS}{\texttt{[:+]}}
+\newcommand{\FIRSTMATCH}{\texttt{first\_match}}
 \newcommand{\eword}{\texttt{[*0]}}
 
 \newcommand{\Esuffix}{\texttt{<>->}}
@@ -609,6 +610,7 @@ denote arbitrary SERE.
                      & $f\FSTAR{\mvar{i}:}$
                      & $f\FSTAR{\mvar{i} to}$
                      & $f\FSTAR{\mvar{i},}$\\
+   first match       & $\mathclap{\FIRSTMATCH\code(f\code)}$ \\
 \end{tabular}
 \end{center}
 
@@ -679,7 +681,9 @@ $a$ is an atomic proposition.
     \text{or} & \mvar{i}>0 \land (\exists k\in\N,\,
       (\sigma^{0..k}\VDash f) \land (\sigma^{k..}
       \VDash f\FSTAR{\mvar{i-1}..}))\\
-  \end{cases}
+    \end{cases}\\
+  \sigma\VDash \FIRSTMATCH\code(f\code) & \iff
+      (\sigma\VDash f)\land (\nexists k<|\sigma|,\,\sigma^{0..k}\nVDash f)
 \end{align*}}
 
 Notes:
@@ -713,6 +717,11 @@ operands are Boolean formulas.
   by~\citet{dax.09.atva}.  With this simple addition, it is possible
   to define a subset of PSL that expresses exactly the
   stutter-invariant $\omega$-regular languages.
+\item The $\FIRSTMATCH$ operator does not exist in PSL.  It comes
+  from SystemVerilog Assertions (SVA)~\cite{systemverilog.04.lrm}.
+  One intuition behind $\FIRSTMATCH\code(f\code)$ is that the
+  DFA for $\FIRSTMATCH\code(f\code)$ can be obtained from the DFA
+  for $f$ by removing all transitions leaving accepting states.
 \end{itemize}
 
 \subsection{Syntactic Sugar}
@@ -757,10 +766,11 @@ it for output.  $b$ must be a Boolean formula.
 \end{align*}
 
 The following adds input support for the SVA concatenation (or delay)
-operator.  The simplest equivalence are that $f \DELAY{0} g$,
-$f \DELAY{1} g$, $f \DELAY{2} g$ mean respectively $f \FUSION g$,
-$f \CONCAT g$, and $f \CONCAT \1\CONCAT g$, but the delay can be a
-range, and $f$ can be omitted.
+operator~\cite{systemverilog.04.lrm}.  The simplest equivalence are
+that $f \DELAY{0} g$, $f \DELAY{1} g$, $f \DELAY{2} g$ mean
+respectively $f \FUSION g$, $f \CONCAT g$, and
+$f \CONCAT \1\CONCAT g$, but the delay can be a range, and $f$ can be
+omitted.
 
 \begin{align*}
   f\DELAY{\mvar{i}} g &\equiv f\DELAYR{\mvar{i}..\mvar{i}} g & {}\DELAY{\mvar{i}} g &\equiv {}\DELAYR{\mvar{i}..\mvar{i}} g\\
@@ -790,8 +800,8 @@ $b_1$, $b_2$ are assumed to be Boolean formulas.
   \eword\FSTAR{\mvar{i}..\mvar{j}} &\equiv \0\text{~if~}i>0 \\
   &&
   f\FSTAR{\mvar{i}..\mvar{j}}\FSTAR{\mvar{k}..\mvar{l}} &\equiv f\FSTAR{\mvar{ik}..\mvar{jl}}\text{~if~}i(k+1)\le jk+1 \\
-  f\FSTAR{0}&\equiv \1 &
-  f\FSTAR{1}&\equiv f\text{~if~}\varepsilon\nVDash f\\
+  f\FSTAR{0}&\equiv \1 & f\FSTAR{1}&\equiv f\text{~if~}\varepsilon\nVDash f\\
+  \FIRSTMATCH\code(b\code) &\equiv b & \FIRSTMATCH\code(f\code) &\equiv \eword\text{~if~}\varepsilon\VDash f
 \end{align*}
 
 \noindent
@@ -958,40 +968,48 @@ operator, even if the operator has multiple synonyms (like \samp{|},
 \samp{||}, and {`\verb=\/='}).
 
 \begin{align*}
-\mathit{constant} ::={}& \0 \mid \1                             & \mathit{tformula} ::={}&\mathit{bformula}\\
-\mathit{atomic\_prop} ::={}& \text{see section~\ref{sec:ap}}    &   \mid{}&\tsamp{(}\,\mathit{tformula}\,\tsamp{)} \\
-\mathit{bformula} ::={}& \mathit{constant}                      &   \mid{}&\msamp{\NOT}\,\mathit{tformula}\,\\
-  \mid{}&\mathit{atomic\_prop}                                  &   \mid{}&\mathit{tformula}\,\msamp{\AND}\,\mathit{tformula} \\
-  \mid{}&\mathit{atomic\_prop}\code{=0}                         &   \mid{}&\mathit{tformula}\,\msamp{\OR}\,\mathit{tformula} \\
-  \mid{}&\mathit{atomic\_prop}\code{=1}                         &   \mid{}&\mathit{tformula}\,\msamp{\IMPLIES}\,\mathit{tformula} \\
-  \mid{}&\tsamp{(}\,\mathit{bformula}\,\tsamp{)}                &   \mid{}&\mathit{tformula}\,\msamp{\XOR}\,\mathit{tformula} \\
-  \mid{}&\msamp{\NOT}\,\mathit{bformula}                        &   \mid{}&\mathit{tformula}\,\msamp{\EQUIV}\,\mathit{tformula} \\
-  \mid{}&\mathit{bformula}\,\msamp{\AND}\,\mathit{bformula}     &   \mid{}&\msamp{\X}\,\mathit{tformula} \\
-  \mid{}&\mathit{bformula}\,\msamp{\OR}\,\mathit{bformula}      &   \mid{}&\msamp{\XREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} \\
-  \mid{}&\mathit{bformula}\,\msamp{\IMPLIES}\,\mathit{bformula} &   \mid{}&\msamp{\F}\,\mathit{tformula}\\
-  \mid{}&\mathit{bformula}\,\msamp{\XOR}\,\mathit{bformula}     &   \mid{}&\msamp{\FREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} \\
-  \mid{}&\mathit{bformula}\,\msamp{\EQUIV}\,\mathit{bformula}   &   \mid{}&\msamp{\G}\,\mathit{tformula}\\
-\mathit{sere} ::={}&\mathit{bformula}                           &   \mid{}&\msamp{\GREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} \\
-  \mid{}&\tsamp{\{}\,\mathit{sere}\,\tsamp{\}}                  &   \mid{}&\mathit{tformula}\,\msamp{\U}\,\mathit{tformula} \\
-  \mid{}&\tsamp{(}\,\mathit{sere}\,\tsamp{)}                    &   \mid{}&\mathit{tformula}\,\msamp{\W}\,\mathit{tformula} \\
-  \mid{}&\mathit{sere}\msamp{\OR}\mathit{sere}                  &   \mid{}&\mathit{tformula}\,\msamp{\R}\,\mathit{tformula} \\
-  \mid{}&\mathit{sere}\msamp{\AND}\mathit{sere}                 &   \mid{}&\mathit{tformula}\,\msamp{\M}\,\mathit{tformula} \\
-  \mid{}&\mathit{sere}\msamp{\ANDALT}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Asuffix}\,\mathit{tformula}\\
-  \mid{}&\mathit{sere}\msamp{\CONCAT}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\AsuffixEQ}\,\mathit{tformula}\\
-  \mid{}&\mathit{sere}\msamp{\FUSION}\mathit{sere}              &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Esuffix}\,\mathit{tformula}\\
-  \mid{}&\msamp{\STAR{\mvar{i}..\mvar{j}}}                      &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\EsuffixEQ}\,\mathit{tformula} \\
-  \mid{}&\msamp{\PLUS{}}                                        &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}} \\
-  \mid{}&\mathit{sere}\msamp{\STAR{\mvar{i}..\mvar{j}}}         &   \mid{}&\tsamp{\{}\mathit{sere}\tsamp{\}}\msamp{\NOT} \\
-  \mid{}&\mathit{sere}\msamp{\PLUS} \\
-  \mid{}&\mathit{sere}\msamp{\FSTAR{\mvar{i}..\mvar{j}}} \\
-  \mid{}&\mathit{sere}\msamp{\FPLUS} \\
-  \mid{}&\mathit{sere}\msamp{\EQUAL{\mvar{i}..\mvar{j}}} \\
-  \mid{}&\mathit{sere}\msamp{\GOTO{\mvar{i}..\mvar{j}}}  \\
-  \mid{}&\DELAY{\mvar{i}}\mathit{sere} \\
-  \mid{}&\DELAYR{\mvar{i}..\mvar{j}}\mathit{sere} \\
-  \mid{}&\mathit{sere}\DELAY{\mvar{i}}\mathit{sere} \\
-  \mid{}&\mathit{sere}\DELAYR{\mvar{i}..\mvar{j}}\mathit{sere} \\
+\mathit{constant} ::={}     & \0 \mid \1                                                                                                                                                                                                 \\
+\mathit{atomic\_prop} ::={} & \text{see secn~\ref{sec:ap}}                                                                                                                                                                               \\[1ex]
+  \mathit{bformula} ::={}     & \mathit{constant}                                      & \mid{} & \tsamp{(}\,\mathit{bformula}\,\tsamp{)}              & \mid{} & \mathit{bformula}\,\msamp{\XOR}\,\mathit{bformula}                       \\
+  \mid{}                    & \mathit{atomic\_prop}                                  & \mid{} & \msamp{\NOT}\,\mathit{bformula}                      & \mid{} & \mathit{bformula}\,\msamp{\EQUIV}\,\mathit{bformula}                     \\
+  \mid{}                    & \mathit{atomic\_prop}\code{=0}                         & \mid{} & \mathit{bformula}\,\msamp{\AND}\,\mathit{bformula}   & \mid{} & \mathit{bformula}\,\msamp{\IMPLIES}\,\mathit{bformula}                   \\
+  \mid{}                    & \mathit{atomic\_prop}\code{=1}                         & \mid{} & \mathit{bformula}\,\msamp{\OR}\,\mathit{bformula}                                                                                        \\[1ex]
+\mathit{sere} ::={}         & \mathit{bformula}                                      & \mid{} & \msamp{\STAR{\mvar{i}..\mvar{j}}}                    & \mid{} & \DELAY{\mvar{i}}\mathit{sere}                                            \\
+  \mid{}                    & \tsamp{\{}\,\mathit{sere}\,\tsamp{\}}                  & \mid{} & \msamp{\PLUS{}}                                      & \mid{} & \DELAYR{\mvar{i}..\mvar{j}}\mathit{sere}                                 \\
+  \mid{}                    & \tsamp{(}\,\mathit{sere}\,\tsamp{)}                    & \mid{} & \mathit{sere}\msamp{\STAR{\mvar{i}..\mvar{j}}}       & \mid{} & \mathit{sere}\DELAY{\mvar{i}}\mathit{sere}                               \\
+  \mid{}                    & \mathit{sere}\msamp{\OR}\mathit{sere}                  & \mid{} & \mathit{sere}\msamp{\PLUS}                           & \mid{} & \mathit{sere}\DELAYR{\mvar{i}..\mvar{j}}\mathit{sere}                    \\
+  \mid{}                    & \mathit{sere}\msamp{\AND}\mathit{sere}                 & \mid{} & \mathit{sere}\msamp{\FSTAR{\mvar{i}..\mvar{j}}}      & \mid{} & \FIRSTMATCH\code(\,sere\,\code)                                          \\
+  \mid{}                    & \mathit{sere}\msamp{\ANDALT}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\FPLUS}                                                                                                              \\
+  \mid{}                    & \mathit{sere}\msamp{\CONCAT}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\EQUAL{\mvar{i}..\mvar{j}}}                                                                                          \\
+  \mid{}                    & \mathit{sere}\msamp{\FUSION}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\GOTO{\mvar{i}..\mvar{j}}}                                                                                           \\[1ex]
+ \mathit{tformula} ::={}    & \mathit{bformula}                                      & \mid{} & \msamp{\X}\,\mathit{tformula}                        & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Asuffix}\,\mathit{tformula}   \\
+\mid{}                      & \tsamp{(}\,\mathit{tformula}\,\tsamp{)}                & \mid{} & \msamp{\XREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\AsuffixEQ}\,\mathit{tformula} \\
+\mid{}                      & \msamp{\NOT}\,\mathit{tformula}\,                      & \mid{} & \msamp{\F}\,\mathit{tformula}                        & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Esuffix}\,\mathit{tformula}   \\
+\mid{}                      & \mathit{tformula}\,\msamp{\AND}\,\mathit{tformula}     & \mid{} & \msamp{\FREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\EsuffixEQ}\,\mathit{tformula} \\
+\mid{}                      & \mathit{tformula}\,\msamp{\OR}\,\mathit{tformula}      & \mid{} & \msamp{\G}\,\mathit{tformula}                        & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}                                        \\
+\mid{}                      & \mathit{tformula}\,\msamp{\IMPLIES}\,\mathit{tformula} & \mid{} & \msamp{\GREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\msamp{\NOT}                            \\
+\mid{}                      & \mathit{tformula}\,\msamp{\XOR}\,\mathit{tformula}     & \mid{} & \mathit{tformula}\,\msamp{\U}\,\mathit{tformula}                                                                                         \\
+\mid{}                      & \mathit{tformula}\,\msamp{\EQUIV}\,\mathit{tformula}   & \mid{} & \mathit{tformula}\,\msamp{\W}\,\mathit{tformula}                                                                                         \\
+                            &                                                        & \mid{} & \mathit{tformula}\,\msamp{\R}\,\mathit{tformula}                                                                                         \\
+                            &                                                        & \mid{} & \mathit{tformula}\,\msamp{\M}\,\mathit{tformula}                                                                                         \\
 \end{align*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \section{Operator precedence}
 
