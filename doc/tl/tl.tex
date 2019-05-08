@@ -801,7 +801,8 @@ $b_1$, $b_2$ are assumed to be Boolean formulas.
   &&
   f\FSTAR{\mvar{i}..\mvar{j}}\FSTAR{\mvar{k}..\mvar{l}} &\equiv f\FSTAR{\mvar{ik}..\mvar{jl}}\text{~if~}i(k+1)\le jk+1 \\
   f\FSTAR{0}&\equiv \1 & f\FSTAR{1}&\equiv f\text{~if~}\varepsilon\nVDash f\\
-  \FIRSTMATCH\code(b\code) &\equiv b & \FIRSTMATCH\code(f\code) &\equiv \eword\text{~if~}\varepsilon\VDash f
+  \FIRSTMATCH\code(b\code) &\equiv b & \FIRSTMATCH\code(f\code) &\equiv \eword\text{~if~}\varepsilon\VDash f \\
+                                    && \FIRSTMATCH\code(\FIRSTMATCH\code(f\code)\code) &\equiv \FIRSTMATCH\code(f\code)
 \end{align*}
 
 \noindent
@@ -993,22 +994,6 @@ operator, even if the operator has multiple synonyms (like \samp{|},
                             &                                                        & \mid{} & \mathit{tformula}\,\msamp{\R}\,\mathit{tformula}                                                                                         \\
                             &                                                        & \mid{} & \mathit{tformula}\,\msamp{\M}\,\mathit{tformula}                                                                                         \\
 \end{align*}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 \section{Operator precedence}
@@ -1600,7 +1585,14 @@ SERE.
   \sere{b_1\FUSION r_1}\ANDALT\sere{b_2\FUSION r_2} &\equiv \sere{b_1\ANDALT b_2}\FUSION\sere{r_1\ANDALT r_2} &
   \sere{r_1\FUSION b_1}\ANDALT\sere{r_2\FUSION b_2} &\equiv \sere{r_1\ANDALT r_2}\FUSION\sere{b_1\ANDALT b_2} \\
   \sere{b_1\CONCAT r_1}\AND \sere{b_2\CONCAT r_2} &\equiv \sere{b_1\ANDALT b_2}\CONCAT\sere{r_1\AND r_2} \\
-  \sere{b_1\FUSION r_1}\AND \sere{b_2\FUSION r_2} &\equiv \sere{b_1\ANDALT b_2}\FUSION\sere{r_1\AND r_2} \mathrlap{\quad\text{if~}\varepsilon\nVDash r_1\land\varepsilon\nVDash r_2}\\
+  \sere{b_1\FUSION r_1}\AND \sere{b_2\FUSION r_2} &\equiv \sere{b_1\ANDALT b_2}\FUSION\sere{r_1\AND r_2} \mathrlap{\quad\text{if~}\varepsilon\nVDash r_1\land\varepsilon\nVDash r_2}
+\end{align*}
+\begin{align*}
+  \FIRSTMATCH\code(b\STAR{\mvar{i}..\mvar{j}}\code) &\equiv b\STAR{\mvar{i}} \\
+  \FIRSTMATCH\code(r\STAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH\code(r\STAR{\mvar{i}}\code) \\
+  \FIRSTMATCH\code(r_1\CONCAT{}r_2\STAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH(r_1\CONCAT\mathrlap{r_2\STAR{\mvar{i}})} \\
+  \FIRSTMATCH\code(b\CONCAT{}r\code) &\equiv b\CONCAT\FIRSTMATCH\code(r\code) \\
+  \FIRSTMATCH\code(r_1\CONCAT{}r_2\code) &\equiv\FIRSTMATCH(r_1)\mathrlap{\quad\text{if~} \varepsilon\VDash r_2}
 \end{align*}
 
 Starred subformulas are rewritten in Star Normal

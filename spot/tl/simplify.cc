@@ -856,7 +856,6 @@ namespace spot
           case op::ap:
           case op::Not:
           case op::FStar:
-          case op::first_match:
             return f;
           case op::X:
             {
@@ -1428,6 +1427,58 @@ namespace spot
                     min = 1;
                 }
               return formula::Star(h, min, f.max());
+            }
+          case op::first_match:
+            {
+              formula h = f[0];
+              if (h.is(op::Star))
+                {
+                  // first_match(b[*i..j]) = b[*i]
+                  // first_match(f[*i..j]) = first_match(f[*i])
+                  unsigned m = h.min();
+                  formula s = formula::Star(h[0], m, m);
+                  return h[0].is_boolean() ? s : formula::first_match(s);
+                }
+              else if (h.is(op::Concat))
+                {
+                  // If b is Boolean and e accepts [*0], we have
+                  // first_match(b;f) = b;first_match(f)
+                  // first_match(f;e) = first_match(f)
+                  // first_match(f;g[*i..j]) = first_match(f;g[*i])
+                  // the first two rules can be repeated, so we will loop
+                  // to save the recursion and intermediate caching.
+
+                  // Extract Boolean formulas at the beginning.
+                  int i = 0;
+                  int n = h.size();
+                  while (i < n && h[i].is_boolean())
+                    ++i;
+                  vec prefix;
+                  prefix.reserve(i + 1); // +1 to append first_match()
+                  for (int ii = 0; ii < i; ++ii)
+                    prefix.push_back(h[ii]);
+                  // Extract suffix, minus trailing formulas that accept [*0].
+                  // "i" is the start of the suffix.
+                  do
+                    --n;
+                  while (i <= n && h[n].accepts_eword());
+                  vec suffix;
+                  suffix.reserve(n + 1 - i);
+                  for (int ii = i; ii <= n; ++ii)
+                    suffix.push_back(h[ii]);
+                  if (!suffix.empty() && suffix.back().is(op::Star))
+                    {
+                      formula s = suffix.back();
+                      unsigned smin = s.min();
+                      suffix.back() = formula::Star(s[0], smin, smin);
+                    }
+                  prefix.push_back(formula::first_match
+                                   (formula::Concat(suffix)));
+                  formula res = formula::Concat(prefix);
+                  if (res != f)
+                    return recurse(res);
+                }
+              return f;
             }
           }
         SPOT_UNREACHABLE();

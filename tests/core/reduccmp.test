@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2009-2014, 2016-2018 Laboratoire de Recherche et
+# Copyright (C) 2009-2014, 2016-2019 Laboratoire de Recherche et
 # Developpement de l'Epita (LRDE).
 # Copyright (C) 2004, 2006 Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -436,6 +436,16 @@ GF(a && GF(b) && c), G(F(a & c) & Fb)
 # not reduced
 {a;(b[*2..4];c*;([*0]+{d;e}))*}!, {a;(b[*2..4];c*;([*0]+{d;e}))*}!
 {c[*];e[*]}[]-> a, {c[*];e[*]}[]-> a
+# first_match
+{first_match(a*);b}, b
+{first_match(a)}, a
+{first_match(a;b*)}, a
+{first_match(a;c;b*)}, a & Xc
+{first_match(a;c;b*;e)}, a & X(c & X{first_match(b[*];e)})
+{first_match(a;c;b*;(e | [*0]))}, a & Xc
+{first_match(a;c;b[+];(e | [*0]))}, a & X(c & Xb)
+{first_match(b[+];(e | [*0]))}, b
+{first_match(b[*2..3])}, b & Xb
 EOF
 
 run 0 ../reduccmp nottau.txt
