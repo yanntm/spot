@@ -1436,25 +1436,45 @@ namespace spot
                   // first_match(b[*i..j]) = b[*i]
                   // first_match(f[*i..j]) = first_match(f[*i])
                   unsigned m = h.min();
-                  formula s = formula::Star(h[0], m, m);
-                  return h[0].is_boolean() ? s : formula::first_match(s);
+                  if (m < h.max())
+                    {
+                      formula s = formula::Star(h[0], m, m);
+                      s = h[0].is_boolean() ? s : formula::first_match(s);
+                      return recurse(s);
+                    }
+                }
+              else if (h.is(op::FStar))
+                {
+                  // first_match(f[:*i..j]) = first_match(f[:*i])
+                  unsigned m = h.min();
+                  if (m < h.max())
+                    {
+                      formula s = formula::FStar(h[0], m, m);
+                      return recurse(formula::first_match(s));
+                    }
                 }
               else if (h.is(op::Concat))
                 {
                   // If b is Boolean and e accepts [*0], we have
-                  // first_match(b;f) = b;first_match(f)
-                  // first_match(f;e) = first_match(f)
-                  // first_match(f;g[*i..j]) = first_match(f;g[*i])
-                  // the first two rules can be repeated, so we will loop
+                  // 1. first_match(b;f) ≡ b;first_match(f)
+                  // 2. first_match(f;e) ≡ first_match(f)
+                  // 3. first_match(first_match(f);g) =
+                  //      first_match(f);first_match(g)
+                  // 4. first_match(f;g[*i:j]) ≡ first_match(f;g[*i])
+                  // 5. first_match(f;g[:*i..j]) = first_match(f;g[:*i])
+                  // 6. first_match(b[*i:j];f) ≡ b[*i];first_match(b[*0:j-i];f)
+                  // Rules 1-3 can be repeated, so we will loop
                   // to save the recursion and intermediate caching.
 
                   // Extract Boolean formulas at the beginning.
                   int i = 0;
                   int n = h.size();
-                  while (i < n && h[i].is_boolean())
+                  while (i < n
+                         && (h[i].is_boolean() || h[i].is(op::first_match)))
                     ++i;
                   vec prefix;
-                  prefix.reserve(i + 1); // +1 to append first_match()
+                  // +1 to append first_match(suffix), +1 to for rule 6.
+                  prefix.reserve(i + 2);
                   for (int ii = 0; ii < i; ++ii)
                     prefix.push_back(h[ii]);
                   // Extract suffix, minus trailing formulas that accept [*0].
@@ -1466,17 +1486,83 @@ namespace spot
                   suffix.reserve(n + 1 - i);
                   for (int ii = i; ii <= n; ++ii)
                     suffix.push_back(h[ii]);
-                  if (!suffix.empty() && suffix.back().is(op::Star))
+                  // Rules 4-5
+                  if (!suffix.empty() && suffix.back().is(op::Star, op::FStar))
                     {
                       formula s = suffix.back();
                       unsigned smin = s.min();
-                      suffix.back() = formula::Star(s[0], smin, smin);
+                      suffix.back() = formula::bunop(s.kind(),
+                                                     s[0], smin, smin);
+                    }
+                  // Rule 6
+                  if (!suffix.empty() && suffix.front().is(op::Star))
+                    {
+                      formula s = suffix.front();
+                      unsigned smin = s.min();
+                      if (smin > 0 && s[0].is_boolean())
+                        {
+                          prefix.push_back(formula::Star(s[0], smin, smin));
+                          suffix.front() =
+                            formula::Star(s[0], 0, s.max() - smin);
+                        }
                     }
                   prefix.push_back(formula::first_match
                                    (formula::Concat(suffix)));
                   formula res = formula::Concat(prefix);
                   if (res != f)
                     return recurse(res);
+                }
+              else if (h.is(op::Fusion))
+                {
+                  // 1. first_match(b:f) = b:first_match(f) if f rejects [*0]
+                  // (not implemented, because first_match will build a DFA
+                  // and limiting its choices is good)
+                  // 2. first_match(b[*i..j]:f) =
+                  //       b[*i-1];first_match(b[*1..j-i+1]:f) if i>1
+                  if (h[0].is(op::Star))
+                    {
+                      formula s = h[0];
+                      unsigned smin = s.min();
+                      if (smin > 1 && s[0].is_boolean())
+                        {
+                          --smin;
+                          unsigned smax = s.max();
+                          if (smax != formula::unbounded())
+                            smax -= smin;
+                          formula s2 = formula::Star(s[0], 1, smax);
+                          formula in = formula::Fusion({s2, h.all_but(0)});
+                          in = formula::first_match(in);
+                          formula s3 = formula::Star(s[0], smin, smin);
+                          return recurse(formula::Concat({s3, in}));
+                        }
+                    }
+                  // 3. first_match(first_match(f):g) =
+                  //       first_match(f):first_match(1:g)
+                  if (h[0].is(op::first_match))
+                    {
+                      formula rest = h.all_but(0);
+                      if (rest.accepts_eword())
+                        rest = formula::Fusion({formula::tt(), rest});
+                      rest = formula::first_match(rest);
+                      return recurse(formula::Fusion({h[0], rest}));
+                    }
+                  // 4. first_match(f:g[*i..j]) = first_match(f:g[*max(1,i)])
+                  // 5. first_match(f:g[:*i..j]) = first_match(f:g[:*i])
+                  unsigned last = h.size() - 1;
+                  formula tail = h[last];
+                  if (tail.is(op::Star, op::FStar))
+                    {
+                      unsigned smin = tail.min();
+                      if (smin < tail.max())
+                        {
+                          if (smin == 0 && tail.is(op::Star))
+                            ++smin;
+                          formula s2 =
+                            formula::bunop(tail.kind(), tail[0], smin, smin);
+                          formula in = formula::Fusion({h.all_but(last), s2});
+                          return recurse(formula::first_match(in));
+                        }
+                    }
                 }
               return f;
             }

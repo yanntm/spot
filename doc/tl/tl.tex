@@ -1590,9 +1590,17 @@ SERE.
 \begin{align*}
   \FIRSTMATCH\code(b\STAR{\mvar{i}..\mvar{j}}\code) &\equiv b\STAR{\mvar{i}} \\
   \FIRSTMATCH\code(r\STAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH\code(r\STAR{\mvar{i}}\code) \\
-  \FIRSTMATCH\code(r_1\CONCAT{}r_2\STAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH(r_1\CONCAT\mathrlap{r_2\STAR{\mvar{i}})} \\
+  \FIRSTMATCH\code(r\FSTAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH\code(r\FSTAR{\mvar{i}}\code) \\
+  \FIRSTMATCH\code(r_1\CONCAT{}r_2\STAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH\code(r_1\CONCAT{}r_2\STAR{\mvar{i}}\code) \\
+  \FIRSTMATCH\code(r_1\CONCAT{}r_2\FSTAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH\code(r_1\CONCAT{}r_2\FSTAR{\mvar{i}}\code) \\
+  \FIRSTMATCH\code(r_1\FUSION{}r_2\STAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH\code(r_1\FUSION{}r_2\STAR{\mvar{\max(i,1)}}\code) \\
+  \FIRSTMATCH\code(r_1\FUSION{}r_2\FSTAR{\mvar{i}..\mvar{j}}\code) &\equiv \FIRSTMATCH\code(r_1\FUSION{}r_2\FSTAR{\mvar{i}}\code) \\
   \FIRSTMATCH\code(b\CONCAT{}r\code) &\equiv b\CONCAT\FIRSTMATCH\code(r\code) \\
-  \FIRSTMATCH\code(r_1\CONCAT{}r_2\code) &\equiv\FIRSTMATCH(r_1)\mathrlap{\quad\text{if~} \varepsilon\VDash r_2}
+  \FIRSTMATCH\code(b\STAR{\mvar{i}..\mvar{j}}\CONCAT{}r\code) &\equiv b\STAR{\mvar{i}}\CONCAT\FIRSTMATCH\code(b\STAR{0..\mvar{j-i}}\CONCAT r\code) \\
+  \FIRSTMATCH\code(b\STAR{\mvar{i}..\mvar{j}}\FUSION{}r\code) &\equiv b\STAR{\mvar{i-1}}\CONCAT\FIRSTMATCH\code(b\STAR{1..\mvar{j-i+1}}\FUSION r\code)\quad\text{if~}i>1\\
+  \FIRSTMATCH\code(r_1\CONCAT{}r_2\code) &\equiv\FIRSTMATCH\code(r_1\code)\quad\text{if~} \varepsilon\VDash r_2\\
+  \FIRSTMATCH\code(\FIRSTMATCH\code(r_1\code)\CONCAT{}r_2\code) &\equiv\FIRSTMATCH\code(r_1\code)\CONCAT\FIRSTMATCH\code(r_2\code)\\
+  \FIRSTMATCH\code(\FIRSTMATCH\code(r_1\code)\FUSION{}r_2\code) &\equiv\FIRSTMATCH\code(r_1\code)\FUSION\FIRSTMATCH\code(\1\FUSION{}r_2\code)
 \end{align*}
 
 Starred subformulas are rewritten in Star Normal

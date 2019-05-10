@@ -446,6 +446,18 @@ GF(a && GF(b) && c), G(F(a & c) & Fb)
 {first_match(a;c;b[+];(e | [*0]))}, a & X(c & Xb)
 {first_match(b[+];(e | [*0]))}, b
 {first_match(b[*2..3])}, b & Xb
+{first_match(a;b[*2..3];a)}, a & X(b & X(b & X{first_match(b[*0..1];a)}))
+{first_match(b:a[*2][+])}, {first_match(b:a[*2])}
+{first_match(b[*3]:a[*2][+])}, b & X(b & X{first_match(b:a[*2])})
+{first_match((a | (b;b))[*2..3])}, {first_match((a | b[*2])[*2])}
+{first_match((a | (b;b))[:*2..3])}, {first_match((a | b[*2])[:*2])}
+{first_match(a;(a | (b;b))[*2..3])}, a & X{first_match((a | b[*2])[*2])}
+{first_match(a:(a | (b;b))[*2..3])}, {first_match(a:(a | b[*2])[*2])}
+{first_match(a;(a | (b;b))[:*2..3])}, a & X{first_match((a | b[*2])[:*2])}
+{first_match(a:(a | (b;b))[:*2..3])}, {first_match(a:(a | b[*2])[:*2])}
+{first_match(1:e[*0..3])[*]}[]-> c, c W !e
+{first_match(first_match(a*;e);b)}[]->a, {first_match(a[*];e)}[]-> X(a | !b)
+{first_match(first_match(a*;e):b*)}[]->a, {first_match(a[*];e)}[]-> (a | !b)
 EOF
 
 run 0 ../reduccmp nottau.txt
