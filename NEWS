@@ -7,6 +7,13 @@ New in spot 2.7.4.dev (not yet released)
     GraphViz that aborts when some label exceeds 16k characters, and
     also helps making large automata more readable.
 
+  Bugs fixed:
+
+  - spot::translator was not applying Boolean sub-formula rewritting
+    by default unless a spot::option_map was passed.  This caused some
+    C++ code for translating certains formulas to be noticeably slower
+    than the equivalent call to the ltl2tgba binary.
+
 New in spot 2.7.4 (2019-04-27)
 
   Bugs fixed:

@@ -35,7 +35,8 @@ namespace spot
   void translator::setup_opt(const option_map* opt)
   {
     comp_susp_ = early_susp_ = skel_wdba_ = skel_simul_ = 0;
-    relabel_bool_ = tls_impl_ = -1;
+    relabel_bool_ = 4;
+    tls_impl_ = -1;
     ltl_split_ = true;
 
     opt_ = opt;
