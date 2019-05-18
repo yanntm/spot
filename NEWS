@@ -62,6 +62,12 @@ New in spot 2.7.4.dev (not yet released)
   - spot::relabel_apply() make it easier to reverse the effect
     of spot::relabel() or spot::relabel_bse() on formula.
 
+  - The LTL simplifier learned the following optional rules:
+    F(G(a | Fb)) = FGa | GFb  (if option "favor_event_univ")
+    G(F(a | Gb)) = GFa | FGb   (if option "favor_event_univ")
+    F(G(a & Fb) = FGa & GFb   (unless option "reduce_size_strictly")
+    G(F(a & Gb)) = GFa & FGb  (unless option "reduce_size_strictly")
+
 New in spot 2.7.4 (2019-04-27)
 
   Bugs fixed:

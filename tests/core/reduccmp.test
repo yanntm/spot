@@ -335,6 +335,18 @@ Xa&Xb&GFc&GFd&Ge, X(a&b&G(Fc&Fd))&Ge
 GFc|GFd|FGe|FGf, F(GF(c|d)|Ge|Gf)
 G(GFc|GFd|FGe|FGf), F(GF(c|d)|Ge|Gf)
 
+F(G(a | Gb)), F(Ga | Gb)
+G(F(a & Fb)), G(Fa & Fb)
+# These two are not reduced by default
+F(G(a | Fb)), F(G(a | Fb))
+G(F(a | Gb)), G(F(a | Gb))
+
+# issue #385
+F(G(a & Fb)), G(Fb & FGa)
+G(F(a & Gb)), G(Fa & FGb)
+Ge | XGF(Ge & X(c & Fd)), Ge | G(Fd & FGe & Fc)
+G!GXXe -> GF(b & c & Gc), F(G(Fb & FGc) | Ge)
+
 # Because reduccmp will translate the formula,
 # this also check for an old bug in ltl2tgba_fm.
 {(c&!c)[->0..1]}!, 0

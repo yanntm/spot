@@ -365,22 +365,31 @@ diff output expected
 # The first four formulas appear in a NEWS entry for Spot 2.6
 # The 5th one is from issue #267.
 # The 6th one is from issue #358.
+# formula 7-12 are from issue #385.
 cat >formulas <<EOF
-GF((a & XXa) | (!a & XX!a)), 4,8, 4,8, 6,14, 7,14
-GF((a & XXXa) | (!a & XXX!a)), 7,14, 8,16, 8,18, 15,30
-GF(((a & Xb) | XXc) & Xd), 4,64, 4,64, 5,80, 5,80
-GF((b | Fa) & (b R Xb)), 2,4, 2,4, 3,6, 3,12
-G(F(a & Xa) & F(a & X!a)), 2,4, 2,4, 4,8, 4,8
-G(!p0 & F(p1 & XG!p1)), 1,0, 1,0, 1,0, 1,0
+GF((a & XXa) | (!a & XX!a)), 4,8, 4,8, 6,14, 7,14, 4,8
+GF((a & XXXa) | (!a & XXX!a)), 7,14, 8,16, 8,18, 15,30, 8,16
+GF(((a & Xb) | XXc) & Xd), 4,64, 4,64, 5,80, 5,80, 4,64
+GF((b | Fa) & (b R Xb)), 2,4, 2,4, 3,6, 3,12, 2,4
+G(F(a & Xa) & F(a & X!a)), 2,4, 2,4, 4,8, 4,8, 3,6
+G(!p0 & F(p1 & XG!p1)), 1,0, 1,0, 1,0, 1,0, 1,0
+FG(a | Fb), 3,15, 3,15, 3,15, 3,15, 1,4
+FG(a & Fb), 2,7, 2,7, 3,9, 3,9, 1,4
+GF(a & Gb), 2,7, 2,7, 3,9, 3,9, 1,4
+GF(a | Gb), 2,7, 2,7, 3,12, 3,12, 1,4
+Ge | GF(Ge & X(c & Fd)), 4,31, 4,31, 6,39, 6,39, 2,16
+F(GF(b & Gc) | Ge), 3,22, 3,22, 4,26, 4,26, 1,8
 EOF
 
 # Call perl in the middle of all this to make sure
 # \r is removed fom %>.  Issue #380.
-ltl2tgba -Fformulas/1 --stats='%f, %s,%t' |
-    ltl2tgba -D -F-/1 --stats='%f,%>, %s,%t' |
-    perl -pi -e 's/$/\r/' |
-    ltl2tgba -B -F-/1 --stats='%f,%>, %s,%t' |
-    ltl2tgba -BD -F-/1 --stats='%f,%>, %s,%t' > output
+ltlfilt -Fformulas/1 --stats='%f,%f,%>' |
+ltl2tgba -F-/2 --stats='%<,%<, %s,%t' |
+    ltl2tgba -D -F-/2 --stats='%<,%<,%>, %s,%t' |
+    perl -p -e 's/$/\r/' |
+    ltl2tgba -B -F-/2 --stats='%<,%<,%>, %s,%t' |
+    ltl2tgba -BD -F-/2 --stats='%<,%<,%>, %s,%t' |
+    ltl2tgba -GD -F-/2 --stats='%<,%>, %s,%t' > output
 
 diff formulas output
 

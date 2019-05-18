@@ -913,16 +913,21 @@ namespace spot
               if (opt_.event_univ && c.is_eventual())
                 return c;
 
-              auto g_in_f = [this](formula g, std::vector<formula>* to)
+              auto g_in_f = [this](formula g, std::vector<formula>* to,
+                                   std::vector<formula>* eventual = nullptr)
                 {
                   if (g[0].is(op::Or))
                     {
-                      mospliter s2(mospliter::Split_Univ, g[0], c_);
+                      mospliter s2(mospliter::Split_Univ |
+                                   (eventual ? mospliter::Split_Event : 0),
+                                   g[0], c_);
                       for (formula e: *s2.res_Univ)
                         to->push_back(e.is(op::X) ? e[0] : e);
                       to->push_back
                       (unop_multop(op::G, op::Or,
                                    std::move(*s2.res_other)));
+                      if (eventual)
+                        std::swap(*s2.res_Event, *eventual);
                     }
                   else
                     {
@@ -947,13 +952,37 @@ namespace spot
                   if (c.is(op::X))
                     return recurse(unop_unop(op::X, op::F, c[0]));
 
-                  // G(F(a & Fb)) = G(Fa & Fb)
+                  // F(G(a | Gb)) = F(Ga | Gb)
+                  // F(G(a | Fb)) = FGa | GFb // opt_.favor_event_univ
                   if (c.is({op::G, op::Or}))
                     {
-                      std::vector<formula> toadd;
-                      g_in_f(c, &toadd);
+                      std::vector<formula> toadd, eventual;
+                      g_in_f(c, &toadd,
+                             opt_.favor_event_univ ? &eventual : nullptr);
                       formula res = unop_multop(op::F, op::Or,
                                                 std::move(toadd));
+                      if (!eventual.empty())
+                        {
+                          formula ev = unop_multop(op::G, op::Or,
+                                                   std::move(eventual));
+                          res = formula::Or({res, ev});
+                        }
+                      if (res != f)
+                        return recurse(res);
+                    }
+
+                  // F(G(a & Fb) = FGa & GFb // !opt_.reduce_size_strictly
+                  if (c.is({op::G, op::And}) && !opt_.reduce_size_strictly)
+                    {
+                      mospliter s2(mospliter::Split_Event, c[0], c_);
+                      for (formula& e: *s2.res_Event)
+                        while (e.is(op::X))
+                          e = e[0];
+                      formula fg = unop_unop_multop(op::F, op::G, op::And,
+                                                    std::move(*s2.res_other));
+                      formula gf = unop_multop(op::G, op::And,
+                                               std::move(*s2.res_Event));
+                      formula res = formula::And({fg, gf});
                       if (res != f)
                         return recurse(res);
                     }
@@ -1077,16 +1106,21 @@ namespace spot
               if (opt_.event_univ && c.is_universal())
                 return c;
 
-              auto f_in_g = [this](formula f, std::vector<formula>* to)
+              auto f_in_g = [this](formula f, std::vector<formula>* to,
+                                   std::vector<formula>* univ = nullptr)
                 {
                   if (f[0].is(op::And))
                     {
-                      mospliter s2(mospliter::Split_Event, f[0], c_);
+                      mospliter s2(mospliter::Split_Event |
+                                   (univ ? mospliter::Split_Univ : 0),
+                                   f[0], c_);
                       for (formula e: *s2.res_Event)
                         to->push_back(e.is(op::X) ? e[0] : e);
                       to->push_back
                       (unop_multop(op::F, op::And,
                                    std::move(*s2.res_other)));
+                      if (univ)
+                        std::swap(*s2.res_Univ, *univ);
                     }
                   else
                     {
@@ -1112,12 +1146,36 @@ namespace spot
                     return recurse(unop_unop(op::X, op::G, c[0]));
 
                   // G(F(a & Fb)) = G(Fa & Fb)
+                  // G(F(a & Gb)) = GFa & FGb // !opt_.reduce_size_strictly
                   if (c.is({op::F, op::And}))
                     {
-                      std::vector<formula> toadd;
-                      f_in_g(c, &toadd);
+                      std::vector<formula> toadd, univ;
+                      f_in_g(c, &toadd,
+                             opt_.reduce_size_strictly ? nullptr : &univ);
                       formula res = unop_multop(op::G, op::And,
                                                 std::move(toadd));
+                      if (!univ.empty())
+                        {
+                          formula un = unop_multop(op::F, op::And,
+                                                   std::move(univ));
+                          res = formula::And({res, un});
+                        }
+                      if (res != f)
+                        return recurse(res);
+                    }
+
+                  // G(F(a | Gb)) = GFa | FGb   // opt_.favor_event_univ
+                  if (c.is({op::F, op::Or}) && opt_.favor_event_univ)
+                    {
+                      mospliter s2(mospliter::Split_Univ, c[0], c_);
+                      for (formula& u: *s2.res_Univ)
+                        while (u.is(op::X))
+                          u = u[0];
+                      formula gf = unop_unop_multop(op::G, op::F, op::Or,
+                                                    std::move(*s2.res_other));
+                      formula fg = unop_multop(op::F, op::Or,
+                                               std::move(*s2.res_Univ));
+                      formula res = formula::Or({gf, fg});
                       if (res != f)
                         return recurse(res);
                     }
