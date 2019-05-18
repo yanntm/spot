@@ -444,7 +444,15 @@ namespace spot
             print_sclatex_psl(os << '$', f) << '$';
             return os;
           }
-        return escape_for_output(os, str_psl(f));
+        // GraphViz (2.40.1) has a strict limit of 16k for label
+        // length.  The limit we use below is more conservative,
+        // because (1) escaping the html element in the string
+        // (e.g., "&" -> "&amp;") can increase it a lot, and (2)
+        // a label of size 2048 is already unreasonable to display.
+        std::string s = str_psl(f);
+        if (s.size() > 2048)
+          s = "(label too long)";
+        return escape_for_output(os, s);
       }
 
       std::ostream&

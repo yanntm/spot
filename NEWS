@@ -42,6 +42,11 @@ New in spot 2.7.4.dev (not yet released)
     helpful to display automata as "graphs", e.g., when illustrating
     algorithms that do not care about labels.
 
+  - print_dot will replace labels that have more 2048 characters by a
+    "(label too long)" string.  This works around a limitation of
+    GraphViz that aborts when some label exceeds 16k characters, and
+    also helps making large automata more readable.
+
   - A new complement() function that return automata with unspecified
     acceptance condition.  The output can be alternating only if the
     input was alternating.

@@ -1104,3 +1104,8 @@ digraph "a U b" {
 }
 EOF
 diff out expected
+
+f="{{!a;!b}:{{c <-> d} && {e xor f} && {m | {l && {k | {j <-> {i xor {g && h}"
+f="$f}}}}} && {{n && o} | {!n && p}} && {q -> {r <-> s}}}:{[*0..1];t}}[]-> u"
+ltl2tgba -f "$f" --dot=bar > out.dot
+grep 'label too long' out.dot
