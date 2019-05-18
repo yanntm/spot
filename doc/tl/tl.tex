@@ -88,6 +88,8 @@
 \newcommand{\CONCAT}{\mathbin{\texttt{;}}}
 \newcommand{\DELAY}[1]{\mathbin{\texttt{\#\##1}}}
 \newcommand{\DELAYR}[1]{\mathbin{\texttt{\#\#[#1]}}}
+\newcommand{\DELAYP}[1]{\mathbin{\texttt{\#\#[+]}}}
+\newcommand{\DELAYS}[1]{\mathbin{\texttt{\#\#[*]}}}
 \newcommand{\0}{\texttt{0}}
 \newcommand{\1}{\texttt{1}}
 \newcommand{\STAR}[1]{\texttt{[*#1]}}
@@ -779,7 +781,9 @@ omitted.
   f\DELAYR{\mvar{i}..\mvar{j}} g &\equiv f\FUSION\{\STAR{\mvar{i}..\mvar{j}}\CONCAT g\} \\
   {}\DELAYR{..} g &\equiv \STAR{}\CONCAT g & {}\DELAYR{\mvar{i}..} g &\equiv \STAR{\mvar{i}..}\CONCAT g \\
   {}\DELAYR{..\mvar{j}} g &\equiv \STAR{0..\mvar{j}}\CONCAT g &
-  {}\DELAYR{\mvar{i}..\mvar{j}} g &\equiv \STAR{\mvar{i}..\mvar{j}}\CONCAT g
+                                                                {}\DELAYR{\mvar{i}..\mvar{j}} g &\equiv \STAR{\mvar{i}..\mvar{j}}\CONCAT g \\
+  f \DELAYP{} g & \equiv f \DELAYR{1..} g & f \DELAYS{} g & \equiv f \DELAYR{0..} g \\
+   \DELAYP{} g & \equiv  \DELAYR{1..} g &  \DELAYS{} g & \equiv \DELAYR{0..} g
 \end{align*}
 \subsection{Trivial Identities (Occur Automatically)}
 

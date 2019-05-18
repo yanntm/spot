@@ -232,6 +232,8 @@ using namespace spot;
 %token OP_POST_NEG "negative suffix" OP_POST_POS "positive suffix"
 %token <num> OP_DELAY_N "SVA delay operator"
 %token OP_DELAY_OPEN "opening bracket for SVA delay operator"
+%token OP_DELAY_PLUS "##[+] operator"
+%token OP_DELAY_STAR "##[*] operator"
 
 /* Priorities.  */
 
@@ -240,7 +242,7 @@ using namespace spot;
 
 %left OP_CONCAT
 %left OP_FUSION
-%left OP_DELAY_N OP_DELAY_OPEN
+%left OP_DELAY_N OP_DELAY_OPEN OP_DELAY_PLUS OP_DELAY_STAR
 
 /* Logical operators.  */
 %right OP_IMPLIES OP_EQUIV
@@ -451,7 +453,10 @@ delayargs: OP_DELAY_OPEN sqbracketargs
 	    { error_list.
 		emplace_back(@$, "missing closing bracket for ##[");
 	      $$.min = $$.max = 1U; }
-
+        | OP_DELAY_PLUS
+          { $$.min = 1; $$.max = fnode::unbounded(); }
+        | OP_DELAY_STAR
+          { $$.min = 0; $$.max = fnode::unbounded(); }
 
 atomprop: ATOMIC_PROP
           {

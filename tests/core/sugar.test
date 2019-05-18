@@ -43,6 +43,8 @@ F[]a|G[]b|X[]c
 {a ##[:] b}|->e
 {a ##[:1] b}|->e
 {##[..3] b}|->e
+{a ##[+] b}|->e
+{##[*] b}|->e
 EOF
 
 ltlfilt -F ok.in > ok.out
@@ -66,6 +68,8 @@ FGa | Gb | XGc
 {a:{[*];b}}[]-> e
 {a:{[*0..1];b}}[]-> e
 {[*0..3];b}[]-> e
+{a;[*];b}[]-> e
+{[*];b}[]-> e
 EOF
 diff ok.out expect
 

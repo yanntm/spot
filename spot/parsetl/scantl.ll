@@ -233,6 +233,8 @@ eol2        (\n\r)+|(\r\n)+
                                     }
                                   return token::OP_DELAY_N;
                                 }
+"##[+]"                         BEGIN(0); return token::OP_DELAY_PLUS;
+"##[*]"                         BEGIN(0); return token::OP_DELAY_STAR;
 "##["                           BEGIN(sqbracket); return token::OP_DELAY_OPEN;
 
   /* PSL operators */
