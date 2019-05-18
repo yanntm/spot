@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2015, 2017, 2018  Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2017-2019  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -31,6 +31,8 @@ assert(res == """#define p0 a & b
 #define p1 c
 GFp0 -> (FGp0 & Gp1)""")
 
+h = spot.relabel_apply(g, m)
+assert h == f
 
 autg = g.translate()
 spot.relabel_here(autg, m)

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2012-2016, 2018-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -482,4 +482,17 @@ namespace spot
     bse_relabeler rel(gen, c, m);
     return rel.visit(f);
   }
+
+  formula
+  relabel_apply(formula f, relabeling_map* m)
+  {
+    if (f.is(op::ap))
+      {
+        auto i = m->find(f);
+        if (i != m->end())
+          return i->second;
+      }
+    return f.map(relabel_apply, m);
+  }
+
 }

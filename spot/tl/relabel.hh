@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2015 Laboratoire de Recherche et
+// Copyright (C) 2012, 2013, 2015, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -48,4 +48,13 @@ namespace spot
   SPOT_API
   formula relabel_bse(formula f, relabeling_style style,
                       relabeling_map* m = nullptr);
+
+  /// \ingroup tl_rewriting
+  /// \brief Replace atomic propositions of \a f by subformulas
+  /// specified in \a m.
+  ///
+  /// Atomic proposition that do not appear in \a m are not
+  /// replaced.
+  SPOT_API
+  formula relabel_apply(formula f, relabeling_map* m);
 }
