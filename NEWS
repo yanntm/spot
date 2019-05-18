@@ -1,6 +1,11 @@
 New in spot 2.7.4.dev (not yet released)
 
-  Nothing yet.
+  Library:
+
+  - print_dot will replace labels that have more 2048 characters by a
+    "(label too long)" string.  This works around a limitation of
+    GraphViz that aborts when some label exceeds 16k characters, and
+    also helps making large automata more readable.
 
 New in spot 2.7.4 (2019-04-27)
 
