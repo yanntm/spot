@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2009-2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2009-2019 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 # Copyright (C) 2003-2004 Laboratoire d'Informatique de Paris 6
 # (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -217,6 +217,17 @@ ltlfilt -q    -f '{{a*}[:+];c}' --equivalent-to 'Xc R a'
 ltlfilt -q -r -f '{{a*}[:+];c}' --equivalent-to 'Xc R a'
 ltlfilt -q    -f '{c && {b | [*0]}[:+]}' --equivalent-to 'c & b'
 ltlfilt -q -r -f '{c && {b | [*0]}[:+]}' --equivalent-to 'c & b'
+
+
+# The ##[i:j] operator introduced in 2.8 has four different rewritings
+# depending on whether a or b accepts [*0].
+
+for a in 'a1;a2' 'a1[*];a2[*]'; do
+    for b in 'b1;b2' 'b1[*];b2[*]'; do
+        ltlfilt -q -f "{($a) ##[0:8] ($b)}[]->c" \
+          --equivalent-to "{(($a):($b))|(($a);[*0:7];($b))}[]->c" || exit 1
+    done
+done
 
 # test unknown dot options
 ltl2tgba --dot=@ a 2>stderr && exit 1

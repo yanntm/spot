@@ -60,10 +60,11 @@ New in spot 2.7.4.dev (not yet released)
 
   - The parser for SERE learned to recognize the ##n and ##[i:j]
     operators from SVA.  So {##2 a ##0 b[+] ##1 c ##2 e} is another
-    way to write {[*2];a:b[+];c;1;e}, and {a ##[i:j] b} is parsed as
-    {a:{[*i..j];b}}.  The formula::sugar_delay() function implement
-    this SVA operator in terms of the existing PSL operators.
-    ##[+] and ##[*] are sugar for ##[1:$] and ##[0:$].
+    way to write {[*2];a:b[+];c;1;e}.  The syntax {a ##[i:j] b} is
+    replaced in different ways depending on the values of i, a, and b.
+    The formula::sugar_delay() function implement this SVA operator in
+    terms of the existing PSL operators.  ##[+] and ##[*] are sugar
+    for ##[1:$] and ##[0:$].
 
   - spot::relabel_apply() make it easier to reverse the effect
     of spot::relabel() or spot::relabel_bse() on formula.
