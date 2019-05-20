@@ -58,6 +58,7 @@ F(a & !Xa & Xb)
 {a*;(!a)*;a[+]}|->b
 {a*;(!a)[+];a[+]}|->b
 {a*;(!c)[+];a[+]}|->b
+{a* ##0 b*}|->c
 EOF
 
 checkopt --boolean <<EOF
@@ -115,10 +116,11 @@ a & (b | c)
 {a[+];{!a}[*];a[*]}[]-> b
 {a[*];{!a}[*];a[+]}[]-> b
 {a[*];{!a}[+];a[+]}[]-> b
+{a[*]:b[*]}[]-> c
 EOF
 
 checkopt -c --stutter-invariant <<EOF
-15
+16
 EOF
 
 checkopt --syntactic-stutter-invariant <<EOF
@@ -134,6 +136,7 @@ a & (b | c)
 {a[*];{!a}[+];a[*]}[]-> b
 {a[+];{!a}[*];a[*]}[]-> b
 {a[*];{!a}[*];a[+]}[]-> b
+{a[*]:b[*]}[]-> c
 EOF
 
 checkopt --simplify <<EOF
@@ -158,6 +161,7 @@ a R (b W !a)
 !a R (a R (b W !a))
 !a R (a | X(a R (b W !a)))
 !a R (c | X(c R (b W !a)))
+(c W !b) W !a
 EOF
 
 checkopt --simplify --eventual --unique <<EOF
@@ -191,6 +195,7 @@ a & (b | c)
 {a[*];{!a}[*];a[+]}[]-> b
 {a[*];{!a}[+];a[+]}[]-> b
 {a[*];{!c}[+];a[+]}[]-> b
+{a[*]:b[*]}[]-> c
 EOF
 
 checkopt --obligation <<EOF
@@ -210,6 +215,7 @@ a & (b | c)
 {a[*];{!a}[*];a[+]}[]-> b
 {a[*];{!a}[+];a[+]}[]-> b
 {a[*];{!c}[+];a[+]}[]-> b
+{a[*]:b[*]}[]-> c
 EOF
 
 checkopt --guarantee <<EOF
@@ -232,6 +238,7 @@ checkopt -v --ltl <<EOF
 {a[*];{!a}[*];a[+]}[]-> b
 {a[*];{!a}[+];a[+]}[]-> b
 {a[*];{!c}[+];a[+]}[]-> b
+{a[*]:b[*]}[]-> c
 EOF
 
 checkopt -v --ap=3 <<EOF
@@ -275,6 +282,7 @@ a & (b | c)
 {a[*];{!a}[*];a[+]}[]-> b
 {a[*];{!a}[+];a[+]}[]-> b
 {a[*];{!c}[+];a[+]}[]-> b
+{a[*]:b[*]}[]-> c
 EOF
 
 checkopt -v --stutter-invariant <<EOF

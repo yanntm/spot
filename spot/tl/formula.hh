@@ -1245,9 +1245,25 @@ namespace spot
     ///
     /// The operator does not exist in Spot it is handled as syntactic
     /// sugar by the parser.  This function is used by the parser to
-    /// create the equivalent SERE.
+    /// create the equivalent SERE using PSL operators.
+    ///
+    /// The rewriting rules depends on the values of a, n, and b.
+    /// If n≥1 `a ##[n:m] b` is encoded as `a;1[*n-1,m-1];b`.
+    /// Otherwise:
+    /// * `a ##[0:0] b` is encoded as `a:b`,
+    /// * For m>0, `a ##[0:m] b` is encoded as
+    ///   - `a:(1[*0:m];b)` is `a` rejects `[*0]`,
+    ///   - `(a;1[*0:m]):b` is `b` rejects `[*0]`,
+    ///   - `(a:b) | (a;1[*0:m-1];b)` is `a` and `b` accept `[*0]`.
+    ///
+    /// The left operand can also be missing, in which case
+    /// `##[n:m] b` is rewritten as `1[*n:m];b`.
+    /// @{
     static formula sugar_delay(const formula& a, const formula& b,
                                unsigned min, unsigned max);
+    static formula sugar_delay(const formula& b,
+                               unsigned min, unsigned max);
+    /// @}
 
 #ifndef SWIG
     /// \brief Return the underlying pointer to the formula.

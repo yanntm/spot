@@ -541,8 +541,7 @@ sere: booleanatom
 	    | sere OP_FUSION error
               { missing_right_binop($$, $1, @2, "fusion operator"); }
 	    | OP_DELAY_N sere
-              { $$ = formula::sugar_delay(formula::tt(), formula($2),
-                                          $1, $1).to_node_(); }
+              { $$ = formula::sugar_delay(formula($2), $1, $1).to_node_(); }
 	    | OP_DELAY_N error
               { missing_right_binop($$, fnode::tt(), @1, "SVA delay operator"); }
 	    | sere OP_DELAY_N sere
@@ -557,7 +556,7 @@ sere: booleanatom
 		    error_list.emplace_back(@1, "reversed range");
 		    std::swap($1.max, $1.min);
 		  }
-                $$ = formula::sugar_delay(formula::tt(), formula($2),
+                $$ = formula::sugar_delay(formula($2),
                                           $1.min, $1.max).to_node_();
               }
 	    | delayargs error

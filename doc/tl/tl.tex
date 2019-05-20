@@ -785,11 +785,12 @@ omitted.
   f\DELAYR{0..}g                & \equiv (f\FUSION{}g)\OR(f\CONCAT{}\1\STAR{}\CONCAT{}g)\quad\text{if~}\varepsilon\VDash f \land \varepsilon\VDash g
 \end{align*}
 \begin{align*}
-  f\DELAY{\mvar{i}} g           & \equiv f\DELAYR{\mvar{i}..\mvar{i}} g & {}\DELAY{\mvar{i}} g  & \equiv \1\DELAYR{\mvar{i}..\mvar{i}} g                          \\
-  f\DELAYP{}g                   & \equiv f\DELAYR{1..}g                 & \DELAYP{} g           & \equiv\DELAYR{1..}g                                             \\
-  f\DELAYS{}g                   & \equiv f\DELAYR{0..}g                 & \DELAYS{} g           & \equiv\DELAYR{0..}g
-  f\DELAYR{..\mvar{j}} g        & \equiv f\DELAYR{0..\mvar{j}} g\}      & \DELAYR{..\mvar{j}} g & \equiv \1\DELAYR{0..\mvar{j}} g\}                               \\
-  f\DELAYR{..} g                & \equiv f\DELAYR{0..} f g\}            & \DELAYR{..} g         & \equiv \1\DELAYR{0..} g\}                                       \\
+  \DELAYR{\mvar{i}..\mvar{j}}g  & \equiv \1\STAR{\mvar{i}..\mvar{j}}\CONCAT g & \DELAYR{\mvar{i}..}g  & \equiv \1\STAR{\mvar{i}..}\CONCAT g                       \\
+  f\DELAY{\mvar{i}} g           & \equiv f\DELAYR{\mvar{i}..\mvar{i}} g       & {}\DELAY{\mvar{i}} g  & \equiv \1\STAR{\mvar{i}}\CONCAT g                         \\
+  f\DELAYP{}g                   & \equiv f\DELAYR{1..}g                       & \DELAYP{} g           & \equiv\DELAYR{1..}g                                       \\
+  f\DELAYS{}g                   & \equiv f\DELAYR{0..}g                       & \DELAYS{} g           & \equiv\DELAYR{0..}g                                       \\
+  f\DELAYR{..\mvar{j}} g        & \equiv f\DELAYR{0..\mvar{j}} g\}            & \DELAYR{..\mvar{j}} g & \equiv \1\DELAYR{0..\mvar{j}} g\}                         \\
+  f\DELAYR{..} g                & \equiv f\DELAYR{0..} f g\}                  & \DELAYR{..} g         & \equiv \1\DELAYR{0..} g\}
 \end{align*}
 
 \subsection{Trivial Identities (Occur Automatically)}

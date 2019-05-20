@@ -1773,15 +1773,22 @@ namespace spot
     return Concat({Star(Concat({s, b}), min, max), s});
   }
 
+  formula formula::sugar_delay(const formula& b,
+                               unsigned min, unsigned max)
+  {
+    // ##[min:max] b = 1[*min:max];b
+    return Concat({Star(tt(), min, max), b});
+  }
   formula formula::sugar_delay(const formula& a, const formula& b,
                                unsigned min, unsigned max)
   {
     // If min>=1
     //   a ##[min:max] b  = a;1[*min-1:max-1];b
     // If min==0 we can use
-    //   a ##[min:max] b = a:(1[*0:max];b)  if a rejects [*0]
-    //   a ##[min:max] b = (a;1[*0:max]):b  if b rejects [*0]
-    //   a ##[min:max] b = (a:b)|(a;[*0:max-1];b)  else
+    //   a ##[0:0] b = a:b
+    //   a ##[0:max] b = a:(1[*0:max];b)  if a rejects [*0]
+    //   a ##[0:max] b = (a;1[*0:max]):b  if b rejects [*0]
+    //   a ##[0:max] b = (a:b)|(a;[*0:max-1];b)  else
     if (min > 0)
       {
         --min;
@@ -1789,6 +1796,8 @@ namespace spot
           --max;
         return Concat({a, Star(tt(), min, max), b});
       }
+    if (max == 0)
+      return Fusion({a, b});
     if (!a.accepts_eword())
       return Fusion({a, Concat({Star(tt(), 0, max), b})});
     if (!b.accepts_eword())
