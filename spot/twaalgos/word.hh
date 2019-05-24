@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014, 2015, 2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2013, 2014, 2015, 2016, 2018, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -61,6 +61,13 @@ namespace spot
     /// - If any formula contains a disjunction, replace it by a
     /// single operand.
     void simplify();
+
+    /// \brief Use all atomic proposition.
+    ///
+    /// Make sure each letters actually use all variables in \a aps.
+    /// By default, missing variables are introduced as negative,
+    /// but setting \a positive to true will reverse that.
+    void use_all_aps(bdd aps, bool positive = false);
 
     typedef std::list<bdd> seq_t;
     seq_t prefix;

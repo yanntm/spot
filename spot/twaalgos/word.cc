@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -42,6 +42,17 @@ namespace spot
   twa_word::twa_word(const bdd_dict_ptr& dict) noexcept
     : dict_(dict)
   {
+  }
+
+  void
+  twa_word::use_all_aps(bdd aps, bool positive)
+  {
+    bdd def = positive ?
+      static_cast<bdd>(bddtrue) : static_cast<bdd>(bddfalse);
+    for (bdd& i: prefix)
+      i = bdd_satoneset(i, aps, def);
+    for (bdd& i: cycle)
+      i = bdd_satoneset(i, aps, def);
   }
 
   void

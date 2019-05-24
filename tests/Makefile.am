@@ -410,6 +410,7 @@ TESTS_python = \
   python/split.py \
   python/streett_totgba.py \
   python/streett_totgba2.py \
+  python/stutter.py \
   python/rs_like.py \
   python/sum.py \
   python/toparity.py \
