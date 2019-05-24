@@ -22,6 +22,9 @@
 
 import spot
 
-a1 = spot.translate('a U Gb & GFc & GFa')
+a1 = spot.translate('a U Gb')
 ta1 = spot.statelabeldiff(a1)
+rm1 = spot.remove_testing(ta1)
+
+assert spot.are_equivalent(ta1, rm1)
 

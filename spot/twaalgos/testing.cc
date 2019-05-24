@@ -156,24 +156,28 @@ namespace spot
     return res;
   }
 
-  twa_graph_ptr remove_stuttering(const const_twa_graph_ptr& input_twa)
+  twa_graph_ptr remove_stuttering_lasso(const const_twa_graph_ptr& input_twa)
   {
     if (SPOT_UNLIKELY(!(input_twa->is_existential())))
       throw std::runtime_error
         ("remove_testing() does not support alternating automata");
+
+    if (!input_twa->get_named_prop<bool>("testing-automaton"))
+      throw std::runtime_error
+        ("remove_testing() need a testing automata");
 
     auto filter_edge = [](const twa_graph::edge_storage_t& e, unsigned,
         void* filter_data)
     {
       auto allap = static_cast<bdd*>(filter_data);
 
-      if (&e.cond != allap)
+      if (e.cond != *allap)
         return scc_info::edge_filter_choice::cut;
       return scc_info::edge_filter_choice::keep;
     };
 
     bdd empty = bdd_satoneset(bddtrue, input_twa->ap_vars(), bddfalse);
-    scc_info r_scc = scc_info(input_twa, ~0U, filter_edge, &empty);
+    scc_info r_scc(input_twa, ~0U, filter_edge, &empty);
 
     unsigned nb_scc = r_scc.scc_count();
     std::vector<bool> is_livelock(nb_scc, false);
@@ -196,16 +200,24 @@ namespace spot
     }
 
     twa_graph_ptr res = make_twa_graph(input_twa->get_dict());
+    auto acc = input_twa->get_acceptance();
+    unsigned fin = input_twa->num_sets();
+    acc |= acc_cond::acc_code::fin({fin});
+    res->set_acceptance(fin+1, acc);
+
     transform_accessible(input_twa, res, [&](unsigned src, bdd& cond,
-          acc_cond::mark_t&, unsigned dst)
+          acc_cond::mark_t& m, unsigned dst)
         {
           //acc.set();
-          if (cond != empty)
-            return;
-
-          if (is_livelock[r_scc.scc_of(src)] || is_livelock[r_scc.scc_of(dst)])
-            cond = bddfalse;
+          if (cond == empty && is_livelock[r_scc.scc_of(src)])
+          {
+            if (src != dst)
+              cond = bddfalse;
+          }
+          else
+            m.set(fin);
         });
+    res->set_named_prop("testing-automaton", new bool);
     return res;
   }
 }
