@@ -70,8 +70,19 @@ namespace spot
     };
   }
 
+  std::ostream& output_aborter::print_reason(std::ostream& os) const
+  {
+    os << "more than ";
+    if (reason_is_states_)
+      os << max_states_ << " states required";
+    else
+      os << max_edges_ << " edges required";
+    return os;
+  }
+
   twa_graph_ptr
-  tgba_powerset(const const_twa_graph_ptr& aut, power_map& pm, bool merge)
+  tgba_powerset(const const_twa_graph_ptr& aut, power_map& pm, bool merge,
+                const output_aborter* aborter)
   {
     unsigned ns = aut->num_states();
     unsigned nap = aut->ap().size();
@@ -245,6 +256,12 @@ namespace spot
                 pm.map_.emplace_back(std::move(ps));
               }
             res->new_edge(src_num, dst_num, num2bdd[c]);
+            if (aborter && aborter->too_large(res))
+              {
+                for (auto v: toclean)
+                  delete v;
+                return nullptr;
+              }
           }
       }
 
@@ -256,10 +273,11 @@ namespace spot
   }
 
   twa_graph_ptr
-  tgba_powerset(const const_twa_graph_ptr& aut)
+  tgba_powerset(const const_twa_graph_ptr& aut,
+                const output_aborter* aborter)
   {
     power_map pm;
-    return tgba_powerset(aut, pm);
+    return tgba_powerset(aut, pm, true, aborter);
   }
 
 
@@ -428,10 +446,13 @@ namespace spot
     // Do not merge edges in the deterministic automaton.  If we
     // add two self-loops labeled by "a" and "!a", we do not want
     // these to be merged as "1" before the acceptance has been fixed.
-    auto det = tgba_powerset(aut, pm, false);
 
-    if ((threshold_states > 0)
-        && (pm.map_.size() > aut->num_states() * threshold_states))
+    unsigned max_states = aut->num_states() * threshold_states;
+    if (max_states == 0)
+      max_states = ~0U;
+    output_aborter aborter(max_states);
+    auto det = tgba_powerset(aut, pm, false, &aborter);
+    if (!det)
       return nullptr;
     if (fix_dba_acceptance(det, aut, pm, threshold_cycles))
       return nullptr;

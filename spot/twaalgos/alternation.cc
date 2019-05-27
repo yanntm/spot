@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2016-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -349,7 +349,7 @@ namespace spot
       }
 
 
-      twa_graph_ptr run(bool named_states)
+      twa_graph_ptr run(bool named_states, const output_aborter* aborter)
       {
         // First, we classify each SCC into three possible classes:
         //
@@ -442,6 +442,9 @@ namespace spot
         state_set v;
         while (!todo.empty())
           {
+            if (aborter && aborter->too_large(res))
+              return nullptr;
+
             unsigned s = todo.top();
             todo.pop();
 
@@ -505,14 +508,15 @@ namespace spot
 
 
   twa_graph_ptr remove_alternation(const const_twa_graph_ptr& aut,
-                                   bool named_states)
+                                   bool named_states,
+                                   const output_aborter* aborter)
   {
     if (aut->is_existential())
       // Nothing to do, why was this function called at all?
       return std::const_pointer_cast<twa_graph>(aut);
 
     alternation_remover ar(aut);
-    return ar.run(named_states);
+    return ar.run(named_states, aborter);
   }
 
 

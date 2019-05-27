@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2012-2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2012-2019 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -34,7 +34,7 @@ check_csv()
 # Make sure ltlcross quotes formulas correctly
 cat >formula <<\EOF
 G"a'-'>'b"
-FGa
+FGa & GFb
 EOF
 run 0 ltlcross -F formula --csv=out.csv \
                          "ltl2tgba -s %f >%N" \
@@ -48,11 +48,11 @@ info: check_empty P1*N0
 info: check_empty P1*N1
 info: check_empty Comp(N1)*Comp(P1)
 info: check_empty P0*N0
+info: check_empty Comp(N0)*Comp(P0)
 info: check_empty P0*N1
-info: check_empty Comp(N0)*N1
 info: check_empty P1*N0
-info: check_empty Comp(N1)*N0
 info: check_empty P1*N1
+info: check_empty Comp(N1)*Comp(P1)
 EOF
 grep 'info: check_empty' error > ce
 diff -u ce ceplan
@@ -60,6 +60,7 @@ diff -u ce ceplan
 ltlcross -F formula --csv=out.csv \
                    --ref "ltl2tgba -s %f >%N" \
                    "ltl2tgba --lenient -s %s >%N" \
+                   --determinize-max-states=0 \
                    --verbose 2> error
 cat >ceplan <<EOF
 info: check_empty P0*N1
@@ -68,7 +69,6 @@ info: check_empty P1*N1
 info: check_empty Comp(N1)*Comp(P1)
 info: check_empty P0*N1
 info: check_empty P1*N0
-info: check_empty Comp(N1)*N0
 info: check_empty P1*N1
 EOF
 grep 'info: check_empty' error > ce
@@ -318,3 +318,18 @@ ltlcross --color --products=0 ltl2tgba -f GFa -f FGa --csv=out.csv
 grep product out.csv && exit 1
 check_csv out.csv
 
+# --determinize and --determinize-max-states are incompatible.
+ltlcross -f a ltl2tgba --determinize --determinize-max-states=10 2>stderr &&
+    exit 1
+grep 'max-states.*incompatible' stderr
+ltlcross -f a ltl2tgba --determinize-max-states=10 --determinize 2>stderr &&
+    exit 1
+grep 'max-states.*incompatible' stderr
+
+# --determinize and --determinize-max-edges are incompatible.
+ltlcross -f a ltl2tgba --determinize-max-edges=10 --determinize  2>stderr &&
+    exit 1
+grep 'max-edges.*incompatible' stderr
+ltlcross -f a ltl2tgba --determinize-max-edges=10 --determinize  2>stderr &&
+    exit 1
+grep 'max-edges.*incompatible' stderr

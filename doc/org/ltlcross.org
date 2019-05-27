@@ -15,34 +15,37 @@ The main differences with LBTT are:
   - *support for PSL formulas in addition to LTL*
   - support for (non-alternating) automata with *any type of acceptance condition*,
   - support for *weak alternating automata*,
-  - additional intersection *checks with the complement* (option =-D=), allowing
-    to check equivalence of automata more precisely,
+  - additional intersection *checks with the complement* allowing to
+    check equivalence of automata more precisely,
   - *more statistics*, especially:
     - the number of logical transitions represented by each physical edge,
     - the number of deterministic states and automata
     - the number of SCCs with their various strengths (nonaccepting, terminal, weak, strong)
     - the number of terminal, weak, and strong automata
-  - an option to *reduce counterexample* by attempting to mutate and
+  - an option to *reduce counterexamples* by attempting to mutate and
     shorten troublesome formulas (option =--grind=),
   - statistics output in *CSV* for easier post-processing,
   - *more precise time measurement* (LBTT was only precise to
     1/100 of a second, reporting most times as "0.00s").
 
-Although =ltlcross= performs the same sanity checks as LBTT, it does
+Although =ltlcross= performs similar sanity checks as LBTT, it does
 not implement any of the interactive features of LBTT.  In our almost
 10-year usage of LBTT, we never had to use its interactive features to
 understand bugs in our translation.  Therefore =ltlcross= will report
 problems, maybe with a conterexample, but you will be on your own to
-investigate and fix them.
+investigate and fix them (the =--grind= option may help you reduce the
+problem to a shorter formula).
 
 The core of =ltlcross= is a loop that does the following steps:
   - Input a formula
   - Translate the formula and its negation using each configured translator.
     If there are 3 translators, the positive and negative translations
-    will be denoted =P0=, =N0=, =P1=, =N1=, =P2=, =N2=.  Optionally
-    build complemented automata denoted =Comp(P0)=, =Comp(N0)=, etc.
+    will be denoted =P0=, =N0=, =P1=, =N1=, =P2=, =N2=.
+  - Optionally build complemented automata denoted =Comp(P0)=, =Comp(N0)=, etc.
+    (By default, this is done only for small automata, but see options =-D=,
+    =--determinize-max-states= and =--determinize-max-edges=.)
   - Perform sanity checks between all these automata to detect any problem.
-  - Build the products of these automata with a random state-space (the same
+  - Optionally build the products of these automata with a random state-space (the same
     state-space for all translations).  (If the =--products=N= option is given,
     =N= products are performed instead.)
   - Gather statistics if requested.
@@ -282,29 +285,34 @@ positive and negative formulas by the ith translator).
     The cycle part is denoted by =cycle{...}=.
 
   - Complemented intersection check.  If $P_i$ and $N_i$ are
-    deterministic, =ltlcross= builds their complements, $Comp(P_i)$
-    and $Comp(N_i)$, and then ensures that $Comp(P_i)\otimes
-    Comp(N_i)$ is empty.  If only one of them is deterministic, for
-    instance $P_i$, we check that $P_j\otimes Comp(P_i)$ for all $j
-    \ne i$; likewise if it's $N_i$ that is deterministic.
+    deterministic or if they are small enough, =ltlcross= attempts to
+    build their complements, $Comp(P_i)$ and $Comp(N_i)$.
 
-    By default this check is only done for deterministic automata,
-    because complementation is relatively cheap is that case (at least
-    it is cheap for simple acceptance conditions).  Using option
-    =--determinize=, =ltlcross= can be instructed to perform
-    complementation of non-deterministic automata as well, ensuring
-    precise equivalence checks between all automata.  However be aware
-    that this determinization + complementation may generate large
-    automata.
+    Complementation is not always attempted, especially when it
+    requires a determinization-based construction.  The conditions
+    specifying when the complement automata are constructed can be
+    modified with the =--determinize-max-states=N= and
+    =--determinize-max-edges=M= options, which abort the
+    complementation if it would produce an automaton with more than
+    =N= states (500 by default) or more than =M= edges (5000 by
+    default).  Alternatively, use =--determinize= (a.k.a. =-D=) to
+    force the complementation of all automata.
+
+    If both complement automata could be computed, =ltlcross= ensures that
+    $Comp(P_i)\otimes Comp(N_i)$ is empty.
+
+    If only one automaton has been complemented, for instance $P_i$,
+    =ltlcross= checks that $P_j\otimes Comp(P_i)$ for all $j \ne i$;
+    likewise if it's $N_i$ that is deterministic.
 
     When validating a translator with =ltlcross= without using the
     =--determinize= option we highly recommend to include a translator
     with good deterministic output to augment test coverage.  Using
-    '=ltl2tgba -lD %f >%O=' will produce deterministic automata for
-    all obligation properties and many recurrence properties.  Using
-    '=ltl2dstar --ltl2nba=spin:pathto/ltl2tgba@-Ds %L %O=' will
-    systematically produce a deterministic Rabin automaton (that
-    =ltlcross= can complement easily).
+    '=ltl2tgba -D %f >%O=' will produce deterministic automata for all
+    obligation properties and many recurrence properties.  Using
+    '=ltl2tgba -PD %f >%O=' will systematically produce a
+    deterministic Parity automaton (that =ltlcross= can complement
+    easily).
 
   - Cross-comparison checks: for some state-space $S$,
     all $P_i\otimes S$ are either all empty, or all non-empty.
@@ -325,7 +333,7 @@ positive and negative formulas by the ith translator).
     These products tests may sometime catch errors that were not
     captured by the first two tests if one non-deterministic automaton
     recognize less words than what it should.  If the input automata
-    are deterministic or the =--determinize= option is used, this test
+    are all deterministic or the =--determinize= option is used, this test
     is redundant and can be disabled.  (In fact, the =--determinize=
     option implies option =--product=0= to do so.)
 
@@ -1111,16 +1119,16 @@ produce transition-based generalized Büchi automata, while =ltl3ba
 -H1= produces co-Büchi alternating automata.
 
 #+BEGIN_SRC sh :prologue "export SPOT_HOA_TOLERANT=1; exec 2>&1"
-ltlcross -f 'FGa' ltl2tgba 'ltl3ba -H1' --determinize --verbose
+ltlcross -f 'FGa' ltl2tgba 'ltl3ba -H1' --verbose
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 F(G(a))
-Running [P0]: ltl2tgba -H 'F(G(a))'>'lcr-o0-cNwEjy'
-Running [P1]: ltl3ba -H1 -f '<>([](a))'>'lcr-o1-WQo28q'
-Running [N0]: ltl2tgba -H '!(F(G(a)))'>'lcr-o0-KT96Zj'
-Running [N1]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o1-WE1RXc'
+Running [P0]: ltl2tgba -H 'F(G(a))'>'lcr-o0-ltzvEc'
+Running [P1]: ltl3ba -H1 -f '<>([](a))'>'lcr-o1-dqnX28'
+Running [N0]: ltl2tgba -H '!(F(G(a)))'>'lcr-o0-wmIXr5'
+Running [N1]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o1-yJesT1'
 info: collected automata:
 info:   P0	(2 st.,3 ed.,1 sets)
 info:   N0	(1 st.,2 ed.,1 sets) deterministic complete
@@ -1129,14 +1137,14 @@ info:   N1	(3 st.,5 ed.,1 sets) univ-edges complete
 Performing sanity checks and gathering statistics...
 info: getting rid of universal edges...
 info:   N1	(3 st.,5 ed.,1 sets) -> (2 st.,4 ed.,1 sets)
-info: complementing non-deterministic automata via determinization...
-info:   P0	(2 st.,3 ed.,1 sets) -> (2 st.,4 ed.,2 sets)	Comp(P0)
-info:   P1	(2 st.,3 ed.,1 sets) -> (2 st.,4 ed.,2 sets)	Comp(P1)
+info: complementing automata...
+info:   P0	(2 st.,3 ed.,1 sets) -> (2 st.,4 ed.,1 sets)	Comp(P0)
+info:   N0	(1 st.,2 ed.,1 sets) -> (1 st.,2 ed.,1 sets)	Comp(N0)
+info:   P1	(2 st.,3 ed.,1 sets) -> (2 st.,4 ed.,1 sets)	Comp(P1)
+info:   N1	(2 st.,4 ed.,1 sets) -> (2 st.,4 ed.,1 sets)	Comp(N1)
 info: getting rid of any Fin acceptance...
-info:	Comp(P0)	(2 st.,4 ed.,2 sets) -> (2 st.,4 ed.,1 sets)
 info:	Comp(N0)	(1 st.,2 ed.,1 sets) -> (2 st.,3 ed.,1 sets)
 info:	     P1 	(2 st.,3 ed.,1 sets) -> (2 st.,3 ed.,1 sets)
-info:	Comp(P1)	(2 st.,4 ed.,2 sets) -> (2 st.,4 ed.,1 sets)
 info:	Comp(N1)	(2 st.,4 ed.,1 sets) -> (3 st.,6 ed.,1 sets)
 info: check_empty P0*N0
 info: check_empty Comp(N0)*Comp(P0)
@@ -1144,6 +1152,7 @@ info: check_empty P0*N1
 info: check_empty P1*N0
 info: check_empty P1*N1
 info: check_empty Comp(N1)*Comp(P1)
+info: cross_checks and consistency_checks unnecessary
 
 No problem detected.
 #+end_example
@@ -1162,41 +1171,35 @@ alternating automata are supported) into non-alternating automata.
 Here only =N1= needs this transformation.
 
 Then =ltlcross= computes the complement of these four
-automata.  Since =P0= and =P1= are nondeterministic and the
-=--determinize= option was given, a first pass determinize and
-complete these two automata, creating =Comp(P0)= and =Comp(P1)=.
-
-Apparently =N0= and =N1= are already deterministic, so their
-complement could be obtained by just complementing their acceptance
-condition (this is not written -- we only deduce so because they do
-not appear in the list of automata that had to be determinized).
+automata.
 
 Now that =ltlcross= has four complemented automata, it has to make
 sure they use only =Inf= acceptance because that is what our emptiness
 check procedure can handle.  So there is a new pass over all automata,
 rewriting them to get rid of any =Fin= acceptance.
 
-After this preparatory work, it is time for actually comparing these
+After this preparatory work, it is time to actually compare these
 automata.  Together, the tests =P0*N0= and =Comp(N0)*Comp(P0)= ensure
 that the automaton =N0= is really the complement of =P0=.  Similarly
 =P1*N1= and =Comp(N1)*Comp(P1)= ensure that =N1= is the complement of
 =P1=.  Finally =P0*N1= and =P1*N0= ensure that =P1= is equivalent to
 =P0= and =N1= is equivalent to =N0=.
 
-Note that if we had not used the =--determinize= option, the procedure
-would look slightly more complex:
+Note that if we reduce =ltlcross='s ability to determinize
+automata for complementation, the procedure
+can look slightly more complex:
 
 #+BEGIN_SRC sh :prologue "export SPOT_HOA_TOLERANT=1; exec 2>&1"
-ltlcross -f 'FGa' ltl2tgba 'ltl3ba -H1' --verbose
+ltlcross -f 'FGa' ltl2tgba 'ltl3ba -H1' --determinize-max-states=1 --verbose
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 F(G(a))
-Running [P0]: ltl2tgba -H 'F(G(a))'>'lcr-o0-Ot1KDa'
-Running [P1]: ltl3ba -H1 -f '<>([](a))'>'lcr-o1-Kvzdfm'
-Running [N0]: ltl2tgba -H '!(F(G(a)))'>'lcr-o0-X2dURx'
-Running [N1]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o1-wuLpzJ'
+Running [P0]: ltl2tgba -H 'F(G(a))'>'lcr-o0-HHyVWR'
+Running [P1]: ltl3ba -H1 -f '<>([](a))'>'lcr-o1-scKnIH'
+Running [N0]: ltl2tgba -H '!(F(G(a)))'>'lcr-o0-6Wloux'
+Running [N1]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o1-MQ7Rin'
 info: collected automata:
 info:   P0	(2 st.,3 ed.,1 sets)
 info:   N0	(1 st.,2 ed.,1 sets) deterministic complete
@@ -1205,6 +1208,11 @@ info:   N1	(3 st.,5 ed.,1 sets) univ-edges complete
 Performing sanity checks and gathering statistics...
 info: getting rid of universal edges...
 info:   N1	(3 st.,5 ed.,1 sets) -> (2 st.,4 ed.,1 sets)
+info: complementing automata...
+info:   P0	not complemented (more than 1 states required)
+info:   N0	(1 st.,2 ed.,1 sets) -> (1 st.,2 ed.,1 sets)	Comp(N0)
+info:   P1	not complemented (more than 1 states required)
+info:   N1	(2 st.,4 ed.,1 sets) -> (2 st.,4 ed.,1 sets)	Comp(N1)
 info: getting rid of any Fin acceptance...
 info:	Comp(N0)	(1 st.,2 ed.,1 sets) -> (2 st.,3 ed.,1 sets)
 info:	     P1 	(2 st.,3 ed.,1 sets) -> (2 st.,3 ed.,1 sets)
@@ -1215,7 +1223,9 @@ info: check_empty Comp(N0)*N1
 info: check_empty P1*N0
 info: check_empty Comp(N1)*N0
 info: check_empty P1*N1
-info: building state-space #0/1 of 200 states with seed 0
+info: complements were not computed for some automata
+info: continuing with cross_checks and consistency_checks
+info: building state-space #1/1 of 200 states with seed 0
 info: state-space has 4136 edges
 info: building product between state-space and P0 (2 st., 3 ed.)
 info:   product has 400 st., 8298 ed.
@@ -1263,10 +1273,10 @@ ltlcross -f 'FGa' ltl2tgba --reference 'ltl3ba -H1' --verbose
 #+RESULTS:
 #+begin_example
 F(G(a))
-Running [P0]: ltl3ba -H1 -f '<>([](a))'>'lcr-o0-hsnlkV'
-Running [P1]: ltl2tgba -H 'F(G(a))'>'lcr-o1-R0jOmP'
-Running [N0]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o0-7GwxvJ'
-Running [N1]: ltl2tgba -H '!(F(G(a)))'>'lcr-o1-5sgPFD'
+Running [P0]: ltl3ba -H1 -f '<>([](a))'>'lcr-o0-bh9PHg'
+Running [P1]: ltl2tgba -H 'F(G(a))'>'lcr-o1-LvvYEm'
+Running [N0]: ltl3ba -H1 -f '!(<>([](a)))'>'lcr-o0-bcUDEs'
+Running [N1]: ltl2tgba -H '!(F(G(a)))'>'lcr-o1-Pw1REy'
 info: collected automata:
 info:   P0	(2 st.,3 ed.,1 sets)
 info:   N0	(3 st.,5 ed.,1 sets) univ-edges complete
@@ -1275,31 +1285,18 @@ info:   N1	(1 st.,2 ed.,1 sets) deterministic complete
 Performing sanity checks and gathering statistics...
 info: getting rid of universal edges...
 info:   N0	(3 st.,5 ed.,1 sets) -> (2 st.,4 ed.,1 sets)
+info: complementing automata...
+info:   P1	(2 st.,3 ed.,1 sets) -> (2 st.,4 ed.,1 sets)	Comp(P1)
+info:   N1	(1 st.,2 ed.,1 sets) -> (1 st.,2 ed.,1 sets)	Comp(N1)
 info: getting rid of any Fin acceptance...
 info:	     P0 	(2 st.,3 ed.,1 sets) -> (2 st.,3 ed.,1 sets)
 info:	Comp(N1)	(1 st.,2 ed.,1 sets) -> (2 st.,3 ed.,1 sets)
 info: P0 and N0 assumed correct and used as references
 info: check_empty P0*N1
 info: check_empty P1*N0
-info: check_empty Comp(N1)*N0
 info: check_empty P1*N1
-info: building state-space #0/1 of 200 states with seed 0
-info: state-space has 4136 edges
-info: building product between state-space and P0 (2 st., 3 ed.)
-info:   product has 400 st., 8298 ed.
-info:               2 SCCs
-info: building product between state-space and P1 (2 st., 3 ed.)
-info:   product has 400 st., 8298 ed.
-info:               2 SCCs
-info: building product between state-space and N0 (2 st., 4 ed.)
-info:   product has 400 st., 8272 ed.
-info:               1 SCCs
-info: building product between state-space and N1 (1 st., 2 ed.)
-info:   product has 200 st., 4136 ed.
-info:               1 SCCs
-info: cross_check {P0,P1}, state-space #0/1
-info: cross_check {N0,N1}, state-space #0/1
-info: consistency_check (P1,N1), state-space #0/1
+info: check_empty Comp(N1)*Comp(P1)
+info: cross_checks and consistency_checks unnecessary
 
 No problem detected.
 #+end_example

@@ -103,6 +103,14 @@ for the presence of an accepting self-loop.") },
     { DOC("degen-remscc", "If non-zero (the default), make sure the output \
 of the degenalization has as many SCCs as the input, by removing superfluous \
 ones.") },
+    { DOC("det-max-states", "When defined to a positive integer N, \
+determinizations will be aborted whenever the number of generated \
+states would exceed N.  In this case a non-deterministic automaton \
+will be returned.")},
+    { DOC("det-max-edges", "When defined to a positive integer N, \
+determinizations will be aborted whenever the number of generated \
+edges would exceed N.  In this case a non-deterministic automaton \
+will be returned.")},
     { DOC("det-scc", "Set to 0 to disable scc-based optimizations in \
 the determinization algorithm.") },
     { DOC("det-simul", "Set to 0 to disable simulation-based optimizations in \

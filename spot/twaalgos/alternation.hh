@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2016, 2018, 2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -20,6 +20,7 @@
 #pragma once
 
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/powerset.hh>
 #include <utility>
 
 namespace spot
@@ -98,10 +99,14 @@ namespace spot
   /// acceptance is only used in presence of size-1 rejecting-SCCs.)
   ///
   /// \param named_states name each state for easier debugging
+  ///
+  /// \param aborter Return nullptr if the built automaton would
+  /// be larger than the size specified by the \a aborter.
   /// @}
   SPOT_API
   twa_graph_ptr remove_alternation(const const_twa_graph_ptr& aut,
-                                   bool named_states = false);
+                                   bool named_states = false,
+                                   const output_aborter* aborter = nullptr);
 
 
   // Remove universal edges on the fly.

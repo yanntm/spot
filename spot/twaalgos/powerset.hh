@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2011, 2013-2015, 2019 Laboratoire de Recherche et
 // Développement de l'Epita.
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -24,6 +24,7 @@
 
 #include <set>
 #include <vector>
+#include <iosfwd>
 #include <spot/twa/twagraph.hh>
 
 namespace spot
@@ -41,6 +42,43 @@ namespace spot
     }
   };
 
+  /// \brief Helper object to specify when an algorithm
+  /// should abort its construction.
+  class SPOT_API output_aborter
+  {
+    unsigned max_states_;
+    unsigned max_edges_;
+    mutable bool reason_is_states_;
+  public:
+    output_aborter(unsigned max_states,
+                   unsigned max_edges = ~0U)
+      : max_states_(max_states), max_edges_(max_edges)
+    {
+    }
+
+    unsigned max_states() const
+    {
+      return max_states_;
+    }
+
+    unsigned max_edges() const
+    {
+      return max_edges_;
+    }
+
+    bool too_large(const const_twa_graph_ptr& aut) const
+    {
+      bool too_many_states = aut->num_states() > max_states_;
+      if (!too_many_states && (aut->num_edges() <= max_edges_))
+        return false;
+      // Only update the reason if we return true;
+      reason_is_states_ = too_many_states;
+      return true;
+    }
+
+    std::ostream& print_reason(std::ostream&) const;
+  };
+
 
   /// \ingroup twa_misc
   /// \brief Build a deterministic automaton, ignoring acceptance conditions.
@@ -53,12 +91,17 @@ namespace spot
   /// associated to each state of the deterministic automaton.
   /// The \a merge argument can be set to false to prevent merging of
   /// transitions.
+  ///
+  /// If ab \a aborter is given, abort the construction whenever it
+  /// would build an automaton that is too large, and return nullptr.
   //@{
   SPOT_API twa_graph_ptr
   tgba_powerset(const const_twa_graph_ptr& aut,
-                power_map& pm, bool merge = true);
+                power_map& pm, bool merge = true,
+                const output_aborter* aborter = nullptr);
   SPOT_API twa_graph_ptr
-  tgba_powerset(const const_twa_graph_ptr& aut);
+  tgba_powerset(const const_twa_graph_ptr& aut,
+                const output_aborter* aborter = nullptr);
   //@}
 
 

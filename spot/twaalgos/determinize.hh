@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016 Laboratoire de Recherche et Développement
-// de l'Epita.
+// Copyright (C) 2015, 2016, 2019 Laboratoire de Recherche et
+// Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <spot/twaalgos/powerset.hh>
 #include <spot/twa/twagraph.hh>
 
 namespace spot
@@ -72,10 +73,15 @@ namespace spot
   ///                    might be worth to call
   ///                    spot::check_stutter_invariance() first if
   ///                    possible.)
+  ///
+  /// \param aborter abort the construction if the constructed
+  ///                automaton would be too large.  Return nullptr
+  ///                in this case.
   SPOT_API twa_graph_ptr
   tgba_determinize(const const_twa_graph_ptr& aut,
                    bool pretty_print = false,
                    bool use_scc = true,
                    bool use_simulation = true,
-                   bool use_stutter = true);
+                   bool use_stutter = true,
+                   const output_aborter* aborter = nullptr);
 }

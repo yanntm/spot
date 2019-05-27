@@ -511,17 +511,31 @@ namespace spot
   }
 
   twa_graph_ptr
-  complement(const const_twa_graph_ptr& aut)
+  complement(const const_twa_graph_ptr& aut, const output_aborter* aborter)
   {
     if (!aut->is_existential() || is_universal(aut))
       return dualize(aut);
     if (is_very_weak_automaton(aut))
-      return remove_alternation(dualize(aut));
+      return remove_alternation(dualize(aut), aborter);
     // Determinize
-    spot::postprocessor p;
+    spot::option_map m;
+    if (aborter)
+      {
+        m.set("det-max-states", aborter->max_states());
+        m.set("det-max-edges", aborter->max_edges());
+      }
+    if (aut->num_states() > 32)
+      {
+        m.set("ba-simul", 0);
+        m.set("simul", 0);
+      }
+    spot::postprocessor p(&m);
     p.set_type(spot::postprocessor::Generic);
     p.set_pref(spot::postprocessor::Deterministic);
     p.set_level(spot::postprocessor::Low);
-    return dualize(p.run(std::const_pointer_cast<twa_graph>(aut)));
+    auto det = p.run(std::const_pointer_cast<twa_graph>(aut));
+    if (!det)
+      return nullptr;
+    return dualize(det);
   }
 }

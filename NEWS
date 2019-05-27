@@ -8,6 +8,19 @@ New in spot 2.7.4.dev (not yet released)
   - ltldo, ltlcross, and autcross are now preferring posix_spawn()
     over fork()+exec() when available.
 
+  - ltlcross has new options --determinize-max-states=N and
+    --determinize-max-edges=M to restrict the use of
+    determinization-based complementation to cases where it produces
+    automata with at most N states and M edges.  By default
+    determinization is now attempted up to 500 states and 5000
+    edges.  This is an improvement over the previous default where
+    determinization-based complementation was not performed at all,
+    unless -D was specified.
+
+  - ltlcross will no skip unnecessary cross-checks and
+    consistency-checks (they are unnecessary when all automata
+    could be complemented and statistics were not required).
+
   Library:
 
   - Add generic_accepting_run() as a variant of generic_emptiness_check() that
@@ -32,7 +45,7 @@ New in spot 2.7.4.dev (not yet released)
     allows "autfilt [-D] --small" to minimize very-weak automata
     whenever they are found to represent obligation properties.)
 
-  - There is a new spot::scc_and_mark_filter objet that simplify the
+  - There is a new spot::scc_and_mark_filter objet that simplifies the
     creation of filters to restrict spot::scc_info to some particular
     SCC while cutting new SCCs on given acceptance sets.  This is used
     by spot::generic_emptiness_check() when processing SCCs
@@ -51,6 +64,20 @@ New in spot 2.7.4.dev (not yet released)
     acceptance condition.  The output can be alternating only if the
     input was alternating.
 
+  - There is a new class output_aborter that is used to specify
+    upper bounds on the size of automata produced by some algorithms.
+    Several functions have been changed to accept an output_aborter.
+    This includes:
+      * tgba_determinize()
+      * tgba_powerset()
+      * minimize_obligation()
+      * minimize_wdba()
+      * remove_alternation()
+      * product()
+      * the new complement()
+      * the postprocessor class, via the "det-max-state" and
+        "det-max-edges" options.
+
   - SVA's first_match operator can now be used in SERE formulas and
     that is supported by the ltl_to_tgba_fm() translation.  See
     doc/tl/tl.pdf for the semantics.  *WARNING* Because this adds a
@@ -66,7 +93,7 @@ New in spot 2.7.4.dev (not yet released)
     terms of the existing PSL operators.  ##[+] and ##[*] are sugar
     for ##[1:$] and ##[0:$].
 
-  - spot::relabel_apply() make it easier to reverse the effect
+  - spot::relabel_apply() makes it easier to reverse the effect
     of spot::relabel() or spot::relabel_bse() on formula.
 
   - The LTL simplifier learned the following optional rules:

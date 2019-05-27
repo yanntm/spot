@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -71,6 +71,8 @@ namespace spot
         det_scc_ = opt->get("det-scc", 1);
         det_simul_ = opt->get("det-simul", 1);
         det_stutter_ = opt->get("det-stutter", 1);
+        det_max_states_ = opt->get("det-max-states", -1);
+        det_max_edges_ = opt->get("det-max-edges", -1);
         simul_ = opt->get("simul", -1);
         scc_filter_ = opt->get("scc-filter", -1);
         ba_simul_ = opt->get("ba-simul", -1);
@@ -337,12 +339,19 @@ namespace spot
     twa_graph_ptr dba = nullptr;
     twa_graph_ptr sim = nullptr;
 
+    output_aborter aborter_
+      (det_max_states_ >= 0 ? static_cast<unsigned>(det_max_states_) : -1U,
+       det_max_edges_ >= 0 ? static_cast<unsigned>(det_max_edges_) : -1U);
+    output_aborter* aborter =
+      (det_max_states_ >= 0 || det_max_edges_ >= 0) ? &aborter_ : nullptr;
+
     // (Small,Low) is the only configuration where we do not run
     // WDBA-minimization.
     if ((PREF_ != Small || level_ != Low) && wdba_minimize_)
       {
+        // FIXME: This should be level_ <= Medium I believe.
         bool reject_bigger = (PREF_ == Small) && (level_ == Medium);
-        dba = minimize_obligation(a, f, nullptr, reject_bigger);
+        dba = minimize_obligation(a, f, nullptr, reject_bigger, aborter);
         if (dba
             && dba->prop_inherently_weak().is_true()
             && dba->prop_universal().is_true())
@@ -459,11 +468,17 @@ namespace spot
     if ((PREF_ == Deterministic && (type_ == Generic || want_parity)) && !dba)
       {
         dba = tgba_determinize(to_generalized_buchi(sim),
-                               false, det_scc_, det_simul_, det_stutter_);
-        dba = simplify_acc(dba);
-        if (level_ != Low)
-          dba = simulation(dba);
-        sim = nullptr;
+                               false, det_scc_, det_simul_, det_stutter_,
+                               aborter);
+        // Setting det-max-states or det-max-edges may cause tgba_determinize
+        // to fail.
+        if (dba)
+          {
+            dba = simplify_acc(dba);
+            if (level_ != Low)
+              dba = simulation(dba);
+            sim = nullptr;
+          }
       }
 
     // Now dba contains either the result of WDBA-minimization (in

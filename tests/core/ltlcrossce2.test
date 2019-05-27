@@ -97,7 +97,9 @@ esac
 EOF
 chmod +x fake
 
-genltl --eh=9 | ltlcross 'ltl2tgba' './fake %f >%O' 2>errors && exit 1
+genltl --eh=9 |
+    ltlcross --determinize-max-states=5 'ltl2tgba' './fake %f >%O' 2>errors &&
+    exit 1
 cat errors
 grep 'error: P0\*Comp(P1) is nonempty' errors
 grep 'error: {P0} disagree with {P1}' errors

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/powerset.hh>
 
 namespace spot
 {
@@ -70,8 +71,12 @@ namespace spot
   /// - any other type of input is determized before
   ///   complementation.
   ///
+  /// If an output_aborter is supplied, it is used to
+  /// abort the construction of larger automata.
+  ///
   /// complement_semidet() is not yet used.
   SPOT_API twa_graph_ptr
-  complement(const const_twa_graph_ptr& aut);
+  complement(const const_twa_graph_ptr& aut,
+             const output_aborter* aborter = nullptr);
 
 }

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018
+// Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019
 // Laboratoire de Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -20,6 +20,7 @@
 #pragma once
 
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/powerset.hh>
 #include <spot/tl/formula.hh>
 
 namespace spot
@@ -92,7 +93,12 @@ namespace spot
         month     = oct
       }
       \endverbatim */
-  SPOT_API twa_graph_ptr minimize_wdba(const const_twa_graph_ptr& a);
+  ///
+  /// If an \a output_aborter is given, the determinization is aborted
+  /// whenever it would produce an automaton that is too large.  In
+  /// that case, a nullptr is returned.
+  SPOT_API twa_graph_ptr minimize_wdba(const const_twa_graph_ptr& a,
+                                       const output_aborter* aborter = nullptr);
 
   /// \brief Minimize an automaton if it represents an obligation property.
   ///
@@ -149,10 +155,15 @@ namespace spot
   /// determinization step during minimize_wdba().)  Note that
   /// checking the size of the minimized WDBA occurs before ensuring
   /// that the minimized WDBA is correct.
+  ///
+  /// If an \a output_aborter is given, the determinization is aborted
+  /// whenever it would produce an automaton that is too large.  In
+  /// this case, aut_f is returned unchanged.
   SPOT_API twa_graph_ptr
   minimize_obligation(const const_twa_graph_ptr& aut_f,
                       formula f = nullptr,
                       const_twa_graph_ptr aut_neg_f = nullptr,
-                      bool reject_bigger = false);
+                      bool reject_bigger = false,
+                      const output_aborter* aborter = nullptr);
   /// @}
 }

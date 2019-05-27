@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et
+// Copyright (C) 2015-2019 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -804,7 +804,8 @@ namespace spot
   twa_graph_ptr
   tgba_determinize(const const_twa_graph_ptr& a,
                    bool pretty_print, bool use_scc,
-                   bool use_simulation, bool use_stutter)
+                   bool use_simulation, bool use_stutter,
+                   const output_aborter* aborter)
   {
     if (!a->is_existential())
       throw std::runtime_error
@@ -938,6 +939,8 @@ namespace spot
     // The main loop
     while (!todo.empty())
       {
+        if (aborter && aborter->too_large(res))
+          return nullptr;
         const safra_state& curr = todo.front().get().first;
         unsigned src_num = todo.front().get().second;
         todo.pop_front();

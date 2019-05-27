@@ -48,7 +48,8 @@ namespace spot
                       const const_twa_graph_ptr& right,
                       unsigned left_state,
                       unsigned right_state,
-                      twa_graph_ptr res, T merge_acc)
+                      twa_graph_ptr res, T merge_acc,
+                      const output_aborter* aborter)
     {
       std::unordered_map<product_state, unsigned, product_state_hash> s2n;
       std::deque<std::pair<product_state, unsigned>> todo;
@@ -78,6 +79,11 @@ namespace spot
         return;
       while (!todo.empty())
         {
+          if (aborter && aborter->too_large(res))
+            {
+              res = nullptr;
+              return;
+            }
           auto top = todo.front();
           todo.pop_front();
           for (auto& l: left->out(top.first.first))
@@ -99,7 +105,8 @@ namespace spot
                               const const_twa_graph_ptr& right,
                               unsigned left_state,
                               unsigned right_state,
-                              bool and_acc)
+                              bool and_acc,
+                              const output_aborter* aborter)
     {
       if (SPOT_UNLIKELY(!(left->is_existential() && right->is_existential())))
         throw std::runtime_error
@@ -148,7 +155,7 @@ namespace spot
                                  return accmark;
                                else
                                  return rejmark;
-                             });
+                             }, aborter);
               else
                 product_main(left, right, left_state, right_state, res,
                              [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
@@ -157,7 +164,7 @@ namespace spot
                                  return accmark;
                                else
                                  return rejmark;
-                             });
+                             }, aborter);
             }
           else if (!rightweak)
             {
@@ -181,7 +188,7 @@ namespace spot
                                    return mr;
                                  else
                                    return rejmark;
-                               });
+                               }, aborter);
                 }
               else
                 {
@@ -203,7 +210,7 @@ namespace spot
                                    return mr;
                                  else
                                    return accmark;
-                               });
+                               }, aborter);
 
                 }
             }
@@ -230,7 +237,7 @@ namespace spot
                                    return ml;
                                  else
                                    return rejmark;
-                               });
+                               }, aborter);
                 }
               else
                 {
@@ -252,7 +259,7 @@ namespace spot
                                    return ml;
                                  else
                                    return accmark;
-                               });
+                               }, aborter);
 
                 }
             }
@@ -271,9 +278,12 @@ namespace spot
                        [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
                        {
                          return ml | (mr << left_num);
-                       });
+                       }, aborter);
 
         }
+
+      if (!res)                 // aborted
+        return nullptr;
 
       // The product of two non-deterministic automata could be
       // deterministic.  Likewise for non-complete automata.
@@ -297,17 +307,19 @@ namespace spot
   twa_graph_ptr product(const const_twa_graph_ptr& left,
                         const const_twa_graph_ptr& right,
                         unsigned left_state,
-                        unsigned right_state)
+                        unsigned right_state,
+                        const output_aborter* aborter)
   {
-    return product_aux(left, right, left_state, right_state, true);
+    return product_aux(left, right, left_state, right_state, true, aborter);
   }
 
   twa_graph_ptr product(const const_twa_graph_ptr& left,
-                        const const_twa_graph_ptr& right)
+                        const const_twa_graph_ptr& right,
+                        const output_aborter* aborter)
   {
     return product(left, right,
                    left->get_init_state_number(),
-                   right->get_init_state_number());
+                   right->get_init_state_number(), aborter);
   }
 
   twa_graph_ptr product_or(const const_twa_graph_ptr& left,
@@ -316,7 +328,7 @@ namespace spot
                            unsigned right_state)
   {
     return product_aux(complete(left), complete(right),
-                       left_state, right_state, false);
+                       left_state, right_state, false, nullptr);
   }
 
   twa_graph_ptr product_or(const const_twa_graph_ptr& left,

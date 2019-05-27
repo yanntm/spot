@@ -36,7 +36,6 @@
 #include <spot/misc/hash.hh>
 #include <spot/misc/bddlt.hh>
 #include <spot/twaalgos/product.hh>
-#include <spot/twaalgos/powerset.hh>
 #include <spot/twaalgos/gtec/gtec.hh>
 #include <spot/twaalgos/strength.hh>
 #include <spot/twaalgos/sccfilter.hh>
@@ -374,7 +373,8 @@ namespace spot
     return res;
   }
 
-  twa_graph_ptr minimize_wdba(const const_twa_graph_ptr& a)
+  twa_graph_ptr minimize_wdba(const const_twa_graph_ptr& a,
+                              const output_aborter* aborter)
   {
     if (!a->is_existential())
       throw std::runtime_error
@@ -389,9 +389,15 @@ namespace spot
       power_map pm;
       bool input_is_det = is_deterministic(a);
       if (input_is_det)
-        det_a = std::const_pointer_cast<twa_graph>(a);
+        {
+          det_a = std::const_pointer_cast<twa_graph>(a);
+        }
       else
-        det_a = tgba_powerset(a, pm);
+        {
+          det_a = tgba_powerset(a, pm, aborter);
+          if (!det_a)
+            return nullptr;
+        }
 
       // For each SCC of the deterministic automaton, determine if it
       // is accepting or not.
@@ -420,8 +426,10 @@ namespace spot
         }
       else
         {
-          twa_graph_ptr prod = spot::product(a, det_a);
-          //print_dot(std::cerr, prod, "s");
+          twa_graph_ptr prod = spot::product(a, det_a, aborter);
+          if (!prod)
+            return nullptr;
+
           const product_states* pmap =
             prod->get_named_prop<product_states>("product-states");
           assert(pmap);
@@ -564,21 +572,38 @@ namespace spot
   minimize_obligation(const const_twa_graph_ptr& aut_f,
                       formula f,
                       const_twa_graph_ptr aut_neg_f,
-                      bool reject_bigger)
+                      bool reject_bigger,
+                      const output_aborter* aborter)
   {
     if (!aut_f->is_existential())
       throw std::runtime_error
         ("minimize_obligation() does not support alternation");
 
-    // FIXME: We should build scc_info once, pass it to minimize_wdba
-    // and reuse it for is_terminal_automaton(),
-    // is_weak_automaton(), and is_very_weak_automaton().
-    // FIXME: we should postpone the call to minimize_wdba() until
-    // we know for sure that we can verify (or that we do not need
-    // to verify) its output, rather than computing in cases where
-    // we may discard it.
-    auto min_aut_f = minimize_wdba(aut_f);
+    bool minimization_will_be_correct = false;
+    // WDBA-minimization necessarily work for obligations
+    if ((f && f.is_syntactic_obligation())
+        // Weak deterministic automata are obligations
+        || (aut_f->prop_weak() && is_deterministic(aut_f))
+        // Guarantee automata are obligations as well.
+        || is_terminal_automaton(aut_f))
+      {
+        minimization_will_be_correct = true;
+      }
+    else if (!aut_neg_f)
+      {
+        // The minimization might not be correct and will need to
+        // be checked.   Are we able to build aut_neg_f?
+        if (!(is_deterministic(aut_f) || f || is_very_weak_automaton(aut_f)))
+          return nullptr;
+      }
 
+    // FIXME: We should build scc_info once, and reuse it between
+    //  minimize_wdba is_terminal_automaton(), is_weak_automaton(),
+    //  and is_very_weak_automaton().
+    auto min_aut_f = minimize_wdba(aut_f, aborter);
+
+    if (!min_aut_f)
+      return std::const_pointer_cast<twa_graph>(aut_f);
     if (reject_bigger)
       {
         // Abort if min_aut_f has more states than aut_f.
@@ -587,29 +612,18 @@ namespace spot
           return std::const_pointer_cast<twa_graph>(aut_f);
       }
 
-    // if f is a syntactic obligation formula, the WDBA minimization
-    // must be correct.
-    if (f && f.is_syntactic_obligation())
+    if (minimization_will_be_correct)
       return min_aut_f;
 
-    // If the input automaton was already weak and deterministic, the
-    // output is necessary correct.
-    if (aut_f->prop_weak() && is_deterministic(aut_f))
-      return min_aut_f;
-
-    // If aut_f is a guarantee automaton, the WDBA minimization must be
-    // correct.
-    if (is_terminal_automaton(aut_f))
-      return min_aut_f;
-
-    // Build negation automaton if not supplied.
+    // The minimization might not be correct and will need to
+    // be checked.   Build negation automaton if not supplied.
     if (!aut_neg_f)
       {
         if (is_deterministic(aut_f))
           {
             // If the automaton is deterministic, complementing is
             // easy.
-            aut_neg_f = remove_fin(dualize(aut_f));
+            aut_neg_f = dualize(aut_f);
           }
         else if (f)
           {
@@ -631,15 +645,10 @@ namespace spot
             return nullptr;
           }
       }
-
-    // If the negation is a guarantee automaton, then the
-    // minimization is correct.
-    if (is_terminal_automaton(aut_neg_f))
-      return min_aut_f;
-
     // Make sure the minimized WDBA does not accept more words than
     // the input.
-    if (product(min_aut_f, aut_neg_f)->is_empty())
+    auto prod = product(min_aut_f, aut_neg_f, aborter);
+    if (prod && prod->is_empty())
       {
         assert((bool)min_aut_f->prop_weak());
         return min_aut_f;

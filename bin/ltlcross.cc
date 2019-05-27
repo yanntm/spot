@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -55,7 +55,7 @@
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twaalgos/isweakscc.hh>
 #include <spot/twaalgos/word.hh>
-#include <spot/twaalgos/dualize.hh>
+#include <spot/twaalgos/complement.hh>
 #include <spot/twaalgos/cleanacc.hh>
 #include <spot/twaalgos/alternation.hh>
 #include <spot/misc/formater.hh>
@@ -86,6 +86,8 @@ enum {
   OPT_BOGUS,
   OPT_CSV,
   OPT_DENSITY,
+  OPT_DET_MAX_STATES,
+  OPT_DET_MAX_EDGES,
   OPT_DUPS,
   OPT_FAIL_ON_TIMEOUT,
   OPT_GRIND,
@@ -118,8 +120,18 @@ static const argp_option options[] =
     { "no-complement", OPT_NOCOMP, nullptr, 0,
       "do not complement deterministic automata to perform extra checks", 0 },
     { "determinize", 'D', nullptr, 0,
-      "determinize non-deterministic automata so that they"
+      "always determinize non-deterministic automata so that they"
       "can be complemented; also implicitly sets --products=0", 0 },
+    { "determinize-max-states", OPT_DET_MAX_STATES, "N", 0,
+      "attempt to determinize non-deterministic automata so they can be "
+      "complemented, unless the deterministic automaton would have more "
+      "than N states.  Without this option or -D, determinizations "
+      "are attempted up to 500 states.", 0 },
+    { "determinize-max-edges", OPT_DET_MAX_EDGES, "N", 0,
+      "attempt to determinize non-deterministic automata so they can be "
+      "complemented, unless the deterministic automaton would have more "
+      "than N edges.  Without this option or -D, determinizations "
+      "are attempted up to 5000 edges.", 0 },
     { "stop-on-error", OPT_STOP_ERR, nullptr, 0,
       "stop on first execution error or failure to pass"
       " sanity checks (timeouts are OK)", 0 },
@@ -195,6 +207,10 @@ static bool allow_dups = false;
 static bool no_checks = false;
 static bool no_complement = false;
 static bool determinize = false;
+static bool max_det_states_given = false;
+static bool max_det_edges_given = false;
+static unsigned max_det_states = 500U;
+static unsigned max_det_edges = 5000U;
 static bool stop_on_error = false;
 static int seed = 0;
 static unsigned products = 1;
@@ -427,12 +443,37 @@ parse_opt(int key, char* arg, struct argp_state*)
     case 'D':
       determinize = true;
       products = 0;
+      max_det_states = -1U;
+      max_det_edges = -1U;
+      if (max_det_states_given)
+        error(2, 0, "Options --determinize-max-states and "
+              "--determinize are incompatible.");
+      if (max_det_edges_given)
+        error(2, 0, "Options --determinize-max-edges and "
+              "--determinize are incompatible.");
+      break;
+    case OPT_DET_MAX_EDGES:
+      max_det_edges_given = true;
+      max_det_states = to_pos_int(arg, "--determinize-max-edges");
+      if (determinize)
+        error(2, 0, "Options --determinize-max-edges and "
+              "--determinize are incompatible.");
+      break;
+    case OPT_DET_MAX_STATES:
+      max_det_states_given = true;
+      max_det_states = to_pos_int(arg, "--determinize-max-states");
+      if (determinize)
+        error(2, 0, "Options --determinize-max-states and "
+              "--determinize are incompatible.");
       break;
     case ARGP_KEY_ARG:
       if (arg[0] == '-' && !arg[1])
         jobs.emplace_back(arg, true);
       else
         tools_push_trans(arg);
+      break;
+    case OPT_AMBIGUOUS:
+      opt_ambiguous = true;
       break;
     case OPT_AUTOMATA:
       opt_automata = true;
@@ -466,16 +507,6 @@ parse_opt(int key, char* arg, struct argp_state*)
       want_stats = true;
       json_output = arg ? arg : "-";
       break;
-    case OPT_PRODUCTS:
-      if (*arg == '+')
-        {
-          products_avg = false;
-          ++arg;
-        }
-      products = to_pos_int(arg, "--products");
-      if (products == 0)
-        products_avg = false;
-      break;
     case OPT_NOCHECKS:
       no_checks = true;
       no_complement = true;
@@ -485,6 +516,16 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_OMIT:
       opt_omit = true;
+      break;
+    case OPT_PRODUCTS:
+      if (*arg == '+')
+        {
+          products_avg = false;
+          ++arg;
+        }
+      products = to_pos_int(arg, "--products");
+      if (products == 0)
+        products_avg = false;
       break;
     case OPT_REFERENCE:
       tools_push_trans(arg, true);
@@ -500,9 +541,6 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_STRENGTH:
       opt_strength = true;
-      break;
-    case OPT_AMBIGUOUS:
-      opt_ambiguous = true;
       break;
     case OPT_VERBOSE:
       verbose = true;
@@ -1094,6 +1132,8 @@ namespace
             }
         }
 
+      bool missing_complement = true;
+
       if (!no_checks)
         {
           std::cerr << "Performing sanity checks and gathering statistics..."
@@ -1122,7 +1162,7 @@ namespace
               return smallest_ref;
             };
 
-          // This are not our definitive choice for reference
+          // These are not our definitive choice for reference
           // automata, because the sizes might change after we remove
           // alternation and Fin acceptance.  But we need to know now
           // if we will have a pair of reference automata in order to
@@ -1158,32 +1198,27 @@ namespace
                   std::cerr << ")\n";
                 }
             };
-          auto complement = [&](const std::vector<spot::twa_graph_ptr>& x,
-                                std::vector<spot::twa_graph_ptr>& comp,
-                                unsigned i)
-            {
-              if (!no_complement && x[i] && is_universal(x[i]))
-                comp[i] = dualize(x[i]);
-            };
 
+          // Remove alternation
           for (size_t i = 0; i < m; ++i)
             {
               unalt(pos, i, 'P');
               unalt(neg, i, 'N');
-              // Do not complement reference automata if we have a
-              // reference pair.
-              if (smallest_pos_ref >= 0 && tools[i].reference)
-                continue;
-              complement(pos, comp_pos, i);
-              complement(neg, comp_neg, i);
             }
 
-          if (determinize && !no_complement)
+          // Complement
+          if (!no_complement)
             {
+              spot::output_aborter aborter_(max_det_states,
+                                            max_det_edges);
+              spot::output_aborter* aborter = nullptr;
+              if (max_det_states != -1U || max_det_edges != -1U)
+                aborter = &aborter_;
+
               print_first = verbose;
-              auto tmp = [&](std::vector<spot::twa_graph_ptr>& from,
-                             std::vector<spot::twa_graph_ptr>& to, int i,
-                             char prefix)
+              auto comp = [&](std::vector<spot::twa_graph_ptr>& from,
+                              std::vector<spot::twa_graph_ptr>& to, int i,
+                              char prefix)
                 {
                   if (from[i] && !to[i])
                     {
@@ -1193,29 +1228,41 @@ namespace
                         return;
                       if (print_first)
                         {
-                          std::cerr << "info: complementing non-deterministic "
-                            "automata via determinization...\n";
+                          std::cerr << "info: complementing automata...\n";
                           print_first = false;
                         }
-                      spot::postprocessor p;
-                      p.set_type(spot::postprocessor::Generic);
-                      p.set_pref(spot::postprocessor::Deterministic);
-                      p.set_level(spot::postprocessor::Low);
-                      to[i] = dualize(p.run(from[i]));
+                      if (verbose)
+                        std::cerr << "info:   " << prefix << i;
+                      if (aborter && aborter->too_large(from[i])
+                          && !spot::is_universal(from[i]))
+                        missing_complement = true;
+                      else
+                        to[i] = spot::complement(from[i], aborter);
                       if (verbose)
                         {
-                          std::cerr << "info:   " << prefix << i << "\t(";
-                          printsize(from[i]);
-                          std::cerr << ") -> (";
-                          printsize(to[i]);
-                          std::cerr << ")\tComp(" << prefix << i << ")\n";
+                          if (to[i])
+                            {
+                              std::cerr << "\t(";
+                              printsize(from[i]);
+                              std::cerr << ") -> (";
+                              printsize(to[i]);
+                              std::cerr << ")\tComp(" << prefix << i << ")\n";
+                            }
+                          else
+                            {
+                              std::cerr << "\tnot complemented";
+                              if (aborter)
+                                aborter->print_reason(std::cerr << " (") << ')';
+                              std::cerr << '\n';
+                            }
                         }
                     }
                 };
+              missing_complement = false;
               for (unsigned i = 0; i < m; ++i)
                 {
-                  tmp(pos, comp_pos, i, 'P');
-                  tmp(neg, comp_neg, i, 'N');
+                  comp(pos, comp_pos, i, 'P');
+                  comp(neg, comp_neg, i, 'N');
                 }
             }
 
@@ -1362,15 +1409,41 @@ namespace
                 (*nstats)[i].product_scc.reserve(products);
               }
           }
-      for (unsigned p = 0; p < products; ++p)
+      // Decide if we need products with state-space.
+      unsigned actual_products = products;
+      if (actual_products)
+        {
+          if (missing_complement)
+            {
+              if (verbose)
+                std::cerr
+                  << ("info: complements not computed for some automata\ninfo: "
+                      "continuing with cross_checks and consistency_checks\n");
+            }
+          else if (want_stats)
+            {
+              if (verbose)
+                std::cerr
+                  << ("info: running cross_checks and consistency_checks"
+                      "just for statistics\n");
+            }
+          else
+            {
+              if (verbose)
+                std::cerr
+                  << "info: cross_checks and consistency_checks unnecessary\n";
+              actual_products = 0;
+            }
+        }
+      for (unsigned p = 0; p < actual_products; ++p)
         {
           // build a random state-space.
           spot::srand(seed);
 
           if (verbose)
-            std::cerr << "info: building state-space #" << p << '/' << products
-                      << " of " << states  << " states with seed " << seed
-                      << '\n';
+            std::cerr << "info: building state-space #" << (p+1) << '/'
+                      << products << " of " << states
+                      << " states with seed " << seed << '\n';
 
           auto statespace = spot::random_graph(states, density, ap, dict);
 
@@ -1408,7 +1481,7 @@ namespace
                       std::cerr << ("warning: not enough memory to build "
                                     "product of P") << i << " with state-space";
                       if (products > 1)
-                        std::cerr << " #" << p << '/' << products << '\n';
+                        std::cerr << " #" << (p+1) << '/' << products << '\n';
                       std::cerr << '\n';
                       ++oom_count;
                     }

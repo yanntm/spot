@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -240,6 +240,8 @@ namespace spot
     bool det_scc_ = true;
     bool det_simul_ = true;
     bool det_stutter_ = true;
+    int det_max_states_ = -1;
+    int det_max_edges_ = -1;
     int simul_ = -1;
     int scc_filter_ = -1;
     int ba_simul_ = -1;

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014, 2015, 2018 Laboratoire de Recherche et
+// Copyright (C) 2014, 2015, 2018, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -21,6 +21,7 @@
 
 #include <spot/misc/common.hh>
 #include <spot/twa/fwd.hh>
+#include <spot/twaalgos/powerset.hh>
 #include <vector>
 #include <utility>
 
@@ -45,9 +46,13 @@ namespace spot
   /// "product-states" with type spot::product_states.  This stores
   /// the pair of original state numbers associated to each state of
   /// the product.
+  ///
+  /// If an \a aborter is given, the function will return nullptr
+  /// whenever the resulting product would be too large.
   SPOT_API
   twa_graph_ptr product(const const_twa_graph_ptr& left,
-                        const const_twa_graph_ptr& right);
+                        const const_twa_graph_ptr& right,
+                        const output_aborter* aborter = nullptr);
 
   /// \ingroup twa_algorithms
   /// \brief Intersect two automata using a synchronous product
@@ -68,11 +73,15 @@ namespace spot
   /// "product-states" with type spot::product_states.  This stores
   /// the pair of original state numbers associated to each state of
   /// the product.
+  ///
+  /// If an \a aborter is given, the function will return nullptr
+  /// whenever the resulting product would be too large.
   SPOT_API
   twa_graph_ptr product(const const_twa_graph_ptr& left,
                         const const_twa_graph_ptr& right,
                         unsigned left_state,
-                        unsigned right_state);
+                        unsigned right_state,
+                        const output_aborter* aborter = nullptr);
 
   /// \ingroup twa_algorithms
   /// \brief Sum two automata using a synchronous product
