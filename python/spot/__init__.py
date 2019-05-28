@@ -1074,7 +1074,7 @@ def bdd_to_formula(b, dic=_bdd_dict):
 def language_containment_checker(dic=_bdd_dict):
     from spot.impl import language_containment_checker as c
     c.contains = lambda this, a, b: c.contained(this, b, a)
-    c.are_equivalent = c.equal
+    c.are_equivalent = lambda this, a, b: c.equal(this, a, b)
     return c(dic)
 
 def mp_hierarchy_svg(cl=None):
