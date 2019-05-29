@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2010, 2011, 2014-2016, 2018 Laboratoire de Recherche
+# Copyright (C) 2010, 2011, 2014-2016, 2018, 2019 Laboratoire de Recherche
 # et Developpement de l'EPITA (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6
 # (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -61,6 +61,8 @@ export top_builddir
 top_srcdir='@abs_top_srcdir@'
 export top_srcdir
 
+SPOT_UNINSTALLED=1
+export SPOT_UNINSTALLED
 
 case $1 in
     */*)
