@@ -78,6 +78,8 @@ am__depfiles_remade += ./spot/$(DEPDIR)/impl_wrap.Pcxx
 
 ${srcdir}/spot/impl_wrap.cxx: spot/impl.i
 	$(SWIG) $(SWIGFLAGS) -I$(srcdir) -I$(top_srcdir) -MF spot/$(DEPDIR)/impl_wrap.TPcxx $(srcdir)/spot/impl.i
+## work around https://github.com/swig/swig/issues/1553
+	$(PERL) -pi -e 's/^#define SWIG_Python_CallFunctor.*/#define SWIG_Python_CallFunctor(functor, obj) PyObject_CallFunctionObjArgs(functor, obj, NULL);/' $@
 	mv spot/$(DEPDIR)/impl_wrap.TPcxx spot/$(DEPDIR)/impl_wrap.Pcxx
 
 spot/impl.py: spot/impl.i
