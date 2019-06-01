@@ -491,6 +491,10 @@ namespace std {
 %include <spot/twa/bddprint.hh>
 %include <spot/twa/formula2bdd.hh>
 %include <spot/twa/fwd.hh>
+ /* These operators may raise exceptions, and we do not
+    want Swig4 to convert those exceptions to NotImplemented. */
+%nopythonmaybecall spot::acc_cond::mark_t::operator<<;
+%nopythonmaybecall spot::acc_cond::mark_t::operator>>;
 %implicitconv spot::acc_cond::mark_t;
 %implicitconv spot::acc_cond::acc_code;
 %feature("flatnested") spot::acc_cond::mark_t;
