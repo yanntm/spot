@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -161,6 +161,10 @@ namespace spot
             res->unregister_ap(v);
           }
       }
+
+    if (res->prop_terminal().is_false())
+      // Non-terminal automata could become terminal.
+      res->prop_terminal(trival::maybe());
 
     transform_accessible(aut, res, [&](unsigned, bdd& cond,
                                        acc_cond::mark_t&, unsigned)

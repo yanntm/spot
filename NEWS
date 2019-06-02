@@ -102,6 +102,12 @@ New in spot 2.7.4.dev (not yet released)
     F(G(a & Fb) = FGa & GFb   (unless option "reduce_size_strictly")
     G(F(a & Gb)) = GFa & FGb  (unless option "reduce_size_strictly")
 
+  Bugs fixed:
+
+  - The remove_ap algorithm was preserving the "terminal property" of
+    automata, but it is possible that a non-terminal input produces a
+    terminal output after some propositions are removed.
+
 New in spot 2.7.4 (2019-04-27)
 
   Bugs fixed:
