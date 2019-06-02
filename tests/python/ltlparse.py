@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2009-2012, 2014-2017 Laboratoire de Recherche et
+# Copyright (C) 2009-2012, 2014-2017, 2019 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -199,3 +199,14 @@ for (x, msg) in [('a->', "missing right operand for \"implication operator\""),
     del f9
 
 assert spot.fnode_instances_check()
+
+f = spot.formula_F(2, 4, spot.formula_ap("a"))
+assert f == spot.formula("XX(a | X(a | X(a)))")
+f = spot.formula_G(2, 4, spot.formula_ap("a"))
+assert f == spot.formula("XX(a & X(a & X(a)))")
+f = spot.formula_X(2, spot.formula_ap("a"))
+assert f == spot.formula("XX(a)")
+f = spot.formula_G(2, spot.formula_unbounded(), spot.formula_ap("a"))
+assert f == spot.formula("XXG(a)")
+f = spot.formula_F(2, spot.formula_unbounded(), spot.formula_ap("a"))
+assert f == spot.formula("XXF(a)")

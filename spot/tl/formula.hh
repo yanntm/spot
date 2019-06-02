@@ -906,7 +906,8 @@ namespace spot
 
     /// \brief Construct F[n:m]
     ///
-    /// F[2:3] = XX(a | Xa)
+    /// F[2:3]a = XX(a | Xa)
+    /// F[2:$]a = XXFa
     ///
     /// This syntax is from TSLF; the operator is called next_e![n..m] in PSL.
     static formula F(unsigned min_level, unsigned max_level, const formula& f)
@@ -916,7 +917,8 @@ namespace spot
 
     /// \brief Construct G[n:m]
     ///
-    /// G[2:3] = XX(a & Xa)
+    /// G[2:3]a = XX(a & Xa)
+    /// G[2:$]a = XXGa
     ///
     /// This syntax is from TSLF; the operator is called next_a![n..m] in PSL.
     static formula G(unsigned min_level, unsigned max_level, const formula& f)
@@ -1217,6 +1219,10 @@ namespace spot
     ///
     /// For instance nested_unup_range(op::X, op::Or, 2, 4, a) returns
     /// XX(a | X(a | Xa)).
+    ///
+    /// For `max==unbounded()`, \a uo is repeated \a min times, and
+    /// its child is set to `F(a)` if \a bo is `op::Or` or to `G(a)`
+    /// otherwise.
     static const formula nested_unop_range(op uo, op bo, unsigned min,
                                            unsigned max, formula f)
     {

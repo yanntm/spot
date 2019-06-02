@@ -1657,11 +1657,14 @@ namespace spot
     const fnode* res = f;
     if (max < min)
       std::swap(min, max);
-    for (unsigned i = min; i < max; ++i)
-      {
-        const fnode* a = f->clone();
-        res = fnode::multop(bo, {a, fnode::unop(uo, res)});
-      }
+    if (max != unbounded())
+      for (unsigned i = min; i < max; ++i)
+        {
+          const fnode* a = f->clone();
+          res = fnode::multop(bo, {a, fnode::unop(uo, res)});
+        }
+    else
+      res = fnode::unop(bo == op::Or ? op::F : op::G, res);
     for (unsigned i = 0; i < min; ++i)
       res = fnode::unop(uo, res);
     return res;

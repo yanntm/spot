@@ -93,6 +93,9 @@ New in spot 2.7.4.dev (not yet released)
     terms of the existing PSL operators.  ##[+] and ##[*] are sugar
     for ##[1:$] and ##[0:$].
 
+  - The F[n:m] and G[n:m] operators introduced in Spot 2.7 now
+    support the case where m=$.
+
   - spot::relabel_apply() makes it easier to reverse the effect
     of spot::relabel() or spot::relabel_bse() on formula.
 

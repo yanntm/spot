@@ -887,6 +887,10 @@ subformula: booleanatom
 	    | OP_FREP OP_SQBKT_NUM OP_SQBKT_SEP OP_SQBKT_NUM OP_SQBKT_CLOSE
               subformula %prec OP_FREP
               { $$ = fnode::nested_unop_range(op::X, op::Or, $2, $4, $6); }
+	    | OP_FREP OP_SQBKT_NUM OP_SQBKT_SEP_unbounded OP_SQBKT_CLOSE
+              subformula %prec OP_FREP
+            { $$ = fnode::nested_unop_range(op::X, op::Or, $2,
+                                            fnode::unbounded(), $5); }
 	    | OP_FREP OP_SQBKT_NUM OP_SQBKT_SEP OP_SQBKT_NUM OP_SQBKT_CLOSE
               error
 	      { missing_right_op($$, @1 + @5, "F[.] operator"); }
@@ -904,6 +908,10 @@ subformula: booleanatom
 	    | OP_GREP OP_SQBKT_NUM OP_SQBKT_SEP OP_SQBKT_NUM OP_SQBKT_CLOSE
               subformula %prec OP_GREP
               { $$ = fnode::nested_unop_range(op::X, op::And, $2, $4, $6); }
+	    | OP_GREP OP_SQBKT_NUM OP_SQBKT_SEP_unbounded OP_SQBKT_CLOSE
+              subformula %prec OP_GREP
+            { $$ = fnode::nested_unop_range(op::X, op::And, $2,
+                                            fnode::unbounded(), $5); }
 	    | OP_GREP OP_SQBKT_NUM OP_SQBKT_CLOSE subformula %prec OP_GREP
               { $$ = fnode::nested_unop_range(op::X, op::And, $2, $2, $4);
                 error_list.emplace_back(@1 + @3,

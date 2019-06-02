@@ -30,9 +30,13 @@ G[2:4]a
 G[4:2]a
 F[2:4]a
 F[4:2]a
+F[2:$]a
+F[2..]a
 X [4]a | b
 G [2:4] a | b
 G [4:2] a | b
+G [2:] a | b
+G [2..] a | b
 F [2:4] a |  b
 F [4:2]a | F[2:2]b
 F[]a|G[]b|X[]c
@@ -61,9 +65,13 @@ XX(a & X(a & Xa))
 XX(a & X(a & Xa))
 XX(a | X(a | Xa))
 XX(a | X(a | Xa))
+XXFa
+XXFa
 b | XXXXa
 b | XX(a & X(a & Xa))
 b | XX(a & X(a & Xa))
+b | XXGa
+b | XXGa
 b | XX(a | X(a | Xa))
 XX(a | X(a | Xa)) | XXb
 FGa | Gb | XGc
@@ -93,7 +101,7 @@ F[3:1]
 F[3:1][2:1]
 F[a
 G[2:4]
-G[2:]a
+G[2:.]a
 G[4]a
 G[a
 X[2
@@ -163,12 +171,12 @@ syntax error, unexpected end of formula
 missing right operand for "G[.] operator"
 
 ltlfilt:err.in:6: parse error:
->>> G[2:]a
+>>> G[2:.]a
         ^
-syntax error, unexpected closing bracket, expecting $num
+syntax error, unexpected $undefined, expecting closing bracket
 
->>> G[2:]a
-    ^^^^^
+>>> G[2:.]a
+    ^^^^^^
 treating this G[.] as a simple G
 
 ltlfilt:err.in:7: parse error:
