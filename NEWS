@@ -1,5 +1,11 @@
 New in spot 2.7.4.dev (not yet released)
 
+  Build:
+
+  - Although the Python bindings in this release are still done with
+    Swig-3.0, the code has been updated to be compatible with
+    Swig-4.0.
+
   Library:
 
   - print_dot will replace labels that have more 2048 characters by a
