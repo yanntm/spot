@@ -1,20 +1,24 @@
-The DiVinE model checker [http://anna.fi.muni.cz/divine/] has a
-specification language called DVE that makes it easy to model
+The DiVinE 2 model checker
+[http://web.archive.org/web/20120723095042/http://divine.fi.muni.cz/index.html]
+used to have a specification language called DVE, for modelling
 processes synchonizing through channels
-[http://anna.fi.muni.cz/divine/language.html].
+[http://web.archive.org/web/20120723095115/http://divine.fi.muni.cz/language.html].
 
 A lot of models can be found in the BEEM database at
-http://anna.fi.muni.cz/models/
+http://paradise.fi.muni.cz/beem/
 
-The LTSmin group [http://fmt.cs.utwente.nl/tools/ltsmin/] patched
-DiVinE and SpinJa to compile models as dynamic libraries. This dynamic
+The LTSmin group [https://ltsmin.utwente.nl/] patched
+DiVinE and to compile models as dynamic libraries. This dynamic
 library provides a very simple C interface (no C++) and extra
-information about state variables (name, type, possible values).  We
-use this interface so you will need to install their version of these
-tools to use Spot with DVE or PROMELA models.
+information about state variables (name, type, possible values).
+They also distribute SpinS, a compiler for PROMELA models generating
+dynamic libraries with the same interface.
 
-The source code for our interface is in spot/ltsmin/ and generate a
-separate library, libspotltsmin.so, that has to be loaded in addition
+Spot uses this interface so you will need to install their version of
+these tools to use Spot with DVE or PROMELA models.
+
+The source code for our interface is in spot/ltsmin/ and generates a
+separate library, libspotltsmin.so, that has to be linked in addition
 to libspot.so.  The current directory contains some testing code based
 on a toy modelchecker built upon the above interface: using it require
 an installation of DiVinE or SpinS (preferably both for testing
@@ -27,8 +31,8 @@ Installation of DiVinE
 Use the following commands to compile and install the patched version
 of DiVinE.
 
-  git clone http://fmt.cs.utwente.nl/tools/scm/divine2.git
-  cd divine2
+  git clone https://gitlab.lrde.epita.fr/spot/divine-ltsmin-deb
+  cd divine-ltsmin-deb
   mkdir _build && cd _build
   cmake .. -DMURPHI=OFF -DHOARD=OFF -DGUI=OFF -DRX_PATH= -DCMAKE_INSTALL_PREFIX=$HOME/usr
   make
@@ -45,6 +49,13 @@ DiVinE 2 only compiles with the GNU std C++ library; as a consequence,
 you must provide the option -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" to
 the cmake command line.
 
+The above git repository is our own copy of the LTSmin fork of Divine,
+that we patched to generate Debian packages for amd64.  If you use
+our Debian repository [https://spot.lrde.epita.fr/install.html#Debian]
+you can actually install this version of divine with just:
+
+  apt-get install divine-ltsmin
+
 After installation, you can check that compilation works by running
 the following command on any DVE model.  It should create a file
 model.dve2C (which is a dynamic library).
@@ -56,10 +67,9 @@ Installation of SpinS
 ======================
 
 The extended version of SpinJa is called SpinS and should be included
-with LTSmin.
-You can download LTSmin from their website:
-[http://fmt.cs.utwente.nl/tools/ltsmin/] and install it following the
-INSTALL instructions.
+with LTSmin.  You can download LTSmin from their website
+[http://ltsmin.utwente.nl/] and install it following the INSTALL
+instructions.
 
 To compile a promela model, simply run the following command:
   spins model.pm
