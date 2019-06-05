@@ -1,4 +1,4 @@
-New in spot 2.7.4.dev (not yet released)
+New in spot 2.7.5.dev (not yet released)
 
   Command-line tools:
 
@@ -55,11 +55,6 @@ New in spot 2.7.4.dev (not yet released)
     helpful to display automata as "graphs", e.g., when illustrating
     algorithms that do not care about labels.
 
-  - print_dot will replace labels that have more 2048 characters by a
-    "(label too long)" string.  This works around a limitation of
-    GraphViz that aborts when some label exceeds 16k characters, and
-    also helps making large automata more readable.
-
   - A new complement() function that return automata with unspecified
     acceptance condition.  The output can be alternating only if the
     input was alternating.
@@ -105,7 +100,26 @@ New in spot 2.7.4.dev (not yet released)
     F(G(a & Fb) = FGa & GFb   (unless option "reduce_size_strictly")
     G(F(a & Gb)) = GFa & FGb  (unless option "reduce_size_strictly")
 
+New in spot 2.7.5 (2019-06-05)
+
+  Build:
+
+  - Although the Python bindings in this release are still done with
+    Swig3.0, the code has been updated to be compatible with Swig4.0.
+
+  Library:
+
+  - print_dot will replace labels that have more 2048 characters by a
+    "(label too long)" string.  This works around a limitation of
+    GraphViz that aborts when some label exceeds 16k characters, and
+    also helps making large automata more readable.
+
   Bugs fixed:
+
+  - spot::translator was not applying Boolean sub-formula rewritting
+    by default unless a spot::option_map was passed.  This caused some
+    C++ code for translating certains formulas to be noticeably slower
+    than the equivalent call to the ltl2tgba binary.
 
   - The remove_ap algorithm was preserving the "terminal property" of
     automata, but it is possible that a non-terminal input produces a
