@@ -1,10 +1,9 @@
-New in spot 2.7.4.dev (not yet released)
+New in spot 2.7.5 (2019-06-05)
 
   Build:
 
   - Although the Python bindings in this release are still done with
-    Swig-3.0, the code has been updated to be compatible with
-    Swig-4.0.
+    Swig3.0, the code has been updated to be compatible with Swig4.0.
 
   Library:
 
