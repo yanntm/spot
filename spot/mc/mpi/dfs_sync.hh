@@ -169,7 +169,7 @@ namespace spot
         if (!check_invariant(ns))
           mpi_.abort(1);
         else if (ns_hash % mpi_.world_size != mpi_.world_rank)
-          MPI_Send(ns, state_size_, MPI_INT, ns_hash % mpi_.world_size, 0,
+          MPI_Ssend(ns, state_size_, MPI_INT, ns_hash % mpi_.world_size, 0,
                    MPI_COMM_WORLD);
         else if (r_.find(ns) == r_.end())
         {
