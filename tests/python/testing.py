@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2009, 2010, 2012, 2014, 2015, 2016 Laboratoire de Recherche et
+# Copyright (C) 2019 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 # département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -22,9 +22,19 @@
 
 import spot
 
+def lt2ta(f):
+    return spot.remove_stuttering_lasso(spot.statelabeldiff(spot.translate(f)))
+
+#tests statelabeldiff
 a1 = spot.translate('a U Gb')
 ta1 = spot.statelabeldiff(a1)
-rm1 = spot.remove_testing(ta1)
+assert spot.are_equivalent(ta1, a1)
 
+#tests remove_diff
+rm1 = spot.remove_testing(ta1)
 assert spot.are_equivalent(ta1, rm1)
+
+#tests remove_stuttering_lasso
+f = spot.translate("GFa & GFb")
+assert spot.are_equivalent(f, lt2ta("GFa & GFb"))
 

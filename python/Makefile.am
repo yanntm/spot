@@ -25,6 +25,11 @@ AUTOMAKE_OPTIONS = subdir-objects
 AM_CPPFLAGS = -I$(PYTHONINC) -I$(top_builddir) -I$(top_srcdir) \
 	      $(BUDDY_CPPFLAGS) -DSWIG_TYPE_TABLE=spot
 
+# Disable fastproxy, because IPython 2 bogusly ignores _repr_latex_
+# when -fastproxy is used.
+#   https://github.com/ipython/ipython/issues/7003
+# Once a fixed version of IPython hits Debian stable, we can remove
+# this.
 SWIGFLAGS = -c++ -python -py3 -O -MD
 
 EXTRA_DIST = buddy.i spot/impl.i spot/ltsmin.i spot/gen.i
