@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -59,6 +59,9 @@ static const argp_option options[] =
     { "l-dsa", gen::AUT_L_DSA, "RANGE", 0,
       "A deterministic Streett automaton with 4N states with no "
       "equivalent deterministic Rabin automaton of less than N! states.", 0},
+    { "m-nba", gen::AUT_M_NBA, "RANGE", 0,
+      "An NBA with N+1 states whose determinization needs at least "
+      "N! states", 0},
     RANGE_DOC,
   /**************************************************/
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },

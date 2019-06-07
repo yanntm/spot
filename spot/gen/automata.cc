@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et Developpement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Developpement
 // de l'EPITA (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -32,7 +32,7 @@ namespace spot
       ks_nca(unsigned n, bdd_dict_ptr dict)
       {
         if (n == 0)
-          throw std::runtime_error("ks_nca expects a positive argument");
+          throw std::runtime_error("ks-nca expects a positive argument");
         // the alphabet has four letters:
         // i, s (for sigma), p (for pi), h (for hash)
         // we encode this four letters alphabet thanks to two AP a and b
@@ -99,7 +99,7 @@ namespace spot
       l_nba(unsigned n, bdd_dict_ptr dict)
       {
         if (n == 0)
-          throw std::runtime_error("l_nba expects a positive argument");
+          throw std::runtime_error("l-nba expects a positive argument");
 
         auto aut = make_twa_graph(dict);
 
@@ -138,7 +138,7 @@ namespace spot
       l_dsa(unsigned n, bdd_dict_ptr dict)
       {
         if (n < 1 || n > 16)
-          throw std::runtime_error("l_dsa expects 1 <= n <= 16");
+          throw std::runtime_error("l-dsa expects 1 <= n <= 16");
 
         auto aut = make_twa_graph(dict);
 
@@ -173,6 +173,62 @@ namespace spot
       }
     }
 
+    static unsigned ulog2(unsigned n)
+    {
+      assert(n>0);
+      --n;
+#ifdef __GNUC__
+      return 8*sizeof(unsigned) - __builtin_clz(n);
+#else
+      unsigned res = 0;
+      while (n)
+        {
+          ++res;
+          n >>= 1;
+        }
+      return res;
+#endif
+    }
+
+    static twa_graph_ptr
+    m_nba(unsigned n, bdd_dict_ptr dict)
+    {
+      if (n == 0)
+        throw std::runtime_error
+          ("l-nba expects a positive argument");
+
+      auto aut = make_twa_graph(dict);
+      aut->set_buchi();
+      aut->new_states(n + 1);
+      aut->set_init_state(0);
+
+      // How many AP to we need to represent n+1 letters
+      unsigned nap = ulog2(n + 1);
+      std::vector<int> apvars(nap);
+      for (unsigned a = 0; a < nap; ++a)
+        apvars[a] = aut->register_ap("p" + std::to_string(a));
+
+      bdd all = bdd_ibuildcube(0, nap, apvars.data());
+      for (unsigned letter = n; letter > 0; --letter)
+        {
+          bdd cond = bdd_ibuildcube(letter, nap, apvars.data());
+          aut->new_acc_edge(0, letter, cond);
+          aut->new_edge(letter, 0, cond);
+          all |= cond;
+        }
+      for (unsigned letter = n; letter > 0; --letter)
+        aut->new_edge(letter, letter, all);
+
+      aut->prop_state_acc(true);
+      aut->prop_universal(false);
+      aut->prop_complete(false);
+      aut->prop_inherently_weak(false);
+      aut->prop_stutter_invariant(false);
+      aut->prop_semi_deterministic(false);
+
+      return aut;
+    }
+
     twa_graph_ptr aut_pattern(aut_pattern_id pattern, int n, bdd_dict_ptr dict)
     {
       if (n < 0)
@@ -192,6 +248,8 @@ namespace spot
           return l_nba(n, dict);
         case AUT_L_DSA:
           return l_dsa(n, dict);
+        case AUT_M_NBA:
+          return m_nba(n, dict);
         case AUT_END:
           break;
         }
@@ -205,6 +263,7 @@ namespace spot
           "ks-nca",
           "l-nba",
           "l-dsa",
+          "m-nba",
         };
       // Make sure we do not forget to update the above table every
       // time a new pattern is added.

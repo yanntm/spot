@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -1526,3 +1526,17 @@ diff expected4 res4
 ltlcross 'ltl2tgba -P' 'ltl2tgba -P"odd max"' 'ltl2tgba -P"even min"' \
          'ltl2tgba -p' 'ltl2tgba -p"odd max"' 'ltl2tgba -p"even min"' \
          -f FGa -f 'GFa&GFb' -f 'GF(a <-> XXXb)' -f '(p0 W XXGp0) & GFp1 & FGp2'
+
+
+# Test the behavior of our determinization on Max Michel automata.
+# Any change to Spot that lowers the output.states is welcome :-)
+genaut --m-nba=1..4 | autcross --language-preserved 'autfilt -D' --csv=out.csv
+cut -d, -f4,17 out.csv > sizes.csv
+cat >expected <<EOF
+"input.states","output.states"
+2,3
+3,15
+4,129
+5,2057
+EOF
+diff sizes.csv expected

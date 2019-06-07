@@ -15,15 +15,19 @@ genaut --help | sed -n '/Pattern selection:/,/^$/p' | sed '1d;$d'
 #+END_SRC
 
 #+RESULTS:
-:       --ks-nca=RANGE         A co-Büchi automaton with 2N+1 states for which
-:                              any equivalent deterministic co-Büchi automaton
-:                              has at least 2^N/(2N+1) states.
-:       --l-dsa=RANGE          A deterministic Streett automaton with 4N states
-:                              with no equivalent deterministic Rabin automaton
-:                              of less than N! states.
-:       --l-nba=RANGE          A Büchi automaton with 3N+1 states whose
-:                              complementary Streett automaton needs at least N!
-:                              states.
+#+begin_example
+      --ks-nca=RANGE         A co-Büchi automaton with 2N+1 states for which
+                             any equivalent deterministic co-Büchi automaton
+                             has at least 2^N/(2N+1) states.
+      --l-dsa=RANGE          A deterministic Streett automaton with 4N states
+                             with no equivalent deterministic Rabin automaton
+                             of less than N! states.
+      --l-nba=RANGE          A Büchi automaton with 3N+1 states whose
+                             complementary Streett automaton needs at least N!
+                             states.
+      --m-nba=RANGE          An NBA with N+1 states whose determinization needs
+                             at least N! states
+#+end_example
 
 
 By default, the output format is [[file:hoa.org][HOA]], but this can be controlled using

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Developpement de
+// Copyright (C) 2017, 2019 Laboratoire de Recherche et Developpement de
 // l'EPITA (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -109,6 +109,29 @@ namespace spot
           }
           \endverbatim */
       AUT_L_DSA,
+      /// \brief An NBA with (n+1) states whose complement needs ≥n! states
+      ///
+      /// This automaton is usually attributed to Max Michel (1988),
+      /// who described it in some unpublished documents.  Other
+      /// descriptions of this automaton can be found in a number
+      /// of papers, like:
+      /** \verbatim
+          @InBook{thomas.97.chapter,
+            author      = {Wolfgang Thomas},
+            title       = {Languages, Automata, and Logic},
+            booktitle   = {Handbook of Formal Languages ---
+                           Volume 3 Beyond Words},
+            editor      = {Grzegorz Rozenberg and Arto Salomaa},
+            chapter     = 7,
+            publisher   = {Springer-Verlag},
+            year        = {1997}
+          }
+          \endverbatim */
+      ///
+      /// Our implementation uses $\lceil \log_2(n+1)\rceil$ atomic
+      /// propositions to encode the $n+1$ letters used in the
+      /// original alphabet.
+      AUT_M_NBA,
       AUT_END
     };
 

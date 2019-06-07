@@ -12,6 +12,10 @@ Automata.  Proceedings of ICALP'15.
 l
 C. Löding: Optimal Bounds for Transformations of ω-Automata.
 Proceedings of FSTTCS'99.
+.TP
+m
+M. Michel: Complementation is more difficult with automata on
+infinite words.  CNET, Paris (1988).  Unpublished manuscript.
 
 [SEE ALSO]
 .BR autfilt (1),

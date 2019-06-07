@@ -21,6 +21,9 @@ New in spot 2.7.5.dev (not yet released)
     consistency-checks (they are unnecessary when all automata
     could be complemented and statistics were not required).
 
+  - genaut learned --m-nba=N to generate Max Michel's NBA familly.
+    (NBAs with N+1 states whose determinized have at least N! states.)
+
   Library:
 
   - Add generic_accepting_run() as a variant of generic_emptiness_check() that
