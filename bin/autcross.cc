@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018, 2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -45,12 +45,9 @@
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/postproc.hh>
 #include <spot/twaalgos/isdet.hh>
-#include <spot/twaalgos/determinize.hh>
-#include <spot/twaalgos/dualize.hh>
+#include <spot/twaalgos/complement.hh>
 #include <spot/twaalgos/alternation.hh>
 #include <spot/twaalgos/cleanacc.hh>
-#include <spot/twaalgos/remfin.hh>
-#include <spot/twaalgos/product.hh>
 #include <spot/misc/escape.hh>
 #include <spot/misc/timer.hh>
 
@@ -518,13 +515,11 @@ namespace
         return false;
       }
 
-    auto prod = spot::product(aut_i, aut_j);
-
     if (verbose)
       std::cerr << "info: check_empty "
                 << autname(i) << '*' << autname(j, true) << '\n';
 
-    auto w = prod->accepting_word();
+    auto w = aut_i->intersecting_word(aut_j);
     if (w)
       {
         std::ostream& err = global_error();
@@ -637,6 +632,7 @@ namespace
               {
                 if (!pos[i])
                   continue;
+                cleanup_acceptance_here(pos[i]);
                 if (!pos[i]->is_existential())
                   {
                     if (verbose)
@@ -659,8 +655,6 @@ namespace
                         std::cerr << '\n';
                       }
                   }
-                if (is_universal(pos[i]))
-                  neg[i] = dualize(pos[i]);
               }
           }
 
@@ -668,19 +662,14 @@ namespace
             bool print_first = verbose;
             for (unsigned i = 0; i < mi; ++i)
               {
-                if (pos[i] && !neg[i])
+                if (pos[i])
                   {
                     if (print_first)
                       {
-                        std::cerr << "info: complementing non-deterministic "
-                        "automata via determinization...\n";
+                        std::cerr << "info: complementing automata...\n";
                         print_first = false;
                       }
-                    spot::postprocessor p;
-                    p.set_type(spot::postprocessor::Generic);
-                    p.set_pref(spot::postprocessor::Deterministic);
-                    p.set_level(level);
-                    neg[i] = dualize(p.run(pos[i]));
+                    neg[i] = spot::complement(pos[i]);
                     if (verbose)
                       {
                         std::cerr << "info:   "
@@ -690,52 +679,9 @@ namespace
                         printsize(neg[i], false);
                         std::cerr << '\t' << autname(i, true) << '\n';
                       }
+                    cleanup_acceptance_here(pos[i]);
                   }
               };
-          }
-
-          {
-            bool print_first = true;
-            auto tmp = [&](std::vector<spot::twa_graph_ptr>& x, unsigned i,
-                           bool neg)
-              {
-                if (!x[i])
-                  return;
-                if (x[i]->acc().uses_fin_acceptance())
-                  {
-                    if (verbose)
-                      {
-                        if (print_first)
-                          {
-                            std::cerr <<
-                              "info: getting rid of any Fin acceptance...\n";
-                            print_first = false;
-                          }
-                        std::cerr << "info:   "
-                                  << std::setw(8) << autname(i, neg) << '\t';
-                        printsize(x[i], false);
-                        std::cerr << " ->";
-                      }
-                    cleanup_acceptance_here(x[i]);
-                    x[i] = remove_fin(x[i]);
-                    if (verbose)
-                      {
-                        std::cerr << ' ';
-                        printsize(x[i], false);
-                        std::cerr << '\n';
-                      }
-                  }
-                else
-                  {
-                    // Remove useless sets nonetheless.
-                    cleanup_acceptance_here(x[i]);
-                  }
-              };
-            for (unsigned i = 0; i < mi; ++i)
-              {
-                tmp(pos, i, false);
-                tmp(neg, i, true);
-              }
           }
 
           // Just make a circular implication check

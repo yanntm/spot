@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2017, 2018, 2019 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -22,7 +22,7 @@
 set -e
 
 # Exercise %L while we are at it.
-randaut -n10 2 | tee input |
+randaut -n10 -A2..3 2 | tee input |
 autcross --language-preserve 'autfilt %L>%O' 'autfilt --complement' \
   --save-bogus=bogus.hoa 2>stderr && exit 1
 cat stderr
