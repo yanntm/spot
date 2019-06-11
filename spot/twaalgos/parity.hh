@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2016-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -132,5 +132,38 @@ namespace spot
 
   SPOT_API twa_graph_ptr
   colorize_parity_here(twa_graph_ptr aut, bool keep_style = false);
+  /// @}
+
+
+  /// \brief Reduce the parity acceptance condition to use a minimal
+  /// number of colors.
+  ///
+  /// This implements an algorithm derived from the following article,
+  /// but generalized to all types of parity acceptance.
+  /** \verbatim
+      @Article{carton.99.ita,
+      author       = {Olivier Carton and Ram{\'o}n Maceiras},
+      title        = {Computing the {R}abin index of a parity automaton},
+      journal      = {Informatique théorique et applications},
+      year         = {1999},
+      volume       = {33},
+      number       = {6},
+      pages        = {495--505}
+      }
+      \endverbatim */
+  ///
+  /// The kind of parity (min/max) is preserved, but the style
+  /// (odd/even) may be altered to reduce the number of colors used.
+  ///
+  /// If \a colored is true, colored automata are output (this is what
+  /// the above paper assumes).  Otherwise, the smallest or highest
+  /// colors (depending on the parity kind) is removed to simplify the
+  /// acceptance condition.
+  /// @{
+  SPOT_API twa_graph_ptr
+  reduce_parity(const const_twa_graph_ptr& aut, bool colored = false);
+
+  SPOT_API twa_graph_ptr
+  reduce_parity_here(twa_graph_ptr aut, bool colored = false);
   /// @}
 }

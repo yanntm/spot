@@ -23,6 +23,7 @@
 #include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/complete.hh>
 #include <spot/twaalgos/sccinfo.hh>
+#include <algorithm>
 #include <vector>
 #include <utility>
 #include <functional>
@@ -386,4 +387,247 @@ namespace spot
     return aut;
   }
 
+  twa_graph_ptr
+  reduce_parity(const const_twa_graph_ptr& aut, bool colored)
+  {
+    return reduce_parity_here(make_twa_graph(aut, twa::prop_set::all()),
+                              colored);
+  }
+
+  twa_graph_ptr
+  reduce_parity_here(twa_graph_ptr aut, bool colored)
+  {
+    unsigned num_sets = aut->num_sets();
+    if (!colored && num_sets == 0)
+      return aut;
+
+    bool current_max;
+    bool current_odd;
+    if (!aut->acc().is_parity(current_max, current_odd, true))
+      input_is_not_parity("reduce_parity");
+    if (!aut->is_existential())
+      throw std::runtime_error
+        ("reduce_parity_here() does not support alternation");
+
+    // The algorithm assumes "max odd" or "max even" parity.  "min"
+    // parity is handled by converting it to "max" while the algorithm
+    // reads the automaton, and then back to "min" when it writes it.
+    //
+    // The main idea of the algorithm is to refine the SCCs of the
+    // automaton as will peel the parity layers one by one, starting
+    // with the maximum color.
+    //
+    // In the following tree, assume Sᵢ denotes SCCs and t. denotes a
+    // trivial SCC.  Let's assume our original graph is made of one
+    // SCC S₁.  In each SCC, we "peel the maximum layer", i.e., we
+    // remove the edges with the maximum colors.  Doing so, we may
+    // introduce more sub-SCCs, in which we do this process
+    // recursively.
+    //
+    //           S₁
+    //           |
+    //         max=4
+    //        ╱    ╲
+    //       S₂     S₃
+    //       |      |
+    //      max=2  max=1
+    //      ╱ ╲     |
+    //     S₄  t.   t.
+    //     |
+    //    max=0
+    //     |
+    //     t.
+    //
+    // Now the trick assign the same colors to all leaves, and then
+    // compress consecutive layers with identical parity.  Let S₁[3]
+    // denote the transitions with color 3 in SCC S₁, let C(S₁[3])
+    // denote the new color we will assign to those sets.
+    //
+    // Assume we decide C(t.)=k=2n, this is arbitrary and imaginary
+    // (as there are no transitions to color in t.)
+    //
+    // Then
+    //  C(S₄[0])=k because 0 and C(t.)=k have same parity
+    //  C(S₂[2])=k because 2 and max(C(S₄[0]),C(t.)) have same parity
+    //  C(S₃[1])=k+1 because 1 and C(t.)=k have different parity
+    //  C(S₁[4])=k+2 because 4 and max(C(S₂[2]),C(S₃[1])) have different parity
+    // So in the case, the resulting automaton would use 3 colors, k,k+1,k+2.
+    //
+    // If we do the same computation with C(t.)=k=2n+1, the result is
+    // better:
+    //  C(S₄[0])=k+1 because 0 and C(t.)=k have different parity
+    //  C(S₂[2])=k+1 because 2 and max(C(S₄[0]),C(t.)) have same parity
+    //  C(S₃[1])=k   because 1 and C(t.)=k have same parity
+    //  C(S₁[4])=k+1 because 4 and max(C(S₂[2]),C(S₃[1])) have same
+    // Here only two colors are needed.
+    //
+    // So the following code evaluates those two possible scenarios,
+    // using k=0 or k=1.
+    //
+    // -2 means the edge was never assigned a color.
+    std::vector<int> piprime1(aut->num_edges() + 1, -2); // k=1
+    std::vector<int> piprime2(aut->num_edges() + 1, -2); // k=0
+    bool sba = aut->prop_state_acc().is_true();
+
+    auto rec =
+      [&](const scc_and_mark_filter& filter, auto& self) -> std::pair<int, int>
+      {
+        scc_info si(filter);
+        unsigned numscc = si.scc_count();
+        std::pair<int, int> res = {1, 0};  // k=1, k=0
+        for (unsigned scc = 0; scc < numscc; ++scc)
+          if (!si.is_trivial(scc))
+            {
+              int piri;         // π(Rᵢ)
+              int color;        // corresponding color, to deal with "min" kind
+              if (current_max)
+                {
+                  piri = color = si.acc_sets_of(scc).max_set() - 1;
+                }
+              else
+                {
+                  color = si.acc_sets_of(scc).min_set() - 1;
+                  if (color < 0)
+                    color = num_sets;
+                  // The algorithm works with max parity, so reverse
+                  // the color range.
+                  piri = num_sets - color - 1;
+                }
+              std::pair<int, int> m;
+              if (piri < 0)
+                {
+                  // Uncolored transition.  Always odd.
+                  m = {1, 1};
+                }
+              else
+                {
+                  scc_and_mark_filter filter2(si, scc, {unsigned(color)});
+                  m = self(filter2, self);
+                  m.first += (piri - m.first) & 1;
+                  m.second += (piri - m.second) & 1;
+                }
+              for (unsigned state: si.states_of(scc))
+                for (auto& e: aut->out(state))
+                  if ((sba || si.scc_of(e.dst) == scc) &&
+                      ((piri >= 0 && e.acc.has(color)) || (piri < 0 && !e.acc)))
+                    {
+                      unsigned en = aut->edge_number(e);
+                      piprime1[en] = m.first;
+                      piprime2[en] = m.second;
+                    }
+              res.first = std::max(res.first, m.first);
+              res.second = std::max(res.second, m.second);
+            }
+        return res;
+      };
+    scc_and_mark_filter filter1(aut, {});
+    rec(filter1, rec);
+
+    // compute the used range for each vector.
+    int min1 = num_sets;
+    int max1 = -2;
+    for (int m : piprime1)
+      {
+        if (m <= -2)
+          continue;
+        if (m < min1)
+          min1 = m;
+        if (m > max1)
+          max1 = m;
+      }
+
+    if (SPOT_UNLIKELY(max1 == -2))
+      {
+        aut->set_acceptance(0, spot::acc_cond::acc_code::f());
+        return aut;
+      }
+    int min2 = num_sets;
+    int max2 = -2;
+    for (int m : piprime2)
+      {
+        if (m <= -2)
+          continue;
+        if (m < min2)
+          min2 = m;
+        if (m > max2)
+          max2 = m;
+      }
+
+    unsigned size1 = max1 + 1 - min1;
+    unsigned size2 = max2 + 1 - min2;
+    if (size2 < size1)
+      {
+        std::swap(size1, size2);
+        std::swap(min1, min2);
+        std::swap(piprime1, piprime2);
+      }
+
+    unsigned new_num_sets = size1;
+    if (current_max)
+      {
+        for (int& m : piprime1)
+          if (m > -2)
+            m -= min1;
+          else
+            m = 0;
+      }
+    else
+      {
+        for (int& m : piprime1)
+          if (m > -2)
+            m = new_num_sets - (m - min1) - 1;
+          else
+            m = new_num_sets - 1;
+      }
+
+    // The parity style changes if we shift colors by an odd number.
+    bool new_odd = current_odd ^ (min1 & 1);
+    if (!current_max)
+      // Switching from min<->max changes the parity style every time
+      // the number of colors is even.  If the input was "min", we
+      // switched once to "max" to apply the reduction and once again
+      // to go back to "min".  So there are two points where the
+      // parity style may have changed.
+      new_odd ^= !(num_sets & 1) ^ !(new_num_sets & 1);
+    if (!colored)
+      {
+        new_odd ^= current_max;
+        new_num_sets -= 1;
+
+        // It seems we have nothing to win by changing automata with a
+        // single set (unless we reduced it to 0 sets, of course).
+        if (new_num_sets == num_sets && num_sets == 1)
+          return aut;
+      }
+
+    aut->set_acceptance(new_num_sets,
+                        acc_cond::acc_code::parity(current_max, new_odd,
+                                                   new_num_sets));
+    if (colored)
+      for (auto& e: aut->edges())
+        {
+          unsigned n = aut->edge_number(e);
+          e.acc = acc_cond::mark_t({unsigned(piprime1[n])});
+        }
+    else if (current_max)
+      for (auto& e: aut->edges())
+        {
+          unsigned n = piprime1[aut->edge_number(e)];
+          if (n == 0)
+            e.acc = acc_cond::mark_t({});
+          else
+            e.acc = acc_cond::mark_t({n - 1});
+        }
+    else
+      for (auto& e: aut->edges())
+        {
+          unsigned n = piprime1[aut->edge_number(e)];
+          if (n >= new_num_sets)
+            e.acc = acc_cond::mark_t({});
+          else
+            e.acc = acc_cond::mark_t({n});
+        }
+
+    return aut;
+  }
 }

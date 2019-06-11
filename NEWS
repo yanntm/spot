@@ -108,6 +108,12 @@ New in spot 2.7.5.dev (not yet released)
     colorize_parity() learned that coloring transitiant edges does not
     require the introduction of a new color.
 
+  - A new reduce_parity() function implements and generalizes the
+    algorithm for minimizing parity acceptance by Carton and Maceiras
+    (Computing the Rabin index of a parity automaton, 1999).  This is
+    a better replacement for cleanup_parity() and colorize_parity().
+    See https://spot.lrde.epita.fr/ipynb/parity.html for examples.
+
 New in spot 2.7.5 (2019-06-05)
 
   Build:

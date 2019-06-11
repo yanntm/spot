@@ -384,6 +384,23 @@ int main()
                                      is_max, is_odd, acc_num_sets))
                   throw std::runtime_error("cleanup_parity: wrong acceptance.");
               }
+
+            // Check reduce_parity
+            for (auto colored: { true, false })
+              {
+                auto output = spot::reduce_parity(aut, colored);
+                if (!colored && !is_almost_colored(output))
+                  throw std::runtime_error(
+                    "reduce_parity: too many acc on a transition.");
+                if (colored && !is_colored_printerr(output))
+                  throw std::runtime_error("reduce_parity: not colored.");
+                if (!are_equiv(aut, output))
+                  throw std::runtime_error("reduce_parity: not equivalent.");
+                if (!is_right_parity(output, to_parity_kind(is_max),
+                                     spot::parity_style_any,
+                                     is_max, is_odd, acc_num_sets))
+                  throw std::runtime_error("reduce_parity: wrong acceptance.");
+              }
           }
         }
 
