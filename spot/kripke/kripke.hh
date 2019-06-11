@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2013, 2014, 2016, 2017 Laboratoire de Recherche
-// et Developpement de l'Epita
+// Copyright (C) 2009, 2010, 2013, 2014, 2016, 2017, 2019 Laboratoire
+// de Recherche et Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
 //
@@ -22,9 +22,11 @@
 #include <spot/kripke/fairkripke.hh>
 #include <spot/twacube/cube.hh>
 #include <memory>
+#include <type_traits>
 
 namespace spot
 {
+  /// \ingroup kripke
   /// \brief This class is a template representation of a Kripke
   /// structure. It is composed of two template parameters: State
   /// represents a state of the Kripke structure, SuccIterator is
@@ -42,6 +44,9 @@ namespace spot
     /// is used internally for sharing this structure among threads.
     State initial(unsigned tid);
 
+    /// \brief Returns the number of threads that are handled by the kripkecube
+    unsigned get_threads();
+
     /// \brief Provides a string representation of the parameter state
     std::string to_string(const State, unsigned tid) const;
 
@@ -56,40 +61,56 @@ namespace spot
     const std::vector<std::string> get_ap();
   };
 
-  /// \brief This method allows to ensure (at compile time) if
+#ifndef SWIG
+
+  /// \ingroup kripke
+  /// \brief This class allows to ensure (at compile time) if
   /// a given parameter is of type kripkecube. It also check
   /// if the iterator has the good interface.
-  template <typename State, typename SuccIter>
-  bool is_a_kripkecube(kripkecube<State, SuccIter>&)
+  template <typename T, typename State, typename SuccIter>
+  class is_a_kripkecube_ptr
   {
-    // Hardly waiting C++17 concepts...
-    State (kripkecube<State, SuccIter>::*test_initial)(unsigned) =
-      &kripkecube<State, SuccIter>::initial;
-    std::string (kripkecube<State, SuccIter>::*test_to_string)
-      (const State, unsigned) const = &kripkecube<State, SuccIter>::to_string;
-    void (kripkecube<State, SuccIter>::*test_recycle)(SuccIter*, unsigned) =
-      &kripkecube<State, SuccIter>::recycle;
-    const std::vector<std::string>
-      (kripkecube<State, SuccIter>::*test_get_ap)() =
-      &kripkecube<State, SuccIter>::get_ap;
-    void (SuccIter::*test_next)() = &SuccIter::next;
-    State (SuccIter::*test_state)() const= &SuccIter::state;
-    bool (SuccIter::*test_done)() const= &SuccIter::done;
-    cube (SuccIter::*test_condition)() const = &SuccIter::condition;
+  private:
+    using yes = std::true_type;
+    using no = std::false_type;
 
-    // suppress warnings about unused variables
-    (void) test_initial;
-    (void) test_to_string;
-    (void) test_recycle;
-    (void) test_get_ap;
-    (void) test_next;
-    (void) test_state;
-    (void) test_done;
-    (void) test_condition;
+    // Hardly waiting C++ concepts...
+    template<typename U, typename V> static auto test_kripke(U u, V v)
+      -> decltype(
+       // Check the kripke
+       std::is_same<State,       decltype(u->initial(0))>::value            &&
+       std::is_same<unsigned,    decltype(u->get_threads())>::value         &&
+       std::is_same<std::string, decltype(u->to_string(State(), 0))>::value &&
+       std::is_same<SuccIter*,   decltype(u->succ(State(), 0))>::value      &&
+       std::is_same<void,        decltype(u->recycle(nullptr, 0))>::value   &&
+       std::is_same<const std::vector<std::string>,
+                                 decltype(u->get_ap())>::value              &&
+       std::is_same<void,        decltype(u->recycle(nullptr, 0))>::value   &&
 
-    // Always return true since otherwise a compile-time error will be raised.
-    return true;
-  }
+       // Check the SuccIterator
+       std::is_same<void,        decltype(v->next())>::value                &&
+       std::is_same<bool,        decltype(v->done())>::value                &&
+       std::is_same<State,       decltype(v->state())>::value               &&
+       std::is_same<spot::cube,  decltype(v->condition())>::value
+
+      // finally return the type "yes"
+      , yes()
+    );
+
+    // For all other cases return the type "no"
+    template<typename, typename> static no test_kripke(...);
+
+  public:
+
+    /// \brief Checking this value will ensure, at compile time, that the
+    /// Kripke specialisation respects the required interface.
+    static constexpr bool value =
+      std::is_same< decltype(test_kripke<T, SuccIter*>(nullptr, nullptr)), yes
+                  >::value;
+  };
+
+#endif
+
 
   /// \ingroup kripke
   /// \brief Iterator code for Kripke structure
