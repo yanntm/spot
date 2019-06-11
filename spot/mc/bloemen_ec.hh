@@ -475,7 +475,9 @@ namespace spot
       nb_th_(std::thread::hardware_concurrency()),
       stop_(stop)
     {
-      SPOT_ASSERT(is_a_kripkecube(sys));
+      static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
+                                             State, SuccIterator>::value,
+                    "error: does not match the kripkecube requirements");
     }
 
     using uf = iterable_uf_ec<State, StateHash, StateEqual>;

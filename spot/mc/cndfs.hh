@@ -117,7 +117,9 @@ namespace spot
                 sizeof(local_colors)*(std::thread::hardware_concurrency() - 1)),
       stop_(stop)
     {
-      SPOT_ASSERT(is_a_kripkecube(sys));
+      static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
+                                             State, SuccIterator>::value,
+                    "error: does not match the kripkecube requirements");
     }
 
     virtual ~swarmed_cndfs()
