@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017, 2018 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -432,7 +432,9 @@ namespace spot
       sys_(sys),  uf_(uf), tid_(tid),
       nb_th_(std::thread::hardware_concurrency())
     {
-      SPOT_ASSERT(is_a_kripkecube(sys));
+      static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
+                                             State, SuccIterator>::value,
+                    "error: does not match the kripkecube requirements");
     }
 
     using uf = iterable_uf<State, StateHash, StateEqual>;

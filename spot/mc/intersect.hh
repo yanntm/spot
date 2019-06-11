@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2018, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -66,7 +66,9 @@ namespace spot
               twacube_ptr twa, unsigned tid, bool& stop):
       sys_(sys), twa_(twa), tid_(tid), stop_(stop)
     {
-      SPOT_ASSERT(is_a_kripkecube(sys));
+      static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
+                                             State, SuccIterator>::value,
+                    "error: does not match the kripkecube requirements");
       map.reserve(2000000);
       todo.reserve(100000);
     }

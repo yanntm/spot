@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2018 Laboratoire de Recherche et Developpement
+// Copyright (C) 2011-2019 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -201,7 +201,6 @@ static std::string  split_filename(const std::string& str) {
   unsigned found = str.find_last_of("/");
   return str.substr(found+1);
 }
-
 
 static int checked_main()
 {
