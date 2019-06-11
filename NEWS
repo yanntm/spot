@@ -103,6 +103,11 @@ New in spot 2.7.5.dev (not yet released)
     F(G(a & Fb) = FGa & GFb   (unless option "reduce_size_strictly")
     G(F(a & Gb)) = GFa & FGb  (unless option "reduce_size_strictly")
 
+  - cleanup_parity() and colorize_parity() were cleaned up a bit,
+    resulting in fewer colors used in some cases.  In particular,
+    colorize_parity() learned that coloring transitiant edges does not
+    require the introduction of a new color.
+
 New in spot 2.7.5 (2019-06-05)
 
   Build:

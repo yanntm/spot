@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2016, 2018, 2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -22,6 +22,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/complete.hh>
+#include <spot/twaalgos/sccinfo.hh>
 #include <vector>
 #include <utility>
 #include <functional>
@@ -165,120 +166,132 @@ namespace spot
   twa_graph_ptr
   cleanup_parity_here(twa_graph_ptr aut, bool keep_style)
   {
+    unsigned num_sets = aut->num_sets();
+    if (num_sets == 0)
+      return aut;
+
     bool current_max;
     bool current_odd;
     if (!aut->acc().is_parity(current_max, current_odd, true))
       input_is_not_parity("cleanup_parity");
-    auto num_sets = aut->num_sets();
-    if (num_sets == 0)
-      return aut;
 
-    // Compute all the used sets
+    // Gather all the used colors, while leaving only one per edge.
     auto used_in_aut = acc_cond::mark_t();
-    for (auto& t: aut->edges())
-      {
-        // leave only one color on each transition
-        if (current_max)
-          {
-            auto maxset = t.acc.max_set();
-            if (maxset)
-              t.acc = acc_cond::mark_t{maxset - 1};
-          }
-        else
-          {
-            t.acc = t.acc.lowest();
-          }
-        // recall colors used in the automaton
-        used_in_aut |= t.acc;
-      }
-
-    // remove from the acceptance condition the unused one (starting from the
-    // least significant)
-    auto useful = used_in_aut;
-    int useful_min = 0;
-    int useful_max = num_sets-1;
-    if (!current_max)
-      {
-        int n = num_sets-1;
-        while (n >= 0 && !useful.has(n))
-          {
-            if (n > 0)
-              useful.clear(n-1);
-            n -= 2;
-          }
-        useful_max = n;
-      }
-    else
-      {
-        unsigned n = 0;
-        while (n < num_sets && !useful.has(n))
-          {
-            useful.clear(n+1);
-            n += 2;
-          }
-        useful_min = n;
-      }
-    if (used_in_aut)
-    {
-      // Never remove the least significant acceptance set, and mark the
-      // acceptance set 0 to keep the style if needed.
-      if (keep_style && useful_min <= useful_max)
-        {
-          useful.set(useful_min);
-          useful.set(useful_max);
-        }
-
-      // Fill the vector shift with the new acceptance sets
-      std::vector<unsigned> shift(num_sets);
-      int prev_used = -1;
-      bool change_style = false;
-      unsigned new_index = 0;
-      for (auto i = 0U; i < num_sets; ++i)
-        if (useful.has(i))
-          {
-            if (prev_used == -1)
-              change_style = i % 2 != 0;
-            else if ((i + prev_used) % 2 != 0)
-              ++new_index;
-            shift[i] = new_index;
-            prev_used = i;
-          }
-
-      // Update all the transitions with the vector shift
+    acc_cond::mark_t allsets = aut->acc().all_sets();
+    if (current_max)
       for (auto& t: aut->edges())
         {
-          t.acc &= useful;
-          auto maxset = t.acc.max_set();
-          if (maxset)
-            t.acc = acc_cond::mark_t{shift[maxset - 1]};
-        }
-
-      auto new_num_sets = new_index + 1;
-      if (!useful)
-        {
-          new_num_sets = 0;
-          if (current_max)
-            change_style = false;
+          if (auto maxset = (t.acc & allsets).max_set())
+            {
+              t.acc = acc_cond::mark_t{maxset - 1};
+              used_in_aut |= t.acc;
+            }
           else
-            change_style = num_sets % 2 == 1;
+            {
+              t.acc = acc_cond::mark_t{};
+            }
+        }
+    else
+      for (auto& t: aut->edges())
+        {
+          t.acc = (t.acc & allsets).lowest();
+          used_in_aut |= t.acc;
         }
 
-      if (new_num_sets < num_sets)
-        {
-          auto new_acc =
-            acc_cond::acc_code::parity(current_max,
-                                       current_odd != change_style,
-                                       new_num_sets);
-          aut->set_acceptance(new_num_sets, new_acc);
-        }
-    }
-    else
+    if (used_in_aut)
+      {
+        if (current_max)
+          // If max even or max odd: if 0 is not used, we can remove 1, if
+          // 2 is not used, we can remove 3, etc.
+          // This is obvious from the encoding:
+          // max odd n  = ... Inf(3) | (Fin(2) & (Inf(1) | Fin(0)))
+          // max even n = ... Fin(3) & (Inf(2) | (Fin(1) & Inf(0)))
+          {
+            unsigned n = 0;
+            while (n + 1 < num_sets && !used_in_aut.has(n))
+              {
+                used_in_aut.clear(n + 1);
+                n += 2;
+              }
+          }
+        else
+          // min even and min odd simply work the other way around:
+          // min even 4 = Inf(0) | (Fin(1) & (Inf(2) | Fin(3)))
+          // min odd 4  = Fin(0) & (Inf(1) | (Fin(2) & Inf(3)))
+          {
+            int n = num_sets - 1;
+            while (n >= 1 && !used_in_aut.has(n))
+              {
+                used_in_aut.clear(n - 1);
+                n -= 2;
+              }
+          }
+      }
+
+    // If no color needed in the automaton, exit early.
+    if (!used_in_aut)
       {
         if ((current_max && current_odd)
-           || (!current_max && current_odd != (num_sets % 2 == 0)))
+            || (!current_max && current_odd == (num_sets & 1)))
           aut->set_acceptance(0, acc_cond::acc_code::t());
         else
           aut->set_acceptance(0, acc_cond::acc_code::f());
+        for (auto& e: aut->edges())
+          e.acc = {};
+        return aut;
+      }
+
+    // Renumber colors.  Two used colors separated by a unused color
+    // can be merged.
+    std::vector<unsigned> rename(num_sets);
+    int prev_used = -1;
+    bool change_style = false;
+    unsigned new_index = 0;
+    for (auto i = 0U; i < num_sets; ++i)
+      if (used_in_aut.has(i))
+        {
+          if (prev_used == -1)
+            {
+              if (i & 1)
+                {
+                  if (keep_style)
+                    new_index = 1;
+                  else
+                    change_style = true;
+                }
+            }
+          else if ((i + prev_used) & 1)
+            ++new_index;
+          rename[i] = new_index;
+          prev_used = i;
+        }
+    assert(prev_used >= 0);
+
+    // Update all colors according to RENAME.
+    // Using max_set or min_set makes no difference since
+    // there is now at most one color per edge.
+    for (auto& t: aut->edges())
+      {
+        acc_cond::mark_t m = t.acc & used_in_aut;
+        unsigned color = m.max_set();
+        if (color)
+          t.acc = acc_cond::mark_t{rename[color - 1]};
+        else
+          t.acc = m;
+      }
+
+    unsigned new_num_sets = new_index + 1;
+    if (new_num_sets < num_sets)
+      {
+        auto new_acc =
+          acc_cond::acc_code::parity(current_max,
+                                     current_odd != change_style,
+                                     new_num_sets);
+        aut->set_acceptance(new_num_sets, new_acc);
+      }
+    else
+      {
+        assert(!change_style);
       }
     return aut;
   }
@@ -297,44 +310,79 @@ namespace spot
     bool current_odd;
     if (!aut->acc().is_parity(current_max, current_odd, true))
       input_is_not_parity("colorize_parity");
+    if (!aut->is_existential())
+      throw std::runtime_error
+        ("colorize_parity_here() does not support alternation");
 
-    bool has_empty = false;
-    for (const auto& e: aut->edges())
-      if (!e.acc)
-        {
-          has_empty = true;
-          break;
-        }
-    auto num_sets = aut->num_sets();
+    bool has_empty_in_scc = false;
+    {
+      scc_info si(aut, scc_info_options::NONE);
+      for (const auto& e: aut->edges())
+        if (!e.acc && si.scc_of(e.src) == si.scc_of(e.dst))
+          {
+            has_empty_in_scc = true;
+            break;
+          }
+    }
+    unsigned num_sets = aut->num_sets();
+    bool new_odd = current_odd;
     int incr = 0;
-    if (has_empty)
+    unsigned empty = current_max ? 0 : num_sets - 1;
+    if (has_empty_in_scc)
       {
-        // If the automaton has a transition that belong to any set, we need to
-        // introduce a new acceptance set.
-        // We may want to add a second acceptance set to keep the style of
-        // the parity acceptance
-        incr = 1 + (keep_style && current_max);
-        num_sets += incr;
-        bool new_style = current_odd == (keep_style || !current_max);
-        auto new_acc = acc_cond::acc_code::parity(current_max,
-                                                  new_style, num_sets);
+        // If the automaton has an SCC transition that belongs to no set
+        // (called "empty trans." below), we may need to introduce a
+        // new acceptance set.  What to do depends on the kind
+        // (min/max) and style (odd/even) of parity acceptance and the
+        // number (n) of colors used.
+        //
+        // | kind/style | n   | empty tr.  | other tr. | result       |
+        // |------------+-----+------------+-----------+--------------|
+        // | max odd    | any | set to {0} | add 1     | max even n+1 |
+        // | max even   | any | set to {0} | add 1     | max odd n+1  |
+        // | min odd    | any | set to {n} | unchanged | min odd n+1  |
+        // | min even   | any | set to {n} | unchanged | min even n+1 |
+        //
+        // In the above table, the "max" cases both change their style
+        // We may want to add a second acceptance set to keep the
+        // style:
+        //
+        // | kind/style | n   | empty tr.  | other tr. | result       |
+        // |------------+-----+------------+-----------+--------------|
+        // | max odd    | any | set to {1} | add 2     | max odd n+2  |
+        // | max even   | any | set to {1} | add 2     | max even n+2 |
+        if (current_max)
+          {
+            incr = 1 + keep_style;
+            num_sets += incr;
+            new_odd = current_odd == keep_style;
+            empty = keep_style;
+          }
+        else
+          {
+            empty = num_sets++;
+          }
+
+        auto new_acc =
+          acc_cond::acc_code::parity(current_max, new_odd, num_sets);
         aut->set_acceptance(num_sets, new_acc);
       }
+
     if (current_max)
       {
         --incr;
         for (auto& e: aut->edges())
           {
             auto maxset = e.acc.max_set();
-            e.acc = acc_cond::mark_t{maxset ? maxset + incr : incr};
+            e.acc = acc_cond::mark_t{maxset ? maxset + incr : empty};
           }
       }
     else
       {
-        auto unused_mark = num_sets - incr;
         for (auto& e: aut->edges())
-          e.acc = e.acc ? e.acc.lowest() : acc_cond::mark_t{unused_mark};
+          e.acc = e.acc ? e.acc.lowest() : acc_cond::mark_t{empty};
       }
+
     return aut;
   }
 
