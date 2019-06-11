@@ -215,7 +215,6 @@ static std::string  split_filename(const std::string& str) {
   return str.substr(found+1);
 }
 
-
 static int checked_main()
 {
   spot::default_environment& env =

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -34,8 +34,10 @@ namespace spot
   public:
     seq_reach_kripke(kripkecube<State, SuccIterator>& sys, unsigned tid):
       sys_(sys), tid_(tid)
-    {
-      SPOT_ASSERT(is_a_kripkecube(sys));
+  {
+      static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
+                                             State, SuccIterator>::value,
+                    "error: does not match the kripkecube requirements");
       visited.reserve(2000000);
       todo.reserve(100000);
     }
