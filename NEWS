@@ -17,7 +17,7 @@ New in spot 2.7.5.dev (not yet released)
     determinization-based complementation was not performed at all,
     unless -D was specified.
 
-  - ltlcross will no skip unnecessary cross-checks and
+  - ltlcross will now skip unnecessary cross-checks and
     consistency-checks (they are unnecessary when all automata
     could be complemented and statistics were not required).
 
@@ -58,9 +58,9 @@ New in spot 2.7.5.dev (not yet released)
     helpful to display automata as "graphs", e.g., when illustrating
     algorithms that do not care about labels.
 
-  - A new complement() function that return automata with unspecified
-    acceptance condition.  The output can be alternating only if the
-    input was alternating.
+  - A new complement() function returns complementd automata with
+    unspecified acceptance condition.  The output can be alternating
+    only if the input was alternating.
 
   - There is a new class output_aborter that is used to specify
     upper bounds on the size of automata produced by some algorithms.
