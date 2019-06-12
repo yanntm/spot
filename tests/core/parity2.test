@@ -317,14 +317,14 @@ State: 1
 [1&2] 4 {2}
 State: 2
 [!0] 1 {2}
-[0&1&2] 2 {1}
 [0&!1&2] 2 {2}
+[0&1&2] 2 {1}
 State: 3
 [0] 3 {2}
 [0&1&2] 4 {2}
 State: 4
-[0&1&2] 4 {1}
 [0&!1&2] 4 {2}
+[0&1&2] 4 {1}
 --END--
 HOA: v1
 name: "FGa"
@@ -804,7 +804,7 @@ properties: trans-labels explicit-labels trans-acc deterministic
 State: 0
 [0&!1 | 0&!2] 0
 [!0] 1
-[0&1&2] 2 {1}
+[0&1&2] 2
 State: 1
 [!1 | !2] 3
 [1&2] 4
@@ -815,7 +815,7 @@ State: 2
 [0&1&2] 2 {1}
 State: 3
 [0&!1 | 0&!2] 3
-[0&1&2] 4 {1}
+[0&1&2] 4
 State: 4
 [0&!2] 3 {0}
 [0&!1&2] 4
@@ -865,7 +865,7 @@ properties: trans-labels explicit-labels trans-acc deterministic
 State: 0
 [0&!1 | 0&!2] 0
 [!0] 1
-[0&1&2] 2 {1}
+[0&1&2] 2
 State: 1
 [!1 | !2] 3
 [1&2] 4
@@ -876,7 +876,7 @@ State: 2
 [0&1&2] 2 {1}
 State: 3
 [0&!1 | 0&!2] 3
-[0&1&2] 4 {1}
+[0&1&2] 4
 State: 4
 [0&!2] 3 {0}
 [0&!1&2] 4
@@ -926,7 +926,7 @@ properties: trans-labels explicit-labels trans-acc deterministic
 State: 0
 [0&!1 | 0&!2] 0
 [!0] 1
-[0&1&2] 2 {0}
+[0&1&2] 2
 State: 1
 [!1 | !2] 3
 [1&2] 4
@@ -937,7 +937,7 @@ State: 2
 [0&1&2] 2 {0}
 State: 3
 [0&!1 | 0&!2] 3
-[0&1&2] 4 {0}
+[0&1&2] 4
 State: 4
 [0&!2] 3 {1}
 [0&!1&2] 4
@@ -988,22 +988,22 @@ properties: deterministic
 State: 0
 [0&!1 | 0&!2] 0 {2}
 [!0] 1 {2}
-[0&1&2] 2 {1}
+[0&1&2] 2 {2}
 State: 1
 [!1 | !2] 3 {2}
 [1&2] 4 {2}
 State: 2
 [0&!2] 0 {0}
 [!0] 1 {2}
-[0&1&2] 2 {1}
 [0&!1&2] 2 {2}
+[0&1&2] 2 {1}
 State: 3
 [0&!1 | 0&!2] 3 {2}
-[0&1&2] 4 {1}
+[0&1&2] 4 {2}
 State: 4
 [0&!2] 3 {0}
-[0&1&2] 4 {1}
 [0&!1&2] 4 {2}
+[0&1&2] 4 {1}
 --END--
 HOA: v1
 name: "FGa"
@@ -1050,22 +1050,22 @@ properties: deterministic
 State: 0
 [0&!1 | 0&!2] 0 {2}
 [!0] 1 {2}
-[0&1&2] 2 {1}
+[0&1&2] 2 {2}
 State: 1
 [!1 | !2] 3 {2}
 [1&2] 4 {2}
 State: 2
 [0&!2] 0 {0}
 [!0] 1 {2}
-[0&1&2] 2 {1}
 [0&!1&2] 2 {2}
+[0&1&2] 2 {1}
 State: 3
 [0&!1 | 0&!2] 3 {2}
-[0&1&2] 4 {1}
+[0&1&2] 4 {2}
 State: 4
 [0&!2] 3 {0}
-[0&1&2] 4 {1}
 [0&!1&2] 4 {2}
+[0&1&2] 4 {1}
 --END--
 HOA: v1
 name: "FGa"
@@ -1112,7 +1112,7 @@ properties: deterministic
 State: 0
 [0&!1 | 0&!2] 0 {1}
 [!0] 1 {1}
-[0&1&2] 2 {2}
+[0&1&2] 2 {1}
 State: 1
 [!1 | !2] 3 {1}
 [1&2] 4 {1}
@@ -1123,7 +1123,7 @@ State: 2
 [0&1&2] 2 {2}
 State: 3
 [0&!1 | 0&!2] 3 {1}
-[0&1&2] 4 {2}
+[0&1&2] 4 {1}
 State: 4
 [0&!2] 3 {3}
 [0&!1&2] 4 {1}
@@ -1135,20 +1135,17 @@ diff expected3 res3
 cat >expected4<<EOF
 HOA: v1
 name: "FGa"
-States: 2
+States: 1
 Start: 0
 AP: 1 "a"
-acc-name: Rabin 1
-Acceptance: 2 Fin(0) & Inf(1)
+acc-name: co-Buchi
+Acceptance: 1 Fin(0)
 properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
-[!0] 0
-[0] 1 {1}
-State: 1
+[0] 0
 [!0] 0 {0}
-[0] 1 {1}
 --END--
 HOA: v1
 name: "G(Fa & Fb)"
@@ -1199,20 +1196,17 @@ State: 4
 --END--
 HOA: v1
 name: "FGa"
-States: 2
+States: 1
 Start: 0
 AP: 1 "a"
-acc-name: Rabin 1
-Acceptance: 2 Fin(0) & Inf(1)
+acc-name: co-Buchi
+Acceptance: 1 Fin(0)
 properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
-[!0] 0
-[0] 1 {1}
-State: 1
+[0] 0
 [!0] 0 {0}
-[0] 1 {1}
 --END--
 HOA: v1
 name: "G(Fa & Fb)"
@@ -1263,20 +1257,17 @@ State: 4
 --END--
 HOA: v1
 name: "FGa"
-States: 2
+States: 1
 Start: 0
 AP: 1 "a"
 acc-name: parity max even 2
 Acceptance: 2 Fin(1) & Inf(0)
-properties: trans-labels explicit-labels trans-acc complete
+properties: trans-labels explicit-labels trans-acc colored complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
-[!0] 0
-[0] 1 {0}
-State: 1
+[0] 0 {0}
 [!0] 0 {1}
-[0] 1 {0}
 --END--
 HOA: v1
 name: "G(Fa & Fb)"
@@ -1327,20 +1318,17 @@ State: 4
 --END--
 HOA: v1
 name: "FGa"
-States: 2
+States: 1
 Start: 0
 AP: 1 "a"
-acc-name: parity min odd 3
-Acceptance: 3 Fin(0) & (Inf(1) | Fin(2))
+acc-name: parity max even 2
+Acceptance: 2 Fin(1) & Inf(0)
 properties: trans-labels explicit-labels trans-acc colored complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
-[!0] 0 {2}
-[0] 1 {1}
-State: 1
-[!0] 0 {0}
-[0] 1 {1}
+[0] 0 {0}
+[!0] 0 {1}
 --END--
 HOA: v1
 name: "G(Fa & Fb)"
@@ -1392,20 +1380,17 @@ State: 4
 --END--
 HOA: v1
 name: "FGa"
-States: 2
+States: 1
 Start: 0
 AP: 1 "a"
-acc-name: parity min odd 3
-Acceptance: 3 Fin(0) & (Inf(1) | Fin(2))
+acc-name: Rabin 1
+Acceptance: 2 Fin(0) & Inf(1)
 properties: trans-labels explicit-labels trans-acc colored complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
-[!0] 0 {2}
-[0] 1 {1}
-State: 1
+[0] 0 {1}
 [!0] 0 {0}
-[0] 1 {1}
 --END--
 HOA: v1
 name: "G(Fa & Fb)"
@@ -1457,20 +1442,17 @@ State: 4
 --END--
 HOA: v1
 name: "FGa"
-States: 2
+States: 1
 Start: 0
 AP: 1 "a"
-acc-name: parity max even 4
-Acceptance: 4 Fin(3) & (Inf(2) | (Fin(1) & Inf(0)))
+acc-name: parity max even 2
+Acceptance: 2 Fin(1) & Inf(0)
 properties: trans-labels explicit-labels trans-acc colored complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
+[0] 0 {0}
 [!0] 0 {1}
-[0] 1 {2}
-State: 1
-[!0] 0 {3}
-[0] 1 {2}
 --END--
 HOA: v1
 name: "G(Fa & Fb)"
@@ -1535,7 +1517,7 @@ cat >expected <<EOF
 "input.states","output.states"
 2,3
 3,15
-4,129
-5,2057
+4,120
+5,1801
 EOF
 diff sizes.csv expected

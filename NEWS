@@ -114,6 +114,9 @@ New in spot 2.7.5.dev (not yet released)
     a better replacement for cleanup_parity() and colorize_parity().
     See https://spot.lrde.epita.fr/ipynb/parity.html for examples.
 
+  - The postprocessor and translator classes are now using
+    reduce_parity() for further simplifications.
+
 New in spot 2.7.5 (2019-06-05)
 
   Build:

@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016-2018 Laboratoire de Recherche et Développement
+# Copyright (C) 2016-2019 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -185,28 +185,28 @@ cat >exp<<EOF
 "ms-example=4,3",11,11
 "ms-example=4,4",12,12
 "ms-phi-r=0",1,2
-"ms-phi-r=1",1,16
-"ms-phi-r=2",1,29
-"ms-phi-s=0",1,5
-"ms-phi-s=1",1,8
-"ms-phi-s=2",1,494
+"ms-phi-r=1",1,12
+"ms-phi-r=2",1,28
+"ms-phi-s=0",1,3
+"ms-phi-s=1",1,7
+"ms-phi-s=2",1,375
 "ms-phi-h=0",1,1
 "ms-phi-h=1",2,3
 "ms-phi-h=2",4,7
 "ms-phi-h=3",8,15
 "ms-phi-h=4",16,31
 "gf-equiv=0",1,1
-"gf-equiv=1",1,4
-"gf-equiv=2",1,8
-"gf-equiv=3",1,21
-"gf-equiv=4",1,81
-"gf-equiv=5",1,431
+"gf-equiv=1",1,3
+"gf-equiv=2",1,7
+"gf-equiv=3",1,20
+"gf-equiv=4",1,80
+"gf-equiv=5",1,430
 "gf-implies=0",1,1
-"gf-implies=1",1,5
-"gf-implies=2",1,12
-"gf-implies=3",1,41
-"gf-implies=4",1,186
-"gf-implies=5",1,1047
+"gf-implies=1",1,4
+"gf-implies=2",1,11
+"gf-implies=3",1,33
+"gf-implies=4",1,131
+"gf-implies=5",1,653
 "gf-equiv-xn=1",2,2
 "gf-equiv-xn=2",4,4
 "gf-equiv-xn=3",8,8

@@ -28,6 +28,7 @@
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/sccinfo.hh>
+#include <spot/twaalgos/hoa.hh>
 
 namespace spot
 {
@@ -230,7 +231,9 @@ namespace spot
           om = *opt_;
         om.set("ltl-split", 0);
         translator translate_without_split(simpl_, &om);
-        translate_without_split.set_pref(pref_);
+        // Never force colored automata at intermediate steps.
+        // This is best added at the very end.
+        translate_without_split.set_pref(pref_ & ~Colored);
         translate_without_split.set_level(level_);
         translate_without_split.set_type(type_);
         auto transrun = [&](formula f)
@@ -302,6 +305,11 @@ namespace spot
               aut = product_susp(aut, susp_aut);
             else
               aut = product_or_susp(aut, susp_aut);
+            //if (aut && susp_aut)
+            //  {
+            //    print_hoa(std::cerr << "AUT\n", aut) << '\n';
+            //    print_hoa(std::cerr << "SUSPAUT\n", susp_aut) << '\n';
+            //  }
           }
         if (leading_x > 0)
           {

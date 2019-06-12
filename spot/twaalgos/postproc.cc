@@ -198,8 +198,7 @@ namespace spot
       tmp = sbacc(tmp);
     if (want_parity)
       {
-        if (COLORED_)
-          colorize_parity_here(tmp);
+        reduce_parity_here(tmp, COLORED_);
         parity_kind kind = parity_kind_any;
         parity_style style = parity_style_any;
         if ((type_ & ParityMin) == ParityMin)
@@ -241,16 +240,18 @@ namespace spot
       {
         if (PREF_ == Any && level_ == Low)
           return in;
-        if (!(want_parity && in->acc().is_parity()))
+        bool isparity = in->acc().is_parity();
+        if (isparity && in->is_existential()
+            && (type_ == Generic || want_parity))
+          return reduce_parity(in);
+        if (!(want_parity && isparity))
           {
             if (level_ == High)
               return simplify_acceptance(in);
             else
               return cleanup_acceptance(in);
           }
-        if (level_ == High)
-          return cleanup_parity(in);
-        return in;
+        return cleanup_parity(in);
       };
     a = simplify_acc(a);
 
