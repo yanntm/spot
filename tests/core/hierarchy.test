@@ -1,7 +1,7 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de
-# l'Epita (LRDE).
+# Copyright (C) 2017, 2019 Laboratoire de Recherche et Développement
+# de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -70,31 +70,33 @@ ltlfilt -q --safety --guarantee -f '(Gb R (b xor Gb)) W (a W Xa)'
 # make sure SPOT_PR_CHECK is read.
 randltl -n -1 a b c | ltlfilt -v --syntactic-safety --syntactic-guarantee \
   --syntactic-obligation --syntactic-recurrence --syntactic-persistence \
-  -n 100 > res
-cat res | SPOT_PR_CHECK=x ltlfilt --recurrence 2>err && exit 1
-cat res | SPOT_PR_CHECK=9 ltlfilt --recurrence 2>err && exit 1
+  -n 500 > res
+SPOT_PR_CHECK=x ltlfilt res --recurrence 2>err && exit 1
+SPOT_PR_CHECK=9 ltlfilt res --recurrence 2>err && exit 1
 grep SPOT_PR_CHECK err
 
 # Testing Recurrence.
-cat res | ltlfilt --recurrence > r0
-for i in 1 2; do
-  cat res | SPOT_PR_CHECK=$i ltlfilt --recurrence > r$i
+ltlfilt res --recurrence > r0
+for i in 1 2 3; do
+    SPOT_PR_CHECK=$i ltlfilt res --recurrence > r$i
 done
 diff r0 r2
 diff r1 r2
-cat res | ltlfilt -o %h.ltl
+diff r2 r3
+ltlfilt res -o %h.ltl
 cat R.ltl O.ltl G.ltl S.ltl B.ltl | sort > rogsb.ltl
 sort r2 > r3
 diff r3 rogsb.ltl
 
 # Testing Persistence.
-cat res | ltlfilt --persistence > p0
-for i in 1 2; do
-  cat res | SPOT_PR_CHECK=$i ltlfilt --persistence > p$i
+ltlfilt res --persistence > p0
+for i in 1 2 3; do
+  SPOT_PR_CHECK=$i ltlfilt res --persistence > p$i
 done
 diff p0 p2
 diff p1 p2
-cat res | ltlfilt -o %h.ltl
+diff p2 p3
+ltlfilt res -o %h.ltl
 cat P.ltl O.ltl G.ltl S.ltl B.ltl | sort > pogsb.ltl
 sort p2 > p3
 diff p3 pogsb.ltl

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -65,77 +65,89 @@ namespace spot
       return !cobuchi->intersects(not_aut);
     }
 
+    [[noreturn]] static void invalid_spot_pr_check()
+    {
+      throw std::runtime_error("invalid value for SPOT_PR_CHECK "
+                               "(should be 1, 2, or 3)");
+    }
+
+    static prcheck
+    algo_to_perform(bool is_persistence, bool aut_given)
+    {
+      static unsigned value = [&]()
+        {
+          int val;
+          try
+            {
+              auto s = getenv("SPOT_PR_CHECK");
+              val = s ? std::stoi(s) : 0;
+            }
+          catch (const std::exception& e)
+            {
+              invalid_spot_pr_check();
+            }
+          if (val < 0 || val > 3)
+            invalid_spot_pr_check();
+          return val;
+        }();
+      switch (value)
+        {
+        case 0:
+          if (aut_given && !is_persistence)
+            return prcheck::via_Parity;
+          else
+            return prcheck::via_CoBuchi;
+        case 1:
+          return prcheck::via_CoBuchi;
+        case 2:
+          return prcheck::via_Rabin;
+        case 3:
+          return prcheck::via_Parity;
+        default:
+          SPOT_UNREACHABLE();
+        }
+      SPOT_UNREACHABLE();
+      return prcheck::via_Parity;
+    }
+
     static bool
     detbuchi_realizable(const twa_graph_ptr& aut)
     {
       if (is_universal(aut))
         return true;
 
-      // if aut is a non-deterministic TGBA, we do
-      // TGBA->DPA->DRA->(D?)BA.  The conversion from DRA to
-      // BA will preserve determinism if possible.
+      bool want_old = algo_to_perform(false, true) == prcheck::via_Rabin;
+      if (want_old)
+        {
+          // if aut is a non-deterministic TGBA, we do
+          // TGBA->DPA->DRA->(D?)BA.  The conversion from DRA to
+          // BA will preserve determinism if possible.
+          spot::postprocessor p;
+          p.set_type(spot::postprocessor::Generic);
+          p.set_pref(spot::postprocessor::Deterministic);
+          p.set_level(spot::postprocessor::Low);
+          auto dpa = p.run(aut);
+          if (dpa->acc().is_generalized_buchi())
+            {
+              assert(is_deterministic(dpa));
+              return true;
+            }
+          else
+            {
+              auto dra = to_generalized_rabin(dpa);
+              return rabin_is_buchi_realizable(dra);
+            }
+        }
+      // Converting reduce_parity() will produce a Büchi automaton (or
+      // an automaton with "t" or "f" acceptance) if the parity
+      // automaton is DBA-realizable.
       spot::postprocessor p;
-      p.set_type(spot::postprocessor::Generic);
+      p.set_type(spot::postprocessor::Parity);
       p.set_pref(spot::postprocessor::Deterministic);
       p.set_level(spot::postprocessor::Low);
       auto dpa = p.run(aut);
-      if (dpa->acc().is_generalized_buchi())
-        {
-          assert(is_deterministic(dpa));
-          return true;
-        }
-      else
-        {
-          auto dra = to_generalized_rabin(dpa);
-          return rabin_is_buchi_realizable(dra);
-        }
+      return dpa->acc().is_f() || dpa->acc().is_generalized_buchi();
     }
-  }
-
-  [[noreturn]] static void invalid_spot_pr_check()
-  {
-    throw std::runtime_error("invalid value for SPOT_PR_CHECK "
-                             "(should be 1 or 2)");
-  }
-
-  static prcheck
-  algo_to_perform(bool is_persistence, bool aut_given)
-  {
-    static prcheck env_algo = [&]()
-      {
-        int val;
-        try
-          {
-            auto s = getenv("SPOT_PR_CHECK");
-            val = s ? std::stoi(s) : 0;
-          }
-        catch (const std::exception& e)
-          {
-            invalid_spot_pr_check();
-          }
-        if (val == 0)
-          {
-            if (aut_given && !is_persistence)
-              return prcheck::via_Rabin;
-            else if (is_persistence || !aut_given)
-              return prcheck::via_CoBuchi;
-            else
-              SPOT_UNREACHABLE();
-          }
-        else if (val == 1)
-          {
-            return prcheck::via_CoBuchi;
-          }
-        else if (val == 2)
-          {
-            return prcheck::via_Rabin;
-          }
-        else
-          {
-            invalid_spot_pr_check();
-          }
-      }();
-    return env_algo;
   }
 
   bool
@@ -161,6 +173,7 @@ namespace spot
                                   ltl_to_tgba_fm(f, make_bdd_dict(), true));
 
       case prcheck::via_Rabin:
+      case prcheck::via_Parity:
         return detbuchi_realizable(ltl_to_tgba_fm(formula::Not(f),
                                                   make_bdd_dict(), true));
 
@@ -195,6 +208,7 @@ namespace spot
                                                  make_bdd_dict(), true));
 
       case prcheck::via_Rabin:
+      case prcheck::via_Parity:
         return detbuchi_realizable(aut ? aut :
                                    ltl_to_tgba_fm(f, make_bdd_dict(), true));
 

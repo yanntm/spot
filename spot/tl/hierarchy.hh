@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017, 2018, 2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -37,6 +37,9 @@ namespace spot
   ///
   /// If PR_via_CoBuchi, they will check if the formula is cobuchi_realizable.
   ///
+  /// If PR_via_Parity, they will check if the formula is
+  /// detbuchi/cobuchi-realizable by calling reduce_parity() on a DPA.
+  ///
   /// Note that is_persistence() and is_recurrence() will work on a formula f
   /// or its negation because of the duality of both classes
   /// (see https://spot.lrde.epita.fr/hierarchy.html for details).
@@ -47,6 +50,7 @@ namespace spot
     Auto,
     via_CoBuchi,
     via_Rabin,
+    via_Parity,
   };
 
   /// \ingroup tl_hier

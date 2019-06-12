@@ -520,7 +520,7 @@ automata.
 For the subclass of /obligation/ properties, using =-D= is a sure way
 to obain a deterministic automaton (and even a minimal one), but for
 the /recurrence/ properties that are not /obligations/ the translator
-does not make any special effort to produce deterministic automata,
+does not make /too much/ effort to produce deterministic automata,
 even with =-D= (this might change in the future).
 
 All properties that are not in the /persistence/ class (this includes
@@ -585,106 +585,40 @@ $txt
 [[file:hier-recurrence-3.svg]]
 
 One way to obtain a deterministic Büchi automaton (it has to exist, since this is
-a /recurrence/ property), is to chain a few algorithms implemented in Spot:
+a /recurrence/ property), is to request a deterministic automaton with parity
+acceptance using =-P=.  The number of color output with =-P= is always reduced
+to the minimal number possible, so for a /recurrence/ property the output
+automaton can only have one of three possible acceptance: =Inf(0)=, =t=, or =f=.
 
- 1. Determinize the non-deterministic automaton to obtain a
-    deterministic automaton with parity acceptance: this is done by
-    using =ltl2tgba -P -D=, with option =-P= indicating that parity
-    acceptance is desired.
-
-    #+NAME: hier-recurrence-4
-    #+BEGIN_SRC sh :exports code
-    ltl2tgba -P -D 'G(Gb | Fa)' -d
-    #+END_SRC
-    #+BEGIN_SRC dot :file hier-recurrence-4.svg :var txt=hier-recurrence-4 :exports results
-    $txt
-    #+END_SRC
-    #+RESULTS:
-    [[file:hier-recurrence-4.svg]]
-
- 2. Transform the parity acceptance into Rabin acceptance: this is
-    done with =autfilt --generalized-rabin=.  Because of the type of
-    parity acceptance used, the result will actually be Rabin and not
-    generalized Rabin.
-
-    #+NAME: hier-recurrence-5
-    #+BEGIN_SRC sh :exports code
-    ltl2tgba -P -D 'G(Gb | Fa)' |
-      autfilt --generalized-rabin -d
-    #+END_SRC
-    #+BEGIN_SRC dot :file hier-recurrence-5.svg :var txt=hier-recurrence-5 :exports results
-    $txt
-    #+END_SRC
-
-    #+RESULTS:
-    [[file:hier-recurrence-5.svg]]
-
-    (The only change here is in the acceptance condition.)
-
- 3. In step 4 we are going to convert the automaton to state-based
-    Büchi, and this sometimes works better if the input Rabin automaton
-    also uses state-based acceptance.  So let us add =-S= to the
-    previous command:
-
-    #+NAME: hier-recurrence-6
-    #+BEGIN_SRC sh :results verbatim :exports code
-    ltl2tgba -P -D 'G(Gb | Fa)' |
-      autfilt -S --generalized-rabin -d
-    #+END_SRC
-
-    #+BEGIN_SRC dot :file hier-recurrence-6.svg :var txt=hier-recurrence-6 :exports results
-    $txt
-    #+END_SRC
-
-    #+RESULTS:
-    [[file:hier-recurrence-6.svg]]
-
- 4. Finally, convert the resulting automaton to BA, using =autfilt
-    -B=.  Spot can convert automata with any acceptance condition to
-    BA, but when the input is a deterministic Rabin automaton, it uses
-    a dedicated algorithm that preserves determinism whenever possible
-    (and we know it is possible, because we are working on a
-    recurrence formula).  Adding =-D= here to suggest that we are
-    trying to obtain a deterministic automaton does not hurt, as it
-    will enable simplifications as a side-effect (without =-D= we
-    simply get a larger deterministic automaton).
-
-    #+NAME: hier-recurrence-7
-    #+BEGIN_SRC sh :exports code
-    ltl2tgba -P -D 'G(Gb | Fa)' |
-      autfilt -S --generalized-rabin |
-      autfilt -B -D -d
-    #+END_SRC
-
-    #+BEGIN_SRC dot :file hier-recurrence-7.svg :var txt=hier-recurrence-7 :exports results
-    $txt
-    #+END_SRC
-
-    #+RESULTS:
-    [[file:hier-recurrence-7.svg]]
-
-Here we are lucky that the deterministic Büchi automaton is even
-smaller than the original non-deterministic version.  As said earlier,
-passing =-S= to the first =autfilt= was optional, but in this case it
-helps producing a smaller automaton.  Here is what we get without it:
-
-#+NAME: hier-recurrence-8
+#+NAME: hier-recurrence-4
 #+BEGIN_SRC sh :exports code
-ltl2tgba -P -D 'G(Gb | Fa)' |
-  autfilt --generalized-rabin |
-  autfilt -B -D -d
+ltl2tgba -P -D 'G(Gb | Fa)' -d
 #+END_SRC
-
-#+BEGIN_SRC dot :file hier-recurrence-8.svg :var txt=hier-recurrence-8 :exports results
+#+BEGIN_SRC dot :file hier-recurrence-4.svg :var txt=hier-recurrence-4 :exports results
 $txt
 #+END_SRC
-
 #+RESULTS:
-[[file:hier-recurrence-8.svg]]
+[[file:hier-recurrence-4.svg]]
 
-It is likely that =ltl2tgba -B -D= will implement all this processing
-chain in the future, but so originally =-D= was only expressing a
-preference not a requirement.
+Note that if the acceptance is =t=, the property is a monitor, and if
+its =f=, the property is =false=.  In any way, if you would like to
+obtain a DBA for any recurrent property, a sure way to avoid these
+difference is to pipe the result through =autfilt -B=
+
+#+NAME: hier-recurrence-5
+#+BEGIN_SRC sh :exports code
+ltl2tgba -P -D 'G(Gb | Fa)' | autfilt -B -d
+#+END_SRC
+#+BEGIN_SRC dot :file hier-recurrence-5.svg :var txt=hier-recurrence-5 :exports results
+$txt
+#+END_SRC
+#+RESULTS:
+[[file:hier-recurrence-5.svg]]
+
+
+It is likely that =ltl2tgba -B -D= will implement these steps in the
+future, but so originally =-D= was only expressing a preference not a
+requirement.
 
 ** Persistence
 
@@ -725,8 +659,9 @@ $txt
 
 Note that in this example, we know that =GFa= is trivial enough that
 =ltl2tgba -D GFa= will generate a deterministic automaton.  In the
-general case we might have to determinize the automaton as we did in
-the previous section (we will do it again below).
+general case we might have to determinize the automaton using =-P -D= as
+we did in the previous section.  For persistence properties, =-P -D= should
+return an automaton whose acceptance is one of =Fin(0)=, =t=, or =f=.
 
 /Persistence/ properties can be represented by weak Büchi automata.
 The translator is aware of that, so when it detects that the input
@@ -739,10 +674,8 @@ optimization is simply not applied.)
 If the input is a weak property that is not syntactically weak, the
 output will not necessarily be weak.  One costly way to obtain a weak
 automaton for a formula $\varphi$ would be to first compute a
-deterministic Büchi automaton of the recurrence $\lnot\varphi$ then
-complement the acceptance of the resulting automaton, yielding a
-deterministic co-Büchi automaton, and then transform that into a Büchi
-automaton.
+deterministic co-Büchi automaton $\varphi$ then transform that into a
+Büchi automaton.
 
 Let's do that on the persistence formula =F(G!a | G(b U a))=, just for
 the fun of it.
@@ -766,15 +699,11 @@ $txt
 #+RESULTS:
 [[file:hier-persistence-3.svg]]
 
-Furthermore it appears that =ltl2tgba -D= does generate a deterministic
-Büchi automaton for the complement, instead we get a non-deterministic
-generalized Büchi automaton:
+So let's determinize using parity acceptance:
 
 #+NAME: hier-persistence-4
 #+BEGIN_SRC sh :exports code
-ltlfilt --negate -f 'F(G!a | G(b U a))' |
-  ltl2tgba -D |
-  autfilt --highlight-nondet=5 -d
+ltl2tgba -P -D 'F(G!a | G(b U a))' -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-persistence-4.svg :var txt=hier-persistence-4 :exports results
 $txt
@@ -783,58 +712,16 @@ $txt
 #+RESULTS:
 [[file:hier-persistence-4.svg]]
 
-So let us use the same tricks as in the previous section,
-determinizing this automaton into a Rabin automaton, and then back to
-deterministic Büchi:
-
-#+NAME: hier-persistence-5
-#+BEGIN_SRC sh :exports code
-ltlfilt --negate -f 'F(G!a | G(b U a))' |
-  ltl2tgba -P -D |
-  autfilt --generalized-rabin |
-  autfilt --tgba -D -d
-#+END_SRC
-#+BEGIN_SRC dot :file hier-persistence-5.svg :var txt=hier-persistence-5 :exports results
-$txt
-#+END_SRC
-
-#+RESULTS:
-[[file:hier-persistence-5.svg]]
-
-This is a deterministic Büchi automaton for the negation of our formula.
-Now we can complement it to obtain a deterministic co-Büchi automaton for =F(G!a | G(b U a))=:
-
-#+NAME: hier-persistence-6
-#+BEGIN_SRC sh :exports code
-ltlfilt --negate -f 'F(G!a | G(b U a))' |
-  ltl2tgba -P -D |
-  autfilt --generalized-rabin |
-  autfilt --tgba -D |
-  autfilt --complement -d
-#+END_SRC
-
-#+BEGIN_SRC dot :file hier-persistence-6.svg :var txt=hier-persistence-6 :exports results
-$txt
-#+END_SRC
-
-#+RESULTS:
-[[file:hier-persistence-6.svg]]
-
-And finally we convert the result back to Büchi:
+And finally we convert the result back to Büchi with =autfilt -B=.
 
 #+NAME: hier-persistence-7
 #+BEGIN_SRC sh :exports code
-ltlfilt --negate -f 'F(G!a | G(b U a))' |
-  ltl2tgba -P -D |
-  autfilt --generalized-rabin |
-  autfilt --tgba -D |
-  autfilt --complement -B -d
+ltl2tgba -P -D 'F(G!a | G(b U a))' | autfilt -B --highlight-nondet --small -d
 #+END_SRC
-
 #+BEGIN_SRC dot :file hier-persistence-7.svg :var txt=hier-persistence-7 :exports results
 $txt
 #+END_SRC
 #+RESULTS:
 [[file:hier-persistence-7.svg]]
 
-That is indeed, a weak automaton.
+That is indeed, a weak non-deterministic automaton.

@@ -24,6 +24,12 @@ New in spot 2.7.5.dev (not yet released)
   - genaut learned --m-nba=N to generate Max Michel's NBA familly.
     (NBAs with N+1 states whose determinized have at least N! states.)
 
+  - Due to some new simplification of parity acceptance, the output of
+    "ltl2tgba -P -D" is now using a minimal number of colors.  This
+    means that recurrence properties have an acceptance condition
+    amongst "Inf(0)", "t", or "f", and persistance properties have an
+    acceptance condition among "Fin(0)", "t", or "f".
+
   Library:
 
   - Add generic_accepting_run() as a variant of generic_emptiness_check() that
@@ -116,6 +122,13 @@ New in spot 2.7.5.dev (not yet released)
 
   - The postprocessor and translator classes are now using
     reduce_parity() for further simplifications.
+
+  - The code for checking recurrence/persistence properties can also
+    use the fact the reduce_parity() with return "Inf(0)" (or "t" or
+    "f") for deterministic automata corresponding to recurrence
+    properties, and "Fin(0)" (or "t" or "f") for persistence
+    properties.  This can be altered with the SPOT_PR_CHECK
+    environment variable.
 
 New in spot 2.7.5 (2019-06-05)
 
