@@ -1080,7 +1080,10 @@ namespace spot
       }
 
     if (!equiv)
-      return false;
+      {
+        max = false;
+        return false;
+      }
 
     if (equiv_codes(code_, max_code))
       {
@@ -1092,6 +1095,7 @@ namespace spot
         max = false;
         return true;
       }
+    max = false;
     return false;
   }
 
