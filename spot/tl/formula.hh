@@ -1191,22 +1191,7 @@ namespace spot
     /// \brief Create SERE for f[:*min..max]
     ///
     /// This operator is a generalization of the (+) operator
-    /// defined in the following paper.
-    /** \verbatim
-      @InProceedings{          dax.09.atva,
-      author        = {Christian Dax and Felix Klaedtke and Stefan Leue},
-      title         = {Specification Languages for Stutter-Invariant Regular
-      Properties},
-      booktitle     = {Proceedings of the 7th International Symposium on
-      Automated Technology for Verification and Analysis
-      (ATVA'09)},
-      pages         = {244--254},
-      year                = {2009},
-      volume        = {5799},
-      series        = {Lecture Notes in Computer Science},
-      publisher        = {Springer-Verlag}
-      }
-      \endverbatim */
+    /// defined by Dax et al. \cite dax.09.atva
     /// @{
     SPOT_DEF_BUNOP(FStar);
     /// @}
@@ -1617,44 +1602,18 @@ namespace spot
     /// \brief Whether the formula is purely eventual.
     ///
     /// Pure eventuality formulae are defined in
-    /** \verbatim
-      @InProceedings{          etessami.00.concur,
-      author          = {Kousha Etessami and Gerard J. Holzmann},
-      title           = {Optimizing {B\"u}chi Automata},
-      booktitle       = {Proceedings of the 11th International Conference on
-      Concurrency Theory (Concur'2000)},
-      pages           = {153--167},
-      year                = {2000},
-      editor          = {C. Palamidessi},
-      volume          = {1877},
-      series          = {Lecture Notes in Computer Science},
-      publisher       = {Springer-Verlag}
-      }
-      \endverbatim */
     ///
     /// A word that satisfies a pure eventuality can be prefixed by
     /// anything and still satisfies the formula.
+    /// \cite etessami.00.concur
     SPOT_DEF_PROP(is_eventual);
     /// \brief Whether a formula is purely universal.
     ///
     /// Purely universal formulae are defined in
-    /** \verbatim
-      @InProceedings{          etessami.00.concur,
-      author          = {Kousha Etessami and Gerard J. Holzmann},
-      title           = {Optimizing {B\"u}chi Automata},
-      booktitle       = {Proceedings of the 11th International Conference on
-      Concurrency Theory (Concur'2000)},
-      pages           = {153--167},
-      year            = {2000},
-      editor          = {C. Palamidessi},
-      volume          = {1877},
-      series          = {Lecture Notes in Computer Science},
-      publisher       = {Springer-Verlag}
-      }
-      \endverbatim */
     ///
     /// Any (non-empty) suffix of a word that satisfies a purely
     /// universal formula also satisfies the formula.
+    /// \cite etessami.00.concur
     SPOT_DEF_PROP(is_universal);
     /// Whether a PSL/LTL formula is syntactic safety property.
     SPOT_DEF_PROP(is_syntactic_safety);

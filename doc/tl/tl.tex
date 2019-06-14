@@ -722,7 +722,7 @@ operands are Boolean formulas.
   to define a subset of PSL that expresses exactly the
   stutter-invariant $\omega$-regular languages.
 \item The $\FIRSTMATCH$ operator does not exist in PSL.  It comes
-  from SystemVerilog Assertions (SVA)~\cite{systemverilog.04.lrm}.
+  from SystemVerilog Assertions (SVA)~\cite{systemverilog.18.std}.
   One intuition behind $\FIRSTMATCH\code(f\code)$ is that the
   DFA for $\FIRSTMATCH\code(f\code)$ can be obtained from the DFA
   for $f$ by removing all transitions leaving accepting states.
@@ -1805,7 +1805,7 @@ implication can be done in two ways:
   we implement are described in Appendix~\ref{ann:syntimpl}.
 
 \item[Language Containment Checks] were initially proposed
-  by~\citet{tauriainen.03.a83}.  This detection is enabled by the
+  by~\citet{tauriainen.03.tr}.  This detection is enabled by the
   ``\verb|tl_simplifier_options::containment_checks|'' option.
 \end{description}
 
@@ -1888,7 +1888,7 @@ are counted as one.
 \endgroup
 
 Many of the above rules were collected from the
-literature~\cite{somenzi.00.cav,tauriainen.03.a83,babiak.12.tacas} and
+literature~\cite{somenzi.00.cav,tauriainen.03.tr,babiak.12.tacas} and
 sometimes generalized to support operators such as $\M$ and $\W$.
 
 \appendix
@@ -2043,7 +2043,7 @@ $f_1\AND f_2$ & \bor{f_1}{g}{f_2}{g}  &              &              &           
 \phantomsection % fix hyperlinks
 \addcontentsline{toc}{chapter}{\bibname}
 \bibliographystyle{plainnat}
-\bibliography{tl}
+\bibliography{spot}
 
 \end{document}
 %%% Local Variables:

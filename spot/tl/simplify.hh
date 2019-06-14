@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2017 Laboratoire de Recherche et Developpement
+// Copyright (C) 2011-2017, 2019 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -121,21 +121,8 @@ namespace spot
     ///
     /// Returns whether \a f syntactically implies \a g.
     ///
-    /// This is adapted from
-    /** \verbatim
-        @InProceedings{          somenzi.00.cav,
-        author         = {Fabio Somenzi and Roderick Bloem},
-        title          = {Efficient {B\"u}chi Automata for {LTL} Formulae},
-        booktitle      = {Proceedings of the 12th International Conference on
-        Computer Aided Verification (CAV'00)},
-        pages          = {247--263},
-        year           = {2000},
-        volume         = {1855},
-        series         = {Lecture Notes in Computer Science},
-        publisher      = {Springer-Verlag}
-        }
-        \endverbatim */
-    ///
+    /// This is adapted from the rules of Somenzi and
+    /// Bloem. \cite somenzi.00.cav
     bool syntactic_implication(formula f, formula g);
     /// \brief Syntactic implication with one negated argument.
     ///

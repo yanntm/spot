@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Développement
-// de l'Epita.
+// Copyright (C) 2015-2016, 2018-2019 Laboratoire de Recherche et
+// Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -87,18 +87,7 @@ namespace spot
   /// \brief Converts any DNF acceptance condition into Streett-like.
   ///
   /// This function is an optimized version of the construction described
-  /// by Lemma 4 and 5 of the paper below.
-  /** \verbatim
-      @Article{boker.2011.fossacs,
-        author    = {Udi Boker and Orna Kupferman},
-        title     = {Co-Büching Them All},
-        booktitle = {Foundations of Software Science and Computational
-                     Structures - 14th International Conference, FOSSACS 2011}
-        year      = {2011},
-        pages     = {184--198},
-        url       = {\url{www.cs.huji.ac.il/~ornak/publications/fossacs11b.pdf}}
-      }
-      \endverbatim */
+  /// by Lemma 4 and 5 of \cite boker.2011.fossacs .
   ///
   /// In the described construction, as many copies as there are minterms in
   /// the acceptance condition are made and the union of all those copies is

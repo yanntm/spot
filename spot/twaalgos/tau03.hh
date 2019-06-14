@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014 Laboratoire de Recherche et Développement de
+// Copyright (C) 2013, 2014, 2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -75,25 +75,7 @@ namespace spot
       end;
       \endverbatim */
   ///
-  /// This algorithm is the one presented in
-  ///
-  /** \verbatim
-      @techreport{HUT-TCS-A83,
-         address = {Espoo, Finland},
-         author = {Heikki Tauriainen},
-         institution = {Helsinki University of Technology, Laboratory for
-         Theoretical Computer Science},
-         month = {December},
-         number = {A83},
-         pages = {132},
-         title = {On Translating Linear Temporal Logic into Alternating and
-         Nondeterministic Automata},
-         type = {Research Report},
-         year = {2003},
-         url = {http://www.tcs.hut.fi/Publications/info/bibdb.HUT-TCS-A83.shtml}
-      }
-      \endverbatim */
-  ///
+  /// This algorithm is the one presented in \cite tauriainen.03.tr .
   SPOT_API emptiness_check_ptr
   explicit_tau03_search(const const_twa_ptr& a, option_map o = option_map());
 

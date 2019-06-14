@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2017 Laboratoire de Recherche
+// Copyright (C) 2014-2017, 2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -30,22 +30,7 @@ namespace spot
   ///
   /// Any letter that enters a state will spawn a copy of this state
   /// with a self-loop using the same letter.  For more details
-  /// about this function, see
-  /** \verbatim
-      @InProceedings{   michaud.15.spin,
-        author        = {Thibaud Michaud and Alexandre Duret-Lutz},
-        title         = {Practical Stutter-Invariance Checks for
-                        {$\omega$}-Regular Languages},
-        booktitle     = {Proceedings of the 22th International SPIN
-                        Symposium on Model Checking of Software (SPIN'15)},
-        year          = 2015,
-        pages         = {84--101},
-        series        = {Lecture Notes in Computer Science},
-        volume        = 9232,
-        publisher     = {Springer},
-        month         = aug
-      }
-      \endverbatim */
+  /// about this function, see \cite michaud.15.spin .
   SPOT_API twa_graph_ptr
   sl(const_twa_graph_ptr aut);
 
@@ -55,22 +40,7 @@ namespace spot
   ///
   /// For any transition (s,d) labeled by a letter ℓ, we add a state x
   /// and three transitions (s,x), (x,x), (x,d) all labeled by ℓ.
-  /// For more details about this function, see
-  /** \verbatim
-      @InProceedings{   michaud.15.spin,
-        author        = {Thibaud Michaud and Alexandre Duret-Lutz},
-        title         = {Practical Stutter-Invariance Checks for
-                        {$\omega$}-Regular Languages},
-        booktitle     = {Proceedings of the 22th International SPIN
-                        Symposium on Model Checking of Software (SPIN'15)},
-        year          = 2015,
-        pages         = {84--101},
-        series        = {Lecture Notes in Computer Science},
-        volume        = 9232,
-        publisher     = {Springer},
-        month         = aug
-      }
-      \endverbatim */
+  /// For more details about this function, see \cite michaud.15.spin .
   ///
   /// The inplace version of the function modifies the input
   /// automaton.
@@ -89,23 +59,7 @@ namespace spot
   /// a transition labeled by B, and (y,z) is a transition labeled by C,
   /// we add a transition (x,z) labeled by B∧C.
   ///
-  /// For more details about this function, see
-  /** \verbatim
-      @InProceedings{   michaud.15.spin,
-        author        = {Thibaud Michaud and Alexandre Duret-Lutz},
-        title         = {Practical Stutter-Invariance Checks for
-                        {$\omega$}-Regular Languages},
-        booktitle     = {Proceedings of the 22th International SPIN
-                        Symposium on Model Checking of Software (SPIN'15)},
-        year          = 2015,
-        pages         = {84--101},
-        series        = {Lecture Notes in Computer Science},
-        volume        = 9232,
-        publisher     = {Springer},
-        month         = aug
-      }
-      \endverbatim */
-  ///
+  /// For more details about this function, see \cite michaud.15.spin .
   ///
   /// The inplace version of the function modifies the input
   /// automaton.
@@ -133,22 +87,7 @@ namespace spot
   /// The prop_stutter_invariant() property of \a aut_f is set as a
   /// side-effect.
   ///
-  /// For more details about this function, see
-  /** \verbatim
-      @InProceedings{   michaud.15.spin,
-        author        = {Thibaud Michaud and Alexandre Duret-Lutz},
-        title         = {Practical Stutter-Invariance Checks for
-                        {$\omega$}-Regular Languages},
-        booktitle     = {Proceedings of the 22th International SPIN
-                        Symposium on Model Checking of Software (SPIN'15)},
-        year          = 2015,
-        pages         = {84--101},
-        series        = {Lecture Notes in Computer Science},
-        volume        = 9232,
-        publisher     = {Springer},
-        month         = aug
-      }
-      \endverbatim */
+  /// For more details about this function, see \cite michaud.15.spin .
   SPOT_API bool
   is_stutter_invariant(formula f, twa_graph_ptr aut_f = nullptr);
 
@@ -164,22 +103,7 @@ namespace spot
   /// The prop_stutter_invariant() property of \a aut_f is set as a
   /// side-effect.
   ///
-  /// For more details about this function, see
-  /** \verbatim
-      @InProceedings{   michaud.15.spin,
-        author        = {Thibaud Michaud and Alexandre Duret-Lutz},
-        title         = {Practical Stutter-Invariance Checks for
-                        {$\omega$}-Regular Languages},
-        booktitle     = {Proceedings of the 22th International SPIN
-                        Symposium on Model Checking of Software (SPIN'15)},
-        year          = 2015,
-        pages         = {84--101},
-        series        = {Lecture Notes in Computer Science},
-        volume        = 9232,
-        publisher     = {Springer},
-        month         = aug
-      }
-      \endverbatim */
+  /// For more details about this function, see \cite michaud.15.spin .
   SPOT_API bool
   is_stutter_invariant(twa_graph_ptr aut_f,
                        const_twa_graph_ptr aut_nf = nullptr,

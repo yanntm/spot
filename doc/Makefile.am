@@ -152,6 +152,7 @@ $(srcdir)/userdoc: $(srcdir)/org-stamp
 EXTRA_DIST = \
   footer.html \
   mainpage.dox \
+  spot.bib \
   $(ORG_FILES) \
   $(PICTURES_EXTRA) \
   $(srcdir)/org-stamp \

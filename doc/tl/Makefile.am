@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2011, 2012, 2013, 2015 Laboratoire de Recherche et
+## Copyright (C) 2011, 2012, 2013, 2015, 2019 Laboratoire de Recherche et
 ## Développement de l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
@@ -24,12 +24,12 @@ all: $(srcdir)/tl.pdf
 # recent version of latexmk; but version 4.13a, installed on some
 # of our hosts, does not support it.  Add -pvc- because some people
 # turn pvc on in their config file.
-LATEXMK = BIBINPUTS='$(srcdir)' latexmk -pdf -ps- -dvi- -pvc- \
+LATEXMK = BIBINPUTS='$(srcdir)/..' latexmk -pdf -ps- -dvi- -pvc- \
   -e '$$bibtex_use=2' \
   -e '$$pdflatex="pdflatex %O \"\\def\\SpotVersion{$(VERSION)}\\input{%S}\""'
 
 dist_pdf_DATA = $(srcdir)/tl.pdf
-EXTRA_DIST = tl.tex tl.bib spotltl.sty
+EXTRA_DIST = tl.tex spotltl.sty
 
 # latexmk produces its output in the current directory, and may not
 # update its timestamp when no rebuild was necessary.  This can cause
@@ -38,7 +38,7 @@ EXTRA_DIST = tl.tex tl.bib spotltl.sty
 # people that do not change the documentation).  Hence the "touch"
 # below.  In case of a VPATH build, we always copy the file, so the
 # timestamp is updated anyway.
-$(srcdir)/tl.pdf: $(srcdir)/tl.tex $(srcdir)/tl.bib
+$(srcdir)/tl.pdf: $(srcdir)/tl.tex $(srcdir)/../spot.bib
 	$(LATEXMK) $(srcdir)/tl.tex
 	if test '$(srcdir)' = '.'; then touch $@; else cp tl.pdf $@; fi
 

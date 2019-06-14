@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -93,19 +93,7 @@ public:
   typedef std::unordered_map<unsigned, unsigned> strategy_t;
 
   /// Compute the winning strategy and winning region of this game for player
-  /// 1 using Zielonka's recursive algorithm.
-  /** \verbatim
-      @article{ zielonka.98.tcs
-        title = "Infinite games on finitely coloured graphs with applications to
-        automata on infinite trees",
-        journal = "Theoretical Computer Science",
-        volume = "200",
-        number = "1",
-        pages = "135 - 183",
-        year = "1998",
-        author = "Wieslaw Zielonka",
-      }
-      \endverbatim */
+  /// 1 using Zielonka's recursive algorithm. \cite zielonka.98.tcs
   void solve(region_t (&w)[2], strategy_t (&s)[2]) const;
 
 private:

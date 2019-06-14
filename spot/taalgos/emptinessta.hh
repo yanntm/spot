@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2014, 2016, 2018 Laboratoire de Recherche
+// Copyright (C) 2012-2014, 2016, 2018, 2019 Laboratoire de Recherche
 // et Dévelopment de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -46,20 +46,7 @@ namespace spot
   /// If spot::ta_check::check() returns false, then the product automaton
   /// was found empty.  Otherwise the automaton accepts some run.
   ///
-  /// This is based on the following paper.
-  /** \verbatim
-       @InProceedings{        geldenhuys.06.spin,
-       author        = {Jaco Geldenhuys and Henri Hansen},
-       title         = {Larger Automata and Less Work for {LTL} Model Checking},
-       booktitle     = {Proceedings of the 13th International SPIN Workshop
-                       (SPIN'06)},
-       year          = {2006},
-       pages         = {53--70},
-       series        = {Lecture Notes in Computer Science},
-       volume        = {3925},
-       publisher     = {Springer}
-      }
-      \endverbatim */
+  /// This is based on \cite geldenhuys.06.spin .
   ///
   /// the implementation of spot::ta_check::check() is inspired from the
   /// two-pass algorithm of the paper above:

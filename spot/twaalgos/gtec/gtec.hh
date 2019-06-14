@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2013, 2014, 2015, 2016, 2018 Laboratoire de Recherche
+// Copyright (C) 2008, 2013-2016, 2018-2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -34,24 +34,7 @@ namespace spot
 
   /// \brief Check whether the language of an automate is empty.
   ///
-  /// This is based on the following paper.
-  /** \verbatim
-      @InProceedings{couvreur.99.fm,
-        author    = {Jean-Michel Couvreur},
-        title     = {On-the-fly Verification of Temporal Logic},
-        pages     = {253--271},
-        editor    = {Jeannette M. Wing and Jim Woodcock and Jim Davies},
-        booktitle = {Proceedings of the World Congress on Formal Methods in
-                     the Development of Computing Systems (FM'99)},
-        publisher = {Springer-Verlag},
-        series    = {Lecture Notes in Computer Science},
-        volume    = {1708},
-        year      = {1999},
-        address   = {Toulouse, France},
-        month     = {September},
-        isbn      = {3-540-66587-0}
-      }
-      \endverbatim */
+  /// This is based on \cite couvreur.99.fm .
   ///
   /// A recursive definition of the algorithm would look as follows,
   /// but the implementation is of course not recursive.

@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2015 Laboratoire de Recherche et Developpement
-// de l'Epita (LRDE).
+// Copyright (C) 2013, 2015, 2019 Laboratoire de Recherche et
+// Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -23,24 +23,14 @@
 
 namespace spot
 {
+  /// \ingroup tl_rewriting
   /// \brief Rewrite a stutter-insensitive formula \a f without
   /// using the X operator.
   ///
   /// This function may also be applied to stutter-sensitive formulas,
   /// but in that case the resulting formula is not equivalent.
   ///
-  /** \verbatim
-      @Article{         etessami.00.ipl,
-      author        = {Kousha Etessami},
-      title         = {A note on a question of {P}eled and {W}ilke regarding
-      stutter-invariant {LTL}},
-      journal       = {Information Processing Letters},
-      volume        = {75},
-      number        = {6},
-      year          = {2000},
-      pages         = {261--263}
-      }
-      \endverbatim */
+  /// \see \cite etessami.00.ipl
   SPOT_API
   formula remove_x(formula f);
 }

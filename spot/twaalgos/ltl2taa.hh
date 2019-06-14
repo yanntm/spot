@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2013, 2014, 2015 Laboratoire de Recherche
+// Copyright (C) 2009, 2010, 2013-2015, 2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -27,21 +27,7 @@ namespace spot
   /// \ingroup twa_ltl
   /// \brief Build a spot::taa* from an LTL formula.
   ///
-  /// This is based on the following.
-  /** \verbatim
-      @techreport{HUT-TCS-A104,
-          address = {Espoo, Finland},
-          author  = {Heikki Tauriainen},
-          month   = {September},
-          note    = {Doctoral dissertation},
-          number  = {A104},
-          pages   = {xii+229},
-          title   = {Automata and Linear Temporal Logic: Translations
-                     with Transition-Based Acceptance},
-          type    = {Research Report},
-          year    = {2006}
-      }
-      \endverbatim */
+  /// This is based on \cite tauriainen.06.tr .
   ///
   /// \param f The formula to translate into an automaton.
   /// \param dict The spot::bdd_dict the constructed automata should use.

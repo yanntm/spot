@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014 Laboratoire de Recherche et Developpement
-// de l'Epita (LRDE).
+// Copyright (C) 2013, 2014, 2019 Laboratoire de Recherche et
+// Developpement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
 // et Marie Curie.
@@ -33,25 +33,9 @@ namespace spot
   /// \ingroup emptiness_check_algorithms
   /// \pre The automaton \a a must have at most one acceptance condition.
   ///
-  /// The original algorithm, coming from the following paper, has only
-  /// been slightly modified to work on transition-based automata.
-  /** \verbatim
-      @InProceedings{geldenhuys.04.tacas,
-        author  = {Jaco Geldenhuys and Antti Valmari},
-        title   = {Tarjan's Algorithm Makes On-the-Fly {LTL} Verification
-                  More Efficient},
-        booktitle = {Proceedings of the 10th International Conference on Tools
-                  and Algorithms for the Construction and Analysis of Systems
-                  (TACAS'04)},
-        editor  = {Kurt Jensen and Andreas Podelski},
-        pages   = {205--219},
-        year    = {2004},
-        publisher = {Springer-Verlag},
-        series  = {Lecture Notes in Computer Science},
-        volume  = {2988},
-        isbn    = {3-540-21299-X}
-      }
-      \endverbatim */
+  /// The original algorithm, coming from \cite geldenhuys.04.tacas ,
+  /// has only been slightly modified to work on transition-based
+  /// automata.
   SPOT_API emptiness_check_ptr
   explicit_gv04_check(const const_twa_ptr& a, option_map o = option_map());
 }

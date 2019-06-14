@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2009, 2013-2015, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -33,21 +33,7 @@ namespace spot
   /// BDD function.
   ///
   /// This algorithm implements a derecursived version the Minato-Morreale
-  /// algorithm presented in the following paper.
-  /** \verbatim
-      @InProceedings{   minato.92.sasimi,
-        author        = {Shin-ichi Minato},
-        title         = {Fast Generation of Irredundant Sum-of-Products Forms
-                        from Binary Decision Diagrams},
-        booktitle     = {Proceedings of the third Synthesis and Simulation
-                        and Meeting International Interchange workshop
-                        (SASIMI'92)},
-        pages         = {64--73},
-        year          = {1992},
-        address       = {Kobe, Japan},
-        month         = {April}
-      }
-      \endverbatim */
+  /// algorithm. \cite minato.92.sasimi
   class SPOT_API minato_isop
   {
   public:

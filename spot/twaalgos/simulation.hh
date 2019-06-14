@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015, 2017 Laboratoire de Recherche et
+// Copyright (C) 2012-2015, 2017, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -33,24 +33,7 @@ namespace spot
   /// When the suffixes (letter and acceptance conditions) reachable
   /// from one state are included in the suffixes seen by another one,
   /// the former state can be merged into the latter.  The algorithm is
-  /// based on the following paper, but generalized to handle TωA
-  /// directly.
-  ///
-  /** \verbatim
-      @InProceedings{ etessami.00.concur,
-        author        = {Kousha Etessami and Gerard J. Holzmann},
-        title         = {Optimizing {B\"u}chi Automata},
-        booktitle     = {Proceedings of the 11th International Conference on
-                             Concurrency Theory (Concur'00)},
-        pages         = {153--167},
-        year          = {2000},
-        editor        = {C. Palamidessi},
-        volume        = {1877},
-        series        = {Lecture Notes in Computer Science},
-        address       = {Pennsylvania, USA},
-        publisher     = {Springer-Verlag}
-      }
-      \endverbatim */
+  /// described in \cite babiak.13.spin .
   ///
   /// Our reconstruction of the quotient automaton based on this
   /// suffix-inclusion relation will also improve determinism.
@@ -87,24 +70,7 @@ namespace spot
   ///
   /// When the prefixes (letter and acceptance conditions) leading to
   /// one state are included in the prefixes leading to one, the former
-  /// state can be merged into the latter.
-  ///
-  /// Reverse simulation is discussed in the following paper,
-  /// but generalized to handle TωA directly.
-  /** \verbatim
-      @InProceedings{ somenzi.00.cav,
-        author        = {Fabio Somenzi and Roderick Bloem},
-        title         = {Efficient {B\"u}chi Automata for {LTL} Formul{\ae}},
-        booktitle     = {Proceedings of the 12th International Conference on
-                         Computer Aided Verification (CAV'00)},
-        pages         = {247--263},
-        year          = {2000},
-        volume        = {1855},
-        series        = {Lecture Notes in Computer Science},
-        address       = {Chicago, Illinois, USA},
-        publisher     = {Springer-Verlag}
-      }
-      \endverbatim */
+  /// state can be merged into the latter.  \cite babiak.13.spin .
   ///
   /// Our reconstruction of the quotient automaton based on this
   /// prefix-inclusion relation will also improve codeterminism.

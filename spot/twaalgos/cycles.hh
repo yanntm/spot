@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015, 2018 Laboratoire de Recherche et
+// Copyright (C) 2012-2015, 2018-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -28,20 +28,7 @@ namespace spot
   /// \brief Enumerate elementary cycles in a SCC.
   ///
   /// This class implements a non-recursive version of the algorithm
-  /// on page 170 of:
-  /** \verbatim
-      @Article{loizou.82.is,
-        author =  {George Loizou and Peter Thanisch},
-        title =   {Enumerating the Cycles of a Digraph: A New
-                   Preprocessing Strategy},
-        journal = {Information Sciences},
-        year =           {1982},
-        volume =  {27},
-        number =  {3},
-        pages =   {163--182},
-        month =   aug
-      }
-      \endverbatim */
+  /// on page 170 of \cite loizou.82.is .
   /// (the additional preprocessings described later in that paper are
   /// not implemented).
   ///

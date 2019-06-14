@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2017 Laboratoire de
+// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2017, 2019 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -30,26 +30,11 @@
 namespace spot
 {
   /// \ingroup twa_ltl
-  /// \brief Build a spot::twa_graph_ptr from an LTL formula.
+  /// \brief Build a spot::twa_graph_ptr from an LTL or PSL formula.
   ///
-  /// This is based on the following paper.
-  /** \verbatim
-      @InProceedings{couvreur.99.fm,
-        author    = {Jean-Michel Couvreur},
-        title     = {On-the-fly Verification of Temporal Logic},
-        pages     = {253--271},
-        editor          = {Jeannette M. Wing and Jim Woodcock and Jim Davies},
-        booktitle = {Proceedings of the World Congress on Formal Methods in the
-                           Development of Computing Systems (FM'99)},
-        publisher = {Springer-Verlag},
-        series          = {Lecture Notes in Computer Science},
-        volume          = {1708},
-        year      = {1999},
-        address          = {Toulouse, France},
-        month          = {September},
-        isbn      = {3-540-66587-0}
-      }
-      \endverbatim */
+  /// This originally derived from an algorithm by Couvreur
+  /// \cite couvreur.99.fm , but it has been improved in many
+  /// ways \cite duret.14.ijccbs .
   ///
   /// \param f The formula to translate into an automaton.
   ///
@@ -68,25 +53,7 @@ namespace spot
   ///
   /// \param branching_postponement When set, several transitions leaving
   /// from the same state with the same label (i.e., condition + acceptance
-  /// conditions) will be merged.  This corresponds to an optimization
-  /// described in the following paper.
-  /** \verbatim
-      @InProceedings{          sebastiani.03.charme,
-        author    = {Roberto Sebastiani and Stefano Tonetta},
-        title     = {"More Deterministic" vs. "Smaller" B{\"u}chi Automata for
-                           Efficient LTL Model Checking},
-        booktitle = {Proceedings for the 12th Advanced Research Working
-                       Conference on Correct Hardware Design and Verification
-                       Methods (CHARME'03)},
-        pages     = {126--140},
-        year      = {2003},
-        editor          = {G. Goos and J. Hartmanis and J. van Leeuwen},
-        volume          = {2860},
-        series          = {Lectures Notes in Computer Science},
-        month     = {October},
-        publisher = {Springer-Verlag}
-      }
-      \endverbatim */
+  /// conditions) will be merged.  \cite sebastiani.03.charme
   ///
   /// \param fair_loop_approx When set, a really simple characterization of
   /// unstable state is used to suppress all acceptance conditions from
@@ -100,43 +67,11 @@ namespace spot
   /// \param simplifier If this parameter is set, the LTL formulae
   /// representing each state of the automaton will be simplified
   /// before computing the successor.  \a simpl should be configured
-  /// for the type of reduction you want, see
-  /// spot::tl_simplifier.  This idea is taken from the
-  /// following paper.
-  /** \verbatim
-      @InProceedings{          thirioux.02.fmics,
-        author    = {Xavier Thirioux},
-        title     = {Simple and Efficient Translation from {LTL} Formulas to
-                       {B\"u}chi Automata},
-        booktitle = {Proceedings of the 7th International ERCIM Workshop in
-                     Formal Methods for Industrial Critical Systems (FMICS'02)},
-        series    = {Electronic Notes in Theoretical Computer Science},
-        volume    = {66(2)},
-        publisher = {Elsevier},
-        editor    = {Rance Cleaveland and Hubert Garavel},
-        year      = {2002},
-        month     = jul,
-        address   = {M{\'a}laga, Spain}
-      }
-      \endverbatim */
+  /// for the type of reduction you want, see spot::tl_simplifier.
+  /// This idea is taken from \cite thirioux.02.fmics .
   ///
-  /// \param unambiguous When true, unambigous TGBA will be produced using
-  /// the trick described in the following paper.
-  /** \verbatim
-      @InProceedings{          benedikt.13.tacas,
-        author    = {Michael Benedikt and Rastislav Lenhardt and James
-                       Worrell},
-        title     = {{LTL} Model Checking of Interval Markov Chains},
-        booktitle = {19th International Conference on Tools and Algorithms for
-                           the Construction and Analysis of Systems (TACAS'13)},
-        year      = {2013},
-        pages     = {32--46},
-        series    = {Lecture Notes in Computer Science},
-        volume    = {7795},
-        editor    = {Nir Piterman and Scott A. Smolka},
-        publisher = {Springer}
-      }
-      \endverbatim */
+  /// \param unambiguous When true, unambigous TGBA will be produced
+  /// using the trick described in \cite benedikt.13.tacas .
   ///
   /// \return A spot::twa_graph that recognizes the language of \a f.
   SPOT_API twa_graph_ptr

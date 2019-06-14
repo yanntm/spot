@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -58,18 +58,8 @@ namespace spot
   /// \brief Converts a nondet Streett-like aut. to a nondet. co-Büchi aut.
   ///
   /// This function works in top of the augmented subset construction algorithm
-  /// and is described in section 3.1 of:
-  /** \verbatim
-      @Article{boker.2011.fossacs,
-        author    = {Udi Boker and Orna Kupferman},
-        title     = {Co-Büching Them All},
-        booktitle = {Foundations of Software Science and Computational
-                     Structures - 14th International Conference, FOSSACS 2011}
-        year      = {2011},
-        pages     = {184--198},
-        url       = {\url{www.cs.huji.ac.il/~ornak/publications/fossacs11b.pdf}}
-      }
-      \endverbatim */
+  /// and is described in section 3.1 of \cite boker.2011.fossacs .
+  ///
   /// This implementation is quite different from the described algorithm. It
   /// is made to work with automaton with Street-like acceptance (including
   /// Büchi).
@@ -86,18 +76,7 @@ namespace spot
   ///
   /// This function converts the Rabin-like automaton into a Strett-like
   /// automaton and then calls nsa_to_nca() on it. It is described in section
-  /// 3.2 of:
-  /** \verbatim
-      @Article{boker.2011.fossacs,
-        author    = {Udi Boker and Orna Kupferman},
-        title     = {Co-Büching Them All},
-        booktitle = {Foundations of Software Science and Computational
-                     Structures - 14th International Conference, FOSSACS 2011}
-        year      = {2011},
-        pages     = {184--198},
-        url       = {\url{www.cs.huji.ac.il/~ornak/publications/fossacs11b.pdf}}
-      }
-      \endverbatim */
+  /// 3.2 of \cite boker.2011.fossacs .
   ///
   /// \a aut The automaton to convert.
   /// \a named_states name each state for easier debugging.
@@ -122,18 +101,7 @@ namespace spot
   ///
   /// This function calls first nsa_to_nca() in order to retrieve som
   /// information and then runs a breakpoint construction. The algorithm is
-  /// described in section 4 of:
-  /** \verbatim
-      @Article{boker.2011.fossacs,
-        author    = {Udi Boker and Orna Kupferman},
-        title     = {Co-Büching Them All},
-        booktitle = {Foundations of Software Science and Computational
-                     Structures - 14th International Conference, FOSSACS 2011}
-        year      = {2011},
-        pages     = {184--198},
-        url       = {\url{www.cs.huji.ac.il/~ornak/publications/fossacs11b.pdf}}
-      }
-      \endverbatim */
+  /// described in section 4 of \cite boker.2011.fossacs .
   ///
   /// \a aut The automaton to convert.
   /// \a named_states name each state for easier debugging.
@@ -144,18 +112,7 @@ namespace spot
   ///
   /// This function calls first nra_to_nca() in order to retrieve som
   /// information and then runs a breakpoint construction. The algorithm is
-  /// described in section 4 of:
-  /** \verbatim
-      @Article{boker.2011.fossacs,
-        author    = {Udi Boker and Orna Kupferman},
-        title     = {Co-Büching Them All},
-        booktitle = {Foundations of Software Science and Computational
-                     Structures - 14th International Conference, FOSSACS 2011}
-        year      = {2011},
-        pages     = {184--198},
-        url       = {\url{www.cs.huji.ac.il/~ornak/publications/fossacs11b.pdf}}
-      }
-      \endverbatim */
+  /// described in section 4 of \cite boker.2011.fossacs .
   ///
   /// \a aut The automaton to convert.
   /// \a named_states name each state for easier debugging.

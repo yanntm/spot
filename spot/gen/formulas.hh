@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Developpement de
+// Copyright (C) 2017, 2018, 2019 Laboratoire de Recherche et Developpement de
 // l'EPITA (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -21,241 +21,151 @@
 
 #include <spot/tl/formula.hh>
 
-
-// Families defined here come from the following papers:
-//
-// @InProceedings{cichon.09.depcos,
-//   author = {Jacek Cicho{\'n} and Adam Czubak and Andrzej Jasi{\'n}ski},
-//   title = {Minimal {B\"uchi} Automata for Certain Classes of {LTL} Formulas},
-//   booktitle = {Proceedings of the Fourth International Conference on
-//                Dependability of Computer Systems},
-//   pages = {17--24},
-//   year = 2009,
-//   publisher = {IEEE Computer Society},
-// }
-//
-// @InProceedings{geldenhuys.06.spin,
-//   author = {Jaco Geldenhuys and Henri Hansen},
-//   title = {Larger Automata and Less Work for LTL Model Checking},
-//   booktitle = {Proceedings of the 13th International SPIN Workshop},
-//   year = {2006},
-//   pages = {53--70},
-//   series = {Lecture Notes in Computer Science},
-//   volume = {3925},
-//   publisher = {Springer}
-// }
-//
-// @InProceedings{gastin.01.cav,
-//   author = {Paul Gastin and Denis Oddoux},
-//   title = {Fast {LTL} to {B\"u}chi Automata Translation},
-//   booktitle        = {Proceedings of the 13th International Conference on
-//                   Computer Aided Verification (CAV'01)},
-//   pages = {53--65},
-//   year = 2001,
-//   editor = {G. Berry and H. Comon and A. Finkel},
-//   volume = {2102},
-//   series = {Lecture Notes in Computer Science},
-//   address = {Paris, France},
-//   publisher = {Springer-Verlag}
-// }
-//
-// @InProceedings{rozier.07.spin,
-//   author = {Kristin Y. Rozier and Moshe Y. Vardi},
-//   title = {LTL Satisfiability Checking},
-//   booktitle = {Proceedings of the 12th International SPIN Workshop on
-//                   Model Checking of Software (SPIN'07)},
-//   pages = {149--167},
-//   year = {2007},
-//   volume = {4595},
-//   series = {Lecture Notes in Computer Science},
-//   publisher = {Springer-Verlag}
-// }
-//
-// @InProceedings{dwyer.98.fmsp,
-//   author = {Matthew B. Dwyer and George S. Avrunin and James C. Corbett},
-//   title         = {Property Specification Patterns for Finite-state
-//                   Verification},
-//   booktitle     = {Proceedings of the 2nd Workshop on Formal Methods in
-//                   Software Practice (FMSP'98)},
-//   publisher     = {ACM Press},
-//   address       = {New York},
-//   editor        = {Mark Ardis},
-//   month         = mar,
-//   year          = {1998},
-//   pages         = {7--15}
-// }
-//
-// @InProceedings{etessami.00.concur,
-//   author = {Kousha Etessami and Gerard J. Holzmann},
-//   title = {Optimizing {B\"u}chi Automata},
-//   booktitle = {Proceedings of the 11th International Conference on
-//                Concurrency Theory (Concur'00)},
-//   pages = {153--167},
-//   year = {2000},
-//   editor = {C. Palamidessi},
-//   volume = {1877},
-//   series = {Lecture Notes in Computer Science},
-//   address = {Pennsylvania, USA},
-//   publisher = {Springer-Verlag}
-// }
-//
-// @InProceedings{somenzi.00.cav,
-//   author = {Fabio Somenzi and Roderick Bloem},
-//   title = {Efficient {B\"u}chi Automata for {LTL} Formul{\ae}},
-//   booktitle = {Proceedings of the 12th International Conference on
-//                Computer Aided Verification (CAV'00)},
-//   pages = {247--263},
-//   year = {2000},
-//   volume = {1855},
-//   series = {Lecture Notes in Computer Science},
-//   address = {Chicago, Illinois, USA},
-//   publisher = {Springer-Verlag}
-// }
-//
-// @InProceedings{tabakov.10.rv,
-//   author = {Deian Tabakov and Moshe Y. Vardi},
-//   title = {Optimized Temporal Monitors for {SystemC}},
-//   booktitle = {Proceedings of the 1st International Conference on Runtime
-//		  Verification (RV'10)},
-//   pages = {436--451},
-//   year = 2010,
-//   volume = {6418},
-//   series = {Lecture Notes in Computer Science},
-//   month = nov,
-//   publisher = {Springer}
-// }
-//
-// @InProceedings{kupferman.10.mochart,
-//   author = {Orna Kupferman and And Rosenberg},
-//   title = {The Blow-Up in Translating LTL do Deterministic Automata},
-//   booktitle = {Proceedings of the 6th International Workshop on Model
-//                Checking and Artificial Intelligence (MoChArt 2010)},
-//   pages = {85--94},
-//   year = 2011,
-//   volume = {6572},
-//   series = {Lecture Notes in Artificial Intelligence},
-//   month = nov,
-//   publisher = {Springer}
-// }
-//
-// @techreport{holevek.04.tr,
-//    title = {Verification Results in {Liberouter} Project},
-//    author = {J. Hole\v{c}ek and T. Kratochv\'ila and V. \v{R}eh\'ak
-//              and D. \v{S}afr\'anek and P. \v{S}ime\v{c}ek},
-//    month = {September},
-//    year = 2004,
-//    number = 03,
-//    institution = {CESNET}
-// }
-//
-// @InProceedings{pelanek.07.spin,
-//   author = {Radek Pel\'{a}nek},
-//   title = {{BEEM}: benchmarks for explicit model checkers},
-//   booktitle = {Proceedings of the 14th international SPIN conference on
-//     Model checking software},
-//   year = 2007,
-//   pages = {263--267},
-//   numpages = {5},
-//   volume = {4595},
-//   series = {Lecture Notes in Computer Science},
-//   publisher = {Springer-Verlag}
-// }
-//
-// @InProceedings{muller.17.gandalf,
-//   author = {David M\"uller and Salomon Sickert},
-//   title = {{LTL} to Deterministic {E}merson-{L}ei Automata},
-//   booktitle = {Proceedings of the 8th International Sumposium on Games,
-//                Automata, Logics and Formal Verification (GandALF'17)},
-//   year = 2017,
-//   publisher = {Springer-Verlag}
-//   series    = {Electronic Proceedings in Theoretical Computer Science},
-//   volume    = {256},
-//   publisher = {Open Publishing Association},
-//   pages     = {180--194},
-//   doi       = {10.4204/EPTCS.256.13}
-// }
-//
-// @InProceedings{sickert.16.cav,
-//   author = {Salomon Sickert and Javier Esparza and Stefaan Jaax
-//             and Jan K{\v{r}}et{\'i}nsk{\'y}},
-//   title = {Limit-Deterministic {B\"u}chi Automata for Linear Temporal Logic}
-//   booktitle = {Proceedings of the 28th International Conference on
-//                Computer Aided Verification (CAV'16)},
-//   year = 2016,
-//   publisher = {Springer-Verlag}
-//   series = {Lecture Notes in Computer Science},
-//   volume    = {9780},
-//   pages     = {312--332},
-//   doi       = {10.1007/978-3-319-41540-6_17}
-// }
-//
-// @InProceedings{kretisnky.12.cav,
-//   author       = {Jan K{\v{r}}et{\'i}nsk{\'y} and Javier Esparza},
-//   title        = {Deterministic Automata for the {(F,G)}-Fragment of
-//                   {LTL}},
-//   booktitle    = {24th International Conference on Computer Aided
-//                   Verification (CAV'12)},
-//   year         = 2012,
-//   pages        = {7--22},
-//   doi          = {10.1007/978-3-642-31424-7_7},
-//   url          = {https://doi.org/10.1007/978-3-642-31424-7_7},
-//   isbn         = {978-3-642-31424-7},
-//   publisher    = {Springer},
-// }
-
-
 namespace spot
 {
   namespace gen
   {
+    /// \ingroup gen
+    /// \defgroup genltl Hard-coded families of formulas.
+    /// @{
+
+    /// \brief Identifiers for formula patterns
     enum ltl_pattern_id {
       LTL_BEGIN = 256,
+      /// `F(p1)&F(p2)&...&F(pn)`
+      /// \cite geldenhuys.06.spin
       LTL_AND_F = LTL_BEGIN,
+      /// `FG(p1)&FG(p2)&...&FG(pn)`
       LTL_AND_FG,
+      /// `GF(p1)&GF(p2)&...&GF(pn)`
+      /// \cite cichon.09.depcos ,
+      /// \cite geldenhuys.06.spin .
       LTL_AND_GF,
+      /// `F(p1&F(p2&F(p3&...F(pn)))) & F(q1&F(q2&F(q3&...F(qn))))`
+      /// \cite cichon.09.depcos
       LTL_CCJ_ALPHA,
+      /// `F(p&X(p&X(p&...X(p)))) & F(q&X(q&X(q&...X(q))))`
+      /// \cite cichon.09.depcos
       LTL_CCJ_BETA,
+      /// `F(p&(Xp)&(XXp)&...(X...X(p))) & F(q&(Xq)&(XXq)&...(X...X(q)))`
+      /// \cite cichon.09.depcos
       LTL_CCJ_BETA_PRIME,
+      /// 55 specification patterns from Dwyer et al.
+      /// \cite dwyer.98.fmsp
       LTL_DAC_PATTERNS,
+      /// 12 formulas from Etessami and Holzmann.
+      /// \cite etessami.00.concur
       LTL_EH_PATTERNS,
+      /// `F(p0 | XG(p1 | XG(p2 | ... XG(pn))))`
       LTL_FXG_OR,
+      /// `(GFa1 & GFa2 & ... & GFan) <-> GFz`
       LTL_GF_EQUIV,
+      /// `GF(a <-> X[n](a))`
       LTL_GF_EQUIV_XN,
+      /// `(GFa1 & GFa2 & ... & GFan) -> GFz`
       LTL_GF_IMPLIES,
+      /// `GF(a -> X[n](a))`
       LTL_GF_IMPLIES_XN,
+      /// `(F(p1)|G(p2))&(F(p2)|G(p3))&...&(F(pn)|G(p{n+1}))`
+      /// \cite geldenhuys.06.spin
       LTL_GH_Q,
+      /// `(GF(p1)|FG(p2))&(GF(p2)|FG(p3))&...  &(GF(pn)|FG(p{n+1}))`
+      /// \cite geldenhuys.06.spin
       LTL_GH_R,
+      /// `!((GF(p1)&GF(p2)&...&GF(pn)) -> G(q->F(r)))`
+      /// \cite gastin.01.cav
       LTL_GO_THETA,
+      /// `G(p0 & XF(p1 & XF(p2 & ... XF(pn))))`
       LTL_GXF_AND,
+      /// 55 patterns from the Liberouter project.
+      /// \cite holevek.04.tr
       LTL_HKRSS_PATTERNS,
+      /// Linear formula with doubly exponential DBA.
+      /// \cite kupferman.10.mochart
       LTL_KR_N,
+      /// Quasilinear formula with doubly exponential DBA.
+      /// \cite kupferman.10.mochart
       LTL_KR_NLOGN,
+      /// Quadratic formula with doubly exponential DBA.
+      /// \cite kupferman.10.mochart ,
+      /// \cite kupferman.05.tcl .
       LTL_KV_PSI,
+      /// `GF(a1&X(a2&X(a3&...Xan)))&F(b1&F(b2&F(b3&...&Xbm)))`
+      /// \cite muller.17.gandalf
       LTL_MS_EXAMPLE,
+      /// `FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb)|...`
+      /// \cite muller.17.gandalf
       LTL_MS_PHI_H,
+      /// `(FGa{n}&GFb{n})|((FGa{n-1}|GFb{n-1})&(...))`
+      /// \cite muller.17.gandalf
       LTL_MS_PHI_R,
+      /// `(FGa{n}|GFb{n})&((FGa{n-1}&GFb{n-1})|(...))`
+      /// \cite muller.17.gandalf
       LTL_MS_PHI_S,
+      /// `FG(p1)|FG(p2)|...|FG(pn)`
+      /// \cite cichon.09.depcos
       LTL_OR_FG,
+      /// `G(p1)|G(p2)|...|G(pn)`
+      /// \cite geldenhuys.06.spin
       LTL_OR_G,
+      /// `GF(p1)|GF(p2)|...|GF(pn)`
+      /// \cite geldenhuys.06.spin
       LTL_OR_GF,
+      /// 20 formulas from BEEM.
+      /// \cite pelanek.07.spin
       LTL_P_PATTERNS,
+      /// `(((p1 R p2) R p3) ... R pn)`
       LTL_R_LEFT,
+      /// `(p1 R (p2 R (... R pn)))`
       LTL_R_RIGHT,
+      /// n-bit counter
+      /// \cite rozier.07.spin
       LTL_RV_COUNTER,
+      /// n-bit counter with carry
+      /// \cite rozier.07.spin
       LTL_RV_COUNTER_CARRY,
+      /// linear-size formular for an n-bit counter with carry
+      /// \cite rozier.07.spin
       LTL_RV_COUNTER_CARRY_LINEAR,
+      /// linear-size formular for an n-bit counter
+      /// \cite rozier.07.spin
       LTL_RV_COUNTER_LINEAR,
+      /// 27 formulas from Somenzi and Bloem
+      /// \cite somenzi.00.cav
       LTL_SB_PATTERNS,
+      /// `f(0,j)=(GFa0 U X^j(b))`, `f(i,j)=(GFai U G(f(i-1,j)))`
+      /// \cite sickert.16.cav
       LTL_SEJK_F,
+      /// `(GFa1&...&GFan) -> (GFb1&...&GFbn)`
+      /// \cite sickert.16.cav
       LTL_SEJK_J,
+      /// `(GFa1|FGb1)&...&(GFan|FGbn)`
+      /// \cite sickert.16.cav
       LTL_SEJK_K,
+      /// 3 formulas from Sikert et al.
+      /// \cite sickert.16.cav
       LTL_SEJK_PATTERNS,
+      /// `G(p -> (q | Xq | ... | XX...Xq)`
+      /// \cite tabakov.10.rv
       LTL_TV_F1,
+      /// `G(p -> (q | X(q | X(... | Xq)))`
+      /// \cite tabakov.10.rv
       LTL_TV_F2,
+      /// `G(p -> (q & Xq & ... & XX...Xq)`
+      /// \cite tabakov.10.rv
       LTL_TV_G1,
+      /// `G(p -> (q & X(q & X(... & Xq)))`
+      /// \cite tabakov.10.rv
       LTL_TV_G2,
+      /// `G(p1 -> (p1 U (p2 & (p2 U (p3 & (p3 U ...))))))`
+      /// \cite tabakov.10.rv
       LTL_TV_UU,
+      /// `(((p1 U p2) U p3) ... U pn)`
+      /// \cite geldenhuys.06.spin
       LTL_U_LEFT,
+      /// `(p1 U (p2 U (... U pn)))`
+      /// \cite geldenhuys.06.spin ,
+      /// \cite gastin.01.cav .
       LTL_U_RIGHT,
       LTL_END
     };
@@ -283,5 +193,6 @@ namespace spot
     ///
     /// Return the number of arguments expected by an LTL pattern.
     SPOT_API int ltl_pattern_argc(ltl_pattern_id pattern);
+    /// @}
   }
 }

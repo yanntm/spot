@@ -112,24 +112,8 @@ namespace spot
   /// determinized, and this procedure does not ensure that the
   /// produced automaton is equivalent to \a aut.
   ///
-  /// The construction is adapted from Section 3.2 of:
-  /// \verbatim
-  /// @InProceedings{          dax.07.atva,
-  ///   author    = {Christian Dax and Jochen Eisinger and Felix Klaedtke},
-  ///   title     = {Mechanizing the Powerset Construction for Restricted
-  ///                  Classes of {$\omega$}-Automata},
-  ///   year      = 2007,
-  ///   series    = {Lecture Notes in Computer Science},
-  ///   publisher = {Springer-Verlag},
-  ///   volume    = 4762,
-  ///   booktitle = {Proceedings of the 5th International Symposium on
-  ///                  Automated Technology for Verification and Analysis
-  ///                  (ATVA'07)},
-  ///   editor    = {Kedar S. Namjoshi and Tomohiro Yoneda and Teruo Higashino
-  ///                 and Yoshio Okamura},
-  ///   month     = oct
-  /// }
-  /// \endverbatim
+  /// The construction is adapted from Section 3.2 of
+  /// \cite dax.07.atva
   /// only adapted to work on TBA rather than BA.
   ///
   /// If \a threshold_states is non null, abort the construction

@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2013, 2014, 2015, 2016, 2017, 2018 Laboratoire
-// de Recherche et Développement de l'Epita (LRDE)
+// Copyright (C) 2010-2011, 2013-2019 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
 //
@@ -156,29 +156,10 @@ namespace spot
   /// an incorrect SCC number is supplied.
   ///
   /// The definition are basically those used in the following paper,
-  /// except that we extra the "inherently weak" part instead of the
+  /// except that we extract the "inherently weak" part instead of the
   /// weak part because we can now test for inherent weakness
   /// efficiently enough (not enumerating all cycles as suggested in
-  /// the paper).
-  /** \verbatim
-      @inproceedings{renault.13.tacas,
-        author = {Etienne Renault and Alexandre Duret-Lutz and Fabrice
-                  Kordon and Denis Poitrenaud},
-        title = {Strength-Based Decomposition of the Property {B\"u}chi
-                  Automaton for Faster Model Checking},
-        booktitle = {Proceedings of the 19th International Conference on Tools
-                  and Algorithms for the Construction and Analysis of Systems
-                  (TACAS'13)},
-        editor = {Nir Piterman and Scott A. Smolka},
-        year = {2013},
-        month = mar,
-        pages = {580--593},
-        publisher = {Springer},
-        series = {Lecture Notes in Computer Science},
-        volume = {7795},
-        doi = {10.1007/978-3-642-36742-7_42}
-      }
-      \endverbatim */
+  /// the paper).   \cite renault.13.tacas
   ///
   /// \param aut the automaton to decompose
   /// \param keep a string specifying the strengths/SCCs to keep

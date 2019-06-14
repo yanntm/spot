@@ -27,6 +27,12 @@ namespace spot
 {
   namespace gen
   {
+    /// \defgroup gen Hard-coded families of formulas or automata.
+    /// @{
+    /// \defgroup genaut Hard-coded families of automata.
+    /// @{
+
+    /// \brief Identifiers for automaton patterns
     enum aut_pattern_id {
       AUT_BEGIN = 256,
       /// \brief A family of co-Büchi automata.
@@ -34,23 +40,9 @@ namespace spot
       /// Builds a co-Büchi automaton of size 2n+1 that is
       /// good-for-games and that has no equivalent deterministic
       /// co-Büchi automaton with less than 2^n / (2n+1) states.
+      /// \cite kuperberg.15.icalp
       ///
       /// Only defined for n>0.
-      ///
-      /** \verbatim
-          @InProceedings{   kuperberg.15.icalp,
-            author        = {Denis Kuperberg and Micha{\l} Skrzypczak },
-            title         = {On Determinisation of Good-for-Games Automata},
-            booktitle     = {Proceedings of the 42nd International Colloquium on
-                            Automata, Languages, and Programming (ICALP'15)},
-            pages         = {299--310},
-            year          = {2015},
-            publisher     = {Springer},
-            series        = {Lecture Notes in Computer Science},
-            volume        = 9135,
-            doi           = {10.1007/978-3-662-47666-6_24}
-          }
-          \endverbatim */
       AUT_KS_NCA = AUT_BEGIN,
       /// \brief Hard-to-complement non-deterministic Büchi automata
       ///
@@ -59,27 +51,10 @@ namespace spot
       /// at least n! states if Streett acceptance is used.
       ///
       /// Only defined for n>0.  The automaton constructed corresponds
-      /// to the right part of Fig.1 in the following paper, except
+      /// to the right part of Fig.1 of \cite loding.99.fstts , except
       /// that only state q_1 is initial.  (The fact that states q_2,
       /// q_3, ..., and q_n are not initial as in the paper does not
       /// change the recognized language.)
-      ///
-      /** \verbatim
-          @InProceedings{loding.99.fstts,
-            author	= {Christof L{\"o}ding},
-            title	= {Optimal Bounds for Transformations of
-                           $\omega$-Automata},
-            booktitle	= {Proceedings of the 19th Conference on Foundations of
-                           Software Technology and Theoretical Computer Science
-                           (FSTTCS'99)},
-            year        = 1999,
-            publisher	= {Springer},
-            pages       = {97--109},
-            series	= {Lecture Notes in Computer Science},
-            volume	= 1738,
-            doi		= {10.1007/3-540-46691-6_8}
-          }
-          \endverbatim */
       AUT_L_NBA,
       /// \brief DSA hard to convert to DRA.
       ///
@@ -90,43 +65,15 @@ namespace spot
       /// Only defined for 1<n<=16 because Spot does not support more
       /// than 32 acceptance pairs.
       ///
-      /// This automaton corresponds to the right part of Fig.2 in the
-      /// following paper.
-      /** \verbatim
-          @InProceedings{loding.99.fstts,
-            author	= {Christof L{\"o}ding},
-            title	= {Optimal Bounds for Transformations of
-                           $\omega$-Automata},
-            booktitle	= {Proceedings of the 19th Conference on Foundations of
-                           Software Technology and Theoretical Computer Science
-                           (FSTTCS'99)},
-            year        = 1999,
-            publisher	= {Springer},
-            pages       = {97--109},
-            series	= {Lecture Notes in Computer Science},
-            volume	= 1738,
-            doi		= {10.1007/3-540-46691-6_8}
-          }
-          \endverbatim */
+      /// This automaton corresponds to the right part of Fig.2 of
+      /// \cite loding.99.fstts .
       AUT_L_DSA,
       /// \brief An NBA with (n+1) states whose complement needs ≥n! states
       ///
       /// This automaton is usually attributed to Max Michel (1988),
-      /// who described it in some unpublished documents.  Other
+      /// who described it in some unpublished document.  Other
       /// descriptions of this automaton can be found in a number
-      /// of papers, like:
-      /** \verbatim
-          @InBook{thomas.97.chapter,
-            author      = {Wolfgang Thomas},
-            title       = {Languages, Automata, and Logic},
-            booktitle   = {Handbook of Formal Languages ---
-                           Volume 3 Beyond Words},
-            editor      = {Grzegorz Rozenberg and Arto Salomaa},
-            chapter     = 7,
-            publisher   = {Springer-Verlag},
-            year        = {1997}
-          }
-          \endverbatim */
+      /// of papers \cite thomas.97.chapter .
       ///
       /// Our implementation uses $\lceil \log_2(n+1)\rceil$ atomic
       /// propositions to encode the $n+1$ letters used in the
@@ -153,5 +100,8 @@ namespace spot
     /// The returned name is suitable to be used as an option
     /// key for the genaut binary.
     SPOT_API const char* aut_pattern_name(aut_pattern_id pattern);
+
+    /// @}
+    /// @}
   }
 }

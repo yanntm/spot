@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017, 2018, 2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -43,17 +43,7 @@ namespace spot
   /// If the input automaton is existential, the output will be universal.
   /// If the input automaton is universal, the output will be existential.
   /// Finally, if the input automaton is alternating, the result is alternating.
-  /// More can be found on page 22 (Definition 1.6) of:
-  /** \verbatim
-      @mastersthesis{loding.98.methodsfor
-        author = {Christof Löding}
-        title  = {Methods for the Transformation of ω-Automata: Complexity
-                 and Connection to Second Order Logic}
-        school = {Institute of Computer Science and Applied Mathematics
-                  Christian-Albrechts-University of Kiel}
-        year   = {1998}
-      }
-      \endverbatim */
+  /// More can be found on page 22 (Definition 1.6) of \cite loding.98.msc .
   SPOT_API twa_graph_ptr
   dualize(const const_twa_graph_ptr& aut);
 }

@@ -36,21 +36,7 @@ namespace spot
   /// determinized and minimized using the standard DFA construction
   /// as if all states were accepting states.
   ///
-  /// For more detail about monitors, see the following paper:
-  /** \verbatim
-      @InProceedings{          tabakov.10.rv,
-        author         = {Deian Tabakov and Moshe Y. Vardi},
-        title          = {Optimized Temporal Monitors for SystemC{$^*$}},
-        booktitle = {Proceedings of the 10th International Conferance
-                     on Runtime Verification},
-        pages          = {436--451},
-        year           = 2010,
-        volume         = {6418},
-        series         = {Lecture Notes in Computer Science},
-        month          = nov,
-        publisher = {Spring-Verlag}
-      }
-      \endverbatim */
+  /// For more detail about monitors, see \cite tabakov.10.rv .
   /// (Note: although the above paper uses Spot, this function did not
   /// exist in Spot at that time.)
   ///
@@ -75,24 +61,7 @@ namespace spot
   ///
   /// The construction is inspired by the following paper, however we
   /// guarantee that the output language is a subsets of the original
-  /// language while they don't.
-  /** \verbatim
-      @InProceedings{          dax.07.atva,
-        author    = {Christian Dax and Jochen Eisinger and Felix Klaedtke},
-        title     = {Mechanizing the Powerset Construction for Restricted
-                       Classes of {$\omega$}-Automata},
-        year      = 2007,
-        series    = {Lecture Notes in Computer Science},
-        publisher = {Springer-Verlag},
-        volume    = 4762,
-        booktitle = {Proceedings of the 5th International Symposium on
-                       Automated Technology for Verification and Analysis
-                       (ATVA'07)},
-        editor    = {Kedar S. Namjoshi and Tomohiro Yoneda and Teruo Higashino
-                       and Yoshio Okamura},
-        month     = oct
-      }
-      \endverbatim */
+  /// language while they don't. \cite dax.07.atva
   ///
   /// If an \a output_aborter is given, the determinization is aborted
   /// whenever it would produce an automaton that is too large.  In
@@ -104,25 +73,7 @@ namespace spot
   ///
   /// This function attempts to minimize the automaton \a aut_f using the
   /// algorithm implemented in the minimize_wdba() function, and presented
-  /// by the following paper:
-  ///
-  /** \verbatim
-      @InProceedings{          dax.07.atva,
-        author    = {Christian Dax and Jochen Eisinger and Felix Klaedtke},
-        title     = {Mechanizing the Powerset Construction for Restricted
-                       Classes of {$\omega$}-Automata},
-        year      = 2007,
-        series    = {Lecture Notes in Computer Science},
-        publisher = {Springer-Verlag},
-        volume    = 4762,
-        booktitle = {Proceedings of the 5th International Symposium on
-                       Automated Technology for Verification and Analysis
-                       (ATVA'07)},
-        editor    = {Kedar S. Namjoshi and Tomohiro Yoneda and Teruo Higashino
-                       and Yoshio Okamura},
-        month     = oct
-      }
-      \endverbatim */
+  /// by \cite dax.07.atva .
   ///
   /// Because it is hard to determine if an automaton corresponds
   /// to an obligation property, you should supply either the formula

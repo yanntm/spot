@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2011, 2013-2015, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -55,21 +55,7 @@ namespace spot
   ///          belongs to a single acceptance set.
   ///
   /// This algorithms is adapted from the one in Fig 6.2 page 48 of
-  /** \verbatim
-      @TechReport{          tauriainen.00.a66,
-        author        = {Heikki Tauriainen},
-        title   = {Automated Testing of {B\"u}chi Automata Translators for
-                        {L}inear {T}emporal {L}ogic},
-        address        = {Espoo, Finland},
-        institution = {Helsinki University of Technology, Laboratory for
-                        Theoretical Computer Science},
-        number        = {A66},
-        year        = {2000},
-        url        = {http://citeseer.nj.nec.com/tauriainen00automated.html},
-        type        = {Research Report},
-        note        = {Reprint of Master's thesis}
-      }
-      \endverbatim */
+  /// \cite tauriainen.00.tr .
   ///
   /// Although the intent is similar, there are some differences
   /// between the above published algorithm and this implementation.

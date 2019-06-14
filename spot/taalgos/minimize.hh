@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Laboratoire de
+// Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2019 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -35,24 +35,6 @@ namespace spot
   /// Two states are bisimilar if the automaton can accept the
   ///    same executions starting for either of these states. This can be
   /// achieved using any algorithm based on partition refinement
-  ///
-  /// For more detail about this type of algorithm, see the following paper:
-  /** \verbatim
-      @InProceedings{valmari.09.icatpn,
-      author = {Antti Valmari},
-      title = {Bisimilarity Minimization in in O(m logn) Time},
-      booktitle = {Proceedings of the 30th International Conference on
-                     the Applications and Theory of Petri Nets
-                     (ICATPN'09)},
-      series = {Lecture Notes in Computer Science},
-      publisher = {Springer},
-      isbn = {978-3-642-02423-8},
-      pages = {123--142},
-      volume = 5606,
-       url = {http://dx.doi.org/10.1007/978-3-642-02424-5_9},
-      year = {2009}
-      }
-      \endverbatim */
   ///
   /// \param ta_ the TA automaton to convert into a simplified TA
   SPOT_API ta_explicit_ptr

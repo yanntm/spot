@@ -140,17 +140,7 @@ namespace spot
   ///
   /// This implements an algorithm derived from the following article,
   /// but generalized to all types of parity acceptance.
-  /** \verbatim
-      @Article{carton.99.ita,
-      author       = {Olivier Carton and Ram{\'o}n Maceiras},
-      title        = {Computing the {R}abin index of a parity automaton},
-      journal      = {Informatique théorique et applications},
-      year         = {1999},
-      volume       = {33},
-      number       = {6},
-      pages        = {495--505}
-      }
-      \endverbatim */
+  /// \cite carton.99.ita
   ///
   /// The kind of parity (min/max) is preserved, but the style
   /// (odd/even) may be altered to reduce the number of colors used.

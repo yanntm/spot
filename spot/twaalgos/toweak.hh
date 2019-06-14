@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -31,30 +31,9 @@ namespace spot
   /// automaton is already weak, it will simply be copied.
   ///
   /// For details about the algorithm used, see the following papers:
-  /** \verbatim
-      @article{kupferman.01.tocl,
-        author      = {Orna Kupferman and Moshe Y. Vardi},
-        title       = {Weak alternating automata are not that weak},
-        journal     = {ACM Transactions on Computational Logic (TOCL)},
-        month       = {July},
-        year        = 2001,
-        pages       = {408--429},
-        volume      = {2},
-        number      = {3},
-        publisher   = {ACM New York, NY, USA}
-      }
-      @article{kupferman.05.tcs,
-        author      = {Orna Kupferman and Moshe Y. Vardi},
-        title       = {From complementation to certification},
-        journal     = {Theoretical Computer Science},
-        month       = {November},
-        year        = 2005,
-        pages       = {83--100},
-        volume      = {345},
-        number      = {1},
-        publisher   = {Elsevier}
-      }
-      \endverbatim */
+  /// \cite kupferman.01.tocl ,
+  /// \cite kupferman.05.tcs .
+  ///
   /// Although at the end of the above paper there is a hint at an optimization
   /// that greatly reduces the number of transition in the resulting automaton,
   /// but in return makes the run of remove_alternation algorithm way slower.

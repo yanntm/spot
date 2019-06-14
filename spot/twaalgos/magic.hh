@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014 Laboratoire de Recherche et Developpement
-// de l'Epita (LRDE).
+// Copyright (C) 2013, 2014, 2019 Laboratoire de Recherche et
+// Developpement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
 // et Marie Curie.
@@ -79,19 +79,7 @@ namespace spot
   ///
   /// This algorithm is an adaptation to TBA of the one
   /// (which deals with accepting states) presented in
-  ///
-  /** \verbatim
-       Article{         courcoubetis.92.fmsd,
-         author        = {Costas Courcoubetis and Moshe Y. Vardi and Pierre
-                         Wolper and Mihalis Yannakakis},
-         title         = {Memory-Efficient Algorithm for the Verification of
-                         Temporal Properties},
-         journal       = {Formal Methods in System Design},
-         pages         = {275--288},
-         year          = {1992},
-         volume        = {1}
-       }
-      \endverbatim */
+  /// \cite courcoubetis.92.fmsd .
   ///
   /// \bug The name is misleading.  Magic-search is the algorithm
   /// from \c godefroid.93.pstv, not \c courcoubetis.92.fmsd.
@@ -106,16 +94,7 @@ namespace spot
   ///
   /// During the visit of \a a, the returned checker does not store explicitely
   /// the traversed states but uses the bit-state hashing technic presented in:
-  ///
-  /** \verbatim
-      @book{Holzmann91,
-         author = {G.J. Holzmann},
-         title = {Design and Validation of Computer Protocols},
-         publisher = {Prentice-Hall},
-         address = {Englewood Cliffs, New Jersey},
-         year = {1991}
-      }
-      \endverbatim */
+  /// \cite Holzmann.91.book.
   ///
   /// Consequently, the detection of an acceptence cycle is not ensured.
   ///

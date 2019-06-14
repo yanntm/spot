@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2014 Laboratoire de Recherche et Developpement
-// de l'Epita (LRDE).
+// Copyright (C) 2013, 2014, 2019 Laboratoire de Recherche et
+// Developpement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
 // Pierre et Marie Curie.
@@ -84,19 +84,7 @@ namespace spot
       \endverbatim */
   ///
   /// It is an adaptation to TBA of the one presented in
-  /** \verbatim
-       @techreport{SE04,
-         author = {Stefan Schwoon and Javier Esparza},
-         institution = {Universit{\"a}t Stuttgart, Fakult\"at Informatik,
-         Elektrotechnik und Informationstechnik},
-         month = {November},
-         number = {2004/06},
-         title = {A Note on On-The-Fly Verification Algorithms},
-         year = {2004},
-         url =
-     {http://www.fmi.uni-stuttgart.de/szs/publications/info/schwoosn.SE04.shtml}
-       }
-      \endverbatim */
+  /// \cite schwoon.04.tr .
   ///
   /// \sa spot::explicit_magic_search
   ///
@@ -109,17 +97,8 @@ namespace spot
   /// it is a TBA).
   ///
   /// During the visit of \a a, the returned checker does not store explicitely
-  /// the traversed states but uses the bit-state hashing technic presented in:
-  ///
-  /** \verbatim
-      @book{Holzmann91,
-         author = {G.J. Holzmann},
-         title = {Design and Validation of Computer Protocols},
-         publisher = {Prentice-Hall},
-         address = {Englewood Cliffs, New Jersey},
-         year = {1991}
-      }
-      \endverbatim */
+  /// the traversed states but uses the bit-state hashing technic presented in
+  /// \cite holzmann.91.book
   ///
   /// Consequently, the detection of an acceptence cycle is not ensured.
   ///
