@@ -33,6 +33,7 @@
 #include <spot/tl/snf.hh>
 #include <spot/tl/length.hh>
 #include <spot/twa/formula2bdd.hh>
+#include <spot/misc/minato.hh>
 #include <cassert>
 #include <memory>
 
@@ -45,6 +46,7 @@ namespace spot
   {
     typedef std::unordered_map<formula, formula> f2f_map;
     typedef std::unordered_map<formula, bdd> f2b_map;
+    typedef std::map<int, formula> b2f_map;
     typedef std::pair<formula, formula> pairf;
     typedef std::map<pairf, bool> syntimpl_cache_t;
   public:
@@ -78,13 +80,18 @@ namespace spot
          << "syntactic implications: " << syntimpl_.size() << " entries\n"
          << "boolean to bdd:         " << as_bdd_.size() << " entries\n"
          << "star normal form:       " << snf_cache_.size() << " entries\n"
-         << "boolean isop:           " << bool_isop_.size() << " entries\n";
+         << "boolean isop:           " << bool_isop_.size() << " entries\n"
+         << "as dnf:                 " << as_dnf_.size() << " entries\n"
+         << "as cnf:                 " << as_cnf_.size() << " entries\n";
     }
 
     void
     clear_as_bdd_cache()
     {
       as_bdd_.clear();
+      for (auto p: bdd_to_f_)
+        dict->unregister_variable(p.first, this);
+      bdd_to_f_.clear();
     }
 
     // Convert a Boolean formula into a BDD for easier comparison.
@@ -136,13 +143,95 @@ namespace spot
             break;
           }
         default:
-          SPOT_UNIMPLEMENTED();
+          {
+            unsigned var = dict->register_anonymous_variables(1, this);
+            bdd_to_f_[var] = f;
+            result = bdd_ithvar(var);
+            break;
+          }
         }
 
       // Cache the result before returning.
       as_bdd_[f] = result;
       return result;
     }
+
+    formula as_xnf(formula f, bool cnf)
+    {
+      bdd in = as_bdd(f);
+      if (cnf)
+        in = !in;
+      minato_isop isop(in);
+      bdd cube;
+      vec clauses;
+      while ((cube = isop.next()) != bddfalse)
+        {
+          vec literals;
+          while (cube != bddtrue)
+            {
+              int var = bdd_var(cube);
+              const bdd_dict::bdd_info& i = dict->bdd_map[var];
+              formula res;
+              if (i.type == bdd_dict::var)
+                {
+                  res = i.f;
+                }
+              else
+                {
+                  res = bdd_to_f_[var];
+                  assert(res);
+                }
+              bdd high = bdd_high(cube);
+              if (high == bddfalse)
+                {
+                  if (!cnf)
+                    res = formula::Not(res);
+                  cube = bdd_low(cube);
+                }
+              else
+                {
+                  if (cnf)
+                    res = formula::Not(res);
+                  // If bdd_low is not false, then cube was not a
+                  // conjunction.
+                  assert(bdd_low(cube) == bddfalse);
+                  cube = high;
+                }
+              assert(cube != bddfalse);
+              literals.emplace_back(res);
+            }
+          if (cnf)
+            clauses.emplace_back(formula::Or(literals));
+          else
+            clauses.emplace_back(formula::And(literals));
+        }
+      if (cnf)
+        return formula::And(clauses);
+      else
+        return formula::Or(clauses);
+    }
+
+    formula as_dnf(formula f)
+    {
+      auto i = as_dnf_.find(f);
+      if (i != as_dnf_.end())
+        return i->second;
+      formula r = as_xnf(f, false);
+      as_dnf_[f] = r;
+      return r;
+    }
+
+    formula as_cnf(formula f)
+    {
+      auto i = as_cnf_.find(f);
+      if (i != as_cnf_.end())
+        return i->second;
+      formula r = as_xnf(f, true);
+      as_cnf_[f] = r;
+      return r;
+    }
+
+
 
     formula
     lookup_nenoform(formula f)
@@ -303,7 +392,10 @@ namespace spot
 
   private:
     f2b_map as_bdd_;
+    b2f_map bdd_to_f_;
     f2f_map simplified_;
+    f2f_map as_dnf_;
+    f2f_map as_cnf_;
     f2f_map nenoform_;
     syntimpl_cache_t syntimpl_;
     snf_cache snf_cache_;
@@ -987,22 +1079,32 @@ namespace spot
                         return recurse(res);
                     }
 
-                  // FG(a & Xb) = FG(a & b)
-                  // FG(a & Gb) = FG(a & b)
-                  if (c.is({op::G, op::And}))
+                  // FG(a) = FG(dnf(a)) if a is not Boolean
+                  // and contains some | above non-Boolean subformulas.
+                  if (c.is(op::G) && !c[0].is_boolean())
                     {
                       formula m = c[0];
-                      if (!m.is_boolean())
-                        {
-                          formula out = m.map([](formula f)
-                                              {
-                                                if (f.is(op::X, op::G))
-                                                  return f[0];
-                                                return f;
-                                              });
-                          if (out != m)
-                            return recurse(unop_unop(op::F, op::G, out));
-                        }
+                      bool want_cnf = m.is(op::And);
+                      if (!want_cnf && m.is(op::Or))
+                        for (auto cc : m)
+                          if (cc.is(op::And))
+                            {
+                              want_cnf = true;
+                              break;
+                            }
+                      if (want_cnf && !opt_.reduce_size_strictly)
+                        m = c_->as_cnf(m);
+                      // FG(a & Xb) = FG(a & b)
+                      // FG(a & Gb) = FG(a & b)
+                      if (m.is(op::And))
+                        m = m.map([](formula f)
+                                  {
+                                    if (f.is(op::X, op::G))
+                                      return f[0];
+                                    return f;
+                                  });
+                      if (c[0] != m)
+                        return recurse(unop_unop(op::F, op::G, m));
                     }
                 }
               // if Fa => a, keep a.
@@ -1248,22 +1350,33 @@ namespace spot
                         return recurse(res);
                     }
 
-                  // GF(a | Xb) = GF(a | b)
-                  // GF(a | Fb) = GF(a | b)
-                  if (c.is({op::F, op::Or}))
+
+                  // GF(a) = GF(dnf(a)) if a is not Boolean
+                  // and contains some | above non-Boolean subformulas.
+                  if (c.is(op::F) && !c[0].is_boolean())
                     {
                       formula m = c[0];
-                      if (!m.is_boolean())
-                        {
-                          formula out = m.map([](formula f)
-                                              {
-                                                if (f.is(op::X, op::F))
-                                                  return f[0];
-                                                return f;
-                                              });
-                          if (out != m)
-                            return recurse(unop_unop(op::G, op::F, out));
-                        }
+                      bool want_dnf = m.is(op::Or);
+                      if (!want_dnf && m.is(op::And))
+                        for (auto cc : m)
+                          if (cc.is(op::Or))
+                            {
+                              want_dnf = true;
+                              break;
+                            }
+                      if (want_dnf && !opt_.reduce_size_strictly)
+                        m = c_->as_dnf(m);
+                      // GF(a | Xb) = GF(a | b)
+                      // GF(a | Fb) = GF(a | b)
+                      if (m.is(op::Or))
+                        m = m.map([](formula f)
+                                  {
+                                    if (f.is(op::X, op::F))
+                                      return f[0];
+                                    return f;
+                                  });
+                      if (c[0] != m)
+                        return recurse(unop_unop(op::G, op::F, m));
                     }
                   // GF(f1 & f2 & eu1 & eu2) = G(F(f1 & f2) & eu1 & eu2
                   if (opt_.event_univ && c.is({op::F, op::And}))

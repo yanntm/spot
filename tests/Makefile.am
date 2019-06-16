@@ -208,6 +208,7 @@ TESTS_misc = \
   core/trival.test
 
 TESTS_twa = \
+  core/385.test \
   core/acc.test \
   core/acc2.test \
   core/bdddict.test \

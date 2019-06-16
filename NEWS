@@ -105,9 +105,11 @@ New in spot 2.7.5.dev (not yet released)
 
   - The LTL simplifier learned the following optional rules:
     F(G(a | Fb)) = FGa | GFb  (if option "favor_event_univ")
-    G(F(a | Gb)) = GFa | FGb   (if option "favor_event_univ")
+    G(F(a | Gb)) = GFa | FGb  (if option "favor_event_univ")
     F(G(a & Fb) = FGa & GFb   (unless option "reduce_size_strictly")
     G(F(a & Gb)) = GFa & FGb  (unless option "reduce_size_strictly")
+    GF(f) = GF(dnf(f))        (unless option "reduce_size_strictly")
+    FG(f) = FG(cnf(f))        (unless option "reduce_size_strictly")
 
   - cleanup_parity() and colorize_parity() were cleaned up a bit,
     resulting in fewer colors used in some cases.  In particular,

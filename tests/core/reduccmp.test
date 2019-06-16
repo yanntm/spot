@@ -346,6 +346,8 @@ F(G(a & Fb)), G(Fb & FGa)
 G(F(a & Gb)), G(Fa & FGb)
 Ge | XGF(Ge & X(c & Fd)), Ge | G(Fd & FGe & Fc)
 G!GXXe -> GF(b & c & Gc), F(G(Fb & FGc) | Ge)
+GFX((e & XXXa) -> (e & X!d)), GF(!a | !d | !e)
+!GFX((e & XXXa) -> (e & X!d)), FG(a & d & e)
 
 # Because reduccmp will translate the formula,
 # this also check for an old bug in ltl2tgba_fm.
