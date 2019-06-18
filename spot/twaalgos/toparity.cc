@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -53,11 +53,13 @@ namespace spot
       {
         std::stringstream s;
         s << state << " [";
-        for (unsigned i = 0; i != perm.size(); ++i)
+        unsigned ps = perm.size();
+        for (unsigned i = 0; i < ps; ++i)
           {
-            s << perm[i] << '@' << count[i];
-            if (i < perm.size() - 1)
+            if (i > 0)
               s << ", ";
+            unsigned p = perm[i];
+            s << p << '@' << count[p];
           }
         s << ']';
 
