@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement de
 # l'EPITA.
 #
 # This file is part of Spot, a model checking library.
@@ -45,3 +45,7 @@ for f in spot.randltl(5, 2000):
     p = spot.to_parity(n)
     assert spot.are_equivalent(n, p)
 
+# Issue #390.
+a = spot.translate('!(GFa -> (GFb & GF(!b & !Xb)))', 'gen', 'det');
+b = spot.to_parity(a);
+assert a.equivalent_to(b)

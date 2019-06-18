@@ -138,6 +138,11 @@ New in spot 2.7.5.dev (not yet released)
     could produce a different number of edges for the same input in
     two different transition order.
 
+  - A symmetry-based optimization of the LAR algorithm performed in
+    spot::to_parity() turned out to be incorrect.  The optimization
+    has been removed.  "ltlsynt --algo=lar" is the only code using
+    this function currently.
+
 New in spot 2.7.5 (2019-06-05)
 
   Build:
