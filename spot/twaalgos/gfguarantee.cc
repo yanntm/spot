@@ -185,13 +185,92 @@ namespace spot
               //   }
             }
 
-          unsigned nedges = aut->num_edges();
           unsigned new_init = -1U;
-          // The loop might add new edges, but we just want to iterate
-          // on the initial ones.
-          for (unsigned edge = 1; edge <= nedges; ++edge)
+          // We do two the rewrite in two passes.  The first one
+          // replays histories to detect the new source the edges
+          // should synchronize with. We used to have single
+          // loop, but replaying history on edges that have been modified
+          // result in different automaton depending on the edge order.
+          std::vector<unsigned> redirect_src;
+          if (is_det)
             {
-              auto& e = aut->edge_storage(edge);
+              redirect_src.resize(aut->edge_vector().size());
+              for (auto& e: aut->edges())
+                {
+                  unsigned edge = aut->edge_number(e);
+                  redirect_src[edge] = e.src; // no change by default
+                  // Don't bother with terminal states, they won't be
+                  // reachable anymore.
+                  if (term[si.scc_of(e.src)])
+                    continue;
+                  // It will not loop
+                  if (!term[si.scc_of(e.dst)])
+                    continue;
+                  // It will loop.
+
+                  // If initial state cannot be reached from another
+                  // state of the automaton, we can get rid of it by
+                  // combining the edge reaching the terminal state
+                  // with the edges leaving the initial state.
+                  //
+                  // However if we have some histories for e.src
+                  // (which implies that the automaton is
+                  // deterministic), we can try to replay that from
+                  // the initial state first.
+                  //
+                  // One problem with those histories, is that we do
+                  // not know how much of it to replay.  It's possible
+                  // that we cannot find a matching transition (e.g. if
+                  // the history if "b" but the choices are "!a" or "a"),
+                  // and its also possible to that playing too much of
+                  // history will get us back the terminal state.  In both
+                  // cases, we should try again with a smaller history.
+                  unsigned moved_init = init;
+                  bdd econd = e.cond;
+
+                  auto& h = histories[e.src];
+                  int hsize = h.size();
+                  for (int hlen = hsize - 1; hlen >= 0; --hlen)
+                    {
+                      for (int pos = hlen - 1; pos >= 0; --pos)
+                        {
+                          for (auto& e: aut->out(moved_init))
+                            if (bdd_implies(h[pos], e.cond))
+                              {
+                                if (term[si.scc_of(e.dst)])
+                                  goto failed;
+                                moved_init = e.dst;
+                                goto moved;
+                              }
+                          // if we reach this place, we failed to follow
+                          // one step of the history.
+                          goto failed;
+                        moved:
+                          continue;
+                        }
+
+                      // Make sure no successor of the new initial
+                      // state will reach a terminal state; if
+                      // that is the case, we have to shorten the
+                      // history further.
+                      if (hlen > 0)
+                        for (auto& ei: aut->out(moved_init))
+                          if ((ei.cond & econd) != bddfalse
+                              && term[si.scc_of(ei.dst)])
+                            goto failed;
+
+                      redirect_src[edge] = moved_init;
+                      break;
+                    failed:
+                      moved_init = init;
+                      continue;
+                    }
+                }
+            }
+
+          // No we do the redirection.
+          for (auto& e: aut->edges())
+            {
               // Don't bother with terminal states, they won't be
               // reachable anymore.
               if (term[si.scc_of(e.src)])
@@ -235,95 +314,55 @@ namespace spot
                   bool first;
                   if (is_det)
                     {
-                      auto& h = histories[e.src];
-                      int hsize = h.size();
-                      for (int hlen = hsize - 1; hlen >= 0; --hlen)
+                      unsigned edge = aut->edge_number(e);
+                      moved_init = redirect_src[edge];
+
+                      first = true;
+                      for (auto& ei: aut->out(moved_init))
                         {
-                          for (int pos = hlen - 1; pos >= 0; --pos)
+                          bdd cond = ei.cond & econd;
+                          if (cond != bddfalse)
                             {
-                              for (auto& e: aut->out(moved_init))
-                                if (bdd_implies(h[pos], e.cond))
-                                  {
-                                    if (term[si.scc_of(e.dst)])
-                                      goto failed;
-                                    moved_init = e.dst;
-                                    goto moved;
-                                  }
-                              // if we reach this place, we failed to follow
-                              // one step of the history.
-                              goto failed;
-                            moved:
-                              continue;
-                            }
-
-                          // Make sure no successor of the new initial
-                          // state will reach a terminal state; if
-                          // that is the case, we have to shorten the
-                          // history further.
-                          if (hlen > 0)
-                            for (auto& ei: aut->out(moved_init))
-                              if ((ei.cond & econd) != bddfalse
-                                  && term[si.scc_of(ei.dst)])
-                                goto failed;
-
-                          // we have successfully played all history
-                          // to a non-terminal state.
-                          //
-                          // Combine this edge with any compatible
-                          // edge from the initial state.
-                          first = true;
-                          for (auto& ei: aut->out(moved_init))
-                            {
-                              bdd cond = ei.cond & econd;
-                              if (cond != bddfalse)
+                              // We should never reach the terminal state,
+                              // unless the history is empty.  In that
+                              // case (ts=true) we have to make a loop to
+                              // the initial state without any
+                              // combination.
+                              bool ts = term[si.scc_of(ei.dst)];
+                              if (ts)
                                 {
-                                  // We should never reach the terminal state,
-                                  // unless the history is empty.  In that
-                                  // case (ts=true) we have to make a loop to
-                                  // the initial state without any
-                                  // combination.
-                                  bool ts = term[si.scc_of(ei.dst)];
-                                  if (ts)
+                                  want_merge_edges = true;
+                                }
+                              if (first)
+                                {
+                                  e.acc = {0};
+                                  e.cond = cond;
+                                  first = false;
+                                  if (!ts)
                                     {
-                                      assert(hlen == 0);
-                                      want_merge_edges = true;
-                                    }
-                                  if (first)
-                                    {
-                                      e.acc = {0};
-                                      e.cond = cond;
-                                      first = false;
-                                      if (!ts)
-                                        {
-                                          e.dst = ei.dst;
-                                          if (new_init == -1U)
-                                            new_init = e.src;
-                                        }
-                                      else
-                                        {
-                                          new_init = e.dst = init;
-                                        }
+                                      e.dst = ei.dst;
+                                      if (new_init == -1U)
+                                        new_init = e.src;
                                     }
                                   else
                                     {
-                                      if (ts)
-                                        {
-                                          aut->new_edge(e.src, init, cond, {0});
-                                          new_init = init;
-                                        }
-                                      else
-                                        {
-                                          aut->new_edge(e.src, ei.dst,
-                                                        cond, {0});
-                                        }
+                                      new_init = e.dst = init;
                                     }
-
+                                }
+                              else
+                                {
+                                  if (ts)
+                                    {
+                                      aut->new_edge(e.src, init, cond, {0});
+                                      new_init = init;
+                                    }
+                                  else
+                                    {
+                                      aut->new_edge(e.src, ei.dst,
+                                                    cond, {0});
+                                    }
                                 }
                             }
-                          break;
-                        failed:
-                          moved_init = init;
-                          continue;
                         }
                     }
                   else

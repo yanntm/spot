@@ -132,6 +132,12 @@ New in spot 2.7.5.dev (not yet released)
     properties.  This can be altered with the SPOT_PR_CHECK
     environment variable.
 
+  Bugs fixed:
+
+  - The gf_guarantee_to_ba() is relying on an inplace algorithm that
+    could produce a different number of edges for the same input in
+    two different transition order.
+
 New in spot 2.7.5 (2019-06-05)
 
   Build:
