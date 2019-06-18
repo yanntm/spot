@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -71,13 +71,13 @@ static const argp_option options[] =
       " propositions", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
-    { "algo", OPT_ALGO, "ds|sd", 0,
+    { "algo", OPT_ALGO, "ds|sd|large", 0,
       "choose the algorithm for synthesis:\n"
       " - sd:   split then determinize with Safra (default)\n"
       " - ds:   determinize (Safra) then split\n"
       " - lar:  translate to a deterministic automaton with arbitrary"
-      "         acceptance condition, then use LAR to turn to parity,"
-      "         then split", 0 },
+      " acceptance condition, then use LAR to turn to parity,"
+      " then split", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
