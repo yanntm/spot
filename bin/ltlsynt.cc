@@ -198,7 +198,7 @@ namespace
     dpa->merge_edges();
     if (opt_print_pg)
       dpa = spot::sbacc(dpa);
-    spot::colorize_parity_here(dpa, true);
+    spot::reduce_parity_here(dpa, true);
     spot::change_parity_here(dpa, spot::parity_kind_max,
                              spot::parity_style_odd);
     assert((
@@ -317,17 +317,17 @@ namespace
             {
               auto tmp = to_dpa(aut);
               if (verbose)
-                std::cerr << "determinization done\n"
-                  << "dpa has " << tmp->num_states() << " states" << std::endl;
+                std::cerr << "determinization done\nDPA has "
+                          << dpa->num_states() << " states, "
+                          << dpa->num_sets() << " colors\n";
               tmp->merge_states();
               if (verbose)
-                std::cerr << "simulation done\n"
-                  << "dpa has " << tmp->num_states() << " states" << std::endl;
+                std::cerr << "simplification done\nDPA has "
+                          << tmp->num_states() << " states\n";
               dpa = split_2step(tmp, all_inputs);
               if (verbose)
-                std::cerr << "split inputs and outputs done\n"
-                  << "automaton has " << dpa->num_states() << " states"
-                  << std::endl;
+                std::cerr << "split inputs and outputs done\nautomaton has "
+                          << dpa->num_states() << " states\n";
               spot::colorize_parity_here(dpa, true);
               break;
             }
@@ -335,17 +335,17 @@ namespace
             {
               auto split = split_2step(aut, all_inputs);
               if (verbose)
-                std::cerr << "split inputs and outputs done\n"
-                  << "automaton has " << split->num_states() << " states"
-                  << std::endl;
+                std::cerr << "split inputs and outputs done\nautomaton has "
+                          << split->num_states() << " states\n";
               dpa = to_dpa(split);
               if (verbose)
-                std::cerr << "determinization done\n"
-                  << "dpa has " << dpa->num_states() << " states" << std::endl;
+                std::cerr << "determinization done\nDPA has "
+                          << dpa->num_states() << " states, "
+                          << dpa->num_sets() << " colors\n";
               dpa->merge_states();
               if (verbose)
-                std::cerr << "simulation done\n"
-                  << "dpa has " << dpa->num_states() << " states" << std::endl;
+                std::cerr << "simplification done\nDPA has "
+                          << dpa->num_states() << " states\n";
               break;
             }
           case LAR:
@@ -353,17 +353,16 @@ namespace
               dpa = split_2step(aut, all_inputs);
               dpa->merge_states();
               if (verbose)
-                std::cerr << "split inputs and outputs done\n"
-                  << "automaton has " << dpa->num_states() << " states"
-                  << std::endl;
+                std::cerr << "split inputs and outputs done\nautomaton has "
+                          << dpa->num_states() << " states\n";
               dpa = spot::to_parity(dpa);
-              spot::cleanup_parity_here(dpa);
+              spot::reduce_parity_here(dpa, true);
               spot::change_parity_here(dpa, spot::parity_kind_max,
                                        spot::parity_style_odd);
               if (verbose)
-                std::cerr << "LAR construction done\n"
-                  << "dpa has " << dpa->num_states() << " states" << std::endl;
-              spot::colorize_parity_here(dpa, true);
+                std::cerr << "LAR construction done\nDPA has "
+                          << dpa->num_states() << " states, "
+                          << dpa->num_sets() << " colors\n";
               break;
             }
         }

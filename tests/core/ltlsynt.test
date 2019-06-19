@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement
+# Copyright (C) 2017, 2019 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -23,54 +23,54 @@
 set -e
 
 cat >exp <<EOF
-parity 19;
-0 0 0 1,2 "INIT";
-2 0 1 3;
+parity 17;
+0 1 0 1,2 "INIT";
+2 1 1 3;
 3 2 0 4,5;
-5 0 1 3,6;
+5 1 1 3,6;
 6 3 0 4,5;
-4 0 1 7,8;
-8 0 0 9,10;
-10 0 1 11,12;
-12 0 0 9,13;
-13 1 1 11,12;
-11 2 0 9,10;
+4 1 1 7,8;
+8 1 0 9,10;
+10 1 1 11,12;
+12 1 0 9,10;
 9 3 1 3,6;
-7 0 0 14,15;
-15 1 1 7,11;
-14 2 1 3,6;
-1 0 1 3,16;
-16 3 0 2,17;
-17 3 1 3,16;
+11 2 0 9,10;
+7 1 0 13,14;
+14 1 1 7,11;
+13 2 1 3,6;
+1 1 1 3,15;
+15 1 0 2,1;
 EOF
-ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --print-pg > out
+ltlsynt --ins=a --outs=b -f 'GFa <-> GFb' --print-pg >out
 diff out exp
 
 cat >exp <<EOF
 REALIZABLE
-aag 17 1 2 1 14
+aag 23 1 2 1 16
 2
-4 31
-6 33
-35
+4 3
+6 45
+47
 8 5 7
-10 3 8
 12 2 8
 14 4 7
-16 3 14
-18 2 14
+16 2 14
 20 5 6
-22 2 20
-24 3 20
-26 19 23
-28 11 13
-30 28 26
-32 17 25
-34 11 26
+22 3 20
+24 2 20
+26 4 6
+28 2 26
+30 3 26
+36 29 31
+38 25 36
+40 17 23
+42 13 40
+44 42 38
+46 25 29
 i0 a
 o0 b
 EOF
-ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --aiger > out
+ltlsynt --ins=a --outs=b -f 'GFa <-> GFb' --aiger >out
 diff out exp
 
 cat >exp <<EOF
@@ -98,7 +98,7 @@ i0 a
 o0 b
 o1 c
 EOF
-ltlsynt --ins='a' --outs='b,c' -f 'GFa <-> (GFb & GFc)' --aiger > out
+ltlsynt --ins=a --outs=b,c -f 'GFa <-> (GFb & GFc)' --aiger >out
 diff out exp
 
 cat >exp <<EOF
@@ -106,9 +106,9 @@ translating formula done
 split inputs and outputs done
 automaton has 9 states
 determinization done
-dpa has 14 states
-simulation done
-dpa has 14 states
+DPA has 14 states, 4 colors
+simplification done
+DPA has 11 states
 parity game built
 EOF
 ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --verbose --realizability 2> out
