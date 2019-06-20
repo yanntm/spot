@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2017-2019 Laboratoire de Recherche et Développement de
 # l'EPITA.
 #
 # This file is part of Spot, a model checking library.
@@ -553,7 +553,7 @@ dual = spot.dualize(aut)
 h = dual.to_str('hoa')
 
 assert h == """HOA: v1
-States: 6
+States: 5
 Start: 0
 AP: 2 "a" "b"
 acc-name: co-Buchi
@@ -561,27 +561,24 @@ Acceptance: 1 Fin(0)
 properties: trans-labels explicit-labels state-acc complete
 properties: deterministic univ-branch
 --BODY--
-State: 0
-[0] 1
-[!0] 1&2
-State: 1 {0}
-[0&1] 1
-[0&!1] 4
-[!0&!1] 2&4
-[!0&1] 1&2
+State: 0 {0}
+[0&1] 0
+[0&!1] 1
+[!0&!1] 1&2
+[!0&1] 0&2
+State: 1
+[0&1] 0
+[0&!1] 1
+[!0&!1] 1&2
+[!0&1] 0&2
 State: 2
 [!0&1] 3
-[0 | !1] 5
+[0 | !1] 4
 State: 3 {0}
 [!0] 3
-[0] 5
+[0] 4
 State: 4
-[0&1] 1
-[0&!1] 4
-[!0&!1] 2&4
-[!0&1] 1&2
-State: 5
-[t] 5
+[t] 4
 --END--"""
 
 opts = spot.option_map()

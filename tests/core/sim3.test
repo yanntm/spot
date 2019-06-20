@@ -47,7 +47,7 @@ State: 6 {0 3}
 --END--
 EOF
 
-test "`autfilt --small input --stats=%S,%s`" = 7,2
+test "`autfilt --small input --stats=%S,%s`" = 7,1
 
 autfilt -S --high --small input -H > out
 cat >expected <<EOF

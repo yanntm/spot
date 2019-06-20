@@ -23,6 +23,7 @@
 #include <utility>
 #include <cmath>
 #include <limits>
+#include <numeric>
 #include <spot/twaalgos/simulation.hh>
 #include <spot/misc/minato.hh>
 #include <spot/twa/bddprint.hh>
@@ -493,7 +494,7 @@ namespace spot
           }
       }
 
-      // Build the minimal resulting automaton.
+      // Build the simplified automaton.
       twa_graph_ptr build_result()
       {
         twa_graph_ptr res = make_twa_graph(a_->get_dict());
@@ -526,6 +527,9 @@ namespace spot
               (*record_implications_)[s] = relation_[cl];
           }
 
+        std::vector<bdd> signatures;
+        signatures.reserve(sorted_classes_.size());
+
         // Acceptance of states.  Only used if Sba && Cosimulation.
         std::vector<acc_cond::mark_t> accst;
         if (Sba && Cosimulation)
@@ -538,6 +542,7 @@ namespace spot
         unsigned nb_minato = 0;
 
         auto all_inf = all_inf_;
+        unsigned srcst = 0;
         // For each class, we will create
         // all the edges between the states.
         for (auto& p: sorted_classes_)
@@ -552,7 +557,11 @@ namespace spot
             if (Cosimulation)
               sig = bdd_compose(sig, bddfalse, bdd_var(bdd_initial));
 
-            // Get all the variable in the signature.
+            assert(gb->get_state(src.id()) == srcst);
+            assert(signatures.size() == srcst);
+            signatures.push_back(bdd_exist(sig, all_proms_));
+
+            // Get all the variables in the signature.
             bdd sup_sig = bdd_support(sig);
 
             // Get the variable in the signature which represents the
@@ -607,7 +616,6 @@ namespace spot
                     // acceptance conditions on the input automaton,
                     // we must revert them to create a new edge.
                     acc ^= all_inf;
-
                     if (Cosimulation)
                       {
                         if (Sba)
@@ -617,7 +625,7 @@ namespace spot
                             // to all edges leaving src.  As we
                             // can't do this here, store this in a table
                             // so we can fix it later.
-                            accst[gb->get_state(src.id())] = acc;
+                            accst[srcst] = acc;
                             acc = {};
                           }
                         gb->new_edge(dst.id(), src.id(), cond, acc);
@@ -628,6 +636,7 @@ namespace spot
                       }
                   }
               }
+            ++srcst;
           }
 
         res->set_init_state(gb->get_state(previous_class_
@@ -649,6 +658,41 @@ namespace spot
                   continue;
                 for (auto& t: res->out(s))
                   t.acc = acc;
+              }
+          }
+
+        // Attempt to merge trivial SCCs
+        if (!record_implications_ && res->num_states() > 1)
+          {
+            scc_info si(res, scc_info_options::NONE);
+            unsigned nscc = si.scc_count();
+            unsigned nstates = res->num_states();
+            std::vector<unsigned> redirect(nstates);
+            std::iota(redirect.begin(), redirect.end(), 0);
+            bool changed = false;
+            for (unsigned scc = 0; scc < nscc; ++scc)
+              if (si.is_trivial(scc))
+                {
+                  unsigned s = si.one_state_of(scc);
+                  bdd ref = signatures[s];
+                  for (unsigned i = 0; i < nstates; ++i)
+                    if (si.reachable_state(i)
+                        && signatures[i] == ref && !si.is_trivial(si.scc_of(i)))
+                      {
+                        changed = true;
+                        redirect[s] = i;
+                        break;
+                      }
+                }
+            if (changed)
+              {
+                if (Cosimulation)
+                  for (auto& e: res->edges())
+                    e.src = redirect[e.src];
+                else
+                  for (auto& e: res->edges())
+                    e.dst = redirect[e.dst];
+                res->set_init_state(redirect[res->get_init_state_number()]);
               }
           }
 

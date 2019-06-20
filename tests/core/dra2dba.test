@@ -330,4 +330,5 @@ Acc-Sig: +2
 EOF
 
 autcross 'dstar2tgba -D' --language-preserved -F in.dra --csv=out.csv
-grep '3,18,107,144,1,2,0,0,0$' out.csv
+cat out.csv
+grep '3,17,104,136,1,1,0,0,0$' out.csv
