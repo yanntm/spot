@@ -75,6 +75,8 @@ namespace spot
         else
           {
             int fo = acc.fin_one();
+            if (fo < 0)
+              std::cerr << autacc << acc << '\n';
             assert(fo >= 0);
             // Try to accept when Fin(fo) == true
             acc_cond::mark_t fo_m = {(unsigned) fo};
@@ -160,9 +162,16 @@ namespace spot
   bool generic_emptiness_check_for_scc(const scc_info& si,
                                        unsigned scc)
   {
-    if (SPOT_UNLIKELY(!si.get_aut()->is_existential()))
-      throw std::runtime_error("generic_emptiness_check_for_scc() "
-                               "does not support alternating automata");
     return is_scc_empty(si, scc, si.get_aut()->acc(), nullptr);
   }
+
+  bool
+  generic_emptiness_check_for_scc(const scc_info& si, unsigned scc,
+                                  const acc_cond& forced_acc)
+  {
+    if (si.is_trivial(scc))
+      return true;
+    return scc_split_check(si, scc, forced_acc, nullptr, {});
+  }
+
 }

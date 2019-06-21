@@ -40,4 +40,13 @@ namespace spot
   /// \brief Emptiness check of one SCC, for any acceptance condition.
   SPOT_API bool
   generic_emptiness_check_for_scc(const scc_info& si, unsigned scc);
+
+  /// \ingroup emptiness_check_algorithms
+  /// \brief Emptiness check of one SCC, for any acceptance condition.
+  ///
+  /// This version makes it possible to ignore the acceptance
+  /// condition of the automaton, and use \a forced_acc.
+  SPOT_API bool
+  generic_emptiness_check_for_scc(const scc_info& si, unsigned scc,
+                                  const acc_cond& forced_acc);
 }

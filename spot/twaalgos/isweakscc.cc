@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -20,7 +20,7 @@
 #include "config.h"
 #include <spot/tl/formula.hh>
 #include <spot/twaalgos/isweakscc.hh>
-#include <spot/twaalgos/mask.hh>
+#include <spot/twaalgos/genem.hh>
 
 namespace spot
 {
@@ -38,18 +38,8 @@ namespace spot
   {
     if (SPOT_UNLIKELY(scc >= map.scc_count()))
       invalid_scc_number("scc_has_rejecting_cycle");
-    auto aut = map.get_aut();
-    // We check that by cloning the SCC and complementing its
-    // acceptance condition.
-    std::vector<bool> keep(aut->num_states(), false);
-    auto& states = map.states_of(scc);
-    for (auto s: states)
-      keep[s] = true;
-    auto sccaut = mask_keep_accessible_states(aut, keep, states.front(),
-                                              /* drop_univ_branch = */ true);
-    sccaut->set_acceptance(sccaut->acc().num_sets(),
-                           sccaut->get_acceptance().complement());
-    return !sccaut->is_empty();
+    acc_cond neg_acc = map.get_aut()->get_acceptance().complement();
+    return !generic_emptiness_check_for_scc(map, scc, neg_acc);
   }
 
   bool
