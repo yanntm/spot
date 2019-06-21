@@ -158,7 +158,7 @@ namespace spot
   }
 
   twa_run_ptr
-  twa::intersecting_run(const_twa_ptr other, bool from_other) const
+  twa::intersecting_run(const_twa_ptr other) const
   {
     auto self = shared_from_this();
     if (acc().uses_fin_acceptance() || other->acc().uses_fin_acceptance())
@@ -168,14 +168,14 @@ namespace spot
         auto run = generic_accepting_run(product(g1, g2));
         if (!run)
           return nullptr;
-        return run->reduce()->project(from_other ? g2 : g1);
+        return run->reduce()->project(g1);
       }
     self = remove_fin_maybe(self); // remove alternation, not Fin
     other = remove_fin_maybe(other);
     auto run = otf_product(self, other)->accepting_run();
     if (!run)
       return nullptr;
-    return run->reduce()->project(from_other ? other : self);
+    return run->reduce()->project(self);
   }
 
   twa_word_ptr

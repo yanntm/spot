@@ -872,18 +872,42 @@ namespace spot
     /// \brief Return an accepting run recognizing a word accepted by
     /// two automata.
     ///
-    /// If \a from_other is true, the returned run will be over the
-    /// \a other automaton.  Otherwise, the run will be over this
-    /// automaton.  (This argument will be deprecated soon, do not
-    /// use it.)
+    /// The run returned is a run from automaton this.
     ///
     /// Return nullptr if no accepting run were found.
     ///
     /// An emptiness check is performed on a product computed
     /// on-the-fly, unless some of the operands use Fin-acceptance: in
     /// this case an explicit product is performed.
-    virtual twa_run_ptr intersecting_run(const_twa_ptr other,
-                                         bool from_other = false) const;
+    virtual twa_run_ptr intersecting_run(const_twa_ptr other) const;
+
+    /// \brief Return an accepting run recognizing a word accepted by
+    /// two automata.
+    ///
+    /// If \a from_other is true, the returned run will be over the
+    /// \a other automaton.  Otherwise, the run will be over this
+    /// automaton.
+    ///
+    /// This form is deprecated.  Replace a->interesecting_run(b, true)
+    /// by b->intersecting_run(a).
+    ///
+    /// Return nullptr if no accepting run were found.
+    ///
+    /// An emptiness check is performed on a product computed
+    /// on-the-fly, unless some of the operands use Fin-acceptance: in
+    /// this case an explicit product is performed.
+    ///
+    /// This function was deprecated in Spot 2.8.
+    SPOT_DEPRECATED("replace a->intersecting_run(b, true) "
+                    "by b->intersecting_run(a).")
+    twa_run_ptr intersecting_run(const_twa_ptr other,
+                                 bool from_other) const
+    {
+      if (from_other)
+        return other->intersecting_run(shared_from_this());
+      else
+        return this->intersecting_run(other);
+    }
 
     /// \brief Return a word accepted by two automata.
     ///
