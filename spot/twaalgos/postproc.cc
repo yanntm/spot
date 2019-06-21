@@ -350,8 +350,7 @@ namespace spot
     // WDBA-minimization.
     if ((PREF_ != Small || level_ != Low) && wdba_minimize_)
       {
-        // FIXME: This should be level_ <= Medium I believe.
-        bool reject_bigger = (PREF_ == Small) && (level_ == Medium);
+        bool reject_bigger = (PREF_ == Small) && (level_ <= Medium);
         dba = minimize_obligation(a, f, nullptr, reject_bigger, aborter);
         if (dba
             && dba->prop_inherently_weak().is_true()
