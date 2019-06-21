@@ -254,46 +254,35 @@ namespace spot
     //
     // When we construct a formula such as Multop(Op,X,Multop(Op,Y,Z))
     // we will want to inline it as Multop(Op,X,Y,Z).
-    {
-      vec inlined;
-      vec::iterator i = v.begin();
-      while (i != v.end())
-        {
-          // Some simplification routines erase terms using null
-          // pointers that we must ignore.
-          if ((*i) == nullptr)
-            {
-              // FIXME: For commutative operators we should replace
-              // the pointer by the first non-null value at the end
-              // of the array instead of calling erase.
-              i = v.erase(i);
+    //
+    // At the same time, it's possible that vec contains some null
+    // pointers we should remove.  We can do it in the same loop.
+    //
+    // It is simpler to construct a separate vector to do that, but that's
+    // only needed if we have nested multops or null poiners.
+    if (std::find_if(v.begin(), v.end(),
+                     [o](const fnode* f) { return f == nullptr || f->is(o); })
+        != v.end())
+      {
+        vec inlined;
+        for (const fnode* f: v)
+          {
+            if (f == nullptr)
               continue;
-            }
-          if ((*i)->is(o))
-            {
-              unsigned ps = (*i)->size();
-              for (unsigned n = 0; n < ps; ++n)
-                inlined.emplace_back((*i)->nth(n)->clone());
-              (*i)->destroy();
-              // FIXME: Do not use erase.  See previous FIXME.
-              i = v.erase(i);
-              continue;
-            }
-          // All operators except "Concat" and "Fusion" are
-          // commutative, so we just keep a list of the inlined
-          // arguments that should later be added to the vector.
-          // For concat we have to keep track of the order of
-          // all the arguments.
-          if (o == op::Concat || o == op::Fusion)
-            inlined.emplace_back(*i);
-          ++i;
-        }
-      if (o == op::Concat || o == op::Fusion)
+            if (f->is(o))
+              {
+                unsigned ps = f->size();
+                for (unsigned n = 0; n < ps; ++n)
+                  inlined.emplace_back(f->nth(n)->clone());
+                f->destroy();
+              }
+            else
+              {
+                inlined.emplace_back(f);
+              }
+          }
         v.swap(inlined);
-      else
-        v.insert(v.end(), inlined.begin(), inlined.end());
-    }
-
+      }
     if (o != op::Concat && o != op::Fusion)
       std::sort(v.begin(), v.end(), formula_ptr_less_than_bool_first());
 
