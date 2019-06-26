@@ -30,6 +30,11 @@ New in spot 2.7.5.dev (not yet released)
     amongst "Inf(0)", "t", or "f", and persistance properties have an
     acceptance condition among "Fin(0)", "t", or "f".
 
+  Documentation:
+
+  - https://spot.lrde.epita.fr/tut90.html is a new file that explains
+    the purpose of the =spot::bdd_dict= object.
+
   Library:
 
   - Add generic_accepting_run() as a variant of generic_emptiness_check() that

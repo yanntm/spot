@@ -200,6 +200,12 @@ class twa_graph:
         from IPython.display import SVG
         return SVG(_ostream_to_svg(ostr))
 
+def make_twa_graph(*args):
+    from spot.impl import make_twa_graph as mtg
+    if len(args) == 0:
+        return mtg(_bdd_dict)
+    return mtg(*args)
+
 @_extend(formula)
 class formula:
     def __init__(self, str):
