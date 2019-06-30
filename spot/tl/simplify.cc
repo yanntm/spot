@@ -291,7 +291,7 @@ namespace spot
     {
       if (!f1.is_psl_formula() || !f2.is_psl_formula())
         return false;
-      trace << "[CN] Does (" << str_psl(f1) << ") implies !("
+      trace << "[CN] Does (" << str_psl(f1) << ") imply !("
             << str_psl(f2) << ") ?" << std::endl;
       if (lcc.contained_neg(f1, f2))
         {
@@ -305,12 +305,12 @@ namespace spot
         }
     }
 
-    // Return true if f1 => !f2
+    // Return true if !f1 => f2
     bool neg_contained(formula f1, formula f2)
     {
       if (!f1.is_psl_formula() || !f2.is_psl_formula())
         return false;
-      trace << "[NC] Does (" << str_psl(f1) << ") implies !("
+      trace << "[NC] Does !(" << str_psl(f1) << ") imply ("
             << str_psl(f2) << ") ?" << std::endl;
       if (lcc.neg_contained(f1, f2))
         {
@@ -332,7 +332,7 @@ namespace spot
     implication_neg(formula f1, formula f2, bool right)
     {
       trace << "[IN] Does " << (right ? "(" : "!(")
-            << str_psl(f1) << ") implies "
+            << str_psl(f1) << ") imply "
             << (right ? "!(" : "(") << str_psl(f2) << ") ?"
             << std::endl;
       if ((options.synt_impl && syntactic_implication_neg(f1, f2, right))
