@@ -228,6 +228,7 @@ namespace spot
     bool has_deadlock()
     {
       return deadlock_;
+      //return false;
     }
 
     unsigned walltime()

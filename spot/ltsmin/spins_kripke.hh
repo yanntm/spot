@@ -220,6 +220,8 @@ namespace spot
     cspins_iterator* succ(const cspins_state s, unsigned tid);
     void recycle(cspins_iterator* it, unsigned tid);
 
+    int get_state_variable_type(int var) const;
+
     /// \brief List the atomic propositions used by *this* kripke
     const std::vector<std::string> get_ap();
 

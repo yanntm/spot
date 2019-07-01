@@ -60,7 +60,7 @@ namespace spot
         }
       else if (ext == ".dve")
         {
-          command = "divine compile --ltsmin " + filename;
+          command = "~/usr/bin/divine compile --ltsmin " + filename;
           command += " 2> /dev/null"; // FIXME needed for Clang on MacOSX
           compiled_ext = "2C";
         }

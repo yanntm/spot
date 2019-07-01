@@ -48,10 +48,12 @@ namespace spot
     std::unordered_set<State, StateHash, StateEqual> q_, r_;
     std::vector<std::vector<std::vector<int>>> sbuf_;
     std::vector<size_t> sbuf_size_;
+    std::vector<int> pc_;
 
     size_t state_size_;
     int buffer_size_;
     size_t processed_states_;
+    size_t sended_states_;
 
     bool has_finish;
     mpi_window win_finish;
@@ -64,7 +66,8 @@ namespace spot
       dfs_cep(kripkecube<State, SuccIterator>& sys)
         : sys_(sys),
           mpi_(),
-          processed_states_(0)
+          processed_states_(0),
+	  sended_states_(0)
       { }
 
       virtual ~dfs_cep() { }
@@ -72,7 +75,13 @@ namespace spot
       State setup()
       {
         State s0 = sys_.initial(0);
+	std::cout << sys_.to_string(s0, 0) << std::endl;
         state_size_ = s0[STATE_HEADER_SIZE - 1] + STATE_HEADER_SIZE;
+	std::cout << "size : " << state_size_ << std::endl;
+	for (int i = 0; i < state_size_ - STATE_HEADER_SIZE; ++i)
+          if (sys_.get_state_variable_type(i))
+            pc_.push_back(i);
+
         buffer_size_ = MTU / (state_size_ * sizeof (int));
 
         sbuf_.resize(mpi_.world_size,
@@ -97,6 +106,14 @@ namespace spot
       {
         StateHash hash;
         return hash(state);
+	/*int sum = 0;
+	int i = 0;
+	for (const auto& pos : pc_)
+	{
+	  sum *= pos;
+	  sum += state[STATE_HEADER_SIZE + pos];
+	}
+	return sum;*/
       }
 
       bool termination()
@@ -183,6 +200,7 @@ namespace spot
         for (; !i->done(); i->next())
         {
           State next = i->state();
+          //std::cout << sys_.to_string(next, 0) << std::endl;
           size_t hash = get_hash(next);
           if (!check_invariant(next))
             mpi_.abort(1);
@@ -226,6 +244,7 @@ namespace spot
         }
         win_buf_[mpi_.world_rank].put(target, 0, out_buf,
                                       sbuf_size_[target] * state_size_);
+	sended_states_ += sbuf_size_[target];
         sbuf_size_[target] = 0;
       }
 
@@ -272,6 +291,7 @@ namespace spot
         check_invariant(s0);
         explore(s0);
         std::cout << "unique state explored: " << r_.size() << "\n";
+	std::cout << "state sended: " << sended_states_ << "\n";
         finalize();
       }
   };

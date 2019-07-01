@@ -123,6 +123,7 @@ namespace spot
         MPI_Iprobe(MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &state_received, &status);
         if (state_received)
         {
+	  std::cout << "new state" << std::endl;
           work = true;
           int* state = (int *) malloc(state_size_ * sizeof (int));
           MPI_Recv(state, state_size_, MPI_INT, status.MPI_SOURCE, 0, 

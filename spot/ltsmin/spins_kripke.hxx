@@ -301,6 +301,12 @@ namespace spot
     recycle_[tid].push_back(it);
   }
 
+  int
+  kripkecube<cspins_state, cspins_iterator>::get_state_variable_type(int var) const
+  {
+    return d_->get_state_variable_type(var);
+  }
+
   const std::vector<std::string>
   kripkecube<cspins_state, cspins_iterator>::get_ap()
   {
