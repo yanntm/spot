@@ -200,6 +200,7 @@ namespace spot
     }
 
     twa_graph_ptr res = make_twa_graph(input_twa->get_dict());
+    res->copy_ap_of(input_twa);
     auto acc = input_twa->get_acceptance();
     unsigned fin = input_twa->num_sets();
     acc |= acc_cond::acc_code::fin({fin});
@@ -208,7 +209,6 @@ namespace spot
     transform_accessible(input_twa, res, [&](unsigned src, bdd& cond,
           acc_cond::mark_t& m, unsigned dst)
         {
-          //acc.set();
           if (cond == empty && is_livelock[r_scc.scc_of(src)])
           {
             if (src != dst)
@@ -218,6 +218,7 @@ namespace spot
             m.set(fin);
         });
     res->set_named_prop("testing-automaton", new bool);
+    res->purge_unreachable_states();
     return res;
   }
 }
