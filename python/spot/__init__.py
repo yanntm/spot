@@ -107,14 +107,17 @@ if 'op_ff' not in globals():
 _bdd_dict = make_bdd_dict()
 
 
-
 __om_init_tmp = option_map.__init__
+
+
 def __om_init_new(self, str=None):
     __om_init_tmp(self)
     if str:
         res = self.parse_options(str)
         if res:
-            raise RuntimeError("failed to parse option at: '" + str +"'")
+            raise RuntimeError("failed to parse option at: '" + str + "'")
+
+
 option_map.__init__ = __om_init_new
 
 
@@ -162,6 +165,7 @@ class twa:
                 self.highlight_edge(val, color)
         return self
 
+
 @_extend(twa)
 class twa:
     def to_str(a, format='hoa', opt=None):
@@ -192,6 +196,7 @@ class twa:
                 f.write('\n')
         return a
 
+
 @_extend(twa_graph)
 class twa_graph:
     def show_storage(self, opt=None):
@@ -200,11 +205,13 @@ class twa_graph:
         from IPython.display import SVG
         return SVG(_ostream_to_svg(ostr))
 
+
 def make_twa_graph(*args):
     from spot.impl import make_twa_graph as mtg
     if len(args) == 0:
         return mtg(_bdd_dict)
     return mtg(*args)
+
 
 @_extend(formula)
 class formula:
@@ -243,8 +250,8 @@ class formula:
             return str_sclatex_psl(self, parenth)
         elif format == 'mathjax' or format == 'j':
             return (str_sclatex_psl(self, parenth).
-                        replace("``", "\\unicode{x201C}").
-                        replace("\\textrm{''}", "\\unicode{x201D}"))
+                    replace("``", "\\unicode{x201C}").
+                    replace("\\textrm{''}", "\\unicode{x201D}"))
         elif format == 'dot' or format == 'd':
             ostr = ostringstream()
             print_dot_psl(ostr, self)
@@ -475,9 +482,9 @@ def automata(*sources, timeout=None, ignore_abort=True,
                 # universal_newlines for str output instead of bytes
                 # when the pipe is read from Python (which happens
                 # when timeout is set).
+                prefn = None if no_sid else os.setsid
                 proc = subprocess.Popen(filename[:-1], shell=True,
-                                        preexec_fn=
-                                        None if no_sid else os.setsid,
+                                        preexec_fn=prefn,
                                         universal_newlines=True,
                                         stdout=subprocess.PIPE)
                 if timeout is None:
@@ -751,7 +758,7 @@ formula.translate = translate
 # instance methods (i.e., self passed as first argument
 # automatically), because only user-defined functions are converted as
 # instance methods.
-def _add_formula(meth, name = None):
+def _add_formula(meth, name=None):
     setattr(formula, name or meth, (lambda self, *args, **kwargs:
                                     globals()[meth](self, *args, **kwargs)))
 
@@ -811,9 +818,10 @@ twa.postprocess = postprocess
 # instance methods (i.e., self passed as first argument
 # automatically), because only user-defined functions are converted as
 # instance methods.
-def _add_twa_graph(meth, name = None):
+def _add_twa_graph(meth, name=None):
     setattr(twa_graph, name or meth, (lambda self, *args, **kwargs:
                                       globals()[meth](self, *args, **kwargs)))
+
 
 for meth in ('scc_filter', 'scc_filter_states',
              'is_deterministic', 'is_unambiguous',
@@ -824,6 +832,8 @@ _add_twa_graph('are_equivalent', 'equivalent_to')
 # Wrapper around a formula iterator to which we add some methods of formula
 # (using _addfilter and _addmap), so that we can write things like
 # formulas.simplify().is_X_free().
+
+
 class formulaiterator:
     def __init__(self, formulas):
         self._formulas = formulas
@@ -1003,14 +1013,14 @@ def simplify(f, **kwargs):
     favor_event_univ = kwargs.get('favor_event_univ', False)
 
     simp_opts = tl_simplifier_options(basics,
-                                       synt_impl,
-                                       event_univ,
-                                       cont_checks,
-                                       cont_checks_stronger,
-                                       nenoform_stop_on_boolean,
-                                       reduce_size_strictly,
-                                       boolean_to_isop,
-                                       favor_event_univ)
+                                      synt_impl,
+                                      event_univ,
+                                      cont_checks,
+                                      cont_checks_stronger,
+                                      nenoform_stop_on_boolean,
+                                      reduce_size_strictly,
+                                      boolean_to_isop,
+                                      favor_event_univ)
     return tl_simplifier(simp_opts).simplify(f)
 
 
@@ -1025,14 +1035,13 @@ for fun in ['remove_x', 'relabel', 'relabel_bse',
     _addmap(fun)
 
 
-
 # Better interface to the corresponding C++ function.
 def sat_minimize(aut, acc=None, colored=False,
                  state_based=False, states=0,
                  max_states=0, sat_naive=False, sat_langmap=False,
                  sat_incr=0, sat_incr_steps=0,
                  display_log=False, return_log=False):
-    args=''
+    args = ''
     if acc is not None:
         if type(acc) is not str:
             raise ValueError("argument 'acc' should be a string")
@@ -1079,15 +1088,18 @@ def parse_word(word, dic=_bdd_dict):
     from spot.impl import parse_word as pw
     return pw(word, dic)
 
+
 def bdd_to_formula(b, dic=_bdd_dict):
     from spot.impl import bdd_to_formula as bf
     return bf(b, dic)
+
 
 def language_containment_checker(dic=_bdd_dict):
     from spot.impl import language_containment_checker as c
     c.contains = lambda this, a, b: c.contained(this, b, a)
     c.are_equivalent = lambda this, a, b: c.equal(this, a, b)
     return c(dic)
+
 
 def mp_hierarchy_svg(cl=None):
     """
@@ -1099,7 +1111,7 @@ def mp_hierarchy_svg(cl=None):
     `mp_class(cl)`.
 
     """
-    if type(cl)==formula:
+    if type(cl) == formula:
         cl = mp_class(cl)
     ch = None
     coords = {
@@ -1112,12 +1124,12 @@ def mp_hierarchy_svg(cl=None):
         'B': '110,198',
     }
     if cl in coords:
-        highlight='''<g transform="translate({})">
+        highlight = '''<g transform="translate({})">
     <line x1="-10" y1="-10" x2="10" y2="10" stroke="red" stroke-width="5" />
     <line x1="-10" y1="10" x2="10" y2="-10" stroke="red" stroke-width="5" />
     </g>'''.format(coords[cl])
     else:
-        highlight=''
+        highlight = ''
     return '''
 <svg height="210" width="220" xmlns="http://www.w3.org/2000/svg" version="1.1">
 <polygon points="20,0 200,120 200,210 20,210" fill="cyan" opacity=".2" />
@@ -1150,7 +1162,9 @@ def show_mp_hierarchy(cl):
     from IPython.display import SVG
     return SVG(mp_hierarchy_svg(cl))
 
+
 formula.show_mp_hierarchy = show_mp_hierarchy
+
 
 @_extend(twa_word)
 class twa_word:
@@ -1162,8 +1176,8 @@ class twa_word:
                 res += '; '
             res += bdd_to_formula(letter, bd).to_str('j')
         if len(res) > 1:
-            res += '; ';
-        res += '\\mathsf{cycle}\\{';
+            res += '; '
+        res += '\\mathsf{cycle}\\{'
         for idx, letter in enumerate(self.cycle):
             if idx:
                 res += '; '
@@ -1201,7 +1215,7 @@ class twa_word:
             'txt': 'text-anchor="start" font-size="20"',
             'red': 'stroke="#ff0000" stroke-width="2"',
             'sml': 'text-anchor="start" font-size="10"'
-            }
+        }
         txt = '''
 <svg height="{h3}" width="{w}" xmlns="http://www.w3.org/2000/svg" version="1.1">
 <rect x="0" y="0" width="{w}" height="{height}" fill="{bgcolor}"/>
@@ -1236,11 +1250,11 @@ class twa_word:
                 if cur != 0:
                     if last == -cur:
                         txt += \
-                        ('<line x1="{x}" y1="{y1}" x2="{x}" y2="{y2}" {red}/>'
+                            ('<line x1="{x}" y1="{y1}" x2="{x}" y2="{y2}" {red}/>'
                              .format(x=xpos*50, y1=ypos*50+5,
                                      y2=ypos*50+45, **d))
                     txt += \
-                    ('<line x1="{x1}" y1="{y}" x2="{x2}" y2="{y}" {red}/>'
+                        ('<line x1="{x1}" y1="{y}" x2="{x2}" y2="{y}" {red}/>'
                          .format(x1=xpos*50, x2=(xpos+1)*50,
                                  y=ypos*50+25-20*cur, **d))
                 last = cur
@@ -1263,5 +1277,6 @@ class twa_word:
 class scc_and_mark_filter:
     def __enter__(self):
         return self
+
     def __exit__(self, exc_type, exc_value, traceback):
         self.restore_acceptance()

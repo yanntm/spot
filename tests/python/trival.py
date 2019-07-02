@@ -39,9 +39,9 @@ assert v4 == spot.trival(spot.trival.maybe_value)
 assert v3
 assert -v2
 assert not -v1
-assert not v1;
+assert not v1
 assert not -v3
 
 for u in (v1, v2, v3):
-  for v in (v1, v2, v3):
-      assert (u & v) == -(-u | -v)
+    for v in (v1, v2, v3):
+        assert (u & v) == -(-u | -v)

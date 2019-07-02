@@ -24,7 +24,7 @@ formulas = [('(Gp0 | Fp1) M 1', False, True),
             ('(p1 | (Fp0 R (p1 W p0))) M 1', True, True),
             ('!G(F(p1 & Fp0) W p1)', False, True),
             ('X(!p0 W Xp1)', False, False),
-            ('FG(p0)', False, True) ]
+            ('FG(p0)', False, True)]
 
 for f, isd, issd in formulas:
     print(f)

@@ -12,7 +12,9 @@ with those stored in the notebook.
 
 from __future__ import print_function
 
-import os,sys,time
+import os
+import sys
+import time
 import base64
 import re
 import pprint
@@ -40,7 +42,7 @@ except ImportError:
     except ImportError:
         try:
             from IPython.zmq.blockingkernelmanager \
-              import BlockingKernelManager as KernelManager
+                import BlockingKernelManager as KernelManager
         except:
             print('IPython is needed to run this script.')
             sys.exit(77)
@@ -51,6 +53,7 @@ try:
 except ImportError:
     from IPython.nbformat import v4 as nbformat
 
+
 def compare_png(a64, b64):
     """compare two b64 PNGs (incomplete)"""
     try:
@@ -60,6 +63,7 @@ def compare_png(a64, b64):
     adata = base64.decodestring(a64)
     bdata = base64.decodestring(b64)
     return True
+
 
 def canonicalize(s, type, ignores):
     """sanitize a string for comparison.
@@ -163,8 +167,8 @@ def canonical_dict(dict, ignores):
     if 'ename' in dict and dict['ename'] == 'CalledProcessError':
         # CalledProcessError message has a final dot in Python 3.6
         dict['evalue'] = \
-          re.sub(r"(' returned non-zero exit status \d+)\.", r'\1',
-                 dict['evalue'])
+            re.sub(r"(' returned non-zero exit status \d+)\.", r'\1',
+                   dict['evalue'])
 
     if 'transient' in dict:
         del dict['transient']
@@ -195,6 +199,7 @@ def compare_outputs(ref, test, ignores=[]):
                            fromfile='expected', tofile='effective')))
         return False
 
+
 def _wait_for_ready_backport(kc):
     """Backport BlockingKernelClient.wait_for_ready from IPython 3"""
     # Wait for kernel info reply on shell channel
@@ -209,6 +214,7 @@ def _wait_for_ready_backport(kc):
             msg = kc.get_iopub_msg(block=True, timeout=1)
         except Empty:
             break
+
 
 def run_cell(kc, cell):
     kc.execute(cell.source)
@@ -295,7 +301,6 @@ def test_notebook(ipynb):
             print("OK")
             successes += 1
 
-
     print("tested notebook %s" % ipynb)
     print("    %3i cells successfully replicated" % successes)
     if failures:
@@ -307,6 +312,7 @@ def test_notebook(ipynb):
     del km
     if failures | errors:
         sys.exit(1)
+
 
 if __name__ == '__main__':
     for ipynb in sys.argv[1:]:

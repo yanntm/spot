@@ -139,8 +139,6 @@ State: 1 [0&1] 0 {4 6 7} [0&!1] 1 {3 6} [!0&1] 0 {4 7} [!0&!1] 1 {0}
 --END--""")
 
 
-
-
 def generic_emptiness2_rec(aut):
     spot.cleanup_acceptance_here(aut, False)
     # Catching 'false' acceptance here is an optimization that could be removed.
@@ -183,6 +181,8 @@ def generic_emptiness2_rec(aut):
     return True
 
 # A very old python version of spot.generic_emptiness_check()
+
+
 def generic_emptiness2(aut):
     old_a = spot.acc_cond(aut.acc())
     res = generic_emptiness2_rec(aut)
@@ -191,6 +191,8 @@ def generic_emptiness2(aut):
     return res
 
 # A more modern python version of spot.generic_emptiness_check()
+
+
 def is_empty1(g):
     si = spot.scc_info_with_options(g, spot.scc_info_options_NONE)
     for scc_num in range(si.scc_count()):
@@ -200,17 +202,21 @@ def is_empty1(g):
             return False
     return True
 
+
 def is_scc_empty1(si, scc_num, acc=None):
-    if acc is None: # acceptance isn't forced, get it from the automaton
+    if acc is None:  # acceptance isn't forced, get it from the automaton
         acc = si.get_aut().acc()
     occur, common = si.acc_sets_of(scc_num), si.common_sets_of(scc_num)
     acc = acc.restrict_to(occur)
     acc = acc.remove(common, False)
-    if acc.is_t(): return False
-    if acc.is_f(): return True
-    if acc.accepting(occur): return False
+    if acc.is_t():
+        return False
+    if acc.is_f():
+        return True
+    if acc.accepting(occur):
+        return False
     for cl in acc.top_disjuncts():
-        fu = cl.fin_unit() # Is there Fin at the top level
+        fu = cl.fin_unit()  # Is there Fin at the top level
         if fu:
             with spot.scc_and_mark_filter(si, scc_num, fu) as filt:
                 filt.override_acceptance(cl.remove(fu, True))
@@ -229,22 +235,25 @@ def is_scc_empty1(si, scc_num, acc=None):
                 return False
     return True
 
+
 def is_empty2(g):
     return is_empty2_rec(spot.scc_and_mark_filter(g, g.acc().fin_unit()))
+
 
 def is_empty2_rec(g):
     si = spot.scc_info_with_options(g, spot.scc_info_options_STOP_ON_ACC)
     if si.one_accepting_scc() >= 0:
         return False
     for scc_num in range(si.scc_count()):
-        if si.is_rejecting_scc(scc_num): # this includes trivial SCCs
+        if si.is_rejecting_scc(scc_num):  # this includes trivial SCCs
             continue
         if not is_scc_empty2(si, scc_num):
             return False
     return True
 
+
 def is_scc_empty2(si, scc_num, acc=None):
-    if acc is None: # acceptance isn't forced, get it from the automaton
+    if acc is None:  # acceptance isn't forced, get it from the automaton
         acc = si.get_aut().acc()
     occur, common = si.acc_sets_of(scc_num), si.common_sets_of(scc_num)
     acc = acc.restrict_to(occur)
@@ -252,7 +261,7 @@ def is_scc_empty2(si, scc_num, acc=None):
     # 3 stop conditions removed here, because they are caught by
     # one_accepting_scc() or is_rejecting_scc() in is_empty2_rec()
     for cl in acc.top_disjuncts():
-        fu = cl.fin_unit() # Is there Fin at the top level
+        fu = cl.fin_unit()  # Is there Fin at the top level
         if fu:
             with spot.scc_and_mark_filter(si, scc_num, fu) as filt:
                 filt.override_acceptance(cl.remove(fu, True))
@@ -271,6 +280,7 @@ def is_scc_empty2(si, scc_num, acc=None):
                 return False
     return True
 
+
 def run_bench(automata):
     for aut in automata:
         # Make sure our three implementation behave identically
@@ -286,5 +296,6 @@ def run_bench(automata):
         if res == 'FFFFF':
             run3 = spot.generic_accepting_run(aut)
             assert run3.replay(spot.get_cout()) is True
+
 
 run_bench([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a11, a360])

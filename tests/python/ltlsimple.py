@@ -23,7 +23,7 @@
 import spot
 import sys
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 a = spot.formula.ap('a')
 b = spot.formula.ap('b')
 c = spot.formula.ap('c')
@@ -31,7 +31,7 @@ c2 = spot.formula.ap('c')
 
 assert c == c2
 
-op  = spot.formula.And([a, b])
+op = spot.formula.And([a, b])
 op2 = spot.formula.And([op, c])
 op3 = spot.formula.And([a, c, b])
 
@@ -55,7 +55,7 @@ assert op4 == op2
 
 del op2, op3, op4
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 a = spot.formula.ap('a')
 b = spot.formula.ap('b')
 c = spot.formula.ap('c')
@@ -65,14 +65,15 @@ F = spot.formula.ff()
 f1 = spot.formula.Equiv(c, a)
 f2 = spot.formula.Implies(a, b)
 f3 = spot.formula.Xor(b, c)
-f4 = spot.formula.Not(f3); del f3
+f4 = spot.formula.Not(f3)
+del f3
 f5 = spot.formula.Xor(F, c)
 
 del a, b, c, T, F, f1, f2, f4, f5
 
 assert spot.fnode_instances_check()
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 assert str([str(x) for x in spot.formula('a &b & c')]) == "['a', 'b', 'c']"
 
 
@@ -83,18 +84,23 @@ def switch_g_f(x):
         return spot.formula.G(switch_g_f(x[0]))
     return x.map(switch_g_f)
 
+
 f = spot.formula('GFa & XFGb & Fc & G(a | b | Fd)')
 assert str(switch_g_f(f)) == 'FGa & XGFb & Gc & F(a | b | Gd)'
 
 x = 0
+
+
 def count_g(f):
     global x
     if f._is(spot.op_G):
         x += 1
+
+
 f.traverse(count_g)
 assert x == 3
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 # The example from tut01.org
 
@@ -106,7 +112,7 @@ Spin syntax:       {f:s}
 Default for shell: echo {f:q} | ...
 LBT for shell:     echo {f:lq} | ...
 Default for CSV:   ...,{f:c},...
-Wring, centered:   {f:w:~^50}""".format(f = formula)
+Wring, centered:   {f:w:~^50}""".format(f=formula)
 
 assert res == """\
 Default output:    a U (b U "$strange[0]=name")
@@ -135,10 +141,13 @@ for (input, output) in [('(a&b)<->b', 'b->(a&b)'),
     assert(f == output)
     assert(spot.are_equivalent(input, output))
 
+
 def myparse(input):
     env = spot.default_environment.instance()
     pf = spot.parse_infix_psl(input, env)
     return pf.f
+
+
 # This used to fail, because myparse would return a pointer
 # to pf.f inside the destroyed pf.
 assert myparse('a U b') == spot.formula('a U b')

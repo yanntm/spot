@@ -46,6 +46,6 @@ for f in spot.randltl(5, 2000):
     assert spot.are_equivalent(n, p)
 
 # Issue #390.
-a = spot.translate('!(GFa -> (GFb & GF(!b & !Xb)))', 'gen', 'det');
-b = spot.to_parity(a);
+a = spot.translate('!(GFa -> (GFb & GF(!b & !Xb)))', 'gen', 'det')
+b = spot.to_parity(a)
 assert a.equivalent_to(b)

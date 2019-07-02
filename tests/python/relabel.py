@@ -37,7 +37,7 @@ assert h == f
 autg = g.translate()
 spot.relabel_here(autg, m)
 assert str(autg.ap()) == \
-  '(spot.formula("a"), spot.formula("b"), spot.formula("c"))'
+    '(spot.formula("a"), spot.formula("b"), spot.formula("c"))'
 assert spot.isomorphism_checker.are_isomorphic(autg, f.translate())
 
 a = spot.formula('a')

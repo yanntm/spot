@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2010, 2011, 2012, 2014 Laboratoire de Recherche et
+# Copyright (C) 2010, 2011, 2012, 2014, 2019 Laboratoire de Recherche et
 # Développement de l'EPITA.
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6
 # (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -26,9 +26,12 @@
 import sys
 from buddy import *
 
-# Build the requirements for all other fields than (i,j) assuming
-# that (i,j) has a queen.
+
 def build(i, j):
+    """
+    Build the requirements for all other fields than (i,j) assuming
+    that (i,j) has a queen.
+    """
     a = b = c = d = bddtrue
 
     # No one in the same column.
@@ -57,7 +60,6 @@ def build(i, j):
 
     global queen
     queen &= a & b & c & d
-
 
 
 # Get the number of queens from the command-line, or default to 8.
@@ -97,7 +99,6 @@ solution = bdd_satone(queen)
 bdd_printset(solution)
 
 from spot import nl_cout
-
 nl_cout()
 
 # Cleanup all BDD variables before calling bdd_done(), otherwise

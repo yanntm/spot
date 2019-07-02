@@ -44,8 +44,8 @@ for str1, isl in l:
     assert isl == pf.f.is_leaf()
     del pf
 
-assert spot.formula('a').is_leaf();
-assert spot.formula('0').is_leaf();
+assert spot.formula('a').is_leaf()
+assert spot.formula('0').is_leaf()
 
 for str1 in ['a * b', 'a xor b', 'a <-> b']:
     pf = spot.parse_infix_boolean(str1, e, False)
@@ -84,70 +84,71 @@ assert f6.errors
 del f6
 
 for (x, msg) in [('{foo[->bug]}', "treating this goto block as [->]"),
-                ('{foo[->', 'missing closing bracket for goto operator'),
-                ('{foo[->3..1]}', "reversed range"),
-                ('{foo[*bug]}', "treating this star block as [*]"),
-                ('{foo[*bug', "missing closing bracket for star"),
-                ('{foo[*3..1]}', "reversed range"),
-                ('{[*3..1]}', "reversed range"),
-                ('{foo[:*bug]}', "treating this fusion-star block as [:*]"),
-                ('{foo[:*3..1]}', "reversed range"),
-                ('{foo[:*bug', "missing closing bracket for fusion-star"),
-                ('{foo[=bug]}', "treating this equal block as [=]"),
-                ('{foo[=bug', "missing closing bracket for equal operator"),
-                ('{foo[=3..1]}', "reversed range"),
-                ('{()}', "treating this brace block as false"),
-                ('{(a b)}', "treating this parenthetical block as false"),
-                ('{(a*}', "missing closing parenthesis"),
-                ('{(a*&)}', "missing right operand for "
-                     + "\"non-length-matching and operator\""),
-                ('{(a*&&)}', "missing right operand for "
-                     + "\"length-matching and operator\""),
-                ('{(a*|)}', "missing right operand for \"or operator\""),
-                ('{a*;}', "missing right operand for \"concat operator\""),
-                ('{a*::b}', "missing right operand for \"fusion operator\""),
-                ('{a* xor }', "missing right operand for \"xor operator\""),
-                ('{a* -> }', "missing right operand for "
-                     + "\"implication operator\""),
-                ('{a <-> <-> b }',
-                     "missing right operand for \"equivalent operator\""),
-                ('{a;b b}', "ignoring this"),
-                ('{*', "missing closing brace"),
-                ('{(a', "missing closing parenthesis"),
-                ('{* a', "ignoring trailing garbage and missing closing brace"),
-                ('F(a b)', "ignoring this"),
-                ('F(-)', "treating this parenthetical block as false"),
-                ('F(', "missing closing parenthesis"),
-                ('F(a b', "ignoring trailing garbage and "
-                     + "missing closing parenthesis"),
-                ('F(-', "missing closing parenthesis"),
-                ('F(-', "parenthetical block as false"),
-                ('a&', "missing right operand for \"and operator\""),
-                ('a*', "missing right operand for \"and operator\""),
-                ('a|', "missing right operand for \"or operator\""),
-                ('a^', "missing right operand for \"xor operator\""),
-                ('a->', "missing right operand for \"implication operator\""),
-                ('a<->', "missing right operand for \"equivalent operator\""),
-                ('!', "missing right operand for \"not operator\""),
-                ('a W', "missing right operand for \"weak until operator\""),
-                ('a U', "missing right operand for \"until operator\""),
-                ('a R', "missing right operand for \"release operator\""),
-                ('a M', "missing right operand for "
-                     + "\"strong release operator\""),
-                ('{a}[]->', "missing right operand for "
-                     + "\"universal overlapping concat operator\""),
-                ('{a}[]=>', "missing right operand for "
-                     + "\"universal non-overlapping concat operator\""),
-                ('{a}<>->', "missing right operand for "
-                     + "\"existential overlapping concat operator\""),
-                ('{a}<>=>', "missing right operand for "
-                     + "\"existential non-overlapping concat operator\""),
-                ('(X)', "missing right operand for \"next operator\""),
-                ('("X)', "unclosed string"),
-                ('("X)', "missing closing parenthesis"),
-                ('{"X', "unclosed string"),
-                ('{"X}', "missing closing brace"),
-                ]:
+                 ('{foo[->', 'missing closing bracket for goto operator'),
+                 ('{foo[->3..1]}', "reversed range"),
+                 ('{foo[*bug]}', "treating this star block as [*]"),
+                 ('{foo[*bug', "missing closing bracket for star"),
+                 ('{foo[*3..1]}', "reversed range"),
+                 ('{[*3..1]}', "reversed range"),
+                 ('{foo[:*bug]}', "treating this fusion-star block as [:*]"),
+                 ('{foo[:*3..1]}', "reversed range"),
+                 ('{foo[:*bug', "missing closing bracket for fusion-star"),
+                 ('{foo[=bug]}', "treating this equal block as [=]"),
+                 ('{foo[=bug', "missing closing bracket for equal operator"),
+                 ('{foo[=3..1]}', "reversed range"),
+                 ('{()}', "treating this brace block as false"),
+                 ('{(a b)}', "treating this parenthetical block as false"),
+                 ('{(a*}', "missing closing parenthesis"),
+                 ('{(a*&)}', "missing right operand for "
+                  + "\"non-length-matching and operator\""),
+                 ('{(a*&&)}', "missing right operand for "
+                  + "\"length-matching and operator\""),
+                 ('{(a*|)}', "missing right operand for \"or operator\""),
+                 ('{a*;}', "missing right operand for \"concat operator\""),
+                 ('{a*::b}', "missing right operand for \"fusion operator\""),
+                 ('{a* xor }', "missing right operand for \"xor operator\""),
+                 ('{a* -> }', "missing right operand for "
+                  + "\"implication operator\""),
+                 ('{a <-> <-> b }',
+                  "missing right operand for \"equivalent operator\""),
+                 ('{a;b b}', "ignoring this"),
+                 ('{*', "missing closing brace"),
+                 ('{(a', "missing closing parenthesis"),
+                 ('{* a',
+                  "ignoring trailing garbage and missing closing brace"),
+                 ('F(a b)', "ignoring this"),
+                 ('F(-)', "treating this parenthetical block as false"),
+                 ('F(', "missing closing parenthesis"),
+                 ('F(a b', "ignoring trailing garbage and "
+                  + "missing closing parenthesis"),
+                 ('F(-', "missing closing parenthesis"),
+                 ('F(-', "parenthetical block as false"),
+                 ('a&', "missing right operand for \"and operator\""),
+                 ('a*', "missing right operand for \"and operator\""),
+                 ('a|', "missing right operand for \"or operator\""),
+                 ('a^', "missing right operand for \"xor operator\""),
+                 ('a->', "missing right operand for \"implication operator\""),
+                 ('a<->', "missing right operand for \"equivalent operator\""),
+                 ('!', "missing right operand for \"not operator\""),
+                 ('a W', "missing right operand for \"weak until operator\""),
+                 ('a U', "missing right operand for \"until operator\""),
+                 ('a R', "missing right operand for \"release operator\""),
+                 ('a M', "missing right operand for "
+                  + "\"strong release operator\""),
+                 ('{a}[]->', "missing right operand for "
+                  + "\"universal overlapping concat operator\""),
+                 ('{a}[]=>', "missing right operand for "
+                  + "\"universal non-overlapping concat operator\""),
+                 ('{a}<>->', "missing right operand for "
+                  + "\"existential overlapping concat operator\""),
+                 ('{a}<>=>', "missing right operand for "
+                  + "\"existential non-overlapping concat operator\""),
+                 ('(X)', "missing right operand for \"next operator\""),
+                 ('("X)', "unclosed string"),
+                 ('("X)', "missing closing parenthesis"),
+                 ('{"X', "unclosed string"),
+                 ('{"X}', "missing closing brace"),
+                 ]:
     f7 = spot.parse_infix_psl(x)
     assert f7.errors
     ostr = spot.ostringstream()
@@ -158,20 +159,20 @@ for (x, msg) in [('{foo[->bug]}', "treating this goto block as [->]"),
     del f7
 
 for (x, msg) in [('a&', "missing right operand for \"and operator\""),
-                ('a*', "missing right operand for \"and operator\""),
-                ('a|', "missing right operand for \"or operator\""),
-                ('a^', "missing right operand for \"xor operator\""),
-                ('a->', "missing right operand for \"implication operator\""),
-                ('a<->', "missing right operand for \"equivalent operator\""),
-                ('(-', "parenthetical block as false"),
-                ('(-', "missing closing parenthesis"),
-                ('(-)', "treating this parenthetical block as false"),
-                ('(a', "missing closing parenthesis"),
-                ('(a b)', "ignoring this"),
-                ('(a b', "ignoring trailing garbage and "
-                     + "missing closing parenthesis"),
-                ('!', "missing right operand for \"not operator\""),
-                ]:
+                 ('a*', "missing right operand for \"and operator\""),
+                 ('a|', "missing right operand for \"or operator\""),
+                 ('a^', "missing right operand for \"xor operator\""),
+                 ('a->', "missing right operand for \"implication operator\""),
+                 ('a<->', "missing right operand for \"equivalent operator\""),
+                 ('(-', "parenthetical block as false"),
+                 ('(-', "missing closing parenthesis"),
+                 ('(-)', "treating this parenthetical block as false"),
+                 ('(a', "missing closing parenthesis"),
+                 ('(a b)', "ignoring this"),
+                 ('(a b', "ignoring trailing garbage and "
+                  + "missing closing parenthesis"),
+                 ('!', "missing right operand for \"not operator\""),
+                 ]:
     f8 = spot.parse_infix_boolean(x)
     assert f8.errors
     ostr = spot.ostringstream()
@@ -182,12 +183,12 @@ for (x, msg) in [('a&', "missing right operand for \"and operator\""),
     del f8
 
 for (x, msg) in [('a->', "missing right operand for \"implication operator\""),
-                ('a<->', "missing right operand for \"equivalent operator\""),
-                ('(aa', "missing closing parenthesis"),
-                ('("aa', "missing closing parenthesis"),
-                ('"(aa', "unclosed string"),
-                ('{aa', "missing closing brace"),
-                ]:
+                 ('a<->', "missing right operand for \"equivalent operator\""),
+                 ('(aa', "missing closing parenthesis"),
+                 ('("aa', "missing closing parenthesis"),
+                 ('"(aa', "unclosed string"),
+                 ('{aa', "missing closing brace"),
+                 ]:
     f9 = spot.parse_infix_psl(x, spot.default_environment.instance(),
                               False, True)
     assert f9.errors

@@ -34,7 +34,8 @@ d = simp.get_dict()
 a = spot.ltl_to_tgba_fm(pf.f, d)
 g = spot.parse_infix_boolean('b&c', e)
 b = simp.as_bdd(g.f)
-buddy.bdd_printset(b); spot.nl_cout()
+buddy.bdd_printset(b)
+spot.nl_cout()
 del g
 
 s0 = a.get_init_state()
@@ -43,11 +44,13 @@ it.first()
 while not it.done():
     c = it.cond()
     sys.stdout.write("%s\n" % c)
-    b &= c # `&=' is defined only in buddy.  So if this statement works
-           # it means buddy can grok spot's objects.
-    buddy.bdd_printset(c); spot.nl_cout()
+    b &= c  # `&=' is defined only in buddy.  So if this statement works
+    # it means buddy can grok spot's objects.
+    buddy.bdd_printset(c)
+    spot.nl_cout()
     it.next()
-buddy.bdd_printset(b); spot.nl_cout()
+buddy.bdd_printset(b)
+spot.nl_cout()
 sys.stdout.write("%s\n" % b)
 del it
 del s0

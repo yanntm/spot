@@ -71,8 +71,8 @@ else:
 try:
     gen.ltl_pattern(gen.LTL_OR_G, -10)
 except RuntimeError as e:
-     assert 'or-g' in str(e)
-     assert 'positive' in str(e)
+    assert 'or-g' in str(e)
+    assert 'positive' in str(e)
 else:
     exit(2)
 

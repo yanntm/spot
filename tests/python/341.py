@@ -20,6 +20,7 @@
 import spot
 from subprocess import _active
 
+
 def two_intersecting_automata():
     """return two random automata with a non-empty intersection"""
     g = spot.automata('randaut -A4 -Q5 -n-1 2 |')
@@ -27,9 +28,10 @@ def two_intersecting_automata():
         if a.intersects(b):
             return a, b
 
+
 for i in range(5):
     two_intersecting_automata()
 
 n = len(_active)
 print(n, "active processes")
-assert(n == 0);
+assert(n == 0)

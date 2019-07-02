@@ -23,27 +23,29 @@ import os
 import shutil
 import sys
 
+
 def tgba(a):
-  if not a.is_existential():
-    a = spot.remove_alternation(a)
-  a = spot.to_generalized_buchi(a)
-  return a
+    if not a.is_existential():
+        a = spot.remove_alternation(a)
+    a = spot.to_generalized_buchi(a)
+    return a
+
 
 def test_aut(aut):
-  stgba = tgba(aut)
-  assert stgba.equivalent_to(aut)
-  os.environ["SPOT_STREETT_CONV_MIN"] = '1'
-  sftgba = tgba(aut)
-  del os.environ["SPOT_STREETT_CONV_MIN"]
-  assert stgba.equivalent_to(sftgba)
+    stgba = tgba(aut)
+    assert stgba.equivalent_to(aut)
+    os.environ["SPOT_STREETT_CONV_MIN"] = '1'
+    sftgba = tgba(aut)
+    del os.environ["SPOT_STREETT_CONV_MIN"]
+    assert stgba.equivalent_to(sftgba)
 
-  slike = spot.simplify_acceptance(aut)
+    slike = spot.simplify_acceptance(aut)
 
-  sltgba = tgba(slike)
-  os.environ["SPOT_STREETT_CONV_MIN"] = "1"
-  slftgba = tgba(slike)
-  del os.environ["SPOT_STREETT_CONV_MIN"]
-  assert sltgba.equivalent_to(slftgba)
+    sltgba = tgba(slike)
+    os.environ["SPOT_STREETT_CONV_MIN"] = "1"
+    slftgba = tgba(slike)
+    del os.environ["SPOT_STREETT_CONV_MIN"]
+    assert sltgba.equivalent_to(slftgba)
 
 # Those automata are generated with ltl2dstar, which is NOT part of spot,
 # using the following command:
@@ -51,11 +53,12 @@ def test_aut(aut):
 # ltldo "ltl2dstar --automata=streett --output-format=hoa\
 #       --ltl2nba=spin:ltl2tgba@-s %L ->%O" -F- --name=%f -H"
 
+
 if shutil.which('ltl2dstar') is None:
-  sys.exit(77)
+    sys.exit(77)
 for a in spot.automata('genltl --eh-patterns --dac-patterns --hkrss-patterns\
                         --sb-patterns |\
                         ltldo "ltl2dstar --automata=streett --output-format=hoa\
                         --ltl2nba=spin:ltl2tgba@-s %L ->%O"\
                         -T5 -F- --name=%f -H|'):
-  test_aut(a)
+    test_aut(a)

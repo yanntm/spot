@@ -29,10 +29,12 @@ GF!b
 (b & GF!b) | (!b & FGb)
 b | (a & XF(b R a)) | (!a & XG(!b U !a))"""
 
+
 def test_phi(phi):
-    a =  spot.translate(phi, 'TGBA', 'SBAcc')
+    a = spot.translate(phi, 'TGBA', 'SBAcc')
     res = spot.to_weak_alternating(spot.dualize(a))
     assert res.equivalent_to(spot.formula.Not(spot.formula(phi)))
+
 
 for p in phi1.split('\n'):
     print(p)

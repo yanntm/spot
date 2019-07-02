@@ -20,6 +20,10 @@
 # Make sure we can leep track of BDD association in Python using bdd_dict, as
 # discussed in issue #372.
 
+
+import spot
+
+
 class bdd_holder:
     def __init__(self, aut):
         self.bdddict = d = aut.get_dict()
@@ -48,9 +52,9 @@ class bdd_holder3:
         self.bdddict.unregister_all_my_variables(self)
 
 
-
 def check_ok():
     assert type(bdict.varnum(spot.formula.ap("a"))) is int
+
 
 def check_nok():
     try:
@@ -60,12 +64,13 @@ def check_nok():
     else:
         raise RuntimeError("missing exception")
 
+
 def debug(txt):
     # print(txt)
     # bdict.dump(spot.get_cout())
     pass
 
-import spot
+
 aut = spot.translate("a U b")
 bdict = aut.get_dict()
 debug("aut")

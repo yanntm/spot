@@ -25,6 +25,7 @@
 import spot
 import buddy
 
+
 def report_missing_exception():
     raise RuntimeError("missing exception")
 
@@ -147,7 +148,7 @@ else:
     report_missing_exception()
 
 try:
-    m = spot.mark_t([0,n,1])
+    m = spot.mark_t([0, n, 1])
 except RuntimeError as e:
     assert "bit index is out of bounds" in str(e)
 else:

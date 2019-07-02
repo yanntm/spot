@@ -25,37 +25,37 @@ bdd_setvarnum(5)
 
 V = [bdd_ithvar(i) for i in range(5)]
 
-a =  V[0] & V[1] & -V[2]
-b =  V[0] & V[1] & -V[2] & -V[3]
+a = V[0] & V[1] & -V[2]
+b = V[0] & V[1] & -V[2] & -V[3]
 c = -V[0] & V[1] & -V[2] & -V[3]
-d =         V[1] & -V[2]
-e =         V[1] &  V[2] & -V[3] & V[4]
-f =  V[0]                & -V[3] & V[4]
+d = V[1] & -V[2]
+e = V[1] & V[2] & -V[3] & V[4]
+f = V[0] & -V[3] & V[4]
 g = -V[0] | V[1]
 
-assert(bdd_implies(b,a))
-assert(not bdd_implies(a,b))
-assert(not bdd_implies(c,a))
-assert(bdd_implies(a,d))
-assert(bdd_implies(b,d))
-assert(bdd_implies(c,d))
-assert(bdd_implies(d,d))
-assert(not bdd_implies(e,d))
-assert(not bdd_implies(d,e))
-assert(not bdd_implies(f,e))
-assert(not bdd_implies(e,f))
-assert(bdd_implies(bddfalse,f))
-assert(not bdd_implies(bddtrue,f))
-assert(bdd_implies(f,bddtrue))
-assert(not bdd_implies(f,bddfalse))
-assert(bdd_implies(a,g))
+assert(bdd_implies(b, a))
+assert(not bdd_implies(a, b))
+assert(not bdd_implies(c, a))
+assert(bdd_implies(a, d))
+assert(bdd_implies(b, d))
+assert(bdd_implies(c, d))
+assert(bdd_implies(d, d))
+assert(not bdd_implies(e, d))
+assert(not bdd_implies(d, e))
+assert(not bdd_implies(f, e))
+assert(not bdd_implies(e, f))
+assert(bdd_implies(bddfalse, f))
+assert(not bdd_implies(bddtrue, f))
+assert(bdd_implies(f, bddtrue))
+assert(not bdd_implies(f, bddfalse))
+assert(bdd_implies(a, g))
 
 a = (-V[2] & (-V[1] | V[0])) | (-V[0] & V[1] & V[2])
 b = V[1] | -V[2]
-assert(bdd_implies(a,b))
+assert(bdd_implies(a, b))
 
 # Cleanup all BDD variables before calling bdd_done(), otherwise
 # bdd_delref will be called after bdd_done() and this is unsafe in
 # optimized builds.
-V = a = b = c = d = e = f = g = 0;
+V = a = b = c = d = e = f = g = 0
 bdd_done()

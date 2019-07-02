@@ -36,7 +36,7 @@ k.new_edge(s3, s3)
 k.new_edge(s3, s2)
 k.set_init_state(s1)
 
-hoa="""HOA: v1
+hoa = """HOA: v1
 States: 3
 Start: 0
 AP: 2 "p1" "p2"

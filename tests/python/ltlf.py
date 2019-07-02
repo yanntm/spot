@@ -30,7 +30,7 @@ formulas = ['GFa', 'FGa', '(GFa) U b',
             '(a M b) W c', 'a W (b M c)',
             '(a U b) R c', 'a R (b U c)',
             '(a W b) M c', 'a M (b W c)',
-           ]
+            ]
 
 # The rewriting assume the atomic proposition will not change
 # once we reache the non-alive part.

@@ -23,10 +23,12 @@ import signal
 import sys
 import os
 
+
 def alarm_handler(signum, frame):
     sys.stdout.write("signaled\n")
     os.kill(child, signal.SIGTERM)
     exit(0)
+
 
 f = """!(G(F(P_Rbt2.observe)&& F(P_Rbt3.observe) &&
 F(P_rbt1.observe)&& F(P_Rbt1.plus || P_Rbt1.moins || P_Rbt1.stop)&&

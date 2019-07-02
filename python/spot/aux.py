@@ -28,6 +28,7 @@ import os
 import errno
 import contextlib
 
+
 def extend(*classes):
     """
     Decorator that extends all the given classes with the contents
@@ -88,6 +89,7 @@ def rm_f(filename):
     except OSError as e:
         if e.errno != errno.ENOENT:
             raise
+
 
 @contextlib.contextmanager
 def tmpdir():

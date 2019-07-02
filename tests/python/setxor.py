@@ -25,25 +25,25 @@ bdd_setvarnum(5)
 
 V = [bdd_ithvar(i) for i in range(5)]
 
-a =  V[0] & -V[1] &  V[2] & -V[3]
-b =  V[0] &  V[1] &  V[2] & -V[3]
-c = -V[0] &  V[1] & -V[2] & -V[3]
+a = V[0] & -V[1] & V[2] & -V[3]
+b = V[0] & V[1] & V[2] & -V[3]
+c = -V[0] & V[1] & -V[2] & -V[3]
 
-assert(c == bdd_setxor(a,b))
-assert(c == bdd_setxor(b,a))
-assert(a == bdd_setxor(b,c))
-assert(a == bdd_setxor(c,b))
-assert(b == bdd_setxor(a,c))
-assert(b == bdd_setxor(c,a))
+assert(c == bdd_setxor(a, b))
+assert(c == bdd_setxor(b, a))
+assert(a == bdd_setxor(b, c))
+assert(a == bdd_setxor(c, b))
+assert(b == bdd_setxor(a, c))
+assert(b == bdd_setxor(c, a))
 
-d =          V[1] &  V[2] & -V[3] & V[4]
-e =  V[0] &  V[1] & -V[2] & -V[3] & V[4]
+d = V[1] & V[2] & -V[3] & V[4]
+e = V[0] & V[1] & -V[2] & -V[3] & V[4]
 
-assert(e == bdd_setxor(a,d))
-assert(e == bdd_setxor(d,a))
+assert(e == bdd_setxor(a, d))
+assert(e == bdd_setxor(d, a))
 
 # Cleanup all BDD variables before calling bdd_done(), otherwise
 # bdd_delref will be called after bdd_done() and this is unsafe in
 # optimized builds.
-V = a = b = c = d = e = 0;
+V = a = b = c = d = e = 0
 bdd_done()

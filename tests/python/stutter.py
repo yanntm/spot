@@ -24,6 +24,7 @@
 
 import spot
 
+
 def explain_stut(f):
     f = spot.formula(f)
     pos = spot.translate(f)
@@ -40,6 +41,7 @@ def explain_stut(f):
     word2 = spot.sl2(waut).intersecting_word(aut)
     word2.simplify()
     return(word, word2)
+
 
 # Test from issue #388
 w1, w2 = explain_stut('{(a:b) | (a;b)}|->Gc')

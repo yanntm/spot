@@ -26,5 +26,5 @@ s = ""
 for aut2 in si.split_on_sets(0, [0]):
     # This call to to_str() used to fail because split_on_sets had not
     # registered the atomic propositions of aut
-    s += aut2.to_str();
+    s += aut2.to_str()
 assert spot.automaton(s).num_states() == 8

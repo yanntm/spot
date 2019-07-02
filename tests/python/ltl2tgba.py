@@ -28,6 +28,7 @@ import sys
 import getopt
 import spot
 
+
 def usage(prog):
     sys.stderr.write("""Usage: %s [OPTIONS...] formula
 

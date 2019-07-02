@@ -46,37 +46,39 @@ rg = spot.randltlgenerator(2, opts)
 
 dict = spot.make_bdd_dict()
 
+
 def produce_phi(rg, n):
-  phi = []
-  while len(phi) < n:
-    f = rg.next()
-    if f.is_syntactic_persistence():
-      phi.append(f)
-  return phi
+    phi = []
+    while len(phi) < n:
+        f = rg.next()
+        if f.is_syntactic_persistence():
+            phi.append(f)
+    return phi
+
 
 phi1 = produce_phi(rg, 1000)
 phi2 = produce_phi(rg, 1000)
 inputres = []
 aut = []
 for p in zip(phi1, phi2):
-  inputres.append(spot.formula.Or(p))
-  a1 = spot.ltl_to_tgba_fm(p[0], dict)
-  a2 = spot.ltl_to_tgba_fm(p[1], dict)
-  aut.append(spot.to_generalized_buchi( \
-      spot.remove_alternation(spot.sum(a1, a2), True)))
+    inputres.append(spot.formula.Or(p))
+    a1 = spot.ltl_to_tgba_fm(p[0], dict)
+    a2 = spot.ltl_to_tgba_fm(p[1], dict)
+    aut.append(spot.to_generalized_buchi(
+        spot.remove_alternation(spot.sum(a1, a2), True)))
 
 for p in zip(aut, inputres):
-  assert p[0].equivalent_to(p[1])
+    assert p[0].equivalent_to(p[1])
 
 aut = []
 inputres = []
 
 for p in zip(phi1, phi2):
-  inputres.append(spot.formula.And(p))
-  a1 = spot.ltl_to_tgba_fm(p[0], dict)
-  a2 = spot.ltl_to_tgba_fm(p[1], dict)
-  aut.append(spot.to_generalized_buchi( \
-      spot.remove_alternation(spot.sum_and(a1, a2), True)))
+    inputres.append(spot.formula.And(p))
+    a1 = spot.ltl_to_tgba_fm(p[0], dict)
+    a2 = spot.ltl_to_tgba_fm(p[1], dict)
+    aut.append(spot.to_generalized_buchi(
+        spot.remove_alternation(spot.sum_and(a1, a2), True)))
 
 for p in zip(aut, inputres):
-  assert p[0].equivalent_to(p[1])
+    assert p[0].equivalent_to(p[1])
