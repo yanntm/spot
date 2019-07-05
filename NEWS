@@ -140,7 +140,7 @@ New in spot 2.7.5.dev (not yet released)
     properties.  This can be altered with the SPOT_PR_CHECK
     environment variable.
 
-  Backward incompatibilities:
+  Deprecation notices:
 
   - The virtual function twa::intersecting_run() no longuer takes a
     second "from_other" Boolean argument.  This is a backward
@@ -148,6 +148,11 @@ New in spot 2.7.5.dev (not yet released)
     subclass.  For backward compatibility with programs that simply
     call this function with two argument, a non-virtual version of the
     function has been introduced and marked as deprecated.
+
+  - The spot::acc_cond::format() methods have been deprecated.  These
+    were used to display acceptance marks, but acceptance marks are
+    unrelated to acceptance conditions, so it's better to simply print
+    marks with operator<< without this extra step.
 
   Bugs fixed:
 

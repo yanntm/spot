@@ -406,6 +406,13 @@ namespace spot
 
       SPOT_API
       friend std::ostream& operator<<(std::ostream& os, mark_t m);
+
+      std::string as_string() const
+      {
+        std::ostringstream os;
+        os << *this;
+        return os.str();
+      }
     };
 
     /// \brief Operators for acceptance formulas.
@@ -1842,20 +1849,22 @@ namespace spot
     /// that the condition is satisfied.
     mark_t accepting_sets(mark_t inf) const;
 
-    // FIXME: deprecate?
+    // Deprecated since Spot 2.8
+    SPOT_DEPRECATED("Use operator<< instead.")
     std::ostream& format(std::ostream& os, mark_t m) const
     {
-      auto a = m; // ???
-      if (!a)
+      if (!m)
         return os;
       return os << m;
     }
 
-    // FIXME: deprecate?
+    // Deprecated since Spot 2.8
+    SPOT_DEPRECATED("Use operator<< or mark_t::as_string() instead.")
     std::string format(mark_t m) const
     {
       std::ostringstream os;
-      format(os, m);
+      if (m)
+        os << m;
       return os.str();
     }
 

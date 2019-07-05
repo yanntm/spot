@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-x
-// Copyright (C) 2014, 2015, 2017, 2018 Laboratoire de Recherche et
+// Copyright (C) 2014, 2015, 2017, 2018, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -28,9 +28,7 @@
 
 static void check(spot::acc_cond& ac, spot::acc_cond::mark_t m)
 {
-  std::cout << '#' << m.count() << ": " << ac.format(m);
-  if (!m)
-    std::cout << "empty";
+  std::cout << '#' << m.count() << ": " << m;
   if (ac.accepting(m))
     std::cout << " accepting";
   std::cout << '\n';

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2013-2016, 2018, 2019 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -207,24 +207,24 @@ public:
     /// \brief Use this function to get a string representation of a transition.
     std::string
     format_t(bdd_dict_ptr& debug_dict, unsigned src, bdd& cond,
-        unsigned dst);
+             unsigned dst);
 
     /// \brief Use this function to get a string representation of a transition
     /// acc.
     std::string
-    format_ta(bdd_dict_ptr& debug_dict, const acc_cond* debug_cand_acc,
-        unsigned src, bdd& cond, unsigned dst, const acc_cond::mark_t& acc);
+    format_ta(bdd_dict_ptr& debug_dict, unsigned src, bdd& cond, unsigned dst,
+              const acc_cond::mark_t& acc);
 
     /// \brief Use this function to get a string representation of a path var.
     std::string
-    format_p(const acc_cond* debug_cand_acc, const acc_cond* debug_ref_acc,
-        unsigned src_cand, unsigned src_ref, unsigned dst_cand,
-        unsigned dst_ref, acc_cond::mark_t acc_cand, acc_cond::mark_t acc_ref);
+    format_p(unsigned src_cand, unsigned src_ref,
+             unsigned dst_cand, unsigned dst_ref,
+             acc_cond::mark_t acc_cand, acc_cond::mark_t acc_ref);
 
     /// \brief Use this function to get a string representation of a path var.
     std::string
-    format_p(unsigned src_cand, unsigned src_ref, unsigned dst_cand,
-        unsigned dst_ref);
+    format_p(unsigned src_cand, unsigned src_ref,
+             unsigned dst_cand, unsigned dst_ref);
   };
 
   /// \brief Give a filename to save the log of the SAT minimization.

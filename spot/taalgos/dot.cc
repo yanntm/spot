@@ -1,6 +1,7 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2012, 2014-2016, 2018 Laboratoire de Recherche
-// et Developpement de l Epita (LRDE).
+
+// Copyright (C) 2010, 2012, 2014-2016, 2018-2019 Laboratoire de
+// Recherche et Developpement de l Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -239,8 +240,7 @@ namespace spot
         if (!opt_hide_sets_)
           {
             label += "\n";
-            label += t_automata_->acc().
-              format(si->acc());
+            label += si->acc().as_string();
           }
 
         os_ << "  " << in << " -> " << out << " [label=\"";

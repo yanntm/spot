@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2018 Laboratoire de Recherche
+// Copyright (C) 2013-2019 Laboratoire de Recherche
 // et Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -63,8 +63,6 @@ namespace spot
   namespace
   {
     static bdd_dict_ptr debug_dict = nullptr;
-    static const acc_cond* debug_ref_acc = nullptr;
-    static const acc_cond* debug_cand_acc = nullptr;
 
     struct path
     {
@@ -333,15 +331,14 @@ namespace spot
       std::string
       fmt_ta(unsigned src, bdd& cond, unsigned dst, unsigned nacc)
       {
-        return helper.format_ta(debug_dict, debug_cand_acc, src, cond,
-            dst, cacc.mark(nacc));
+        return helper.format_ta(debug_dict, src, cond, dst, cacc.mark(nacc));
       }
 
       std::string
       fmt_ta(unsigned src, unsigned cond, unsigned dst, unsigned nacc)
       {
-        return helper.format_ta(debug_dict, debug_cand_acc, src,
-            alpha_vect[cond], dst, cacc.mark(nacc));
+        return helper.format_ta(debug_dict, src,
+                                alpha_vect[cond], dst, cacc.mark(nacc));
       }
 
       std::string
@@ -349,8 +346,8 @@ namespace spot
           unsigned dst_ref, acc_cond::mark_t acc_cand = {},
           acc_cond::mark_t acc_ref = {})
       {
-        return helper.format_p(debug_cand_acc, debug_ref_acc, src_cand,
-            src_ref, dst_cand, dst_ref, acc_cand, acc_ref);
+        return helper.format_p(src_cand, src_ref, dst_cand, dst_ref,
+                               acc_cand, acc_ref);
       }
 
       acc_cond::mark_t
@@ -568,8 +565,6 @@ namespace spot
       assert(d.cand_size > 0);
 
 #if TRACE
-      debug_ref_acc = &ref->acc();
-      debug_cand_acc = &d.cacc;
       solver.comment("d.ref_size:", d.ref_size, '\n');
       solver.comment("d.cand_size:", d.cand_size, '\n');
 #endif

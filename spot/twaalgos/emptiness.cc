@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011-2018 Laboratoire de Recherche et
+// Copyright (C) 2009, 2011-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -632,7 +632,7 @@ namespace spot
               {
                 os << "ERROR: no transition with label="
                    << bdd_format_formula(aut->get_dict(), label)
-                   << " and acc=" << aut->acc().format(acc)
+                   << " and acc=" << acc
                    << " leaving state " << serial
                    << " for state " << aut->format_state(next) << '\n'
                    << "The following transitions leave state " << serial
@@ -644,9 +644,7 @@ namespace spot
                       os << "  * label="
                          << bdd_format_formula(aut->get_dict(),
                                                j->cond())
-                         << " and acc="
-                         << (aut->acc().format
-                             (j->acc()))
+                         << " and acc=" << j->acc()
                          << " going to " << aut->format_state(s2) << '\n';
                       s2->destroy();
                     }
@@ -660,20 +658,19 @@ namespace spot
           {
             os << "transition with label="
                << bdd_format_formula(aut->get_dict(), label)
-               << " and acc=" << aut->acc().format(acc)
-               << std::endl;
+               << " and acc=" << acc << std::endl;
           }
         else
           {
             os << "  |  ";
             bdd_print_formula(os, aut->get_dict(), label);
-            os << '\t';
-            aut->acc().format(acc);
+            if (acc)
+              os << '\t' << acc;
             os << std::endl;
           }
         aut->release_iter(j);
 
-        // Sum acceptance conditions.
+        // Sum acceptance marks.
         //
         // (Beware l and i designate the next step to consider.
         // Therefore if i is at the beginning of the cycle, `acc'
@@ -686,8 +683,8 @@ namespace spot
               {
                 all_acc_seen = true;
                 if (debug)
-                  os << "all acceptance conditions ("
-                     << aut->acc().format(all_acc)
+                  os << "all acceptance marks ("
+                     << all_acc
                      << ") have been seen\n";
               }
           }
@@ -696,10 +693,10 @@ namespace spot
     if (!aut->acc().accepting(all_acc))
       {
         if (debug)
-          os << "ERROR: The cycle's acceptance conditions ("
-             << aut->acc().format(all_acc)
-             << ") do not\nmatch those of the automaton ("
-             << aut->acc().format(aut->acc().all_sets())
+          os << "ERROR: The cycle's acceptance marks ("
+             << all_acc
+             << ") do not satisfy the acceptance condition ("
+             << aut->get_acceptance()
              << ")\n";
         return false;
       }

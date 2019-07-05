@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -97,7 +97,7 @@ namespace spot
 
   std::string
   vars_helper::format_t(bdd_dict_ptr& debug_dict, unsigned src, bdd& cond,
-      unsigned dst)
+                        unsigned dst)
   {
     std::ostringstream buffer;
     buffer << '<' << src << ',' << bdd_format_formula(debug_dict, cond)
@@ -107,31 +107,30 @@ namespace spot
 
   std::string
   vars_helper::format_ta(bdd_dict_ptr& debug_dict,
-      const acc_cond* debug_cand_acc, unsigned src, bdd& cond, unsigned dst,
-      const acc_cond::mark_t& acc)
+                         unsigned src, bdd& cond, unsigned dst,
+                         const acc_cond::mark_t& acc)
   {
     std::ostringstream buffer;
     buffer << '<' << src << ',' << bdd_format_formula(debug_dict, cond)
-      << ',' << debug_cand_acc->format(acc) << ',' << dst << '>';
+           << ',' << acc << ',' << dst << '>';
     return buffer.str();
   }
 
   std::string
-  vars_helper::format_p(const acc_cond* debug_cand_acc,
-      const acc_cond* debug_ref_acc, unsigned src_cand, unsigned src_ref,
-      unsigned dst_cand, unsigned dst_ref, acc_cond::mark_t acc_cand,
-      acc_cond::mark_t acc_ref)
+  vars_helper::format_p(unsigned src_cand, unsigned src_ref,
+                        unsigned dst_cand, unsigned dst_ref,
+                        acc_cond::mark_t acc_cand, acc_cond::mark_t acc_ref)
   {
     std::ostringstream buffer;
     buffer << '<' << src_cand << ',' << src_ref << ',' << dst_cand << ','
-      << dst_ref << ", " << debug_cand_acc->format(acc_cand) << ", "
-      << debug_ref_acc->format(acc_ref) << '>';
+           << dst_ref << ", " << acc_cand << ", "
+           << acc_ref << '>';
     return buffer.str();
   }
 
   std::string
   vars_helper::format_p(unsigned src_cand, unsigned src_ref, unsigned dst_cand,
-      unsigned dst_ref)
+                        unsigned dst_ref)
   {
     std::ostringstream buffer;
     buffer << '<' << src_cand << ',' << src_ref;
