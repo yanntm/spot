@@ -27,7 +27,7 @@ New in spot 2.7.5.dev (not yet released)
   - Due to some new simplification of parity acceptance, the output of
     "ltl2tgba -P -D" is now using a minimal number of colors.  This
     means that recurrence properties have an acceptance condition
-    amongst "Inf(0)", "t", or "f", and persistance properties have an
+    among "Inf(0)", "t", or "f", and persistance properties have an
     acceptance condition among "Fin(0)", "t", or "f".
 
   Documentation:
@@ -72,9 +72,10 @@ New in spot 2.7.5.dev (not yet released)
     helpful to display automata as "graphs", e.g., when illustrating
     algorithms that do not care about labels.
 
-  - A new complement() function returns complementd automata with
-    unspecified acceptance condition.  The output can be alternating
-    only if the input was alternating.
+  - A new complement() function returns complemented automata with
+    unspecified acceptance condition, allowing different algorithms to
+    be used.  The output can be alternating only if the input was
+    alternating.
 
   - There is a new class output_aborter that is used to specify
     upper bounds on the size of automata produced by some algorithms.
