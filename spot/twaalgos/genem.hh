@@ -26,6 +26,11 @@ namespace spot
 {
   /// \ingroup emptiness_check_algorithms
   /// \brief Emptiness check of an automaton, for any acceptance condition.
+  ///
+  /// Currently only implemented for twa_graph automata, i.e., not automata
+  /// constructed on-the-fly.
+  ///
+  /// \cite baier.19.atva
   SPOT_API bool
   generic_emptiness_check(const const_twa_graph_ptr& aut);
 
@@ -33,11 +38,16 @@ namespace spot
   /// \brief Accepting run search in an automaton, for any acceptance condition.
   /// \return An accepting run over the automaton, or nullptr if the language is
   /// empty.
+  ///
+  /// Currently only implemented for twa_graph automata, i.e., not automata
+  /// constructed on-the-fly.
   SPOT_API twa_run_ptr
   generic_accepting_run(const const_twa_graph_ptr& aut);
 
   /// \ingroup emptiness_check_algorithms
   /// \brief Emptiness check of one SCC, for any acceptance condition.
+  ///
+  /// \cite baier.19.atva
   SPOT_API bool
   generic_emptiness_check_for_scc(const scc_info& si, unsigned scc);
 
@@ -46,6 +56,8 @@ namespace spot
   ///
   /// This version makes it possible to ignore the acceptance
   /// condition of the automaton, and use \a forced_acc.
+  ///
+  /// \cite baier.19.atva
   SPOT_API bool
   generic_emptiness_check_for_scc(const scc_info& si, unsigned scc,
                                   const acc_cond& forced_acc);
