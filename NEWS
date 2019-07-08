@@ -112,13 +112,21 @@ New in spot 2.7.5.dev (not yet released)
   - spot::relabel_apply() makes it easier to reverse the effect
     of spot::relabel() or spot::relabel_bse() on formula.
 
-  - The LTL simplifier learned the following optional rules:
+  - The LTL simplifier learned the following rules:
     F(G(a | Fb)) = FGa | GFb  (if option "favor_event_univ")
     G(F(a | Gb)) = GFa | FGb  (if option "favor_event_univ")
     F(G(a & Fb) = FGa & GFb   (unless option "reduce_size_strictly")
     G(F(a & Gb)) = GFa & FGb  (unless option "reduce_size_strictly")
     GF(f) = GF(dnf(f))        (unless option "reduce_size_strictly")
     FG(f) = FG(cnf(f))        (unless option "reduce_size_strictly")
+    (f & g) R h = f R h       if h implies g
+    (f & g) M h = f M h       if h implies g
+    (f | g) W h = f W h       if g implies h
+    (f | g) U h = f U h       if g implies h
+    Gf | F(g & eventual) = f W (g & eventual)    if !f implies g
+    Ff & G(g | universal) = f M (g | universal)  if f implies !g
+    f U (g & eventual) = F(g & eventual)         if !f implies g
+    f R (g | universal) = G(g | universal)       if f implies !g
 
   - cleanup_parity() and colorize_parity() were cleaned up a bit,
     resulting in fewer colors used in some cases.  In particular,

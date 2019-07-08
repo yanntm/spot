@@ -1857,6 +1857,7 @@ are counted as one.
 \text{if~} & f\simp h        &  & \text{~then~} & (f\U g) \U h        & \equiv g \U h             \\
 \text{if~} & f\simp h        &  & \text{~then~} & (f\W g) \U h        & \equiv g \U h             \\
 \text{if~} & g\simp h        &  & \text{~then~} & (f\U g) \U h        & \equiv (f \U g) \OR h     \\
+\text{if~} & g\simp h        &  & \text{~then~} & (f\OR g) \U h       & \equiv f \U h             \\
 \text{if~} & (\NOT f)\simp g &  & \text{~then~} & f\W g               & \equiv \1                 \\
 \text{if~} & \flessg         &  & \text{~then~} & f\W g               & \equiv f                  \\
 \text{if~} & f\simp g        &  & \text{~then~} & f\W g               & \equiv g                  \\
@@ -1868,6 +1869,7 @@ are counted as one.
 \text{if~} & f\simp h        &  & \text{~then~} & (f\W g) \W h        & \equiv g \W h             \\
 \text{if~} & g\simp h        &  & \text{~then~} & (f\W g) \W h        & \equiv (f \W g) \OR h     \\
 \text{if~} & g\simp h        &  & \text{~then~} & (f\U g) \W h        & \equiv (f \U g) \OR h     \\
+\text{if~} & g\simp h        &  & \text{~then~} & (f\OR g) \W h       & \equiv f \W h             \\
 \text{if~} & \flessg         &  & \text{~then~} & f\R g               & \equiv f                  \\
 \text{if~} & g\simp f        &  & \text{~then~} & f\R g               & \equiv g                  \\
 \text{if~} & g\simp \NOT f   &  & \text{~then~} & f\R g               & \equiv \G g               \\
@@ -1879,6 +1881,7 @@ are counted as one.
 \text{if~} & h\simp f        &  & \text{~then~} & (f\M g) \R h        & \equiv g \R h             \\
 \text{if~} & g\simp h        &  & \text{~then~} & (f\R g) \R h        & \equiv (f \AND g) \R h    \\
 \text{if~} & g\simp h        &  & \text{~then~} & (f\M g) \R h        & \equiv (f \AND g) \R h    \\
+\text{if~} & h\simp g        &  & \text{~then~} & (f\AND g) \R h      & \equiv f \R h             \\
 \text{if~} & \flessg         &  & \text{~then~} & f\M g               & \equiv f                  \\
 \text{if~} & g\simp f        &  & \text{~then~} & f\M g               & \equiv g                  \\
 \text{if~} & g\simp \NOT f   &  & \text{~then~} & f\M g               & \equiv \0                 \\
@@ -1888,12 +1891,24 @@ are counted as one.
 \text{if~} & h\simp f        &  & \text{~then~} & (f\M g) \M h        & \equiv g \M h             \\
 \text{if~} & h\simp f        &  & \text{~then~} & (f\R g) \M h        & \equiv g \M h             \\
 \text{if~} & g\simp h        &  & \text{~then~} & (f\M g) \M h        & \equiv (f \AND g) \M h    \\
+\text{if~} & h\simp g        &  & \text{~then~} & (f\AND g) \M h      & \equiv f \M h             \\
 \end{alignat*}
 \endgroup
 
 Many of the above rules were collected from the
 literature~\cite{somenzi.00.cav,tauriainen.03.tr,babiak.12.tacas} and
 sometimes generalized to support operators such as $\M$ and $\W$.
+
+The following rules mix implication-based checks with formulas that
+are pure eventualities ($e$) or that are purely universal ($u$).
+
+\allowdisplaybreaks
+\begin{alignat*}{3}
+\text{if~} & (\NOT f)\simp g  &  & \text{~then~} & f \U (g \AND e)        & \equiv \F(g \AND e)    \\
+\text{if~} & f\simp \NOT g    &  & \text{~then~} & f \R (g \OR u)         & \equiv \G(g \OR e)     \\
+\text{if~} & (\NOT f) \simp g &  & \text{~then~} & \G(f) \OR \F(g \AND e) & \equiv f \W (g \AND e) \\
+\text{if~} & f \simp\NOT g    &  & \text{~then~} & \F(f) \AND \G(g \OR e) & \equiv f \M (g \OR e)  \\
+\end{alignat*}
 
 \appendix
 \chapter{Defining LTL with only one of $\U$, $\W$, $\R$, or $\M$}

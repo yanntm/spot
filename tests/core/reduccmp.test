@@ -298,16 +298,35 @@ a W ((a&b) W c), a W c
 (a R b) M (c&a), b M (c&a)
 (a M b) M (c&a), b M (c&a)
 
-(a R (b&c)) R (c), (a&b&c) R c
-(a M (b&c)) R (c), (a&b&c) R c
+(x M y) M y, x M y
+(x R y) R y, x R y
+(x & y) M y, x M y
+(x & y) R y, x R y
+
+(a R (b&c)) R (c), (a&b) R c
+(a M (b&c)) R (c), (a&b) R c
 # not reduced
 (a R (b&c)) M (c), (a R (b&c)) M (c)
-(a M (b&c)) M (c), (a&b&c) M c
+(a M (b&c)) M (c), (a&b) M c
 (a W (c&b)) W b, (a W (c&b)) | b
 (a U (c&b)) W b, (a U (c&b)) | b
 (a U (c&b)) U b, (a U (c&b)) | b
 # not reduced
 (a W (c&b)) U b, (a W (c&b)) U b
+
+!x U (x & Fa), F(x & Fa)
+!x R (x | Ga), G(x | Ga)
+!x U ((x | c) & Fa & Fb), F((x | c) & Fa & Fb)
+!x R ((x & c) | Ga | Gb), G((x & c) | Ga | Gb)
+
+G!f | F((f|g) & Fa & Fb), !f W ((f | g) & Fa & Fb)
+F!f & G((f&g) | Ga | Gb), !f M ((f & g) | Ga | Gb)
+
+(x|b) W (x|a), b W (x|a)
+(x|b) U (x|a), b U (x|a)
+
+!x U ((x | c) & Fa & Fb), F((x | c) & Fa & Fb)
+!x R ((x & c) | Ga | Gb), G((x & c) | Ga | Gb)
 
 # Eventuality and universality class reductions
 Fa M b, Fa & b

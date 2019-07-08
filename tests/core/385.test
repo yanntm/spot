@@ -36,7 +36,7 @@ EOF
 # Some of the following are still not optimal.
 cat >expected <<EOF
 1,GF(!a | !d | !e)
-6,G(Gc | F(a | (!c & F!e)))
+6,G(Fa | (c W (!c & F!e)))
 2,Ge | G(Fd & FGe & Fc)
 1,F(G(Fb & FGc) | Ge)
 4,G(F!d | (!c & G!b))

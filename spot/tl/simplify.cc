@@ -2160,6 +2160,31 @@ namespace spot
                 // if c => b, then (a U c) U b = (a U c) | b
                 if (a.is(op::U) && c_->implication(a[1], b))
                   return recurse(formula::Or({a, b}));
+                // if g => h, then (f|g) U h = f U h
+                if (a.is(op::Or))
+                  {
+                    unsigned n = a.size();
+                    for (unsigned child = 0; child < n; ++child)
+                      if (c_->implication(a[child], b))
+                        return recurse(formula::U(a.all_but(child), b));
+                  }
+                // a U (b & e) = F(b & e) if !b => a
+                if (b.is(op::And))
+                  for (formula c: b)
+                    if (c.is_eventual())
+                      {
+                        // We know there is one pure eventuality
+                        // formula but we might have more.  So lets
+                        // extract everything else.
+                        vec rest;
+                        rest.reserve(c.size());
+                        for (formula cc: b)
+                          if (!cc.is_eventual())
+                            rest.emplace_back(cc);
+                        if (c_->implication_neg(formula::And(rest), a, false))
+                          return recurse(formula::F(b));
+                        break;
+                      }
                 break;
 
               case op::R:
@@ -2198,6 +2223,31 @@ namespace spot
                         return recurse(formula::R(ac, b));
                       }
                   }
+                // if h => g, then (f&g) R h = f R h
+                if (a.is(op::And))
+                  {
+                    unsigned n = a.size();
+                    for (unsigned child = 0; child < n; ++child)
+                      if (c_->implication(b, a[child]))
+                        return recurse(formula::R(a.all_but(child), b));
+                  }
+                // a R (b | u) = G(b | u) if b => !a
+                if (b.is(op::Or))
+                  for (formula c: b)
+                    if (c.is_universal())
+                      {
+                        // We know there is one purely universal
+                        // formula but we might have more.  So lets
+                        // extract everything else.
+                        vec rest;
+                        rest.reserve(c.size());
+                        for (formula cc: b)
+                          if (!cc.is_universal())
+                            rest.emplace_back(cc);
+                        if (c_->implication_neg(formula::Or(rest), a, true))
+                          return recurse(formula::G(b));
+                        break;
+                      }
                 break;
 
               case op::W:
@@ -2234,6 +2284,14 @@ namespace spot
                 // if c => b, then (a U c) W b = (a U c) | b
                 if (a.is(op::U, op::W) && c_->implication(a[1], b))
                   return recurse(formula::Or({a, b}));
+                // if g => h, then (f|g) W h = f M h
+                if (a.is(op::Or))
+                  {
+                    unsigned n = a.size();
+                    for (unsigned child = 0; child < n; ++child)
+                      if (c_->implication(a[child], b))
+                        return recurse(formula::W(a.all_but(child), b));
+                  }
                 break;
 
               case op::M:
@@ -2265,6 +2323,14 @@ namespace spot
                   return
                     recurse(formula::M(formula::And({a[0], a[1]}),
                                        b));
+                // if h => g, then (f&g) M h = f M h
+                if (a.is(op::And))
+                  {
+                    unsigned n = a.size();
+                    for (unsigned child = 0; child < n; ++child)
+                      if (c_->implication(b, a[child]))
+                        return recurse(formula::M(a.all_but(child), b));
+                  }
                 break;
 
               default:
@@ -2680,6 +2746,7 @@ namespace spot
                   // F(a) & (a M b) = a M b
                   // F(b) & (a W b) = a U b
                   // F(b) & (a U b) = a U b
+                  // F(c) & G(phi | e) = c M (phi | e)  if c => !phi.
                   typedef std::unordered_map<formula, vec::iterator> fmap_t;
                   fmap_t uwmap; // associates "b" to "a U b" or "a W b"
                   fmap_t rmmap; // associates "a" to "a R b" or "a M b"
@@ -2760,6 +2827,43 @@ namespace spot
                             {
                               *j->second = formula::M(bo[0], bo[1]);
                               assert(j->second->is(op::M));
+                            }
+                        }
+                      if (opt_.synt_impl | opt_.containment_checks)
+                        {
+                          // if the input looks like o1|u1|u2|o2,
+                          // return o1 | o2.  The input must have at
+                          // least on universal formula.
+                          auto extract_not_un =
+                            [&](formula f) {
+                              if (f.is(op::Or))
+                                for (auto u: f)
+                                  if (u.is_universal())
+                                    {
+                                      vec phi;
+                                      phi.reserve(f.size());
+                                      for (auto uu: f)
+                                        if (!uu.is_universal())
+                                          phi.push_back(uu);
+                                      return formula::Or(phi);
+                                    }
+                              return formula(nullptr);
+                            };
+
+                          // F(c) & G(phi | e) = c M (phi | e)  if  c => !phi.
+                          for (auto in_g = s.res_G->begin();
+                               in_g != s.res_G->end();)
+                            {
+                              if (formula phi = extract_not_un(*in_g))
+                                if (c_->implication_neg(phi, c, true))
+                                  {
+                                    s.res_other->push_back(formula::M(c,
+                                                                      *in_g));
+                                    in_g = s.res_G->erase(in_g);
+                                    superfluous = true;
+                                    continue;
+                                  }
+                              ++in_g;
                             }
                         }
                       if (superfluous)
@@ -3273,6 +3377,7 @@ namespace spot
                   // G(a) | (a W b) = a W b
                   // G(b) | (a R b) = a R b.
                   // G(b) | (a M b) = a R b.
+                  // G(c) | F(phi & e) = c W (phi & e)  if  !c => phi.
                   typedef std::unordered_map<formula, vec::iterator> fmap_t;
                   fmap_t uwmap; // associates "a" to "a U b" or "a W b"
                   fmap_t rmmap; // associates "b" to "a R b" or "a M b"
@@ -3353,6 +3458,43 @@ namespace spot
                             {
                               *j->second = formula::R(bo[0], bo[1]);
                               assert(j->second->is(op::R));
+                            }
+                        }
+                      if (opt_.synt_impl | opt_.containment_checks)
+                        {
+                          // if the input looks like o1&e1&e2&o2,
+                          // return o1 & o2.  The input must have at
+                          // least on eventual formula.
+                          auto extract_not_ev =
+                            [&](formula f) {
+                              if (f.is(op::And))
+                                for (auto e: f)
+                                  if (e.is_eventual())
+                                    {
+                                      vec phi;
+                                      phi.reserve(f.size());
+                                      for (auto ee: f)
+                                        if (!ee.is_eventual())
+                                          phi.push_back(ee);
+                                      return formula::And(phi);
+                                    }
+                              return formula(nullptr);
+                            };
+
+                          // G(c) | F(phi & e) = c W (phi & e)  if  !c => phi.
+                          for (auto in_f = s.res_F->begin();
+                               in_f != s.res_F->end();)
+                            {
+                              if (formula phi = extract_not_ev(*in_f))
+                                if (c_->implication_neg(c, phi, false))
+                                  {
+                                    s.res_other->push_back(formula::W(c,
+                                                                      *in_f));
+                                    in_f = s.res_F->erase(in_f);
+                                    superfluous = true;
+                                    continue;
+                                  }
+                              ++in_f;
                             }
                         }
                       if (superfluous)
