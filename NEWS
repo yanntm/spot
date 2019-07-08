@@ -30,10 +30,13 @@ New in spot 2.7.5.dev (not yet released)
     among "Inf(0)", "t", or "f", and persistance properties have an
     acceptance condition among "Fin(0)", "t", or "f".
 
+  - ltldo and ltlcross learned shorthands to call the tools ltl2na,
+    ltl2nba, and ltl2ngba from Owl 19.06.
+
   Documentation:
 
   - https://spot.lrde.epita.fr/tut90.html is a new file that explains
-    the purpose of the =spot::bdd_dict= object.
+    the purpose of the spot::bdd_dict object.
 
   Library:
 
@@ -102,7 +105,7 @@ New in spot 2.7.5.dev (not yet released)
     operators from SVA.  So {##2 a ##0 b[+] ##1 c ##2 e} is another
     way to write {[*2];a:b[+];c;1;e}.  The syntax {a ##[i:j] b} is
     replaced in different ways depending on the values of i, a, and b.
-    The formula::sugar_delay() function implement this SVA operator in
+    The formula::sugar_delay() function implements this SVA operator in
     terms of the existing PSL operators.  ##[+] and ##[*] are sugar
     for ##[1:$] and ##[0:$].
 

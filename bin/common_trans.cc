@@ -54,14 +54,16 @@ static shorthands_t shorthands_ltl[] = {
     { "ltl2dgra", " %f>%O" },
     { "ltl2dpa", " %f>%O" },
     { "ltl2dra", " %f>%O" },
-    { "ltl2ldba", " %f>%O" },
     { "ltl2dstar", " --output-format=hoa %[MW]L %O"},
+    { "ltl2ldba", " %f>%O" },
+    { "ltl2na", " %f>%O" },
+    { "ltl2nba", " %f>%O" },
+    { "ltl2ngba", " %f>%O" },
     { "ltl2tgba", " -H %f>%O" },
     { "ltl3ba", " -f %s>%O" },
     { "ltl3dra", " -f %s>%O" },
     { "ltl3hoa", " -f %f>%O" },
-    // ltl3tela is the new name of ltl3hoa
-    { "ltl3tela", " -f %f>%O" },
+    { "ltl3tela", " -f %f>%O" },    // ltl3tela is the new name of ltl3hoa
     { "modella", " %[MWei^]L %O" },
     { "spin", " -f %s>%O" },
   };
