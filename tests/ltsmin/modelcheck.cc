@@ -31,6 +31,7 @@
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/emptiness.hh>
 #include <spot/twaalgos/postproc.hh>
+#include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/are_isomorphic.hh>
 #include <spot/twa/twaproduct.hh>
 #include <spot/misc/timer.hh>
@@ -640,8 +641,13 @@ static int checked_main()
                   << " threads, but your computer only support " << hc
                   << ". This could slow down parallel algorithms.\n";
 
+      // Only support Single Acceptance Conditions
+      tm.start("degeneralize");
+      auto prop_degen = spot::degeneralize_tba(prop);
+      tm.stop("degeneralize");
+
       tm.start("twa to twacube");
-      auto propcube = spot::twa_to_twacube(prop);
+      auto propcube = spot::twa_to_twacube(prop_degen);
       tm.stop("twa to twacube");
 
       tm.start("load kripkecube");
