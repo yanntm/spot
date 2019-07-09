@@ -70,6 +70,7 @@ static shorthands_t shorthands_ltl[] = {
 
 static shorthands_t shorthands_autproc[] = {
     { "autfilt", " %H>%O" },
+    { "dra2dpa", " <%H>%O" },
     { "dstar2tgba", " %H>%O" },
     { "ltl2dstar", " -B %H %O" },
     { "nba2dpa", " <%H>%O" },

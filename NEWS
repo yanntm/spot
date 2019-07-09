@@ -31,7 +31,8 @@ New in spot 2.7.5.dev (not yet released)
     acceptance condition among "Fin(0)", "t", or "f".
 
   - ltldo and ltlcross learned shorthands to call the tools ltl2na,
-    ltl2nba, and ltl2ngba from Owl 19.06.
+    ltl2nba, and ltl2ngba from Owl 19.06.  Similarly, autcross learned
+    a shorthand for Owl's dra2dpa.
 
   Documentation:
 
