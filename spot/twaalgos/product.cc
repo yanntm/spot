@@ -48,7 +48,7 @@ namespace spot
                       const const_twa_graph_ptr& right,
                       unsigned left_state,
                       unsigned right_state,
-                      twa_graph_ptr res, T merge_acc,
+                      twa_graph_ptr& res, T merge_acc,
                       const output_aborter* aborter)
     {
       std::unordered_map<product_state, unsigned, product_state_hash> s2n;
