@@ -534,7 +534,7 @@ namespace spot
     p.set_pref(spot::postprocessor::Deterministic);
     p.set_level(spot::postprocessor::Low);
     auto det = p.run(std::const_pointer_cast<twa_graph>(aut));
-    if (!det)
+    if (!det || !is_universal(det))
       return nullptr;
     return dualize(det);
   }

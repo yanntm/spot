@@ -1,6 +1,12 @@
 New in spot 2.8.0.dev (not yet released)
 
-  Nothing yet.
+  Bugs fixed:
+
+  - When complement() was called with an output_aborter, it could
+    return an alternating automaton on large automata.  This in turn
+    caused ltlcross to emit errors like "remove_alternation() only
+    works with weak alternating automata" or "product() does not
+    support alternating automata".
 
 New in spot 2.8 (2019-07-10)
 
