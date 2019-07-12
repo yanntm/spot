@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Developpement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Developpement
 // de l'EPITA (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -1142,6 +1142,8 @@ namespace spot
               kr2_exp_5(n, fa, fb, fc, fd),
               kr2_exp_mutex(n, fa, fb, fc, fd) });
 
+        delete[] fa;
+        delete[] fb;
         return res;
       }
 
