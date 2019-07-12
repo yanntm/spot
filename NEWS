@@ -1,5 +1,9 @@
 New in spot 2.8.0.dev (not yet released)
 
+  Command-line tools:
+
+  - genltl learned --pps-arbiter-standard and --pps-arbiter-strict.
+
   Bugs fixed:
 
   - When complement() was called with an output_aborter, it could

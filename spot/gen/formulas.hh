@@ -114,6 +114,14 @@ namespace spot
       /// 20 formulas from BEEM.
       /// \cite pelanek.07.spin
       LTL_P_PATTERNS,
+      /// Arbiter for n clients sending requests, and receiving
+      /// grants. \cite piterman.06.vmcai using standard
+      /// semantics from \cite jacobs.16.synt .
+      LTL_PPS_ARBITER_STANDARD,
+      /// Arbiter for n clients sending requests, and receiving
+      /// grants. \cite piterman.06.vmcai using strict
+      /// semantics from \cite jacobs.16.synt .
+      LTL_PPS_ARBITER_STRICT,
       /// `(((p1 R p2) R p3) ... R pn)`
       LTL_R_LEFT,
       /// `(p1 R (p2 R (... R pn)))`

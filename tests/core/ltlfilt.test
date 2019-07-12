@@ -534,3 +534,8 @@ cat >exp <<EOF
 F
 EOF
 diff out exp
+
+f1=`genltl --pps-arbiter-standard=2`
+f2=`genltl --pps-arbiter-strict=2`
+run 1 ltlfilt -f "$f2" --implied-by "$f1"
+run 0 ltlfilt -f "$f1" --implied-by "$f2"

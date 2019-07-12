@@ -1197,6 +1197,90 @@ namespace spot
       }
     }
 
+    static formula
+    pps_arbiter(std::string r_, std::string g_, int n, bool strict_)
+    {
+      formula* r = new formula[n];
+      formula* g = new formula[n];
+      std::vector<formula> res;
+
+      for (int i = 0; i < n; ++i)
+        {
+          r[i] = formula::ap(r_ + std::to_string(i + 1));
+          g[i] = formula::ap(g_ + std::to_string(i + 1));
+        }
+
+      formula theta_e;
+      formula theta_s;
+      formula psi_e;
+      formula psi_s;
+      formula phi_e;
+      formula phi_s;
+      {
+        std::vector<formula> res;
+        for (int i = 0; i < n; ++i)
+          res.push_back(formula::Not(r[i]));
+        theta_e = formula::And(res);
+
+        res.clear();
+        for (int i = 0; i < n; ++i)
+          res.push_back(formula::Not(g[i]));
+        theta_s = formula::And(res);
+
+        res.clear();
+        for (int i = 0; i < n; ++i)
+          {
+            formula left = formula::Xor(r[i], g[i]);
+            formula right = formula::Equiv(r[i], formula::X(r[i]));
+            res.push_back(formula::Implies(left, right));
+          }
+        psi_e = formula::And(res);
+
+        res.clear();
+        for (int i = 0; i < n; ++i)
+          {
+            for (int j = 0; j < i; ++j)
+              res.push_back(formula::Not(formula::And({g[i], g[j]})));
+            formula left = formula::Equiv(r[i], g[i]);
+            formula right = formula::Equiv(g[i], formula::X(g[i]));
+            res.push_back(formula::Implies(left, right));
+          }
+        psi_s = formula::And(res);
+
+        res.clear();
+        for (int i = 0; i < n; ++i)
+          {
+            formula f = formula::Not(formula::And({r[i], g[i]}));
+            res.push_back(formula::G(formula::F(f)));
+          }
+        phi_e = formula::And(res);
+
+        res.clear();
+        for (int i = 0; i < n; ++i)
+          {
+            res.push_back(formula::G(formula::F(formula::Equiv(r[i], g[i]))));
+          }
+        phi_s = formula::And(res);
+      }
+      delete[] r;
+      delete[] g;
+
+      if (!strict_)
+        {
+          formula imp =
+            formula::Implies(formula::And({formula::G(psi_e), phi_e}),
+                             formula::And({formula::G(psi_s), phi_s}));
+          return formula::Implies(theta_e, formula::And({theta_s, imp}));
+        }
+      else
+        {
+          formula e = formula::W(psi_s, formula::Not(psi_e));
+          formula imp =
+            formula::Implies(formula::And({formula::G(psi_e), phi_e}), phi_s);
+          return formula::Implies(theta_e, formula::And({theta_s, e, imp}));
+        }
+    }
+
     formula ltl_pattern(ltl_pattern_id pattern, int n, int m)
     {
       if (n < 0)
@@ -1275,6 +1359,10 @@ namespace spot
           return ms_phi_rs("a", "b", n, false);
         case LTL_P_PATTERNS:
           return p_pattern(n);
+        case LTL_PPS_ARBITER_STANDARD:
+          return pps_arbiter("r", "g", n, false);
+        case LTL_PPS_ARBITER_STRICT:
+          return pps_arbiter("r", "g", n, true);
         case LTL_R_LEFT:
           return bin_n("p", n, op::R, false);
         case LTL_R_RIGHT:
@@ -1351,6 +1439,8 @@ namespace spot
           "or-g",
           "or-gf",
           "p-patterns",
+          "pps-arbiter-standard",
+          "pps-arbiter-strict",
           "r-left",
           "r-right",
           "rv-counter",
@@ -1420,6 +1510,8 @@ namespace spot
           return 0;
         case LTL_P_PATTERNS:
           return 20;
+        case LTL_PPS_ARBITER_STANDARD:
+        case LTL_PPS_ARBITER_STRICT:
         case LTL_R_LEFT:
         case LTL_R_RIGHT:
         case LTL_RV_COUNTER_CARRY:
@@ -1485,6 +1577,8 @@ namespace spot
         case LTL_OR_G:
         case LTL_OR_GF:
         case LTL_P_PATTERNS:
+        case LTL_PPS_ARBITER_STANDARD:
+        case LTL_PPS_ARBITER_STRICT:
         case LTL_R_LEFT:
         case LTL_R_RIGHT:
         case LTL_RV_COUNTER_CARRY:

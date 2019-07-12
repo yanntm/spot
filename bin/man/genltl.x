@@ -54,6 +54,10 @@ p
 R. Pelánek: BEEM: benchmarks for explicit model checkers
 Proceedings of Spin'07.  LNCS 4595.
 .TP
+pps
+N. Piterman, A. Pnueli, and Y. Sa'ar: Synthesis of Reactive(1) Designs.
+Proceedings of VMCAI'06.  LNCS 3855.
+.TP
 rv
 K. Rozier and M. Vardi: LTL Satisfiability Checking.
 Proceedings of Spin'07.  LNCS 4595.
