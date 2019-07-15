@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008-2012, 2014-2018 Laboratoire de Recherche et
+// Copyright (C) 2008-2012, 2014-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris
 // 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -98,58 +98,50 @@ cons_emptiness_check(int num, spot::const_twa_graph_ptr a,
 static void
 syntax(char* prog)
 {
-  std::cerr << "Usage: "<< prog << " [OPTIONS...] PROPS..." << std::endl
-            << std::endl
-            << "General Options:" << std::endl
-            << "  -0      suppress default output, just generate the graph"
-            << " in memory" << std::endl
-            << "  -1      produce minimal output (for our paper)" << std::endl
-            << "  -g      output graph in dot format" << std::endl
-            << "  -s N    seed for the random number generator" << std::endl
-            << "  -z      display statistics about emptiness-check algorithms"
-            << std::endl
-            << "  -Z      like -z, but print extra statistics after the run"
-            << " of each algorithm" << std::endl
-            << std::endl
-            << "Graph Generation Options:" << std::endl
-            << "  -a N F  number of acceptance conditions and probability that"
-            << " one is true" << std::endl
-            << "            [0 0.0]" << std::endl
-            << "  -d F    density of the graph [0.2]" << std::endl
-            << "  -n N    number of nodes of the graph [20]" << std::endl
-            << "  -t F    probability of the atomic propositions to be true"
-            << " [0.5]" << std::endl
-            << "  -det    generate a deterministic and complete graph [false]"
-            << std::endl
-            << std::endl
-            << "Emptiness-Check Options:" << std::endl
-            << "  -A FILE use all algorithms listed in FILE" << std::endl
-            << "  -D      degeneralize TGBA for emptiness-check algorithms that"
-            << " would" << std::endl
-            << "            otherwise be skipped (implies -e)" << std::endl
-            << "  -e N    compare result of all "
-            << "emptiness checks on N randomly generated graphs" << std::endl
-            << "  -m      try to reduce runs, in a second pass (implies -r)"
-            << std::endl
-            << "  -R N    repeat each emptiness-check and accepting run "
-            << "computation N times" << std::endl
-            << "  -r      compute and replay accepting runs (implies -e)"
-            << std::endl
-            << "  ar:MODE select the mode MODE for accepting runs computation "
-            << "(implies -r)" << std::endl
-            << std::endl
-            << "Where:" << std::endl
-            << "  F      are floats between 0.0 and 1.0 inclusive" << std::endl
-            << "  E      are floating values" << std::endl
-            << "  S      are `KEY=E, KEY=E, ...' strings" << std::endl
-            << "  N      are positive integers" << std::endl
-            << "  PROPS  are the atomic properties to use on transitions"
-            << std::endl
-            << "Use -dp to see the list of KEYs." << std::endl
-            << std::endl
-            << "When -i is used, a random graph a synchronized with"
-            << " each formula." << std::endl << "If -e N is additionally used"
-            << " N random graphs are generated for each formula." << std::endl;
+  std::cerr
+    << "Usage: " << prog
+    << (" [OPTIONS...] PROPS...\n\n"
+        "General Options:\n"
+        "  -0      suppress default output, just generate the graph"
+        " in memory\n"
+        "  -1      produce minimal output (for our paper)\n"
+        "  -g      output graph in dot format\n"
+        "  -s N    seed for the random number generator\n"
+        "  -z      display statistics about emptiness-check algorithms\n"
+        "  -Z      like -z, but print extra statistics after the run"
+        " of each algorithm\n\n"
+        "Graph Generation Options:\n"
+        "  -a N F  number of acceptance conditions and probability that"
+        " one is true\n"
+        "            [0 0.0]\n"
+        "  -d F    density of the graph [0.2]\n"
+        "  -n N    number of nodes of the graph [20]\n"
+        "  -t F    probability of the atomic propositions to be true"
+        " [0.5]\n"
+        "  -det    generate a deterministic and complete graph [false]\n\n"
+        "Emptiness-Check Options:\n"
+        "  -A FILE use all algorithms listed in FILE\n"
+        "  -D      degeneralize TGBA for emptiness-check algorithms that"
+        " would\n"
+        "            otherwise be skipped (implies -e)\n"
+        "  -e N    compare result of all "
+        "emptiness checks on N randomly generated graphs\n"
+        "  -m      try to reduce runs, in a second pass (implies -r)\n"
+        "  -R N    repeat each emptiness-check and accepting run "
+        "computation N times\n"
+        "  -r      compute and replay accepting runs (implies -e)\n"
+        "  ar:MODE select the mode MODE for accepting runs computation "
+        "(implies -r)\n\n"
+        "Where:\n"
+        "  F      are floats between 0.0 and 1.0 inclusive\n"
+        "  E      are floating values\n"
+        "  S      are `KEY=E, KEY=E, ...' strings\n"
+        "  N      are positive integers\n"
+        "  PROPS  are the atomic properties to use on transitions\n"
+        "Use -dp to see the list of KEYs.\n\n"
+        "When -i is used, a random graph a synchronized with"
+        " each formula.\nIf -e N is additionally used"
+        " N random graphs are generated for each formula.\n");
   exit(2);
 }
 
@@ -161,7 +153,7 @@ to_int(const char* s)
   int res = strtol(s, &endptr, 10);
   if (*endptr)
     {
-      std::cerr << "Failed to parse `" << s << "' as an integer." << std::endl;
+      std::cerr << "Failed to parse `" << s << "' as an integer.\n";
       exit(1);
     }
   return res;
@@ -174,7 +166,7 @@ to_int_pos(const char* s, const char* arg)
   if (res <= 0)
     {
       std::cerr << "argument of " << arg
-                << " (" << res << ") must be positive" << std::endl;
+                << " (" << res << ") must be positive\n";
       exit(1);
     }
   return res;
@@ -187,7 +179,7 @@ to_int_nonneg(const char* s, const char* arg)
   if (res < 0)
     {
       std::cerr << "argument of " << arg
-                << " (" << res << ") must be nonnegative" << std::endl;
+                << " (" << res << ") must be nonnegative\n";
       exit(1);
     }
   return res;
@@ -201,7 +193,7 @@ to_float(const char* s)
   float res = strtod(s, &endptr);
   if (*endptr)
     {
-      std::cerr << "Failed to parse `" << s << "' as a float." << std::endl;
+      std::cerr << "Failed to parse `" << s << "' as a float.\n";
       exit(1);
     }
   return res;
@@ -214,7 +206,7 @@ to_float_nonneg(const char* s, const char* arg)
   if (res < 0)
     {
       std::cerr << "argument of " << arg
-                << " (" << res << ") must be nonnegative" << std::endl;
+                << " (" << res << ") must be nonnegative\n";
       exit(1);
     }
   return res;
@@ -544,7 +536,7 @@ main(int argc, char** argv)
               if (!*in)
                 {
                   delete in;
-                  std::cerr << "Failed to open " << argv[argn] << std::endl;
+                  std::cerr << "Failed to open " << argv[argn] << '\n';
                   exit(2);
                 }
             }
@@ -571,7 +563,7 @@ main(int argc, char** argv)
         {
           if (options.parse_options(argv[argn]))
             {
-              std::cerr << "Failed to parse " << argv[argn] << std::endl;
+              std::cerr << "Failed to parse " << argv[argn] << '\n';
               exit(2);
             }
         }
@@ -680,7 +672,7 @@ main(int argc, char** argv)
                                                     &err);
           if (!ec_algos[i].inst)
             {
-              std::cerr << "Parse error after `" << err << '\'' << std::endl;
+              std::cerr << "Parse error after `" << err << "'\n";
               exit(1);
             }
           ec_algos[i].inst->options().set(options);

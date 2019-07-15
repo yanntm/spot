@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2007-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2007-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 // Copyright (C) 2003-2007 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -396,7 +396,7 @@ checked_main(int argc, char** argv)
           if (!echeck_inst)
             {
               std::cerr << "Failed to parse argument of -e near `"
-                        << err <<  '\'' << std::endl;
+                        << err <<  "'\n";
               exit(2);
             }
           expect_counter_example = true;
@@ -414,7 +414,7 @@ checked_main(int argc, char** argv)
           if (!echeck_inst)
             {
               std::cerr << "Failed to parse argument of -e near `"
-                        << err <<  '\'' << std::endl;
+                        << err << "'\n";
               exit(2);
             }
           expect_counter_example = false;
@@ -820,13 +820,13 @@ checked_main(int argc, char** argv)
           std::ifstream fin(argv[formula_index]);
           if (!fin)
             {
-              std::cerr << "Cannot open " << argv[formula_index] << std::endl;
+              std::cerr << "Cannot open " << argv[formula_index] << '\n';
               exit(2);
             }
 
           if (!std::getline(fin, input, '\0'))
             {
-              std::cerr << "Cannot read " << argv[formula_index] << std::endl;
+              std::cerr << "Cannot read " << argv[formula_index] << '\n';
               exit(2);
             }
         }
@@ -952,7 +952,7 @@ checked_main(int argc, char** argv)
                         << "\n    varnum: " <<  s.varnum
                         << "\n    cachesize: " << s.cachesize
                         << "\n    gbcnum: " << s.gbcnum
-                        << std::endl;
+                        << '\n';
               bdd_fprintstat(stderr);
               dict->dump(std::cerr);
             }

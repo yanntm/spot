@@ -385,8 +385,7 @@ namespace
       format(command, tools[tool_num].cmd);
 
       std::string cmd = command.str();
-      std::cerr << "Running [" << l << tool_num << "]: "
-                << cmd << std::endl;
+      std::cerr << "Running [" << l << tool_num << "]: " << cmd << '\n';
       spot::process_timer timer;
       timer.start();
       int es = exec_with_timeout(cmd.c_str());
@@ -623,9 +622,7 @@ namespace
 
       if (!no_checks)
         {
-          std::cerr << "Performing sanity checks and gathering statistics..."
-                    << std::endl;
-
+          std::cerr << "Performing sanity checks and gathering statistics...\n";
           {
             bool print_first = true;
             for (unsigned i = 0; i < mi; ++i)
@@ -712,14 +709,14 @@ namespace
         }
       else
         {
-          std::cerr << "Gathering statistics..." << std::endl;
+          std::cerr << "Gathering statistics...\n";
         }
 
 
       if (problems && bogus_output)
         print_hoa(bogus_output->ostream(), input) << std::endl;
 
-      std::cerr << std::endl;
+      std::cerr << '\n';
 
       // Shall we stop processing now?
       abort_run = global_error_flag && stop_on_error;
@@ -806,21 +803,20 @@ main(int argc, char** argv)
                 err << ("error: some error was detected during the above "
                         "runs.\n       Check file ")
                     << bogus_output_filename
-                    << " for problematic automata.";
+                    << " for problematic automata.\n";
               else
                 err << ("error: some error was detected during the above "
                         "runs,\n       please search for 'error:' messages"
-                        " in the above trace.");
-              err << std::endl;
+                        " in the above trace.\n");
               end_error();
             }
           else if (timeout_count == 0 && ignored_exec_fail == 0)
             {
-              std::cerr << "No problem detected." << std::endl;
+              std::cerr << "No problem detected.\n";
             }
           else
             {
-              std::cerr << "No major problem detected." << std::endl;
+              std::cerr << "No major problem detected.\n";
             }
 
           unsigned additional_errors = 0U;
@@ -851,7 +847,7 @@ main(int argc, char** argv)
                 }
               if (additional_errors == 1)
                 std::cerr << '.';
-              std::cerr << std::endl;
+              std::cerr << '\n';
             }
         }
 

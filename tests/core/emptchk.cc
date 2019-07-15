@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2014-2016, 2018-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -36,7 +36,7 @@
 static void
 syntax(char* prog)
 {
-  std::cerr << prog << " file" << std::endl;
+  std::cerr << prog << " file\n";
   exit(2);
 }
 
@@ -124,7 +124,7 @@ main(int argc, char** argv)
           auto i = spot::make_emptiness_check_instantiator(algo, &err);
           if (!i)
             {
-              std::cerr << "Failed to parse `" << err <<  '\'' << std::endl;
+              std::cerr << "Failed to parse `" << err <<  "'\n";
               exit(2);
             }
 

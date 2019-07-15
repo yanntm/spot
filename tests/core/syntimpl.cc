@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008-2012, 2014-2016, 2018 Laboratoire de Recherche
+// Copyright (C) 2008-2012, 2014-2016, 2018-2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -32,7 +32,7 @@
 static void
 syntax(char* prog)
 {
-  std::cerr << prog << " formula1 formula2?" << std::endl;
+  std::cerr << prog << " formula1 formula2?\n";
   exit(2);
 }
 

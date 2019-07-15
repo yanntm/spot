@@ -769,7 +769,7 @@ parse_opt(int key, char* arg, struct argp_state*)
                     {
                       std::cerr << ", '" << acc_is_args[i] << '\'';
                     }
-                std::cerr << std::endl;
+                std::cerr << '\n';
                 exit(2);
               }
           }

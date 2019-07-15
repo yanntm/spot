@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2012-2018 Laboratoire de Recherche et
+// Copyright (C) 2009, 2012-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2003-2006 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -346,17 +346,17 @@ namespace spot
       {
         if (var_seen)
           {
-            std::cerr << "var_map is empty but Var in map" << std::endl;
+            std::cerr << "var_map is empty but Var in map\n";
             fail = true;
           }
         if (acc_seen)
           {
-            std::cerr << "acc_map is empty but Acc in map" << std::endl;
+            std::cerr << "acc_map is empty but Acc in map\n";
             fail = true;
           }
         if (refs_seen)
           {
-            std::cerr << "maps are empty but var_refs is not" << std::endl;
+            std::cerr << "maps are empty but var_refs is not\n";
             fail = true;
           }
         if (!fail)
@@ -364,7 +364,7 @@ namespace spot
       }
     else
       {
-        std::cerr << "some maps are not empty" << std::endl;
+        std::cerr << "some maps are not empty\n";
       }
     dump(std::cerr);
     abort();

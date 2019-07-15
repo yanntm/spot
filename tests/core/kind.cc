@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2012, 2015, 2016, 2018 Laboratoire de Recherche
-// et Developement de l'Epita (LRDE).
+// Copyright (C) 2010, 2012, 2015, 2016, 2018, 2019 Laboratoire de
+// Recherche et Developement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -28,7 +28,7 @@
 static void
 syntax(char *prog)
 {
-  std::cerr << prog << " formula" << std::endl;
+  std::cerr << prog << " formula\n";
   exit(2);
 }
 

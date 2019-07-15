@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016, 2018 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2016, 2018-2019 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -174,31 +174,27 @@ static bool is_included(spot::const_twa_graph_ptr left,
   auto product = spot::product(left, tmp);
   if (!product->is_empty())
     {
-      std::cerr << "======Not included======" << std::endl;
+      std::cerr << "======Not included======\n";
       if (first_left)
-        std::cerr << "======First automaton======" << std::endl;
+        std::cerr << "======First automaton======\n";
       else
-        std::cerr << "======Second automaton======" << std::endl;
-      spot::print_hoa(std::cerr, left);
-      std::cerr << std::endl;
+        std::cerr << "======Second automaton======\n";
+      spot::print_hoa(std::cerr, left) << '\n';
       if (first_left)
-        std::cerr << "======Second automaton======" << std::endl;
+        std::cerr << "======Second automaton======\n";
       else
-        std::cerr << "======First automaton======" << std::endl;
-      spot::print_hoa(std::cerr, right);
-      std::cerr << std::endl;
+        std::cerr << "======First automaton======\n";
+      spot::print_hoa(std::cerr, right) << '\n';
       if (first_left)
-        std::cerr << "======!Second automaton======" << std::endl;
+        std::cerr << "======!Second automaton======\n";
       else
-        std::cerr << "======!First automaton======" << std::endl;
-      spot::print_hoa(std::cerr, tmp);
-      std::cerr << std::endl;
+        std::cerr << "======!First automaton======\n";
+      spot::print_hoa(std::cerr, tmp) << '\n';
       if (first_left)
-        std::cerr << "======First X !Second======" <<std::endl;
+        std::cerr << "======First X !Second======\n";
       else
-        std::cerr << "======Second X !First======" <<std::endl;
-      spot::print_hoa(std::cerr, product);
-      std::cerr << std::endl;
+        std::cerr << "======Second X !First======\n";
+      spot::print_hoa(std::cerr, product) << '\n';
       return false;
     }
   return true;
@@ -241,18 +237,16 @@ static bool is_right_parity(spot::const_twa_graph_ptr aut,
     target_odd = origin_odd;
   if (!(is_max == target_max && is_odd == target_odd))
     {
-      std::cerr << "======Wrong accceptance======" << std::endl;
+      std::cerr << "======Wrong accceptance======\n";
       std::string kind[] = { "max", "min", "same", "any" };
       std::string style[] = { "odd", "even", "same", "any" };
       std::cerr << "target: " << kind[target_kind] << ' '
-                << style[target_style] << std::endl;
-      std::cerr << "origin: " << kind[origin_max ? 0 : 1] << ' '
-                << style[origin_odd ? 0 : 1] << ' '
-                << num_sets << std::endl;
-      std::cerr << "actually: " << kind[is_max ? 0 : 1] << ' '
-                << style[is_odd ? 0 : 1] << ' '
-                << aut->num_sets() << std::endl;
-      std::cerr << std::endl;
+                << style[target_style]
+                << "\norigin: " << kind[origin_max ? 0 : 1] << ' '
+                << style[origin_odd ? 0 : 1] << ' ' << num_sets
+                << "\nactually: " << kind[is_max ? 0 : 1] << ' '
+                << style[is_odd ? 0 : 1] << ' ' << aut->num_sets()
+                << "\n\n";
       return false;
     }
   return true;
@@ -263,9 +257,8 @@ static bool is_almost_colored(spot::const_twa_graph_ptr aut)
   for (auto t: aut->edges())
     if (t.acc.count() > 1)
       {
-        std::cerr << "======Not colored======" << std::endl;
-        spot::print_hoa(std::cerr, aut);
-        std::cerr << std::endl;
+        std::cerr << "======Not colored======\n";
+        spot::print_hoa(std::cerr, aut) << '\n';
         return false;
       }
   return true;
@@ -276,9 +269,8 @@ static bool is_colored_printerr(spot::const_twa_graph_ptr aut)
   bool result = is_colored(aut);
   if (!result)
     {
-      std::cerr << "======Not colored======" << std::endl;
-      spot::print_hoa(std::cerr, aut);
-      std::cerr << std::endl;
+      std::cerr << "======Not colored======\n";
+      spot::print_hoa(std::cerr, aut) << '\n';
     }
   return result;
 }

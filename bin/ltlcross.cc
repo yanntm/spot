@@ -571,8 +571,7 @@ namespace
       format(command, tools[translator_num].cmd);
 
       std::string cmd = command.str();
-      std::cerr << "Running [" << l << translator_num << "]: "
-                << cmd << std::endl;
+      std::cerr << "Running [" << l << translator_num << "]: " << cmd << '\n';
       spot::process_timer timer;
       timer.start();
       int es = exec_with_timeout(cmd.c_str());
@@ -1031,8 +1030,7 @@ namespace
               std::cerr
                 << ("warning: This formula or its negation has already"
                     " been checked.\n         Use --allow-dups if it "
-                    "should not be ignored.\n")
-                << std::endl;
+                    "should not be ignored.\n\n");
               return 0;
             }
         }
@@ -1136,8 +1134,7 @@ namespace
 
       if (!no_checks)
         {
-          std::cerr << "Performing sanity checks and gathering statistics..."
-                    << std::endl;
+          std::cerr << "Performing sanity checks and gathering statistics...\n";
 
           // If we have reference tools, pick the smallest of their
           // automata for positive and negative references.
@@ -1391,7 +1388,7 @@ namespace
         }
       else
         {
-          std::cerr << "Gathering statistics..." << std::endl;
+          std::cerr << "Gathering statistics...\n";
         }
 
       spot::atomic_prop_set* ap = spot::atomic_prop_collect(f);
@@ -1567,7 +1564,7 @@ namespace
             delete pos_map[i];
           ++seed;
         }
-      std::cerr << std::endl;
+      std::cerr << '\n';
       delete ap;
 
       // Shall we stop processing formulas now?
@@ -1702,17 +1699,17 @@ main(int argc, char** argv)
                 err << ("error: some error was detected during the above "
                         "runs,\n       please search for 'error:' messages"
                         " in the above trace.");
-              err << std::endl;
+              err << '\n';
               end_error();
             }
           else if (timeout_count == 0
                    && ignored_exec_fail == 0 && oom_count == 0)
             {
-              std::cerr << "No problem detected." << std::endl;
+              std::cerr << "No problem detected.\n";
             }
           else
             {
-              std::cerr << "No major problem detected." << std::endl;
+              std::cerr << "No major problem detected.\n";
             }
 
           unsigned additional_errors = 0U;
@@ -1755,7 +1752,7 @@ main(int argc, char** argv)
                 }
               if (additional_errors == 1)
                 std::cerr << '.';
-              std::cerr << std::endl;
+              std::cerr << '\n';
             }
         }
 

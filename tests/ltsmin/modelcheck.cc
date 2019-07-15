@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2018 Laboratoire de Recherche et Developpement
+// Copyright (C) 2011-2019 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -136,7 +136,7 @@ checked_main(int argc, char **argv)
               break;
             default:
             error:
-              std::cerr << "Unknown option `" << argv[i] << "'." << std::endl;
+              std::cerr << "Unknown option `" << argv[i] << "'.\n";
               exit(1);
             }
           --argc;
@@ -285,10 +285,9 @@ checked_main(int argc, char **argv)
           }
         catch (const std::bad_alloc&)
           {
-            std::cerr << "Out of memory during emptiness check."
-                      << std::endl;
+            std::cerr << "Out of memory during emptiness check.\n";
             if (!compress_states)
-              std::cerr << "Try option -z for state compression." << std::endl;
+              std::cerr << "Try option -z for state compression.\n";
             exit_code = 2;
             exit(exit_code);
           }
@@ -329,8 +328,8 @@ checked_main(int argc, char **argv)
               }
             catch (const std::bad_alloc&)
               {
-                std::cerr << "Out of memory while looking for counterexample."
-                          << std::endl;
+                std::cerr
+                  << "Out of memory while looking for counterexample.\n";
                 exit_code = 2;
                 exit(exit_code);
               }

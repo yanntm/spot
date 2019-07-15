@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*_
-// Copyright (C) 2008-2012, 2014-2016, 2018 Laboratoire
+// Copyright (C) 2008-2012, 2014-2016, 2018-2019 Laboratoire
 // de Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2006, 2007 Laboratoire d'Informatique de Paris
 // 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -35,7 +35,7 @@
 static void
 syntax(char* prog)
 {
-  std::cerr << prog << " option formula1 (formula2)?" << std::endl;
+  std::cerr << prog << " option formula1 (formula2)?\n";
   exit(2);
 }
 
@@ -162,7 +162,7 @@ main(int argc, char** argv)
         fin = new std::ifstream(argv[2]);
         if (!*fin)
           {
-            std::cerr << "Cannot open " << argv[2] << std::endl;
+            std::cerr << "Cannot open " << argv[2] << '\n';
             exit(2);
           }
       }
@@ -196,7 +196,7 @@ main(int argc, char** argv)
       {
         if (readfile)
           {
-            std::cerr << "Cannot read from file and check result." << std::endl;
+            std::cerr << "Cannot read from file and check result.\n";
             exit(2);
           }
 
@@ -232,7 +232,7 @@ main(int argc, char** argv)
           if (!simp->are_equivalent(input_f, maybe_larger))
             {
               std::cerr << "Incorrect reduction (reduce_size_strictly=0) from `"
-                        << f1s_before << "' to `" << f1l << "'." << std::endl;
+                        << f1s_before << "' to `" << f1l << "'.\n";
               exit_code = 3;
             }
         }

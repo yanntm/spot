@@ -1736,7 +1736,7 @@ namespace spot
         {
           if (!cnt++)
             std::cerr << "*** m.uniq is not empty ***\n";
-          i->dump(std::cerr) << std::endl;
+          i->dump(std::cerr) << '\n';
         }
     return cnt == 0;
   }

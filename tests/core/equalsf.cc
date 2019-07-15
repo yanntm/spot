@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008-2012, 2014-2016, 2018 Laboratoire de
+// Copyright (C) 2008-2012, 2014-2016, 2018-2019 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2006 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -36,7 +36,7 @@
 static void
 syntax(char* prog)
 {
-  std::cerr << prog << " [-E] file" << std::endl;
+  std::cerr << prog << " [-E] file\n";
   exit(2);
 }
 

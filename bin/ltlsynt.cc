@@ -290,7 +290,7 @@ namespace
 
       auto aut = trans_.run(&f);
       if (verbose)
-        std::cerr << "translating formula done" << std::endl;
+        std::cerr << "translating formula done\n";
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
       for (unsigned i = 0; i < input_aps_.size(); ++i)
@@ -369,7 +369,7 @@ namespace
       auto owner = complete_env(dpa);
       auto pg = spot::parity_game(dpa, owner);
       if (verbose)
-        std::cerr << "parity game built" << std::endl;
+        std::cerr << "parity game built\n";
       timer.stop();
 
       if (opt_print_pg)
