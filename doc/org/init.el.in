@@ -11,6 +11,13 @@
 (print (org-version nil t t))
 (print (concat "Org " org-version))
 
+; Some combination of GNU TLS and Emacs fail to retrieve archive
+; contents over https.
+; https://www.reddit.com/r/emacs/comments/cdf48c/failed_to_download_gnu_archive/
+; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34341
+(if (and (version< emacs-version "26.3") (>= libgnutls-version 30600))
+    (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
+
 ; The Org version that ships with emacs is usually too old.
 (when (version< org-version "9.1")
   (warn "Org-mode is too old; attempting to download a more recent version")

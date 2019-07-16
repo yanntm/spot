@@ -12,6 +12,10 @@ New in spot 2.8.0.dev (not yet released)
     works with weak alternating automata" or "product() does not
     support alternating automata".
 
+  - Work around Emacs bug #34341 when rebuilding documentation on a
+    system with Emacs <26.3, GNU TLS >= 3.6, and without ESS or with
+    an obsolete org-mode installed.
+
 New in spot 2.8 (2019-07-10)
 
   Command-line tools:
