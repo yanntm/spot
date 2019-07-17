@@ -101,3 +101,7 @@ grep 'error: P1\*N0 is nonempty' errors
 grep 'error: P1\*N1 is nonempty' errors
 test `grep cycle errors | wc -l` = 3
 test `grep '^error:' errors | wc -l` = 4
+
+ltlcross -q -f 'G(F(p0) & F(G(!p1))) | (F(G(!p0)) & G(F(p1)))' \
+    "ltl2tgba --lbtt %f >%T" "./fake %l >%T" 2> errors && exit 1
+test 8 -eq `wc -l <errors`

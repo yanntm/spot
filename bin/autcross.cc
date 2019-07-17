@@ -113,10 +113,12 @@ static const argp_option options[] =
       "all available optimizations (slow, default)", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", -15 },
+    { "quiet", 'q', nullptr, 0,
+      "suppress all normal output in absence of errors", 0 },
     { "save-bogus", OPT_BOGUS, "[>>]FILENAME", 0,
-      "save formulas for which problems were detected in FILENAME", -1 },
+      "save formulas for which problems were detected in FILENAME", 0 },
     { "verbose", OPT_VERBOSE, nullptr, 0,
-      "print what is being done, for debugging", -1 },
+      "print what is being done, for debugging", 0 },
     { nullptr, 0, nullptr, 0,
       "If an output FILENAME is prefixed with '>>', it is open "
       "in append mode instead of being truncated.", -14 },
@@ -135,6 +137,7 @@ const struct argp_child children[] =
   };
 
 static bool verbose = false;
+static bool quiet = false;
 static bool ignore_exec_fail = false;
 static unsigned ignored_exec_fail = 0;
 static bool fail_on_timeout = false;
@@ -154,6 +157,10 @@ parse_opt(int key, char* arg, struct argp_state*)
     {
     case 'F':
       jobs.emplace_back(arg, true);
+      break;
+    case 'q':
+      quiet = true;
+      verbose = false;
       break;
     case OPT_BOGUS:
       {
@@ -196,6 +203,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_VERBOSE:
       verbose = true;
+      quiet = false;
       break;
     case ARGP_KEY_ARG:
       if (arg[0] == '-' && !arg[1])
@@ -385,7 +393,12 @@ namespace
       format(command, tools[tool_num].cmd);
 
       std::string cmd = command.str();
-      std::cerr << "Running [" << l << tool_num << "]: " << cmd << '\n';
+      auto disp_cmd = [&]() {
+                        std::cerr << "Running [" << l << tool_num
+                                  << "]: " << cmd << '\n';
+                      };
+      if (!quiet)
+        disp_cmd();
       spot::process_timer timer;
       timer.start();
       int es = exec_with_timeout(cmd.c_str());
@@ -397,12 +410,15 @@ namespace
         {
           if (fail_on_timeout)
             {
+              if (quiet)
+                disp_cmd();
               global_error() << "error: timeout during execution of command\n";
               end_error();
             }
           else
             {
-              std::cerr << "warning: timeout during execution of command\n";
+              if (!quiet)
+                std::cerr << "warning: timeout during execution of command\n";
               ++timeout_count;
             }
           status_str = "timeout";
@@ -411,6 +427,8 @@ namespace
         }
       else if (WIFSIGNALED(es))
         {
+          if (quiet)
+            disp_cmd();
           status_str = "signal";
           problem = true;
           es = WTERMSIG(es);
@@ -424,6 +442,8 @@ namespace
           status_str = "exit code";
           if (!ignore_exec_fail)
             {
+              if (quiet)
+                disp_cmd();
               problem = true;
               global_error() << "error: execution returned exit code "
                              << es << ".\n";
@@ -432,8 +452,9 @@ namespace
           else
             {
               problem = false;
-              std::cerr << "warning: execution returned exit code "
-                        << es << ".\n";
+              if (!quiet)
+                std::cerr << "warning: execution returned exit code "
+                          << es << ".\n";
               ++ignored_exec_fail;
             }
         }
@@ -448,6 +469,8 @@ namespace
                                      opt_parse);
           if (!aut->errors.empty())
             {
+              if (quiet)
+                disp_cmd();
               status_str = "parse error";
               problem = true;
               es = -1;
@@ -459,6 +482,8 @@ namespace
             }
           else if (aut->aborted)
             {
+              if (quiet)
+                disp_cmd();
               status_str = "aborted";
               problem = true;
               es = -1;
@@ -508,9 +533,10 @@ namespace
     if (aut_i->num_sets() + aut_j->num_sets() >
         spot::acc_cond::mark_t::max_accsets())
       {
-        std::cerr << "info: building " << autname(i)
-                  << '*' << autname(j, true)
-                  << " requires more acceptance sets than supported\n";
+        if (!quiet)
+          std::cerr << "info: building " << autname(i)
+                    << '*' << autname(j, true)
+                    << " requires more acceptance sets than supported\n";
         return false;
       }
 
@@ -573,14 +599,21 @@ namespace
 
       input_statistics.push_back(in_statistics());
 
-      std::cerr << bold << source << reset_color;
       input_statistics[round_num].input_source = std::move(source);
       if (auto name = input->get_named_prop<std::string>("automaton-name"))
-        {
-          std::cerr << '\t' << *name;
-          input_statistics[round_num].input_name = *name;
-        }
-      std::cerr << '\n';
+        input_statistics[round_num].input_name = *name;
+
+      auto disp_src = [&]() {
+                        std::cerr << bold
+                                  << input_statistics[round_num].input_source
+                                  << reset_color;
+                        if (!input_statistics[round_num].input_name.empty())
+                          std::cerr << '\t'
+                                    << input_statistics[round_num].input_name;
+                        std::cerr << '\n';
+                      };
+      if (!quiet)
+        disp_src();
       input_statistics[round_num].input.set(input);
 
       int problems = 0;
@@ -606,7 +639,6 @@ namespace
           problems += prob;
         }
       spot::cleanup_tmpfiles();
-      ++round_num;
       output_statistics.push_back(std::move(stats));
 
       if (verbose)
@@ -622,7 +654,9 @@ namespace
 
       if (!no_checks)
         {
-          std::cerr << "Performing sanity checks and gathering statistics...\n";
+          if (!quiet)
+            std::cerr
+              << "Performing sanity checks and gathering statistics...\n";
           {
             bool print_first = true;
             for (unsigned i = 0; i < mi; ++i)
@@ -709,15 +743,23 @@ namespace
         }
       else
         {
-          std::cerr << "Gathering statistics...\n";
+          if (!quiet)
+            std::cerr << "Gathering statistics...\n";
         }
 
 
       if (problems && bogus_output)
         print_hoa(bogus_output->ostream(), input) << std::endl;
 
-      std::cerr << '\n';
+      if (problems && quiet)
+        {
+          std::cerr << "input automaton was ";
+          disp_src();
+        }
+      if (!quiet || problems)
+        std::cerr << '\n';
 
+      ++round_num;
       // Shall we stop processing now?
       abort_run = global_error_flag && stop_on_error;
       return problems;
@@ -794,7 +836,7 @@ main(int argc, char** argv)
         {
           error(2, 0, "no automaton to translate");
         }
-      else
+      else if (!quiet)
         {
           if (global_error_flag)
             {

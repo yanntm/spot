@@ -176,6 +176,8 @@ static const argp_option options[] =
     { "grind", OPT_GRIND, "[>>]FILENAME", 0,
       "for each formula for which a problem was detected, write a simpler " \
       "formula that fails on the same test in FILENAME", 0 },
+    { "quiet", 'q', nullptr, 0,
+      "suppress all normal output in absence of error", 0 },
     { "save-bogus", OPT_BOGUS, "[>>]FILENAME", 0,
       "save formulas for which problems were detected in FILENAME", 0 },
     { "verbose", OPT_VERBOSE, nullptr, 0,
@@ -220,6 +222,7 @@ static const char* bogus_output_filename = nullptr;
 static output_file* bogus_output = nullptr;
 static output_file* grind_output = nullptr;
 static bool verbose = false;
+static bool quiet = false;
 static bool ignore_exec_fail = false;
 static unsigned ignored_exec_fail = 0;
 static bool fail_on_timeout = false;
@@ -452,6 +455,10 @@ parse_opt(int key, char* arg, struct argp_state*)
         error(2, 0, "Options --determinize-max-edges and "
               "--determinize are incompatible.");
       break;
+    case 'q':
+      verbose = false;
+      quiet = true;
+      break;
     case OPT_DET_MAX_EDGES:
       max_det_edges_given = true;
       max_det_states = to_pos_int(arg, "--determinize-max-edges");
@@ -544,6 +551,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_VERBOSE:
       verbose = true;
+      quiet = false;
       break;
     default:
       return ARGP_ERR_UNKNOWN;
@@ -571,7 +579,12 @@ namespace
       format(command, tools[translator_num].cmd);
 
       std::string cmd = command.str();
-      std::cerr << "Running [" << l << translator_num << "]: " << cmd << '\n';
+      auto disp_cmd = [&]() {
+                        std::cerr << "Running [" << l << translator_num
+                                  << "]: " << cmd << '\n';
+                      };
+      if (!quiet)
+        disp_cmd();
       spot::process_timer timer;
       timer.start();
       int es = exec_with_timeout(cmd.c_str());
@@ -583,12 +596,15 @@ namespace
         {
           if (fail_on_timeout)
             {
+              if (quiet)
+                disp_cmd();
               global_error() << "error: timeout during execution of command\n";
               end_error();
             }
           else
             {
-              std::cerr << "warning: timeout during execution of command\n";
+              if (!quiet)
+                std::cerr << "warning: timeout during execution of command\n";
               ++timeout_count;
             }
           status_str = "timeout";
@@ -597,6 +613,8 @@ namespace
         }
       else if (WIFSIGNALED(es))
         {
+          if (quiet)
+            disp_cmd();
           status_str = "signal";
           problem = true;
           es = WTERMSIG(es);
@@ -610,6 +628,8 @@ namespace
           status_str = "exit code";
           if (!ignore_exec_fail)
             {
+              if (quiet)
+                disp_cmd();
               problem = true;
               global_error() << "error: execution returned exit code "
                              << es << ".\n";
@@ -618,8 +638,9 @@ namespace
           else
             {
               problem = false;
-              std::cerr << "warning: execution returned exit code "
-                        << es << ".\n";
+              if (!quiet)
+                std::cerr << "warning: execution returned exit code "
+                          << es << ".\n";
               ++ignored_exec_fail;
             }
         }
@@ -634,6 +655,8 @@ namespace
                                      opt_parse);
           if (!aut->errors.empty())
             {
+              if (quiet)
+                disp_cmd();
               status_str = "parse error";
               problem = true;
               es = -1;
@@ -645,6 +668,8 @@ namespace
             }
           else if (aut->aborted)
             {
+              if (quiet)
+                disp_cmd();
               status_str = "aborted";
               problem = true;
               es = -1;
@@ -735,16 +760,19 @@ namespace
         // complemented, or the --verbose option is used,
         if (!verbose && (icomp || jcomp))
           return false;
-        std::cerr << "info: building ";
-        if (icomp)
-          std::cerr << "Comp(N" << i << ')';
-        else
-          std::cerr << 'P' << i;
-        if (jcomp)
-          std::cerr << "*Comp(P" << j << ')';
-        else
-          std::cerr << "*N" << j;
-        std::cerr << " requires more acceptance sets than supported\n";
+        if (!quiet)
+          {
+            std::cerr << "info: building ";
+            if (icomp)
+              std::cerr << "Comp(N" << i << ')';
+            else
+              std::cerr << 'P' << i;
+            if (jcomp)
+              std::cerr << "*Comp(P" << j << ')';
+            else
+              std::cerr << "*N" << j;
+            std::cerr << " requires more acceptance sets than supported\n";
+          }
         return false;
       }
 
@@ -931,16 +959,18 @@ namespace
           unsigned mutation_max;
           while        (res)
             {
-              std::cerr << "Trying to find a bogus mutation of " << bold
-                        << bogus << reset_color << "...\n";
+              if (!quiet)
+                std::cerr << "Trying to find a bogus mutation of " << bold
+                          << bogus << reset_color << "...\n";
               mutations = mutate(f);
               mutation_count = 1;
               mutation_max = mutations.size();
               res = 0;
               for (auto g: mutations)
                 {
-                  std::cerr << "Mutation " << mutation_count << '/'
-                            << mutation_max << ": ";
+                  if (!quiet)
+                    std::cerr << "Mutation " << mutation_count << '/'
+                              << mutation_max << ": ";
                   f = g;
                   res = process_formula(g);
                   if (res)
@@ -957,9 +987,10 @@ namespace
                     bogus_output->ostream() << bogus << std::endl;
                 }
             }
-          std::cerr << "Smallest bogus mutation found for "
-                    << bold << input << reset_color << " is "
-                    << bold << bogus << reset_color << ".\n\n";
+          if (!quiet)
+            std::cerr << "Smallest bogus mutation found for "
+                      << bold << input << reset_color << " is "
+                      << bold << bogus << reset_color << ".\n\n";
           grind_output->ostream() << bogus << std::endl;
         }
       return 0;
@@ -1014,23 +1045,27 @@ namespace
       // Call formula() before printing anything else, in case it
       // complains.
       std::string fstr = runner.formula();
-      if (filename)
-        std::cerr << filename << ':';
-      if (linenum)
-        std::cerr << linenum << ':';
-      if (filename || linenum)
-        std::cerr << ' ';
-      std::cerr << bold << fstr << reset_color << '\n';
+      if (!quiet)
+        {
+          if (filename)
+            std::cerr << filename << ':';
+          if (linenum)
+            std::cerr << linenum << ':';
+          if (filename || linenum)
+            std::cerr << ' ';
+          std::cerr << bold << fstr << reset_color << '\n';
+        }
 
       // Make sure we do not translate the same formula twice.
       if (!allow_dups)
         {
           if (!unique_set.insert(f).second)
             {
-              std::cerr
-                << ("warning: This formula or its negation has already"
-                    " been checked.\n         Use --allow-dups if it "
-                    "should not be ignored.\n\n");
+              if (!quiet)
+                std::cerr
+                  << ("warning: This formula or its negation has already"
+                      " been checked.\n         Use --allow-dups if it "
+                      "should not be ignored.\n\n");
               return 0;
             }
         }
@@ -1134,7 +1169,9 @@ namespace
 
       if (!no_checks)
         {
-          std::cerr << "Performing sanity checks and gathering statistics...\n";
+          if (!quiet)
+            std::cerr
+              << "Performing sanity checks and gathering statistics...\n";
 
           // If we have reference tools, pick the smallest of their
           // automata for positive and negative references.
@@ -1564,7 +1601,11 @@ namespace
             delete pos_map[i];
           ++seed;
         }
-      std::cerr << '\n';
+      if (problems && quiet)
+        std::cerr << "input formula was "
+                  << bold << fstr << reset_color << "\n\n";
+      if (!quiet)
+        std::cerr << '\n';
       delete ap;
 
       // Shall we stop processing formulas now?
@@ -1685,7 +1726,7 @@ main(int argc, char** argv)
         {
           error(2, 0, "no formula to translate");
         }
-      else
+      else if (!quiet)
         {
           if (global_error_flag)
             {

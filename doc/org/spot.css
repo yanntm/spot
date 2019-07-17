@@ -50,6 +50,8 @@ thead tr{background:#ffe35e}
 .org-keyword,.org-builtin,.org-preprocessor,.org-py-import-from,.org-py-def-class{font-weight:bold}
 .org-string{font-weight:bold;color:#00adad}
 .src-hoa .org-string{font-weight:bold;color:#d70079}
+.src-makefile .org-variable-name{font-weight:bold;color:#d70079}
+.org-makefile-targets{font-weight:bold;color:#00adad}
 .org-function-name{font-weight:bold;color:#d70079}
 .org-type{font-weight:bold;color:#00adad}
 .org-comment-delimiter{font-weight:bold;color:#a13672}

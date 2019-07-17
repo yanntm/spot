@@ -281,6 +281,20 @@ run 1 ltlcross 'echo HOA: --ABORT-- %f > %H' \
    -f a --csv=out.csv 2>stderr
 grep '"exit_status"' out.csv
 grep '"exit_code"' out.csv
+test `grep ': echo HOA' stderr | wc -l` -eq 2
+grep -q -i 'performing' stderr
+test `grep 'error:.*aborted' stderr | wc -l` -eq 2
+test `grep '"aborted",-1' out.csv | wc -l` -eq 2
+test 3 = `wc -l < out.csv`
+check_csv out.csv
+
+# Support for --ABORT-- in HOA.
+run 1 ltlcross -q 'echo HOA: --ABORT-- %f > %H' \
+   -f a --csv=out.csv 2>stderr
+grep '"exit_status"' out.csv
+grep '"exit_code"' out.csv
+test `grep ': echo HOA' stderr | wc -l` -eq 2
+grep -q -i 'performing' stderr && exit 1
 test `grep 'error:.*aborted' stderr | wc -l` -eq 2
 test `grep '"aborted",-1' out.csv | wc -l` -eq 2
 test 3 = `wc -l < out.csv`

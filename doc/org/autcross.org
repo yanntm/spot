@@ -472,6 +472,18 @@ an alternate filename to load, or some key to look up somewhere.
 rm -f autcross.csv
 #+END_SRC
 
+* Running =autcross= in parallel.
+   :PROPERTIES:
+   :CUSTOM_ID: parallel
+   :END:
+
+  While the =autcross= command itself has no built-in support for
+  parallelization (patches welcome), its interface allows easy
+  parallelization with third party tools such as: =xargs -P= ([[https://www.gnu.org/software/findutils/][GNU
+  findutils]]), =parallel= ([[https://www.gnu.org/software/parallel/][GNU parallel]] or [[https://joeyh.name/code/moreutils/][moreutils]]), or even =make=.
+  See [[file:ltlcross.org::#parallel][running =ltlcross= in parallel]] for inspiration.
+
+
 #  LocalWords:  utf autcross SETUPFILE html HOA neverclaim dstar's Nr
 #  LocalWords:  autfilt dstar randaut lcr xZO urHakt mmkgH ABdm kMYrq
 #  LocalWords:  kvBP lVlGfJ BexLFn rjvy rKKlxG Musr LyAxtZ shorthands

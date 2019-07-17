@@ -4,6 +4,12 @@ New in spot 2.8.0.dev (not yet released)
 
   - genltl learned --pps-arbiter-standard and --pps-arbiter-strict.
 
+  - ltlcross and autcross have learned a new option -q (--quiet) to
+    remain quiet until an error is found.  This helps for instance in
+    scenarios where multiple instances of ltlcross/autcross are run in
+    parallel (using "xargs -P" or "GNU Parallel", for instance).  See
+    https://spot.lrde.epita.fr/ltlcross.html#parallel for examples.
+
   Bugs fixed:
 
   - When complement() was called with an output_aborter, it could

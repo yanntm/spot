@@ -876,7 +876,6 @@ ggplot(dt2, aes(x=states.small, y=states.deter)) +
 #+RESULTS:
 [[file:ltlcross-r2.svg]]
 
-
 * Miscellaneous options
 
 ** =--stop-on-error=
@@ -1301,8 +1300,92 @@ info: cross_checks and consistency_checks unnecessary
 No problem detected.
 #+end_example
 
+* Running =ltlcross= in parallel
+   :PROPERTIES:
+   :CUSTOM_ID: parallel
+   :END:
+
+  The =ltlcross= command itself has no built-in support for
+  parallelization (patches welcome).  However its interface makes it
+  rather easy to parallelize =ltlcross= runs with third-party tools
+  such as:
+
+  - =xargs= from [[https://www.gnu.org/software/findutils/][GNU findutils]].  The [[https://www.gnu.org/software/findutils/manual/html_node/find_html/Controlling-Parallelism.html#Controlling-Parallelism][=-P n= option]] is a GNU extension
+    to specify that n commands should be run in parallel.
+
+    For instance the following command tests =ltl2tgba= and =ltl3ba=
+    against 1000 formulas, running 8 formulas in parallel.
+
+    #+begin_src sh :exports code
+      randltl -n-1 3 | ltlfilt --relabel=pnn --unique -n1000 |
+          xargs -P8 -I'{}' ltlcross -q --save-bogus='>>bugs.ltl' ltl2tgba ltl3ba -f '{}'
+    #+end_src
+
+    #+RESULTS:
+
+    The above pipeline uses =randltl= to generate an infinite number
+    of LTL formulas (=-n-1=) over three atomic propositions.  Those
+    formules are then relabeled with =ltlfilt= (so that =a U b= and =b
+    U a= both get mapped to the same =p0 U p1=) and filtered for
+    duplicates (=--unique=).  This first 1000 formulas (=-n1000=) are
+    then passed on to =xargs=. The command =xargs -I'{}' ltlcross...=
+    takes each line of input, and executes the command =ltlcross...=
+    with ={}= replaced by the input line.  The option =-P8= does this
+    with 8 processes in parallel.  Here =ltlcross= is called with
+    option =-q= to silence most its regular output as the 8 instances
+    of =ltlcross= would be otherwise writing to the same terminal.
+    With =-q=, only errors are displayed.  Additionally =--save-bogus=
+    is used to keep track of all formulas causing errors.  The =>>bugs.ltl=
+    syntax means to open =bugs.ltl= in append mode, so that =bugs.ltl= does
+    not get overwritten each time a new =ltlcross= instance finds a bug.
+
+  - [[https://www.gnu.org/software/parallel/][GNU parallel]] or [[https://joeyh.name/code/moreutils/][moreutils's parallel]] can also be used similarly.
+
+  - =make -j n= is another option: first convert the list of formulas
+    into a =Makefile= that calls =ltlcross= for each of them.
+
+    For instance here is how to build a makefile called =ltlcross.mk=
+    testing ltl2tgbaand ltl3ba against all formulas produced by
+    =genltl --eh=, and gathering statistics from all runs in =all.csv=.
+
+    #+NAME: ltlcross.mk
+    #+begin_src sh :epilogue "cat ltlcross.mk" :wrap src makefile
+    echo 'LTLCROSS=ltlcross -q ltl2tgba ltl3ba' > ltlcross.mk
+    echo "ALL= $(echo $(genltl --eh --format="%F%L.csv"))" >> ltlcross.mk
+    echo "all.csv: \$(ALL); cat \$(ALL) | sed -e 1n -e '/^\"formula\"/d' > \$@" >>ltlcross.mk
+    genltl --eh --format="%F%L.csv:; \$(LTLCROSS) --csv=\$@ -f '%f'" >>ltlcross.mk
+    #+end_src
+
+    This creates =ltlcross.mk=:
+    #+RESULTS: ltlcross.mk
+    #+begin_src makefile
+    LTLCROSS=ltlcross -q ltl2tgba ltl3ba
+    ALL= eh-patterns1.csv eh-patterns2.csv eh-patterns3.csv eh-patterns4.csv eh-patterns5.csv eh-patterns6.csv eh-patterns7.csv eh-patterns8.csv eh-patterns9.csv eh-patterns10.csv eh-patterns11.csv eh-patterns12.csv
+    all.csv: $(ALL); cat $(ALL) | sed -e 1n -e '/^"formula"/d' > $@
+    eh-patterns1.csv:; $(LTLCROSS) --csv=$@ -f 'p0 U (p1 & Gp2)'
+    eh-patterns2.csv:; $(LTLCROSS) --csv=$@ -f 'p0 U (p1 & X(p2 U p3))'
+    eh-patterns3.csv:; $(LTLCROSS) --csv=$@ -f 'p0 U (p1 & X(p2 & F(p3 & XF(p4 & XF(p5 & XFp6)))))'
+    eh-patterns4.csv:; $(LTLCROSS) --csv=$@ -f 'F(p0 & XGp1)'
+    eh-patterns5.csv:; $(LTLCROSS) --csv=$@ -f 'F(p0 & X(p1 & XFp2))'
+    eh-patterns6.csv:; $(LTLCROSS) --csv=$@ -f 'F(p0 & X(p1 U p2))'
+    eh-patterns7.csv:; $(LTLCROSS) --csv=$@ -f 'FGp0 | GFp1'
+    eh-patterns8.csv:; $(LTLCROSS) --csv=$@ -f 'G(p0 -> (p1 U p2))'
+    eh-patterns9.csv:; $(LTLCROSS) --csv=$@ -f 'G(p0 & XF(p1 & XF(p2 & XFp3)))'
+    eh-patterns10.csv:; $(LTLCROSS) --csv=$@ -f 'GFp0 & GFp1 & GFp2 & GFp3 & GFp4'
+    eh-patterns11.csv:; $(LTLCROSS) --csv=$@ -f '(p0 U (p1 U p2)) | (p1 U (p2 U p0)) | (p2 U (p0 U p1))'
+    eh-patterns12.csv:; $(LTLCROSS) --csv=$@ -f 'G(p0 -> (p1 U (Gp2 | Gp3)))'
+    #+end_src
+
+    This makefile could be executed for instance with =make -f
+    ltlcross.mk -j 4=, where =-j 4= specifies that 4 processes can be
+    executed in parallel.  Using different =csv= files for each
+    process avoids potential race conditions that could occur if each
+    instance of =ltlcross= was appending to the same file.  The =sed=
+    command used while merging all =csv= files keeps the first header
+    line (=1n=) while removing all subsequent ones (=/"formula"/d=).
+
 #+BEGIN_SRC sh :results silent :exports results
-rm -f results.csv results.json ltlcross.csv bogus-grind bogus
+rm -f results.csv results.json ltlcross.csv bogus-grind bogus ltlcross.mk
 #+END_SRC
 
 #  LocalWords:  ltlcross num toc LTL Büchi LBTT Testbench PSL SRC sed
