@@ -61,6 +61,7 @@ debian-gcc-snapshot:
     - ./configure --with-included-ltdl CXX='g++'
     - make
     - make distcheck  DISTCHECK_CONFIGURE_FLAGS='--with-included-ltdl'
+  allow_failure: true
   artifacts:
     when: always
     paths:
