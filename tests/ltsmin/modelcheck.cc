@@ -736,7 +736,7 @@ static int checked_main()
                     << ','
                     << tm.timer("cndfs").walltime() << ','
                     << memused << ','
-                    << (std::get<0>(res) ? "EMPTY," : "NOT-EMPTY,")
+                    << (std::get<0>(res) ? "EMPTY," : "NONEMPTY,")
                     << std::get<2>(res)[smallest].states << ','
                     << std::get<2>(res)[smallest].transitions
                     << '\n';
