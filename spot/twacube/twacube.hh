@@ -112,8 +112,10 @@ namespace spot
       // precomputed primes and seed access one of this primes. Note
       // that the chosen prime must be greater than n.
       SPOT_ASSERT(primes[seed] > (st_.succ_tail-st_.succ+1));
-      return (((idx_-st_.succ+1)*primes[seed]) % (st_.succ_tail-st_.succ+1))
-        + st_.succ;
+      unsigned long long c = (idx_-st_.succ) + 1;
+      unsigned long long p = primes[seed];
+      unsigned long long s = (st_.succ_tail-st_.succ+1);
+      return (unsigned)  (((c*p) % s)+st_.succ);
     }
 
   private:
