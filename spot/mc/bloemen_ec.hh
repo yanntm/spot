@@ -235,7 +235,8 @@ namespace spot
       a->list_status_.store(list_status::BUSY);
     }
 
-    void unite(uf_element* a, uf_element* b, acc_cond::mark_t acc)
+    acc_cond::mark_t
+    unite(uf_element* a, uf_element* b, acc_cond::mark_t acc)
     {
       uf_element* a_root;
       uf_element* b_root;
@@ -248,7 +249,23 @@ namespace spot
           b_root = find(b);
 
           if (a_root == b_root)
-            return;
+            {
+              // Update accepting condition
+              {
+                std::lock_guard<std::mutex> rlock(a_root->acc_mutex_);
+                a_root->acc |= acc;
+                acc |= a_root->acc;
+              }
+
+              while(a_root->parent.load() != a_root)
+                {
+                  a_root = find(a_root);
+                  std::lock_guard<std::mutex> rlock(a_root->acc_mutex_);
+                  a_root->acc |= acc;
+                  acc |= a_root->acc;
+                }
+              return acc;
+            }
 
           r = std::max(a_root, b_root);
           q = std::min(a_root, b_root);
@@ -263,7 +280,7 @@ namespace spot
       if (a_list == nullptr)
         {
           unlock_root(q);
-          return;
+          return acc;
         }
 
       uf_element* b_list = lock_list(b);
@@ -271,7 +288,7 @@ namespace spot
         {
           unlock_list(a_list);
           unlock_root(q);
-          return;
+          return acc;
         }
 
       SPOT_ASSERT(a_list->list_status_.load() == list_status::LOCK);
@@ -306,6 +323,7 @@ namespace spot
         std::lock_guard<std::mutex> qlock(q->acc_mutex_);
         q->acc |= acc;
         r->acc |= q->acc;
+        acc |= r->acc;
       }
 
       while(r->parent.load() != r)
@@ -314,11 +332,13 @@ namespace spot
           std::lock_guard<std::mutex> rlock(r->acc_mutex_);
           std::lock_guard<std::mutex> qlock(q->acc_mutex_);
           r->acc |= q->acc;
+          acc |= r->acc;
         }
 
       unlock_list(a_list);
       unlock_list(b_list);
       unlock_root(q);
+      return acc;
     }
 
     uf_element* pick_from_list(uf_element* u, bool* sccfound)
@@ -463,7 +483,6 @@ namespace spot
     void run()
     {
       tm_.start("DFS thread " + std::to_string(tid_));
-
       State init_kripke = sys_.initial(tid_);
       unsigned init_twa = twa_->get_initial();
       auto pair = uf_.make_claim(init_kripke, init_twa);
@@ -505,14 +524,22 @@ namespace spot
                     }
                   else if (w.first == uf::claim_status::CLAIM_FOUND)
                     {
+                      acc_cond::mark_t scc_acc = trans_acc;
+
+                      // This operation is mandatory to update acceptance marks.
+                      // Otherwise, when w.second and todo.back() are
+                      // already in the same set, the acceptance condition will
+                      // not be added.
+                      scc_acc |= uf_.unite(w.second, w.second, scc_acc);
+
                       while (!uf_.sameset(todo_.back(), w.second))
                         {
                           uf_element* r = Rp_.back();
                           Rp_.pop_back();
-                          uf_.unite(r, Rp_.back(), trans_acc);
+                          uf_.unite(r, Rp_.back(), scc_acc);
                         }
 
-                      acc_cond::mark_t scc_acc;
+
                       {
                         auto root = uf_.find(w.second);
                         std::lock_guard<std::mutex> lock(w.second->acc_mutex_);
