@@ -619,7 +619,7 @@ private:
           if (tag == BOOL)
             return res;
           else
-            return ecr;
+            return !!ecr;
         }
         operator emptiness_check_result_ptr() const
         {
