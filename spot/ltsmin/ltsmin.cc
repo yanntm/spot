@@ -1497,7 +1497,8 @@ namespace spot
                                std::function<bool(unsigned, unsigned)> fitness,
                                std::string name, unsigned nb_generations,
                                int initial_population, float threshold,
-                               unsigned new_generation, bool random)
+                               unsigned new_generation, bool random,
+			       float strategy)
   {
     name = name.substr(name.find_last_of("/")+1);
     spot::timer_map tm;
@@ -1554,7 +1555,7 @@ namespace spot
 					 splitter_, i, fitness,
                                          nb_generations, threshold,
                                          new_generation);
-	    }, stop, initial_population);
+	    }, stop, initial_population, strategy);
           }
         else
                     {

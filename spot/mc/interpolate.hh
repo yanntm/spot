@@ -511,15 +511,30 @@ namespace spot
     swarmed_dfs2(kripkecube<State, SuccIterator>& sys,
 		 shared_map& map, unsigned tid,
 		 std::function<std::vector<State>*(std::vector<State>&)> fun,
-		 std::atomic<bool>& stop, unsigned initial_population = 1000):
+		 std::atomic<bool>& stop, unsigned initial_population = 1000,
+		 float strategy = 0.5):
       sys_(sys), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
       p_(sizeof(int)*std::thread::hardware_concurrency()),
       interpolate_fun_(fun), stop_(stop), THRESHOLD(initial_population)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
-      if (!(tid_%2)) // FIXME How many !
-	phase1 = false;       // Reference, no GP for this thread
+
+      if (strategy == 0.5)
+	{
+	  // Keep the previous default behavior
+	  if (!(tid_%2))
+	    phase1 = false;
+	}
+      else if (strategy >= 0 && strategy <= 1)
+	{
+	  if (tid < (sys.nb_threads_ * strategy))
+	    {
+	      phase1 = false;
+	      std::cout << tid << " "<< std::endl;
+	    }
+        }
+
     }
 
     virtual ~swarmed_dfs2()
@@ -1036,15 +1051,29 @@ namespace spot
     swarmed_gp_deadlock(kripkecube<State, SuccIterator>& sys,
 		 shared_map& map, unsigned tid,
 		 std::function<std::vector<State>*(std::vector<State>&)> fun,
-		 std::atomic<bool>& stop, unsigned initial_population = 1000):
+		 std::atomic<bool>& stop, unsigned initial_population = 1000,
+		 float strategy = 0.5):
       sys_(sys), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
       p_(sizeof(int)*std::thread::hardware_concurrency()),
       interpolate_fun_(fun), stop_(stop), THRESHOLD(initial_population)
     {
       SPOT_ASSERT(is_a_kripkecube(sys));
-      if (!(tid_%2)) // FIXME How many !
-	phase1 = false;       // Reference, no GP for this thread
+
+      if (strategy == 0.5)
+	{
+	  // Keep the previous default behavior
+	  if (!(tid_%2))
+	    phase1 = false;
+	}
+      else if (strategy >= 0 && strategy <= 1)
+	{
+	  if (tid < (sys.nb_threads_ * strategy))
+	    {
+	      phase1 = false;
+	      std::cout << tid << " "<< std::endl;
+	    }
+        }
     }
 
     virtual ~swarmed_gp_deadlock()

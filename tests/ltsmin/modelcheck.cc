@@ -86,6 +86,7 @@ struct mc_options_
   unsigned initial_population = 1000;
   unsigned new_generation = 50;
   float threshold = 0.999;
+  float strategy = 0;
 } mc_options;
 
 
@@ -170,6 +171,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 'z':
       mc_options.compress = to_unsigned(arg);
       break;
+    case 'x':
+      mc_options.strategy = to_float(arg);
+      break;
     default:
       return ARGP_ERR_UNKNOWN;
     }
@@ -222,6 +226,7 @@ static const argp_option options[] =
     { "generation", 'G', "INT", 0, "nb generation (3)", 0 },
     { "initial", 'I', "INT", 0, "size of the initial population (1000)", 0 },
     { "initial", 'P', "INT", 0, "size of each new population (50)", 0 },
+    { "strategy", 'x', "INT", 0, "...", 0 },
     { "csv", CSV, nullptr, 0,
       "output a CSV containing interesting values", 0 },
     // ------------------------------------------------------------
@@ -578,7 +583,7 @@ static int checked_main()
                                                mc_options.initial_population,
                                                mc_options.threshold,
                                                mc_options.new_generation,
-                                               random);
+                                               random, mc_options.strategy);
           else
             spot::ltsmin_model::swarmed_gp_deadlock(modelcube, fitness,
                                                mc_options.model,

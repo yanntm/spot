@@ -95,7 +95,8 @@ namespace spot
                                std::function<bool(unsigned, unsigned)> fitness,
                                std::string name, unsigned nb_generations,
                                int initial_population, float threshold,
-                               unsigned new_generation, bool random);
+                               unsigned new_generation, bool random,
+			       float strategy);
     static void swarmed_gp_deadlock(ltsmin_kripkecube_ptr sys,
                                std::function<bool(unsigned, unsigned)> fitness,
                                std::string name, unsigned nb_generations,

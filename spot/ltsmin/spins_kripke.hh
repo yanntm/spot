@@ -217,6 +217,7 @@ namespace spot
     bool selfloopize_;
     int dead_idx_;
     std::vector<std::string> aps_;
+  public:
     unsigned int nb_threads_;
   };
 
