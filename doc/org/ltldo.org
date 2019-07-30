@@ -485,12 +485,12 @@ Instead of outputting the result of the translation of each formula by each
 translator, =ltldo= can also be configured to output the smallest
 automaton obtained for each formula:
 
-#+BEGIN_SRC sh
+#+BEGIN_SRC sh :wrap SRC hoa
 ltldo ltl2ba ltl3ba 'ltl2tgba -s' -f 'F(a & Xa | FGa)' --smallest
 #+END_SRC
 
 #+RESULTS:
-#+begin_example
+#+begin_SRC hoa
 HOA: v1
 States: 3
 Start: 0
@@ -507,7 +507,7 @@ State: 1
 State: 2 {0}
 [t] 2
 --END--
-#+end_example
+#+end_SRC
 
 Therefore, in practice, =ltldo --smallest trans1 trans2 trans3...=
 acts like a portfolio of translators, always returning the smallest

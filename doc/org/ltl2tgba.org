@@ -32,16 +32,16 @@ less frequent.)
 Formulas to translate may be specified using [[file:ioltl.org][common input options for
 LTL/PSL formulas]].
 
-#+BEGIN_SRC sh
+#+BEGIN_SRC sh :wrap SRC hoa
 ltl2tgba -f 'Fa & GFb'
 #+END_SRC
 
 #+RESULTS:
-#+begin_example
+#+begin_SRC hoa
 HOA: v1
 name: "Fa & GFb"
 States: 2
-Start: 1
+Start: 0
 AP: 2 "a" "b"
 acc-name: Buchi
 Acceptance: 1 Inf(0)
@@ -49,13 +49,13 @@ properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0
-[1] 0 {0}
-[!1] 0
+[!0] 0
+[0] 1
 State: 1
-[0] 0
-[!0] 1
+[!1] 1
+[1] 1 {0}
 --END--
-#+end_example
+#+end_SRC
 
 Actually, because =ltl2tgba= is often used with a single formula
 passed on the command line, the =-f= option can be omitted and any

@@ -841,12 +841,12 @@ The [[http://adl.github.io/hoaf/][HOA format]] inherits several features from th
 extends it in many ways, including support for non-deterministic
 automata, alternating automata, and for arbitrary acceptance conditions.
 
-#+BEGIN_SRC sh :exports results
+#+BEGIN_SRC sh :exports results :wrap SRC hoa
 ltldo ltl2dstar -f 'FGp0 | GFp1' --name=%f
 #+END_SRC
 
 #+RESULTS:
-#+begin_example
+#+begin_SRC hoa
 HOA: v1
 name: "FGp0 | GFp1"
 States: 4
@@ -878,7 +878,7 @@ State: 3 {1 3}
 [!0&1] 2
 [0&1] 3
 --END--
-#+end_example
+#+end_SRC
 
 #+NAME: hoa1
 #+BEGIN_SRC sh
