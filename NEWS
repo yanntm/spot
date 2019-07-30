@@ -1,6 +1,10 @@
 New in spot 2.8.1.dev (not yet released)
 
-  Nothing yet.
+  Bugs fixed:
+
+  - Calling "autfilt --dualize" on an alternating automaton with
+    transition-based acceptance and universal initial states would
+    fail with "set_init_state() called with nonexisting state".
 
 New in spot 2.8.1 (2019-07-18)
 

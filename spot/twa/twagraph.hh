@@ -285,7 +285,10 @@ namespace spot
 
     void set_init_state(state_num s)
     {
-      if (SPOT_UNLIKELY(s >= num_states()))
+      bool univ = is_univ_dest(s);
+      if (SPOT_UNLIKELY((!univ && s >= num_states())
+                        // univ destinations have at least length 2.
+                        || (univ && 2 + ~s >= g_.dests_vector().size())))
         throw std::invalid_argument
           ("set_init_state() called with nonexisting state");
       init_number_ = s;

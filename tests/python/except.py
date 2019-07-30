@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -92,6 +92,25 @@ except RuntimeError as e:
     assert "scc_info::determine_unknown_acceptance() does not supp" in str(e)
 else:
     report_missing_exception()
+
+try:
+    alt.set_init_state(999)
+except ValueError as e:
+    assert "set_init_state()" in str(e)
+else:
+    report_missing_exception()
+
+alt.set_univ_init_state([s1, s2])
+u = alt.get_init_state_number()
+alt.set_init_state(u)
+
+try:
+    alt.set_init_state(u - 1)
+except ValueError as e:
+    assert "set_init_state()" in str(e)
+else:
+    report_missing_exception()
+
 
 r = spot.twa_run(aut)
 try:
