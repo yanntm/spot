@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -181,11 +181,12 @@ namespace spot
       }
 
       // Handles the dualization of a universal initial transition.
-      // In theory the transition would be split into several existential
-      // initial transitions, but since spot does not allow multiple initial
-      // states, we rather use a trick: We add a new initial state, and then
-      // copy all exiting transitions from each of the state of the universal
-      // initial transition.
+      // In theory the transition would be split into several
+      // existential initial transitions, but since Spot does not
+      // allow multiple initial states, we rather use a trick: We add
+      // a new initial state, and then copy all exiting transitions
+      // from each destination states of the universal initial
+      // transition.
       void univ_init(const twa_graph_ptr& res)
       {
         bdd comb = bddfalse;
