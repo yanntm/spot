@@ -1,5 +1,6 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de l'Epita
+# Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
+# de l'Epita
 #
 # This file is part of Spot, a model checking library.
 #
@@ -58,27 +59,14 @@ def produce_phi(rg, n):
 
 phi1 = produce_phi(rg, 1000)
 phi2 = produce_phi(rg, 1000)
-inputres = []
-aut = []
 for p in zip(phi1, phi2):
-    inputres.append(spot.formula.Or(p))
     a1 = spot.ltl_to_tgba_fm(p[0], dict)
     a2 = spot.ltl_to_tgba_fm(p[1], dict)
-    aut.append(spot.to_generalized_buchi(
-        spot.remove_alternation(spot.sum(a1, a2), True)))
 
-for p in zip(aut, inputres):
-    assert p[0].equivalent_to(p[1])
+    p0orp1 = spot.formula.Or(p)
+    a1ora2 = spot.remove_alternation(spot.sum(a1, a2), True)
+    assert p0orp1.equivalent_to(a1ora2)
 
-aut = []
-inputres = []
-
-for p in zip(phi1, phi2):
-    inputres.append(spot.formula.And(p))
-    a1 = spot.ltl_to_tgba_fm(p[0], dict)
-    a2 = spot.ltl_to_tgba_fm(p[1], dict)
-    aut.append(spot.to_generalized_buchi(
-        spot.remove_alternation(spot.sum_and(a1, a2), True)))
-
-for p in zip(aut, inputres):
-    assert p[0].equivalent_to(p[1])
+    p0andp1 = spot.formula.And(p)
+    a1anda2 = spot.remove_alternation(spot.sum_and(a1, a2), True)
+    assert p0andp1.equivalent_to(a1anda2)
