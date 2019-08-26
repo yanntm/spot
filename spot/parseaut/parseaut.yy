@@ -1,5 +1,5 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
+** Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
 ** de l'Epita (LRDE).
 **
 ** This file is part of Spot, a model checking library.
@@ -22,9 +22,9 @@
 %locations
 %defines
 %expect 0 // No shift/reduce
-%name-prefix "hoayy"
+%define api.prefix {hoayy}
 %debug
-%error-verbose
+%define parse.error verbose
 %parse-param {void* scanner}
 %lex-param {void* scanner} { PARSE_ERROR_LIST }
 %define api.location.type {spot::location}
@@ -256,7 +256,7 @@ extern "C" int strverscmp(const char *s1, const char *s2);
 
 %left '|'
 %left '&'
-%nonassoc '!'
+%precedence '!'
 
 %type <states> init-state-conj-2 state-conj-2 state-conj-checked
 %type <num> checked-state-num state-num acc-set sign
@@ -356,7 +356,7 @@ aut-1: hoa   { res.h->type = spot::parsed_aut_type::HOA; }
 hoa: header "--BODY--" body "--END--"
    | "HOA:" error "--END--"
 
-string_opt: { $$ = nullptr; }
+string_opt: %empty { $$ = nullptr; }
           | STRING { $$ = $1; }
 BOOLEAN: 't' | 'f'
 
@@ -726,7 +726,8 @@ aps: "AP:" INT
 	 }
      }
 
-header-items: | header-items header-item
+header-items: %empty
+            | header-items header-item
 header-item: "States:" INT
            {
 	     if (res.states >= 0)
@@ -832,7 +833,8 @@ header-item: "States:" INT
 	     }
            | error
 
-ap-names: | ap-names ap-name
+ap-names: %empty
+        | ap-names ap-name
 ap-name: STRING
 	 {
 	   if (!res.ignore_more_ap)
@@ -861,13 +863,15 @@ ap-name: STRING
 	   delete $1;
 	 }
 
-acc-spec: | acc-spec BOOLEAN
+acc-spec: %empty
+          | acc-spec BOOLEAN
 	  | acc-spec INT
 	  | acc-spec IDENTIFIER
             {
 	      delete $2;
 	    }
-properties: | properties IDENTIFIER
+properties: %empty
+            | properties IDENTIFIER
 	      {
                 bool val = true;
                 // no-univ-branch was replaced by !univ-branch in HOA 1.1
@@ -903,16 +907,19 @@ properties: | properties IDENTIFIER
 		delete $3;
 	      }
 
-highlight-edges: | highlight-edges INT INT
+highlight-edges: %empty
+               | highlight-edges INT INT
               {
 		res.highlight_edges->emplace($2, $3);
 	      }
-highlight-states: | highlight-states INT INT
+highlight-states: %empty
+                | highlight-states INT INT
               {
 		res.highlight_states->emplace($2, $3);
 	      }
 
-header-spec: | header-spec BOOLEAN
+header-spec: %empty
+             | header-spec BOOLEAN
              | header-spec INT
              | header-spec STRING
 	       {
@@ -1243,7 +1250,8 @@ checked-state-num: state-num
 		     $$ = $1;
 		   }
 
-states: | states state
+states: %empty
+        | states state
         {
 	  if ((res.universal.is_true() || res.complete.is_true()))
 	    {
@@ -1357,7 +1365,7 @@ label: '[' label-expr ']'
 	     error(@$, "ignoring this invalid label");
 	     res.cur_label = bddtrue;
 	   }
-state-label_opt:       { res.has_state_label = false; }
+state-label_opt: %empty { res.has_state_label = false; }
                | label
 	       {
 		 res.has_state_label = true;
@@ -1422,7 +1430,7 @@ acc-sig: '{' acc-sets '}'
 	     {
 	       error(@$, "ignoring this invalid acceptance set");
 	     }
-acc-sets:
+acc-sets: %empty
           {
 	    $$ = spot::acc_cond::mark_t({});
 	  }
@@ -1434,7 +1442,7 @@ acc-sets:
 	      $$ = $1 | res.aut_or_ks->acc().mark($2);
 	  }
 
-state-acc_opt:
+state-acc_opt: %empty
                {
                  $$ = spot::acc_cond::mark_t({});
                }
@@ -1449,7 +1457,7 @@ state-acc_opt:
 		     res.acc_style = Mixed_Acc;
 		   }
 	       }
-trans-acc_opt:
+trans-acc_opt: %empty
                {
                  $$ = spot::acc_cond::mark_t({});
                }
@@ -1467,7 +1475,8 @@ trans-acc_opt:
 	       }
 
 /* block of labeled-edges, with occasional (incorrect) unlabeled edge */
-labeled-edges: | some-labeled-edges
+labeled-edges: %empty
+               | some-labeled-edges
 some-labeled-edges: labeled-edge
                   | some-labeled-edges labeled-edge
                   | some-labeled-edges incorrectly-unlabeled-edge
@@ -1659,7 +1668,7 @@ dstar_header: dstar_sizes
     res.cur_guard = res.guards.end();
   }
 
-dstar_sizes:
+dstar_sizes: %empty
   | dstar_sizes error
   | dstar_sizes "Acceptance-Pairs:" INT
   {
@@ -1742,7 +1751,7 @@ sign: '+' { $$ = res.plus; }
   |   '-' { $$ = res.minus; }
 
 // Membership to a pair is represented as (+NUM,-NUM)
-dstar_accsigs:
+dstar_accsigs: %empty
   {
     $$ = spot::acc_cond::mark_t({});
   }
@@ -1773,7 +1782,7 @@ dstar_accsigs:
 
 dstar_state_accsig: "Acc-Sig:" dstar_accsigs { $$ = $2; }
 
-dstar_transitions:
+dstar_transitions: %empty
   | dstar_transitions INT
   {
     std::pair<map_t::iterator, bool> i =
@@ -1783,7 +1792,7 @@ dstar_transitions:
     ++res.cur_guard;
   }
 
-dstar_states:
+dstar_states: %empty
   | dstar_states error
   | dstar_states dstar_state_id dstar_state_accsig dstar_transitions
   {
@@ -1826,8 +1835,7 @@ never: "never"
          res.h->aut->register_aps_from_dict();
        }
 
-nc-states:
-  /* empty */
+nc-states: %empty
   | nc-state
   | nc-states ';' nc-state
   | nc-states ';'
@@ -1909,7 +1917,7 @@ nc-state:
     }
 
 nc-transitions:
-  /* empty */ { $$ = new std::list<pair>; }
+  %empty { $$ = new std::list<pair>; }
   | nc-transitions nc-transition
     {
       if ($2)
@@ -1958,7 +1966,7 @@ nc-formula: nc-formula-or-ident
      }
 
 nc-opt-dest:
-  /* empty */
+  %empty
     {
       $$ = nullptr;
     }
@@ -2076,7 +2084,7 @@ lbtt-header: lbtt-header-states INT_S
 	     res.trans_acc_seen = true;
 	   }
 lbtt-body: lbtt-states
-lbtt-states:
+lbtt-states: %empty
            | lbtt-states lbtt-state lbtt-transitions
 
 lbtt-state: STATE_NUM INT lbtt-acc
@@ -2098,7 +2106,7 @@ lbtt-state: STATE_NUM INT lbtt-acc
                                      std::vector<unsigned>{res.cur_state});
 	    res.acc_state = $3;
 	  }
-lbtt-acc:               { $$ = spot::acc_cond::mark_t({}); }
+lbtt-acc: %empty { $$ = spot::acc_cond::mark_t({}); }
         | lbtt-acc ACC
 	{
 	  $$  = $1;
@@ -2148,7 +2156,7 @@ lbtt-guard: STRING
 	      }
 	    delete $1;
 	  }
-lbtt-transitions:
+lbtt-transitions: %empty
                 | lbtt-transitions DEST_NUM lbtt-acc lbtt-guard
                 {
 		  unsigned dst = $2;

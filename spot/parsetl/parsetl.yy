@@ -25,9 +25,9 @@
 %language "C++"
 %locations
 %defines
-%name-prefix "tlyy"
+%define api.prefix {tlyy}
 %debug
-%error-verbose
+%define parse.error verbose
 %expect 0
 %lex-param { spot::parse_error_list& error_list }
 %define api.location.type {spot::location}
@@ -47,6 +47,7 @@
 %parse-param {spot::parse_error_list &error_list}
 %parse-param {spot::environment &parse_environment}
 %parse-param {spot::formula &result}
+
 %union
 {
   std::string* str;
@@ -238,7 +239,7 @@ using namespace spot;
 /* Priorities.  */
 
 /* Low priority SERE-LTL binding operator. */
-%nonassoc OP_UCONCAT OP_ECONCAT OP_UCONCAT_NONO OP_ECONCAT_NONO
+%precedence OP_UCONCAT OP_ECONCAT OP_UCONCAT_NONO OP_ECONCAT_NONO
 
 %left OP_CONCAT
 %left OP_FUSION
@@ -259,18 +260,18 @@ using namespace spot;
 
 /* LTL operators.  */
 %right OP_U OP_R OP_M OP_W
-%nonassoc OP_F OP_G OP_FREP OP_GREP
-%nonassoc OP_X OP_XREP
+%precedence OP_F OP_G OP_FREP OP_GREP
+%precedence OP_X OP_XREP
 
 /* High priority regex operator. */
-%nonassoc OP_BSTAR OP_STAR_OPEN OP_PLUS
+%precedence OP_BSTAR OP_STAR_OPEN OP_PLUS
           OP_BFSTAR OP_FSTAR_OPEN OP_FPLUS
           OP_EQUAL_OPEN OP_GOTO_OPEN
 
 /* Not has the most important priority (after Wring's `=0' and `=1',
    but as those can only attach to atomic proposition, they do not
    need any precedence).  */
-%nonassoc OP_NOT
+%precedence OP_NOT
 
 %type <ltl> subformula atomprop booleanatom sere lbtformula boolformula
 %type <ltl> bracedsere parenthesedsubformula
@@ -368,8 +369,10 @@ enderror: error END_OF_INPUT
 
 
 OP_SQBKT_SEP_unbounded: OP_SQBKT_SEP | OP_SQBKT_SEP OP_UNBOUNDED
-OP_SQBKT_SEP_opt: | OP_SQBKT_SEP_unbounded
-error_opt: | error
+OP_SQBKT_SEP_opt: %empty
+                | OP_SQBKT_SEP_unbounded
+error_opt: %empty
+         | error
 
 /* for [*i..j] and [=i..j] */
 sqbracketargs: OP_SQBKT_NUM OP_SQBKT_SEP OP_SQBKT_NUM OP_SQBKT_CLOSE

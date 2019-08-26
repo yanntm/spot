@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016, 2018 Laboratoire de Recherche et Developpement
-// de l'Epita (LRDE).
+// Copyright (C) 2016, 2018-2019 Laboratoire de Recherche et
+// Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -64,7 +64,7 @@ namespace spot
     {
     }
 
-    static constexpr trival maybe()
+    static constexpr trival maybe() noexcept
     {
       return trival();
     }
