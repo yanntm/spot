@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013, 2014, 2015, 2016 Laboratoire de Recherche et
+// Copyright (C) 2011, 2013-2016, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -46,17 +46,17 @@ namespace spot
     // \brief Generate a Kripke structure on-the-fly
     //
     // The dead parameter is used to control the behavior of the model
-    // on dead states (i.e. the final states of finite sequences).
-    // If DEAD is "false", it means we are not
-    // interested in finite sequences of the system, and dead state
-    // will have no successor.  If DEAD is
-    // "true", we want to check finite sequences as well as infinite
-    // sequences, but do not need to distinguish them.  In that case
-    // dead state will have a loop labeled by true.  If DEAD is any
-    // other string, this is the name a property that should be true
-    // when looping on a dead state, and false otherwise.
+    // on dead states (i.e. the final states of finite sequences).  If
+    // DEAD is formula::ff(), it means we are not interested in finite
+    // sequences of the system, and dead state will have no successor.
+    // If DEAD is formula::tt(), we want to check finite sequences as
+    // well as infinite sequences, but do not need to distinguish
+    // them.  In that case dead state will have a loop labeled by
+    // true.  If DEAD is any atomic proposition (formula::ap("...")),
+    // this is the name a property that should be true when looping on
+    // a dead state, and false otherwise.
     //
-    // This function returns 0 on error.
+    // This function returns nullptr on error.
     //
     // \a to_observe the list of atomic propositions that should be observed
     //               in the model
