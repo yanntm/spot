@@ -1,5 +1,5 @@
 # DO NOT EDIT! GENERATED AUTOMATICALLY!
-# Copyright (C) 2002-2018 Free Software Foundation, Inc.
+# Copyright (C) 2002-2019 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ AC_DEFUN([gl_EARLY],
   AC_REQUIRE([gl_USE_SYSTEM_EXTENSIONS])
   AC_REQUIRE([gl_PROG_AR_RANLIB])
 
+  AC_REQUIRE([AM_PROG_CC_C_O])
   # Code from module absolute-header:
   # Code from module alloca:
   # Code from module alloca-opt:
@@ -50,9 +51,9 @@ AC_DEFUN([gl_EARLY],
   # Code from module c-ctype:
   # Code from module c-strcase:
   # Code from module c-strcaseeq:
+  # Code from module c99:
   # Code from module close-stream:
   # Code from module closeout:
-  # Code from module configmake:
   # Code from module dirname-lgpl:
   # Code from module dosname:
   # Code from module double-slash-root:
@@ -71,14 +72,17 @@ AC_DEFUN([gl_EARLY],
   # Code from module gettext-h:
   # Code from module gettimeofday:
   # Code from module hard-locale:
+  # Code from module havelib:
   # Code from module include_next:
   # Code from module intprops:
   # Code from module isatty:
   # Code from module largefile:
   AC_REQUIRE([AC_SYS_LARGEFILE])
+  # Code from module libc-config:
   # Code from module limits-h:
   # Code from module localcharset:
   # Code from module localtime-buffer:
+  # Code from module lock:
   # Code from module lstat:
   # Code from module malloc-gnu:
   # Code from module malloc-posix:
@@ -88,6 +92,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module memchr:
   # Code from module mempcpy:
   # Code from module minmax:
+  # Code from module mkdir:
   # Code from module mkstemp:
   # Code from module mkstemps:
   # Code from module msvc-inval:
@@ -110,6 +115,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module ssize_t:
   # Code from module stat:
   # Code from module stat-time:
+  # Code from module std-gnu11:
   # Code from module stdalign:
   # Code from module stdbool:
   # Code from module stddef:
@@ -133,6 +139,8 @@ AC_DEFUN([gl_EARLY],
   # Code from module sys_wait:
   # Code from module sysexits:
   # Code from module tempname:
+  # Code from module threadlib:
+  gl_THREADLIB_EARLY
   # Code from module time:
   # Code from module unistd:
   # Code from module vasnprintf:
@@ -140,6 +148,10 @@ AC_DEFUN([gl_EARLY],
   # Code from module vsnprintf:
   # Code from module wchar:
   # Code from module wctype-h:
+  # Code from module windows-mutex:
+  # Code from module windows-once:
+  # Code from module windows-recmutex:
+  # Code from module windows-rwlock:
   # Code from module xalloc:
   # Code from module xalloc-die:
   # Code from module xalloc-oversized:
@@ -169,10 +181,7 @@ AC_SUBST([LTALLOCA])
   m4_ifdef([AM_XGETTEXT_OPTION],
     [AM_][XGETTEXT_OPTION([--flag=argp_error:2:c-format])
      AM_][XGETTEXT_OPTION([--flag=argp_failure:4:c-format])])
-  gl_CLOSE_STREAM
   gl_MODULE_INDICATOR([close-stream])
-  gl_CLOSEOUT
-  gl_CONFIGMAKE_PREP
   gl_DIRNAME_LGPL
   gl_DOUBLE_SLASH_ROOT
   gl_HEADER_ERRNO_H
@@ -218,7 +227,6 @@ AC_SUBST([LTALLOCA])
     gl_PREREQ_GETTIMEOFDAY
   fi
   gl_SYS_TIME_MODULE_INDICATOR([gettimeofday])
-  gl_HARD_LOCALE
   gl_FUNC_ISATTY
   if test $REPLACE_ISATTY = 1; then
     AC_LIBOBJ([isatty])
@@ -226,12 +234,16 @@ AC_SUBST([LTALLOCA])
   fi
   gl_UNISTD_MODULE_INDICATOR([isatty])
   AC_REQUIRE([gl_LARGEFILE])
+  gl___INLINE
   gl_LIMITS_H
   gl_LOCALCHARSET
-  LOCALCHARSET_TESTS_ENVIRONMENT="CHARSETALIASDIR=\"\$(abs_top_builddir)/$gl_source_base\""
+  dnl For backward compatibility. Some packages still use this.
+  LOCALCHARSET_TESTS_ENVIRONMENT=
   AC_SUBST([LOCALCHARSET_TESTS_ENVIRONMENT])
   AC_REQUIRE([gl_LOCALTIME_BUFFER_DEFAULTS])
   AC_LIBOBJ([localtime-buffer])
+  gl_LOCK
+  gl_MODULE_INDICATOR([lock])
   gl_FUNC_LSTAT
   if test $REPLACE_LSTAT = 1; then
     AC_LIBOBJ([lstat])
@@ -274,6 +286,10 @@ AC_SUBST([LTALLOCA])
   fi
   gl_STRING_MODULE_INDICATOR([mempcpy])
   gl_MINMAX
+  gl_FUNC_MKDIR
+  if test $REPLACE_MKDIR = 1; then
+    AC_LIBOBJ([mkdir])
+  fi
   gl_FUNC_MKSTEMP
   if test $HAVE_MKSTEMP = 0 || test $REPLACE_MKSTEMP = 1; then
     AC_LIBOBJ([mkstemp])
@@ -401,6 +417,7 @@ AC_SUBST([LTALLOCA])
   AC_PROG_MKDIR_P
   gl_SYSEXITS
   gl_FUNC_GEN_TEMPNAME
+  AC_REQUIRE([gl_THREADLIB])
   gl_HEADER_TIME_H
   gl_UNISTD_H
   gl_FUNC_VASNPRINTF
@@ -408,6 +425,30 @@ AC_SUBST([LTALLOCA])
   gl_STDIO_MODULE_INDICATOR([vsnprintf])
   gl_WCHAR_H
   gl_WCTYPE_H
+  AC_REQUIRE([AC_CANONICAL_HOST])
+  case "$host_os" in
+    mingw*)
+      AC_LIBOBJ([windows-mutex])
+      ;;
+  esac
+  AC_REQUIRE([AC_CANONICAL_HOST])
+  case "$host_os" in
+    mingw*)
+      AC_LIBOBJ([windows-once])
+      ;;
+  esac
+  AC_REQUIRE([AC_CANONICAL_HOST])
+  case "$host_os" in
+    mingw*)
+      AC_LIBOBJ([windows-recmutex])
+      ;;
+  esac
+  AC_REQUIRE([AC_CANONICAL_HOST])
+  case "$host_os" in
+    mingw*)
+      AC_LIBOBJ([windows-rwlock])
+      ;;
+  esac
   gl_XALLOC
   gl_XSIZE
   # End of code from modules
@@ -546,6 +587,7 @@ AC_DEFUN([gltests_LIBSOURCES], [
 # This macro records the list of files which have been installed by
 # gnulib-tool and may be removed by future gnulib-tool invocations.
 AC_DEFUN([gl_FILE_LIST], [
+  build-aux/config.rpath
   lib/_Noreturn.h
   lib/alloca.c
   lib/alloca.in.h
@@ -574,11 +616,11 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/c-strcasecmp.c
   lib/c-strcaseeq.h
   lib/c-strncasecmp.c
+  lib/cdefs.h
   lib/close-stream.c
   lib/close-stream.h
   lib/closeout.c
   lib/closeout.h
-  lib/config.charset
   lib/dirname-lgpl.c
   lib/dirname.h
   lib/dosname.h
@@ -607,11 +649,15 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/getprogname.h
   lib/gettext.h
   lib/gettimeofday.c
+  lib/glthread/lock.c
+  lib/glthread/lock.h
+  lib/glthread/threadlib.c
   lib/hard-locale.c
   lib/hard-locale.h
   lib/intprops.h
   lib/isatty.c
   lib/itold.c
+  lib/libc-config.h
   lib/limits.in.h
   lib/localcharset.c
   lib/localcharset.h
@@ -627,6 +673,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/memchr.valgrind
   lib/mempcpy.c
   lib/minmax.h
+  lib/mkdir.c
   lib/mkstemp.c
   lib/mkstemps.c
   lib/msvc-inval.c
@@ -645,8 +692,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/quotearg.h
   lib/rawmemchr.c
   lib/rawmemchr.valgrind
-  lib/ref-add.sin
-  lib/ref-del.sin
   lib/secure_getenv.c
   lib/size_max.h
   lib/sleep.c
@@ -695,6 +740,15 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/wchar.in.h
   lib/wctype-h.c
   lib/wctype.in.h
+  lib/windows-initguard.h
+  lib/windows-mutex.c
+  lib/windows-mutex.h
+  lib/windows-once.c
+  lib/windows-once.h
+  lib/windows-recmutex.c
+  lib/windows-recmutex.h
+  lib/windows-rwlock.c
+  lib/windows-rwlock.h
   lib/xalloc-die.c
   lib/xalloc-oversized.h
   lib/xalloc.h
@@ -702,13 +756,11 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/xsize.c
   lib/xsize.h
   m4/00gnulib.m4
+  m4/__inline.m4
   m4/absolute-header.m4
   m4/alloca.m4
   m4/argp.m4
-  m4/close-stream.m4
-  m4/closeout.m4
   m4/codeset.m4
-  m4/configmake.m4
   m4/dirname.m4
   m4/double-slash-root.m4
   m4/eealloc.m4
@@ -724,20 +776,23 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/getopt.m4
   m4/getprogname.m4
   m4/gettimeofday.m4
-  m4/glibc21.m4
   m4/gnulib-common.m4
-  m4/hard-locale.m4
+  m4/host-cpu-c-abi.m4
   m4/include_next.m4
   m4/intmax_t.m4
   m4/inttypes_h.m4
   m4/isatty.m4
   m4/largefile.m4
+  m4/lib-ld.m4
+  m4/lib-link.m4
+  m4/lib-prefix.m4
   m4/limits-h.m4
   m4/localcharset.m4
   m4/locale-fr.m4
   m4/locale-ja.m4
   m4/locale-zh.m4
   m4/localtime-buffer.m4
+  m4/lock.m4
   m4/longlong.m4
   m4/lstat.m4
   m4/malloc.m4
@@ -749,6 +804,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/memchr.m4
   m4/mempcpy.m4
   m4/minmax.m4
+  m4/mkdir.m4
   m4/mkstemp.m4
   m4/mkstemps.m4
   m4/mmap-anon.m4
@@ -759,6 +815,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/off_t.m4
   m4/pathmax.m4
   m4/printf.m4
+  m4/pthread_rwlock_rdlock.m4
   m4/quote.m4
   m4/quotearg.m4
   m4/rawmemchr.m4
@@ -768,6 +825,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/ssize_t.m4
   m4/stat-time.m4
   m4/stat.m4
+  m4/std-gnu11.m4
   m4/stdalign.m4
   m4/stdbool.m4
   m4/stddef_h.m4
@@ -791,6 +849,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/sys_wait_h.m4
   m4/sysexits.m4
   m4/tempname.m4
+  m4/threadlib.m4
   m4/time_h.m4
   m4/unistd_h.m4
   m4/vasnprintf.m4
