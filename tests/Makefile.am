@@ -445,7 +445,8 @@ if USE_LTSMIN
 check_PROGRAMS += ltsmin/modelcheck
 
 ltsmin_modelcheck_SOURCES = ltsmin/modelcheck.cc
-ltsmin_modelcheck_LDADD = $(top_builddir)/spot/ltsmin/libspotltsmin.la $(LDADD)
+ltsmin_modelcheck_LDADD = $(top_builddir)/spot/ltsmin/libspotltsmin.la \
+	$(LDADD) -lpthread
 
 check_SCRIPTS += ltsmin/defs
 
