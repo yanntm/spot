@@ -34,12 +34,14 @@ LTOSETUP =					\
   AR_FLAGS='cru --plugin $(LTOPLUG)'		\
   RANLIB='ranlib --plugin $(LTOPLUG)'           \
   VALGRIND=false
-PRO1SETUP =					\
-  CFLAGS='-flto -fprofile-generate'		\
-  CXXFLAGS='-flto -fprofile-generate'
-PRO2SETUP =					\
-  CFLAGS='-flto -fprofile-use'			\
-  CXXFLAGS='-flto -fprofile-use'
+GCDADIR := $(shell pwd)/gcda
+PROFW = -Wno-error=coverage-mismatch
+PRO1SETUP =							\
+  CFLAGS='-flto -fprofile-generate=$(GCDADIR) $(PROFW)'		\
+  CXXFLAGS='-flto -fprofile-generate=$(GCDADIR) $(PROFW)'
+PRO2SETUP =						\
+  CFLAGS='-flto -fprofile-use=$(GCDADIR) $(PROFW)'	\
+  CXXFLAGS='-flto -fprofile-use=$(GCDADIR) $(PROFW)'
 PYDEFAULT=$(shell py3versions --default)
 PYOTHERS=$(filter-out $(PYDEFAULT), $(shell py3versions --supported))
 
@@ -57,6 +59,7 @@ FLTOWORKAROUND = perl -pi -e s/-flto// bin/Makefile
 # We want to build Spot twice: once to get profile data, and a second
 # time to use it.
 override_dh_auto_configure:
+	mkdir -p $(GCDADIR)
 	dh_auto_configure -- $(PRO1SETUP) $(LTOSETUP)	\
 	  --disable-devel --enable-optimizations	\
 	  --disable-static PYTHON=/usr/bin/$(PYDEFAULT)
