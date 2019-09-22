@@ -72,6 +72,7 @@ namespace spot
       KEqualBunop,
       KGotoBunop,
       KFirstMatch,
+      KStrongX,
     };
 
     const char* spot_kw[] = {
@@ -112,6 +113,7 @@ namespace spot
       "[=",
       "[->",
       "first_match",
+      "X[!]",
     };
 
     const char* spin_kw[] = {
@@ -138,60 +140,62 @@ namespace spot
       " || ",
       " || ",
       " && ",
-      " && ",                        // not supported
-      " & ",                        // not supported
-      ";",                        // not supported
-      ":",                        // not supported
-      "{",                        // not supported
-      "}",                        // not supported
-      "]",                        // not supported
-      "[*",                        // not supported
-      "[+]",                        // not supported
-      "[:*",                        // not supported
-      "[:+]",                        // not supported
-      "[=",                        // not supported
-      "[->",                        // not supported
-      "first_match",                // not supported
+      " && ",                   // not supported
+      " & ",                    // not supported
+      ";",                      // not supported
+      ":",                      // not supported
+      "{",                      // not supported
+      "}",                      // not supported
+      "]",                      // not supported
+      "[*",                     // not supported
+      "[+]",                    // not supported
+      "[:*",                    // not supported
+      "[:+]",                   // not supported
+      "[=",                     // not supported
+      "[->",                    // not supported
+      "first_match",            // not supported
+      "!X!",
     };
 
     const char* wring_kw[] = {
       "FALSE",
       "TRUE",
-      "[*0]",                        // not supported
+      "[*0]",                   // not supported
       " ^ ",
       " -> ",
       " <-> ",
       " U ",
       " R ",
-      " W ",                        // rewritten
-      " M ",                        // rewritten
-      "<>-> ",                // not supported
-      "<>=> ",                // not supported
-      "<>+> ",                // not supported
-      "<>=+> ",                // not supported
-      "[]-> ",                // not supported
-      "[]=> ",                // not supported
+      " W ",                    // rewritten
+      " M ",                    // rewritten
+      "<>-> ",                  // not supported
+      "<>=> ",                  // not supported
+      "<>+> ",                  // not supported
+      "<>=+> ",                 // not supported
+      "[]-> ",                  // not supported
+      "[]=> ",                  // not supported
       "!",
       "X",
       "F",
       "G",
       " + ",
-      " | ",                        // not supported
+      " | ",                    // not supported
       " * ",
-      " && ",                        // not supported
-      " & ",                        // not supported
-      ";",                        // not supported
-      ":",                        // not supported
-      "{",                        // not supported
-      "}",                        // not supported
-      "]",                        // not supported
-      "[*",                        // not supported
-      "[+]",                        // not supported
-      "[:*",                        // not supported
-      "[:+]",                        // not supported
-      "[=",                        // not supported
-      "[->",                        // not supported
-      "first_match",                // not supported
+      " && ",                   // not supported
+      " & ",                    // not supported
+      ";",                      // not supported
+      ":",                      // not supported
+      "{",                      // not supported
+      "}",                      // not supported
+      "]",                      // not supported
+      "[*",                     // not supported
+      "[+]",                    // not supported
+      "[:*",                    // not supported
+      "[:+]",                   // not supported
+      "[=",                     // not supported
+      "[->",                    // not supported
+      "first_match",            // not supported
+      "X[!]",                   // not supported, FIXME: we need a syntax
     };
 
     const char* utf8_kw[] = {
@@ -232,6 +236,7 @@ namespace spot
       "[=",
       "[->",
       "first_match",
+      "Ⓧ",
     };
 
     const char* latex_kw[] = {
@@ -272,6 +277,7 @@ namespace spot
       "\\SereEqual{",
       "\\SereGoto{",
       "\\FirstMatch",
+      "\\StrongX",
     };
 
     const char* sclatex_kw[] = {
@@ -316,6 +322,7 @@ namespace spot
       "^{=",
       "^{\\to",
       "\\mathsf{first\\_match}",
+      "\\textcircled{\\mathsf{X}}",
     };
 
     static bool
@@ -519,7 +526,18 @@ namespace spot
               break;
             }
           case op::X:
-            emit(KX);
+            {
+              emit(KX);
+              bool cst = f[0].is_constant();
+              if (cst)
+                openp();
+              visit(f[0]);
+              if (cst)
+                closep();
+              break;
+            }
+          case op::strong_X:
+            emit(KStrongX);
             visit(f[0]);
             break;
           case op::F:
@@ -1075,6 +1093,9 @@ namespace spot
             break;
           case op::X:
             os_ << 'X';
+            break;
+          case op::strong_X:
+            os_ << 'X';         // unsupported
             break;
           case op::F:
             os_ << 'F';

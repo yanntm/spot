@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014, 2015 Laboratoire de Recherche et Développement
+# Copyright (C) 2014, 2015, 2019 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -52,6 +52,7 @@ p1 U (p4 | (p3 xor (p4 W p0)))
 1 U (p4 | (p3 xor (p4 W p0)))
 Xp1 U (p4 | !(p4 W p0))
 Xp1 W (p4 | (p3 xor (p4 W p0)))
+X(0) U (p4 | (p3 xor (p4 W p0)))
 Xp1 U (p4 | (p3 xor (p4 W 0)))
 Xp4 U (p4 | (p3 xor (p4 W p0)))
 Xp3 U (p4 | (p3 xor (p4 W p0)))
@@ -74,10 +75,10 @@ Xp4 R p3
 p3 W !p0
 Xp4 W !p0
 (p4 R p3) W !p0
-(0 R p3) W !p0
 (Xp4 R p3) W p0
 (Xp4 R p3) W 0
 (p3 W Xp4) W !p0
+(X(0) R p3) W !p0
 (Xp3 R p3) W !p0
 (Xp0 R p3) W !p0
 (Xp4 R p4) W !p0
@@ -180,11 +181,11 @@ F!{{p2;p0}[:*]}
 {{p2;p0}[:*]}[]-> Xp0
 F({p2;p0}[]-> Xp0)
 F({{p2;p0}[:*]}[]-> p0)
-F({{p2;p0}[:*]}[]-> 0)
 F({p0[*2][:*]}[]-> Xp0)
 F({p2[*2][:*]}[]-> Xp2)
 F({{1;p0}[:*]}[]-> Xp0)
 F({{p2;1}[:*]}[]-> Xp0)
+F({{p2;p0}[:*]}[]-> X(0))
 EOF
 
 echo '1,a,3' > input

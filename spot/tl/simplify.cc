@@ -489,7 +489,13 @@ namespace spot
               result = negated ? formula::Not(f) : f;
               break;
             case op::X:
-              // !Xa == X!a
+            case op::strong_X:
+              // Currently we don't distinguish between weak and
+              // strong semantics, so we treat the two operators
+              // identically.
+              //
+              //   !Xa == X!a
+              //   !X[!]a = X!a
               result = formula::X(rec(f[0], negated));
               break;
             case op::F:
@@ -714,7 +720,10 @@ namespace spot
     formula
     unop_multop(op uop, op mop, vec v)
     {
-      return formula::unop(uop, formula::multop(mop, v));
+      formula f = formula::unop(uop, formula::multop(mop, v));
+      if (f.is(op::X) && f[0].is_ff())
+        return formula::ff();
+      return f;
     }
 
     formula
@@ -797,6 +806,7 @@ namespace spot
         switch (f.kind())
           {
           case op::X:
+          case op::strong_X:
             if (res_X && !eu)
               {
                 res_X->emplace_back(f[0]);
@@ -950,8 +960,15 @@ namespace spot
           case op::FStar:
             return f;
           case op::X:
+          case op::strong_X:
             {
               formula c = f[0];
+              // The following rules are not trivial simplifications,
+              // because they are not true in LTLf.
+              //   X(0)=0
+              //   X[!](1)=1
+              if (c.is_constant())
+                return c;
               // Xf = f if f is both eventual and universal.
               if (c.is_universal() && c.is_eventual())
                 {
@@ -3731,9 +3748,10 @@ namespace spot
       switch (f.kind())
         {
         case op::X:
+        case op::strong_X:
           if (g.is_eventual() && syntactic_implication(f[0], g))
             return true;
-          if (g.is(op::X) && syntactic_implication(f[0], g[0]))
+          if (g.is(op::X, op::strong_X) && syntactic_implication(f[0], g[0]))
             return true;
           break;
 
@@ -3893,6 +3911,7 @@ namespace spot
 
         case op::G:
         case op::X:
+        case op::strong_X:
           if (f.is_universal() && syntactic_implication(f, g[0]))
             return true;
           break;

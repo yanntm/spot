@@ -242,6 +242,7 @@ namespace spot
         C(Star);
         C(FStar);
         C(first_match);
+        C(strong_X);
 #undef C
       }
     SPOT_UNREACHABLE();
@@ -788,10 +789,20 @@ namespace spot
             }
           break;
         }
+
       case op::X:
-        // X(1) = 1,  X(0) = 0
-        if (f->is_tt() || f->is_ff())
+        // X(1) = 1
+        if (f->is_tt())
           return f;
+        // We do not have X(0)=0 because that
+        // is not true with finite semantics.
+        assert(!f->is_eword());
+        break;
+      case op::strong_X:
+        // X[!](0) = 0
+        if (f->is_ff())
+          return f;
+        // Note: with finite semantics X[!](1)≠1.
         assert(!f->is_eword());
         break;
 
@@ -1176,6 +1187,7 @@ namespace spot
         is_.accepting_eword = false;
         break;
       case op::X:
+      case op::strong_X:
         props = children[0]->props;
         is_.not_marked = true;
         is_.boolean = false;
@@ -1186,6 +1198,10 @@ namespace spot
         // is_.syntactic_obligation inherited
         // is_.syntactic_recurrence inherited
         // is_.syntactic_persistence inherited
+
+        // is_.accepting_eword is currently unused outside SEREs, but
+        // we could make sense of it if we start supporting LTL over
+        // finite traces.
         is_.accepting_eword = false;
         break;
       case op::F:

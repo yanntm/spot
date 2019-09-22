@@ -1,5 +1,35 @@
 New in spot 2.8.1.dev (not yet released)
 
+  Library:
+
+  - Historically, Spot only supports LTL with infinite semantics
+    so it had automatic simplifications reducing X(1) and X(0) to
+    1 and 0 whenever such formulas are constructed.  This
+    caused issues for users of LTLf formulas, where it is important
+    to distinguish a "weak next" (for which X(1)=1 but X(0)!=0) from
+    a "strong next" (for which X(0)=0 but X(1)!=1).
+
+    To accomodate this, this version introduces a new operator
+    op::strong_X in addition to the existing op::X (whose
+    interpretation is now weak in LTLf).  The syntax for the strong
+    next is X[!] as a reference to the PSL syntax (where the strong
+    next is written X!).
+
+    Trivial simplification rules for X are changed to just
+       X(1) = 1       (and not X(0)=0 anymore)
+    while we have
+       X[!]0 = 0
+
+    The X(0)=0 and X[!]1=1 reductions are now preformed during LTL
+    simplification, not automatically.  Aside from the from_ltlf()
+    function, the other functions of the library handle X and X[!] in
+    the same way, since there is no different between X and X[!]  over
+    infinite words.
+
+    Operators F[n:m!] and G[n:m!] are also supported as strong
+    variants of F[n:m] and G[n:m], but those four are only implemented
+    as syntactic sugar.
+
   Bugs fixed:
 
   - Calling "autfilt --dualize" on an alternating automaton with

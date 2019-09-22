@@ -81,6 +81,7 @@ namespace spot
               return;
             }
           case op::X:
+          case op::strong_X:
             {
               ltl2taa_visitor v = recurse(f[0]);
               std::vector<formula> dst;

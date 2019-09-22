@@ -24,19 +24,24 @@
 
 set -e
 
-cat >ok.in <<EOF
+cat >ok.in <<\EOF
 X[4]a
+X[3!]a
 G[2:4]a
 G[4:2]a
 F[2:4]a
 F[4:2]a
 F[2:$]a
 F[2..]a
+F[2:$!]a
+F[2:3!]a
 X [4]a | b
 G [2:4] a | b
 G [4:2] a | b
 G [2:] a | b
 G [2..] a | b
+G [2..!] a | b
+G [2..3!] a | b
 F [2:4] a |  b
 F [4:2]a | F[2:2]b
 F[]a|G[]b|X[]c
@@ -59,19 +64,24 @@ EOF
 
 ltlfilt -F ok.in > ok.out
 
-cat >expect <<EOF
+cat >expect <<\EOF
 XXXXa
+X[!]X[!]X[!]a
 XX(a & X(a & Xa))
 XX(a & X(a & Xa))
 XX(a | X(a | Xa))
 XX(a | X(a | Xa))
 XXFa
 XXFa
+X[!]X[!]Fa
+X[!]X[!](a | X[!]a)
 b | XXXXa
 b | XX(a & X(a & Xa))
 b | XX(a & X(a & Xa))
 b | XXGa
 b | XXGa
+b | X[!]X[!]Ga
+b | X[!]X[!](a & X[!]a)
 b | XX(a | X(a | Xa))
 XX(a | X(a | Xa)) | XXb
 FGa | Gb | XGc
@@ -99,14 +109,19 @@ cat >err.in <<EOF
 F[
 F[3:1]
 F[3:1][2:1]
+F[2]a
+F[2!]a
 F[a
 G[2:4]
 G[2:.]a
 G[4]a
+G[4!]a
 G[a
 X[2
 X[2]
+X[2:3]
 X[2:4]a
+X[2:4!]a
 X[a
 {a ## b}
 {a ##7}
@@ -122,6 +137,7 @@ numoreof="$num or end of formula"
 sep="separator for square bracket operator"
 undefined='$undefined'
 closingbkt='square bracket operator, expecting closing bracket'
+eclosingbkt='expecting closing bracket or closing !]'
 
 ltlfilt -F err.in 2>err && exit 1
 cat >expect2 <<EOF
@@ -153,6 +169,16 @@ missing right operand for "F[.] operator"
 ignoring trailing garbage
 
 ltlfilt:err.in:4: parse error:
+>>> F[2]a
+    ^^^^
+F[n:m] expects two parameters
+
+ltlfilt:err.in:5: parse error:
+>>> F[2!]a
+    ^^^^^
+F[n:m!] expects two parameters
+
+ltlfilt:err.in:6: parse error:
 >>> F[a
       ^
 syntax error, unexpected $undefined, expecting $numoreof
@@ -161,7 +187,7 @@ syntax error, unexpected $undefined, expecting $numoreof
     ^^^
 missing closing bracket for F[.]
 
-ltlfilt:err.in:5: parse error:
+ltlfilt:err.in:7: parse error:
 >>> G[2:4]
           ^
 syntax error, unexpected end of formula
@@ -170,21 +196,26 @@ syntax error, unexpected end of formula
     ^^^^^^
 missing right operand for "G[.] operator"
 
-ltlfilt:err.in:6: parse error:
+ltlfilt:err.in:8: parse error:
 >>> G[2:.]a
         ^
-syntax error, unexpected $undefined, expecting closing bracket
+syntax error, unexpected $undefined, $eclosingbkt
 
 >>> G[2:.]a
     ^^^^^^
 treating this G[.] as a simple G
 
-ltlfilt:err.in:7: parse error:
+ltlfilt:err.in:9: parse error:
 >>> G[4]a
     ^^^^
 G[n:m] expects two parameters
 
-ltlfilt:err.in:8: parse error:
+ltlfilt:err.in:10: parse error:
+>>> G[4!]a
+    ^^^^^
+G[n:m!] expects two parameters
+
+ltlfilt:err.in:11: parse error:
 >>> G[a
       ^
 syntax error, unexpected $undefined, expecting $numoreof
@@ -193,16 +224,16 @@ syntax error, unexpected $undefined, expecting $numoreof
     ^^^
 missing closing bracket for G[.]
 
-ltlfilt:err.in:9: parse error:
+ltlfilt:err.in:12: parse error:
 >>> X[2
        ^
-syntax error, unexpected end of formula, expecting closing bracket
+syntax error, unexpected end of formula, $eclosingbkt
 
 >>> X[2
     ^^^
 missing closing bracket for X[.]
 
-ltlfilt:err.in:10: parse error:
+ltlfilt:err.in:13: parse error:
 >>> X[2]
         ^
 syntax error, unexpected end of formula
@@ -211,25 +242,43 @@ syntax error, unexpected end of formula
     ^^^^
 missing right operand for "X[.] operator"
 
-ltlfilt:err.in:11: parse error:
+ltlfilt:err.in:14: parse error:
+>>> X[2:3]
+       ^
+syntax error, unexpected separator for square bracket operator, $eclosingbkt
+
+>>> X[2:3]
+    ^^^^^^
+missing closing bracket for X[.]
+
+ltlfilt:err.in:15: parse error:
 >>> X[2:4]a
        ^
-syntax error, unexpected $sep, expecting closing bracket
+syntax error, unexpected $sep, $eclosingbkt
 
 >>> X[2:4]a
     ^^^^^^^
 treating this X[.] as a simple X
 
-ltlfilt:err.in:12: parse error:
+ltlfilt:err.in:16: parse error:
+>>> X[2:4!]a
+       ^
+syntax error, unexpected separator for square bracket operator, $eclosingbkt
+
+>>> X[2:4!]a
+    ^^^^^^^^
+treating this X[.!] as a simple X[!]
+
+ltlfilt:err.in:17: parse error:
 >>> X[a
       ^
-syntax error, unexpected $undefined, expecting $numoreof
+syntax error, unexpected $undefined, expecting closing !] or $numoreof
 
 >>> X[a
     ^^^
 missing closing bracket for X[.]
 
-ltlfilt:err.in:13: parse error:
+ltlfilt:err.in:18: parse error:
 >>> {a ## b}
        ^
 syntax error, unexpected $undefined
@@ -238,7 +287,7 @@ syntax error, unexpected $undefined
        ^^^^
 ignoring this
 
-ltlfilt:err.in:14: parse error:
+ltlfilt:err.in:19: parse error:
 >>> {a ##7}
           ^
 syntax error, unexpected closing brace
@@ -247,7 +296,7 @@ syntax error, unexpected closing brace
        ^^^
 missing right operand for "SVA delay operator"
 
-ltlfilt:err.in:15: parse error:
+ltlfilt:err.in:20: parse error:
 >>> {a ##[::] b}
            ^
 syntax error, unexpected separator for $closingbkt
@@ -256,12 +305,12 @@ syntax error, unexpected separator for $closingbkt
        ^^^^^^
 treating this delay block as ##1
 
-ltlfilt:err.in:16: parse error:
+ltlfilt:err.in:21: parse error:
 >>> {a ##[2:1] b}
      ^
 reversed range
 
-ltlfilt:err.in:17: parse error:
+ltlfilt:err.in:22: parse error:
 >>> {a ##[1:2]}
               ^
 syntax error, unexpected closing brace
@@ -270,7 +319,7 @@ syntax error, unexpected closing brace
        ^^^^^^^
 missing right operand for "SVA delay operator"
 
-ltlfilt:err.in:18: parse error:
+ltlfilt:err.in:23: parse error:
 >>> {##[1:2]}
             ^
 syntax error, unexpected closing brace
@@ -280,4 +329,4 @@ syntax error, unexpected closing brace
 missing right operand for "SVA delay operator"
 
 EOF
-diff err expect2
+diff -u err expect2

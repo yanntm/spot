@@ -48,6 +48,8 @@ G(a & Xb)
 Xa
 F(a & !Xa & Xb)
 {a & {b|c} }
+((a && b) U (! (X 1)))
+((a && b) U (! (X[!] 1)))
 
 {a[=2:3]}|->b
 {a[->2:3]}|->b
@@ -63,6 +65,7 @@ EOF
 
 checkopt --boolean <<EOF
 a & (b | c)
+0
 EOF
 
 checkopt --bsize-min=2 --bsize-max=4 <<EOF
@@ -81,6 +84,8 @@ F(GFa | Gb)
 F(b W GFa)
 a U Fb
 F(a & !Xa & Xb)
+0
+(a & b) U !X[!]1
 EOF
 
 checkopt --universal <<EOF
@@ -88,16 +93,19 @@ GFa | FGb
 F(GFa | Gb)
 GFa | Gb
 G(a & Xb)
+0
 EOF
 
 checkopt --eventual --universal <<EOF
 GFa | FGb
 F(GFa | Gb)
+0
 EOF
 
 checkopt --suspendable <<EOF
 GFa | FGb
 F(GFa | Gb)
+0
 EOF
 
 checkopt --stutter-invariant <<EOF
@@ -110,6 +118,8 @@ b W GFa
 a U Fb
 F(a & !Xa & Xb)
 a & (b | c)
+0
+(a & b) U !X[!]1
 {{!a}[*];a[+]}[]-> b
 {a[*];{!a}[*];a[*]}[]-> b
 {a[*];{!a}[+];a[*]}[]-> b
@@ -120,7 +130,7 @@ a & (b | c)
 EOF
 
 checkopt -c --stutter-invariant <<EOF
-16
+18
 EOF
 
 checkopt --syntactic-stutter-invariant <<EOF
@@ -131,6 +141,7 @@ GFa | Gb
 b W GFa
 a U Fb
 a & (b | c)
+0
 {{!a}[*];a[+]}[]-> b
 {a[*];{!a}[*];a[*]}[]-> b
 {a[*];{!a}[+];a[*]}[]-> b
@@ -152,6 +163,8 @@ G(a & Xb)
 Xa
 F(a & X(!a & b))
 a & (b | c)
+0
+0
 a R (!a | X({a[->1..2]}[]-> (b & X(b W a))))
 a R (!a | X({a[->1..2]}[]-> b))
 a R (b W !a)
@@ -169,6 +182,7 @@ F(GFa | Gb)
 F(b W GFa)
 Fb
 F(a & X(!a & b))
+0
 EOF
 
 checkopt --liveness <<EOF
@@ -186,6 +200,8 @@ checkopt --safety <<EOF
 G(a & Xb)
 Xa
 a & (b | c)
+0
+(a & b) U !X[!]1
 {a[=2..3]}[]-> b
 {a[->2..3]}[]-> b
 {{!a}[*];a[+]}[]-> b
@@ -206,6 +222,8 @@ G(a & Xb)
 Xa
 F(a & !Xa & Xb)
 a & (b | c)
+0
+(a & b) U !X[!]1
 {a[=2..3]}[]-> b
 {a[->2..3]}[]-> b
 {{!a}[*];a[+]}[]-> b
@@ -224,6 +242,8 @@ a U Fb
 Xa
 F(a & !Xa & Xb)
 a & (b | c)
+0
+(a & b) U !X[!]1
 EOF
 
 checkopt -v --ltl <<EOF
@@ -251,6 +271,8 @@ a U Fb
 G(a & Xb)
 Xa
 F(a & !Xa & Xb)
+0
+(a & b) U !X[!]1
 {a[=2..3]}[]-> b
 {a[->2..3]}[]-> b
 {{!a}[*];a[+]}[]-> b
@@ -273,6 +295,7 @@ a U Fb
 G(a & Xb)
 F(a & !Xa & Xb)
 a & (b | c)
+(a & b) U !X[!]1
 {a[=2..3]}[]-> b
 {a[->2..3]}[]-> b
 {{!a}[*];a[+]}[]-> b
@@ -300,10 +323,6 @@ F(GFa | Gb)
 F(b W GFa)
 EOF
 
-# Restrict to LTL
-run 0 ltlfilt --ltl formulas > formulas2
-mv formulas2 formulas
-
 checkopt --ltl --from-ltlf=al <<EOF
 al & (G(!al | F(a & al)) | F(al & G(!al | b))) & (al U G!al)
 al & F(al & (G(!al | F(a & al)) | G(!al | b))) & (al U G!al)
@@ -311,10 +330,12 @@ al & F(al & ((!al | b) W G(!al | F(a & al)))) & (al U G!al)
 al & (G(!al | F(a & al)) | G(!al | b)) & (al U G!al)
 al & ((!al | b) W G(!al | F(a & al))) & (al U G!al)
 al & (a U (al & F(al & b))) & (al U G!al)
-al & G(!al | (a & X(al & b))) & (al U G!al)
-al & X(a & al) & (al U G!al)
-al & F(a & al & !X(a & al) & X(al & b)) & (al U G!al)
+al & G(!al | (a & X(!al | b))) & (al U G!al)
+al & X(a | !al) & (al U G!al)
+al & F(a & al & !X(a | !al) & X(!al | b)) & (al U G!al)
 a & al & (b | c) & (al U G!al)
+0
+al & ((a & b) U (al & !X[!]al)) & (al U G!al)
 EOF
 
 checkopt --ltl --from-ltlf='!dead' <<EOF
@@ -324,10 +345,12 @@ checkopt --ltl --from-ltlf='!dead' <<EOF
 !dead & (G(dead | F(a & !dead)) | G(b | dead)) & (!dead U Gdead)
 !dead & ((b | dead) W G(dead | F(a & !dead))) & (!dead U Gdead)
 !dead & (a U (!dead & F(b & !dead))) & (!dead U Gdead)
-!dead & G(dead | (a & X(b & !dead))) & (!dead U Gdead)
-!dead & X(a & !dead) & (!dead U Gdead)
-!dead & F(a & !dead & !X(a & !dead) & X(b & !dead)) & (!dead U Gdead)
+!dead & G(dead | (a & X(b | dead))) & (!dead U Gdead)
+!dead & X(a | dead) & (!dead U Gdead)
+!dead & F(a & !dead & !X(a | dead) & X(b | dead)) & (!dead U Gdead)
 a & !dead & (b | c) & (!dead U Gdead)
+0
+!dead & ((a & b) U (!dead & !X[!]!dead)) & (!dead U Gdead)
 EOF
 
 cat >in <<EOF

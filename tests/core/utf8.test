@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2012, 2013, 2015, 2016 Laboratoire de Recherche et
+# Copyright (C) 2012, 2013, 2015, 2016, 2019 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -64,3 +64,9 @@ diff expected output
 
 randltl --psl -8 --seed 0 --tree-size 16 a b c -n 100 > formulae
 ../reduc -f -h 0 formulae
+
+echo 'Ⓧa' >in
+ltlfilt -8 -f 'X[!]a' >out
+diff in out
+ltlfilt -8 -F in >out
+diff in out

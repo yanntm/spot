@@ -57,8 +57,22 @@
 #include <cstddef>
 #include <limits>
 
+// The strong_X operator was introduced in Spot 2.8.2 to fix an issue
+// with from_ltlf().  As adding a new operator is a backward
+// incompatibility, causing new warnings from the compiler.
+#if defined(SPOT_BUILD) or defined(SPOT_USES_STRONG_X)
+// Use #if SPOT_HAS_STRONG_X in code that need to be backward
+// compatible with older Spot versions.
+#  define SPOT_HAS_STRONG_X 1
+// You me #define SPOT_WANT_STRONG_X yourself before including
+// this file to force the use of STRONG_X
+#  define SPOT_WANT_STRONG_X 1
+#endif
+
 namespace spot
 {
+
+
   /// \ingroup tl_essentials
   /// \brief Operator types
   enum class op: uint8_t
@@ -98,6 +112,9 @@ namespace spot
     Star,                      ///< Star
     FStar,                     ///< Fustion Star
     first_match,               ///< first_match(sere)
+#ifdef SPOT_WANT_STRONG_X
+    strong_X,                  ///< strong Next
+#endif
   };
 
 #ifndef SWIG
@@ -899,6 +916,22 @@ namespace spot
       return nested_unop_range(op::X, op::Or /* unused */, level, level, f);
     }
 
+#if SPOT_WANT_STRONG_X
+    /// \brief Construct a strong_X
+    /// @{
+    SPOT_DEF_UNOP(strong_X);
+    /// @}
+
+    /// \brief Construct a strong_X[n]
+    ///
+    /// strong_X[3]f = strong_X strong_X strong_X f
+    static formula strong_X(unsigned level, const formula& f)
+    {
+      return nested_unop_range(op::strong_X, op::Or /* unused */,
+                               level, level, f);
+    }
+#endif
+
     /// \brief Construct an F
     /// @{
     SPOT_DEF_UNOP(F);
@@ -1662,6 +1695,9 @@ namespace spot
             return *this;
           case op::Not:
           case op::X:
+#if SPOT_HAS_STRONG_X
+          case op::strong_X:
+#endif
           case op::F:
           case op::G:
           case op::Closure:

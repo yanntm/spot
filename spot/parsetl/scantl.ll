@@ -64,6 +64,7 @@ DARROWL   "=>"|"⇒"|"⟹"
 ARROWLR   "<->"|"<-->"|"↔"
 DARROWLR  "<=>"|"⇔"
 CIRCLE    "()"|"○"|"◯"
+CIRCLEX   "Ⓧ"
 NOT       "!"|"~"|"¬"
 BOXARROW  {BOX}{ARROWL}|"|"{ARROWL}|"↦"
 BOXDARROW {BOX}{DARROWL}|"|"{DARROWL}|"⤇"
@@ -254,6 +255,7 @@ eol2        (\n\r)+|(\r\n)+
 "[="				BEGIN(sqbracket); return token::OP_EQUAL_OPEN;
 "["{ARROWL}			BEGIN(sqbracket); return token::OP_GOTO_OPEN;
 <sqbracket>"]"			BEGIN(0); return token::OP_SQBKT_CLOSE;
+<sqbracket>"!]"                 BEGIN(0); return token::OP_SQBKT_STRONG_CLOSE;
 <sqbracket>[0-9]+		{
 				  errno = 0;
 				  unsigned long n = strtoul(yytext, 0, 10);
@@ -313,6 +315,7 @@ eol2        (\n\r)+|(\r\n)+
 "U"				BEGIN(0); return token::OP_U;
 "R"|"V"				BEGIN(0); return token::OP_R;
 "X"|{CIRCLE}			BEGIN(0); return token::OP_X;
+{CIRCLEX}                       BEGIN(0); return token::OP_STRONG_X;
 "W"				BEGIN(0); return token::OP_W;
 "M"				BEGIN(0); return token::OP_M;
 

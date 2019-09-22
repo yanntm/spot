@@ -56,14 +56,18 @@
 \DeclareMathOperator{\F}{\texttt{F}}
 \DeclareMathOperator{\FALT}{\texttt{<>}}
 \newcommand{\FREP}[1]{\texttt{F[#1]}}
+\newcommand{\StrongFREP}[1]{\texttt{F[#1!]}}
 \DeclareMathOperator{\G}{\texttt{G}}
 \DeclareMathOperator{\GALT}{\texttt{[]}}
 \newcommand{\GREP}[1]{\texttt{G[#1]}}
+\newcommand{\StrongGREP}[1]{\texttt{G[#1!]}}
 \newcommand{\U}{\mathbin{\texttt{U}}}
 \newcommand{\R}{\mathbin{\texttt{R}}}
 \newcommand{\RALT}{\mathbin{\texttt{V}}}
 \DeclareMathOperator{\X}{\texttt{X}}
+\newcommand{\StrongX}{\texttt{X[!]}}
 \newcommand{\XREP}[1]{\texttt{X[#1]}}
+\newcommand{\StrongXREP}[1]{\texttt{X[#1!]}}
 \DeclareMathOperator{\XALT}{\texttt{()}}
 \newcommand{\M}{\mathbin{\texttt{M}}}
 \newcommand{\W}{\mathbin{\texttt{W}}}
@@ -485,7 +489,8 @@ temporal operators can be used to construct another temporal formula.
                  & preferred & \multicolumn{1}{c}{other supported} & \multicolumn{2}{l}{UTF8 characters supported} \\
    operator      & syntax    & \multicolumn{1}{c}{syntaxes} & preferred & others \\
   \cmidrule(r){1-3} \cmidrule(l){4-5}
-  Next           & $\X f$    & $\XALT f$ & $\Circle$ \uni{25CB} & $\Circle$ \uni{25EF}\\
+  (Weak) Next    & $\X f$    & $\XALT f$ & $\Circle$ \uni{25CB} & $\Circle$ \uni{25EF}\\
+  Strong Next    & $\StrongX f$ & & \tikz[baseline=(X.base)]\node[inner sep=0pt, circle, draw](X){\textsc{x}}; \uni{24CD} & \\
   Eventually     & $\F f$    & $\FALT f$ & $\Diamond$ \uni{25C7} & $\Diamond$ \uni{22C4} \uni{2662}\\
   Always         & $\G f$    & $\GALT f$ & $\Square$ \uni{25A1} & $\Square$ \uni{2B1C} \uni{25FB}\\
   (Strong) Until & $f \U g$ \\
@@ -499,6 +504,7 @@ temporal operators can be used to construct another temporal formula.
 
 \begin{align*}
   \sigma\vDash \X f &\iff \sigma^{1..}\vDash f\\
+  \sigma\vDash \StrongX f &\iff \sigma^{1..}\vDash f\\
   \sigma\vDash \F f &\iff \exists i\in \N,\, \sigma^{i..}\vDash f\\
   \sigma\vDash \G f &\iff \forall i\in \N,\, \sigma^{i..}\vDash f\\
   \sigma\vDash f\U g &\iff \exists j\in\N,\,
@@ -514,6 +520,11 @@ temporal operators can be used to construct another temporal formula.
   \end{cases}\\
   \sigma \vDash f\R g &\iff (\sigma \vDash f\M g)\lor(\sigma\vDash \G g)
 \end{align*}
+
+Note that the semantics of $\X$ (weak next) and $\StrongX$ (strong
+next) are identical in LTL formulas.  The two operators make sense
+only to build LTLf formulas (i.e., LTL with finite semantics), for
+which support is being progressively introduced in Spot.
 
 Appendix~\ref{sec:ltl-equiv} explains how to rewrite the above LTL
 operators using only $\X$ and one operator chosen among $\U$, $\W$,
@@ -537,12 +548,20 @@ or all times between $n$ and $m$ steps.
   \GREP{\mvar{n}:\mvar{m}}f
   & \equiv \underbrace{\vphantom{(}\X\X\ldots\X}_{\mathclap{\text{\mvar{n} occ. of~}\X}} (f \AND \underbrace{\X(f \AND \X(\ldots \AND \X f))}_{\mathclap{\mvar{m}-\mvar{n}\text{~occ. of~}\X}})
   & \GREP{\mvar{n}:}f &\equiv \XREP{\mvar{n}}\G{}f\\
+ \StrongXREP{\mvar{n}} f
+ & \equiv \underbrace{\StrongX\StrongX\ldots\StrongX}_{\mathclap{\text{\mvar{n} occurrences of~}\StrongX}} f \\
+ \StrongFREP{\mvar{n}:\mvar{m}}f
+ & \equiv \underbrace{\vphantom{(}\StrongX\StrongX\ldots\StrongX}_{\mathclap{\text{\mvar{n} occ. of~}\StrongX}} (f \OR \underbrace{\StrongX(f \OR \StrongX(\ldots \OR \StrongX f))}_{\mathclap{\mvar{m}-\mvar{n}\text{~occ. of~}\StrongX}})
+ & \StrongFREP{\mvar{n}:}f &\equiv \StrongXREP{\mvar{n}}\F{}f\\
+ \StrongGREP{\mvar{n}:\mvar{m}}f
+ & \equiv \underbrace{\vphantom{(}\StrongX\StrongX\ldots\StrongX}_{\mathclap{\text{\mvar{n} occ. of~}\StrongX}} (f \AND \underbrace{\StrongX(f \AND \StrongX(\ldots \AND \StrongX f))}_{\mathclap{\mvar{m}-\mvar{n}\text{~occ. of~}\StrongX}})
+ & \StrongGREP{\mvar{n}:}f &\equiv \StrongXREP{\mvar{n}}\G{}f
 \end{align*}
 
 \subsection{Trivial Identities (Occur Automatically)}
 
   \begin{align*}
-    \X\0 &\equiv \0 &
+    \StrongX\0 &\equiv \0 &
     \F\0 &\equiv \0 &
     \G\0 &\equiv \0 \\
     \X\1 &\equiv \1 &
@@ -983,32 +1002,33 @@ operator, even if the operator has multiple synonyms (like \samp{|},
 \samp{||}, and {`\verb=\/='}).
 
 \begin{align*}
-\mathit{constant} ::={}     & \0 \mid \1                                                                                                                                                                                                 \\
-\mathit{atomic\_prop} ::={} & \text{see secn~\ref{sec:ap}}                                                                                                                                                                               \\[1ex]
-  \mathit{bformula} ::={}     & \mathit{constant}                                      & \mid{} & \tsamp{(}\,\mathit{bformula}\,\tsamp{)}              & \mid{} & \mathit{bformula}\,\msamp{\XOR}\,\mathit{bformula}                       \\
-  \mid{}                    & \mathit{atomic\_prop}                                  & \mid{} & \msamp{\NOT}\,\mathit{bformula}                      & \mid{} & \mathit{bformula}\,\msamp{\EQUIV}\,\mathit{bformula}                     \\
-  \mid{}                    & \mathit{atomic\_prop}\code{=0}                         & \mid{} & \mathit{bformula}\,\msamp{\AND}\,\mathit{bformula}   & \mid{} & \mathit{bformula}\,\msamp{\IMPLIES}\,\mathit{bformula}                   \\
-  \mid{}                    & \mathit{atomic\_prop}\code{=1}                         & \mid{} & \mathit{bformula}\,\msamp{\OR}\,\mathit{bformula}                                                                                        \\[1ex]
-\mathit{sere} ::={}         & \mathit{bformula}                                      & \mid{} & \msamp{\STAR{\mvar{i}..\mvar{j}}}                    & \mid{} & \DELAY{\mvar{i}}\mathit{sere}                                            \\
-  \mid{}                    & \tsamp{\{}\,\mathit{sere}\,\tsamp{\}}                  & \mid{} & \msamp{\PLUS{}}                                      & \mid{} & \DELAYR{\mvar{i}..\mvar{j}}\mathit{sere}                                 \\
-  \mid{}                    & \tsamp{(}\,\mathit{sere}\,\tsamp{)}                    & \mid{} & \mathit{sere}\msamp{\STAR{\mvar{i}..\mvar{j}}}       & \mid{} & \mathit{sere}\DELAY{\mvar{i}}\mathit{sere}                               \\
-  \mid{}                    & \mathit{sere}\msamp{\OR}\mathit{sere}                  & \mid{} & \mathit{sere}\msamp{\PLUS}                           & \mid{} & \mathit{sere}\DELAYR{\mvar{i}..\mvar{j}}\mathit{sere}                    \\
-  \mid{}                    & \mathit{sere}\msamp{\AND}\mathit{sere}                 & \mid{} & \mathit{sere}\msamp{\FSTAR{\mvar{i}..\mvar{j}}}      & \mid{} & \FIRSTMATCH\code(\,sere\,\code)                                          \\
-  \mid{}                    & \mathit{sere}\msamp{\ANDALT}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\FPLUS}                                                                                                              \\
-  \mid{}                    & \mathit{sere}\msamp{\CONCAT}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\EQUAL{\mvar{i}..\mvar{j}}}                                                                                          \\
-  \mid{}                    & \mathit{sere}\msamp{\FUSION}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\GOTO{\mvar{i}..\mvar{j}}}                                                                                           \\[1ex]
- \mathit{tformula} ::={}    & \mathit{bformula}                                      & \mid{} & \msamp{\X}\,\mathit{tformula}                        & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Asuffix}\,\mathit{tformula}   \\
-\mid{}                      & \tsamp{(}\,\mathit{tformula}\,\tsamp{)}                & \mid{} & \msamp{\XREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\AsuffixEQ}\,\mathit{tformula} \\
-\mid{}                      & \msamp{\NOT}\,\mathit{tformula}\,                      & \mid{} & \msamp{\F}\,\mathit{tformula}                        & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Esuffix}\,\mathit{tformula}   \\
-\mid{}                      & \mathit{tformula}\,\msamp{\AND}\,\mathit{tformula}     & \mid{} & \msamp{\FREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\EsuffixEQ}\,\mathit{tformula} \\
-\mid{}                      & \mathit{tformula}\,\msamp{\OR}\,\mathit{tformula}      & \mid{} & \msamp{\G}\,\mathit{tformula}                        & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}                                        \\
-\mid{}                      & \mathit{tformula}\,\msamp{\IMPLIES}\,\mathit{tformula} & \mid{} & \msamp{\GREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\msamp{\NOT}                            \\
-\mid{}                      & \mathit{tformula}\,\msamp{\XOR}\,\mathit{tformula}     & \mid{} & \mathit{tformula}\,\msamp{\U}\,\mathit{tformula}                                                                                         \\
-\mid{}                      & \mathit{tformula}\,\msamp{\EQUIV}\,\mathit{tformula}   & \mid{} & \mathit{tformula}\,\msamp{\W}\,\mathit{tformula}                                                                                         \\
-                            &                                                        & \mid{} & \mathit{tformula}\,\msamp{\R}\,\mathit{tformula}                                                                                         \\
-                            &                                                        & \mid{} & \mathit{tformula}\,\msamp{\M}\,\mathit{tformula}                                                                                         \\
+\mathit{constant} ::={}     & \0 \mid \1                                                                                                                                                                                                       \\
+\mathit{atomic\_prop} ::={} & \text{see secn~\ref{sec:ap}}                                                                                                                                                                                     \\[1ex]
+  \mathit{bformula} ::={}   & \mathit{constant}                                      & \mid{} & \tsamp{(}\,\mathit{bformula}\,\tsamp{)}                    & \mid{} & \mathit{bformula}\,\msamp{\XOR}\,\mathit{bformula}                       \\
+  \mid{}                    & \mathit{atomic\_prop}                                  & \mid{} & \msamp{\NOT}\,\mathit{bformula}                            & \mid{} & \mathit{bformula}\,\msamp{\EQUIV}\,\mathit{bformula}                     \\
+  \mid{}                    & \mathit{atomic\_prop}\code{=0}                         & \mid{} & \mathit{bformula}\,\msamp{\AND}\,\mathit{bformula}         & \mid{} & \mathit{bformula}\,\msamp{\IMPLIES}\,\mathit{bformula}                   \\
+  \mid{}                    & \mathit{atomic\_prop}\code{=1}                         & \mid{} & \mathit{bformula}\,\msamp{\OR}\,\mathit{bformula}                                                                                              \\[1ex]
+\mathit{sere} ::={}         & \mathit{bformula}                                      & \mid{} & \msamp{\STAR{\mvar{i}..\mvar{j}}}                          & \mid{} & \DELAY{\mvar{i}}\mathit{sere}                                            \\
+  \mid{}                    & \tsamp{\{}\,\mathit{sere}\,\tsamp{\}}                  & \mid{} & \msamp{\PLUS{}}                                            & \mid{} & \DELAYR{\mvar{i}..\mvar{j}}\mathit{sere}                                 \\
+  \mid{}                    & \tsamp{(}\,\mathit{sere}\,\tsamp{)}                    & \mid{} & \mathit{sere}\msamp{\STAR{\mvar{i}..\mvar{j}}}             & \mid{} & \mathit{sere}\DELAY{\mvar{i}}\mathit{sere}                               \\
+  \mid{}                    & \mathit{sere}\msamp{\OR}\mathit{sere}                  & \mid{} & \mathit{sere}\msamp{\PLUS}                                 & \mid{} & \mathit{sere}\DELAYR{\mvar{i}..\mvar{j}}\mathit{sere}                    \\
+  \mid{}                    & \mathit{sere}\msamp{\AND}\mathit{sere}                 & \mid{} & \mathit{sere}\msamp{\FSTAR{\mvar{i}..\mvar{j}}}            & \mid{} & \FIRSTMATCH\code(\,sere\,\code)                                          \\
+  \mid{}                    & \mathit{sere}\msamp{\ANDALT}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\FPLUS}                                                                                                                    \\
+  \mid{}                    & \mathit{sere}\msamp{\CONCAT}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\EQUAL{\mvar{i}..\mvar{j}}}                                                                                                \\
+  \mid{}                    & \mathit{sere}\msamp{\FUSION}\mathit{sere}              & \mid{} & \mathit{sere}\msamp{\GOTO{\mvar{i}..\mvar{j}}}                                                                                                 \\[1ex]
+ \mathit{tformula} ::={}    & \mathit{bformula}                                      & \mid{} & \msamp{\X}\,\mathit{tformula}                              & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Asuffix}\,\mathit{tformula}   \\
+ \mid{}                     & \tsamp{(}\,\mathit{tformula}\,\tsamp{)}                & \mid{} & \msamp{\StrongX}\,\mathit{tformula}                        & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\AsuffixEQ}\,\mathit{tformula} \\
+ \mid{}                     & \msamp{\NOT}\,\mathit{tformula}\,                      & \mid{} & \msamp{\XREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula}       & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\Esuffix}\,\mathit{tformula}   \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\AND}\,\mathit{tformula}     & \mid{} & \msamp{\StrongXREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula} & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\,\msamp{\EsuffixEQ}\,\mathit{tformula} \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\OR}\,\mathit{tformula}      & \mid{} & \msamp{\F}\,\mathit{tformula}                              & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}                                        \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\IMPLIES}\,\mathit{tformula} & \mid{} & \msamp{\FREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula}       & \mid{} & \tsamp{\{}\mathit{sere}\tsamp{\}}\msamp{\NOT}                            \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\XOR}\,\mathit{tformula}     & \mid{} & \msamp{\StrongFREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula}                                                                                     \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\EQUIV}\,\mathit{tformula}   & \mid{} & \msamp{\G}\,\mathit{tformula}                                                                                                                  \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\U}\,\mathit{tformula}       & \mid{} & \msamp{\GREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula}                                                                                           \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\W}\,\mathit{tformula}       & \mid{} & \msamp{\StrongGREP{\mvar{i}..\mvar{j}}}\,\mathit{tformula}                                                                                     \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\R}\,\mathit{tformula}                                                                                                                                                                 \\
+ \mid{}                     & \mathit{tformula}\,\msamp{\M}\,\mathit{tformula}
 \end{align*}
-
 
 \section{Operator precedence}
 
@@ -1142,6 +1162,7 @@ rules:
   \varphi_E ::={}& \0
            \mid \1
            \mid \X \varphi_E
+           \mid \StrongX \varphi_E
            \mid \F \varphi
            \mid \G \varphi_E
            \mid \varphi_E\AND \varphi_E
@@ -1156,6 +1177,7 @@ rules:
   \varphi_U ::={}& \0
            \mid \1
            \mid \X \varphi_U
+           \mid \StrongX \varphi_U
            \mid \F \varphi_U
            \mid \G \varphi
            \mid \varphi_U\AND \varphi_U
@@ -1449,6 +1471,10 @@ they try to lift subformulas that are both eventual and universal
 \emph{higher} in the syntax tree.  Conversely, rules defined with $\equivNeu$
 are applied only when \verb|favor_event_univ|' is \texttt{false}: they
 try to \textit{lower} subformulas that are both eventual and universal.
+
+Currently all these simplifications assume LTL semantics, so they make
+no differences between $\X$ and $\StrongX$. For simplicity, they are
+only listed with $\X$.
 
 \subsection{Basic Simplifications}\label{sec:basic-simp}
 

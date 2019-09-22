@@ -97,6 +97,7 @@ namespace spot
       case op::ap:
       case op::Not:
       case op::X:
+      case op::strong_X:
       case op::Closure:
       case op::NegClosure:
       case op::NegClosureMarked:

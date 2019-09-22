@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016, 2018 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2016, 2018, 2019 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -29,11 +29,12 @@ namespace spot
       auto t = [&alive] (formula f) { return from_ltlf_aux(f, alive); };
       switch (auto o = f.kind())
         {
-        case op::X:
+        case op::strong_X:
         case op::F:
           return formula::unop(o, formula::And({alive, t(f[0])}));
+        case op::X:             // weak
         case op::G:
-          return formula::G(formula::Or({formula::Not(alive), t(f[0])}));
+          return formula::unop(o, formula::Or({formula::Not(alive), t(f[0])}));
           // Note that the t() function given in the proof of Theorem 1 of
           // the IJCAI'13 paper by De Giacomo & Vardi has a typo.
           //  t(a U b) should be equal to t(a) U t(b & alive).

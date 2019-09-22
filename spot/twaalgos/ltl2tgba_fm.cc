@@ -585,6 +585,7 @@ namespace spot
           case op::F:
           case op::G:
           case op::X:
+          case op::strong_X:
           case op::Closure:
           case op::NegClosure:
           case op::NegClosureMarked:
@@ -1215,6 +1216,7 @@ namespace spot
               return bdd_not(recurse(node[0]));
             }
           case op::X:
+          case op::strong_X:
             {
               // r(Xy) = Next[y]
               // r(X(a&b&c)) = Next[a]&Next[b]&Next[c]

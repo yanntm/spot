@@ -76,6 +76,7 @@ namespace spot
           case op::ap:
           case op::Not:
           case op::X:
+          case op::strong_X:
           case op::F:
           case op::G:
           case op::Closure:

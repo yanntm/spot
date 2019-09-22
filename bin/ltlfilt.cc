@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -615,8 +615,14 @@ namespace
       if (negate)
         f = spot::formula::Not(f);
 
+      bool matched = true;
+
       if (from_ltlf)
-        f = spot::from_ltlf(f, from_ltlf);
+        {
+          matched &= !ltl || f.is_ltl_formula();
+          if (matched)
+            f = spot::from_ltlf(f, from_ltlf);
+        }
 
       if (remove_x)
         {
@@ -655,8 +661,6 @@ namespace
 
       if (!opt->excl_ap.empty())
         f = opt->excl_ap.constrain(f);
-
-      bool matched = true;
 
       matched &= !ltl || f.is_ltl_formula();
       matched &= !psl || f.is_psl_formula();
