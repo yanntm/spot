@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -82,7 +82,7 @@ report_not_ltl(spot::formula f,
 {
   std::string s = spot::str_psl(f);
   static const char msg[] =
-    "formula '%s' cannot be written %s's syntax because it is not LTL";
+    "formula '%s' cannot be written in %s's syntax because it is not LTL";
   if (filename)
     error_at_line(2, 0, filename, atoi(linenum), msg, s.c_str(), syn);
   else

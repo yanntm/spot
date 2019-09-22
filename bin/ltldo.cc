@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -33,6 +33,7 @@
 #include "common_conv.hh"
 #include "common_finput.hh"
 #include "common_aoutput.hh"
+#include "common_output.hh"
 #include "common_post.hh"
 #include "common_trans.hh"
 #include "common_hoaread.hh"
@@ -51,13 +52,15 @@ of input and output as required.";
 
 enum {
   OPT_ERRORS = 256,
-  OPT_SMALLEST,
-  OPT_GREATEST,
   OPT_FAIL_ON_TIMEOUT,
+  OPT_GREATEST,
+  OPT_NEGATE,
+  OPT_SMALLEST,
 };
 
 static const argp_option options[] =
   {
+    { "negate", OPT_NEGATE, nullptr, 0, "negate each formula", 1 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Error handling:", 4 },
     { "errors", OPT_ERRORS, "abort|warn|ignore", 0,
@@ -129,6 +132,7 @@ static bool fail_on_timeout = false;
 static int best_type = 0;       // -1 smallest, 1 greatest, 0 no selection
 static const char* best_format = "%s,%e";
 static int opt_max_count = -1;
+static bool negate = false;
 
 static char const *const errors_args[] =
 {
@@ -172,6 +176,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       best_type = 1;
       if (arg)
         best_format = arg;
+      break;
+    case OPT_NEGATE:
+      negate = true;
       break;
     case OPT_SMALLEST:
       best_type = -1;
@@ -336,7 +343,17 @@ namespace
           return 1;
         }
 
-      inputf = input;
+      if (negate)
+        {
+          pf.f = spot::formula::Not(pf.f);
+          std::ostringstream os;
+          stream_formula(os, pf.f, filename, std::to_string(linenum).c_str());
+          inputf = os.str();
+        }
+      else
+        {
+          inputf = input;
+        }
       process_formula(pf.f, filename, linenum);
       return 0;
     }
@@ -463,6 +480,12 @@ main(int argc, char** argv)
               program_name);
 
       setup_sig_handler();
+
+      // Usually we print the formula as it was given to us, but
+      // if --negate is used we have to reformat it.  We don't know
+      // was the input format unless --lbt-input was given, and in
+      // that case we keep it for output.
+      output_format = lbt_input ? lbt_output : spot_output;
 
       spot::postprocessor post;
       post.set_pref(pref | comp | sbacc | colored);

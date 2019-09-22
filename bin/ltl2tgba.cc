@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -46,6 +46,7 @@ the smallest Transition-based Generalized Büchi Automata, \
 output in the HOA format.\n\
 If multiple formulas are supplied, several automata will be output.";
 
+enum { OPT_NEGATE = 256 };
 
 static const argp_option options[] =
   {
@@ -59,6 +60,7 @@ static const argp_option options[] =
       "the part of the line after the formula if it "
       "comes from a column extracted from a CSV file", 4 },
     /**************************************************/
+    { "negate", OPT_NEGATE, nullptr, 0, "negate each formula", 1 },
     { "unambiguous", 'U', nullptr, 0, "output unambiguous automata", 2 },
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },
     { "extra-options", 'x', "OPTS", 0,
@@ -76,6 +78,7 @@ const struct argp_child children[] =
     { nullptr, 0, nullptr, 0 }
   };
 
+static bool negate = false;
 static spot::option_map extra_options;
 static spot::postprocessor::output_pref unambig = 0;
 
@@ -94,6 +97,9 @@ parse_opt(int key, char* arg, struct argp_state*)
         if (opt)
           error(2, 0, "failed to parse --options near '%s'", opt);
       }
+      break;
+    case OPT_NEGATE:
+      negate = true;
       break;
     case ARGP_KEY_ARG:
       // FIXME: use stat() to distinguish filename from string?
@@ -138,6 +144,9 @@ namespace
                         "formula '%s' is not an LTL or PSL formula",
                         s.c_str());
         }
+
+      if (negate)
+        f = spot::formula::Not(f);
 
       spot::process_timer timer;
       timer.start();

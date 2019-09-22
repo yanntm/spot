@@ -1,5 +1,9 @@
 New in spot 2.8.1.dev (not yet released)
 
+  Command-line tools:
+
+  - ltl2tgba and ltldo learned a --negate option.
+
   Library:
 
   - Historically, Spot only supports LTL with infinite semantics
