@@ -646,9 +646,7 @@ complementation ourselves:
 
 #+NAME: hier-persistence-2
 #+BEGIN_SRC sh :exports code
-ltlfilt --negate -f FGa |
-  ltl2tgba -D |
-  autfilt --complement -d
+ltl2tgba --negate -D FGa | autfilt --complement -d
 #+END_SRC
 #+BEGIN_SRC dot :file hier-persistence-2.svg :var txt=hier-persistence-2 :exports results
 $txt
