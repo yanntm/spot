@@ -1495,13 +1495,13 @@ normal forms if $f$, handling non-Boolean sub-formulas as if they were
 atomic propositions.
 
 \begin{align*}
-  \X\F\G f & \equiv \F\G f                & \F(f\U g)        & \equiv \F g              & \G(f \R g)      & \equiv \G g             \\
-  \X\G\F f & \equiv \G\F f                & \F(f\M g)        & \equiv \F (f\AND g)      & \G(f \W g)      & \equiv \G(f\OR g)       \\
-\F\X f     & \equiv \X\F f                & \F\G(f\AND \X g) & \equiv \F\G(f\AND g)     & \G\F(f\OR \X g) & \equiv \G\F(f\OR g)     \\
-\G\X f     & \equiv \X\G f                & \F\G(f\AND \G g) & \equiv \F\G(f\AND g)     & \G\F(f\OR \F g) & \equiv \G\F(f\OR g)     \\
-           &                              & \F\G(f\OR\G g)   & \equiv \F(\G f\OR\G g)   & \G\F(f\AND\F g) & \equiv \G(\F f\AND\F g) \\
-\G\F f     & \equiV \G\F(\mathsf{dnf}(f)) & \F\G(f\AND\F g)  & \equiV \F\G f\AND\G\F g  & \G\F(f\AND\G g) & \equiV \G\F f\AND\F\G g \\
-\F\G f     & \equiV \F\G(\mathsf{cnf}(f)) & \F\G(f\OR\F g)   & \equivEU \F\G f\OR\G\F g & \G\F(f\OR\G g)  & \equivEU \G\F f\OR\F\G g
+\X\F\G f & \equiv \F\G f                & \F(f\U g)        & \equiv \F g              & \G(f \R g)      & \equiv \G g             \\
+\X\G\F f & \equiv \G\F f                & \F(f\M g)        & \equiv \F (f\AND g)      & \G(f \W g)      & \equiv \G(f\OR g)       \\
+\F\X f   & \equiv \X\F f                & \F\G(f\AND \X g) & \equiv \F\G(f\AND g)     & \G\F(f\OR \X g) & \equiv \G\F(f\OR g)     \\
+\G\X f   & \equiv \X\G f                & \F\G(f\AND \G g) & \equiv \F\G(f\AND g)     & \G\F(f\OR \F g) & \equiv \G\F(f\OR g)     \\
+\X\0     & \equiv \0                    & \F\G(f\OR\G g)   & \equiv \F(\G f\OR\G g)   & \G\F(f\AND\F g) & \equiv \G(\F f\AND\F g) \\
+\G\F f   & \equiV \G\F(\mathsf{dnf}(f)) & \F\G(f\AND\F g)  & \equiV \F\G f\AND\G\F g  & \G\F(f\AND\G g) & \equiV \G\F f\AND\F\G g \\
+\F\G f   & \equiV \F\G(\mathsf{cnf}(f)) & \F\G(f\OR\F g)   & \equivEU \F\G f\OR\G\F g & \G\F(f\OR\G g)  & \equivEU \G\F f\OR\F\G g
 \end{align*}
 \begin{align*}
   \G(f_1\OR\ldots\OR f_n \OR \G\F(g_1)\OR\ldots\OR \G\F(g_m)) & \equiv \G(f_1\OR\ldots\OR f_n)\OR \G\F(g_1\OR\ldots\OR g_m)
