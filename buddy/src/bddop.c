@@ -122,7 +122,7 @@ static int firstReorder;            /* Used instead of local variable in order
 				       to avoid compiler warning about 'first'
 				       being clobbered by setjmp */
 
-static char*            allsatProfile; /* Variable profile for bdd_allsat() */
+static signed char*     allsatProfile; /* Variable profile for bdd_allsat() */
 static bddallsathandler allsatHandler; /* Callback handler for bdd_allsat() */
 
 extern bddCacheStat bddcachestats;
@@ -2691,7 +2691,7 @@ DESCR   {* Iterates through all legal variable assignments (those
 	   The following is an example of a callback handler that
 	   prints 'X' for don't cares, '0' for zero, and '1' for one:
 	   \begin{verbatim}
-void allsatPrintHandler(char* varset, int size)
+void allsatPrintHandler(signed char* varset, int size)
 {
   for (int v=0; v<size ; ++v)
   {
@@ -2713,7 +2713,7 @@ void bdd_allsat(BDD r, bddallsathandler handler)
 
    CHECKn(r);
 
-   if (__unlikely((allsatProfile=(char*)malloc(bddvarnum)) == NULL))
+   if (__unlikely((allsatProfile=(signed char*)malloc(bddvarnum)) == NULL))
    {
       bdd_error(BDD_MEMORY);
       return;
