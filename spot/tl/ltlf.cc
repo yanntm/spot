@@ -30,6 +30,8 @@ namespace spot
       switch (auto o = f.kind())
         {
         case op::strong_X:
+          o = op::X;
+          SPOT_FALLTHROUGH;
         case op::F:
           return formula::unop(o, formula::And({alive, t(f[0])}));
         case op::X:             // weak
