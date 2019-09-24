@@ -8,7 +8,7 @@ static const int varnum = 5;
   Example of allsat print handler.
 **************************************************************************/
 
-void allsatHandlerPrint(char* varset, int size)
+void allsatHandlerPrint(signed char* varset, int size)
 {
   using namespace std ;
   for (int v=0; v<size ; ++v)
@@ -26,7 +26,7 @@ void allsatHandlerPrint(char* varset, int size)
 static bdd allsatBDD;
 static bdd allsatSumBDD;
 
-void allsatHandler(char* varset, int size)
+void allsatHandler(signed char* varset, int size)
 {
   bdd x = bddtrue;
   for (int v=0 ; v<size ; ++v)

@@ -268,7 +268,7 @@ typedef void (*bddgbchandler)(int,bddGbcStat*);
 typedef void (*bdd2inthandler)(int,int);
 typedef int  (*bddsizehandler)(void);
 typedef void (*bddfilehandler)(FILE *, int);
-typedef void (*bddallsathandler)(char*, int);
+typedef void (*bddallsathandler)(signed char*, int);
 
 BUDDY_API bddinthandler  bdd_error_hook(bddinthandler);
 BUDDY_API bddgbchandler  bdd_gbc_hook(bddgbchandler);
