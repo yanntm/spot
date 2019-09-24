@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -416,13 +416,6 @@ namespace spot
       return size_;
     }
 
-    /// Return the bit-vector at \a index.
-    bitvect& at(const size_t index)
-    {
-      SPOT_ASSERT(index < size_);
-      return *reinterpret_cast<bitvect*>(storage() + index * bvsize_);
-    }
-
     void clear_all()
     {
       // FIXME: This could be changed into a large memset if the
@@ -432,10 +425,22 @@ namespace spot
     }
 
     /// Return the bit-vector at \a index.
+    bitvect& at(const size_t index)
+    {
+      SPOT_ASSERT(index < size_);
+      // The double cast is to prevent -Wcast-align diagnostics
+      // about the fact that char* (the type of storage) has a
+      // smaller required alignment than bitvect*.
+      auto v = static_cast<void*>(storage() + index * bvsize_);
+      return *static_cast<bitvect*>(v);
+    }
+
+    /// Return the bit-vector at \a index.
     const bitvect& at(const size_t index) const
     {
       SPOT_ASSERT(index < size_);
-      return *reinterpret_cast<const bitvect*>(storage() + index * bvsize_);
+      auto v = static_cast<const void*>(storage() + index * bvsize_);
+      return *static_cast<const bitvect*>(v);
     }
 
     friend SPOT_API bitvect_array* make_bitvect_array(size_t bitcount,

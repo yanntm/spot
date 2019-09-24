@@ -83,6 +83,7 @@ alpine-gcc:
     - ./configure
     - make
     - make check
+    - make distcheck || { chmod -R u+w ./spot-*; false; }
   artifacts:
     when: always
     paths:
@@ -284,3 +285,19 @@ publish-unstable:
     - dput lrde *.changes
     - curl -X POST -F ref=master -F token=$TRIGGER_SPOT_WEB -F "variables[spot_branch]=next" https://gitlab.lrde.epita.fr/api/v4/projects/131/trigger/pipeline
     - curl -X POST -F ref=master -F token=$TRIGGER_SANDBOX https://gitlab.lrde.epita.fr/api/v4/projects/181/trigger/pipeline
+
+raspbian:
+  stage: build
+  tags:
+    - armv7
+  script:
+    - autoreconf -vfi
+    - ./configure
+    - make
+    - make distcheck || { chmod -R u+w ./spot-*; false; }
+  artifacts:
+    when: always
+    paths:
+      - ./spot-*/_build/sub/tests/*/*.log
+      - ./*.log
+      - ./*.tar.gz

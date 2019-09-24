@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2012, 2014, 2015, 2018 Laboratoire de Recherche
-// et Développement de l'Epita (LRDE).
+// Copyright (C) 2009, 2012, 2014, 2015, 2018, 2019 Laboratoire de
+// Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
 // Pierre et Marie Curie.
@@ -81,7 +81,7 @@ namespace spot
 
   static std::ostream* where;
   static void
-  print_sat_handler(char* varset, int size)
+  print_sat_handler(signed char* varset, int size)
   {
     bool not_first = false;
     for (int v = 0; v < size; ++v)
@@ -111,7 +111,7 @@ namespace spot
 
   static bool first_done = false;
   static void
-  print_accset_handler(char* varset, int size)
+  print_accset_handler(signed char* varset, int size)
   {
     for (int v = 0; v < size; ++v)
       if (varset[v] > 0)

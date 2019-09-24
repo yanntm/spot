@@ -125,7 +125,10 @@ namespace spot
   /// \brief An implementation of the Couvreur99 emptiness-check algorithm.
   ///
   /// See the documentation for spot::couvreur99.
-  class SPOT_API couvreur99_check: public emptiness_check, public ec_statistics
+  class SPOT_API couvreur99_check:
+    // We inherit from ec_statistics first to work around GCC bug #90309.
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90309#c6
+    public ec_statistics, public emptiness_check
   {
   public:
     couvreur99_check(const const_twa_ptr& a, option_map o = option_map());
@@ -160,6 +163,7 @@ namespace spot
     bool poprem_;
     /// Number of dead SCC removed by the algorithm.
     unsigned removed_components;
+
     unsigned get_removed_components() const;
     unsigned get_vmsize() const;
   };
