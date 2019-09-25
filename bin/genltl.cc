@@ -261,6 +261,8 @@ enqueue_job(int pattern, const char* range_str = nullptr)
 static int
 parse_opt(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   if (key >= gen::LTL_BEGIN && key < gen::LTL_END)
     {
       enqueue_job(key, arg);
@@ -278,6 +280,7 @@ parse_opt(int key, char* arg, struct argp_state*)
     default:
       return ARGP_ERR_UNKNOWN;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 

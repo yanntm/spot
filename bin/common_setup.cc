@@ -150,6 +150,8 @@ static const argp_option options_hidden[] =
 static int
 parse_opt_misc(int key, char*, struct argp_state* state)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   // This switch is alphabetically-ordered.
   switch (key)
     {
@@ -170,6 +172,7 @@ parse_opt_misc(int key, char*, struct argp_state* state)
     default:
       return ARGP_ERR_UNKNOWN;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 
@@ -181,6 +184,18 @@ const struct argp misc_argp_hidden = { options_hidden, parse_opt_misc,
                                        nullptr, nullptr, nullptr,
                                        nullptr, nullptr };
 
+[[noreturn]] void handle_any_exception()
+{
+  try
+    {
+      throw;
+    }
+  catch (const std::exception& e)
+    {
+      error(2, 0, "%s", e.what());
+    }
+  SPOT_UNREACHABLE();
+}
 
 int protected_main(char** progname, std::function<int()> mainfun)
 {
@@ -189,13 +204,9 @@ int protected_main(char** progname, std::function<int()> mainfun)
       setup(progname);
       return mainfun();
     }
-  catch (const std::runtime_error& e)
+  catch (...)
     {
-      error(2, 0, "%s", e.what());
-    }
-  catch (const std::invalid_argument& e)
-    {
-      error(2, 0, "%s", e.what());
+      handle_any_exception();
     }
   SPOT_UNREACHABLE();
   return 2;

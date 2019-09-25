@@ -20,6 +20,7 @@
 #include "common_sys.hh"
 #include "common_output.hh"
 #include "common_aoutput.hh"
+#include "common_setup.hh"
 #include <iostream>
 #include <sstream>
 #include <spot/tl/print.hh>
@@ -304,6 +305,8 @@ static std::map<std::string, std::unique_ptr<output_file>> outputfiles;
 int
 parse_opt_output(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   // This switch is alphabetically-ordered.
   switch (key)
     {
@@ -344,6 +347,7 @@ parse_opt_output(int key, char* arg, struct argp_state*)
     default:
       return ARGP_ERR_UNKNOWN;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 

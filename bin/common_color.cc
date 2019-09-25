@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017 Laboratoire de Recherche et Développement de
-// l'Epita (LRDE).
+// Copyright (C) 2017, 2019 Laboratoire de Recherche et Développement
+// de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -19,6 +19,7 @@
 
 #include "common_sys.hh"
 #include "common_color.hh"
+#include "common_setup.hh"
 
 #include <argp.h>
 #include <unistd.h>
@@ -77,6 +78,8 @@ static const argp_option options_color[] =
 static int
 parse_opt_color(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   // This switch is alphabetically-ordered.
   switch (key)
     {
@@ -91,6 +94,7 @@ parse_opt_color(int key, char* arg, struct argp_state*)
     default:
       return ARGP_ERR_UNKNOWN;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 

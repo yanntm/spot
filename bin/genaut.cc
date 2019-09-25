@@ -97,11 +97,14 @@ enqueue_job(int pattern, const char* range_str)
 static int
 parse_opt(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   if (key >= gen::AUT_BEGIN && key < gen::AUT_END)
     {
       enqueue_job(key, arg);
       return 0;
     }
+  END_EXCEPTION_PROTECT;
   return ARGP_ERR_UNKNOWN;
 }
 

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2012-2016, 2018-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -20,6 +20,7 @@
 #include "common_post.hh"
 #include "common_r.hh"
 #include "common_aoutput.hh"
+#include "common_setup.hh"
 #include "error.h"
 #include "argmatch.h"
 
@@ -154,6 +155,8 @@ static const argp_option options_disabled[] =
 static int
 parse_opt_post(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   // This switch is alphabetically-ordered.
   switch (key)
     {
@@ -253,6 +256,7 @@ parse_opt_post(int key, char* arg, struct argp_state*)
     default:
       return ARGP_ERR_UNKNOWN;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 
