@@ -412,6 +412,8 @@ namespace
 static int
 parse_opt(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   switch (key)
     {
     case OPT_INPUT:
@@ -452,6 +454,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       verbose = true;
       break;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 

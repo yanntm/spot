@@ -24,6 +24,7 @@
 #include "common_aoutput.hh"
 #include "common_post.hh"
 #include "common_cout.hh"
+#include "common_setup.hh"
 
 #include <unistd.h>
 #include <ctime>
@@ -304,6 +305,8 @@ const struct argp aoutput_o_format_argp = { o_options,
 
 int parse_opt_aoutput(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   // This switch is alphabetically-ordered.
   switch (key)
     {
@@ -358,6 +361,7 @@ int parse_opt_aoutput(int key, char* arg, struct argp_state*)
     default:
       return ARGP_ERR_UNKNOWN;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 

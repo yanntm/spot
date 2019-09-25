@@ -164,6 +164,8 @@ const struct argp_child children[] =
 static int
 parse_opt(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   switch (key)
     {
     case OPT_ERRORS:
@@ -197,6 +199,7 @@ parse_opt(int key, char* arg, struct argp_state*)
     default:
       return ARGP_ERR_UNKNOWN;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 

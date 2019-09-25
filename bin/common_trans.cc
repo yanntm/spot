@@ -18,6 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "common_trans.hh"
+#include "common_setup.hh"
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
@@ -902,6 +903,8 @@ bool opt_relabel = false;
 
 static int parse_opt_trans(int key, char* arg, struct argp_state*)
 {
+  // Called from C code, so should not raise any exception.
+  BEGIN_EXCEPTION_PROTECT;
   switch (key)
     {
     case 't':
@@ -930,6 +933,7 @@ static int parse_opt_trans(int key, char* arg, struct argp_state*)
     default:
       return ARGP_ERR_UNKNOWN;
     }
+  END_EXCEPTION_PROTECT;
   return 0;
 }
 
