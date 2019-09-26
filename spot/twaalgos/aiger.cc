@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -120,7 +120,7 @@ namespace spot
 
       unsigned aig_not(unsigned v)
       {
-        unsigned not_v = v + 1 - 2 * (v % 2);
+        unsigned not_v = v ^ 1;
         assert(var2bdd_.count(v));
         var2bdd_[not_v] = !(var2bdd_[v]);
         bdd2var_[var2bdd_[not_v]] = not_v;
@@ -137,9 +137,8 @@ namespace spot
           return it->second;
         max_var_ += 2;
         and_gates_[max_var_] = {v1, v2};
-        bdd v1v2 = var2bdd_[v1] & var2bdd_[v2];
-        bdd2var_[v1v2] = max_var_;
-        var2bdd_[max_var_] = v1v2;
+        bdd2var_[b] = max_var_;
+        var2bdd_[max_var_] = b;
         return max_var_;
       }
 
@@ -152,14 +151,18 @@ namespace spot
         if (vs.size() == 2)
           return aig_and(vs[0], vs[1]);
         unsigned m = vs.size() / 2;
-        std::vector<unsigned> left(vs.begin(), vs.begin() + m);
-        std::vector<unsigned> right(vs.begin() + m, vs.end());
-        return aig_and(aig_and(left), aig_and(right));
+        unsigned left =
+          aig_and(std::vector<unsigned>(vs.begin(), vs.begin() + m));
+        unsigned right =
+          aig_and(std::vector<unsigned>(vs.begin() + m, vs.end()));
+        return aig_and(left, right);
       }
 
       unsigned aig_or(unsigned v1, unsigned v2)
       {
-        return aig_not(aig_and(aig_not(v1), aig_not(v2)));
+        unsigned n1 = aig_not(v1);
+        unsigned n2 = aig_not(v2);
+        return aig_not(aig_and(n1, n2));
       }
 
       unsigned aig_or(std::vector<unsigned> vs)
@@ -171,45 +174,53 @@ namespace spot
 
       unsigned aig_pos(unsigned v)
       {
-        return v - v % 2;
+
+        return v & ~1;
       }
 
       void remove_unused()
       {
-        std::unordered_set<unsigned> todo;
+        // Run a DFS on the gates and latches to collect
+        // all nodes connected to the output.
+        std::deque<unsigned> todo;
+        std::vector<bool> used(max_var_ / 2 + 1, false);
+        auto mark = [&](unsigned v)
+                    {
+                      unsigned pos = aig_pos(v);
+                      if (!used[pos/2])
+                        {
+                          used[pos/2] = 1;
+                          todo.push_back(pos);
+                        }
+                    };
         for (unsigned v : outputs_)
-          todo.insert(aig_pos(v));
-        std::unordered_set<unsigned> used;
+          mark(v);
         while (!todo.empty())
           {
-            used.insert(todo.begin(), todo.end());
-            std::unordered_set<unsigned> todo_next;
-            for (unsigned v : todo)
+            unsigned v = todo.front();
+            todo.pop_front();
+            auto it_and = and_gates_.find(v);
+            if (it_and != and_gates_.end())
               {
-                auto it_and = and_gates_.find(v);
-                if (it_and != and_gates_.end())
-                  {
-                    if (!used.count(aig_pos(it_and->second.first)))
-                      todo_next.insert(aig_pos(it_and->second.first));
-                    if (!used.count(aig_pos(it_and->second.second)))
-                      todo_next.insert(aig_pos(it_and->second.second));
-                  }
-                else if (v <= (num_inputs_ + latches_.size()) * 2
-                         && v > num_inputs_ * 2)
-                  {
-                    unsigned l = v / 2 - num_inputs_ - 1;
-                    if (!used.count(aig_pos(latches_[l])))
-                      todo_next.insert(aig_pos(latches_[l]));
-                  }
+                mark(it_and->second.first);
+                mark(it_and->second.second);
               }
-            todo = todo_next;
+            else if (v <= (num_inputs_ + latches_.size()) * 2
+                     && v > num_inputs_ * 2)
+              {
+                mark(latches_[v / 2 - num_inputs_ - 1]);
+              }
           }
-        std::unordered_set<unsigned> unused;
-        for (auto& p : and_gates_)
-          if (!used.count(p.first))
-            unused.insert(p.first);
-        for (unsigned v : unused)
-          and_gates_.erase(v);
+        // Erase and_gates that were not seen in the above
+        // exploration.
+        auto e = and_gates_.end();
+        for (auto i = and_gates_.begin(); i != e;)
+          {
+            if (!used[i->first/2])
+              i = and_gates_.erase(i);
+            else
+              ++i;
+          }
       }
 
       void
@@ -244,7 +255,7 @@ namespace spot
       std::vector<bool> v(size);
       for (unsigned i = 0; i < size; ++i)
         {
-          v[i] = s % 2;
+          v[i] = s & 1;
           s >>= 1;
         }
       return v;
@@ -277,7 +288,7 @@ namespace spot
           unsigned st0 = bdd_var(all);
           for (unsigned i = 0; i < size; ++i)
             {
-              b &= s % 2 ? bdd_ithvar(st0 + i) : bdd_nithvar(st0 + i);
+              b &= (s & 1)  ? bdd_ithvar(st0 + i) : bdd_nithvar(st0 + i);
               s >>= 1;
             }
         }
