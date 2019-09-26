@@ -116,7 +116,6 @@ arch-gcc-glibcxxdebug:
     - /wip/
   image: registry.lrde.epita.fr/spot-arch
   script:
-    - env
     - autoreconf -vfi
     - ./configure --enable-devel --enable-c++17 --enable-glibcxx-debug
     - make
