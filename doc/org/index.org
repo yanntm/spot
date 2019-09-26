@@ -59,9 +59,9 @@ The latest version is *{{{LASTRELEASE}}}* and was released on
 
 Spot is distributed under a [[http://www.gnu.org/licenses/gpl-3.0.html][GNU GPL v3 license]].
 
-A consequence is that if you distribute a tool built using Spot, you
-*must* make the source code of that tool available as well, under a
-compatible license.
+One consequence is that any work based on Spot is covered by that
+license as well.  For instance if you distribute a tool that [[https://en.wikipedia.org/wiki/GNU_General_Public_License#Linking_and_derived_works][links
+with]] Spot, you should distribute the source code of that tool as well.
 
 * Staying in touch
 
