@@ -269,6 +269,10 @@ typedef void (*bdd2inthandler)(int,int);
 typedef int  (*bddsizehandler)(void);
 typedef void (*bddfilehandler)(FILE *, int);
 typedef void (*bddallsathandler)(signed char*, int);
+// The historical type of bddallsathandler is the following,
+// unfortunately the signedness of char* is implementation defined.
+// Now we have to support both for backward compatibility.
+typedef void (*bddallsathandler_old)(char*, int);
 
 BUDDY_API bddinthandler  bdd_error_hook(bddinthandler);
 BUDDY_API bddgbchandler  bdd_gbc_hook(bddgbchandler);
@@ -613,6 +617,7 @@ protected:
    friend bdd      bdd_fullsatone(const bdd &);
    friend bdd      bdd_satprefix(bdd &);
    friend void     bdd_allsat(const bdd &r, bddallsathandler handler);
+   friend void     bdd_allsat(const bdd &r, bddallsathandler_old handler);
    friend double   bdd_satcount(const bdd &);
    friend double   bdd_satcountset(const bdd &, const bdd &);
    friend double   bdd_satcountln(const bdd &);
@@ -828,6 +833,10 @@ inline bdd bdd_satprefix(bdd &r)
 
 inline void bdd_allsat(const bdd &r, bddallsathandler handler)
 { bdd_allsat(r.root, handler); }
+
+// backward compatibility for C++ users
+inline void bdd_allsat(const bdd &r, bddallsathandler_old handler)
+{ bdd_allsat(r.root, (bddallsathandler)handler); }
 
 inline double bdd_satcount(const bdd &r)
 { return bdd_satcount(r.root); }

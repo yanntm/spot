@@ -1,8 +1,4 @@
-New in spot 2.8.1.dev (not yet released)
-
-  Command-line tools:
-
-  - ltl2tgba and ltldo learned a --negate option.
+New in spot 2.8.2.dev  (not yet released)
 
   Library:
 
@@ -34,11 +30,23 @@ New in spot 2.8.1.dev (not yet released)
     variants of F[n:m] and G[n:m], but those four are only implemented
     as syntactic sugar.
 
+New in spot 2.8.2 (2019-09-27)
+
+  Command-line tools:
+
+  - ltl2tgba and ltldo learned a --negate option.
+
   Bugs fixed:
 
   - Calling "autfilt --dualize" on an alternating automaton with
     transition-based acceptance and universal initial states would
     fail with "set_init_state() called with nonexisting state".
+
+  - The numbering of nodes in the AIGER output of ltlsynt was
+    architecture dependent.
+
+  - Various compilation issues.  In particular, this release is the
+    first one that can be compiled (as pass tests) on a Raspberry PI.
 
 New in spot 2.8.1 (2019-07-18)
 
