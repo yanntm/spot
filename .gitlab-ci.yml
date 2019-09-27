@@ -287,6 +287,8 @@ publish-unstable:
 
 raspbian:
   stage: build
+  only:
+    - branches
   tags:
     - armv7
   script:
