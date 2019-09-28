@@ -18,7 +18,7 @@ New in spot 2.8.2 (2019-09-27)
     architecture dependent.
 
   - Various compilation issues.  In particular, this release is the
-    first one that can be compiled (as pass tests) on a Raspberry PI.
+    first one that can be compiled (and pass tests) on a Raspberry PI.
 
 New in spot 2.8.1 (2019-07-18)
 
@@ -67,13 +67,13 @@ New in spot 2.8 (2019-07-10)
     consistency-checks (they are unnecessary when all automata
     could be complemented and statistics were not required).
 
-  - genaut learned --m-nba=N to generate Max Michel's NBA familly.
+  - genaut learned --m-nba=N to generate Max Michel's NBA family.
     (NBAs with N+1 states whose determinized have at least N! states.)
 
   - Due to some new simplification of parity acceptance, the output of
     "ltl2tgba -P -D" is now using a minimal number of colors.  This
     means that recurrence properties have an acceptance condition
-    among "Inf(0)", "t", or "f", and persistance properties have an
+    among "Inf(0)", "t", or "f", and persistence properties have an
     acceptance condition among "Fin(0)", "t", or "f".
 
   - ltldo and ltlcross learned shorthands to call the tools ltl2na,
@@ -100,8 +100,8 @@ New in spot 2.8 (2019-07-10)
     'ltldo ltl2dstar -f 'GFa -> GFb' | autfilt --small' produces 1
     state instead of 4.)
 
-  - simulation-based reductions hae learned another trick to better
-    merge states from transiant SCCs.
+  - simulation-based reductions has learned another trick to better
+    merge states from transient SCCs.
 
   - acc_cond::top_disjuncts() and acc_cond::top_conjuncts() can be
     used to split an acceptance condition on the top-level & or |.
@@ -112,7 +112,7 @@ New in spot 2.8 (2019-07-10)
     allows "autfilt [-D] --small" to minimize very-weak automata
     whenever they are found to represent obligation properties.)
 
-  - There is a new spot::scc_and_mark_filter objet that simplifies the
+  - There is a new spot::scc_and_mark_filter object that simplifies the
     creation of filters to restrict spot::scc_info to some particular
     SCC while cutting new SCCs on given acceptance sets.  This is used
     by spot::generic_emptiness_check() when processing SCCs
@@ -180,7 +180,7 @@ New in spot 2.8 (2019-07-10)
 
   - cleanup_parity() and colorize_parity() were cleaned up a bit,
     resulting in fewer colors used in some cases.  In particular,
-    colorize_parity() learned that coloring transitiant edges does not
+    colorize_parity() learned that coloring transient edges does not
     require the introduction of a new color.
 
   - A new reduce_parity() function implements and generalizes the
@@ -201,7 +201,7 @@ New in spot 2.8 (2019-07-10)
 
   Deprecation notices:
 
-  - The virtual function twa::intersecting_run() no longuer takes a
+  - The virtual function twa::intersecting_run() no longer takes a
     second "from_other" Boolean argument.  This is a backward
     incompatibility only for code that overrides this function in a
     subclass.  For backward compatibility with programs that simply
@@ -215,7 +215,7 @@ New in spot 2.8 (2019-07-10)
 
   Bugs fixed:
 
-  - The gf_guarantee_to_ba() is relying on an inplace algorithm that
+  - The gf_guarantee_to_ba() is relying on an in-place algorithm that
     could produce a different number of edges for the same input in
     two different transition order.
 
@@ -240,9 +240,9 @@ New in spot 2.7.5 (2019-06-05)
 
   Bugs fixed:
 
-  - spot::translator was not applying Boolean sub-formula rewritting
+  - spot::translator was not applying Boolean sub-formula rewriting
     by default unless a spot::option_map was passed.  This caused some
-    C++ code for translating certains formulas to be noticeably slower
+    C++ code for translating certain formulas to be noticeably slower
     than the equivalent call to the ltl2tgba binary.
 
   - The remove_ap algorithm was preserving the "terminal property" of
@@ -273,7 +273,7 @@ New in spot 2.7.3 (2019-04-19)
     --stats would output the \r as part of the %> sequence instead
     of ignoring it.
 
-  - Fix serious typo in removel_alternation() causing incorrect
+  - Fix serious typo in remove_alternation() causing incorrect
     output for some VWAA.  Bug introduced in Spot 2.6.
 
   Documentation:
@@ -331,8 +331,8 @@ New in spot 2.7.1 (2019-02-14)
 
   - Printing Kripke structures via print_hoa() will save state names.
 
-  - kripke_graph_ptr objects now honnor any "state-names" property
-    when formating states.
+  - kripke_graph_ptr objects now honor any "state-names" property
+    when formatting states.
 
   Bugs fixed:
 
@@ -353,7 +353,7 @@ New in spot 2.7.1 (2019-02-14)
 
   - The product_susp() function used to multiply an automaton with a
     suspendable automaton could incorrectly build transition-based
-    automata when multipliying two state-based automata.  This caused
+    automata when multiplying two state-based automata.  This caused
     ltl2tgba to emit error messages such as: "automaton has
     transition-based acceptance despite prop_state_acc()==true".
 
@@ -477,7 +477,7 @@ New in spot 2.7 (2018-12-11)
 
     Note that this you were relying on the fact that Jupyter calls
     repr() to display returned values, you may want to call print()
-    explicitely if you prefer the old representation.
+    explicitly if you prefer the old representation.
 
   - Fix compilation under Cygwin and Alpine Linux, both choking
     on undefined secure_getenv().
@@ -521,7 +521,7 @@ New in spot 2.6.2 (2018-09-28)
 
   - configure --disable-doxygen would actually enable it.
 
-  - Fix several warnings emited by the development version of GCC.
+  - Fix several warnings emitted by the development version of GCC.
 
 New in spot 2.6.1  (2018-08-04)
 
@@ -542,7 +542,7 @@ New in spot 2.6.1  (2018-08-04)
     command-line tools.)
 
   - The spot::contains(a, b) function introduced in 2.6 was testing
-    a⊆b instead of a⊇b as one would expect.  Infortunately the
+    a⊆b instead of a⊇b as one would expect.  Unfortunately the
     documentation was also matching the code, so this is a backward
     incompatible change, but a short-lived one.
 
@@ -596,7 +596,7 @@ New in spot 2.6  (2018-07-04)
 
   - ./configure --enable-max-accsets=N let you specify a maximum
     number of acceptance sets that Spot should support.  The default
-    is still 32, but this limit is no longer hardcoded.  Larger values
+    is still 32, but this limit is no longer hard-coded.  Larger values
     will cost additional memory and time.
 
   - We know distribute RPM packages for Fedora 28.  See
@@ -679,7 +679,7 @@ New in spot 2.6  (2018-07-04)
     FG(a|b)|FG(!a|Xb)|FG(a|XXb)|FG(!a|XXXb) 170(2)   8(4)   8(4)    8(5)
 
   - For 'parity' output, the 'ltl-split' optimization just separates
-    obligation subformulas from the rest, where a determinization is
+    obligation sub-formulas from the rest, where a determinization is
     still performed.
                                  ltl2tgba -DP  ltl3dra  ltl2dpa
                                    2.5   2.6    0.2.3    18.06
@@ -746,7 +746,7 @@ New in spot 2.6  (2018-07-04)
     that are not used in the automaton.
 
   - spot::contains() and spot::are_equivalent() can be used to
-    check language containement between two automata or formulas.
+    check language containment between two automata or formulas.
     They are most welcome in Python, since we used to redefine
     them every now and them.  Some examples are shown in
     https://spot.lrde.epita.fr/ipynb/contains.html
@@ -758,7 +758,7 @@ New in spot 2.6  (2018-07-04)
     https://spot.lrde.epita.fr/ipynb/contains.html
 
   - spot::complement_semidet(aut) is a new function that returns the
-    complement of aut, where aut is a semideterministic automaton. The
+    complement of aut, where aut is a semi-deterministic automaton. The
     function uses the NCSB complementation algorithm proposed by
     F. Blahoudek, M. Heizmann, S. Schewe, J. Strejček, and MH. Tsai
     (TACAS'16).
@@ -772,7 +772,7 @@ New in spot 2.6  (2018-07-04)
     spot::minimize_wdba() was changed to produce an automaton
     recognizing a language that includes the original one.  As a
     consequence spot::minimize_obligation() and
-    spot::is_wdba_realizable() now only need one containement check
+    spot::is_wdba_realizable() now only need one containment check
     instead of two.
 
   - Slightly improved log output for the SAT-based minimization
@@ -788,7 +788,7 @@ New in spot 2.6  (2018-07-04)
     See https://spot.lrde.epita.fr/ipynb/alternation.html for some
     examples.
 
-  - Strings are now implicitely converted into formulas when passed
+  - Strings are now implicitly converted into formulas when passed
     as arguments to functions that expect formulas.  Previously this
     was done only for a few functions.
 
@@ -800,7 +800,7 @@ New in spot 2.6  (2018-07-04)
 
   - Python *.py and *.so files are now always installed into the same
     directory.  This was an issue on systems like Fedora that separate
-    plateform-specific packages from non-plateform-specific ones.
+    platform-specific packages from non-platform-specific ones.
 
   - print_dot() will correctly escape strings containing \n in HTML
     mode.
@@ -818,7 +818,7 @@ New in spot 2.6  (2018-07-04)
   - The type spot::acc_cond::mark_t has been overhauled and uses
     a custom bit-vector to represent acceptance sets instead of
     storing everything in a "unsigned int".  This change is
-    to accomodate configure's --enable-max-accsets=N option and
+    to accommodate configure's --enable-max-accsets=N option and
     has several effect:
 
     * The following shortcuts are deprecated:
@@ -840,7 +840,7 @@ New in spot 2.6  (2018-07-04)
   - The output of print_dot() now include the acceptance condition.
     Add option "A" (supported since version 2.4) to cancel that.
 
-  - Because genltl now supports LTL pattern with two argumens, using
+  - Because genltl now supports LTL pattern with two arguments, using
     --format=%L may output two comma-separated integer.  This is an
     issue if you used to produce CSV files using for instance:
       genltl --format='%F,%L,%f' ...
@@ -915,7 +915,7 @@ New in spot 2.5.1 (2018-02-20)
 
   - is_generalized_rabin() had a typo that caused some non-simplified
     acceptance conditions like Fin(0)|(Fin(0)&Inf(1)) to be
-    incorrectly detecteded as generalized-Rabin 2 0 1 and then output
+    incorrectly detected as generalized-Rabin 2 0 1 and then output
     as Fin(0)|(Fin(1)&Inf(2)) instead.  Likewise for
     is_generalized_streett
 
