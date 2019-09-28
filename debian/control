@@ -65,8 +65,8 @@ Section: science
 Suggests: libspot-dev
 Depends: ${shlibs:Depends}, ${misc:Depends}, libspot0 (>= ${source:Version}), libspot0 (<< ${source:Version}.1~)
 Description: functions for generating formulas and automata in Spot
-  Library for generating families of formulas and automata
-  taken from the literature.
+ Library for generating families of formulas and automata
+ taken from the literature.
 
 Package: spot-doc
 Section: doc
