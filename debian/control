@@ -71,7 +71,7 @@ Description: functions for generating formulas and automata in Spot
 Package: spot-doc
 Section: doc
 Architecture: all
-Depends: ${misc:Depends}, libjs-mathjax, libjs-jquery
+Depends: ${misc:Depends}, libjs-mathjax, libjs-jquery, libjs-requirejs
 Description: documentation for Spot
  HTML and PDF documentation for Spot.
 
