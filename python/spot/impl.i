@@ -20,13 +20,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-%{
-  // Workaround for SWIG 2.0.2 using ptrdiff_t but not including cstddef.
-  // It matters with g++ 4.6.
-#include <cstddef>
-%}
-
-
 %module(package="spot", director="1") impl
 
 %include "std_shared_ptr.i"
