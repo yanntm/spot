@@ -2,6 +2,12 @@ New in spot 2.8.2.dev  (not yet released)
 
   Nothing yet.
 
+  Python:
+
+  - Doing "import spot.foo" will now load any spot-extra/foo.py on
+    Python's search path.  This can be used to install third-party
+    packages that want to behave as plugins for Spot.
+
 New in spot 2.8.2 (2019-09-27)
 
   Command-line tools:

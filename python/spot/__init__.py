@@ -36,6 +36,16 @@ if 'SPOT_UNINSTALLED' in os.environ:
     # into .libs/
     __path__.extend(sys.path)
 
+# We may have third-party plugins that want to be loaded as "spot.xxx", but
+# that are installed in a different $prefix.  This sets things so that any
+# file that looks like spot-extra/xxx.py can be loaded with "import spot.xxx".
+for path in sys.path:
+    if path not in __path__:
+        path += "/spot-extra"
+        if os.path.isdir(path):
+            __path__.append(path)
+
+
 from spot.impl import *
 from spot.aux import \
      extend as _extend, \
