@@ -71,7 +71,7 @@ static const argp_option options[] =
       " propositions", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
-    { "algo", OPT_ALGO, "ds|sd|large", 0,
+    { "algo", OPT_ALGO, "ds|sd|lar", 0,
       "choose the algorithm for synthesis:\n"
       " - sd:   split then determinize with Safra (default)\n"
       " - ds:   determinize (Safra) then split\n"
