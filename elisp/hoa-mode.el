@@ -1,6 +1,6 @@
-;;; hoa-mode.el --- Major mode for the Hanoi Omega Automata format
+;;; hoa-mode.el --- Major mode for the HOA format -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015  Alexandre Duret-Lutz
+;; Copyright (C) 2015, 2017, 2019  Alexandre Duret-Lutz
 
 ;; Author: Alexandre Duret-Lutz <adl@lrde.epita.fr>
 ;; Maintainer: Alexandre Duret-Lutz <adl@lrde.epita.fr>
@@ -175,14 +175,19 @@ the GraphViz package, see URL `http://www.graphviz.org/')."
   :group 'hoa-mode
   :type 'string)
 
-(defun hoa-display-automaton-at-point ()
+(defun hoa-display-automaton-at-point (arg)
   "Display the automaton-at-point.
 
 This uses the command in `hoa-display-command' to convert HOA
 into PNG, and then display the result in `hoa-display-buffer'.
 If the command terminates with an error, its standard error is
-put in `hoa-display-error-buffer' and shown."
-  (interactive)
+put in `hoa-display-error-buffer' and shown.
+
+With a numeric prefix, the value of `hoa-display-command' can
+be edited before it is executed."
+  (interactive "P")
+  (when arg
+    (setq hoa-display-command (read-string "command: " hoa-display-command)))
   (let ((b (save-excursion (if (not (looking-at "HOA:"))
 			       (hoa-start-of-automaton)
 			     (point))))
