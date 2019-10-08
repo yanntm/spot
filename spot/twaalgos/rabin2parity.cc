@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -77,19 +77,19 @@ namespace spot
 
         build_iar_scc(scc_.initial());
 
-        // resulting automaton has acceptance condition: parity max odd
-        // with priorities ranging from 0 to 2*(nb pairs)
-        // /!\ priorities are shifted by -1 compared to the original paper
-        if (is_rabin)
-          res_->set_acceptance(2*pairs_.size() + 1,
-              acc_cond::acc_code::parity(true, true, 2*pairs_.size() + 1));
-        else
-          res_->set_acceptance(2*pairs_.size() + 1,
-              acc_cond::acc_code::parity(true, false, 2*pairs_.size() + 1));
-
-        // set initial state
-        res_->set_init_state(
-            iar2num.at(state2iar.at(aut_->get_init_state_number())));
+        {
+          // resulting automaton has acceptance condition: parity max odd
+          // for Rabin-like input and parity max even for Streett-like input.
+          // with priorities ranging from 0 to 2*(nb pairs)
+          // /!\ priorities are shifted by -1 compared to the original paper
+          unsigned sets = 2 * pairs_.size() + 1;
+          res_->set_acceptance(sets, acc_cond::acc_code::parity_max(is_rabin,
+                                                                    sets));
+        }
+        {
+          unsigned s = iar2num.at(state2iar.at(aut_->get_init_state_number()));
+          res_->set_init_state(s);
+        }
 
         // there could be quite a number of unreachable states, prune them
         res_->purge_unreachable_states();

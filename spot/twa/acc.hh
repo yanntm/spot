@@ -816,11 +816,37 @@ namespace spot
 
       /// \brief Build a parity acceptance condition
       ///
-      /// In parity acceptance a word is accepting if the maximum (or
+      /// In parity acceptance a run is accepting if the maximum (or
       /// minimum) set number that is seen infinitely often is odd (or
-      /// even).  This function will build a formula for that, as
+      /// even).  These functions will build a formula for that, as
       /// specified in the HOA format.
-      static acc_code parity(bool max, bool odd, unsigned sets);
+      /// @{
+      static acc_code parity(bool is_max, bool is_odd, unsigned sets);
+      static acc_code parity_max(bool is_odd, unsigned sets)
+      {
+        return parity(true, is_odd, sets);
+      }
+      static acc_code parity_max_odd(unsigned sets)
+      {
+        return parity_max(true, sets);
+      }
+      static acc_code parity_max_even(unsigned sets)
+      {
+        return parity_max(false, sets);
+      }
+      static acc_code parity_min(bool is_odd, unsigned sets)
+      {
+        return parity(false, is_odd, sets);
+      }
+      static acc_code parity_min_odd(unsigned sets)
+      {
+        return parity_min(true, sets);
+      }
+      static acc_code parity_min_even(unsigned sets)
+      {
+        return parity_min(false, sets);
+      }
+      /// @}
 
       /// \brief Build a random acceptance condition
       ///

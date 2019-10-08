@@ -20,6 +20,20 @@
 
 import spot
 
+max_even_5 = spot.acc_code.parity(True, False, 5)
+assert max_even_5 == spot.acc_code.parity_max_even(5)
+assert max_even_5 == spot.acc_code.parity_max(False, 5)
+min_even_5 = spot.acc_code.parity(False, False, 5)
+assert min_even_5 == spot.acc_code.parity_min_even(5)
+assert min_even_5 == spot.acc_code.parity_min(False, 5)
+
+max_odd_5 = spot.acc_code.parity(True, True, 5)
+assert max_odd_5 == spot.acc_code.parity_max_odd(5)
+assert max_odd_5 == spot.acc_code.parity_max(True, 5)
+min_odd_5 = spot.acc_code.parity(False, True, 5)
+assert min_odd_5 == spot.acc_code.parity_min_odd(5)
+assert min_odd_5 == spot.acc_code.parity_min(True, 5)
+
 
 for f in ('FGa', 'GFa & GFb & FGc', 'XXX(a U b)'):
     a1 = spot.translate(f, 'parity')

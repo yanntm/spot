@@ -128,18 +128,17 @@ namespace spot
                 lar_state dst{e.dst, new_perm};
                 unsigned dst_num = get_state(dst);
 
-                // do the h last elements satisfy the acceptance condition?
+                // Do the h last elements satisfy the acceptance condition?
+                // If they do, emit 2h, if they don't emit 2h+1.
                 acc_cond::mark_t m(new_perm.end() - h, new_perm.end());
-                if (aut_->acc().accepting(m))
-                  res_->new_edge(src_num, dst_num, e.cond, {2*h});
-                else
-                  res_->new_edge(src_num, dst_num, e.cond, {2*h+1});
+                bool rej = !aut_->acc().accepting(m);
+                res_->new_edge(src_num, dst_num, e.cond, {2*h + rej});
               }
           }
 
         // parity max even
-        res_->set_acceptance(2*aut_->num_sets() + 2,
-            acc_cond::acc_code::parity(true, false, 2*aut_->num_sets() + 2));
+        unsigned sets = 2*aut_->num_sets() + 2;
+        res_->set_acceptance(sets, acc_cond::acc_code::parity_max_even(sets));
 
         if (pretty_print)
           {

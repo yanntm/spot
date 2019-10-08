@@ -965,7 +965,7 @@ namespace spot
     if (sets % 2 == 1)
       sets += 1;
     // Acceptance is now min(odd) since we can emit Red on paths 0 with new opti
-    res->set_acceptance(sets, acc_cond::acc_code::parity(false, true, sets));
+    res->set_acceptance(sets, acc_cond::acc_code::parity_min_odd(sets));
     res->prop_universal(true);
     res->prop_state_acc(false);
 

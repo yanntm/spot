@@ -30,6 +30,16 @@ New in spot 2.8.2.dev  (not yet released)
     variants of F[n:m] and G[n:m], but those four are only implemented
     as syntactic sugar.
 
+  - acc_cond::acc_code::parity(bool, bool, int) was not very readable,
+    as it was unclear to the reader what the boolean argument meant.
+    The following sister functions can now improve readability:
+       parity_max(is_odd, n) = parity(true, is_odd, n)
+       parity_max_odd(n) = parity_max(true, n)
+       parity_max_even(n) = parity_max(false, n)
+       parity_min(is_odd, n) = parity(false, is_odd, n)
+       parity_min_odd(n) = parity_min(true, n)
+       parity_min_even(n) = parity_min(false, n)
+
   Python:
 
   - Doing "import spot.foo" will now load any spot-extra/foo.py on
