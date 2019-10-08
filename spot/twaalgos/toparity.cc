@@ -19,10 +19,11 @@
 
 #include "config.h"
 #include <spot/twaalgos/toparity.hh>
+#include <spot/twaalgos/sccinfo.hh>
 
 #include <deque>
 #include <map>
-
+#include <numeric>
 #include <sstream>
 
 namespace spot
@@ -88,15 +89,14 @@ namespace spot
             return it.first->second;
           };
 
+        std::vector<unsigned> initial_perm(aut_->num_sets());
+        std::iota(initial_perm.begin(), initial_perm.end(), 0);
         {
-          std::vector<unsigned> p0;
-          for (unsigned k : aut_->acc().all_sets().sets())
-            p0.push_back(k);
-          lar_state s0{aut_->get_init_state_number(), p0};
-          unsigned init = get_state(s0); // put s0 in todo
-          res_->set_init_state(init);
+          lar_state s0{aut_->get_init_state_number(), initial_perm};
+          res_->set_init_state(get_state(s0));
         }
 
+        scc_info si(aut_, scc_info_options::NONE);
         // main loop
         while (!todo.empty())
           {
@@ -106,6 +106,7 @@ namespace spot
             // TODO todo could store this number to avoid one lookup
             unsigned src_num = get_state(current);
 
+            unsigned source_scc = si.scc_of(current.state);
             for (const auto& e : aut_->out(current.state))
               {
                 // find the new permutation
@@ -116,6 +117,12 @@ namespace spot
                     auto it = std::find(new_perm.begin(), new_perm.end(), k);
                     h = std::max(h, unsigned(new_perm.end() - it));
                     std::rotate(it, it+1, new_perm.end());
+                  }
+
+                if (source_scc != si.scc_of(e.dst))
+                  {
+                    new_perm = initial_perm;
+                    h = 0;
                   }
 
                 lar_state dst{e.dst, new_perm};

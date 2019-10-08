@@ -35,6 +35,18 @@ State: 0
 p = spot.to_parity(a)
 assert spot.are_equivalent(a, p)
 
+a = spot.automaton("""
+HOA: v1 States: 6 Start: 0 AP: 2 "p0" "p1" Acceptance: 6 Inf(5) |
+Fin(2) | Inf(1) | (Inf(0) & Fin(3)) | Inf(4) properties: trans-labels
+explicit-labels trans-acc --BODY-- State: 0 [0&1] 2 {4 5} [0&1] 4 {0 4}
+[!0&!1] 3 {3 5} State: 1 [0&!1] 3 {1 5} [!0&!1] 5 {0 1} State: 2 [!0&!1]
+0 {0 3} [0&!1] 1 {0} State: 3 [!0&1] 4 {1 2 3} [0&1] 3 {3 4 5} State:
+4 [!0&!1] 1 {2 4} State: 5 [!0&1] 4 --END--
+""")
+p = spot.to_parity(a)
+assert p.num_states() == 22
+assert spot.are_equivalent(a, p)
+
 for f in spot.randltl(4, 400):
     d = spot.translate(f, "det", "G")
     p = spot.to_parity(d)
