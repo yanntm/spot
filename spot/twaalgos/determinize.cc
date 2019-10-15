@@ -34,6 +34,7 @@
 #include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/parity.hh>
+#include <spot/priv/robin_hood.hh>
 
 namespace spot
 {
@@ -132,7 +133,8 @@ namespace spot
       }
     };
 
-    using power_set = std::unordered_map<safra_state, unsigned, hash_safra>;
+    using power_set =
+      robin_hood::unordered_node_map<safra_state, unsigned, hash_safra>;
 
     std::string
     nodes_to_string(const const_twa_graph_ptr& aut,
@@ -191,7 +193,7 @@ namespace spot
       update_succ(int brace, unsigned dst, const acc_cond::mark_t& acc)
       {
         int newb = brace;
-        if (acc.count())
+        if (acc)
           {
             assert(acc.has(0) && acc.count() == 1 && "Only TBA are accepted");
             // Accepting edges generate new braces: step A1
@@ -338,6 +340,8 @@ namespace spot
         }
 
       private:
+        std::vector<safra_state> stutter_path_;
+
         void
         compute_()
         {
@@ -346,60 +350,63 @@ namespace spot
 
           const bdd& ap = *bddit;
 
+          // In stutter-invariant automata, every time we follow a
+          // transition labeled by L, we can actually stutter the L
+          // label and jump further away.  The following code performs
+          // this stuttering until a cycle is found, and select one
+          // state of the cycle as the destination to jump to.
           if (cs_.use_stutter && cs_.aut->prop_stutter_invariant())
             {
               ss = *cs_.src;
-              bool stop = false;
-              std::deque<safra_state> path;
-              std::unordered_set<
-                std::reference_wrapper<const safra_state>,
-                hash_safra,
-                ref_wrap_equal<const safra_state>> states;
+              // The path is usually quite small (3-4 states), so it's
+              // not worth setting up a hash table to detect a cycle.
+              stutter_path_.clear();
+              std::vector<safra_state>::iterator cycle_seed;
               unsigned mincolor = -1U;
-              while (!stop)
+              // stutter forward until we cycle
+              for (;;)
                 {
-                  path.emplace_back(std::move(ss));
-                  auto i = states.insert(path.back());
-                  SPOT_ASSUME(i.second);
-                  ss = path.back().compute_succ(cs_, ap, color_);
-                  mincolor = std::min(color_, mincolor);
-                  stop = states.find(ss) != states.end();
-                }
-
-              // also insert last element (/!\ it thus appears twice in path)
-              path.emplace_back(std::move(ss));
-              const safra_state& loopstart = path.back();
-              bool in_seen = cs_.seen.find(ss) != cs_.seen.end();
-              unsigned tokeep = path.size()-1;
-              unsigned idx = path.size()-2;
-              // The loop is guaranteed to end, because path contains too
-              // occurrences of loopstart
-              while (!(loopstart == path[idx]))
-                {
-                  // if path[tokeep] is already in seen, replace it with a
-                  // smaller state also in seen.
-                  if (in_seen && cs_.seen.find(path[idx]) != cs_.seen.end())
-                    if (path[idx] < path[tokeep])
-                      tokeep = idx;
-
-                  // if path[tokeep] is not in seen, replace it either with a
-                  // state in seen or with a smaller state
-                  if (!in_seen)
+                  // any duplicate value, if any, is usually close to
+                  // the end, so search backward.
+                  auto it = std::find(stutter_path_.rbegin(),
+                                      stutter_path_.rend(), ss);
+                  if (it != stutter_path_.rend())
                     {
-                      if (cs_.seen.find(path[idx]) != cs_.seen.end())
+                      cycle_seed = (it + 1).base();
+                      break;
+                    }
+                  stutter_path_.emplace_back(std::move(ss));
+                  ss = stutter_path_.back().compute_succ(cs_, ap, color_);
+                  mincolor = std::min(color_, mincolor);
+                }
+              bool in_seen = cs_.seen.find(*cycle_seed) != cs_.seen.end();
+              for (auto it = cycle_seed + 1; it < stutter_path_.end(); ++it)
+                {
+                  if (in_seen)
+                    {
+                      // if *cycle_seed is already in seen, replace
+                      // it with a smaller state also in seen.
+                      if (cs_.seen.find(*it) != cs_.seen.end()
+                          && *it < *cycle_seed)
+                        cycle_seed = it;
+                    }
+                  else
+                    {
+                      // if *cycle_seed is not in seen, replace it
+                      // either with a state in seen or with a smaller
+                      // state
+                      if (cs_.seen.find(*it) != cs_.seen.end())
                         {
-                          tokeep = idx;
+                          cycle_seed = it;
                           in_seen = true;
                         }
-                      else if (path[idx] < path[tokeep])
-                        tokeep = idx;
+                      else if (*it < *cycle_seed)
+                        {
+                          cycle_seed = it;
+                        }
                     }
-                  --idx;
                 }
-              // clean references to path before move (see next line)
-              states.clear();
-              // move is safe, no dangling references
-              ss = std::move(path[tokeep]);
+              ss = std::move(*cycle_seed);
               color_ = mincolor;
             }
           else
@@ -558,7 +565,7 @@ namespace spot
     class safra_support
     {
       const std::vector<bdd>& state_supports;
-      std::unordered_map<bdd, std::vector<bdd>, bdd_hash> cache;
+      robin_hood::unordered_flat_map<bdd, std::vector<bdd>, bdd_hash> cache;
 
     public:
       safra_support(const std::vector<bdd>& s): state_supports(s) {}
@@ -617,20 +624,19 @@ namespace spot
     while (it1 != nodes_.end())
       {
         const auto& imp1 = implies[it1->first];
-        bool erased = false;
+        auto old_it1 = it1++;
+        if (imp1.empty())
+          continue;
         for (auto it2 = nodes_.begin(); it2 != nodes_.end(); ++it2)
           {
-            if (it1 == it2)
+            if (old_it1 == it2)
               continue;
             if (imp1[it2->first])
               {
-                erased = true;
-                it1 = nodes_.erase(it1);
+                it1 = nodes_.erase(old_it1);
                 break;
               }
           }
-        if (!erased)
-          ++it1;
       }
   }
 
@@ -758,13 +764,20 @@ namespace spot
   safra_state::hash() const
   {
     size_t res = 0;
+    //std::cerr << this << " [";
     for (const auto& p : nodes_)
       {
         res ^= (res << 3) ^ p.first;
         res ^= (res << 3) ^ p.second;
+        //  std::cerr << '(' << p.first << ',' << p.second << ')';
       }
+    //    std::cerr << "][ ";
     for (const auto& b : braces_)
-      res ^= (res << 3) ^ b;
+      {
+        res ^= (res << 3) ^ b;
+        //  std::cerr << b << ' ';
+      }
+    //    std::cerr << "]: " << std::hex << res << std::dec << '\n';
     return res;
   }
 
@@ -784,18 +797,15 @@ namespace spot
       res[i + scccount * i] = 1;
     for (unsigned i = 0; i != scccount; ++i)
       {
-        std::stack<unsigned> s;
-        s.push(i);
-        while (!s.empty())
+        unsigned ibase = i * scccount;
+        for (unsigned d: scc.succ(i))
           {
-            unsigned src = s.top();
-            s.pop();
-            for (unsigned d: scc.succ(src))
-              {
-                s.push(d);
-                unsigned idx = scccount * i + d;
-                res[idx] = 1;
-              }
+            // we necessarily have d < i because of the way SCCs are
+            // numbered, so we can build the transitive closure by
+            // just ORing any SCC reachable from d.
+            unsigned dbase = d * scccount;
+            for (unsigned j = 0; j != scccount; ++j)
+              res[ibase + j] |= res[dbase + j];
           }
       }
     return res;
@@ -843,26 +853,40 @@ namespace spot
         std::vector<char>(implications.size(), 0));
     {
       std::vector<char> is_connected = find_scc_paths(scc);
+      unsigned sccs = scc.scc_count();
+      bool something_implies_something = false;
       for (unsigned i = 0; i != implications.size(); ++i)
         {
           // NB spot::simulation() does not remove unreachable states, as it
           // would invalidate the contents of 'implications'.
-          // so we need to explicitely test for unreachable states
+          // so we need to explicitly test for unreachable states
           // FIXME based on the scc_info, we could remove the unreachable
           // states, both in the input automaton and in 'implications'
           // to reduce the size of 'implies'.
           if (!scc.reachable_state(i))
             continue;
+          unsigned scc_of_i = scc.scc_of(i);
+          bool i_implies_something = false;
           for (unsigned j = 0; j != implications.size(); ++j)
             {
               if (!scc.reachable_state(j))
                 continue;
 
-              // index to see if there is a path from scc2 -> scc1
-              unsigned idx = scc.scc_count() * scc.scc_of(j) + scc.scc_of(i);
-              implies[i][j] =     !is_connected[idx]
-                              &&  bdd_implies(implications[i], implications[j]);
+              bool i_implies_j = !is_connected[sccs * scc.scc_of(j) + scc_of_i]
+                && bdd_implies(implications[i], implications[j]);
+              implies[i][j] = i_implies_j;
+              i_implies_something |= i_implies_j;
             }
+          // Clear useless lines.
+          if (!i_implies_something)
+            implies[i].clear();
+          else
+            something_implies_something = true;
+        }
+      if (!something_implies_something)
+        {
+          implies.clear();
+          use_simulation = false;
         }
     }
 
@@ -962,8 +986,7 @@ namespace spot
       }
     // Green and red colors work in pairs, so the number of parity conditions is
     // necessarily even.
-    if (sets % 2 == 1)
-      sets += 1;
+    sets += sets & 1;
     // Acceptance is now min(odd) since we can emit Red on paths 0 with new opti
     res->set_acceptance(sets, acc_cond::acc_code::parity_min_odd(sets));
     res->prop_universal(true);

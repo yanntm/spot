@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+## Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
 ## de l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
@@ -29,9 +29,17 @@ libpriv_la_SOURCES = \
   bddalloc.hh \
   freelist.cc \
   freelist.hh \
+  robin_hood.hh \
   satcommon.hh\
   satcommon.cc\
   trim.cc \
   trim.hh \
   weight.cc \
   weight.hh
+
+GH = https://raw.githubusercontent.com/martinus
+RH = $(GH)/robin-hood-hashing/master/src/include/robin_hood.h
+.PHONY: update
+update:
+	wget $(RH) -O $(srcdir)/robin_hood.hh || \
+	  curl $(RH) -o $(srcdir)/robin_hood.hh
