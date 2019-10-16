@@ -267,9 +267,9 @@ namespace spot
             >= scc_.states_of(scc_num).size());
 
         // update state2iar
-        for (const auto& scc_state : sub_scc.states_of(bscc))
+        for (unsigned scc_state : sub_scc.states_of(bscc))
           {
-            iar_state iar = num2iar.at(scc_state);
+            iar_state& iar = num2iar.at(scc_state);
             if (state2iar.find(iar.state) == state2iar.end())
               state2iar[iar.state] = iar;
           }
