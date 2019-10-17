@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2018 Laboratoire de Recherche et Developpement
+// Copyright (C) 2015, 2018, 2019 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -20,7 +20,6 @@
 #include "config.h"
 #include <spot/priv/trim.hh>
 #include <algorithm>
-#include <functional>
 #include <cctype>
 #include <locale>
 
@@ -29,12 +28,9 @@ namespace spot
   void
   trim(std::string& str)
   {
-    str.erase(std::find_if(str.rbegin(), str.rend(),
-                           std::not1(std::ptr_fun<int, int>
-                                     (std::isspace))).base(),
+    auto not_space = [](unsigned char c){ return !std::isspace(c); };
+    str.erase(std::find_if(str.rbegin(), str.rend(), not_space).base(),
               str.end());
-    str.erase(str.begin(),
-              std::find_if(str.begin(), str.end(),
-                           std::not1(std::ptr_fun<int, int>(std::isspace))));
+    str.erase(str.begin(), std::find_if(str.begin(), str.end(), not_space));
   }
 }
