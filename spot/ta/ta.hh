@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2012-2017 Laboratoire de Recherche et
+// Copyright (C) 2010, 2012-2017, 2019 Laboratoire de Recherche et
 // Developpement de l Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -84,10 +84,7 @@ namespace spot
     {
     }
 
-    virtual
-    ~ta()
-    {
-    }
+    virtual ~ta() = default;
 
     typedef std::set<state*, state_ptr_less_than> states_set_t;
     typedef std::set<const state*, state_ptr_less_than> const_states_set_t;
@@ -197,10 +194,7 @@ namespace spot
   class ta_succ_iterator : public twa_succ_iterator
   {
   public:
-    virtual
-    ~ta_succ_iterator()
-    {
-    }
+    virtual ~ta_succ_iterator() = default;
   };
 
 #ifndef SWIG

@@ -46,11 +46,9 @@ namespace spot
       return *this;
     }
 
-    virtual ~kripke_graph_state() noexcept
-    {
-    }
+    virtual ~kripke_graph_state() noexcept = default;
 
-    virtual int compare(const spot::state* other) const override
+    int compare(const spot::state* other) const override
     {
       auto o = down_cast<const kripke_graph_state*>(other);
 
@@ -62,19 +60,19 @@ namespace spot
       return 0;
     }
 
-    virtual size_t hash() const override
+    size_t hash() const override
     {
       return
         reinterpret_cast<const char*>(this) - static_cast<const char*>(nullptr);
     }
 
-    virtual kripke_graph_state*
+    kripke_graph_state*
     clone() const override
     {
       return const_cast<kripke_graph_state*>(this);
     }
 
-    virtual void destroy() const override
+    void destroy() const override
     {
     }
 
@@ -110,9 +108,7 @@ namespace spot
     {
     }
 
-    ~kripke_graph_succ_iterator()
-    {
-    }
+    virtual ~kripke_graph_succ_iterator() = default;
 
     void recycle(const typename Graph::state_storage_t* s)
     {
@@ -120,24 +116,24 @@ namespace spot
       t_ = s->succ;
     }
 
-    virtual bool first() override
+    bool first() override
     {
       p_ = t_;
       return p_;
     }
 
-    virtual bool next() override
+    bool next() override
     {
       p_ = g_->edge_storage(p_).next_succ;
       return p_;
     }
 
-    virtual bool done() const override
+    bool done() const override
     {
       return !p_;
     }
 
-    virtual kripke_graph_state* dst() const override
+    kripke_graph_state* dst() const override
     {
       SPOT_ASSERT(!done());
       return const_cast<kripke_graph_state*>
@@ -214,14 +210,14 @@ namespace spot
       return init_number_;
     }
 
-    virtual const kripke_graph_state* get_init_state() const override
+    const kripke_graph_state* get_init_state() const override
     {
       return state_from_number(get_init_state_number());
     }
 
     /// \brief Allow to get an iterator on the state we passed in
     /// parameter.
-    virtual kripke_graph_succ_iterator<graph_t>*
+    kripke_graph_succ_iterator<graph_t>*
     succ_iter(const spot::state* st) const override
     {
       auto s = down_cast<const typename graph_t::state_storage_t*>(st);
@@ -267,13 +263,13 @@ namespace spot
       return std::to_string(n);
     }
 
-    virtual std::string format_state(const state* st) const override
+    std::string format_state(const state* st) const override
     {
       return format_state(state_number(st));
     }
 
     /// \brief Get the condition on the state
-    virtual bdd state_condition(const state* s) const override
+    bdd state_condition(const state* s) const override
     {
       auto gs = down_cast<const kripke_graph_state*>(s);
       return gs->cond();

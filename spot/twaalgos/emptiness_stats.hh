@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2017 Laboratoire de Recherche et Développement de
+// Copyright (C) 2015-2017, 2019 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 // Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -34,10 +34,7 @@ namespace spot
 
   struct unsigned_statistics
   {
-    virtual
-    ~unsigned_statistics()
-    {
-    }
+    virtual ~unsigned_statistics() = default;
 
     unsigned
     get(const char* str) const
@@ -200,10 +197,7 @@ namespace spot
           (&acss_statistics::acss_states);
     }
 
-    virtual
-    ~acss_statistics()
-    {
-    }
+    virtual ~acss_statistics() = default;
 
     /// Number of states in the search space for the accepting cycle.
     virtual unsigned acss_states() const = 0;

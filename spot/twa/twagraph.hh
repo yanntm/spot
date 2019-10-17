@@ -51,11 +51,9 @@ namespace spot
       return *this;
     }
 
-    virtual ~twa_graph_state() noexcept
-    {
-    }
+    virtual ~twa_graph_state() noexcept = default;
 
-    virtual int compare(const spot::state* other) const override
+    int compare(const spot::state* other) const override
     {
       auto o = down_cast<const twa_graph_state*>(other);
 
@@ -67,19 +65,19 @@ namespace spot
       return 0;
     }
 
-    virtual size_t hash() const override
+    size_t hash() const override
     {
       return
         reinterpret_cast<const char*>(this) - static_cast<const char*>(nullptr);
     }
 
-    virtual twa_graph_state*
+    twa_graph_state*
     clone() const override
     {
       return const_cast<twa_graph_state*>(this);
     }
 
-    virtual void destroy() const override
+    void destroy() const override
     {
     }
   };
@@ -152,36 +150,36 @@ namespace spot
       t_ = t;
     }
 
-    virtual bool first() override
+    bool first() override
     {
       p_ = t_;
       return p_;
     }
 
-    virtual bool next() override
+    bool next() override
     {
       p_ = g_->edge_storage(p_).next_succ;
       return p_;
     }
 
-    virtual bool done() const override
+    bool done() const override
     {
       return !p_;
     }
 
-    virtual const twa_graph_state* dst() const override
+    const twa_graph_state* dst() const override
     {
       SPOT_ASSERT(!done());
       return &g_->state_data(g_->edge_storage(p_).dst);
     }
 
-    virtual bdd cond() const override
+    bdd cond() const override
     {
       SPOT_ASSERT(!done());
       return g_->edge_data(p_).cond;
     }
 
-    virtual acc_cond::mark_t acc() const override
+    acc_cond::mark_t acc() const override
     {
       SPOT_ASSERT(!done());
       return g_->edge_data(p_).acc;
@@ -234,9 +232,7 @@ namespace spot
         prop_copy(other, p);
       }
 
-    virtual ~twa_graph()
-    {
-    }
+    virtual ~twa_graph() = default;
 
 #ifndef SWIG
     template <typename State_Name,
@@ -318,7 +314,7 @@ namespace spot
       return init_number_;
     }
 
-    virtual const twa_graph_state* get_init_state() const override
+    const twa_graph_state* get_init_state() const override
     {
       unsigned n = get_init_state_number();
       if (SPOT_UNLIKELY(!is_existential()))
@@ -327,7 +323,7 @@ namespace spot
       return state_from_number(n);
     }
 
-    virtual twa_succ_iterator*
+    twa_succ_iterator*
     succ_iter(const state* st) const override
     {
       auto s = down_cast<const typename graph_t::state_storage_t*>(st);
@@ -371,7 +367,7 @@ namespace spot
 
     std::string format_state(unsigned n) const;
 
-    virtual std::string format_state(const state* st) const override
+    std::string format_state(const state* st) const override
     {
       return format_state(state_number(st));
     }

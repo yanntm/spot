@@ -49,7 +49,7 @@ namespace spot
     {
     }
 
-    virtual void destroy() const override;
+    void destroy() const override;
 
     const state*
     left() const
@@ -63,9 +63,9 @@ namespace spot
       return right_;
     }
 
-    virtual int compare(const state* other) const override;
-    virtual size_t hash() const override;
-    virtual state_product* clone() const override;
+    int compare(const state* other) const override;
+    size_t hash() const override;
+    state_product* clone() const override;
 
   private:
     const state* left_;                ///< State from the left automaton.
@@ -90,14 +90,14 @@ namespace spot
 
     virtual ~twa_product();
 
-    virtual const state* get_init_state() const override;
+    const state* get_init_state() const override;
 
-    virtual twa_succ_iterator*
+    twa_succ_iterator*
     succ_iter(const state* state) const override;
 
-    virtual std::string format_state(const state* state) const override;
+    std::string format_state(const state* state) const override;
 
-    virtual state* project_state(const state* s, const const_twa_ptr& t)
+    state* project_state(const state* s, const const_twa_ptr& t)
       const override;
 
     const acc_cond& left_acc() const;
@@ -121,7 +121,7 @@ namespace spot
   public:
     twa_product_init(const const_twa_ptr& left, const const_twa_ptr& right,
                       const state* left_init, const state* right_init);
-    virtual const state* get_init_state() const override;
+    const state* get_init_state() const override;
   protected:
     const state* left_init_;
     const state* right_init_;

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2014, 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -38,8 +38,8 @@ namespace spot
   {
   public:
     virtual ~default_environment();
-    virtual formula require(const std::string& prop_str) override;
-    virtual const std::string& name() const override;
+    formula require(const std::string& prop_str) override;
+    const std::string& name() const override;
 
     /// Get the sole instance of spot::default_environment.
     static default_environment& instance();

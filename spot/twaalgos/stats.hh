@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2011-2017 Laboratoire de Recherche et
+// Copyright (C) 2008, 2011-2017, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -66,8 +66,7 @@ namespace spot
       return *this;
     }
 
-    virtual void
-    print(std::ostream& os, const char*) const override;
+    void print(std::ostream& os, const char*) const override;
   };
 
   class SPOT_API printable_acc_cond final: public spot::printable

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2013, 2014, 2015, 2016 Laboratoire de
+// Copyright (C) 2009, 2010, 2013, 2014, 2015, 2016, 2019 Laboratoire de
 // Recherche et Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -54,8 +54,8 @@ namespace spot
     fair_kripke_succ_iterator(const bdd& cond, acc_cond::mark_t acc_cond);
     virtual ~fair_kripke_succ_iterator();
 
-    virtual bdd cond() const override;
-    virtual acc_cond::mark_t acc() const override;
+    bdd cond() const override;
+    acc_cond::mark_t acc() const override;
   protected:
     bdd cond_;
     acc_cond::mark_t acc_cond_;
@@ -98,7 +98,6 @@ namespace spot
     virtual bdd state_condition(const state* s) const = 0;
 
     /// \brief The acceptance mark that labels state \a s.
-    virtual acc_cond::mark_t
-      state_acceptance_mark(const state* s) const = 0;
+    virtual acc_cond::mark_t state_acceptance_mark(const state* s) const = 0;
   };
 }

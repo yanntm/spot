@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Laboratoire
-// de Recherche et Développement de l'Epita (LRDE).
+// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019
+// Laboratoire de Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -61,36 +61,35 @@ namespace spot
     void
     delete_stuttering_transitions();
     // ta interface
-    virtual
-    ~ta_explicit();
-    virtual const_states_set_t get_initial_states_set() const override;
+    virtual ~ta_explicit();
+    const_states_set_t get_initial_states_set() const override;
 
-    virtual ta_succ_iterator* succ_iter(const spot::state* s) const override;
+    ta_succ_iterator* succ_iter(const spot::state* s) const override;
 
-    virtual ta_succ_iterator*
+    ta_succ_iterator*
     succ_iter(const spot::state* s, bdd condition) const override;
 
     bdd_dict_ptr get_dict() const;
 
-    virtual std::string
+    std::string
     format_state(const spot::state* s) const override;
 
-    virtual bool
+    bool
     is_accepting_state(const spot::state* s) const override;
 
-    virtual bool
+    bool
     is_livelock_accepting_state(const spot::state* s) const override;
 
-    virtual bool
+    bool
     is_initial_state(const spot::state* s) const override;
 
-    virtual bdd
+    bdd
     get_state_condition(const spot::state* s) const override;
 
-    virtual void
+    void
     free_state(const spot::state* s) const override;
 
-    virtual spot::state*
+    spot::state*
     get_artificial_initial_state() const override
     {
       return (spot::state*) artificial_initial_state_;
@@ -152,18 +151,15 @@ namespace spot
     {
     }
 
-    virtual int compare(const spot::state* other) const override;
-    virtual size_t hash() const override;
-    virtual state_ta_explicit* clone() const override;
+    int compare(const spot::state* other) const override;
+    size_t hash() const override;
+    state_ta_explicit* clone() const override;
 
-    virtual void destroy() const override
+    void destroy() const override
     {
     }
 
-    virtual
-    ~state_ta_explicit()
-    {
-    }
+    virtual ~state_ta_explicit() = default;
 
     transitions*
     get_transitions() const;
@@ -226,14 +222,14 @@ namespace spot
 
     ta_explicit_succ_iterator(const state_ta_explicit* s, bdd condition);
 
-    virtual bool first() override;
-    virtual bool next() override;
-    virtual bool done() const override;
+    bool first() override;
+    bool next() override;
+    bool done() const override;
 
-    virtual const state* dst() const override;
-    virtual bdd cond() const override;
+    const state* dst() const override;
+    bdd cond() const override;
 
-    virtual acc_cond::mark_t acc() const override;
+    acc_cond::mark_t acc() const override;
 
   private:
     state_ta_explicit::transitions* transitions_;

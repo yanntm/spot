@@ -136,9 +136,9 @@ namespace spot
     virtual ~couvreur99_check();
 
     /// Check whether the automaton's language is empty.
-    virtual emptiness_check_result_ptr check() override;
+    emptiness_check_result_ptr check() override;
 
-    virtual std::ostream& print_stats(std::ostream& os) const override;
+    std::ostream& print_stats(std::ostream& os) const override;
 
     /// \brief Return the status of the emptiness-check.
     ///
@@ -178,7 +178,7 @@ namespace spot
     couvreur99_check_shy(const const_twa_ptr& a, option_map o = option_map());
     virtual ~couvreur99_check_shy();
 
-    virtual emptiness_check_result_ptr check() override;
+    emptiness_check_result_ptr check() override;
 
   protected:
     struct successor {

@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire
-// de Recherche et Développement de l'Epita (LRDE).
+// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019
+// Laboratoire de Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -42,17 +42,17 @@ namespace spot
                   state_ta_explicit* artificial_initial_state);
 
     // tgba interface
-    virtual spot::state* get_init_state() const override;
+    spot::state* get_init_state() const override;
 
-    virtual twa_succ_iterator*
+    twa_succ_iterator*
     succ_iter(const spot::state* local_state) const override;
 
     const_ta_explicit_ptr get_ta() const { return ta_; }
     ta_explicit_ptr get_ta() { return ta_; }
 
-    virtual std::string format_state(const spot::state* s) const override;
+    std::string format_state(const spot::state* s) const override;
 
-    virtual twa_succ_iterator*
+    twa_succ_iterator*
     succ_iter_by_changeset(const spot::state* s, bdd change_set) const override;
   protected:
     ta_explicit_ptr ta_;

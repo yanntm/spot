@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement de
+// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement de
 // l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -341,9 +341,7 @@ static bool f8()
 struct my_state: public spot::state
 {
 public:
-  virtual ~my_state() noexcept
-  {
-  }
+  virtual ~my_state() noexcept = default;
 
   my_state() noexcept
   {

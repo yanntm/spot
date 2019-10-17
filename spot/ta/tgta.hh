@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire
+// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Laboratoire
 // de Recherche et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -66,9 +66,7 @@ namespace spot
     }
 
   public:
-    virtual ~tgta()
-    {
-    }
+    virtual ~tgta() = default;
 
     /// \brief Get an iterator over the successors of \a state
     /// filtred by the value of the changeset on transitions between the

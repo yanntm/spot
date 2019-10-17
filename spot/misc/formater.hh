@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012, 2013, 2016 Laboratoire de Recherche et
+// Copyright (C) 2012, 2013, 2016, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -79,7 +79,7 @@ namespace spot
       return *this;
     }
 
-    virtual void
+    void
     print(std::ostream& os, const char*) const override
     {
       os << val_;
@@ -90,7 +90,7 @@ namespace spot
   class printable_id: public printable
   {
   public:
-    virtual void
+    void
     print(std::ostream& os, const char* x) const override
     {
       os << '%' << *x;
@@ -101,7 +101,7 @@ namespace spot
   class printable_percent: public printable
   {
   public:
-    virtual void
+    void
     print(std::ostream& os, const char*) const override
     {
       os << '%';
