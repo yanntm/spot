@@ -127,8 +127,8 @@ generate_aut(const spot::bdd_dict_ptr& current_bdd)
             for (auto& t: LAST_AUT->edges())
               {
                 auto nb_acc = std::rand() % (num_sets - min + 1) + min;
-                std::random_shuffle(cont_sets[num_sets].begin(),
-                                    cont_sets[num_sets].end());
+                spot::mrandom_shuffle(cont_sets[num_sets].begin(),
+                                      cont_sets[num_sets].end());
                 for (auto j = 0; j < nb_acc; ++j)
                   SET_TR(t, cont_sets[num_sets][j]);
               }
@@ -141,8 +141,8 @@ generate_aut(const spot::bdd_dict_ptr& current_bdd)
               for (auto& t: LAST_AUT->edges())
                 {
                   auto nb_acc = std::rand() % (num_sets - min + 1) + min;
-                  std::random_shuffle(cont_sets[num_sets].begin(),
-                                      cont_sets[num_sets].end());
+                  spot::mrandom_shuffle(cont_sets[num_sets].begin(),
+                                        cont_sets[num_sets].end());
                   for (auto j = 0; j < nb_acc; ++j)
                     {
                       auto value = cont_sets[num_sets][j] * 2 + even;
