@@ -504,6 +504,7 @@ namespace spot
       }
 
     private:
+      static size_t bump_next_id();
       void setup_props(op o);
       void destroy_aux() const;
 
@@ -790,9 +791,9 @@ namespace spot
       if (id() > other.id())
         return false;
       // The case where id()==other.id() but ptr_ != other.ptr_ is
-      // very unlikely (we would need to build more that UINT_MAX
-      // formulas), so let's just compare pointer, and ignore the fact
-      // that it may give some nondeterminism.
+      // very unlikely (we would need to build more than UINT_MAX
+      // formulas), so let's just compare pointers, and ignore the
+      // fact that it may introduce some nondeterminism.
       return ptr_ < other.ptr_;
     }
 
@@ -1402,7 +1403,7 @@ namespace spot
     /// Can be used as a hash number.
     ///
     /// The id is almost unique as it is an unsigned number
-    /// incremented at each formula construction, and the unsigned may
+    /// incremented for each formula construction, and the number may
     /// wrap around zero.  If this is used for ordering, make sure to
     /// deal with equality
     size_t id() const

@@ -1053,9 +1053,15 @@ namespace spot
     auto ires = m.name2ap.emplace(name, nullptr);
     if (!ires.second)
       return ires.first->second->clone();
-    // Name the formula before creating it, because
-    // the constructor will call ap_name().
-    m.ap2name.emplace(next_id_, name);
+    // Name the formula before creating it, because the constructor
+    // will call ap_name().
+    //
+    // We plan to use next_id_ for identifier, but it is possible that
+    // next_id_ has already wrapped around 0 and that next_id_ is
+    // already the name of another atomic proposition.  In that
+    // unlikely case, simply increment the id.
+    while (SPOT_UNLIKELY(!m.ap2name.emplace(next_id_, name).second))
+      bump_next_id();
     // next_id_ is incremented by setup_props(), called by the
     // constructor of fnode
     return ires.first->second = new fnode(op::ap, {});
@@ -1072,6 +1078,19 @@ namespace spot
   }
 
   size_t fnode::next_id_ = 0U;
+
+  size_t fnode::bump_next_id()
+  {
+    size_t id = next_id_++;
+    // If the counter of formulae ever loops, we want to skip the
+    // first three values, because they are permanently associated
+    // to constants, and it is convenient to have constants
+    // smaller than all other formulas.
+    if (SPOT_UNLIKELY(next_id_ == 0))
+      next_id_ = 3;
+    return id;
+  }
+
   const fnode* fnode::ff_ = new fnode(op::ff, {});
   const fnode* fnode::tt_ = new fnode(op::tt, {});
   const fnode* fnode::ew_ = new fnode(op::eword, {});
@@ -1079,13 +1098,7 @@ namespace spot
 
   void fnode::setup_props(op o)
   {
-    id_ = next_id_++;
-    // If the counter of formulae ever loops, we want to skip the
-    // first three values, because they are permanently associated
-    // to constants, and it is convenient to have constants
-    // smaller than all other formulas.
-    if (SPOT_UNLIKELY(next_id_ == 0))
-      next_id_ = 3;
+    id_ = bump_next_id();
 
     switch (o)
       {
