@@ -236,13 +236,8 @@ namespace spot
 
     ~state_unicity_table()
     {
-      for (state_set::iterator i = m.begin(); i != m.end();)
-        {
-          // Advance the iterator before destroying its key.  This
-          // avoids issues with old g++ implementations.
-          state_set::iterator old = i++;
-          (*old)->destroy();
-        }
+      for (auto i = m.begin(); i != m.end();)
+        (*i++)->destroy();
     }
 
     size_t

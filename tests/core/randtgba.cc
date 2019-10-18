@@ -301,8 +301,7 @@ struct stat_collector
        << std::setw(64) << std::setfill('-') << "" << std::setfill(' ')
        << std::endl;
     os << std::right << std::fixed << std::setprecision(1);
-    for (typename alg_1stat_map::const_iterator i = m.begin();
-         i != m.end(); ++i)
+    for (auto i = m.begin(); i != m.end(); ++i)
       {
         os << std::setw(25) << i->first << " |"
            << std::setw(6) << i->second.min
@@ -496,7 +495,7 @@ main(int argc, char** argv)
   spot::option_map options;
 
   auto& env = spot::default_environment::instance();
-  spot::atomic_prop_set* ap = new spot::atomic_prop_set;
+  auto ap = new spot::atomic_prop_set;
   auto dict = spot::make_bdd_dict();
 
   spot::tl_simplifier_options simpopt(true, true, true, true, true);
@@ -658,7 +657,7 @@ main(int argc, char** argv)
   spot::timer_map tm_ec;
   spot::timer_map tm_ar;
   std::set<int> failed_seeds;
-  spot::atomic_prop_set* apf = new spot::atomic_prop_set;
+  auto apf = new spot::atomic_prop_set;
   for (auto i: *ap)
     apf->insert(i);
 

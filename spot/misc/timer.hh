@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire de
-// Recherche et Développement de l'Epita (LRDE).
+// Copyright (C) 2009, 2011, 2012, 2013, 2014, 2015, 2016, 2019
+// Laboratoire de Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
 // et Marie Curie.
@@ -244,7 +244,7 @@ namespace spot
     void
     cancel(const std::string& name)
     {
-      tm_type::iterator i = tm.find(name);
+      auto i = tm.find(name);
       if (SPOT_UNLIKELY(i == tm.end()))
         throw std::invalid_argument("timer_map::cancel(): unknown name");
       SPOT_ASSERT(0 < i->second.second);
@@ -256,7 +256,7 @@ namespace spot
     const spot::timer&
     timer(const std::string& name) const
     {
-      tm_type::const_iterator i = tm.find(name);
+      auto i = tm.find(name);
       if (SPOT_UNLIKELY(i == tm.end()))
         throw std::invalid_argument("timer_map::timer(): unknown name");
       return i->second.first;

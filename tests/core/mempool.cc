@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016, 2018 Laboratoire de Recherche et Développement
-// de l'Epita.
+// Copyright (C) 2016, 2018, 2019 Laboratoire de Recherche et
+// Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -110,7 +110,7 @@ int main()
   {
     spot::fixed_size_pool p(sizeof(foo));
 
-    foo* a = new (p.allocate()) foo(1);
+    auto  a = new (p.allocate()) foo(1);
     a->incr();
     // delete and deallocate, no problem
     a->~foo();
@@ -130,7 +130,7 @@ int main()
   {
     spot::multiple_size_pool p;
 
-    foo* a = new (p.allocate(sizeof(foo))) foo(1);
+    auto  a = new (p.allocate(sizeof(foo))) foo(1);
     a->incr();
     // delete and deallocate, no problem
     a->~foo();
@@ -148,12 +148,12 @@ int main()
   }
 
   {
-    bar* b = new bar(1);
+    auto  b = new bar(1);
     b->incr();
     // no delete: valgrind should find a leak
   }
   {
-    baz* c = new baz(1);
+    auto  c = new baz(1);
     c->incr();
     // no delete: valgrind should find a leak
   }
@@ -186,4 +186,3 @@ int main()
 
   return 0;
 }
-

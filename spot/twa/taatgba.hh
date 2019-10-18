@@ -173,7 +173,7 @@ namespace spot
     {
       state* src = add_state(s);
       state_set* dst = add_state_set(d);
-      transition* t = new transition;
+      auto  t = new transition;
       t->dst = dst;
       t->condition = bddtrue;
       t->acceptance_conditions = {};
@@ -247,10 +247,10 @@ namespace spot
     /// when it does not exist already.
     taa_tgba::state* add_state(const label& name)
     {
-      typename ns_map::iterator i = name_state_map_.find(name);
+      auto i = name_state_map_.find(name);
       if (i == name_state_map_.end())
       {
-        taa_tgba::state* s = new taa_tgba::state;
+        auto  s = new taa_tgba::state;
         name_state_map_[name] = s;
         state_name_map_[s] = name;
         return s;
@@ -261,7 +261,7 @@ namespace spot
     /// \brief Return the taa::state_set for \a names.
     taa_tgba::state_set* add_state_set(const std::vector<label>& names)
     {
-      state_set* ss = new state_set;
+      auto  ss = new state_set;
       for (unsigned i = 0; i < names.size(); ++i)
         ss->insert(add_state(names[i]));
       state_set_vec_.emplace_back(ss);
@@ -270,7 +270,7 @@ namespace spot
 
     std::string format_state_set(const taa_tgba::state_set* ss) const
     {
-      state_set::const_iterator i1 = ss->begin();
+      auto i1 = ss->begin();
       typename sn_map::const_iterator i2;
       if (ss->empty())
         return std::string("{}");

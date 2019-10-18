@@ -44,7 +44,7 @@ main(int argc, char **argv)
       return 2;
     auto f1 = pf1.f;
 
-    spot::relabeling_map* m = new spot::relabeling_map;
+    auto  m = new spot::relabeling_map;
     auto f2 = spot::relabel_bse(f1, spot::Pnn, m);
     spot::print_psl(std::cout, f2) << '\n';
 
