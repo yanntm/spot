@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2014, 2015, 2018 Laboratoire de Recherche et
+// Copyright (C) 2011, 2014, 2015, 2018, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -35,16 +35,16 @@ check_vv(int* data, int size, unsigned expected = 0)
   spot::int_vector_vector_compress(input, output);
 
   std::cout << "WC[" << output.size() << "] ";
-  for (size_t i = 0; i < output.size(); ++i)
-    std::cout << output[i] << ' ';
+  for (unsigned int i : output)
+    std::cout << i << ' ';
   std::cout << '\n';
 
   std::vector<int> decomp;
   spot::int_vector_vector_decompress(output, decomp, size);
 
   std::cout << "WD[" << decomp.size() << "] ";
-  for (size_t i = 0; i < decomp.size(); ++i)
-    std::cout << decomp[i] << ' ';
+  for (int i : decomp)
+    std::cout << i << ' ';
   std::cout << '\n';
 
   int res = (decomp != input);
@@ -78,8 +78,8 @@ check_av(int* data, int size, unsigned expected = 0)
     spot::int_array_vector_compress(data, size);
 
   std::cout << "VC[" << v->size() << "] ";
-  for (size_t i = 0; i < v->size(); ++i)
-    std::cout << (*v)[i] << ' ';
+  for (unsigned int i : *v)
+    std::cout << i << ' ';
   std::cout << '\n';
 
   int* decomp = new int[size];

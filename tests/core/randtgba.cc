@@ -664,18 +664,18 @@ main(int argc, char** argv)
 
   if (opt_ec)
     {
-      for (unsigned i = 0; i < ec_algos.size(); ++i)
+      for (auto & ec_algo : ec_algos)
         {
           const char* err;
-          ec_algos[i].inst =
-            spot::make_emptiness_check_instantiator(ec_algos[i].name.c_str(),
+          ec_algo.inst =
+            spot::make_emptiness_check_instantiator(ec_algo.name.c_str(),
                                                     &err);
-          if (!ec_algos[i].inst)
+          if (!ec_algo.inst)
             {
               std::cerr << "Parse error after `" << err << "'\n";
               exit(1);
             }
-          ec_algos[i].inst->options().set(options);
+          ec_algo.inst->options().set(options);
         }
     }
 
@@ -954,9 +954,9 @@ main(int argc, char** argv)
       ec_ratio_stat_type::stats_alg_map& stats = glob_ec_ratio_stats.stats;
       typedef ec_ratio_stat_type::alg_1stat_map::const_iterator ec_iter;
 
-      for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
+      for (auto & ec_algo : ec_algos)
         {
-          const std::string algo = ec_algos[ai].name;
+          const std::string algo = ec_algo.name;
 
           int n = -1;
 
@@ -999,9 +999,9 @@ main(int argc, char** argv)
       std::cout << std::right << std::fixed << std::setprecision(1);
       ec_ratio_stat_type::stats_alg_map& stats2 = arc_ratio_stats.stats;
 
-      for (unsigned ai = 0; ai < ec_algos.size(); ++ai)
+      for (auto & ec_algo : ec_algos)
         {
-          const std::string algo = ec_algos[ai].name;
+          const std::string algo = ec_algo.name;
 
           std::cout << std::setw(25)  << algo << ' ' << std::setw(8);
 
@@ -1025,9 +1025,8 @@ main(int argc, char** argv)
     {
       exit_code = 1;
       std::cout << "The check failed for the following seeds:";
-      for (std::set<int>::const_iterator i = failed_seeds.begin();
-           i != failed_seeds.end(); ++i)
-        std::cout << ' ' << *i;
+      for (int failed_seed : failed_seeds)
+        std::cout << ' ' << failed_seed;
       std::cout << std::endl;
     }
 
