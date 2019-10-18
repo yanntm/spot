@@ -182,33 +182,16 @@ f4()
   return f == 11;
 }
 
+struct int_float_pair
+{
+  int one;
+  float two;
+};
+
 static bool
 f5()
 {
-  spot::digraph<void, std::pair<int, float>> g(3);
-
-  auto s1 = g.new_state();
-  auto s2 = g.new_state();
-  auto s3 = g.new_state();
-  g.new_edge(s1, s2, std::make_pair(1, 1.2f));
-  g.new_edge(s1, s3, std::make_pair(2, 1.3f));
-  g.new_edge(s2, s3, std::make_pair(3, 1.4f));
-  g.new_edge(s3, s2, std::make_pair(4, 1.5f));
-
-  int f = 0;
-  float h = 0;
-  for (auto& t: g.out(s1))
-    {
-      f += std::get<0>(t);
-      h += std::get<1>(t);
-    }
-  return f == 3 && (h > 2.49 && h < 2.51);
-}
-
-static bool
-f6()
-{
-  spot::digraph<void, std::pair<int, float>> g(3);
+  spot::digraph<void, int_float_pair> g(3);
 
   auto s1 = g.new_state();
   auto s2 = g.new_state();
@@ -222,8 +205,31 @@ f6()
   float h = 0;
   for (auto& t: g.out(s1))
     {
-      f += t.first;
-      h += t.second;
+      f += t.one;
+      h += t.two;
+    }
+  return f == 3 && (h > 2.49 && h < 2.51);
+}
+
+static bool
+f6()
+{
+  spot::digraph<void, int_float_pair> g(3);
+
+  auto s1 = g.new_state();
+  auto s2 = g.new_state();
+  auto s3 = g.new_state();
+  g.new_edge(s1, s2, 1, 1.2f);
+  g.new_edge(s1, s3, 2, 1.3f);
+  g.new_edge(s2, s3, 3, 1.4f);
+  g.new_edge(s3, s2, 4, 1.5f);
+
+  int f = 0;
+  float h = 0;
+  for (auto& t: g.out(s1))
+    {
+      f += t.one;
+      h += t.two;
     }
   return f == 3 && (h > 2.49 && h < 2.51) && g.is_existential();
 }

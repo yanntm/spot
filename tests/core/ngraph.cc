@@ -219,33 +219,15 @@ static bool f4()
   return f == 11;
 }
 
+struct int_float_pair
+{
+  int one;
+  float two;
+};
+
 static bool f5()
 {
-  typedef spot::digraph<void, std::pair<int, float>> graph_t;
-  graph_t g(3);
-  spot::named_graph<graph_t, std::string> gg(g);
-
-  auto s1 = gg.new_state("s1");
-  gg.new_state("s2");
-  gg.new_state("s3");
-  gg.new_edge("s1", "s2", std::make_pair(1, 1.2f));
-  gg.new_edge("s1", "s3", std::make_pair(2, 1.3f));
-  gg.new_edge("s2", "s3", std::make_pair(3, 1.4f));
-  gg.new_edge("s3", "s2", std::make_pair(4, 1.5f));
-
-  int f = 0;
-  float h = 0;
-  for (auto& t: g.out(s1))
-    {
-      f += std::get<0>(t);
-      h += std::get<1>(t);
-    }
-  return f == 3 && (h > 2.49 && h < 2.51);
-}
-
-static bool f6()
-{
-  typedef spot::digraph<void, std::pair<int, float>> graph_t;
+  typedef spot::digraph<void, int_float_pair> graph_t;
   graph_t g(3);
   spot::named_graph<graph_t, std::string> gg(g);
 
@@ -261,8 +243,32 @@ static bool f6()
   float h = 0;
   for (auto& t: g.out(s1))
     {
-      f += t.first;
-      h += t.second;
+      f += t.one;
+      h += t.two;
+    }
+  return f == 3 && (h > 2.49 && h < 2.51);
+}
+
+static bool f6()
+{
+  typedef spot::digraph<void, int_float_pair> graph_t;
+  graph_t g(3);
+  spot::named_graph<graph_t, std::string> gg(g);
+
+  auto s1 = gg.new_state("s1");
+  gg.new_state("s2");
+  gg.new_state("s3");
+  gg.new_edge("s1", "s2", 1, 1.2f);
+  gg.new_edge("s1", "s3", 2, 1.3f);
+  gg.new_edge("s2", "s3", 3, 1.4f);
+  gg.new_edge("s3", "s2", 4, 1.5f);
+
+  int f = 0;
+  float h = 0;
+  for (auto& t: g.out(s1))
+    {
+      f += t.one;
+      h += t.two;
     }
   return f == 3 && (h > 2.49 && h < 2.51) && g.is_existential();
 }
