@@ -169,7 +169,7 @@ else:
 try:
     m = spot.mark_t([0, n, 1])
 except RuntimeError as e:
-    assert "bit index is out of bounds" in str(e)
+    assert "Too many acceptance sets used.  The limit is" in str(e)
 else:
     report_missing_exception()
 
