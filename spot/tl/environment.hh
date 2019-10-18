@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2012, 2014, 2015 Laboratoire de Recherche et
+// Copyright (C) 2008, 2012, 2014, 2015, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris
 // 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -48,9 +48,6 @@ namespace spot
     /// Get the name of the environment.
     virtual const std::string& name() const = 0;
 
-    virtual
-    ~environment()
-    {
-    }
+    virtual ~environment() = default;
   };
 }

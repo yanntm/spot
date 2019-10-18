@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2015-2018 Laboratoire de Recherche et
+// Copyright (C) 2011, 2015-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -59,8 +59,8 @@ namespace spot
     using const_pointer = const value_type*;
     using size_type = size_t;
 
-    constexpr pool_allocator() noexcept
-    {}
+    constexpr pool_allocator() noexcept = default;
+
     template<class U>
     constexpr pool_allocator(const pool_allocator<U>&) noexcept
     {}

@@ -91,9 +91,7 @@ namespace spot
     }
 
     virtual
-    ~emptiness_check_result()
-    {
-    }
+    ~emptiness_check_result() = default;
 
     /// \brief Return a run accepted by the automata passed to
     /// the emptiness check.

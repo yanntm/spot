@@ -1381,25 +1381,12 @@ namespace spot
     }
 
     /// \brief Copy an acceptance condition
-    acc_cond(const acc_cond& o)
-      : num_(o.num_), all_(o.all_), code_(o.code_),
-        uses_fin_acceptance_(o.uses_fin_acceptance_)
-    {
-    }
+    acc_cond(const acc_cond& o) = default;
 
     /// \brief Copy an acceptance condition
-    acc_cond& operator=(const acc_cond& o)
-    {
-      num_ = o.num_;
-      all_ = o.all_;
-      code_ = o.code_;
-      uses_fin_acceptance_ = o.uses_fin_acceptance_;
-      return *this;
-    }
+    acc_cond& operator=(const acc_cond& o) = default;
 
-    ~acc_cond()
-    {
-    }
+    ~acc_cond() = default;
 
     /// \brief Change the acceptance formula.
     ///

@@ -308,9 +308,7 @@ struct int_pair
   {
   }
 
-  int_pair()
-  {
-  }
+  int_pair() = default;
 #endif
 };
 

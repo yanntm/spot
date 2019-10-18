@@ -30,9 +30,7 @@ namespace spot
   class printable
   {
   public:
-    virtual ~printable()
-    {
-    }
+    virtual ~printable() = default;
 
     virtual void
     print(std::ostream&, const char*) const = 0;
@@ -121,9 +119,7 @@ namespace spot
       call_['%'] = call_[0] = &percent;
     }
 
-    virtual ~formater()
-    {
-    }
+    virtual ~formater() = default;
 
     /// \brief Scan the %-sequences occuring in \a fmt.
     ///

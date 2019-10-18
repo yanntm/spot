@@ -113,7 +113,7 @@ namespace spot
 
   public:
     enumerate_cycles(const scc_info& map);
-    virtual ~enumerate_cycles() {}
+    virtual ~enumerate_cycles() = default;
 
     /// \brief Run in SCC scc, and call \a cycle_found() for any new
     /// elementary cycle found.

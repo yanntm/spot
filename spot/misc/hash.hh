@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2011, 2014, 2015, 2018 Laboratoire de Recherche et
-// Développement de l'Epita (LRDE).
+// Copyright (C) 2008, 2011, 2014, 2015, 2018, 2019 Laboratoire de
+// Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
 // Université Pierre et Marie Curie.
@@ -41,9 +41,7 @@ namespace spot
     // A default constructor is needed if the ptr_hash object is
     // stored in a const member.  This occur with the clang version
     // installed by OS X 10.9.
-    ptr_hash()
-    {
-    }
+    ptr_hash() = default;
 
     size_t operator()(const T* p) const noexcept
     {
@@ -64,9 +62,7 @@ namespace spot
   {
     // A default constructor is needed if the identity_hash object is
     // stored in a const member.
-    identity_hash()
-    {
-    }
+    identity_hash() = default;
 
     size_t operator()(const T& s) const noexcept
     {

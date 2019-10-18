@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et
+// Copyright (C) 2014-2019 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -268,9 +268,7 @@ struct int_pair
   {
   }
 
-  int_pair()
-  {
-  }
+  int_pair() = default;
 #endif
 };
 

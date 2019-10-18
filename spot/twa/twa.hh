@@ -107,9 +107,7 @@ namespace spot
     /// \code s->destroy(); \endcode
     /// instead of
     /// \code delete s; \endcode .
-    virtual ~state()
-    {
-    }
+    virtual ~state() = default;
   };
 
   /// \ingroup twa_essentials
@@ -393,9 +391,7 @@ namespace spot
   {
   public:
     virtual
-    ~twa_succ_iterator()
-    {
-    }
+    ~twa_succ_iterator() = default;
 
     /// \name Iteration
     ///@{
