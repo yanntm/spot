@@ -102,7 +102,10 @@ namespace spot
         : mark_t(_value_t::zero())
       {
         for (iterator i = begin; i != end; ++i)
-          set(*i);
+          if (SPOT_LIKELY(*i < SPOT_MAX_ACCSETS))
+            set(*i);
+          else
+            report_too_many_sets();
       }
 
       /// Create a mark_t from a list of set numbers.

@@ -53,6 +53,17 @@ static void print(const std::vector<std::vector<int>>& res)
     }
 }
 
+static void expect(const std::exception& e, const char* prefix)
+{
+  if (std::strncmp(e.what(), "Too many acceptance sets used.",
+                   strlen(prefix)))
+    {
+      std::cerr << "exception: " << e.what() << '\n';
+      std::cerr << "expected:  " << prefix << '\n';
+      abort();
+    }
+}
+
 int main()
 {
   spot::acc_cond ac(4);
@@ -189,7 +200,7 @@ int main()
     }
   catch (const std::runtime_error& e)
     {
-      assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
+      expect(e, "Too many acceptance sets used.");
     }
 
 #if SPOT_DEBUG
@@ -204,7 +215,7 @@ int main()
     }
   catch (const std::runtime_error& e)
     {
-      assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
+      expect(e, "Too many acceptance sets used.");
     }
 
   try
@@ -214,17 +225,17 @@ int main()
     }
   catch (const std::runtime_error& e)
     {
-      assert(!std::strncmp(e.what(), "Too many acceptance sets used.", 30));
+      expect(e, "Too many acceptance sets used.");
     }
+#endif
   try
     {
       spot::acc_cond::mark_t m{spot::acc_cond::mark_t::max_accsets()};
     }
   catch (const std::runtime_error& e)
     {
-      assert(!std::strcmp(e.what(), "bit index is out of bounds"));
+      expect(e, "Too many acceptance sets used.");
     }
-#endif
 
   return 0;
 }
