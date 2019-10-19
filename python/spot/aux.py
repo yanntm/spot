@@ -27,6 +27,7 @@ import sys
 import os
 import errno
 import contextlib
+import re
 
 
 def extend(*classes):
@@ -42,6 +43,21 @@ def extend(*classes):
                     setattr(cls, name, val)
         return classes[0]
     return wrap
+
+
+# Work around a bug introduced in GraphViz 2.42.x, where the scale
+# parameter is inverted.  https://gitlab.com/graphviz/graphviz/issues/1605
+# In our case, the scale parameters should both be <= 1, so we can
+# detect when that is not the case.
+svgscale_regex = re.compile('transform="scale\(([\d.]+) ([\d.]+)\) rotate')
+
+def _gvfix(matchobj):
+        xs = float(matchobj.group(1))
+        ys = float(matchobj.group(2))
+        if xs >= 1 and ys >= 1:
+            xs = 1/xs
+            ys = 1/ys
+        return 'transform="scale({} {}) rotate'.format(xs, ys)
 
 
 # Add a small LRU cache so that when we display automata into a
@@ -70,7 +86,8 @@ def str_to_svg(str):
     ret = dot.wait()
     if ret:
         raise subprocess.CalledProcessError(ret, 'dot')
-    return stdout.decode('utf-8')
+    out = stdout.decode('utf-8')
+    return svgscale_regex.sub(_gvfix, out)
 
 
 def ostream_to_svg(ostr):
