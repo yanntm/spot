@@ -1039,7 +1039,7 @@ class BUDDY_API bdd_ioformat
  public:
    bdd_ioformat(int f) { format=f; }
  private:
-   BUDDY_LOCAL bdd_ioformat(void)  { }
+   BUDDY_LOCAL bdd_ioformat(void) = default;
    int format;
    BUDDY_LOCAL static int curformat;
 
