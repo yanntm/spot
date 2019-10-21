@@ -339,10 +339,9 @@ static int checked_main()
             }
           catch (const std::bad_alloc&)
           {
-            std::cerr << "Out of memory during emptiness check."
-                      << std::endl;
+            std::cerr << "Out of memory during emptiness check.\n";
             if (!mc_options.compress)
-              std::cerr << "Try option -z for state compression." << std::endl;
+              std::cerr << "Try option -z for state compression.\n";
             exit_code = 2;
             exit(exit_code);
           }
@@ -374,8 +373,8 @@ static int checked_main()
               }
             catch (const std::bad_alloc&)
               {
-                std::cerr << "Out of memory while looking for counterexample."
-                          << std::endl;
+                std::cerr
+                  << "Out of memory while looking for counterexample.\n";
                 exit_code = 2;
                 exit(exit_code);
               }
