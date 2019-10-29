@@ -35,6 +35,7 @@
 #include <spot/twaalgos/ltl2tgba_fm.hh>
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/sccinfo.hh>
+#include <spot/priv/robin_hood.hh>
 
 namespace spot
 {
@@ -111,12 +112,13 @@ namespace spot
       ~ratexp_to_dfa();
 
     protected:
-      typedef std::pair<twa_graph_ptr, const namer*> labelled_aut;
+      // Use robin_hood::pair because std::pair is not no-throw constructible
+      typedef robin_hood::pair<twa_graph_ptr, const namer*> labelled_aut;
       labelled_aut translate(formula f);
 
     private:
       translate_dict& dict_;
-      typedef std::unordered_map<formula, labelled_aut> f2a_t;
+      typedef robin_hood::unordered_node_map<formula, labelled_aut> f2a_t;
       std::vector<labelled_aut> automata_;
       f2a_t f2a_;
     };
@@ -158,7 +160,7 @@ namespace spot
       tl_simplifier* ls;
       mark_tools mt;
 
-      typedef bdd_dict::fv_map fv_map;
+      typedef robin_hood::unordered_flat_map<formula, int> fv_map;
       typedef std::vector<formula> vf_map;
 
       fv_map next_map;               ///< Maps "Next" variables to BDD variables
@@ -173,7 +175,7 @@ namespace spot
       bool single_acc;
       acc_cond& acc;
       // Map BDD variables to acceptance marks.
-      std::map<int, unsigned> bm;
+      robin_hood::unordered_flat_map<int, unsigned> bm;
       bool unambiguous;
 
       enum translate_flags
@@ -214,9 +216,9 @@ namespace spot
         bool has_marked:1;
       };
 
-      typedef
-      std::unordered_map<flagged_formula, translated,
-                         flagged_formula_hash> flagged_formula_to_bdd_map;
+      typedef robin_hood::unordered_node_map
+        <flagged_formula, translated, flagged_formula_hash>
+        flagged_formula_to_bdd_map;
     private:
       flagged_formula_to_bdd_map ltl_bdd_;
 
@@ -238,7 +240,7 @@ namespace spot
         if (a == bddtrue)
           return {};
         assert(a != bddfalse);
-        std::vector<unsigned> t;
+        acc_cond::mark_t res = {};
         do
           {
             int v = bdd_var(a);
@@ -246,13 +248,13 @@ namespace spot
             a = bdd_low(a);
             if (h != bddfalse)
               {
-                t.emplace_back(bm[v]);
+                res.set(bm[v]);
                 if (a == bddfalse)
                   a = h;
               }
           }
         while (a != bddtrue);
-        return acc_cond::mark_t(t.begin(), t.end());
+        return res;
       }
 
       int
@@ -260,8 +262,7 @@ namespace spot
       {
         if (single_acc)
           {
-            int num = dict->register_acceptance_variable
-              (formula::tt(), this);
+            int num = dict->register_acceptance_variable(formula::tt(), this);
             a_set &= bdd_ithvar(num);
 
             auto p = bm.emplace(num, 0U);
@@ -360,13 +361,13 @@ namespace spot
       std::ostream&
       dump(std::ostream& os) const
       {
-        os << "Next Variables:" << std::endl;
+        os << "Next Variables:\n";
         for (auto& fi: next_map)
         {
           os << "  " << fi.second << ": Next[";
-          print_psl(os, fi.first) << ']' << std::endl;
+          print_psl(os, fi.first) << "]\n";
         }
-        os << "Shared Dict:" << std::endl;
+        os << "Shared Dict:\n";
         dict->dump(os);
         return os;
       }
@@ -414,14 +415,31 @@ namespace spot
       formula
       conj_bdd_to_formula(bdd b, op o = op::And) const
       {
+        if (b == bddtrue)
+          return formula::tt();
         if (b == bddfalse)
           return formula::ff();
-        vec v;
-        while (b != bddtrue)
+        // Unroll the first loop of the next do/while loop so that we
+        // do not have to create v when b is not a conjunction.
+        formula res = var_to_formula(bdd_var(b));
+        bdd high = bdd_high(b);
+        if (high == bddfalse)
           {
-            int var = bdd_var(b);
-            formula res = var_to_formula(var);
-            bdd high = bdd_high(b);
+            res = formula::Not(res);
+            b = bdd_low(b);
+          }
+        else
+          {
+            assert(bdd_low(b) == bddfalse);
+            b = high;
+          }
+        if (b == bddtrue)
+          return res;
+        vec v{std::move(res)};
+        do
+          {
+            res = var_to_formula(bdd_var(b));
+            high = bdd_high(b);
             if (high == bddfalse)
               {
                 res = formula::Not(res);
@@ -433,8 +451,9 @@ namespace spot
                 b = high;
               }
             assert(b != bddfalse);
-            v.emplace_back(res);
+            v.emplace_back(std::move(res));
           }
+        while (b != bddtrue);
         return formula::multop(o, std::move(v));
       }
 
@@ -1727,15 +1746,15 @@ namespace spot
       }
 
     private:
-      typedef std::unordered_map<formula, bool> pfl_map;
+      typedef robin_hood::unordered_flat_map<formula, bool> pfl_map;
       pfl_map pfl_;
     };
 
-    class formula_canonizer final
+    class formula_canonicalizer final
     {
     public:
-      formula_canonizer(translate_dict& d,
-                        bool fair_loop_approx, bdd all_promises)
+      formula_canonicalizer(translate_dict& d,
+                            bool fair_loop_approx, bdd all_promises)
         : fair_loop_approx_(fair_loop_approx),
           all_promises_(all_promises),
           d_(d)
@@ -1837,7 +1856,7 @@ namespace spot
       }
 
       formula
-      canonize(formula f)
+      canonicalize(formula f)
       {
         bool new_variable = false;
         bdd b = translate(f, &new_variable).symbolic;
@@ -1863,14 +1882,14 @@ namespace spot
       // We do this because many formulae (such as `aR(bRc)' and
       // `aR(bRc).(bRc)') are equivalent, and are trivially identified
       // by looking at the set of successors.
-      typedef std::unordered_map<bdd, formula,
-                                 bdd_hash> bdd_to_formula_map;
+      typedef robin_hood::unordered_node_map<bdd, formula,
+                                             bdd_hash> bdd_to_formula_map;
       bdd_to_formula_map b2f_;
       // Map each formula to its associated bdd.  This speed things up when
       // the same formula is translated several times, which especially
-      // occurs when canonize() is called repeatedly inside exprop.
-      typedef std::unordered_map<formula,
-                                 translate_dict::translated> formula_to_bdd_map;
+      // occurs when canonicalize() is called repeatedly inside exprop.
+      typedef robin_hood::unordered_node_map
+        <formula, translate_dict::translated> formula_to_bdd_map;
       formula_to_bdd_map f2b_;
 
       possible_fair_loop_checker pflc_;
@@ -1986,7 +2005,7 @@ namespace spot
                     return f.is_boolean();
                   });
 
-    formula_canonizer fc(d, fair_loop_approx, all_promises);
+    formula_canonicalizer fc(d, fair_loop_approx, all_promises);
 
     // These are used when atomic propositions are interpreted as
     // events.  There are two kinds of events: observable events are
@@ -2024,7 +2043,7 @@ namespace spot
 
     // This is in case the initial state is equivalent to true...
     if (symb_merge)
-      f2 = fc.canonize(f2);
+      f2 = fc.canonicalize(f2);
 
     formulae_to_translate.insert(f2);
     a->set_init_state(namer->new_state(f2));
@@ -2135,7 +2154,7 @@ namespace spot
                 // If we already know a state with the same
                 // successors, use it in lieu of the current one.
                 if (symb_merge)
-                  dest = fc.canonize(dest);
+                  dest = fc.canonicalize(dest);
 
                 bdd conds = bdd_existcomp(label, d.var_set);
                 bdd promises = bdd_existcomp(label, d.a_set);
@@ -2185,8 +2204,9 @@ namespace spot
             bdd c = bddfalse;
             while (i != dests.end() && i->dest.is_tt())
               c |= i++->cond;
-            for (; i != dests.end(); ++i)
-              i->cond -= c;
+            if (c != bddfalse)
+              for (; i != dests.end(); ++i)
+                i->cond -= c;
           }
 
         // Create transitions in the automaton
@@ -2223,10 +2243,8 @@ namespace spot
       }
 
     auto& acc = a->acc();
-    unsigned ns = a->num_states();
-    for (unsigned s = 0; s < ns; ++s)
-      for (auto& t: a->out(s))
-        t.acc = acc.comp(t.acc);
+    for (auto& e: a->edges())
+      e.acc = acc.comp(e.acc);
 
     acc.set_generalized_buchi();
 
