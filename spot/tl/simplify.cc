@@ -27,7 +27,7 @@
 #endif
 
 #include <spot/tl/simplify.hh>
-#include <unordered_map>
+#include <spot/priv/robin_hood.hh>
 #include <spot/tl/contain.hh>
 #include <spot/tl/print.hh>
 #include <spot/tl/snf.hh>
@@ -37,6 +37,9 @@
 #include <cassert>
 #include <memory>
 #include <unordered_set>
+#include <map>
+
+
 
 namespace spot
 {
@@ -45,9 +48,9 @@ namespace spot
   // The name of this class is public, but not its contents.
   class tl_simplifier_cache final
   {
-    typedef std::unordered_map<formula, formula> f2f_map;
-    typedef std::unordered_map<formula, bdd> f2b_map;
-    typedef std::map<int, formula> b2f_map;
+    typedef robin_hood::unordered_map<formula, formula> f2f_map;
+    typedef robin_hood::unordered_map<formula, bdd> f2b_map;
+    typedef robin_hood::unordered_map<int, formula> b2f_map;
     typedef std::pair<formula, formula> pairf;
     typedef std::map<pairf, bool> syntimpl_cache_t;
   public:
@@ -2544,8 +2547,8 @@ namespace spot
                   if (!mo.is_syntactic_stutter_invariant()) // Skip if no X.
                     {
                       typedef std::unordered_set<formula> fset_t;
-                      typedef std::unordered_map<formula,
-                                                 std::set<unsigned>> fmap_t;
+                      typedef robin_hood::unordered_node_map
+                        <formula, std::set<unsigned>> fmap_t;
                       fset_t xgset; // XG(...)
                       fset_t xset;  // X(...)
                       fmap_t wuset; // (X...)W(...) or (X...)U(...)
@@ -2765,7 +2768,8 @@ namespace spot
                   // F(b) & (a W b) = a U b
                   // F(b) & (a U b) = a U b
                   // F(c) & G(phi | e) = c M (phi | e)  if c => !phi.
-                  typedef std::unordered_map<formula, vec::iterator> fmap_t;
+                  typedef robin_hood::unordered_map<formula,
+                                                    vec::iterator> fmap_t;
                   fmap_t uwmap; // associates "b" to "a U b" or "a W b"
                   fmap_t rmmap; // associates "a" to "a R b" or "a M b"
                   // (a U b) & (c U b) = (a & c) U b
@@ -3119,8 +3123,8 @@ namespace spot
                   if (!mo.is_syntactic_stutter_invariant()) // Skip if no X
                     {
                       typedef std::unordered_set<formula> fset_t;
-                      typedef std::unordered_map<formula,
-                                                 std::set<unsigned>> fmap_t;
+                      typedef robin_hood::unordered_node_map
+                        <formula, std::set<unsigned>> fmap_t;
                       fset_t xfset; // XF(...)
                       fset_t xset;  // X(...)
                       fmap_t rmset; // (X...)R(...) or (X...)M(...) or
@@ -3396,7 +3400,8 @@ namespace spot
                   // G(b) | (a R b) = a R b.
                   // G(b) | (a M b) = a R b.
                   // G(c) | F(phi & e) = c W (phi & e)  if  !c => phi.
-                  typedef std::unordered_map<formula, vec::iterator> fmap_t;
+                  typedef robin_hood::unordered_map<formula,
+                                                    vec::iterator> fmap_t;
                   fmap_t uwmap; // associates "a" to "a U b" or "a W b"
                   fmap_t rmmap; // associates "b" to "a R b" or "a M b"
                   // (a U b) | (a U c) = a U (b | c)
