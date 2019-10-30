@@ -36,6 +36,7 @@
 #include <spot/misc/minato.hh>
 #include <cassert>
 #include <memory>
+#include <unordered_set>
 
 namespace spot
 {

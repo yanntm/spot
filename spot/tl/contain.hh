@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2011-2016, 2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2006 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -23,22 +23,17 @@
 #pragma once
 
 #include <spot/tl/formula.hh>
-#include <spot/twaalgos/ltl2tgba_fm.hh>
-#include <spot/misc/hash.hh>
-#include <map>
+#include <spot/twa/bdddict.hh>
 
 namespace spot
 {
+  class tl_simplifier_cache;
+
   /// Check containment between LTL formulae.
   class SPOT_API language_containment_checker
   {
-    struct record_
-    {
-      const_twa_graph_ptr translation;
-      typedef std::map<const record_*, bool> incomp_map;
-      incomp_map incompatible;
-    };
-    typedef std::unordered_map<formula, record_> trans_map;
+    struct record_;
+    struct trans_map_;
   public:
     /// This class uses spot::ltl_to_tgba_fm to translate LTL
     /// formulae.  See that function for the meaning of these options.
@@ -75,6 +70,7 @@ namespace spot
     bool branching_postponement_;
     bool fair_loop_approx_;
     /* Translation Maps */
-    trans_map translated_;
+    trans_map_* translated_;
+    tl_simplifier_cache* c_;
   };
 }
