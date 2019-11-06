@@ -1,4 +1,4 @@
-New in spot 2.8.2.dev  (not yet released)
+New in spot 2.8.3.dev  (not yet released)
 
   Library:
 
@@ -40,11 +40,20 @@ New in spot 2.8.2.dev  (not yet released)
        parity_min_odd(n) = parity_min(true, n)
        parity_min_even(n) = parity_min(false, n)
 
+New in spot 2.8.3 (2019-11-06)
+
+  Build:
+
+  - Minor portabilities improvements with C++17 deprecations.
+
   Python:
 
   - Doing "import spot.foo" will now load any spot-extra/foo.py on
     Python's search path.  This can be used to install third-party
     packages that want to behave as plugins for Spot.
+
+  - Work around GraphViz bug #1605 in Jupyter notebooks.
+    https://gitlab.com/graphviz/graphviz/issues/1605
 
 New in spot 2.8.2 (2019-09-27)
 
