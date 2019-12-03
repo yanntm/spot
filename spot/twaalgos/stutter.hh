@@ -122,12 +122,19 @@ namespace spot
   /// If no complemented automaton could be constructed, the
   /// the result will be returned as trival::maybe().
   ///
+  /// If \a find_counterexamples is set and the automaton is found to
+  /// be stutter-sensitive, then two named properties named
+  /// "accepted-word" and "rejected-word" will be added to the
+  /// automaton.  Those sample words will be stutter-equivalent, and
+  /// serve as a proof that the property is stutter-sensitive.
+  ///
   /// This variant of is_stutter_invariant() is used for the
   /// --check=stutter option of command-line tools.
   SPOT_API trival
   check_stutter_invariance(twa_graph_ptr aut_f,
                            formula f = nullptr,
-                           bool do_not_determinize = false);
+                           bool do_not_determinize = false,
+                           bool find_counterexamples = false);
 
 
   ///@{

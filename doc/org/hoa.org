@@ -967,6 +967,8 @@ terminal.
    :CUSTOM_ID: extensions
    :END:
 
+** Highlighting states and edges
+
 Spot supports two additional headers that are not part of the standard
 HOA format.  These are =spot.highlight.states= and
 =spot.highlight.edges=.  These are used to [[file:autfilt.org::#decoration][decorate states and edges]]
@@ -1104,6 +1106,68 @@ State: 2
 [0&!1] 2
 --END--
 #+END_SRC
+
+** Sample words
+
+When the =--check=stutter-sensitive-example= option is used, and when
+a stutter-sensitive automaton is output, two sample words are added to
+the HOA output as a proof that the automaton is stutter-sensitive.
+One of these words is accepted, the other is rejected, and the two are
+stutter-equivalent (i.e., they differ only by some stuttering).
+
+The headers are called =spot.accepted-word= and =spot.rejected-word=
+if HOA v1.1 is selected.  However since these are also useful to
+third-party tools, we also output them as =spot-accepted-word= and
+=spot-rejected-word= in HOA v1.
+
+#+BEGIN_SRC sh :wrap SRC hoa
+ltl2tgba --check=stutter-sensitive-example -H1 Xa; echo
+ltl2tgba --check=stutter-sensitive-example -H1.1 Xa
+#+END_SRC
+
+#+RESULTS:
+#+begin_SRC hoa
+HOA: v1
+name: "Xa"
+States: 3
+Start: 1
+AP: 1 "a"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc deterministic
+properties: stutter-sensitive terminal
+spot-accepted-word: "!a; cycle{a}"
+spot-rejected-word: "!a; !a; cycle{a}"
+--BODY--
+State: 0
+[0] 2
+State: 1
+[t] 0
+State: 2 {0}
+[t] 2
+--END--
+
+HOA: v1.1
+name: "Xa"
+States: 3
+Start: 1
+AP: 1 "a"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc !complete
+properties: deterministic !stutter-invariant terminal
+spot.accepted-word: "!a; cycle{a}"
+spot.rejected-word: "!a; !a; cycle{a}"
+--BODY--
+State: 0
+[0] 2
+State: 1
+[t] 0
+State: 2 {0}
+[t] 2
+--END--
+#+end_SRC
+
 
 #+BEGIN_SRC sh :results silent :exports results
 rm -f stvstracc.hoa sba.hoa stvstrlab.hoa decorate.hoa

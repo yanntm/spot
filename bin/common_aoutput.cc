@@ -49,16 +49,22 @@ enum check_type
   {
     check_unambiguous = (1 << 0),
     check_stutter = (1 << 1),
-    check_strength = (1 << 2),
-    check_semi_determinism = (1 << 3),
+    check_stutter_example = check_stutter | (1 << 2),
+    check_strength = (1 << 3),
+    check_semi_determinism = (1 << 4),
     check_all = -1U,
   };
 static char const *const check_args[] =
   {
     "unambiguous",
+    /* Before we added --check=stutter-sensitive-example,
+       --check=stutter used to unambiguously refer to
+       stutter-invariant. */
+    "stutter",
     "stutter-invariant", "stuttering-invariant",
     "stutter-insensitive", "stuttering-insensitive",
     "stutter-sensitive", "stuttering-sensitive",
+    "stutter-sensitive-example", "stuttering-sensitive-example",
     "strength", "weak", "terminal",
     "semi-determinism", "semi-deterministic",
     "all",
@@ -67,9 +73,11 @@ static char const *const check_args[] =
 static check_type const check_types[] =
   {
     check_unambiguous,
+    check_stutter,
     check_stutter, check_stutter,
     check_stutter, check_stutter,
     check_stutter, check_stutter,
+    check_stutter_example, check_stutter_example,
     check_strength, check_strength, check_strength,
     check_semi_determinism, check_semi_determinism,
     check_all
@@ -149,8 +157,9 @@ static const argp_option options[] =
     { "format", 0, nullptr, OPTION_ALIAS, nullptr, 0 },
     { "check", OPT_CHECK, "PROP", OPTION_ARG_OPTIONAL,
       "test for the additional property PROP and output the result "
-      "in the HOA format (implies -H).  PROP may be any prefix of "
-      "'all' (default), 'unambiguous', 'stutter-invariant', or 'strength'.",
+      "in the HOA format (implies -H).  PROP may be some prefix of "
+      "'all' (default), 'unambiguous', 'stutter-invariant', "
+      "'stutter-sensitive-example', 'semi-determinism', or 'strength'.",
       0 },
     { nullptr, 0, nullptr, 0, nullptr, 0 }
   };
@@ -585,7 +594,9 @@ automaton_printer::print(const spot::twa_graph_ptr& aut,
   if (opt_check)
     {
       if (opt_check & check_stutter)
-        spot::check_stutter_invariance(aut, f);
+        spot::check_stutter_invariance(aut, f, false,
+                                       (opt_check & check_stutter_example)
+                                       == check_stutter_example);
       if (opt_check & check_unambiguous)
         spot::check_unambiguous(aut);
       if (opt_check & check_strength)

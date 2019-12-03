@@ -599,6 +599,16 @@ namespace spot
             os << nl;
           }
       }
+    if (auto word = aut->get_named_prop<std::string>("accepted-word"))
+      {
+        os << (v1_1 ? "spot." : "spot-") << "accepted-word: \"";
+        escape_str(os, *word) << '"' << nl;
+      }
+    if (auto word = aut->get_named_prop<std::string>("rejected-word"))
+      {
+        os << (v1_1 ? "spot." : "spot-") << "rejected-word: \"";
+        escape_str(os, *word) << '"' << nl;
+      }
 
     // If we want to output implicit labels, we have to
     // fill a vector with all destinations in order.

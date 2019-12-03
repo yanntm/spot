@@ -230,6 +230,9 @@ sl(a) x sl(!a), performed on-the-fly
 cl(a) x cl(!a)
 .RE
 .RE
+This variable is used by the \fB--check=stutter-invariance\fR and
+\fB--stutter-invariant\fR options, but it is ignored by
+\fB--check=stutter-sensitive-example\fR.
 
 .TP
 \fBSPOT_TMPDIR\fR, \fBTMPDIR\fR

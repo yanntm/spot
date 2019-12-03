@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014-2018 Laboratoire de Recherche et
+# Copyright (C) 2014-2019 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -137,3 +137,23 @@ for i in 1 2 3 4 5 6 7 8; do
     test 0 = `SPOT_STUTTER_CHECK=$i \
               autfilt pirogov --is-stutter-invariant -c` || exit 1
 done
+
+
+ltl2tgba Xa --check=stutter-sensitive-example > out
+grep ' stutter-sensitive' out
+grep '^spot-accepted-word: "' out
+grep '^spot-rejected-word: "' out
+
+ltl2tgba 'X"a b"' --check=stutter-sensitive-example -H1.1 > out
+grep ' !stutter-invariant' out
+grep '^spot\.accepted-word: ".*\\\"' out
+grep '^spot\.rejected-word: ".*\\\"' out
+# Make sur we can parse it ok.
+autfilt -q out
+
+ltl2tgba Ga --check=stutter-sensitive-example > out
+grep ' stutter-invariant' out
+grep -q '^spot.accepted-word: "' out && exit 1
+grep -q '^spot.rejected-word: "' out && exit 1
+
+:

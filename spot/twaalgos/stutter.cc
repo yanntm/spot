@@ -31,6 +31,7 @@
 #include <spot/twaalgos/complement.hh>
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/sccinfo.hh>
+#include <spot/twaalgos/word.hh>
 #include <spot/twa/twaproduct.hh>
 #include <spot/twa/bddprint.hh>
 #include <deque>
@@ -664,10 +665,11 @@ namespace spot
 
   trival
   check_stutter_invariance(twa_graph_ptr aut, formula f,
-                           bool do_not_determinize)
+                           bool do_not_determinize,
+                           bool find_counterexamples)
   {
     trival is_stut = aut->prop_stutter_invariant();
-    if (is_stut.is_known())
+    if (!find_counterexamples && is_stut.is_known())
       return is_stut.is_true();
 
     twa_graph_ptr neg = nullptr;
@@ -676,7 +678,45 @@ namespace spot
     else if (!is_deterministic(aut) && do_not_determinize)
       return trival::maybe();
 
-    return is_stutter_invariant(aut, std::move(neg));
+    if (!find_counterexamples)
+      return is_stutter_invariant(aut, std::move(neg));
+
+    // Procedure that may find a counterexample.
+
+    if (!neg)
+      neg = complement(aut);
+
+    auto aword = product(closure(aut), closure(neg))->accepting_word();
+    if (!aword)
+      {
+        aut->prop_stutter_invariant(true);
+        return true;
+      }
+    aword->simplify();
+    aword->use_all_aps(aut->ap_vars());
+    auto aaut = aword->as_automaton();
+    twa_word_ptr rword;
+    if (aaut->intersects(aut))
+      {
+        rword = sl2(aaut)->intersecting_word(neg);
+        rword->simplify();
+      }
+    else
+      {
+        rword = aword;
+        aword = sl2(aaut)->intersecting_word(neg);
+        aword->simplify();
+      }
+    std::ostringstream os;
+    os << *aword;
+    aut->set_named_prop<std::string>("accepted-word",
+                                     new std::string(os.str()));
+    os.str("");
+    os << *rword;
+    aut->set_named_prop<std::string>("rejected-word",
+                                     new std::string(os.str()));
+    aut->prop_stutter_invariant(false);
+    return false;
   }
 
   std::vector<bool>

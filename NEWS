@@ -1,5 +1,19 @@
 New in spot 2.8.3.dev  (not yet released)
 
+  Command-line tools:
+
+  - When the --check=stutter-sensitive-example option is passed to
+    tools like ltl2tgba, autfilt, genaut, or ltldo, the produced
+    automata are checked for stutter-invariance (as in the
+    --check=stutter-invariant case), additionally a proof of
+    stutter-sensitiveness is provided as two stutter-equivalent words:
+    one accepted, and one rejected.  These sample words are printed in
+    the HOA output.
+
+    % ltl2tgba --check=stutter-sensitive-example Xa | grep word:
+    spot-accepted-word: "!a; cycle{a}"
+    spot-rejected-word: "!a; !a; cycle{a}"
+
   Library:
 
   - Historically, Spot only supports LTL with infinite semantics
