@@ -1019,7 +1019,9 @@ from the command-line, Python, or C++.
 The Spot project can be broken down into several parts, as shown
 above.  Orange boxes are C/C++ libraries.  Red boxes are command-line
 programs.  Blue boxes are Python-related.  The gray outline shows the
-components that are distributed and installed by Spot.
+components that are distributed and installed by the Spot tarball.
+Green boxes represent online services that build upon the Python
+layers.
 
   - =libbddx= is a customized version of [[https://sourceforge.net/projects/buddy/][the BuDDy library]], for
     manipulating [[#bdd][BDDs]].
@@ -1040,7 +1042,14 @@ components that are distributed and installed by Spot.
     These are available by importing =spot.gen=, =spot.ltsmin=, =bdd=,
     and =spot=.  Those Python bindings also includes some additional
     code to make them more usable in interactive environments such as
-    the [[http://juptter.org][IPython/Jupyter]] notebook.
+    the [[http://jupyter.org][IPython/Jupyter]] notebook.
+  - While the online services described pictured in green are not
+    distributed with the rest of Spot, their source-code is publicly
+    available (in case you want to contribute or run a local version).
+    The [[https://spot-sandbox.lrde.epita.fr/][=spot-sandbox=]] website runs from a Docker container whose
+    configuration can be found in [[https://gitlab.lrde.epita.fr/spot/sandbox/tree/master=][this repository]].  The client and
+    server parts of the [[https://spot.lrde.epita.fr/app/][online LTL translator]] can be found in [[https://gitlab.lrde.epita.fr/spot/spot-web-app/][this
+    repository]].
 
 * Automaton property flags
    :PROPERTIES:
