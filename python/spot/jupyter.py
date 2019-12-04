@@ -21,8 +21,23 @@
 Auxiliary functions for Spot's Python bindings.
 """
 
-from IPython.display import display, HTML
+from IPython.display import display, HTML, DisplayObject
 
+class SVG(DisplayObject):
+    """
+    Replacement for IPython.display.SVG that does not use
+    minidom to extract the <svg> element.
+
+    We need that because prior to Python 3.8, minidom used
+    sort all attributes, and in Python 3.8 this was changed
+    to keep the same order, causing test failures in our
+    diff-based test suite.
+
+    We do not need the <svg> extraction when processing
+    GraphViz output.
+    """
+    def _repr_svg_(self):
+        return self.data
 
 def display_inline(*args, per_row=None, show=None):
     """

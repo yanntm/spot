@@ -150,7 +150,7 @@ class twa:
         # Load the SVG function only if we need it. This way the
         # bindings can still be used outside of IPython if IPython is
         # not installed.
-        from IPython.display import SVG
+        from spot.jupyter import SVG
         return SVG(self._repr_svg_(opt))
 
     def highlight_states(self, states, color):
@@ -212,7 +212,7 @@ class twa_graph:
     def show_storage(self, opt=None):
         ostr = ostringstream()
         self.dump_storage_as_dot(ostr, opt)
-        from IPython.display import SVG
+        from spot.jupyter import SVG
         return SVG(_ostream_to_svg(ostr))
 
 
@@ -237,7 +237,7 @@ class formula:
         # Load the SVG function only if we need it. This way the bindings
         # can still be used outside of IPython if IPython is not
         # installed.
-        from IPython.display import SVG
+        from spot.jupyter import SVG
         return SVG(_str_to_svg(self.to_str('d')))
 
     def _repr_latex_(self):
@@ -1169,7 +1169,7 @@ def show_mp_hierarchy(cl):
     Return a picture of the Manna & Pnueli hierarchy as an SVG object
     in the IPython/Jupyter.
     """
-    from IPython.display import SVG
+    from spot.jupyter import SVG
     return SVG(mp_hierarchy_svg(cl))
 
 
@@ -1278,7 +1278,7 @@ class twa_word:
         """
         Display the word as an SVG picture of signals.
         """
-        from IPython.display import SVG
+        from spot.jupyter import SVG
         return SVG(self.as_svg())
 
 
