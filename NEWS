@@ -1,6 +1,13 @@
 New in spot 2.8.3.dev  (not yet released)
 
-  Nothing yet.
+  Bugs fixed:
+
+  - The Rabin-to-Büchi conversion could misbehave when applied to
+    Rabin-like acceptance with where some pairs have missing Inf(.)
+    (e.g. Fin(0)|(Inf(1)&Fin(2))) and when some of the SCCs do not
+    visit the remaining Inf(.).  This indirectly caused the
+    complementation algorithm to produce incorrect results on such
+    inputs, causing false positives in ltlcross and autcross.
 
 New in spot 2.8.3 (2019-11-06)
 
