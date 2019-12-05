@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -126,7 +126,8 @@ namespace spot
       auto scc_pairs = rs_pairs_view(aut_pairs.pairs(), scc_acc);
       // If there is one aut_fin_alone that is not in the SCC,
       // any cycle in the SCC is accepting.
-      if (scc_pairs.fins_alone().proper_subset(aut_pairs.fins_alone()))
+      auto aut_fin_alone = aut_pairs.fins_alone();
+      if ((scc_acc & aut_fin_alone) != aut_fin_alone)
         {
           for_each_edge(aut, si.edges_of(scc), keep, [&](unsigned e)
             {
