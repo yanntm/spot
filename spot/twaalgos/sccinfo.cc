@@ -438,7 +438,7 @@ namespace spot
     return support;
   }
 
-  bool scc_info::check_scc_emptiness(unsigned n)
+  bool scc_info::check_scc_emptiness(unsigned n) const
   {
     if (SPOT_UNLIKELY(!aut_->is_existential()))
       throw std::runtime_error("scc_info::check_scc_emptiness() "
@@ -832,4 +832,27 @@ namespace spot
 
     return res;
   }
+
+    scc_info::edge_filter_choice
+    scc_and_mark_filter::filter_scc_and_mark_
+    (const twa_graph::edge_storage_t& e, unsigned dst, void* data)
+    {
+      auto& d = *reinterpret_cast<scc_and_mark_filter*>(data);
+      if (d.lower_si_->scc_of(dst) != d.lower_scc_)
+        return scc_info::edge_filter_choice::ignore;
+      if (d.cut_sets_ & e.acc)
+        return scc_info::edge_filter_choice::cut;
+      return scc_info::edge_filter_choice::keep;
+    }
+
+    scc_info::edge_filter_choice
+    scc_and_mark_filter::filter_mark_
+    (const twa_graph::edge_storage_t& e, unsigned, void* data)
+    {
+      auto& d = *reinterpret_cast<scc_and_mark_filter*>(data);
+      if (d.cut_sets_ & e.acc)
+        return scc_info::edge_filter_choice::cut;
+      return scc_info::edge_filter_choice::keep;
+    }
+
 }

@@ -38,21 +38,6 @@ namespace spot
 {
   namespace
   {
-    enum strategy_t
-    {
-      trivial     = 1U,
-      weak        = 2U,
-      alternation = 4U,
-      rabin       = 8U,
-      streett     = 16U,
-    };
-
-    using strategy =
-        std::function<twa_graph_ptr(const const_twa_graph_ptr& aut)>;
-
-    twa_graph_ptr
-    remove_fin_impl(const const_twa_graph_ptr&, const strategy_t);
-
     using EdgeMask = std::vector<bool>;
 
     template< typename Edges, typename Apply >
@@ -67,19 +52,6 @@ namespace spot
           if (mask[edge_id])
             apply(edge_id);
         }
-    }
-
-    template< typename Edges >
-    acc_cond::mark_t scc_acc_marks(const_twa_graph_ptr aut,
-                                   const Edges& edges,
-                                   const EdgeMask& mask)
-    {
-      acc_cond::mark_t scc_mark = {};
-      for_each_edge(aut, edges, mask, [&] (unsigned e)
-        {
-          scc_mark |= aut->edge_data(e).acc;
-        });
-      return scc_mark;
     }
 
     // Transforms automaton from transition based acceptance to state based
@@ -122,7 +94,7 @@ namespace spot
       if (si.is_rejecting_scc(scc))
         return true;
 
-      auto scc_acc = scc_acc_marks(aut, si.inner_edges_of(scc), keep);
+      auto scc_acc = si.acc_sets_of(scc);
       auto scc_pairs = rs_pairs_view(aut_pairs.pairs(), scc_acc);
       // If there is one aut_fin_alone that is not in the SCC,
       // any cycle in the SCC is accepting.
@@ -143,31 +115,14 @@ namespace spot
       // necessarily imply that all cycles in the SCC are also
       // non-accepting.  We may have a smaller cycle that is
       // accepting, but which becomes non-accepting when extended with
-      // more edges.
+      // more edges.  In that case (which we can detect by checking
+      // whether the SCC has a non-empty language), the SCC is the
+      // not TBA-realizable.
       if (!scc_infs_alone)
-        {
-          // Check whether the SCC is accepting.  We do that by simply
-          // converting that SCC into a TGBA and running our emptiness
-          // check.  This is not a really smart implementation and
-          // could be improved.
-          auto& states = si.states_of(scc);
-          std::vector<bool> keep_states(aut->num_states(), false);
-          for (auto s: states)
-            keep_states[s] = true;
-          auto sccaut = mask_keep_accessible_states(aut,
-                                                    keep_states,
-                                                    states.front());
-          // Prevent recurring into this function by skipping the
-          // Rabin strategy
-          auto skip = strategy_t::rabin;
-          // If SCCAUT is empty, the SCC is BA-type (and none of its
-          // states are final).  If SCCAUT is nonempty, the SCC is not
-          // BA type
-          return remove_fin_impl(sccaut, skip)->is_empty();
-        }
+        return si.check_scc_emptiness(scc);
 
-      // Remaining infs corresponds to I₁s that have been seen without seeing
-      // the matching F₁. In this SCC any edge in these I₁ is therefore
+      // Remaining infs corresponds to Iᵢs that have been seen without seeing
+      // the matching Fᵢ. In this SCC any edge in these Iᵢ is therefore
       // final. Otherwise we do not know: it is possible that there is
       // a non-accepting cycle in the SCC that does not visit Fᵢ.
       std::set<unsigned> unknown;
@@ -180,7 +135,7 @@ namespace spot
               unknown.insert(e);
         });
 
-      // Erase edges that cannot belong to a cycle, i.e., that edges
+      // Erase edges that cannot belong to a cycle, i.e., the edges
       // whose 'dst' is not 'src' of any unknown edges.
       std::vector<unsigned> remove;
       do
@@ -277,8 +232,8 @@ namespace spot
       std::vector<bool> keep(aut->edge_vector().size(), true);
 
       for (unsigned scc = 0; scc < si.scc_count(); ++scc)
-          scc_is_tba_type[scc] = is_scc_tba_type(aut, si, scc, keep,
-                                                 aut_pairs, final);
+        scc_is_tba_type[scc] = is_scc_tba_type(aut, si, scc, keep,
+                                               aut_pairs, final);
 
       auto res = make_twa_graph(aut->get_dict());
       res->copy_ap_of(aut);
@@ -783,21 +738,14 @@ namespace spot
       return res;
     }
 
-    twa_graph_ptr remove_fin_impl(const const_twa_graph_ptr& aut,
-                                  const strategy_t skip = {})
+    twa_graph_ptr remove_fin_impl(const_twa_graph_ptr aut)
     {
       auto simp = simplify_acceptance(aut);
-
-      auto handle = [&](strategy stra, strategy_t type) -> twa_graph_ptr
-      {
-        return (type & skip) ? nullptr : stra(simp);
-      };
-
-      if (auto maybe = handle(trivial_strategy, strategy_t::trivial))
+      if (auto maybe = trivial_strategy(simp))
         return maybe;
-      if (auto maybe = handle(weak_strategy, strategy_t::weak))
+      if (auto maybe = weak_strategy(simp))
         return maybe;
-      if (auto maybe = handle(alternation_strategy, strategy_t::alternation))
+      if (auto maybe = alternation_strategy(simp))
         return maybe;
       // The order between Rabin and Streett matters because for
       // instance "Streett 1" (even generalized Streett 1) is
@@ -810,9 +758,9 @@ namespace spot
       // Note that SPOT_STREETT_CONV_MIN default to 3, which means
       // that regardless of this order, Rabin 1 is not handled by
       // streett_strategy unless SPOT_STREETT_CONV_MIN is changed.
-      if (auto maybe = handle(rabin_strategy, strategy_t::rabin))
+      if (auto maybe = rabin_strategy(simp))
         return maybe;
-      if (auto maybe = handle(streett_strategy, strategy_t::streett))
+      if (auto maybe = streett_strategy(simp))
         return maybe;
       return default_strategy(simp);
     }

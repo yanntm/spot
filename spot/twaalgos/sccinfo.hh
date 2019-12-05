@@ -478,6 +478,11 @@ namespace spot
       return options_;
     }
 
+    edge_filter get_filter() const
+    {
+      return filter_;
+    }
+
     const void* get_filter_data() const
     {
       return filter_data_;
@@ -623,7 +628,7 @@ namespace spot
     ///
     /// This is an internal function of
     /// determine_unknown_acceptance().
-    bool check_scc_emptiness(unsigned n);
+    bool check_scc_emptiness(unsigned n) const;
 
     /// \brief Retrieves an accepting run of the automaton whose cycle is in the
     /// SCC.
@@ -733,24 +738,9 @@ namespace spot
 
     static scc_info::edge_filter_choice
     filter_scc_and_mark_(const twa_graph::edge_storage_t& e,
-                         unsigned dst, void* data)
-    {
-      auto& d = *reinterpret_cast<scc_and_mark_filter*>(data);
-      if (d.lower_si_->scc_of(dst) != d.lower_scc_)
-        return scc_info::edge_filter_choice::ignore;
-      if (d.cut_sets_ & e.acc)
-        return scc_info::edge_filter_choice::cut;
-      return scc_info::edge_filter_choice::keep;
-    };
-
+                         unsigned dst, void* data);
     static scc_info::edge_filter_choice
-    filter_mark_(const twa_graph::edge_storage_t& e, unsigned, void* data)
-    {
-      auto& d = *reinterpret_cast<scc_and_mark_filter*>(data);
-      if (d.cut_sets_ & e.acc)
-        return scc_info::edge_filter_choice::cut;
-      return scc_info::edge_filter_choice::keep;
-    };
+    filter_mark_(const twa_graph::edge_storage_t& e, unsigned, void* data);
 
   public:
     /// \brief Specify how to restrict scc_info to some SCC and acceptance sets
@@ -764,9 +754,10 @@ namespace spot
       : lower_si_(&lower_si), lower_scc_(lower_scc), cut_sets_(cut_sets),
         aut_(lower_si_->get_aut()), old_acc_(aut_->get_acceptance())
     {
-      const void* data = lower_si.get_filter_data();
-      if (data)
+      auto f = lower_si.get_filter();
+      if (f == &filter_mark_ || f == &filter_scc_and_mark_)
         {
+          const void* data = lower_si.get_filter_data();
           auto& d = *reinterpret_cast<const scc_and_mark_filter*>(data);
           cut_sets_ |= d.cut_sets_;
         }

@@ -298,4 +298,4 @@ def run_bench(automata):
             assert run3.replay(spot.get_cout()) is True
 
 
-run_bench([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a11, a360])
+run_bench([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a360])
