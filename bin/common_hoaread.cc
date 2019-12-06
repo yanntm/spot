@@ -30,8 +30,8 @@ enum
 static const argp_option options[] =
 {
   { "trust-hoa", OPT_TRUST_HOA, "BOOL", 0,
-    "If False, properties listed in HOA files are ignored, "
-    "unless they can be easily verified.  If True (the default) "
+    "If false, properties listed in HOA files are ignored, "
+    "unless they can be easily verified.  If true (the default) "
     "any supported property is trusted.", 1 },
   { nullptr, 0, nullptr, 0, nullptr, 0 }
 };
