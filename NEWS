@@ -1,4 +1,4 @@
-New in spot 2.8.3.dev  (not yet released)
+New in spot 2.8.4.dev (not yet released)
 
   Command-line tools:
 
@@ -54,6 +54,8 @@ New in spot 2.8.3.dev  (not yet released)
        parity_min_odd(n) = parity_min(true, n)
        parity_min_even(n) = parity_min(false, n)
 
+New in spot 2.8.4 (2019-12-08)
+
   Bugs fixed:
 
   - The Rabin-to-Büchi conversion could misbehave when applied to
@@ -62,6 +64,9 @@ New in spot 2.8.3.dev  (not yet released)
     visit the remaining Inf(.).  This indirectly caused the
     complementation algorithm to produce incorrect results on such
     inputs, causing false positives in ltlcross and autcross.
+
+  - Work around a small difference between Python 3.7 and 3.8, causing
+    spurious failures of the test suite.
 
 New in spot 2.8.3 (2019-11-06)
 
