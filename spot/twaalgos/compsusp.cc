@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2015, 2018 Laboratoire de Recherche et
+// Copyright (C) 2012-2015, 2018, 2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -169,7 +169,7 @@ namespace spot
         // Copy all atomic propositions, except the one corresponding
         // to the variable v used for synchronization.
         int vn = bdd_var(v);
-        assert(dict->bdd_map[vn].type = bdd_dict::var);
+        assert(dict->bdd_map[vn].type == bdd_dict::var);
         formula vf = dict->bdd_map[vn].f;
         for (auto a: left->ap())
           if (a != vf)
