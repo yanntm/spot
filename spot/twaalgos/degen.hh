@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2015, 2017, 2018 Laboratoire de
+// Copyright (C) 2012-2015, 2017-2019 Laboratoire de
 // Recherche et Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -27,7 +27,7 @@ namespace spot
   /// \brief Degeneralize a spot::tgba into an equivalent sba with
   /// only one acceptance condition.
   ///
-  /// This algorithms will build a new explicit automaton that has
+  /// This algorithm will build a new explicit automaton that has
   /// at most (N+1) times the number of states of the original automaton.
   ///
   /// When \a use_z_lvl is set, the level of the degeneralized
@@ -78,4 +78,27 @@ namespace spot
                    bool ignaccsl = false,
                    bool remove_extra_scc = true);
   /// \@}
+
+  /// \ingroup twa_acc_transform
+  /// \brief Partial degeneralization of a TwA
+  ///
+  /// Given an automaton whose acceptance contains a conjunction of
+  /// Inf terms, perform a partial degeneralization to replace this
+  /// conjunction by a single Inf term.
+  ///
+  /// For instance if the input has acceptance
+  ///    (Fin(0)&Inf(1)&Inf(3))|Fin(2)
+  /// calling partial_degeneralize with \a todegen set to `{1,3}`
+  /// will build an equivalent automaton with acceptance
+  ///    (Fin(0)&Inf(2))|Fin(1)
+  ///
+  /// where Inf(2) tracks the acceptance of the original
+  /// Inf(1)&Inf(3), and Fin(1) tracks the acceptance of the original
+  /// Fin(2).
+  ///
+  /// Cases where the sets listed in \a todegen also occur outside
+  /// of the Inf-conjunction are also supported.
+  SPOT_API twa_graph_ptr
+  partial_degeneralize(const const_twa_graph_ptr& a,
+                       acc_cond::mark_t todegen);
 }

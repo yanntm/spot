@@ -393,6 +393,7 @@ TESTS_python = \
   python/otfcrash.py \
   python/parsetgba.py \
   python/parity.py \
+  python/pdegen.py \
   python/prodexpt.py \
   python/_product_weak.ipynb \
   python/_product_susp.ipynb \

@@ -54,6 +54,10 @@ New in spot 2.8.4.dev (not yet released)
        parity_min_odd(n) = parity_min(true, n)
        parity_min_even(n) = parity_min(false, n)
 
+  - partial_degeneralize() is a new function performing partial
+    degeneralization to get rid of conjunction of Inf terms in
+    acceptance conditions.
+
 New in spot 2.8.4 (2019-12-08)
 
   Bugs fixed:

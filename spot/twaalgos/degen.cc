@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2018 Laboratoire de Recherche
+// Copyright (C) 2012-2019 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -236,6 +236,62 @@ namespace spot
           i->second.print(i->first);
       }
     };
+
+
+    namespace
+    {
+      static void
+      keep_bottommost_copies(twa_graph_ptr& res,
+                             scc_info& si_orig,
+                             std::vector<unsigned>* orig_states)
+      {
+        unsigned res_ns = res->num_states();
+        auto a = si_orig.get_aut();
+        if (res_ns <= a->num_states())
+          return;
+
+        scc_info si_res(res, scc_info_options::TRACK_STATES);
+        unsigned res_scc_count = si_res.scc_count();
+        if (res_scc_count <= si_orig.scc_count())
+          return;
+
+        // If we reach this place, we have more SCCs in the output than
+        // in the input.  This means that we have created some redundant
+        // SCCs.  Often, these are trivial SCCs created in front of
+        // their larger sisters, because we did not pick the correct
+        // level when entering the SCC for the first time, and the level
+        // we picked has not been seen again when exploring the SCC.
+        // But it could also be the case that by entering the SCC in two
+        // different ways, we create two clones of the SCC (I haven't
+        // encountered any such case, but I do not want to rule it out
+        // in the code below).
+        //
+        // Now we will iterate over the SCCs in topological order to
+        // remember the "bottommost" SCCs that contain each original
+        // state.  If an original state is duplicated in a higher SCC,
+        // it can be shunted away.  Amen.
+        std::vector<unsigned>
+          bottommost_occurence(a->num_states());
+        {
+          unsigned n = res_scc_count;
+          do
+            for (unsigned s: si_res.states_of(--n))
+              bottommost_occurence[(*orig_states)[s]] = s;
+          while (n);
+        }
+        std::vector<unsigned> retarget(res_ns);
+        for (unsigned n = 0; n < res_ns; ++n)
+          {
+            unsigned other = bottommost_occurence[(*orig_states)[n]];
+            retarget[n] =
+              (si_res.scc_of(n) != si_res.scc_of(other)) ? other : n;
+          }
+        for (auto& e: res->edges())
+          e.dst = retarget[e.dst];
+        res->set_init_state(retarget[res->get_init_state_number()]);
+        res->purge_unreachable_states();
+      }
+    }
 
     template<bool want_sba>
     twa_graph_ptr
@@ -617,48 +673,8 @@ namespace spot
       orders.print();
 #endif
       res->merge_edges();
-
-      unsigned res_ns = res->num_states();
-      if (!remove_extra_scc || res_ns <= a->num_states())
-        return res;
-
-      scc_info si_res(res, scc_info_options::TRACK_STATES);
-      unsigned res_scc_count = si_res.scc_count();
-      if (res_scc_count <= m->scc_count())
-        return res;
-
-      // If we reach this place, we have more SCCs in the output than
-      // in the input.  This means that we have created some redundant
-      // SCCs.  Often, these are trivial SCCs created in front of
-      // their larger sisters, because we did not pick the correct
-      // level when entering the SCC for the first time, and the level
-      // we picked has not been seen again when exploring the SCC.
-      // But it could also be the case that by entering the SCC in two
-      // different ways, we create two clones of the SCC (I haven't
-      // encountered any such case, but I do not want to rule it out
-      // in the code below).
-      //
-      // Now we will iterate over the SCCs in topological order to
-      // remember the "bottomost" SCCs that contain each original
-      // state.  If an original state is duplicated in a higher SCC,
-      // it can be shunted away.  Amen.
-      std::vector<unsigned> bottomost_occurence(a->num_states());
-      {
-        unsigned n = res_scc_count;
-        do
-          for (unsigned s: si_res.states_of(--n))
-            bottomost_occurence[(*orig_states)[s]] = s;
-        while (n);
-      }
-      std::vector<unsigned> retarget(res_ns);
-      for (unsigned n = 0; n < res_ns; ++n)
-        {
-          unsigned other = bottomost_occurence[(*orig_states)[n]];
-          retarget[n] = (si_res.scc_of(n) != si_res.scc_of(other)) ? other : n;
-        }
-      for (auto& e: res->edges())
-        e.dst = retarget[e.dst];
-      res->purge_unreachable_states();
+      if (remove_extra_scc)
+        keep_bottommost_copies(res, *(m.get()), orig_states);
       return res;
     }
   }
@@ -694,4 +710,189 @@ namespace spot
                                    use_lvl_cache, skip_levels, ignaccsl,
                                    remove_extra_scc);
   }
+
+  namespace
+  {
+    static acc_cond::mark_t
+    to_strip(const acc_cond::acc_code& code, acc_cond::mark_t todegen)
+    {
+      if (code.empty())
+        return todegen;
+
+      acc_cond::mark_t tostrip = todegen;
+      unsigned pos = code.size();
+      do
+        {
+          switch (code[pos - 1].sub.op)
+            {
+            case acc_cond::acc_op::And:
+            case acc_cond::acc_op::Or:
+              --pos;
+              break;
+            case acc_cond::acc_op::Inf:
+            case acc_cond::acc_op::InfNeg:
+              pos -= 2;
+              if (code[pos].mark != todegen)
+                tostrip -= code[pos].mark;
+              break;
+            case acc_cond::acc_op::Fin:
+            case acc_cond::acc_op::FinNeg:
+              pos -= 2;
+              tostrip -= code[pos].mark;
+              break;
+            }
+        }
+      while (pos > 0);
+      return tostrip;
+    }
+
+    static void
+    update_acc_for_partial_degen(acc_cond::acc_code& code,
+                                 acc_cond::mark_t todegen,
+                                 acc_cond::mark_t tostrip,
+                                 acc_cond::mark_t accmark)
+    {
+      if (!todegen)
+        {
+          code &= acc_cond::acc_code::inf(accmark);
+          return;
+        }
+
+      if (code.empty())
+        return;
+
+      unsigned pos = code.size();
+      do
+        {
+          switch (code[pos - 1].sub.op)
+            {
+            case acc_cond::acc_op::And:
+            case acc_cond::acc_op::Or:
+              --pos;
+              break;
+            case acc_cond::acc_op::Inf:
+            case acc_cond::acc_op::InfNeg:
+              pos -= 2;
+              if (code[pos].mark == todegen)
+                code[pos].mark = accmark;
+              else
+                code[pos].mark = code[pos].mark.strip(tostrip);
+              break;
+            case acc_cond::acc_op::Fin:
+            case acc_cond::acc_op::FinNeg:
+              pos -= 2;
+              code[pos].mark = code[pos].mark.strip(tostrip);
+              break;
+            }
+        }
+      while (pos > 0);
+    }
+
+
+
+  }
+
+
+  twa_graph_ptr
+  partial_degeneralize(const const_twa_graph_ptr& a,
+                       acc_cond::mark_t todegen)
+  {
+    auto res = make_twa_graph(a->get_dict());
+    res->copy_ap_of(a);
+    acc_cond::acc_code acc = a->get_acceptance();
+
+    acc_cond::mark_t tostrip = to_strip(acc, todegen);
+    acc_cond::mark_t keep = a->acc().all_sets() - tostrip;
+    acc_cond::mark_t degenmark = {keep.count()};
+
+    update_acc_for_partial_degen(acc, todegen, tostrip, degenmark);
+    res->set_acceptance(acc);
+
+    std::vector<unsigned> order;
+    for (unsigned set: todegen.sets())
+      order.push_back(set);
+
+    //auto* names = new std::vector<std::string>;
+    //res->set_named_prop("state-names", names);
+    auto orig_states = new std::vector<unsigned>();
+    auto levels = new std::vector<unsigned>();
+    orig_states->reserve(a->num_states()); // likely more are needed.
+    levels->reserve(a->num_states());
+    res->set_named_prop("original-states", orig_states);
+    res->set_named_prop("degen-levels", levels);
+
+    scc_info si_orig(a, scc_info_options::NONE);
+
+    // degen_states -> new state numbers
+    ds2num_map ds2num;
+
+    queue_t todo;
+
+    auto new_state = [&](degen_state ds)
+                     {
+                       auto di = ds2num.find(ds);
+                       if (di != ds2num.end())
+                         return di->second;
+
+                       unsigned ns = res->new_state();
+                       ds2num[ds] = ns;
+                       todo.emplace_back(ds);
+
+                       //std::ostringstream os;
+                       //os << ds.first << ',' << ds.second;
+                       //names->push_back(os.str());
+                       assert(ns == orig_states->size());
+                       orig_states->emplace_back(ds.first);
+                       levels->emplace_back(ds.second);
+                       return ns;
+                     };
+    degen_state s(a->get_init_state_number(), 0);
+    new_state(s);
+
+    while (!todo.empty())
+      {
+        s = todo.front();
+        todo.pop_front();
+
+        int src = ds2num[s];
+        unsigned slevel = s.second;
+        unsigned orig_src = s.first;
+        unsigned scc_src = si_orig.scc_of(orig_src);
+        for (auto& e: a->out(orig_src))
+          {
+            unsigned nextlvl = slevel;
+            acc_cond::mark_t accepting = {};
+            if (si_orig.scc_of(e.dst) == scc_src)
+              {
+                while (nextlvl < order.size() && e.acc.has(order[nextlvl]))
+                  ++nextlvl;
+
+                if (nextlvl == order.size())
+                  {
+                    accepting = degenmark;
+                    nextlvl = 0;
+
+                    if ((e.acc & todegen) != todegen)
+                      while (nextlvl < order.size()
+                             && e.acc.has(order[nextlvl]))
+                        ++nextlvl;
+                  }
+                accepting |= e.acc.strip(tostrip);
+              }
+            else
+              {
+                nextlvl = 0;
+              }
+
+            degen_state ds_dst(e.dst, nextlvl);
+            unsigned dst = new_state(ds_dst);
+            res->new_edge(src, dst, e.cond, accepting);
+          }
+      }
+
+    res->merge_edges();
+    keep_bottommost_copies(res, si_orig, orig_states);
+    return res;
+  }
+
 }
