@@ -848,7 +848,7 @@ namespace spot
             p.first->second = ns;
             if (names)
               {
-                assert(ns = names->size());
+                assert(ns == names->size());
                 names->push_back(aut->format_state(next));
               }
           }
