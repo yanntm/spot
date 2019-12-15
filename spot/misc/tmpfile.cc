@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2015, 2017, 2018 Laboratoire de Recherche et
+// Copyright (C) 2013, 2015, 2017-2019 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -75,7 +75,29 @@ namespace spot
           fd = mkstemp(*name);
         }
       if (fd < 0)
-        throw std::runtime_error("failed to create "s + *name);
+        {
+          std::string err = ("failed to create temporary file "s + *name
+                             + ": " + strerror(errno));
+          if (errno == EACCES)
+            {
+              if (tmpdir)
+                err += ("\nConsider setting the SPOT_TMPDIR environment "
+                        "variable to a writable directory.");
+              else
+                err += ("\nConsider executing this from a writable "
+                        "directory, or setting\nthe SPOT_TMPDIR environment "
+                        "variable to such a directory.");
+            }
+          else if (tmpdir)
+            {
+              const char* dir =
+                secure_getenv("SPOT_TMPDIR") ? "SPOT_TMPDIR" : "TMPDIR";
+              err += ("\nNote that the directory comes from the "s
+                      + dir
+                      + " environment variable.");
+            }
+          throw std::runtime_error(err);
+        }
       return fd;
     }
   }

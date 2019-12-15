@@ -214,6 +214,7 @@ TESTS_twa = \
   core/bdddict.test \
   core/alternating.test \
   core/ltlcross3.test \
+  core/ltlcross5.test \
   core/taatgba.test \
   core/renault.test \
   core/nondet.test \
