@@ -40,6 +40,7 @@
 #include <spot/twaalgos/cobuchi.hh>
 #include <spot/twaalgos/rabin2parity.hh>
 #include <spot/twaalgos/cleanacc.hh>
+#include <spot/twaalgos/hoa.hh>
 
 namespace spot
 {
@@ -334,6 +335,11 @@ namespace spot
           a = to_nca(a);
         return finalize(a);
       }
+
+    // This assumes that edges have been ordered, but this should
+    // occur as a side effect of do_scc_filter() when type_==Monitor.
+    if (type_ != Monitor)
+      a->merge_states();
 
     bool dba_is_wdba = false;
     bool dba_is_minimal = false;

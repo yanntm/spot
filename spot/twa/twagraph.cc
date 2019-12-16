@@ -243,22 +243,33 @@ namespace spot
 
     const unsigned nb_states = num_states();
     std::vector<unsigned> remap(nb_states, -1U);
-    for (unsigned i = 0; i != nb_states; ++i)
+    bool change = false;
+    for (unsigned i = 0; i < nb_states; ++i)
       {
         auto out1 = out(i);
-        for (unsigned j = 0; j != i; ++j)
+        for (unsigned j = 0; j < i; ++j)
           {
             auto out2 = out(j);
             if (std::equal(out1.begin(), out1.end(), out2.begin(), out2.end(),
                            [](const edge_storage_t& a,
                               const edge_storage_t& b)
-                           { return a.dst == b.dst && a.data() == b.data(); }))
+                           { return (a.data() == b.data()
+                                     // the edges go to the same destination
+                                     && (a.dst == b.dst
+                                         // or they are both self-loops
+                                         || (a.src == a.dst
+                                             && b.src == b.dst))); }))
             {
-              remap[i] = j;
+              unsigned to = remap[j];
+              remap[i] = (to == -1U) ? j : to;
+              change = true;
               break;
             }
           }
       }
+
+    if (!change)
+      return;
 
     for (auto& e: edges())
       if (remap[e.dst] != -1U)
@@ -275,6 +286,8 @@ namespace spot
         s = -1U;
 
     defrag_states(std::move(remap), st);
+    if (!prop_universal().is_true())
+      merge_edges();
   }
 
   void twa_graph::purge_unreachable_states(shift_action* f, void* action_data)
