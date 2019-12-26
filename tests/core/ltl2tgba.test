@@ -292,3 +292,6 @@ test 2 = `ltl2tgba -f "$f" --low -x tls-impl=3 --stats=%s`
 
 # This is not optimal, the smallest DBA for this formula has 2 states.
 test 3 = `ltl2tgba -BD -f 'GF((p0 & GF!p0) | (!p0 & FGp0))' --stats=%s`
+
+# Some versions of Spot incorrectly returned "t" automata with -B
+test "Inf(0)" = "`ltl2tgba -B 'Xb | G!b' --stats=%g`"
