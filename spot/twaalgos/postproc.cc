@@ -163,6 +163,15 @@ namespace spot
                             degen_lowinit_, degen_remscc_);
   }
 
+  static void
+  force_buchi(twa_graph_ptr& a)
+  {
+    assert(a->acc().is_t());
+    acc_cond::mark_t m = a->set_buchi();
+    for (auto& e: a->edges())
+      e.acc = m;
+  }
+
   twa_graph_ptr
   postprocessor::do_scc_filter(const twa_graph_ptr& a, bool arg) const
   {
@@ -196,6 +205,8 @@ namespace spot
       tmp = SBACC_ ? do_degen(tmp) : do_degen_tba(tmp);
     if (SBACC_)
       tmp = sbacc(tmp);
+    if (type_ == BA && tmp->acc().is_t())
+      force_buchi(tmp);
     if (want_parity)
       {
         reduce_parity_here(tmp, COLORED_);

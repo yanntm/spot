@@ -58,6 +58,11 @@ New in spot 2.8.4.dev (not yet released)
     degeneralization to get rid of conjunction of Inf terms in
     acceptance conditions.
 
+  Bugs fixed:
+
+  - ltl2tgba -B could return automata with "t" acceptance, instead
+    of the expected Inf(0).
+
 New in spot 2.8.4 (2019-12-08)
 
   Bugs fixed:
