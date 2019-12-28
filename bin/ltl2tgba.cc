@@ -70,7 +70,7 @@ static const argp_option options[] =
 
 const struct argp_child children[] =
   {
-    { &finput_argp, 0, nullptr, 1 },
+    { &finput_argp, 0, nullptr, 0 },
     { &aoutput_argp, 0, nullptr, 0 },
     { &aoutput_o_format_argp, 0, nullptr, 0 },
     { &post_argp, 0, nullptr, 0 },
