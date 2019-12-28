@@ -153,7 +153,7 @@ ARGMATCH_VERIFY(errors_args, errors_types);
 const struct argp_child children[] =
   {
     { &hoaread_argp, 0, "Parsing of automata:", 3 },
-    { &finput_argp, 0, nullptr, 1 },
+    { &finput_argp, 0, nullptr, 0 },
     { &trans_argp, 0, nullptr, 3 },
     { &aoutput_argp, 0, nullptr, 6 },
     { build_percent_list(), 0, nullptr, 7 },
