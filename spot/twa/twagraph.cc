@@ -148,7 +148,8 @@ namespace spot
                    });
 
     auto& trans = this->edge_vector();
-    unsigned tend = trans.size();
+    unsigned orig_size = trans.size();
+    unsigned tend = orig_size;
     unsigned out = 0;
     unsigned in = 1;
     // Skip any leading false edge.
@@ -233,6 +234,13 @@ namespace spot
       }
 
     g_.chain_edges_();
+
+    // Did we actually reduce the number of edges?
+    if (trans.size() != orig_size)
+      // Merging some edges may turn a non-deterministic automaton
+      // into a deterministic one.
+      if (prop_universal().is_false())
+        prop_universal(trival::maybe());
   }
 
   void twa_graph::merge_states()
