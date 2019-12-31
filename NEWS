@@ -63,6 +63,15 @@ New in spot 2.8.4.dev (not yet released)
   - ltl2tgba -B could return automata with "t" acceptance, instead
     of the expected Inf(0).
 
+  - twa_graph::merge_edges() (a.k.a. autfilt --merge-transitions) was
+    unaware that merging edges can sometimes transform a
+    non-deterministic automaton into a deterministic one, causing the
+    following unexpected diagnostic:
+    "print_hoa(): automaton is universal despite prop_universal()==false"
+    The kind of non-deterministic automata where this occurs is not
+    naturally produced by any Spot algorithm, but can be found for
+    instance in automata produced by Goal 2015-10-18.
+
 New in spot 2.8.4 (2019-12-08)
 
   Bugs fixed:

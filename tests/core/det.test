@@ -275,3 +275,25 @@ State: 1
 --END--
 EOF
 diff output expected
+
+# This is a syntactically non-deterministic automaton, which is
+# semantically equivalent to a deterministic automaton (once
+# transitions with compatible src/dst are merged).  Running
+# --merge-transition on this used to fail because merge_edges() would
+# preserve the determism bit (or rather, the non-determinism bit).
+cat >in.hoa <<EOF
+HOA: v1
+States: 2
+Start: 1
+AP: 2 "a" "b"
+Acceptance: 1 Inf(0)
+--BODY--
+State: 0 {0}
+[t] 0
+State: 1
+[0] 0
+[1] 0
+--END--
+EOF
+autfilt -q --is-deterministic in.hoa && exit 1
+autfilt --merge-transitions in.hoa | autfilt --is-deterministic
