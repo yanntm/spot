@@ -218,15 +218,15 @@ def _wait_for_ready_backport(kc):
 
 def run_cell(kc, cell):
     kc.execute(cell.source)
-    # wait for finish, maximum 30s
-    reply = kc.get_shell_msg(timeout=30)
     outs = []
 
     while True:
         try:
             msg = kc.get_iopub_msg(timeout=1)
         except Empty:
-            break
+            if not kc.is_alive():
+                raise RuntimeError("Kernel died")
+            continue
 
         msg_type = msg['msg_type']
         content = msg['content']
@@ -253,6 +253,14 @@ def run_cell(kc, cell):
 
         content['output_type'] = msg_type
         outs.append(content)
+    # Flush shell channel
+    while True:
+        try:
+            kc.get_shell_msg(timeout=0.1)
+        except Empty:
+            if not kc.is_alive():
+                raise RuntimeError("Kernel died")
+            break
     return outs
 
 
@@ -268,7 +276,7 @@ def test_notebook(ipynb):
     kc.start_channels()
 
     try:
-        kc.wait_for_ready()
+        kc.wait_for_ready(timeout=30)
     except AttributeError:
         _wait_for_ready_backport(kc)
 
