@@ -1,4 +1,4 @@
-New in spot 2.8.4.dev (not yet released)
+New in spot 2.8.5.dev (not yet released)
 
   Command-line tools:
 
@@ -57,6 +57,8 @@ New in spot 2.8.4.dev (not yet released)
   - partial_degeneralize() is a new function performing partial
     degeneralization to get rid of conjunction of Inf terms in
     acceptance conditions.
+
+New in spot 2.8.5 (2020-01-04)
 
   Bugs fixed:
 
