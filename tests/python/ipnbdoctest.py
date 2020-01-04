@@ -18,6 +18,7 @@ import time
 import base64
 import re
 import pprint
+import random
 from difflib import unified_diff as diff
 
 from collections import defaultdict
@@ -324,5 +325,20 @@ def test_notebook(ipynb):
 
 if __name__ == '__main__':
     for ipynb in sys.argv[1:]:
-        print("testing %s" % ipynb)
-        test_notebook(ipynb)
+        tries=3
+        while tries:
+            print("testing %s" % ipynb)
+            try:
+                test_notebook(ipynb)
+                break
+            except RuntimeError as e:
+                # If the Kernel dies, try again.  It seems we have spurious
+                # failures when multiple instances of jupyter start in parallel.
+                if 'Kernel died' in str(e):
+                    tries -= 1
+                    if tries:
+                        s = random.randint(1, 5)
+                        print("trying again in", s, "seconds...")
+                        time.sleep(s)
+                else:
+                    raise e
