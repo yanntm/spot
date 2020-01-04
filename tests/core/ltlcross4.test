@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2012-2014, 2017 Laboratoire de Recherche et
+# Copyright (C) 2012-2014, 2017, 2020 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -32,7 +32,15 @@ ltlcross -F formulas.txt \
   "{ltl2tgba any} ltl2tgba --lbtt --any %f > %T" \
   "{ltl2tgba det} ltl2tgba --lbtt --deterministic %f > %T" \
   "{ltl2tgba sma} ltl2tgba --lbtt --small %f > %T" \
-  --csv=output.csv
+  --csv=output.csv 2> stderr
+
+cat stderr
+grep -F -q '[P0: ltl2tgba any]' stderr
+grep -F -q '[P1: ltl2tgba det]' stderr
+grep -F -q '[P2: ltl2tgba sma]' stderr
+grep -F -q '[N0: ltl2tgba any]' stderr
+grep -F -q '[N1: ltl2tgba det]' stderr
+grep -F -q '[N2: ltl2tgba sma]' stderr
 
 cat >test.py <<EOF
 import sys

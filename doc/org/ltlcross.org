@@ -381,7 +381,7 @@ formulas (where =W= and =M= operators have been rewritten away because
 they are not supported by =spin= and =lbt=).
 
 #+BEGIN_SRC sh :results verbatim :exports code
-randltl -n 3 a b |
+randltl -n 3 --seed=5 a b |
 ltlfilt --remove-wm |
 ltlcross --csv=results.csv \
          'ltl2tgba -s %f >%O' \
@@ -391,12 +391,44 @@ ltlcross --csv=results.csv \
 #+RESULTS:
 
 #+BEGIN_SRC sh :results verbatim :exports results
-randltl -n 3 a b | ltlfilt --remove-wm |
+randltl -n 3 --seed=5 a b | ltlfilt --remove-wm |
 ltlcross --csv=results.csv --json=results.json \
          'ltl2tgba -s %f >%O' \
          'spin -f %s >%O' \
          'lbt < %L >%O' 2>&1
 #+END_SRC
+
+#+RESULTS:
+#+begin_example
+-:1: G(!((!(p0)) & ((X(p0)) | (F((p1) R (X(p0)))))))
+Running [P0]: ltl2tgba -s 'G(!((!(p0)) & ((X(p0)) | (F((p1) R (X(p0)))))))' >'lcr-o0-UWmAOs'
+Running [P1]: spin -f '[](!((!(p0)) && ((X(p0)) || (<>((p1) V (X(p0)))))))' >'lcr-o1-UALknk'
+Running [P2]: lbt < 'lcr-i0-7JlcYb' >'lcr-o2-Yqa4y3'
+Running [N0]: ltl2tgba -s '!(G(!((!(p0)) & ((X(p0)) | (F((p1) R (X(p0))))))))' >'lcr-o0-O9vcaV'
+Running [N1]: spin -f '!([](!((!(p0)) && ((X(p0)) || (<>((p1) V (X(p0))))))))' >'lcr-o1-jwQ2NM'
+Running [N2]: lbt < 'lcr-i0-eDh8rE' >'lcr-o2-kjYd6v'
+Performing sanity checks and gathering statistics...
+
+-:2: F(p0)
+Running [P0]: ltl2tgba -s 'F(p0)' >'lcr-o0-yDowOn'
+Running [P1]: spin -f '<>(p0)' >'lcr-o1-zxU8yf'
+Running [P2]: lbt < 'lcr-i1-l78Dj7' >'lcr-o2-NcC93Y'
+Running [N0]: ltl2tgba -s '!(F(p0))' >'lcr-o0-5xUjPQ'
+Running [N1]: spin -f '!(<>(p0))' >'lcr-o1-fD4OCI'
+Running [N2]: lbt < 'lcr-i1-G0kdqA' >'lcr-o2-ZsPBds'
+Performing sanity checks and gathering statistics...
+
+-:3: (X(p0)) U ((!(p0)) & (X(p0)))
+Running [P0]: ltl2tgba -s '(X(p0)) U ((!(p0)) & (X(p0)))' >'lcr-o0-I2461j'
+Running [P1]: spin -f '(X(p0)) U ((!(p0)) && (X(p0)))' >'lcr-o1-IxFTSb'
+Running [P2]: lbt < 'lcr-i2-02hRJ3' >'lcr-o2-yl6OAV'
+Running [N0]: ltl2tgba -s '!((X(p0)) U ((!(p0)) & (X(p0))))' >'lcr-o0-yTDisN'
+Running [N1]: spin -f '!((X(p0)) U ((!(p0)) && (X(p0))))' >'lcr-o1-CUj4lF'
+Running [N2]: lbt < 'lcr-i2-xWC2fx' >'lcr-o2-aHi19o'
+Performing sanity checks and gathering statistics...
+
+No problem detected.
+#+end_example
 
 After this execution, the file =results.csv= contains the following:
 
@@ -414,26 +446,26 @@ s/,/|/g
 
 #+ATTR_HTML: :class csv-table
 #+RESULTS:
-| formula                       | tool               | exit_status | exit_code |       time | states | edges | transitions | acc | scc | nondet_states | nondet_aut | complete_aut | product_states | product_transitions | product_scc |
-|-------------------------------+--------------------+-------------+-----------+------------+--------+-------+-------------+-----+-----+---------------+------------+--------------+----------------+---------------------+-------------|
-| 0                             | ltl2tgba -s %f >%O | ok          |         0 |  0.0269145 |      1 |     1 |           0 |   1 |   1 |             0 |          0 |            0 |              1 |                   0 |           1 |
-| 0                             | spin -f %s >%O     | ok          |         0 | 0.00112819 |      2 |     2 |           1 |   1 |   2 |             0 |          0 |            0 |              1 |                   0 |           1 |
-| 0                             | lbt < %L >%O       | ok          |         0 | 0.00228413 |      1 |     0 |           0 |   0 |   1 |             0 |          0 |            0 |              1 |                   0 |           1 |
-| 1                             | ltl2tgba -s %f >%O | ok          |         0 |  0.0269548 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            1 |            200 |                4199 |           1 |
-| 1                             | spin -f %s >%O     | ok          |         0 | 0.00121962 |      2 |     2 |           2 |   1 |   2 |             0 |          0 |            1 |            201 |                4220 |           2 |
-| 1                             | lbt < %L >%O       | ok          |         0 | 0.00206923 |      3 |     3 |           3 |   0 |   3 |             0 |          0 |            1 |            222 |                4653 |          23 |
-| !(F(!(p0)))                   | ltl2tgba -s %f >%O | ok          |         0 |  0.0293213 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2059 |           1 |
-| !(F(!(p0)))                   | spin -f %s >%O     | ok          |         0 | 0.00114213 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2059 |           1 |
-| !(F(!(p0)))                   | lbt < %L >%O       | ok          |         0 | 0.00281165 |      2 |     2 |           2 |   0 |   2 |             0 |          0 |            0 |            201 |                2071 |           2 |
-| F(!(p0))                      | ltl2tgba -s %f >%O | ok          |         0 |  0.0273697 |      2 |     3 |           4 |   1 |   2 |             0 |          0 |            1 |            400 |                8264 |           2 |
-| F(!(p0))                      | spin -f %s >%O     | ok          |         0 | 0.00110435 |      2 |     3 |           5 |   1 |   2 |             1 |          1 |            1 |            400 |               10337 |           2 |
-| F(!(p0))                      | lbt < %L >%O       | ok          |         0 | 0.00205025 |      4 |     6 |          10 |   1 |   4 |             2 |          1 |            1 |            601 |               14497 |         203 |
-| F((G(p0)) \vert{} (F(p1)))    | ltl2tgba -s %f >%O | ok          |         0 |  0.0283784 |      3 |     5 |          11 |   1 |   3 |             1 |          1 |            0 |            600 |               11358 |           3 |
-| F((G(p0)) \vert{} (F(p1)))    | spin -f %s >%O     | ok          |         0 | 0.00144813 |      4 |     8 |          24 |   1 |   4 |             2 |          1 |            0 |            800 |               24920 |           4 |
-| F((G(p0)) \vert{} (F(p1)))    | lbt < %L >%O       | ok          |         0 | 0.00218541 |      9 |    17 |          52 |   2 |   9 |             4 |          1 |            0 |           1601 |               41559 |         805 |
-| !(F((G(p0)) \vert{} (F(p1)))) | ltl2tgba -s %f >%O | ok          |         0 |   0.026898 |      2 |     4 |           4 |   1 |   1 |             0 |          0 |            0 |            395 |                3964 |           1 |
-| !(F((G(p0)) \vert{} (F(p1)))) | spin -f %s >%O     | ok          |         0 | 0.00365003 |      2 |     3 |           5 |   1 |   1 |             1 |          1 |            0 |            396 |                4964 |           1 |
-| !(F((G(p0)) \vert{} (F(p1)))) | lbt < %L >%O       | ok          |         0 | 0.00184477 |      3 |     6 |           9 |   1 |   2 |             3 |          1 |            0 |            397 |                5957 |           2 |
+| formula                                                  | tool               | exit_status | exit_code |        time | states | edges | transitions | acc | scc | nondet_states | nondet_aut | complete_aut | product_states | product_transitions | product_scc |
+|----------------------------------------------------------+--------------------+-------------+-----------+-------------+--------+-------+-------------+-----+-----+---------------+------------+--------------+----------------+---------------------+-------------|
+| G(!((!(p0)) & ((X(p0)) \vert{} (F((p1) R (X(p0)))))))    | ltl2tgba -s %f >%O | ok          |         0 |   0.0125294 |      2 |     3 |           3 |   1 |   2 |             0 |          0 |            0 |            400 |                6276 |           2 |
+| G(!((!(p0)) & ((X(p0)) \vert{} (F((p1) R (X(p0)))))))    | spin -f %s >%O     | ok          |         0 |   0.0127994 |      7 |    21 |          35 |   1 |   2 |             7 |          1 |            0 |           1200 |               29442 |           4 |
+| G(!((!(p0)) & ((X(p0)) \vert{} (F((p1) R (X(p0)))))))    | lbt < %L >%O       | ok          |         0 |  0.00127784 |      6 |    14 |          28 |   1 |   5 |             6 |          1 |            0 |           1000 |               20970 |         403 |
+| !(G(!((!(p0)) & ((X(p0)) \vert{} (F((p1) R (X(p0)))))))) | ltl2tgba -s %f >%O | ok          |         0 |   0.0130485 |      3 |     5 |           6 |   1 |   3 |             0 |          0 |            1 |            600 |               12633 |           3 |
+| !(G(!((!(p0)) & ((X(p0)) \vert{} (F((p1) R (X(p0)))))))) | spin -f %s >%O     | ok          |         0 |  0.00115759 |      6 |    13 |          32 |   1 |   5 |             4 |          1 |            0 |           1200 |               33622 |         204 |
+| !(G(!((!(p0)) & ((X(p0)) \vert{} (F((p1) R (X(p0)))))))) | lbt < %L >%O       | ok          |         0 |  0.00120846 |     13 |    28 |          67 |   2 |  13 |             7 |          1 |            0 |           2400 |               59006 |        1604 |
+| F(p0)                                                    | ltl2tgba -s %f >%O | ok          |         0 |   0.0124681 |      2 |     3 |           4 |   1 |   2 |             0 |          0 |            1 |            400 |                8264 |           2 |
+| F(p0)                                                    | spin -f %s >%O     | ok          |         0 | 0.000771485 |      2 |     3 |           5 |   1 |   2 |             1 |          1 |            1 |            400 |               10323 |           2 |
+| F(p0)                                                    | lbt < %L >%O       | ok          |         0 |  0.00188293 |      4 |     6 |          10 |   1 |   4 |             2 |          1 |            1 |            601 |               14487 |         203 |
+| !(F(p0))                                                 | ltl2tgba -s %f >%O | ok          |         0 |   0.0125541 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2073 |           1 |
+| !(F(p0))                                                 | spin -f %s >%O     | ok          |         0 | 0.000802091 |      1 |     1 |           1 |   1 |   1 |             0 |          0 |            0 |            200 |                2073 |           1 |
+| !(F(p0))                                                 | lbt < %L >%O       | ok          |         0 |  0.00127165 |      2 |     2 |           2 |   0 |   2 |             0 |          0 |            0 |            201 |                2081 |           2 |
+| (X(p0)) U ((!(p0)) & (X(p0)))                            | ltl2tgba -s %f >%O | ok          |         0 |   0.0121934 |      3 |     3 |           4 |   1 |   3 |             0 |          0 |            0 |            208 |                4118 |           9 |
+| (X(p0)) U ((!(p0)) & (X(p0)))                            | spin -f %s >%O     | ok          |         0 | 0.000795817 |      4 |     6 |           7 |   1 |   4 |             1 |          1 |            0 |            408 |                6159 |          10 |
+| (X(p0)) U ((!(p0)) & (X(p0)))                            | lbt < %L >%O       | ok          |         0 |   0.0011121 |      6 |     7 |          10 |   1 |   6 |             1 |          1 |            0 |            484 |                7467 |          86 |
+| !((X(p0)) U ((!(p0)) & (X(p0))))                         | ltl2tgba -s %f >%O | ok          |         0 |   0.0122315 |      3 |     4 |           5 |   1 |   3 |             0 |          0 |            0 |            208 |                4128 |           9 |
+| !((X(p0)) U ((!(p0)) & (X(p0))))                         | spin -f %s >%O     | ok          |         0 | 0.000903485 |      4 |     8 |          10 |   1 |   3 |             2 |          1 |            0 |            800 |               20222 |         203 |
+| !((X(p0)) U ((!(p0)) & (X(p0))))                         | lbt < %L >%O       | ok          |         0 |  0.00182082 |      9 |    17 |          23 |   0 |   9 |             4 |          1 |            0 |           1601 |               34445 |        1004 |
 
 This file can be loaded in any spreadsheet or statistical application.
 
@@ -457,36 +489,36 @@ cat results.json
     "lbt < %L >%O"
   ],
   "formula": [
-    "0",
-    "1",
-    "!(F(!(p0)))",
-    "F(!(p0))",
-    "F((G(p0)) | (F(p1)))",
-    "!(F((G(p0)) | (F(p1))))"
+    "G(!((!(p0)) & ((X(p0)) | (F((p1) R (X(p0)))))))",
+    "!(G(!((!(p0)) & ((X(p0)) | (F((p1) R (X(p0))))))))",
+    "F(p0)",
+    "!(F(p0))",
+    "(X(p0)) U ((!(p0)) & (X(p0)))",
+    "!((X(p0)) U ((!(p0)) & (X(p0))))"
   ],
   "fields":  [
   "formula","tool","exit_status","exit_code","time","states","edges","transitions","acc","scc","nondet_states","nondet_aut","complete_aut","product_states","product_transitions","product_scc"
   ],
   "inputs":  [ 0, 1 ],
   "results": [
-    [ 0,0,"ok",0,0.0137672,1,1,0,1,1,0,0,0,1,0,1 ],
-    [ 0,1,"ok",0,0.000908285,2,2,1,1,2,0,0,0,1,0,1 ],
-    [ 0,2,"ok",0,0.00133153,1,0,0,0,1,0,0,0,1,0,1 ],
-    [ 1,0,"ok",0,0.0135283,1,1,1,1,1,0,0,1,200,4199,1 ],
-    [ 1,1,"ok",0,0.000828822,2,2,2,1,2,0,0,1,201,4220,2 ],
-    [ 1,2,"ok",0,0.00134064,3,3,3,0,3,0,0,1,222,4653,23 ],
-    [ 2,0,"ok",0,0.0140072,1,1,1,1,1,0,0,0,200,2059,1 ],
-    [ 2,1,"ok",0,0.00081293,1,1,1,1,1,0,0,0,200,2059,1 ],
-    [ 2,2,"ok",0,0.00134737,2,2,2,0,2,0,0,0,201,2071,2 ],
-    [ 3,0,"ok",0,0.0137064,2,3,4,1,2,0,0,1,400,8264,2 ],
-    [ 3,1,"ok",0,0.000911401,2,3,5,1,2,1,1,1,400,10337,2 ],
-    [ 3,2,"ok",0,0.00130378,4,6,10,1,4,2,1,1,601,14497,203 ],
-    [ 4,0,"ok",0,0.0144879,3,5,11,1,3,1,1,0,600,11358,3 ],
-    [ 4,1,"ok",0,0.00103421,4,8,24,1,4,2,1,0,800,24920,4 ],
-    [ 4,2,"ok",0,0.0013883,9,17,52,2,9,4,1,0,1601,41559,805 ],
-    [ 5,0,"ok",0,0.0142669,2,4,4,1,1,0,0,0,395,3964,1 ],
-    [ 5,1,"ok",0,0.00240013,2,3,5,1,1,1,1,0,396,4964,1 ],
-    [ 5,2,"ok",0,0.00134713,3,6,9,1,2,3,1,0,397,5957,2 ]
+    [ 0,0,"ok",0,0.0132415,2,3,3,1,2,0,0,0,400,6276,2 ],
+    [ 0,1,"ok",0,0.0129795,7,21,35,1,2,7,1,0,1200,29442,4 ],
+    [ 0,2,"ok",0,0.00126994,6,14,28,1,5,6,1,0,1000,20970,403 ],
+    [ 1,0,"ok",0,0.0130197,3,5,6,1,3,0,0,1,600,12633,3 ],
+    [ 1,1,"ok",0,0.00115913,6,13,32,1,5,4,1,0,1200,33622,204 ],
+    [ 1,2,"ok",0,0.00120161,13,28,67,2,13,7,1,0,2400,59006,1604 ],
+    [ 2,0,"ok",0,0.012826,2,3,4,1,2,0,0,1,400,8264,2 ],
+    [ 2,1,"ok",0,0.000675097,2,3,5,1,2,1,1,1,400,10323,2 ],
+    [ 2,2,"ok",0,0.0011281,4,6,10,1,4,2,1,1,601,14487,203 ],
+    [ 3,0,"ok",0,0.0122189,1,1,1,1,1,0,0,0,200,2073,1 ],
+    [ 3,1,"ok",0,0.000746496,1,1,1,1,1,0,0,0,200,2073,1 ],
+    [ 3,2,"ok",0,0.00124168,2,2,2,0,2,0,0,0,201,2081,2 ],
+    [ 4,0,"ok",0,0.0130605,3,3,4,1,3,0,0,0,208,4118,9 ],
+    [ 4,1,"ok",0,0.000788826,4,6,7,1,4,1,1,0,408,6159,10 ],
+    [ 4,2,"ok",0,0.0012278,6,7,10,1,6,1,1,0,484,7467,86 ],
+    [ 5,0,"ok",0,0.0124917,3,4,5,1,3,0,0,0,208,4128,9 ],
+    [ 5,1,"ok",0,0.000906358,4,8,10,1,3,2,1,0,800,20222,203 ],
+    [ 5,2,"ok",0,0.00129181,9,17,23,0,9,4,1,0,1601,34445,1004 ]
   ]
 }
 #+end_SRC
@@ -526,9 +558,9 @@ for i in range(0, len(data["tool"])):
 #+END_SRC
 #+RESULTS:
 : tool               & count & time & states & edges & transitions & acc & scc & nondet_states & nondet_aut & complete_aut & product_states & product_transitions & product_scc \\
-: ltl2tgba -s %f >%O &   6 &    0.0 &    1.7 &    2.5 &    3.5 &    1.0 &    1.5 &    0.2 &    0.2 &    0.3 &  299.3 & 4974.0 &    1.5 \\
-: spin -f %s >%O     &   6 &    0.0 &    2.2 &    3.2 &    6.3 &    1.0 &    2.0 &    0.7 &    0.5 &    0.3 &  333.0 & 7750.0 &    1.8 \\
-: lbt < %L >%O       &   6 &    0.0 &    3.7 &    5.7 &   12.7 &    0.7 &    3.5 &    1.5 &    0.5 &    0.3 &  503.8 & 11456.2 &  172.7 \\
+: ltl2tgba -s %f >%O &   6 &    0.0 &    2.3 &    3.2 &    3.8 &    1.0 &    2.3 &    0.0 &    0.0 &    0.3 &  336.0 & 6248.7 &    4.3 \\
+: spin -f %s >%O     &   6 &    0.0 &    4.0 &    8.7 &   15.0 &    1.0 &    2.8 &    2.5 &    0.8 &    0.2 &  701.3 & 16973.5 &   70.7 \\
+: lbt < %L >%O       &   6 &    0.0 &    6.7 &   12.3 &   23.3 &    0.8 &    6.5 &    3.3 &    0.8 &    0.2 & 1047.8 & 23076.0 &  550.3 \\
 
 The script =bench/ltl2tgba/sum.py= is a more evolved version of the
 above script that generates two kinds of LaTeX tables.
@@ -715,14 +747,57 @@ name.  =ltlcross= supports the specification of such short names by
 looking whether the command specification for a translator has the
 form "={short name}actual command=".
 
-For instance, after
-#+BEGIN_SRC sh :results silent
+For instance:
+#+BEGIN_SRC sh :prologue "exec 2>&1"
 genltl --and-f=1..5 |
 ltlcross '{small} ltl2tgba -s --small %f >%O' \
          '{deter} ltl2tgba -s --deter %f >%O' --csv=ltlcross.csv
 #+END_SRC
 
-The file =ltlcross.csv= now contains:
+#+RESULTS:
+#+begin_example
+-:1: F(p1)
+Running [P0: small]: ltl2tgba -s --small 'F(p1)' >'lcr-o0-gizrt5'
+Running [P1: deter]: ltl2tgba -s --deter 'F(p1)' >'lcr-o1-E2Y2os'
+Running [N0: small]: ltl2tgba -s --small '!(F(p1))' >'lcr-o0-LiBWmP'
+Running [N1: deter]: ltl2tgba -s --deter '!(F(p1))' >'lcr-o1-ztzWmc'
+Performing sanity checks and gathering statistics...
+
+-:2: (F(p1)) & (F(p2))
+Running [P0: small]: ltl2tgba -s --small '(F(p1)) & (F(p2))' >'lcr-o0-DCyLpz'
+Running [P1: deter]: ltl2tgba -s --deter '(F(p1)) & (F(p2))' >'lcr-o1-MeEivW'
+Running [N0: small]: ltl2tgba -s --small '!((F(p1)) & (F(p2)))' >'lcr-o0-X5oXCj'
+Running [N1: deter]: ltl2tgba -s --deter '!((F(p1)) & (F(p2)))' >'lcr-o1-APddNG'
+Performing sanity checks and gathering statistics...
+
+-:3: (F(p1)) & (F(p2)) & (F(p3))
+Running [P0: small]: ltl2tgba -s --small '(F(p1)) & (F(p2)) & (F(p3))' >'lcr-o0-D8un13'
+Running [P1: deter]: ltl2tgba -s --deter '(F(p1)) & (F(p2)) & (F(p3))' >'lcr-o1-njT4hr'
+Running [N0: small]: ltl2tgba -s --small '!((F(p1)) & (F(p2)) & (F(p3)))' >'lcr-o0-YNmfBO'
+Running [N1: deter]: ltl2tgba -s --deter '!((F(p1)) & (F(p2)) & (F(p3)))' >'lcr-o1-2bGzWb'
+Performing sanity checks and gathering statistics...
+
+-:4: (F(p1)) & (F(p2)) & (F(p3)) & (F(p4))
+Running [P0: small]: ltl2tgba -s --small '(F(p1)) & (F(p2)) & (F(p3)) & (F(p4))' >'lcr-o0-rlrmnz'
+Running [P1: deter]: ltl2tgba -s --deter '(F(p1)) & (F(p2)) & (F(p3)) & (F(p4))' >'lcr-o1-KobkRW'
+Running [N0: small]: ltl2tgba -s --small '!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))' >'lcr-o0-5DFKnk'
+Running [N1: deter]: ltl2tgba -s --deter '!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)))' >'lcr-o1-8IIcXH'
+Performing sanity checks and gathering statistics...
+
+-:5: (F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))
+Running [P0: small]: ltl2tgba -s --small '(F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))' >'lcr-o0-h7sYE5'
+Running [P1: deter]: ltl2tgba -s --deter '(F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5))' >'lcr-o1-ypOBqt'
+Running [N0: small]: ltl2tgba -s --small '!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5)))' >'lcr-o0-2rJtfR'
+Running [N1: deter]: ltl2tgba -s --deter '!((F(p1)) & (F(p2)) & (F(p3)) & (F(p4)) & (F(p5)))' >'lcr-o1-qK2p7e'
+Performing sanity checks and gathering statistics...
+
+No problem detected.
+#+end_example
+
+When =ltlcross= is running, the short name is now displayed on stderr
+before the command.  Furthermore, the file =ltlcross.csv= now use the
+short name in the =tool= column:
+
 #+BEGIN_SRC sh :results output raw :exports results
 sed 's/"//g
 s/|/\\vert{}/g

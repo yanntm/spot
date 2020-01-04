@@ -14,6 +14,9 @@ New in spot 2.8.5.dev (not yet released)
     spot-accepted-word: "!a; cycle{a}"
     spot-rejected-word: "!a; !a; cycle{a}"
 
+  - When running translators ltlcross will now display {names} when
+    supplied.
+
   Library:
 
   - Historically, Spot only supports LTL with infinite semantics

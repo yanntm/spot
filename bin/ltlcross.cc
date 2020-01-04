@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -582,10 +582,14 @@ namespace
       format(command, tools[translator_num].cmd);
 
       std::string cmd = command.str();
-      auto disp_cmd = [&]() {
-                        std::cerr << "Running [" << l << translator_num
-                                  << "]: " << cmd << '\n';
-                      };
+      auto disp_cmd =
+        [&]() {
+          std::cerr << "Running [" << l << translator_num;
+          const char* name = tools[translator_num].name;
+          if (name != tools[translator_num].spec)
+            std::cerr << ": " << name;
+          std::cerr << "]: " << cmd << '\n';
+        };
       if (!quiet)
         disp_cmd();
       spot::process_timer timer;
