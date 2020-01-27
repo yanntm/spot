@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2017-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2015, 2017-2020 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -320,6 +320,292 @@ namespace spot
                                            complement));
       return aut;
     }
+
+
+    acc_cond::acc_code acc_rewrite_rec(const acc_cond::acc_word* pos)
+    {
+      auto start = pos - pos->sub.size;
+      switch (pos->sub.op)
+        {
+          case acc_cond::acc_op::And:
+            {
+              --pos;
+              auto res = acc_cond::acc_code::t();
+              do
+                {
+                  auto tmp = acc_rewrite_rec(pos);
+                  tmp &= std::move(res);
+                  std::swap(tmp, res);
+                  pos -= pos->sub.size + 1;
+                }
+              while (pos > start);
+              return res;
+            }
+         case acc_cond::acc_op::Or:
+            {
+              --pos;
+              auto res = acc_cond::acc_code::f();
+              do
+                {
+                  auto tmp = acc_rewrite_rec(pos);
+                  tmp |= std::move(res);
+                  std::swap(tmp, res);
+                  pos -= pos->sub.size + 1;
+                }
+              while (pos > start);
+              return res;
+            }
+          case acc_cond::acc_op::Fin:
+            return acc_cond::acc_code::fin(pos[-1].mark);
+          case acc_cond::acc_op::Inf:
+            return acc_cond::acc_code::inf(pos[-1].mark);
+          case acc_cond::acc_op::FinNeg:
+          case acc_cond::acc_op::InfNeg:
+            SPOT_UNREACHABLE();
+        };
+        SPOT_UNREACHABLE();
+        return {};
+    }
+
+    acc_cond::mark_t find_interm_rec(acc_cond::acc_word* pos)
+    {
+      acc_cond::acc_op wanted;
+      auto topop = pos->sub.op;
+      if (topop == acc_cond::acc_op::Or)
+        {
+          wanted = acc_cond::acc_op::Fin;
+        }
+      else
+        {
+          wanted = acc_cond::acc_op::Inf;
+          assert(topop == acc_cond::acc_op::And);
+        }
+      acc_cond::mark_t res = {};
+      const acc_cond::acc_word* rend = pos - (pos->sub.size + 1);
+      --pos;
+      do
+        switch (auto op = pos->sub.op)
+          {
+          case acc_cond::acc_op::Inf:
+          case acc_cond::acc_op::Fin:
+          case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::FinNeg:
+            {
+              auto m = pos[-1].mark;
+              if (op == wanted && m == m.lowest())
+                {
+                  res |= m;
+                }
+              else
+                {
+                  return {};
+                }
+              pos -= 2;
+              break;
+            }
+          case acc_cond::acc_op::And:
+          case acc_cond::acc_op::Or:
+            if (op == topop)
+              {
+                if (auto m = find_interm_rec(pos))
+                  res |= m;
+                else
+                  return {};
+                pos -= pos->sub.size + 1;
+              }
+            else
+              {
+                auto posend = pos - (pos->sub.size + 1);
+                --pos;
+                bool seen = false;
+                do
+                  {
+                    switch (auto op = pos->sub.op)
+                      {
+                      case acc_cond::acc_op::Inf:
+                      case acc_cond::acc_op::Fin:
+                      case acc_cond::acc_op::InfNeg:
+                      case acc_cond::acc_op::FinNeg:
+                        if (op == wanted)
+                          {
+                            auto m = pos[-1].mark;
+                            if (!seen && m == m.lowest())
+                              {
+                                seen = true;
+                                res |= m;
+                              }
+                            else
+                              {
+                                return {};
+                              }
+                          }
+                        pos -= 2;
+                        break;
+                      case acc_cond::acc_op::And:
+                      case acc_cond::acc_op::Or:
+                        return {};
+                      }
+                  }
+                while (pos > posend);
+              }
+            break;
+          }
+      while (pos > rend);
+      return res;
+    }
+
+    // Replace Inf(i)|Inf(j) by Inf(k)
+    //   or    Fin(i)&Fin(j) by Fin(k)
+    // For this to work, k must be one of i or j,
+    //                   k must be used only once in the acceptance
+    // the transitions have to be updated: every transition marked
+    // by i or j should be marked by k.
+    void fuse_marks_here(twa_graph_ptr aut)
+    {
+      acc_cond::acc_code acccopy = aut->get_acceptance();
+      acc_cond::mark_t once = acccopy.used_once_sets();
+      if (!once)
+        return;
+
+      acc_cond::acc_word* pos = &acccopy.back();
+      const acc_cond::acc_word* front = &acccopy.front();
+
+      // a list of pairs ({i}, {j, k, l, ...}) where i is a set
+      // occurring once that can be removed if all transitions in set
+      // i are added to sets j,k,l, ...
+      std::vector<std::pair<acc_cond::mark_t, acc_cond::mark_t>> to_fuse;
+
+      auto find_fusable = [&](acc_cond::acc_word* pos)
+                          {
+                            acc_cond::acc_op wanted;
+                            auto topop = pos->sub.op;
+                            if (topop == acc_cond::acc_op::And)
+                              {
+                                wanted = acc_cond::acc_op::Fin;
+                              }
+                            else
+                              {
+                                wanted = acc_cond::acc_op::Inf;
+                                assert(topop == acc_cond::acc_op::Or);
+                              }
+
+                            // Return a vector of "singleton-sets" of
+                            // the wanted type in the operand of the
+                            // pointed Or/And operator.  For instance,
+                            // assuming wanted=Inf and pos points to
+                            //
+                            // Inf({1})|Inf({2,3})|Fin({4})
+                            //         |Inf({5})|Inf({5})|Inf({6})
+                            //
+                            // This returns [({1}, Inf({1})),
+                            //               ({5}, Inf({5}))]].
+                            std::vector<std::pair<acc_cond::mark_t,
+                                                  acc_cond::acc_word*>>
+                                        singletons;
+                            const acc_cond::acc_word* rend =
+                              pos - (pos->sub.size + 1);
+                            --pos;
+                            do
+                              {
+                                switch (auto op = pos->sub.op)
+                                  {
+                                  case acc_cond::acc_op::InfNeg:
+                                  case acc_cond::acc_op::FinNeg:
+                                  case acc_cond::acc_op::Inf:
+                                  case acc_cond::acc_op::Fin:
+                                    {
+                                      auto m = pos[-1].mark;
+                                      if (op == wanted && m == m.lowest())
+                                        singletons.emplace_back(m, pos);
+                                      pos -= 2;
+                                    }
+                                    break;
+                                  case acc_cond::acc_op::And:
+                                  case acc_cond::acc_op::Or:
+                                    // On
+                                    // Fin(a)&(Fin(b)&Inf(c)|Fin(d))
+                                    // where we'd like to return [{a},
+                                    // {b,d}] and decide later that
+                                    // {b,d} can receive {a} if they
+                                    // (b and d) are both used once.
+                                    if (auto m = find_interm_rec(pos))
+                                      {
+                                        singletons.emplace_back(m, pos);
+                                        // move this to the front, to
+                                        // be sure it is the first
+                                        // recipient tried.
+                                        swap(singletons.front(),
+                                             singletons.back());
+                                      }
+                                    pos -= pos->sub.size + 1;
+                                    break;
+                                  }
+                              }
+                            while (pos > rend);
+
+                            acc_cond::mark_t can_receive = {};
+                            for (auto p: singletons)
+                              if ((p.first & once) == p.first)
+                                {
+                                  can_receive = p.first;
+                                  break;
+                                }
+                            if (!can_receive)
+                              return;
+                            for (auto p: singletons)
+                              if (p.first != can_receive)
+                                {
+                                  to_fuse.emplace_back(p.first, can_receive);
+                                  if (p.second->sub.op == acc_cond::acc_op::Fin)
+                                    p.second->sub.op = acc_cond::acc_op::Inf;
+                                  else
+                                    p.second->sub.op = acc_cond::acc_op::Fin;
+                                  p.second[-1].mark = {};
+                                }
+                          };
+
+      do
+        {
+          switch (pos->sub.op)
+            {
+            case acc_cond::acc_op::And:
+            case acc_cond::acc_op::Or:
+              find_fusable(pos);
+              // Don't skip to entire operands, as we might find
+              // fusable sub-parts.
+              --pos;
+              break;
+            case acc_cond::acc_op::Inf:
+            case acc_cond::acc_op::InfNeg:
+            case acc_cond::acc_op::FinNeg:
+            case acc_cond::acc_op::Fin:
+              pos -= 2;
+              break;
+            }
+        }
+      while (pos >= front);
+
+      if (to_fuse.empty())
+        return;
+
+      // Update the transition according to to_fuse.
+      for (auto pair: to_fuse)
+        if (pair.first & once) // can we remove pair.first?
+          {
+            for (auto& e: aut->edges())
+              if (e.acc & pair.first)
+                e.acc = (e.acc - pair.first) | pair.second;
+          }
+        else
+          {
+            for (auto& e: aut->edges())
+              if (e.acc & pair.first)
+                e.acc |= pair.second;
+          }
+
+      // Now rewrite the acceptance condition, removing all the "to_kill" terms.
+      aut->set_acceptance(aut->num_sets(), acc_rewrite_rec(&acccopy.back()));
+    }
   }
 
   twa_graph_ptr simplify_acceptance_here(twa_graph_ptr aut)
@@ -327,9 +613,11 @@ namespace spot
     cleanup_acceptance_here(aut, false);
     merge_identical_marks_here(aut);
     if (!aut->acc().is_generalized_buchi())
-      simplify_complementary_marks_here(aut);
+      {
+        simplify_complementary_marks_here(aut);
+        fuse_marks_here(aut);
+      }
     cleanup_acceptance_here(aut, true);
-
     return aut;
   }
 

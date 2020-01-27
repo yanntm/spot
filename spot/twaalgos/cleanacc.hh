@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2017-2019 Laboratoire de Recherche et
+// Copyright (C) 2015, 2017-2020 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -57,6 +57,11 @@ namespace spot
   ///   - `Fin(i) | Inf(j) = Inf(j)`
   ///   - `Inf(i) | Inf(j) = t`
   ///   - `Fin(i) | Inf(i) = t`
+  /// And also merge terms like `Inf(i)|Inf(j)` or `Fin(i)&Fin(j)`
+  /// provided at least i or j is used uniquely in the formula.
+  /// (for instance if i is unique, `Inf(i)|Inf(j)` is rewritten
+  /// as `Inf(i)`, and `i` is added on all transitions where `j` is present
+  /// in the automaton.)
   ///
   /// simplify_acceptance_here() works in place, simplify_acceptance()
   /// returns a new automaton that has been simplified.

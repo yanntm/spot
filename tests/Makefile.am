@@ -1,6 +1,5 @@
 ## -*- coding: utf-8 -*-
-
-## Copyright (C) 2009-2019 Laboratoire de Recherche et Développement
+## Copyright (C) 2009-2020 Laboratoire de Recherche et Développement
 ## de l'Epita (LRDE).
 ## Copyright (C) 2003-2006 Laboratoire d'Informatique de Paris 6
 ## (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -410,6 +409,7 @@ TESTS_python = \
   python/semidet.py \
   python/setacc.py \
   python/setxor.py \
+  python/simplacc.py \
   python/simstate.py \
   python/split.py \
   python/streett_totgba.py \

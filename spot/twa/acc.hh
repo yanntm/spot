@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2020 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -1199,7 +1199,7 @@ namespace spot
       ///
       /// If multiple unit-Fin appear as unit-clauses, the set of
       /// those will be returned.  For instance applied to
-      /// `Fin(0)&Fin(1)&(Inf(2)|Fin(3))``, this will return `{0,1}`.
+      /// `Fin(0)&Fin(1)&(Inf(2)|Fin(3))`, this will return `{0,1}`.
       mark_t fin_unit() const;
 
       /// \brief Return one acceptance set i that appear as `Fin(i)`
@@ -1285,6 +1285,14 @@ namespace spot
 
       /// \brief Return the set of sets appearing in the condition.
       acc_cond::mark_t used_sets() const;
+
+      /// \brief Return the sets that appears only once in the
+      /// acceptance.
+      ///
+      /// For instance if the condition is
+      /// `Fin(0)&(Inf(1)|(Fin(1)&Inf(2)))`, this returns `{0,2}`,
+      /// because set `1` is used more than once.
+      mark_t used_once_sets() const;
 
       /// \brief  Return the sets used as Inf or Fin in the acceptance condition
       std::pair<acc_cond::mark_t, acc_cond::mark_t> used_inf_fin_sets() const;

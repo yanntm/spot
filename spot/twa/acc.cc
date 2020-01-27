@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2020 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -2340,6 +2340,7 @@ namespace spot
 
     std::swap(c, *this);
   }
+
   int acc_cond::acc_code::fin_one() const
   {
     if (empty() || is_f())
@@ -2397,5 +2398,35 @@ namespace spot
       }
     while (pos >= &front());
     return res;
+  }
+
+  acc_cond::mark_t acc_cond::acc_code::used_once_sets() const
+  {
+    mark_t seen = {};
+    mark_t dups = {};
+    if (empty())
+      return {};
+    const acc_cond::acc_word* pos = &back();
+    do
+      {
+        switch (pos->sub.op)
+          {
+          case acc_cond::acc_op::And:
+          case acc_cond::acc_op::Or:
+            --pos;
+            break;
+          case acc_cond::acc_op::Inf:
+          case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::FinNeg:
+          case acc_cond::acc_op::Fin:
+            auto m = pos[-1].mark;
+            pos -= 2;
+            dups |= m & seen;
+            seen |= m;
+            break;
+          }
+      }
+    while (pos >= &front());
+    return seen - dups;
   }
 }

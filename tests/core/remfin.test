@@ -1,8 +1,7 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-
-# Copyright (C) 2015-2018 Laboratoire de Recherche et Développement de
-# l'Epita (LRDE).
+# Copyright (C) 2015-2018, 2020 Laboratoire de Recherche et
+# Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -340,7 +339,7 @@ HOA: v1
 States: 4
 Start: 0
 AP: 2 "a" "b"
-Acceptance: 5 (Inf(0)&Inf(1)&Inf(4)) | Inf(0) | (Inf(2)&Inf(3))
+Acceptance: 4 (Inf(0)&Inf(1)) | Inf(0) | (Inf(2)&Inf(3))
 properties: trans-labels explicit-labels trans-acc
 --BODY--
 State: 0
@@ -357,7 +356,7 @@ State: 2
 [!0&!1] 2 {0}
 [!0&!1] 3
 State: 3
-[!0&!1] 3 {0 1 4}
+[!0&!1] 3 {0 1}
 --END--
 HOA: v1
 States: 1
@@ -402,7 +401,8 @@ HOA: v1
 States: 10
 Start: 2
 AP: 1 "p1"
-Acceptance: 2 Inf(1) | Inf(0)
+acc-name: Buchi
+Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels state-acc
 --BODY--
 State: 0
@@ -410,29 +410,29 @@ State: 0
 [!0] 6
 [0] 8
 [0] 9
-State: 1 {0 1}
+State: 1
 [t] 3
-State: 2 {0 1}
+State: 2
 [0] 1
 [!0] 5
-State: 3 {0 1}
+State: 3
 [0] 0
 [!0] 6
-State: 4 {0 1}
+State: 4 {0}
 [0] 4
 [!0] 6
-State: 5 {0 1}
+State: 5
 [0] 3
 [!0] 7
 State: 6
 [0] 0
 [!0] 6
-State: 7 {1}
+State: 7
 [0] 4
 [!0] 6
 State: 8
 [0] 8
-State: 9 {1}
+State: 9 {0}
 [0] 9
 --END--
 HOA: v1
@@ -765,7 +765,7 @@ acc-name: Buchi
 Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels state-acc
 --BODY--
-State: 0 {0}
+State: 0
 [!0&1] 5
 [!0&1] 7
 State: 1

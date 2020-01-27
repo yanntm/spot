@@ -61,6 +61,13 @@ New in spot 2.8.5.dev (not yet released)
     degeneralization to get rid of conjunction of Inf terms in
     acceptance conditions.
 
+  - simplify_acceptance_here() and simplify_acceptance() learned to
+    simplify subformulas like Fin(i)&Fin(j) or Inf(i)|Inf(j), or some
+    more complex variants of those.  If i us uniquely used in the
+    acceptance condition these become respectively Fin(i) or Inf(i),
+    and the automaton is adjusted to that i also appears where j
+    appeared.
+
 New in spot 2.8.5 (2020-01-04)
 
   Bugs fixed:
