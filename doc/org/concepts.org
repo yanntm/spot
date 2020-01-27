@@ -683,7 +683,7 @@ newer Spin releases (starting with Spin 6.2.4) use the second syntax
 as they help Spin to produce more precise counterexamples.
 
 Spot can read and write never claims in both syntaxes, but it cannot
-parse never claim that use other features (such as variables) of the
+parse never claims that use other features (such as variables) of the
 Promela language.
 
 * LBTT's format
