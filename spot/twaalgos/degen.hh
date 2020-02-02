@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2015, 2017-2019 Laboratoire de
+// Copyright (C) 2012-2015, 2017-2020 Laboratoire de
 // Recherche et Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -23,6 +23,8 @@
 
 namespace spot
 {
+  class scc_info;
+
   /// \ingroup twa_acc_transform
   /// \brief Degeneralize a spot::tgba into an equivalent sba with
   /// only one acceptance condition.
@@ -101,4 +103,29 @@ namespace spot
   SPOT_API twa_graph_ptr
   partial_degeneralize(const const_twa_graph_ptr& a,
                        acc_cond::mark_t todegen);
+
+  /// \ingroup twa_algorithms
+  /// \brief Propagate marks around the automaton
+  ///
+  /// For each state of the automaton, marks that are common
+  /// to all input transitions will be pushed on the outgoing
+  /// transitions, and marks that are common to all outgoing
+  /// transitions will be pulled to the input transitions.
+  /// This considers only transitions that are not self-loops
+  /// and that belong to some SCC.  If an scc_info has already
+  /// been built, pass it as \a si to avoid building it again.
+  ///
+  /// Two variants of the algorithm are provided.  One modifies
+  /// the automaton in place; the second returns a vector of marks
+  /// indexed by transition numbers.
+  ///
+  /// @{
+  SPOT_API std::vector<acc_cond::mark_t>
+  propagate_marks_vector(const const_twa_graph_ptr& aut,
+                         scc_info* si = nullptr);
+
+  SPOT_API void
+  propagate_marks_here(twa_graph_ptr& aut,
+                       scc_info* si = nullptr);
+  /// @}
 }

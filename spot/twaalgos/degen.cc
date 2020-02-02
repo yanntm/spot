@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2019 Laboratoire de Recherche
+// Copyright (C) 2012-2020 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -122,7 +122,7 @@ namespace spot
         unsigned n = a->num_states();
         acc_cond::mark_t all = a_->acc().all_sets();
         // slot 2 will hold acceptance mark that are common to the
-        // incoming transitions of each state.  For know with all
+        // incoming transitions of each state.  For now with all
         // marks if there is some incoming edge.  The next loop will
         // constrain this value.
         for (auto& e: a_->edges())
@@ -176,36 +176,59 @@ namespace spot
     // Order of accepting sets (for one SCC)
     class acc_order final
     {
+      std::vector<std::pair<acc_cond::mark_t, unsigned>> found_;
       std::vector<unsigned> order_;
-      acc_cond::mark_t found_;
 
     public:
-      unsigned
-      next_level(int slevel, acc_cond::mark_t set, bool skip_levels)
+      acc_order(acc_cond::mark_t all)
       {
-        // Update the order with any new set we discover
-        if (auto newsets = set - found_)
-          {
-            newsets.fill(std::back_inserter(order_));
-            found_ |= newsets;
-          }
+        unsigned count = all.count();
+        found_.emplace_back(all, count);
+        order_.insert(order_.begin(), count, 0);
+      }
 
-        unsigned next = slevel;
-        while (next < order_.size() && set.has(order_[next]))
+      unsigned
+      next_level(unsigned slevel, acc_cond::mark_t set)
+      {
+        unsigned last = order_.size();
+        if (last == 0)
+          return slevel;
+        unsigned index = order_[slevel];
+
+        while (slevel < last
+               && (found_[index].first & set) == found_[index].first)
+          slevel += found_[index++].second;
+        if (slevel == last)
+          return slevel;
+        if (acc_cond::mark_t match = (found_[index].first & set))
           {
-            ++next;
-            if (!skip_levels)
-              break;
+            unsigned matchsize = match.count();
+            found_[index].first -= match;
+            found_[index].second -= matchsize;
+            found_.emplace(found_.begin() + index, match, matchsize);
+            slevel += matchsize;
+            // update order_
+            unsigned opos = 0;
+            unsigned fpos = 0;
+            for (auto& p: found_)
+              {
+                for (unsigned n = 0; n < p.second; ++n)
+                  order_[opos++] = fpos;
+                ++fpos;
+              }
           }
-        return next;
+        return slevel;
       }
 
       void
       print(int scc)
       {
         std::cout << "Order_" << scc << ":\t";
+        for (auto i: found_)
+          std::cout << i.first << ' ';
+        std::cout << " // ";
         for (auto i: order_)
-          std::cout << i << ", ";
+          std::cout << i << ' ';
         std::cout << '\n';
       }
     };
@@ -213,27 +236,26 @@ namespace spot
     // Accepting order for each SCC
     class scc_orders final
     {
-      std::map<int, acc_order> orders_;
-      bool skip_levels_;
+      std::vector<acc_order> orders_;
 
     public:
-      scc_orders(bool skip_levels):
-        skip_levels_(skip_levels)
+      scc_orders(acc_cond::mark_t all, unsigned scc_count)
+        : orders_(scc_count, acc_order(all))
       {
       }
 
       unsigned
       next_level(int scc, int slevel, acc_cond::mark_t set)
       {
-        return orders_[scc].next_level(slevel, set, skip_levels_);
+        return orders_[scc].next_level(slevel, set);
       }
 
       void
       print()
       {
-        std::map<int, acc_order>::iterator i;
-        for (i = orders_.begin(); i != orders_.end(); i++)
-          i->second.print(i->first);
+        unsigned sz = orders_.size();
+        for (unsigned i = 0; i < sz; ++i)
+          orders_[i].print(i);
       }
     };
 
@@ -348,9 +370,6 @@ namespace spot
           order.emplace_back(i - 1);
       }
 
-      // Initialize scc_orders
-      scc_orders orders(skip_levels);
-
       // and vice-versa.
       ds2num_map ds2num;
 
@@ -368,6 +387,11 @@ namespace spot
       // Compute SCCs in order to use any optimization.
       std::unique_ptr<scc_info> m = use_scc
         ? std::make_unique<scc_info>(a, scc_info_options::NONE)
+        : nullptr;
+
+      // Initialize scc_orders
+      std::unique_ptr<scc_orders> orders = use_cust_acc_orders
+        ? std::make_unique<scc_orders>(a->acc().all_sets(), m->scc_count())
         : nullptr;
 
       // Cache for common outgoing/incoming acceptances.
@@ -390,7 +414,7 @@ namespace spot
         {
           auto set = inout.common_inout_acc(s.first);
           if (SPOT_UNLIKELY(use_cust_acc_orders))
-            s.second = orders.next_level(m->initial(), s.second, set);
+            s.second = orders->next_level(m->initial(), s.second, set);
           else
             while (s.second < order.size() && set.has(order[s.second]))
               {
@@ -589,7 +613,7 @@ namespace spot
                       // for this scc
                       if (use_cust_acc_orders)
                         {
-                          d.second = orders.next_level(scc, next, acc);
+                          d.second = orders->next_level(scc, next, acc);
                         }
                       // Else compute level according the global acc order
                       else
@@ -628,7 +652,7 @@ namespace spot
 
               // In case we are building a TBA is_acc has to be
               // set differently for each edge, and
-              // we do not need to stay use final level.
+              // we do not need to stay on final level.
               if (!want_sba)
                 {
                   is_acc = d.second == order.size();
@@ -640,7 +664,7 @@ namespace spot
                         {
                           if (use_cust_acc_orders)
                             {
-                              d.second = orders.next_level(scc, d.second, acc);
+                              d.second = orders->next_level(scc, d.second, acc);
                             }
                           else
                             {
@@ -670,7 +694,7 @@ namespace spot
       for (auto i: order)
         std::cout << i << ", ";
       std::cout << '\n';
-      orders.print();
+      orders->print();
 #endif
       res->merge_edges();
       if (remove_extra_scc)
@@ -808,20 +832,39 @@ namespace spot
     update_acc_for_partial_degen(acc, todegen, tostrip, degenmark);
     res->set_acceptance(acc);
 
-    std::vector<unsigned> order;
-    for (unsigned set: todegen.sets())
-      order.push_back(set);
-
-    //auto* names = new std::vector<std::string>;
-    //res->set_named_prop("state-names", names);
+    // auto* names = new std::vector<std::string>;
+    // res->set_named_prop("state-names", names);
     auto orig_states = new std::vector<unsigned>();
     auto levels = new std::vector<unsigned>();
-    orig_states->reserve(a->num_states()); // likely more are needed.
+    unsigned ns = a->num_states();
+    orig_states->reserve(ns); // likely more are needed.
     levels->reserve(a->num_states());
     res->set_named_prop("original-states", orig_states);
     res->set_named_prop("degen-levels", levels);
 
     scc_info si_orig(a, scc_info_options::NONE);
+
+    auto marks = propagate_marks_vector(a, &si_orig);
+
+    std::vector<unsigned> highest_level(ns, 0);
+    // Compute the marks that are common to all incoming or all
+    // outgoing transitions of each state, ignoring self-loops and
+    // out-of-SCC transitions.  Note that because
+    // propagate_marks_verctor() has been used, the intersection
+    // of all incoming marks is equal to the intersection of all
+    // outgoing marks unless the state has no predecessor or no
+    // successor.  We take the outgoing marks because states without
+    // successor are useless (but states without predecessors are not).
+    std::vector<acc_cond::mark_t> inout(ns, todegen);
+    for (auto& e: a->edges())
+      if (e.src != e.dst && si_orig.scc_of(e.src) == si_orig.scc_of(e.dst))
+        {
+          unsigned idx = a->edge_number(e);
+          inout[e.src] &= marks[idx];
+        }
+
+    scc_orders orders(todegen, si_orig.scc_count());
+    unsigned ordersize = todegen.count();
 
     // degen_states -> new state numbers
     ds2num_map ds2num;
@@ -834,25 +877,41 @@ namespace spot
                        if (di != ds2num.end())
                          return di->second;
 
+                       highest_level[ds.first] =
+                         std::max(highest_level[ds.first], ds.second);
+
                        unsigned ns = res->new_state();
                        ds2num[ds] = ns;
                        todo.emplace_back(ds);
 
-                       //std::ostringstream os;
-                       //os << ds.first << ',' << ds.second;
-                       //names->push_back(os.str());
+                       // std::ostringstream os;
+                       // os << ds.first << ',' << ds.second;
+                       // names->push_back(os.str());
                        assert(ns == orig_states->size());
                        orig_states->emplace_back(ds.first);
                        levels->emplace_back(ds.second);
                        return ns;
                      };
-    degen_state s(a->get_init_state_number(), 0);
+
+    unsigned init = a->get_init_state_number();
+    degen_state s(init, 0);
+    // The initial level can be anything.  As a heuristic, pretend we
+    // have just seen the acceptance condition common to incoming
+    // edges.
+    s.second = orders.next_level(si_orig.scc_of(init), 0, inout[init]);
+    if (s.second == ordersize)
+      s.second = 0;
+
     new_state(s);
+
+    // A list of edges are that "all accepting" and whose destination
+    // could be redirected to a higher level.
+    std::vector<unsigned> allaccedges;
 
     while (!todo.empty())
       {
-        s = todo.front();
-        todo.pop_front();
+        s = todo.back();
+        todo.pop_back();
 
         int src = ds2num[s];
         unsigned slevel = s.second;
@@ -860,22 +919,39 @@ namespace spot
         unsigned scc_src = si_orig.scc_of(orig_src);
         for (auto& e: a->out(orig_src))
           {
+            bool saveedge = false;
             unsigned nextlvl = slevel;
             acc_cond::mark_t accepting = {};
             if (si_orig.scc_of(e.dst) == scc_src)
               {
-                while (nextlvl < order.size() && e.acc.has(order[nextlvl]))
-                  ++nextlvl;
-
-                if (nextlvl == order.size())
+                unsigned idx = a->edge_number(e);
+                acc_cond::mark_t acc = marks[idx] & todegen;
+                nextlvl = orders.next_level(scc_src, nextlvl, acc);
+                if (nextlvl == ordersize)
                   {
                     accepting = degenmark;
                     nextlvl = 0;
-
-                    if ((e.acc & todegen) != todegen)
-                      while (nextlvl < order.size()
-                             && e.acc.has(order[nextlvl]))
-                        ++nextlvl;
+                    if ((acc & todegen) != todegen)
+                      {
+                        nextlvl = orders.next_level(scc_src, nextlvl, acc);
+                      }
+                    else
+                      {
+                        // Because we have seen all sets on this
+                        // transition, we can jump to any level we
+                        // like.  As a heuristic, let's jump to the
+                        // highest existing level.
+                        nextlvl = highest_level[e.dst];
+                        if (nextlvl == 0 // probably a new state ->
+                                         // use inout for now
+                            && inout[e.dst] != todegen)
+                          nextlvl = orders.next_level(scc_src, nextlvl,
+                                                      inout[e.dst]);
+                        // It's possible that we have not yet seen the
+                        // highest level yet, so let's save this edge
+                        // and revisit this issue at the end.
+                        saveedge = true;
+                      }
                   }
                 accepting |= e.acc.strip(tostrip);
               }
@@ -886,13 +962,87 @@ namespace spot
 
             degen_state ds_dst(e.dst, nextlvl);
             unsigned dst = new_state(ds_dst);
-            res->new_edge(src, dst, e.cond, accepting);
+            unsigned idx = res->new_edge(src, dst, e.cond, accepting);
+            if (saveedge)
+              allaccedges.push_back(idx);
           }
       }
-
+    // Raise the destination of the "all-accepting" edges to the
+    // highest existing level.
+    auto& ev = res->edge_vector();
+    for (unsigned idx: allaccedges)
+      {
+        unsigned dst = ev[idx].dst;
+        unsigned orig_dst = (*orig_states)[dst];
+        unsigned hl = highest_level[orig_dst];
+        ev[idx].dst = ds2num[degen_state{orig_dst, hl}];
+      }
+    //orders.print();
     res->merge_edges();
     keep_bottommost_copies(res, si_orig, orig_states);
     return res;
   }
 
+
+  std::vector<acc_cond::mark_t>
+  propagate_marks_vector(const const_twa_graph_ptr& aut,
+                         scc_info* si)
+  {
+    bool own_si = true;
+    if (si)
+      own_si = false;
+    else
+      si = new scc_info(aut);
+
+    unsigned ns = aut->num_states();
+    acc_cond::mark_t allm = aut->acc().all_sets();
+    unsigned es = aut->edge_vector().size();
+    std::vector<acc_cond::mark_t> marks(es, acc_cond::mark_t{});
+    const auto& edges = aut->edge_vector();
+    for (unsigned e = 1; e < es; ++e)
+      marks[e] = edges[e].acc;
+
+    std::vector<acc_cond::mark_t> common_in(ns, allm);
+    std::vector<acc_cond::mark_t> common_out(ns, allm);
+
+    for (;;)
+      {
+        bool changed = false;
+        for (auto& e: aut->edges())
+          if (e.src != e.dst && si->scc_of(e.src) == si->scc_of(e.dst))
+            {
+              unsigned idx = aut->edge_number(e);
+              common_in[e.dst] &= marks[idx];
+              common_out[e.src] &= marks[idx];
+            }
+        for (auto& e: aut->edges())
+          if (e.src != e.dst && si->scc_of(e.src) == si->scc_of(e.dst))
+            {
+              unsigned idx = aut->edge_number(e);
+              auto acc = marks[idx] | common_in[e.src] | common_out[e.dst];
+              if (acc != marks[idx])
+                {
+                  marks[idx] = acc;
+                  changed = true;
+                }
+            }
+        if (!changed)
+          break;
+        std::fill(common_in.begin(), common_in.end(), allm);
+        std::fill(common_out.begin(), common_out.end(), allm);
+      }
+    if (own_si)
+      delete si;
+    return marks;
+  }
+
+  void propagate_marks_here(twa_graph_ptr& aut, scc_info* si)
+  {
+    auto marks = propagate_marks_vector(aut, si);
+    for (auto& e: aut->edges())
+      {
+        unsigned idx = aut->edge_number(e);
+        e.acc = marks[idx];
+      }
+  }
 }
