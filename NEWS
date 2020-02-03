@@ -79,6 +79,13 @@ New in spot 2.8.5.dev (not yet released)
     should be on each transition; propagate_marks_here() actually
     modifies the automaton.
 
+  Bugs fixed:
+
+  - degeneralize_tba() was incorrectly not honnoring the "skip_level"
+    optimization after creating an accepting transition; as a
+    consequence, some correct output could be larger than necessary
+    (but still correct).
+
 New in spot 2.8.5 (2020-01-04)
 
   Bugs fixed:

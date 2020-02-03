@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2015, 2017-2018  Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2017-2018, 2020  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -169,7 +169,9 @@ State: 11 "{₀[1#1]{₁[0#0,0#1]{₂[1#0]₂}₁}₀}"
 
 a = spot.translate('!Gp0 xor FG((p0 W Gp1) M p1)')
 a = spot.degeneralize_tba(a)
+assert a.num_states() == 8
 b = spot.simulation(a)
+assert b.num_states() == 3
 b.set_init_state(1)
 b.purge_unreachable_states()
 b.copy_state_names_from(a)
@@ -182,7 +184,7 @@ Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic stutter-invariant
 --BODY--
-State: 0 "[1,8,9]"
+State: 0 "[1,7]"
 [!1] 0 {0}
 [1] 0
 --END--"""

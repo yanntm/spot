@@ -159,7 +159,7 @@ assert daut5.equivalent_to(aut5)
 sets = list(range(aut5.num_sets()))
 pdaut5 = spot.partial_degeneralize(aut5, sets)
 assert pdaut5.equivalent_to(aut5)
-assert daut5.num_states() == 10
+assert daut5.num_states() == 9
 assert pdaut5.num_states() == 8
 
 aut6 = spot.automaton("""HOA: v1 States: 6 Start: 0 AP: 3 "p0" "p1" "p2"
@@ -189,7 +189,7 @@ assert daut7.equivalent_to(aut7)
 sets = list(range(aut7.num_sets()))
 pdaut7 = spot.partial_degeneralize(aut7, sets)
 assert pdaut7.equivalent_to(aut7)
-assert daut7.num_states() == 11
+assert daut7.num_states() == 10
 assert pdaut7.num_states() == 10
 
 aut8 = spot.automaton("""HOA: v1 States: 8 Start: 0 AP: 3 "p0" "p1" "p2"
