@@ -580,7 +580,7 @@ namespace spot
                     {
                       d.second = 0; // Make it go to the first level.
                       // Skip as many levels as possible.
-                      if (!a->acc().accepting(acc) && !skip_levels)
+                      if (!a->acc().accepting(acc) && skip_levels)
                         {
                           if (use_cust_acc_orders)
                             {
