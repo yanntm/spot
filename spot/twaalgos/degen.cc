@@ -29,6 +29,7 @@
 #include <memory>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twa/bddprint.hh>
+#include <spot/twaalgos/isdet.hh>
 
 //#define DEGEN_DEBUG
 
@@ -738,7 +739,8 @@ namespace spot
   namespace
   {
     static acc_cond::mark_t
-    to_strip(const acc_cond::acc_code& code, acc_cond::mark_t todegen)
+    to_strip(const acc_cond::acc_code& code, acc_cond::mark_t todegen,
+             bool also_fin)
     {
       if (code.empty())
         return todegen;
@@ -753,16 +755,21 @@ namespace spot
             case acc_cond::acc_op::Or:
               --pos;
               break;
+            case acc_cond::acc_op::Fin:
+            case acc_cond::acc_op::FinNeg:
+              if (!also_fin)
+                {
+                  pos -= 2;
+                  tostrip -= code[pos].mark;
+                  break;
+                }
+              // Handle Fin and Inf in the same way
+              SPOT_FALLTHROUGH;
             case acc_cond::acc_op::Inf:
             case acc_cond::acc_op::InfNeg:
               pos -= 2;
               if (code[pos].mark != todegen)
                 tostrip -= code[pos].mark;
-              break;
-            case acc_cond::acc_op::Fin:
-            case acc_cond::acc_op::FinNeg:
-              pos -= 2;
-              tostrip -= code[pos].mark;
               break;
             }
         }
@@ -770,21 +777,20 @@ namespace spot
       return tostrip;
     }
 
-    static void
+    static bool
     update_acc_for_partial_degen(acc_cond::acc_code& code,
                                  acc_cond::mark_t todegen,
                                  acc_cond::mark_t tostrip,
-                                 acc_cond::mark_t accmark)
+                                 acc_cond::mark_t accmark,
+                                 bool also_fin)
     {
-      if (!todegen)
+      if (!todegen || code.empty())
         {
           code &= acc_cond::acc_code::inf(accmark);
-          return;
+          return true;
         }
 
-      if (code.empty())
-        return;
-
+      bool updated = false;
       unsigned pos = code.size();
       do
         {
@@ -794,26 +800,46 @@ namespace spot
             case acc_cond::acc_op::Or:
               --pos;
               break;
+            case acc_cond::acc_op::Fin:
+            case acc_cond::acc_op::FinNeg:
+              if (!also_fin)
+                {
+                  pos -= 2;
+                  code[pos].mark = code[pos].mark.strip(tostrip);
+                  break;
+                }
+              // Handle Fin and Inf in the same way
+              SPOT_FALLTHROUGH;
             case acc_cond::acc_op::Inf:
             case acc_cond::acc_op::InfNeg:
               pos -= 2;
               if (code[pos].mark == todegen)
-                code[pos].mark = accmark;
+                {
+                  code[pos].mark = accmark;
+                  updated = true;
+                }
               else
-                code[pos].mark = code[pos].mark.strip(tostrip);
-              break;
-            case acc_cond::acc_op::Fin:
-            case acc_cond::acc_op::FinNeg:
-              pos -= 2;
-              code[pos].mark = code[pos].mark.strip(tostrip);
+                {
+                  code[pos].mark = code[pos].mark.strip(tostrip);
+                }
               break;
             }
         }
       while (pos > 0);
+      return updated;
     }
 
 
-
+    [[noreturn]] static void
+    report_invalid_partial_degen_arg(acc_cond::mark_t todegen,
+                                     acc_cond::acc_code& cond)
+    {
+      std::ostringstream err;
+      err << "partial_degeneralize(): " << todegen
+          << " does not match any degeneralizable subformula of "
+          << cond << '.';
+      throw std::runtime_error(err.str());
+    }
   }
 
 
@@ -825,11 +851,17 @@ namespace spot
     res->copy_ap_of(a);
     acc_cond::acc_code acc = a->get_acceptance();
 
-    acc_cond::mark_t tostrip = to_strip(acc, todegen);
+    // We can also degeneralize disjunctions of Fin if the input is
+    // deterministic.
+    bool also_fin = a->acc().uses_fin_acceptance() && is_deterministic(a);
+
+    acc_cond::mark_t tostrip = to_strip(acc, todegen, also_fin);
     acc_cond::mark_t keep = a->acc().all_sets() - tostrip;
     acc_cond::mark_t degenmark = {keep.count()};
 
-    update_acc_for_partial_degen(acc, todegen, tostrip, degenmark);
+    if (!update_acc_for_partial_degen(acc, todegen, tostrip, degenmark,
+                                      also_fin))
+      report_invalid_partial_degen_arg(todegen, acc);
     res->set_acceptance(acc);
 
     // auto* names = new std::vector<std::string>;

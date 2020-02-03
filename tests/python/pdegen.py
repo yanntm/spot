@@ -24,7 +24,7 @@
 
 import spot
 
-a, b, d = spot.automata("""
+a, b, d, f = spot.automata("""
 HOA: v1
 States: 2
 Start: 0
@@ -58,6 +58,18 @@ Acceptance: 1 Fin(0)
 --BODY--
 State: 0
 [0] 0 {0}
+--END--
+HOA: v1
+States: 2
+Start: 0
+AP: 1 "p0"
+Acceptance: 2 Fin(0)|Fin(1)
+--BODY--
+State: 0
+[0] 0 {0}
+[0] 1 {1}
+State: 1
+[!0] 0
 --END--
 """)
 
@@ -96,6 +108,42 @@ dd = spot.partial_degeneralize(d, [])
 assert dd.equivalent_to(d)
 assert dd.num_states() == 1
 assert str(dd.get_acceptance()) == 'Inf(1) & Fin(0)'
+
+e = spot.dualize(b)
+de = spot.partial_degeneralize(e, [0, 1])
+assert de.equivalent_to(e)
+assert de.num_states() == 4
+
+de.copy_state_names_from(e)
+dehoa = de.to_str('hoa')
+assert dehoa == """HOA: v1
+States: 4
+Start: 0
+AP: 1 "p0"
+acc-name: parity max even 2
+Acceptance: 2 Fin(1) & Inf(0)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic
+--BODY--
+State: 0 "0#0"
+[0] 1
+[!0] 2
+State: 1 "1#0"
+[!0] 2
+[0] 3 {0 1}
+State: 2 "3#0"
+[t] 2 {0}
+State: 3 "2#0"
+[0] 1 {0 1}
+[!0] 2
+--END--"""
+
+try:
+    df = spot.partial_degeneralize(f, [0, 1])
+except RuntimeError as e:
+    assert 'partial_degeneralize(): {0,1} does not' in str(e)
+else:
+    raise RuntimeError("missing exception")
 
 aut5 = spot.automaton(""" HOA: v1 States: 8 Start: 0 AP: 3 "p0" "p1" "p2"
 acc-name: generalized-Buchi 10 Acceptance: 10
@@ -158,3 +206,9 @@ pdaut8 = spot.partial_degeneralize(aut8, sets)
 assert pdaut8.equivalent_to(aut8)
 assert daut8.num_states() == 22
 assert pdaut8.num_states() == 9
+
+aut9 = spot.dualize(aut8)
+pdaut9 = spot.partial_degeneralize(aut9, sets)
+assert pdaut9.equivalent_to(aut9)
+# one more state than aut9, because dualize completed the automaton.
+assert pdaut9.num_states() == 10

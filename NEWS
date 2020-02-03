@@ -59,7 +59,8 @@ New in spot 2.8.5.dev (not yet released)
 
   - partial_degeneralize() is a new function performing partial
     degeneralization to get rid of conjunctions of Inf terms in
-    acceptance conditions.
+    acceptance conditions.  This also works with disjunctions of
+    Fin terms in deterministic automata.
 
   - simplify_acceptance_here() and simplify_acceptance() learned to
     simplify subformulas like Fin(i)&Fin(j) or Inf(i)|Inf(j), or some

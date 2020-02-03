@@ -99,7 +99,14 @@ namespace spot
   /// Fin(2).
   ///
   /// Cases where the sets listed in \a todegen also occur outside
-  /// of the Inf-conjunction are also supported.
+  /// of the Inf-conjunction are also supported.  Subformulas that
+  /// are disjunctions of Fin(.) terms (e.g., Fin(1)|Fin(2)) can
+  /// also be degeneralized if the input automaton is deterministic.
+  ///
+  /// If this functions is called with a value of \a todegen that does
+  /// not match a (complete) conjunction of Inf(.), or in a
+  /// deterministic automaton a (complete) disjunction of Fin(.), an
+  /// std::runtime_error exception is thrown.
   SPOT_API twa_graph_ptr
   partial_degeneralize(const const_twa_graph_ptr& a,
                        acc_cond::mark_t todegen);
