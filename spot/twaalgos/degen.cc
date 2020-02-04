@@ -767,10 +767,14 @@ namespace spot
               SPOT_FALLTHROUGH;
             case acc_cond::acc_op::Inf:
             case acc_cond::acc_op::InfNeg:
-              pos -= 2;
-              if (code[pos].mark != todegen)
-                tostrip -= code[pos].mark;
-              break;
+              {
+                pos -= 2;
+                acc_cond::mark_t m = code[pos].mark;
+                if (todegen.subset(m))
+                  m -= todegen;
+                tostrip -= m;
+                break;
+              }
             }
         }
       while (pos > 0);
@@ -812,17 +816,21 @@ namespace spot
               SPOT_FALLTHROUGH;
             case acc_cond::acc_op::Inf:
             case acc_cond::acc_op::InfNeg:
-              pos -= 2;
-              if (code[pos].mark == todegen)
-                {
-                  code[pos].mark = accmark;
-                  updated = true;
-                }
-              else
-                {
-                  code[pos].mark = code[pos].mark.strip(tostrip);
-                }
-              break;
+              {
+                pos -= 2;
+                acc_cond::mark_t m = code[pos].mark;
+                if (todegen.subset(m))
+                  {
+                    m -= todegen;
+                    code[pos].mark = m.strip(tostrip) | accmark;
+                    updated = true;
+                  }
+                else
+                  {
+                    code[pos].mark = m.strip(tostrip);
+                  }
+                break;
+              }
             }
         }
       while (pos > 0);

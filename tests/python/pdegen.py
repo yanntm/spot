@@ -212,3 +212,71 @@ pdaut9 = spot.partial_degeneralize(aut9, sets)
 assert pdaut9.equivalent_to(aut9)
 # one more state than aut9, because dualize completed the automaton.
 assert pdaut9.num_states() == 10
+
+aut10 = spot.automaton("""HOA: v1
+States: 3
+Start: 0
+AP: 1 "p0"
+Acceptance: 3 (Fin(0)|Fin(1))&Inf(2) | Inf(0)&Inf(1)
+--BODY--
+State: 0
+[0] 1 {0}
+State: 1
+[0] 2 {2}
+[!0] 2
+State: 2
+[0] 0 {1}
+[!0] 1
+--END--""")
+pdaut10 = spot.partial_degeneralize(aut10, [0, 1])
+assert pdaut10.equivalent_to(aut10)
+assert pdaut10.to_str() ==  """HOA: v1
+States: 3
+Start: 0
+AP: 1 "p0"
+Acceptance: 2 (Fin(1) & Inf(0)) | Inf(1)
+properties: trans-labels explicit-labels trans-acc deterministic
+--BODY--
+State: 0
+[0] 1 {1}
+State: 1
+[!0] 2
+[0] 2 {0}
+State: 2
+[0] 0 {1}
+[!0] 1
+--END--"""
+
+aut11 = spot.automaton("""HOA: v1
+States: 3
+Start: 0
+AP: 1 "p0"
+Acceptance: 4 (Fin(0)|Fin(1))&Inf(2) | Inf(0)&Inf(1)&Inf(3)
+--BODY--
+State: 0
+[0] 1 {0}
+State: 1
+[0] 2 {2}
+[!0] 2
+State: 2
+[0] 0 {1}
+[!0] 1
+--END--""")
+pdaut11 = spot.partial_degeneralize(aut11, [0, 1])
+assert pdaut11.equivalent_to(aut11)
+assert pdaut11.to_str() ==  """HOA: v1
+States: 3
+Start: 0
+AP: 1 "p0"
+Acceptance: 3 (Fin(2) & Inf(0)) | (Inf(1)&Inf(2))
+properties: trans-labels explicit-labels trans-acc deterministic
+--BODY--
+State: 0
+[0] 1 {2}
+State: 1
+[!0] 2
+[0] 2 {0}
+State: 2
+[0] 0 {2}
+[!0] 1
+--END--"""
