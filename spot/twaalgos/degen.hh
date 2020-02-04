@@ -104,12 +104,47 @@ namespace spot
   /// also be degeneralized if the input automaton is deterministic.
   ///
   /// If this functions is called with a value of \a todegen that does
-  /// not match a (complete) conjunction of Inf(.), or in a
-  /// deterministic automaton a (complete) disjunction of Fin(.), an
-  /// std::runtime_error exception is thrown.
+  /// not match a conjunction of Inf(.), or in a deterministic
+  /// automaton a disjunction of Fin(.), an std::runtime_error
+  /// exception is thrown.
+  ///
+  /// The version of the function that has no \a todegen argument will
+  /// perform all possible partial degeneralizations, and may return
+  /// the input automaton unmodified if no partial degeneralization is
+  /// possible.
+  ///
+  /// @{
   SPOT_API twa_graph_ptr
   partial_degeneralize(const const_twa_graph_ptr& a,
                        acc_cond::mark_t todegen);
+  SPOT_API twa_graph_ptr
+  partial_degeneralize(twa_graph_ptr a);
+  /// @}
+
+  /// \brief Is the automaton partially degeneralizable?
+  ///
+  /// Return a mark `M={m₁, m₂, ..., mₙ}` such that either (1)
+  /// `Inf(m₁)&Inf(m₂)&...&Inf(mₙ)` appears in the acceptance
+  /// condition of \a aut, or (2) \a aut is deterministic and
+  /// `Inf(m₁)|Inf(m₂)|...|Fin(mₙ)` appear in its conditions.
+  ///
+  /// If multiple such marks exist the smallest such mark is returned.
+  /// (This is important in case of overlapping options.  E.g., in the
+  /// formula `Inf(0)&Inf(1)&Inf(3) | (Inf(0)&Inf(1))&Fin(2)` we have
+  /// two possible degeneralizations options `{0,1,3}`, and `{0,1}`.
+  /// Degeneralizing for `{0,1,3}` and then `{0,1}` could enlarge the
+  /// automaton by a factor 6, while degeneralizing by `{0,1}` and
+  /// then some `{x,y}` may enlarge the automaton only by a factor 4.)
+  ///
+  /// Return an empty mark otherwise if the automaton is not partially
+  /// degeneralizable.
+  ///
+  /// The optional arguments \a allow_inf and \a allow_fin, can be set
+  /// to false to disallow one type of match.
+  SPOT_API acc_cond::mark_t
+  is_partially_degeneralizable(const const_twa_graph_ptr& aut,
+                               bool allow_inf = true,
+                               bool allow_fin = true);
 
   /// \ingroup twa_algorithms
   /// \brief Propagate marks around the automaton

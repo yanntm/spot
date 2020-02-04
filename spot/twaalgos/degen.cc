@@ -837,7 +837,6 @@ namespace spot
       return updated;
     }
 
-
     [[noreturn]] static void
     report_invalid_partial_degen_arg(acc_cond::mark_t todegen,
                                      acc_cond::acc_code& cond)
@@ -850,10 +849,67 @@ namespace spot
     }
   }
 
+  acc_cond::mark_t
+  is_partially_degeneralizable(const const_twa_graph_ptr& aut,
+                               bool allow_inf, bool allow_fin)
+  {
+    auto& code = aut->get_acceptance();
+
+    if (code.empty())
+      return {};
+
+    if (allow_fin)
+      allow_fin = is_deterministic(aut);
+
+    acc_cond::mark_t res = {};
+    unsigned res_sz = -1U;
+    auto update = [&](const acc_cond::mark_t& m)
+    {
+      unsigned sz = m.count();
+      if (sz > 1 && sz < res_sz)
+        {
+          res_sz = sz;
+          res = m;
+        }
+      // If we have found a pair to degeneralize, we
+      // won't find
+      return res_sz == 2;
+    };
+
+    unsigned pos = code.size();
+    do
+      {
+        switch (code[pos - 1].sub.op)
+          {
+          case acc_cond::acc_op::And:
+          case acc_cond::acc_op::Or:
+            --pos;
+            break;
+          case acc_cond::acc_op::Fin:
+          case acc_cond::acc_op::FinNeg:
+            pos -= 2;
+            if (allow_fin)
+              if (update(code[pos].mark))
+                return res;
+            break;
+          case acc_cond::acc_op::Inf:
+          case acc_cond::acc_op::InfNeg:
+            pos -= 2;
+            if (allow_inf)
+              if (update(code[pos].mark))
+                return res;
+            break;
+          }
+      }
+    while (pos > 0);
+    return res;
+  }
+
 
   twa_graph_ptr
   partial_degeneralize(const const_twa_graph_ptr& a,
                        acc_cond::mark_t todegen)
+
   {
     auto res = make_twa_graph(a->get_dict());
     res->copy_ap_of(a);
@@ -1021,6 +1077,14 @@ namespace spot
     res->merge_edges();
     keep_bottommost_copies(res, si_orig, orig_states);
     return res;
+  }
+
+  twa_graph_ptr
+  partial_degeneralize(twa_graph_ptr a)
+  {
+    while (acc_cond::mark_t m = is_partially_degeneralizable(a))
+      a = partial_degeneralize(a, m);
+    return a;
   }
 
 

@@ -73,10 +73,12 @@ State: 1
 --END--
 """)
 
+assert spot.is_partially_degeneralizable(a) == [0, 1]
 da = spot.partial_degeneralize(a, [0, 1])
 assert da.equivalent_to(a)
 assert da.num_states() == 2
 
+assert spot.is_partially_degeneralizable(b) == [0, 1]
 db = spot.partial_degeneralize(b, [0, 1])
 assert db.equivalent_to(b)
 assert db.num_states() == 3
@@ -100,10 +102,12 @@ State: 2 "1#0" {1}
 --END--"""
 
 c = spot.automaton("randaut -A'(Fin(0)&Inf(1)&Inf(2))|Fin(2)' 1 |")
+assert spot.is_partially_degeneralizable(c) == [1, 2]
 dc = spot.partial_degeneralize(c, [1, 2])
 assert dc.equivalent_to(c)
 assert str(dc.get_acceptance()) == '(Fin(0) & Inf(2)) | Fin(1)'
 
+assert spot.is_partially_degeneralizable(d) == []
 dd = spot.partial_degeneralize(d, [])
 assert dd.equivalent_to(d)
 assert dd.num_states() == 1
@@ -138,6 +142,8 @@ State: 3 "2#0"
 [!0] 2
 --END--"""
 
+assert spot.is_partially_degeneralizable(de) == []
+
 try:
     df = spot.partial_degeneralize(f, [0, 1])
 except RuntimeError as e:
@@ -157,6 +163,7 @@ State: 7 [0&!1&!2] 0 {4 7} --END--""")
 daut5 = spot.degeneralize_tba(aut5)
 assert daut5.equivalent_to(aut5)
 sets = list(range(aut5.num_sets()))
+assert spot.is_partially_degeneralizable(aut5) == sets
 pdaut5 = spot.partial_degeneralize(aut5, sets)
 assert pdaut5.equivalent_to(aut5)
 assert daut5.num_states() == 9
@@ -171,6 +178,7 @@ trans-labels explicit-labels trans-acc deterministic --BODY-- State: 0
 daut6 = spot.degeneralize_tba(aut6)
 assert daut6.equivalent_to(aut6)
 sets = list(range(aut6.num_sets()))
+assert spot.is_partially_degeneralizable(aut6) == sets
 pdaut6 = spot.partial_degeneralize(aut6, sets)
 assert pdaut6.equivalent_to(aut6)
 assert daut6.num_states() == 8
@@ -187,6 +195,7 @@ State: 0 [0&!1&2] 1 {2 3} State: 1 [0&!1&2] 0 {0 2} [0&!1&!2] 6 State: 2
 daut7 = spot.degeneralize_tba(aut7)
 assert daut7.equivalent_to(aut7)
 sets = list(range(aut7.num_sets()))
+assert spot.is_partially_degeneralizable(aut7) == sets
 pdaut7 = spot.partial_degeneralize(aut7, sets)
 assert pdaut7.equivalent_to(aut7)
 assert daut7.num_states() == 10
@@ -202,6 +211,7 @@ State: 0 [!0&1&!2] 7 {0} State: 1 [!0&1&2] 1 {4} [0&!1&2] 6 {1 2} State: 2
 daut8 = spot.degeneralize_tba(aut8)
 assert daut8.equivalent_to(aut8)
 sets = list(range(aut8.num_sets()))
+assert spot.is_partially_degeneralizable(aut8) == sets
 pdaut8 = spot.partial_degeneralize(aut8, sets)
 assert pdaut8.equivalent_to(aut8)
 assert daut8.num_states() == 22
@@ -228,6 +238,7 @@ State: 2
 [0] 0 {1}
 [!0] 1
 --END--""")
+assert spot.is_partially_degeneralizable(aut10) == [0, 1]
 pdaut10 = spot.partial_degeneralize(aut10, [0, 1])
 assert pdaut10.equivalent_to(aut10)
 assert pdaut10.to_str() ==  """HOA: v1
@@ -262,6 +273,7 @@ State: 2
 [0] 0 {1}
 [!0] 1
 --END--""")
+assert spot.is_partially_degeneralizable(aut11) == [0, 1]
 pdaut11 = spot.partial_degeneralize(aut11, [0, 1])
 assert pdaut11.equivalent_to(aut11)
 assert pdaut11.to_str() ==  """HOA: v1
@@ -280,3 +292,37 @@ State: 2
 [0] 0 {2}
 [!0] 1
 --END--"""
+
+aut12 = spot.automaton("""HOA: v1
+States: 3
+Start: 0
+AP: 1 "p0"
+Acceptance: 4 Inf(0)&Inf(1)&Inf(3) | (Inf(0)&Inf(1))&Fin(2)
+--BODY--
+State: 0
+[0] 1 {0}
+State: 1
+[0] 2 {2}
+[!0] 2
+State: 2
+[0] 2 {1}
+[0] 0
+[!0] 1 {3}
+--END--""")
+assert spot.is_partially_degeneralizable(aut12) == [0,1]
+aut12b = spot.partial_degeneralize(aut12, [0,1])
+aut12c = spot.partial_degeneralize(aut12b, [1,2])
+assert aut12c.equivalent_to(aut12)
+assert aut12c.num_states() == 9
+
+aut12d = spot.partial_degeneralize(aut12, [0,1,3])
+aut12e = spot.partial_degeneralize(aut12d, [0,1])
+assert aut12e.equivalent_to(aut12)
+assert aut12e.num_states() == 11
+
+aut12f = spot.partial_degeneralize(aut12)
+assert aut12f.equivalent_to(aut12)
+assert aut12f.num_states() == 9
+
+aut12g = spot.partial_degeneralize(aut12f)
+assert aut12f == aut12g
