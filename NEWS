@@ -79,6 +79,12 @@ New in spot 2.8.5.dev (not yet released)
     should be on each transition; propagate_marks_here() actually
     modifies the automaton.
 
+  - rabin_to_buchi_if_realizable() is a new variant of
+    rabin_to_buchi_maybe() that converts a Rabin-like automaton into a
+    Büchi automaton only if the resulting Büchi automaton can keep the
+    same transition structure (where the ..._maybe() variant would
+    modify the Rabin automaton if needed).
+
   Bugs fixed:
 
   - degeneralize_tba() was incorrectly not honnoring the "skip_level"

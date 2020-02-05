@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2016-2018  Laboratoire de Recherche et Développement
+# Copyright (C) 2016-2018, 2020  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -482,9 +482,30 @@ State: 1
 [0] 1 {0}
 --END--"""
 
-
 res = spot.remove_fin(aut)
 assert(res.to_str('hoa') == exp)
+
+# Different order for rabin_to_buchi_if_realizable() due to merge_edges() not
+# being called.  This is on purpose: the edge order should match exactly the
+# original automaton.
+exp2 = """HOA: v1
+States: 2
+Start: 0
+AP: 2 "p0" "p2"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic
+--BODY--
+State: 0
+[0] 1
+[!0] 0 {0}
+State: 1
+[0] 1 {0}
+[!0] 0 {0}
+--END--"""
+res = spot.rabin_to_buchi_if_realizable(aut)
+assert(res.to_str('hoa') == exp2)
 
 # Test 12.
 aut = spot.automaton("""
@@ -574,6 +595,32 @@ State: 1
 res = spot.remove_fin(aut)
 assert(res.to_str('hoa') == exp)
 
+# rabin_to_buchi_if_realizable() does not call merge_edges() on purpose: the
+# edge order should match exactly the original automaton.
+exp2 = """HOA: v1
+States: 2
+Start: 0
+AP: 2 "p3" "p2"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic
+--BODY--
+State: 0
+[0&1] 1
+[0&!1] 0 {0}
+[!0&1] 1
+[!0&!1] 0 {0}
+State: 1
+[0&1] 1 {0}
+[0&!1] 0 {0}
+[!0&1] 1 {0}
+[!0&!1] 0 {0}
+--END--"""
+
+res = spot.rabin_to_buchi_if_realizable(aut)
+assert(res.to_str('hoa') == exp2)
+
 # Test 14.
 aut = spot.automaton("""
 HOA: v1
@@ -608,3 +655,4 @@ State: 1
 
 res = spot.remove_fin(aut)
 assert(res.to_str('hoa') == exp)
+assert spot.rabin_to_buchi_if_realizable(aut) is None

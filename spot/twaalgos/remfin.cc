@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -789,6 +789,37 @@ namespace spot
         return false;
 
     return true;
+  }
+
+  twa_graph_ptr
+  rabin_to_buchi_if_realizable(const const_twa_graph_ptr& aut)
+  {
+    std::vector<acc_cond::rs_pair> pairs;
+    if (!aut->acc().is_rabin_like(pairs))
+      return nullptr;
+
+    auto aut_pairs = rs_pairs_view(pairs);
+    auto code = aut->get_acceptance();
+    if (code.is_t())
+      return nullptr;
+
+    scc_info si(aut, scc_info_options::TRACK_STATES);
+    std::vector<bool> final(aut->edge_vector().size(), false);
+    std::vector<bool> keep(aut->edge_vector().size(), true);
+
+    for (unsigned scc = 0; scc < si.scc_count(); ++scc)
+      if (!is_scc_tba_type(aut, si, scc, keep, aut_pairs, final))
+        return nullptr;
+
+    auto res = make_twa_graph(aut, twa::prop_set::all());
+    auto m = res->set_buchi();
+
+    auto& ev = res->edge_vector();
+    unsigned edgecount = ev.size();
+    for (unsigned eidx = 1; eidx < edgecount; ++eidx)
+      ev[eidx].acc = final[eidx] ? m : acc_cond::mark_t{};
+
+    return res;
   }
 
   twa_graph_ptr
