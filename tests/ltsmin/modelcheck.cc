@@ -77,6 +77,7 @@ struct mc_options_
   bool bloemen = false;
   bool bloemen_ec = false;
   bool cndfs = false;
+  bool bitstate_hashing = false;
 } mc_options;
 
 
@@ -125,6 +126,8 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       mc_options.has_deadlock = true;
       mc_options.selfloopize = false;
       break;
+    case 'H':
+      mc_options.bitstate_hashing = true;
     case 'k':
       mc_options.kripke_output = true;
       break;
@@ -196,6 +199,10 @@ static const argp_option options[] =
       "2 : (faster) assume all values in [0 .. 2^28-1]", 0 },
     // ------------------------------------------------------------
     { nullptr, 0, nullptr, 0, "General options:", 5 },
+    // ------------------------------------------------------------
+    { nullptr, 0, nullptr, 0, "Bitstate hashing", 6 },
+    { "bitstate_hashing", 'H', nullptr, 0, "bitstate hashing", 0 },
+
     { nullptr, 0, nullptr, 0, nullptr, 0 }
   };
 
@@ -306,6 +313,41 @@ static int checked_main()
           tm.stop("kripke output");
         }
     }
+
+  if (mc_options.bitstate_hashing)
+  {
+      tm.start("load kripkecube");
+      spot::ltsmin_kripkecube_ptr modelcube = nullptr;
+      try
+        {
+           modelcube = spot::ltsmin_model::load(mc_options.model)
+             .kripkecube({}, spot::formula::ff(), mc_options.compress,
+                         mc_options.nb_threads);
+        }
+      catch (const std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
+      tm.stop("load kripkecube");
+
+      int memused = spot::memusage();
+      tm.start("deadlock check");
+      spot::bitstate_hashing<spot::ltsmin_kripkecube_ptr,
+                                    spot::cspins_state,
+                                    spot::cspins_iterator,
+                                    spot::cspins_state_hash,
+                                    spot::cspins_state_equal>(modelcube);
+      tm.stop("deadlock check");
+      memused = spot::memusage() - memused;
+
+      if (!modelcube)
+        {
+          exit_code = 2;
+          goto safe_exit;
+        }
+
+      return 0;
+  }
 
   if (mc_options.nb_threads == 1 &&
       mc_options.formula != nullptr &&

@@ -26,6 +26,7 @@
 #include <vector>
 #include <utility>
 #include <spot/kripke/kripke.hh>
+#include <spot/mc/bitstate.hh>
 #include <spot/mc/ec.hh>
 #include <spot/mc/deadlock.hh>
 #include <spot/mc/cndfs.hh>
@@ -412,5 +413,18 @@ namespace spot
       delete swarmed[i];
 
     return std::make_tuple(is_empty, trace, stats, tm);
+  }
+
+  template<typename kripke_ptr, typename State,
+           typename Iterator, typename Hash, typename Equal>
+    void bitstate_hashing(kripke_ptr sys)
+  {
+    using algo_name = spot::bitstate<State, Iterator, Hash, Equal>;
+    auto s = new algo_name(*sys, 0);
+
+    std::cout << "\nBitstate hashing:\n";
+    std::cout << "DFS: " << s->dfs() << '\n';
+    std::cout << "DFS (bitstate hashing): " << s->dfs_bitstate_hashing() << '\n';
+    delete s;
   }
 }
