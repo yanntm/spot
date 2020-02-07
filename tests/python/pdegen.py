@@ -324,5 +324,45 @@ aut12f = spot.partial_degeneralize(aut12)
 assert aut12f.equivalent_to(aut12)
 assert aut12f.num_states() == 9
 
+# Check handling of original-states
+dot = aut12f.to_str('dot', 'd')
+assert dot == """digraph "" {
+  rankdir=LR
+  label="Inf(2) | (Inf(1) & Fin(0))\\n[Rabin-like 2]"
+  labelloc="t"
+  I [label="", style=invis, width=0]
+  I -> 0
+  0 [label="0 (0)"]
+  0 -> 1 [label="p0"]
+  1 [label="1 (1)"]
+  1 -> 2 [label="!p0"]
+  1 -> 2 [label="p0\\n{0}"]
+  2 [label="2 (2)"]
+  2 -> 0 [label="p0"]
+  2 -> 3 [label="!p0"]
+  2 -> 4 [label="p0\\n{1}"]
+  3 [label="3 (1)"]
+  3 -> 8 [label="!p0"]
+  3 -> 8 [label="p0\\n{0}"]
+  4 [label="4 (2)"]
+  4 -> 0 [label="p0"]
+  4 -> 4 [label="p0"]
+  4 -> 5 [label="!p0"]
+  5 [label="5 (1)"]
+  5 -> 6 [label="!p0"]
+  5 -> 6 [label="p0\\n{0}"]
+  6 [label="6 (2)"]
+  6 -> 5 [label="!p0"]
+  6 -> 6 [label="p0"]
+  6 -> 7 [label="p0"]
+  7 [label="7 (0)"]
+  7 -> 3 [label="p0"]
+  8 [label="8 (2)"]
+  8 -> 3 [label="!p0"]
+  8 -> 4 [label="p0\\n{1,2}"]
+  8 -> 7 [label="p0"]
+}
+"""
+
 aut12g = spot.partial_degeneralize(aut12f)
 assert aut12f == aut12g

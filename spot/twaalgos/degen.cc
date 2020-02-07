@@ -1082,8 +1082,28 @@ namespace spot
   twa_graph_ptr
   partial_degeneralize(twa_graph_ptr a)
   {
+    bool composeorig = false;
     while (acc_cond::mark_t m = is_partially_degeneralizable(a))
-      a = partial_degeneralize(a, m);
+      {
+        twa_graph_ptr b = partial_degeneralize(a, m);
+        // After the first partial degeneralization, we need to compose
+        // the original-states, so that original-states still appear
+        // to reference the original automaton.
+        if (composeorig)
+          {
+            auto origa =
+              a->get_named_prop<std::vector<unsigned>>("original-states");
+            auto origb =
+              b->get_named_prop<std::vector<unsigned>>("original-states");
+            for (auto& s: *origb)
+              s = (*origa)[s];
+          }
+        else
+          {
+            composeorig = true;
+          }
+        a = b;
+      }
     return a;
   }
 
