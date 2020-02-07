@@ -27,11 +27,12 @@
 #include <utility>
 #include <spot/kripke/kripke.hh>
 #include <spot/mc/bitstate.hh>
-#include <spot/mc/ec.hh>
-#include <spot/mc/deadlock.hh>
-#include <spot/mc/cndfs.hh>
 #include <spot/mc/bloemen.hh>
 #include <spot/mc/bloemen_ec.hh>
+#include <spot/mc/bloom_filter.hh>
+#include <spot/mc/cndfs.hh>
+#include <spot/mc/deadlock.hh>
+#include <spot/mc/ec.hh>
 #include <spot/misc/common.hh>
 #include <spot/misc/timer.hh>
 
@@ -417,10 +418,10 @@ namespace spot
 
   template<typename kripke_ptr, typename State,
            typename Iterator, typename Hash, typename Equal>
-    void bitstate_hashing(kripke_ptr sys)
+    void bitstate_hashing(kripke_ptr sys, uint32_t mem_size)
   {
     using algo_name = spot::bitstate<State, Iterator, Hash, Equal>;
-    auto s = new algo_name(*sys, 0);
+    auto s = new algo_name(*sys, mem_size);
 
     std::cout << "\nBitstate hashing:\n";
     std::cout << "DFS: " << s->dfs() << '\n';

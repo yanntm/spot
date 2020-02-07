@@ -77,7 +77,7 @@ struct mc_options_
   bool bloemen = false;
   bool bloemen_ec = false;
   bool cndfs = false;
-  bool bitstate_hashing = false;
+  unsigned bitstate_mem_size = 0;
 } mc_options;
 
 
@@ -127,7 +127,8 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       mc_options.selfloopize = false;
       break;
     case 'H':
-      mc_options.bitstate_hashing = true;
+      mc_options.bitstate_mem_size = to_unsigned(arg, "-H/--bitstate-hashing");
+      break;
     case 'k':
       mc_options.kripke_output = true;
       break;
@@ -201,7 +202,7 @@ static const argp_option options[] =
     { nullptr, 0, nullptr, 0, "General options:", 5 },
     // ------------------------------------------------------------
     { nullptr, 0, nullptr, 0, "Bitstate hashing", 6 },
-    { "bitstate_hashing", 'H', nullptr, 0, "bitstate hashing", 0 },
+    { "bitstate_hashing", 'H', "INT", 0, "bitstate hashing memory size", 0 },
 
     { nullptr, 0, nullptr, 0, nullptr, 0 }
   };
@@ -314,7 +315,7 @@ static int checked_main()
         }
     }
 
-  if (mc_options.bitstate_hashing)
+  if (mc_options.bitstate_mem_size != 0)
   {
       tm.start("load kripkecube");
       spot::ltsmin_kripkecube_ptr modelcube = nullptr;
@@ -336,7 +337,8 @@ static int checked_main()
                                     spot::cspins_state,
                                     spot::cspins_iterator,
                                     spot::cspins_state_hash,
-                                    spot::cspins_state_equal>(modelcube);
+                                    spot::cspins_state_equal>
+                                        (modelcube, mc_options.bitstate_mem_size);
       tm.stop("deadlock check");
       memused = spot::memusage() - memused;
 

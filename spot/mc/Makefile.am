@@ -21,7 +21,7 @@ AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS)
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 mcdir = $(pkgincludedir)/mc
-mc_HEADERS = bitstate.hh reachability.hh intersect.hh ec.hh unionfind.hh utils.hh\
+mc_HEADERS = bitstate.hh bloom_filter.hh reachability.hh intersect.hh ec.hh unionfind.hh utils.hh\
 	mc.hh deadlock.hh bloemen.hh cndfs.hh
 
 noinst_LTLIBRARIES = libmc.la
