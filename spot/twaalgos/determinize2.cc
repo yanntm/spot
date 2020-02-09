@@ -97,8 +97,6 @@ namespace spot
       // Compute successor for transition ap
       safra_state
       compute_succ(const compute_succs& cs, const bdd& ap, unsigned& color) const;
-      void
-      merge_redundant_states(const std::vector<std::vector<char>>& implies);
       unsigned
       finalize_construction(const std::vector<int>& buildbraces,
                             const compute_succs& cs);
@@ -254,7 +252,6 @@ namespace spot
       const power_set& seen;
       const scc_info& scc;
       const std::vector<std::vector<char>>& implies;
-      bool use_simulation;
       bool use_stutter;
 
       // work vectors for safra_state::finalize_construction()
@@ -268,7 +265,6 @@ namespace spot
                     const power_set& seen,
                     const scc_info& scc,
                     const std::vector<std::vector<char>>& implies,
-                    bool use_simulation,
                     bool use_stutter)
       : src(nullptr)
       , all_bdds(nullptr)
@@ -276,7 +272,6 @@ namespace spot
       , seen(seen)
       , scc(scc)
       , implies(implies)
-      , use_simulation(use_simulation)
       , use_stutter(use_stutter)
       {}
 
@@ -600,31 +595,6 @@ namespace spot
     return safra_state(ss, cs, color);
   }
 
-  // When a node a implies a node b, remove the node a.
-  void
-  safra_state::merge_redundant_states(
-      const std::vector<std::vector<char>>& implies)
-  {
-    auto it1 = nodes_.begin();
-    while (it1 != nodes_.end())
-      {
-        const auto& imp1 = implies[it1->first];
-        auto old_it1 = it1++;
-        if (imp1.empty())
-          continue;
-        for (auto it2 = nodes_.begin(); it2 != nodes_.end(); ++it2)
-          {
-            if (old_it1 == it2)
-              continue;
-            if (imp1[it2->first])
-              {
-                it1 = nodes_.erase(old_it1);
-                break;
-              }
-          }
-      }
-  }
-
   // Return the emitted color, red or green
   unsigned
   safra_state::finalize_construction(const std::vector<int>& buildbraces,
@@ -733,8 +703,6 @@ namespace spot
                            unsigned& color)
   : nodes_(s.nodes_.begin(), s.nodes_.end())
   {
-    if (cs.use_simulation)
-      merge_redundant_states(cs.implies);
     color = finalize_construction(s.braces_, cs);
   }
 
@@ -802,7 +770,7 @@ namespace spot
   twa_graph_ptr
   tgba_determinize2(const const_twa_graph_ptr& a,
                     bool pretty_print,
-                    bool use_simulation, bool use_stutter,
+                    bool use_stutter,
                     const output_aborter* aborter)
   {
     if (!a->is_existential())
@@ -818,14 +786,6 @@ namespace spot
       twa_graph_ptr aut_tmp = spot::degeneralize_tba(a);
       if (pretty_print)
         aut_tmp->copy_state_names_from(a);
-      if (use_simulation)
-        {
-          aut_tmp = spot::scc_filter(aut_tmp);
-          auto aut2 = simulation(aut_tmp, &implications);
-          if (pretty_print)
-            aut2->copy_state_names_from(aut_tmp);
-          aut_tmp = aut2;
-        }
       aut = aut_tmp;
     }
     scc_info_options scc_opt = scc_info_options::TRACK_SUCCS;
@@ -874,7 +834,6 @@ namespace spot
       if (!something_implies_something)
         {
           implies.clear();
-          use_simulation = false;
         }
     }
 
@@ -945,8 +904,7 @@ namespace spot
     }
     unsigned sets = 0;
 
-    compute_succs succs(aut, seen, scc, implies, use_simulation,
-                        use_stutter);
+    compute_succs succs(aut, seen, scc, implies, use_stutter);
     // The main loop
     while (!todo.empty())
       {
