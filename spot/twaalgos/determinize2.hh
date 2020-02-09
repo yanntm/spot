@@ -80,7 +80,6 @@ namespace spot
   SPOT_API twa_graph_ptr
   tgba_determinize2(const const_twa_graph_ptr& aut,
                     bool pretty_print = false,
-                    bool use_scc = true,
                     bool use_simulation = true,
                     bool use_stutter = true,
                     const output_aborter* aborter = nullptr);
