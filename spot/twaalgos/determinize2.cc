@@ -254,7 +254,6 @@ namespace spot
       const power_set& seen;
       const scc_info& scc;
       const std::vector<std::vector<char>>& implies;
-      bool use_scc;
       bool use_simulation;
       bool use_stutter;
 
@@ -269,7 +268,6 @@ namespace spot
                     const power_set& seen,
                     const scc_info& scc,
                     const std::vector<std::vector<char>>& implies,
-                    bool use_scc,
                     bool use_simulation,
                     bool use_stutter)
       : src(nullptr)
@@ -278,7 +276,6 @@ namespace spot
       , seen(seen)
       , scc(scc)
       , implies(implies)
-      , use_scc(use_scc)
       , use_simulation(use_simulation)
       , use_stutter(use_stutter)
       {}
@@ -596,17 +593,8 @@ namespace spot
           {
             if (!bdd_implies(ap, t.cond))
               continue;
-            // Check if we are leaving the SCC, if so we delete all the
-            // braces as no cycles can be found with that node
-            if (cs.use_scc && cs.scc.scc_of(node.first) != cs.scc.scc_of(t.dst))
-              if (cs.scc.is_accepting_scc(cs.scc.scc_of(t.dst)))
-                // Entering accepting SCC so add brace
-                ss.update_succ_toplevel<true>(t.dst);
-              else
-                // When entering non accepting SCC don't create any braces
-                ss.update_succ_toplevel<false>(t.dst);
-            else
-              ss.update_succ(node.second, t.dst, t.acc);
+
+            ss.update_succ(node.second, t.dst, t.acc);
           }
       }
     return safra_state(ss, cs, color);
@@ -813,7 +801,7 @@ namespace spot
 
   twa_graph_ptr
   tgba_determinize2(const const_twa_graph_ptr& a,
-                    bool pretty_print, bool use_scc,
+                    bool pretty_print,
                     bool use_simulation, bool use_stutter,
                     const output_aborter* aborter)
   {
@@ -950,15 +938,14 @@ namespace spot
 
     {
       unsigned init_state = aut->get_init_state_number();
-      bool start_accepting =
-        !use_scc || scc.is_accepting_scc(scc.scc_of(init_state));
+      bool start_accepting = true; // always true without use_scc opti
       safra_state init(init_state, start_accepting);
       unsigned num = get_state(init); // inserts both in seen and in todo
       res->set_init_state(num);
     }
     unsigned sets = 0;
 
-    compute_succs succs(aut, seen, scc, implies, use_scc, use_simulation,
+    compute_succs succs(aut, seen, scc, implies, use_simulation,
                         use_stutter);
     // The main loop
     while (!todo.empty())
