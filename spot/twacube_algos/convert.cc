@@ -146,7 +146,7 @@ namespace spot
     auto res = make_twa_graph(d);
 
     // Fix the acceptance of the resulting automaton
-    res->acc() = twacube->acc();
+    res->set_acceptance(twacube->num_sets(), twacube->acc().get_acceptance());
 
     // Grep bdd id for each atomic propositions
     std::vector<int> bdds_ref;

@@ -132,6 +132,23 @@ namespace spot
     /// \brief Returns the acceptance condition associated to the automaton.
     acc_cond& acc();
 
+    /// \brief Set number of acceptance sets used by the automaton
+    void set_num_sets(unsigned num)
+    {
+      if (num < acc_.num_sets())
+        {
+          acc_.~acc_cond();
+          new (&acc_) acc_cond;
+        }
+      acc_.add_sets(num - acc_.num_sets());
+    }
+
+    /// \brief Number of acceptance sets used by the automaton.
+    unsigned num_sets() const
+    {
+      return acc_.num_sets();
+    }
+
     /// \brief Returns the names of the atomic properties.
     std::vector<std::string> ap() const;
 

@@ -22,6 +22,7 @@
 #include <iostream>
 #include <spot/twacube/cube.hh>
 #include <assert.h>
+#include <cstring>
 
 namespace spot
 {
@@ -157,6 +158,43 @@ namespace spot
       res.pop_back();
     if (res.front() == '&')
       res =  res.substr(1);
+    return res;
+  }
+
+  cube cubeset::copy(const cube c) const
+  {
+    cube res = alloc();
+    std::memcpy(res, c, sizeof(unsigned int) * uint_size_ * 2);
+    return res;
+  }
+
+  void
+  cubeset::permutations_rec(size_t n,
+                            const std::vector<size_t>& aps,
+                            cube curr,
+                            std::vector<cube>& res) const
+  {
+    if (n < aps.size())
+      {
+        set_false_var(curr, aps[n]);
+        permutations_rec(n + 1, aps, curr, res);
+        set_true_var(curr, aps[n]);
+        permutations_rec(n + 1, aps, curr, res);
+      }
+    else
+      {
+        assert(is_valid(curr));
+        res.push_back(copy(curr));
+      }
+  }
+
+  std::vector<cube>
+  cubeset::permutations(const std::vector<size_t>& support) const
+  {
+    std::vector<cube> res;
+
+    permutations_rec(0, support, alloc(), res);
+
     return res;
   }
 }
