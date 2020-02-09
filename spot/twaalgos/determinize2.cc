@@ -43,76 +43,73 @@ namespace spot
     // forward declaration
     struct safra_build;
     class compute_succs;
-  }
 
-  class safra_state final
-  {
-  public:
-    // a helper method to check invariants
-    void
-    check() const
+    class safra_state final
     {
-      // do not refer to braces that do not exist
-      for (const auto& p : nodes_)
-        if (p.second >= 0)
-          if (((unsigned)p.second) >= braces_.size())
-            assert(false);
+    public:
+      // a helper method to check invariants
+      void
+      check() const
+      {
+        // do not refer to braces that do not exist
+        for (const auto& p : nodes_)
+          if (p.second >= 0)
+            if (((unsigned)p.second) >= braces_.size())
+              assert(false);
 
-      // braces_ describes the parenthood relation, -1 meaning toplevel
-      // so braces_[b] < b always, and -1 is the only negative number allowed
-      for (int b : braces_)
-        {
-          if (b < 0 && b != -1)
-            assert(false);
-          if (b >= 0 && braces_[b] > b)
-            assert(false);
-        }
+        // braces_ describes the parenthood relation, -1 meaning toplevel
+        // so braces_[b] < b always, and -1 is the only negative number allowed
+        for (int b : braces_)
+          {
+            if (b < 0 && b != -1)
+              assert(false);
+            if (b >= 0 && braces_[b] > b)
+              assert(false);
+          }
 
-      // no unused braces
-      std::set<int> used_braces;
-      for (const auto& n : nodes_)
-        {
-          int b = n.second;
-          while (b >= 0)
-            {
-              used_braces.insert(b);
-              b = braces_[b];
-            }
-        }
-      assert(used_braces.size() == braces_.size());
-    }
+        // no unused braces
+        std::set<int> used_braces;
+        for (const auto& n : nodes_)
+          {
+            int b = n.second;
+            while (b >= 0)
+              {
+                used_braces.insert(b);
+                b = braces_[b];
+              }
+          }
+        assert(used_braces.size() == braces_.size());
+      }
 
-  public:
-    using state_t = unsigned;
-    using safra_node_t = std::pair<state_t, std::vector<int>>;
+    public:
+      using state_t = unsigned;
+      using safra_node_t = std::pair<state_t, std::vector<int>>;
 
-    bool operator<(const safra_state&) const;
-    bool operator==(const safra_state&) const;
-    size_t hash() const;
+      bool operator<(const safra_state&) const;
+      bool operator==(const safra_state&) const;
+      size_t hash() const;
 
-    // Print the number of states in each brace
-    // default constructor
-    safra_state();
-    safra_state(state_t state_number, bool acceptance_scc = false);
-    safra_state(const safra_build& s, const compute_succs& cs, unsigned& color);
-    // Compute successor for transition ap
-    safra_state
-    compute_succ(const compute_succs& cs, const bdd& ap, unsigned& color) const;
-    void
-    merge_redundant_states(const std::vector<std::vector<char>>& implies);
-    unsigned
-    finalize_construction(const std::vector<int>& buildbraces,
-                          const compute_succs& cs);
+      // Print the number of states in each brace
+      // default constructor
+      safra_state();
+      safra_state(state_t state_number, bool acceptance_scc = false);
+      safra_state(const safra_build& s, const compute_succs& cs, unsigned& color);
+      // Compute successor for transition ap
+      safra_state
+      compute_succ(const compute_succs& cs, const bdd& ap, unsigned& color) const;
+      void
+      merge_redundant_states(const std::vector<std::vector<char>>& implies);
+      unsigned
+      finalize_construction(const std::vector<int>& buildbraces,
+                            const compute_succs& cs);
 
-    // each brace points to its parent.
-    // braces_[i] is the parent of i
-    // Note that braces_[i] < i, -1 stands for "no parent" (top-level)
-    std::vector<int> braces_;
-    std::vector<std::pair<state_t, int>> nodes_;
-  };
+      // each brace points to its parent.
+      // braces_[i] is the parent of i
+      // Note that braces_[i] < i, -1 stands for "no parent" (top-level)
+      std::vector<int> braces_;
+      std::vector<std::pair<state_t, int>> nodes_;
+    };
 
-  namespace
-  {
     struct hash_safra
     {
       size_t
@@ -582,9 +579,9 @@ namespace spot
         return i.first->second;
       }
     };
-  }
 
-  std::vector<char> find_scc_paths(const scc_info& scc);
+    std::vector<char> find_scc_paths(const scc_info& scc);
+  }
 
   safra_state
   safra_state::compute_succ(const compute_succs& cs,
@@ -787,28 +784,31 @@ namespace spot
     return nodes_ == other.nodes_ && braces_ == other.braces_;
   }
 
-  // res[i + scccount*j] = 1 iff SCC i is reachable from SCC j
-  std::vector<char>
-  find_scc_paths(const scc_info& scc)
+  namespace
   {
-    unsigned scccount = scc.scc_count();
-    std::vector<char> res(scccount * scccount, 0);
-    for (unsigned i = 0; i != scccount; ++i)
-      res[i + scccount * i] = 1;
-    for (unsigned i = 0; i != scccount; ++i)
-      {
-        unsigned ibase = i * scccount;
-        for (unsigned d: scc.succ(i))
-          {
-            // we necessarily have d < i because of the way SCCs are
-            // numbered, so we can build the transitive closure by
-            // just ORing any SCC reachable from d.
-            unsigned dbase = d * scccount;
-            for (unsigned j = 0; j != scccount; ++j)
-              res[ibase + j] |= res[dbase + j];
-          }
-      }
-    return res;
+    // res[i + scccount*j] = 1 iff SCC i is reachable from SCC j
+    std::vector<char>
+    find_scc_paths(const scc_info& scc)
+    {
+      unsigned scccount = scc.scc_count();
+      std::vector<char> res(scccount * scccount, 0);
+      for (unsigned i = 0; i != scccount; ++i)
+        res[i + scccount * i] = 1;
+      for (unsigned i = 0; i != scccount; ++i)
+        {
+          unsigned ibase = i * scccount;
+          for (unsigned d: scc.succ(i))
+            {
+              // we necessarily have d < i because of the way SCCs are
+              // numbered, so we can build the transitive closure by
+              // just ORing any SCC reachable from d.
+              unsigned dbase = d * scccount;
+              for (unsigned j = 0; j != scccount; ++j)
+                res[ibase + j] |= res[dbase + j];
+            }
+        }
+      return res;
+    }
   }
 
   twa_graph_ptr
