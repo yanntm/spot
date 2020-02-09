@@ -250,7 +250,6 @@ namespace spot
       const const_twa_graph_ptr& aut;
       const power_set& seen;
       const scc_info& scc;
-      const std::vector<std::vector<char>>& implies;
 
       // work vectors for safra_state::finalize_construction()
       mutable std::vector<char> empty_green;
@@ -261,14 +260,12 @@ namespace spot
     public:
       compute_succs(const const_twa_graph_ptr& aut,
                     const power_set& seen,
-                    const scc_info& scc,
-                    const std::vector<std::vector<char>>& implies)
+                    const scc_info& scc)
       : src(nullptr)
       , all_bdds(nullptr)
       , aut(aut)
       , seen(seen)
       , scc(scc)
-      , implies(implies)
       {}
 
       void
@@ -505,8 +502,6 @@ namespace spot
         return i.first->second;
       }
     };
-
-    std::vector<char> find_scc_paths(const scc_info& scc);
   }
 
   safra_state
@@ -667,33 +662,6 @@ namespace spot
     return nodes_ == other.nodes_ && braces_ == other.braces_;
   }
 
-  namespace
-  {
-    // res[i + scccount*j] = 1 iff SCC i is reachable from SCC j
-    std::vector<char>
-    find_scc_paths(const scc_info& scc)
-    {
-      unsigned scccount = scc.scc_count();
-      std::vector<char> res(scccount * scccount, 0);
-      for (unsigned i = 0; i != scccount; ++i)
-        res[i + scccount * i] = 1;
-      for (unsigned i = 0; i != scccount; ++i)
-        {
-          unsigned ibase = i * scccount;
-          for (unsigned d: scc.succ(i))
-            {
-              // we necessarily have d < i because of the way SCCs are
-              // numbered, so we can build the transitive closure by
-              // just ORing any SCC reachable from d.
-              unsigned dbase = d * scccount;
-              for (unsigned j = 0; j != scccount; ++j)
-                res[ibase + j] |= res[dbase + j];
-            }
-        }
-      return res;
-    }
-  }
-
   twa_graph_ptr
   tgba_determinize2(const const_twa_graph_ptr& a,
                     bool pretty_print,
@@ -716,48 +684,6 @@ namespace spot
     }
     scc_info_options scc_opt = scc_info_options::TRACK_SUCCS;
     scc_info scc = scc_info(aut, scc_opt);
-
-    // If use_simulation is false, implications is empty, so nothing is built
-    std::vector<std::vector<char>> implies(
-        implications.size(),
-        std::vector<char>(implications.size(), 0));
-    {
-      std::vector<char> is_connected = find_scc_paths(scc);
-      unsigned sccs = scc.scc_count();
-      bool something_implies_something = false;
-      for (unsigned i = 0; i != implications.size(); ++i)
-        {
-          // NB spot::simulation() does not remove unreachable states, as it
-          // would invalidate the contents of 'implications'.
-          // so we need to explicitly test for unreachable states
-          // FIXME based on the scc_info, we could remove the unreachable
-          // states, both in the input automaton and in 'implications'
-          // to reduce the size of 'implies'.
-          if (!scc.reachable_state(i))
-            continue;
-          unsigned scc_of_i = scc.scc_of(i);
-          bool i_implies_something = false;
-          for (unsigned j = 0; j != implications.size(); ++j)
-            {
-              if (!scc.reachable_state(j))
-                continue;
-
-              bool i_implies_j = !is_connected[sccs * scc.scc_of(j) + scc_of_i]
-                && bdd_implies(implications[i], implications[j]);
-              implies[i][j] = i_implies_j;
-              i_implies_something |= i_implies_j;
-            }
-          // Clear useless lines.
-          if (!i_implies_something)
-            implies[i].clear();
-          else
-            something_implies_something = true;
-        }
-      if (!something_implies_something)
-        {
-          implies.clear();
-        }
-    }
 
 
     // Compute the support of each state
@@ -811,7 +737,7 @@ namespace spot
     }
     unsigned sets = 0;
 
-    compute_succs succs(aut, seen, scc, implies);
+    compute_succs succs(aut, seen, scc);
     // The main loop
     while (!todo.empty())
       {
