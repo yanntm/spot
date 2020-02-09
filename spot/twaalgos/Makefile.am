@@ -44,6 +44,7 @@ twaalgos_HEADERS = \
   cycles.hh \
   degen.hh \
   determinize.hh \
+  determinize2.hh \
   dot.hh \
   dtbasat.hh \
   dtwasat.hh \
@@ -113,6 +114,7 @@ libtwaalgos_la_SOURCES = \
   cycles.cc \
   degen.cc \
   determinize.cc \
+  determinize2.cc \
   dot.cc \
   dtbasat.cc \
   dtwasat.cc \
