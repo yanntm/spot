@@ -85,7 +85,6 @@ namespace spot
       using state_t = unsigned;
       using safra_node_t = std::pair<state_t, std::vector<int>>;
 
-      bool operator<(const safra_state&) const;
       bool operator==(const safra_state&) const;
       size_t hash() const;
 
@@ -252,7 +251,6 @@ namespace spot
       const power_set& seen;
       const scc_info& scc;
       const std::vector<std::vector<char>>& implies;
-      bool use_stutter;
 
       // work vectors for safra_state::finalize_construction()
       mutable std::vector<char> empty_green;
@@ -264,15 +262,13 @@ namespace spot
       compute_succs(const const_twa_graph_ptr& aut,
                     const power_set& seen,
                     const scc_info& scc,
-                    const std::vector<std::vector<char>>& implies,
-                    bool use_stutter)
+                    const std::vector<std::vector<char>>& implies)
       : src(nullptr)
       , all_bdds(nullptr)
       , aut(aut)
       , seen(seen)
       , scc(scc)
       , implies(implies)
-      , use_stutter(use_stutter)
       {}
 
       void
@@ -339,69 +335,7 @@ namespace spot
 
           const bdd& ap = *bddit;
 
-          // In stutter-invariant automata, every time we follow a
-          // transition labeled by L, we can actually stutter the L
-          // label and jump further away.  The following code performs
-          // this stuttering until a cycle is found, and select one
-          // state of the cycle as the destination to jump to.
-          if (cs_.use_stutter && cs_.aut->prop_stutter_invariant())
-            {
-              ss = *cs_.src;
-              // The path is usually quite small (3-4 states), so it's
-              // not worth setting up a hash table to detect a cycle.
-              stutter_path_.clear();
-              std::vector<safra_state>::iterator cycle_seed;
-              unsigned mincolor = -1U;
-              // stutter forward until we cycle
-              for (;;)
-                {
-                  // any duplicate value, if any, is usually close to
-                  // the end, so search backward.
-                  auto it = std::find(stutter_path_.rbegin(),
-                                      stutter_path_.rend(), ss);
-                  if (it != stutter_path_.rend())
-                    {
-                      cycle_seed = (it + 1).base();
-                      break;
-                    }
-                  stutter_path_.emplace_back(std::move(ss));
-                  ss = stutter_path_.back().compute_succ(cs_, ap, color_);
-                  mincolor = std::min(color_, mincolor);
-                }
-              bool in_seen = cs_.seen.find(*cycle_seed) != cs_.seen.end();
-              for (auto it = cycle_seed + 1; it < stutter_path_.end(); ++it)
-                {
-                  if (in_seen)
-                    {
-                      // if *cycle_seed is already in seen, replace
-                      // it with a smaller state also in seen.
-                      if (cs_.seen.find(*it) != cs_.seen.end()
-                          && *it < *cycle_seed)
-                        cycle_seed = it;
-                    }
-                  else
-                    {
-                      // if *cycle_seed is not in seen, replace it
-                      // either with a state in seen or with a smaller
-                      // state
-                      if (cs_.seen.find(*it) != cs_.seen.end())
-                        {
-                          cycle_seed = it;
-                          in_seen = true;
-                        }
-                      else if (*it < *cycle_seed)
-                        {
-                          cycle_seed = it;
-                        }
-                    }
-                }
-              ss = std::move(*cycle_seed);
-              color_ = mincolor;
-            }
-          else
-            {
-              ss = cs_.src->compute_succ(cs_, ap, color_);
-            }
+          ss = cs_.src->compute_succ(cs_, ap, color_);
         }
       };
 
@@ -706,13 +640,6 @@ namespace spot
     color = finalize_construction(s.braces_, cs);
   }
 
-  bool
-  safra_state::operator<(const safra_state& other) const
-  {
-    // FIXME what is the right, if any, comparison to perform?
-    return braces_ == other.braces_ ? nodes_ < other.nodes_
-                                    : braces_ < other.braces_;
-  }
   size_t
   safra_state::hash() const
   {
@@ -770,7 +697,6 @@ namespace spot
   twa_graph_ptr
   tgba_determinize2(const const_twa_graph_ptr& a,
                     bool pretty_print,
-                    bool use_stutter,
                     const output_aborter* aborter)
   {
     if (!a->is_existential())
@@ -789,10 +715,6 @@ namespace spot
       aut = aut_tmp;
     }
     scc_info_options scc_opt = scc_info_options::TRACK_SUCCS;
-    // We do need to track states in SCC for stutter invariance (see below how
-    // supports are computed in this case)
-    if (use_stutter && aut->prop_stutter_invariant())
-      scc_opt = scc_info_options::TRACK_SUCCS | scc_info_options::TRACK_STATES;
     scc_info scc = scc_info(aut, scc_opt);
 
     // If use_simulation is false, implications is empty, so nothing is built
@@ -840,30 +762,15 @@ namespace spot
 
     // Compute the support of each state
     std::vector<bdd> support(aut->num_states());
-    if (use_stutter && aut->prop_stutter_invariant())
+
+    for (unsigned i = 0; i != aut->num_states(); ++i)
       {
-        // FIXME this could be improved
-        // supports of states should account for possible stuttering if we plan
-        // to use stuttering invariance
-        for (unsigned c = 0; c != scc.scc_count(); ++c)
-          {
-            bdd c_supp = scc.scc_ap_support(c);
-            for (const auto& su: scc.succ(c))
-              c_supp &= support[scc.one_state_of(su)];
-            for (unsigned st: scc.states_of(c))
-              support[st] = c_supp;
-          }
+        bdd res = bddtrue;
+        for (const auto& e : aut->out(i))
+          res &= bdd_support(e.cond);
+        support[i] = res;
       }
-    else
-      {
-        for (unsigned i = 0; i != aut->num_states(); ++i)
-          {
-            bdd res = bddtrue;
-            for (const auto& e : aut->out(i))
-              res &= bdd_support(e.cond);
-            support[i] = res;
-          }
-      }
+
 
     safra_support safra2letters(support);
 
@@ -904,7 +811,7 @@ namespace spot
     }
     unsigned sets = 0;
 
-    compute_succs succs(aut, seen, scc, implies, use_stutter);
+    compute_succs succs(aut, seen, scc, implies);
     // The main loop
     while (!todo.empty())
       {
