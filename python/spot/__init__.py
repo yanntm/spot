@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014-2019  Laboratoire de
+# Copyright (C) 2014-2020  Laboratoire de
 # Recherche et Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -622,7 +622,7 @@ def _postproc_translate_options(obj, default_type, *args):
         nonlocal pref_, pref_name_
         if pref_ is not None and pref_name_ != val:
             raise ValueError("preference cannot be both {} and {}"
-                             .format(pref_name, val))
+                             .format(pref_name_, val))
         elif val == 'small':
             pref_ = postprocessor.Small
         elif val == 'deterministic':

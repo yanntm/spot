@@ -92,6 +92,10 @@ New in spot 2.8.5.dev (not yet released)
     consequence, some correct output could be larger than necessary
     (but still correct).
 
+  - calling spot.translate() with two conflicting preferences like
+    spot.translate(..., 'det', 'any') triggered a syntax error in the
+    Python code to handle this error.
+
 New in spot 2.8.5 (2020-01-04)
 
   Bugs fixed:
