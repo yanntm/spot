@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement de
+# Copyright (C) 2018-2020 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -177,5 +177,14 @@ try:
     spot.complement_semidet(spot.translate('Gb R a', 'ba'))
 except RuntimeError as e:
     assert "requires a semi-deterministic input" in str(e)
+else:
+    report_missing_exception()
+
+try:
+    spot.translate('F(G(a | !a) & ((b <-> c) W d))', 'det', 'any')
+except ValueError as e:
+    s = str(e)
+    assert 'det' in s
+    assert 'any' in s
 else:
     report_missing_exception()

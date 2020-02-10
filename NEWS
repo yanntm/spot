@@ -2,6 +2,10 @@ New in spot 2.8.5.dev (not yet released)
 
   Bugs fixed:
 
+  - calling spot.translate() with two conflicting preferences like
+    spot.translate(..., 'det', 'any') triggered a syntax error in the
+    Python code to handle this error.
+
   - degeneralize_tba() was incorrectly not honnoring the "skip_level"
     optimization after creating an accepting transition; as a
     consequence, some correct output could be larger than necessary
