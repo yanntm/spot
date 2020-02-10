@@ -351,6 +351,9 @@ namespace spot
       // Preserve determinism, weakness, and stutter-invariance
       res->prop_copy(a, { false, true, true, true, true, true });
 
+      auto old_orig_states =
+        a->get_named_prop<std::vector<unsigned>>("original-states");
+
       auto orig_states = new std::vector<unsigned>();
       auto levels = new std::vector<unsigned>();
       orig_states->reserve(a->num_states()); // likely more are needed.
@@ -459,7 +462,10 @@ namespace spot
             todo.emplace_back(ds);
 
           assert(ns == orig_states->size());
-          orig_states->emplace_back(ds.first);
+          unsigned orig = ds.first;
+          if (old_orig_states)
+            orig = (*old_orig_states)[orig];
+          orig_states->emplace_back(orig);
           levels->emplace_back(ds.second);
 
           // Level cache stores one encountered level for each state
@@ -935,6 +941,8 @@ namespace spot
 
     // auto* names = new std::vector<std::string>;
     // res->set_named_prop("state-names", names);
+    auto old_orig_states =
+      a->get_named_prop<std::vector<unsigned>>("original-states");
     auto orig_states = new std::vector<unsigned>();
     auto levels = new std::vector<unsigned>();
     unsigned ns = a->num_states();
@@ -988,8 +996,12 @@ namespace spot
                        // std::ostringstream os;
                        // os << ds.first << ',' << ds.second;
                        // names->push_back(os.str());
+
+                       unsigned orig = ds.first;
+                       if (old_orig_states)
+                         orig = (*old_orig_states)[orig];
                        assert(ns == orig_states->size());
-                       orig_states->emplace_back(ds.first);
+                       orig_states->emplace_back(orig);
                        levels->emplace_back(ds.second);
                        return ns;
                      };
@@ -1094,31 +1106,10 @@ namespace spot
   twa_graph_ptr
   partial_degeneralize(twa_graph_ptr a)
   {
-    bool composeorig = false;
     while (acc_cond::mark_t m = is_partially_degeneralizable(a))
-      {
-        twa_graph_ptr b = partial_degeneralize(a, m);
-        // After the first partial degeneralization, we need to compose
-        // the original-states, so that original-states still appear
-        // to reference the original automaton.
-        if (composeorig)
-          {
-            auto origa =
-              a->get_named_prop<std::vector<unsigned>>("original-states");
-            auto origb =
-              b->get_named_prop<std::vector<unsigned>>("original-states");
-            for (auto& s: *origb)
-              s = (*origa)[s];
-          }
-        else
-          {
-            composeorig = true;
-          }
-        a = b;
-      }
+      a = partial_degeneralize(a, m);
     return a;
   }
-
 
   std::vector<acc_cond::mark_t>
   propagate_marks_vector(const const_twa_graph_ptr& aut,

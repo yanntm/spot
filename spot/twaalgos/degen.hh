@@ -57,9 +57,16 @@ namespace spot
   /// and the original state of the input automaton is stored in the
   /// "original-states" named property of the produced automaton.  Call
   /// `aut->get_named_prop<std::vector<unsigned>>("original-states")`
-  /// to retrieve it.  Note that these functions may return the original
+  /// to retrieve it.  However be aware that if the input automaton
+  /// already defines the "original-states" named property, it will
+  /// be composed with the new one, so the "original-states" of the
+  /// degeneralized automaton will refer to the same automaton as the
+  /// "original-states" of the input automaton.
+  ///
+  /// Note that these functions may return the original
   /// automaton as-is if it is already degeneralized; in this case
-  /// the "original-states" property is not defined.
+  /// the "original-states" property is not defined (or not changed).
+  ///
   /// Similarly, the property "degen-levels" keeps track of the degeneralization
   /// levels.  To retrieve it, call
   /// `aut->get_named_prop<std::vector<unsigned>>("degen-levels")`.
@@ -113,6 +120,8 @@ namespace spot
   /// the input automaton unmodified if no partial degeneralization is
   /// possible.
   ///
+  /// The "original-state" and "degen-levels" named properties are
+  /// updated as for degeneralize() and degeneralize_tba().
   /// @{
   SPOT_API twa_graph_ptr
   partial_degeneralize(const const_twa_graph_ptr& a,
