@@ -59,21 +59,6 @@ namespace spot
   ///                     names will refer to the states in the
   ///                     degeneralized automaton).
   ///
-  /// \param use_scc whether to simplify the construction based on
-  ///                the SCCs in the input automaton.
-  ///
-  /// \param use_simulation whether to simplify the construction based
-  ///                       on simulation relations between states in
-  ///                       the original automaton.
-  ///
-  /// \param use_stutter whether to simplify the construction when the
-  ///                    input automaton is known to be
-  ///                    stutter-invariant.  (The stutter-invariant
-  ///                    flag of the input automaton is used, so it
-  ///                    might be worth to call
-  ///                    spot::check_stutter_invariance() first if
-  ///                    possible.)
-  ///
   /// \param aborter abort the construction if the constructed
   ///                automaton would be too large.  Return nullptr
   ///                in this case.

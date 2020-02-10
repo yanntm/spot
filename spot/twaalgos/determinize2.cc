@@ -248,8 +248,6 @@ namespace spot
       const safra_state* src;
       const std::vector<bdd>* all_bdds;
       const const_twa_graph_ptr& aut;
-      const power_set& seen;
-      const scc_info& scc;
 
       // work vectors for safra_state::finalize_construction()
       mutable std::vector<char> empty_green;
@@ -258,14 +256,10 @@ namespace spot
       mutable safra_build ss;
 
     public:
-      compute_succs(const const_twa_graph_ptr& aut,
-                    const power_set& seen,
-                    const scc_info& scc)
+      compute_succs(const const_twa_graph_ptr& aut)
       : src(nullptr)
       , all_bdds(nullptr)
       , aut(aut)
-      , seen(seen)
-      , scc(scc)
       {}
 
       void
@@ -737,7 +731,7 @@ namespace spot
     }
     unsigned sets = 0;
 
-    compute_succs succs(aut, seen, scc);
+    compute_succs succs(aut);
     // The main loop
     while (!todo.empty())
       {
