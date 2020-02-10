@@ -11,6 +11,9 @@ New in spot 2.8.5.dev (not yet released)
     consequence, some correct output could be larger than necessary
     (but still correct).
 
+  - Some formulas with Boolean sub-formulas equivalent to true or
+    false could be translated into automata with false labels.
+
 New in spot 2.8.5 (2020-01-04)
 
   Bugs fixed:
