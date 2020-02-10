@@ -96,6 +96,9 @@ New in spot 2.8.5.dev (not yet released)
     spot.translate(..., 'det', 'any') triggered a syntax error in the
     Python code to handle this error.
 
+  - Some formulas with Boolean sub-formulas equivalent to true or
+    false could be translated into automata with false labels.
+
 New in spot 2.8.5 (2020-01-04)
 
   Bugs fixed:
