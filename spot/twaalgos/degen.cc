@@ -266,7 +266,8 @@ namespace spot
       static void
       keep_bottommost_copies(twa_graph_ptr& res,
                              scc_info& si_orig,
-                             std::vector<unsigned>* orig_states)
+                             std::vector<unsigned>* orig_states,
+                             bool force_purge = false)
       {
         unsigned res_ns = res->num_states();
         auto a = si_orig.get_aut();
@@ -276,7 +277,11 @@ namespace spot
         scc_info si_res(res, scc_info_options::TRACK_STATES);
         unsigned res_scc_count = si_res.scc_count();
         if (res_scc_count <= si_orig.scc_count())
-          return;
+          {
+            if (force_purge)
+              res->purge_unreachable_states();
+            return;
+          }
 
         // If we reach this place, we have more SCCs in the output than
         // in the input.  This means that we have created some redundant
@@ -1064,18 +1069,25 @@ namespace spot
           }
       }
     // Raise the destination of the "all-accepting" edges to the
-    // highest existing level.
+    // highest existing level.  If we do such a redirection, we need
+    // to force keep_bottommost_copies to purge unreachable_states.
+    bool force_purge = false;
     auto& ev = res->edge_vector();
     for (unsigned idx: allaccedges)
       {
         unsigned dst = ev[idx].dst;
         unsigned orig_dst = (*orig_states)[dst];
         unsigned hl = highest_level[orig_dst];
-        ev[idx].dst = ds2num[degen_state{orig_dst, hl}];
+        unsigned new_dst = ds2num[degen_state{orig_dst, hl}];
+        if (dst != new_dst)
+          {
+            ev[idx].dst = new_dst;
+            force_purge = true;
+          }
       }
     //orders.print();
     res->merge_edges();
-    keep_bottommost_copies(res, si_orig, orig_states);
+    keep_bottommost_copies(res, si_orig, orig_states, force_purge);
     return res;
   }
 

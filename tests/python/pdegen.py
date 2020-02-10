@@ -366,3 +366,24 @@ assert dot == """digraph "" {
 
 aut12g = spot.partial_degeneralize(aut12f)
 assert aut12f == aut12g
+
+aut13 = spot.automaton("""HOA: v1
+States: 2
+Start: 0
+AP: 4 "p9" "p14" "p10" "p7"
+acc-name: generalized-Buchi 3
+Acceptance: 3 Inf(0)&Inf(1)&Inf(2)
+properties: trans-labels explicit-labels trans-acc deterministic
+--BODY--
+State: 0
+[!0&!1&2] 0 {0 1 2}
+[!0&!1&!2] 1 {0 1}
+State: 1
+[!0&!1&2&!3] 0 {0 1 2}
+[!0&!1&!2&!3] 1 {0 1}
+[!0&!1&!2&3] 1 {0}
+[!0&!1&2&3] 1 {0 2}
+--END--""")
+aut13g = spot.partial_degeneralize(aut13)
+assert aut13g.equivalent_to(aut13)
+assert aut13g.num_states() == 3
