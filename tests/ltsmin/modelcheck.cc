@@ -77,7 +77,7 @@ struct mc_options_
   bool bloemen = false;
   bool bloemen_ec = false;
   bool cndfs = false;
-  unsigned bitstate_mem_size = 0;
+  size_t bitstate_mem_size = 0;
 } mc_options;
 
 
