@@ -285,6 +285,7 @@ TESTS_twa = \
   core/ltl2dstar4.test \
   core/ltl2ta.test \
   core/ltl2ta2.test \
+  core/pdegen.test \
   core/randaut.test \
   core/randtgba.test \
   core/isomorph.test \

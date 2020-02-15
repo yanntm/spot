@@ -144,10 +144,14 @@ State: 3 "2#0"
 
 assert spot.is_partially_degeneralizable(de) == []
 
+df = spot.partial_degeneralize(f, [0, 1])
+df.equivalent_to(f)
+assert str(df.acc()) == '(1, Fin(0))'
+
 try:
-    df = spot.partial_degeneralize(f, [0, 1])
+    df = spot.partial_degeneralize(f, [0, 1, 2])
 except RuntimeError as e:
-    assert 'partial_degeneralize(): {0,1} does not' in str(e)
+    assert 'partial_degeneralize(): {0,1,2} does not' in str(e)
 else:
     raise RuntimeError("missing exception")
 

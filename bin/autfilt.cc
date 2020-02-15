@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -133,6 +133,7 @@ enum {
   OPT_MASK_ACC,
   OPT_MERGE,
   OPT_NONDET_STATES,
+  OPT_PARTIAL_DEGEN,
   OPT_PRODUCT_AND,
   OPT_PRODUCT_OR,
   OPT_RANDOMIZE,
@@ -363,6 +364,10 @@ static const argp_option options[] =
     { "sum-and", OPT_SUM_AND, "FILENAME", 0,
       "build the sum with the automaton in FILENAME "
       "to intersect languages", 0 },
+    { "partial-degeneralize", OPT_PARTIAL_DEGEN, "NUM1,NUM2,...",
+      OPTION_ARG_OPTIONAL, "Degeneralize automata according to sets "
+      "NUM1,NUM2,... If no sets are given, partial degeneralization "
+      "is performed for all conjunctions of Inf and disjunctions of Fin.", 0 },
     { "separate-sets", OPT_SEP_SETS, nullptr, 0,
       "if both Inf(x) and Fin(x) appear in the acceptance condition, replace "
       "Fin(x) by a new Fin(y) and adjust the automaton", 0 },
@@ -619,6 +624,8 @@ static bool opt_complement = false;
 static bool opt_complement_acc = false;
 static char* opt_decompose_scc = nullptr;
 static bool opt_dualize = false;
+static bool opt_partial_degen_set = false;
+static spot::acc_cond::mark_t opt_partial_degen = {};
 static spot::acc_cond::mark_t opt_mask_acc = {};
 static std::vector<bool> opt_keep_states = {};
 static unsigned int opt_keep_states_initial = 0;
@@ -1005,6 +1012,23 @@ parse_opt(int key, char* arg, struct argp_state*)
       opt_nondet_states = parse_range(arg, 0, std::numeric_limits<int>::max());
       opt_nondet_states_set = true;
       break;
+    case OPT_PARTIAL_DEGEN:
+      {
+        opt_partial_degen_set = true;
+        if (arg)
+          for (auto res : to_longs(arg))
+            {
+              if (res < 0)
+                error(2, 0, "acceptance sets should be non-negative:"
+                      " --partial-degeneralize=%ld", res);
+              if (static_cast<unsigned long>(res) >=
+                  spot::acc_cond::mark_t::max_accsets())
+                error(2, 0, "this implementation does not support that many"
+                      " acceptance sets: --partial-degeneralize=%ld", res);
+              opt_partial_degen.set(res);
+            }
+        break;
+      }
     case OPT_PRODUCT_AND:
       {
         auto a = read_automaton(arg, opt->dict);
@@ -1477,6 +1501,19 @@ namespace
         aut->purge_dead_states();
       else if (opt_rem_unreach)
         aut->purge_unreachable_states();
+
+      if (opt_partial_degen_set)
+        {
+          if (opt_partial_degen)
+            {
+              auto sets = opt_partial_degen & aut->acc().all_sets();
+              aut = spot::partial_degeneralize(aut, sets);
+            }
+          else
+            {
+              aut = spot::partial_degeneralize(aut);
+            }
+        }
 
       if (opt->product_and)
         aut = ::product(std::move(aut), opt->product_and);

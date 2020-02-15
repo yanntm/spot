@@ -750,8 +750,7 @@ namespace spot
   namespace
   {
     static acc_cond::mark_t
-    to_strip(const acc_cond::acc_code& code, acc_cond::mark_t todegen,
-             bool also_fin)
+    to_strip(const acc_cond::acc_code& code, acc_cond::mark_t todegen)
     {
       if (code.empty())
         return todegen;
@@ -768,14 +767,6 @@ namespace spot
               break;
             case acc_cond::acc_op::Fin:
             case acc_cond::acc_op::FinNeg:
-              if (!also_fin)
-                {
-                  pos -= 2;
-                  tostrip -= code[pos].mark;
-                  break;
-                }
-              // Handle Fin and Inf in the same way
-              SPOT_FALLTHROUGH;
             case acc_cond::acc_op::Inf:
             case acc_cond::acc_op::InfNeg:
               {
@@ -796,8 +787,7 @@ namespace spot
     update_acc_for_partial_degen(acc_cond::acc_code& code,
                                  acc_cond::mark_t todegen,
                                  acc_cond::mark_t tostrip,
-                                 acc_cond::mark_t accmark,
-                                 bool also_fin)
+                                 acc_cond::mark_t accmark)
     {
       if (!todegen || code.empty())
         {
@@ -817,14 +807,6 @@ namespace spot
               break;
             case acc_cond::acc_op::Fin:
             case acc_cond::acc_op::FinNeg:
-              if (!also_fin)
-                {
-                  pos -= 2;
-                  code[pos].mark = code[pos].mark.strip(tostrip);
-                  break;
-                }
-              // Handle Fin and Inf in the same way
-              SPOT_FALLTHROUGH;
             case acc_cond::acc_op::Inf:
             case acc_cond::acc_op::InfNeg:
               {
@@ -868,9 +850,6 @@ namespace spot
 
     if (code.empty())
       return {};
-
-    if (allow_fin)
-      allow_fin = is_deterministic(aut);
 
     acc_cond::mark_t res = {};
     unsigned res_sz = -1U;
@@ -926,16 +905,11 @@ namespace spot
     res->copy_ap_of(a);
     acc_cond::acc_code acc = a->get_acceptance();
 
-    // We can also degeneralize disjunctions of Fin if the input is
-    // deterministic.
-    bool also_fin = a->acc().uses_fin_acceptance() && is_deterministic(a);
-
-    acc_cond::mark_t tostrip = to_strip(acc, todegen, also_fin);
+    acc_cond::mark_t tostrip = to_strip(acc, todegen);
     acc_cond::mark_t keep = a->acc().all_sets() - tostrip;
     acc_cond::mark_t degenmark = {keep.count()};
 
-    if (!update_acc_for_partial_degen(acc, todegen, tostrip, degenmark,
-                                      also_fin))
+    if (!update_acc_for_partial_degen(acc, todegen, tostrip, degenmark))
       report_invalid_partial_degen_arg(todegen, acc);
     res->set_acceptance(acc);
 

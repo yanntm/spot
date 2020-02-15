@@ -17,6 +17,10 @@ New in spot 2.8.5.dev (not yet released)
   - When running translators ltlcross will now display {names} when
     supplied.
 
+  - autfilt learned the --partial-degeneralize option, to remove
+    conjunctions of Inf, or disjunction of Fin that appears in
+    arbitrary conditions.
+
   Library:
 
   - Historically, Spot only supports LTL with infinite semantics
@@ -58,9 +62,8 @@ New in spot 2.8.5.dev (not yet released)
        parity_min_even(n) = parity_min(false, n)
 
   - partial_degeneralize() is a new function performing partial
-    degeneralization to get rid of conjunctions of Inf terms in
-    acceptance conditions.  This also works with disjunctions of
-    Fin terms in deterministic automata.
+    degeneralization to get rid of conjunctions of Inf terms, or
+    disjunctions of Fin terms in acceptance conditions.
 
   - simplify_acceptance_here() and simplify_acceptance() learned to
     simplify subformulas like Fin(i)&Fin(j) or Inf(i)|Inf(j), or some

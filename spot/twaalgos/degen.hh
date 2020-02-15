@@ -107,13 +107,12 @@ namespace spot
   ///
   /// Cases where the sets listed in \a todegen also occur outside
   /// of the Inf-conjunction are also supported.  Subformulas that
-  /// are disjunctions of Fin(.) terms (e.g., Fin(1)|Fin(2)) can
-  /// also be degeneralized if the input automaton is deterministic.
+  /// are disjunctions of Fin(.) terms (e.g., Fin(1)|Fin(2)) will
+  /// be degeneralized as well.
   ///
   /// If this functions is called with a value of \a todegen that does
-  /// not match a conjunction of Inf(.), or in a deterministic
-  /// automaton a disjunction of Fin(.), an std::runtime_error
-  /// exception is thrown.
+  /// not match a conjunction of Inf(.), or a disjunction of Fin(.),
+  /// an std::runtime_error exception is thrown.
   ///
   /// The version of the function that has no \a todegen argument will
   /// perform all possible partial degeneralizations, and may return
@@ -132,10 +131,9 @@ namespace spot
 
   /// \brief Is the automaton partially degeneralizable?
   ///
-  /// Return a mark `M={m₁, m₂, ..., mₙ}` such that either (1)
-  /// `Inf(m₁)&Inf(m₂)&...&Inf(mₙ)` appears in the acceptance
-  /// condition of \a aut, or (2) \a aut is deterministic and
-  /// `Inf(m₁)|Inf(m₂)|...|Fin(mₙ)` appear in its conditions.
+  /// Return a mark `M={m₁, m₂, ..., mₙ}` such that either
+  /// `Inf(m₁)&Inf(m₂)&...&Inf(mₙ)` or `Fin(m₁)|Fin(m₂)|...|Fin(mₙ)`
+  /// appears in the acceptance condition of \a aut.
   ///
   /// If multiple such marks exist the smallest such mark is returned.
   /// (This is important in case of overlapping options.  E.g., in the
