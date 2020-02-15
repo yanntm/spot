@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014, 2015, 2016, 2017, 2018 Laboratoire de Recherche et
+# Copyright (C) 2014-2018, 2020 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -220,5 +220,13 @@ grep 'randaut:.*end of acceptance.*invalid range' stderr
 
 randaut -Q0 1 2>stderr && exit 1
 grep '0 states' stderr
+
+# This catch a bug where 'Fin(1) & Inf(2) & Fin(0)' was
+# incorrectly detected a generalized-Rabin and output a
+# 'Fin(0) | Fin(1) & Inf(2)'.
+randaut -Q1 -A 'Fin(1) & Inf(2) & Fin(0)' 2 > out.hoa
+grep 'Acceptance:' out.hoa > out.acc
+echo 'Acceptance: 3 Fin(1) & Inf(2) & Fin(0)' > out.exp
+diff out.acc out.exp
 
 :

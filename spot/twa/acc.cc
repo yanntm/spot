@@ -681,14 +681,20 @@ namespace spot
 
     // generalized Rabin should start with Or, unless
     // it has a single pair.
+    bool singlepair = false;
     {
       auto topop = code_.back().sub.op;
       if (topop == acc_op::And)
-        // Probably single-pair generalized-Rabin.  Shift the source
-        // by one position as if we had an invisible Or in front.
-        ++s;
+        {
+          // Probably single-pair generalized-Rabin.  Shift the source
+          // by one position as if we had an invisible Or in front.
+          ++s;
+          singlepair = true;
+        }
       else if (topop != acc_op::Or)
-        return false;
+        {
+          return false;
+        }
     }
 
     // Each pair is the position of a Fin followed
@@ -752,7 +758,8 @@ namespace spot
       }
     for (auto i: p)
       pairs.emplace_back(i.second);
-    return (!(seen_fin & seen_inf)
+    return ((!singlepair || pairs.size() == 1)
+            && !(seen_fin & seen_inf)
             && (seen_fin | seen_inf) == all_sets());
   }
 
@@ -776,14 +783,20 @@ namespace spot
 
     // generalized Streett should start with And, unless
     // it has a single pair.
+    bool singlepair = false;
     {
       auto topop = code_.back().sub.op;
       if (topop == acc_op::Or)
-        // Probably single-pair generalized-Streett.  Shift the source
-        // by one position as if we had an invisible And in front.
-        ++s;
+        {
+          // Probably single-pair generalized-Streett.  Shift the source
+          // by one position as if we had an invisible And in front.
+          ++s;
+          singlepair = true;
+        }
       else if (topop != acc_op::And)
-        return false;
+        {
+          return false;
+        }
     }
 
 
@@ -847,7 +860,8 @@ namespace spot
       }
     for (auto i: p)
       pairs.emplace_back(i.second);
-    return (!(seen_inf & seen_fin)
+    return ((!singlepair || pairs.size() == 1)
+            && !(seen_inf & seen_fin)
             && (seen_inf | seen_fin) == all_sets());
   }
 
