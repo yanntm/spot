@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2019 Laboratoire de Recherche et
+// Copyright (C) 2015-2016, 2019-2020 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -34,20 +34,20 @@ namespace spot
   /// The output will be a deterministic automaton using parity acceptance.
   ///
   /// This procedure is based on an algorithm by Roman Redziejowski
-  /// (Fundamenta Informaticae 119, 3-4 (2012)).  Redziejowski's
-  /// algorithm is similar to Piterman's improvement of Safra's
-  /// algorithm, except it is presented on transition-based acceptance
-  /// and use simpler notations.  We implement three additional
-  /// optimizations (they can be individually disabled) based on
+  /// \cite redziejowski.12.fi .  Redziejowski's algorithm is similar
+  /// to Piterman's improvement of Safra's algorithm, except it is
+  /// presented on transition-based acceptance and use simpler
+  /// notations.  We implement three additional optimizations (they
+  /// can be individually disabled) based on
   ///
   ///   - knowledge about SCCs of the input automaton
   ///   - knowledge about simulation relations in the input automaton
   ///   - knowledge about stutter-invariance of the input automaton
   ///
-  /// The last optimization is an idea described by Joachim Klein &
-  /// Christel Baier (CIAA'07) and implemented in ltl2dstar.  In fact,
-  /// ltl2dstar even has a finer version (letter-based stuttering)
-  /// that is not implemented here.
+  /// The last optimization is an idea implemented in
+  /// [`ltl2dstar`](https://www.ltl2dstar.fr) \cite klein.07.ciaa .  In
+  /// fact, `ltl2dstar` even has a finer version (letter-based
+  /// stuttering) that is not implemented here.
   ///
   /// \param aut the automaton to determinize
   ///
