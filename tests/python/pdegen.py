@@ -391,3 +391,25 @@ State: 1
 aut13g = spot.partial_degeneralize(aut13)
 assert aut13g.equivalent_to(aut13)
 assert aut13g.num_states() == 3
+
+
+aut14 = spot.automaton("""HOA: v1
+States: 2
+Start: 0
+AP: 2 "p0" "p1"
+Acceptance: 5 (Inf(0)&Inf(1)) | ((Fin(2)|Fin(3)) & Fin(4))
+--BODY--
+State: 0
+[!0 & 1] 0 {2 3}
+[!0 & !1] 0 {3}
+[0] 1
+State: 1
+[0&1] 1 {1 2 4}
+[0&!1] 1 {4}
+[!0&1] 1 {0 1 2 3}
+[!0&!1] 1 {0 3}
+--END--
+""")
+aut14g = spot.partial_degeneralize(aut14)
+assert aut14g.equivalent_to(aut14)
+assert aut14g.num_states() == 3

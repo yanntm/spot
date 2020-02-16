@@ -915,8 +915,6 @@ namespace spot
 
     // auto* names = new std::vector<std::string>;
     // res->set_named_prop("state-names", names);
-    auto old_orig_states =
-      a->get_named_prop<std::vector<unsigned>>("original-states");
     auto orig_states = new std::vector<unsigned>();
     auto levels = new std::vector<unsigned>();
     unsigned ns = a->num_states();
@@ -972,8 +970,6 @@ namespace spot
                        // names->push_back(os.str());
 
                        unsigned orig = ds.first;
-                       if (old_orig_states)
-                         orig = (*old_orig_states)[orig];
                        assert(ns == orig_states->size());
                        orig_states->emplace_back(orig);
                        levels->emplace_back(ds.second);
@@ -1071,6 +1067,14 @@ namespace spot
             force_purge = true;
           }
       }
+    // compose original-states with the any previously existing one.
+    // We do that now, because the above loop uses orig_states to
+    // find the local source, but for the bottommost copy below, it's better
+    // if we compose everything.
+    if (auto old_orig_states =
+        a->get_named_prop<std::vector<unsigned>>("original-states"))
+      for (auto& s: *orig_states)
+        s = (*old_orig_states)[s];
     //orders.print();
     res->merge_edges();
     keep_bottommost_copies(res, si_orig, orig_states, force_purge);
