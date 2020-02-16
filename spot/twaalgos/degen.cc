@@ -298,8 +298,10 @@ namespace spot
         // remember the "bottommost" SCCs that contain each original
         // state.  If an original state is duplicated in a higher SCC,
         // it can be shunted away.  Amen.
+        unsigned maxorig = *std::max_element(orig_states->begin(),
+                                             orig_states->end());
         std::vector<unsigned>
-          bottommost_occurence(a->num_states());
+          bottommost_occurence(maxorig + 1);
         {
           unsigned n = res_scc_count;
           do

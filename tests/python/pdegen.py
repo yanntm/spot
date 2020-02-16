@@ -413,3 +413,29 @@ State: 1
 aut14g = spot.partial_degeneralize(aut14)
 assert aut14g.equivalent_to(aut14)
 assert aut14g.num_states() == 3
+
+# Extracting an SCC from this large automaton will produce an automaton A in
+# which original-states refers to states larger than those in A.  Some version
+# of partial_degeneralize(A) incorrectly assumed that orig_states could not be
+# larger than A, (because initially partial_degeneralize did not compose
+# original-states).
+aut15 = spot.automaton(""" HOA: v1 name: "(FGp0 & ((XFp0 & F!p1) | F(Gp1 &
+XG!p0))) | G(F!p0 & (XFp0 | F!p1) & F(Gp1 | G!p0))" States: 14 Start: 0 AP: 2
+"p1" "p0" Acceptance: 6 (Fin(0) & Fin(1)) | ((Fin(4)|Fin(5)) & (Inf(2)&Inf(3)))
+properties: trans-labels explicit-labels trans-acc complete properties:
+deterministic --BODY-- State: 0 [!0] 1 [0] 2 State: 1 [!0&!1] 1 {0 1 2 3 5}
+[0&!1] 3 [!0&1] 4 [0&1] 5 State: 2 [0&!1] 2 {1} [!0&1] 4 [!0&!1] 6 [0&1] 7
+State: 3 [0&!1] 3 {1 3} [!0&1] 4 [!0&!1] 6 {0 1 2 3 5} [0&1] 8 State: 4 [!0&!1]
+4 {1 2 3 5} [!0&1] 4 {2 4 5} [0&!1] 5 {1 3} [0&1] 5 {4} State: 5 [!0&1] 4 {2 4
+5} [0&!1] 5 {1 3} [0&1] 8 {2 4} [!0&!1] 9 {1 2 3 5} State: 6 [0&!1] 3 {1 3}
+[!0&1] 4 [0&1] 5 [!0&!1] 10 State: 7 [!0&1] 4 [0&!1] 7 {1 3} [!0&!1] 11 [0&1]
+12 {0 4} State: 8 [!0&1] 4 {2 4 5} [0&1] 5 {4} [0&!1] 8 {1 3} [!0&!1] 11 {1 3
+5} State: 9 [!0&1] 4 {2 4 5} [0&!1] 5 {1 3} [0&1] 5 {4} [!0&!1] 11 {1 3 5}
+State: 10 [!0&1] 4 [0&1] 8 [!0&!1] 10 {0 1 2 3 5} [0&!1] 13 {1 2 3} State: 11
+[!0&1] 4 {2 4 5} [0&!1] 8 {1 2 3} [0&1] 8 {2 4} [!0&!1] 11 {1 2 3 5} State: 12
+[!0&1] 4 [0&1] 7 {0 2 4} [!0&!1] 9 [0&!1] 12 {1 3} State: 13 [!0&1] 4 [0&1] 5
+[!0&!1] 10 {0 1 3 5} [0&!1] 13 {1 3} --END--""")
+si = spot.scc_info(aut15)
+aut15b = si.split_on_sets(2, [])[0]; d
+aut15c = spot.partial_degeneralize(aut15b)
+assert aut15c.equivalent_to(aut15b)
