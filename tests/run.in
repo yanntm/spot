@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2010, 2011, 2014-2016, 2018, 2019 Laboratoire de Recherche
+# Copyright (C) 2010-2011, 2014-2016, 2018-2020 Laboratoire de Recherche
 # et Developpement de l'EPITA (LRDE).
 # Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6
 # (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -60,6 +60,12 @@ top_builddir='@abs_top_builddir@'
 export top_builddir
 top_srcdir='@abs_top_srcdir@'
 export top_srcdir
+
+# Reset those variables, as they may affect the output of DOT.
+SPOT_DOTEXTRA=
+export SPOT_DOTEXTRA
+SPOT_DOTDEFAULT=
+export SPOT_DOTDEFAULT=
 
 SPOT_UNINSTALLED=1
 export SPOT_UNINSTALLED
