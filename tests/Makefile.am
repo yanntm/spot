@@ -448,6 +448,20 @@ EXTRA_DIST = \
   python/ipnbdoctest.py
 
 
+############################## BENCH ###############################
+
+check_PROGRAMS += ltsmin/bench
+ltsmin_bench_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) \
+	$(BUDDY_CPPFLAGS) \-I$(top_builddir)/lib -I$(top_srcdir)/lib
+ltsmin_bench_CXXFLAGS = $(CXXFLAGS) -pthread
+ltsmin_bench_SOURCES = ltsmin/bench.cc
+ltsmin_bench_LDADD =  \
+  $(top_builddir)/bin/libcommon.a		\
+  $(top_builddir)/lib/libgnu.la			\
+  $(top_builddir)/spot/libspot.la              \
+  $(top_builddir)/spot/ltsmin/libspotltsmin.la
+
+
 ############################## LTSMIN ##############################
 
 if USE_LTSMIN
