@@ -5,6 +5,14 @@
 #include "bin/common_setup.hh"
 #include "bin/common_conv.hh"
 
+#include <spot/kripke/kripke.hh>
+#include <spot/misc/timer.hh>
+#include <spot/tl/apcollect.hh>
+#include <spot/tl/defaultenv.hh>
+#include <spot/tl/parse.hh>
+#include <spot/twaalgos/translate.hh>
+#include <spot/twacube_algos/convert.hh>
+
 const char argp_program_doc[] =
 "Bench determinization";
 
@@ -72,18 +80,60 @@ const struct argp_child children[] =
 static int
 checked_main()
 {
-  if (mc_options.model == nullptr && mc_options.formula == nullptr)
+  auto& env = spot::default_environment::instance();
+
+  auto dict = spot::make_bdd_dict();
+  spot::const_twa_graph_ptr aut = nullptr;
+  spot::twacube_ptr aut_cube = nullptr;
+  spot::formula f = nullptr;
+  spot::atomic_prop_set ap;
+  spot::timer_map tm;
+
+  int exit_code = 0;
+
+  if (mc_options.formula == nullptr)
     {
-      std::cerr << "Please provide a model or formula to determinize\n";
+      std::cerr << "Please provide a formula to determinize\n";
       return 1;
     }
 
-  if (mc_options.model != nullptr)
-    {
+  tm.start("parsing formula");
+  {
+    auto pf = spot::parse_infix_psl(mc_options.formula, env, false);
+    exit_code = pf.format_errors(std::cerr);
+    f = pf.f;
+  }
+  tm.stop("parsing formula");
 
-    }
+  std::cout << "parsed formula" << std::endl;
 
-  return 0;
+  tm.start("translating formula");
+  {
+    spot::translator trans(dict);
+    trans.set_level(spot::postprocessor::optimization_level::Low);
+    // if (deterministic) FIXME ???
+    //   trans.set_pref(spot::postprocessor::Deterministic);
+    aut = trans.run(&f);
+  }
+  tm.stop("translating formula");
+
+  std::cout << "translated formula" << std::endl;
+  std::cout << "twa states: " << aut->num_states() << '\n';
+
+  tm.start("translating to/from twacube");
+  {
+    aut_cube = spot::twa_to_twacube(aut);
+    aut = spot::twacube_to_twa(aut_cube);
+  }
+  tm.stop("translating to/from twacube");
+
+  // FIXME: ???
+  atomic_prop_collect(f, &ap);
+
+  std::cout << "twa states: " << aut->num_states() << '\n';
+  std::cout << "twacube states: " << aut_cube->num_states() << '\n';
+
+  return exit_code;
 }
 
 int
