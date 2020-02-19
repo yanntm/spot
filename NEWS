@@ -1,4 +1,4 @@
-New in spot 2.8.5.dev (not yet released)
+New in spot 2.8.6.dev (not yet released)
 
   Command-line tools:
 
@@ -88,16 +88,18 @@ New in spot 2.8.5.dev (not yet released)
     same transition structure (where the ..._maybe() variant would
     modify the Rabin automaton if needed).
 
+New in spot 2.8.6 (2020-02-19)
+
   Bugs fixed:
+
+  - calling spot.translate() with two conflicting preferences like
+    spot.translate(..., 'det', 'any') triggered a syntax error in the
+    Python code to handle this error.
 
   - degeneralize_tba() was incorrectly not honnoring the "skip_level"
     optimization after creating an accepting transition; as a
     consequence, some correct output could be larger than necessary
     (but still correct).
-
-  - calling spot.translate() with two conflicting preferences like
-    spot.translate(..., 'det', 'any') triggered a syntax error in the
-    Python code to handle this error.
 
   - Some formulas with Boolean sub-formulas equivalent to true or
     false could be translated into automata with false labels.
