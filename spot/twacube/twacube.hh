@@ -167,6 +167,15 @@ namespace spot
     /// in memory. This is mandatory for swarming techniques.
     bool succ_contiguous() const;
 
+    unsigned num_states() const
+    {
+      return theg_.num_states();
+    }
+
+    unsigned num_edges() const
+    {
+      return theg_.num_edges();
+    }
 
     typedef digraph<cstate, transition> graph_t;
 
