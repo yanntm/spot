@@ -63,10 +63,13 @@ namespace spot
       }
     public:
       explicit iar_generator(const const_twa_graph_ptr& a,
-                             const std::vector<acc_cond::rs_pair>& p)
+                             const std::vector<acc_cond::rs_pair>& p,
+                             const bool pretty_print)
       : aut_(a)
       , pairs_(p)
       , scc_(scc_info(a))
+      , pretty_print_(pretty_print)
+      , state2pos_iar_states(aut_->num_states(), -1U)
       {}
 
       twa_graph_ptr
@@ -94,6 +97,30 @@ namespace spot
         // there could be quite a number of unreachable states, prune them
         res_->purge_unreachable_states();
 
+        if (pretty_print_)
+        {
+          unsigned nstates = res_->num_states();
+          auto names = new std::vector<std::string>(nstates);
+          for (auto e : res_->edges())
+          {
+            unsigned s = e.src;
+            iar_state iar = num2iar.at(s);
+            std::ostringstream st;
+            st << iar.state << ' ';
+            if (iar.perm.empty())
+              st << '[';
+            char sep = '[';
+            for (unsigned h: iar.perm)
+            {
+              st << sep << h;
+              sep = ',';
+            }
+            st << ']';
+            (*names)[s] = st.str();
+          }
+          res_->set_named_prop("state-names", names);
+        }
+
         return res_;
       }
 
@@ -112,6 +139,11 @@ namespace spot
                 unsigned nb = res_->new_state();
                 iar2num[s] = nb;
                 num2iar[nb] = s;
+                unsigned iar_pos = iar_states.size();
+                unsigned old_newest_pos = state2pos_iar_states[s.state];
+                state2pos_iar_states[s.state] = iar_pos;
+                iar_states.push_back(
+                  std::pair<iar_state, unsigned>(s, old_newest_pos));
                 todo.push_back(s);
                 return nb;
               }
@@ -191,16 +223,21 @@ namespace spot
                     // transition, they move at the front of new_perm in any
                     // order. Check whether there already exists an iar_state
                     // that matches this condition.
-                    for (unsigned i = 0; i != num2iar.size(); ++i)
-                      if (num2iar[i].state == e.dst)
-                        if (std::equal(new_perm.begin() + seen_nb,
-                                       new_perm.end(),
-                                       num2iar[i].perm.begin() + seen_nb))
-                          {
-                            dst = num2iar[i];
-                            dst_num = i;
-                            break;
-                          }
+
+                    auto iar_pos = state2pos_iar_states[e.dst];
+                    while (iar_pos != -1U)
+                    {
+                      iar_state& tmp = iar_states[iar_pos].first;
+                      iar_pos = iar_states[iar_pos].second;
+                      if (std::equal(new_perm.begin() + seen_nb,
+                        new_perm.end(),
+                        tmp.perm.begin() + seen_nb))
+                      {
+                        dst = tmp;
+                        dst_num = iar2num[dst];
+                        break;
+                      }
+                    }
                     // if such a state was not found, build it
                     if (dst_num == -1U)
                       {
@@ -210,13 +247,14 @@ namespace spot
 
                     // find the maximal index encountered by this transition
                     unsigned maxint = -1U;
-                    for (unsigned k = 0; k != current.perm.size(); ++k)
+                    for (int k = current.perm.size() - 1; k >= 0; --k)
                       {
                         unsigned pk = current.perm[k];
                         if (!inf(pk) ||
-                            (e.acc & (pairs_[pk].fin | pairs_[pk].inf)))
-                          // k increases in the loop, so k > maxint necessarily
-                          maxint = k;
+                            (e.acc & (pairs_[pk].fin | pairs_[pk].inf))) {
+                              maxint = k;
+                              break;
+                            }
                       }
 
                     acc_cond::mark_t acc = {};
@@ -280,6 +318,7 @@ namespace spot
       const std::vector<acc_cond::rs_pair>& pairs_;
       const scc_info scc_;
       twa_graph_ptr res_;
+      bool pretty_print_;
 
       // to be used when entering a new SCC
       // maps a state of aut_ onto an iar_state with the appropriate perm
@@ -287,11 +326,14 @@ namespace spot
 
       std::map<iar_state, unsigned> iar2num;
       std::map<unsigned, iar_state> num2iar;
+
+      std::vector<unsigned> state2pos_iar_states;
+      std::vector<std::pair<iar_state, unsigned>> iar_states;
     };
   }
 
   twa_graph_ptr
-  iar_maybe(const const_twa_graph_ptr& aut)
+  iar_maybe(const const_twa_graph_ptr& aut, bool pretty_print)
   {
     std::vector<acc_cond::rs_pair> pairs;
     if (!aut->acc().is_rabin_like(pairs))
@@ -299,20 +341,20 @@ namespace spot
         return nullptr;
       else
         {
-          iar_generator<false> gen(aut, pairs);
+          iar_generator<false> gen(aut, pairs, pretty_print);
           return gen.run();
         }
     else
       {
-        iar_generator<true> gen(aut, pairs);
+        iar_generator<true> gen(aut, pairs, pretty_print);
         return gen.run();
       }
   }
 
   twa_graph_ptr
-  iar(const const_twa_graph_ptr& aut)
+  iar(const const_twa_graph_ptr& aut, bool pretty_print)
   {
-    if (auto res = iar_maybe(aut))
+    if (auto res = iar_maybe(aut, pretty_print))
       return res;
     throw std::runtime_error("iar() expects Rabin-like or Streett-like input");
   }

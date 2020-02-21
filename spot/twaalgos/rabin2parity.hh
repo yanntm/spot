@@ -41,7 +41,7 @@ namespace spot
   /// Street-like.
   SPOT_API
   twa_graph_ptr
-  iar(const const_twa_graph_ptr& aut);
+  iar(const const_twa_graph_ptr& aut, bool pretty_print = false);
 
   /// \ingroup twa_acc_transform
   /// \brief Turn a Rabin-like or Streett-like automaton into a parity automaton
@@ -51,5 +51,5 @@ namespace spot
   /// Streett-like, and calls spot::iar() otherwise.
   SPOT_API
   twa_graph_ptr
-  iar_maybe(const const_twa_graph_ptr& aut);
+  iar_maybe(const const_twa_graph_ptr& aut, bool pretty_print = false);
 }
