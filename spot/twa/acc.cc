@@ -25,6 +25,7 @@
 #include <cctype>
 #include <cstring>
 #include <map>
+#include <numeric>
 #include <spot/twa/acc.hh>
 #include "spot/priv/bddalloc.hh"
 #include <spot/misc/minato.hh>
@@ -1059,6 +1060,38 @@ namespace spot
     return res;
   }
 
+  bool
+  acc_cond::has_parity_prefix(acc_cond& new_cond,
+                              std::vector<unsigned>& colors) const
+  {
+    return code_.has_parity_prefix(new_cond, colors);
+  }
+
+  bool
+  acc_cond::is_parity_max_equiv(std::vector<int>&permut, bool even) const
+  {
+    bool result = code_.is_parity_max_equiv(permut, 0, even);
+    int max_value = *std::max_element(std::begin(permut), std::end(permut));
+    for (unsigned i = 0; i < permut.size(); ++i)
+      if (permut[i] != -1)
+        permut[i] = max_value - permut[i];
+      else
+        permut[i] = i;
+    return result;
+  }
+
+  std::vector<unsigned>
+  acc_cond::colors_inf_conj(unsigned min_nb_colors)
+  {
+    return code_.colors_inf_conj(min_nb_colors);
+  }
+
+  std::vector<unsigned>
+  acc_cond::colors_fin_disj(unsigned min_nb_colors)
+  {
+    return code_.colors_fin_disj(min_nb_colors);
+  }
+
   bool acc_cond::is_parity(bool& max, bool& odd, bool equiv) const
   {
     unsigned sets = num_;
@@ -1249,6 +1282,110 @@ namespace spot
       }
     return rescode;
   }
+
+  bool
+  acc_cond::acc_code::is_parity_max_equiv(std::vector<int>& permut,
+                    unsigned new_color,
+                    bool even) const
+  {
+    auto conj = top_conjuncts();
+    auto disj = top_disjuncts();
+    if (conj.size() == 1)
+    {
+      if (disj.size() == 1)
+      {
+        acc_cond::acc_code elem = conj[0];
+        if ((even && elem.back().sub.op == acc_cond::acc_op::Inf)
+          || (!even && elem.back().sub.op == acc_cond::acc_op::Fin))
+        {
+          for (auto color : disj[0][0].mark.sets())
+          {
+            if (permut[color] != -1
+                && ((unsigned) permut[color]) != new_color)
+              return false;
+            permut[color] = new_color;
+          }
+          return true;
+        }
+        return false;
+      }
+      else
+      {
+        std::sort(disj.begin(), disj.end(),
+          [](acc_code c1, acc_code c2)
+                  {
+            (void) c2;
+            return c1.back().sub.op == acc_cond::acc_op::Inf;
+          });
+        unsigned i = 0;
+        for (; i < disj.size() - 1; ++i)
+        {
+          if (disj[i].back().sub.op != acc_cond::acc_op::Inf
+            || disj[i][0].mark.count() != 1)
+            return false;
+          for (auto color : disj[i][0].mark.sets())
+          {
+            if (permut[color] != -1
+              && ((unsigned) permut[color]) != new_color)
+                        return false;
+            permut[color] = new_color;
+          }
+        }
+        if (disj[i].back().sub.op == acc_cond::acc_op::Inf)
+        {
+          if (!even || disj[i][0].mark.count() != 1)
+            return false;
+          for (auto color : disj[i][0].mark.sets())
+          {
+            if (permut[color] != -1
+              && ((unsigned) permut[color]) != new_color)
+                        return false;
+            permut[color] = new_color;
+          }
+          return true;
+        }
+        return disj[i].is_parity_max_equiv(permut, new_color + 1, even);
+      }
+    }
+    else
+      {       std::sort(conj.begin(), conj.end(),
+        [](acc_code c1, acc_code c2)
+              {
+          (void) c2;
+          return c1.back().sub.op == acc_cond::acc_op::Fin;
+        });
+      unsigned i = 0;
+      for (; i < conj.size() - 1; i++)
+      {
+        if (conj[i].back().sub.op != acc_cond::acc_op::Fin
+          || conj[i][0].mark.count() != 1)
+            return false;
+        for (auto color : conj[i][0].mark.sets())
+        {
+          if (permut[color] != -1 && permut[color != new_color])
+            return false;
+          permut[color] = new_color;
+        }
+      }
+      if (conj[i].back().sub.op == acc_cond::acc_op::Fin)
+      {
+        if (even)
+          return 0;
+        if (conj[i][0].mark.count() != 1)
+          return false;
+        for (auto color : conj[i][0].mark.sets())
+        {
+          if (permut[color] != -1 && permut[color != new_color])
+            return false;
+          permut[color] = new_color;
+        }
+        return true;
+      }
+
+      return conj[i].is_parity_max_equiv(permut, new_color + 1, even);
+    }
+  }
+
 
   namespace
   {

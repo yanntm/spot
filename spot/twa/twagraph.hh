@@ -219,6 +219,9 @@ namespace spot
     mutable unsigned init_number_;
 
   public:
+
+    void apply_permutation(std::vector<unsigned> permut);
+
     twa_graph(const bdd_dict_ptr& dict)
       : twa(dict),
         init_number_(0)

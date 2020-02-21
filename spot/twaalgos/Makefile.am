@@ -59,6 +59,7 @@ twaalgos_HEADERS = \
   isunamb.hh \
   isweakscc.hh \
   langmap.hh \
+  car.hh \
   lbtt.hh \
   ltl2taa.hh \
   ltl2tgba_fm.hh \
@@ -128,6 +129,7 @@ libtwaalgos_la_SOURCES = \
   isunamb.cc \
   isweakscc.cc \
   langmap.cc \
+  car.cc \
   lbtt.cc \
   ltl2taa.cc \
   ltl2tgba_fm.cc \
