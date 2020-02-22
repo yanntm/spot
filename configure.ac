@@ -218,6 +218,7 @@ AC_CONFIG_FILES([
   bin/Makefile
   bin/man/Makefile
   bench/Makefile
+  bench/bitstate/Makefile
   bench/dtgbasat/Makefile
   bench/emptchk/Makefile
   bench/emptchk/defs
