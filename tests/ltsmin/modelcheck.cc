@@ -334,11 +334,11 @@ static int checked_main()
       int memused = spot::memusage();
       tm.start("deadlock check");
       spot::bitstate_hashing<spot::ltsmin_kripkecube_ptr,
-                                    spot::cspins_state,
-                                    spot::cspins_iterator,
-                                    spot::cspins_state_hash,
-                                    spot::cspins_state_equal>
-                                        (modelcube, mc_options.bitstate_mem_size);
+                             spot::cspins_state,
+                             spot::cspins_iterator,
+                             spot::cspins_state_hash,
+                             spot::cspins_state_equal>
+        (modelcube, mc_options.bitstate_mem_size);
       tm.stop("deadlock check");
       memused = spot::memusage() - memused;
 
