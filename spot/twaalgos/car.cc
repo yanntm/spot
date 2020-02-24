@@ -690,7 +690,7 @@ public:
         for (unsigned s = 0; s < buchi->num_states(); ++s)
         {
           unsigned b = g.state_storage(s).succ;
-          while(b)
+          while (b)
           {
             auto& e = g.edge_storage(b);
             auto acc = e.acc;
