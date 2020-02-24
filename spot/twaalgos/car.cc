@@ -686,7 +686,7 @@ public:
             names->push_back(new_car.to_string(
               is_streett_to_buchi ? Streett_to_Buchi : Rabin_to_Buchi));
         }
-        auto g = sub_automaton->get_graph();
+        auto g = buchi->get_graph();
         for (unsigned s = 0; s < buchi->num_states(); ++s)
         {
           unsigned b = g.state_storage(s).succ;
@@ -701,7 +701,7 @@ public:
                       dst = { (*init_states)[e.dst], e.dst, perm_t() };
             unsigned src_state = car2num[src],
                      dst_state = car2num[dst];
-            auto col = ((int) acc.min_set()) - 1;
+            int col = ((int) acc.max_set()) - 1;
             if (col > (int) max_free_color)
               throw std::runtime_error("CAR needs more sets");
             auto& e2 = sub_automaton->get_graph().edge_storage(b);
