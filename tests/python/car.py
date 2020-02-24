@@ -19,10 +19,35 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import spot
-import time
 
-a = spot.automaton("""
-HOA: v1
+options = [
+    # No option
+    [False, False, False, False, False, False, False, False],
+    # Only acc clean and …
+    # … search last
+    [True, False, True, False, True, False, False, False],
+    # … partial degen
+    [False, True, True, False, False, False, False, False],
+    # … parity equiv
+    [False, False, True, True, False, False, False, False],
+    # … parity prefix
+    [False, False, True, False, False, True, False, False],
+    # … rabin to buchi
+    [False, False, True, False, False, False, True, False],
+]
+
+i = 1
+
+def test(aut):
+    global i
+    for se, par, cl, parity, last, pref, rab, pri in options:
+        p = spot.car(aut, se, par, cl, parity, last, pref, rab, pri)
+        assert(spot.are_equivalent(aut, p))
+    print(f"OK {i}")
+    i += 1
+
+
+test(spot.automaton("""HOA: v1
 name: "(FGp0 & ((XFp0 & F!p1) | F(Gp1 & XG!p0))) | G(F!p0 & (XFp0 | F!p1) &
 F(Gp1 | G!p0))"
 States: 14
@@ -100,12 +125,9 @@ State: 13
 [0&1] 5
 [!0&!1] 10 {0 1 3 5}
 [0&!1] 13 {1 3}
---END--""")
-scc_ = spot.scc_info(a)
-spot.partial_degeneralize(scc_.split_on_sets(2, [])[0])
+--END--"""))
 
-
-a = spot.automaton("""
+test(spot.automaton("""
 HOA: v1
 States: 2
 Start: 0
@@ -121,37 +143,54 @@ State: 1
 [0&!1] 1 {4}
 [!0&1] 1 {0 1 2 3}
 [!0&!1] 1 {0 3}
---END--""")
-p = spot.car(a, False, False, False, False, False, False, True)
-assert spot.are_equivalent(a, p)
-a = spot.automaton("""
+--END--"""))
+
+test(spot.automaton("""
 HOA: v1 States: 6 Start: 0 AP: 2 "p0" "p1" Acceptance: 6 Inf(5) |
 Fin(2) | Inf(1) | (Inf(0) & Fin(3)) | Inf(4) properties: trans-labels
 explicit-labels trans-acc --BODY-- State: 0 [0&1] 2 {4 5} [0&1] 4 {0 4}
 [!0&!1] 3 {3 5} State: 1 [0&!1] 3 {1 5} [!0&!1] 5 {0 1} State: 2 [!0&!1]
 0 {0 3} [0&!1] 1 {0} State: 3 [!0&1] 4 {1 2 3} [0&1] 3 {3 4 5} State:
 4 [!0&!1] 1 {2 4} State: 5 [!0&1] 4 --END--
-""")
-p = spot.car(a, False, False, False, False, False, False, True)
-if (not p.num_states() == 8):
-    print(p.num_states())
-assert spot.are_equivalent(a, p)
+"""))
 
 for f in spot.randltl(15, 1000):
-    print(f)
-    d = spot.translate(f, "det", "G")
-    p = spot.car(d, False, False, False, False, False, False, True)
-    p2 = spot.car(d, False, False, False, False, False, False, True)
-    if(not spot.are_equivalent(p, d)):
-        print(f)
-        assert(False)
+    test(spot.translate(f, "det", "G"))
 
 for f in spot.randltl(5, 10000):
-    print(f)
-    n = spot.translate(f)
-    p = spot.car(n, False, False, False, False, False, False, True)
-    assert(spot.are_equivalent(n, p))
+    test(spot.translate(f))
 
-a = spot.translate('!(GFa -> (GFb & GF(!b & !Xb)))', 'gen', 'det')
-b = spot.car(a, False, False, False, False, False, False, True)
-assert spot.are_equivalent(a, b)
+test(spot.translate('!(GFa -> (GFb & GF(!b & !Xb)))', 'gen', 'det'))
+
+test(spot.automaton("""
+HOA: v1
+States: 4
+Start: 0
+AP: 2 "p0" "p1"
+Acceptance: 6
+((Fin(1) | Inf(2)) & Inf(5)) | (Fin(0) & (Fin(1) | (Fin(3) & Inf(4))))
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic
+--BODY--
+State: 0
+[!0&!1] 0 {2}
+[0&1] 1 {0 5}
+[0&!1] 1 {0 2 5}
+[!0&1] 2 {1}
+State: 1
+[0&1] 1 {0}
+[!0&!1] 1 {2}
+[0&!1] 1 {0 2}
+[!0&1] 2 {1}
+State: 2
+[!0&!1] 0 {2 3}
+[0&!1] 0 {0 2 3 5}
+[!0&1] 2 {1 4}
+[0&1] 3 {0 5}
+State: 3
+[!0&!1] 0 {2 3}
+[0&!1] 0 {0 2 3 5}
+[!0&1] 2 {1 4}
+[0&1] 3 {0}
+--END--
+"""))
