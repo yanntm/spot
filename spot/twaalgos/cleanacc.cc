@@ -524,8 +524,8 @@ namespace spot
                                   case acc_cond::acc_op::Or:
                                     // On
                                     // Fin(a)&(Fin(b)&Inf(c)|Fin(d))
-                                    // where we'd like to return [{a},
-                                    // {b,d}] and decide later that
+                                    // where we'd like to return [({a},...),
+                                    // ({b,d},...)] and decide later that
                                     // {b,d} can receive {a} if they
                                     // (b and d) are both used once.
                                     if (auto m = find_interm_rec(pos))
@@ -553,7 +553,8 @@ namespace spot
                             if (!can_receive)
                               return;
                             for (auto p: singletons)
-                              if (p.first != can_receive)
+                              if (p.first != can_receive &&
+                                  p.first.lowest() == p.first)
                                 {
                                   to_fuse.emplace_back(p.first, can_receive);
                                   if (p.second->sub.op == acc_cond::acc_op::Fin)
@@ -592,6 +593,7 @@ namespace spot
       for (auto pair: to_fuse)
         if (pair.first & once) // can we remove pair.first?
           {
+            assert(pair.first.count() == 1);
             for (auto& e: aut->edges())
               if (e.acc & pair.first)
                 e.acc = (e.acc - pair.first) | pair.second;

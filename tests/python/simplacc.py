@@ -31,7 +31,14 @@ HOA: v1 States: 2 Start: 0 AP: 2 "a" "b" Acceptance: 3 (Inf(0) | Inf(1)) &
 HOA: v1 States: 2 Start: 0 AP: 2 "a" "b" Acceptance: 4 (Inf(0) |
 (Inf(1)&(Inf(3)|Fin(2)))) --BODY-- State: 0 [1] 0 {3} [0] 1 {0} State: 1 [0] 1
 {2} [1] 0 {1} --END--
-"""))
+/* The next automaton was incorrectly simplified. */
+HOA: v1 States: 4 Start: 0 AP: 2 "p0" "p1" Acceptance: 6 ((Fin(1) | Inf(2)) &
+Inf(5)) | (Fin(0) & (Fin(1) | (Fin(3) & Inf(4)))) properties: trans-labels
+explicit-labels trans-acc complete properties: deterministic --BODY-- State: 0
+[!0&!1] 0 {2} [0&1] 1 {0 5} [0&!1] 1 {0 2 5} [!0&1] 2 {1} State: 1 [0&1] 1 {0}
+[!0&!1] 1 {2} [0&!1] 1 {0 2} [!0&1] 2 {1} State: 2 [!0&!1] 0 {2 3} [0&!1] 0 {0
+2 3 5} [!0&1] 2 {1 4} [0&1] 3 {0 5} State: 3 [!0&!1] 0 {2 3} [0&!1] 0 {0 2 3 5}
+[!0&1] 2 {1 4} [0&1] 3 {0} --END--"""))
 
 res = []
 for a in auts:
@@ -44,11 +51,15 @@ for a in auts:
     assert b.equivalent_to(a)
     res.append(str(b.get_acceptance()))
 
-assert res == ['Inf(0)',
-               'Fin(0)',
-               'Inf(1) & Fin(0)',
-               'Fin(1) | Inf(0)',
-               'Inf(1) & (Fin(0) | Inf(2))',
-               'Fin(1) | (Fin(2) & Inf(0))',
-               '(Fin(1) | Inf(2)) & Inf(0)',
-               'Fin(0) | (Fin(2) & Inf(1))']
+assert res == [
+   'Inf(0)',
+   'Fin(0)',
+   'Inf(1) & Fin(0)',
+   'Fin(1) | Inf(0)',
+   'Inf(1) & (Fin(0) | Inf(2))',
+   'Fin(1) | (Fin(2) & Inf(0))',
+   '(Fin(1) | Inf(2)) & Inf(0)',
+   'Fin(0) | (Fin(2) & Inf(1))',
+   '((Fin(1) | Inf(2)) & Inf(5)) | (Fin(0) & (Fin(1) | (Fin(3) & Inf(4))))',
+   '(Fin(5) | (Fin(2) & Inf(1))) & (Inf(0) | ((Fin(4) | Inf(3)) & Inf(1)))',
+   ]
