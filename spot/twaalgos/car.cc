@@ -653,7 +653,7 @@ public:
             car_state src = { (*init_states)[s], s, perm_t() },
               dst = { (*init_states)[e.dst], e.dst, perm_t() };
             unsigned src_state = car2num[src],
-              dst_state = car2num[dst];
+                     dst_state = car2num[dst];
             res_->new_edge(src_state, dst_state, e.cond, mark);
           }
         }
@@ -663,10 +663,6 @@ public:
          bool is_streett_to_buchi, std::vector<int> inf_fin_prefix,
          unsigned max_free_color)
       {
-        // TODO: Régler ça.
-        (void) inf_fin_prefix;
-        (void) max_free_color;
-
         std::vector<unsigned>* init_states = sub_automaton
           ->get_named_prop<std::vector<unsigned>>("original-states");
         auto sub_cond = sub_automaton->get_acceptance();
@@ -690,19 +686,36 @@ public:
             names->push_back(new_car.to_string(
               is_streett_to_buchi ? Streett_to_Buchi : Rabin_to_Buchi));
         }
+        auto g = sub_automaton->get_graph();
         for (unsigned s = 0; s < buchi->num_states(); ++s)
         {
-          for (auto e : buchi->out(s))
+          unsigned b = g.state_storage(s).succ;
+          while(b)
           {
+            auto& e = g.edge_storage(b);
             auto acc = e.acc;
             acc <<= (is_odd + is_streett_to_buchi);
-            if ((is_odd || is_streett_to_buchi) && acc == acc_cond::mark_t{})
+            if ((is_odd || is_streett_to_buchi) && acc == acc_cond::mark_t{ })
               acc = { (is_streett_to_buchi && is_odd) };
             car_state src = { (*init_states)[s], s, perm_t() },
                       dst = { (*init_states)[e.dst], e.dst, perm_t() };
             unsigned src_state = car2num[src],
-                      dst_state = car2num[dst];
+                     dst_state = car2num[dst];
+            auto col = ((int) acc.min_set()) - 1;
+            if (col > (int) max_free_color)
+              throw std::runtime_error("CAR needs more sets");
+            auto& e2 = sub_automaton->get_graph().edge_storage(b);
+            for (auto c : e2.acc.sets())
+            {
+              if (inf_fin_prefix[c] + is_odd > col)
+                col = inf_fin_prefix[c] + is_odd;
+            }
+            if (col != -1)
+              acc = { (unsigned) col };
+            else
+              acc = {};
             res_->new_edge(src_state, dst_state, e.cond, acc);
+            b = e.next_succ;
           }
         }
       }
@@ -888,7 +901,7 @@ public:
             simplify_acceptance_here(sub_automaton);
           }
           std::vector<int> parity_prefix_colors (SPOT_MAX_ACCSETS, -1);
-          unsigned min_prefix_color = SPOT_MAX_ACCSETS;
+          unsigned min_prefix_color = SPOT_MAX_ACCSETS + 1;
           if (parity_prefix)
           {
             auto new_acc = sub_automaton->acc();
@@ -899,8 +912,9 @@ public:
             for (unsigned i = 0; i < colors.size(); ++i)
               parity_prefix_colors[colors[i]] =
                 SPOT_MAX_ACCSETS - 2 - i - !inf_start;
-            min_prefix_color =
-              SPOT_MAX_ACCSETS - 2 - colors.size() - 1 - !inf_start;
+            if (colors.size() > 0)
+              min_prefix_color =
+                SPOT_MAX_ACCSETS - 2 - colors.size() - 1 - !inf_start;
           }
           build_scc(sub_automaton, scc, parity_prefix_colors,
             min_prefix_color - 1);
