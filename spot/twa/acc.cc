@@ -1070,6 +1070,8 @@ namespace spot
   bool
   acc_cond::is_parity_max_equiv(std::vector<int>&permut, bool even) const
   {
+    if (code_.used_once_sets() != code_.used_sets())
+      return false;
     bool result = code_.is_parity_max_equiv(permut, 0, even);
     int max_value = *std::max_element(std::begin(permut), std::end(permut));
     for (unsigned i = 0; i < permut.size(); ++i)
