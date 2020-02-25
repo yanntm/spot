@@ -711,7 +711,10 @@ public:
                 col = inf_fin_prefix[c] + is_odd;
             }
             if (col != -1)
+            {
               acc = { (unsigned) col };
+              max_color = std::max(max_color, (unsigned) col);
+            }
             else
               acc = {};
             res_->new_edge(src_state, dst_state, e.cond, acc);
@@ -1048,6 +1051,7 @@ private:
     bool scc_acc_clean, bool parity_equiv, bool use_last, bool parity_prefix,
     bool rabin_to_buchi, bool pretty_print)
   {
+
     auto new_aut = remove_false_transitions(aut);
     return car_generator(new_aut, search_ex, partial_degen, scc_acc_clean,
              parity_equiv, use_last, parity_prefix,

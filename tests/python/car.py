@@ -194,3 +194,59 @@ State: 3
 [0&1] 3 {0}
 --END--
 """))
+
+test(spot.automaton("""
+HOA: v1
+States: 5
+Start: 0
+AP: 2 "p1" "p0"
+Acceptance: 5 (Fin(0) & Fin(1)) | (Fin(3) & (Inf(2)&Inf(4)))
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic
+--BODY--
+State: 0
+[!0] 1
+[0] 2
+State: 1
+[!0&!1] 1 {0 1}
+[!0&1] 3
+[0] 4
+State: 2
+[!0&1] 1
+[0&!1] 2
+[0&1] 2 {0 1 2 4}
+[!0&!1] 3
+State: 3
+[!0&1] 3 {1 2 3}
+[!0&!1] 3 {4}
+[0&!1] 4 {3}
+[0&1] 4 {1 2 3}
+State: 4
+[!0&!1] 3 {3}
+[!0&1] 3 {1 2 3}
+[0&!1] 4
+[0&1] 4 {1 2 4}
+--END--
+"""))
+
+test(spot.automaton("""
+HOA: v1
+States: 2
+Start: 0
+AP: 2 "p1" "p0"
+Acceptance: 5 (Fin(0) & (Fin(3)|Fin(4)) & (Inf(1)&Inf(2))) | Inf(3)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic stutter-invariant
+--BODY--
+State: 0
+[0&!1] 0 {2 3}
+[!0&!1] 0 {2 3 4}
+[!0&1] 1
+[0&1] 1 {2 4}
+State: 1
+[!0&!1] 0 {0 2 3 4}
+[!0&1] 1 {1}
+[0&!1] 1 {2 3}
+[0&1] 1 {1 2 4}
+--END--
+"""))
