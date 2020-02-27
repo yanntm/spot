@@ -32,16 +32,6 @@
 
 namespace spot
 {
-  /// \brief This object is returned by the algorithm below
-  struct SPOT_API deadlock_stats
-  {
-    unsigned states;            ///< \brief Number of states visited
-    unsigned transitions;       ///< \brief Number of transitions visited
-    unsigned instack_dfs;       ///< \brief Maximum DFS stack
-    bool has_deadlock;          ///< \brief Does the model contains a deadlock
-    unsigned walltime;          ///< \brief Walltime for this thread in ms
-  };
-
   /// \brief This class aims to explore a model to detect wether it
   /// contains a deadlock. This deadlock detection performs a DFS traversal
   /// sharing information shared among multiple threads.
@@ -94,9 +84,13 @@ namespace spot
     ///< \brief Shortcut to ease shared map manipulation
     using shared_map = brick::hashset::FastConcurrent <deadlock_pair*,
                                                        pair_hasher>;
+    using shared_struct = shared_map;
 
     swarmed_deadlock(kripkecube<State, SuccIterator>& sys,
-                     shared_map& map, unsigned tid, std::atomic<bool>& stop):
+                     twacube_ptr, /* useless here */
+                     shared_map& map, shared_struct* /* useless here */,
+                     unsigned tid,
+                     std::atomic<bool>& stop):
       sys_(sys), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
       p_(sizeof(int)*std::thread::hardware_concurrency()),
@@ -115,6 +109,11 @@ namespace spot
           sys_.recycle(todo_.back().it, tid_);
           todo_.pop_back();
         }
+    }
+
+    static shared_struct* make_shared_st(shared_map m, unsigned i)
+    {
+      return nullptr; // FIXME &map?
     }
 
     void setup()
@@ -237,9 +236,27 @@ namespace spot
       return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
     }
 
-    deadlock_stats stats()
+    std::string name()
     {
-      return {states(), transitions(), dfs_, has_deadlock(), walltime()};
+      return "deadlock";
+    }
+
+    int sccs()
+    {
+      return -1;
+    }
+
+    std::string trace()
+    {
+      std::string result;
+      for (auto& e: todo_)
+        result += sys_.to_string(e.s, tid_);
+      return result;
+    }
+
+    mc_rvalue result()
+    {
+      return deadlock_ ? mc_rvalue::DEADLOCK : mc_rvalue::NO_DEADLOCK;
     }
 
   private:

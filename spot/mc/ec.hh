@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2018, 2019 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -22,6 +22,7 @@
 #include <spot/twa/acc.hh>
 #include <spot/mc/unionfind.hh>
 #include <spot/mc/intersect.hh>
+#include <spot/mc/mc.hh>
 
 namespace spot
 {
@@ -44,6 +45,15 @@ namespace spot
                                               StateEqual>>::product_state;
 
   public:
+    using shared_struct = int; // Useless
+    using shared_map = int; // Useless
+    static shared_struct* make_shared_st(shared_map m, unsigned i)
+    {
+      return nullptr; // Useless
+    }
+
+
+
 
     ec_renault13lpar() = delete;
     ec_renault13lpar(const ec_renault13lpar<State, SuccIterator,
@@ -52,7 +62,11 @@ namespace spot
                                       StateHash, StateEqual>&) = delete;
 
     ec_renault13lpar(kripkecube<State, SuccIterator>& sys,
-                     twacube_ptr twa, unsigned tid, bool stop)
+                     twacube_ptr twa,
+                     shared_map& map, /* useless here */
+                     shared_struct*, /* useless here */
+                     unsigned tid,
+                     bool stop)
       : intersect<State, SuccIterator, StateHash, StateEqual,
                   ec_renault13lpar<State, SuccIterator,
                                    StateHash, StateEqual>>(sys, twa, tid, stop),
@@ -250,10 +264,34 @@ namespace spot
       return res;
     }
 
-    virtual istats stats() override
+    std::string name()
     {
-      return {this->states(), this->trans(), sccs_,
-          (unsigned) roots_.size(), dfs_, found_};
+      return "renault_lpar13";
+    }
+
+    unsigned transitions()
+    {
+      return this->trans();
+    }
+
+    unsigned states()
+    {
+      return this->states();
+    }
+
+    unsigned walltime()
+    {
+      return 0; // FIXME
+    }
+
+    int sccs()
+    {
+      return this->sccs_;
+    }
+
+    mc_rvalue result()
+    {
+      return !found_ ? mc_rvalue::EMPTY : mc_rvalue::NOT_EMPTY;
     }
 
   private:

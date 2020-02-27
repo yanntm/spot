@@ -29,19 +29,10 @@
 #include <spot/misc/fixpool.hh>
 #include <spot/misc/timer.hh>
 #include <spot/twacube/twacube.hh>
+#include <spot/mc/mc.hh>
 
 namespace spot
 {
-  /// \brief This object is returned by the algorithm below
-  struct SPOT_API cndfs_stats
-    {
-     unsigned states;            ///< \brief Number of states visited
-     unsigned transitions;       ///< \brief Number of transitions visited
-     unsigned instack_dfs;       ///< \brief Maximum DFS stack
-     bool is_empty;              ///< \brief Is the model empty
-     unsigned walltime;          ///< \brief Walltime for this thread in ms
-    };
-
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
   class swarmed_cndfs
@@ -108,9 +99,11 @@ namespace spot
     ///< \brief Shortcut to ease shared map manipulation
     using shared_map = brick::hashset::FastConcurrent <product_state,
                                                        state_hasher>;
+    using shared_struct = shared_map;
 
     swarmed_cndfs(kripkecube<State, SuccIterator>& sys, twacube_ptr twa,
-                  shared_map& map, unsigned tid, std::atomic<bool>& stop):
+                  shared_map& map, shared_struct* /* useless here*/,
+                  unsigned tid, std::atomic<bool>& stop):
       sys_(sys), twa_(twa), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
       p_colors_(sizeof(cndfs_colors) +
@@ -134,6 +127,11 @@ namespace spot
           sys_.recycle(todo_red_.back().it_kripke, tid_);
           todo_red_.pop_back();
         }
+    }
+
+    static shared_struct* make_shared_st(shared_map m, unsigned i)
+    {
+      return nullptr; // FIXME &map?
     }
 
     void setup()
@@ -262,7 +260,8 @@ namespace spot
       if (todo_blue_.back().it_prop->done())
         return;
 
-      forward_iterators(todo_blue_, true);
+      forward_iterators(sys_, twa_, todo_blue_.back().it_kripke,
+                        todo_blue_.back().it_prop, true, tid_);
 
       while (!todo_blue_.empty() && !stop_.load(std::memory_order_relaxed))
         {
@@ -278,11 +277,13 @@ namespace spot
               };
 
               bool acc = (bool) twa_->trans_storage(current.it_prop, tid_).acc_;
-              forward_iterators(todo_blue_, false);
+              forward_iterators(sys_, twa_, todo_blue_.back().it_kripke,
+                        todo_blue_.back().it_prop, false, tid_);
 
               auto tmp = push_blue(s, acc);
               if (tmp.first)
-                forward_iterators(todo_blue_, true);
+                forward_iterators(sys_, twa_, todo_blue_.back().it_kripke,
+                                  todo_blue_.back().it_prop, true, tid_);
               else if (acc)
                 {
                   // The state cyan and we can reach it throught an
@@ -349,7 +350,8 @@ namespace spot
       if (!init_push.first)
         return;
 
-      forward_iterators(todo_red_, true);
+      forward_iterators(sys_, twa_, todo_red_.back().it_kripke,
+                        todo_red_.back().it_prop, true, tid_);
 
       while (!todo_red_.empty() && !stop_.load(std::memory_order_relaxed))
         {
@@ -364,12 +366,14 @@ namespace spot
                                  nullptr
               };
               bool acc = (bool) twa_->trans_storage(current.it_prop, tid_).acc_;
-              forward_iterators(todo_red_, false);
+              forward_iterators(sys_, twa_, todo_red_.back().it_kripke,
+                                todo_red_.back().it_prop, false, tid_);
 
               auto res = push_red(s, false);
               if (res.first) // could push properly
                 {
-                  forward_iterators(todo_red_, true);
+                  forward_iterators(sys_, twa_, todo_red_.back().it_kripke,
+                                    todo_red_.back().it_prop, true, tid_);
 
                   SPOT_ASSERT(res.second.colors->blue);
 
@@ -475,54 +479,19 @@ namespace spot
       return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
     }
 
-    cndfs_stats stats()
+    std::string name()
     {
-      return {states(), transitions(), dfs_, is_empty(), walltime()};
+      return "cndfs";
     }
 
-  protected:
-    void forward_iterators(std::vector<todo__element>& todo, bool just_pushed)
+    int sccs()
     {
-      SPOT_ASSERT(!todo.empty());
+      return -1;
+    }
 
-      auto top = todo.back();
-
-      SPOT_ASSERT(!(top.it_prop->done() &&
-                    top.it_kripke->done()));
-
-      // Sometimes kripke state may have no successors.
-      if (top.it_kripke->done())
-        return;
-
-      // The state has just been push and the 2 iterators intersect.
-      // There is no need to move iterators forward.
-      SPOT_ASSERT(!(top.it_prop->done()));
-      if (just_pushed && twa_->get_cubeset()
-          .intersect(twa_->trans_data(top.it_prop, tid_).cube_,
-                     top.it_kripke->condition()))
-        return;
-
-      // Otherwise we have to compute the next valid successor (if it exits).
-      // This requires two loops. The most inner one is for the twacube since
-      // its costless
-      if (top.it_prop->done())
-        top.it_prop->reset();
-      else
-        top.it_prop->next();
-
-      while (!top.it_kripke->done())
-        {
-          while (!top.it_prop->done())
-            {
-              if (twa_->get_cubeset()
-                  .intersect(twa_->trans_data(top.it_prop, tid_).cube_,
-                             top.it_kripke->condition()))
-                return;
-              top.it_prop->next();
-            }
-          top.it_prop->reset();
-          top.it_kripke->next();
-        }
+    mc_rvalue result()
+    {
+      return is_empty_ ? mc_rvalue::EMPTY : mc_rvalue::NOT_EMPTY;
     }
 
   private:

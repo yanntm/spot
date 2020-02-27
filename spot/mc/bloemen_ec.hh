@@ -31,6 +31,7 @@
 #include <spot/misc/fixpool.hh>
 #include <spot/misc/timer.hh>
 #include <spot/twacube/twacube.hh>
+#include <spot/mc/intersect.hh>
 
 namespace spot
 {
@@ -99,7 +100,6 @@ namespace spot
     ///< \brief Shortcut to ease shared map manipulation
     using shared_map = brick::hashset::FastConcurrent <uf_element*,
                                                        uf_element_hasher>;
-
 
     iterable_uf_ec(shared_map& map, unsigned tid):
       map_(map), tid_(tid), size_(std::thread::hardware_concurrency()),
@@ -446,17 +446,6 @@ namespace spot
     fixed_size_pool<pool_type::Unsafe> p_; ///< \brief The allocator
   };
 
-  /// \brief This object is returned by the algorithm below
-  struct SPOT_API bloemen_ec_stats
-    {
-     unsigned inserted;          ///< \brief Number of states inserted
-     unsigned states;            ///< \brief Number of states visited
-     unsigned transitions;       ///< \brief Number of transitions visited
-     unsigned sccs;              ///< \brief Number of SCCs visited
-     bool is_empty;              ///< \brief Is the model empty
-     unsigned walltime;          ///< \brief Walltime for this thread in ms
-    };
-
   /// \brief This class implements the SCC decomposition algorithm of bloemen
   /// as described in PPOPP'16. It uses a shared union-find augmented to manage
   /// work stealing between threads.
@@ -466,12 +455,20 @@ namespace spot
   {
   public:
 
+    using uf = iterable_uf_ec<State, StateHash, StateEqual>;
+    using uf_element = typename uf::uf_element;
+
+    using shared_struct = uf;
+    using shared_map = typename uf::shared_map;
+
+
     swarmed_bloemen_ec(kripkecube<State, SuccIterator>& sys,
                        twacube_ptr twa,
-                       iterable_uf_ec<State, StateHash, StateEqual>& uf,
+                       shared_map& map, /* useless here */
+                       iterable_uf_ec<State, StateHash, StateEqual>* uf,
                        unsigned tid,
                        std::atomic<bool>& stop):
-      sys_(sys),  twa_(twa), uf_(uf), tid_(tid),
+      sys_(sys),  twa_(twa), uf_(*uf), tid_(tid),
       nb_th_(std::thread::hardware_concurrency()),
       stop_(stop)
     {
@@ -480,8 +477,10 @@ namespace spot
                     "error: does not match the kripkecube requirements");
     }
 
-    using uf = iterable_uf_ec<State, StateHash, StateEqual>;
-    using uf_element = typename uf::uf_element;
+    static shared_struct* make_shared_st(shared_map m, unsigned i)
+    {
+      return new uf(m, i);
+    }
 
     void run()
     {
@@ -509,7 +508,7 @@ namespace spot
 
               auto it_kripke = sys_.succ(v_prime->st_kripke, tid_);
               auto it_prop = twa_->succ(v_prime->st_prop);
-              forward_iterators(it_kripke, it_prop, true);
+              forward_iterators(sys_, twa_, it_kripke, it_prop, true, tid_);
               while (!it_kripke->done())
                 {
                   auto w = uf_.make_claim(it_kripke->state(),
@@ -558,7 +557,8 @@ namespace spot
                           return;
                         }
                     }
-                  forward_iterators(it_kripke, it_prop, false);
+                  forward_iterators(sys_, twa_, it_kripke, it_prop,
+                                    false, tid_);
                 }
               uf_.remove_from_list(v_prime);
               sys_.recycle(it_kripke, tid_);
@@ -571,52 +571,6 @@ namespace spot
       tm_.stop("DFS thread " + std::to_string(tid_));
     }
 
-    /// \brief Find the first couple of iterator (from the top of the
-    /// todo stack) that intersect. The \a parameter indicates wheter
-    /// the state has just been pushed since the underlying job is
-    /// slightly different.
-    void forward_iterators(SuccIterator* it_kripke,
-                           std::shared_ptr<trans_index> it_prop,
-                           bool just_pushed)
-    {
-      SPOT_ASSERT(!(it_prop->done() &&
-                    it_kripke->done()));
-
-      // Sometimes kripke state may have no successors.
-      if (it_kripke->done())
-        return;
-
-      // The state has just been push and the 2 iterators intersect.
-      // There is no need to move iterators forward.
-      SPOT_ASSERT(!(it_prop->done()));
-      if (just_pushed && twa_->get_cubeset()
-          .intersect(twa_->trans_data(it_prop, tid_).cube_,
-                     it_kripke->condition()))
-        return;
-
-      // Otherwise we have to compute the next valid successor (if it exits).
-      // This requires two loops. The most inner one is for the twacube since
-      // its costless
-      if (it_prop->done())
-        it_prop->reset();
-      else
-        it_prop->next();
-
-      while (!it_kripke->done())
-        {
-          while (!it_prop->done())
-            {
-              if (SPOT_UNLIKELY(twa_->get_cubeset()
-                  .intersect(twa_->trans_data(it_prop, tid_).cube_,
-                             it_kripke->condition())))
-                return;
-              it_prop->next();
-            }
-          it_prop->reset();
-          it_kripke->next();
-        }
-    }
-
     unsigned walltime()
     {
       return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
@@ -627,15 +581,34 @@ namespace spot
       return is_empty_;
     }
 
-    bloemen_ec_stats stats()
-    {
-      return {uf_.inserted(), states_, transitions_, sccs_, is_empty_,
-              walltime()};
-    }
-
     std::string trace()
     {
       return "Not implemented";
+    }
+
+    std::string name()
+    {
+      return "bloemen_ec";
+    }
+
+    unsigned transitions()
+    {
+      return transitions_;
+    }
+
+    unsigned states()
+    {
+      return states_;
+    }
+
+    int sccs()
+    {
+      return sccs_;
+    }
+
+    mc_rvalue result()
+    {
+      return is_empty_ ? mc_rvalue::EMPTY : mc_rvalue::NOT_EMPTY;
     }
 
   private:

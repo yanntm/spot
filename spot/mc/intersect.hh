@@ -25,18 +25,6 @@
 
 namespace spot
 {
-  /// \brief Wrapper to accumulate results from intersection
-  /// and emptiness checks
-  struct SPOT_API istats
-  {
-    unsigned states;
-    unsigned transitions;
-    unsigned sccs;
-    unsigned instack_sccs;
-    unsigned instack_item;
-    bool is_empty;
-  };
-
   /// \brief This class explores (with a DFS) a product between a
   /// system and a twa. This exploration is performed on-the-fly.
   /// Since this exploration aims to be a generic we need to define
@@ -103,7 +91,8 @@ namespace spot
           if (todo.back().it_prop->done())
             return false;
 
-          forward_iterators(true);
+          forward_iterators(sys_, twa_, todo.back().it_kripke,
+                            todo.back().it_prop, true, 0);
           map[initial] = ++dfs_number;
         }
       while (!todo.empty() && !stop_)
@@ -135,7 +124,8 @@ namespace spot
                 twa_->trans_storage(todo.back().it_prop, tid_).dst
               };
               auto acc = twa_->trans_data(todo.back().it_prop, tid_).acc_;
-              forward_iterators(false);
+              forward_iterators(sys_, twa_, todo.back().it_kripke,
+                                todo.back().it_prop, false, 0);
               auto it  = map.find(dst);
               if (it == map.end())
                 {
@@ -144,7 +134,8 @@ namespace spot
                       map[dst] = ++dfs_number;
                       todo.push_back({dst, sys_.succ(dst.st_kripke, tid_),
                             twa_->succ(dst.st_prop)});
-                      forward_iterators(true);
+                      forward_iterators(sys_, twa_, todo.back().it_kripke,
+                                        todo.back().it_prop, true, 0);
                     }
                 }
               else if (SPOT_UNLIKELY(self().update(todo.back().st,
@@ -169,58 +160,6 @@ namespace spot
     std::string counterexample()
     {
       return self().trace();
-    }
-
-    virtual istats stats()
-    {
-      return {dfs_number, transitions, 0U, 0U, 0U, false};
-    }
-
-  protected:
-
-    /// \brief Find the first couple of iterator (from the top of the
-    /// todo stack) that intersect. The \a parameter indicates wheter
-    /// the state has just been pushed since the underlying job
-    /// is slightly different.
-    void forward_iterators(bool just_pushed)
-    {
-      SPOT_ASSERT(!todo.empty());
-      SPOT_ASSERT(!(todo.back().it_prop->done() &&
-                    todo.back().it_kripke->done()));
-
-      // Sometimes kripke state may have no successors.
-      if (todo.back().it_kripke->done())
-        return;
-
-      // The state has just been push and the 2 iterators intersect.
-      // There is no need to move iterators forward.
-      SPOT_ASSERT(!(todo.back().it_prop->done()));
-      if (just_pushed && twa_->get_cubeset()
-          .intersect(twa_->trans_data(todo.back().it_prop, tid_).cube_,
-                     todo.back().it_kripke->condition()))
-          return;
-
-      // Otherwise we have to compute the next valid successor (if it exits).
-      // This requires two loops. The most inner one is for the twacube since
-      // its costless
-      if (todo.back().it_prop->done())
-        todo.back().it_prop->reset();
-      else
-        todo.back().it_prop->next();
-
-      while (!todo.back().it_kripke->done())
-        {
-          while (!todo.back().it_prop->done())
-            {
-              if (SPOT_UNLIKELY(twa_->get_cubeset()
-                .intersect(twa_->trans_data(todo.back().it_prop, tid_).cube_,
-                           todo.back().it_kripke->condition())))
-                return;
-              todo.back().it_prop->next();
-            }
-          todo.back().it_prop->reset();
-          todo.back().it_kripke->next();
-        }
     }
 
   public:
@@ -272,4 +211,55 @@ namespace spot
     unsigned tid_;
     bool& stop_; // Do not need to be atomic.
   };
+
+
+  /// \brief Find the first couple of iterator (from a given pair of
+  /// interators) that intersect. This method can be used in any
+  /// DFS/BFS-like exploration algorithm. The \a parameter indicates
+  /// wheter the state has just been visited since the underlying job
+  /// is slightly different.
+  template<typename SuccIterator, typename State>
+  static void forward_iterators(kripkecube<State, SuccIterator>& sys,
+                                twacube_ptr twa,
+                                SuccIterator* it_kripke,
+                                std::shared_ptr<trans_index> it_prop,
+                                bool just_visited,
+                                unsigned tid)
+  {
+    SPOT_ASSERT(!(it_prop->done() && it_kripke->done()));
+
+    // Sometimes kripke state may have no successors.
+    if (it_kripke->done())
+      return;
+
+    // The state has just been visited  and the 2 iterators intersect.
+    // There is no need to move iterators forward.
+    SPOT_ASSERT(!(it_prop->done()));
+    if (just_visited && twa->get_cubeset()
+        .intersect(twa->trans_data(it_prop, tid).cube_,
+                   it_kripke->condition()))
+      return;
+
+    // Otherwise we have to compute the next valid successor (if it exits).
+    // This requires two loops. The most inner one is for the twacube since
+    // its costless
+    if (it_prop->done())
+      it_prop->reset();
+    else
+      it_prop->next();
+
+    while (!it_kripke->done())
+      {
+        while (!it_prop->done())
+          {
+            if (SPOT_UNLIKELY(twa->get_cubeset()
+                              .intersect(twa->trans_data(it_prop, tid).cube_,
+                                         it_kripke->condition())))
+              return;
+            it_prop->next();
+          }
+        it_prop->reset();
+        it_kripke->next();
+      }
+  }
 }
