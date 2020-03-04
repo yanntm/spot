@@ -20,7 +20,7 @@ However there is a trick we can use in case we want to use Spot to
 build a finite automaton that recognize some LTLf (i.e. LTL with
 finite semantics) property.  The plan is as follows:
 
-1. Have Spot read the input formula as if it were LTL.
+1. Have Spot read the input LTLf formula as if it was LTL.
 2. Rewrite this formula in a way that embeds the semantics of LTLf in
    LTL.  First, introduce a new atomic proposition =alive= that will
    be true initially, but that will eventually become false forever.
@@ -62,7 +62,7 @@ initially, as required in the first paper...
 
 * Shell version
 
-The first four steps of the the above sequence of operations can be
+The first four steps of the above sequence of operations can be
 executed as follows.  Transforming LTLf to LTL can be done using
 [[file:ltlfilt.org][=ltlfilt=]]'s =--from-ltlf= option, translating the resulting formula
 into a Büchi automaton is obviously done with [[file:ltl2tgba.org][=ltl2tgba=]], and removing
@@ -159,6 +159,10 @@ State: 3 {0}
 --END--
 #+end_example
 
+If you need to print the automaton in a custom format (some finite
+automaton format probably), you should check our example of [[file:tut21.org][custom
+print of an automaton]].
+
 * C++ version
 
 The C++ version is straightforward adaptation of the Python version.
@@ -226,9 +230,12 @@ State: 3 {0}
 --END--
 #+end_example
 
+Again, please check our example of [[file:tut21.org][custom print of an automaton]] if you
+need to print in some format for NFA/DFA.
+
 * Final notes
 
-Spots only deal with infinite behaviors, so if you plan to use Spot to
+Spot only deals with infinite behaviors, so if you plan to use Spot to
 perform some LTLf model checking, you should stop at step 3.  Keep the
 =alive= proposition in your property automaton, and also add it to the
 Kripke structure representing your system.
