@@ -12,6 +12,7 @@
 #include <spot/tl/apcollect.hh>
 #include <spot/tl/defaultenv.hh>
 #include <spot/tl/parse.hh>
+#include <spot/twaalgos/determinize2.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/twacube_algos/convert.hh>
@@ -24,6 +25,9 @@ struct mc_options_
   char* file = nullptr;
   bool use_timer = false;
   unsigned nb_threads = 1;
+  unsigned wanted = 1;
+  unsigned min = 0;
+  unsigned max = 1;
 } mc_options;
 
 static int
@@ -35,11 +39,20 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 'f':
       mc_options.file = arg;
       break;
+    case 'm':
+      mc_options.min = to_unsigned(arg, "-m/--min");
+      break;
+    case 'M':
+      mc_options.max = to_unsigned(arg, "-M/--max");
+      break;
     case 'p':
       mc_options.nb_threads = to_unsigned(arg, "-p/--parallel");
       break;
     case 't':
       mc_options.use_timer = true;
+      break;
+    case 'w':
+      mc_options.wanted = to_unsigned(arg, "-w/--wanted");
       break;
     default:
       return ARGP_ERR_UNKNOWN;
@@ -58,8 +71,14 @@ static const argp_option options[] =
     { "parallel", 'p', "INT", 0, "use INT threads (when possible)", 0 },
     { "timer", 't', nullptr, 0,
       "time the different phases of the execution", 0 },
+    // ------------------------------------------------------------
+    { nullptr, 0, nullptr, 0, "Output options:", 3 },
+    { "wanted", 'w', "INT", 0, "number of auts to bench", 0 },
+    { "min", 'm', "INT", 0, "min det time in seconds", 0 },
+    { "max", 'M', "INT", 0, "max det time in seconds", 0 },
+    // ------------------------------------------------------------
 
-    { nullptr, 0, nullptr, 0, "General options:", 3 },
+    { nullptr, 0, nullptr, 0, "General options:", 4 },
     { nullptr, 0, nullptr, 0, nullptr, 0 }
   };
 
@@ -82,11 +101,16 @@ checked_main()
   spot::twacube_ptr aut_cube = nullptr;
   spot::formula f = nullptr;
   spot::atomic_prop_set ap;
-  spot::timer_map tm;
+  size_t count = 0;
 
   int exit_code = 0;
 
-  auto parser = spot::automaton_stream_parser(mc_options.file);
+  auto parser = spot::automaton_stream_parser("/dev/stdin");
+
+  std::cout << "nb_states,nb_edges"
+            << ",nb_states_deterministic,nb_edges_deterministic"
+            << ",walltime"
+            << '\n';
 
   spot::parsed_aut_ptr res = nullptr;
   while ((res = parser.parse(dict))->aut != nullptr)
@@ -94,8 +118,29 @@ checked_main()
       auto aut = res->aut;
       assert(!res->aborted);
       assert(res->errors.empty());
-
       assert(!spot::is_deterministic(aut));
+
+      spot::timer_map tm;
+      spot::const_twa_graph_ptr det_aut = nullptr;
+      tm.start("determinize");
+      {
+        det_aut = spot::tgba_determinize2(aut);
+      }
+      tm.stop("determinize");
+
+      auto duration = tm.timer("determinize").walltime();
+      if (duration > mc_options.min * 1000 && duration < mc_options.max * 1000)
+        {
+          count++;
+          std::cout << aut->num_states() << ','
+                    << aut->num_edges() << ','
+                    << det_aut->num_states() << ','
+                    << det_aut->num_edges() << ','
+                    << duration << std::endl;
+          if (count >= mc_options.wanted)
+            return exit_code;
+        }
+
     }
 
   return exit_code;
