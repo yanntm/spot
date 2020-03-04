@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2019 Laboratoire de Recherche et Developpement
+// Copyright (C) 2017-2020 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -74,9 +74,7 @@ namespace spot
           }
         else
           {
-            int fo = acc.fin_one();
-            if (fo < 0)
-              std::cerr << autacc << acc << '\n';
+            int fo = disjunct.fin_one();
             assert(fo >= 0);
             // Try to accept when Fin(fo) == true
             acc_cond::mark_t fo_m = {(unsigned) fo};
