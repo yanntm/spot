@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2018-2019 Laboratoire de Recherche et Développement de l'Epita
+# Copyright (C) 2018-2020 Laboratoire de Recherche et Développement de l'Epita
 # (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -283,17 +283,22 @@ def is_scc_empty2(si, scc_num, acc=None):
 
 def run_bench(automata):
     for aut in automata:
-        # Make sure our three implementation behave identically
+        # Make sure all our implementations behave identically
         res5 = is_empty2(aut)
         res4 = is_empty1(aut)
-        res3 = spot.generic_emptiness_check(aut)
+        spot.generic_emptiness_check_select_version("spot28")
+        res3a = spot.generic_emptiness_check(aut)
+        spot.generic_emptiness_check_select_version("atva19")
+        res3b = spot.generic_emptiness_check(aut)
+        spot.generic_emptiness_check_select_version("spot29")
+        res3c = spot.generic_emptiness_check(aut)
         res2 = spot.remove_fin(aut).is_empty()
         res1 = generic_emptiness2(aut)
-        res = (str(res1)[0] + str(res2)[0] + str(res3)[0]
-               + str(res4)[0] + str(res5)[0])
+        res = (str(res1)[0] + str(res2)[0] + str(res3a)[0]
+               + str(res3b)[0] + str(res3c)[0] + str(res4)[0] + str(res5)[0])
         print(res)
-        assert res in ('TTTTT', 'FFFFF')
-        if res == 'FFFFF':
+        assert res in ('TTTTTTT', 'FFFFFFF')
+        if res == 'FFFFFFF':
             run3 = spot.generic_accepting_run(aut)
             assert run3.replay(spot.get_cout()) is True
 

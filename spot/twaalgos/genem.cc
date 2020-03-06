@@ -25,6 +25,25 @@ namespace spot
 {
   namespace
   {
+    enum genem_version_t { spot28, atva19, spot29 };
+    static genem_version_t genem_version = spot29;
+  }
+
+  void generic_emptiness_check_select_version(const char* emversion)
+  {
+    if (emversion == nullptr || !strcasecmp(emversion, "spot29"))
+      genem_version = spot29;
+    else if (!strcasecmp(emversion, "spot28"))
+      genem_version = spot28;
+    else if (!strcasecmp(emversion, "atva19"))
+      genem_version = atva19;
+    else
+      throw std::invalid_argument("generic_emptiness_check version should"
+                                  " be one of {spot28, atva19, spot29}");
+  }
+
+  namespace
+  {
     static bool
     is_scc_empty(const scc_info& si, unsigned scc,
                  const acc_cond& autacc, twa_run_ptr run,
@@ -65,26 +84,55 @@ namespace spot
       acc_cond acc = autacc.restrict_to(sets);
       acc = acc.remove(si.common_sets_of(scc), false);
 
-      for (const acc_cond& disjunct: acc.top_disjuncts())
-        if (acc_cond::mark_t fu = disjunct.fin_unit())
-          {
-            if (!scc_split_check
-                (si, scc, disjunct.remove(fu, true), run, fu))
-              return false;
-          }
-        else
-          {
-            int fo = disjunct.fin_one();
-            assert(fo >= 0);
-            // Try to accept when Fin(fo) == true
-            acc_cond::mark_t fo_m = {(unsigned) fo};
-            if (!scc_split_check
-                (si, scc, disjunct.remove(fo_m, true), run, fo_m))
-              return false;
-            // Try to accept when Fin(fo) == false
-            if (!is_scc_empty(si, scc, disjunct.force_inf(fo_m), run, tocut))
-              return false;
-          }
+      auto generic_recurse =
+        [&] (const acc_cond& subacc)
+        {
+          int fo = (SPOT_UNLIKELY(genem_version == spot28)
+                    ? acc.fin_one() : subacc.fin_one());
+          assert(fo >= 0);
+          // Try to accept when Fin(fo) == true
+          acc_cond::mark_t fo_m = {(unsigned) fo};
+          if (!scc_split_check
+              (si, scc, subacc.remove(fo_m, true), run, fo_m))
+            return false;
+          // Try to accept when Fin(fo) == false
+          if (!is_scc_empty(si, scc, subacc.force_inf(fo_m), run, tocut))
+            return false;
+          return true;
+        };
+
+      if (SPOT_LIKELY(genem_version == spot29))
+        {
+          acc_cond::acc_code rest = acc_cond::acc_code::f();
+          for (const acc_cond& disjunct: acc.top_disjuncts())
+            if (acc_cond::mark_t fu = disjunct.fin_unit())
+              {
+                if (!scc_split_check
+                    (si, scc, disjunct.remove(fu, true), run, fu))
+                  return false;
+              }
+            else
+              {
+                rest |= disjunct.get_acceptance();
+              }
+          if (!rest.is_f() && !generic_recurse(acc_cond(acc.num_sets(), rest)))
+            return false;
+        }
+      else
+        {
+          for (const acc_cond& disjunct: acc.top_disjuncts())
+            if (acc_cond::mark_t fu = disjunct.fin_unit())
+              {
+                if (!scc_split_check
+                    (si, scc, disjunct.remove(fu, true), run, fu))
+                  return false;
+              }
+            else
+              {
+                if (!generic_recurse(disjunct))
+                  return false;
+              }
+        }
       return true;
     }
 

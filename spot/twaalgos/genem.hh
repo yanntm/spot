@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2019 Laboratoire de Recherche et Developpement
+// Copyright (C) 2017-2020 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -61,4 +61,23 @@ namespace spot
   SPOT_API bool
   generic_emptiness_check_for_scc(const scc_info& si, unsigned scc,
                                   const acc_cond& forced_acc);
+
+
+  /// \ingroup emptiness_check_algorithms
+  ///
+  /// Select the version of the generic-emptiness check to use, this
+  /// is mainly for benchmarking purpose.
+  ///
+  /// We currently have three versions:
+  /// - "spot28" is similar to the algorithm described our ATVA'19 paper
+  ///   \cite baier.19.atva , however it has an implementation bug
+  ///   that cause superfluous recursive calls to be performed (the
+  ///   result is still correct.
+  /// - "atva19" is similar to the algorithm described our ATVA'19 paper
+  ///   \cite baier.19.atva , with the above bug fixed.
+  /// - "spot29" improves upon the worst case of atva19.  This is
+  ///   the default.
+  SPOT_API void
+  generic_emptiness_check_select_version(const char* emversion = nullptr);
+
 }
