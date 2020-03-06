@@ -1,6 +1,6 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2016-2017, 2019 Laboratoire de Recherche et Développement de
-# l'Epita (LRDE).
+# Copyright (C) 2016-2017, 2019-2020 Laboratoire de Recherche et Développement
+# de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -102,3 +102,34 @@ res = spot.product(left, right, spot.output_aborter(900, 9000))
 assert res is None
 res = spot.product(left, right, spot.output_aborter(1000, 9000))
 assert res is not None
+
+a, b = spot.automata("""HOA: v1 States: 1 Start: 0 AP: 0 acc-name: all
+Acceptance: 0 t properties: trans-labels explicit-labels state-acc complete
+properties: deterministic stutter-invariant weak --BODY-- State: 0 [t] 0
+--END-- HOA: v1 States: 1 Start: 0 AP: 0 acc-name: none Acceptance: 0 f
+properties: trans-labels explicit-labels state-acc complete properties:
+deterministic stutter-invariant weak --BODY-- State: 0 [t] 0 --END--""")
+out = spot.product(a, b).to_str()
+assert out == """HOA: v1
+States: 1
+Start: 0
+AP: 0
+acc-name: none
+Acceptance: 0 f
+properties: trans-labels explicit-labels state-acc deterministic
+properties: stutter-invariant terminal
+--BODY--
+State: 0
+--END--"""
+out = spot.product_susp(a, b).to_str()
+assert out == """HOA: v1
+States: 1
+Start: 0
+AP: 0
+acc-name: all
+Acceptance: 0 t
+properties: trans-labels explicit-labels state-acc deterministic
+properties: stutter-invariant terminal
+--BODY--
+State: 0
+--END--"""
