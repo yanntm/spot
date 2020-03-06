@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -285,21 +285,34 @@ namespace spot
       if (!res)                 // aborted
         return nullptr;
 
-      // The product of two non-deterministic automata could be
-      // deterministic.  Likewise for non-complete automata.
-      if (left->prop_universal() && right->prop_universal())
-        res->prop_universal(true);
-      if (left->prop_complete() && right->prop_complete())
-        res->prop_complete(true);
-      if (left->prop_stutter_invariant() && right->prop_stutter_invariant())
-        res->prop_stutter_invariant(true);
-      if (left->prop_inherently_weak() && right->prop_inherently_weak())
-        res->prop_inherently_weak(true);
-      if (left->prop_weak() && right->prop_weak())
-        res->prop_weak(true);
-      if (left->prop_terminal() && right->prop_terminal())
-        res->prop_terminal(true);
-      res->prop_state_acc(left->prop_state_acc() && right->prop_state_acc());
+      if (res->acc().is_f())
+        {
+          assert(res->num_edges() == 0);
+          res->prop_universal(true);
+          res->prop_complete(false);
+          res->prop_stutter_invariant(true);
+          res->prop_terminal(true);
+          res->prop_state_acc(true);
+        }
+      else
+        {
+          // The product of two non-deterministic automata could be
+          // deterministic.  Likewise for non-complete automata.
+          if (left->prop_universal() && right->prop_universal())
+            res->prop_universal(true);
+          if (left->prop_complete() && right->prop_complete())
+            res->prop_complete(true);
+          if (left->prop_stutter_invariant() && right->prop_stutter_invariant())
+            res->prop_stutter_invariant(true);
+          if (left->prop_inherently_weak() && right->prop_inherently_weak())
+            res->prop_inherently_weak(true);
+          if (left->prop_weak() && right->prop_weak())
+            res->prop_weak(true);
+          if (left->prop_terminal() && right->prop_terminal())
+            res->prop_terminal(true);
+          res->prop_state_acc(left->prop_state_acc()
+                              && right->prop_state_acc());
+        }
       return res;
     }
   }
@@ -450,6 +463,10 @@ namespace spot
             {
               auto res = make_twa_graph(left->get_dict());
               res->new_state();
+              res->prop_terminal(true);
+              res->prop_stutter_invariant(true);
+              res->prop_universal(true);
+              res->prop_complete(false);
               return res;
             }
           return make_twa_graph(left, twa::prop_set::all());
