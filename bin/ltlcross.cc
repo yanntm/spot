@@ -224,6 +224,7 @@ static bool products_avg = true;
 static bool opt_omit = false;
 static const char* bogus_output_filename = nullptr;
 static output_file* bogus_output = nullptr;
+static const char* grind_output_filename = nullptr;
 static output_file* grind_output = nullptr;
 static const char* saved_inclusion_products_filename = nullptr;
 static output_file* saved_inclusion_products = nullptr;
@@ -513,6 +514,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       fail_on_timeout = true;
       break;
     case OPT_GRIND:
+      grind_output_filename = arg;
       grind_output = new output_file(arg);
       break;
     case OPT_IGNORE_EXEC_FAIL:
@@ -1819,12 +1821,21 @@ main(int argc, char** argv)
             }
         }
 
-      // FIXME: I think we should call close() on all these files
-      // before deleting them.  Otherwise we fail to report write
-      // errors.
-      delete bogus_output;
-      delete grind_output;
-      delete saved_inclusion_products;
+      if (bogus_output)
+        {
+          bogus_output->close(bogus_output_filename);
+          delete bogus_output;
+        }
+      if (grind_output)
+        {
+          grind_output->close(grind_output_filename);
+          delete grind_output;
+        }
+      if (saved_inclusion_products)
+        {
+          saved_inclusion_products->close(saved_inclusion_products_filename);
+          delete saved_inclusion_products;
+        }
 
       if (json_output)
         print_stats_json(json_output);

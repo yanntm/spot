@@ -1,7 +1,7 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016 Laboratoire de Recherche et Développement de
-# l'Epita (LRDE).
+# Copyright (C) 2016, 2020 Laboratoire de Recherche et Développement
+# de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -47,6 +47,8 @@ ltlcross -f GFa ltl2tgba --csv=/dev/full && exit 1
 ltlcross -f GFa ltl2tgba --csv >/dev/full && exit 1
 ltlcross -f GFa ltl2tgba --json=/dev/full && exit 1
 ltlcross -f GFa ltl2tgba --json >/dev/full && exit 1
+ltlcross -f GFa ltl2tgba --save-inclusion-products=/dev/full && exit 1
+ltlcross -f GFa ltl2tgba --save-inclusion-products=- >/dev/full && exit 1
 ltldo ltl2tgba -f GFa >/dev/full && exit 1
 ltldo ltl2tgba -f GFa --output=- >/dev/full && exit 1
 ltldo ltl2tgba -f GFa --output=/dev/full && exit 1
