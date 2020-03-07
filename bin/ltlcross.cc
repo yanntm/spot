@@ -98,6 +98,7 @@ enum {
   OPT_OMIT,
   OPT_PRODUCTS,
   OPT_REFERENCE,
+  OPT_SAVE_INCLUSION_PRODUCTS,
   OPT_SEED,
   OPT_STATES,
   OPT_STOP_ERR,
@@ -180,6 +181,9 @@ static const argp_option options[] =
       "suppress all normal output in absence of error", 0 },
     { "save-bogus", OPT_BOGUS, "[>>]FILENAME", 0,
       "save formulas for which problems were detected in FILENAME", 0 },
+    { "save-inclusion-products",  OPT_SAVE_INCLUSION_PRODUCTS, "[>>]FILENAME",
+      0, "save automata representing products built to check inclusion "
+      "between automata", 0 },
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "print what is being done, for debugging", 0 },
     { nullptr, 0, nullptr, 0,
@@ -221,6 +225,8 @@ static bool opt_omit = false;
 static const char* bogus_output_filename = nullptr;
 static output_file* bogus_output = nullptr;
 static output_file* grind_output = nullptr;
+static const char* saved_inclusion_products_filename = nullptr;
+static output_file* saved_inclusion_products = nullptr;
 static bool verbose = false;
 static bool quiet = false;
 static bool ignore_exec_fail = false;
@@ -539,6 +545,12 @@ parse_opt(int key, char* arg, struct argp_state*)
     case OPT_REFERENCE:
       tools_push_trans(arg, true);
       break;
+    case OPT_SAVE_INCLUSION_PRODUCTS:
+      {
+        saved_inclusion_products = new output_file(arg);
+        saved_inclusion_products_filename = arg;
+        break;
+      }
     case OPT_SEED:
       seed = to_pos_int(arg, "--seed");
       break;
@@ -784,6 +796,9 @@ namespace
       }
 
     auto prod = spot::product(aut_i, aut_j);
+
+    if (saved_inclusion_products)
+      spot::print_hoa(saved_inclusion_products->ostream(), prod) << std::endl;
 
     if (verbose)
       {
@@ -1804,8 +1819,12 @@ main(int argc, char** argv)
             }
         }
 
+      // FIXME: I think we should call close() on all these files
+      // before deleting them.  Otherwise we fail to report write
+      // errors.
       delete bogus_output;
       delete grind_output;
+      delete saved_inclusion_products;
 
       if (json_output)
         print_stats_json(json_output);
