@@ -1264,6 +1264,33 @@ namespace
               unalt(neg, i, 'N');
             }
 
+          print_first = verbose;
+          auto tmp = [&](std::vector<spot::twa_graph_ptr>& x, unsigned i,
+                         const char* prefix, const char* suffix)
+            {
+              if (!x[i])
+                return;
+              unsigned before = x[i]->num_sets();
+              cleanup_acceptance_here(x[i]);
+              unsigned after = x[i]->num_sets();
+              if (verbose && before != after)
+                {
+                  if (print_first)
+                    {
+                      std::cerr << "info: removing unused sets...\n";
+                      print_first = false;
+                    }
+                  std::cerr << "info:   " << prefix << i
+                            << suffix << '\t' << before << " sets -> "
+                            << after << " sets\n";
+                }
+            };
+          for (size_t i = 0; i < m; ++i)
+            {
+              tmp(pos, i, "     P", " ");
+              tmp(neg, i, "     N", " ");
+            }
+
           // Complement
           if (!no_complement)
             {
@@ -1324,67 +1351,11 @@ namespace
                 }
             }
 
-          print_first = verbose;
-          auto tmp = [&](std::vector<spot::twa_graph_ptr>& x, unsigned i,
-                         const char* prefix, const char* suffix)
-            {
-              if (!x[i])
-                return;
-              if (x[i]->acc().uses_fin_acceptance())
-                {
-                  if (verbose)
-                    {
-                      if (print_first)
-                        {
-                          std::cerr <<
-                            "info: getting rid of any Fin acceptance...\n";
-                          print_first = false;
-                        }
-                      std::cerr << "info:\t" << prefix << i
-                                << suffix << "\t(";
-                      printsize(x[i]);
-                      std::cerr << ") ->";
-                    }
-                  try
-                    {
-                      x[i] = remove_fin(x[i]);
-                    }
-                  catch (const std::runtime_error& err)
-                    {
-                      if (verbose)
-                        std::cerr << " failed (" << err.what() << ")\n";
-                      else
-                        std::cerr << "info: preprocessing "
-                                  << prefix << i << suffix
-                                  << " failed (" << err.what() << ")\n";
-                      x[i] = nullptr;
-                    }
-                  if (verbose && x[i])
-                    {
-                      std::cerr << " (";
-                      printsize(x[i]);
-                      std::cerr << ")\n";
-                    }
-                }
-              else
-                {
-                  // Remove useless sets nonetheless.
-                  cleanup_acceptance_here(x[i]);
-                }
-            };
-          for (size_t i = 0; i < m; ++i)
-            {
-              tmp(pos, i, "     P", " ");
-              tmp(neg, i, "     N", " ");
-              tmp(comp_pos, i, "Comp(P", ")");
-              tmp(comp_neg, i, "Comp(N", ")");
-            }
-
           if (smallest_pos_ref >= 0)
             {
-              // Recompute the smallest references now, because removing
-              // alternation and Fin acceptance might have changed the
-              // sizes.
+              // Recompute the smallest references now, because
+              // removing alternation and useless acceptance sets
+              // might have changed the sizes.
               smallest_pos_ref = smallest_ref(pos);
               smallest_neg_ref = smallest_ref(neg);
 

@@ -21,6 +21,10 @@ New in spot 2.8.6.dev (not yet released)
     conjunctions of Inf, or disjunction of Fin that appears in
     arbitrary conditions.
 
+  - ltlcross is now using the generic emptiness check procedure
+    introduced in Spot 2.7, as opposed to removing Fin acceptance
+    before using a classical emptiness check.
+
   - ltlcross learned a --save-inclusion-products=FILENAME option.  Its
     use cases are probably quite limited.  We use that to generate
     benchmarks for our generic emptiness check procedure.
