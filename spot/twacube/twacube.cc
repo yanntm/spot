@@ -66,7 +66,7 @@ namespace spot
     return acc_;
   }
 
-  std::vector<std::string> twacube::get_ap()
+  std::vector<std::string> twacube::get_ap() const
   {
     return aps_;
   }
