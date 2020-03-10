@@ -139,7 +139,7 @@ namespace spot
     acc_cond& acc();
 
     /// \brief Returns the names of the atomic properties.
-    std::vector<std::string> get_ap();
+    std::vector<std::string> get_ap() const;
 
     /// \brief This method creates a new state.
     unsigned new_state();
