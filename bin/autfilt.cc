@@ -427,8 +427,31 @@ static const struct argp_child children[] =
   };
 
 
-typedef spot::twa_graph::graph_t::edge_storage_t tr_t;
-typedef std::set<std::vector<tr_t>> unique_aut_t;
+struct canon_aut
+{
+  typedef spot::twa_graph::graph_t::edge_storage_t tr_t;
+  unsigned num_states;
+  std::vector<tr_t> edges;
+  std::string acc;
+
+  canon_aut(const spot::const_twa_graph_ptr& aut)
+    : num_states(aut->num_states())
+    , edges(aut->edge_vector().begin() + 1,
+            aut->edge_vector().end())
+  {
+    std::ostringstream os;
+    aut->get_acceptance().to_text(os);
+    acc = os.str();
+  }
+
+  bool operator<(const canon_aut& o) const
+  {
+    return std::tie(num_states, edges, acc)
+      < std::tie(o.num_states, o.edges, o.acc);
+  };
+};
+
+typedef std::set<canon_aut> unique_aut_t;
 static long int match_count = 0;
 static spot::option_map extra_options;
 static bool randomize_st = false;
@@ -717,8 +740,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       opt_nth = parse_range(arg, 0, std::numeric_limits<int>::max());
       break;
     case 'u':
-      opt->uniq =
-        std::unique_ptr<unique_aut_t>(new std::set<std::vector<tr_t>>());
+      opt->uniq = std::unique_ptr<unique_aut_t>(new std::set<canon_aut>());
       break;
     case 'v':
       opt_invert = true;
@@ -1607,8 +1629,7 @@ namespace
           auto tmp =
             spot::canonicalize(make_twa_graph(aut,
                                                  spot::twa::prop_set::all()));
-          if (!opt->uniq->emplace(tmp->edge_vector().begin() + 1,
-                                  tmp->edge_vector().end()).second)
+          if (!opt->uniq->emplace(tmp).second)
             return 0;
         }
 
