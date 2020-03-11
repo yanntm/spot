@@ -56,7 +56,7 @@ New in spot 2.8.6.dev (not yet released)
     The X(0)=0 and X[!]1=1 reductions are now preformed during LTL
     simplification, not automatically.  Aside from the from_ltlf()
     function, the other functions of the library handle X and X[!] in
-    the same way, since there is no different between X and X[!]  over
+    the same way, since there is no difference between X and X[!] over
     infinite words.
 
     Operators F[n:m!] and G[n:m!] are also supported as strong
@@ -79,20 +79,20 @@ New in spot 2.8.6.dev (not yet released)
 
   - simplify_acceptance_here() and simplify_acceptance() learned to
     simplify subformulas like Fin(i)&Fin(j) or Inf(i)|Inf(j), or some
-    more complex variants of those.  If i us uniquely used in the
-    acceptance condition these become respectively Fin(i) or Inf(i),
-    and the automaton is adjusted to that i also appears where j
+    more complex variants of those.  If i is uniquely used in the
+    acceptance condition, these become respectively Fin(i) or Inf(i),
+    and the automaton is adjusted so that i also appears where j
     appeared.
 
   - propagate_marks_vector() and propagate_marks_here() are helper
     functions for propagatings marks on the automaton: ignoring
-    self-loop and out-of-SCC transitions, marks common to all the
-    input transitions of a state can be pushed to all outgoing
-    transitions of a state, and vice-versa.  This is repeated until a
-    fix point is reached.  propagate_marks_vector() does not modify
-    the automaton and returns a vector of the acc_cond::mark_t that
-    should be on each transition; propagate_marks_here() actually
-    modifies the automaton.
+    self-loops and out-of-SCC transitions, marks common to all the
+    input transitions of a state can be pushed to all its outgoing
+    transitions, and vice-versa.  This is repeated until a fix point
+    is reached.  propagate_marks_vector() does not modify the
+    automaton and returns a vector of the acc_cond::mark_t that should
+    be on each transition; propagate_marks_here() actually modifies
+    the automaton.
 
   - rabin_to_buchi_if_realizable() is a new variant of
     rabin_to_buchi_maybe() that converts a Rabin-like automaton into a
@@ -101,7 +101,7 @@ New in spot 2.8.6.dev (not yet released)
     modify the Rabin automaton if needed).
 
   - car() is a new variant of LAR algorithm that combines several
-    strategies for paritazing any automaton.
+    strategies for paritizing any automaton.
 
   Bugs fixed:
 
