@@ -772,7 +772,8 @@ namespace
   static bool
   check_empty_prod(const spot::const_twa_graph_ptr& aut_i,
                    const spot::const_twa_graph_ptr& aut_j,
-                   size_t i, size_t j, bool icomp, bool jcomp)
+                   size_t i, size_t j, bool icomp, bool jcomp,
+                   const std::string& formula)
   {
     if (aut_i->num_sets() + aut_j->num_sets() >
         spot::acc_cond::mark_t::max_accsets())
@@ -800,7 +801,20 @@ namespace
     auto prod = spot::product(aut_i, aut_j);
 
     if (saved_inclusion_products)
-      spot::print_hoa(saved_inclusion_products->ostream(), prod) << std::endl;
+      {
+        std::ostringstream os;
+        if (icomp)
+          os << "Comp(N" << i << ')';
+        else
+          os << 'P' << i;
+        if (jcomp)
+          os << "*Comp(P" << j << ')';
+        else
+          os << "*N" << j;
+        os << ", " << formula;
+        prod->set_named_prop("automaton-name", new std::string(os.str()));
+        spot::print_hoa(saved_inclusion_products->ostream(), prod) << std::endl;
+      }
 
     if (verbose)
       {
@@ -1384,7 +1398,8 @@ namespace
                               smallest_pos_ref >= 0 &&
                               (size_t)smallest_pos_ref != i)))
                       problems +=
-                        check_empty_prod(pos[i], neg[j], i, j, false, false);
+                        check_empty_prod(pos[i], neg[j], i, j, false, false,
+                                         fstr);
 
                     // Deal with the extra complemented automata if we
                     // have some.
@@ -1405,17 +1420,17 @@ namespace
                       if (smallest_pos_ref < 0 || i == (size_t)smallest_pos_ref)
                         problems +=
                           check_empty_prod(pos[i], comp_pos[j],
-                                           i, j, false, true);
+                                           i, j, false, true, fstr);
                     if (i != j && comp_neg[i] && !comp_pos[i])
                       if (smallest_neg_ref < 0 || j == (size_t)smallest_neg_ref)
                         problems +=
                           check_empty_prod(comp_neg[i], neg[j],
-                                           i, j, true, false);
+                                           i, j, true, false, fstr);
                     if (comp_pos[i] && comp_neg[j] &&
                         (i == j || (!comp_neg[i] && !comp_pos[j])))
                       problems +=
                         check_empty_prod(comp_neg[j], comp_pos[i],
-                                         j, i, true, true);
+                                         j, i, true, true, fstr);
                   }
         }
       else
