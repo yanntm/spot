@@ -267,6 +267,9 @@ static const argp_option options[] =
       "keep automata that accept WORD", 0 },
     { "reject-word", OPT_REJECT_WORD, "WORD", 0,
       "keep automata that reject WORD", 0 },
+    { "nth", 'N', "RANGE", 0,
+      "assuming input automata are numbered from 1, keep only those in RANGE",
+      0 },
     /**************************************************/
     RANGE_DOC_FULL,
     WORD_DOC,
@@ -612,6 +615,7 @@ static bool opt_terminal_sccs_set = false;
 static range opt_nondet_states = { 0, std::numeric_limits<int>::max() };
 static bool opt_nondet_states_set = false;
 static int opt_max_count = -1;
+static range opt_nth = { 0, std::numeric_limits<int>::max() };
 static bool opt_destut = false;
 static char opt_instut = 0;
 static bool opt_is_empty = false;
@@ -708,6 +712,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case 'n':
       opt_max_count = to_pos_int(arg, "-n/--max-count");
+      break;
+    case 'N':
+      opt_nth = parse_range(arg, 0, std::numeric_limits<int>::max());
       break;
     case 'u':
       opt->uniq =
@@ -1310,6 +1317,9 @@ namespace
     int
     process_automaton(const spot::const_parsed_aut_ptr& haut) override
     {
+      static unsigned order = 0;
+      ++order;
+
       spot::process_timer timer;
       timer.start();
 
@@ -1350,6 +1360,7 @@ namespace
 
       bool matched = true;
 
+      matched &= opt_nth.contains(order);
       matched &= opt_states.contains(aut->num_states());
       matched &= opt_edges.contains(aut->num_edges());
       matched &= opt_accsets.contains(aut->acc().num_sets());

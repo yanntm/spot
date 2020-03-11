@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -223,6 +223,9 @@ static const argp_option options[] =
     { "stutter-invariant", 0, nullptr, OPTION_ALIAS, nullptr, 0 },
     { "ap", OPT_AP_N, "RANGE", 0,
       "match formulas with a number of atomic propositions in RANGE", 0 },
+    { "nth", 'N', "RANGE", 0,
+      "assuming input formulas are numbered from 1, keep only those in RANGE",
+      0 },
     { "invert-match", 'v', nullptr, 0, "select non-matching formulas", 0},
     { "unique", 'u', nullptr, 0,
       "drop formulas that have already been output (not affected by -v)", 0 },
@@ -309,6 +312,7 @@ static spot::relabeling_style style = spot::Abc;
 static bool remove_x = false;
 static bool stutter_insensitive = false;
 static range ap_n = { -1, -1 };
+static range opt_nth = { 0, std::numeric_limits<int>::max() };
 static int opt_max_count = -1;
 static long int match_count = 0;
 static const char* from_ltlf = nullptr;
@@ -355,6 +359,9 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case 'n':
       opt_max_count = to_pos_int(arg, "-n/--max-count");
+      break;
+    case 'N':
+      opt_nth = parse_range(arg, 0, std::numeric_limits<int>::max());
       break;
     case 'q':
       output_format = quiet_output;
@@ -605,6 +612,8 @@ namespace
     process_formula(spot::formula f,
                     const char* filename = nullptr, int linenum = 0) override
     {
+      static unsigned order = 0;
+      ++order;
       spot::process_timer timer;
       timer.start();
 
@@ -618,7 +627,7 @@ namespace
       if (negate)
         f = spot::formula::Not(f);
 
-      bool matched = true;
+      bool matched = opt_nth.contains(order);
 
       if (from_ltlf)
         {

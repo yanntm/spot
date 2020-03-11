@@ -14,12 +14,16 @@ New in spot 2.8.6.dev (not yet released)
     spot-accepted-word: "!a; cycle{a}"
     spot-rejected-word: "!a; !a; cycle{a}"
 
-  - When running translators ltlcross will now display {names} when
-    supplied.
-
   - autfilt learned the --partial-degeneralize option, to remove
     conjunctions of Inf, or disjunction of Fin that appears in
     arbitrary conditions.
+
+  - ltlfilt and autfilt learned a --nth=RANGE (a.k.a. -N) option to
+    select a range of their input formulas or automata (assuming a
+    1-based numbering).
+
+  - When running translators ltlcross will now display {names} when
+    supplied.
 
   - ltlcross is now using the generic emptiness check procedure
     introduced in Spot 2.7, as opposed to removing Fin acceptance
