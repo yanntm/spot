@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -558,37 +558,43 @@ namespace spot
                   };
 
     // The SCC exploration has a small optimization that can flag SCCs
-    // has accepting if they contain accepting self-loops, even if the
+    // as accepting if they contain accepting self-loops, even if the
     // SCC itself has some Fin acceptance to check.  So we have to
     // deal with this situation before we look for the more complex
     // case of satisfying the condition with a larger cycle.  We do
     // this first, because it's good to return a small cycle if we
     // can.
     const acc_cond& acccond = aut_->acc();
-    for (unsigned s: node.states())
-      for (auto& e: aut_->out(s))
-        if (e.src == e.dst && !filter(e) && acccond.accepting(e.acc))
-          {
-            // We have found an accepting self-loop.  That's the cycle
-            // part of our accepting run.
-            r->cycle.clear();
-            r->cycle.emplace_front(aut_->state_from_number(e.src),
-                                   e.cond, e.acc);
-            // Add the prefix.
-            r->prefix.clear();
-            if (e.src != init)
-              explicit_bfs_steps(aut_, init, r->prefix,
-                                 [](const twa_graph::edge_storage_t&)
-                                 {
-                                   return false; // Do not filter.
-                                 },
-                                 [&](const twa_graph::edge_storage_t& t)
-                                 {
-                                   return t.dst == e.src;
-                                 });
-            return;
-          }
-
+    unsigned num_states = aut_->num_states();
+    for (unsigned s = 0; s < num_states; ++s)
+      {
+        // We scan the entire state to find those in the SCC, because
+        // we cannot rely on TRACK_STATES being on.
+        if (scc_of(s) != scc)
+          continue;
+        for (auto& e: aut_->out(s))
+          if (e.src == e.dst && !filter(e) && acccond.accepting(e.acc))
+            {
+              // We have found an accepting self-loop.  That's the cycle
+              // part of our accepting run.
+              r->cycle.clear();
+              r->cycle.emplace_front(aut_->state_from_number(e.src),
+                                     e.cond, e.acc);
+              // Add the prefix.
+              r->prefix.clear();
+              if (e.src != init)
+                explicit_bfs_steps(aut_, init, r->prefix,
+                                   [](const twa_graph::edge_storage_t&)
+                                   {
+                                     return false; // Do not filter.
+                                   },
+                                   [&](const twa_graph::edge_storage_t& t)
+                                   {
+                                     return t.dst == e.src;
+                                   });
+              return;
+            }
+      }
 
     // Prefix search
 
