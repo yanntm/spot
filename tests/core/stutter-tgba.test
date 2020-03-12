@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014-2019 Laboratoire de Recherche et
+# Copyright (C) 2014-2020 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -155,5 +155,13 @@ ltl2tgba Ga --check=stutter-sensitive-example > out
 grep ' stutter-invariant' out
 grep -q '^spot.accepted-word: "' out && exit 1
 grep -q '^spot.rejected-word: "' out && exit 1
+
+
+ltl2tgba 'G({x} |-> ({x[+]} <>-> ({Y1[+]} <>=> Y2)))' \
+         --check=stutter-sensitive-example > out
+grep ' stutter-sensitive' out
+grep -F 'spot-accepted-word: "cycle{!Y1 & !Y2 & x; Y1 & Y2 & x;' out
+grep -F 'spot-rejected-word: "cycle{!Y1 & !Y2 & x; Y1 & Y2 & x}' out
+
 
 :
