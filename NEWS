@@ -12,6 +12,12 @@ New in spot 2.8.6.dev (not yet released)
   - autfilt --uniq was not considering differences in acceptance
     conditions or number of states when discarding automata.
 
+  - In an automaton with acceptance condition containing some Fin, and
+    whose accepting cycle could be reduced to a self-loop in an
+    otherwise larger SCC, the generation of an accepting run could be
+    wrong.  This could in turn cause segfaults or infinite loops while
+    running autcross or autfilt --stats=%w.
+
 New in spot 2.8.6 (2020-02-19)
 
   Bugs fixed:
