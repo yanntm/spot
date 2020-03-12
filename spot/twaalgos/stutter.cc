@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement de
+// Copyright (C) 2014-2020 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -276,6 +276,19 @@ namespace spot
     // We use the same BDD variables as the input.
     res->copy_ap_of(a);
     res->copy_acceptance_of(a);
+
+    // We are going to create self-loop labeled by {},
+    // and those should not be accepting.  If they are,
+    // we need to upgrade the acceptance condition.
+    acc_cond::mark_t toadd = {};
+    if (res->acc().accepting({}))
+      {
+        unsigned ns = res->num_sets();
+        auto na = res->get_acceptance() & acc_cond::acc_code::inf({ns});
+        res->set_acceptance(ns + 1, na);
+        toadd = {ns};
+      }
+
     // These maps make it possible to convert stutter_state to number
     // and vice-versa.
     ss2num_map ss2num;
@@ -318,7 +331,7 @@ namespace spot
                   }
 
                 // Create the edge.
-                res->new_edge(src, dest, one, t.acc);
+                res->new_edge(src, dest, one, t.acc | toadd);
 
                 if (src == dest)
                   self_loop_needed = false;
@@ -335,6 +348,36 @@ namespace spot
   twa_graph_ptr
   sl2_inplace(twa_graph_ptr a)
   {
+    // We are going to create self-loop labeled by {},
+    // and those should not be accepting.  If they are,
+    // we need to upgrade the acceptance condition.
+    if (a->acc().accepting({}))
+      {
+        unsigned ns = a->num_sets();
+        auto na = a->get_acceptance() & acc_cond::acc_code::inf({ns});
+        a->set_acceptance(ns + 1, na);
+        acc_cond::mark_t toadd = {ns};
+        for (auto& e: a->edges())
+          e.acc |= toadd;
+      }
+
+    // The self-loops we add should not be accepting, so try to find
+    // an unsat mark, and upgrade the acceptance condition if
+    // necessary.
+    //
+    // UM is a pair (bool, mark).  If the Boolean is false, the
+    // acceptance is always satisfiable.  Otherwise, MARK is an
+    // example of unsatisfiable mark.
+    auto um = a->acc().unsat_mark();
+    if (!um.first)
+      {
+        auto m = a->set_buchi();
+        for (auto& e: a->edges())
+          e.acc = m;
+        um.second = {};
+      }
+    acc_cond::mark_t unsat = um.second;
+
     bdd atomic_propositions = a->ap_vars();
     unsigned num_states = a->num_states();
     unsigned num_edges = a->num_edges();
@@ -378,10 +421,10 @@ namespace spot
                 unsigned tmp = p.first->second; // intermediate state
                 unsigned i = a->new_edge(src, tmp, one, acc);
                 assert(i > num_edges);
-                i = a->new_edge(tmp, tmp, one, {});
+                i = a->new_edge(tmp, tmp, one, unsat);
                 assert(i > num_edges);
-                // No acceptance here to preserve the state-based property.
-                i = a->new_edge(tmp, dst, one, {});
+                // unsat acceptance here to preserve the state-based property.
+                i = a->new_edge(tmp, dst, one, unsat);
                 assert(i > num_edges);
                 (void)i;
               }

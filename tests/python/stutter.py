@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2019 Laboratoire de Recherche et Développement de
+# Copyright (C) 2019, 2020 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -47,3 +47,16 @@ def explain_stut(f):
 w1, w2 = explain_stut('{(a:b) | (a;b)}|->Gc')
 assert str(w1) == 'a & !b & !c; cycle{!a & b & !c}'
 assert str(w2) == 'a & !b & !c; a & !b & !c; cycle{!a & b & !c}'
+
+# Test from issue #401
+w1, w2 = explain_stut('G({x} |-> ({x[+]} <>-> ({Y1[+]} <>=> Y2)))')
+assert str(w1) == 'cycle{!Y1 & !Y2 & x; Y1 & Y2 & x}'
+assert str(w2) == 'cycle{!Y1 & !Y2 & x; Y1 & Y2 & x; Y1 & Y2 & x}'
+
+# Related to issue #401 as well.  sl() and sl2() should upgrade
+# the t acceptance condition into inf(0).
+pos = spot.translate('Xa & XXb')
+w = pos.accepting_word().as_automaton()
+assert w.acc().is_t()
+assert not spot.sl2(w).acc().is_buchi()
+assert not spot.sl(w).acc().is_buchi()
