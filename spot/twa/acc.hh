@@ -592,7 +592,6 @@ namespace spot
         }
         if (elements.size() == 2)
         {
-          // Vaut 1 si si c'est le 2e qui est bon
           unsigned pos = elements[1].back().sub.op == op
                         && elements[1][0].mark.count() == 1;
           if (!(elements[0].back().sub.op == op || pos))

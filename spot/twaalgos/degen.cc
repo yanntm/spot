@@ -846,7 +846,8 @@ namespace spot
 
   acc_cond::mark_t
   is_partially_degeneralizable(const const_twa_graph_ptr& aut,
-                               bool allow_inf, bool allow_fin)
+                               bool allow_inf, bool allow_fin,
+                               std::vector<acc_cond::mark_t> forbid)
   {
     auto& code = aut->get_acceptance();
 
@@ -881,15 +882,21 @@ namespace spot
           case acc_cond::acc_op::FinNeg:
             pos -= 2;
             if (allow_fin)
-              if (update(code[pos].mark))
+            {
+              auto m = code[pos].mark;
+              if (!std::count(forbid.begin(), forbid.end(), m) && update(m))
                 return res;
+            }
             break;
           case acc_cond::acc_op::Inf:
           case acc_cond::acc_op::InfNeg:
             pos -= 2;
             if (allow_inf)
-              if (update(code[pos].mark))
+            {
+              auto m = code[pos].mark;
+              if (!std::count(forbid.begin(), forbid.end(), m) && update(m))
                 return res;
+            }
             break;
           }
       }

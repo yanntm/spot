@@ -151,7 +151,8 @@ namespace spot
   SPOT_API acc_cond::mark_t
   is_partially_degeneralizable(const const_twa_graph_ptr& aut,
                                bool allow_inf = true,
-                               bool allow_fin = true);
+                               bool allow_fin = true,
+                               std::vector<acc_cond::mark_t> forbid = {});
 
   /// \ingroup twa_algorithms
   /// \brief Propagate marks around the automaton

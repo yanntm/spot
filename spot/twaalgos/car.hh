@@ -23,6 +23,23 @@
 
 namespace spot
 {
+  struct car_option
+{
+    bool search_ex      = true;
+    bool use_last       = true;
+    bool force_order    = true;
+    bool partial_degen  = true;
+    bool acc_clean      = true;
+    bool parity_equiv   = true;
+    bool parity_prefix  = true;
+    bool rabin_to_buchi = true;
+    bool reduce_col_deg = false;
+    bool propagate_col  = true;
+    bool pretty_print   = true;
+};
+
+
+
 /// \ingroup twa_acc_transform
 /// \brief Take an automaton with any acceptance condition and return an
 /// equivalent parity automaton.
@@ -43,17 +60,10 @@ namespace spot
 /// If \a pretty_print is true, we give a name to the states describing the
 // state of the aut_ and the permutation.
 
-  SPOT_API twa_graph_ptr
-  remove_false_transitions(const twa_graph_ptr a);
+SPOT_API twa_graph_ptr
+remove_false_transitions(const twa_graph_ptr a);
 
-  SPOT_API twa_graph_ptr
-  car(const twa_graph_ptr &aut,
-    bool search_ex = true,
-    bool partial_degen = true,
-    bool scc_acc_clean = true,
-    bool parity_equiv = true,
-    bool use_last = true,
-    bool parity_prefix = true,
-    bool rabin_to_buchi = true,
-    bool pretty_print = false);
+SPOT_API twa_graph_ptr
+to_parity(const twa_graph_ptr &aut, const car_option options = car_option());
+
 } // namespace spot
