@@ -1,4 +1,4 @@
-New in spot 2.8.6.dev (not yet released)
+New in spot 2.8.7.dev (not yet released)
 
   Command-line tools:
 
@@ -103,10 +103,12 @@ New in spot 2.8.6.dev (not yet released)
   - car() is a new variant of LAR algorithm that combines several
     strategies for paritizing any automaton.
 
+New in spot 2.8.7 (2019-03-13)
+
   Bugs fixed:
 
   - Building a product between two complete automata where one operand
-    had false acceptance could create a incomplete automaton
+    had false acceptance could create an incomplete automaton
     incorrectly tagged as complete, causing the print_hoa() function
     to raise an exception.
 
@@ -118,6 +120,21 @@ New in spot 2.8.6.dev (not yet released)
     otherwise larger SCC, the generation of an accepting run could be
     wrong.  This could in turn cause segfaults or infinite loops while
     running autcross or autfilt --stats=%w.
+
+  - The generic emptiness check used a suboptimal selection of "Fin"
+    to remove, not matching the correct line in our ATVA'19 paper.
+    This could cause superfluous recursive calls, however benchmarks
+    have shown the difference to be insignificant in practice.
+
+  - The sl(), and sl2() functions for computing the "self-loopization"
+    of an automaton, and used for instance in algorithms for computing
+    proof of stutter-sensitiveness (e.g., in our web application),
+    were incorrect when applied on automata with "t" acceptance (or
+    more generaly, any automaton where a cycle without mark is
+    accepting).
+
+  - ltlcross was not diagnosing write errors associated to
+    options --grind=FILENAME and --save-bogus=FILENAME.
 
 New in spot 2.8.6 (2020-02-19)
 
