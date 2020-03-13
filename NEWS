@@ -18,6 +18,9 @@ New in spot 2.8.6.dev (not yet released)
     wrong.  This could in turn cause segfaults or infinite loops while
     running autcross or autfilt --stats=%w.
 
+  - ltlcross was not diagnosing write errors associated to
+    options --grind=FILENAME and --save-bogus=FILENAME.
+
 New in spot 2.8.6 (2020-02-19)
 
   Bugs fixed:

@@ -220,6 +220,7 @@ static bool products_avg = true;
 static bool opt_omit = false;
 static const char* bogus_output_filename = nullptr;
 static output_file* bogus_output = nullptr;
+static const char* grind_output_filename = nullptr;
 static output_file* grind_output = nullptr;
 static bool verbose = false;
 static bool quiet = false;
@@ -507,6 +508,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       fail_on_timeout = true;
       break;
     case OPT_GRIND:
+      grind_output_filename = arg;
       grind_output = new output_file(arg);
       break;
     case OPT_IGNORE_EXEC_FAIL:
@@ -1800,8 +1802,16 @@ main(int argc, char** argv)
             }
         }
 
-      delete bogus_output;
-      delete grind_output;
+      if (bogus_output)
+        {
+          bogus_output->close(bogus_output_filename);
+          delete bogus_output;
+        }
+      if (grind_output)
+        {
+          grind_output->close(grind_output_filename);
+          delete grind_output;
+        }
 
       if (json_output)
         print_stats_json(json_output);
