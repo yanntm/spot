@@ -160,9 +160,7 @@
 #include <spot/twaalgos/relabel.hh>
 #include <spot/twaalgos/word.hh>
 #include <spot/twaalgos/are_isomorphic.hh>
-#include <spot/twaalgos/rabin2parity.hh>
 #include <spot/twaalgos/toparity.hh>
-#include <spot/twaalgos/car.hh>
 
 #include <spot/parseaut/public.hh>
 
@@ -682,9 +680,7 @@ def state_is_accepting(self, src) -> "bool":
 %include <spot/twaalgos/word.hh>
 %template(list_bdd) std::list<bdd>;
 %include <spot/twaalgos/are_isomorphic.hh>
-%include <spot/twaalgos/rabin2parity.hh>
 %include <spot/twaalgos/toparity.hh>
-%include <spot/twaalgos/car.hh>
 
 %pythonprepend spot::twa::dtwa_complement %{
   from warnings import warn

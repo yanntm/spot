@@ -59,7 +59,6 @@ twaalgos_HEADERS = \
   isunamb.hh \
   isweakscc.hh \
   langmap.hh \
-  car.hh \
   lbtt.hh \
   ltl2taa.hh \
   ltl2tgba_fm.hh \
@@ -72,7 +71,6 @@ twaalgos_HEADERS = \
   postproc.hh \
   powerset.hh \
   product.hh \
-  rabin2parity.hh \
   randomgraph.hh \
   randomize.hh \
   reachiter.hh \
@@ -129,7 +127,6 @@ libtwaalgos_la_SOURCES = \
   isunamb.cc \
   isweakscc.cc \
   langmap.cc \
-  car.cc \
   lbtt.cc \
   ltl2taa.cc \
   ltl2tgba_fm.cc \
@@ -143,7 +140,6 @@ libtwaalgos_la_SOURCES = \
   postproc.cc \
   powerset.cc \
   product.cc \
-  rabin2parity.cc \
   randomgraph.cc \
   randomize.cc \
   reachiter.cc \

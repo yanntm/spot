@@ -373,7 +373,6 @@ TESTS_python = \
   python/bdditer.py \
   python/bddnqueen.py \
   python/bugdet.py \
-  python/car.py \
   python/complement_semidet.py \
   python/declenv.py \
   python/decompose_scc.py \

@@ -1290,3 +1290,30 @@ class scc_and_mark_filter:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.restore_acceptance()
+
+
+def to_parity(aut, **kwargs):
+    option = car_option()
+    if "search_ex" in kwargs:
+        option.search_ex = kwargs.get("search_ex")
+    if "use_last" in kwargs:
+        option.use_last = kwargs.get("use_last")
+    if "force_order" in kwargs:
+        option.force_order = kwargs.get("force_order")
+    if "partial_degen" in kwargs:
+        option.partial_degen = kwargs.get("partial_degen")
+    if "acc_clean" in kwargs:
+        option.acc_clean = kwargs.get("acc_clean")
+    if "parity_equiv" in kwargs:
+        option.parity_equiv = kwargs.get("parity_equiv")
+    if "parity_prefix" in kwargs:
+        option.parity_prefix = kwargs.get("parity_prefix")
+    if "rabin_to_buchi" in kwargs:
+        option.rabin_to_buchi = kwargs.get("rabin_to_buchi")
+    if "reduce_col_deg" in kwargs:
+        option.reduce_col_deg = kwargs.get("reduce_col_deg")
+    if "propagate_col" in kwargs:
+        option.propagate_col = kwargs.get("propagate_col")
+    if "pretty_print" in kwargs:
+        option.pretty_print = kwargs.get("pretty_print")
+    return impl.to_parity(aut, option)

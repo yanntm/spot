@@ -38,8 +38,8 @@
 #include <spot/twaalgos/alternation.hh>
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/cobuchi.hh>
-#include <spot/twaalgos/rabin2parity.hh>
 #include <spot/twaalgos/cleanacc.hh>
+#include <spot/twaalgos/toparity.hh>
 
 namespace spot
 {
@@ -280,7 +280,7 @@ namespace spot
         twa_graph_ptr b = nullptr;
         if (want_parity && is_deterministic(a) &&
             !a->acc().is_generalized_buchi())
-          b = iar_maybe(a);
+          b = to_parity(a);
         // possible only if a was deterministic and (Rabin-like or Streett-like)
         // and we want parity and a is not a TGBA
         // NB: on a TGBA, degeneralization is better than IAR
