@@ -67,7 +67,7 @@ namespace spot
     typedef graph_t::edge_storage_t edge_storage_t;
 
     trans_index(trans_index& ci) = delete;
-    trans_index(unsigned state, graph_t& g):
+    trans_index(unsigned state, const graph_t& g):
       st_(g.state_storage(state))
     {
       reset();
@@ -202,7 +202,7 @@ namespace spot
     }
 
     ///< \brief Returns the successor of state \a i.
-    std::shared_ptr<trans_index> succ(unsigned i)
+    std::shared_ptr<trans_index> succ(unsigned i) const
     {
       return std::make_shared<trans_index>(i, theg_);
     }
