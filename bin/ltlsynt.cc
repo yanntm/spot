@@ -318,8 +318,8 @@ namespace
               auto tmp = to_dpa(aut);
               if (verbose)
                 std::cerr << "determinization done\nDPA has "
-                          << dpa->num_states() << " states, "
-                          << dpa->num_sets() << " colors\n";
+                          << tmp->num_states() << " states, "
+                          << tmp->num_sets() << " colors\n";
               tmp->merge_states();
               if (verbose)
                 std::cerr << "simplification done\nDPA has "
@@ -327,7 +327,7 @@ namespace
               dpa = split_2step(tmp, all_inputs);
               if (verbose)
                 std::cerr << "split inputs and outputs done\nautomaton has "
-                          << dpa->num_states() << " states\n";
+                          << tmp->num_states() << " states\n";
               spot::colorize_parity_here(dpa, true);
               break;
             }
