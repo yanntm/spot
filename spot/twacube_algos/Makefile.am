@@ -25,8 +25,9 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 twacube_algosdir = $(pkgincludedir)/twacube_algos
 
-twacube_algos_HEADERS =  convert.hh
+twacube_algos_HEADERS =  convert.hh determinize.hh
 
 noinst_LTLIBRARIES = libtwacube_algos.la
 libtwacube_algos_la_SOURCES = \
-   convert.cc
+   convert.cc \
+   determinize.cc
