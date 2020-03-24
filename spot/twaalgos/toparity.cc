@@ -695,18 +695,14 @@ group_to_vector_iar(const std::set<std::vector<unsigned>>& group)
     return result;
 }
 
-// Créé les groupes à partir d'un ensemble de mark_t
 std::map<acc_cond::mark_t, std::vector<unsigned>>
 get_groups(const std::set<acc_cond::mark_t>& marks_input)
 {
     std::map<acc_cond::mark_t, std::vector<unsigned>> result;
 
     std::vector<std::set<acc_cond::mark_t>> groups;
-    // Pour toutes les mark_t à traiter
     for (acc_cond::mark_t mark : marks_input)
     {
-        // added teste si la mark peut être ajoutée à un group déjà
-        // existant.
         bool added = false;
         for (unsigned group = 0; group < groups.size(); ++group)
         {
@@ -772,7 +768,6 @@ get_groups_iar(const std::set<std::vector<unsigned>>& marks_input)
     return result;
 }
 
-// Donne pour chaque état l'ensemble des combinaisons entre mark et vector
 std::vector<std::map<acc_cond::mark_t, std::vector<unsigned>>>
 get_mark_to_vector(const twa_graph_ptr& aut)
 {
@@ -1709,7 +1704,7 @@ to_parity(const twa_graph_ptr &aut, const car_option options)
             lar_state current = todo.front();
             todo.pop_front();
 
-            // TODO todo could store this number to avoid one lookup
+            // TODO: todo could store this number to avoid one lookup
             unsigned src_num = get_state(current);
 
             unsigned source_scc = si.scc_of(current.state);
