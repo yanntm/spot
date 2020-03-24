@@ -356,7 +356,7 @@ namespace
                 std::cerr << "split inputs and outputs done\nautomaton has "
                           << dpa->num_states() << " states\n";
               dpa = spot::to_parity(dpa);
-              spot::reduce_parity_here(dpa, true);
+              spot::colorize_parity_here(dpa, true);
               spot::change_parity_here(dpa, spot::parity_kind_max,
                                        spot::parity_style_odd);
               if (verbose)
