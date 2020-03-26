@@ -100,8 +100,8 @@ New in spot 2.8.7.dev (not yet released)
     same transition structure (where the ..._maybe() variant would
     modify the Rabin automaton if needed).
 
-  - car() is a new variant of LAR algorithm that combines several
-    strategies for paritizing any automaton.
+  - to_parity() now combines several strategies for paritizing any
+    automaton.
 
 New in spot 2.8.7 (2019-03-13)
 
