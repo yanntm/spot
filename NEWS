@@ -103,7 +103,7 @@ New in spot 2.8.7.dev (not yet released)
   - to_parity() now combines several strategies for paritizing any
     automaton.
 
-New in spot 2.8.7 (2019-03-13)
+New in spot 2.8.7 (2020-03-13)
 
   Bugs fixed:
 
