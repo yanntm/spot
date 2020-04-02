@@ -110,6 +110,7 @@ namespace spot
       mark_t
       apply_permutation(std::vector<unsigned> permut);
 
+
 #ifndef SWIG
       /// Create a mark_t from a range of set numbers.
       template<class iterator>
@@ -468,6 +469,82 @@ namespace spot
     /// provided methods instead.
     struct SPOT_API acc_code: public std::vector<acc_word>
     {
+      private:
+      bool
+      get_alone_mark(bool& fin, acc_cond::mark_t& mark, bool& conj, acc_code& code)
+      {
+        auto elements = top_conjuncts();
+        conj = (elements.size() > 1);
+        if (!conj)
+        {
+          elements = top_disjuncts();
+          if (elements.size() < 2)
+            return false;
+        }
+
+        for (auto c : elements)
+        {
+          auto op = c.back().sub.op;
+          fin = (op == acc_cond::acc_op::Fin);
+          if ((fin || op == acc_cond::acc_op::Inf) && c[0].mark.count() == 1
+              && (used_once_sets() & c[0].mark) == acc_cond::mark_t {})
+          {
+            mark = c[0].mark;
+            code = c;
+            return true;
+          }
+        }
+        return false;
+      }
+
+      public:
+      acc_code
+      propagate_fin_inf()
+      {
+        bool fin = false, conj;
+        acc_cond::mark_t mark;
+        acc_code result = (*this);
+        acc_code code;
+        while (result.get_alone_mark(fin, mark, conj, code))
+        {
+          auto elements = result.top_disjuncts();
+          if (elements.size() < 2)
+            elements = result.top_conjuncts();
+          result = std::accumulate(elements.begin(), elements.end(), code,
+            [&](acc_code a, acc_code b)
+            {
+              if (b != code)
+              {
+                b = b.remove(mark, !fin);
+                if (conj)
+                  return a & b;
+                else
+                  return a | b;
+              }
+              return a;
+            });
+        }
+        std::vector<acc_code> elements = result.top_disjuncts();
+        if (elements.size() < 2)
+          elements = result.top_conjuncts();
+        if (elements.size() > 1)
+        {
+          acc_code init_code;
+          if (conj)
+            init_code = acc_code::t();
+          else
+            init_code = acc_code::f();
+          result = std::accumulate(elements.begin(), elements.end(), init_code,
+            [&](acc_code a, acc_code b)
+            {
+                if (conj)
+                  return a & b.propagate_fin_inf();
+                else
+                  return a | b.propagate_fin_inf();
+            });
+        }
+        return result;
+      }
 
       std::vector<unsigned>
       colors_inf_conj(unsigned min_nb_colors = 2)
@@ -1860,6 +1937,15 @@ namespace spot
       bool max;
       bool odd;
       return is_parity(max, odd);
+    }
+
+    /// \brief Remove redundant Fin and Inf. For example in
+    /// Fin(0)|(Inf(0) & Fin(1)), Inf(0) is true iff Fin(0) is false so
+    /// we can rewrite it as Fin(0)|Fin(1).
+    acc_cond
+    propagate_fin_inf()
+    {
+      return acc_cond(code_.propagate_fin_inf());
     }
 
     // Return (true, m) if there exist some acceptance mark m that

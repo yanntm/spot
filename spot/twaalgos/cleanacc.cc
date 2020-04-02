@@ -619,6 +619,7 @@ namespace spot
         simplify_complementary_marks_here(aut);
         fuse_marks_here(aut);
       }
+    aut->set_acceptance(aut->acc().propagate_fin_inf());
     cleanup_acceptance_here(aut, true);
     return aut;
   }
