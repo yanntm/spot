@@ -158,8 +158,7 @@ namespace spot
                 unsigned iar_pos = iar_states.size();
                 unsigned old_newest_pos = state2pos_iar_states[s.state];
                 state2pos_iar_states[s.state] = iar_pos;
-                iar_states.push_back(
-                  std::pair<iar_state, unsigned>(s, old_newest_pos));
+                iar_states.push_back({s, old_newest_pos});
                 todo.push_back(s);
                 return nb;
               }
@@ -434,6 +433,20 @@ struct node
         }
     }
 
+    node*
+    get_sub_tree(const std::vector<unsigned>& elements, int pos)
+    {
+        if (pos < 0)
+            return this;
+        unsigned lab = elements[pos];
+        auto child = std::find_if(children.begin(), children.end(),
+                [lab](node* n){
+                    return n->label == lab;
+                });
+        assert(child != children.end());
+        return (*child)->get_sub_tree(elements, pos - 1);
+    }
+
     // Gives a state of res_ (if it exists) reachable from this node.
     // If use_last is true, we take the most recent, otherwise we take
     // the oldest.
@@ -495,6 +508,12 @@ add_res_state(unsigned initial, unsigned state,
               const std::vector<unsigned>& permu)
 {
     nodes[initial].add_new_perm(permu, ((int) permu.size()) - 1, state);
+}
+
+node*
+get_sub_tree(const std::vector<unsigned>& elements, unsigned state)
+{
+    return nodes[state].get_sub_tree(elements, elements.size() - 1);
 }
 };
 
@@ -733,8 +752,7 @@ get_groups(const std::set<acc_cond::mark_t>& marks_input)
     {
         auto new_vector = group_to_vector(group);
         for (auto mark : group)
-            result.insert(std::pair<acc_cond::mark_t, std::vector<unsigned>>(
-                          mark, new_vector));
+            result.insert({mark, new_vector});
     }
     return result;
 }
@@ -769,9 +787,7 @@ get_groups_iar(const std::set<std::vector<unsigned>>& marks_input)
     {
         auto new_vector = group_to_vector_iar(group);
         for (auto vect : group)
-            result.insert(
-                std::pair<std::vector<unsigned>, std::vector<unsigned>>(
-                    vect, new_vector));
+            result.insert({vect, new_vector});
     }
     return result;
 }
@@ -782,11 +798,7 @@ get_mark_to_vector(const twa_graph_ptr& aut)
     std::vector<std::map<acc_cond::mark_t, std::vector<unsigned>>> result;
     auto inputs = get_inputs_states(aut);
     for (unsigned state = 0; state < inputs.size(); ++state)
-    {
-        std::map<acc_cond::mark_t, std::vector<unsigned>> state_map;
-        auto map = get_groups(inputs[state]);
-        result.push_back(map);
-    }
+        result.push_back(get_groups(inputs[state]));
     return result;
 }
 
@@ -798,11 +810,7 @@ get_iar_to_vector(const twa_graph_ptr& aut, algorithm algo,
     std::vector<std::map<std::vector<unsigned>, std::vector<unsigned>>> result;
     auto inputs = get_inputs_iar(aut, algo, perm_elem, pairs);
     for (unsigned state = 0; state < inputs.size(); ++state)
-    {
-        std::map<std::vector<unsigned>, std::vector<unsigned>> state_map;
-        auto map = get_groups_iar(inputs[state]);
-        result.push_back(map);
-    }
+        result.push_back(get_groups_iar(inputs[state]));
     return result;
 }
 
@@ -817,6 +825,27 @@ explicit car_generator(const const_twa_graph_ptr &a, to_parity_options options)
         names = new std::vector<std::string>();
     else
         names = nullptr;
+}
+
+void
+change_transitions_destination(twa_graph_ptr& aut,
+const std::vector<unsigned>& states,
+std::map<unsigned, std::vector<unsigned>>& partial_history,
+state_2_car_scc& state_2_car)
+{
+    for (unsigned current_state : states)
+        for (auto& edge : aut->out(current_state))
+        {
+            unsigned
+                src = edge.src,
+                dst = edge.dst;
+            if (src == dst)
+                continue;
+            unsigned dst_scc = num2car[dst].state_scc;
+            auto cant_change = partial_history[aut->edge_number(edge)];
+            edge.dst = state_2_car.get_sub_tree(cant_change, dst_scc)
+                                 ->get_end(true);
+        }
 }
 
 unsigned
@@ -921,7 +950,7 @@ apply_to_Buchi(const twa_graph_ptr& sub_automaton,
                const std::vector<int>& inf_fin_prefix,
                unsigned max_free_color,
                std::map<unsigned, car_state>& state2car_local,
-               std::map<car_state, unsigned>&car2num_local)
+               std::map<car_state, unsigned>& car2num_local)
 {
     std::vector<unsigned>* init_states = sub_automaton
         ->get_named_prop<std::vector<unsigned>>("original-states");
@@ -1084,6 +1113,9 @@ apply_lar(const twa_graph_ptr &sub_automaton,
           unsigned max_states)
 {
     auto maps = get_mark_to_vector(sub_automaton);
+    // For each edge e of res_, we store the elements of the permutation
+    // that are not moved, and we respect the order.
+    std::map<unsigned, std::vector<unsigned>> edge_to_colors;
     unsigned nb_created_states = 0;
     auto state_2_car = state_2_car_scc(sub_automaton->num_states());
     std::vector<unsigned>* init_states = sub_automaton->
@@ -1167,6 +1199,9 @@ apply_lar(const twa_graph_ptr &sub_automaton,
                 assert(false);
             }
 
+            std::vector<unsigned> not_moved(new_perm.begin() + seen_nb,
+                                            new_perm.end());
+
             if (options.force_order)
             {
                 if (algo == CAR && seen_nb > 1)
@@ -1241,8 +1276,20 @@ apply_lar(const twa_graph_ptr &sub_automaton,
                         acc_col = (unsigned) inf_fin_prefix[col] + is_odd;
                 }
             }
-            res_->new_edge(src_num, dst_num, e.cond, { acc_col });
+            auto new_e = res_->new_edge(src_num, dst_num, e.cond, { acc_col });
+            edge_to_colors.insert({new_e, not_moved});
         }
+    }
+    if (options.search_ex && options.use_last)
+    {
+        std::vector<unsigned> added_states;
+        std::transform(car2num_local.begin(), car2num_local.end(),
+                       std::back_inserter(added_states),
+                       [](std::pair<const car_state, unsigned> pair) {
+                           return pair.second;
+                       });
+        change_transitions_destination(
+            res_, added_states, edge_to_colors, state_2_car);
     }
     auto leaving_edge =
         [&](unsigned d){

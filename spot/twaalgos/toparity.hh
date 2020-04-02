@@ -57,7 +57,6 @@ namespace spot
   };
 
 
-
   /// \ingroup twa_acc_transform
   /// \brief Take an automaton with any acceptance condition and return an
   /// equivalent parity automaton.
