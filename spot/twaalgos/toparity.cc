@@ -1605,23 +1605,29 @@ to_parity_options options;
 std::vector<std::string>* names;
 }; // car_generator
 
-}// namespace
-
-twa_graph_ptr
-remove_false_transitions(const twa_graph_ptr a)
-{
+  static twa_graph_ptr
+  remove_false_transitions(const twa_graph_ptr a)
+  {
+    // Do not do anything if the automaton has no false transition
+    for (auto edge : a->edges())
+      if (edge.cond == bddfalse)
+        goto doremoval;
+    return a;
+  doremoval:
     auto res_ = make_twa_graph(a->get_dict());
     res_->copy_ap_of(a);
-    for (unsigned state = 0; state < a->num_states(); ++state)
-        res_->new_state();
-    for (unsigned state = 0; state < a->num_states(); ++state)
-        for (auto edge : a->out(state))
-            if (edge.cond != bddfalse)
-                res_->new_edge(state, edge.dst, edge.cond, edge.acc);
+    res_->new_states(a->num_states());
+    for (auto edge : a->edges())
+      if (edge.cond != bddfalse)
+        res_->new_edge(edge.src, edge.dst, edge.cond, edge.acc);
     res_->set_init_state(a->get_init_state_number());
     res_->set_acceptance(a->get_acceptance());
+    res_->prop_copy(a, twa::prop_set::all());
     return res_;
-}
+  }
+
+}// namespace
+
 
 twa_graph_ptr
 to_parity(const twa_graph_ptr &aut, const to_parity_options options)

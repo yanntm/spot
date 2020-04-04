@@ -77,10 +77,6 @@ namespace spot
   to_parity(const twa_graph_ptr &aut,
             const to_parity_options options = to_parity_options());
 
-  SPOT_API twa_graph_ptr
-  remove_false_transitions(const twa_graph_ptr a);
-
-
   /// \ingroup twa_acc_transform
   /// \brief Take an automaton with any acceptance condition and return an
   /// equivalent parity automaton.
