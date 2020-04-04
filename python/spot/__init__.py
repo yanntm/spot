@@ -1292,28 +1292,22 @@ class scc_and_mark_filter:
         self.restore_acceptance()
 
 
-def to_parity(aut, **kwargs):
-    option = to_parity_options()
-    if "search_ex" in kwargs:
-        option.search_ex = kwargs.get("search_ex")
-    if "use_last" in kwargs:
-        option.use_last = kwargs.get("use_last")
-    if "force_order" in kwargs:
-        option.force_order = kwargs.get("force_order")
-    if "partial_degen" in kwargs:
-        option.partial_degen = kwargs.get("partial_degen")
-    if "acc_clean" in kwargs:
-        option.acc_clean = kwargs.get("acc_clean")
-    if "parity_equiv" in kwargs:
-        option.parity_equiv = kwargs.get("parity_equiv")
-    if "parity_prefix" in kwargs:
-        option.parity_prefix = kwargs.get("parity_prefix")
-    if "rabin_to_buchi" in kwargs:
-        option.rabin_to_buchi = kwargs.get("rabin_to_buchi")
-    if "reduce_col_deg" in kwargs:
-        option.reduce_col_deg = kwargs.get("reduce_col_deg")
-    if "propagate_col" in kwargs:
-        option.propagate_col = kwargs.get("propagate_col")
-    if "pretty_print" in kwargs:
-        option.pretty_print = kwargs.get("pretty_print")
-    return impl.to_parity(aut, option)
+def to_parity(aut, options = to_parity_options(), **kwargs):
+    """Convert aut into a parity acceptance.
+
+    This procedure combines multiple strategies to attempt to
+    produce a small parity automaton.  The resulting parity
+    acceptance is either "max odd" or "max even".
+
+    The default optimization options maybe altered by passing either an
+    instance of to_parity_options object as options argument, or by
+    passing additional kwargs that will be used to update options.
+
+    Note that if you pass both your own options object and kwargs,
+    options will be updated in place.
+    """
+    if kwargs:
+        for key,val in to_parity_options.__dict__.items():
+            if not key.startswith('_') and key != "thisown" and key in kwargs:
+                setattr(options, key, kwargs.get(key))
+    return impl.to_parity(aut, options)

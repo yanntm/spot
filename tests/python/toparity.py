@@ -89,28 +89,29 @@ options = [
 ]
 
 
-def test(aut):
-    global i
+def test(aut, full=True):
     for opt in options:
-        try:
-            p = spot.to_parity(aut,
-                search_ex = opt.search_ex,
-                use_last = opt.use_last,
-                force_order = opt.force_order,
-                partial_degen = opt.partial_degen,
-                acc_clean = opt.acc_clean,
-                parity_equiv = opt.parity_equiv,
-                parity_prefix = opt.parity_prefix,
-                rabin_to_buchi = opt.rabin_to_buchi,
-                reduce_col_deg = opt.reduce_col_deg,
-                propagate_col = opt.propagate_col,
-                pretty_print = opt.pretty_print,
-            )
-            assert(spot.are_equivalent(aut, p))
-        except:
-            # are_equivalent can raise exception
-            assert(False)
-
+        p1 = spot.to_parity(aut,
+                            search_ex = opt.search_ex,
+                            use_last = opt.use_last,
+                            force_order = opt.force_order,
+                            partial_degen = opt.partial_degen,
+                            acc_clean = opt.acc_clean,
+                            parity_equiv = opt.parity_equiv,
+                            parity_prefix = opt.parity_prefix,
+                            rabin_to_buchi = opt.rabin_to_buchi,
+                            reduce_col_deg = opt.reduce_col_deg,
+                            propagate_col = opt.propagate_col,
+                            pretty_print = opt.pretty_print,
+                            )
+        assert spot.are_equivalent(aut, p1)
+        if full:
+            # Make sure passing opt is the same as setting
+            # each argument individually
+            p2 = spot.to_parity(aut, opt)
+            assert p2.num_states() == p1.num_states()
+            assert p2.num_edges() == p1.num_edges()
+            assert p2.num_sets() == p1.num_sets()
 
 test(spot.automaton("""HOA: v1
 name: "(FGp0 & ((XFp0 & F!p1) | F(Gp1 & XG!p0))) | G(F!p0 & (XFp0 | F!p1) &
@@ -210,22 +211,13 @@ State: 1
 [!0&!1] 1 {0 3}
 --END--"""))
 
-test(spot.automaton("""
-HOA: v1 States: 6 Start: 0 AP: 2 "p0" "p1" Acceptance: 6 Inf(5) |
-Fin(2) | Inf(1) | (Inf(0) & Fin(3)) | Inf(4) properties: trans-labels
-explicit-labels trans-acc --BODY-- State: 0 [0&1] 2 {4 5} [0&1] 4 {0 4}
-[!0&!1] 3 {3 5} State: 1 [0&!1] 3 {1 5} [!0&!1] 5 {0 1} State: 2 [!0&!1]
-0 {0 3} [0&!1] 1 {0} State: 3 [!0&1] 4 {1 2 3} [0&1] 3 {3 4 5} State:
-4 [!0&!1] 1 {2 4} State: 5 [!0&1] 4 --END--
-"""))
 
-for f in spot.randltl(15, 2000):
-    test(spot.translate(f, "det", "G"))
+for i,f in enumerate(spot.randltl(10, 400)):
+    test(spot.translate(f, "det", "G"), full=(i<100))
 
-for f in spot.randltl(5, 25000):
-    test(spot.translate(f))
+for f in spot.randltl(5, 2500):
+    test(spot.translate(f), full=False)
 
-test(spot.translate('!(GFa -> (GFb & GF(!b & !Xb)))', 'gen', 'det'))
 
 test(spot.automaton("""
 HOA: v1
@@ -317,7 +309,7 @@ State: 1
 """))
 
 
-# Tests for the old version of to_parity (CAR)
+# Tests both the old and new version of to_parity
 a = spot.automaton("""HOA: v1
 States: 1
 Start: 0
@@ -332,6 +324,7 @@ State: 0
 --END--""")
 p = spot.to_parity_old(a, True)
 assert spot.are_equivalent(a, p)
+test(a)
 
 a = spot.automaton("""
 HOA: v1 States: 6 Start: 0 AP: 2 "p0" "p1" Acceptance: 6 Inf(5) |
@@ -344,6 +337,8 @@ explicit-labels trans-acc --BODY-- State: 0 [0&1] 2 {4 5} [0&1] 4 {0 4}
 p = spot.to_parity_old(a, True)
 assert p.num_states() == 22
 assert spot.are_equivalent(a, p)
+test(a)
+assert spot.to_parity(a).num_states() == 6
 
 for f in spot.randltl(4, 400):
     d = spot.translate(f, "det", "G")
@@ -359,3 +354,4 @@ for f in spot.randltl(5, 2000):
 a = spot.translate('!(GFa -> (GFb & GF(!b & !Xb)))', 'gen', 'det')
 b = spot.to_parity_old(a, True)
 assert a.equivalent_to(b)
+test(a)
