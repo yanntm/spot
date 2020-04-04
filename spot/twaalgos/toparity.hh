@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2020 Laboratoire de Recherche et Développement
+// Copyright (C) 2018-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -23,81 +23,101 @@
 
 namespace spot
 {
-  // The version that combines CAR, IAR and multiple optimizations.
-  struct car_option
-{
-  bool search_ex      = true;
-  bool use_last       = true;
-  bool force_order    = true;
-  bool partial_degen  = true;
-  bool acc_clean      = true;
-  bool parity_equiv   = true;
-  bool parity_prefix  = true;
-  bool rabin_to_buchi = true;
-  bool reduce_col_deg = false;
-  bool propagate_col  = true;
-  bool pretty_print   = false;
-};
+  /// \ingroup twa_acc_transform
+  /// \brief Options to control various optimizations of to_parity().
+  struct to_parity_options
+  {
+    /// If \c search_ex is true, whenever CAR or IAR have to move
+    /// several elements in a record, it tries to find an order such
+    /// that the new permutation already exists.
+    bool search_ex      = true;
+    /// If \a use_last is true and \a search_ex are true, we use the
+    /// most recent state when we find multiple existing state
+    /// compatible with the current move.
+    bool use_last       = true;
+    bool force_order    = true;
+    /// If \c partial_degen is true, apply a partial
+    /// degeneralization to remove occurrences of acceptance
+    /// subformulas such as `Fin(x) | Fin(y)` or `Inf(x) & Inf(y)`.
+    bool partial_degen  = true;
+    /// If \c scc_acc_clean is true, to_parity() will ignore colors
+    /// no occoring in an SCC while processing this SCC.
+    bool acc_clean      = true;
+    /// If \a parity_equiv is true, to_parity() will check if there
+    /// exists a permutations of colors such that the acceptance
+    /// condition is a parity condition.
+    bool parity_equiv   = true;
+    bool parity_prefix  = true;
+    bool rabin_to_buchi = true;
+    bool reduce_col_deg = false;
+    bool propagate_col  = true;
+    /// If \a pretty_print is true, states of the output automaton are
+    /// named to help debugging.
+    bool pretty_print   = false;
+  };
 
 
 
-/// \ingroup twa_acc_transform
-/// \brief Take an automaton with any acceptance condition and return an
-/// equivalent parity automaton.
-///
-/// The parity condition of the returned automaton is max even or
-/// max odd.
-/// If \a search_ex is true, when we move several elements, we
-/// try to find an order  such that the new permutation already exists.
-/// If \a partial_degen is true, we apply a partial degeneralization to remove
-// occurences of Fin | Fin and Inf & Inf.
-/// If \a scc_acc_clean is true, we remove for each SCC the colors that don't
-// appear.
-/// If \a parity_equiv is true, we check if there exists a permutations of
-// colors such that the acceptance
-/// condition is a partity condition.
-/// If \a use_last is true, we use the most recent state when looking for an
-// existing state.
-/// If \a pretty_print is true, we give a name to the states describing the
-// state of the aut_ and the permutation.
+  /// \ingroup twa_acc_transform
+  /// \brief Take an automaton with any acceptance condition and return an
+  /// equivalent parity automaton.
+  ///
+  /// The parity condition of the returned automaton is either max even or
+  /// max odd.
+  ///
+  /// This procedure combines many strategies in an attempt to produce
+  /// the smallest possible parity automaton.  Some of the strategies
+  /// include CAR (color acceptance record), IAR (index appearance
+  /// record), partial degenerazation, conversion from Rabin to Büchi
+  /// when possible, etc.
+  ///
+  /// The \a options argument can be used to selectively disable some of the
+  /// optimizations.
+  SPOT_API twa_graph_ptr
+  to_parity(const twa_graph_ptr &aut,
+            const to_parity_options options = to_parity_options());
 
   SPOT_API twa_graph_ptr
   remove_false_transitions(const twa_graph_ptr a);
 
-  SPOT_API twa_graph_ptr
-  to_parity(const twa_graph_ptr &aut, const car_option options = car_option());
-
-
-  // Old version of CAR
 
   /// \ingroup twa_acc_transform
   /// \brief Take an automaton with any acceptance condition and return an
   /// equivalent parity automaton.
   ///
   /// The parity condition of the returned automaton is max even.
+  ///
+  /// This implements a straightforward adaptation of the LAR (latest
+  /// appearance record) to automata with transition-based marks.  We
+  /// call this adaptation the CAR (color apperance record), as it
+  /// tracks colors (i.e., acceptance sets) instead of states.
+  ///
+  /// It is better to use to_parity() instead, as it will use better
+  /// strategies when possible, and has additional optimizations.
   SPOT_API twa_graph_ptr
   to_parity_old(const const_twa_graph_ptr& aut, bool pretty_print=false);
 
-  // Old version of IAR
   /// \ingroup twa_acc_transform
   /// \brief Turn a Rabin-like or Streett-like automaton into a parity automaton
   /// based on the index appearence record (IAR)
   ///
+  /// This is an implementation of \cite kretinsky.17.tacas .
   /// If the input automaton has n states and k pairs, the output automaton has
   /// at most k!*n states and 2k+1 colors. If the input automaton is
   /// deterministic, the output automaton is deterministic as well, which is the
   /// intended use case for this function. If the input automaton is
   /// non-deterministic, the result is still correct, but way larger than an
   /// equivalent Büchi automaton.
+  ///
   /// If the input automaton is Rabin-like (resp. Streett-like), the output
   /// automaton has max odd (resp. min even) acceptance condition.
-  /// Details on the algorithm can be found in:
-  ///   https://arxiv.org/pdf/1701.05738.pdf (published at TACAS 2017)
   ///
   /// Throws an std::runtime_error if the input is neither Rabin-like nor
   /// Street-like.
-  SPOT_API
-  twa_graph_ptr
+  ///
+  /// It is better to use to_parity() instead, as it will use better
+  /// strategies when possible, and has additional optimizations.
+  SPOT_API twa_graph_ptr
   iar_old(const const_twa_graph_ptr& aut, bool pretty_print = false);
 
   /// \ingroup twa_acc_transform
@@ -105,7 +125,7 @@ namespace spot
   /// based on the index appearence record (IAR)
   ///
   /// Returns nullptr if the input automaton is neither Rabin-like nor
-  /// Streett-like, and calls spot::iar() otherwise.
+  /// Streett-like, and calls spot::iar_old() otherwise.
   SPOT_API
   twa_graph_ptr
   iar_maybe_old(const const_twa_graph_ptr& aut, bool pretty_print = false);

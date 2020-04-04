@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement de
+# Copyright (C) 2018-2020 Laboratoire de Recherche et Développement de
 # l'EPITA.
 #
 # This file is part of Spot, a model checking library.
@@ -22,7 +22,7 @@ import spot
 
 # Tests for the new version of to_parity
 
-no_option = spot.car_option()
+no_option = spot.to_parity_options()
 no_option.search_ex = False
 no_option.use_last = False
 no_option.force_order = False
@@ -33,7 +33,7 @@ no_option.parity_prefix = False
 no_option.rabin_to_buchi = False
 no_option.propagate_col = False
 
-acc_clean_search_opt = spot.car_option()
+acc_clean_search_opt = spot.to_parity_options()
 acc_clean_search_opt.force_order = False
 acc_clean_search_opt.partial_degen = False
 acc_clean_search_opt.parity_equiv = False
@@ -41,7 +41,7 @@ acc_clean_search_opt.parity_prefix = False
 acc_clean_search_opt.rabin_to_buchi = False
 acc_clean_search_opt.propagate_col = False
 
-partial_degen_opt = spot.car_option()
+partial_degen_opt = spot.to_parity_options()
 partial_degen_opt.search_ex = False
 partial_degen_opt.force_order = False
 partial_degen_opt.parity_equiv = False
@@ -49,7 +49,7 @@ partial_degen_opt.parity_prefix = False
 partial_degen_opt.rabin_to_buchi = False
 partial_degen_opt.propagate_col = False
 
-parity_equiv_opt = spot.car_option()
+parity_equiv_opt = spot.to_parity_options()
 parity_equiv_opt.search_ex = False
 parity_equiv_opt.use_last = False
 parity_equiv_opt.force_order = False
@@ -58,7 +58,7 @@ parity_equiv_opt.parity_prefix = False
 parity_equiv_opt.rabin_to_buchi = False
 parity_equiv_opt.propagate_col = False
 
-rab_to_buchi_opt = spot.car_option()
+rab_to_buchi_opt = spot.to_parity_options()
 rab_to_buchi_opt.use_last = False
 rab_to_buchi_opt.force_order = False
 rab_to_buchi_opt.partial_degen = False
@@ -67,14 +67,14 @@ rab_to_buchi_opt.parity_prefix = False
 rab_to_buchi_opt.propagate_col = False
 
 # Force to use CAR or IAR for each SCC
-use_car_opt = spot.car_option()
+use_car_opt = spot.to_parity_options()
 use_car_opt.partial_degen = False
 use_car_opt.parity_equiv = False
 use_car_opt.parity_prefix = False
 use_car_opt.rabin_to_buchi = False
 use_car_opt.propagate_col = False
 
-all_opt = spot.car_option()
+all_opt = spot.to_parity_options()
 all_opt.pretty_print = True
 
 

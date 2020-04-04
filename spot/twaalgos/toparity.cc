@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2018-2020 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -799,7 +799,7 @@ get_iar_to_vector(const twa_graph_ptr& aut, algorithm algo,
 }
 
 public:
-explicit car_generator(const const_twa_graph_ptr &a, car_option options)
+explicit car_generator(const const_twa_graph_ptr &a, to_parity_options options)
     : aut_(a)
     , scc_(scc_info(a))
     , is_odd(false)
@@ -1600,7 +1600,7 @@ std::vector<car_state> num2car;
 std::map<unsigned, car_state> state2car;
 std::map<car_state, unsigned> car2num;
 
-car_option options;
+to_parity_options options;
 
 std::vector<std::string>* names;
 }; // car_generator
@@ -1624,7 +1624,7 @@ remove_false_transitions(const twa_graph_ptr a)
 }
 
 twa_graph_ptr
-to_parity(const twa_graph_ptr &aut, const car_option options)
+to_parity(const twa_graph_ptr &aut, const to_parity_options options)
 {
     return car_generator(remove_false_transitions(aut), options).run();
 }

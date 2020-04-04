@@ -1293,7 +1293,7 @@ class scc_and_mark_filter:
 
 
 def to_parity(aut, **kwargs):
-    option = car_option()
+    option = to_parity_options()
     if "search_ex" in kwargs:
         option.search_ex = kwargs.get("search_ex")
     if "use_last" in kwargs:
