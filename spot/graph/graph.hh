@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et
+// Copyright (C) 2014-2018, 2020 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -660,18 +660,6 @@ namespace spot
     {
       return dests_.empty();
     }
-
-#ifndef SWIG
-    /// \brief Whether the automaton has universal branching
-    ///
-    /// The name of this function is confusing since non-deterministic
-    /// automata should be a subclass of alternating automata.
-    SPOT_DEPRECATED("use !is_existential() instead")
-    bool is_alternating() const
-    {
-      return !is_existential();
-    }
-#endif
 
     /// \brief Create a new states
     ///
