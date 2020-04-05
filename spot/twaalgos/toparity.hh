@@ -74,7 +74,7 @@ namespace spot
   /// The \a options argument can be used to selectively disable some of the
   /// optimizations.
   SPOT_API twa_graph_ptr
-  to_parity(const twa_graph_ptr &aut,
+  to_parity(const const_twa_graph_ptr &aut,
             const to_parity_options options = to_parity_options());
 
   /// \ingroup twa_acc_transform

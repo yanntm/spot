@@ -1613,8 +1613,8 @@ to_parity_options options;
 std::vector<std::string>* names;
 }; // car_generator
 
-  static twa_graph_ptr
-  remove_false_transitions(const twa_graph_ptr a)
+  static const_twa_graph_ptr
+  remove_false_transitions(const const_twa_graph_ptr& a)
   {
     // Do not do anything if the automaton has no false transition
     for (auto edge : a->edges())
@@ -1638,7 +1638,7 @@ std::vector<std::string>* names;
 
 
 twa_graph_ptr
-to_parity(const twa_graph_ptr &aut, const to_parity_options options)
+to_parity(const const_twa_graph_ptr &aut, const to_parity_options options)
 {
     return car_generator(remove_false_transitions(aut), options).run();
 }
