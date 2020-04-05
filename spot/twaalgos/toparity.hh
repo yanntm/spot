@@ -91,7 +91,7 @@ namespace spot
   /// It is better to use to_parity() instead, as it will use better
   /// strategies when possible, and has additional optimizations.
   SPOT_API twa_graph_ptr
-  to_parity_old(const const_twa_graph_ptr& aut, bool pretty_print=false);
+  to_parity_old(const const_twa_graph_ptr& aut, bool pretty_print = false);
 
   /// \ingroup twa_acc_transform
   /// \brief Turn a Rabin-like or Streett-like automaton into a parity automaton
@@ -113,17 +113,18 @@ namespace spot
   ///
   /// It is better to use to_parity() instead, as it will use better
   /// strategies when possible, and has additional optimizations.
+  SPOT_DEPRECATED("use to_parity() instead") // deprecated since Spot 2.9
   SPOT_API twa_graph_ptr
-  iar_old(const const_twa_graph_ptr& aut, bool pretty_print = false);
+  iar(const const_twa_graph_ptr& aut, bool pretty_print = false);
 
   /// \ingroup twa_acc_transform
   /// \brief Turn a Rabin-like or Streett-like automaton into a parity automaton
   /// based on the index appearence record (IAR)
   ///
   /// Returns nullptr if the input automaton is neither Rabin-like nor
-  /// Streett-like, and calls spot::iar_old() otherwise.
-  SPOT_API
-  twa_graph_ptr
-  iar_maybe_old(const const_twa_graph_ptr& aut, bool pretty_print = false);
+  /// Streett-like, and calls spot::iar() otherwise.
+  SPOT_DEPRECATED("use to_parity() and spot::acc_cond::is_rabin_like() instead")
+  SPOT_API twa_graph_ptr   // deprecated since Spot 2.9
+  iar_maybe(const const_twa_graph_ptr& aut, bool pretty_print = false);
 
 } // namespace spot

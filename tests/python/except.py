@@ -33,7 +33,7 @@ def report_missing_exception():
 aut = spot.translate('GFa & GFb & GFc')
 aut.set_acceptance(spot.acc_cond("parity min even 4"))
 try:
-    spot.iar_old(aut)
+    spot.iar(aut)
 except RuntimeError as e:
     assert 'iar() expects Rabin-like or Streett-like input' in str(e)
 else:

@@ -39,8 +39,8 @@
 namespace spot
 {
 
-// Old version of IAR.
-namespace
+  // Old version of IAR.
+  namespace
   {
 
     using perm_t = std::vector<unsigned>;
@@ -346,31 +346,39 @@ namespace
       std::vector<unsigned> state2pos_iar_states;
       std::vector<std::pair<iar_state, unsigned>> iar_states;
     };
-  }
 
-  twa_graph_ptr
-  iar_maybe_old(const const_twa_graph_ptr& aut, bool pretty_print)
-  {
-    std::vector<acc_cond::rs_pair> pairs;
-    if (!aut->acc().is_rabin_like(pairs))
-      if (!aut->acc().is_streett_like(pairs))
-        return nullptr;
+    // Make this a function different from iar_maybe(), so that
+    // iar() does not have to call a deprecated function.
+    static twa_graph_ptr
+    iar_maybe_(const const_twa_graph_ptr& aut, bool pretty_print)
+    {
+      std::vector<acc_cond::rs_pair> pairs;
+      if (!aut->acc().is_rabin_like(pairs))
+        if (!aut->acc().is_streett_like(pairs))
+          return nullptr;
+        else
+          {
+            iar_generator<false> gen(aut, pairs, pretty_print);
+            return gen.run();
+          }
       else
         {
-          iar_generator<false> gen(aut, pairs, pretty_print);
+          iar_generator<true> gen(aut, pairs, pretty_print);
           return gen.run();
         }
-    else
-      {
-        iar_generator<true> gen(aut, pairs, pretty_print);
-        return gen.run();
-      }
+    }
   }
 
   twa_graph_ptr
-  iar_old(const const_twa_graph_ptr& aut, bool pretty_print)
+  iar_maybe(const const_twa_graph_ptr& aut, bool pretty_print)
   {
-    if (auto res = iar_maybe_old(aut, pretty_print))
+    return iar_maybe_(aut, pretty_print);
+  }
+
+  twa_graph_ptr
+  iar(const const_twa_graph_ptr& aut, bool pretty_print)
+  {
+    if (auto res = iar_maybe_(aut, pretty_print))
       return res;
     throw std::runtime_error("iar() expects Rabin-like or Streett-like input");
   }

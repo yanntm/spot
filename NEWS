@@ -100,8 +100,16 @@ New in spot 2.8.7.dev (not yet released)
     same transition structure (where the ..._maybe() variant would
     modify the Rabin automaton if needed).
 
-  - to_parity() now combines several strategies for paritizing any
-    automaton.
+  - to_parity() has been rewritten now combines several strategies for
+    paritizing automata with any acceptance condition.
+
+  Backward-incompatible changes:
+
+  - iar() and iar_maybe() have been moved from
+    spot/twaalgos/rabin2parity.hh spot/twaalgos/toparity.hh and marked
+    as deprecated, they should be replaced by to_parity().  In case
+    the input is Rabin-like or Streett-like, to_parity() should be at
+    least as good as iar().
 
 New in spot 2.8.7 (2020-03-13)
 
