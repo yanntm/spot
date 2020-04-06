@@ -1443,7 +1443,8 @@ build_scc(twa_graph_ptr &sub_automaton,
           unsigned max_states = -1U)
 {
 
-    std::vector<int> parity_prefix_colors (SPOT_MAX_ACCSETS, -1);
+    std::vector<int> parity_prefix_colors (SPOT_MAX_ACCSETS,
+                                            - SPOT_MAX_ACCSETS - 2);
     unsigned min_prefix_color = SPOT_MAX_ACCSETS + 1;
     if (options.parity_prefix)
     {
