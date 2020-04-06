@@ -49,5 +49,5 @@ State: 0
 EOF
 
 autfilt --simplify-acceptance 325 > 325s
-exp='4 Fin(0) | (Fin(0) & Inf(1)) | (Fin(2) & Inf(3))'
+exp='3 Fin(0) | (Fin(1) & Inf(2))'
 test "$exp" = "`autfilt --stats='%a %g' 325s`"

@@ -471,7 +471,8 @@ namespace spot
     {
       private:
       bool
-      get_alone_mark(bool& fin, acc_cond::mark_t& mark, bool& conj, acc_code& code)
+      get_alone_mark(bool& fin, acc_cond::mark_t& mark, bool& conj,
+                      acc_code& code)
       {
         auto elements = top_conjuncts();
         conj = (elements.size() > 1);
@@ -510,19 +511,25 @@ namespace spot
           auto elements = result.top_disjuncts();
           if (elements.size() < 2)
             elements = result.top_conjuncts();
-          result = std::accumulate(elements.begin(), elements.end(), code,
+          acc_code init_code;
+          if (conj)
+            init_code = acc_code::t();
+          else
+            init_code = acc_code::f();
+          bool keeped_code = false;
+          result = std::accumulate(elements.rbegin(), elements.rend(),
+          init_code,
             [&](acc_code a, acc_code b)
             {
-              if (b != code)
-              {
-                b = b.remove(mark, !fin);
-                if (conj)
-                  return a & b;
-                else
-                  return a | b;
-              }
-              return a;
-            });
+              if (b != code || keeped_code)
+                b = b.remove(mark, fin == conj);
+              if (b == code)
+                keeped_code = true;
+              if (conj)
+                return a & b;
+              else
+                return a | b;
+              });
         }
         std::vector<acc_code> elements = result.top_disjuncts();
         if (elements.size() < 2)
@@ -534,7 +541,8 @@ namespace spot
             init_code = acc_code::t();
           else
             init_code = acc_code::f();
-          result = std::accumulate(elements.begin(), elements.end(), init_code,
+          result = std::accumulate(elements.rbegin(), elements.rend(),
+          init_code,
             [&](acc_code a, acc_code b)
             {
                 if (conj)

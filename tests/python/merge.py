@@ -78,7 +78,7 @@ assert hoa == """HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
-Acceptance: 2 Fin(1) | (Inf(0)&Inf(1))
+Acceptance: 2 Fin(1) | Inf(0)
 properties: trans-labels explicit-labels trans-acc
 --BODY--
 State: 0
