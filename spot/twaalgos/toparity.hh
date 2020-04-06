@@ -30,16 +30,21 @@ namespace spot
     /// If \c search_ex is true, whenever CAR or IAR have to move
     /// several elements in a record, it tries to find an order such
     /// that the new permutation already exists.
-    bool search_ex      = true;
+    bool search_ex = true;
     /// If \a use_last is true and \a search_ex are true, we use the
     /// most recent state when we find multiple existing state
     /// compatible with the current move.
     bool use_last       = true;
+    /// If \a force_order is true, we force to use an order when CAR or IAR is
+    /// applied. Given a state s and a set E ({0}, {0 1}, {2} for example) we
+    /// construct an order on colors. With the given example, we ask to have
+    /// a permutation that start with [0 …], [0 1 …] or [2 …] in
+    ///  that order of preference.
     bool force_order    = true;
     /// If \c partial_degen is true, apply a partial
     /// degeneralization to remove occurrences of acceptance
     /// subformulas such as `Fin(x) | Fin(y)` or `Inf(x) & Inf(y)`.
-    bool partial_degen  = true;
+    bool partial_degen = true;
     /// If \c scc_acc_clean is true, to_parity() will ignore colors
     /// no occoring in an SCC while processing this SCC.
     bool acc_clean      = true;
@@ -47,13 +52,24 @@ namespace spot
     /// exists a permutations of colors such that the acceptance
     /// condition is a parity condition.
     bool parity_equiv   = true;
+    /// If \a parity_prefix is true, to_parity() will remove the prefix of
+    /// the acceptance condition that correspond to parity, works on the
+    // remaining and adds marks to process the prefix.
     bool parity_prefix  = true;
+    /// If \a rabin_to_buchi is true, to_parity() tries to convert a Rabin or
+    /// Streett condition to Büchi or co-Büchi with
+    /// rabin_to_buchi_if_realizable().
     bool rabin_to_buchi = true;
+    /// Only allow degeneralization if it reduces the number of colors in the
+    /// acceptance condition.
     bool reduce_col_deg = false;
+    /// Use propagate_marks_here to increase the number of marks on transition in
+    /// order to move more colors (and increase the number of compatible states)
+    /// when we apply LAR.
     bool propagate_col  = true;
     /// If \a pretty_print is true, states of the output automaton are
     /// named to help debugging.
-    bool pretty_print   = false;
+    bool pretty_print = false;
   };
 
 
