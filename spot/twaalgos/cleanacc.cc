@@ -620,7 +620,7 @@ namespace spot
         fuse_marks_here(aut);
       }
     cleanup_acceptance_here(aut, true);
-    auto prop_cond = aut->acc().propagate_fin_inf();
+    auto prop_cond = aut->acc().unit_propagation();
     if (prop_cond != aut->acc())
     {
       aut->set_acceptance(prop_cond);

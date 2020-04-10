@@ -1060,6 +1060,60 @@ namespace spot
     return res;
   }
 
+  namespace
+  {
+    bool
+    has_parity_prefix_aux(acc_cond original,
+                          acc_cond &new_cond,
+                          std::vector<unsigned> &colors,
+                          std::vector<acc_cond::acc_code> elements,
+                          acc_cond::acc_op op)
+    {
+      acc_cond::mark_t empty_m = {};
+      if (elements.size() > 2)
+      {
+        new_cond = original;
+        return false;
+      }
+      if (elements.size() == 2)
+      {
+        unsigned pos = elements[1].back().sub.op == op &&
+                       elements[1][0].mark.count() == 1;
+        if (!(elements[0].back().sub.op == op || pos))
+        {
+          new_cond = original;
+          return false;
+        }
+        if ((elements[1 - pos].used_sets() & elements[pos][0].mark) != empty_m)
+        {
+          new_cond = original;
+          return false;
+        }
+        if (elements[pos][0].mark.count() != 1)
+        {
+          return false;
+        }
+        colors.push_back(elements[pos][0].mark.min_set() - 1);
+        elements[1 - pos].has_parity_prefix(new_cond, colors);
+        return true;
+      }
+      return false;
+    }
+  }
+
+  bool
+  acc_cond::acc_code::has_parity_prefix(acc_cond &new_cond,
+                                        std::vector<unsigned> &colors) const
+  {
+    auto disj = top_disjuncts();
+    if (!(has_parity_prefix_aux((*this), new_cond, colors,
+            disj, acc_cond::acc_op::Inf) ||
+          has_parity_prefix_aux((*this), new_cond, colors,
+            top_conjuncts(), acc_cond::acc_op::Fin)))
+      new_cond = acc_cond((*this));
+    return disj.size() == 2;
+  }
+
   bool
   acc_cond::has_parity_prefix(acc_cond& new_cond,
                               std::vector<unsigned>& colors) const
@@ -1080,18 +1134,6 @@ namespace spot
       else
         permut[i] = i;
     return result;
-  }
-
-  std::vector<unsigned>
-  acc_cond::colors_inf_conj(unsigned min_nb_colors)
-  {
-    return code_.colors_inf_conj(min_nb_colors);
-  }
-
-  std::vector<unsigned>
-  acc_cond::colors_fin_disj(unsigned min_nb_colors)
-  {
-    return code_.colors_fin_disj(min_nb_colors);
   }
 
   bool acc_cond::is_parity(bool& max, bool& odd, bool equiv) const
@@ -2518,6 +2560,124 @@ namespace spot
       }
     while (pos >= &front());
     return -1;
+  }
+
+  namespace
+  {
+  bool
+  find_unit_clause(acc_cond::acc_code code, bool& conj, bool& fin,
+                                         acc_cond::mark_t& res)
+  {
+    res = {};
+    acc_cond::mark_t possibles = ~code.used_once_sets();
+    bool found_one = false;
+    conj = false;
+    fin = false;
+    if (code.empty() || code.is_f())
+      return false;
+    const acc_cond::acc_word* pos = &code.back();
+    conj = (pos->sub.op == acc_cond::acc_op::And);
+    do
+      {
+        switch (pos->sub.op)
+          {
+          case acc_cond::acc_op::And:
+            if (!conj)
+              pos -= pos->sub.size + 1;
+            else
+              --pos;
+            break;
+          case acc_cond::acc_op::Or:
+            if (conj)
+              pos -= pos->sub.size + 1;
+            else
+              --pos;
+            break;
+          case acc_cond::acc_op::Inf:
+          case acc_cond::acc_op::InfNeg:
+          case acc_cond::acc_op::FinNeg:
+            if (!fin)
+            {
+              auto m = pos[-1].mark & possibles;
+              if (m.count() == 1 || conj)
+              {
+                found_one = true;
+                res |= m;
+              }
+            }
+            pos -= 2;
+            break;
+          case acc_cond::acc_op::Fin:
+            if (!found_one || fin)
+            {
+              auto m = pos[-1].mark & possibles;
+              if (m.count() == 1 || !conj)
+              {
+                found_one = true;
+                fin = true;
+                res |= m;
+              }
+            }
+            pos -= 2;
+            break;
+          }
+      }
+    while (pos >= &code.front());
+    return res != acc_cond::mark_t {};
+  }
+  }
+
+  acc_cond::acc_code
+  acc_cond::acc_code::unit_propagation()
+  {
+    bool fin, conj;
+    acc_cond::mark_t mark;
+    acc_code result = (*this);
+    acc_code code;
+    if (result.size() > 1 &&
+        (result.back().sub.op == acc_cond::acc_op::And
+        || result.back().sub.op == acc_cond::acc_op::Or))
+    {
+      while (find_unit_clause(result, conj, fin, mark))
+      {
+        acc_code init_code;
+        if (fin)
+          init_code = acc_code::fin(mark);
+        else
+          init_code = acc_code::inf(mark);
+        if (conj)
+          result = init_code & result.remove(mark, fin == conj);
+        else
+          result = init_code | result.remove(mark, fin == conj);
+      }
+
+      auto pos = &result.back();
+      auto fo = pos->sub.op;
+      bool is_and = (fo == acc_cond::acc_op::And);
+      std::vector<acc_cond::acc_code> propagated;
+      acc_cond::acc_code res;
+      if (is_and)
+        res = acc_cond::acc_code::t();
+      else
+        res = acc_cond::acc_code::f();
+      if (is_and || fo == acc_cond::acc_op::Or)
+      {
+        --pos;
+        while (pos >= &result.front())
+        {
+          propagated.push_back(acc_code(pos).unit_propagation());
+          pos -= pos->sub.size + 1;
+        }
+        result = std::accumulate(propagated.rbegin(), propagated.rend(), res,
+        [&](acc_cond::acc_code c1, acc_cond::acc_code c2)
+        {
+          if (is_and)
+            return c1 & c2;
+          return c1 | c2;
+        });
+      }
+    }
+    return result;
   }
 
   acc_cond::mark_t acc_cond::acc_code::fin_unit() const

@@ -70,12 +70,6 @@ namespace spot
 #endif
   public:
 
-    std::vector<unsigned>
-    colors_inf_conj(unsigned min_nb_colors);
-
-    std::vector<unsigned>
-    colors_fin_disj(unsigned min_nb_colors);
-
     /// \brief An acceptance mark
     ///
     /// This type is used to represent a set of acceptance sets.  It
@@ -469,250 +463,12 @@ namespace spot
     /// provided methods instead.
     struct SPOT_API acc_code: public std::vector<acc_word>
     {
-      private:
-      bool
-      get_alone_mark(bool& fin, acc_cond::mark_t& mark, bool& conj,
-                      acc_code& code)
-      {
-        auto elements = top_conjuncts();
-        conj = (elements.size() > 1);
-        if (!conj)
-        {
-          elements = top_disjuncts();
-          if (elements.size() < 2)
-            return false;
-        }
-
-        for (auto c : elements)
-        {
-          auto op = c.back().sub.op;
-          fin = (op == acc_cond::acc_op::Fin);
-          if ((fin || op == acc_cond::acc_op::Inf) && c[0].mark.count() == 1
-              && (used_once_sets() & c[0].mark) == acc_cond::mark_t {})
-          {
-            mark = c[0].mark;
-            code = c;
-            return true;
-          }
-        }
-        return false;
-      }
-
-      public:
       acc_code
-      propagate_fin_inf()
-      {
-        bool fin = false, conj;
-        acc_cond::mark_t mark;
-        acc_code result = (*this);
-        acc_code code;
-        while (result.get_alone_mark(fin, mark, conj, code))
-        {
-          auto elements = result.top_disjuncts();
-          if (elements.size() < 2)
-            elements = result.top_conjuncts();
-          acc_code init_code;
-          if (conj)
-            init_code = acc_code::t();
-          else
-            init_code = acc_code::f();
-          bool keeped_code = false;
-          result = std::accumulate(elements.rbegin(), elements.rend(),
-          init_code,
-            [&](acc_code a, acc_code b)
-            {
-              if (b != code || keeped_code)
-                b = b.remove(mark, fin == conj);
-              if (b == code)
-                keeped_code = true;
-              if (conj)
-                return a & b;
-              else
-                return a | b;
-              });
-        }
-        std::vector<acc_code> elements = result.top_disjuncts();
-        if (elements.size() < 2)
-          elements = result.top_conjuncts();
-        if (elements.size() > 1)
-        {
-          acc_code init_code;
-          if (conj)
-            init_code = acc_code::t();
-          else
-            init_code = acc_code::f();
-          result = std::accumulate(elements.rbegin(), elements.rend(),
-          init_code,
-            [&](acc_code a, acc_code b)
-            {
-                if (conj)
-                  return a & b.propagate_fin_inf();
-                else
-                  return a | b.propagate_fin_inf();
-            });
-        }
-        return result;
-      }
-
-      std::vector<unsigned>
-      colors_inf_conj(unsigned min_nb_colors = 2)
-      {
-        auto result = std::vector<unsigned>();
-        auto conj = top_conjuncts();
-        if (conj.size() != 1)
-        {
-          std::sort(conj.begin(), conj.end(),
-            [](acc_code c1, acc_code c2)
-              {
-                (void)c2;
-                return c1.back().sub.op == acc_cond::acc_op::Inf;
-              });
-          unsigned i = 0;
-          while (i < conj.size())
-          {
-            acc_cond::acc_code elem = conj[i];
-            if (elem.back().sub.op == acc_cond::acc_op::Inf)
-            {
-              if (elem[0].mark.count() == 1)
-                result.insert(result.end(), elem[0].mark.min_set() - 1);
-            } else
-              break;
-            ++i;
-          }
-          if (result.size() >= min_nb_colors)
-                return result;
-          while (i < conj.size())
-          {
-            result = conj[i].colors_inf_conj();
-            if (result.size() >= min_nb_colors)
-              return result;
-            result.clear();
-            ++i;
-          }
-        }
-        else
-        {
-          auto disj = top_disjuncts();
-          if (disj.size() > 1)
-          {
-            for (auto elem : disj)
-            {
-              result = elem.colors_inf_conj();
-              if (result.size() >= min_nb_colors)
-                return result;
-              result.clear();
-            }
-          }
-          else
-            return {};
-        }
-        return result;
-      }
-
-      std::vector<unsigned>
-      colors_fin_disj(unsigned min_nb_colors = 2)
-      {
-        auto result = std::vector<unsigned>();
-        auto disj = top_disjuncts();
-        if (disj.size() != 1)
-        {
-          std::sort(disj.begin(), disj.end(),
-            [](acc_code c1, acc_code c2)
-              {
-                (void) c2;
-                return c1.back().sub.op == acc_cond::acc_op::Fin;
-              });
-          unsigned i = 0;
-          while (i < disj.size())
-          {
-            acc_cond::acc_code elem = disj[i];
-            if (elem.back().sub.op == acc_cond::acc_op::Fin)
-            {
-              if (elem[0].mark.count() == 1)
-                result.insert(result.end(), elem[0].mark.min_set() - 1);
-            } else
-              break;
-            ++i;
-          }
-          if (result.size() >= min_nb_colors)
-                return result;
-          while (i < disj.size())
-          {
-            result = disj[i].colors_fin_disj();
-            if (result.size() >= min_nb_colors)
-              return result;
-            result.clear();
-            ++i;
-          }
-        }
-        else
-        {
-          auto disj = top_conjuncts();
-          if (disj.size() > 1)
-          {
-            for (auto elem : disj)
-            {
-              result = elem.colors_fin_disj();
-              if (result.size() >= min_nb_colors)
-                return result;
-              result.clear();
-            }
-          }
-          else
-            return {};
-        }
-        return result;
-      }
+      unit_propagation();
 
       bool
-      has_parity_prefix_aux(spot::acc_cond& new_cond,
-        std::vector<unsigned>& colors, std::vector<acc_code> elements,
-        acc_cond::acc_op op) const
-      {
-        mark_t empty_m = { };
-        if (elements.size() > 2)
-        {
-          new_cond = (*this);
-          return false;
-        }
-        if (elements.size() == 2)
-        {
-          unsigned pos = elements[1].back().sub.op == op
-                        && elements[1][0].mark.count() == 1;
-          if (!(elements[0].back().sub.op == op || pos))
-          {
-            new_cond = (*this);
-            return false;
-          }
-          if ((elements[1 - pos].used_sets() & elements[pos][0].mark)
-                != empty_m)
-          {
-            new_cond = (*this);
-            return false;
-          }
-          if (elements[pos][0].mark.count() != 1)
-          {
-            return false;
-          }
-          colors.push_back(elements[pos][0].mark.min_set() - 1);
-          elements[1 - pos].has_parity_prefix(new_cond, colors);
-          return true;
-        }
-        return false;
-      }
-
-      bool has_parity_prefix(spot::acc_cond& new_cond,
-        std::vector<unsigned>& colors) const
-      {
-        auto disj = top_disjuncts();
-        if (!
-          (has_parity_prefix_aux(new_cond, colors,
-          top_conjuncts(), acc_cond::acc_op::Fin) ||
-          has_parity_prefix_aux(new_cond, colors,
-          disj, acc_cond::acc_op::Inf)))
-            new_cond = spot::acc_cond(*this);
-        return disj.size() == 2;
-      }
+      has_parity_prefix(acc_cond& new_cond,
+        std::vector<unsigned>& colors) const;
 
       bool
       is_parity_max_equiv(std::vector<int>& permut,
@@ -1951,9 +1707,9 @@ namespace spot
     /// Fin(0)|(Inf(0) & Fin(1)), Inf(0) is true iff Fin(0) is false so
     /// we can rewrite it as Fin(0)|Fin(1).
     acc_cond
-    propagate_fin_inf()
+    unit_propagation()
     {
-      return acc_cond(code_.propagate_fin_inf());
+      return acc_cond(code_.unit_propagation());
     }
 
     // Return (true, m) if there exist some acceptance mark m that
