@@ -32,7 +32,6 @@ namespace spot
     std::set<int> newvars;
     vars.reserve(relmap->size());
     bool bool_subst = false;
-    bool need_cleanup = false;
 
     for (auto& p: *relmap)
       {
@@ -62,16 +61,20 @@ namespace spot
             bdd newb = formula_to_bdd(p.second, d, aut);
             bdd_setbddpair(pairs, oldv, newb);
             bool_subst = true;
-            if (newb == bddtrue || newb == bddfalse)
-              need_cleanup = true;
           }
       }
-    if (!bool_subst)
-      for (auto& t: aut->edges())
-        t.cond = bdd_replace(t.cond, pairs);
-    else
-      for (auto& t: aut->edges())
-        t.cond = bdd_veccompose(t.cond, pairs);
+
+    bool need_cleanup = false;
+    typedef bdd (*op_t)(const bdd&, bddPair*);
+    op_t op = bool_subst ?
+      static_cast<op_t>(bdd_veccompose) : static_cast<op_t>(bdd_replace);
+    for (auto& t: aut->edges())
+      {
+        bdd c = (*op)(t.cond, pairs);
+        t.cond = c;
+        if (c == bddfalse)
+          need_cleanup = true;
+      }
 
     // Erase all the old variables that are not reused in the new set.
     // (E.g., if we relabel a&p0 into p0&p1 we should not unregister
@@ -80,8 +83,8 @@ namespace spot
       if (newvars.find(v) == newvars.end())
         aut->unregister_ap(v);
 
-    // If some of the proposition are equivalent to true or false,
-    // it's possible that we have introduced edges with false labels.
+    // If some of the edges were relabeled false, we need to clean the
+    // automaton.
     if (need_cleanup)
       {
         aut->merge_edges();     // remove any edge labeled by 0

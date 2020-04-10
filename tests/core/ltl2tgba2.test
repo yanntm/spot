@@ -432,7 +432,13 @@ cat >expected <<EOF
 8,(Fin(1) | Inf(0)) & (Fin(2) | Inf(1)) & (Fin(0) | Inf(2))
 EOF
 
-# This formula used to produce translation with false label.
-ltl2tgba -D -G 'F(G(a | !a) & ((b <-> c) W d))' | grep '\[f\]' && exit 1
+# This formulas used to produce translation with false label.
 
+# Reported by Florian Renkin
+ltl2tgba -D -G 'F(G(a | !a) & ((b <-> c) W d))' | grep '\[f\]' && exit 1
+# Reported by Jens Kreber
+ltl2tgba '!b & e U (a & b & c)' | grep '\[f\]' && exit 1
+ltl2tgba '!b & e U (a & b & c)' --stats=%w | grep 0 && exit 1
+ltl2tgba 'X!c & X(b & c & d & a U e)' | grep '\[f\]' && exit 1
+ltl2tgba 'X!c & X(b & c & d & a U e)' --stats=%w | grep 0 && exit 1
 :
