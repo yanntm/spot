@@ -833,19 +833,21 @@ const std::vector<unsigned>& states,
 std::map<unsigned, std::vector<unsigned>>& partial_history,
 state_2_car_scc& state_2_car)
 {
-    for (unsigned current_state : states)
-        for (auto& edge : aut->out(current_state))
-        {
-            unsigned
-                src = edge.src,
-                dst = edge.dst;
-            if (src == dst)
-                continue;
-            unsigned dst_scc = num2car[dst].state_scc;
-            auto cant_change = partial_history[aut->edge_number(edge)];
-            edge.dst = state_2_car.get_sub_tree(cant_change, dst_scc)
-                                 ->get_end(true);
-        }
+    for (auto& edge : aut->edges())
+    {
+        unsigned
+            src = edge.src,
+            dst = edge.dst;
+        // We don't change loops or transitions that were not created in
+        // the current SCC.
+        if (src == dst
+        || std::find(states.begin(), states.end(), src) == states.end())
+            continue;
+        unsigned dst_scc = num2car[dst].state_scc;
+        auto cant_change = partial_history[aut->edge_number(edge)];
+        edge.dst = state_2_car.get_sub_tree(cant_change, dst_scc)
+                                ->get_end(true);
+    }
 }
 
 unsigned

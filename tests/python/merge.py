@@ -78,7 +78,8 @@ assert hoa == """HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
-Acceptance: 2 Fin(1) | Inf(0)
+acc-name: parity min even 2
+Acceptance: 2 Inf(0) | Fin(1)
 properties: trans-labels explicit-labels trans-acc
 --BODY--
 State: 0

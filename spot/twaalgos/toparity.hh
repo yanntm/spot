@@ -63,9 +63,9 @@ namespace spot
     /// Only allow degeneralization if it reduces the number of colors in the
     /// acceptance condition.
     bool reduce_col_deg = false;
-    /// Use propagate_marks_here to increase the number of marks on transition in
-    /// order to move more colors (and increase the number of compatible states)
-    /// when we apply LAR.
+    /// Use propagate_marks_here to increase the number of marks on transition
+    /// in order to move more colors (and increase the number of
+    /// compatible states) when we apply LAR.
     bool propagate_col  = true;
     /// If \a pretty_print is true, states of the output automaton are
     /// named to help debugging.
