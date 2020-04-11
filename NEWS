@@ -122,6 +122,9 @@ New in spot 2.8.7.dev (not yet released)
   - Emptiness checks, and scc_info should now ignore edges labeled
     with false.
 
+  - relabel_bse() could incorrectly relabel Boolean subformulas that
+    had some atomic propositions in common.
+
 New in spot 2.8.7 (2020-03-13)
 
   Bugs fixed:

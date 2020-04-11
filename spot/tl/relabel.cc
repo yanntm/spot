@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2016, 2018-2019 Laboratoire de Recherche et
+// Copyright (C) 2012-2016, 2018-2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -194,15 +194,15 @@ namespace spot
   //          ╱   ╲       ╱   ╲
   //         a─────b     c─────d
   //
-  // (The root node is also a cut-point, but we only consider Boolean
-  // cut-points for relabeling.)
+  // (The root node is also a cut point, but we only consider Boolean
+  // cut points for relabeling.)
   //
   // On the other hand, (a & b) U (b & !c) has only one Boolean
   // cut-point which corresponds to the NOT operator:
   //
   //             (a&b)U(b&!c)
   //                ╱   ╲
-  //              a&b   b&c
+  //              a&b   b&!c
   //             ╱   ╲ ╱   ╲
   //            a─────b────!c
   //                        │
@@ -222,7 +222,7 @@ namespace spot
   //     replace that node by a fresh atomic proposition.
   //
   // In the example above (a&b)U(b&!c), the last recursion
-  // stop a, b, and !c, producing (p0&p1)U(p1&p2).
+  // stops on a, b, and !c, producing (p0&p1)U(p1&p2).
   namespace
   {
     typedef std::vector<formula> succ_vec;
@@ -282,20 +282,23 @@ namespace spot
         if (sz > 1 && f.is_boolean())
           {
             // For Boolean nodes, connect all children in a
-            // loop.  This way the node can only be a cut-point
+            // loop.  This way the node can only be a cut point
             // if it separates all children from the reset of
             // the graph (not only one).
             formula pred = f[0];
             for (i = 1; i < sz; ++i)
               {
                 formula next = f[i];
-                // Note that we only add an edge in one
-                // direction, because we are building a cycle
-                // between all children anyway.
+                // Note that we only add an edge in both directions,
+                // as the cut point algorithm really need undirected
+                // graphs.  (We used to do only one direction, and
+                // that turned out to be a bug.)
                 g[pred].emplace_back(next);
+                g[next].emplace_back(pred);
                 pred = next;
               }
             g[pred].emplace_back(f[0]);
+            g[f[0]].emplace_back(pred);
           }
         s.pop();
       }
