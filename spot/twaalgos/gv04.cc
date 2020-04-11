@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2010, 2011, 2013-2019 Laboratoire de
+// Copyright (C) 2008, 2010, 2011, 2013-2020 Laboratoire de
 // recherche et développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -119,6 +119,10 @@ namespace spot
               {
                 trace << " No more successors" << std::endl;
                 pop();
+              }
+            else if (SPOT_UNLIKELY(iter->cond() == bddfalse))
+              {
+                continue;
               }
             else
               {

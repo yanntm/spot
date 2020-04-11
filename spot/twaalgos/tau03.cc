@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013-2019  Laboratoire de Recherche et
+// Copyright (C) 2011, 2013-2020  Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -167,6 +167,8 @@ namespace spot
                 // Go down the edge (f.s, <label, acc>, s_prime)
                 f.it->next();
                 inc_transitions();
+                if (SPOT_UNLIKELY(label == bddfalse))
+                  continue;
                 typename heap::color_ref c_prime = h.get_color_ref(s_prime);
                 if (c_prime.is_white())
                   {
@@ -194,11 +196,13 @@ namespace spot
                   {
                    inc_transitions();
                    const state *s_prime = i->dst();
+                   bdd label = i->cond();
+                   auto acc = i->acc();
+                   if (SPOT_UNLIKELY(label == bddfalse))
+                     continue;
                    trace << "DFS_BLUE rescanning the arc from "
                          << a_->format_state(f.s) << "  to "
                          << a_->format_state(s_prime) << std::endl;
-                    bdd label = i->cond();
-                    auto acc = i->acc();
                     typename heap::color_ref c_prime = h.get_color_ref(s_prime);
                     assert(!c_prime.is_white());
                     auto acu = acc | c.get_acc();
@@ -247,6 +251,8 @@ namespace spot
                 // Go down the edge (f.s, <label, acc>, s_prime)
                 f.it->next();
                 inc_transitions();
+                if (SPOT_UNLIKELY(label == bddfalse))
+                  continue;
                 typename heap::color_ref c_prime = h.get_color_ref(s_prime);
                 if (c_prime.is_white())
                   {

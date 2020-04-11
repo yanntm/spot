@@ -158,24 +158,25 @@ namespace spot
                 // Gather all successor SCCs
                 if (track_succs)
                   for (auto& t: aut->out(*s))
-                    for (unsigned d: aut->univ_dests(t))
-                      {
-                        unsigned n = sccof_[d];
-                        if (n == num || n == -1U)
-                          continue;
-                        // If edges are cut, we are not able to
-                        // maintain proper successor information.
-                        if (filter_)
-                          switch (filter_(t, d, filter_data_))
-                            {
-                            case edge_filter_choice::keep:
-                              break;
-                            case edge_filter_choice::ignore:
-                            case edge_filter_choice::cut:
-                              continue;
-                            }
-                        succ.emplace_back(n);
-                      }
+                    if (SPOT_LIKELY(t.cond != bddfalse))
+                      for (unsigned d: aut->univ_dests(t))
+                        {
+                          unsigned n = sccof_[d];
+                          if (n == num || n == -1U)
+                            continue;
+                          // If edges are cut, we are not able to
+                          // maintain proper successor information.
+                          if (filter_)
+                            switch (filter_(t, d, filter_data_))
+                              {
+                              case edge_filter_choice::keep:
+                                break;
+                              case edge_filter_choice::ignore:
+                              case edge_filter_choice::cut:
+                                continue;
+                              }
+                          succ.emplace_back(n);
+                        }
               }
             while (*s++ != curr);
 
@@ -250,6 +251,13 @@ namespace spot
             // We have a successor to look at.
             // Fetch the values we are interested in...
             auto& e = gr.edge_storage(tr_succ);
+
+            // Skip false edges.
+            if (SPOT_UNLIKELY(e.cond == bddfalse))
+              {
+                todo_.top().out_edge = e.next_succ;
+                continue;
+              }
 
             unsigned dest = e.dst;
             if ((int) dest < 0)
@@ -412,7 +420,7 @@ namespace spot
         auto& s = result[src_scc];
         for (auto& t: aut_->out(src))
           {
-            if (scc_of(t.dst) != src_scc)
+            if (scc_of(t.dst) != src_scc || SPOT_UNLIKELY(t.cond == bddfalse))
               continue;
             s.insert(t.acc);
           }
@@ -502,7 +510,7 @@ namespace spot
         bfs_queue.pop_front();
         for (auto& t: aut->out(src))
           {
-            if (filter(t))
+            if (SPOT_UNLIKELY(t.cond == bddfalse) || filter(t))
               continue;
 
             if (match(t))
@@ -573,7 +581,8 @@ namespace spot
         if (scc_of(s) != scc)
           continue;
         for (auto& e: aut_->out(s))
-          if (e.src == e.dst && !filter(e) && acccond.accepting(e.acc))
+          if (e.src == e.dst && SPOT_LIKELY(e.cond != bddfalse)
+              && !filter(e) && acccond.accepting(e.acc))
             {
               // We have found an accepting self-loop.  That's the cycle
               // part of our accepting run.

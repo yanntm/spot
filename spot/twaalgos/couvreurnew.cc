@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2016-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2016-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -41,7 +41,8 @@ namespace spot
     public:
       explicitproxy(explicit_iterator it)
         : it_(it)
-      {}
+      {
+      }
 
       const explicitproxy*
       operator->() const
@@ -71,6 +72,12 @@ namespace spot
       acc() const
       {
         return it_->acc;
+      }
+
+      bdd
+      cond() const
+      {
+        return it_->cond;
       }
 
       void
@@ -704,7 +711,7 @@ namespace spot
               assert(ecs_->root.size() == arc.size());
 
             // We are looking at the next successor in SUCC.
-            auto succ = todo.top().second;
+            auto& succ = todo.top().second;
 
             // If there are no more successors, backtrack.
             if (succ->done())
@@ -744,6 +751,14 @@ namespace spot
 
             // We have a successor to look at.
             inc_transitions();
+
+            // Ignore false edges
+            if (SPOT_UNLIKELY(succ->cond() == bddfalse))
+              {
+                succ->next();
+                continue;
+              }
+
             // Fetch the values we are interested in...
             auto acc = succ->acc();
             if (!need_accepting_run)
@@ -763,7 +778,7 @@ namespace spot
             state_t dest = succ->dst();
             // ... and point the iterator to the next successor, for
             // the next iteration.
-            todo.top().second->next();
+            succ->next();
 
             // We do not need succ from now on.
 

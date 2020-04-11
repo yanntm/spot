@@ -377,6 +377,7 @@ TESTS_python = \
   python/declenv.py \
   python/decompose_scc.py \
   python/dualize.py \
+  python/ecfalse.py \
   python/except.py \
   python/gen.py \
   python/genem.py \

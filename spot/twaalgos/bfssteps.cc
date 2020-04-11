@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014, 2015, 2018 Laboratoire de Recherche et
+// Copyright (C) 2014, 2015, 2018, 2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE)
 // Copyright (C) 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -78,6 +78,10 @@ namespace spot
         todo.pop_front();
         for (auto i: a_->succ(src))
           {
+            // skip false transitions
+            if (SPOT_UNLIKELY(i->cond() == bddfalse))
+              continue;
+
             const state* dest = filter(i->dst());
 
             if (!dest)

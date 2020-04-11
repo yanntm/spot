@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2011, 2014-2016, 2018-2019 Laboratoire de
+// Copyright (C) 2008, 2011, 2014-2016, 2018-2020 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -109,6 +109,8 @@ namespace spot
           do
             {
               inc_transitions();
+              if (SPOT_UNLIKELY(i->cond() == bddfalse))
+                continue;
 
               const state* s = i->dst();
               auto j = ecs_->h.find(s);
@@ -219,9 +221,15 @@ namespace spot
         // of the arc) we are interested in...
         const state* dest = succ->dst();
         acc_cond::mark_t acc = succ->acc();
+        trace << "-> " << dest << ' ' << acc << ' ' << succ->cond();
         // ... and point the iterator to the next successor, for
         // the next iteration.
-        succ->next();
+        {
+          bdd cond = succ->cond();
+          succ->next();
+          if (SPOT_UNLIKELY(cond == bddfalse))
+            continue;
+        }
         // We do not need SUCC from now on.
 
         // Are we going to a new state?
@@ -321,10 +329,12 @@ namespace spot
   {
     for (auto iter: shy->ecs_->aut->succ(s))
       {
+        shy->inc_transitions();
+        if (SPOT_UNLIKELY(iter->cond() == bddfalse))
+          continue;
         q.emplace_back(iter->acc(),
                        iter->dst());
         shy->inc_depth();
-        shy->inc_transitions();
       }
   }
 
@@ -372,24 +382,28 @@ namespace spot
   }
 
 #ifdef TRACE
-  couvreur99_check_shy::dump_queue(std::ostream& os)
+  namespace
   {
-    os << "--- TODO ---\n";
-    unsigned lvl = 0;
-    for (auto& ti: todo)
-      {
-        ++lvl;
-        os << '#' << lvl << " s:" << ti.s << " n:" << ti.n
-           << " q:{";
-        for (auto qi = ti.q.begin(); qi != ti.q.end();)
-          {
-            os << qi->s;
-            ++qi;
-            if (qi != ti.q.end())
-              os << ", ";
-          }
-        os << "}\n";
-      }
+    template<class T>
+    void dump_queue(const T& todo)
+    {
+      trace << "--- TODO ---\n";
+      unsigned lvl = 0;
+      for (auto& ti: todo)
+        {
+          ++lvl;
+          trace << '#' << lvl << " s:" << ti.s << " n:" << ti.n
+                << " q:{";
+          for (auto qi = ti.q.begin(); qi != ti.q.end();)
+            {
+              trace << qi->s;
+              ++qi;
+              if (qi != ti.q.end())
+                trace << ", ";
+            }
+          trace << "}\n";
+        }
+    }
   }
 #endif
 
@@ -410,7 +424,7 @@ namespace spot
     for (;;)
       {
 #ifdef TRACE
-        dump_queue();
+        dump_queue(todo);
 #endif
 
         assert(ecs_->root.size() == 1 + arc.size());

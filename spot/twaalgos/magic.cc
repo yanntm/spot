@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2013-2019  Laboratoire de recherche et
+// Copyright (C) 2011, 2013-2020  Laboratoire de recherche et
 // développement de l'Epita (LRDE).
 // Copyright (C) 2004, 2005  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -199,6 +199,8 @@ namespace spot
                 // Go down the edge (f.s, <label, acc>, s_prime)
                 f.it->next();
                 inc_transitions();
+                if (SPOT_UNLIKELY(label == bddfalse))
+                  continue;
                 typename heap::color_ref c = h.get_color_ref(s_prime);
                 if (c.is_white())
                   {
@@ -286,6 +288,8 @@ namespace spot
                 // Go down the edge (f.s, <label, acc>, s_prime)
                 f.it->next();
                 inc_transitions();
+                if (SPOT_UNLIKELY(label == bddfalse))
+                  continue;
                 typename heap::color_ref c = h.get_color_ref(s_prime);
                 if (c.is_white())
                   {
