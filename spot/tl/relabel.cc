@@ -151,6 +151,75 @@ namespace spot
     return r.visit(f);
   }
 
+  namespace
+  {
+    typedef std::map<formula, int> sub_formula_count_t;
+
+    static void
+    sub_formula_collect(formula f, sub_formula_count_t* s)
+    {
+      assert(s);
+      f.traverse([&](const formula& f)
+                 {
+                   auto p = s->emplace(f, 1);
+                   if (p.second)
+                     return false;
+                   p.first->second += 1;
+                   return true;
+                 });
+    }
+
+    static std::pair<formula, formula>
+    split_used_once(formula f, const sub_formula_count_t& subcount)
+    {
+      assert(f.is_boolean());
+      unsigned sz = f.size();
+      if (sz <= 2)
+        return {f, nullptr};
+      // If we have a Boolean formula with more than two
+      // children, like (a & b & c & d) where some children
+      // (assume {a,b}) are used only once, but some other
+      // (assume {c,d}) are used multiple time in the formula,
+      // then split that into ((a & b) & (c & d)) to give
+      // (a & b) a chance to be relabeled as a whole.
+      bool has_once = false;
+      bool has_mult = false;
+      for (unsigned j = 0; j < sz; ++j)
+        {
+          auto p = subcount.find(f[j]);
+          assert(p != subcount.end());
+          unsigned sc = p->second;
+          assert(sc > 0);
+          if (sc == 1)
+            has_once = true;
+          else
+            has_mult = true;
+          if (has_once && has_mult)
+            {
+              std::vector<formula> once;
+              std::vector<formula> mult;
+              for (unsigned i = 0; i < j; ++i)
+                mult.push_back(f[i]);
+              once.push_back(f[j]);
+              if (sc > 1)
+                std::swap(once, mult);
+              for (++j; j < sz; ++j)
+                {
+                  auto p = subcount.find(f[j]);
+                  assert(p != subcount.end());
+                  unsigned sc = p->second;
+                  ((sc == 1) ? once : mult).push_back(f[j]);
+                }
+              formula f1 = formula::multop(f.kind(), std::move(once));
+              formula f2 = formula::multop(f.kind(), std::move(mult));
+              return { f1, f2 };
+            }
+        }
+      return {f, nullptr};
+    }
+  }
+
+
   //////////////////////////////////////////////////////////////////////
   // Boolean-subexpression relabeler
   //////////////////////////////////////////////////////////////////////
@@ -165,16 +234,12 @@ namespace spot
   // a subexpression (such as c&d above) only once.  However this
   // scheme has two problems:
   //
-  //   1. It will not detect inter-dependent Boolean subexpressions.
+  //   A. It will not detect inter-dependent Boolean subexpressions.
   //      For instance it will mistakenly relabel "(a & b) U (a & !b)"
   //      as "p0 U p1", hiding the dependency between a&b and a&!b.
   //
-  //   2. Because of our n-ary operators, it will fail to
+  //   B. Because of our n-ary operators, it will fail to
   //      notice that (a & b) is a sub-expression of (a & b & c).
-  //
-  // The code below only addresses point 1 so that interdependent
-  // subexpressions are not relabeled.  Point 2 could be improved in
-  // a future version of somebody feels inclined to do so.
   //
   // The way we compute the subexpressions that can be relabeled is
   // by transforming the formula syntax tree into an undirected
@@ -223,6 +288,17 @@ namespace spot
   //
   // In the example above (a&b)U(b&!c), the last recursion
   // stops on a, b, and !c, producing (p0&p1)U(p1&p2).
+  //
+  // Problem #B above (handling of n-ary expression) need some
+  // additional tricks.  Consider (a&b&c&d) U X(c&d), and assume
+  // {a,b,c,d} are Boolean subformulas.  The construction, as we have
+  // presented it, would interconnect all of {a,b,c,d}, preventing c&d
+  // from being relabeled together.  To help with that, we count the
+  // number of time of each subformula is used (or how many parents
+  // its has in the syntax DAG), and use that to split (a&b&c&d) into
+  // (a&b)&(c&d), separating subformulas that are used only once.  The
+  // counting is done by sub_formula_collect(), and the split by
+  // split_used_once().
   namespace
   {
     typedef std::vector<formula> succ_vec;
@@ -235,9 +311,10 @@ namespace spot
     public:
       fgraph& g;
       std::stack<formula> s;
+      sub_formula_count_t& subcount;
 
-      formula_to_fgraph(fgraph& g):
-        g(g)
+      formula_to_fgraph(fgraph& g, sub_formula_count_t& subcount):
+        g(g), subcount(subcount)
         {
         }
 
@@ -268,6 +345,24 @@ namespace spot
 
         unsigned sz = f.size();
         unsigned i = 0;
+        if (sz > 2 && f.is_boolean())
+          {
+            // If we have a Boolean formula with more than two
+            // children, like (a & b & c & d) where some children
+            // (assume {a,b}) are used only once, but some other
+            // (assume {c,d}) are used multiple time in the formula,
+            // then split that into ((a & b) & (c & d)) to give
+            // (a & b) a chance to be relabeled as a whole.
+            auto pair = split_used_once(f, subcount);
+            if (pair.second)
+              {
+                visit(pair.first);
+                visit(pair.second);
+                g[pair.first].emplace_back(pair.second);
+                g[pair.second].emplace_back(pair.first);
+                goto done;
+              }
+          }
         if (sz > 2 && !f.is_boolean())
           {
             /// If we have a formula like (a & b & Xc), consider
@@ -300,6 +395,7 @@ namespace spot
             g[pred].emplace_back(f[0]);
             g[f[0]].emplace_back(pred);
           }
+      done:
         s.pop();
       }
     };
@@ -409,10 +505,12 @@ namespace spot
     class bse_relabeler final: public relabeler
     {
     public:
-      fset& c;
-      bse_relabeler(ap_generator* gen, fset& c,
-                    relabeling_map* m)
-        : relabeler(gen, m), c(c)
+      const fset& c;
+      const sub_formula_count_t& subcount;
+
+      bse_relabeler(ap_generator* gen, const fset& c,
+                    relabeling_map* m, const sub_formula_count_t& subcount)
+        : relabeler(gen, m), c(c), subcount(subcount)
       {
       }
 
@@ -433,6 +531,19 @@ namespace spot
 
         unsigned i = 0;
         std::vector<formula> res;
+        if (f.is_boolean() && sz > 2)
+          {
+            // If we have a Boolean formula with more than two
+            // children, like (a & b & c & d) where some children
+            // (assume {a,b}) are used only once, but some other
+            // (assume {c,d}) are used multiple time in the formula,
+            // then split that into ((a & b) & (c & d)) to give
+            // (a & b) a chance to be relabeled as a whole.
+            auto pair = split_used_once(f, subcount);
+            if (pair.second)
+              return formula::multop(f.kind(), { visit(pair.first),
+                                                 visit(pair.second) });
+          }
         /// If we have a formula like (a & b & Xc), consider
         /// it as ((a & b) & Xc) in the graph to isolate the
         /// Boolean operands as a single node.
@@ -459,10 +570,14 @@ namespace spot
   relabel_bse(formula f, relabeling_style style, relabeling_map* m)
   {
     fgraph g;
+    sub_formula_count_t subcount;
+
+    // Scan f for sub-formulas used once.
+    sub_formula_collect(f, &subcount);
 
     // Build the graph g from the formula f.
     {
-      formula_to_fgraph conv(g);
+      formula_to_fgraph conv(g, subcount);
       conv.visit(f);
     }
 
@@ -482,7 +597,7 @@ namespace spot
         gen = new abc_generator;
         break;
       }
-    bse_relabeler rel(gen, c, m);
+    bse_relabeler rel(gen, c, m, subcount);
     return rel.visit(f);
   }
 

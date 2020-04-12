@@ -90,21 +90,30 @@ Fp0 -> ((p1 -> (!p0 U (!p0 & p2 & p3 & X((!p0 & p3) U p4)))) U p0)
   p4   ->   p4
 EOF
 
+# Variant to check that p3 & p6 can be gathered.
+t <<EOF
+<>p1 -> ((p0 -> (!p1 U (!p1 && p3 && !p5 && X((!p1 && !p5) U p4) & p6))) U p1)
+Fp0 -> ((p1 -> (!p0 U (!p0 & p2 & p3 & X((!p0 & p3) U p4)))) U p0)
+  p0   ->   p1
+  p1   ->   p0
+  p2   ->   p3 & p6
+  p3   ->   !p5
+  p4   ->   p4
+EOF
+
 # The next two formulas come from a report by Jens Kreber.
 t <<EOF
 !b & e U (a & b & c)
-!p0 & (p1 U (p0 & p2 & p3))
+!p0 & (p1 U (p0 & p2))
   p0   ->   b
   p1   ->   e
-  p2   ->   a
-  p3   ->   c
+  p2   ->   a & c
 EOF
 t <<EOF
 X!c & X(b & c & d & a U e)
-X!p0 & X(p0 & p1 & p2 & (p3 U p4))
+X!p0 & X(p0 & p1 & (p2 U p3))
   p0   ->   c
-  p1   ->   b
-  p2   ->   d
-  p3   ->   a
-  p4   ->   e
+  p1   ->   b & d
+  p2   ->   a
+  p3   ->   e
 EOF

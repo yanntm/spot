@@ -103,6 +103,10 @@ New in spot 2.8.7.dev (not yet released)
   - to_parity() has been rewritten now combines several strategies for
     paritizing automata with any acceptance condition.
 
+  - relabel_bse(), used by ltlfilt --relabel-bool, is now better at
+    dealing with n-ary operators and isolating subsets of operands
+    that can be relabeled as a single term.
+
   Backward-incompatible changes:
 
   - iar() and iar_maybe() have been moved from
