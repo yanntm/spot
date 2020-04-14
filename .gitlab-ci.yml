@@ -119,7 +119,7 @@ arch-gcc-glibcxxdebug:
     - autoreconf -vfi
     - ./configure --enable-devel --enable-c++17 --enable-glibcxx-debug
     - make
-    - make distcheck
+    - make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-devel --enable-c++17 --enable-glibcxx-debug'
   artifacts:
     when: on_failure
     paths:
