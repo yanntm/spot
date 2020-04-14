@@ -495,6 +495,9 @@ state_2_car_scc(unsigned nb_states)
     : nodes(nb_states, node()){
 }
 
+// Try to find a state compatible with the permu when seen_nb colors are
+// moved. If use_last is true, it return the last created compatible state.
+// If it is false, it returns the oldest.
 unsigned
 get_res_state(unsigned state, const std::vector<unsigned>& permu,
               unsigned seen_nb, bool use_last)
@@ -648,6 +651,7 @@ const
         return pairs[k].fin;
 }
 
+// Gives for each state a set of marks incoming to this state.
 std::vector<std::set<acc_cond::mark_t>>
 get_inputs_states(const twa_graph_ptr& aut)
 {
@@ -662,6 +666,7 @@ get_inputs_states(const twa_graph_ptr& aut)
     return inputs;
 }
 
+// Gives for each state a set of pairs incoming to this state.
 std::vector<std::set<std::vector<unsigned>>>
 get_inputs_iar(const twa_graph_ptr& aut, algorithm algo,
                const std::set<unsigned>& perm_elem,
@@ -680,7 +685,7 @@ get_inputs_iar(const twa_graph_ptr& aut, algorithm algo,
     }
     return inputs;
 }
-
+// Give an order from the set of marks
 std::vector<unsigned>
 group_to_vector(const std::set<acc_cond::mark_t>& group)
 {
@@ -701,6 +706,7 @@ group_to_vector(const std::set<acc_cond::mark_t>& group)
     return result;
 }
 
+// Give an order from the set of indices of pairs
 std::vector<unsigned>
 group_to_vector_iar(const std::set<std::vector<unsigned>>& group)
 {
@@ -722,6 +728,7 @@ group_to_vector_iar(const std::set<std::vector<unsigned>>& group)
     return result;
 }
 
+// Give a correspondance between a mark and an order for CAR
 std::map<acc_cond::mark_t, std::vector<unsigned>>
 get_groups(const std::set<acc_cond::mark_t>& marks_input)
 {
@@ -757,6 +764,7 @@ get_groups(const std::set<acc_cond::mark_t>& marks_input)
     return result;
 }
 
+// Give a correspondance between a mark and an order for IAR
 std::map<std::vector<unsigned>, std::vector<unsigned>>
 get_groups_iar(const std::set<std::vector<unsigned>>& marks_input)
 {
@@ -792,6 +800,7 @@ get_groups_iar(const std::set<std::vector<unsigned>>& marks_input)
     return result;
 }
 
+// Give for each state the correspondance between a mark and an order (CAR)
 std::vector<std::map<acc_cond::mark_t, std::vector<unsigned>>>
 get_mark_to_vector(const twa_graph_ptr& aut)
 {
@@ -802,6 +811,7 @@ get_mark_to_vector(const twa_graph_ptr& aut)
     return result;
 }
 
+// Give for each state the correspondance between a mark and an order (IAR)
 std::vector<std::map<std::vector<unsigned>, std::vector<unsigned>>>
 get_iar_to_vector(const twa_graph_ptr& aut, algorithm algo,
                   const std::set<unsigned>& perm_elem,
@@ -827,27 +837,30 @@ explicit car_generator(const const_twa_graph_ptr &a, to_parity_options options)
         names = nullptr;
 }
 
+// During the creation of the states, we had to choose between a set of
+// compatible states. But it is possible to create another compatible state
+// after. This function checks if a compatible state was created after and
+// use it.
 void
 change_transitions_destination(twa_graph_ptr& aut,
 const std::vector<unsigned>& states,
 std::map<unsigned, std::vector<unsigned>>& partial_history,
 state_2_car_scc& state_2_car)
 {
-    for (auto& edge : aut->edges())
-    {
-        unsigned
-            src = edge.src,
-            dst = edge.dst;
-        // We don't change loops or transitions that were not created in
-        // the current SCC.
-        if (src == dst
-        || std::find(states.begin(), states.end(), src) == states.end())
-            continue;
-        unsigned dst_scc = num2car[dst].state_scc;
-        auto cant_change = partial_history[aut->edge_number(edge)];
-        edge.dst = state_2_car.get_sub_tree(cant_change, dst_scc)
-                                ->get_end(true);
-    }
+    for (auto s : states)
+        for (auto& edge : aut->out(s))
+        {
+            unsigned
+                src = edge.src,
+                dst = edge.dst;
+            // We don't change loops
+            if (src == dst)
+                continue;
+            unsigned dst_scc = num2car[dst].state_scc;
+            auto cant_change = partial_history[aut->edge_number(edge)];
+            edge.dst = state_2_car.get_sub_tree(cant_change, dst_scc)
+                                    ->get_end(true);
+        }
 }
 
 unsigned
@@ -1003,6 +1016,7 @@ apply_to_Buchi(const twa_graph_ptr& sub_automaton,
     return buchi->num_states();
 }
 
+// Create a permutation for the first state of a SCC (IAR)
 void
 initial_perm_iar(std::set<unsigned> &perm_elem, perm_t &p0,
                  algorithm algo, const acc_cond::mark_t &colors,
@@ -1572,7 +1586,7 @@ run()
 
         algorithm algo_sub, algo_deg;
         unsigned max_states_sub_car = -1U;
-
+        // We try with and without degeneralization and we keep the best.
         if (has_degeneralized)
         {
             nb_states_deg =
@@ -1652,6 +1666,7 @@ private:
 const const_twa_graph_ptr &aut_;
 const scc_info scc_;
 twa_graph_ptr res_;
+// Says if we constructing an odd or even max
 bool is_odd;
 
 std::vector<car_state> num2car;
