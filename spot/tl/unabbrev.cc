@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2018-2019 Laboratoire de Recherche et
+// Copyright (C) 2015, 2018-2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -276,7 +276,9 @@ namespace spot
           break;
         }
       }
-    return entry.first->second = out;
+    // The recursion may have invalidated the "entry" iterator, so do
+    // not reuse it.
+    return cache_[in] = out;
   }
 
   formula unabbreviate(formula in, const char* opt)

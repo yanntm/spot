@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2020 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -964,7 +964,7 @@ namespace spot
       // States already seen.
       state_map<unsigned> seen;
       // States to process
-      std::deque<state_map<unsigned>::const_iterator> todo;
+      std::deque<state_map<unsigned>::value_type> todo;
 
       auto new_state = [&](const state* s) -> unsigned
         {
@@ -972,7 +972,7 @@ namespace spot
           if (p.second)
             {
               p.first->second = out->new_state();
-              todo.emplace_back(p.first);
+              todo.emplace_back(*p.first);
               if (names)
                 names->emplace_back(aut->format_state(s));
               if (ohstates)
@@ -994,7 +994,7 @@ namespace spot
         {
           const state* src1;
           unsigned src2;
-          std::tie(src1, src2) = *todo.front();
+          std::tie(src1, src2) = todo.front();
           todo.pop_front();
           for (auto* t: aut->succ(src1))
             {

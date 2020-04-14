@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2015, 2017-2019 Laboratoire de Recherche et
+// Copyright (C) 2013-2015, 2017-2020 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -260,19 +260,22 @@ namespace spot
                   }
                 else       // state stays in check
                   {
+                    // remove states that should stay in s (ncsb_s),
+                    // and mark the other as ncsb_c.
+                    // The first two loops form a kind of remove_if()
+                    // that set the non-removed states to ncsb_c.
                     auto it = succs.begin();
-                    while (it != succs.end())
-                      {
-                        // remove state if it should stay in s
-                        if ((*it)[t.dst] == ncsb_s)
-                          {
-                            std::iter_swap(it, succs.end() - 1);
-                            succs.pop_back();
-                            continue;
-                          }
+                    auto end = succs.end();
+                    for (; it != end; ++it)
+                      if ((*it)[t.dst] != ncsb_s)
                         (*it)[t.dst] = ncsb_c;
-                        ++it;
-                      }
+                      else
+                        break;
+                    if (it != end)
+                      for (auto it2 = it; ++it2 != end;)
+                        if ((*it2)[t.dst] != ncsb_s)
+                          *it++ = std::move(*it2);
+                    succs.erase(it, end);
                   }
                 // No need to look for other compatible transitions
                 // for this state; it's in the deterministic part of
