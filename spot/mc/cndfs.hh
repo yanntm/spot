@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017, 2018, 2019 Laboratoire de Recherche et
-// Developpement de l'Epita
+// Copyright (C) 2015, 2016, 2017, 2018, 2019, 2020 Laboratoire de
+// Recherche et Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
 //
@@ -65,33 +65,31 @@ namespace spot
       State st_kripke;
       unsigned st_prop;
       cndfs_colors* colors;
+
+      bool operator==(const product_state& other) const
+      {
+        StateEqual equal;
+        return (st_prop == other.st_prop)
+          && equal(st_kripke, other.st_kripke);
+      }
     };
 
     /// \brief The hasher for the previous state.
-    struct state_hasher
+    struct state_hasher : brq::hash_adaptor<product_state>
     {
       state_hasher(const product_state&)
       { }
 
       state_hasher() = default;
 
-      brick::hash::hash128_t
-      hash(const product_state& lhs) const
+      auto hash(const product_state& lhs) const
       {
         StateHash hash;
         // Not modulo 31 according to brick::hashset specifications.
         unsigned u = hash(lhs.st_kripke) % (1<<30);
         u = wang32_hash(lhs.st_prop) ^ u;
         u = u % (1<<30);
-        return {u, u};
-      }
-
-      bool equal(const product_state& lhs,
-                 const product_state& rhs) const
-      {
-        StateEqual equal;
-        return (lhs.st_prop == rhs.st_prop)
-          && equal(lhs.st_kripke, rhs.st_kripke);
+        return u;
       }
     };
 
@@ -106,8 +104,7 @@ namespace spot
   public:
 
     ///< \brief Shortcut to ease shared map manipulation
-    using shared_map = brick::hashset::FastConcurrent <product_state,
-                                                       state_hasher>;
+    using shared_map = brq::concurrent_hash_set<product_state>;
 
     swarmed_cndfs(kripkecube<State, SuccIterator>& sys, twacube_ptr twa,
                   shared_map& map, unsigned tid, std::atomic<bool>& stop):
@@ -156,7 +153,7 @@ namespace spot
       s.colors = c;
 
       // Try to insert the new state in the shared map.
-      auto it = map_.insert(s);
+      auto it = map_.insert(s, state_hasher());
       bool b = it.isnew();
 
       // Insertion failed, delete element
@@ -195,7 +192,7 @@ namespace spot
     push_red(product_state s, bool ignore_cyan)
     {
       // Try to insert the new state in the shared map.
-      auto it = map_.insert(s);
+      auto it = map_.insert(s, state_hasher());
       bool b = it.isnew();
 
       SPOT_ASSERT(!b); // should never be new in a red DFS
@@ -407,7 +404,7 @@ namespace spot
                     }
                   else if (acc && res.second.colors->l[tid_].is_in_Rp)
                     {
-                      auto it = map_.insert(s);
+                      auto it = map_.insert(s, state_hasher());
                       Rp_acc_.push_back(*it);
                     }
                 }
