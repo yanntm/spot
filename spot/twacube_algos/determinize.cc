@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <spot/twacube_algos/determinize.hh>
+#include <bddx.h>
 
 namespace spot
 {
@@ -116,12 +117,39 @@ namespace spot
     }
 
   std::vector<cube>
-  get_letters(const safra_state&)
+  get_letters(const safra_state& s, const std::vector<cube>& supports, twacube_ptr aut)
     {
-      // BDD satoneset: use original automaton, and translate to bdd and back
-      // again
-      // TODO(am):
-      return std::vector<cube>();
+      const cubeset& cs = aut->get_cubeset();
+
+      cube supp = cs.alloc();
+      for (const auto& [state, _] : s.nodes_)
+        supp = cs.intersection(supp, supports[state]);
+
+      // convert support from cube to bdd
+      bdd allap = bddtrue;
+      for(unsigned i = 0; i < cs.size(); ++i)
+        {
+            if (cs.is_true_var(supp, i))
+              allap &= bdd_ithvar(i);
+            else if (cs.is_false_var(supp, i))
+              allap &= bdd_nithvar(i);
+            // otherwise it 's a free variable, shouldn't even be in the support?
+            // TODO: what if both true and false, after intersection?
+        }
+
+      std::vector<cube> res;
+
+      // from the BDD support, do satonesets to extract individual atomic propositions
+      bdd all = bddtrue;
+      while (all != bddfalse)
+        {
+          bdd one = bdd_satoneset(all, allap, bddfalse);
+          all -= one;
+          cube one_cube = cs.alloc();
+          cs.set_true_var(one_cube, bdd_var(one));
+          res.push_back(one_cube);
+        }
+      return res;
     }
 
   twacube_ptr
@@ -134,13 +162,12 @@ namespace spot
 
     auto res = make_twacube(aut->get_ap());
 
-    // TODO(am): compute support
-    std::vector<cube> support(aut->num_states());
+    // computing each state's support, i.e. all variables upon which the
+    // transition taken depends
+    std::vector<cube> supports(aut->num_states());
     for (unsigned i = 0; i != aut->num_states(); ++i)
       {
-        // TODO(am): start from 'all true' cube ??
-        // all variables will be free
-        // check what alloc returns
+        // alloc() returns a cube with all variables marked free
         cube res = aut->get_cubeset().alloc();
 
         const auto succs = aut->succ(i);
@@ -150,7 +177,7 @@ namespace spot
             res = aut->get_cubeset().intersection(res, cube_support(trans.cube_));
           }
 
-        support[i] = res;
+        supports[i] = res;
       }
 
     // association between safra_state and destination state in resulting
@@ -175,7 +202,8 @@ namespace spot
 
     // initial state creation
     {
-      // FIXME: get_initial() discards const qualifier
+      // FIXME: get_initial() discards const qualifier, upstream change to
+      // er/twacube
       unsigned init_state = aut->get_initial();
       safra_state init(init_state, true);
       unsigned res_init = get_state(init);
@@ -195,7 +223,7 @@ namespace spot
         todo.pop_front();
 
         // get each possible transition
-        auto letters = get_letters(curr);
+        auto letters = get_letters(curr, supports, aut);
         for (const auto& l : letters)
           {
             // returns successor safra_state and emitted color if any
