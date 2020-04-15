@@ -280,7 +280,7 @@ Except for =--unique=, all these filters can be inverted using option
 that use 3 acceptance sets and that have between 2 and 5 states, and
 keep the others.
 
-* Simplifying automata
+* Simplifying automata and changing acceptance conditions
    :PROPERTIES:
    :header-args:sh: :results verbatim :exports results
    :END:
@@ -382,7 +382,7 @@ when =--deterministic= is passed.
 
 When =--deterministic= is used, the first of these two procedures is
 attempted on any supplied automaton.  (It's even attempted for
-deterministic automata, because that might reduce them.)
+deterministic automata, because the minimization might reduce them.)
 
 If that first procedure failed, and the input automaton is not
 deterministic and =--generic= (the default for =autfilt=), =--parity=
@@ -543,20 +543,20 @@ HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
-Acceptance: 4 Inf(0)&Fin(1)&Fin(3) | Inf(2)&Inf(3) | Inf(1)
+Acceptance: 5 Inf(0)&Fin(1)&Fin(4) | Inf(2)&Inf(3) | Inf(1)
 --BODY--
 State: 0 {3}
 [t] 0
 [0] 1 {1}
-[!0] 2 {0}
+[!0] 2 {0 4}
 State: 1 {3}
 [1] 0
 [0&1] 1 {0}
-[!0&1] 2 {2}
+[!0&1] 2 {2 4}
 State: 2
 [!1] 0
 [0&!1] 1 {0}
-[!0&!1] 2 {0}
+[!0&!1] 2 {0 4}
 --END--
 EOF
 #+END_SRC
@@ -605,13 +605,31 @@ $txt
 [[file:autfilt-ex3.svg]]
 
 
-Using =--remove-fin= transforms the automaton to remove all traces
-of Fin-acceptance: this usually requires adding non-deterministic jumps to
-altered copies of strongly-connected components.
+Using =--simplify-acc= applies several rules (like unit-propagation, detection
+of identical acceptance sets, etc) to simplify the acceptance formula of an automaton.
+
+#+NAME: autfilt-ex3b
+#+BEGIN_SRC sh
+autfilt --simplify-acc aut-ex1.hoa --dot
+#+END_SRC
+
+#+BEGIN_SRC dot :file autfilt-ex3b.svg :var txt=autfilt-ex3b :exports results
+  $txt
+#+END_SRC
+
+#+RESULTS:
+[[file:autfilt-ex3b.svg]]
+
+
+Using =--remove-fin= transforms the automaton to remove all traces of
+Fin-acceptance: this usually requires adding non-deterministic jumps
+to altered copies of strongly-connected components.  Fin removal does
+not simplify the automaton constructed, so additionally passing
+=--small= will help reduce the automaton.
 
 #+NAME: autfilt-ex4
 #+BEGIN_SRC sh
-autfilt --remove-fin aut-ex1.hoa --dot
+autfilt --remove-fin --small aut-ex1.hoa --dot
 #+END_SRC
 
 #+BEGIN_SRC dot :file autfilt-ex4.svg :var txt=autfilt-ex4 :exports results
@@ -636,6 +654,41 @@ $txt
 
 #+RESULTS:
 [[file:autfilt-ex5.svg]]
+
+
+The =--colored-parity= request a transformation to parity acceptance.
+The "colored" part of the option mean that each edge should be
+colored by one acceptance sets.  (Using =--parity= would allow edges
+without any color.)
+
+#+NAME: autfilt-ex6
+#+BEGIN_SRC sh
+autfilt --colored-parity aut-ex1.hoa --dot
+#+END_SRC
+
+#+BEGIN_SRC dot :file autfilt-ex6.svg :var txt=autfilt-ex6 :exports results
+$txt
+#+END_SRC
+
+#+RESULTS:
+[[file:autfilt-ex6.svg]]
+
+A specific type of parity acceptance can be forced by passing it as an
+argument of the =--parity= or =--colored-parity= option.
+
+#+NAME: autfilt-ex6b
+#+BEGIN_SRC sh
+autfilt --parity='min odd' aut-ex1.hoa --dot
+#+END_SRC
+
+#+BEGIN_SRC dot :file autfilt-ex6b.svg :var txt=autfilt-ex6b :exports results
+$txt
+#+END_SRC
+
+#+RESULTS:
+[[file:autfilt-ex6b.svg]]
+
+
 
 ** Atomic proposition removal
    :PROPERTIES:
@@ -765,30 +818,6 @@ run in the automaton:
 ltl2tgba 'a U b U c' | autfilt --highlight-word='a&!b&!c; cycle{!a&!b&c}' -d
 #+END_SRC
 
-#+RESULTS: highlight-word
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [shape="circle"]
-  node [style="filled", fillcolor="#ffffa0"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 2
-  0 [label="0", peripheries=2]
-  0 -> 0 [label=<1>, style=bold, color="#F17CB0"]
-  1 [label="1"]
-  1 -> 0 [label=<c>]
-  1 -> 1 [label=<b &amp; !c>]
-  2 [label="2"]
-  2 -> 0 [label=<c>, style=bold, color="#F17CB0"]
-  2 -> 1 [label=<!a &amp; b &amp; !c>]
-  2 -> 2 [label=<a &amp; !c>, style=bold, color="#F17CB0"]
-}
-#+end_example
-
 #+BEGIN_SRC dot :file autfilt-hlword.svg :var txt=highlight-word :exports results
 $txt
 #+END_SRC
@@ -808,30 +837,6 @@ ltl2tgba 'a U b U c' |
   autfilt --highlight-word=5,'a&!b&!c; cycle{!a&!b&c}' \
           --highlight-word=4,'!a&b&!c; cycle{!a&!b&c}' -d
 #+END_SRC
-
-#+RESULTS: highlight-word2
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [shape="circle"]
-  node [style="filled", fillcolor="#ffffa0"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 2
-  0 [label="0", peripheries=2]
-  0 -> 0 [label=<1>, style=bold, color="#60BD68"]
-  1 [label="1"]
-  1 -> 0 [label=<c>, style=bold, color="#60BD68"]
-  1 -> 1 [label=<b &amp; !c>]
-  2 [label="2"]
-  2 -> 0 [label=<c>, style=bold, color="#F15854"]
-  2 -> 1 [label=<!a &amp; b &amp; !c>, style=bold, color="#60BD68"]
-  2 -> 2 [label=<a &amp; !c>, style=bold, color="#F15854"]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file autfilt-hlword2.svg :var txt=highlight-word2 :exports results
   $txt
