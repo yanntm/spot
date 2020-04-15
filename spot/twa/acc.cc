@@ -1357,10 +1357,10 @@ namespace spot
       {
         std::sort(disj.begin(), disj.end(),
           [](acc_code c1, acc_code c2)
-                  {
-            (void) c2;
-            return c1.back().sub.op == acc_cond::acc_op::Inf;
-          });
+              {
+                return (c1 != c2) &&
+                c1.back().sub.op == acc_cond::acc_op::Inf;
+              });
         unsigned i = 0;
         for (; i < disj.size() - 1; ++i)
         {
@@ -1394,10 +1394,10 @@ namespace spot
     else
       {       std::sort(conj.begin(), conj.end(),
         [](acc_code c1, acc_code c2)
-              {
-          (void) c2;
-          return c1.back().sub.op == acc_cond::acc_op::Fin;
-        });
+          {
+            return (c1 != c2)
+                  && c1.back().sub.op == acc_cond::acc_op::Fin;
+          });
       unsigned i = 0;
       for (; i < conj.size() - 1; i++)
       {

@@ -689,13 +689,20 @@ get_inputs_iar(const twa_graph_ptr& aut, algorithm algo,
 std::vector<unsigned>
 group_to_vector(const std::set<acc_cond::mark_t>& group)
 {
+    // In this function, we have for example the marks {1, 2}, {1, 2, 3}, {2}
+    // A compatible order is [2, 1, 3]
     std::vector<acc_cond::mark_t> group_vect(group.begin(), group.end());
 
+    // We sort the elements by inclusion. This function is called on a
+    // set of marks such that each mark is included or includes the others.
     std::sort(group_vect.begin(), group_vect.end(),
               [](const acc_cond::mark_t left, const acc_cond::mark_t right)
                 {
-                    return (left & right) == left;
+                    return (left != right) && ((left & right) == left);
                 });
+    // At this moment, we have the vector [{2}, {1, 2}, {1, 2, 3}].
+    // In order to create the order, we add the elements of the first element.
+    // Then we add the elements of the second mark (without duplication), etc.
     std::vector<unsigned> result;
     for (auto mark : group_vect)
     {
@@ -717,8 +724,9 @@ group_to_vector_iar(const std::set<std::vector<unsigned>>& group)
               [](const std::vector<unsigned> left,
                  const std::vector<unsigned> right)
                 {
-                    return std::includes(right.begin(), right.end(),
-                                        left.begin(), left.end());
+                    return (right != left)
+                        && std::includes(right.begin(), right.end(),
+                                         left.begin(), left.end());
                 });
     std::vector<unsigned> result;
     for (auto vec : group_vect)
