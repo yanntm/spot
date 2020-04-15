@@ -441,4 +441,11 @@ ltl2tgba '!b & e U (a & b & c)' | grep '\[f\]' && exit 1
 ltl2tgba '!b & e U (a & b & c)' --stats=%w | grep 0 && exit 1
 ltl2tgba 'X!c & X(b & c & d & a U e)' | grep '\[f\]' && exit 1
 ltl2tgba 'X!c & X(b & c & d & a U e)' --stats=%w | grep 0 && exit 1
+
+# This caused issue at some point, because simplify_acceptance would
+# leave some undeclared acceptance set in the automaton, which would
+# cause simulation-based reduction to produce garbage output, which
+# would in turn cause the HOA printer to choke.
+ltlcross -f 'G(F(Gb ^ Fa) & FG!a)' 'ltl2tgba -G -D'
+
 :

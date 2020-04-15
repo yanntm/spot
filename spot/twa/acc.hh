@@ -1703,13 +1703,16 @@ namespace spot
       return is_parity(max, odd);
     }
 
-    /// \brief Remove redundant Fin and Inf. For example in
-    /// Fin(0)|(Inf(0) & Fin(1)), Inf(0) is true iff Fin(0) is false so
-    /// we can rewrite it as Fin(0)|Fin(1).
-    acc_cond
-    unit_propagation()
+    /// \brief Remove superfluous Fin and Inf by unit propagation.
+    ///
+    /// For example in `Fin(0)|(Inf(0) & Fin(1))`, `Inf(0)` is true
+    /// iff `Fin(0)` is false so we can rewrite it as `Fin(0)|Fin(1)`.
+    ///
+    /// The number of acceptance sets is not modified even if some do
+    /// not appear in the acceptance condition anymore.
+    acc_cond unit_propagation()
     {
-      return acc_cond(code_.unit_propagation());
+      return acc_cond(num_, code_.unit_propagation());
     }
 
     // Return (true, m) if there exist some acceptance mark m that
