@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2011, 2013-2019 Laboratoire de Recherche et
+// Copyright (C) 2009, 2011, 2013-2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2003-2005 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -881,23 +881,13 @@ namespace spot
     /// this case an explicit product is performed.
     virtual twa_run_ptr intersecting_run(const_twa_ptr other) const;
 
-    /// \brief Return an accepting run recognizing a word accepted by
-    /// two automata.
-    ///
-    /// If \a from_other is true, the returned run will be over the
-    /// \a other automaton.  Otherwise, the run will be over this
-    /// automaton.
-    ///
-    /// This form is deprecated.  Replace a->interesecting_run(b, true)
-    /// by b->intersecting_run(a).
-    ///
-    /// Return nullptr if no accepting run were found.
-    ///
-    /// An emptiness check is performed on a product computed
-    /// on-the-fly, unless some of the operands use Fin-acceptance: in
-    /// this case an explicit product is performed.
-    ///
-    /// This function was deprecated in Spot 2.8.
+    // (undocumented)
+    //
+    // If \a from_other is true, the returned run will be over the
+    // \a other automaton.  Otherwise, the run will be over this
+    // automaton.
+    //
+    // This function was deprecated in Spot 2.8.
     SPOT_DEPRECATED("replace a->intersecting_run(b, true) "
                     "by b->intersecting_run(a).")
     twa_run_ptr intersecting_run(const_twa_ptr other,
