@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018, 2019 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017-2020 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -116,7 +116,7 @@ static const argp_option options[] =
     { "quiet", 'q', nullptr, 0,
       "suppress all normal output in absence of errors", 0 },
     { "save-bogus", OPT_BOGUS, "[>>]FILENAME", 0,
-      "save formulas for which problems were detected in FILENAME", 0 },
+      "save automata for which problems were detected in FILENAME", 0 },
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "print what is being done, for debugging", 0 },
     { nullptr, 0, nullptr, 0,
