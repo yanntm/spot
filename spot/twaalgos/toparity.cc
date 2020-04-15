@@ -1655,8 +1655,25 @@ run()
         }
     }
     unsigned initial_state = aut_->get_init_state_number();
-    auto initial_car = state2car.find(initial_state);
-    auto initial_state_res = car2num.find(initial_car->second);
+    auto initial_car_ptr = state2car.find(initial_state);
+    car_state initial_car;
+    // If we take an automaton with one state and without transition, 
+    // the SCC was useless so state2car doesn't have initial_state
+    if (initial_car_ptr == state2car.end())
+    {
+        assert(res_->num_states() == 0);
+        auto new_state = res_->new_state();
+        car_state new_car = {initial_state, 0, perm_t()};
+        state2car[initial_state] = new_car;
+        if (options.pretty_print)
+            names->push_back(new_car.to_string(None));
+        num2car.insert(num2car.begin() + new_state, new_car);
+        car2num[new_car] = new_state;
+        initial_car = new_car;
+    }
+    else
+        initial_car = initial_car_ptr->second;
+    auto initial_state_res = car2num.find(initial_car);
     if (initial_state_res != car2num.end())
         res_->set_init_state(initial_state_res->second);
     else
