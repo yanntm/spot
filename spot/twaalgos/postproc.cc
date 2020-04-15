@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -274,22 +274,25 @@ namespace spot
         !(type_ == Generic && PREF_ == Any && level_ == Low))
       a = remove_alternation(a);
 
-    if ((via_gba && !a->acc().is_generalized_buchi())
-        || (want_parity && !a->acc().is_parity()))
+    if ((via_gba || (want_parity && !a->acc().is_parity()))
+        && !a->acc().is_generalized_buchi())
       {
-        twa_graph_ptr b = nullptr;
-        if (want_parity && is_deterministic(a) &&
-            !a->acc().is_generalized_buchi())
-          b = to_parity(a);
-        // possible only if a was deterministic and (Rabin-like or Streett-like)
-        // and we want parity and a is not a TGBA
-        // NB: on a TGBA, degeneralization is better than IAR
-        if (b)
-          a = b;
+        // If we do want a parity automaton, we can use to_parity().
+        // However (1) degeneralization is better if the input is
+        // GBA, and (2) if we want a deterministic parity automaton and the
+        // input is not deterministic, that is useless here.  We need
+        // to determinize it first, and our deterministization
+        // function only deal with TGBA as input.
+        if (want_parity && (PREF_ != Deterministic || is_deterministic(a)))
+          {
+            a = to_parity(a);
+          }
         else
-          a = to_generalized_buchi(a);
-        if (PREF_ == Any && level_ == Low)
-          a = do_scc_filter(a, true);
+          {
+            a = to_generalized_buchi(a);
+            if (PREF_ == Any && level_ == Low)
+              a = do_scc_filter(a, true);
+          }
       }
 
     if (PREF_ == Any && level_ == Low
