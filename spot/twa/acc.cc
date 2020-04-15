@@ -2651,6 +2651,8 @@ namespace spot
           result = init_code | result.remove(mark, fin == conj);
       }
 
+      if (result.is_t())
+        return result;
       auto pos = &result.back();
       auto fo = pos->sub.op;
       bool is_and = (fo == acc_cond::acc_op::And);
