@@ -1684,6 +1684,7 @@ run()
         res_->set_named_prop("state-names", names);
     reduce_parity_here(res_);
     res_->purge_unreachable_states();
+    res_->merge_states();
     return res_;
 }
 

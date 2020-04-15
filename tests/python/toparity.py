@@ -195,7 +195,7 @@ State: 13
 [0&1] 5
 [!0&!1] 10 {0 1 3 5}
 [0&!1] 13 {1 3}
---END--"""), [35, 28, 23, 30, 29, 25, 22])
+--END--"""), [31, 27, 23, 28, 28, 24, 22])
 
 test(spot.automaton("""
 HOA: v1
@@ -288,7 +288,7 @@ State: 4
 [0&!1] 4
 [0&1] 4 {1 2 4}
 --END--
-"""), [9, 6, 7, 7, 6, 6, 6])
+"""), [8, 6, 7, 7, 6, 6, 6])
 
 test(spot.automaton("""
 HOA: v1
@@ -341,7 +341,7 @@ explicit-labels trans-acc --BODY-- State: 0 [0&1] 2 {4 5} [0&1] 4 {0 4}
 p = spot.to_parity_old(a, True)
 assert p.num_states() == 22
 assert spot.are_equivalent(a, p)
-test(a, [8, 7, 8, 8, 6, 7, 6])
+test(a, [6, 6, 6, 6, 6, 6, 6])
 
 # Force a few edges to false, to make sure to_parity() is OK with that.
 for e in a.out(2):
@@ -371,4 +371,4 @@ for f in spot.randltl(5, 2000):
 a = spot.translate('!(GFa -> (GFb & GF(!b & !Xb)))', 'gen', 'det')
 b = spot.to_parity_old(a, True)
 assert a.equivalent_to(b)
-test(a, [7, 7, 3, 7, 8, 7, 3])
+test(a, [6, 6, 3, 6, 7, 6, 3])
