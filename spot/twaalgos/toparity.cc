@@ -1657,7 +1657,7 @@ run()
     unsigned initial_state = aut_->get_init_state_number();
     auto initial_car_ptr = state2car.find(initial_state);
     car_state initial_car;
-    // If we take an automaton with one state and without transition, 
+    // If we take an automaton with one state and without transition,
     // the SCC was useless so state2car doesn't have initial_state
     if (initial_car_ptr == state2car.end())
     {
@@ -1703,34 +1703,13 @@ to_parity_options options;
 std::vector<std::string>* names;
 }; // car_generator
 
-  static const_twa_graph_ptr
-  remove_false_transitions(const const_twa_graph_ptr& a)
-  {
-    // Do not do anything if the automaton has no false transition
-    for (auto edge : a->edges())
-      if (edge.cond == bddfalse)
-        goto doremoval;
-    return a;
-  doremoval:
-    auto res_ = make_twa_graph(a->get_dict());
-    res_->copy_ap_of(a);
-    res_->new_states(a->num_states());
-    for (auto edge : a->edges())
-      if (edge.cond != bddfalse)
-        res_->new_edge(edge.src, edge.dst, edge.cond, edge.acc);
-    res_->set_init_state(a->get_init_state_number());
-    res_->set_acceptance(a->get_acceptance());
-    res_->prop_copy(a, twa::prop_set::all());
-    return res_;
-  }
-
 }// namespace
 
 
 twa_graph_ptr
 to_parity(const const_twa_graph_ptr &aut, const to_parity_options options)
 {
-    return car_generator(remove_false_transitions(aut), options).run();
+    return car_generator(aut, options).run();
 }
 
   // Old version of CAR.

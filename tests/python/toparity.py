@@ -19,7 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import spot
-import itertools
+from itertools import zip_longest
+from buddy import bddfalse
 
 # Tests for the new version of to_parity
 
@@ -91,8 +92,7 @@ options = [
 
 
 def test(aut, expected_num_states=[], full=True):
-    for (opt, expected_num) in\
-            itertools.zip_longest(options, expected_num_states):
+    for (opt, expected_num) in zip_longest(options, expected_num_states):
         p1 = spot.to_parity(aut,
                             search_ex = opt.search_ex,
                             use_last = opt.use_last,
@@ -107,8 +107,8 @@ def test(aut, expected_num_states=[], full=True):
                             pretty_print = opt.pretty_print,
                             )
         assert spot.are_equivalent(aut, p1)
-        if (expected_num != None):
-                assert(p1.num_states() == expected_num)
+        if expected_num is not None:
+                assert p1.num_states() == expected_num
         if full:
             # Make sure passing opt is the same as setting
             # each argument individually
@@ -342,6 +342,20 @@ p = spot.to_parity_old(a, True)
 assert p.num_states() == 22
 assert spot.are_equivalent(a, p)
 test(a, [8, 7, 8, 8, 6, 7, 6])
+
+# Force a few edges to false, to make sure to_parity() is OK with that.
+for e in a.out(2):
+    if e.dst == 1:
+        e.cond = bddfalse
+        break
+for e in a.out(3):
+    if e.dst == 3:
+        e.cond = bddfalse
+        break
+p = spot.to_parity_old(a, True)
+assert p.num_states() == 22
+assert spot.are_equivalent(a, p)
+test(a, [7, 6, 7, 7, 6, 6, 6])
 
 for f in spot.randltl(4, 400):
     d = spot.translate(f, "det", "G")
