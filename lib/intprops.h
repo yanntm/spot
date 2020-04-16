@@ -1,6 +1,6 @@
 /* intprops.h -- properties of integer types
 
-   Copyright (C) 2001-2019 Free Software Foundation, Inc.
+   Copyright (C) 2001-2020 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
@@ -21,19 +21,6 @@
 #define _GL_INTPROPS_H
 
 #include <limits.h>
-
-/* If the compiler lacks __has_builtin, define it well enough for this
-   source file only.  */
-#ifndef __has_builtin
-# define __has_builtin(x) _GL_HAS_##x
-# if 5 <= __GNUC__ && !defined __ICC
-#  define _GL_HAS___builtin_add_overflow 1
-# else
-#  define _GL_HAS___builtin_add_overflow 0
-# endif
-# define _GL_HAS___builtin_mul_overflow _GL_HAS___builtin_add_overflow
-# define _GL_TEMPDEF___has_builtin
-#endif
 
 /* Return a value with the common real type of E and V and the value of V.
    Do not evaluate E.  */
@@ -235,19 +222,20 @@
 
 /* True if __builtin_add_overflow (A, B, P) and __builtin_sub_overflow
    (A, B, P) work when P is non-null.  */
-#if __has_builtin (__builtin_add_overflow)
+#if 5 <= __GNUC__ && !defined __ICC
 # define _GL_HAS_BUILTIN_ADD_OVERFLOW 1
+#elif defined __has_builtin
+# define _GL_HAS_BUILTIN_ADD_OVERFLOW __has_builtin (__builtin_add_overflow)
 #else
 # define _GL_HAS_BUILTIN_ADD_OVERFLOW 0
 #endif
 
-/* True if __builtin_mul_overflow (A, B, P) works when P is non-null.
-   Work around Clang bug <https://bugs.llvm.org/show_bug.cgi?id=16404>.  */
-#if (__has_builtin (__builtin_mul_overflow) \
-     && (!defined __clang__ || (defined __APPLE__ && defined __MACH__)))
-# define _GL_HAS_BUILTIN_MUL_OVERFLOW 1
-#else
+/* True if __builtin_mul_overflow (A, B, P) works when P is non-null.  */
+#ifdef __clang__
+/* Work around Clang bug <https://bugs.llvm.org/show_bug.cgi?id=16404>.  */
 # define _GL_HAS_BUILTIN_MUL_OVERFLOW 0
+#else
+# define _GL_HAS_BUILTIN_MUL_OVERFLOW _GL_HAS_BUILTIN_ADD_OVERFLOW
 #endif
 
 /* True if __builtin_add_overflow_p (A, B, C) works, and similarly for
@@ -385,12 +373,17 @@
    _GL_INT_OP_WRAPV (a, b, r, -, _GL_INT_SUBTRACT_RANGE_OVERFLOW)
 #endif
 #if _GL_HAS_BUILTIN_MUL_OVERFLOW
-/* Work around GCC bug 91450.  */
-# define INT_MULTIPLY_WRAPV(a, b, r) \
-   ((!_GL_SIGNED_TYPE_OR_EXPR (*(r)) && EXPR_SIGNED (a) && EXPR_SIGNED (b) \
-     && _GL_INT_MULTIPLY_RANGE_OVERFLOW (a, b, 0, (__typeof__ (*(r))) -1)) \
-    ? ((void) __builtin_mul_overflow (a, b, r), 1) \
-    : __builtin_mul_overflow (a, b, r))
+# if (9 < __GNUC__ + (3 <= __GNUC_MINOR__) \
+      || (__GNUC__ == 8 && 4 <= __GNUC_MINOR__))
+#  define INT_MULTIPLY_WRAPV(a, b, r) __builtin_mul_overflow (a, b, r)
+# else
+   /* Work around GCC bug 91450.  */
+#  define INT_MULTIPLY_WRAPV(a, b, r) \
+    ((!_GL_SIGNED_TYPE_OR_EXPR (*(r)) && EXPR_SIGNED (a) && EXPR_SIGNED (b) \
+      && _GL_INT_MULTIPLY_RANGE_OVERFLOW (a, b, 0, (__typeof__ (*(r))) -1)) \
+     ? ((void) __builtin_mul_overflow (a, b, r), 1) \
+     : __builtin_mul_overflow (a, b, r))
+# endif
 #else
 # define INT_MULTIPLY_WRAPV(a, b, r) \
    _GL_INT_OP_WRAPV (a, b, r, *, _GL_INT_MULTIPLY_RANGE_OVERFLOW)
@@ -587,12 +580,5 @@
          ? (EXPR_SIGNED (b) ? 0 < (b) + (tmin) : -1 - (tmin) < (b) - 1) \
          : (tmin) / (a) < (b)) \
       : (tmax) / (b) < (a)))
-
-#ifdef _GL_TEMPDEF___has_builtin
-# undef __has_builtin
-# undef _GL_HAS___builtin_add_overflow
-# undef _GL_HAS___builtin_mul_overflow
-# undef _GL_TEMPDEF___has_builtin
-#endif
 
 #endif /* _GL_INTPROPS_H */
