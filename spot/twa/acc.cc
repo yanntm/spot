@@ -2641,10 +2641,36 @@ namespace spot
       while (find_unit_clause(result, conj, fin, mark))
       {
         acc_code init_code;
+
         if (fin)
-          init_code = acc_code::fin(mark);
+        {
+          if (conj)
+          {
+            init_code = acc_code::t();
+            for (unsigned col : mark.sets())
+              init_code &= acc_code::fin({col});
+          } else
+          {
+            init_code = acc_code::f();
+            for (unsigned col : mark.sets())
+              init_code |= acc_code::fin({col});
+          }
+        }
         else
-          init_code = acc_code::inf(mark);
+        {
+          if (conj)
+          {
+            init_code = acc_code::t();
+            for (unsigned col : mark.sets())
+              init_code &= acc_code::inf({col});
+          }
+          else
+          {
+            init_code = acc_code::f();
+            for (unsigned col : mark.sets())
+              init_code |= acc_code::inf({col});
+          }
+        }
         if (conj)
           result = init_code & result.remove(mark, fin == conj);
         else
