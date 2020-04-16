@@ -38,7 +38,19 @@ explicit-labels trans-acc complete properties: deterministic --BODY-- State: 0
 [!0&!1] 0 {2} [0&1] 1 {0 5} [0&!1] 1 {0 2 5} [!0&1] 2 {1} State: 1 [0&1] 1 {0}
 [!0&!1] 1 {2} [0&!1] 1 {0 2} [!0&1] 2 {1} State: 2 [!0&!1] 0 {2 3} [0&!1] 0 {0
 2 3 5} [!0&1] 2 {1 4} [0&1] 3 {0 5} State: 3 [!0&!1] 0 {2 3} [0&!1] 0 {0 2 3 5}
-[!0&1] 2 {1 4} [0&1] 3 {0} --END--"""))
+[!0&1] 2 {1 4} [0&1] 3 {0} --END--
+/* This one caused an infinite loop in the simplification code. */
+HOA: v1 States: 10 Start: 0 AP: 2 "p0" "p1" Acceptance: 6 (((Fin(4) &
+(Fin(3) | (Fin(3) & Inf(1))) & (Inf(0)&Inf(5))) | (Fin(5) & Fin(2)))
+& Inf(5)) | Inf(5) | Inf(0) properties: trans-labels explicit-labels
+trans-acc --BODY-- State: 0 [!0&!1] 2 [!0&!1] 7 {1} [!0&!1] 6 State:
+1 [!0&!1] 5 {1 5} [0&!1] 9 {3} [!0&1] 1 {0} [!0&!1] 4 {0 3} State: 2
+[0&1] 1 {1} State: 3 [!0&1] 8 {4} State: 4 [!0&!1] 0 {5} [!0&1] 3 {4}
+State: 5 [!0&1] 4 {3 5} [!0&1] 3 {2 4} [!0&1] 2 {2 3} [!0&!1] 0 {0}
+[!0&1] 7 {0 4 5} [0&1] 5 {2} State: 6 [0&!1] 7 [0&!1] 1 {1 4} [0&1]
+4 {1 4} State: 7 [0&1] 3 {2 3} [0&1] 0 [!0&!1] 6 [0&1] 1 State: 8 [0&1]
+3 [!0&!1] 0 [0&1] 9 State: 9 [0&!1] 7 {4 5} [!0&1] 8 {0} [0&1] 9 --END--
+"""))
 
 res = []
 for a in auts:
@@ -62,4 +74,6 @@ assert res == [
    'Fin(0) | (Fin(2) & Inf(1))',
    '((Fin(1) | Inf(2)) & Inf(5)) | (Fin(0) & (Fin(1) | (Fin(3) & Inf(4))))',
    '(Fin(5) | (Fin(2) & Inf(1))) & (Inf(0) | ((Fin(4) | Inf(3)) & Inf(1)))',
+   'Inf(1) | Inf(0)',
+   'Fin(1) & Fin(0)',
    ]

@@ -367,7 +367,7 @@ namespace spot
         return {};
     }
 
-    acc_cond::mark_t find_interm_rec(acc_cond::acc_word* pos)
+    acc_cond::mark_t find_interm_rec(const acc_cond::acc_word* pos)
     {
       acc_cond::acc_op wanted;
       auto topop = pos->sub.op;
@@ -489,13 +489,13 @@ namespace spot
                                 assert(topop == acc_cond::acc_op::Or);
                               }
 
-                            // Return a vector of "singleton-sets" of
+                            // Build a vector of "singleton-sets" of
                             // the wanted type in the operand of the
                             // pointed Or/And operator.  For instance,
                             // assuming wanted=Inf and pos points to
                             //
                             // Inf({1})|Inf({2,3})|Fin({4})
-                            //         |Inf({5})|Inf({5})|Inf({6})
+                            //         |Inf({5})|Inf({5,6})
                             //
                             // This returns [({1}, Inf({1})),
                             //               ({5}, Inf({5}))]].
@@ -522,9 +522,8 @@ namespace spot
                                     break;
                                   case acc_cond::acc_op::And:
                                   case acc_cond::acc_op::Or:
-                                    // On
-                                    // Fin(a)&(Fin(b)&Inf(c)|Fin(d))
-                                    // where we'd like to return [({a},...),
+                                    // On Fin(a)&(Fin(b)&Inf(c)|Fin(d))
+                                    // we'd like to build [({a},...),
                                     // ({b,d},...)] and decide later that
                                     // {b,d} can receive {a} if they
                                     // (b and d) are both used once.
@@ -556,12 +555,18 @@ namespace spot
                               if (p.first != can_receive &&
                                   p.first.lowest() == p.first)
                                 {
-                                  to_fuse.emplace_back(p.first, can_receive);
+                                  // Mark fused singletons as false,
+                                  // so that a future call to
+                                  // find_fusable() ignores them.
                                   if (p.second->sub.op == acc_cond::acc_op::Fin)
                                     p.second->sub.op = acc_cond::acc_op::Inf;
-                                  else
+                                  else if (p.second->sub.op ==
+                                           acc_cond::acc_op::Inf)
                                     p.second->sub.op = acc_cond::acc_op::Fin;
+                                  else
+                                    continue;
                                   p.second[-1].mark = {};
+                                  to_fuse.emplace_back(p.first, can_receive);
                                 }
                           };
 
