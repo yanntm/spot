@@ -57,23 +57,28 @@ for a in auts:
     b = spot.simplify_acceptance(a)
     assert b.equivalent_to(a)
     res.append(str(b.get_acceptance()))
+    c = spot.simplify_acceptance(b)
+    assert b.get_acceptance() == c.get_acceptance()
 
     a.set_acceptance(a.num_sets(), a.get_acceptance().complement())
     b = spot.simplify_acceptance(a)
     assert b.equivalent_to(a)
     res.append(str(b.get_acceptance()))
+    c = spot.simplify_acceptance(b)
+    assert b.get_acceptance() == c.get_acceptance()
+
 
 assert res == [
    'Inf(0)',
    'Fin(0)',
-   'Inf(1) & Fin(0)',
+   'Fin(0) & Inf(1)',
    'Fin(1) | Inf(0)',
-   'Inf(1) & (Fin(0) | Inf(2))',
+   '(Fin(0) | Inf(2)) & Inf(1)',
    'Fin(1) | (Fin(2) & Inf(0))',
    '(Fin(1) | Inf(2)) & Inf(0)',
    'Fin(0) | (Fin(2) & Inf(1))',
    '((Fin(1) | Inf(2)) & Inf(5)) | (Fin(0) & (Fin(1) | (Fin(3) & Inf(4))))',
    '(Fin(5) | (Fin(2) & Inf(1))) & (Inf(0) | ((Fin(4) | Inf(3)) & Inf(1)))',
-   'Inf(1) | Inf(0)',
-   'Fin(1) & Fin(0)',
+   'Inf(0)',
+   'Fin(0)',
    ]

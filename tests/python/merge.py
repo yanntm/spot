@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de
+# Copyright (C) 2017, 2020 Laboratoire de Recherche et Développement de
 # l'EPITA.
 #
 # This file is part of Spot, a model checking library.
@@ -78,8 +78,7 @@ assert hoa == """HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
-acc-name: parity min even 2
-Acceptance: 2 Inf(0) | Fin(1)
+Acceptance: 2 Fin(1) | Inf(0)
 properties: trans-labels explicit-labels trans-acc
 --BODY--
 State: 0

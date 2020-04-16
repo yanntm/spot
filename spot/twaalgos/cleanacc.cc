@@ -617,20 +617,20 @@ namespace spot
 
   twa_graph_ptr simplify_acceptance_here(twa_graph_ptr aut)
   {
-    cleanup_acceptance_here(aut, false);
-    merge_identical_marks_here(aut);
-    if (!aut->acc().is_generalized_buchi())
+    for (;;)
       {
+        cleanup_acceptance_here(aut, false);
+        merge_identical_marks_here(aut);
+        if (aut->acc().is_generalized_buchi())
+          break;
+        acc_cond::acc_code old = aut->get_acceptance();
         simplify_complementary_marks_here(aut);
         fuse_marks_here(aut);
+        aut->set_acceptance(aut->acc().unit_propagation());
+        if (old == aut->get_acceptance())
+          break;
       }
     cleanup_acceptance_here(aut, true);
-    auto prop_cond = aut->acc().unit_propagation();
-    if (prop_cond != aut->acc())
-    {
-      aut->set_acceptance(prop_cond);
-      cleanup_acceptance_here(aut, true);
-    }
     return aut;
   }
 

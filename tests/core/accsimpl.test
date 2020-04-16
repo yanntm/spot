@@ -72,4 +72,4 @@ State: 0
 --END--
 EOF
 autcross --language-preserved 'autfilt --simplify-acc' -F frenkin
-test 1,4,2 = "`autfilt --simplify-acc frenkin --stats=%s,%e,%a`"
+test 1,4,1 = "`autfilt --simplify-acc frenkin --stats=%s,%e,%a`"
