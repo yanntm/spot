@@ -1606,9 +1606,10 @@ run()
             max_states_sub_car =
                 10000 + nb_states_deg - 1;
         }
-        nb_states_sub =
-            build_scc(sub_automaton, scc, state2car_sub, car2num_sub,
-                        algo_sub, max_states_sub_car);
+        if (!options.force_degen || !has_degeneralized)
+            nb_states_sub =
+                build_scc(sub_automaton, scc, state2car_sub, car2num_sub,
+                          algo_sub, max_states_sub_car);
         if (nb_states_deg < nb_states_sub)
         {
             state2car.insert(state2car_deg.begin(), state2car_deg.end());

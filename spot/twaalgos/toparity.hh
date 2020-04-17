@@ -45,9 +45,12 @@ namespace spot
     /// degeneralization to remove occurrences of acceptance
     /// subformulas such as `Fin(x) | Fin(y)` or `Inf(x) & Inf(y)`.
     bool partial_degen = true;
+    /// If \c force_degen is false, to_parity will checks if we can
+    /// get a better result if we don't apply partial_degeneralize.
+    bool force_degen = true;
     /// If \c scc_acc_clean is true, to_parity() will ignore colors
     /// no occoring in an SCC while processing this SCC.
-    bool acc_clean      = true;
+    bool acc_clean = true;
     /// If \a parity_equiv is true, to_parity() will check if there
     /// exists a permutations of colors such that the acceptance
     /// condition is a parity condition.
