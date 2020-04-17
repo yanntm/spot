@@ -106,6 +106,10 @@ def test(aut, expected_num_states=[], full=True):
                             propagate_col = opt.propagate_col,
                             pretty_print = opt.pretty_print,
                             )
+        p1st, p1ed, p1se = p1.num_states(), p1.num_edges(), p1.num_sets()
+        if opt.parity_prefix is False:
+            # Reduce the number of colors to help are_equivalent
+            spot.reduce_parity_here(p1)
         assert spot.are_equivalent(aut, p1)
         if expected_num is not None:
                 assert p1.num_states() == expected_num
@@ -113,9 +117,9 @@ def test(aut, expected_num_states=[], full=True):
             # Make sure passing opt is the same as setting
             # each argument individually
             p2 = spot.to_parity(aut, opt)
-            assert p2.num_states() == p1.num_states()
-            assert p2.num_edges() == p1.num_edges()
-            assert p2.num_sets() == p1.num_sets()
+            assert p2.num_states() == p1st
+            assert p2.num_edges() == p1ed
+            assert p2.num_sets() == p1se
 
 test(spot.automaton("""HOA: v1
 name: "(FGp0 & ((XFp0 & F!p1) | F(Gp1 & XG!p0))) | G(F!p0 & (XFp0 | F!p1) &

@@ -1679,13 +1679,25 @@ run()
         res_->set_init_state(initial_state_res->second);
     else
         res_->new_state();
-    res_->set_acceptance(
-        acc_cond::acc_code::parity_max(is_odd, SPOT_MAX_ACCSETS));
     if (options.pretty_print)
         res_->set_named_prop("state-names", names);
-    reduce_parity_here(res_);
+
     res_->purge_unreachable_states();
-    // res_->merge_states();
+    // If parity_prefix is used, we use all available colors by
+    // default: The IAR/CAR are using lower indices, and the prefix is
+    // using the upper indices.  So we use reduce_parity() to clear
+    // the mess.   If parity_prefix is not used,
+    unsigned max_color = SPOT_MAX_ACCSETS;
+    if (!options.parity_prefix)
+      {
+        acc_cond::mark_t all = {};
+        for (auto& e: res_->edges())
+          all |= e.acc;
+        max_color = all.max_set();
+      }
+    res_->set_acceptance(acc_cond::acc_code::parity_max(is_odd, max_color));
+    if (options.parity_prefix)
+      reduce_parity_here(res_);
     return res_;
 }
 

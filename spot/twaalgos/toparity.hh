@@ -31,16 +31,16 @@ namespace spot
     /// several elements in a record, it tries to find an order such
     /// that the new permutation already exists.
     bool search_ex = true;
-    /// If \a use_last is true and \a search_ex are true, we use the
+    /// If \c use_last is true and \a search_ex are true, we use the
     /// most recent state when we find multiple existing state
     /// compatible with the current move.
-    bool use_last       = true;
-    /// If \a force_order is true, we force to use an order when CAR or IAR is
+    bool use_last = true;
+    /// If \c force_order is true, we force to use an order when CAR or IAR is
     /// applied. Given a state s and a set E ({0}, {0 1}, {2} for example) we
     /// construct an order on colors. With the given example, we ask to have
     /// a permutation that start with [0 …], [0 1 …] or [2 …] in
     ///  that order of preference.
-    bool force_order    = true;
+    bool force_order = true;
     /// If \c partial_degen is true, apply a partial
     /// degeneralization to remove occurrences of acceptance
     /// subformulas such as `Fin(x) | Fin(y)` or `Inf(x) & Inf(y)`.
@@ -51,15 +51,25 @@ namespace spot
     /// If \c scc_acc_clean is true, to_parity() will ignore colors
     /// no occoring in an SCC while processing this SCC.
     bool acc_clean = true;
-    /// If \a parity_equiv is true, to_parity() will check if there
+    /// If \c parity_equiv is true, to_parity() will check if there
     /// exists a permutations of colors such that the acceptance
     /// condition is a parity condition.
-    bool parity_equiv   = true;
-    /// If \a parity_prefix is true, to_parity() will remove the prefix of
-    /// the acceptance condition that correspond to parity, works on the
-    // remaining and adds marks to process the prefix.
-    bool parity_prefix  = true;
-    /// If \a rabin_to_buchi is true, to_parity() tries to convert a Rabin or
+    bool parity_equiv = true;
+    /// If \c parity_prefix is true, to_parity() will use a special
+    /// handling for acceptance conditions of the form `Inf(m0) |
+    /// (Fin(m1) & (Inf(m2) | (… β)))` that start as a parity
+    /// condition (modulo a renumbering of `m0`, `m1`, `m2`, ...) but where
+    /// `β` can be an arbitrary formula.  In this case, the paritization
+    /// algorithm is really applied only to `β`, and the marks of the
+    /// prefix are appended after a suitable renumbering.
+    ///
+    /// For technical reasons, activating this option (and this is the
+    /// default) causes reduce_parity() to be called at the end to
+    /// minimize the number of colors used.  It is therefore
+    /// recommended to disable this option when one wants to follow
+    /// the output CAR/IAR constructions.
+    bool parity_prefix = true;
+    /// If \c rabin_to_buchi is true, to_parity() tries to convert a Rabin or
     /// Streett condition to Büchi or co-Büchi with
     /// rabin_to_buchi_if_realizable().
     bool rabin_to_buchi = true;
@@ -69,8 +79,8 @@ namespace spot
     /// Use propagate_marks_here to increase the number of marks on transition
     /// in order to move more colors (and increase the number of
     /// compatible states) when we apply LAR.
-    bool propagate_col  = true;
-    /// If \a pretty_print is true, states of the output automaton are
+    bool propagate_col = true;
+    /// If \c pretty_print is true, states of the output automaton are
     /// named to help debugging.
     bool pretty_print = false;
   };
