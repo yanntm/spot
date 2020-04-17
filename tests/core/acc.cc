@@ -237,5 +237,9 @@ int main()
       expect(e, "Too many acceptance sets used.");
     }
 
+  auto cond1 =  spot::acc_cond::acc_code(
+    "(Inf(0) & Inf(5)) | Inf(5) | Inf(0)");
+  std::cout << cond1.unit_propagation() << '\n';
+
   return 0;
 }
