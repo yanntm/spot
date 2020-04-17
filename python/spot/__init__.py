@@ -1292,7 +1292,7 @@ class scc_and_mark_filter:
         self.restore_acceptance()
 
 
-def to_parity(aut, options = to_parity_options(), **kwargs):
+def to_parity(aut, options = None, **kwargs):
     """Convert aut into a parity acceptance.
 
     This procedure combines multiple strategies to attempt to
@@ -1306,6 +1306,10 @@ def to_parity(aut, options = to_parity_options(), **kwargs):
     Note that if you pass both your own options object and kwargs,
     options will be updated in place.
     """
+    if options is None:
+        # Can't make this a default option, otherwise the default
+        # instance would be updated by the kwargs.
+        options = to_parity_options()
     if kwargs:
         for key,val in to_parity_options.__dict__.items():
             if not key.startswith('_') and key != "thisown" and key in kwargs:
