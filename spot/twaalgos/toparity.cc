@@ -896,14 +896,14 @@ apply_false_true_clean(const twa_graph_ptr &sub_automaton, bool is_true,
     }
     for (unsigned state = 0; state < sub_automaton->num_states(); ++state)
     {
-        auto col = is_true ^ !is_odd;
-        if (((unsigned) col) > max_free_color)
-            throw std::runtime_error("CAR needs more sets");
         unsigned s_aut = (*init_states)[state];
         car_state src = { s_aut, state, perm_t() };
         unsigned src_state = car2num_local[src];
         for (auto e : aut_->out(s_aut))
         {
+            auto col = is_true ^ !is_odd;
+            if (((unsigned)col) > max_free_color)
+                throw std::runtime_error("CAR needs more sets");
             if (scc_.scc_of(s_aut) == scc_.scc_of(e.dst))
             {
                 for (auto c : e.acc.sets())
