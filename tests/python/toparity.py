@@ -112,7 +112,8 @@ def test(aut, expected_num_states=[], full=True):
             spot.reduce_parity_here(p1)
         assert spot.are_equivalent(aut, p1)
         if expected_num is not None:
-                assert p1.num_states() == expected_num
+            # print(p1.num_states(), expected_num)
+            assert p1.num_states() == expected_num
         if full:
             # Make sure passing opt is the same as setting
             # each argument individually
@@ -292,7 +293,7 @@ State: 4
 [0&!1] 4
 [0&1] 4 {1 2 4}
 --END--
-"""), [9, 6, 6, 6, 7, 6, 6])
+"""), [9, 6, 7, 7, 6, 6, 6])
 
 test(spot.automaton("""
 HOA: v1

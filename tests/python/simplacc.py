@@ -67,18 +67,17 @@ for a in auts:
     c = spot.simplify_acceptance(b)
     assert b.get_acceptance() == c.get_acceptance()
 
-
 assert res == [
-   'Inf(0)',
-   'Fin(0)',
-   'Fin(0) & Inf(1)',
-   'Fin(1) | Inf(0)',
-   '(Fin(0) | Inf(2)) & Inf(1)',
-   'Fin(1) | (Fin(2) & Inf(0))',
-   '(Fin(1) | Inf(2)) & Inf(0)',
-   'Fin(0) | (Fin(2) & Inf(1))',
-   '((Fin(1) | Inf(2)) & Inf(5)) | (Fin(0) & (Fin(1) | (Fin(3) & Inf(4))))',
-   '(Fin(5) | (Fin(2) & Inf(1))) & (Inf(0) | ((Fin(4) | Inf(3)) & Inf(1)))',
-   'Inf(0)',
-   'Fin(0)',
-   ]
+    'Inf(0)',
+    'Fin(0)',
+    'Inf(1) & Fin(0)',
+    'Fin(1) | Inf(0)',
+    'Inf(1) & (Fin(0) | Inf(2))',
+    'Fin(1) | (Inf(0) & Fin(2))',
+    'Inf(0) & (Inf(2) | Fin(1))',
+    'Fin(0) | (Fin(2) & Inf(1))',
+    '((Fin(1) | Inf(2)) & Inf(5)) | (Fin(0) & (Fin(1) | (Fin(3) & Inf(4))))',
+    '((Inf(1) & Fin(2)) | Fin(5)) & (Inf(0) | (Inf(1) & (Inf(3) | Fin(4))))',
+    'Inf(0)',
+    'Fin(0)',
+    ]

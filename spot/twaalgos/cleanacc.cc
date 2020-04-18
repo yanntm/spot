@@ -157,101 +157,99 @@ namespace spot
       return aut;
     }
 
-    // Eventually remove complementary marks from the acceptance condition.
+    // Remove complementary marks from the acceptance condition.
     acc_cond::acc_code remove_compl_rec(const acc_cond::acc_word* pos,
                                         const std::vector<acc_cond::mark_t>&
                                                           complement)
     {
       auto start = pos - pos->sub.size;
+      auto boolop =
+        [&](acc_cond::acc_op opand, acc_cond::acc_op opfin,
+            acc_cond::acc_op opinf,
+            acc_cond::acc_code&& truecode,
+            acc_cond::acc_code&& falsecode)
+        {
+          --pos;
+          acc_cond::acc_code res = truecode;
+          acc_cond::mark_t seen_fin = {};
+          do
+            {
+              auto tmp = remove_compl_rec(pos, complement);
+
+              if (!tmp.empty() && (tmp.back().sub.op == opfin
+                                   && tmp.front().mark.count() == 1))
+                seen_fin |= tmp.front().mark;
+
+              if (opand == acc_cond::acc_op::And)
+                tmp &= std::move(res);
+              else
+                tmp |= std::move(res);
+              std::swap(tmp, res);
+              pos -= pos->sub.size + 1;
+            }
+          while (pos > start);
+          if (res.empty() || res.back().sub.op != opand)
+            return res;
+          // Locate the position of any Inf element.
+          // A property of the &= operator is that there
+          // is only one Inf in a conjunction.
+          auto rbegin = &res.back();
+          auto rend = rbegin - rbegin->sub.size;
+          --rbegin;
+          do
+            {
+              if (rbegin->sub.op == opinf)
+                break;
+              rbegin -= rbegin->sub.size + 1;
+            }
+          while (rbegin > rend);
+          if (rbegin <= rend)
+            return res;
+          // Fin(i) & Inf(i) = f;
+          if (rbegin[-1].mark & seen_fin)
+            return std::move(falsecode);
+          for (auto m: seen_fin.sets())
+            {
+              acc_cond::mark_t cm = complement[m];
+              // Fin(i) & Fin(!i) = f;
+              if (cm & seen_fin)
+                return std::move(falsecode);
+              // Inf({!i}) & Fin({i}) = Fin({i})
+              rbegin[-1].mark -= complement[m];
+            }
+          if (rbegin[-1].mark)
+            return res;
+          // Inf(i) has been rewritten as t, we need to remove it.  Sigh!
+          acc_cond::acc_code res2 = std::move(truecode);
+          rbegin = &res.back() - 1;
+          do
+            {
+              acc_cond::acc_code tmp(rbegin);
+              if (opand == acc_cond::acc_op::And)
+                tmp &= std::move(res);
+              else
+                tmp |= std::move(res);
+              std::swap(tmp, res2);
+              rbegin -= rbegin->sub.size + 1;
+            }
+          while (rbegin > rend);
+          return res2;
+        };
+
       switch (pos->sub.op)
         {
           case acc_cond::acc_op::And:
-            {
-              --pos;
-              auto res = acc_cond::acc_code::t();
-              acc_cond::mark_t seen_fin = {};
-              auto inf = acc_cond::acc_code::inf({});
-              do
-                {
-                  auto tmp = remove_compl_rec(pos, complement);
-
-                  if (!tmp.empty())
-                    {
-                      if (tmp.back().sub.op == acc_cond::acc_op::Fin
-                          && tmp.front().mark.count() == 1)
-                        seen_fin |= tmp.front().mark;
-
-                      if (tmp.back().sub.op == acc_cond::acc_op::Inf)
-                        {
-                          inf &= std::move(tmp);
-                          pos -= pos->sub.size + 1;
-                          continue;
-                        }
-                    }
-                  tmp &= std::move(res);
-                  std::swap(tmp, res);
-                  pos -= pos->sub.size + 1;
-                }
-              while (pos > start);
-
-              // Fin(i) & Inf(i) = f;
-              if (inf.front().mark & seen_fin)
-                return acc_cond::acc_code::f();
-              for (auto m: seen_fin.sets())
-                {
-                  acc_cond::mark_t cm = complement[m];
-                  // Fin(i) & Fin(!i) = f;
-                  if (cm & seen_fin)
-                    return acc_cond::acc_code::f();
-                  // Inf({!i}) & Fin({i}) = Fin({i})
-                  inf.front().mark -= complement[m];
-                }
-
-              return inf & res;
-            }
+            return boolop(acc_cond::acc_op::And,
+                          acc_cond::acc_op::Fin,
+                          acc_cond::acc_op::Inf,
+                          acc_cond::acc_code::t(),
+                          acc_cond::acc_code::f());
           case acc_cond::acc_op::Or:
-            {
-              --pos;
-              auto res = acc_cond::acc_code::f();
-              acc_cond::mark_t seen_inf = {};
-              auto fin = acc_cond::acc_code::f();
-              do
-                {
-                  auto tmp = remove_compl_rec(pos, complement);
-
-                  if (!tmp.empty())
-                    {
-                      if (tmp.back().sub.op == acc_cond::acc_op::Inf
-                          && tmp.front().mark.count() == 1)
-                        seen_inf |= tmp.front().mark;
-
-                      if (tmp.back().sub.op == acc_cond::acc_op::Fin)
-                        {
-                          fin |= std::move(tmp);
-                          pos -= pos->sub.size + 1;
-                          continue;
-                        }
-                    }
-                  tmp |= std::move(res);
-                  std::swap(tmp, res);
-                  pos -= pos->sub.size + 1;
-                }
-              while (pos > start);
-
-              // Fin(i) | Inf(i) = t;
-              if (fin.front().mark & seen_inf)
-                return acc_cond::acc_code::t();
-              for (auto m: seen_inf.sets())
-                {
-                  acc_cond::mark_t cm = complement[m];
-                  // Inf({i}) | Inf({!i}) = t;
-                  if (cm & seen_inf)
-                    return acc_cond::acc_code::t();
-                  // Fin({!i}) | Inf({i}) = Inf({i})
-                  fin.front().mark -= complement[m];
-                }
-              return res | fin;
-            }
+            return boolop(acc_cond::acc_op::Or,
+                          acc_cond::acc_op::Inf,
+                          acc_cond::acc_op::Fin,
+                          acc_cond::acc_code::f(),
+                          acc_cond::acc_code::t());
           case acc_cond::acc_op::Fin:
             return acc_cond::acc_code::fin(pos[-1].mark);
           case acc_cond::acc_op::Inf:
