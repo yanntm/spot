@@ -148,7 +148,7 @@ namespace spot
     void set_initial(unsigned init);
 
     /// \brief Returns the id of the initial state in the automaton.
-    unsigned get_initial();
+    unsigned get_initial() const;
 
     /// \brief Accessor for a state from its id.
     cstate* state_from_int(unsigned i);
