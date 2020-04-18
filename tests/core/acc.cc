@@ -240,6 +240,10 @@ int main()
   auto cond1 =  spot::acc_cond::acc_code(
     "(Inf(0) & Inf(5)) | Inf(5) | Inf(0)");
   std::cout << cond1.unit_propagation() << '\n';
+  auto cond2 =  spot::acc_cond::acc_code("Fin(1) | Inf(0) | Inf(0)");
+  std::cout << cond2.unit_propagation() << '\n';
+  auto cond3 =  spot::acc_cond::acc_code("Inf(0) & Inf(2) | Fin(2)");
+  std::cout << cond3.unit_propagation() << '\n';
 
   return 0;
 }
