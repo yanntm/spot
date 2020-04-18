@@ -21,6 +21,7 @@
 
 #include <deque>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <spot/twacube_algos/determinize.hh>
@@ -102,55 +103,48 @@ namespace spot
   ///
   /// \returns a pair with the successor and the emitted color if any
   std::pair<safra_state, unsigned>
-  compute_succ(twacube_ptr, const safra_state& src, const cube&)
-    {
-      // TODO
-      return std::make_pair(src, -1U);
-    }
+  compute_succ(twacube_ptr, const safra_state& src, size_t)
+  {
+    // TODO
+    return std::make_pair(src, -1U);
+  }
+
+  // set containing indices of atomic propositions included in the support
+  using cube_support = std::unordered_set<size_t>;
 
   /// \brief finds all the variables that \a c depends on.
-  cube
-  cube_support(const cube& c)
-    {
-      // TODO(am): just identify variables that aren't free ?
-      return c;
-    }
+  cube_support
+  compute_cube_support(const cube& c, const cubeset& cs)
+  {
+    std::unordered_set<size_t> res;
 
-  std::vector<cube>
-  get_letters(const safra_state& s, const std::vector<cube>& supports, twacube_ptr aut)
-    {
-      const cubeset& cs = aut->get_cubeset();
+    for (size_t i = 0; i < cs.size(); ++i)
+      {
+        // if is free var
+        if (cs.is_true_var(c, i) || cs.is_false_var(c, i))
+          res.insert(i);
+      }
 
-      cube supp = cs.alloc();
-      for (const auto& [state, _] : s.nodes_)
-        supp = cs.intersection(supp, supports[state]);
+    return res;
+  }
 
-      // convert support from cube to bdd
-      bdd allap = bddtrue;
-      for(unsigned i = 0; i < cs.size(); ++i)
-        {
-            if (cs.is_true_var(supp, i))
-              allap &= bdd_ithvar(i);
-            else if (cs.is_false_var(supp, i))
-              allap &= bdd_nithvar(i);
-            // otherwise it 's a free variable, shouldn't even be in the support?
-            // TODO: what if both true and false, after intersection?
-        }
+  // for a given powerset state, return all letters (atomic propositions) that
+  // are involved in a transition from this state
+  cube_support
+  get_letters(const safra_state& s, const std::vector<cube_support>& supports)
+  {
+    cube_support res;
 
-      std::vector<cube> res;
+    // for each "sub state"
+    for (const auto& [state, _] : s.nodes_)
+      {
+        cube_support state_support = supports[state];
+        // compute the union of their support
+        res.insert(state_support.begin(), state_support.end());
+      }
 
-      // from the BDD support, do satonesets to extract individual atomic propositions
-      bdd all = bddtrue;
-      while (all != bddfalse)
-        {
-          bdd one = bdd_satoneset(all, allap, bddfalse);
-          all -= one;
-          cube one_cube = cs.alloc();
-          cs.set_true_var(one_cube, bdd_var(one));
-          res.push_back(one_cube);
-        }
-      return res;
-    }
+    return res;
+  }
 
   twacube_ptr
   twacube_determinize(const twacube_ptr aut)
@@ -162,19 +156,24 @@ namespace spot
 
     auto res = make_twacube(aut->get_ap());
 
+    const cubeset& cs = aut->get_cubeset();
+
     // computing each state's support, i.e. all variables upon which the
     // transition taken depends
-    std::vector<cube> supports(aut->num_states());
+    std::vector<cube_support> supports(aut->num_states());
     for (unsigned i = 0; i != aut->num_states(); ++i)
       {
         // alloc() returns a cube with all variables marked free
-        cube res = aut->get_cubeset().alloc();
+        cube_support res;
 
         const auto succs = aut->succ(i);
         while (!succs->done())
           {
             auto& trans = aut->trans_data(succs, THREAD_ID);
-            res = aut->get_cubeset().intersection(res, cube_support(trans.cube_));
+            cube_support support = compute_cube_support(trans.cube_, cs);
+
+            // union of support and res
+            res.insert(support.begin(), support.end());
           }
 
         supports[i] = res;
@@ -189,16 +188,16 @@ namespace spot
 
     // find association between safra state and res state, or create one
     auto get_state = [&res, &seen, &todo](const safra_state& s) -> unsigned
-      {
-        auto it = seen.find(s);
-        if (it == seen.end())
-          {
-            unsigned dst_num = res->new_state();
-            it = seen.emplace(s, dst_num).first;
-            todo.emplace_back(*it);
-          }
-        return it->second;
-      };
+    {
+      auto it = seen.find(s);
+      if (it == seen.end())
+        {
+          unsigned dst_num = res->new_state();
+          it = seen.emplace(s, dst_num).first;
+          todo.emplace_back(*it);
+        }
+      return it->second;
+    };
 
     // initial state creation
     {
@@ -221,22 +220,24 @@ namespace spot
         todo.pop_front();
 
         // get each possible transition
-        auto letters = get_letters(curr, supports, aut);
+        auto letters = get_letters(curr, supports);
         for (const auto& l : letters)
           {
             // returns successor safra_state and emitted color if any
             auto [succ, color] = compute_succ(aut, curr, l);
             unsigned dst_num = get_state(succ);
 
+            // TODO: should letter always be true, is this right ?
+            cube cond = cs.alloc();
+            cs.set_true_var(cond, l);
+
             if (color != -1U)
               {
-                // TODO: acc_cond::mark_t couleur
-                res->create_transition(src_num, l, { color }, dst_num);
+                res->create_transition(src_num, cond, { color }, dst_num);
               }
             else
               {
-                // TODO: acc_cond::mark_t 'vide' ?
-                res->create_transition(src_num, l, {} , dst_num);
+                res->create_transition(src_num, cond, {} , dst_num);
               }
           }
       }
