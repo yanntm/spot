@@ -153,7 +153,7 @@ namespace spot
     }
 
   twacube_ptr
-  twacube_determinize(twacube_ptr aut)
+  twacube_determinize(const twacube_ptr aut)
   {
     // TODO(am): check is_existential + is_universal before launching useless
     // computation
@@ -202,8 +202,6 @@ namespace spot
 
     // initial state creation
     {
-      // FIXME: get_initial() discards const qualifier, upstream change to
-      // er/twacube
       unsigned init_state = aut->get_initial();
       safra_state init(init_state, true);
       unsigned res_init = get_state(init);
