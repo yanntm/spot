@@ -81,10 +81,10 @@ namespace spot
     init_ = init;
   }
 
-  unsigned twacube::get_initial()
+  unsigned twacube::get_initial() const
   {
     if (theg_.num_states() == 0)
-      new_state();
+      throw std::runtime_error("automaton has no state at all");
 
     return init_;
   }
