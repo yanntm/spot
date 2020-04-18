@@ -356,7 +356,7 @@ namespace spot
                       break;
                     case acc_cond::acc_op::Fin:
                       fin |= pos[-1].mark;
-                      assert(pos[-1].mark.count() == 1);
+                      assert(pos[-1].mark.is_singleton());
                       pos -= 2;
                       break;
                     case acc_cond::acc_op::Inf:

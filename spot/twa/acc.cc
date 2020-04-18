@@ -152,7 +152,7 @@ namespace spot
               {
                 if (!top)
                   // Avoid extra parentheses if there is only one set
-                  top = code[pos - 1].mark.count() == 1;
+                  top = code[pos - 1].mark.is_singleton();
                 unsigned level = 0;
                 const char* and_ = "";
                 const char* and_next_ = []() {
@@ -207,7 +207,7 @@ namespace spot
               {
                 if (!top)
                   // Avoid extra parentheses if there is only one set
-                  top = code[pos - 1].mark.count() == 1;
+                  top = code[pos - 1].mark.is_singleton();
                 unsigned level = 0;
                 const char* or_ = "";
                 if (!top)
@@ -491,7 +491,7 @@ namespace spot
             }
           if (o1 != acc_cond::acc_op::Fin
               || o2 != acc_cond::acc_op::Inf
-              || m1.count() != 1
+              || !m1.is_singleton()
               || m2 != (m1 << 1))
             return false;
           seen_fin |= m1;
@@ -519,7 +519,7 @@ namespace spot
           assert(code.size() == 2);
 
           auto m = code[0].mark;
-          if (mainop == singleop && m.count() != 1)
+          if (mainop == singleop && !m.is_singleton())
             return false;
 
           acc_cond::mark_t fin = {};
@@ -557,7 +557,7 @@ namespace spot
               acc_cond::mark_t fin = {};
               acc_cond::mark_t inf = {};
 
-              if (op == singleop && m.count() != 1)
+              if (op == singleop && !m.is_singleton())
                 {
                   pairs.clear();
                   return false;
@@ -595,8 +595,8 @@ namespace spot
                 }
               if (o1 != acc_cond::acc_op::Fin
                   || o2 != acc_cond::acc_op::Inf
-                  || m1.count() != 1
-                  || m2.count() != 1)
+                  || !m1.is_singleton()
+                  || !m2.is_singleton())
                 {
                   pairs.clear();
                   return false;
@@ -723,7 +723,7 @@ namespace spot
 
             if (o1 != acc_cond::acc_op::Fin
                 || o2 != acc_cond::acc_op::Inf
-                || m1.count() != 1)
+                || !m1.is_singleton())
               return false;
 
             unsigned i = m2.count();
@@ -826,7 +826,7 @@ namespace spot
 
             if (o1 != acc_cond::acc_op::Inf
                 || o2 != acc_cond::acc_op::Fin
-                || m1.count() != 1)
+                || !m1.is_singleton())
               return false;
 
             unsigned i = m2.count();
@@ -1069,34 +1069,33 @@ namespace spot
                           std::vector<acc_cond::acc_code> elements,
                           acc_cond::acc_op op)
     {
-      acc_cond::mark_t empty_m = {};
       if (elements.size() > 2)
-      {
-        new_cond = original;
-        return false;
-      }
+        {
+          new_cond = original;
+          return false;
+        }
       if (elements.size() == 2)
-      {
-        unsigned pos = elements[1].back().sub.op == op &&
-                       elements[1][0].mark.count() == 1;
-        if (!(elements[0].back().sub.op == op || pos))
         {
-          new_cond = original;
-          return false;
+          unsigned pos = (elements[1].back().sub.op == op
+                          && elements[1][0].mark.is_singleton());
+          if (!(elements[0].back().sub.op == op || pos))
+            {
+              new_cond = original;
+              return false;
+            }
+          if ((elements[1 - pos].used_sets() & elements[pos][0].mark))
+            {
+              new_cond = original;
+              return false;
+            }
+          if (!elements[pos][0].mark.is_singleton())
+            {
+              return false;
+            }
+          colors.push_back(elements[pos][0].mark.min_set() - 1);
+          elements[1 - pos].has_parity_prefix(new_cond, colors);
+          return true;
         }
-        if ((elements[1 - pos].used_sets() & elements[pos][0].mark) != empty_m)
-        {
-          new_cond = original;
-          return false;
-        }
-        if (elements[pos][0].mark.count() != 1)
-        {
-          return false;
-        }
-        colors.push_back(elements[pos][0].mark.min_set() - 1);
-        elements[1 - pos].has_parity_prefix(new_cond, colors);
-        return true;
-      }
       return false;
     }
   }
@@ -1329,105 +1328,106 @@ namespace spot
 
   bool
   acc_cond::acc_code::is_parity_max_equiv(std::vector<int>& permut,
-                    unsigned new_color,
-                    bool even) const
+                                          unsigned new_color,
+                                          bool even) const
   {
     auto conj = top_conjuncts();
     auto disj = top_disjuncts();
     if (conj.size() == 1)
-    {
-      if (disj.size() == 1)
       {
-        acc_cond::acc_code elem = conj[0];
-        if ((even && elem.back().sub.op == acc_cond::acc_op::Inf)
-          || (!even && elem.back().sub.op == acc_cond::acc_op::Fin))
-        {
-          for (auto color : disj[0][0].mark.sets())
+        if (disj.size() == 1)
           {
-            if (permut[color] != -1
-                && ((unsigned) permut[color]) != new_color)
-              return false;
-            permut[color] = new_color;
-          }
-          return true;
-        }
-        return false;
-      }
-      else
-      {
-        std::sort(disj.begin(), disj.end(),
-          [](acc_code c1, acc_code c2)
+            acc_cond::acc_code elem = conj[0];
+            if ((even && elem.back().sub.op == acc_cond::acc_op::Inf)
+                || (!even && elem.back().sub.op == acc_cond::acc_op::Fin))
               {
-                return (c1 != c2) &&
-                c1.back().sub.op == acc_cond::acc_op::Inf;
-              });
-        unsigned i = 0;
-        for (; i < disj.size() - 1; ++i)
-        {
-          if (disj[i].back().sub.op != acc_cond::acc_op::Inf
-            || disj[i][0].mark.count() != 1)
+                for (auto color : disj[0][0].mark.sets())
+                  {
+                    if (permut[color] != -1
+                        && ((unsigned) permut[color]) != new_color)
+                      return false;
+                    permut[color] = new_color;
+                  }
+                return true;
+              }
             return false;
-          for (auto color : disj[i][0].mark.sets())
-          {
-            if (permut[color] != -1
-              && ((unsigned) permut[color]) != new_color)
-                        return false;
-            permut[color] = new_color;
           }
-        }
-        if (disj[i].back().sub.op == acc_cond::acc_op::Inf)
-        {
-          if (!even || disj[i][0].mark.count() != 1)
-            return false;
-          for (auto color : disj[i][0].mark.sets())
+        else
           {
-            if (permut[color] != -1
-              && ((unsigned) permut[color]) != new_color)
-                        return false;
-            permut[color] = new_color;
+            std::sort(disj.begin(), disj.end(),
+                      [](acc_code c1, acc_code c2)
+                      {
+                        return (c1 != c2) &&
+                          c1.back().sub.op == acc_cond::acc_op::Inf;
+                      });
+            unsigned i = 0;
+            for (; i < disj.size() - 1; ++i)
+              {
+                if (disj[i].back().sub.op != acc_cond::acc_op::Inf
+                    || !disj[i][0].mark.is_singleton())
+                  return false;
+                for (auto color : disj[i][0].mark.sets())
+                  {
+                    if (permut[color] != -1
+                        && ((unsigned) permut[color]) != new_color)
+                      return false;
+                    permut[color] = new_color;
+                  }
+              }
+            if (disj[i].back().sub.op == acc_cond::acc_op::Inf)
+              {
+                if (!even || !disj[i][0].mark.is_singleton())
+                  return false;
+                for (auto color : disj[i][0].mark.sets())
+                  {
+                    if (permut[color] != -1
+                        && ((unsigned) permut[color]) != new_color)
+                      return false;
+                    permut[color] = new_color;
+                  }
+                return true;
+              }
+            return disj[i].is_parity_max_equiv(permut, new_color + 1, even);
           }
-          return true;
-        }
-        return disj[i].is_parity_max_equiv(permut, new_color + 1, even);
       }
-    }
     else
-      {       std::sort(conj.begin(), conj.end(),
-        [](acc_code c1, acc_code c2)
+      {
+        std::sort(conj.begin(), conj.end(),
+                  [](acc_code c1, acc_code c2)
+                  {
+                    return (c1 != c2)
+                      && c1.back().sub.op == acc_cond::acc_op::Fin;
+                  });
+        unsigned i = 0;
+        for (; i < conj.size() - 1; i++)
           {
-            return (c1 != c2)
-                  && c1.back().sub.op == acc_cond::acc_op::Fin;
-          });
-      unsigned i = 0;
-      for (; i < conj.size() - 1; i++)
-      {
-        if (conj[i].back().sub.op != acc_cond::acc_op::Fin
-          || conj[i][0].mark.count() != 1)
-            return false;
-        for (auto color : conj[i][0].mark.sets())
-        {
-          if (permut[color] != -1 && permut[color != new_color])
-            return false;
-          permut[color] = new_color;
-        }
-      }
-      if (conj[i].back().sub.op == acc_cond::acc_op::Fin)
-      {
-        if (even)
-          return 0;
-        if (conj[i][0].mark.count() != 1)
-          return false;
-        for (auto color : conj[i][0].mark.sets())
-        {
-          if (permut[color] != -1 && permut[color != new_color])
-            return false;
-          permut[color] = new_color;
-        }
-        return true;
-      }
+            if (conj[i].back().sub.op != acc_cond::acc_op::Fin
+                || !conj[i][0].mark.is_singleton())
+              return false;
+            for (auto color : conj[i][0].mark.sets())
+              {
+                if (permut[color] != -1 && permut[color != new_color])
+                  return false;
+                permut[color] = new_color;
+              }
+          }
+        if (conj[i].back().sub.op == acc_cond::acc_op::Fin)
+          {
+            if (even)
+              return 0;
+            if (!conj[i][0].mark.is_singleton())
+              return false;
+            for (auto color : conj[i][0].mark.sets())
+              {
+                if (permut[color] != -1 && permut[color != new_color])
+                  return false;
+                permut[color] = new_color;
+              }
+            return true;
+          }
 
-      return conj[i].is_parity_max_equiv(permut, new_color + 1, even);
-    }
+        return conj[i].is_parity_max_equiv(permut, new_color + 1, even);
+      }
   }
 
 
@@ -1688,7 +1688,7 @@ namespace spot
             break;
           case acc_cond::acc_op::Fin:
           case acc_cond::acc_op::FinNeg:
-            if (pos[-1].mark.count() > 1 && pos > and_scope)
+            if (pos[-1].mark.has_many() && pos > and_scope)
               return false;
             SPOT_FALLTHROUGH;
           case acc_cond::acc_op::Inf:
@@ -1721,7 +1721,7 @@ namespace spot
             break;
           case acc_cond::acc_op::Inf:
           case acc_cond::acc_op::InfNeg:
-            if (pos[-1].mark.count() > 1 && pos > or_scope)
+            if (pos[-1].mark.has_many() && pos > or_scope)
               return false;
             SPOT_FALLTHROUGH;
           case acc_cond::acc_op::Fin:
@@ -2564,69 +2564,69 @@ namespace spot
 
   namespace
   {
-  bool
-  find_unit_clause(acc_cond::acc_code code, bool& conj, bool& fin,
-                                         acc_cond::mark_t& res)
-  {
-    res = {};
-    acc_cond::mark_t possibles = ~code.used_once_sets();
-    bool found_one = false;
-    conj = false;
-    fin = false;
-    if (code.empty() || code.is_f())
-      return false;
-    const acc_cond::acc_word* pos = &code.back();
-    conj = (pos->sub.op == acc_cond::acc_op::And);
-    do
-      {
-        switch (pos->sub.op)
-          {
-          case acc_cond::acc_op::And:
-            if (!conj)
-              pos -= pos->sub.size + 1;
-            else
-              --pos;
-            break;
-          case acc_cond::acc_op::Or:
-            if (conj)
-              pos -= pos->sub.size + 1;
-            else
-              --pos;
-            break;
-          case acc_cond::acc_op::Inf:
-          case acc_cond::acc_op::InfNeg:
-          case acc_cond::acc_op::FinNeg:
-            if (!fin)
+    bool
+    find_unit_clause(acc_cond::acc_code code, bool& conj, bool& fin,
+                     acc_cond::mark_t& res)
+    {
+      res = {};
+      bool found_one = false;
+      conj = false;
+      fin = false;
+      if (code.empty() || code.is_f())
+        return false;
+      acc_cond::mark_t candidates = ~code.used_once_sets();
+      if (!candidates)
+        return false;
+      const acc_cond::acc_word* pos = &code.back();
+      conj = (pos->sub.op == acc_cond::acc_op::And);
+      do
+        {
+          switch (pos->sub.op)
             {
-              auto m = pos[-1].mark & possibles;
-              if ((!conj && pos[-1].mark.count() == 1)
-                || (conj && m.count() > 0))
-              {
-                found_one = true;
-                res |= m;
-              }
+            case acc_cond::acc_op::And:
+              if (!conj)
+                pos -= pos->sub.size + 1;
+              else
+                --pos;
+              break;
+            case acc_cond::acc_op::Or:
+              if (conj)
+                pos -= pos->sub.size + 1;
+              else
+                --pos;
+              break;
+            case acc_cond::acc_op::Inf:
+            case acc_cond::acc_op::InfNeg:
+            case acc_cond::acc_op::FinNeg:
+              if (!fin)
+                {
+                  auto m = pos[-1].mark & candidates;
+                  if (m && (conj || pos[-1].mark.is_singleton()))
+                    {
+                      found_one = true;
+                      res |= m;
+                    }
+                }
+              pos -= 2;
+              break;
+            case acc_cond::acc_op::Fin:
+              if (!found_one || fin)
+                {
+                  auto m = pos[-1].mark & candidates;
+                  if (m && (!conj || pos[-1].mark.is_singleton()))
+                    {
+                      found_one = true;
+                      fin = true;
+                      res |= m;
+                    }
+                }
+              pos -= 2;
+              break;
             }
-            pos -= 2;
-            break;
-          case acc_cond::acc_op::Fin:
-            if (!found_one || fin)
-            {
-              auto m = pos[-1].mark & possibles;
-              if ((conj && pos[-1].mark.count() == 1)
-                || (!conj && m.count() > 0))
-              {
-                found_one = true;
-                fin = true;
-                res |= m;
-              }
-            }
-            pos -= 2;
-            break;
-          }
-      }
-    while (pos >= &code.front());
-    return res != acc_cond::mark_t {};
-  }
+        }
+      while (pos >= &code.front());
+      return !!res;
+    }
   }
 
   acc_cond::acc_code
@@ -2733,7 +2733,7 @@ namespace spot
             break;
           case acc_cond::acc_op::Fin:
             auto m = pos[-1].mark;
-            if (m.count() == 1)
+            if (m.is_singleton())
               res |= m;
             pos -= 2;
             break;

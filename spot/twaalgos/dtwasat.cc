@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2019 Laboratoire de Recherche
+// Copyright (C) 2013-2020 Laboratoire de Recherche
 // et Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -153,7 +153,7 @@ namespace spot
                       break;
                     case acc_cond::acc_op::Fin:
                       fin |= pos[-1].mark;
-                      assert(pos[-1].mark.count() == 1);
+                      assert(pos[-1].mark.is_singleton());
                       pos -= 2;
                       break;
                     case acc_cond::acc_op::Inf:

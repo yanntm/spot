@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2019 Laboratoire de Recherche et
+// Copyright (C) 2015-2020 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -195,7 +195,7 @@ namespace spot
         int newb = brace;
         if (acc)
           {
-            assert(acc.has(0) && acc.count() == 1 && "Only TBA are accepted");
+            assert(acc.has(0) && acc.is_singleton() && "Only TBA are accepted");
             // Accepting edges generate new braces: step A1
             newb = braces_.size();
             braces_.emplace_back(brace);

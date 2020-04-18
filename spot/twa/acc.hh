@@ -389,6 +389,28 @@ namespace spot
         return id & -id;
       }
 
+      /// \brief Whether the mark contains only one bit set.
+      bool is_singleton() const
+      {
+#if __GNUC__
+        /* With GCC and Clang, count() is implemented using popcount. */
+        return count() == 1;
+#else
+        return id && !(id & (id - 1));
+#endif
+      }
+
+      /// \brief Whether the mark contains at least two bits set.
+      bool has_many() const
+      {
+#if __GNUC__
+        /* With GCC and Clang, count() is implemented using popcount. */
+        return count() > 1;
+#else
+        return !!(id & (id - 1));
+#endif
+      }
+
       /// \brief Remove n bits that where set.
       ///
       /// If there are less than n bits set, the output is empty.

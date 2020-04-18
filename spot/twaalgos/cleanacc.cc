@@ -177,7 +177,7 @@ namespace spot
               auto tmp = remove_compl_rec(pos, complement);
 
               if (!tmp.empty() && (tmp.back().sub.op == opfin
-                                   && tmp.front().mark.count() == 1))
+                                   && tmp.front().mark.is_singleton()))
                 seen_fin |= tmp.front().mark;
 
               if (opand == acc_cond::acc_op::And)
@@ -390,7 +390,7 @@ namespace spot
           case acc_cond::acc_op::FinNeg:
             {
               auto m = pos[-1].mark;
-              if (op == wanted && m == m.lowest())
+              if (op == wanted && m.is_singleton())
                 {
                   res |= m;
                 }
@@ -427,7 +427,7 @@ namespace spot
                         if (op == wanted)
                           {
                             auto m = pos[-1].mark;
-                            if (!seen && m == m.lowest())
+                            if (!seen && m.is_singleton())
                               {
                                 seen = true;
                                 res |= m;
@@ -513,7 +513,7 @@ namespace spot
                                   case acc_cond::acc_op::Fin:
                                     {
                                       auto m = pos[-1].mark;
-                                      if (op == wanted && m == m.lowest())
+                                      if (op == wanted && m.is_singleton())
                                         singletons.emplace_back(m, pos);
                                       pos -= 2;
                                     }
@@ -550,8 +550,8 @@ namespace spot
                             if (!can_receive)
                               return;
                             for (auto p: singletons)
-                              if (p.first != can_receive &&
-                                  p.first.lowest() == p.first)
+                              if (p.first != can_receive
+                                  && p.first.is_singleton())
                                 {
                                   // Mark fused singletons as false,
                                   // so that a future call to
@@ -596,7 +596,7 @@ namespace spot
       for (auto pair: to_fuse)
         if (pair.first & once) // can we remove pair.first?
           {
-            assert(pair.first.count() == 1);
+            assert(pair.first.is_singleton());
             for (auto& e: aut->edges())
               if (e.acc & pair.first)
                 e.acc = (e.acc - pair.first) | pair.second;

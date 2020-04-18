@@ -660,7 +660,7 @@ get_inputs_states(const twa_graph_ptr& aut)
     for (auto e : aut->edges())
     {
         auto elements = e.acc & used;
-        if (elements.count() > 1)
+        if (elements.has_many())
             inputs[e.dst].insert(elements);
     }
     return inputs;

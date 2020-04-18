@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2017-2018, 2020 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -26,7 +26,7 @@ namespace spot
   is_colored(const const_twa_graph_ptr& aut)
   {
     for (auto t: aut->edges())
-      if (t.acc.count() != 1)
+      if (!t.acc.is_singleton())
         return false;
     return true;
   }
