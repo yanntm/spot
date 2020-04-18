@@ -27,5 +27,5 @@ namespace spot
 {
   /// \brief Determinize a twacube
   SPOT_API twacube_ptr
-  twacube_determinize(twacube_ptr aut);
+  twacube_determinize(const twacube_ptr aut);
 }
