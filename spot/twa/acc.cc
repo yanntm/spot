@@ -2599,7 +2599,8 @@ namespace spot
             if (!fin)
             {
               auto m = pos[-1].mark & possibles;
-              if (m.count() == 1 || conj)
+              if ((!conj && pos[-1].mark.count() == 1)
+                || (conj && m.count() > 0))
               {
                 found_one = true;
                 res |= m;
@@ -2611,7 +2612,8 @@ namespace spot
             if (!found_one || fin)
             {
               auto m = pos[-1].mark & possibles;
-              if (m.count() == 1 || !conj)
+              if ((conj && pos[-1].mark.count() == 1)
+                || (!conj && m.count() > 0))
               {
                 found_one = true;
                 fin = true;
