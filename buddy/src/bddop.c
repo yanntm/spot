@@ -564,11 +564,305 @@ BDD bdd_apply(BDD l, BDD r, int op)
    return res;
 }
 
+// Represents a single operation to peform in apply_rec
+// It is either:
+//  1) a recursive call to apply_rec, in which case it contains both
+//      data_l and data_r, and entry is NULL
+//  2) an instruction to build a new BDD node from other recursive
+//      calls, in which case it contains data_l (the level, the
+//      entry_store, storing the original l and r for the node, and
+//      the entry pointer in the cache to fill in with the new node
+typedef struct work_item {
+    int data_l;
+    union {
+        int data_r;
+        BddCacheData entry_store;
+    };
+    BddCacheData* entry;
+} work_item;
 
+// A simple array-based representation of a stack containing work_items,
+// which doubles in size when it runs out of space (see:
+//  stack_push_work/stack_push_op)
+typedef struct op_stack {
+    work_item* work_items;
+    int cur_pos;
+    int len;
+} op_stack;
+
+// Allocates a new op_stack of length 10
+static void init_stack(op_stack** stack) {
+    op_stack* new_stack = malloc(sizeof(op_stack));
+    new_stack->len = 10;
+    new_stack->cur_pos = 0;
+
+    new_stack->work_items = calloc(sizeof(work_item), new_stack->len);
+
+    *stack = new_stack;
+}
+
+// Add a new "recursive call" to the stack, doubling the
+// stack size if necessary
+static void stack_push_work(op_stack* stack, int data_l, int data_r) {
+    int i = stack->cur_pos;
+
+    if (i >= stack->len) {
+        stack->len *= 2;
+        stack->work_items = realloc(stack->work_items, stack->len * sizeof(work_item));
+    }
+
+    work_item* item = &stack->work_items[i];
+    item->data_l = data_l;
+    item->data_r = data_r;
+    item->entry = NULL;
+
+    stack->cur_pos++;
+}
+
+// Add a new node build to the stack, doubling the
+// stack size if necessary
+static void stack_push_op(op_stack* stack, int data_l, BddCacheData* entry, BddCacheData entry_store) {
+    int i = stack->cur_pos;
+
+    if (i >= stack->len) {
+        stack->len *= 2;
+        stack->work_items = realloc(stack->work_items, stack->len * sizeof(work_item));
+    }
+
+    work_item* item = &stack->work_items[i];
+    item->data_l = data_l;
+    item->entry = entry;
+    item->entry_store = entry_store;
+
+    stack->cur_pos++;
+}
+
+// Pops the data from the top of the stack
+// Need to check whether *entry is NULL to see whether it is
+// a recursive call or a node build
+static void stack_pop(op_stack* stack, int* data_l, int* data_r, BddCacheData** entry, BddCacheData* entry_store) {
+    stack->cur_pos--;
+    int i = stack->cur_pos;
+    work_item* item = &stack->work_items[i];
+
+    *data_l = item->data_l;
+    *entry = item->entry;
+
+    if (*entry != NULL) {
+        *entry_store = item->entry_store;
+    } else {
+        *data_r = item->data_r;
+    }
+}
+
+#define STACK_EMPTY(s) (s->cur_pos == 0)
+
+// The global stack for apply_rec
+op_stack* work_stack = NULL;
 static BDD apply_rec(BDD l, BDD r)
 {
+#define RESULT(s, r) \
+    if (STACK_EMPTY(s)) return r; \
+    else { \
+        PUSHREF(r); \
+        goto work_loop; \
+    }
+
    BddCacheData *entry;
-   BDD res;
+   BDD res = 0;
+
+   BddCacheData entry_store;
+
+    if (work_stack == NULL) {
+       init_stack(&work_stack);
+    }
+
+   work_stack->cur_pos = 0;
+   stack_push_work(work_stack, l, r);
+
+   while (!STACK_EMPTY(work_stack)) {
+work_loop:
+       stack_pop(work_stack, &l, &r, &entry, &entry_store);
+
+       if (entry != NULL) {
+           // In this case, l is the level, not the left operand.
+           res = bdd_makenode(l, READREF(1), READREF(2));
+           POPREF(2);
+
+           entry->i.a = entry_store.i.a;
+           entry->i.c = entry_store.i.c;
+           entry->i.b = entry_store.i.b;
+           entry->i.res = res;
+
+           RESULT(work_stack, res);
+       }
+
+   switch (applyop)
+     {
+     case bddop_and:
+       if (l == r) {
+         RESULT(work_stack, l);
+       }
+       if (l > r)
+         {
+           BDD tmp = l;
+           l = r;
+           r = tmp;
+         }
+       if (ISZERO(l) /* ||  ISZERO(r) */) {
+         RESULT(work_stack, 0);
+       }
+       if (ISONE(l)) {
+         RESULT(work_stack, r);
+       }
+       break;
+     case bddop_or:
+       if (l == r) {
+         RESULT(work_stack, l);
+       }
+       if (l > r)
+         {
+           BDD tmp = l;
+           l = r;
+           r = tmp;
+         }
+       if (ISONE(l)  ||  ISONE(r)) {
+         RESULT(work_stack, 1);
+       }
+       if (ISZERO(l)) {
+         RESULT(work_stack, r);
+       }
+       break;
+     case bddop_xor:
+       if (l == r) {
+         RESULT(work_stack, 0);
+       }
+       if (l > r)
+         {
+           BDD tmp = l;
+           l = r;
+           r = tmp;
+         }
+       if (ISZERO(l)) {
+         RESULT(work_stack, r);
+       }
+       break;
+     case bddop_nand:
+       if (l > r)
+         {
+           BDD tmp = l;
+           l = r;
+           r = tmp;
+         }
+       if (ISZERO(l)) {
+         RESULT(work_stack, 1);
+        }
+       break;
+     case bddop_nor:
+       if (l > r)
+         {
+           BDD tmp = l;
+           l = r;
+           r = tmp;
+         }
+       if (ISONE(l)  ||  ISONE(r)) {
+         RESULT(work_stack, 0);
+       }
+       break;
+     case bddop_invimp: /* l << r = r >> l */
+       {
+         BDD tmp = l;
+         l = r;
+         r = tmp;
+         applyop = bddop_imp;
+       }
+       /* fall through */
+     case bddop_imp:
+       if (ISONE(r) || ISZERO(l)) {
+         RESULT(work_stack, 1);
+       }
+       if (ISONE(l)) {
+         RESULT(work_stack, r);
+        }
+       break;
+     case bddop_biimp:
+       if (l == r) {
+         RESULT(work_stack, 1);
+        }
+       if (l > r)
+         {
+           BDD tmp = l;
+           l = r;
+           r = tmp;
+         }
+       if (ISONE(l)) {
+         RESULT(work_stack, r);
+        }
+       break;
+     case bddop_less:  /* l < r = r - l */
+       {
+         BDD tmp = l;
+         l = r;
+         r = tmp;
+         applyop = bddop_diff;
+       }
+       /* fall through */
+     case bddop_diff:  /* l - r = l &! r */
+       if (l == r || ISONE(r)) {
+           RESULT(work_stack, 0);
+        }
+       if (ISZERO(r)) {
+         RESULT(work_stack, l);
+       }
+       break;
+     }
+       if (__unlikely(ISCONST(l)  &&  ISCONST(r))) {
+          RESULT(work_stack, oprres[applyop][l<<1 | r]);
+       } else {
+          entry = BddCache_lookup(&applycache, APPLYHASH(l,r,applyop));
+
+          /* Check entry->c last, because not_rec() does not initialize it. */
+          if (entry->i.a == l  &&  entry->i.c == applyop  &&  entry->i.b == r)
+          {
+#ifdef CACHESTATS
+            bddcachestats.opHit++;
+#endif
+            RESULT(work_stack, entry->i.res);
+          }
+#ifdef CACHESTATS
+          bddcachestats.opMiss++;
+#endif
+          entry_store.i.a = l;
+          entry_store.i.c = applyop;
+          entry_store.i.b = r;
+
+          int ll = LEVEL(l), lr = LEVEL(r);
+          if (ll == lr)
+          {
+              stack_push_op(work_stack, ll, entry, entry_store);
+              stack_push_work(work_stack, LOW(l), LOW(r));
+              stack_push_work(work_stack, HIGH(l), HIGH(r));
+          }
+          else if (ll < lr)
+          {
+              stack_push_op(work_stack, ll, entry, entry_store);
+              stack_push_work(work_stack, LOW(l), r);
+              stack_push_work(work_stack, HIGH(l), r);
+          }
+          else
+          {
+              stack_push_op(work_stack, lr, entry, entry_store);
+              stack_push_work(work_stack, l, LOW(r));
+              stack_push_work(work_stack, l, HIGH(r));
+          }
+       }
+   }
+
+   res = READREF(1);
+   POPREF(1);
+
+   return res;
+}
 
 #define APPLY_SHORTCUTS(op, rec)                        \
    switch (op)                                          \
@@ -674,60 +968,6 @@ static BDD apply_rec(BDD l, BDD r)
          return rec(l);                                 \
        break;                                           \
      }
-
-   /* empty macro arguments are undefined in ISO C90 and ISO C++98, so
-      use + when we do not want to call any function.*/
-   APPLY_SHORTCUTS(applyop, +);
-
-   if (__unlikely(ISCONST(l)  &&  ISCONST(r)))
-      res = oprres[applyop][l<<1 | r];
-   else
-   {
-      entry = BddCache_lookup(&applycache, APPLYHASH(l,r,applyop));
-
-      /* Check entry->c last, because not_rec() does not initialize it. */
-      if (entry->i.a == l  &&  entry->i.c == applyop  &&  entry->i.b == r)
-      {
-#ifdef CACHESTATS
-	 bddcachestats.opHit++;
-#endif
-	 return entry->i.res;
-      }
-#ifdef CACHESTATS
-      bddcachestats.opMiss++;
-#endif
-
-      if (LEVEL(l) == LEVEL(r))
-      {
-	 PUSHREF( apply_rec(LOW(l), LOW(r)) );
-	 PUSHREF( apply_rec(HIGH(l), HIGH(r)) );
-	 res = bdd_makenode(LEVEL(l), READREF(2), READREF(1));
-      }
-      else
-      if (LEVEL(l) < LEVEL(r))
-      {
-	 PUSHREF( apply_rec(LOW(l), r) );
-	 PUSHREF( apply_rec(HIGH(l), r) );
-	 res = bdd_makenode(LEVEL(l), READREF(2), READREF(1));
-      }
-      else
-      {
-	 PUSHREF( apply_rec(l, LOW(r)) );
-	 PUSHREF( apply_rec(l, HIGH(r)) );
-	 res = bdd_makenode(LEVEL(r), READREF(2), READREF(1));
-      }
-
-      POPREF(2);
-
-      entry->i.a = l;
-      entry->i.c = applyop;
-      entry->i.b = r;
-      entry->i.res = res;
-   }
-
-   return res;
-}
-
 
 /*
 NAME    {* bdd\_and *}
