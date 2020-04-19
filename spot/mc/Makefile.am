@@ -22,7 +22,7 @@ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 mcdir = $(pkgincludedir)/mc
 mc_HEADERS = bloom_filter.hh reachability.hh intersect.hh ec.hh unionfind.hh utils.hh\
-	mc.hh deadlock.hh bloemen.hh cndfs.hh
+	mc.hh deadlock.hh deadlock_bitstate.hh bloemen.hh cndfs.hh
 
 noinst_LTLIBRARIES = libmc.la
 
