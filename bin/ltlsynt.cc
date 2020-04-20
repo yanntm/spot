@@ -71,13 +71,14 @@ static const argp_option options[] =
       " propositions", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
-    { "algo", OPT_ALGO, "ds|sd|lar", 0,
+    { "algo", OPT_ALGO, "ds|sd|lar|lar.old", 0,
       "choose the algorithm for synthesis:\n"
       " - sd:   split then determinize with Safra (default)\n"
       " - ds:   determinize (Safra) then split\n"
       " - lar:  translate to a deterministic automaton with arbitrary"
       " acceptance condition, then use LAR to turn to parity,"
-      " then split", 0 },
+      " then split\n"
+      " - lar.old:  old version of LAR, for benchmarking.\n", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
@@ -121,6 +122,7 @@ enum solver
   DET_SPLIT,
   SPLIT_DET,
   LAR,
+  LAR_OLD,
 };
 
 static char const *const solver_args[] =
@@ -128,6 +130,7 @@ static char const *const solver_args[] =
   "detsplit", "ds",
   "splitdet", "sd",
   "lar",
+  "lar.old",
   nullptr
 };
 static solver const solver_types[] =
@@ -135,6 +138,7 @@ static solver const solver_types[] =
   DET_SPLIT, DET_SPLIT,
   SPLIT_DET, SPLIT_DET,
   LAR,
+  LAR_OLD,
 };
 ARGMATCH_VERIFY(solver_args, solver_types);
 
@@ -349,13 +353,17 @@ namespace
               break;
             }
           case LAR:
+          case LAR_OLD:
             {
               dpa = split_2step(aut, all_inputs);
               dpa->merge_states();
               if (verbose)
                 std::cerr << "split inputs and outputs done\nautomaton has "
                           << dpa->num_states() << " states\n";
-              dpa = spot::to_parity(dpa);
+              if (opt_solver == LAR)
+                dpa = spot::to_parity(dpa);
+              else
+                dpa = spot::to_parity_old(dpa);
               spot::colorize_parity_here(dpa, true);
               spot::change_parity_here(dpa, spot::parity_kind_max,
                                        spot::parity_style_odd);

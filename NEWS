@@ -33,6 +33,9 @@ New in spot 2.8.7.dev (not yet released)
     use cases are probably quite limited.  We use that to generate
     benchmarks for our generic emptiness check procedure.
 
+  - ltlsynt --algo=lar uses the new version of to_parity() mentionned
+    below.  The old version is available via --algo=lar.old
+
   Library:
 
   - Historically, Spot only supports LTL with infinite semantics
