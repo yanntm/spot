@@ -120,5 +120,33 @@ namespace spot
 
     /// \brief Return the cube binded with atomic proposition names
     std::string dump(cube c, const std::vector<std::string>& aps) const;
+
+    /// \brief Build all permutations for a given support
+    ///
+    /// For a support containing indices 0, and 1, (with a cube of size 2), this
+    /// will return a vector containing the following cubes:
+    ///
+    ///     - true_var  = 0 0
+    ///     - false_var = 1 1
+    ///
+    ///     - true_var  = 0 1
+    ///     - false_var = 1 0
+    ///
+    ///     - true_var  = 1 0
+    ///     - false_var = 0 1
+    ///
+    ///     - true_var  = 1 1
+    ///     - false_var = 0 0
+    ///
+    /// Used in determinization
+    std::vector<cube> permutations(const std::vector<size_t>& support) const;
+
+  private:
+    cube copy(const cube c) const;
+
+    void permutations_rec(size_t n,
+                          const std::vector<size_t>& aps,
+                          cube curr,
+                          std::vector<cube>& res) const;
   };
 }

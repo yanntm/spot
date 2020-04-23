@@ -464,15 +464,18 @@ namespace spot
   }
 
   std::vector<cube>
-  permutations(cube_support)
+  permutations(cube_support support_set, const cubeset& cs)
   {
-    return std::vector<cube>();
+    // switch set to vector, easier
+    std::vector<size_t> support(support_set.begin(), support_set.end());
+
+    return cs.permutations(support);
   }
 
   // for a given powerset state, return all letters (atomic propositions) that
   // are involved in a transition from this state
   std::vector<cube>
-  get_letters(const safra_state& s, const std::vector<cube_support>& supports)
+  get_letters(const safra_state& s, const std::vector<cube_support>& supports, const cubeset& cs)
   {
     cube_support safra_support;
 
@@ -485,7 +488,7 @@ namespace spot
       }
 
 
-    return permutations(safra_support);
+    return permutations(safra_support, cs);
   }
 
   twacube_ptr
@@ -564,7 +567,7 @@ namespace spot
         const unsigned src_num = todo.front().second;
         todo.pop_front();
 
-        succs.set(curr, get_letters(curr, supports));
+        succs.set(curr, get_letters(curr, supports, cs));
 
         // iterator over successors of curr
         for (auto s = succs.begin(); s != succs.end(); ++s)
