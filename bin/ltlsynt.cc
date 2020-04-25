@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -286,7 +286,7 @@ namespace
       spot::process_timer timer;
       timer.start();
 
-      if (opt_solver == LAR)
+      if (opt_solver == LAR || opt_solver == LAR_OLD)
         {
           trans_.set_type(spot::postprocessor::Generic);
           trans_.set_pref(spot::postprocessor::Deterministic);
@@ -361,10 +361,17 @@ namespace
                 std::cerr << "split inputs and outputs done\nautomaton has "
                           << dpa->num_states() << " states\n";
               if (opt_solver == LAR)
-                dpa = spot::to_parity(dpa);
+                {
+                  dpa = spot::to_parity(dpa);
+                  // reduce_parity is called by to_parity(),
+                  // but with colorization turned off.
+                  spot::colorize_parity_here(dpa, true);
+                }
               else
-                dpa = spot::to_parity_old(dpa);
-              spot::colorize_parity_here(dpa, true);
+                {
+                  dpa = spot::to_parity_old(dpa);
+                  dpa = reduce_parity_here(dpa, true);
+                }
               spot::change_parity_here(dpa, spot::parity_kind_max,
                                        spot::parity_style_odd);
               if (verbose)
