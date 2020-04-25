@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2018, 2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -226,22 +226,32 @@ namespace spot
         if (susp.empty() && (type_ == TGBA || type_ == BA))
           goto nosplit;
 
-        option_map om;
+        option_map om_wos;
+        option_map om_ws;
         if (opt_)
-          om = *opt_;
-        om.set("ltl-split", 0);
-        translator translate_without_split(simpl_, &om);
+          om_ws = *opt_;
+        // Don't blindingly apply reduce_parity() in the
+        // generic case, for issue #402.
+        om_ws.set("gen-reduce-parity", 0);
+        om_wos = om_ws;
+        om_wos.set("ltl-split", 0);
+        translator translate_without_split(simpl_, &om_wos);
         // Never force colored automata at intermediate steps.
         // This is best added at the very end.
         translate_without_split.set_pref(pref_ & ~Colored);
         translate_without_split.set_level(level_);
         translate_without_split.set_type(type_);
+        translator translate_with_split(simpl_, &om_ws);
+        translate_with_split.set_pref(pref_ & ~Colored);
+        translate_with_split.set_level(level_);
+        translate_with_split.set_type(type_);
+
         auto transrun = [&](formula f)
           {
             if (f == r2)
               return translate_without_split.run(f);
             else
-              return run(f);
+              return translate_with_split.run(f);
           };
 
         // std::cerr << "splitting\n";

@@ -84,6 +84,7 @@ namespace spot
         sat_states_ = opt->get("sat-states", 0);
         state_based_ = opt->get("state-based", 0);
         wdba_minimize_ = opt->get("wdba-minimize", 1);
+        gen_reduce_parity_ = opt->get("gen-reduce-parity", 1);
 
         if (sat_acc_ && sat_minimize_ == 0)
           sat_minimize_ = 1;        // Dicho.
@@ -254,15 +255,25 @@ namespace spot
         bool isparity = in->acc().is_parity();
         if (isparity && in->is_existential()
             && (type_ == Generic || want_parity))
-          return reduce_parity(in);
-        if (!(want_parity && isparity))
           {
-            if (level_ == High)
-              return simplify_acceptance(in);
-            else
-              return cleanup_acceptance(in);
+            auto res = reduce_parity(in);
+            if (want_parity || gen_reduce_parity_)
+              return res;
+            // In case type_ == Generic and gen_reduce_parity_ == 0,
+            // we only return the result of reduce_parity() if it can
+            // lower the number of colors.  Otherwise,
+            // simplify_acceptance() will not do better and we return
+            // the input unchanged.  The reason for not always using
+            // the output of reduce_parity() is that is may hide
+            // symmetries between automata, as in issue #402.
+            return (res->num_sets() < in->num_sets()) ? res : in;
           }
-        return cleanup_parity(in);
+        if (want_parity && isparity)
+          return cleanup_parity(in);
+        if (level_ == High)
+          return simplify_acceptance(in);
+        else
+          return cleanup_acceptance(in);
       };
     a = simplify_acc(a);
 

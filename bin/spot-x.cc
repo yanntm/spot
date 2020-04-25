@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -117,6 +117,15 @@ the determinization algorithm.") },
 the determinization algorithm.") },
     { DOC("det-stutter", "Set to 0 to disable optimizations based on \
 the stutter-invariance in the determinization algorithm.") },
+    { DOC("gen-reduce-parity", "When the postprocessor routines are \
+configured to output automata with any kind of acceptance condition, \
+but they happen to process an automaton with parity acceptance, they \
+call a function to minimize the number of colors needed.  This option \
+controls what happen when this reduction does not reduce the number of \
+colors: when set (the default) the output of the reduction is returned, \
+this means the colors in the automaton may have changed slightly, and in \
+particular, there is no transition with more than one color; when unset, \
+the original automaton is returned.") },
     { DOC("gf-guarantee", "Set to 0 to disable alternate constructions \
 for GF(guarantee)->[D]BA and FG(safety)->DCA.  Those constructions \
 are from an LICS'18 paper by J. Esparza, J. Křentínský, and S. Sickert.  \

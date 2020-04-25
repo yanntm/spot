@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -251,6 +251,7 @@ namespace spot
     bool sat_langmap_ = false;
     int sat_acc_ = 0;
     int sat_states_ = 0;
+    int gen_reduce_parity_ = 1;
     bool state_based_ = false;
     bool wdba_minimize_ = true;
   };
