@@ -26,7 +26,7 @@ struct mc_options_
   char* file = nullptr;
   bool use_timer = false;
   unsigned nb_threads = 1;
-  unsigned wanted = 1;
+  unsigned wanted = 0;
   unsigned min = 0;
   unsigned max_states = 0;
 } mc_options;
@@ -153,7 +153,7 @@ checked_main()
                     << duration
                     << std::endl;
 
-          if (count >= mc_options.wanted)
+          if (mc_options.wanted != 0 && count >= mc_options.wanted)
             return exit_code;
         }
 
