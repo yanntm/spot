@@ -442,53 +442,53 @@ namespace spot
         return s.hash();
       }
     };
-  }
 
-  // set containing indices of atomic propositions included in the support
-  using cube_support = std::unordered_set<size_t>;
+    // set containing indices of atomic propositions included in the support
+    using cube_support = std::unordered_set<size_t>;
 
-  /// \brief finds all the variables that \a c depends on.
-  cube_support
-  compute_cube_support(const cube& c, const cubeset& cs)
-  {
-    std::unordered_set<size_t> res;
+    /// \brief finds all the variables that \a c depends on.
+    cube_support
+    compute_cube_support(const cube& c, const cubeset& cs)
+    {
+      std::unordered_set<size_t> res;
 
-    for (size_t i = 0; i < cs.size(); ++i)
-      {
-        // if is free var
-        if (cs.is_true_var(c, i) || cs.is_false_var(c, i))
-          res.insert(i);
-      }
+      for (size_t i = 0; i < cs.size(); ++i)
+        {
+          // if is free var
+          if (cs.is_true_var(c, i) || cs.is_false_var(c, i))
+            res.insert(i);
+        }
 
-    return res;
-  }
+      return res;
+    }
 
-  std::vector<cube>
-  permutations(cube_support support_set, const cubeset& cs)
-  {
-    // switch set to vector, easier
-    std::vector<size_t> support(support_set.begin(), support_set.end());
+    std::vector<cube>
+    permutations(cube_support support_set, const cubeset& cs)
+    {
+      // switch set to vector, easier
+      std::vector<size_t> support(support_set.begin(), support_set.end());
 
-    return cs.permutations(support);
-  }
+      return cs.permutations(support);
+    }
 
-  // for a given powerset state, return all letters (atomic propositions) that
-  // are involved in a transition from this state
-  std::vector<cube>
-  get_letters(const safra_state& s, const std::vector<cube_support>& supports, const cubeset& cs)
-  {
-    cube_support safra_support;
+    // for a given powerset state, return all letters (atomic propositions) that
+    // are involved in a transition from this state
+    std::vector<cube>
+    get_letters(const safra_state& s, const std::vector<cube_support>& supports, const cubeset& cs)
+    {
+      cube_support safra_support;
 
-    // for each "sub state"
-    for (const auto& [state, _] : s.nodes_)
-      {
-        cube_support state_support = supports[state];
-        // compute the union of their support
-        safra_support.insert(state_support.begin(), state_support.end());
-      }
+      // for each "sub state"
+      for (const auto& [state, _] : s.nodes_)
+        {
+          cube_support state_support = supports[state];
+          // compute the union of their support
+          safra_support.insert(state_support.begin(), state_support.end());
+        }
 
 
-    return permutations(safra_support, cs);
+      return permutations(safra_support, cs);
+    }
   }
 
   twacube_ptr
@@ -578,7 +578,7 @@ namespace spot
             unsigned dst_num = get_state(*s);
             if (s.color_ != -1U)
               {
-                res->create_transition(src_num, s.cond(), { s.color_ }, dst_num);
+                res->create_transition(src_num, s.cond(), {s.color_}, dst_num);
               }
             else
               {
