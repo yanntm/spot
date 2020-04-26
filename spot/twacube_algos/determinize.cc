@@ -592,9 +592,8 @@ namespace spot
     // necessarily even.
     sets += sets & 1;
 
-    // TODO: number of sets? in twa/twa.hh
-    // res->set_acceptance(sets, acc_cond::acc_code::parity_min_odd(sets));
-    res->acc() = acc_cond::acc_code::parity_min_odd(sets);
+    res->set_num_sets(sets);
+    res->acc().set_acceptance(acc_cond::acc_code::parity_min_odd(sets));
 
     // TODO: set these properties when twacube supports them
     // res->prop_universal(true);
