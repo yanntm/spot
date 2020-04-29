@@ -76,7 +76,7 @@ digraph "" {
   rankdir=LR
   label="(Inf(0)&Inf(1)) & Fin(2)\n[Streett-like 3]"
   labelloc="t"
-  node [shape="circle"]
+  node [shape="ellipse",width="0.5",height="0.5"]
   I [label="", style=invis, width=0]
   I -> 1
   subgraph cluster_0 {

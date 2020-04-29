@@ -334,6 +334,7 @@ assert dot == """digraph "" {
   rankdir=LR
   label="Inf(2) | (Inf(1) & Fin(0))\\n[Rabin-like 2]"
   labelloc="t"
+  node [shape="box",style="rounded",width="0.5"]
   I [label="", style=invis, width=0]
   I -> 0
   0 [label="0 (0)"]

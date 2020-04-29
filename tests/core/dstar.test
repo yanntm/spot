@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2013-2016, 2018 Laboratoire de Recherche et
+# Copyright (C) 2013-2016, 2018, 2020 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -63,7 +63,7 @@ digraph "" {
   rankdir=LR
   label="Fin(0) & Inf(1)\n[Rabin 1]"
   labelloc="t"
-  node [shape="circle"]
+  node [shape="box",style="rounded",width="0.5"]
   I [label="", style=invis, width=0]
   I -> 0
   0 [label="0"]

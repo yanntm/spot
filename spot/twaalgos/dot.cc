@@ -86,7 +86,9 @@ namespace spot
       acc_cond::mark_t inf_sets_ = {};
       acc_cond::mark_t fin_sets_ = {};
       unsigned opt_shift_sets_ = 0;
-      enum { ShapeAuto = 0, ShapeCircle, ShapeEllipse } opt_shape_ = ShapeAuto;
+      enum { ShapeAuto = 0, ShapeCircle, ShapeEllipse,
+             ShapeRectangle } opt_shape_ = ShapeAuto;
+      const char* extrastyle = "";
       bool opt_force_acc_trans_ = false;
       bool opt_vertical_ = false;
       bool opt_name_ = false;
@@ -253,6 +255,9 @@ namespace spot
               break;
             case 'e':
               opt_shape_ = ShapeEllipse;
+              break;
+            case 'E':
+              opt_shape_ = ShapeRectangle;
               break;
             case 'f':
               if (*options != '(')
@@ -495,7 +500,8 @@ namespace spot
           return;
         std::string dest = string_dst(dst, color_num);
         if (univ == 0)
-          os_ << "  " << dest << " [label=<>,shape=point]\n";
+          os_ << "  " << dest
+              << " [label=<>,shape=point,width=0.05,height=0.05]\n";
         if (print_edges)
           {
             for (unsigned d: aut_->univ_dests(dst))
@@ -603,14 +609,18 @@ namespace spot
             os_ << "  node [shape=\"circle\"]\n";
             break;
           case ShapeEllipse:
-            // Do not print anything.  Ellipse is
-            // the default shape used by GraphViz.
+            // Ellipse is the default shape used by GraphViz, but
+            // with set width and height so it's a circle when possible.
+            os_ << "  node [shape=\"ellipse\",width=\"0.5\",height=\"0.5\"]\n";
+            break;
+          case ShapeRectangle:
+            os_ << "  node [shape=\"box\",style=\"rounded\",width=\"0.5\"]\n";
             break;
           case ShapeAuto:
             SPOT_UNREACHABLE();
           }
         if (!opt_node_color_.empty())
-          os_ << "  node [style=\"filled\", fillcolor=\""
+          os_ << "  node [style=\"filled" << extrastyle << "\", fillcolor=\""
               << opt_node_color_ << "\"]\n";
         if (!opt_font_.empty())
           os_ << "  fontname=\"" << opt_font_
@@ -713,7 +723,7 @@ namespace spot
             auto iter = highlight_states_->find(s);
             if (iter != highlight_states_->end())
               {
-                os_ << ", style=\"bold";
+                os_ << ", style=\"bold" << extrastyle;
                 if (!opt_node_color_.empty())
                   os_ << ",filled";
                 os_ << "\", color=\"" << palette[iter->second % palette_mod]
@@ -884,7 +894,8 @@ namespace spot
         if (opt_name_)
           name_ = graph_name_;
         mark_states_ = (!opt_force_acc_trans_
-                        && aut_->prop_state_acc().is_true());
+                        && aut_->prop_state_acc().is_true()
+                        && aut_->num_sets() > 0);
         dcircles_ = (mark_states_
                      && (!opt_bullet || opt_bullet_but_buchi)
                      && (aut_->acc().is_buchi() || aut_->acc().is_co_buchi()));
@@ -892,22 +903,37 @@ namespace spot
           {
             if ((inline_state_names_ && (sn_ || sprod_ || opt_state_labels_))
                 || (opt_state_labels_ && opt_latex_)
-                || aut->num_states() > 100
+                || aut->num_states() > 1000
+                || (mark_states_ && !dcircles_)
                 || orig_)
               {
+                opt_shape_ = ShapeRectangle;
+                // If all state names are very short, prefer ellipses.
+                if (!opt_state_labels_ && !orig_
+                    && !(mark_states_ && !dcircles_)
+                    && ((sn_ && std::all_of(sn_->begin(), sn_->end(),
+                                            [](const std::string& s)
+                                            { return s.size() <= 4; }))
+                        || (sprod_ && std::all_of(sprod_->begin(),
+                                                  sprod_->end(),
+                                                  [](auto p)
+                                                  {
+                                                    return (p.first < 100
+                                                            && p.second < 100);
+                                                  }))))
+                  opt_shape_ = ShapeEllipse;
+              }
+            else if (aut->num_states() > 10)
+              {
                 opt_shape_ = ShapeEllipse;
-                // If all state names are short, prefer circles.
-                if (!opt_state_labels_ && !orig_ &&
-                    sn_ && std::all_of(sn_->begin(), sn_->end(),
-                                       [](const std::string& s)
-                                       { return s.size() <= 2; }))
-                  opt_shape_ = ShapeCircle;
               }
             else
               {
                 opt_shape_ = ShapeCircle;
               }
           }
+        if (opt_shape_ == ShapeRectangle)
+          extrastyle = ",rounded";
         auto si =
           std::unique_ptr<scc_info>(opt_scc_ ? new scc_info(aut) : nullptr);
 

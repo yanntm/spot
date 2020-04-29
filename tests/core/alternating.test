@@ -1,7 +1,7 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016-2018 Laboratoire de Recherche et Développement
-# de l'Epita (LRDE).
+# Copyright (C) 2016-2018, 2020 Laboratoire de Recherche et
+# Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
 #
@@ -62,6 +62,7 @@ digraph "" {
   rankdir=LR
   label="Fin(⓿)\n[co-Büchi]"
   labelloc="t"
+  node [shape="box",style="rounded",width="0.5"]
   I [label="", style=invis, width=0]
   I -> -11 [arrowhead=onormal]
   subgraph cluster_0 {
@@ -88,7 +89,7 @@ digraph "" {
   color=green
   label=""
   3 [label="GF(b)"]
-  -8 [label=<>,shape=point]
+  -8 [label=<>,shape=point,width=0.05,height=0.05]
   }
   subgraph cluster_5 {
   color=red
@@ -100,15 +101,15 @@ digraph "" {
   label=""
   0 [label="((((a) U (b)) && GF(b)) && FG(a))"]
   }
-  -11 [label=<>,shape=point]
+  -11 [label=<>,shape=point,width=0.05,height=0.05]
   -11 -> 0
   -11 -> 2
   0 -> -1 [label="b", arrowhead=onormal]
-  -1 [label=<>,shape=point]
+  -1 [label=<>,shape=point,width=0.05,height=0.05]
   -1 -> 1
   -1 -> 3
   0 -> -4 [label="a & !b", style=bold, color="#E31A1C", arrowhead=onormal]
-  -4 [label=<>,shape=point]
+  -4 [label=<>,shape=point,width=0.05,height=0.05]
   -4 -> 1 [style=bold, color="#E31A1C"]
   -4 -> 3 [style=bold, color="#E31A1C"]
   -4 -> 5 [style=bold, color="#E31A1C"]
@@ -506,23 +507,23 @@ digraph "" {
   rankdir=LR
   label=<Fin(<font color="#1F78B4">⓿</font>)<br/>[co-Büchi]>
   labelloc="t"
-  node [shape="circle"]
+  node [shape="box",style="rounded",width="0.5"]
   fontname="Lato"
   node [fontname="Lato"]
   edge [fontname="Lato"]
   I [label="", style=invis, width=0]
   I -> -1 [arrowhead=onormal]
-  -1 [label=<>,shape=point]
+  -1 [label=<>,shape=point,width=0.05,height=0.05]
   -1 -> 0
   -1 -> 1
   0 [label=<0>]
   0 -> 0 [label=<!a &amp; !c>]
   0 -> -1.1 [label=<a &amp; b &amp; !c>, style=bold, color="#FF4DA0", $style]
-  -1.1 [label=<>,shape=point]
+  -1.1 [label=<>,shape=point,width=0.05,height=0.05]
   -1.1 -> 0 [style=bold, color="#FF4DA0"]
   -1.1 -> 1 [style=bold, color="#FF4DA0"]
   0 -> -1.2 [label=<a &amp; !c>, style=bold, color="#FF7F00", arrowhead=onormal]
-  -1.2 [label=<>,shape=point]
+  -1.2 [label=<>,shape=point,width=0.05,height=0.05]
   -1.2 -> 0 [style=bold, color="#FF7F00"]
   -1.2 -> 1 [style=bold, color="#FF7F00"]
   1 [label=<1>]
@@ -569,6 +570,7 @@ digraph "SLAA for c R (c | G(a & b) | (F!b & F!a))" {
   rankdir=LR
   label=<Fin($color1) &amp; Fin($color)<br/>[Streett-like 2]>
   labelloc="t"
+  node [shape="box",style="rounded",width="0.5"]
   fontname="Lato"
   node [fontname="Lato"]
   edge [fontname="Lato"]
@@ -598,10 +600,10 @@ digraph "SLAA for c R (c | G(a & b) | (F!b & F!a))" {
   color=green
   label=""
   0 [label=<c R (c | G(a &amp; b) | (F!b &amp; F!a))>]
-  -1 [label=<>,shape=point]
-  -4 [label=<>,shape=point]
-  -7 [label=<>,shape=point]
-  -10 [label=<>,shape=point]
+  -1 [label=<>,shape=point,width=0.05,height=0.05]
+  -4 [label=<>,shape=point,width=0.05,height=0.05]
+  -7 [label=<>,shape=point,width=0.05,height=0.05]
+  -10 [label=<>,shape=point,width=0.05,height=0.05]
   }
   0 -> 4 [label=<c>]
   0 -> 0 [label=<!a &amp; !b &amp; !c>]
@@ -665,6 +667,7 @@ digraph "SLAA for c R (c | G(a & b) | (F!b & F!a))" {
   rankdir=LR
   label=<Fin($color1) &amp; Fin($color)<br/>[Streett-like 2]>
   labelloc="t"
+  node [shape="box",style="rounded",width="0.5"]
   fontname="Lato"
   node [fontname="Lato"]
   edge [fontname="Lato"]
@@ -689,11 +692,11 @@ digraph "SLAA for c R (c | G(a & b) | (F!b & F!a))" {
   color=green
   label=""
   0 [label=<c R (c | G(a &amp; b) | (F!b &amp; F!a))>]
-  -1 [label=<>,shape=point]
-  -4 [label=<>,shape=point]
-  -7 [label=<>,shape=point]
+  -1 [label=<>,shape=point,width=0.05,height=0.05]
+  -4 [label=<>,shape=point,width=0.05,height=0.05]
+  -7 [label=<>,shape=point,width=0.05,height=0.05]
   1 [label=<G(a &amp; b)>]
-  -10 [label=<>,shape=point]
+  -10 [label=<>,shape=point,width=0.05,height=0.05]
   }
   0 -> 4 [label=<c>]
   0 -> 0 [label=<!a &amp; !b &amp; !c>]
@@ -745,7 +748,7 @@ digraph "" {
   rankdir=LR
   label=<Fin(<font color="#1F78B4">⓿</font>)<br/>[co-Büchi]>
   labelloc="t"
-  node [shape="circle"]
+  node [shape="box",style="rounded",width="0.5"]
   fontname="Lato"
   node [fontname="Lato"]
   edge [fontname="Lato"]
@@ -753,14 +756,14 @@ digraph "" {
   I -> 0
   0 [label=<0>]
   0 -> -1.1 [label=<b &amp; c>, style=bold, color="#FF4DA0", arrowhead=onormal]
-  -1.1 [label=<>,shape=point]
+  -1.1 [label=<>,shape=point,width=0.05,height=0.05]
   -1.1 -> 1 [style=bold, color="#FF4DA0"]
   -1.1 -> 2 [style=bold, color="#FF4DA0"]
   1 [label=<1>]
   1 -> -1.1 [label=<a &amp; b>, style=bold, color="#FF4DA0", arrowhead=onormal]
   2 [label=<2>]
   2 -> -1.2 [label=<!a &amp; !b &amp; !c>, style=bold, color="#FF7F00", $style]
-  -1.2 [label=<>,shape=point]
+  -1.2 [label=<>,shape=point,width=0.05,height=0.05]
   -1.2 -> 1 [style=bold, color="#FF7F00"]
   -1.2 -> 2 [style=bold, color="#FF7F00"]
 }
@@ -792,7 +795,7 @@ digraph "" {
   rankdir=LR
   label=<Fin(<font color="#1F78B4">⓿</font>)<br/>[co-Büchi]>
   labelloc="t"
-  node [shape="circle"]
+  node [shape="box",style="rounded",width="0.5"]
   fontname="Lato"
   node [fontname="Lato"]
   edge [fontname="Lato"]
@@ -800,17 +803,17 @@ digraph "" {
   I -> 0
   0 [label=<0>]
   0 -> -1.1 [label=<b &amp; c>, style=bold, color="#FF4DA0", arrowhead=onormal]
-  -1.1 [label=<>,shape=point]
+  -1.1 [label=<>,shape=point,width=0.05,height=0.05]
   -1.1 -> 1 [style=bold, color="#FF4DA0"]
   -1.1 -> 2 [style=bold, color="#FF4DA0"]
   1 [label=<1>]
   1 -> -1.3 [label=<a &amp; b>, style=bold, color="#6A3D9A", arrowhead=onormal]
-  -1.3 [label=<>,shape=point]
+  -1.3 [label=<>,shape=point,width=0.05,height=0.05]
   -1.3 -> 1 [style=bold, color="#6A3D9A"]
   -1.3 -> 2 [style=bold, color="#6A3D9A"]
   2 [label=<2>]
   2 -> -1.2 [label=<!a &amp; !b &amp; !c>, style=bold, color="#FF7F00", $style]
-  -1.2 [label=<>,shape=point]
+  -1.2 [label=<>,shape=point,width=0.05,height=0.05]
   -1.2 -> 1 [style=bold, color="#FF7F00"]
   -1.2 -> 2 [style=bold, color="#FF7F00"]
 }
@@ -848,6 +851,7 @@ digraph "SLAA for G((b & Fa) | (!b & G!a))" {
   rankdir=LR
   label=<Fin(<font color="#1F78B4">⓿</font>)<br/>[co-Büchi]>
   labelloc="t"
+  node [shape="box",style="rounded",width="0.5"]
   fontname="Lato"
   node [fontname="Lato"]
   edge [fontname="Lato"]
@@ -872,8 +876,8 @@ digraph "SLAA for G((b & Fa) | (!b & G!a))" {
   color=green
   label=""
   0 [label=<G((b &amp; Fa) | (!b &amp; G!a))>]
-  -1 [label=<>,shape=point]
-  -4 [label=<>,shape=point]
+  -1 [label=<>,shape=point,width=0.05,height=0.05]
+  -4 [label=<>,shape=point,width=0.05,height=0.05]
   }
   0 -> 0 [label=<a &amp; b>]
   0 -> -1 [label=<!a &amp; b>, arrowhead=onormal]
