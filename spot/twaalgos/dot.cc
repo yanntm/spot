@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011, 2012, 2014-2019 Laboratoire de Recherche
+// Copyright (C) 2011, 2012, 2014-2020 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -739,8 +739,11 @@ namespace spot
           }
         os_ << "]\n";
         if (incomplete_ && incomplete_->find(s) != incomplete_->end())
-          os_ << "  u" << s << " [label=\"...\", shape=none, width=0, height=0"
-            "]\n  " << s << " -> u" << s << " [style=dashed]\n";
+          os_ << "  u" << s << (" [label=\"...\", shape=none, "
+                                "width=0, height=0, "
+                                "tooltip=\"hidden successors\"]\n  ")
+              << s << " -> u" << s << (" [style=dashed, "
+                                       "tooltip=\"hidden successors\"]\n");
       }
 
       void
