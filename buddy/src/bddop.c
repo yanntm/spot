@@ -42,6 +42,15 @@
 #include "kernel.h"
 #include "cache.h"
 
+#ifdef __has_attribute
+#  if __has_attribute(fallthrough)
+#    define BUDDY_FALLTHROUGH __attribute__ ((fallthrough))
+#  endif
+#endif
+#ifndef BUDDY_FALLTHROUGH
+#  define BUDDY_FALLTHROUGH while (0);
+#endif
+
    /* Hash value modifiers to distinguish between entries in misccache */
 #define CACHEID_CONSTRAIN   0x0
 #define CACHEID_RESTRICT    0x1
@@ -640,7 +649,7 @@ static BDD apply_rec(BDD l, BDD r)
          r = tmp;                                       \
          op = bddop_imp;                                \
        }                                                \
-       /* fall through */                               \
+       BUDDY_FALLTHROUGH;                               \
      case bddop_imp:                                    \
        if (ISONE(r) || ISZERO(l))                       \
          return 1;                                      \
@@ -666,7 +675,7 @@ static BDD apply_rec(BDD l, BDD r)
          r = tmp;                                       \
          op = bddop_diff;                               \
        }                                                \
-       /* fall through */                               \
+       BUDDY_FALLTHROUGH;                               \
      case bddop_diff:  /* l - r = l &! r */             \
        if (l == r || ISONE(r))                          \
          return 0;                                      \
