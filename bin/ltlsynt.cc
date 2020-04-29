@@ -33,7 +33,9 @@
 #include "common_sys.hh"
 
 #include <spot/misc/bddlt.hh>
+#include <spot/misc/escape.hh>
 #include <spot/misc/game.hh>
+#include <spot/misc/timer.hh>
 #include <spot/tl/formula.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
@@ -51,6 +53,7 @@
 enum
 {
   OPT_ALGO = 256,
+  OPT_CSV,
   OPT_INPUT,
   OPT_OUTPUT,
   OPT_PRINT,
@@ -89,6 +92,10 @@ static const argp_option options[] =
       "prints the winning strategy as an AIGER circuit", 0},
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "verbose mode", -1 },
+    { "csv", OPT_CSV, "[>>]FILENAME", OPTION_ARG_OPTIONAL,
+      "output statistics as CSV in FILENAME or on standard output "
+      "(if '>>' is used to request append mode, the header line is "
+      "not output)", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },
     { nullptr, 0, nullptr, 0, nullptr, 0 },
@@ -113,9 +120,17 @@ Exit status:\n\
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 
-bool opt_print_pg(false);
-bool opt_real(false);
-bool opt_print_aiger(false);
+static const char* opt_csv = nullptr;
+static bool opt_print_pg = false;
+static bool opt_real = false;
+static bool opt_print_aiger = false;
+
+static double trans_time = 0.0;
+static double split_time = 0.0;
+static double paritize_time = 0.0;
+static double bgame_time = 0.0;
+static double solve_time = 0.0;
+static double strat2aut_time = 0.0;
 
 enum solver
 {
@@ -124,6 +139,14 @@ enum solver
   LAR,
   LAR_OLD,
 };
+
+static char const *const solver_names[] =
+  {
+   "ds",
+   "sd",
+   "lar",
+   "lar.old"
+  };
 
 static char const *const solver_args[] =
 {
@@ -144,6 +167,7 @@ ARGMATCH_VERIFY(solver_args, solver_types);
 
 static solver opt_solver = SPLIT_DET;
 static bool verbose = false;
+
 
 namespace
 {
@@ -264,6 +288,49 @@ namespace
     return aut;
   }
 
+  static void
+  print_csv(spot::formula f, bool realizable)
+  {
+    if (verbose)
+      std::cerr << "writing CSV to " << opt_csv << '\n';
+
+    output_file outf(opt_csv);
+    std::ostream& out = outf.ostream();
+
+    // Do not output the header line if we append to a file.
+    // (Even if that file was empty initially.)
+    if (!outf.append())
+      {
+        out << ("\"formula\",\"algo\",\"trans_time\","
+                "\"split_time\",\"todpa_time\",\"build_game_time\"");
+        if (!opt_print_pg)
+          {
+            out << ",\"solve_time\"";
+            if (!opt_real)
+              out << ",\"strat2aut_time\"";
+            out << ",\"realizable\"";
+          }
+        out << '\n';
+      }
+    std::ostringstream os;
+    os << f;
+    spot::escape_rfc4180(out << '"', os.str());
+    out << "\",\"" << solver_names[opt_solver]
+        << "\"," << trans_time
+        << ',' << split_time
+        << ',' << paritize_time
+        << ',' << bgame_time;
+    if (!opt_print_pg)
+      {
+        out << ',' << solve_time;
+        if (!opt_real)
+          out << ',' << strat2aut_time;
+        out << ',' << realizable;
+      }
+    out << '\n';
+    outf.close(opt_csv);
+  }
+
   class ltl_processor final : public job_processor
   {
   private:
@@ -280,11 +347,12 @@ namespace
     {
     }
 
-    int process_formula(spot::formula f,
-                        const char*, int) override
+    int solve_formula(spot::formula f)
     {
       spot::process_timer timer;
       timer.start();
+      spot::stopwatch sw;
+      bool want_time = verbose || opt_csv;
 
       if (opt_solver == LAR || opt_solver == LAR_OLD)
         {
@@ -292,9 +360,9 @@ namespace
           trans_.set_pref(spot::postprocessor::Deterministic);
         }
 
+      if (want_time)
+        sw.start();
       auto aut = trans_.run(&f);
-      if (verbose)
-        std::cerr << "translating formula done\n";
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
       for (unsigned i = 0; i < input_aps_.size(); ++i)
@@ -313,34 +381,57 @@ namespace
           unsigned v = aut->register_ap(spot::formula::ap(lowercase.str()));
           all_outputs &= bdd_ithvar(v);
         }
+      if (want_time)
+        trans_time = sw.stop();
+      if (verbose)
+        std::cerr << "translating formula done in "
+                  << trans_time << " seconds\n";
 
       spot::twa_graph_ptr dpa = nullptr;
       switch (opt_solver)
         {
           case DET_SPLIT:
             {
+              if (want_time)
+                sw.start();
               auto tmp = to_dpa(aut);
               if (verbose)
                 std::cerr << "determinization done\nDPA has "
                           << tmp->num_states() << " states, "
                           << tmp->num_sets() << " colors\n";
               tmp->merge_states();
+              if (want_time)
+                paritize_time = sw.stop();
               if (verbose)
                 std::cerr << "simplification done\nDPA has "
-                          << tmp->num_states() << " states\n";
+                          << tmp->num_states() << " states\n"
+                          << "determinization and simplification took "
+                          << paritize_time << " seconds\n";
+              if (want_time)
+                sw.start();
               dpa = split_2step(tmp, all_inputs);
-              if (verbose)
-                std::cerr << "split inputs and outputs done\nautomaton has "
-                          << tmp->num_states() << " states\n";
               spot::colorize_parity_here(dpa, true);
+              if (want_time)
+                split_time = sw.stop();
+              if (verbose)
+                std::cerr << "split inputs and outputs done in " << split_time
+                          << " seconds\nautomaton has "
+                          << tmp->num_states() << " states\n";
               break;
             }
           case SPLIT_DET:
             {
+              if (want_time)
+                sw.start();
               auto split = split_2step(aut, all_inputs);
+              if (want_time)
+                split_time = sw.stop();
               if (verbose)
-                std::cerr << "split inputs and outputs done\nautomaton has "
+                std::cerr << "split inputs and outputs done in " << split_time
+                          << " seconds\nautomaton has "
                           << split->num_states() << " states\n";
+              if (want_time)
+                sw.start();
               dpa = to_dpa(split);
               if (verbose)
                 std::cerr << "determinization done\nDPA has "
@@ -349,17 +440,28 @@ namespace
               dpa->merge_states();
               if (verbose)
                 std::cerr << "simplification done\nDPA has "
-                          << dpa->num_states() << " states\n";
+                          << dpa->num_states() << " states\n"
+                          << "determinization and simplification took "
+                          << paritize_time << " seconds\n";
+              if (want_time)
+                paritize_time = sw.stop();
               break;
             }
           case LAR:
           case LAR_OLD:
             {
+              if (want_time)
+                sw.start();
               dpa = split_2step(aut, all_inputs);
               dpa->merge_states();
+              if (want_time)
+                split_time = sw.stop();
               if (verbose)
-                std::cerr << "split inputs and outputs done\nautomaton has "
+                std::cerr << "split inputs and outputs done in " << split_time
+                          << " seconds\nautomaton has "
                           << dpa->num_states() << " states\n";
+              if (want_time)
+                sw.start();
               if (opt_solver == LAR)
                 {
                   dpa = spot::to_parity(dpa);
@@ -374,35 +476,53 @@ namespace
                 }
               spot::change_parity_here(dpa, spot::parity_kind_max,
                                        spot::parity_style_odd);
+              if (want_time)
+                paritize_time = sw.stop();
               if (verbose)
-                std::cerr << "LAR construction done\nDPA has "
+                std::cerr << "LAR construction done in " << paritize_time
+                          << " seconds\nDPA has "
                           << dpa->num_states() << " states, "
                           << dpa->num_sets() << " colors\n";
               break;
             }
         }
+      if (want_time)
+        sw.start();
       auto owner = complete_env(dpa);
       auto pg = spot::parity_game(dpa, owner);
+      if (want_time)
+        bgame_time = sw.stop();
       if (verbose)
-        std::cerr << "parity game built\n";
-      timer.stop();
+        std::cerr << "parity game built in " << bgame_time << " seconds\n";
 
       if (opt_print_pg)
         {
+          timer.stop();
           pg.print(std::cout);
           return 0;
         }
 
       spot::parity_game::strategy_t strategy[2];
       spot::parity_game::region_t winning_region[2];
+      if (want_time)
+        sw.start();
       pg.solve(winning_region, strategy);
+      if (want_time)
+        solve_time = sw.stop();
+      if (verbose)
+        std::cerr << "parity game solved in " << solve_time << " seconds\n";
+      timer.stop();
       if (winning_region[1].count(pg.get_init_state_number()))
         {
           std::cout << "REALIZABLE\n";
           if (!opt_real)
             {
+              if (want_time)
+                sw.start();
               auto strat_aut =
                 strat_to_aut(pg, strategy[1], dpa, all_outputs);
+              if (want_time)
+                strat2aut_time = sw.stop();
 
               // output the winning strategy
               if (opt_print_aiger)
@@ -421,6 +541,15 @@ namespace
           return 1;
         }
     }
+
+    int process_formula(spot::formula f, const char*, int) override
+    {
+      unsigned res = solve_formula(f);
+      if (opt_csv)
+        print_csv(f, res == 0);
+      return res;
+    }
+
   };
 }
 
@@ -431,6 +560,12 @@ parse_opt(int key, char* arg, struct argp_state*)
   BEGIN_EXCEPTION_PROTECT;
   switch (key)
     {
+    case OPT_ALGO:
+      opt_solver = XARGMATCH("--algo", arg, solver_args, solver_types);
+      break;
+    case OPT_CSV:
+      opt_csv = arg ? arg : "-";
+      break;
     case OPT_INPUT:
       {
         std::istringstream aps(arg);
@@ -456,14 +591,11 @@ parse_opt(int key, char* arg, struct argp_state*)
     case OPT_PRINT:
       opt_print_pg = true;
       break;
-    case OPT_ALGO:
-      opt_solver = XARGMATCH("--algo", arg, solver_args, solver_types);
+    case OPT_PRINT_AIGER:
+      opt_print_aiger = true;
       break;
     case OPT_REAL:
       opt_real = true;
-      break;
-    case OPT_PRINT_AIGER:
-      opt_print_aiger = true;
       break;
     case OPT_VERBOSE:
       verbose = true;
@@ -483,7 +615,10 @@ main(int argc, char **argv)
         exit(err);
       check_no_formula();
 
-      spot::translator trans;
+      // Setup the dictionary now, so that BuDDy's initialization is
+      // not measured in our timings.
+      spot::bdd_dict_ptr dict = spot::make_bdd_dict();
+      spot::translator trans(dict);
       ltl_processor processor(trans, input_aps, output_aps);
       return processor.run();
     });

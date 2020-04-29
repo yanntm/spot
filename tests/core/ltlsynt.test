@@ -102,17 +102,44 @@ ltlsynt --ins=a --outs=b,c -f 'GFa <-> (GFb & GFc)' --aiger >out
 diff out exp
 
 cat >exp <<EOF
-translating formula done
-split inputs and outputs done
+translating formula done in X seconds
+split inputs and outputs done in X seconds
 automaton has 9 states
 determinization done
 DPA has 14 states, 4 colors
 simplification done
 DPA has 11 states
-parity game built
+determinization and simplification took X seconds
+parity game built in X seconds
+parity game solved in X seconds
 EOF
 ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --verbose --realizability 2> out
-diff out exp
+sed 's/ [0-9.e-]* seconds/ X seconds/g' out > outx
+diff outx exp
+
+for r in '' '--real'; do
+    opts="$r --ins=a --outs=b -f"
+    ltlsynt --algo=ds $opts 'GFa <-> GFb' --csv=FILE || :
+    ltlsynt --algo=sd $opts 'FGa <-> GF(b&XXb)' --csv='>>FILE' || :
+    ltlsynt --algo=lar $opts 'FGc <-> GF(!b&XXb)' --csv='>>FILE' || :
+    ltlsynt --algo=lar.old $opts 'FGa <-> GF(c&a)' --csv='>>FILE' || :
+    test 5 = `wc -l < FILE`
+    # Make sure all lines in FILE have the same number of comas
+    sed 's/[^,]//g' < FILE |
+        ( read first
+          while read l; do
+              test "x$first" = "x$l" || exit 1
+          done)
+done
+for a in sd ds lar lar.old; do
+    test 1 = `grep -c ",.$a.," FILE` || exit 1
+done
+
+ltlsynt --algo=lar $opts 'FGa <-> GF(c&a)' --print-pg --csv >out
+grep parity out
+grep 'FGa.*,"lar",' out
+grep formula out
+
 
 F0='(G ((((req) -> (X ((grant) && (X ((grant) && (X (grant))))))) && ((grant)
 -> (X (! (grant))))) && ((cancel) -> (X ((! (grant)) U (go))))))'

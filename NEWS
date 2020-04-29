@@ -36,6 +36,9 @@ New in spot 2.8.7.dev (not yet released)
   - ltlsynt --algo=lar uses the new version of to_parity() mentionned
     below.  The old version is available via --algo=lar.old
 
+  - ltlsynt learned --csv=FILENAME, to record some statistics about
+    the duration of its different phases.
+
   - The dot printer is now automatically using rectangles with rounded
     corners for automata states if one state label have five or more
     characters.  This saves space with very long labels.  Use --dot=c,
