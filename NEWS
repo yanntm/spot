@@ -1,4 +1,4 @@
-New in spot 2.8.7.dev (not yet released)
+New in spot 2.9 (2020-04-30)
 
   Command-line tools:
 
@@ -22,7 +22,7 @@ New in spot 2.8.7.dev (not yet released)
     select a range of their input formulas or automata (assuming a
     1-based numbering).
 
-  - When running translators ltlcross will now display {names} when
+  - When running translators, ltlcross will now display {names} when
     supplied.
 
   - ltlcross is now using the generic emptiness check procedure
@@ -96,8 +96,13 @@ New in spot 2.8.7.dev (not yet released)
     and the automaton is adjusted so that i also appears where j
     appeared.
 
+  - acc_code::unit_propagation() is a new method for performing unit
+    propagation in acceptance condition.  E.g.  Fin(0) | (Inf(0) &
+    Inf(1)) becomes Fin(0) | Inf(1).  This is now called by
+    simplify_acceptance_here().
+
   - propagate_marks_vector() and propagate_marks_here() are helper
-    functions for propagatings marks on the automaton: ignoring
+    functions for propagating marks on the automaton: ignoring
     self-loops and out-of-SCC transitions, marks common to all the
     input transitions of a state can be pushed to all its outgoing
     transitions, and vice-versa.  This is repeated until a fix point
@@ -112,19 +117,22 @@ New in spot 2.8.7.dev (not yet released)
     same transition structure (where the ..._maybe() variant would
     modify the Rabin automaton if needed).
 
-  - to_parity() has been rewritten now combines several strategies for
-    paritizing automata with any acceptance condition.
+  - to_parity() has been rewritten. It now combines several strategies
+    for paritizing automata with any acceptance condition.
 
   - relabel_bse(), used by ltlfilt --relabel-bool, is now better at
     dealing with n-ary operators and isolating subsets of operands
     that can be relabeled as a single term.
 
-  - print_dot() default was changed to use circles for automata with
+  - print_dot()'s default was changed to use circles for automata with
     fewer than 10 unamed states, ellipses for automata with up to 1000
     unamed states (or named states with up to 4 characters), and
     rounded rectangles otherwise.  Rectangles are also used for
     automata with acceptance bullets on states.  The new "E" option
     can be used to force rectangles in all situations.
+
+  - The generic emptiness check has been slightly improved (doing
+    fewer recursive calls in the worst case).
 
   Backward-incompatible changes:
 
