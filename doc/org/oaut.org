@@ -22,23 +22,32 @@ ltl2tgba --help | sed -n '/Output format:/,/^$/p' | sed '1d;$d'
                              --lbtt or --spin)
       --check[=PROP]         test for the additional property PROP and output
                              the result in the HOA format (implies -H).  PROP
-                             may be any prefix of 'all' (default),
-                             'unambiguous', 'stutter-invariant', or
-                             'strength'.
-  -d, --dot[=1|a|b|B|c|e|f(FONT)|h|n|N|o|r|R|s|t|v|+INT]
-                             GraphViz's format.  Add letters for (1) force
-                             numbered states, (a) acceptance display, (b)
-                             acceptance sets as bullets, (B) bullets except for
-                             Büchi/co-Büchi automata, (c) force circular
-                             nodes, (e) force elliptic nodes, (f(FONT)) use
-                             FONT, (h) horizontal layout, (v) vertical layout,
-                             (n) with name, (N) without name, (o) ordered
-                             transitions, (r) rainbow colors for acceptance
-                             sets, (R) color acceptance sets by Inf/Fin, (s)
-                             with SCCs, (t) force transition-based acceptance,
-                             (+INT) add INT to all set numbers
-  -H, --hoaf[=i|l|m|s|t|v]   Output the automaton in HOA format (default).  Add
-                             letters to select (i) use implicit labels for
+                             may be some prefix of 'all' (default),
+                             'unambiguous', 'stutter-invariant',
+                             'stutter-sensitive-example', 'semi-determinism',
+                             or 'strength'.
+  -d, --dot[=1|a|A|b|B|c|C(COLOR)|e|E|f(FONT)|h|k|K|n|N|o|r|R|s|t|u|v|y|+INT|<INT|#]                                                          GraphViz's format.
+                             Add letters for (1) force numbered states, (a)
+                             show acceptance condition (default), (A) hide
+                             acceptance condition, (b) acceptance sets as
+                             bullets, (B) bullets except for Büchi/co-Büchi
+                             automata, (c) force circular nodes, (C) color
+                             nodes with COLOR, (d) show origins when known, (e)
+                             force elliptic nodes, (E) force rEctangular nodes,
+                             (f(FONT)) use FONT, (g) hide edge labels, (h)
+                             horizontal layout, (k) use state labels when
+                             possible, (K) use transition labels (default), (n)
+                             show name, (N) hide name, (o) ordered transitions,
+                             (r) rainbow colors for acceptance sets, (R) color
+                             acceptance sets by Inf/Fin, (s) with SCCs, (t)
+                             force transition-based acceptance, (u) hide true
+                             states, (v) vertical layout, (y) split universal
+                             edges by color, (+INT) add INT to all set numbers,
+                             (<INT) display at most INT states, (#) show
+                             internal edge numbers
+  -H, --hoaf[=1.1|i|k|l|m|s|t|v]   Output the automaton in HOA format
+                             (default).  Add letters to select (1.1) version
+                             1.1 of the format, (i) use implicit labels for
                              complete deterministic automata, (s) prefer
                              state-based acceptance when possible [default],
                              (t) force transition-based acceptance, (m) mix
@@ -55,7 +64,8 @@ ltl2tgba --help | sed -n '/Output format:/,/^$/p' | sed '1d;$d'
   -s, --spin[=6|c]           Spin neverclaim (implies --ba).  Add letters to
                              select (6) Spin's 6.2.4 style, (c) comments on
                              states
-      --stats=FORMAT         output statistics about the automaton
+      --stats=FORMAT, --format=FORMAT
+                             output statistics about the automaton
 #+end_example
 
 The main three output formats (that can also been used as input to
@@ -145,161 +155,6 @@ represent.  Here is a picture of these two automata:
 ltl2tgba --dot=.cn '(Ga -> Gb) W c' 'a U b' | dot | gvpack |
 perl -pe 's/\\\n//g;s/\\/\\\\/g;s/graph G/graph cluster/g'
 #+END_SRC
-#+RESULTS: hoafex
-#+begin_example
-digraph root {
-	graph [bb="0,0,427,231.07",
-		fontname=Lato,
-		labelloc=t,
-		lheight=0.21,
-		rankdir=LR
-	];
-	node [fillcolor="#ffffa0",
-		fontname=Lato,
-		label="\\N",
-		shape=circle,
-		style=filled
-	];
-	edge [fontname=Lato];
-	subgraph cluster {
-		graph [bb="",
-			fontname=Lato,
-			label=<(Gb | F!a) W c>,
-			labelloc=t,
-			lheight=0.21,
-			lp="197.5,196.66",
-			lwidth=1.19,
-			rankdir=LR
-		];
-		node [fillcolor="#ffffa0",
-			fontname=Lato,
-			height="",
-			label="\\N",
-			pos="",
-			shape=circle,
-			style=filled,
-			width=""
-		];
-		edge [fontname=Lato,
-			label="",
-			lp="",
-			pos=""
-		];
-		I		 [height=0.013889,
-			label="",
-			pos="1,49.168",
-			style=invis,
-			width=0.013889];
-		1		 [height=0.5,
-			label=1,
-			pos="56,49.168",
-			width=0.5];
-		I -> 1		 [pos="e,37.942,49.324 1.1549,49.324 2.6725,49.324 15.097,49.324 27.628,49.324"];
-		1 -> 1		 [label=<!a &amp; !c<br/><font color="#5DA5DA">⓿</font>>,
-			lp="56,100.32",
-			pos="e,62.379,66.362 49.621,66.362 48.319,76.182 50.445,85.324 56,85.324 59.472,85.324 61.604,81.753 62.398,76.677"];
-		0		 [height=0.5,
-			label=0,
-			pos="190,121.17",
-			width=0.5];
-		1 -> 0		 [label=<a &amp; b &amp; !c>,
-			lp="123,113.83",
-			pos="e,172.99,115.19 70.127,60.572 76.491,65.727 84.391,71.704 92,76.324 115.21,90.42 143.57,103.1 163.61,111.38"];
-		2		 [height=0.5,
-			label=2,
-			pos="190,34.168",
-			width=0.5];
-		1 -> 2		 [label=<a &amp; !c>,
-			lp="123,64.824",
-			pos="e,175.09,44.492 73.8,53.268 93.402,57.17 126.62,61.596 154,54.324 158.19,53.213 162.39,51.47 166.37,49.467"];
-		3		 [height=0.5,
-			label=3,
-			pos="377,34.168",
-			width=0.5];
-		1 -> 3		 [label=<c>,
-			lp="242,9.8246",
-			pos="e,361.03,25.984 66.027,34.327 72.161,25.632 81.127,15.423 92,10.325 114.02,0 277.48,0.3418 312,7.3246 325.76,10.108 340.24,15.943 351.94,21.478"];
-		0 -> 0		 [label=<b<br/><font color="#5DA5DA">⓿</font>>,
-			lp="190,172.33",
-			pos="e,198.98,137.24 181.02,137.24 178.68,147.48 181.67,157.33 190,157.33 195.47,157.33 198.63,153.08 199.5,147.28"];
-		2 -> 1		 [label=<!a &amp; !c<br/><font color="#5DA5DA">⓿</font>>,
-			lp="123,35.324",
-			pos="e,68.596,36.186 173.36,26.591 167.44,24.066 160.55,21.587 154,20.324 126.94,15.113 117.92,10.98 92,20.324 86.432,22.331 81.123,25.651 76.398,29.343"];
-		2 -> 2		 [label=<a &amp; !c>,
-			lp="190,77.824",
-			pos="e,198.98,50.24 181.02,50.24 178.68,60.475 181.67,70.324 190,70.324 195.47,70.324 198.63,66.083 199.5,60.274"];
-		2 -> 3		 [label=<!a &amp; c>,
-			lp="294,105.83",
-			pos="e,365.94,48.712 203.15,46.686 218.52,61.348 246.56,84.98 276,94.324 291.25,99.165 297.12,100.21 312,94.324 331.12,86.764 347.87,70.495 359.43,56.803"];
-		4		 [height=0.5,
-			label=4,
-			pos="294,34.168",
-			width=0.5];
-		2 -> 4		 [label=<a &amp; c>,
-			lp="242,41.824",
-			pos="e,275.95,34.324 208.3,34.324 224.08,34.324 247.64,34.324 265.91,34.324"];
-		3 -> 3		 [label=<1<br/><font color="#5DA5DA">⓿</font>>,
-			lp="377,85.324",
-			pos="e,384.03,50.989 369.97,50.989 368.41,60.949 370.75,70.324 377,70.324 381,70.324 383.4,66.477 384.2,61.093"];
-		4 -> 3		 [label=<!a>,
-			lp="335.5,41.824",
-			pos="e,358.85,34.324 312.18,34.324 322.81,34.324 336.69,34.324 348.8,34.324"];
-		4 -> 4		 [label=<a>,
-			lp="294,77.824",
-			pos="e,301.03,50.989 286.97,50.989 285.41,60.949 287.75,70.324 294,70.324 298,70.324 300.4,66.477 301.2,61.093"];
-	}
-	subgraph cluster_gv1 {
-		graph [bb="",
-			fontname=Lato,
-			label=<a U b>,
-			labelloc=t,
-			lheight=0.21,
-			lp="81.5,88.5",
-			lwidth=0.47,
-			rankdir=LR
-		];
-		node [fillcolor="#ffffa0",
-			fontname=Lato,
-			height="",
-			label="\\N",
-			peripheries="",
-			pos="",
-			shape=circle,
-			style=filled,
-			width=""
-		];
-		edge [fontname=Lato,
-			label="",
-			lp="",
-			pos=""
-		];
-		I_gv1		 [height=0.013889,
-			label="",
-			pos="261,156.17",
-			style=invis,
-			width=0.013889];
-		"1_gv1"		 [height=0.5,
-			label=1,
-			pos="316,156.17",
-			width=0.5];
-		I_gv1 -> "1_gv1"		 [pos="e,297.94,156.17 261.15,156.17 262.67,156.17 275.1,156.17 287.63,156.17"];
-		"1_gv1" -> "1_gv1"		 [label=<a &amp; !b>,
-			lp="316,199.67",
-			pos="e,322.38,173.21 309.62,173.21 308.32,183.03 310.44,192.17 316,192.17 319.47,192.17 321.6,188.6 322.4,183.52"];
-		"0_gv1"		 [height=0.72222,
-			label=0,
-			peripheries=2,
-			pos="401,156.17",
-			width=0.72222];
-		"1_gv1" -> "0_gv1"		 [label=<b>,
-			lp="356.5,163.67",
-			pos="e,379,156.17 334.2,156.17 344.16,156.17 357,156.17 368.7,156.17"];
-		"0_gv1" -> "0_gv1"		 [label=1,
-			lp="401,203.67",
-			pos="e,409.01,176.75 392.99,176.75 391.89,187.01 394.55,196.17 401,196.17 405.13,196.17 407.71,192.41 408.74,187.01"];
-	}
-}
-#+end_example
 
 #+BEGIN_SRC dot :file hoafex.svg :var txt=hoafex :exports results
 $txt
@@ -611,49 +466,6 @@ from the same font.
 #+BEGIN_SRC sh :prologue export SPOT_DOTEXTRA=
 ltl2tgba --dot=vcsna '(Ga -> Gb) W c'
 #+END_SRC
-#+RESULTS: oaut-dot2
-#+begin_example
-digraph "(Gb | F!a) W c" {
-  label="(Gb | F!a) W c\nInf(0)\n[Büchi]"
-  labelloc="t"
-  node [shape="circle"]
-  I [label="", style=invis, height=0]
-  I -> 0
-  subgraph cluster_0 {
-  color=green
-  label=""
-  1 [label="1"]
-  }
-  subgraph cluster_1 {
-  color=green
-  label=""
-  2 [label="2"]
-  }
-  subgraph cluster_2 {
-  color=red
-  label=""
-  4 [label="4"]
-  }
-  subgraph cluster_3 {
-  color=green
-  label=""
-  0 [label="0"]
-  3 [label="3"]
-  }
-  0 -> 0 [label="!a & !c\n{0}"]
-  0 -> 1 [label="c"]
-  0 -> 2 [label="a & b & !c"]
-  0 -> 3 [label="a & !c"]
-  1 -> 1 [label="1\n{0}"]
-  2 -> 2 [label="b\n{0}"]
-  3 -> 0 [label="!a & !c\n{0}"]
-  3 -> 1 [label="!a & c"]
-  3 -> 3 [label="a & !c"]
-  3 -> 4 [label="a & c"]
-  4 -> 1 [label="!a"]
-  4 -> 4 [label="a"]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file oaut-dot2.svg :var txt=oaut-dot2 :exports results
 $txt
@@ -718,75 +530,6 @@ State: 9
 --END--
 EOF
 #+END_SRC
-
-#+RESULTS: oaut-dot3
-#+begin_example
-digraph G {
-  rankdir=LR
-  label="Fin(2) & (Inf(0)&Inf(1))"
-  labelloc="t"
-  node [shape="circle"]
-  I [label="", style=invis, width=0]
-  I -> 1
-  subgraph cluster_0 {
-  color=grey
-  label=""
-  5 [label="5"]
-  6 [label="6"]
-  }
-  subgraph cluster_1 {
-  color=grey
-  label=""
-  0 [label="0"]
-  }
-  subgraph cluster_2 {
-  color=green
-  label=""
-  8 [label="8"]
-  9 [label="9"]
-  }
-  subgraph cluster_3 {
-  color=green
-  label=""
-  7 [label="7"]
-  }
-  subgraph cluster_4 {
-  color=black
-  label=""
-  2 [label="2"]
-  }
-  subgraph cluster_5 {
-  color=red
-  label=""
-  4 [label="4"]
-  }
-  subgraph cluster_6 {
-  color=green
-  label=""
-  1 [label="1"]
-  3 [label="3"]
-  }
-  0 -> 0 [label="a & b\n{0,1,2}"]
-  0 -> 0 [label="!a & !b\n{2}"]
-  0 -> 5 [label="a\n{2}"]
-  1 -> 4 [label="b"]
-  1 -> 3 [label="a & !b"]
-  2 -> 0 [label="a"]
-  2 -> 7 [label="b"]
-  3 -> 1 [label="a & b\n{0,1}"]
-  4 -> 4 [label="!b\n{1,2}"]
-  4 -> 2 [label="b"]
-  5 -> 6 [label="1\n{1}"]
-  6 -> 5 [label="1"]
-  7 -> 7 [label="!a & b\n{0,2}"]
-  7 -> 7 [label="a & b\n{0,1}"]
-  7 -> 8 [label="1"]
-  8 -> 8 [label="!a & b\n{0,2}"]
-  8 -> 9 [label="a & b\n{0,1}"]
-  9 -> 8 [label="!a & b\n{0,1}"]
-  9 -> 9 [label="a & b\n{0,2}"]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file oaut-dot3.svg :var txt=oaut-dot3 :exports results
 $txt
@@ -1079,24 +822,6 @@ tools have no default name.  This name can be changed using the
 #+BEGIN_SRC sh :exports code
 ltl2tgba --name='TGBA for %f' --dot=n 'a U b'
 #+END_SRC
-
-#+RESULTS: oaut-name
-#+begin_example
-digraph "TGBA for a U b" {
-  rankdir=LR
-  label="TGBA for a U b\n[Büchi]"
-  labelloc="t"
-  node [shape="circle"]
-  node[fontsize=12] fontsize=12 stylesheet="spot.css" edge[arrowhead=vee, arrowsize=.7, fontsize=12]
-  I [label="", style=invis, width=0]
-  I -> 1
-  0 [label="0", peripheries=2]
-  0 -> 0 [label="1"]
-  1 [label="1"]
-  1 -> 0 [label="b"]
-  1 -> 1 [label="a & !b"]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file oaut-name.svg :var txt=oaut-name :exports results
 $txt
