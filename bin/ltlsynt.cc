@@ -50,6 +50,12 @@
 #include <spot/twaalgos/split.hh>
 #include <spot/twaalgos/toparity.hh>
 
+auto str_tolower = [] (std::string s){
+  std::transform(s.begin(), s.end(), s.begin(),
+                 [](unsigned char c){ return std::tolower(c); });
+  return s;
+};
+
 enum
 {
   OPT_ALGO = 256,
@@ -59,7 +65,10 @@ enum
   OPT_PRINT,
   OPT_PRINT_AIGER,
   OPT_REAL,
-  OPT_VERBOSE
+  OPT_VERBOSE,
+  OPT_SMALL_LOW,
+  OPT_ALT,
+  OPT_VERIFY
 };
 
 static const argp_option options[] =
@@ -83,6 +92,10 @@ static const argp_option options[] =
       " acceptance condition, then use LAR to turn to parity,"
       " then split\n"
       " - lar.old:  old version of LAR, for benchmarking.\n", 0 },
+    { "alt-impl", OPT_ALT, nullptr, 0,
+      "Use reimplementation of splitting and zielonka", -1 },
+    {"small-low",     OPT_SMALL_LOW,   nullptr,     0,
+      "Set translator options to small and low for ds/sd", -1},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
@@ -93,6 +106,8 @@ static const argp_option options[] =
       "prints the winning strategy as an AIGER circuit", 0},
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "verbose mode", -1 },
+    { "verify",        OPT_VERIFY,      nullptr,     0,
+      "verify the strategy automaton, raises exception if unsafe", -1},
     { "csv", OPT_CSV, "[>>]FILENAME", OPTION_ARG_OPTIONAL,
       "output statistics as CSV in FILENAME or on standard output "
       "(if '>>' is used to request append mode, the header line is "
@@ -105,13 +120,13 @@ static const argp_option options[] =
   };
 
 static const struct argp_child children[] =
-  {
-    { &finput_argp_headless, 0, nullptr, 0 },
-    { &aoutput_argp, 0, nullptr, 0 },
-    //{ &aoutput_o_format_argp, 0, nullptr, 0 },
-    { &misc_argp, 0, nullptr, 0 },
-    { nullptr, 0, nullptr, 0 }
-  };
+    {
+        { &finput_argp_headless, 0, nullptr, 0 },
+        { &aoutput_argp, 0, nullptr, 0 },
+        //{ &aoutput_o_format_argp, 0, nullptr, 0 },
+        { &misc_argp, 0, nullptr, 0 },
+        { nullptr, 0, nullptr, 0 }
+    };
 
 const char argp_program_doc[] = "\
 Synthesize a controller from its LTL specification.\v\
@@ -127,6 +142,10 @@ static const char* opt_csv = nullptr;
 static bool opt_print_pg = false;
 static bool opt_real = false;
 static bool opt_print_aiger = false;
+static bool opt_alt = false;
+static bool opt_verify = false;
+static bool opt_small_low = false;
+
 static spot::option_map extra_options;
 
 static double trans_time = 0.0;
@@ -173,6 +192,7 @@ static solver const solver_types[] =
   LAR,
   LAR_OLD,
 };
+
 ARGMATCH_VERIFY(solver_args, solver_types);
 
 static solver opt_solver = SPLIT_DET;
@@ -181,7 +201,7 @@ static bool verbose = false;
 
 namespace
 {
-
+  
   // Ensures that the game is complete for player 0.
   // Also computes the owner of each state (false for player 0, i.e. env).
   // Initial state belongs to Player 0 and the game is turn-based.
@@ -190,42 +210,73 @@ namespace
   {
     unsigned sink_env = arena->new_state();
     unsigned sink_con = arena->new_state();
-
+    
     auto um = arena->acc().unsat_mark();
     if (!um.first)
       throw std::runtime_error("game winning condition is a tautology");
     arena->new_edge(sink_con, sink_env, bddtrue, um.second);
     arena->new_edge(sink_env, sink_con, bddtrue, um.second);
-
+    
     std::vector<bool> seen(arena->num_states(), false);
     std::vector<unsigned> todo({arena->get_init_state_number()});
     std::vector<bool> owner(arena->num_states(), false);
     owner[arena->get_init_state_number()] = false;
     owner[sink_env] = true;
     while (!todo.empty())
+    {
+      unsigned src = todo.back();
+      todo.pop_back();
+      seen[src] = true;
+      bdd missing = bddtrue;
+      for (const auto& e: arena->out(src))
       {
-        unsigned src = todo.back();
-        todo.pop_back();
-        seen[src] = true;
-        bdd missing = bddtrue;
-        for (const auto& e: arena->out(src))
-          {
-            if (!owner[src])
-              missing -= e.cond;
-
-            if (!seen[e.dst])
-              {
-                owner[e.dst] = !owner[src];
-                todo.push_back(e.dst);
-              }
-          }
-        if (!owner[src] && missing != bddfalse)
-          arena->new_edge(src, sink_con, missing, um.second);
+        if (!owner[src])
+          missing -= e.cond;
+        
+        if (!seen[e.dst])
+        {
+          owner[e.dst] = !owner[src];
+          todo.push_back(e.dst);
+        }
       }
-
+      if (!owner[src] && missing != bddfalse)
+        arena->new_edge(src, sink_con, missing, um.second);
+    }
+    
     return owner;
   }
-
+  
+  static std::vector<bool>
+  compute_owner(spot::twa_graph_ptr &arena) {
+    
+    auto um = arena->acc().unsat_mark();
+    if (!um.first)
+      throw std::runtime_error("game winning condition is a tautology");
+    
+    std::vector<bool> seen(arena->num_states(), false);
+    std::vector<unsigned> todo({arena->get_init_state_number()});
+    std::vector<bool> owner(arena->num_states(), false);
+    owner[arena->get_init_state_number()] = false;
+    
+    while (!todo.empty()) {
+      unsigned src = todo.back();
+      todo.pop_back();
+      seen[src] = true;
+      bool has_succ = false;
+      for (const auto &e: arena->out(src)) {
+        has_succ = true;
+        
+        if (!seen[e.dst]) {
+          owner[e.dst] = !owner[src];
+          todo.push_back(e.dst);
+        }
+      }
+      assert(has_succ);
+    }
+    
+    return owner;
+  }
+  
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
@@ -240,16 +291,16 @@ namespace
     spot::change_parity_here(dpa, spot::parity_kind_max,
                              spot::parity_style_odd);
     assert((
-      [&dpa]() -> bool
-        {
-          bool max, odd;
-          dpa->acc().is_parity(max, odd);
-          return max && odd;
-        }()));
+               [&dpa]() -> bool
+               {
+                 bool max, odd;
+                 dpa->acc().is_parity(max, odd);
+                 return max && odd;
+               }()));
     assert(spot::is_deterministic(dpa));
     return dpa;
   }
-
+  
   // Construct a smaller automaton, filtering out states that are not
   // accessible.  Also merge back pairs of p --(i)--> q --(o)--> r
   // transitions to p --(i&o)--> r.
@@ -266,47 +317,89 @@ namespace
     aut->set_init_state(aut->new_state());
     pg2aut[pg.get_init_state_number()] = aut->get_init_state_number();
     while (!todo.empty())
+    {
+      unsigned s = todo.back();
+      todo.pop_back();
+      for (auto& e1: dpa->out(s))
       {
-        unsigned s = todo.back();
-        todo.pop_back();
-        for (auto& e1: dpa->out(s))
+        unsigned i = 0;
+        for (auto& e2: dpa->out(e1.dst))
+        {
+          bool self_loop = false;
+          if (e1.dst == s || e2.dst == e1.dst)
+            self_loop = true;
+          if (self_loop || strat.at(e1.dst) == i)
           {
-            unsigned i = 0;
-            for (auto& e2: dpa->out(e1.dst))
-              {
-                bool self_loop = false;
-                if (e1.dst == s || e2.dst == e1.dst)
-                  self_loop = true;
-                if (self_loop || strat.at(e1.dst) == i)
-                  {
-                    bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
-                    if (pg2aut[e2.dst] == -1)
-                      {
-                        pg2aut[e2.dst] = aut->new_state();
-                        todo.push_back(e2.dst);
-                      }
-                    aut->new_edge(pg2aut[s], pg2aut[e2.dst],
-                                  (e1.cond & out), {});
-                    break;
-                  }
-                ++i;
-              }
+            bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
+            if (pg2aut[e2.dst] == -1)
+            {
+              pg2aut[e2.dst] = aut->new_state();
+              todo.push_back(e2.dst);
+            }
+            aut->new_edge(pg2aut[s], pg2aut[e2.dst],
+                          (e1.cond & out), {});
+            break;
           }
+          ++i;
+        }
       }
+    }
     aut->purge_dead_states();
     aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
     return aut;
   }
-
+  
+  // Same as strat_to_aut, however the strategy is given as the
+  // "global" edge number
+  static spot::twa_graph_ptr
+  strat_to_aut_alt(const spot::parity_game &pg,
+                   const spot::parity_game::strategy_alt_t &strat,
+                   const spot::parity_game::region_alt_t &w,
+                   const spot::twa_graph_ptr &dpa,
+                   bdd all_outputs) {
+    auto aut = spot::make_twa_graph(dpa->get_dict());
+    aut->copy_ap_of(dpa);
+    aut->copy_acceptance_of(aut);
+    
+    const unsigned unseen_mark = std::numeric_limits<unsigned>::max();
+    std::vector<unsigned> todo{pg.get_init_state_number()};
+    std::vector<unsigned> pg2aut(pg.num_states(), unseen_mark);
+    aut->set_init_state(aut->new_state());
+    pg2aut[pg.get_init_state_number()] = aut->get_init_state_number();
+    while (!todo.empty()) {
+      unsigned s = todo.back();
+      todo.pop_back();
+      // Env edge
+      for (auto &e1: dpa->out(s)) {
+        SPOT_ASSERT(w.at(e1.dst));
+        // Player strat
+        SPOT_ASSERT( (0<strat.at(e1.dst)) && strat.at(e1.dst)<=dpa->num_edges());
+        auto& e2 = dpa->edge_storage(strat[e1.dst]);
+        bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
+        if (pg2aut[e2.dst] == unseen_mark) {
+          pg2aut[e2.dst] = aut->new_state();
+          todo.push_back(e2.dst);
+        }
+        aut->new_edge(pg2aut[s], pg2aut[e2.dst],
+                      (e1.cond & out), {});
+      }
+    }
+    
+    aut->purge_dead_states();
+    aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
+    
+    return aut;
+  }
+  
   static void
   print_csv(spot::formula f, bool realizable)
   {
     if (verbose)
       std::cerr << "writing CSV to " << opt_csv << '\n';
-
+    
     output_file outf(opt_csv);
     std::ostream& out = outf.ostream();
-
+    
     // Do not output the header line if we append to a file.
     // (Even if that file was empty initially.)
     if (!outf.append())
@@ -315,13 +408,19 @@ namespace
                 "\"split_time\",\"todpa_time\",\"build_game_time\"");
         if (!opt_print_pg)
           {
-            out << ",\"solve_time\"";
-            if (!opt_real)
-              out << ",\"strat2aut_time\"";
-            out << ",\"realizable\"";
+            out << ("\"formula\",\"algo\",\"trans_time\","
+                    "\"split_time\",\"todpa_time\",\"build_game_time\"");
+            if (!opt_print_pg)
+              {
+                out << ",\"solve_time\"";
+                if (!opt_real)
+                  out << ",\"strat2aut_time\"";
+                out << ",\"realizable\"";
+              }
+            out << ",\"dpa_num_states\",\"parity_game_num_states\""
+                << '\n';
           }
-        out << ",\"dpa_num_states\",\"parity_game_num_states\""
-            << '\n';
+        out << '\n';
       }
     std::ostringstream os;
     os << f;
@@ -343,23 +442,23 @@ namespace
         << '\n';
     outf.close(opt_csv);
   }
-
+  
   class ltl_processor final : public job_processor
   {
   private:
     spot::translator& trans_;
     std::vector<std::string> input_aps_;
     std::vector<std::string> output_aps_;
-
+  
   public:
-
+    
     ltl_processor(spot::translator& trans,
                   std::vector<std::string> input_aps_,
                   std::vector<std::string> output_aps_)
-      : trans_(trans), input_aps_(input_aps_), output_aps_(output_aps_)
+        : trans_(trans), input_aps_(input_aps_), output_aps_(output_aps_)
     {
     }
-
+    
     int solve_formula(spot::formula f)
     {
       spot::process_timer timer;
@@ -380,31 +479,36 @@ namespace
                           | spot::postprocessor::Colored);
           break;
         case DET_SPLIT:
+          if ( opt_small_low )
+            {
+              trans_.set_type(spot::postprocessor::TGBA);
+              trans_.set_pref(spot::postprocessor::Small);
+              trans_.set_level(spot::postprocessor::Low);
+            }
+          break;
         case SPLIT_DET:
+          if ( opt_small_low )
+            {
+              trans_.set_type(spot::postprocessor::TGBA);
+              trans_.set_pref(spot::postprocessor::Small);
+              trans_.set_level(spot::postprocessor::Low);
+            }
           break;
         }
-
+        
       if (want_time)
         sw.start();
       auto aut = trans_.run(&f);
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
-      for (unsigned i = 0; i < input_aps_.size(); ++i)
-        {
-          std::ostringstream lowercase;
-          for (char c: input_aps_[i])
-            lowercase << (char)std::tolower(c);
-          unsigned v = aut->register_ap(spot::formula::ap(lowercase.str()));
-          all_inputs &= bdd_ithvar(v);
-        }
-      for (unsigned i = 0; i < output_aps_.size(); ++i)
-        {
-          std::ostringstream lowercase;
-          for (char c: output_aps_[i])
-            lowercase << (char)std::tolower(c);
-          unsigned v = aut->register_ap(spot::formula::ap(lowercase.str()));
-          all_outputs &= bdd_ithvar(v);
-        }
+      for (auto& ap_i : input_aps_) {
+        unsigned v = aut->register_ap(spot::formula::ap(ap_i));
+        all_inputs &= bdd_ithvar(v);
+      }
+      for (auto ap_o : output_aps_) {
+        unsigned v = aut->register_ap(spot::formula::ap(ap_o));
+        all_outputs &= bdd_ithvar(v);
+      }
       if (want_time)
         trans_time = sw.stop();
       if (verbose)
@@ -417,184 +521,229 @@ namespace
 
       spot::twa_graph_ptr dpa = nullptr;
       switch (opt_solver)
-        {
-          case DET_SPLIT:
-            {
-              if (want_time)
-                sw.start();
-              auto tmp = to_dpa(aut);
-              if (verbose)
-                std::cerr << "determinization done\nDPA has "
-                          << tmp->num_states() << " states, "
-                          << tmp->num_sets() << " colors\n";
-              tmp->merge_states();
-              if (want_time)
-                paritize_time = sw.stop();
-              if (verbose)
-                std::cerr << "simplification done\nDPA has "
-                          << tmp->num_states() << " states\n"
-                          << "determinization and simplification took "
-                          << paritize_time << " seconds\n";
-              if (want_time)
-                sw.start();
+      {
+        case DET_SPLIT:
+          {
+            if (want_time)
+              sw.start();
+            auto tmp = to_dpa(aut);
+            if (verbose)
+              std::cerr << "determinization done\nDPA has "
+                        << tmp->num_states() << " states, "
+                        << tmp->num_sets() << " colors\n";
+            tmp->merge_states();
+            if (want_time)
+              paritize_time = sw.stop();
+            if (verbose)
+              std::cerr << "simplification done\nDPA has "
+                        << tmp->num_states() << " states\n"
+                        << "determinization and simplification took "
+                        << paritize_time << " seconds\n";
+            if (want_time)
+              sw.start();
+            if (opt_alt) {
+              dpa = split_2step_alt(tmp, all_inputs, all_outputs);
+            } else {
               dpa = split_2step(tmp, all_inputs);
-              spot::colorize_parity_here(dpa, true);
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << tmp->num_states() << " states\n";
-              break;
             }
-          case DPA_SPLIT:
-            {
-              if (want_time)
-                sw.start();
-              aut->merge_states();
-              if (want_time)
-                paritize_time = sw.stop();
-              if (verbose)
-                std::cerr << "simplification done in " << paritize_time
-                          << " seconds\nDPA has " << aut->num_states()
-                          << " states\n";
-              if (want_time)
-                sw.start();
+            spot::colorize_parity_here(dpa, true);
+            if (want_time)
+              split_time = sw.stop();
+            if (verbose)
+              std::cerr << "split inputs and outputs done in " << split_time
+                        << " seconds\nautomaton has "
+                        << tmp->num_states() << " states\n";
+            break;
+          }
+        case DPA_SPLIT:
+          {
+            if (want_time)
+              sw.start();
+            aut->merge_states();
+            if (want_time)
+              paritize_time = sw.stop();
+            if (verbose)
+              std::cerr << "simplification done in " << paritize_time
+                        << " seconds\nDPA has " << aut->num_states()
+                        << " states\n";
+            if (want_time)
+              sw.start();
+            if (opt_alt) {
+              dpa = split_2step_alt(aut, all_inputs, all_outputs);
+            } else {
               dpa = split_2step(aut, all_inputs);
-              spot::colorize_parity_here(dpa, true);
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << dpa->num_states() << " states\n";
-              break;
             }
-          case SPLIT_DET:
-            {
-              if (want_time)
-                sw.start();
-              auto split = split_2step(aut, all_inputs);
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << split->num_states() << " states\n";
-              if (want_time)
-                sw.start();
-              dpa = to_dpa(split);
-              if (verbose)
-                std::cerr << "determinization done\nDPA has "
-                          << dpa->num_states() << " states, "
-                          << dpa->num_sets() << " colors\n";
-              dpa->merge_states();
-              if (verbose)
-                std::cerr << "simplification done\nDPA has "
-                          << dpa->num_states() << " states\n"
-                          << "determinization and simplification took "
-                          << paritize_time << " seconds\n";
-              if (want_time)
-                paritize_time = sw.stop();
-              break;
+            spot::colorize_parity_here(dpa, true);
+            if (want_time)
+              split_time = sw.stop();
+            if (verbose)
+              std::cerr << "split inputs and outputs done in " << split_time
+                        << " seconds\nautomaton has "
+                        << dpa->num_states() << " states\n";
+            break;
+          }
+        case SPLIT_DET:
+          {
+            if (want_time)
+              sw.start();
+            spot::twa_graph_ptr split;
+            if (opt_alt) {
+              split = split_2step_alt(aut, all_inputs, all_outputs);
+            } else {
+              split = split_2step(aut, all_inputs);
             }
-          case LAR:
-          case LAR_OLD:
-            {
-              if (want_time)
-                sw.start();
+            if (want_time)
+              split_time = sw.stop();
+            if (verbose)
+              std::cerr << "split inputs and outputs done in " << split_time
+                        << " seconds\nautomaton has "
+                        << split->num_states() << " states\n";
+            if (want_time)
+              sw.start();
+            dpa = to_dpa(split);
+            if (verbose)
+              std::cerr << "determinization done\nDPA has "
+                        << dpa->num_states() << " states, "
+                        << dpa->num_sets() << " colors\n";
+            dpa->merge_states();
+            if (verbose)
+              std::cerr << "simplification done\nDPA has "
+                        << dpa->num_states() << " states\n"
+                        << "determinization and simplification took "
+                        << paritize_time << " seconds\n";
+            if (want_time)
+              paritize_time = sw.stop();
+            break;
+          }
+        case LAR:
+        case LAR_OLD:
+          {
+            if (want_time)
+              sw.start();
+            if (opt_alt) {
+              dpa = split_2step_alt(aut, all_inputs, all_outputs);
+            } else {
               dpa = split_2step(aut, all_inputs);
-              dpa->merge_states();
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << dpa->num_states() << " states\n";
-              if (want_time)
-                sw.start();
-              if (opt_solver == LAR)
-                {
-                  dpa = spot::to_parity(dpa);
-                  // reduce_parity is called by to_parity(),
-                  // but with colorization turned off.
-                  spot::colorize_parity_here(dpa, true);
-                }
-              else
-                {
-                  dpa = spot::to_parity_old(dpa);
-                  dpa = reduce_parity_here(dpa, true);
-                }
-              spot::change_parity_here(dpa, spot::parity_kind_max,
-                                       spot::parity_style_odd);
-              if (want_time)
-                paritize_time = sw.stop();
-              if (verbose)
-                std::cerr << "LAR construction done in " << paritize_time
-                          << " seconds\nDPA has "
-                          << dpa->num_states() << " states, "
-                          << dpa->num_sets() << " colors\n";
-              break;
             }
+            dpa->merge_states();
+            if (want_time)
+              split_time = sw.stop();
+            if (verbose)
+              std::cerr << "split inputs and outputs done in " << split_time
+                        << " seconds\nautomaton has "
+                        << dpa->num_states() << " states\n";
+            if (want_time)
+              sw.start();
+            if (opt_solver == LAR)
+              {
+                dpa = spot::to_parity(dpa);
+                // reduce_parity is called by to_parity(),
+                // but with colorization turned off.
+                spot::colorize_parity_here(dpa, true);
+              }
+            else
+              {
+                dpa = spot::to_parity_old(dpa);
+                dpa = reduce_parity_here(dpa, true);
+              }
+            spot::change_parity_here(dpa, spot::parity_kind_max,
+                                     spot::parity_style_odd);
+            if (want_time)
+              paritize_time = sw.stop();
+            if (verbose)
+              std::cerr << "LAR construction done in " << paritize_time
+                        << " seconds\nDPA has "
+                        << dpa->num_states() << " states, "
+                        << dpa->num_sets() << " colors\n";
+            break;
+          }
         }
       nb_states_dpa = dpa->num_states();
+
       if (want_time)
         sw.start();
-      auto owner = complete_env(dpa);
+      std::vector<bool> owner;
+      if (opt_alt) {
+        owner = compute_owner(dpa);
+      }else{
+        owner = complete_env(dpa);
+      }
       auto pg = spot::parity_game(dpa, owner);
       if (want_time)
         bgame_time = sw.stop();
       if (verbose)
         std::cerr << "parity game built in " << bgame_time << " seconds\n";
-
+      
       if (opt_print_pg)
-        {
-          timer.stop();
-          pg.print(std::cout);
-          return 0;
-        }
-
+      {
+        timer.stop();
+        pg.print(std::cout);
+        return 0;
+      }
+      
+      bool is_realizable;
       spot::parity_game::strategy_t strategy[2];
       spot::parity_game::region_t winning_region[2];
+      spot::parity_game::strategy_alt_t strategy_alt;
+      spot::parity_game::region_alt_t winning_region_alt;
       if (want_time)
         sw.start();
-      pg.solve(winning_region, strategy);
+      if (opt_alt) {
+        is_realizable = pg.solve_alt(winning_region_alt, strategy_alt);
+      } else {
+        is_realizable = pg.solve(winning_region, strategy);
+      }
       if (want_time)
         solve_time = sw.stop();
       if (verbose)
         std::cerr << "parity game solved in " << solve_time << " seconds\n";
       nb_states_parity_game = pg.num_states();
       timer.stop();
-      if (winning_region[1].count(pg.get_init_state_number()))
+      if (is_realizable)
+      {
+        std::cout << "REALIZABLE\n";
+        if (!opt_real)
         {
-          std::cout << "REALIZABLE\n";
-          if (!opt_real)
-            {
-              if (want_time)
-                sw.start();
-              auto strat_aut =
-                strat_to_aut(pg, strategy[1], dpa, all_outputs);
-              if (want_time)
-                strat2aut_time = sw.stop();
-
-              // output the winning strategy
-              if (opt_print_aiger)
-                spot::print_aiger(std::cout, strat_aut);
-              else
-                {
-                  automaton_printer printer;
-                  printer.print(strat_aut, timer);
-                }
+          if (want_time)
+            sw.start();
+          spot::twa_graph_ptr strat_aut;
+          if (opt_alt){
+            strat_aut = strat_to_aut_alt(pg, strategy_alt, winning_region_alt,
+                                         dpa, all_outputs);
+          }else{
+            strat_aut = strat_to_aut(pg, strategy[1], dpa, all_outputs);
+          }
+          if (want_time)
+            strat2aut_time = sw.stop();
+          
+          // Verification if demanded
+          if (opt_verify) {
+            auto aut_neg = trans_.run(spot::formula::Not(f));
+            auto run_ptr = aut_neg->intersecting_run(strat_aut);
+            if ((run_ptr != nullptr) || (strat_aut->num_edges()==0)) {
+              run_ptr->replay(std::cerr, true);
+              throw std::runtime_error("Synthesized strategy not safe");
             }
-          return 0;
+          }
+          
+          // output the winning strategy
+          if (opt_print_aiger)
+            spot::print_aiger(std::cout, strat_aut);
+          else
+          {
+            automaton_printer printer;
+            printer.print(strat_aut, timer);
+          }
         }
+        return 0;
+      }
       else
-        {
-          std::cout << "UNREALIZABLE\n";
-          return 1;
-        }
+      {
+        std::cout << "UNREALIZABLE\n";
+        return 1;
+      }
     }
-
+    
     int process_formula(spot::formula f, const char*, int) override
     {
       unsigned res = solve_formula(f);
@@ -602,7 +751,7 @@ namespace
         print_csv(f, res == 0);
       return res;
     }
-
+    
   };
 }
 
@@ -611,56 +760,65 @@ parse_opt(int key, char* arg, struct argp_state*)
 {
   // Called from C code, so should not raise any exception.
   BEGIN_EXCEPTION_PROTECT;
-  switch (key)
-    {
-    case OPT_ALGO:
-      opt_solver = XARGMATCH("--algo", arg, solver_args, solver_types);
-      break;
-    case OPT_CSV:
-      opt_csv = arg ? arg : "-";
-      break;
-    case OPT_INPUT:
+    switch (key)
       {
-        std::istringstream aps(arg);
-        std::string ap;
-        while (std::getline(aps, ap, ','))
+        case OPT_ALGO:
+          opt_solver = XARGMATCH("--algo", arg, solver_args, solver_types);
+          break;
+        case OPT_CSV:
+          opt_csv = arg ? arg : "-";
+          break;
+        case OPT_INPUT:
+        {
+          std::istringstream aps(arg);
+          std::string ap;
+          while (std::getline(aps, ap, ','))
           {
             ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            input_aps.push_back(ap);
+            input_aps.push_back(str_tolower(ap));
           }
-        break;
-      }
-    case OPT_OUTPUT:
-      {
-        std::istringstream aps(arg);
-        std::string ap;
-        while (std::getline(aps, ap, ','))
+          break;
+        }
+        case OPT_OUTPUT:
+        {
+          std::istringstream aps(arg);
+          std::string ap;
+          while (std::getline(aps, ap, ','))
           {
             ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            output_aps.push_back(ap);
+            output_aps.push_back(str_tolower(ap));
           }
+          break;
+        }
+        case OPT_PRINT:
+          opt_print_pg = true;
+          break;
+        case OPT_PRINT_AIGER:
+          opt_print_aiger = true;
+          break;
+        case OPT_REAL:
+          opt_real = true;
+          break;
+        case OPT_VERBOSE:
+          verbose = true;
+          break;
+        case 'x':
+        {
+          const char* opt = extra_options.parse_options(arg);
+          if (opt)
+            error(2, 0, "failed to parse --options near '%s'", opt);
+        }
         break;
+        case OPT_SMALL_LOW:
+          opt_small_low = true;
+          break;
+        case OPT_ALT:
+          opt_alt = true;
+          break;
+        case OPT_VERIFY:
+          opt_verify = true;
+          break;
       }
-    case OPT_PRINT:
-      opt_print_pg = true;
-      break;
-    case OPT_PRINT_AIGER:
-      opt_print_aiger = true;
-      break;
-    case OPT_REAL:
-      opt_real = true;
-      break;
-    case OPT_VERBOSE:
-      verbose = true;
-      break;
-    case 'x':
-      {
-        const char* opt = extra_options.parse_options(arg);
-        if (opt)
-          error(2, 0, "failed to parse --options near '%s'", opt);
-      }
-      break;
-    }
   END_EXCEPTION_PROTECT;
   return 0;
 }
