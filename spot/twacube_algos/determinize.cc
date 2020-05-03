@@ -519,6 +519,8 @@ namespace spot
 
             // union of support and res
             res.insert(support.begin(), support.end());
+
+            succs->next();
           }
 
         supports[i] = res;
