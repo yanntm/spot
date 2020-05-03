@@ -17,6 +17,7 @@
 #include <spot/twaalgos/powerset.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/twacube_algos/convert.hh>
+#include <spot/twacube_algos/twacube_determinize.hh>
 
 const char argp_program_doc[] =
 "Bench determinization";
