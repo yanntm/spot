@@ -399,9 +399,14 @@ namespace spot
               // skip if transition isn't accessible with this ap
               if (!cs.aut->get_cubeset()
                   .intersect(trans_data.cube_, ap))
-                continue;
+                {
+                  succs->next();
+                  continue;
+                }
 
               ss.update_succ(node.second, trans_storage.dst, trans_data.acc_);
+
+              succs->next();
             }
         }
       return safra_state(ss, cs, color);
