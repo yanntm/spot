@@ -132,25 +132,34 @@ checked_main()
       assert(!spot::is_deterministic(aut));
 
       spot::timer_map tm;
-      spot::const_twa_graph_ptr det_aut = nullptr;
+
+      spot::twacube_ptr cube_aut = twa_to_twacube(aut);
+      spot::twacube_ptr cube_det_aut = nullptr;
       tm.start("determinize");
       {
-        det_aut = spot::tgba_determinize2(aut);
+        cube_det_aut = twacube_determinize(cube_aut);
       }
       tm.stop("determinize");
 
+      if (!spot::is_deterministic(twacube_to_twa(cube_det_aut)))
+        {
+          std::cout << "determinization failed" << std::endl;
+          exit_code = 1;
+          break;
+        }
+
       auto duration = tm.timer("determinize").walltime();
-      if (duration > mc_options.min * size_t(1000) && det_aut != nullptr)
+      if (duration >= mc_options.min * size_t(1000) && cube_det_aut != nullptr)
         {
           count++;
 
           auto formula = *aut->get_named_prop<std::string>("automaton-name");
 
           std::cout << formula << ','
-                    << aut->num_states() << ','
-                    << aut->num_edges() << ','
-                    << det_aut->num_states() << ','
-                    << det_aut->num_edges() << ','
+                    << cube_aut->num_states() << ','
+                    << cube_aut->num_edges() << ','
+                    << cube_det_aut->num_states() << ','
+                    << cube_det_aut->num_edges() << ','
                     << duration
                     << std::endl;
 
