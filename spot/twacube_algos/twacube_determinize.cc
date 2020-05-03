@@ -26,7 +26,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <spot/twacube_algos/determinize.hh>
+#include <spot/twacube_algos/twacube_determinize.hh>
 #include <bddx.h>
 
 namespace spot
