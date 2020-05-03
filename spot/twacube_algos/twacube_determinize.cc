@@ -178,7 +178,7 @@ namespace spot
 
       const safra_state* src;
       const std::vector<cube>* all_cubes;
-      const const_twacube_ptr& aut;
+      const_twacube_ptr aut;
 
       // work vectors for safra_state::finalize_construction()
       mutable std::vector<char> empty_green;
@@ -187,7 +187,7 @@ namespace spot
       mutable safra_build ss;
 
     public:
-      compute_succs(const const_twacube_ptr& aut)
+      compute_succs(const_twacube_ptr aut)
         : src(nullptr)
         , all_cubes(nullptr)
         , aut(aut)
