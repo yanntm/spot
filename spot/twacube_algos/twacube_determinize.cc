@@ -194,10 +194,10 @@ namespace spot
       {}
 
       void
-      set(const safra_state& s, const std::vector<cube>& v)
+      set(const safra_state* s, const std::vector<cube>* v)
       {
-        src = &s;
-        all_cubes = &v;
+        src = s;
+        all_cubes = v;
       }
 
       struct iterator
@@ -569,7 +569,9 @@ namespace spot
         const unsigned src_num = todo.front().second;
         todo.pop_front();
 
-        succs.set(curr, get_letters(curr, supports, cs));
+        const auto letters = get_letters(curr, supports, cs);
+
+        succs.set(&curr, &letters);
 
         // iterator over successors of curr
         for (auto s = succs.begin(); s != succs.end(); ++s)
