@@ -137,47 +137,61 @@ namespace spot
     
     // Computes and stores the restriction
     // of each cond to the input domain and the support
-    struct small_cacher_t {
+    struct small_cacher_t
+    {
       //e to e_in
       std::unordered_map<int, int> cond_hash_;
       //e_in and support
       std::unordered_map<int, std::pair<bdd, bdd>> cond_in_hash_;
       
-      void fill(const const_twa_graph_ptr& aut, bdd output_bdd){
+      void fill(const const_twa_graph_ptr& aut, bdd output_bdd)
+      {
         cond_hash_.reserve((size_t) .2*aut->num_edges()+1);
         cond_in_hash_.reserve((size_t) .2*aut->num_edges()+1);
         
-        for (const auto& e : aut->edges()){
+        for (const auto& e : aut->edges())
+        {
           // Check if stored
-          if (cond_hash_.find(e.cond.id())!=cond_hash_.end()){
+          if (cond_hash_.find(e.cond.id())!=cond_hash_.end())
             continue;
-          }
           
           bdd ec_in = bdd_exist(e.cond, output_bdd);
           cond_hash_[e.cond.id()] = ec_in.id();
           
-          if (cond_in_hash_.find(ec_in.id()) == cond_in_hash_.end()){
+          if (cond_in_hash_.find(ec_in.id()) == cond_in_hash_.end())
+          {
             bdd ec_in_s = bdd_exist(bdd_support(e.cond), output_bdd);
             cond_in_hash_[ec_in.id()] = std::pair<bdd,bdd>(ec_in, ec_in_s);
           }
         }
       }
       
-      const std::pair<bdd,bdd>& operator[](bdd econd) const {
+      // Get the condition restricted to input and support of a condition
+      const std::pair<bdd,bdd>& operator[](bdd econd) const
+      {
         return cond_in_hash_.at(cond_hash_.at(econd.id()));
       }
     } small_cacher;
     
     small_cacher.fill(aut, output_bdd);
     
-    struct e_info_t{
+    // Struct to locally store the informations of all outgoing edges
+    // of state.
+    struct e_info_t
+    {
       e_info_t(const twa_graph::edge_storage_t& e,
-               const small_cacher_t& sm):
-          dst(e.dst), econd(e.cond), einsup(sm[e.cond]), acc(e.acc){
-        pre_hash = wang32_hash(dst) ^ std::hash<acc_cond::mark_t>()(acc);
-      };
+               const small_cacher_t& sm)
+          : dst(e.dst),
+            econd(e.cond),
+            einsup(sm[e.cond]),
+            acc(e.acc)
+      {
+        pre_hash = (wang32_hash(dst) ^ std::hash<acc_cond::mark_t>()(acc))
+                    * fnv<size_t>::prime;
+      }
       
-      inline size_t hash() const {
+      inline size_t hash() const
+      {
         return wang32_hash(bdd_hash()(econdout)) ^ pre_hash;
       }
       
@@ -187,7 +201,9 @@ namespace spot
       acc_cond::mark_t acc;
       size_t pre_hash;
     };
-    
+    // We define a order between the edges to avoid creating multiple
+    // states that in fact correspond to permutations of the order of the
+    // outgoing edges
     struct less_info_t {
       // Note: orders via econd
       inline bool operator()(const e_info_t& lhs, const e_info_t& rhs)const{
@@ -229,10 +245,14 @@ namespace spot
       }
     }less_info;
     
-    // Automatically "almost" sorted due to the sorting of cache
+    // Cache vector for all outgoing edges of this states
+    std::vector<e_info_t> e_cache;
+    
+    // Vector of destinations actually reachable for a given
+    // minterm in ins
+    // Automatically "almost" sorted due to the sorting of e_cache
     std::vector<e_info_t*> dests;
     
-    std::vector<e_info_t> e_cache;
     // Loop over all states
     for (unsigned src = 0; src < aut->num_states(); ++src)
     {
@@ -244,7 +264,8 @@ namespace spot
       bdd all_letters = bddfalse;
       bdd support = bddtrue;
       
-      for (const auto& e : aut->out(src)) {
+      for (const auto& e : aut->out(src))
+      {
         e_cache.emplace_back(e, small_cacher);
         all_letters |= e_cache.back().einsup.first;
         support &= e_cache.back().einsup.second;
@@ -259,28 +280,26 @@ namespace spot
         all_letters -= one_letter;
         
         dests.clear();
-        for (auto& e_info : e_cache) {
+        for (auto& e_info : e_cache)
           // implies is faster than and
           if (bdd_implies(one_letter, e_info.einsup.first)) {
-            e_info.econdout = bdd_appex(e_info.econd, one_letter, bddop_and, input_bdd);
+            e_info.econdout =
+                bdd_appex(e_info.econd, one_letter, bddop_and, input_bdd);
             dests.push_back(&e_info);
             e_info.einsup.first -= one_letter; // # 10 This sometimes helps
           }
-        }
+        
         // # dests is almost sorted -> insertion sort
-        if (dests.size()>1) {
+        if (dests.size()>1)
           for (auto it = dests.begin(); it != dests.end(); ++it) {
-            std::rotate(std::upper_bound(dests.begin(), it, *it,less_info), it, it + 1);
+            std::rotate(std::upper_bound(dests.begin(), it, *it,less_info),
+                        it, it + 1);
           }
-        }
         
         bool to_add = true;
         size_t h = fnv<size_t>::init;
         for (const auto& t: dests)
-        {
           h ^= t->hash();
-          h *= fnv<size_t>::prime;
-        }
         
         auto range_h = env_hash.equal_range(h);
         for (auto it_h = range_h.first; it_h != range_h.second; ++it_h)
@@ -303,7 +322,7 @@ namespace spot
               it->second.second |= one_letter;
             } else {
               env_edge_hash.emplace(i,
-                                    std::make_pair(split->new_edge(src, i, bddtrue), one_letter));
+                  std::make_pair(split->new_edge(src, i, bddtrue), one_letter));
             }
             break;
           }

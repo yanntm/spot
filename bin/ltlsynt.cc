@@ -247,8 +247,8 @@ namespace
   }
   
   static std::vector<bool>
-  compute_owner(spot::twa_graph_ptr &arena) {
-    
+  compute_owner(spot::twa_graph_ptr &arena)
+  {
     auto um = arena->acc().unsat_mark();
     if (!um.first)
       throw std::runtime_error("game winning condition is a tautology");
@@ -258,15 +258,17 @@ namespace
     std::vector<bool> owner(arena->num_states(), false);
     owner[arena->get_init_state_number()] = false;
     
-    while (!todo.empty()) {
+    while (!todo.empty())
+    {
       unsigned src = todo.back();
       todo.pop_back();
       seen[src] = true;
       bool has_succ = false;
-      for (const auto &e: arena->out(src)) {
+      for (const auto &e: arena->out(src))
+      {
         has_succ = true;
-        
-        if (!seen[e.dst]) {
+        if (!seen[e.dst])
+        {
           owner[e.dst] = !owner[src];
           todo.push_back(e.dst);
         }
@@ -282,8 +284,11 @@ namespace
   {
     // if the input automaton is deterministic, degeneralize it to be sure to
     // end up with a parity automaton
+//    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
+//                                      false, true, true, false);
     auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
-                                      false, true, true, false);
+                                      false, !opt_small_low,
+                                      !opt_small_low, !opt_small_low);
     dpa->merge_edges();
     if (opt_print_pg)
       dpa = spot::sbacc(dpa);
@@ -356,7 +361,8 @@ namespace
                    const spot::parity_game::strategy_alt_t &strat,
                    const spot::parity_game::region_alt_t &w,
                    const spot::twa_graph_ptr &dpa,
-                   bdd all_outputs) {
+                   bdd all_outputs)
+  {
     auto aut = spot::make_twa_graph(dpa->get_dict());
     aut->copy_ap_of(dpa);
     aut->copy_acceptance_of(aut);
@@ -366,17 +372,20 @@ namespace
     std::vector<unsigned> pg2aut(pg.num_states(), unseen_mark);
     aut->set_init_state(aut->new_state());
     pg2aut[pg.get_init_state_number()] = aut->get_init_state_number();
-    while (!todo.empty()) {
+    while (!todo.empty())
+    {
       unsigned s = todo.back();
       todo.pop_back();
       // Env edge
-      for (auto &e1: dpa->out(s)) {
+      for (auto &e1: dpa->out(s))
+      {
         SPOT_ASSERT(w.at(e1.dst));
         // Player strat
         SPOT_ASSERT( (0<strat.at(e1.dst)) && strat.at(e1.dst)<=dpa->num_edges());
         auto& e2 = dpa->edge_storage(strat[e1.dst]);
         bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
-        if (pg2aut[e2.dst] == unseen_mark) {
+        if (pg2aut[e2.dst] == unseen_mark)
+        {
           pg2aut[e2.dst] = aut->new_state();
           todo.push_back(e2.dst);
         }
