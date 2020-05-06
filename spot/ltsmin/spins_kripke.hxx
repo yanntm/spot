@@ -34,7 +34,7 @@ namespace spot
 {
   cspins_state_manager::cspins_state_manager(unsigned int state_size,
                                              int compress)
-    : p_((state_size+2)*sizeof(int)), compress_(compress),
+    : /*p_((state_size+2)*sizeof(int)),*/ compress_(compress),
       /* reserve one integer for the hash value and size */
       state_size_(state_size),
       fn_compress_(compress == 0 ? nullptr
@@ -57,6 +57,10 @@ namespace spot
     cspins_state out = nullptr;
     size_t size = state_size_;
     int* ref = dst;
+    (void)(cmp);
+    (void)(cmpsize);
+    // WARNING: disable the compress version for tests purposes only
+    #if 0
     if (compress_)
       {
         size_t csize = cmpsize;
@@ -66,7 +70,8 @@ namespace spot
         out = (cspins_state) msp_.allocate((size+2)*sizeof(int));
       }
     else
-      out = (cspins_state) p_.allocate();
+    #endif
+      out = new int[size + 2];
     int hash_value = 0;
     memcpy(unbox_state(out), ref, size * sizeof(int));
     for (unsigned int i = 0; i < state_size_; ++i)
@@ -84,10 +89,13 @@ namespace spot
 
   void cspins_state_manager::dealloc(cspins_state s)
   {
+    // WARNING: disable the compress version for tests purposes only
+    #if 0
     if (compress_)
       msp_.deallocate(s, (s[1]+2)*sizeof(int));
     else
-      p_.deallocate(s);
+    #endif
+    delete[] s;
   }
 
   unsigned int cspins_state_manager::size() const
@@ -156,8 +164,8 @@ namespace spot
 
   cspins_iterator::~cspins_iterator()
   {
-    // Do not release successors states, the manager
-    // will do it on time.
+    delete[] cond_;
+    successors_.clear();
   }
 
   void cspins_iterator::next()
@@ -279,7 +287,7 @@ namespace spot
         cubeset_, dead_idx_, tid
       };
 
-    if (SPOT_LIKELY(!recycle_[tid].empty()))
+    /*if (SPOT_LIKELY(!recycle_[tid].empty()))
       {
         auto tmp  = recycle_[tid].back();
         recycle_[tid].pop_back();
@@ -287,7 +295,7 @@ namespace spot
         compute_condition(p.cond, s, tid);
         tmp->recycle(p);
         return tmp;
-      }
+      }*/
     cube cond = cubeset_.alloc();
     p.cond = cond;
     compute_condition(cond, s, tid);

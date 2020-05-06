@@ -93,8 +93,11 @@ namespace spot
     unsigned int size() const;
 
   private:
+    // WARNING: remove memory pool for testing purposes
+    #if 0
     fixed_size_pool<pool_type::Unsafe> p_;
     multiple_size_pool msp_;
+    #endif
     bool compress_;
     const unsigned int state_size_;
     void (*fn_compress_)(const int*, size_t, int*, size_t&);

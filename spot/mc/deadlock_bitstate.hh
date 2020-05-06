@@ -93,15 +93,6 @@ namespace spot
                     "error: does not match the kripkecube requirements");
     }
 
-    virtual ~swarmed_deadlock_bitstate()
-    {
-      while (!todo_.empty())
-      {
-        sys_.recycle(todo_.back().it, tid_);
-        todo_.pop_back();
-      }
-    }
-
     void setup()
     {
       tm_.start("DFS thread " + std::to_string(tid_));
@@ -129,16 +120,26 @@ namespace spot
       if (SPOT_UNLIKELY(deadlock_))
         return;
 
-      todo_.pop_back();
-      sys_.recycle(elem.it, tid_);
       map_.erase(elem.st, brick_state_hasher());
       bloom_filter_.insert(state_hash_(elem.st.st));
+      //sys_.recycle(elem.it, tid_);
+      //delete elem.it;
+      todo_.pop_back();
     }
 
     void finalize()
     {
       stop_ = true;
       tm_.stop("DFS thread " + std::to_string(tid_));
+    }
+
+    void dealloc()
+    {
+      while (!todo_.empty())
+      {
+        delete todo_.back().it;
+        todo_.pop_back();
+      }
     }
 
     unsigned states()
