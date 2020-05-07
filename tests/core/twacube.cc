@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2015, 2016, 2018, 2020 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -49,6 +49,8 @@ int main()
 
   // Test translation
   auto aut = twa_to_twacube(tg);
+  assert(spot::are_equivalent(aut, tg));
+
   spot::print_dot(std::cout, tg, "A");
   std::cout << "-----------\n" << *aut << "-----------\n";
 
