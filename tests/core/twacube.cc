@@ -49,6 +49,8 @@ int main()
 
   // Test translation
   auto aut = twa_to_twacube(tg);
+  assert(spot::are_equivalent(aut, tg));
+
   spot::print_dot(std::cout, tg, "A");
   std::cout << "-----------\n" << *aut << "-----------\n";
 

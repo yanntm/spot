@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016 Laboratoire de Recherche et Developpement de
+// Copyright (C) 2015, 2016, 2020 Laboratoire de Recherche et Developpement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -53,4 +53,8 @@ namespace spot
   /// \brief Convert a twacube into a twa
   SPOT_API spot::twa_graph_ptr
   twacube_to_twa(spot::twacube_ptr twacube);
+
+  /// \brief Check wether a twacube and a twa are equivalent
+  SPOT_API bool are_equivalent(const spot::twacube_ptr twacube,
+                               const spot::const_twa_graph_ptr twa);
 }

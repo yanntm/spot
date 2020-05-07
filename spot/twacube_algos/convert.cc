@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include <spot/twacube_algos/convert.hh>
+#include <spot/twaalgos/contains.hh>
 #include <assert.h>
 
 namespace spot
@@ -186,5 +187,77 @@ namespace spot
     res->set_init_state(twacube->get_initial());
 
     return res;
+  }
+
+  // FIXME this code is very close to twacube_to_twa, can we merge both?
+  bool are_equivalent(const spot::twacube_ptr twacube,
+                      const spot::const_twa_graph_ptr twa)
+  {
+    // Compute the necessary binder and extract atomic propositions
+    std::unordered_map<int, int> ap_binder;
+    std::vector<std::string>* aps_twa = extract_aps(twa, ap_binder);
+    std::vector<std::string> aps_twacube = twacube->ap();
+
+    // Comparator to compare two strings in case insensitive manner
+    std::function< bool (const std::string&, const std::string&) >
+      comparator = [](const std::string& lhs, const std::string& rhs){
+                     return lhs.compare(rhs) == 0;
+                   };
+
+    // Error. Not working on the same set of aps.
+    if (aps_twa->size() != aps_twacube.size() ||
+        !std::equal(aps_twa->begin(), aps_twa->end(),
+                   aps_twacube.begin(), comparator))
+      throw std::runtime_error("are_equivalent: not working on the same "
+                               "atomic propositions");
+
+    // Grab necessary variables
+    auto& theg = twacube->get_graph();
+    spot::cubeset cs = twacube->get_cubeset();
+
+    auto d = twa->get_dict();
+    auto res = make_twa_graph(d);
+
+    // Fix the acceptance of the resulting automaton
+    res->acc() = twacube->acc();
+
+    // Grep bdd id for each atomic propositions
+    std::vector<int> bdds_ref;
+    for (unsigned i = 0; i < aps_twacube.size(); ++i)
+      {
+        bdds_ref.push_back(ap_binder[i]);
+      }
+
+    // Build all resulting states
+    for (unsigned int i = 0; i < theg.num_states(); ++i)
+      {
+        unsigned st = res->new_state();
+        (void) st;
+        assert(st == i);
+      }
+
+    // Build all resulting conditions.
+    for (unsigned int i = 1; i <= theg.num_edges(); ++i)
+      {
+        bdd cond = bddtrue;
+        for (unsigned j = 0; j < cs.size(); ++j)
+          {
+            if (cs.is_true_var(theg.edge_data(i).cube_, j))
+              cond &= bdd_ithvar(bdds_ref[j]);
+            else if (cs.is_false_var(theg.edge_data(i).cube_, j))
+              cond &= bdd_nithvar(bdds_ref[j]);
+            // otherwise it 's a free variable do nothing
+          }
+
+        res->new_edge(theg.edge_storage(i).src, theg.edge_storage(i).dst,
+                      cond, theg.edge_data(i).acc_);
+      }
+
+    // Fix the initial state
+    res->set_init_state(twacube->get_initial());
+
+    bool result =  are_equivalent(res, twa);
+    delete aps_twa;
+    return result;
   }
 }
