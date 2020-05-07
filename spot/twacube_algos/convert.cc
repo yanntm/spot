@@ -98,23 +98,17 @@ namespace spot
 
           // Special case for bddfalse
           if (cond == bddfalse)
+            continue;
+
+          // Split the bdd into multiple transitions
+          while (cond != bddfalse)
             {
-              spot::cube cube = tg->get_cubeset().alloc();
-              for (unsigned int i = 0; i < cs.size(); ++i)
-                cs.set_false_var(cube, i); // FIXME ! use fill!
-              tg->create_transition(st_binder[n], cube,
-                                    t.acc, st_binder[t.dst]);
+              bdd one = bdd_satone(cond);
+              cond -= one;
+              spot::cube cube =spot::satone_to_cube(one, cs, ap_binder);
+              tg->create_transition(st_binder[n], cube, t.acc,
+                                    st_binder[t.dst]);
             }
-          else
-            // Split the bdd into multiple transitions
-            while (cond != bddfalse)
-              {
-                bdd one = bdd_satone(cond);
-                cond -= one;
-                spot::cube cube =spot::satone_to_cube(one, cs, ap_binder);
-                tg->create_transition(st_binder[n], cube, t.acc,
-                                      st_binder[t.dst]);
-              }
         }
     // Must be contiguous to support swarming.
     assert(tg->succ_contiguous());
