@@ -46,11 +46,24 @@ namespace spot
   /// This function is used to transform an automaton into a turn-based game in
   /// the context of LTL reactive synthesis.
   SPOT_API twa_graph_ptr
-  split_2step(const const_twa_graph_ptr& aut, bdd input_bdd);
+  split_2step_old(const const_twa_graph_ptr& aut, bdd input_bdd);
   
+  /// \brief make each transition a 2-step transition
+  ///
+  /// Given a set of atomic propositions I, split each transition
+  ///     p -- cond --> q                cond in 2^2^AP
+  /// into a set of transitions of the form
+  ///     p -- {a} --> (p,a) -- o --> q
+  /// for each a in cond \cap 2^2^I
+  /// and where o = (cond & a) \cap 2^2^(AP - I)
+  ///
+  /// By definition, the states p are deterministic, only the states of the form
+  /// (p,a) may be non-deterministic.
+  /// This function is used to transform an automaton into a turn-based game in
+  /// the context of LTL reactive synthesis.
   SPOT_API twa_graph_ptr
-  split_2step_alt(const const_twa_graph_ptr& aut,
-                  bdd input_bdd, bdd output_bdd);
+  split_2step(const const_twa_graph_ptr& aut,
+              bdd input_bdd, bdd output_bdd);
   
   /// \brief the reverse of split_2step
   SPOT_API twa_graph_ptr

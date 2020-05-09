@@ -26,10 +26,126 @@
 #include <algorithm>
 #include <chrono>
 
+namespace{
+  // Computes and stores the restriction
+  // of each cond to the input domain and the support
+  // This is usefull as it avoids recomputation
+  // and often many conditions are mapped to the same
+  // restriction
+  struct small_cacher_t
+  {
+    //e to e_in
+    std::unordered_map<int, int> cond_hash_;
+    //e_in and support
+    std::unordered_map<int, std::pair<bdd, bdd>> cond_in_hash_;
+    
+    void fill(const spot::const_twa_graph_ptr& aut, bdd output_bdd)
+      {
+      cond_hash_.reserve((size_t) .2*aut->num_edges()+1);
+      cond_in_hash_.reserve((size_t) .2*aut->num_edges()+1);
+      
+      for (const auto& e : aut->edges())
+      {
+        // Check if stored
+        if (cond_hash_.find(e.cond.id())!=cond_hash_.end())
+          continue;
+        
+        bdd ec_in = bdd_exist(e.cond, output_bdd);
+        cond_hash_[e.cond.id()] = ec_in.id();
+        
+        if (cond_in_hash_.find(ec_in.id()) == cond_in_hash_.end())
+        {
+          bdd ec_in_s = bdd_exist(bdd_support(e.cond), output_bdd);
+          cond_in_hash_[ec_in.id()] = std::pair<bdd,bdd>(ec_in, ec_in_s);
+        }
+      }
+      }
+    
+    // Get the condition restricted to input and support of a condition
+    const std::pair<bdd,bdd>& operator[](bdd econd) const
+      {
+      return cond_in_hash_.at(cond_hash_.at(econd.id()));
+      }
+  };
+  
+  // Struct to locally store the informations of all outgoing edges
+  // of the state.
+  struct e_info_t
+  {
+    e_info_t(const spot::twa_graph::edge_storage_t& e,
+             const small_cacher_t& sm)
+        : dst(e.dst),
+          econd(e.cond),
+          einsup(sm[e.cond]),
+          acc(e.acc)
+      {
+      pre_hash = (spot::wang32_hash(dst)
+                 ^ std::hash<spot::acc_cond::mark_t>()(acc))
+                 * spot::fnv<size_t>::prime;
+      }
+    
+    inline size_t hash() const
+      {
+      return spot::wang32_hash(spot::bdd_hash()(econdout)) ^ pre_hash;
+      }
+    
+    unsigned dst;
+    bdd econd, econdout;
+    std::pair<bdd,bdd> einsup;
+    spot::acc_cond::mark_t acc;
+    size_t pre_hash;
+  };
+  // We define a order between the edges to avoid creating multiple
+  // states that in fact correspond to permutations of the order of the
+  // outgoing edges
+  struct less_info_t {
+    // Note: orders via econd
+    inline bool operator()(const e_info_t& lhs, const e_info_t& rhs)const{
+      if (lhs.dst < rhs.dst) {
+        return true;
+      } else if (lhs.dst > rhs.dst) {
+        return false;
+      }
+      if (lhs.acc < rhs.acc) {
+        return true;
+      } else if (lhs.acc > rhs.acc) {
+        return false;
+      }
+      if (lhs.econd.id() < rhs.econd.id()) {
+        return true;
+      } else if (lhs.econd.id() > rhs.econd.id()) {
+        return false;
+      }
+      return false;
+      }
+    // Note: orders via econdout
+    inline bool operator()(const e_info_t* lhs, const e_info_t* rhs)const{
+      if (lhs->dst < rhs->dst) {
+        return true;
+      } else if (lhs->dst > rhs->dst) {
+        return false;
+      }
+      if (lhs->acc < rhs->acc) {
+        return true;
+      } else if (lhs->acc > rhs->acc) {
+        return false;
+      }
+      if (lhs->econdout.id() < rhs->econdout.id()) {
+        return true;
+      } else if (lhs->econdout.id() > rhs->econdout.id()) {
+        return false;
+      }
+      return false;
+      }
+  };
+}
+
+
+
 namespace spot
 {
   twa_graph_ptr
-  split_2step(const const_twa_graph_ptr& aut, bdd input_bdd)
+  split_2step_old(const const_twa_graph_ptr& aut, bdd input_bdd)
   {
     auto split = make_twa_graph(aut->get_dict());
     split->copy_ap_of(aut);
@@ -120,7 +236,7 @@ namespace spot
   }
   
   twa_graph_ptr
-  split_2step_alt(const const_twa_graph_ptr& aut, bdd input_bdd, bdd output_bdd)
+  split_2step(const const_twa_graph_ptr& aut, bdd input_bdd, bdd output_bdd)
   {
     auto split = make_twa_graph(aut->get_dict());
     split->copy_ap_of(aut);
@@ -135,115 +251,11 @@ namespace spot
 //    std::unordered_map<unsigned, std::pair<unsigned,bdd>> env_edge_hash;
 //    env_edge_hash.reserve(10);
     
-    // Computes and stores the restriction
-    // of each cond to the input domain and the support
-    struct small_cacher_t
-    {
-      //e to e_in
-      std::unordered_map<int, int> cond_hash_;
-      //e_in and support
-      std::unordered_map<int, std::pair<bdd, bdd>> cond_in_hash_;
-      
-      void fill(const const_twa_graph_ptr& aut, bdd output_bdd)
-      {
-        cond_hash_.reserve((size_t) .2*aut->num_edges()+1);
-        cond_in_hash_.reserve((size_t) .2*aut->num_edges()+1);
-        
-        for (const auto& e : aut->edges())
-        {
-          // Check if stored
-          if (cond_hash_.find(e.cond.id())!=cond_hash_.end())
-            continue;
-          
-          bdd ec_in = bdd_exist(e.cond, output_bdd);
-          cond_hash_[e.cond.id()] = ec_in.id();
-          
-          if (cond_in_hash_.find(ec_in.id()) == cond_in_hash_.end())
-          {
-            bdd ec_in_s = bdd_exist(bdd_support(e.cond), output_bdd);
-            cond_in_hash_[ec_in.id()] = std::pair<bdd,bdd>(ec_in, ec_in_s);
-          }
-        }
-      }
-      
-      // Get the condition restricted to input and support of a condition
-      const std::pair<bdd,bdd>& operator[](bdd econd) const
-      {
-        return cond_in_hash_.at(cond_hash_.at(econd.id()));
-      }
-    } small_cacher;
-    
+    small_cacher_t small_cacher;
     small_cacher.fill(aut, output_bdd);
     
-    // Struct to locally store the informations of all outgoing edges
-    // of state.
-    struct e_info_t
-    {
-      e_info_t(const twa_graph::edge_storage_t& e,
-               const small_cacher_t& sm)
-          : dst(e.dst),
-            econd(e.cond),
-            einsup(sm[e.cond]),
-            acc(e.acc)
-      {
-        pre_hash = (wang32_hash(dst) ^ std::hash<acc_cond::mark_t>()(acc))
-                    * fnv<size_t>::prime;
-      }
-      
-      inline size_t hash() const
-      {
-        return wang32_hash(bdd_hash()(econdout)) ^ pre_hash;
-      }
-      
-      unsigned dst;
-      bdd econd, econdout;
-      std::pair<bdd,bdd> einsup;
-      acc_cond::mark_t acc;
-      size_t pre_hash;
-    };
-    // We define a order between the edges to avoid creating multiple
-    // states that in fact correspond to permutations of the order of the
-    // outgoing edges
-    struct less_info_t {
-      // Note: orders via econd
-      inline bool operator()(const e_info_t& lhs, const e_info_t& rhs)const{
-        if (lhs.dst < rhs.dst) {
-          return true;
-        } else if (lhs.dst > rhs.dst) {
-          return false;
-        }
-        if (lhs.acc < rhs.acc) {
-          return true;
-        } else if (lhs.acc > rhs.acc) {
-          return false;
-        }
-        if (lhs.econd.id() < rhs.econd.id()) {
-          return true;
-        } else if (lhs.econd.id() > rhs.econd.id()) {
-          return false;
-        }
-        return false;
-      }
-      // Note: orders via econdout
-      inline bool operator()(const e_info_t* lhs, const e_info_t* rhs)const{
-        if (lhs->dst < rhs->dst) {
-          return true;
-        } else if (lhs->dst > rhs->dst) {
-          return false;
-        }
-        if (lhs->acc < rhs->acc) {
-          return true;
-        } else if (lhs->acc > rhs->acc) {
-          return false;
-        }
-        if (lhs->econdout.id() < rhs->econdout.id()) {
-          return true;
-        } else if (lhs->econdout.id() > rhs->econdout.id()) {
-          return false;
-        }
-        return false;
-      }
-    }less_info;
+    // A order for cached edges
+    less_info_t less_info;
     
     // Cache vector for all outgoing edges of this states
     std::vector<e_info_t> e_cache;
@@ -282,7 +294,8 @@ namespace spot
         dests.clear();
         for (auto& e_info : e_cache)
           // implies is faster than and
-          if (bdd_implies(one_letter, e_info.einsup.first)) {
+          if (bdd_implies(one_letter, e_info.einsup.first))
+          {
             e_info.econdout =
                 bdd_appex(e_info.econd, one_letter, bddop_and, input_bdd);
             dests.push_back(&e_info);
@@ -291,10 +304,9 @@ namespace spot
         
         // # dests is almost sorted -> insertion sort
         if (dests.size()>1)
-          for (auto it = dests.begin(); it != dests.end(); ++it) {
+          for (auto it = dests.begin(); it != dests.end(); ++it)
             std::rotate(std::upper_bound(dests.begin(), it, *it,less_info),
                         it, it + 1);
-          }
         
         bool to_add = true;
         size_t h = fnv<size_t>::init;
@@ -318,7 +330,8 @@ namespace spot
           {
             to_add = false;
             auto it = env_edge_hash.find(i);
-            if (it != env_edge_hash.end()) {
+            if (it != env_edge_hash.end())
+            {
               it->second.second |= one_letter;
             } else {
               env_edge_hash.emplace(i,
