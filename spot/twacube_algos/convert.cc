@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Developpement de
+// Copyright (C) 2015, 2016, 2018, 2020 Laboratoire de Recherche et Developpement de
 // l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -62,6 +62,9 @@ namespace spot
 
   spot::twacube_ptr twa_to_twacube(const spot::const_twa_graph_ptr aut)
   {
+    if (aut == nullptr)
+      return nullptr;
+
     // Compute the necessary binder and extract atomic propositions
     std::unordered_map<int, int> ap_binder;
     std::vector<std::string>* aps = extract_aps(aut, ap_binder);
