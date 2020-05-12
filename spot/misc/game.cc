@@ -82,7 +82,11 @@ namespace{
       if (e.acc.max_set() == 0)
         throw std::runtime_error("arena must be colorized");
       if (owner[e.src] == owner[e.dst])
+      {
+        std::cerr<<owner[e.src]<<" : "<<e.src<<", "<<e.dst<<
+                 "; "<<arena->num_states()<<std::endl;
         throw std::runtime_error("Inconsistent arena");
+      }
     }
     for (unsigned v = 0; v < arena->num_states(); v++)
       if (arena->out(v).begin() == arena->out(v).end())
@@ -359,7 +363,7 @@ namespace spot
           if (!subgame_info.is_empty) // If empty, the scc was trivially solved
           {
             if (subgame_info.is_one_parity){
-              one_par_subgame_solver(subgame_info);
+              one_par_subgame_solver(subgame_info, max_abs_par_);
             }else {
               max_abs_par_ = *subgame_info.all_parities.begin();
               w_stack_.emplace_back(0, 0, 0, max_abs_par_);
@@ -384,8 +388,8 @@ namespace spot
   
         free(info_);
   
-        std::cerr << "callcount " << call_count_ << " direct solves " <<
-        direct_solve_count_ << " one parities " << one_parity_count_ << "\n";
+//        std::cerr << "callcount " << call_count_ << " direct solves " <<
+//        direct_solve_count_ << " one parities " << one_parity_count_ << "\n";
         
         clean_up();
         return w[arena->get_init_state_number()];
@@ -744,7 +748,7 @@ namespace spot
               if (subgame_info.is_one_parity)
               {
                 // Can be trivially solved
-                one_par_subgame_solver(subgame_info);
+                one_par_subgame_solver(subgame_info, this_work.max_par);
                 break;
               }
               
@@ -853,8 +857,10 @@ namespace spot
       }
       
       // Dedicated solver for special cases
-      inline void one_par_subgame_solver(const subgame_info_t& info)
+      inline void one_par_subgame_solver(const subgame_info_t& info,
+                                         unsigned max_par)
       {
+        SPOT_ASSERT(info.all_parities.size()==1);
         // The entire subgame is won by the player of the only parity
         // Any edge will do
         // todo optim for smaller circuit
@@ -864,6 +870,7 @@ namespace spot
         unsigned rd = rd_;
         unsigned one_par = *info.all_parities.begin();
         bool winner = one_par&1;
+        SPOT_ASSERT((0<one_par) && (one_par<=max_par));
   
         for (unsigned v : c_scc_->states())
         {
@@ -876,9 +883,10 @@ namespace spot
           SPOT_ASSERT(s_[v] == -1);
           for (const auto& e : arena_->out(v))
           {
-            if (subgame_[e.dst] >= rd)
+            unsigned this_par = e.acc.max_set() - 1;
+            if ((subgame_[e.dst] >= rd) && (this_par<=max_par))
             {
-              SPOT_ASSERT((e.acc.max_set() - 1) == one_par);
+              SPOT_ASSERT( this_par == one_par);
               // Ok for strat
               s_[v] = arena_->edge_number(e);
               break;
@@ -1010,18 +1018,21 @@ namespace spot
     
     std::vector<bool> seen(arena->num_states(), false);
     std::vector<unsigned> todo({arena->get_init_state_number()});
-    std::vector<bool> owner(arena->num_states(), false);
+    std::vector<bool> owner(arena->num_states()+2, false);
     owner[arena->get_init_state_number()] = false;
+    
+    unsigned sink_env=0, sink_con=0;
     
     while (!todo.empty())
     {
       unsigned src = todo.back();
       todo.pop_back();
       seen[src] = true;
-      bool has_succ = false;
+      bdd missing = bddtrue;
       for (const auto &e: arena->out(src))
       {
-        has_succ = true;
+        if (!owner[src])
+          missing -= e.cond;
         if (!seen[e.dst])
         {
           owner[e.dst] = !owner[src];
@@ -1031,8 +1042,21 @@ namespace spot
                       && "Illformed arena!");
         }
       }
-      assert(has_succ);
+      if (!owner[src] && (missing != bddfalse))
+      {
+        if (sink_env == 0)
+        {
+          sink_env = arena->new_state();
+          sink_con = arena->new_state();
+          arena->new_edge(sink_con, sink_env, bddtrue, um.second);
+          arena->new_edge(sink_env, sink_con, bddtrue, um.second);
+          owner.at(sink_env) = false;
+          owner.at(sink_con) = true;
+        }
+        arena->new_edge(src, sink_con, missing, um.second);
+      }
     }
+    owner.resize(arena->num_states());
     // set them in the aut
     arena->set_named_prop("owner",
                           new std::vector<bool>(std::move(owner)));
@@ -1080,7 +1104,14 @@ namespace spot
         *arena->get_named_prop<pg::region_t>("winning_region");
     pg::strategy_t& s =
         *arena->get_named_prop<pg::strategy_t>("strategy");
-  
+    
+    // If we purge, unsplit but not keep_acc we store the distinct
+    // parts of the condition as chances are we are using ltlsynt
+    bool store_e = do_purge && unsplit && !keep_acc;
+    std::vector<std::array<bdd,2>> e_conds;
+    if (store_e)
+      e_conds.push_back({bddfalse, bddfalse}); //Zero edge
+    
     auto aut = spot::make_twa_graph(arena->get_dict());
     aut->copy_ap_of(arena);
     if (keep_acc){
@@ -1112,21 +1143,33 @@ namespace spot
         // Player strat
         // Only colors on player edge are important,
         // as env edges have been colorized afterwards
+        // todo leave choice to aiger in order to minimize and-gates
         auto &e2 = arena->edge_storage(s[e1.dst]);
         bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
         if (pg2aut[e2.dst] == unseen_mark) {
           pg2aut[e2.dst] = aut->new_state();
           todo.push_back(e2.dst);
         }
-        aut->new_edge(unsplit ? pg2aut[v] : pg2aut[e1.dst], pg2aut[e2.dst],
-                      unsplit ? (e1.cond & out):out,
-                        keep_acc ? e2.acc : acc_cond::mark_t({}));
+        unsigned e_idx =
+            aut->new_edge(unsplit ? pg2aut[v] : pg2aut[e1.dst],
+                          pg2aut[e2.dst],
+                          unsplit ? (e1.cond & out):out,
+                          keep_acc ? e2.acc : acc_cond::mark_t({}));
+        
+        if (store_e)
+        {
+          SPOT_ASSERT(e_idx == e_conds.size());
+          e_conds.push_back({e1.cond, out});
+        }
       }
     }
     if (do_purge) {
       aut->purge_dead_states();
     }
     aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
+    aut->set_named_prop("synthesis-econds",
+                        new std::vector<std::array<bdd,2>>(std::move(e_conds)));
+    
     return aut;
   }
   

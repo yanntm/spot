@@ -35,37 +35,31 @@ namespace{
   struct small_cacher_t
   {
     //e to e_in
-    std::unordered_map<int, int> cond_hash_;
-    //e_in and support
-    std::unordered_map<int, std::pair<bdd, bdd>> cond_in_hash_;
-    
+    std::unordered_map<bdd, std::pair<bdd, bdd>, spot::bdd_hash>
+        cond_hash_;
+  
     void fill(const spot::const_twa_graph_ptr& aut, bdd output_bdd)
-      {
+    {
       cond_hash_.reserve((size_t) .2*aut->num_edges()+1);
-      cond_in_hash_.reserve((size_t) .2*aut->num_edges()+1);
       
       for (const auto& e : aut->edges())
       {
         // Check if stored
-        if (cond_hash_.find(e.cond.id())!=cond_hash_.end())
+        if (cond_hash_.find(e.cond)!=cond_hash_.end())
           continue;
-        
-        bdd ec_in = bdd_exist(e.cond, output_bdd);
-        cond_hash_[e.cond.id()] = ec_in.id();
-        
-        if (cond_in_hash_.find(ec_in.id()) == cond_in_hash_.end())
-        {
-          bdd ec_in_s = bdd_exist(bdd_support(e.cond), output_bdd);
-          cond_in_hash_[ec_in.id()] = std::pair<bdd,bdd>(ec_in, ec_in_s);
-        }
+  
+        cond_hash_[e.cond] =
+            std::pair<bdd,bdd>(
+                bdd_exist(e.cond, output_bdd),
+                bdd_exist(bdd_support(e.cond), output_bdd));
       }
-      }
+    }
     
     // Get the condition restricted to input and support of a condition
     const std::pair<bdd,bdd>& operator[](bdd econd) const
-      {
-      return cond_in_hash_.at(cond_hash_.at(econd.id()));
-      }
+    {
+      return cond_hash_.at(econd);
+    }
   };
   
   // Struct to locally store the informations of all outgoing edges
@@ -299,9 +293,10 @@ namespace spot
             e_info.econdout =
                 bdd_appex(e_info.econd, one_letter, bddop_and, input_bdd);
             dests.push_back(&e_info);
-            e_info.einsup.first -= one_letter; // # 10 This sometimes helps
+            SPOT_ASSERT(e_info.econdout != bddfalse);
+//            e_info.einsup.first -= one_letter; // # 10 This sometimes helps
           }
-        
+        SPOT_ASSERT(!dests.empty());
         // # dests is almost sorted -> insertion sort
         if (dests.size()>1)
           for (auto it = dests.begin(); it != dests.end(); ++it)

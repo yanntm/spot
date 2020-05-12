@@ -64,6 +64,7 @@ enum
   OPT_OUTPUT,
   OPT_PRINT,
   OPT_PRINT_AIGER,
+  OPT_PRINT_AIGER2,
   OPT_REAL,
   OPT_VERBOSE,
   OPT_SMALL_LOW,
@@ -104,6 +105,8 @@ static const argp_option options[] =
       "realizability only, do not compute a winning strategy", 0},
     { "aiger", OPT_PRINT_AIGER, nullptr, 0,
       "prints the winning strategy as an AIGER circuit", 0},
+    { "aiger2", OPT_PRINT_AIGER2, nullptr, 0,
+      "prints the winning strategy as an AIGER circuit", 0},
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "verbose mode", -1 },
     { "verify",        OPT_VERIFY,      nullptr,     0,
@@ -142,6 +145,7 @@ static const char* opt_csv = nullptr;
 static bool opt_print_pg = false;
 static bool opt_real = false;
 static bool opt_print_aiger = false;
+static bool opt_print_aiger2 = false;
 static bool opt_old = false;
 static bool opt_verify = false;
 static bool opt_small_low = false;
@@ -658,11 +662,16 @@ namespace
           }
           
           // output the winning strategy
-          if (opt_print_aiger)
-          {
+          if (opt_print_aiger) {
             if (want_time)
               sw.start();
             spot::print_aiger(std::cout, strat_aut);
+            if (want_time)
+              aut2aiger_time = sw.stop();
+          }else if (opt_print_aiger2){
+            if (want_time)
+              sw.start();
+            spot::print_aiger(std::cout, strat_aut); // Prob when rebasing
             if (want_time)
               aut2aiger_time = sw.stop();
           } else {
@@ -729,6 +738,9 @@ parse_opt(int key, char* arg, struct argp_state*)
           break;
         case OPT_PRINT_AIGER:
           opt_print_aiger = true;
+          break;
+        case OPT_PRINT_AIGER2:
+          opt_print_aiger2 = true;
           break;
         case OPT_REAL:
           opt_real = true;
