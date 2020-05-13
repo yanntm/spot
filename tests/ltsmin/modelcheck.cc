@@ -470,7 +470,7 @@ static int checked_main()
         {
           std::vector<std::string> aps = {};
           if (propcube != nullptr)
-            aps = propcube->get_ap();
+            aps = propcube->ap();
 
           modelcube = spot::ltsmin_model::load(mc_options.model)
             .kripkecube(aps, deadf, mc_options.compress, mc_options.nb_threads);

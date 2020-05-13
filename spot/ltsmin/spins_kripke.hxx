@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018, 2020 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -302,7 +302,7 @@ namespace spot
   }
 
   const std::vector<std::string>
-  kripkecube<cspins_state, cspins_iterator>::get_ap()
+  kripkecube<cspins_state, cspins_iterator>::ap()
   {
     return aps_;
   }
