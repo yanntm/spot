@@ -44,7 +44,6 @@
 #include <thread>
 #include <spot/twacube/twacube.hh>
 #include <spot/twacube_algos/convert.hh>
-#include <spot/mc/ec.hh>
 
 const char argp_program_doc[] =
 "Process model and formula to check wether a "
