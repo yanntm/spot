@@ -116,11 +116,16 @@ checked_main()
   auto parser = spot::automaton_stream_parser("/dev/stdin");
 
   std::cout << "formula,"
-            << "nb_states,"
-            << "nb_edges,"
-            << "nb_states_deterministic,"
-            << "nb_edges_deterministic,"
-            << "walltime"
+            << "twa_nb_states,"
+            << "twa_nb_edges,"
+            << "twa_nb_states_deterministic,"
+            << "twa_nb_edges_deterministic,"
+            << "twacube_nb_states,"
+            << "twacube_nb_edges,"
+            << "twacube_nb_states_deterministic,"
+            << "twacube_nb_edges_deterministic,"
+            << "walltime_twa,"
+            << "walltime_twacube"
             << std::endl;
 
   spot::parsed_aut_ptr res = nullptr;
@@ -133,34 +138,42 @@ checked_main()
 
       spot::timer_map tm;
 
+      spot::twa_graph_ptr det_aut = nullptr;
+      tm.start("determinize twa");
+      {
+        det_aut = tgba_determinize2(aut);
+      }
+      tm.stop("determinize twa");
+
       spot::twacube_ptr cube_aut = twa_to_twacube(aut);
       spot::twacube_ptr cube_det_aut = nullptr;
-      tm.start("determinize");
+
+      tm.start("determinize twacube");
       {
         cube_det_aut = twacube_determinize(cube_aut);
       }
-      tm.stop("determinize");
+      tm.stop("determinize twacube");
 
-      if (!spot::is_deterministic(twacube_to_twa(cube_det_aut)))
-        {
-          std::cout << "determinization failed" << std::endl;
-          exit_code = 1;
-          break;
-        }
+      auto duration_twa = tm.timer("determinize twa").walltime();
+      auto duration_twacube = tm.timer("determinize twacube").walltime();
 
-      auto duration = tm.timer("determinize").walltime();
-      if (duration >= mc_options.min * size_t(1000) && cube_det_aut != nullptr)
+      if (duration_twacube >= mc_options.min * size_t(1000) && cube_det_aut != nullptr)
         {
           count++;
 
           auto formula = *aut->get_named_prop<std::string>("automaton-name");
 
           std::cout << formula << ','
+                    << aut->num_states() << ','
+                    << aut->num_edges() << ','
+                    << det_aut->num_states() << ','
+                    << det_aut->num_edges() << ','
                     << cube_aut->num_states() << ','
                     << cube_aut->num_edges() << ','
                     << cube_det_aut->num_states() << ','
                     << cube_det_aut->num_edges() << ','
-                    << duration
+                    << duration_twa << ','
+                    << duration_twacube
                     << std::endl;
 
           if (mc_options.wanted != 0 && count >= mc_options.wanted)
