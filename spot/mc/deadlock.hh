@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017, 2018, 2019 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018, 2019, 2020 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -32,22 +32,12 @@
 
 namespace spot
 {
-  /// \brief This object is returned by the algorithm below
-  struct SPOT_API deadlock_stats
-  {
-    unsigned states;            ///< \brief Number of states visited
-    unsigned transitions;       ///< \brief Number of transitions visited
-    unsigned instack_dfs;       ///< \brief Maximum DFS stack
-    bool has_deadlock;          ///< \brief Does the model contains a deadlock
-    unsigned walltime;          ///< \brief Walltime for this thread in ms
-  };
-
   /// \brief This class aims to explore a model to detect wether it
   /// contains a deadlock. This deadlock detection performs a DFS traversal
   /// sharing information shared among multiple threads.
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class swarmed_deadlock
+  class SPOT_API swarmed_deadlock
   {
     /// \brief Describes the status of a state
     enum st_status
@@ -94,9 +84,18 @@ namespace spot
     ///< \brief Shortcut to ease shared map manipulation
     using shared_map = brick::hashset::FastConcurrent <deadlock_pair*,
                                                        pair_hasher>;
+    using shared_struct = shared_map;
+
+    static shared_struct* make_shared_st(shared_map, unsigned)
+    {
+      return nullptr; // Useless
+    }
 
     swarmed_deadlock(kripkecube<State, SuccIterator>& sys,
-                     shared_map& map, unsigned tid, std::atomic<bool>& stop):
+                     twacube_ptr, /* useless here */
+                     shared_map& map, shared_struct* /* useless here */,
+                     unsigned tid,
+                     std::atomic<bool>& stop):
       sys_(sys), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
       p_(sizeof(int)*std::thread::hardware_concurrency()),
@@ -106,6 +105,7 @@ namespace spot
       static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
                                              State, SuccIterator>::value,
                     "error: does not match the kripkecube requirements");
+      SPOT_ASSERT(nb_th_ > tid);
     }
 
     virtual ~swarmed_deadlock()
@@ -115,6 +115,46 @@ namespace spot
           sys_.recycle(todo_.back().it, tid_);
           todo_.pop_back();
         }
+    }
+
+    void run()
+    {
+      setup();
+      State initial = sys_.initial(tid_);
+      if (SPOT_LIKELY(push(initial)))
+        {
+          todo_.push_back({initial, sys_.succ(initial, tid_), transitions_});
+        }
+      while (!todo_.empty() && !stop_.load(std::memory_order_relaxed))
+        {
+          if (todo_.back().it->done())
+            {
+              if (SPOT_LIKELY(pop()))
+                {
+                  deadlock_ = todo_.back().current_tr == transitions_;
+                  if (deadlock_)
+                    break;
+                  sys_.recycle(todo_.back().it, tid_);
+                  todo_.pop_back();
+                }
+            }
+          else
+            {
+              ++transitions_;
+              State dst = todo_.back().it->state();
+
+              if (SPOT_LIKELY(push(dst)))
+                {
+                  todo_.back().it->next();
+                  todo_.push_back({dst, sys_.succ(dst, tid_), transitions_});
+                }
+              else
+                {
+                  todo_.back().it->next();
+                }
+            }
+        }
+      finalize();
     }
 
     void setup()
@@ -187,72 +227,45 @@ namespace spot
       return transitions_;
     }
 
-    void run()
-    {
-      setup();
-      State initial = sys_.initial(tid_);
-      if (SPOT_LIKELY(push(initial)))
-        {
-          todo_.push_back({initial, sys_.succ(initial, tid_), transitions_});
-        }
-      while (!todo_.empty() && !stop_.load(std::memory_order_relaxed))
-        {
-          if (todo_.back().it->done())
-            {
-              if (SPOT_LIKELY(pop()))
-                {
-                  deadlock_ = todo_.back().current_tr == transitions_;
-                  if (deadlock_)
-                    break;
-                  sys_.recycle(todo_.back().it, tid_);
-                  todo_.pop_back();
-                }
-            }
-          else
-            {
-              ++transitions_;
-              State dst = todo_.back().it->state();
-
-              if (SPOT_LIKELY(push(dst)))
-                {
-                  todo_.back().it->next();
-                  todo_.push_back({dst, sys_.succ(dst, tid_), transitions_});
-                }
-              else
-                {
-                  todo_.back().it->next();
-                }
-            }
-        }
-      finalize();
-    }
-
-    bool has_deadlock()
-    {
-      return deadlock_;
-    }
-
     unsigned walltime()
     {
       return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
     }
 
-    deadlock_stats stats()
+    std::string name()
     {
-      return {states(), transitions(), dfs_, has_deadlock(), walltime()};
+      return "deadlock";
+    }
+
+    int sccs()
+    {
+      return -1;
+    }
+
+    mc_rvalue result()
+    {
+      return deadlock_ ? mc_rvalue::DEADLOCK : mc_rvalue::NO_DEADLOCK;
+    }
+
+    std::string trace()
+    {
+      std::string result;
+      for (auto& e: todo_)
+        result += sys_.to_string(e.s, tid_);
+      return result;
     }
 
   private:
-    struct todo__element
+    struct todo_element
     {
       State s;
       SuccIterator* it;
       unsigned current_tr;
     };
     kripkecube<State, SuccIterator>& sys_; ///< \brief The system to check
-    std::vector<todo__element> todo_;      ///< \brief The DFS stack
-    unsigned transitions_ = 0;         ///< \brief Number of transitions
-    unsigned tid_;                     ///< \brief Thread's current ID
+    std::vector<todo_element> todo_;       ///< \brief The DFS stack
+    unsigned transitions_ = 0;             ///< \brief Number of transitions
+    unsigned tid_;                         ///< \brief Thread's current ID
     shared_map map_;                       ///< \brief Map shared by threads
     spot::timer_map tm_;                   ///< \brief Time execution
     unsigned states_ = 0;                  ///< \brief Number of states

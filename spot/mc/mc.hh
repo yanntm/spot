@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017, 2019 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2019, 2020 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -19,398 +19,133 @@
 
 #pragma once
 
-#include <functional>
 #include <string>
-#include <thread>
-#include <tuple>
 #include <vector>
 #include <utility>
-#include <spot/kripke/kripke.hh>
-#include <spot/mc/ec.hh>
-#include <spot/mc/deadlock.hh>
-#include <spot/mc/cndfs.hh>
-#include <spot/mc/bloemen.hh>
-#include <spot/mc/bloemen_ec.hh>
-#include <spot/misc/common.hh>
-#include <spot/misc/timer.hh>
 
 namespace spot
 {
-  /// \brief Check for the emptiness between a system and a twa.
-  /// Return a pair containing a boolean indicating wether a counterexample
-  /// has been found and a string representing the counterexample if the
-  /// computation have been required
-  template<typename kripke_ptr, typename State,
-           typename Iterator, typename Hash, typename Equal>
-  static std::tuple<bool, std::string, std::vector<istats>>
-  modelcheck(kripke_ptr sys, spot::twacube_ptr twa, bool compute_ctrx = false)
+  /// \brief The list of parallel model-checking algorithms available
+  enum SPOT_API class mc_algorithm
+    {
+     BLOEMEN_EC,    ///< \brief Bloemen.16.hvc emptiness check
+     BLOEMEN_SCC,   ///< \brief Bloemen.16.ppopp SCC computation
+     CNDFS,         ///< \brief Evangelista.12.atva emptiness check
+     DEADLOCK,      ///< \brief Check wether there is a deadlock
+     SWARMING,       ///< \brief Holzmann.11.ieee applied to renault.13.lpar
+    };
+
+  enum SPOT_API class mc_rvalue
+    {
+     DEADLOCK,                  ///< \brief A deadlock has been found
+     EMPTY,                     ///< \brief The product is empty
+     FAILURE,                    ///< \brief The Algorithm finished abnormally
+     NO_DEADLOCK,               ///< \brief No deadlock has been found
+     NOT_EMPTY,                 ///< \brief The product is not empty
+     SUCCESS,                   ///< \brief The Algorithm finished normally
+    };
+
+  /// \brief This structure contains, for each thread, the collected information
+  /// during the traversal
+  struct SPOT_API ec_stats
   {
-    // Must ensure that the two automata are working on the same
-    // set of atomic propositions.
-    SPOT_ASSERT(sys->get_ap().size() == twa->get_ap().size());
-    for (unsigned int i = 0; i < sys->get_ap().size(); ++i)
-      SPOT_ASSERT(sys->get_ap()[i].compare(twa->get_ap()[i]) == 0);
+   std::vector<std::string> name;     ///< \brief The name of the algorithm used
+   std::vector<unsigned> walltime;    ///< \brief Walltime for this thread in ms
+   std::vector<unsigned> states;      ///< \brief Number of states visited
+   std::vector<unsigned> transitions; ///< \brief Number of transitions visited
+   std::vector<int> sccs;             ///< \brief Number of SCCs or -1
+   std::vector<mc_rvalue> value;      ///< \brief The return status
+   std::string trace;                 ///< \brief The output trace
+  };
 
-    bool stop = false;
-    std::vector<ec_renault13lpar<State, Iterator, Hash, Equal>> ecs;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      ecs.push_back({*sys, twa, i, stop});
-
-    std::vector<std::thread> threads;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads.push_back
-        (std::thread(&ec_renault13lpar<State, Iterator, Hash, Equal>::run,
-                     &ecs[i]));
-
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      threads[i].join();
-
-    bool has_ctrx = false;
-    std::string trace = "";
-    std::vector<istats> stats;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
+  SPOT_API std::ostream& operator<<(std::ostream& os, const mc_algorithm& ma)
+  {
+    switch (ma)
       {
-        has_ctrx |= ecs[i].counterexample_found();
-        if (compute_ctrx && ecs[i].counterexample_found()
-            && trace.compare("") == 0)
-          trace = ecs[i].trace(); // Pick randomly one !
-        stats.push_back(ecs[i].stats());
+      case mc_algorithm::BLOEMEN_EC:
+        os << "bloemen_ec";  break;
+      case mc_algorithm::BLOEMEN_SCC:
+        os << "bloemen_scc";  break;
+      case mc_algorithm::CNDFS:
+        os << "cndfs";  break;
+      case mc_algorithm::DEADLOCK:
+        os << "deadlock";  break;
+      case mc_algorithm::SWARMING:
+        os << "swarming";  break;
       }
-    return std::make_tuple(has_ctrx, trace, stats);
+    return os;
   }
 
-  /// \bief Check wether the system contains a deadlock. The algorithm
-  /// spawns multiple threads performing a classical swarming DFS. As
-  /// soon one thread detects a deadlock all the other threads are stopped.
-  template<typename kripke_ptr, typename State,
-           typename Iterator, typename Hash, typename Equal>
-  static std::tuple<bool, std::vector<deadlock_stats>, spot::timer_map>
-  has_deadlock(kripke_ptr sys)
+  SPOT_API std::ostream& operator<<(std::ostream& os, const mc_rvalue& mr)
   {
-    spot::timer_map tm;
-    using algo_name = spot::swarmed_deadlock<State, Iterator, Hash, Equal>;
-
-    unsigned  nbth = sys->get_threads();
-    typename algo_name::shared_map map;
-    std::atomic<bool> stop(false);
-
-    tm.start("Initialisation");
-    std::vector<algo_name*> swarmed(nbth);
-    for (unsigned i = 0; i < nbth; ++i)
-      swarmed[i] = new algo_name(*sys, map, i, stop);
-    tm.stop("Initialisation");
-
-    std::mutex iomutex;
-    std::atomic<bool> barrier(true);
-    std::vector<std::thread> threads(nbth);
-    for (unsigned i = 0; i < nbth; ++i)
+    switch (mr)
       {
-        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
-        {
-#if defined(unix) || defined(__unix__) || defined(__unix)
-            {
-              std::lock_guard<std::mutex> iolock(iomutex);
-              std::cout << "Thread #" << i
-                        << ": on CPU " << sched_getcpu() << '\n';
-            }
-#endif
-
-            // Wait all threads to be instanciated.
-            while (barrier)
-              continue;
-            swarmed[i]->run();
-         });
-
-#if defined(unix) || defined(__unix__) || defined(__unix)
-        //  Pins threads to a dedicated core.
-        cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(i, &cpuset);
-        int rc = pthread_setaffinity_np(threads[i].native_handle(),
-                                        sizeof(cpu_set_t), &cpuset);
-        if (rc != 0)
-          {
-            std::lock_guard<std::mutex> iolock(iomutex);
-            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
-          }
-#endif
+      case mc_rvalue::DEADLOCK:
+        os << "deadlock";  break;
+      case mc_rvalue::EMPTY:
+        os << "empty"; break;
+      case mc_rvalue::FAILURE:
+        os << "failure";  break;
+      case mc_rvalue::NO_DEADLOCK:
+        os << "no_deadlock"; break;
+      case mc_rvalue::NOT_EMPTY:
+        os << "not_empty";  break;
+      case mc_rvalue::SUCCESS:
+        os << "success"; break;
       }
-
-    tm.start("Run");
-    barrier.store(false);
-
-    for (auto& t : threads)
-      t.join();
-    tm.stop("Run");
-
-    std::vector<deadlock_stats> stats;
-    bool has_deadlock = false;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      {
-        has_deadlock |= swarmed[i]->has_deadlock();
-        stats.push_back(swarmed[i]->stats());
-      }
-
-    for (unsigned i = 0; i < nbth; ++i)
-      delete swarmed[i];
-
-    return std::make_tuple(has_deadlock, stats, tm);
+    return os;
   }
 
-  /// \brief Perform the SCC computation algorithm of bloemen.16.ppopp
-  template<typename kripke_ptr, typename State,
-           typename Iterator, typename Hash, typename Equal>
-  static std::pair<std::vector<bloemen_stats>, spot::timer_map>
-  bloemen(kripke_ptr sys)
+  SPOT_API std::ostream& operator<<(std::ostream& os, const ec_stats& es)
   {
-    spot::timer_map tm;
-    using algo_name = spot::swarmed_bloemen<State, Iterator, Hash, Equal>;
-    using uf_name = spot::iterable_uf<State, Hash, Equal>;
-
-    unsigned  nbth = sys->get_threads();
-    typename uf_name::shared_map map;
-
-    tm.start("Initialisation");
-    std::vector<algo_name*> swarmed(nbth);
-    std::vector<uf_name*> ufs(nbth);
-    for (unsigned i = 0; i < nbth; ++i)
+    for (unsigned i = 0; i < es.name.size(); ++i)
       {
-        ufs[i] = new uf_name(map, i);
-        swarmed[i] = new algo_name(*sys, *ufs[i], i);
+        os << "---- Thread number:\t" << i << '\n'
+           << "   - Algorithm:\t\t" << es.name[i] << '\n'
+           << "   - Walltime (ms):\t" << es.walltime[i] <<'\n'
+           << "   - States:\t\t" << es.states[i] << '\n'
+           << "   - Transitions:\t" << es.transitions[i] << '\n'
+           << "   - Result:\t\t" << es.value[i] << '\n';
+
+        os << "CSV: tid,algorithm,walltime,states,transitions,result\n"
+           << "@th_" << i << ',' << es.name[i] << ',' << es.walltime[i] << ','
+           << es.states[i] << ',' << es.transitions[i] << ','
+           << es.value[i] << "\n\n";
       }
-    tm.stop("Initialisation");
-
-    std::mutex iomutex;
-    std::atomic<bool> barrier(true);
-    std::vector<std::thread> threads(nbth);
-    for (unsigned i = 0; i < nbth; ++i)
-      {
-        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
-        {
-#if defined(unix) || defined(__unix__) || defined(__unix)
-            {
-              std::lock_guard<std::mutex> iolock(iomutex);
-              std::cout << "Thread #" << i
-                        << ": on CPU " << sched_getcpu() << '\n';
-            }
-#endif
-
-            // Wait all threads to be instanciated.
-            while (barrier)
-              continue;
-            swarmed[i]->run();
-         });
-
-#if defined(unix) || defined(__unix__) || defined(__unix)
-        //  Pins threads to a dedicated core.
-        cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(i, &cpuset);
-        int rc = pthread_setaffinity_np(threads[i].native_handle(),
-                                        sizeof(cpu_set_t), &cpuset);
-        if (rc != 0)
-          {
-            std::lock_guard<std::mutex> iolock(iomutex);
-            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
-          }
-#endif
-      }
-
-    tm.start("Run");
-    barrier.store(false);
-
-    for (auto& t : threads)
-      t.join();
-    tm.stop("Run");
-
-    std::vector<bloemen_stats> stats;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      stats.push_back(swarmed[i]->stats());
-
-    for (unsigned i = 0; i < nbth; ++i)
-      {
-        delete swarmed[i];
-        delete ufs[i];
-      }
-    return std::make_pair(stats, tm);
+    return os;
   }
 
-  /// \brief Perform the SCC computation algorithm of bloemen.16.ppopp
-  /// with emptiness check
-  template<typename kripke_ptr, typename State,
-           typename Iterator, typename Hash, typename Equal>
-  static std::tuple<bool,
-                    std::string,
-                    std::vector<bloemen_ec_stats>,
-                    spot::timer_map>
-  bloemen_ec(kripke_ptr sys, spot::twacube_ptr prop, bool compute_ctrx = false)
+  /// \brief This function helps to find the output value from a set of threads
+  /// that may have different values.
+  SPOT_API const mc_rvalue operator|(const mc_rvalue& lhs, const mc_rvalue& rhs)
   {
-    spot::timer_map tm;
-    using algo_name = spot::swarmed_bloemen_ec<State, Iterator, Hash, Equal>;
-    using uf_name = spot::iterable_uf_ec<State, Hash, Equal>;
+    // Handle Deadlocks
+    if (lhs == mc_rvalue::DEADLOCK && rhs == mc_rvalue::DEADLOCK)
+      return mc_rvalue::DEADLOCK;
+    if (lhs == mc_rvalue::NO_DEADLOCK && rhs == mc_rvalue::NO_DEADLOCK)
+      return mc_rvalue::NO_DEADLOCK;
+    if ((lhs == mc_rvalue::DEADLOCK && rhs == mc_rvalue::NO_DEADLOCK) ||
+        (lhs == mc_rvalue::NO_DEADLOCK && rhs == mc_rvalue::DEADLOCK))
+      return mc_rvalue::DEADLOCK;
 
-    unsigned  nbth = sys->get_threads();
-    typename uf_name::shared_map map;
+    // Handle Emptiness
+    if (lhs == mc_rvalue::EMPTY && rhs == mc_rvalue::EMPTY)
+      return mc_rvalue::EMPTY;
+    if (lhs == mc_rvalue::NOT_EMPTY && rhs == mc_rvalue::NOT_EMPTY)
+      return mc_rvalue::NOT_EMPTY;
+    if ((lhs == mc_rvalue::EMPTY && rhs == mc_rvalue::NOT_EMPTY) ||
+        (lhs == mc_rvalue::NOT_EMPTY && rhs == mc_rvalue::EMPTY))
+      return mc_rvalue::EMPTY;
 
-    tm.start("Initialisation");
-    std::vector<algo_name*> swarmed(nbth);
-    std::vector<uf_name*> ufs(nbth);
-    std::atomic<bool> stop(false);
-    for (unsigned i = 0; i < nbth; ++i)
-      {
-        ufs[i] = new uf_name(map, i);
-        swarmed[i] = new algo_name(*sys, prop, *ufs[i], i, stop);
-      }
-    tm.stop("Initialisation");
+    // Handle Failure / Success
+    if (lhs == mc_rvalue::FAILURE && rhs == mc_rvalue::FAILURE)
+      return mc_rvalue::FAILURE;
+    if (lhs == mc_rvalue::SUCCESS && rhs == mc_rvalue::SUCCESS)
+      return mc_rvalue::SUCCESS;
+    if ((lhs == mc_rvalue::FAILURE && rhs == mc_rvalue::SUCCESS) ||
+        (lhs == mc_rvalue::SUCCESS && rhs == mc_rvalue::FAILURE))
+      return mc_rvalue::FAILURE;
 
-    std::mutex iomutex;
-    std::atomic<bool> barrier(true);
-    std::vector<std::thread> threads(nbth);
-    for (unsigned i = 0; i < nbth; ++i)
-      {
-        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
-        {
-#if defined(unix) || defined(__unix__) || defined(__unix)
-            {
-              std::lock_guard<std::mutex> iolock(iomutex);
-              std::cout << "Thread #" << i
-                        << ": on CPU " << sched_getcpu() << '\n';
-            }
-#endif
-
-            // Wait all threads to be instanciated.
-            while (barrier)
-              continue;
-            swarmed[i]->run();
-         });
-
-#if defined(unix) || defined(__unix__) || defined(__unix)
-        //  Pins threads to a dedicated core.
-        cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(i, &cpuset);
-        int rc = pthread_setaffinity_np(threads[i].native_handle(),
-                                        sizeof(cpu_set_t), &cpuset);
-        if (rc != 0)
-          {
-            std::lock_guard<std::mutex> iolock(iomutex);
-            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
-          }
-#endif
-      }
-
-    tm.start("Run");
-    barrier.store(false);
-
-    for (auto& t : threads)
-      t.join();
-    tm.stop("Run");
-
-    std::string trace;
-    std::vector<bloemen_ec_stats> stats;
-    bool is_empty = true;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      {
-        if (!swarmed[i]->is_empty())
-          {
-            is_empty = false;
-            if (compute_ctrx)
-              trace = swarmed[i]->trace();
-          }
-
-        stats.push_back(swarmed[i]->stats());
-      }
-
-    for (unsigned i = 0; i < nbth; ++i)
-      {
-        delete swarmed[i];
-        delete ufs[i];
-      }
-    return std::make_tuple(is_empty, trace, stats, tm);
-  }
-
-  /// \brief CNDFS
-  template<typename kripke_ptr, typename State,
-           typename Iterator, typename Hash, typename Equal>
-  static std::tuple<bool,
-                    std::string,
-                    std::vector<cndfs_stats>,
-                    spot::timer_map>
-  cndfs(kripke_ptr sys, twacube_ptr prop, bool compute_ctrx = false)
-  {
-    spot::timer_map tm;
-    using algo_name = spot::swarmed_cndfs<State, Iterator, Hash, Equal>;
-
-    unsigned  nbth = sys->get_threads();
-    typename algo_name::shared_map map;
-    std::atomic<bool> stop(false);
-
-    tm.start("Initialisation");
-    std::vector<algo_name*> swarmed(nbth);
-    for (unsigned i = 0; i < nbth; ++i)
-      swarmed[i] = new algo_name(*sys, prop, map, i, stop);
-    tm.stop("Initialisation");
-
-    std::mutex iomutex;
-    std::atomic<bool> barrier(true);
-    std::vector<std::thread> threads(nbth);
-    for (unsigned i = 0; i < nbth; ++i)
-      {
-        threads[i] = std::thread ([&swarmed, &iomutex, i, & barrier]
-        {
-#if defined(unix) || defined(__unix__) || defined(__unix)
-            {
-              std::lock_guard<std::mutex> iolock(iomutex);
-              std::cout << "Thread #" << i
-                        << ": on CPU " << sched_getcpu() << '\n';
-            }
-#endif
-
-            // Wait all threads to be instanciated.
-            while (barrier)
-              continue;
-            swarmed[i]->run();
-         });
-
-#if defined(unix) || defined(__unix__) || defined(__unix)
-        //  Pins threads to a dedicated core.
-        cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(i, &cpuset);
-        int rc = pthread_setaffinity_np(threads[i].native_handle(),
-                                        sizeof(cpu_set_t), &cpuset);
-        if (rc != 0)
-          {
-            std::lock_guard<std::mutex> iolock(iomutex);
-            std::cerr << "Error calling pthread_setaffinity_np: " << rc << '\n';
-          }
-#endif
-      }
-
-    tm.start("Run");
-    barrier.store(false);
-
-    for (auto& t : threads)
-      t.join();
-    tm.stop("Run");
-
-    std::string trace;
-    std::vector<cndfs_stats> stats;
-    bool is_empty = true;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
-      {
-        if (!swarmed[i]->is_empty())
-          {
-            is_empty = false;
-            if (compute_ctrx)
-              trace = swarmed[i]->trace();
-          }
-
-        stats.push_back(swarmed[i]->stats());
-      }
-    for (unsigned i = 0; i < nbth; ++i)
-      delete swarmed[i];
-
-    return std::make_tuple(is_empty, trace, stats, tm);
+    throw std::runtime_error("Unable to compare these elements!");
   }
 }
