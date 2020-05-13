@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2013, 2014, 2016, 2017, 2019 Laboratoire
+// Copyright (C) 2009, 2010, 2013, 2014, 2016, 2017, 2019, 2020 Laboratoire
 // de Recherche et Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -94,8 +94,7 @@ namespace spot
        std::is_same<spot::cube,  decltype(v->condition())>::value
 
       // finally return the type "yes"
-      , yes()
-    );
+      , yes());
 
     // For all other cases return the type "no"
     template<typename, typename> static no test_kripke(...);
