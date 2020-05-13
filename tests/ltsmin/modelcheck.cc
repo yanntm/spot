@@ -134,6 +134,10 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       mc_options.nb_threads = to_unsigned(arg, "-p/--parallel");
       mc_options.force_parallel = true;
       break;
+    case 'r':
+      mc_options.algorithm = spot::mc_algorithm::REACHABILITY;
+      mc_options.force_parallel = true;
+      break;
     case 's':
       mc_options.dead_ap = arg;
       break;
@@ -184,6 +188,8 @@ static const argp_option options[] =
       "is found."
       , 0 },
     { "parallel", 'p', "INT", 0, "use INT threads (when possible)", 0 },
+    { "reachability", 'r', nullptr, 0, "performs a traversal of the model "
+      , 0 },
     { "selfloopize", 's', "STRING", 0,
       "use STRING as property for marking deadlock "
       "states (by default selfloopize is activated with STRING='true')", 0 },

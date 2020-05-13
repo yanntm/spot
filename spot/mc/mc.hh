@@ -32,7 +32,8 @@ namespace spot
      BLOEMEN_SCC,   ///< \brief Bloemen.16.ppopp SCC computation
      CNDFS,         ///< \brief Evangelista.12.atva emptiness check
      DEADLOCK,      ///< \brief Check wether there is a deadlock
-     SWARMING,       ///< \brief Holzmann.11.ieee applied to renault.13.lpar
+     REACHABILITY,  ///< \brief Only perform a reachability algorithm
+     SWARMING,      ///< \brief Holzmann.11.ieee applied to renault.13.lpar
     };
 
   enum SPOT_API class mc_rvalue
@@ -70,6 +71,8 @@ namespace spot
         os << "cndfs";  break;
       case mc_algorithm::DEADLOCK:
         os << "deadlock";  break;
+      case mc_algorithm::REACHABILITY:
+        os << "reachability";  break;
       case mc_algorithm::SWARMING:
         os << "swarming";  break;
       }
