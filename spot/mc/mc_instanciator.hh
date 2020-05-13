@@ -166,9 +166,9 @@ namespace spot
         algo == mc_algorithm::SWARMING)
       {
         SPOT_ASSERT(prop != nullptr);
-        SPOT_ASSERT(sys->get_ap().size() == prop->get_ap().size());
-        for (unsigned int i = 0; i < sys->get_ap().size(); ++i)
-          SPOT_ASSERT(sys->get_ap()[i].compare(prop->get_ap()[i]) == 0);
+        SPOT_ASSERT(sys->ap().size() == prop->ap().size());
+        for (unsigned int i = 0; i < sys->ap().size(); ++i)
+          SPOT_ASSERT(sys->ap()[i].compare(prop->ap()[i]) == 0);
       }
 
     switch (algo)

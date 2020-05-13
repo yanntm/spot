@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016 Laboratoire de Recherche
+// Copyright (C) 2015, 2016, 2020 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -139,7 +139,7 @@ namespace spot
     acc_cond& acc();
 
     /// \brief Returns the names of the atomic properties.
-    std::vector<std::string> get_ap() const;
+    std::vector<std::string> ap() const;
 
     /// \brief This method creates a new state.
     unsigned new_state();
