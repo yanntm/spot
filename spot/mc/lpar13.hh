@@ -70,7 +70,7 @@ namespace spot
     using shared_map = int; // Useless here.
     using shared_struct = int; // Useless here.
 
-    static shared_struct* make_shared_st(shared_map m, unsigned i)
+    static shared_struct* make_shared_structure(shared_map m, unsigned i)
     {
       return nullptr; // Useless
     }

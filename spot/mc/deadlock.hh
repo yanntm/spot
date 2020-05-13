@@ -86,7 +86,7 @@ namespace spot
                                                        pair_hasher>;
     using shared_struct = shared_map;
 
-    static shared_struct* make_shared_st(shared_map, unsigned)
+    static shared_struct* make_shared_structure(shared_map, unsigned)
     {
       return nullptr; // Useless
     }
