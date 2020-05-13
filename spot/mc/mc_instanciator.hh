@@ -187,8 +187,14 @@ namespace spot
             kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
 
       case mc_algorithm::DEADLOCK:
-        return instanciate<spot::swarmed_deadlock<State, Iterator, Hash, Equal>,
-            kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
+        return instanciate
+         <spot::swarmed_deadlock<State, Iterator, Hash, Equal, std::true_type>,
+           kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
+
+      case mc_algorithm::REACHABILITY:
+        return instanciate
+         <spot::swarmed_deadlock<State, Iterator, Hash, Equal, std::false_type>,
+           kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
 
       case mc_algorithm::SWARMING:
         return instanciate<spot::lpar13<State, Iterator, Hash, Equal>,
