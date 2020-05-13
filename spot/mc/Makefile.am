@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2015, 2016, 2017, 2019 Laboratoire de Recherche et
+## Copyright (C) 2015, 2016, 2017, 2019, 2020 Laboratoire de Recherche et
 ## Développement de l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
@@ -21,7 +21,7 @@ AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS)
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 
 mcdir = $(pkgincludedir)/mc
-mc_HEADERS = reachability.hh intersect.hh ec.hh unionfind.hh utils.hh\
+mc_HEADERS = reachability.hh intersect.hh lpar13.hh unionfind.hh utils.hh\
 	mc.hh mc_instanciator.hh deadlock.hh bloemen.hh bloemen_ec.hh cndfs.hh
 
 noinst_LTLIBRARIES = libmc.la

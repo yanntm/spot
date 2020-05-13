@@ -33,7 +33,7 @@ namespace spot
   /// the Gabow's one.
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class SPOT_API ec_renault13lpar
+  class SPOT_API lpar13
   {
     struct product_state
     {
@@ -75,7 +75,7 @@ namespace spot
       return nullptr; // Useless
     }
 
-    ec_renault13lpar(kripkecube<State, SuccIterator>& sys,
+    lpar13(kripkecube<State, SuccIterator>& sys,
                      twacube_ptr twa,
                      shared_map& map, /* useless here */
                      shared_struct*, /* useless here */
@@ -89,7 +89,7 @@ namespace spot
                       "error: does not match the kripkecube requirements");
       }
 
-    virtual ~ec_renault13lpar()
+    virtual ~lpar13()
     {
       map.clear();
     }

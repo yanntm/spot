@@ -25,7 +25,7 @@
 #include <utility>
 #include <spot/kripke/kripke.hh>
 #include <spot/mc/mc.hh>
-#include <spot/mc/ec.hh>
+#include <spot/mc/lpar13.hh>
 #include <spot/mc/deadlock.hh>
 #include <spot/mc/cndfs.hh>
 #include <spot/mc/bloemen.hh>
@@ -191,7 +191,7 @@ namespace spot
             kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
 
       case mc_algorithm::SWARMING:
-        return instanciate<spot::ec_renault13lpar<State, Iterator, Hash, Equal>,
+        return instanciate<spot::lpar13<State, Iterator, Hash, Equal>,
             kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
       }
   }
