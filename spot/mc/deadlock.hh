@@ -35,8 +35,11 @@ namespace spot
   /// \brief This class aims to explore a model to detect wether it
   /// contains a deadlock. This deadlock detection performs a DFS traversal
   /// sharing information shared among multiple threads.
+  /// If Deadlock equals std::true_type performs dealock algorithm,
+  /// otherwise perform a simple reachability.
   template<typename State, typename SuccIterator,
-           typename StateHash, typename StateEqual>
+           typename StateHash, typename StateEqual,
+           typename Deadlock>
   class SPOT_API swarmed_deadlock
   {
     /// \brief Describes the status of a state
@@ -78,6 +81,9 @@ namespace spot
         return equal(lhs->st, rhs->st);
       }
     };
+
+    static constexpr bool compute_deadlock =
+       std::is_same<std::true_type, Deadlock>::value;
 
   public:
 
@@ -132,7 +138,7 @@ namespace spot
               if (SPOT_LIKELY(pop()))
                 {
                   deadlock_ = todo_.back().current_tr == transitions_;
-                  if (deadlock_)
+                  if (compute_deadlock && deadlock_)
                     break;
                   sys_.recycle(todo_.back().it, tid_);
                   todo_.pop_back();
@@ -234,7 +240,9 @@ namespace spot
 
     std::string name()
     {
-      return "deadlock";
+      if (compute_deadlock)
+        return "deadlock";
+      return "reachability";
     }
 
     int sccs()
@@ -244,7 +252,9 @@ namespace spot
 
     mc_rvalue result()
     {
-      return deadlock_ ? mc_rvalue::DEADLOCK : mc_rvalue::NO_DEADLOCK;
+      if (compute_deadlock)
+        return deadlock_ ? mc_rvalue::DEADLOCK : mc_rvalue::NO_DEADLOCK;
+      return mc_rvalue::SUCCESS;
     }
 
     std::string trace()
