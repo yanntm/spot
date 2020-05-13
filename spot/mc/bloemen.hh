@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017, 2018, 2019 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018, 2019, 2020 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -21,15 +21,16 @@
 
 #include <atomic>
 #include <chrono>
-#include <spot/bricks/brick-hashset>
 #include <stdlib.h>
 #include <thread>
 #include <vector>
 #include <utility>
-#include <spot/misc/common.hh>
+#include <spot/bricks/brick-hashset>
 #include <spot/kripke/kripke.hh>
+#include <spot/misc/common.hh>
 #include <spot/misc/fixpool.hh>
 #include <spot/misc/timer.hh>
+#include <spot/mc/mc.hh>
 
 namespace spot
 {
@@ -405,16 +406,6 @@ namespace spot
     fixed_size_pool<pool_type::Unsafe> p_; ///< \brief The allocator
   };
 
-  /// \brief This object is returned by the algorithm below
-  struct SPOT_API bloemen_stats
-  {
-    unsigned inserted;          ///< \brief Number of states inserted
-    unsigned states;            ///< \brief Number of states visited
-    unsigned transitions;       ///< \brief Number of transitions visited
-    unsigned sccs;              ///< \brief Number of SCCs visited
-    unsigned walltime;          ///< \brief Walltime for this thread in ms
-  };
-
   /// \brief This class implements the SCC decomposition algorithm of bloemen
   /// as described in PPOPP'16. It uses a shared union-find augmented to manage
   /// work stealing between threads.
@@ -426,10 +417,25 @@ namespace spot
     swarmed_bloemen() = delete;
 
   public:
-    swarmed_bloemen(kripkecube<State, SuccIterator>& sys,
-                    iterable_uf<State, StateHash, StateEqual>& uf,
-                    unsigned tid):
-      sys_(sys),  uf_(uf), tid_(tid),
+
+    using uf = iterable_uf<State, StateHash, StateEqual>;
+    using uf_element = typename uf::uf_element;
+
+    using shared_struct = uf;
+    using shared_map = typename uf::shared_map;
+
+    static shared_struct* make_shared_st(shared_map m, unsigned i)
+    {
+      return new uf(m, i);
+    }
+
+   swarmed_bloemen(kripkecube<State, SuccIterator>& sys,
+                   twacube_ptr, /* useless here */
+                   shared_map& map, /* useless here */
+                   iterable_uf<State, StateHash, StateEqual>* uf,
+                   unsigned tid,
+                   std::atomic<bool>& /*useless here*/):
+      sys_(sys),  uf_(*uf), tid_(tid),
       nb_th_(std::thread::hardware_concurrency())
     {
       static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
@@ -437,13 +443,9 @@ namespace spot
                     "error: does not match the kripkecube requirements");
     }
 
-    using uf = iterable_uf<State, StateHash, StateEqual>;
-    using uf_element = typename uf::uf_element;
-
     void run()
     {
-      tm_.start("DFS thread " + std::to_string(tid_));
-
+      setup();
       State init = sys_.initial(tid_);
       auto pair = uf_.make_claim(init);
       todo_.push_back(pair.second);
@@ -496,7 +498,27 @@ namespace spot
             Rp_.pop_back();
           todo_.pop_back();
         }
+      finalize();
+    }
+
+    void setup()
+    {
+      tm_.start("DFS thread " + std::to_string(tid_));
+    }
+
+    void finalize()
+    {
       tm_.stop("DFS thread " + std::to_string(tid_));
+    }
+
+    unsigned states()
+    {
+      return states_;
+    }
+
+    unsigned transitions()
+    {
+      return transitions_;
     }
 
     unsigned walltime()
@@ -504,9 +526,25 @@ namespace spot
       return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
     }
 
-    bloemen_stats stats()
+    std::string name()
     {
-      return {uf_.inserted(), states_, transitions_, sccs_, walltime()};
+      return "bloemen_scc";
+    }
+
+    int sccs()
+    {
+      return sccs_;
+    }
+
+    mc_rvalue result()
+    {
+      return mc_rvalue::SUCCESS;
+    }
+
+    std::string trace()
+    {
+      // Returning a trace has no sense in this algorithm
+      return "";
     }
 
   private:
