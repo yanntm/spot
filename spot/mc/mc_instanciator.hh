@@ -58,7 +58,7 @@ namespace spot
     tm.start("Initialisation");
     for (unsigned i = 0; i < nbth; ++i)
       {
-        ss[i] = algo_name::make_shared_st(map, i);
+        ss[i] = algo_name::make_shared_structure(map, i);
         swarmed[i] = new algo_name(*sys, prop, map, ss[i], i, stop);
       }
     tm.stop("Initialisation");

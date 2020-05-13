@@ -461,7 +461,7 @@ namespace spot
     using shared_struct = uf;
     using shared_map = typename uf::shared_map;
 
-    static shared_struct* make_shared_st(shared_map m, unsigned i)
+    static shared_struct* make_shared_structure(shared_map m, unsigned i)
     {
       return new uf(m, i);
     }
