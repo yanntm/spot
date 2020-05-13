@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2017, 2018, 2019 Laboratoire de Recherche et
+// Copyright (C) 2015, 2016, 2017, 2018, 2019, 2020 Laboratoire de Recherche et
 // Developpement de l'Epita
 //
 // This file is part of Spot, a model checking library.
@@ -29,22 +29,13 @@
 #include <spot/misc/fixpool.hh>
 #include <spot/misc/timer.hh>
 #include <spot/twacube/twacube.hh>
+#include <spot/mc/mc.hh>
 
 namespace spot
 {
-  /// \brief This object is returned by the algorithm below
-  struct SPOT_API cndfs_stats
-    {
-     unsigned states;            ///< \brief Number of states visited
-     unsigned transitions;       ///< \brief Number of transitions visited
-     unsigned instack_dfs;       ///< \brief Maximum DFS stack
-     bool is_empty;              ///< \brief Is the model empty
-     unsigned walltime;          ///< \brief Walltime for this thread in ms
-    };
-
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class swarmed_cndfs
+  class SPOT_API swarmed_cndfs
   {
     struct local_colors
     {
@@ -95,7 +86,7 @@ namespace spot
       }
     };
 
-    struct todo__element
+    struct todo_element
     {
       product_state st;
       SuccIterator* it_kripke;
@@ -108,9 +99,16 @@ namespace spot
     ///< \brief Shortcut to ease shared map manipulation
     using shared_map = brick::hashset::FastConcurrent <product_state,
                                                        state_hasher>;
+    using shared_struct = shared_map;
+
+    static shared_struct* make_shared_st(shared_map m, unsigned i)
+    {
+      return nullptr; // Useless here.
+    }
 
     swarmed_cndfs(kripkecube<State, SuccIterator>& sys, twacube_ptr twa,
-                  shared_map& map, unsigned tid, std::atomic<bool>& stop):
+                  shared_map& map, shared_struct* /* useless here*/,
+                  unsigned tid, std::atomic<bool>& stop):
       sys_(sys), twa_(twa), tid_(tid), map_(map),
       nb_th_(std::thread::hardware_concurrency()),
       p_colors_(sizeof(cndfs_colors) +
@@ -120,6 +118,7 @@ namespace spot
       static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
                                              State, SuccIterator>::value,
                     "error: does not match the kripkecube requirements");
+      SPOT_ASSERT(nb_th_ > tid);
     }
 
     virtual ~swarmed_cndfs()
@@ -134,6 +133,13 @@ namespace spot
           sys_.recycle(todo_red_.back().it_kripke, tid_);
           todo_red_.pop_back();
         }
+    }
+
+    void run()
+    {
+      setup();
+      blue_dfs();
+      finalize();
     }
 
     void setup()
@@ -180,17 +186,6 @@ namespace spot
       return {true, *it};
     }
 
-    bool pop_blue()
-    {
-      // Track maximum dfs size
-      dfs_ = todo_blue_.size()  > dfs_ ? todo_blue_.size() : dfs_;
-
-      todo_blue_.back().st.colors->l[tid_].cyan = false;
-      sys_.recycle(todo_blue_.back().it_kripke, tid_);
-      todo_blue_.pop_back();
-      return true;
-    }
-
     std::pair<bool, product_state>
     push_red(product_state s, bool ignore_cyan)
     {
@@ -214,6 +209,17 @@ namespace spot
                            twa_->succ(((*it)).st_prop),
                            false});
       return {true, *it};
+    }
+
+    bool pop_blue()
+    {
+      // Track maximum dfs size
+      dfs_ = todo_blue_.size()  > dfs_ ? todo_blue_.size() : dfs_;
+
+      todo_blue_.back().st.colors->l[tid_].cyan = false;
+      sys_.recycle(todo_blue_.back().it_kripke, tid_);
+      todo_blue_.pop_back();
+      return true;
     }
 
     bool pop_red()
@@ -243,13 +249,73 @@ namespace spot
       return transitions_;
     }
 
-    void run()
+    unsigned walltime()
     {
-      setup();
-      blue_dfs();
-      finalize();
+      return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
     }
 
+    std::string name()
+    {
+      return "cndfs";
+    }
+
+    int sccs()
+    {
+      return -1;
+    }
+
+    mc_rvalue result()
+    {
+      return is_empty_ ? mc_rvalue::EMPTY : mc_rvalue::NOT_EMPTY;
+    }
+
+    std::string trace()
+    {
+      SPOT_ASSERT(!is_empty_);
+      StateEqual equal;
+      auto state_equal = [equal](product_state a, product_state b)
+                         {
+                           return a.st_prop == b.st_prop
+                             && equal(a.st_kripke, b.st_kripke);
+                         };
+
+      std::string res = "Prefix:\n";
+
+      auto it = todo_blue_.begin();
+      while (it != todo_blue_.end())
+        {
+          if (state_equal(((*it)).st, cycle_start_))
+            break;
+          res += "  " + std::to_string(((*it)).st.st_prop)
+            + "*" + sys_.to_string(((*it)).st.st_kripke) + "\n";
+          ++it;
+        }
+
+      res += "Cycle:\n";
+      while (it != todo_blue_.end())
+        {
+          res += "  " + std::to_string(((*it)).st.st_prop)
+            + "*" + sys_.to_string(((*it)).st.st_kripke) + "\n";
+          ++it;
+        }
+
+      if (!todo_red_.empty())
+        {
+          it = todo_red_.begin() + 1; // skip first element, also in blue
+          while (it != todo_red_.end())
+            {
+              res += "  " + std::to_string(((*it)).st.st_prop)
+                + "*" + sys_.to_string(((*it)).st.st_kripke) + "\n";
+              ++it;
+            }
+        }
+      res += "  " + std::to_string(cycle_start_.st_prop)
+        + "*" + sys_.to_string(cycle_start_.st_kripke) + "\n";
+
+      return res;
+    }
+
+  private:
     void blue_dfs()
     {
       product_state initial = {sys_.initial(tid_),
@@ -262,7 +328,8 @@ namespace spot
       if (todo_blue_.back().it_prop->done())
         return;
 
-      forward_iterators(todo_blue_, true);
+      forward_iterators(sys_, twa_, todo_blue_.back().it_kripke,
+                        todo_blue_.back().it_prop, true, tid_);
 
       while (!todo_blue_.empty() && !stop_.load(std::memory_order_relaxed))
         {
@@ -278,11 +345,13 @@ namespace spot
               };
 
               bool acc = (bool) twa_->trans_storage(current.it_prop, tid_).acc_;
-              forward_iterators(todo_blue_, false);
+              forward_iterators(sys_, twa_, todo_blue_.back().it_kripke,
+                        todo_blue_.back().it_prop, false, tid_);
 
               auto tmp = push_blue(s, acc);
               if (tmp.first)
-                forward_iterators(todo_blue_, true);
+                forward_iterators(sys_, twa_, todo_blue_.back().it_kripke,
+                                  todo_blue_.back().it_prop, true, tid_);
               else if (acc)
                 {
                   // The state cyan and we can reach it throught an
@@ -324,14 +393,14 @@ namespace spot
 
     void post_red_dfs()
     {
-      for (product_state& s : Rp_acc_)
+      for (product_state& s: Rp_acc_)
         {
           while (s.colors->red.load() && !stop_.load())
             {
               // await
             }
         }
-      for (product_state& s : Rp_)
+      for (product_state& s: Rp_)
         {
           s.colors->red.store(true);
           s.colors->l[tid_].is_in_Rp = false; // empty Rp
@@ -349,7 +418,8 @@ namespace spot
       if (!init_push.first)
         return;
 
-      forward_iterators(todo_red_, true);
+      forward_iterators(sys_, twa_, todo_red_.back().it_kripke,
+                        todo_red_.back().it_prop, true, tid_);
 
       while (!todo_red_.empty() && !stop_.load(std::memory_order_relaxed))
         {
@@ -364,12 +434,14 @@ namespace spot
                                  nullptr
               };
               bool acc = (bool) twa_->trans_storage(current.it_prop, tid_).acc_;
-              forward_iterators(todo_red_, false);
+              forward_iterators(sys_, twa_, todo_red_.back().it_kripke,
+                                todo_red_.back().it_prop, false, tid_);
 
               auto res = push_red(s, false);
               if (res.first) // could push properly
                 {
-                  forward_iterators(todo_red_, true);
+                  forward_iterators(sys_, twa_, todo_red_.back().it_kripke,
+                                    todo_red_.back().it_prop, true, tid_);
 
                   SPOT_ASSERT(res.second.colors->blue);
 
@@ -419,130 +491,22 @@ namespace spot
         }
     }
 
-    std::string trace()
-    {
-      SPOT_ASSERT(!is_empty());
-      StateEqual equal;
-      auto state_equal = [equal](product_state a, product_state b)
-                         {
-                           return a.st_prop == b.st_prop
-                             && equal(a.st_kripke, b.st_kripke);
-                         };
-
-      std::string res = "Prefix:\n";
-
-      auto it = todo_blue_.begin();
-      while (it != todo_blue_.end())
-        {
-          if (state_equal(((*it)).st, cycle_start_))
-            break;
-          res += "  " + std::to_string(((*it)).st.st_prop)
-            + "*" + sys_.to_string(((*it)).st.st_kripke) + "\n";
-          ++it;
-        }
-
-      res += "Cycle:\n";
-      while (it != todo_blue_.end())
-        {
-          res += "  " + std::to_string(((*it)).st.st_prop)
-            + "*" + sys_.to_string(((*it)).st.st_kripke) + "\n";
-          ++it;
-        }
-
-      if (!todo_red_.empty())
-        {
-          it = todo_red_.begin() + 1; // skip first element, also in blue
-          while (it != todo_red_.end())
-            {
-              res += "  " + std::to_string(((*it)).st.st_prop)
-                + "*" + sys_.to_string(((*it)).st.st_kripke) + "\n";
-              ++it;
-            }
-        }
-      res += "  " + std::to_string(cycle_start_.st_prop)
-        + "*" + sys_.to_string(cycle_start_.st_kripke) + "\n";
-
-      return res;
-    }
-
-    bool is_empty()
-    {
-      return is_empty_;
-    }
-
-    unsigned walltime()
-    {
-      return tm_.timer("DFS thread " + std::to_string(tid_)).walltime();
-    }
-
-    cndfs_stats stats()
-    {
-      return {states(), transitions(), dfs_, is_empty(), walltime()};
-    }
-
-  protected:
-    void forward_iterators(std::vector<todo__element>& todo, bool just_pushed)
-    {
-      SPOT_ASSERT(!todo.empty());
-
-      auto top = todo.back();
-
-      SPOT_ASSERT(!(top.it_prop->done() &&
-                    top.it_kripke->done()));
-
-      // Sometimes kripke state may have no successors.
-      if (top.it_kripke->done())
-        return;
-
-      // The state has just been push and the 2 iterators intersect.
-      // There is no need to move iterators forward.
-      SPOT_ASSERT(!(top.it_prop->done()));
-      if (just_pushed && twa_->get_cubeset()
-          .intersect(twa_->trans_data(top.it_prop, tid_).cube_,
-                     top.it_kripke->condition()))
-        return;
-
-      // Otherwise we have to compute the next valid successor (if it exits).
-      // This requires two loops. The most inner one is for the twacube since
-      // its costless
-      if (top.it_prop->done())
-        top.it_prop->reset();
-      else
-        top.it_prop->next();
-
-      while (!top.it_kripke->done())
-        {
-          while (!top.it_prop->done())
-            {
-              if (twa_->get_cubeset()
-                  .intersect(twa_->trans_data(top.it_prop, tid_).cube_,
-                             top.it_kripke->condition()))
-                return;
-              top.it_prop->next();
-            }
-          top.it_prop->reset();
-          top.it_kripke->next();
-        }
-    }
-
-  private:
-    kripkecube<State, SuccIterator>& sys_;
-    twacube_ptr twa_;
-    std::vector<todo__element> todo_blue_;
-    std::vector<todo__element> todo_red_;
-    unsigned transitions_ = 0;         ///< \brief Number of transitions
-    unsigned tid_;                     ///< \brief Thread's current ID
+    kripkecube<State, SuccIterator>& sys_; ///< \brief The system to check
+    twacube_ptr twa_;                      ///< \brief The propertu to check
+    std::vector<todo_element> todo_blue_;  ///< \brief Blue Stack
+    std::vector<todo_element> todo_red_;   ///< \ brief Red Stack
+    unsigned transitions_ = 0;             ///< \brief Number of transitions
+    unsigned tid_;                         ///< \brief Thread's current ID
     shared_map map_;                       ///< \brief Map shared by threads
     spot::timer_map tm_;                   ///< \brief Time execution
     unsigned states_ = 0;                  ///< \brief Number of states
     unsigned dfs_ = 0;                     ///< \brief Maximum DFS stack size
-    /// \brief Maximum number of threads that can be handled by this algorithm
-    unsigned nb_th_ = 0;
-    fixed_size_pool<pool_type::Unsafe> p_colors_;
-    bool is_empty_ = true;               ///< \brief Accepting cycle detected?
+    unsigned nb_th_ = 0;                   /// \brief Maximum number of threads
+    fixed_size_pool<pool_type::Unsafe> p_colors_; /// \brief Memory pool
+    bool is_empty_ = true;                 ///< \brief Accepting cycle detected?
     std::atomic<bool>& stop_;              ///< \brief Stop-the-world boolean
-    std::vector<product_state> Rp_;
-    std::vector<product_state> Rp_acc_;
-    product_state cycle_start_;
+    std::vector<product_state> Rp_;        ///< \brief Rp stack
+    std::vector<product_state> Rp_acc_;    ///< \brief Rp acc stack
+    product_state cycle_start_;            ///< \brief Begining of a cycle
   };
 }
