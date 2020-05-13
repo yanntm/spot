@@ -81,7 +81,8 @@ namespace{
     {
       if (e.acc.max_set() == 0)
         throw std::runtime_error("arena must be colorized");
-      if (owner[e.src] == owner[e.dst])
+//      if ((owner[e.src] == owner[e.dst]) && (e.src!=e.dst))
+      if ((owner[e.src] == owner[e.dst]))
       {
         std::cerr<<owner[e.src]<<" : "<<e.src<<", "<<e.dst<<
                  "; "<<arena->num_states()<<std::endl;
@@ -870,7 +871,8 @@ namespace spot
         unsigned rd = rd_;
         unsigned one_par = *info.all_parities.begin();
         bool winner = one_par&1;
-        SPOT_ASSERT((0<one_par) && (one_par<=max_par));
+//        std::cout << one_par << ", " << max_par << std::endl;
+        SPOT_ASSERT(one_par<=max_par);
   
         for (unsigned v : c_scc_->states())
         {
@@ -946,7 +948,7 @@ namespace spot
           ("First line expected to contain parity");
     
     // pgsolver accepts color 0, we do not, so shift all parities by 2
-    std::cout << this_line << std::endl;
+//    std::cout << this_line << std::endl;
     unsigned max_par = (unsigned) std::strtoll(this_line.c_str()+7, &substr_e,
                                                10)+2;
     
@@ -1018,7 +1020,7 @@ namespace spot
     
     std::vector<bool> seen(arena->num_states(), false);
     std::vector<unsigned> todo({arena->get_init_state_number()});
-    std::vector<bool> owner(arena->num_states()+2, false);
+    std::vector<bool> owner(arena->num_states()+10, false);
     owner[arena->get_init_state_number()] = false;
     
     unsigned sink_env=0, sink_con=0;
@@ -1029,18 +1031,51 @@ namespace spot
       todo.pop_back();
       seen[src] = true;
       bdd missing = bddtrue;
-      for (const auto &e: arena->out(src))
+      for (auto &e: arena->out(src))
       {
-        if (!owner[src])
+        // Owner is only required to have one successor
+        // env must be complete
+        if (owner[src])
+          missing = bddfalse;
+        else
           missing -= e.cond;
-        if (!seen[e.dst])
-        {
+        if (!seen[e.dst]) {
           owner[e.dst] = !owner[src];
           todo.push_back(e.dst);
+        }else if(e.dst==e.src){
+          // Self-loops can occur when using sd
+          // Split into new state and edge
+          if (arena->num_states() == owner.size())
+            owner.resize(owner.size()+20, false);
+          unsigned intermed = arena->new_state();
+//          std::cout << "create " << intermed << std::endl;
+          e.dst = intermed;
+          arena->new_edge(intermed, e.src, bddtrue, e.acc);
+          owner.at(intermed) = !owner[e.src];
         }else{
+//          std::cout << e.src << " ; " << e.dst << " ; " << e.cond << " ; "
+//                    << e.acc << " ; " << owner[e.src] << ","
+//                    << owner[e.dst] << " ; " << arena->num_states()
+//                    << std::endl;
           SPOT_ASSERT((owner[e.dst] != owner[src])
                       && "Illformed arena!");
         }
+      }
+      if (owner[src] && (missing == bddtrue))
+      {
+        // The owned state has no successors
+        // Create edge to sink_env
+        if (sink_env == 0)
+        {
+          sink_env = arena->new_state();
+          sink_con = arena->new_state();
+//          std::cout << "ss " << sink_env << ", " << sink_con << std::endl;
+          arena->new_edge(sink_con, sink_env, bddtrue, um.second);
+          arena->new_edge(sink_env, sink_con, bddtrue, um.second);
+          owner.at(sink_env) = false;
+          owner.at(sink_con) = true;
+        }
+        arena->new_edge(src, sink_env, bddtrue, um.second);
       }
       if (!owner[src] && (missing != bddfalse))
       {
@@ -1048,6 +1083,7 @@ namespace spot
         {
           sink_env = arena->new_state();
           sink_con = arena->new_state();
+//          std::cout << "ss " << sink_env << ", " << sink_con << std::endl;
           arena->new_edge(sink_con, sink_env, bddtrue, um.second);
           arena->new_edge(sink_env, sink_con, bddtrue, um.second);
           owner.at(sink_env) = false;

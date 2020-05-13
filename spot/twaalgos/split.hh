@@ -63,7 +63,7 @@ namespace spot
   /// the context of LTL reactive synthesis.
   SPOT_API twa_graph_ptr
   split_2step(const const_twa_graph_ptr& aut,
-              bdd input_bdd, bdd output_bdd);
+              bdd input_bdd, bdd output_bdd, bool complete_env);
   
   /// \brief the reverse of split_2step
   SPOT_API twa_graph_ptr

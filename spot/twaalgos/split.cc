@@ -230,7 +230,8 @@ namespace spot
   }
   
   twa_graph_ptr
-  split_2step(const const_twa_graph_ptr& aut, bdd input_bdd, bdd output_bdd)
+  split_2step(const const_twa_graph_ptr& aut, bdd input_bdd, bdd output_bdd,
+              bool complete_env)
   {
     auto split = make_twa_graph(aut->get_dict());
     split->copy_ap_of(aut);
@@ -259,6 +260,11 @@ namespace spot
     // Automatically "almost" sorted due to the sorting of e_cache
     std::vector<e_info_t*> dests;
     
+    // If a complete automaton for environment is demanded
+    // we might need a sink
+//    unsigned sink_con=0, sink_env=0;
+    unsigned sink_con=0;
+  
     // Loop over all states
     for (unsigned src = 0; src < aut->num_states(); ++src)
     {
@@ -276,6 +282,19 @@ namespace spot
         all_letters |= e_cache.back().einsup.first;
         support &= e_cache.back().einsup.second;
       }
+      // Complete for env
+      if (complete_env && (all_letters != bddtrue))
+      {
+        if (sink_con == 0) {
+          sink_con = split->new_state();
+//          sink_env = split->new_state();
+//          split->new_edge(sink_env, sink_con, bddtrue);
+//          split->new_edge(sink_con, sink_env, bddtrue);
+        }
+        bdd remaining = bddtrue - all_letters;
+        split->new_edge(src, sink_con, remaining);
+      }
+      
       // Sort to avoid that permutations of the same edges
       // get different states
       std::sort(e_cache.begin(), e_cache.end(), less_info);

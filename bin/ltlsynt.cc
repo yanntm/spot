@@ -240,9 +240,14 @@ namespace
         
         if (!seen[e.dst])
         {
+//          std::cout << "VISIT " << e.dst << std::endl;
           owner[e.dst] = !owner[src];
           todo.push_back(e.dst);
         }
+//        else{
+//          if (!((owner[src]!=owner[e.dst]) || (src==e.dst)))
+//            std::cout << "FAILED " << e.src << ", " << e.dst << std::endl;
+//        }
       }
       if (!owner[src] && missing != bddfalse)
         arena->new_edge(src, sink_con, missing, um.second);
@@ -440,21 +445,35 @@ namespace
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
       for (auto& ap_i : input_aps_) {
-        unsigned v = aut->register_ap(spot::formula::ap(ap_i));
+        long long v =
+            aut->get_dict()->has_registered_proposition(
+                spot::formula::ap(ap_i), aut);
+        if (v==-1)
+        {
+          std::cerr<<"prop "<<ap_i<<" does not appear in aut"<<std::endl;
+          throw std::runtime_error("Unregistered input");
+        }
         all_inputs &= bdd_ithvar(v);
       }
       for (auto ap_o : output_aps_) {
-        unsigned v = aut->register_ap(spot::formula::ap(ap_o));
+        long long v =
+            aut->get_dict()->has_registered_proposition(
+                spot::formula::ap(ap_o), aut);
+        if (v==-1)
+        {
+          std::cerr<<"prop "<<ap_o<<" does not appear in aut"<<std::endl;
+          throw std::runtime_error("Unregistered output");
+        }
         all_outputs &= bdd_ithvar(v);
       }
       if (want_time)
         trans_time = sw.stop();
       if (verbose)
         {
-          std::cerr << "translating formula done in "
-                    << trans_time << " seconds\n";
-          std::cerr << "automaton has " << aut->num_states()
-                    << " states and " << aut->num_sets() << " colors\n";
+          std::cerr<<"translating formula done in "
+                   <<trans_time<<" seconds\n";
+          std::cerr<<"automaton has "<<aut->num_states()
+                   <<" states and "<<aut->num_sets()<<" colors\n";
         }
 
       spot::twa_graph_ptr dpa = nullptr;
@@ -482,7 +501,7 @@ namespace
               if (opt_old)
                 dpa = split_2step_old(tmp, all_inputs);
               else
-                dpa = split_2step(tmp, all_inputs, all_outputs);
+                dpa = split_2step(tmp, all_inputs, all_outputs, false);
               spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
@@ -508,7 +527,7 @@ namespace
               if (opt_old)
                 dpa = split_2step_old(aut, all_inputs);
               else
-                dpa = split_2step(aut, all_inputs, all_outputs);
+                dpa = split_2step(aut, all_inputs, all_outputs, true);
               spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
@@ -526,7 +545,7 @@ namespace
               if (opt_old)
                 split = split_2step_old(aut, all_inputs);
               else
-                split = split_2step(aut, all_inputs, all_outputs);
+                split = split_2step(aut, all_inputs, all_outputs, true);
               if (want_time)
                 split_time = sw.stop();
               if (verbose)
@@ -555,11 +574,10 @@ namespace
             {
               if (want_time)
                 sw.start();
-              if (opt_old) {
+              if (opt_old)
                 dpa = split_2step_old(aut, all_inputs);
-              } else {
-                dpa = split_2step(aut, all_inputs, all_outputs);
-              }
+              else
+                dpa = split_2step(aut, all_inputs, all_outputs, true);
               dpa->merge_states();
               if (want_time)
                 split_time = sw.stop();
@@ -596,11 +614,12 @@ namespace
         sw.start();
       
       std::vector<bool> owner;
-      if (opt_old) {
+      if (opt_old)
         owner = complete_env(dpa);
-      }else{
+//        automaton_printer printer2;
+//        printer2.print(dpa, timer);
+      else
         make_arena(dpa);
-      }
       
       if (want_time)
         bgame_time = sw.stop();
@@ -621,12 +640,10 @@ namespace
       if (want_time)
         sw.start();
       if (opt_old)
-      {
         is_realizable =
             spot::solve_parity_game_old(dpa, owner, winning_region, strategy);
-      } else {
+      else
         is_realizable = spot::solve_parity_game(dpa);
-      }
       if (want_time)
         solve_time = sw.stop();
       if (verbose)
@@ -641,13 +658,12 @@ namespace
           if (want_time)
             sw.start();
           spot::twa_graph_ptr strat_aut;
-          if (opt_old){
+          if (opt_old)
             strat_aut =
                strat_to_aut(dpa, strategy[1], all_outputs);
-          }else{
+          else
             strat_aut =
                 spot::apply_strategy(dpa, all_outputs, true, true, false);
-          }
           if (want_time)
             strat2aut_time = sw.stop();
           
