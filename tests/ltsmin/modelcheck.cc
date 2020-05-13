@@ -543,9 +543,12 @@ static int checked_main()
                     << "model,formula,walltimems,memused,type,"
                     << "states,transitions,sccs\n";
           std::cout << '#'
-                    << split_filename(mc_options.model) << ','
-                    << mc_options.formula << ','
-                    << *walltime << ',' << memused << ','
+                    << split_filename(mc_options.model) << ',';
+
+          if (mc_options.formula != nullptr)
+            std::cout << mc_options.formula;
+
+          std::cout << ',' << *walltime << ',' << memused << ','
                     << rval << ',' << *states << ',' << *trans << ','
                     << *sccs << '\n';
         }
