@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018, 2019 Laboratoire de Recherche et Développement de
+// Copyright (C) 2017, 2018, 2019, 2020 Laboratoire de Recherche et Développement de
 // l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -221,7 +221,7 @@ namespace spot
     void recycle(cspins_iterator* it, unsigned tid);
 
     /// \brief List the atomic propositions used by *this* kripke
-    const std::vector<std::string> get_ap();
+    const std::vector<std::string> ap();
 
     /// \brief The number of thread used by *this* kripke
     unsigned get_threads();

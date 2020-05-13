@@ -55,7 +55,7 @@ namespace spot
       res_->new_state();
 
       // Compute the reverse binder.
-      auto aps = this->sys_.get_ap();
+      auto aps = this->sys_.ap();
       for (unsigned i = 0; i < aps.size(); ++i)
         {
           auto k = res_->register_ap(aps[i]);
@@ -72,7 +72,7 @@ namespace spot
 
     void edge(unsigned src, unsigned dst)
     {
-      cubeset cs(this->sys_.get_ap().size());
+      cubeset cs(this->sys_.ap().size());
       bdd cond = cube_to_bdd(this->todo.back().it->condition(),
                              cs, reverse_binder_);
       res_->new_edge(src, dst, cond);
@@ -345,7 +345,7 @@ namespace spot
       names_ = new std::vector<std::string>();
 
       int i = 0;
-      for (auto ap : this->twa_->get_ap())
+      for (auto ap : this->twa_->ap())
         {
           auto idx = res_->register_ap(ap);
           reverse_binder_[i++] = idx;

@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Développement
-// de l'Epita.
+// Copyright (C) 2015, 2016, 2018, 2020 Laboratoire de Recherche et
+// Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -52,7 +52,7 @@ int main()
   spot::print_dot(std::cout, tg, "A");
   std::cout << "-----------\n" << *aut << "-----------\n";
 
-  const std::vector<std::string>& aps = aut->get_ap();
+  const std::vector<std::string>& aps = aut->ap();
   unsigned int seed = 17;
   for (auto it = aut->succ(2); !it->done(); it->next())
     {

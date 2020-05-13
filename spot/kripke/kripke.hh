@@ -58,7 +58,7 @@ namespace spot
     void recycle(SuccIterator*, unsigned tid);
 
     /// \brief This method allow to deallocate a given state.
-    const std::vector<std::string> get_ap();
+    const std::vector<std::string> ap();
   };
 
 #ifndef SWIG
@@ -84,7 +84,7 @@ namespace spot
        std::is_same<SuccIter*,   decltype(u->succ(State(), 0))>::value      &&
        std::is_same<void,        decltype(u->recycle(nullptr, 0))>::value   &&
        std::is_same<const std::vector<std::string>,
-                                 decltype(u->get_ap())>::value              &&
+                                 decltype(u->ap())>::value                  &&
        std::is_same<void,        decltype(u->recycle(nullptr, 0))>::value   &&
 
        // Check the SuccIterator
