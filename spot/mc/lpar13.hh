@@ -23,6 +23,9 @@
 #include <spot/mc/unionfind.hh>
 #include <spot/mc/intersect.hh>
 #include <spot/mc/mc.hh>
+#include <spot/misc/timer.hh>
+#include <spot/twacube/twacube.hh>
+#include <spot/twacube/fwd.hh>
 
 namespace spot
 {
