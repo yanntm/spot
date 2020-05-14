@@ -19,9 +19,13 @@
 
 #pragma once
 
+#include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <utility>
+
+#include <spot/misc/common.hh>
 
 namespace spot
 {

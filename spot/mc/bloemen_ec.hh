@@ -31,7 +31,9 @@
 #include <spot/misc/fixpool.hh>
 #include <spot/misc/timer.hh>
 #include <spot/twacube/twacube.hh>
+#include <spot/twacube/fwd.hh>
 #include <spot/mc/intersect.hh>
+#include <spot/mc/mc.hh>
 
 namespace spot
 {
