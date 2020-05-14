@@ -579,7 +579,17 @@ namespace spot
 
     void finalize()
     {
+      bool tst_val = false;
+      bool new_val = true;
+      bool exchanged = stop_.compare_exchange_strong(tst_val, new_val);
+      if (exchanged)
+        finisher_ = true;
       tm_.stop("DFS thread " + std::to_string(tid_));
+    }
+
+    bool finisher()
+    {
+      return finisher_;
     }
 
     unsigned states()
@@ -632,5 +642,6 @@ namespace spot
     bool is_empty_ = true;
     spot::timer_map tm_;              ///< \brief Time execution
     std::atomic<bool>& stop_;
+    bool finisher_ = false;
   };
 }

@@ -236,7 +236,17 @@ namespace spot
 
     void finalize()
     {
+      bool tst_val = false;
+      bool new_val = true;
+      bool exchanged = stop_.compare_exchange_strong(tst_val, new_val);
+      if (exchanged)
+        finisher_ = true;
       tm_.stop("DFS thread " + std::to_string(tid_));
+    }
+
+    bool finisher()
+    {
+      return finisher_;
     }
 
     unsigned states()
@@ -508,5 +518,6 @@ namespace spot
     std::vector<product_state> Rp_;        ///< \brief Rp stack
     std::vector<product_state> Rp_acc_;    ///< \brief Rp acc stack
     product_state cycle_start_;            ///< \brief Begining of a cycle
+    bool finisher_ = false;
   };
 }
