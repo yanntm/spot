@@ -81,19 +81,22 @@ grep 'Unexpected' stderr
 # Test parallel algorithms
 
 # Test Deadlock
-run 0 ../modelcheck --model beem-peterson.4.dve2C \
-    --csv --has-deadlock -p 3 >stdout
-test `grep "#" stdout | awk -F',' '{print $4}'` = "NO-DEADLOCK"
-
+run 0 ../modelcheck --model $srcdir/beem-peterson.4.dve \
+    --csv --has-deadlock -p 1 >stdout
+test `grep "#" stdout | awk -F',' '{print $5}'` = "no_deadlock"
 
 # Test Bloemen
-run 0 ../modelcheck --model beem-peterson.4.dve2C \
-    --csv --bloemen -p 3 >stdout
-test `grep "#" stdout | awk -F',' '{print $7}'` -eq 29115
+run 0 ../modelcheck --model $srcdir/beem-peterson.4.dve \
+    --csv --bloemen -p 1 >stdout
+test `grep "#" stdout | awk -F',' '{print $8}'` -eq 29115
 
-run 0 ../modelcheck --model beem-peterson.4.dve2C \
+run 0 ../modelcheck --model $srcdir/beem-peterson.4.dve \
     --formula '!GF(P_0.CS|P_1.CS|P_2.CS|P_3.CS)' --csv --bloemen-ec -p 3 >stdout
 
 # Test CNDFS
-run 0 ../modelcheck --model beem-peterson.4.dve2C \
+run 0 ../modelcheck --model $srcdir/beem-peterson.4.dve \
     --formula '!GF(P_0.CS|P_1.CS|P_2.CS|P_3.CS)' --csv --cndfs -p 3 >stdout
+
+# Test SWARMING
+run 0 ../modelcheck --model $srcdir/beem-peterson.4.dve \
+    --formula '!GF(P_0.CS|P_1.CS|P_2.CS|P_3.CS)' --csv --swarming -p 3 >stdout
