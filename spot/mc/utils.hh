@@ -19,85 +19,148 @@
 
 #pragma once
 
-#include <spot/mc/reachability.hh>
 #include <spot/mc/intersect.hh>
 #include <spot/twa/twa.hh>
 #include <spot/twacube_algos/convert.hh>
 
 namespace spot
 {
+  /// \brief convert a (cube) model  into a twa.
+  /// Note that this algorithm cannot be run in parallel but could.
   template<typename State, typename SuccIterator,
            typename StateHash, typename StateEqual>
-  class SPOT_API kripke_to_twa :
-    public seq_reach_kripke<State, SuccIterator,
-                            StateHash, StateEqual,
-                            kripke_to_twa<State, SuccIterator,
-                                          StateHash, StateEqual>>
+  class SPOT_API kripkecube_to_twa
   {
   public:
-    kripke_to_twa(kripkecube<State, SuccIterator>& sys, bdd_dict_ptr dict)
-      : seq_reach_kripke<State, SuccIterator, StateHash, StateEqual,
-                         kripke_to_twa<State, SuccIterator,
-                                       StateHash, StateEqual>>(sys),
-      dict_(dict)
-      {}
 
-    ~kripke_to_twa()
-      {
-      }
+  kripkecube_to_twa(kripkecube<State, SuccIterator>& sys, bdd_dict_ptr dict):
+    sys_(sys), dict_(dict)
+    {
+     static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
+                   State, SuccIterator>::value,
+                   "error: does not match the kripkecube requirements");
+    }
+
+    ~kripkecube_to_twa()
+    {
+     visited_.clear();
+    }
+
+    void run()
+    {
+     setup();
+     State initial = sys_.initial(0);
+     if (SPOT_LIKELY(push(initial, dfs_number_+1)))
+       {
+         visited_[initial] = dfs_number_++;
+         todo_.push_back({initial, sys_.succ(initial, 0)});
+       }
+     while (!todo_.empty())
+       {
+         if (todo_.back().it->done())
+           {
+             if (SPOT_LIKELY(pop(todo_.back().s)))
+               {
+                 sys_.recycle(todo_.back().it, 0);
+                 todo_.pop_back();
+               }
+           }
+         else
+           {
+             ++transitions_;
+             State dst = todo_.back().it->state();
+             auto it = visited_.find(dst);
+             if (it == visited_.end())
+               {
+                 if (SPOT_LIKELY(push(dst, dfs_number_+1)))
+                   {
+                     visited_[dst] = dfs_number_++;
+                     todo_.back().it->next();
+                     todo_.push_back({dst, sys_.succ(dst, 0)});
+                   }
+               }
+             else
+               {
+                 edge(visited_[todo_.back().s], visited_[dst]);
+                 todo_.back().it->next();
+               }
+           }
+       }
+     finalize();
+    }
 
     void setup()
     {
-      res_ = make_twa_graph(dict_);
-      names_ = new std::vector<std::string>();
+     auto d = spot::make_bdd_dict();
+     res_ = make_twa_graph(d);
+     names_ = new std::vector<std::string>();
 
-      // padding to simplify computation.
-      res_->new_state();
-
-      // Compute the reverse binder.
-      auto aps = this->sys_.ap();
-      for (unsigned i = 0; i < aps.size(); ++i)
-        {
-          auto k = res_->register_ap(aps[i]);
-          reverse_binder_.insert({i, k});
-        }
+     int i = 0;
+     for (auto ap : sys_.ap())
+       {
+         auto idx = res_->register_ap(ap);
+         reverse_binder_[i++] = idx;
+       }
     }
 
-    void push(State s, unsigned i)
+    bool push(State s, unsigned i)
     {
+
       unsigned st = res_->new_state();
-      names_->push_back(this->sys_.to_string(s));
-      SPOT_ASSERT(st == i);
+      names_->push_back(sys_.to_string(s));
+      if (!todo_.empty())
+        {
+          edge(visited_[todo_.back().s], st);
+        }
+
+      SPOT_ASSERT(st+1 == i);
+      return true;
+    }
+
+    bool pop(State)
+    {
+      return true;
     }
 
     void edge(unsigned src, unsigned dst)
     {
-      cubeset cs(this->sys_.ap().size());
-      bdd cond = cube_to_bdd(this->todo.back().it->condition(),
-                             cs, reverse_binder_);
-      res_->new_edge(src, dst, cond);
+     cubeset cs(sys_.ap().size());
+     bdd cond = cube_to_bdd(todo_.back().it->condition(),
+                            cs, reverse_binder_);
+     res_->new_edge(src, dst, cond);
     }
 
     void finalize()
     {
-      res_->set_init_state(1);
-      res_->purge_unreachable_states();
-      res_->set_named_prop<std::vector<std::string>>("state-names", names_);
+     res_->purge_unreachable_states();
+     res_->set_named_prop<std::vector<std::string>>("state-names", names_);
     }
 
     twa_graph_ptr twa()
     {
-      return res_;
+     return res_;
     }
 
-  private:
+  protected:
+    struct todo__element
+    {
+      State s;
+      SuccIterator* it;
+    };
+
+    typedef std::unordered_map<const State, int,
+                               StateHash, StateEqual> visited__map;
+
+    kripkecube<State, SuccIterator>& sys_;
+    std::vector<todo__element> todo_;
+    visited__map visited_;
+    unsigned int dfs_number_ = 0;
+    unsigned int transitions_ = 0;
     spot::twa_graph_ptr res_;
     std::vector<std::string>* names_;
     bdd_dict_ptr dict_;
     std::unordered_map<int, int> reverse_binder_;
   };
-
-
 
   /// \brief convert a (cube) product automaton into a twa
   /// Note that this algorithm cannot be run in parallel.
@@ -128,6 +191,7 @@ namespace spot
       size_t
       operator()(const product_state lhs) const noexcept
       {
+        StateHash hash;
         unsigned u = hash(lhs.st_kripke) % (1<<30);
         u = wang32_hash(lhs.st_prop) ^ u;
         u = u % (1<<30);
@@ -217,6 +281,7 @@ namespace spot
 
     twa_graph_ptr twa()
     {
+      res_->purge_unreachable_states();
       res_->set_named_prop<std::vector<std::string>>("state-names", names_);
       return res_;
     }
@@ -228,7 +293,7 @@ namespace spot
       names_ = new std::vector<std::string>();
 
       int i = 0;
-      for (auto ap : this->twa_->ap())
+      for (auto ap : sys_.ap())
         {
           auto idx = res_->register_ap(ap);
           reverse_binder_[i++] = idx;
@@ -237,24 +302,25 @@ namespace spot
 
     bool push_state(product_state s, unsigned i, acc_cond::mark_t)
     {
-      // push also implies edge (when it's not the initial state)
-      if (this->todo_.size())
-        {
-          auto c = this->twa_->get_cubeset()
-            .intersection(this->twa_->trans_data
-                          (this->todo_.back().it_prop).cube_,
-                          this->todo_.back().it_kripke->condition());
+      unsigned st = res_->new_state();
 
-          bdd x = spot::cube_to_bdd(c, this->twa_->get_cubeset(),
+      if (!todo_.empty())
+        {
+          auto c = twa_->get_cubeset()
+            .intersection(twa_->trans_data
+                          (todo_.back().it_prop).cube_,
+                          todo_.back().it_kripke->condition());
+
+          bdd x = spot::cube_to_bdd(c, twa_->get_cubeset(),
                                     reverse_binder_);
-          this->twa_->get_cubeset().release(c);
-          res_->new_edge(this->map[this->todo_.back().st]-1, i-1, x,
-                         this->twa_->trans_data
-                         (this->todo_.back().it_prop).acc_);
+          twa_->get_cubeset().release(c);
+          res_->new_edge(map[todo_.back().st]-1, st, x,
+                         twa_->trans_data
+                         (todo_.back().it_prop).acc_);
         }
 
-      unsigned st = res_->new_state();
-      names_->push_back(this->sys_.to_string(s.st_kripke) +
+
+      names_->push_back(sys_.to_string(s.st_kripke) +
                         ('*' + std::to_string(s.st_prop)));
       SPOT_ASSERT(st+1 == i);
       return true;
@@ -264,14 +330,14 @@ namespace spot
                 product_state, unsigned dst,
                 acc_cond::mark_t cond)
     {
-      auto c = this->twa_->get_cubeset()
-        .intersection(this->twa_->trans_data
-                      (this->todo_.back().it_prop).cube_,
-                      this->todo_.back().it_kripke->condition());
+      auto c = twa_->get_cubeset()
+        .intersection(twa_->trans_data
+                      (todo_.back().it_prop).cube_,
+                      todo_.back().it_kripke->condition());
 
-      bdd x = spot::cube_to_bdd(c, this->twa_->get_cubeset(),
+      bdd x = spot::cube_to_bdd(c, twa_->get_cubeset(),
                                 reverse_binder_);
-      this->twa_->get_cubeset().release(c);
+      twa_->get_cubeset().release(c);
       res_->new_edge(src-1, dst-1, x, cond);
       return false;
     }
