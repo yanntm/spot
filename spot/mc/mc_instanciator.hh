@@ -117,6 +117,7 @@ namespace spot
         result.transitions.emplace_back(swarmed[i]->transitions());
         result.sccs.emplace_back(swarmed[i]->sccs());
         result.value.emplace_back(swarmed[i]->result());
+        result.finisher.emplace_back(swarmed[i]->finisher());
       }
 
     if (trace)

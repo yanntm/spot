@@ -60,6 +60,7 @@ namespace spot
    std::vector<unsigned> transitions; ///< \brief Number of transitions visited
    std::vector<int> sccs;             ///< \brief Number of SCCs or -1
    std::vector<mc_rvalue> value;      ///< \brief The return status
+   std::vector<bool> finisher;        ///< \brief Is it the finisher thread?
    std::string trace;                 ///< \brief The output trace
   };
 
@@ -112,12 +113,15 @@ namespace spot
            << "   - Walltime (ms):\t" << es.walltime[i] <<'\n'
            << "   - States:\t\t" << es.states[i] << '\n'
            << "   - Transitions:\t" << es.transitions[i] << '\n'
-           << "   - Result:\t\t" << es.value[i] << '\n';
+           << "   - Result:\t\t" << es.value[i] << '\n'
+           << "   - SCCs:\t\t" << es.sccs[i] << '\n';
 
-        os << "CSV: tid,algorithm,walltime,states,transitions,result\n"
+        os << "CSV: tid,algorithm,walltime,states,transitions,"
+              "sccs,result,finisher\n"
            << "@th_" << i << ',' << es.name[i] << ',' << es.walltime[i] << ','
            << es.states[i] << ',' << es.transitions[i] << ','
-           << es.value[i] << "\n\n";
+           << es.sccs[i] << ',' << es.value[i]
+           << ',' << es.finisher[i] << "\n\n";
       }
     return os;
   }
