@@ -436,9 +436,10 @@ namespace spot
                    shared_map& map, /* useless here */
                    iterable_uf<State, StateHash, StateEqual>* uf,
                    unsigned tid,
-                   std::atomic<bool>& /*useless here*/):
+                   std::atomic<bool>& stop):
       sys_(sys),  uf_(*uf), tid_(tid),
-      nb_th_(std::thread::hardware_concurrency())
+      nb_th_(std::thread::hardware_concurrency()),
+      stop_(stop)
     {
       static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
                                              State, SuccIterator>::value,
@@ -457,7 +458,7 @@ namespace spot
       while (!todo_.empty())
         {
         bloemen_recursive_start:
-          while (true)
+          while (!stop_.load(std::memory_order_relaxed))
             {
               bool sccfound = false;
               uf_element* v_prime = uf_.pick_from_list(todo_.back(), &sccfound);
@@ -510,7 +511,17 @@ namespace spot
 
     void finalize()
     {
+      bool tst_val = false;
+      bool new_val = true;
+      bool exchanged = stop_.compare_exchange_strong(tst_val, new_val);
+      if (exchanged)
+        finisher_ = true;
       tm_.stop("DFS thread " + std::to_string(tid_));
+    }
+
+    bool finisher()
+    {
+      return finisher_;
     }
 
     unsigned states()
@@ -561,5 +572,7 @@ namespace spot
     unsigned transitions_ = 0;        ///< \brief Number of transitions visited
     unsigned sccs_ = 0;               ///< \brief Number of SCC visited
     spot::timer_map tm_;              ///< \brief Time execution
+    std::atomic<bool>& stop_;
+    bool finisher_ = false;
   };
 }

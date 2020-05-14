@@ -230,7 +230,17 @@ namespace spot
 
     void finalize()
     {
+      bool tst_val = false;
+      bool new_val = true;
+      bool exchanged = stop_.compare_exchange_strong(tst_val, new_val);
+      if (exchanged)
+        finisher_ = true;
       tm_.stop("DFS thread " + std::to_string(tid_));
+    }
+
+    bool finisher()
+    {
+      return finisher_;
     }
 
     unsigned int states()
@@ -415,5 +425,6 @@ namespace spot
     unsigned sccs_;
     unsigned dfs_;
     spot::timer_map tm_;
+    bool finisher_ = false;
   };
 }

@@ -222,8 +222,17 @@ namespace spot
 
     void finalize()
     {
-      stop_ = true;
+      bool tst_val = false;
+      bool new_val = true;
+      bool exchanged = stop_.compare_exchange_strong(tst_val, new_val);
+      if (exchanged)
+        finisher_ = true;
       tm_.stop("DFS thread " + std::to_string(tid_));
+    }
+
+    bool finisher()
+    {
+      return finisher_;
     }
 
     unsigned states()
@@ -292,5 +301,6 @@ namespace spot
     /// \brief Stack that grows according to the todo stack. It avoid multiple
     /// concurent access to the shared map.
     std::vector<int*> refs_;
+    bool finisher_ = false;
   };
 }
