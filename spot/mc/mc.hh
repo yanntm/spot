@@ -30,7 +30,7 @@
 namespace spot
 {
   /// \brief The list of parallel model-checking algorithms available
-  enum SPOT_API class mc_algorithm
+  enum class SPOT_API mc_algorithm
     {
      BLOEMEN_EC,    ///< \brief Bloemen.16.hvc emptiness check
      BLOEMEN_SCC,   ///< \brief Bloemen.16.ppopp SCC computation
@@ -40,7 +40,7 @@ namespace spot
      SWARMING,      ///< \brief Holzmann.11.ieee applied to renault.13.lpar
     };
 
-  enum SPOT_API class mc_rvalue
+  enum class SPOT_API mc_rvalue
     {
      DEADLOCK,                  ///< \brief A deadlock has been found
      EMPTY,                     ///< \brief The product is empty
