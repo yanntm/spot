@@ -556,29 +556,31 @@ static int checked_main()
 
 
           // Grab The informations to display into the CSV
-          // FIXME: The CSV can be inconsistent since it may return
-          // time of one thread and SCC of another.
-          auto walltime = std::min_element(result.walltime.rbegin(),
-                                           result.walltime.rend());
-          auto states = std::min_element(result.states.rbegin(),
-                                         result.states.rend());
-          auto trans = std::min_element(result.transitions.rbegin(),
-                                        result.transitions.rend());
-          auto sccs = std::max_element(result.sccs.rbegin(),
-                                       result.sccs.rend());
+          unsigned c_states = 0;
+          unsigned c_trans = 0;
+          int c_sccs = 0; // not unsigned since it can be negative
+          unsigned walltime = 0;
+          for (unsigned i = 0; i < result.finisher.size(); ++i)
+            {
+              if (result.finisher[i])
+                walltime = result.walltime[i];
+              c_states += result.states[i];
+              c_trans += result.transitions[i];
+              c_sccs += result.sccs[i];
+            }
 
           std::cout << "Find following the csv: "
                     << "model,formula,walltimems,memused,type,"
-                    << "states,transitions,sccs\n";
+                    << "cumul_states,cumul_transitions,cumul_sccs\n";
           std::cout << '#'
                     << split_filename(mc_options.model) << ',';
 
           if (mc_options.formula != nullptr)
             std::cout << mc_options.formula;
 
-          std::cout << ',' << *walltime << ',' << memused << ','
-                    << rval << ',' << *states << ',' << *trans << ','
-                    << *sccs << '\n';
+          std::cout << ',' << walltime << ',' << memused << ','
+                    << rval << ',' << c_states << ',' << c_trans << ','
+                    << (c_sccs < 0 ? -1 : c_sccs) << '\n';
         }
     }
 
