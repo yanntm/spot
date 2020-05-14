@@ -54,15 +54,16 @@ Exit status:\n\
   2  Errors occurs during processing";
 
 const unsigned DOT_MODEL = 1;
-const unsigned DOT_PRODUCT = 2;
-const unsigned DOT_FORMULA = 4;
-const unsigned CSV = 8;
+const unsigned HOA_MODEL = 2;
+const unsigned DOT_PRODUCT = 4;
+const unsigned DOT_FORMULA = 8;
+const unsigned CSV = 16;
 
 // Handle all options specified in the command line
 struct mc_options_
 {
   bool compute_counterexample = false;
-  unsigned dot_output = 0;
+  unsigned output = 0;
   bool is_empty = false;
   char* formula = nullptr;
   char* model = nullptr;
@@ -104,11 +105,11 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case 'd':
       if (strcmp(arg, "model") == 0)
-        mc_options.dot_output |= DOT_MODEL;
+        mc_options.output |= DOT_MODEL;
       else if (strcmp(arg, "product") == 0)
-        mc_options.dot_output |= DOT_PRODUCT;
+        mc_options.output |= DOT_PRODUCT;
       else if (strcmp(arg, "formula") == 0)
-        mc_options.dot_output |= DOT_FORMULA;
+        mc_options.output |= DOT_FORMULA;
       else
         {
           std::cerr << "Unknown argument: '" << arg
@@ -129,6 +130,9 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       break;
     case 'm':
       mc_options.model = arg;
+      break;
+    case 'k':
+      mc_options.output |= HOA_MODEL;
       break;
     case 'p':
       mc_options.nb_threads = to_unsigned(arg, "-p/--parallel");
@@ -205,6 +209,8 @@ static const argp_option options[] =
       "output a CSV containing interesting values", 0 },
     { "dot", 'd', "[model|product|formula]", 0,
       "output the associated automaton in dot format", 0 },
+    { "kripke", 'k', nullptr, 0,
+      "output the model state-space in Kripke format", 0 },
     // ------------------------------------------------------------
     { nullptr, 0, nullptr, 0, "Optimization options:", 4 },
     { "compress", 'z', "INT", 0, "specify the level of compression\n"
@@ -278,7 +284,7 @@ static int checked_main()
 
       atomic_prop_collect(f, &ap);
 
-      if (mc_options.dot_output & DOT_FORMULA)
+      if (mc_options.output & DOT_FORMULA)
         {
           tm.start("dot output");
           spot::print_dot(std::cout, prop);
@@ -306,11 +312,19 @@ static int checked_main()
           goto safe_exit;
         }
 
-      if (mc_options.dot_output & DOT_MODEL)
+      if (mc_options.output & DOT_MODEL)
         {
           tm.start("dot output");
           spot::print_dot(std::cout, model);
           tm.stop("dot output");
+        }
+
+      if (mc_options.output & HOA_MODEL)
+        {
+          tm.start("kripke output");
+          spot::print_hoa(std::cout, model);
+          tm.stop("kripke output");
+          goto safe_exit;
         }
     }
 
@@ -419,21 +433,29 @@ static int checked_main()
           }
         }
 
-      if (mc_options.dot_output & DOT_PRODUCT)
+      if (mc_options.output & DOT_PRODUCT)
         {
           tm.start("dot output");
           spot::print_dot(std::cout, product);
           tm.stop("dot output");
         }
     }
-  // FIXME : handle here swarming
   else if (mc_options.force_parallel && mc_options.model != nullptr)
     {
       std::cout << "Warning : using parallel algorithms (CUBE-based)\n\n";
 
-      if (mc_options.dot_output & DOT_PRODUCT)
+      if (mc_options.output & DOT_PRODUCT)
         {
           std::cerr << "\nERROR: Parallel algorithm doesn't support DOT"
+            " output  for the synchronous product.\n"
+            "       Please consider removing '-p' option\n";
+          exit_code = 2;
+          goto safe_exit;
+        }
+
+      if (mc_options.output & HOA_MODEL)
+        {
+          std::cerr << "\nERROR: Parallel algorithm doesn't support HOA"
             " output  for the synchronous product.\n"
             "       Please consider removing '-p' option\n";
           exit_code = 2;
