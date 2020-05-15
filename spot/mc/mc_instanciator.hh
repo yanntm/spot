@@ -36,6 +36,47 @@
 namespace spot
 {
 
+  /// \brief This class allows to ensure (at compile time) if
+  /// a given parameter can be compsidered as a modelchecking algorithm
+  /// (i.e., usable by instanciate)
+  template <typename T>
+  class SPOT_API is_a_mc_algorithm
+  {
+  private:
+    using yes = std::true_type;
+    using no = std::false_type;
+
+    // Hardly waiting C++ concepts...
+    template<typename U> static auto test_mc_algo(U u)
+      -> decltype(
+       // Check the kripke
+          std::is_same<void,        decltype(u->setup())>::value             &&
+          std::is_same<void,        decltype(u->run())>::value               &&
+          std::is_same<void,        decltype(u->finalize())>::value          &&
+          std::is_same<bool,        decltype(u->finisher())>::value          &&
+          std::is_same<unsigned,    decltype(u->states())>::value            &&
+          std::is_same<unsigned,    decltype(u->transitions())>::value       &&
+          std::is_same<unsigned,    decltype(u->walltime())>::value          &&
+          std::is_same<std::string, decltype(u->name())>::value              &&
+          std::is_same<int,         decltype(u->sccs())>::value              &&
+          std::is_same<mc_rvalue,   decltype(u->result())>::value            &&
+          std::is_same<std::string, decltype(u->trace())>::value
+
+      // finally return the type "yes"
+      , yes());
+
+    // For all other cases return the type "no"
+    template<typename> static no test_mc_algo(...);
+
+  public:
+
+    /// \brief Checking this value will ensure, at compile time, that the
+    /// Kripke specialisation respects the required interface.
+    static constexpr bool value =
+      std::is_same< decltype(test_mc_algo<T>(nullptr)), yes>::value;
+  };
+
+
   template<typename algo_name, typename kripke_ptr, typename State,
            typename Iterator, typename Hash, typename Equal>
   static SPOT_API ec_stats instanciate(kripke_ptr sys,
@@ -60,6 +101,10 @@ namespace spot
       {
         ss[i] = algo_name::make_shared_structure(map, i);
         swarmed[i] = new algo_name(*sys, prop, map, ss[i], i, stop);
+
+        static_assert(spot::is_a_mc_algorithm<decltype(&*swarmed[i])>::value,
+                    "error: does not match the kripkecube requirements");
+
       }
     tm.stop("Initialisation");
 
