@@ -68,7 +68,7 @@ namespace spot
   /// a given parameter is of type kripkecube. It also check
   /// if the iterator has the good interface.
   template <typename T, typename State, typename SuccIter>
-  class is_a_kripkecube_ptr
+  class SPOT_API is_a_kripkecube_ptr
   {
   private:
     using yes = std::true_type;
