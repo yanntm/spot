@@ -4100,6 +4100,12 @@ namespace spot
     return simplify_recursively(f, cache_);
   }
 
+  tl_simplifier_options&
+  tl_simplifier::options()
+  {
+    return cache_->options;
+  }
+
   formula
   tl_simplifier::negative_normal_form(formula f, bool negated)
   {

@@ -384,8 +384,12 @@ namespace
       if (want_time)
         trans_time = sw.stop();
       if (verbose)
-        std::cerr << "translating formula done in "
-                  << trans_time << " seconds\n";
+        {
+          std::cerr << "translating formula done in "
+                    << trans_time << " seconds\n";
+          std::cerr << "automaton has " << aut->num_states()
+                    << " states and " << aut->num_sets() << " colors\n";
+        }
 
       spot::twa_graph_ptr dpa = nullptr;
       switch (opt_solver)

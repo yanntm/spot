@@ -106,10 +106,6 @@ namespace spot
           throw std::runtime_error
             ("tls-impl should take a value between 0 and 3");
         }
-    if (comp_susp_ > 0 || (ltl_split_ && type_ == Generic))
-      options.favor_event_univ = true;
-    if (type_ == Generic && ltl_split_ && (pref_ & Deterministic))
-      options.keep_top_xor = true;
     simpl_owned_ = simpl_ = new tl_simplifier(options, dict);
   }
 
@@ -419,6 +415,18 @@ namespace spot
 
   twa_graph_ptr translator::run(formula* f)
   {
+    if (simpl_owned_)
+      {
+        // Modify the options according to set_pref() and set_type().
+        // We do it for all translation, but really only the first one
+        // matters.
+        auto& opt = simpl_owned_->options();
+        if (comp_susp_ > 0 || (ltl_split_ && type_ == Generic))
+          opt.favor_event_univ = true;
+        if (type_ == Generic && ltl_split_ && (pref_ & Deterministic))
+          opt.keep_top_xor = true;
+      }
+
     // Do we want to relabel Boolean subformulas?
     // If we have a huge formula such as
     //  (a1 & a2 & ... & an) U (b1 | b2 | ... | bm)
