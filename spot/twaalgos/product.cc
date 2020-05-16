@@ -22,6 +22,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/complete.hh>
 #include <spot/twaalgos/sccinfo.hh>
+#include <spot/twaalgos/isdet.hh>
 #include <deque>
 #include <unordered_map>
 #include <spot/misc/hash.hh>
@@ -40,7 +41,6 @@ namespace spot
         return wang32_hash(s.first ^ wang32_hash(s.second));
       }
     };
-
 
     template<typename T>
     static
@@ -100,12 +100,15 @@ namespace spot
         }
     }
 
+    enum acc_op { and_acc, or_acc, xor_acc, xnor_acc };
+
+
     static
     twa_graph_ptr product_aux(const const_twa_graph_ptr& left,
                               const const_twa_graph_ptr& right,
                               unsigned left_state,
                               unsigned right_state,
-                              bool and_acc,
+                              acc_op aop,
                               const output_aborter* aborter)
     {
       if (SPOT_UNLIKELY(!(left->is_existential() && right->is_existential())))
@@ -122,164 +125,271 @@ namespace spot
       bool leftweak = left->prop_weak().is_true();
       bool rightweak = right->prop_weak().is_true();
       // We have optimization to the standard product in case one
-      // of the arguments is weak.  However these optimizations
-      // are pointless if the said arguments are "t" or "f".
-      if ((leftweak || rightweak)
-          && (left->num_sets() > 0) && (right->num_sets() > 0))
+      // of the arguments is weak.
+      if (leftweak || rightweak)
         {
           // If both automata are weak, we can restrict the result to
-          // Büchi or co-Büchi.  We will favor Büchi unless the two
-          // operands are co-Büchi.
+          // t, f, Büchi or co-Büchi.  We use co-Büchi only when
+          // t and f cannot be used, and both acceptance conditions
+          // are in {t,f,co-Büchi}.
           if (leftweak && rightweak)
             {
             weak_weak:
+              res->prop_weak(true);
               acc_cond::mark_t accmark = {0};
               acc_cond::mark_t rejmark = {};
-              if (left->acc().is_co_buchi() && right->acc().is_co_buchi())
+              auto& lacc = left->acc();
+              auto& racc = right->acc();
+              if ((lacc.is_co_buchi() && (racc.is_co_buchi()
+                                         || racc.num_sets() == 0))
+                  || (lacc.num_sets() == 0 && racc.is_co_buchi()))
                 {
                   res->set_co_buchi();
                   std::swap(accmark, rejmark);
+                }
+              else if ((aop == and_acc && lacc.is_t() && racc.is_t())
+                       || (aop == or_acc && (lacc.is_t() || racc.is_t()))
+                       || (aop == xnor_acc && ((lacc.is_t() && racc.is_t()) ||
+                                               (lacc.is_f() && racc.is_f())))
+                       || (aop == xor_acc && ((lacc.is_t() && racc.is_f()) ||
+                                              (lacc.is_f() && racc.is_t()))))
+                {
+                  res->set_acceptance(0, acc_cond::acc_code::t());
+                  accmark = {};
+                }
+              else if ((aop == and_acc && (lacc.is_f() || racc.is_f()))
+                       || (aop == or_acc && lacc.is_f() && racc.is_f())
+                       || (aop == xor_acc && ((lacc.is_t() && racc.is_t()) ||
+                                              (lacc.is_f() && racc.is_f())))
+                       || (aop == xnor_acc && ((lacc.is_t() && racc.is_f()) ||
+                                               (lacc.is_f() && racc.is_t()))))
+                {
+                  res->set_acceptance(0, acc_cond::acc_code::f());
+                  accmark = {};
                 }
               else
                 {
                   res->set_buchi();
                 }
-              res->prop_weak(true);
-              auto& lacc = left->acc();
-              auto& racc = right->acc();
-              if (and_acc)
-                product_main(left, right, left_state, right_state, res,
-                             [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
-                             {
-                               if (lacc.accepting(ml) && racc.accepting(mr))
-                                 return accmark;
-                               else
-                                 return rejmark;
-                             }, aborter);
-              else
-                product_main(left, right, left_state, right_state, res,
-                             [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
-                             {
-                               if (lacc.accepting(ml) || racc.accepting(mr))
-                                 return accmark;
-                               else
-                                 return rejmark;
-                             }, aborter);
+              switch (aop)
+                {
+                case and_acc:
+                  product_main(left, right, left_state, right_state, res,
+                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                               {
+                                 if (lacc.accepting(ml) && racc.accepting(mr))
+                                   return accmark;
+                                 else
+                                   return rejmark;
+                               }, aborter);
+                  break;
+                case or_acc:
+                  product_main(left, right, left_state, right_state, res,
+                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                               {
+                                 if (lacc.accepting(ml) || racc.accepting(mr))
+                                   return accmark;
+                                 else
+                                   return rejmark;
+                               }, aborter);
+                  break;
+                case xor_acc:
+                  product_main(left, right, left_state, right_state, res,
+                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                               {
+                                 if (lacc.accepting(ml) ^ racc.accepting(mr))
+                                   return accmark;
+                                 else
+                                   return rejmark;
+                               }, aborter);
+                  break;
+                case xnor_acc:
+                  product_main(left, right, left_state, right_state, res,
+                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                               {
+                                 if (lacc.accepting(ml) == racc.accepting(mr))
+                                   return accmark;
+                                 else
+                                   return rejmark;
+                               }, aborter);
+                  break;
+                }
             }
           else if (!rightweak)
             {
-              if (and_acc)
+              switch (aop)
                 {
-                  auto rightunsatmark = right->acc().unsat_mark();
-                  if (!rightunsatmark.first)
-                    {
-                      // Left is weak.  Right was not weak, but it is
-                      // always accepting.  We can therefore pretend
-                      // that right is weak.
-                      goto weak_weak;
-                    }
-                  res->copy_acceptance_of(right);
-                  acc_cond::mark_t rejmark = rightunsatmark.second;
-                  auto& lacc = left->acc();
-                  product_main(left, right, left_state, right_state, res,
-                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
-                               {
-                                 if (lacc.accepting(ml))
-                                   return mr;
-                                 else
-                                   return rejmark;
-                               }, aborter);
-                }
-              else
-                {
-                  auto rightsatmark = right->acc().sat_mark();
-                  if (!rightsatmark.first)
-                    {
-                      // Left is weak.  Right was not weak, but it is
-                      // always rejecting.  We can therefore pretend
-                      // that right is weak.
-                      goto weak_weak;
-                    }
-                  res->copy_acceptance_of(right);
-                  acc_cond::mark_t accmark = rightsatmark.second;
-                  auto& lacc = left->acc();
-                  product_main(left, right, left_state, right_state, res,
-                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
-                               {
-                                 if (!lacc.accepting(ml))
-                                   return mr;
-                                 else
-                                   return accmark;
-                               }, aborter);
-
+                case and_acc:
+                  {
+                    auto rightunsatmark = right->acc().unsat_mark();
+                    if (!rightunsatmark.first)
+                      {
+                        // Left is weak.  Right was not weak, but it is
+                        // always accepting.  We can therefore pretend
+                        // that right is weak.
+                        goto weak_weak;
+                      }
+                    res->copy_acceptance_of(right);
+                    acc_cond::mark_t rejmark = rightunsatmark.second;
+                    auto& lacc = left->acc();
+                    product_main(left, right, left_state, right_state, res,
+                                 [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                                 {
+                                   if (lacc.accepting(ml))
+                                     return mr;
+                                   else
+                                     return rejmark;
+                                 }, aborter);
+                    break;
+                  }
+                case or_acc:
+                  {
+                    auto rightsatmark = right->acc().sat_mark();
+                    if (!rightsatmark.first)
+                      {
+                        // Left is weak.  Right was not weak, but it is
+                        // always rejecting.  We can therefore pretend
+                        // that right is weak.
+                        goto weak_weak;
+                      }
+                    res->copy_acceptance_of(right);
+                    acc_cond::mark_t accmark = rightsatmark.second;
+                    auto& lacc = left->acc();
+                    product_main(left, right, left_state, right_state, res,
+                                 [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                                 {
+                                   if (!lacc.accepting(ml))
+                                     return mr;
+                                   else
+                                     return accmark;
+                                 }, aborter);
+                    break;
+                  }
+                case xor_acc:
+                case xnor_acc:
+                  {
+                    auto rightsatmark = right->acc().sat_mark();
+                    auto rightunsatmark = right->acc().unsat_mark();
+                    if (!rightunsatmark.first || !rightsatmark.first)
+                      {
+                        // Left is weak.  Right was not weak, but it
+                        // is either always rejecting or always
+                        // accepting.  We can therefore pretend that
+                        // right is weak.
+                        goto weak_weak;
+                      }
+                    goto generalcase;
+                    break;
+                  }
                 }
             }
-          else
+          else // right weak
             {
               assert(!leftweak);
-              if (and_acc)
+              switch (aop)
                 {
-                  auto leftunsatmark = left->acc().unsat_mark();
-                  if (!leftunsatmark.first)
-                    {
-                      // Right is weak.  Left was not weak, but it is
-                      // always accepting.  We can therefore pretend
-                      // that left is weak.
-                      goto weak_weak;
-                    }
-                  res->copy_acceptance_of(left);
-                  acc_cond::mark_t rejmark = leftunsatmark.second;
-                  auto& racc = right->acc();
-                  product_main(left, right, left_state, right_state, res,
-                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
-                               {
-                                 if (racc.accepting(mr))
-                                   return ml;
-                                 else
-                                   return rejmark;
-                               }, aborter);
-                }
-              else
-                {
-                  auto leftsatmark = left->acc().sat_mark();
-                  if (!leftsatmark.first)
-                    {
-                      // Right is weak.  Left was not weak, but it is
-                      // always rejecting.  We can therefore pretend
-                      // that left is weak.
-                      goto weak_weak;
-                    }
-                  res->copy_acceptance_of(left);
-                  acc_cond::mark_t accmark = leftsatmark.second;
-                  auto& racc = right->acc();
-                  product_main(left, right, left_state, right_state, res,
-                               [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
-                               {
-                                 if (!racc.accepting(mr))
-                                   return ml;
-                                 else
-                                   return accmark;
-                               }, aborter);
+                case and_acc:
+                  {
+                    auto leftunsatmark = left->acc().unsat_mark();
+                    if (!leftunsatmark.first)
+                      {
+                        // Right is weak.  Left was not weak, but it is
+                        // always accepting.  We can therefore pretend
+                        // that left is weak.
+                        goto weak_weak;
+                      }
+                    res->copy_acceptance_of(left);
+                    acc_cond::mark_t rejmark = leftunsatmark.second;
+                    auto& racc = right->acc();
+                    product_main(left, right, left_state, right_state, res,
+                                 [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                                 {
+                                   if (racc.accepting(mr))
+                                     return ml;
+                                   else
+                                     return rejmark;
+                                 }, aborter);
+                    break;
+                  }
+                case or_acc:
+                  {
+                    auto leftsatmark = left->acc().sat_mark();
+                    if (!leftsatmark.first)
+                      {
+                        // Right is weak.  Left was not weak, but it is
+                        // always rejecting.  We can therefore pretend
+                        // that left is weak.
+                        goto weak_weak;
+                      }
+                    res->copy_acceptance_of(left);
+                    acc_cond::mark_t accmark = leftsatmark.second;
+                    auto& racc = right->acc();
+                    product_main(left, right, left_state, right_state, res,
+                                 [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
+                                 {
+                                   if (!racc.accepting(mr))
+                                     return ml;
+                                   else
+                                     return accmark;
+                                 }, aborter);
 
+                    break;
+                  }
+                case xor_acc:
+                case xnor_acc:
+                  {
+                    auto leftsatmark = left->acc().sat_mark();
+                    auto leftunsatmark = left->acc().unsat_mark();
+                    if (!leftunsatmark.first || !leftsatmark.first)
+                      {
+                        // Right is weak.  Left was not weak, but it
+                        // is either always rejecting or always
+                        // accepting.  We can therefore pretend that
+                        // left is weak.
+                        goto weak_weak;
+                      }
+                    goto generalcase;
+                    break;
+                  }
                 }
             }
         }
       else // general case
         {
+        generalcase:
           auto left_num = left->num_sets();
+          auto& left_acc = left->get_acceptance();
           auto right_acc = right->get_acceptance() << left_num;
-          if (and_acc)
-            right_acc &= left->get_acceptance();
-          else
-            right_acc |= left->get_acceptance();
+          switch (aop)
+            {
+            case and_acc:
+              right_acc &= left_acc;
+              break;
+            case or_acc:
+              right_acc |= left_acc;
+              break;
+            case xor_acc:
+              {
+                auto tmp = right_acc.complement() & left_acc;
+                right_acc &= left_acc.complement();
+                right_acc |= tmp;
+                break;
+              }
+            case xnor_acc:
+              {
+                auto tmp = right_acc.complement() & left_acc.complement();
+                right_acc &= left_acc;
+                tmp |= right_acc;
+                std::swap(tmp, right_acc);
+                break;
+              }
+            }
           res->set_acceptance(left_num + right->num_sets(), right_acc);
-
           product_main(left, right, left_state, right_state, res,
                        [&] (acc_cond::mark_t ml, acc_cond::mark_t mr)
                        {
                          return ml | (mr << left_num);
                        }, aborter);
-
         }
 
       if (!res)                 // aborted
@@ -323,7 +433,7 @@ namespace spot
                         unsigned right_state,
                         const output_aborter* aborter)
   {
-    return product_aux(left, right, left_state, right_state, true, aborter);
+    return product_aux(left, right, left_state, right_state, and_acc, aborter);
   }
 
   twa_graph_ptr product(const const_twa_graph_ptr& left,
@@ -341,7 +451,7 @@ namespace spot
                            unsigned right_state)
   {
     return product_aux(complete(left), complete(right),
-                       left_state, right_state, false, nullptr);
+                       left_state, right_state, or_acc, nullptr);
   }
 
   twa_graph_ptr product_or(const const_twa_graph_ptr& left,
@@ -350,6 +460,32 @@ namespace spot
     return product_or(left, right,
                       left->get_init_state_number(),
                       right->get_init_state_number());
+  }
+
+  twa_graph_ptr product_xor(const const_twa_graph_ptr& left,
+                            const const_twa_graph_ptr& right)
+  {
+    if (SPOT_UNLIKELY(!is_deterministic(left) || !is_deterministic(right)))
+      throw std::runtime_error
+        ("product_xor() only works with deterministic automata");
+
+    return product_aux(complete(left), complete(right),
+                       left->get_init_state_number(),
+                       right->get_init_state_number(),
+                       xor_acc, nullptr);
+  }
+
+  twa_graph_ptr product_xnor(const const_twa_graph_ptr& left,
+                             const const_twa_graph_ptr& right)
+  {
+    if (SPOT_UNLIKELY(!is_deterministic(left) || !is_deterministic(right)))
+      throw std::runtime_error
+        ("product_xnor() only works with deterministic automata");
+
+    return product_aux(complete(left), complete(right),
+                       left->get_init_state_number(),
+                       right->get_init_state_number(),
+                       xnor_acc, nullptr);
   }
 
 

@@ -188,3 +188,32 @@ except ValueError as e:
     assert 'any' in s
 else:
     report_missing_exception()
+
+a1 = spot.translate('FGa')
+a2 = spot.translate('Gb')
+assert not spot.is_deterministic(a1)
+assert spot.is_deterministic(a2)
+try:
+    spot.product_xor(a1, a2)
+except RuntimeError as e:
+    assert "product_xor() only works with deterministic automata"
+else:
+    report_missing_exception()
+try:
+    spot.product_xor(a2, a1)
+except RuntimeError as e:
+    assert "product_xor() only works with deterministic automata"
+else:
+    report_missing_exception()
+try:
+    spot.product_xnor(a1, a2)
+except RuntimeError as e:
+    assert "product_xnor() only works with deterministic automata"
+else:
+    report_missing_exception()
+try:
+    spot.product_xnor(a2, a1)
+except RuntimeError as e:
+    assert "product_xnor() only works with deterministic automata"
+else:
+    report_missing_exception()

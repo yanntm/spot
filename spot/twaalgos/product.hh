@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014, 2015, 2018, 2019 Laboratoire de Recherche et
+// Copyright (C) 2014-2015, 2018-2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -127,6 +127,45 @@ namespace spot
                            unsigned left_state,
                            unsigned right_state);
 
+  /// \ingroup twa_algorithms
+  /// \brief XOR two deterministic automata using a synchronous product
+  ///
+  /// The two operands must be deterministic.
+  ///
+  /// The resulting automaton will accept the symmetric difference of
+  /// both languages and have an acceptance condition that is the xor
+  /// of the acceptance conditions of the two input automata.  In case
+  /// both operands are weak, the acceptance condition of the result
+  /// is made simpler.
+  ///
+  /// The algorithm also defines a named property called
+  /// "product-states" with type spot::product_states.  This stores
+  /// the pair of original state numbers associated to each state of
+  /// the product.
+  SPOT_API
+  twa_graph_ptr product_xor(const const_twa_graph_ptr& left,
+                            const const_twa_graph_ptr& right);
+
+  /// \ingroup twa_algorithms
+  /// \brief XNOR two automata using a synchronous product
+  ///
+  /// The two operands must be deterministic.
+  ///
+  /// The resulting automaton will accept words that are either in
+  /// both input languages, or not in both languages. (The XNOR gate
+  /// it the logical complement of XOR.  XNOR is also known as logical
+  /// equivalence.)  The output will have an acceptance condition that
+  /// is the XNOR of the acceptance conditions of the two input
+  /// automata.  In case both the operands are weak, the acceptance
+  /// condition of the result is made simpler.
+  ///
+  /// The algorithm also defines a named property called
+  /// "product-states" with type spot::product_states.  This stores
+  /// the pair of original state numbers associated to each state of
+  /// the product.
+  SPOT_API
+  twa_graph_ptr product_xnor(const const_twa_graph_ptr& left,
+                             const const_twa_graph_ptr& right);
 
   /// \ingroup twa_algorithms
   /// \brief Build the product of an automaton with a suspendable
@@ -136,7 +175,7 @@ namespace spot
   /// languages of both input automata.
   ///
   /// This function *assumes* that \a right_susp is a suspendable
-  /// automaton, i.e., it its language L satisfies L = Σ*.L.
+  /// automaton, i.e., its language L satisfies L = Σ*.L.
   /// Therefore the product between the two automata need only be done
   /// with the accepting SCCs of left.
   ///
@@ -155,7 +194,7 @@ namespace spot
   /// both input automata.
   ///
   /// This function *assumes* that \a right_susp is a suspendable
-  /// automaton, i.e., it its language L satisfies L = Σ*.L.
+  /// automaton, i.e., its language L satisfies L = Σ*.L.
   /// Therefore, after left has been completed (this will be done by
   /// product_or_susp) the product between the two automata need only
   /// be done with the SCCs of left that contains some rejecting cycles.

@@ -1,6 +1,13 @@
 New in spot 2.9.0.dev (not yet released)
 
-  Nothing yet.
+  Library:
+
+  - product_xor() and product_xnor() are two new versions of the
+    synchronized product.  The only work with operands that are
+    deterministic automata, and build automata whose language are
+    respectively the symmetric difference of the operands, and the
+    complement of that.
+
 
 New in spot 2.9 (2020-04-30)
 
@@ -19,7 +26,7 @@ New in spot 2.9 (2020-04-30)
     spot-rejected-word: "!a; !a; cycle{a}"
 
   - autfilt learned the --partial-degeneralize option, to remove
-    conjunctions of Inf, or disjunction of Fin that appears in
+    conjunctions of Inf, or disjunctions of Fin that appears in
     arbitrary conditions.
 
   - ltlfilt and autfilt learned a --nth=RANGE (a.k.a. -N) option to
