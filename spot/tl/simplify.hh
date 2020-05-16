@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2017, 2019 Laboratoire de Recherche et Developpement
+// Copyright (C) 2011-2017, 2019, 2020 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -30,14 +30,15 @@ namespace spot
   {
   public:
     tl_simplifier_options(bool basics = true,
-                           bool synt_impl = true,
-                           bool event_univ = true,
-                           bool containment_checks = false,
-                           bool containment_checks_stronger = false,
-                           bool nenoform_stop_on_boolean = false,
-                           bool reduce_size_strictly = false,
-                           bool boolean_to_isop = false,
-                           bool favor_event_univ = false)
+                          bool synt_impl = true,
+                          bool event_univ = true,
+                          bool containment_checks = false,
+                          bool containment_checks_stronger = false,
+                          bool nenoform_stop_on_boolean = false,
+                          bool reduce_size_strictly = false,
+                          bool boolean_to_isop = false,
+                          bool favor_event_univ = false,
+                          bool keep_top_xor = false)
       : reduce_basics(basics),
         synt_impl(synt_impl),
         event_univ(event_univ),
@@ -46,7 +47,8 @@ namespace spot
         nenoform_stop_on_boolean(nenoform_stop_on_boolean),
         reduce_size_strictly(reduce_size_strictly),
         boolean_to_isop(boolean_to_isop),
-        favor_event_univ(favor_event_univ)
+        favor_event_univ(favor_event_univ),
+        keep_top_xor(keep_top_xor)
     {
     }
 
@@ -87,6 +89,10 @@ namespace spot
     bool boolean_to_isop;
     // Try to isolate subformulae that are eventual and universal.
     bool favor_event_univ;
+    // Keep Xor and Equiv at the top of the formula, possibly under
+    // &,|, and X operators.  Only rewrite Xor and Equiv under
+    // temporal operators.
+    bool keep_top_xor;
   };
 
   // fwd declaration to hide technical details.
