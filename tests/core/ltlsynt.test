@@ -103,6 +103,7 @@ diff out exp
 
 cat >exp <<EOF
 translating formula done in X seconds
+automaton has 3 states and 2 colors
 split inputs and outputs done in X seconds
 automaton has 9 states
 determinization done
@@ -114,6 +115,21 @@ parity game built in X seconds
 parity game solved in X seconds
 EOF
 ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --verbose --realizability 2> out
+sed 's/ [0-9.e-]* seconds/ X seconds/g' out > outx
+diff outx exp
+
+cat >exp <<EOF
+translating formula done in X seconds
+automaton has 16 states and 2 colors
+split inputs and outputs done in X seconds
+automaton has 47 states
+LAR construction done in X seconds
+DPA has 47 states, 4 colors
+parity game built in X seconds
+parity game solved in X seconds
+EOF
+ltlsynt --ins='a,b,c,d' --outs='e' -f '(Fa & Fb & Fc & Fd) <-> GFe' \
+        --verbose --realizability --algo=lar 2> out
 sed 's/ [0-9.e-]* seconds/ X seconds/g' out > outx
 diff outx exp
 

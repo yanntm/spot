@@ -112,6 +112,14 @@ namespace spot
     /// constructor).
     formula simplify(formula f);
 
+#ifndef SWIG
+    /// The simplifier options.
+    ///
+    /// Those should can still be changed before the first formula is
+    /// simplified.
+    tl_simplifier_options& options();
+#endif
+
     /// Build the negative normal form of formula \a f.
     /// All negations of the formula are pushed in front of the
     /// atomic propositions.  Operators <=>, =>, xor are all removed
