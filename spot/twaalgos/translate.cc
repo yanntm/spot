@@ -108,6 +108,8 @@ namespace spot
         }
     if (comp_susp_ > 0 || (ltl_split_ && type_ == Generic))
       options.favor_event_univ = true;
+    if (type_ == Generic && ltl_split_ && (pref_ & Deterministic))
+      options.keep_top_xor = true;
     simpl_owned_ = simpl_ = new tl_simplifier(options, dict);
   }
 
@@ -167,15 +169,16 @@ namespace spot
                 r2 = formula::multop(op2, susp);
               }
           }
-        if (r2.is_syntactic_obligation() || !r2.is(op::And, op::Or) ||
+        if (r2.is_syntactic_obligation() || !r2.is(op::And, op::Or,
+                                                   op::Xor, op::Equiv) ||
             // For TGBA/BA we only do conjunction.  There is nothing wrong
             // with disjunction, but it seems to generate larger automata
             // in many cases and it needs to be further investigated.  Maybe
             // this could be relaxed in the case of deterministic output.
-            (r2.is(op::Or) && (type_ == TGBA || type_ == BA)))
+            (!r2.is(op::And) && (type_ == TGBA || type_ == BA)))
           goto nosplit;
 
-        bool is_and = r2.is(op::And);
+        op topop = r2.kind();
         // Let's classify subformulas.
         std::vector<formula> oblg;
         std::vector<formula> susp;
@@ -270,10 +273,16 @@ namespace spot
             twa_graph_ptr rest_aut = transrun(rest_f);
             if (aut == nullptr)
               aut = rest_aut;
-            else if (is_and)
+            else if (topop == op::And)
               aut = product(aut, rest_aut);
-            else
+            else if (topop == op::Or)
               aut = product_or(aut, rest_aut);
+            else if (topop == op::Xor)
+              aut = product_xor(aut, rest_aut);
+            else if (topop == op::Equiv)
+              aut = product_xnor(aut, rest_aut);
+            else
+              SPOT_UNREACHABLE();
           }
         if (!susp.empty())
           {
@@ -285,10 +294,16 @@ namespace spot
                 twa_graph_ptr one = transrun(f);
                 if (!susp_aut)
                   susp_aut = one;
-                else if (is_and)
+                else if (topop == op::And)
                   susp_aut = product(susp_aut, one);
-                else
+                else if (topop == op::Or)
                   susp_aut = product_or(susp_aut, one);
+                else if (topop == op::Xor)
+                  susp_aut = product_xor(susp_aut, one);
+                else if (topop == op::Equiv)
+                  susp_aut = product_xnor(susp_aut, one);
+                else
+                  SPOT_UNREACHABLE();
               }
             if (susp_aut->prop_universal().is_true())
               {
@@ -311,10 +326,14 @@ namespace spot
               }
             if (aut == nullptr)
               aut = susp_aut;
-            else if (is_and)
+            else if (topop == op::And)
               aut = product_susp(aut, susp_aut);
-            else
+            else if (topop == op::Or)
               aut = product_or_susp(aut, susp_aut);
+            else if (topop == op::Xor) // No suspension here
+              aut = product_xor(aut, susp_aut);
+            else if (topop == op::Equiv) // No suspension here
+              aut = product_xnor(aut, susp_aut);
             //if (aut && susp_aut)
             //  {
             //    print_hoa(std::cerr << "AUT\n", aut) << '\n';

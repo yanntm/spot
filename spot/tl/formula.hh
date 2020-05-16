@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -186,18 +186,27 @@ namespace spot
       std::string kindstr() const;
 
       /// \see formula::is
+      /// @{
       bool is(op o) const
       {
         return op_ == o;
       }
 
-      /// \see formula::is
       bool is(op o1, op o2) const
       {
         return op_ == o1 || op_ == o2;
       }
 
-      /// \see formula::is
+      bool is(op o1, op o2, op o3) const
+      {
+        return op_ == o1 || op_ == o2 || op_ == o3;
+      }
+
+      bool is(op o1, op o2, op o3, op o4) const
+      {
+        return op_ == o1 || op_ == o2 || op_ == o3 || op_ == o4;
+      }
+
       bool is(std::initializer_list<op> l) const
       {
         const fnode* n = this;
@@ -209,6 +218,7 @@ namespace spot
         }
         return true;
       }
+      /// @}
 
       /// \see formula::get_child_of
       const fnode* get_child_of(op o) const
@@ -1331,6 +1341,19 @@ namespace spot
     bool is(op o1, op o2) const
     {
       return ptr_->is(o1, o2);
+    }
+
+    /// Return true if the formula is of kind \a o1 or \a o2 or \a o3
+    bool is(op o1, op o2, op o3) const
+    {
+      return ptr_->is(o1, o2, o3);
+    }
+
+    /// Return true if the formula is of kind \a o1 or \a o2 or \a o3
+    /// or \a a4.
+    bool is(op o1, op o2, op o3, op o4) const
+    {
+      return ptr_->is(o1, o2, o3, o4);
     }
 
     /// Return true if the formulas nests all the operators in \a l.

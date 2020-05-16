@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2019 Laboratoire de Recherche et Developpement
+// Copyright (C) 2011-2020 Laboratoire de Recherche et Developpement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -417,22 +417,25 @@ namespace spot
     //////////////////////////////////////////////////////////////////////
 
     formula
-    nenoform_rec(formula f, bool negated, tl_simplifier_cache* c);
+    nenoform_rec(formula f, bool negated, tl_simplifier_cache* c,
+                 bool deep);
 
     formula equiv_or_xor(bool equiv, formula f1, formula f2,
-                         tl_simplifier_cache* c)
+                         tl_simplifier_cache* c, bool deep)
     {
-      auto rec = [c](formula f, bool negated)
+      auto rec = [c, deep](formula f, bool negated)
         {
-          return nenoform_rec(f, negated, c);
+          return nenoform_rec(f, negated, c, deep);
         };
 
       if (equiv)
         {
           // Rewrite a<=>b as (a&b)|(!a&!b)
           auto recurse_f1_true = rec(f1, true);
-          auto recurse_f1_false = rec(f1, false);
           auto recurse_f2_true = rec(f2, true);
+          if (!deep && c->options.keep_top_xor)
+            return formula::Equiv(recurse_f1_true, recurse_f2_true);
+          auto recurse_f1_false = rec(f1, false);
           auto recurse_f2_false = rec(f2, false);
           auto left = formula::And({recurse_f1_false, recurse_f2_false});
           auto right = formula::And({recurse_f1_true, recurse_f2_true});
@@ -442,8 +445,10 @@ namespace spot
         {
           // Rewrite a^b as (a&!b)|(!a&b)
           auto recurse_f1_true = rec(f1, true);
-          auto recurse_f1_false = rec(f1, false);
           auto recurse_f2_true = rec(f2, true);
+          if (!deep && c->options.keep_top_xor)
+            return formula::Xor(recurse_f1_true, recurse_f2_true);
+          auto recurse_f1_false = rec(f1, false);
           auto recurse_f2_false = rec(f2, false);
           auto left = formula::And({recurse_f1_false, recurse_f2_true});
           auto right = formula::And({recurse_f1_true, recurse_f2_false});
@@ -451,8 +456,11 @@ namespace spot
         }
     }
 
+    // The deep argument indicate whether we are under a temporal
+    // operator (except X).
     formula
-    nenoform_rec(formula f, bool negated, tl_simplifier_cache* c)
+    nenoform_rec(formula f, bool negated, tl_simplifier_cache* c,
+                 bool deep)
     {
       if (f.is(op::Not))
         {
@@ -474,9 +482,9 @@ namespace spot
         }
       else
         {
-          auto rec = [c](formula f, bool neg)
+          auto rec = [c, &deep](formula f, bool neg)
             {
-              return nenoform_rec(f, neg, c);
+              return nenoform_rec(f, neg, c, deep);
             };
 
           switch (op o = f.kind())
@@ -504,21 +512,25 @@ namespace spot
               break;
             case op::F:
               // !Fa == G!a
+              deep = true;
               result = formula::unop(negated ? op::G : op::F,
                                      rec(f[0], negated));
               break;
             case op::G:
               // !Ga == F!a
+              deep = true;
               result = formula::unop(negated ? op::F : op::G,
                                      rec(f[0], negated));
               break;
             case op::Closure:
+              deep = true;
               result = formula::unop(negated ?
                                      op::NegClosure : op::Closure,
                                      rec(f[0], false));
               break;
             case op::NegClosure:
             case op::NegClosureMarked:
+              deep = true;
               result = formula::unop(negated ? op::Closure : o,
                                      rec(f[0], false));
               break;
@@ -539,17 +551,18 @@ namespace spot
             case op::Xor:
               {
                 // !(a ^ b) == a <=> b
-                result = equiv_or_xor(negated, f[0], f[1], c);
+                result = equiv_or_xor(negated, f[0], f[1], c, deep);
                 break;
               }
             case op::Equiv:
               {
                 // !(a <=> b) == a ^ b
-                result = equiv_or_xor(!negated, f[0], f[1], c);
+                result = equiv_or_xor(!negated, f[0], f[1], c, deep);
                 break;
               }
             case op::U:
               {
+                deep = true;
                 // !(a U b) == !a R !b
                 auto f1 = rec(f[0], negated);
                 auto f2 = rec(f[1], negated);
@@ -558,6 +571,7 @@ namespace spot
               }
             case op::R:
               {
+                deep = true;
                 // !(a R b) == !a U !b
                 auto f1 = rec(f[0], negated);
                 auto f2 = rec(f[1], negated);
@@ -566,6 +580,7 @@ namespace spot
               }
             case op::W:
               {
+                deep = true;
                 // !(a W b) == !a M !b
                 auto f1 = rec(f[0], negated);
                 auto f2 = rec(f[1], negated);
@@ -574,6 +589,7 @@ namespace spot
               }
             case op::M:
               {
+                deep = true;
                 // !(a M b) == !a W !b
                 auto f1 = rec(f[0], negated);
                 auto f2 = rec(f[1], negated);
@@ -604,15 +620,16 @@ namespace spot
               // !(a*) etc. should never occur.
               {
                 assert(!negated);
-                result = f.map([c](formula f)
+                result = f.map([c, deep](formula f)
                                {
-                                 return nenoform_rec(f, false, c);
+                                 return nenoform_rec(f, false, c, deep);
                                });
                 break;
               }
             case op::EConcat:
             case op::EConcatMarked:
               {
+                deep = true;
                 // !(a <>-> b) == a[]-> !b
                 auto f1 = f[0];
                 auto f2 = f[1];
@@ -622,6 +639,7 @@ namespace spot
               }
             case op::UConcat:
               {
+                deep = true;
                 // !(a []-> b) == a<>-> !b
                 auto f1 = f[0];
                 auto f2 = f[1];
@@ -4048,9 +4066,9 @@ namespace spot
     if (f2.is_sere_formula() && !f2.is_boolean())
       return false;
     if (right)
-      f2 = nenoform_rec(f2, true, this);
+      f2 = nenoform_rec(f2, true, this, false);
     else
-      f1 = nenoform_rec(f1, true, this);
+      f1 = nenoform_rec(f1, true, this, false);
     return syntactic_implication(f1, f2);
   }
 
@@ -4085,7 +4103,7 @@ namespace spot
   formula
   tl_simplifier::negative_normal_form(formula f, bool negated)
   {
-    return nenoform_rec(f, negated, cache_);
+    return nenoform_rec(f, negated, cache_, false);
   }
 
   bool

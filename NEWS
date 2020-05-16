@@ -1,5 +1,12 @@
 New in spot 2.9.0.dev (not yet released)
 
+  Command-line tools:
+
+  - 'ltl2tgba -G -D' is now better at handling formulas that use
+    '<->' and 'xor' operators at the top level.   For instance
+         ltl2tgba -D -G '(Fa & Fb & Fc & Fd) <-> GFe'
+    now produces a 16-state automaton (instead of 31 in Spot 2.9).
+
   Library:
 
   - product_xor() and product_xnor() are two new versions of the
@@ -8,6 +15,11 @@ New in spot 2.9.0.dev (not yet released)
     respectively the symmetric difference of the operands, and the
     complement of that.
 
+  - tl_simplifier_options::keep_top_xor is a new option to keep Xor
+    and Equiv operator that appear at the top of LTL formulas (maybe
+    below other Boolean or X operators).  This is used by the
+    spot::translator class when creating deterministic automata with
+    generic acceptance.
 
 New in spot 2.9 (2020-04-30)
 
