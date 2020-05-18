@@ -190,7 +190,7 @@ dstar2tgba -D --stats='input(states=%S) output(states=%s, acc-sets=%a, det=%d)'
 #+BEGIN_SRC sh :exports none
 ltlfilt --remove-wm -f 'G(F(!b & (X!a M (F!a & F!b))) U !b)' -l |
 ltl2dstar --ltl2nba=spin:ltl2tgba@-Ds - - |
-dstar2tgba -D --stats=$arg
+dstar2tgba -D --stats=$arg | tr -d '\n'
 #+END_SRC
 
 In the above command, =ltldo= is used to convert the LTL formula into
