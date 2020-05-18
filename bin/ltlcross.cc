@@ -296,7 +296,7 @@ struct statistics
   double time;
   unsigned states;
   unsigned edges;
-  unsigned transitions;
+  unsigned long long transitions;
   unsigned acc;
   unsigned scc;
   unsigned nonacc_scc;

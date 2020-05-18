@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2011-2018 Laboratoire de Recherche et
+// Copyright (C) 2008, 2011-2018, 2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -64,7 +64,7 @@ namespace spot
     {
     public:
       sub_stats_bfs(const const_twa_ptr& a, twa_sub_statistics& s)
-        : stats_bfs(a, s), s_(s), seen_(a->ap_vars())
+        : stats_bfs(a, s), s_(s), apvars_(a->ap_vars())
       {
       }
 
@@ -73,17 +73,12 @@ namespace spot
                    const twa_succ_iterator* it) override
       {
         ++s_.edges;
-        bdd cond = it->cond();
-        while (cond != bddfalse)
-          {
-            cond -= bdd_satoneset(cond, seen_, bddtrue);
-            ++s_.transitions;
-          }
+        s_.transitions += bdd_satcountset(it->cond(), apvars_);
       }
 
     private:
       twa_sub_statistics& s_;
-      bdd seen_;
+      bdd apvars_;
     };
 
 
@@ -180,11 +175,7 @@ namespace spot
             [&s, &ge](bdd cond)
             {
               ++s.edges;
-              while (cond != bddfalse)
-                {
-                  cond -= bdd_satoneset(cond, ge->ap_vars(), bddtrue);
-                  ++s.transitions;
-                }
+              s.transitions += bdd_satcountset(cond, ge->ap_vars());
             });
       }
     return s;
