@@ -21,6 +21,14 @@ New in spot 2.9.0.dev (not yet released)
     spot::translator class when creating deterministic automata with
     generic acceptance.
 
+  Bugs fixed:
+
+  - spot::twa_sub_statistics was very slow at computing the number of
+    transitons, and could overflow.  It is now avoiding some costly
+    loop of BDD operations, and storing the result using at least 64
+    bits.  This affects the output of "ltlcross --csv" and
+    "--stats=%t" for many tools.
+
 New in spot 2.9 (2020-04-30)
 
   Command-line tools:

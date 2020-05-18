@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2014-2018, 2020 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -167,7 +167,7 @@ private:
   spot::printable_acc_cond haut_gen_acc_;
   spot::printable_value<unsigned> haut_states_;
   spot::printable_value<unsigned> haut_edges_;
-  spot::printable_value<unsigned> haut_trans_;
+  spot::printable_value<unsigned long long> haut_trans_;
   spot::printable_value<unsigned> haut_acc_;
   printable_varset haut_ap_;
   printable_varset aut_ap_;

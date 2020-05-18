@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2008, 2011-2017 Laboratoire de Recherche et
+// Copyright (C) 2008, 2011-2017, 2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 // Copyright (C) 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -44,7 +44,7 @@ namespace spot
 
   struct SPOT_API twa_sub_statistics: public twa_statistics
   {
-    unsigned transitions;
+    unsigned long long transitions;
 
     twa_sub_statistics() { transitions = 0; }
     std::ostream& dump(std::ostream& out) const;
@@ -125,7 +125,7 @@ namespace spot
     printable_formula form_;
     printable_value<unsigned> states_;
     printable_value<unsigned> edges_;
-    printable_value<unsigned> trans_;
+    printable_value<unsigned long long> trans_;
     printable_value<unsigned> acc_;
     printable_scc_info scc_;
     printable_value<unsigned> nondetstates_;
