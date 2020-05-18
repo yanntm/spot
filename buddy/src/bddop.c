@@ -125,6 +125,7 @@ static BddCache quantcache;         /* Cache for exist/forall results */
 static BddCache appexcache;         /* Cache for appex/appall results */
 static BddCache replacecache;       /* Cache for replace results */
 static BddCache misccache;          /* Cache for other results */
+static int misccache_varnum;        /* if this changes, invalidate misccache */
 static int cacheratio;
 static BDD satPolarity;
 static int firstReorder;            /* Used instead of local variable in order
@@ -214,6 +215,7 @@ int bdd_operator_init(int cachesize)
 
    if (BddCache_init(&misccache,cachesize) < 0)
       return bdd_error(BDD_MEMORY);
+   misccache_varnum = bddvarnum;
 
    quantvarsetID = 0;
    quantvarset = NULL;
@@ -249,6 +251,7 @@ void bdd_operator_reset(void)
    BddCache_reset(&appexcache);
    BddCache_reset(&replacecache);
    BddCache_reset(&misccache);
+   misccache_varnum = bddvarnum;
 }
 
 
@@ -2805,6 +2808,14 @@ double bdd_satcount(BDD r)
 
    CHECKa(r, 0.0);
 
+   // Invalidate misccache if the number of variable changed since we
+   // last used it.
+   if (misccache_varnum != bddvarnum)
+     {
+       BddCache_reset(&misccache);
+       misccache_varnum = bddvarnum;
+     }
+
    miscid = CACHEID_SATCOU;
    size = pow(2.0, (double)LEVEL(r));
 
@@ -2817,8 +2828,10 @@ double bdd_satcountset(BDD r, BDD varset)
    double unused = bddvarnum;
    BDD n;
 
-   if (ISCONST(varset)  ||  ISZERO(r)) /* empty set */
-      return 0.0;
+   if (ISZERO(r))
+     return 0.0;
+   if (ISCONST(varset)) /* empty set */
+     return ISONE(r) ? 1.0 : 0.0;
 
    for (n=varset ; !ISCONST(n) ; n=HIGH(n))
       unused--;
@@ -2839,7 +2852,7 @@ static double satcount_rec(int root)
       return root;
 
    entry = BddCache_lookup(&misccache, SATCOUHASH(root));
-   if (entry->d.a == root  &&  entry->d.c == miscid)
+   if (entry->d.a == root && entry->d.c == miscid)
      return entry->d.res;
 
    node = &bddnodes[root];
@@ -2885,6 +2898,14 @@ double bdd_satcountln(BDD r)
    double size;
 
    CHECKa(r, 0.0);
+
+   // Invalidate misccache if the number of variable changed since we
+   // last used it.
+   if (misccache_varnum != bddvarnum)
+     {
+       BddCache_reset(&misccache);
+       misccache_varnum = bddvarnum;
+     }
 
    miscid = CACHEID_SATCOULN;
    size = satcountln_rec(r);
