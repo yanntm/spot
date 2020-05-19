@@ -83,8 +83,6 @@ namespace spot
                               spot::twacube_ptr prop = nullptr,
                               bool trace = false)
   {
-    // FIXME ensure that algo_name contains all methods
-
     spot::timer_map tm;
     std::atomic<bool> stop(false);
     unsigned  nbth = sys->get_threads();
