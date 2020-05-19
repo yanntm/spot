@@ -33,7 +33,7 @@ fi
 
 set -e
 
-run 0 ../testconvert $srcdir/finite.dve 'true' > output
+run 0 ../testconvert $srcdir/finite.dve 'true' | grep -v Thread > output
 cat << EOF > expected
 [CUBE] Model: 15,24
 [BDD]  Model: 15,24
@@ -43,7 +43,7 @@ EOF
 
 cmp output expected
 
-run 0 ../testconvert $srcdir/finite.dve 'G "P.a==5"' > output
+run 0 ../testconvert $srcdir/finite.dve 'G "P.a==5"'| grep -v Thread > output
 cat << EOF > expected
 [CUBE] Model: 15,24
 [BDD]  Model: 15,24
