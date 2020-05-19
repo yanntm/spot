@@ -476,7 +476,8 @@ ltsmin_testconvert_SOURCES = ltsmin/testconvert.cc
 ltsmin_testconvert_LDADD =  \
   $(top_builddir)/bin/libcommon.a		\
   $(top_builddir)/lib/libgnu.la			\
-  $(top_builddir)/spot/libspot.la              \
+  $(top_builddir)/spot/libspot.la       \
+  $(top_builddir)/buddy/src/libbddx.la  \
   $(top_builddir)/spot/ltsmin/libspotltsmin.la
 
 
