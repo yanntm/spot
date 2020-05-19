@@ -27,7 +27,7 @@ AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS) \
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 LDADD = $(top_builddir)/spot/libspot.la \
        $(top_builddir)/buddy/src/libbddx.la \
-       $(LIBLTDL) -lpthread
+       $(LIBLTDL) -lpthread -latomic
 
 # Explicitely set it to avoid default value ".test"
 TEST_EXTENSIONS =
@@ -461,7 +461,7 @@ check_PROGRAMS += ltsmin/modelcheck
 check_PROGRAMS += ltsmin/testconvert
 ltsmin_modelcheck_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) \
 	$(BUDDY_CPPFLAGS) \-I$(top_builddir)/lib -I$(top_srcdir)/lib
-ltsmin_modelcheck_CXXFLAGS = $(CXXFLAGS) -pthread
+ltsmin_modelcheck_CXXFLAGS = $(CXXFLAGS) -pthread -latomic
 ltsmin_modelcheck_SOURCES = ltsmin/modelcheck.cc
 ltsmin_modelcheck_LDADD =  \
   $(top_builddir)/bin/libcommon.a		\
@@ -471,7 +471,7 @@ ltsmin_modelcheck_LDADD =  \
 
 ltsmin_testconvert_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) \
 	$(BUDDY_CPPFLAGS) \-I$(top_builddir)/lib -I$(top_srcdir)/lib
-ltsmin_testconvert_CXXFLAGS = $(CXXFLAGS) -pthread
+ltsmin_testconvert_CXXFLAGS = $(CXXFLAGS) -pthread -latomic
 ltsmin_testconvert_SOURCES = ltsmin/testconvert.cc
 ltsmin_testconvert_LDADD =  \
   $(top_builddir)/bin/libcommon.a		\

@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2010, 2011, 2013-2019 Laboratoire de Recherche
+## Copyright (C) 2010, 2011, 2013-2020 Laboratoire de Recherche
 ## et Development de l'Epita (LRDE).
 ## Copyright (C) 2003, 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 ## département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -23,7 +23,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
 AM_CPPFLAGS = -I$(PYTHONINC) -I$(top_builddir) -I$(top_srcdir) \
-	      $(BUDDY_CPPFLAGS) -DSWIG_TYPE_TABLE=spot
+	      $(BUDDY_CPPFLAGS) -lpthread -latomic -DSWIG_TYPE_TABLE=spot
 
 SWIGFLAGS = -c++ -python -py3 -O -MD
 
@@ -71,7 +71,7 @@ am__depfiles_remade = ./$(DEPDIR)/buddy_wrap.Plo \
 
 spot__impl_la_SOURCES = spot/impl_wrap.cxx
 spot__impl_la_LDFLAGS = -avoid-version -module $(SYMBOLIC_LDFLAGS)
-spot__impl_la_LIBADD = $(top_builddir)/spot/libspot.la
+spot__impl_la_LIBADD = $(top_builddir)/spot/libspot.la -lpthread -latomic
 
 am__depfiles_remade += ./spot/$(DEPDIR)/impl_wrap.Pcxx
 @AMDEP_TRUE@@am__include@ @am__quote@./spot/$(DEPDIR)/impl_wrap.Pcxx@am__quote@ # am--include-marker
@@ -91,7 +91,8 @@ spot/impl.py: spot/impl.i
 spot__ltsmin_la_SOURCES = spot/ltsmin_wrap.cxx
 spot__ltsmin_la_LDFLAGS = -avoid-version -module $(SYMBOLIC_LDFLAGS)
 spot__ltsmin_la_LIBADD = $(top_builddir)/spot/libspot.la \
-                       $(top_builddir)/spot/ltsmin/libspotltsmin.la
+                       $(top_builddir)/spot/ltsmin/libspotltsmin.la \
+					   -lpthread -latomic
 
 am__depfiles_remade += ./spot/$(DEPDIR)/ltsmin_wrap.Pcxx
 @AMDEP_TRUE@@am__include@ @am__quote@./spot/$(DEPDIR)/ltsmin_wrap.Pcxx@am__quote@ # am--include-marker
@@ -109,7 +110,8 @@ spot/ltsmin.py: spot/ltsmin.i
 spot__gen_la_SOURCES = spot/gen_wrap.cxx
 spot__gen_la_LDFLAGS = -avoid-version -module $(SYMBOLIC_LDFLAGS)
 spot__gen_la_LIBADD = $(top_builddir)/spot/libspot.la \
-                       $(top_builddir)/spot/gen/libspotgen.la
+                       $(top_builddir)/spot/gen/libspotgen.la \
+					   -lpthread -latomic
 
 am__depfiles_remade += ./spot/$(DEPDIR)/gen_wrap.Pcxx
 @AMDEP_TRUE@@am__include@ @am__quote@./spot/$(DEPDIR)/gen_wrap.Pcxx@am__quote@ # am--include-marker
