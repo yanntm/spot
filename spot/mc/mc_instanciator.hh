@@ -79,9 +79,9 @@ namespace spot
 
   template<typename algo_name, typename kripke_ptr, typename State,
            typename Iterator, typename Hash, typename Equal>
-  static SPOT_API ec_stats instanciate(kripke_ptr sys,
-                                       spot::twacube_ptr prop = nullptr,
-                                       bool trace = false)
+  static ec_stats instanciate(kripke_ptr sys,
+                              spot::twacube_ptr prop = nullptr,
+                              bool trace = false)
   {
     // FIXME ensure that algo_name contains all methods
 
@@ -246,5 +246,6 @@ namespace spot
         return instanciate<spot::lpar13<State, Iterator, Hash, Equal>,
             kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
       }
+    SPOT_UNREACHABLE();
   }
 }
