@@ -9,6 +9,41 @@ New in spot 2.9.0.dev (not yet released)
 
   Library:
 
+  - Historically, Spot labels automata by Boolean formulas over
+    atomic propositions. These Boolean formulas are represented
+    as BDDs using the BuDDy library. Since this implementation is
+    not thread safe, Spot wasn't able, until now, to integrate
+    parallel algorithms. To bypass this limitation, we introduce the
+    cube data structure. This structure aims to replace BDDs
+    everywhere parallelism is required. Contrary to BDDs, this
+    structure is not able to represent complex boolean formulae, but
+    can represent very simple disjunctive form of boolean formulae
+    and can be used in a multithreaded context.
+
+    Since both the BDD-based and the cube-based implementations have
+    benefits and drawbacks, we opted to keep side-by-side the
+    historical implementation and the new one. As a consequence:
+    twacube and kripkecube are the new versions of twa and kripke.
+    We provide conversion back and forth throught the following
+    functions: twacube_to_twa, twa_to_twa, product_to_twa, and
+    kripkecube_to_twa. The equivalence between a twa and a twacube
+    can be checked using are_equivalent.
+
+    In addition to the previous conversion, we implemented various
+    state-of-the-art algorithms: bloemen.16.ppopp, bloemen.16.hvc,
+    evangeslita.12.atva, renault.13.lpar, holzmann.11.ieee. In order
+    to ease the manipulation of these algorithms we introduce a
+    factory mc_instanciator, that provide a nice abstraction for launching,
+    pinning, and stopping threads inside of parallel model-checking
+    algorithms. One should note that for performances and genericity
+    issues, all these algorithms are templated.
+
+    Finally, since all these algorithms are templated, a refactoring
+    of the ltsmin structure has been done in order to introduce the
+    spins_interface which describes the functions exported by a PINS
+    file. With this refactoring, we can retrieve both a kripke or a
+    kripkecube from a PINS file.
+
   - product_xor() and product_xnor() are two new versions of the
     synchronized product.  The only work with operands that are
     deterministic automata, and build automata whose language are
