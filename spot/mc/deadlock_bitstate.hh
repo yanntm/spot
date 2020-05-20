@@ -98,7 +98,7 @@ namespace spot
       tm_.start("DFS thread " + std::to_string(tid_));
     }
 
-    bool push(deadlock_state s)
+    bool push(deadlock_state& s)
     {
       auto it = map_.insert(s.st, brick_state_hasher());
       if (!it.isnew())

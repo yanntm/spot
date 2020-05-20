@@ -165,6 +165,8 @@ namespace spot
   cspins_iterator::~cspins_iterator()
   {
     delete[] cond_;
+    for (auto& s : successors_)
+        delete[] s;
     successors_.clear();
   }
 
