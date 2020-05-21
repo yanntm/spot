@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2010-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -567,6 +567,16 @@ namespace spot
     return product(min_aut, aut_neg)->is_empty();
   }
 
+  bool minimize_obligation_garanteed_to_work(const const_twa_graph_ptr& aut_f,
+                                             formula f)
+  {
+    // WDBA-minimization necessarily work for obligations
+    return ((f && f.is_syntactic_obligation())
+            // Weak deterministic automata are obligations
+            || (aut_f->prop_weak().is_true() && is_deterministic(aut_f))
+            // Guarantee automata are obligations as well.
+            || is_terminal_automaton(aut_f));
+  }
 
   twa_graph_ptr
   minimize_obligation(const const_twa_graph_ptr& aut_f,
@@ -580,12 +590,7 @@ namespace spot
         ("minimize_obligation() does not support alternation");
 
     bool minimization_will_be_correct = false;
-    // WDBA-minimization necessarily work for obligations
-    if ((f && f.is_syntactic_obligation())
-        // Weak deterministic automata are obligations
-        || (aut_f->prop_weak() && is_deterministic(aut_f))
-        // Guarantee automata are obligations as well.
-        || is_terminal_automaton(aut_f))
+    if (minimize_obligation_garanteed_to_work(aut_f, f))
       {
         minimization_will_be_correct = true;
       }

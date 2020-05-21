@@ -253,7 +253,7 @@ namespace spot
     int sat_states_ = 0;
     int gen_reduce_parity_ = 1;
     bool state_based_ = false;
-    bool wdba_minimize_ = true;
+    int wdba_minimize_ = -1;
   };
   /// @}
 }

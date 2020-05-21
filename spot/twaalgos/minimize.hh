@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019
-// Laboratoire de Recherche et Développement de l'Epita (LRDE).
+// Copyright (C) 2009-2016, 2018-2020 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -116,5 +116,23 @@ namespace spot
                       const_twa_graph_ptr aut_neg_f = nullptr,
                       bool reject_bigger = false,
                       const output_aborter* aborter = nullptr);
+
+  /// \brief Whether calling minimize_obligation is sure to work
+  ///
+  /// This checks whether \a f is a syntactic obligation, or if \a
+  /// aut_f obviously corresponds to an obligation (for instance if
+  /// this is a terminal automaton, or if it is both weak and
+  /// deterministic).  In this case, calling minimize_obligation()
+  /// should not be a waste of time, as it will return a new
+  /// automaton.
+  ///
+  /// If this function returns false, the input property might still
+  /// be a pathological obligation.  The only way to know is to call
+  /// minimize_obligation(), but as it is less likely, you might
+  /// decide to save time.
+  SPOT_API
+  bool minimize_obligation_garanteed_to_work(const const_twa_graph_ptr& aut_f,
+                                             formula f = nullptr);
+
   /// @}
 }

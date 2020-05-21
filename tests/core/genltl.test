@@ -132,12 +132,12 @@ genltl --kr-n2=1..2 --kr-nlogn=1..2 --kr-n=1..2 --gxf-and=0..3 --fxg-or=0..3 \
        --pps-arbiter-standard=2..3 --pps-arbiter-strict=2..3 --format=%F=%L,%f |
     ltl2tgba --low --det -F-/2 --stats='%<,%s' > out
 cat >exp<<EOF
-kv-psi=1,15
-kv-psi=2,106
-kr-nlogn=1,19
-kr-nlogn=2,147
-kr-n=1,12
-kr-n=2,82
+kv-psi=1,10
+kv-psi=2,24
+kr-nlogn=1,16
+kr-nlogn=2,44
+kr-n=1,10
+kr-n=2,25
 gxf-and=0,1
 gxf-and=1,1
 gxf-and=2,1

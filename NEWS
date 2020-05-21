@@ -7,6 +7,17 @@ New in spot 2.9.0.dev (not yet released)
          ltl2tgba -D -G '(Fa & Fb & Fc & Fd) <-> GFe'
     now produces a 16-state automaton (instead of 31 in Spot 2.9).
 
+  - Option '-x wdba-minize=N' used to accept N=0 (off), or N=1 (on).
+    It can now take three values:
+      0: never attempt this optimization,
+      1: always try to determinize and minimize automata as WDBA,
+         and check (if needed) that the result is correct,
+      2: determinize and minimize automata as WDBA only if it is known
+         beforehand (by cheap syntactic means) that the result will be
+         correct (e.g., the input formula is a syntactic obligation).
+    The default is 1 in "--high" mode, 2 in "--medium" mode or in
+    "--deterministic --low" mode, and 0 in other "--low" modes.
+
   Library:
 
   - product_xor() and product_xnor() are two new versions of the
