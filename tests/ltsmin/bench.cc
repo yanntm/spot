@@ -132,9 +132,9 @@ checked_main()
   while ((res = parser.parse(dict))->aut != nullptr)
     {
       auto aut = res->aut;
-      assert(!res->aborted);
-      assert(res->errors.empty());
-      assert(!spot::is_deterministic(aut));
+      SPOT_ASSERT(!res->aborted);
+      SPOT_ASSERT(res->errors.empty());
+      SPOT_ASSERT(!spot::is_deterministic(aut));
 
       spot::timer_map tm;
 
