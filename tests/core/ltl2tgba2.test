@@ -458,4 +458,15 @@ res=`ltl2tgba -D -G 'X((Fa & Fb & Fc & Fd) ^ GFe)' --stats='%s %g'`
 test "$res" = "17 (Inf(0)&Inf(1)) | (Fin(0) & Fin(1))"
 ltlcross 'ltl2tgba -D -G' 'ltl2tgba -G' -f '(Fa & Fb & Fc & Fd) ^ GFe'
 
+f='G(p1 | G!p0) M Xp1'
+test "6,1" = `ltl2tgba "$f" --stats=%s,%d`
+test "6,0" = `ltl2tgba -x wdba-minimize=2 "$f" --stats=%s,%d`
+test "6,0" = `ltl2tgba -x wdba-minimize=0 "$f" --stats=%s,%d`
+test "6,0" = `ltl2tgba --med "$f" --stats=%s,%d`
+f='X((p1 & Xp1) M Fp1)'
+test "4,1" = `ltl2tgba -D "$f" --stats=%s,%d`
+test "4,1" = `ltl2tgba -D -x wdba-minimize=2 "$f" --stats=%s,%d`
+test "4,0" = `ltl2tgba -D -x wdba-minimize=0 "$f" --stats=%s,%d`
+test "4,1" = `ltl2tgba -D --med "$f" --stats=%s,%d`
+
 :

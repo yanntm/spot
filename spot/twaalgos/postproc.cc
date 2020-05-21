@@ -83,7 +83,7 @@ namespace spot
         sat_acc_ = opt->get("sat-acc", 0);
         sat_states_ = opt->get("sat-states", 0);
         state_based_ = opt->get("state-based", 0);
-        wdba_minimize_ = opt->get("wdba-minimize", 1);
+        wdba_minimize_ = opt->get("wdba-minimize", -1);
         gen_reduce_parity_ = opt->get("gen-reduce-parity", 1);
 
         if (sat_acc_ && sat_minimize_ == 0)
@@ -371,9 +371,19 @@ namespace spot
     output_aborter* aborter =
       (det_max_states_ >= 0 || det_max_edges_ >= 0) ? &aborter_ : nullptr;
 
-    // (Small,Low) is the only configuration where we do not run
-    // WDBA-minimization.
-    if ((PREF_ != Small || level_ != Low) && wdba_minimize_)
+    int wdba_minimize = wdba_minimize_;
+    if (wdba_minimize == -1)
+      {
+        if (level_ == High)
+          wdba_minimize = 1;
+        else if (level_ == Medium || PREF_ == Deterministic)
+          wdba_minimize = 2;
+        else
+          wdba_minimize = 0;
+      }
+    if (wdba_minimize == 2)
+      wdba_minimize = minimize_obligation_garanteed_to_work(a, f);
+    if (wdba_minimize)
       {
         bool reject_bigger = (PREF_ == Small) && (level_ <= Medium);
         dba = minimize_obligation(a, f, nullptr, reject_bigger, aborter);

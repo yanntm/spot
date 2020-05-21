@@ -152,8 +152,10 @@ abstracted as atomic propositions during the translation to automaton. \
 This relabeling can speeds the translation if a few Boolean subformulas \
 use a large number of atomic propositions.  By default N=4.  Setting \
 this value to 0 will disable the rewriting.") },
-    { DOC("wdba-minimize", "Set to 0 to disable WDBA-minimization.  \
-Enabled by default.") },
+    { DOC("wdba-minimize", "Set to 0 to disable WDBA-minimization, to 1 to \
+always try it, or 2 to attempt it only on syntactic obligations or on automata \
+that are weak and deterministic.  The default is 1 in --high mode, else 2 in \
+--medium or --deterministic modes, else 0 in --low mode.") },
     { DOC("tba-det", "Set to 1 to attempt a powerset determinization \
 if the TGBA is not already deterministic.  Doing so will degeneralize \
 the automaton.  This is disabled by default, unless sat-minimize is set.") },
