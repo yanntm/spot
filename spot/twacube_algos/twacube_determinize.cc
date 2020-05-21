@@ -504,7 +504,7 @@ namespace spot
 
     // TODO(am): degeneralize ? might need to filter out TGBAs for now
 
-    auto res = make_twacube(aut->get_ap());
+    auto res = make_twacube(aut->ap());
 
     const cubeset& cs = aut->get_cubeset();
 
