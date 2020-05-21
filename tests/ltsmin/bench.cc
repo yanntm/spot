@@ -125,13 +125,19 @@ checked_main()
             << "twacube_nb_states_deterministic,"
             << "twacube_nb_edges_deterministic,"
             << "walltime_twa,"
-            << "walltime_twacube"
+            << "walltime_twacube,"
+            << "are_equivalent_cube_vs_twa,"
+            << "are_equivalent_cube_det_vs_twa,"
+            << "are_equivalent_cube_vs_twa_det,"
+            << "are_equivalent_cube_det_vs_twa_det"
             << std::endl;
 
   spot::parsed_aut_ptr res = nullptr;
   while ((res = parser.parse(dict))->aut != nullptr)
     {
-      auto aut = res->aut;
+      spot::const_twa_graph_ptr aut = res->aut;
+      std::string formula = *aut->get_named_prop<std::string>("automaton-name");
+
       SPOT_ASSERT(!res->aborted);
       SPOT_ASSERT(res->errors.empty());
       SPOT_ASSERT(!spot::is_deterministic(aut));
@@ -161,8 +167,6 @@ checked_main()
         {
           count++;
 
-          auto formula = *aut->get_named_prop<std::string>("automaton-name");
-
           std::cout << formula << ','
                     << aut->num_states() << ','
                     << aut->num_edges() << ','
@@ -173,7 +177,11 @@ checked_main()
                     << cube_det_aut->num_states() << ','
                     << cube_det_aut->num_edges() << ','
                     << duration_twa << ','
-                    << duration_twacube
+                    << duration_twacube << ','
+                    << spot::are_equivalent(cube_aut, aut) << ','
+                    << spot::are_equivalent(cube_det_aut, aut) << ','
+                    << spot::are_equivalent(cube_aut, det_aut) << ','
+                    << spot::are_equivalent(cube_det_aut, det_aut)
                     << std::endl;
 
           if (mc_options.wanted != 0 && count >= mc_options.wanted)
