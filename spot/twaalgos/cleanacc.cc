@@ -390,7 +390,7 @@ namespace spot
           case acc_cond::acc_op::FinNeg:
             {
               auto m = pos[-1].mark;
-              if (op == wanted && m.is_singleton())
+              if (op == wanted)
                 {
                   res |= m;
                 }
@@ -427,7 +427,7 @@ namespace spot
                         if (op == wanted)
                           {
                             auto m = pos[-1].mark;
-                            if (!seen && m.is_singleton())
+                            if (!seen)
                               {
                                 seen = true;
                                 res |= m;
@@ -512,9 +512,9 @@ namespace spot
                                   case acc_cond::acc_op::Inf:
                                   case acc_cond::acc_op::Fin:
                                     {
-                                      auto m = pos[-1].mark;
-                                      if (op == wanted && m.is_singleton())
-                                        singletons.emplace_back(m, pos);
+                                      if (op == wanted)
+                                        singletons.emplace_back(pos[-1].mark,
+                                                                pos);
                                       pos -= 2;
                                     }
                                     break;
@@ -526,19 +526,19 @@ namespace spot
                                     // {b,d} can receive {a} if they
                                     // (b and d) are both used once.
                                     if (auto m = find_interm_rec(pos))
-                                      {
-                                        singletons.emplace_back(m, pos);
-                                        // move this to the front, to
-                                        // be sure it is the first
-                                        // recipient tried.
-                                        swap(singletons.front(),
-                                             singletons.back());
-                                      }
+                                      singletons.emplace_back(m, pos);
                                     pos -= pos->sub.size + 1;
                                     break;
                                   }
                               }
                             while (pos > rend);
+
+                            // sort the singletons vector: we want
+                            // those that are not really singleton to
+                            // be first to they can become recipient
+                            std::partition(singletons.begin(), singletons.end(),
+                                           [&] (auto s)
+                                           { return !s.first.is_singleton(); });
 
                             acc_cond::mark_t can_receive = {};
                             for (auto p: singletons)
