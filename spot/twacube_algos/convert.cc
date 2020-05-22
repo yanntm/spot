@@ -218,9 +218,7 @@ namespace spot
     // Grep bdd id for each atomic propositions
     std::vector<int> bdds_ref;
     for (unsigned i = 0; i < aps_twacube.size(); ++i)
-      {
-        bdds_ref.push_back(ap_binder[i]);
-      }
+      bdds_ref.push_back(res->register_ap(twacube->ap()[i]));
 
     // Build all resulting states
     for (unsigned int i = 0; i < theg.num_states(); ++i)

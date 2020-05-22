@@ -20,6 +20,10 @@
 #include "config.h"
 #include <bddx.h>
 
+#include <spot/tl/parse.hh>
+#include <spot/twaalgos/translate.hh>
+#include <spot/twaalgos/contains.hh>
+
 #include <iostream>
 #include <spot/twacube/twacube.hh>
 #include <spot/twacube_algos/convert.hh>
@@ -27,6 +31,22 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/tl/defaultenv.hh>
+
+static void checkit(std::string f_str)
+{
+  spot::default_environment& env = spot::default_environment::instance();
+  auto pf = spot::parse_infix_psl(f_str, env, false);
+  spot::formula f = pf.f;
+  auto dict = spot::make_bdd_dict();
+  spot::translator trans(dict);
+  auto prop = trans.run(&f);
+
+  auto propcube = spot::twa_to_twacube(prop);
+  assert(spot::are_equivalent(propcube, prop));
+
+  auto propcubeback = spot::twacube_to_twa(propcube);
+  assert(spot::are_equivalent(propcube, propcubeback));
+}
 
 int main()
 {
@@ -66,4 +86,11 @@ int main()
                 << std::endl;
     }
   spot::print_dot(std::cout, spot::twacube_to_twa(aut), "A");
+
+  // Now check the equivalence of multiple translations
+  checkit("F!p8 U (((!p11 & p17 & Gp4) | (!p17 & (p11 | F!p4))) R (p4 U p2))");
+  checkit("F(((p9 & F!p12) | (!p9 & Gp12)) R (G!p7 & ((p16 R p5) M p4)))");
+  checkit("Gp14 U ((Fp11 W (p13 R p6)) M ((Fp16 & Fp10) | G(!p10 & !p16)))");
+  checkit("F(((p9 & F!p12) | (!p9 & Gp12)) R (G!p7 & ((p16 R p5) M p4)))");
+  checkit("Gp14 U ((Fp11 W (p13 R p6)) M ((Fp16 & Fp10) | G(!p10 & !p16)))");
 }
