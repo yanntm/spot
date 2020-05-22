@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2018 Laboratoire de Recherche et
+// Copyright (C) 2017-2018, 2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE)
 //
 // This file is part of Spot, a model checking library.
@@ -106,7 +106,20 @@ namespace spot
                 return (size + mask) & ~mask;
               }
           }(size)),
-      freelist_(nullptr), free_start_(nullptr),
-      free_end_(nullptr), chunklist_(nullptr)
-  {}
+      freelist_(nullptr),
+      chunklist_(nullptr)
+  {
+    new_chunk_();
+  }
+
+  void fixed_size_pool::new_chunk_()
+  {
+    const size_t requested = (size_ > 128 ? size_ : 128) * 8192 - 64;
+    chunk_* c = reinterpret_cast<chunk_*>(::operator new(requested));
+    c->prev = chunklist_;
+    chunklist_ = c;
+
+    free_start_ = c->data_ + size_;
+    free_end_ = c->data_ + requested;
+  }
 }
