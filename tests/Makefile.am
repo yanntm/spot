@@ -459,7 +459,7 @@ EXTRA_DIST = \
 check_PROGRAMS += ltsmin/bench
 ltsmin_bench_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) \
 	$(BUDDY_CPPFLAGS) \-I$(top_builddir)/lib -I$(top_srcdir)/lib
-ltsmin_bench_CXXFLAGS = $(CXXFLAGS) -pthread
+ltsmin_bench_CXXFLAGS = $(CXXFLAGS) -pthread -latomic
 ltsmin_bench_SOURCES = ltsmin/bench.cc
 ltsmin_bench_LDADD =  \
   $(top_builddir)/bin/libcommon.a		\
