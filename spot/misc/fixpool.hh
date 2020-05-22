@@ -65,9 +65,11 @@ namespace spot
                 return (size + mask) & ~mask;
               }
           }(size)),
-      freelist_(nullptr), free_start_(nullptr),
-      free_end_(nullptr), chunklist_(nullptr)
-  {}
+      freelist_(nullptr),
+      chunklist_(nullptr)
+  {
+    new_chunk_();
+  }
 
     /// Free any memory allocated by this pool.
     ~fixed_size_pool()
@@ -106,15 +108,7 @@ namespace spot
 
       // If all the last chunk has been used, allocate one more.
       if (free_start_ + size_ > free_end_)
-        {
-          const size_t requested = (size_ > 128 ? size_ : 128) * 8192 - 64;
-          chunk_* c = reinterpret_cast<chunk_*>(::operator new(requested));
-          c->prev = chunklist_;
-          chunklist_ = c;
-
-          free_start_ = c->data_ + size_;
-          free_end_ = c->data_ + requested;
-        }
+        new_chunk_();
 
       void* res = free_start_;
       free_start_ += size_;
@@ -149,6 +143,17 @@ namespace spot
     }
 
   private:
+    void new_chunk_()
+    {
+      const size_t requested = (size_ > 128 ? size_ : 128) * 8192 - 64;
+      chunk_* c = reinterpret_cast<chunk_*>(::operator new(requested));
+      c->prev = chunklist_;
+      chunklist_ = c;
+
+      free_start_ = c->data_ + size_;
+      free_end_ = c->data_ + requested;
+    }
+
     const size_t size_;
     struct block_ { block_* next; }* freelist_;
     char* free_start_;
