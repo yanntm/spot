@@ -50,6 +50,16 @@ State: 5 [!0&1] 4 {3 5} [!0&1] 3 {2 4} [!0&1] 2 {2 3} [!0&!1] 0 {0}
 [!0&1] 7 {0 4 5} [0&1] 5 {2} State: 6 [0&!1] 7 [0&!1] 1 {1 4} [0&1]
 4 {1 4} State: 7 [0&1] 3 {2 3} [0&1] 0 [!0&!1] 6 [0&1] 1 State: 8 [0&1]
 3 [!0&!1] 0 [0&1] 9 State: 9 [0&!1] 7 {4 5} [!0&1] 8 {0} [0&1] 9 --END--
+/* Derived from issue #405. */
+HOA: v1 States: 2 Start: 0 AP: 2 "p0" "p1" Acceptance: 4 Fin(0) &
+(Fin(1)|Fin(2)|Fin(3)) properties: trans-labels explicit-labels trans-acc
+--BODY-- State: 0 [!0&!1] 0 {0 1 3} [0&1] 1 {0 2} [0&!1] 0 {2} State:
+1 [0&1] 0 {0 2} [0&1] 1 {1} [0&!1] 1 --END--
+/* More complex version of the previous automaton */
+HOA: v1 States: 2 Start: 0 AP: 2 "p0" "p1" Acceptance: 5 Fin(0) &
+(((Fin(1)|Fin(2)|Fin(3))&Inf(4)|Fin(3))) properties: trans-labels
+explicit-labels trans-acc --BODY-- State: 0 [!0&!1] 0 {0 1 3} [0&1] 1
+{0 2} [0&!1] 0 {2} State: 1 [0&1] 0 {0 2} [0&1] 1 {1} [0&!1] 1 {4} --END--
 """))
 
 res = []
@@ -80,4 +90,8 @@ assert res == [
     '((Inf(1) & Fin(2)) | Fin(5)) & (Inf(0) | (Inf(1) & (Inf(3) | Fin(4))))',
     'Inf(0)',
     'Fin(0)',
+    'Fin(0)|Fin(1)|Fin(2)',
+    'Inf(0)&Inf(1)&Inf(2)',
+    '((Fin(0)|Fin(1)) & Inf(3)) | Fin(2)',
+    '((Inf(0)&Inf(1)) | Fin(3)) & Inf(2)',
     ]
