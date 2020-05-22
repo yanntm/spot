@@ -134,14 +134,15 @@ namespace spot
   }
 
   spot::twa_graph_ptr
-  twacube_to_twa(spot::twacube_ptr twacube)
+  twacube_to_twa(spot::twacube_ptr twacube, spot::bdd_dict_ptr d)
   {
     // Grab necessary variables
     auto& theg = twacube->get_graph();
     spot::cubeset cs = twacube->get_cubeset();
 
     // Build the resulting graph
-    auto d = spot::make_bdd_dict();
+    if (d == nullptr)
+      d = spot::make_bdd_dict();
     auto res = make_twa_graph(d);
 
     // Fix the acceptance of the resulting automaton
