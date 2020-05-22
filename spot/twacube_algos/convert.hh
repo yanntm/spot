@@ -50,9 +50,12 @@ namespace spot
   SPOT_API twacube_ptr
   twa_to_twacube(spot::const_twa_graph_ptr aut);
 
-  /// \brief Convert a twacube into a twa
+  /// \brief Convert a twacube into a twa.
+  /// When \d is specified, the BDD_dict in parameter is used rather than
+  /// creating a new one.
   SPOT_API spot::twa_graph_ptr
-  twacube_to_twa(spot::twacube_ptr twacube);
+  twacube_to_twa(spot::twacube_ptr twacube,
+                 spot::bdd_dict_ptr d = nullptr);
 
   /// \brief Check wether a twacube and a twa are equivalent
   SPOT_API bool are_equivalent(const spot::twacube_ptr twacube,

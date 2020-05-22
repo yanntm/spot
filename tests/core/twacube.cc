@@ -44,8 +44,10 @@ static void checkit(std::string f_str)
   auto propcube = spot::twa_to_twacube(prop);
   assert(spot::are_equivalent(propcube, prop));
 
-  auto propcubeback = spot::twacube_to_twa(propcube);
+  auto propcubeback = spot::twacube_to_twa(propcube, dict);
   assert(spot::are_equivalent(propcube, propcubeback));
+
+  assert(spot::are_equivalent(prop, propcubeback));
 }
 
 int main()
