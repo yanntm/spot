@@ -630,6 +630,9 @@ int
 main(int argc, char **argv)
 {
   return protected_main(argv, [&] {
+      extra_options.set("simul", 0);
+      extra_options.set("det-simul", 0);
+      extra_options.set("tls-impl", 1);
       const argp ap = { options, parse_opt, nullptr,
                         argp_program_doc, children, nullptr, nullptr };
       if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
