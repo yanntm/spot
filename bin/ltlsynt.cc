@@ -134,6 +134,8 @@ static double paritize_time = 0.0;
 static double bgame_time = 0.0;
 static double solve_time = 0.0;
 static double strat2aut_time = 0.0;
+static unsigned nb_states_dpa = 0;
+static unsigned nb_states_parity_game = 0;
 
 enum solver
 {
@@ -313,7 +315,8 @@ namespace
               out << ",\"strat2aut_time\"";
             out << ",\"realizable\"";
           }
-        out << '\n';
+        out << ",\"dpa_num_states\",\"parity_game_num_states\""
+            << '\n';
       }
     std::ostringstream os;
     os << f;
@@ -330,7 +333,9 @@ namespace
           out << ',' << strat2aut_time;
         out << ',' << realizable;
       }
-    out << '\n';
+    out << ',' << nb_states_dpa
+        << ',' << nb_states_parity_game
+        << '\n';
     outf.close(opt_csv);
   }
 
@@ -493,6 +498,7 @@ namespace
               break;
             }
         }
+      nb_states_dpa = dpa->num_states();
       if (want_time)
         sw.start();
       auto owner = complete_env(dpa);
@@ -518,6 +524,7 @@ namespace
         solve_time = sw.stop();
       if (verbose)
         std::cerr << "parity game solved in " << solve_time << " seconds\n";
+      nb_states_parity_game = pg.num_states();
       timer.stop();
       if (winning_region[1].count(pg.get_init_state_number()))
         {
