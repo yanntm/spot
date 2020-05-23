@@ -32,6 +32,9 @@ New in spot 2.9.0.dev (not yet released)
     spot::translator class when creating deterministic automata with
     generic acceptance.
 
+  - remove_fin() learned a trick to remove some superfluous
+    transitions.
+
   Bugs fixed:
 
   - Work around undefined behavior reported by clang 10.0.0's UBsan.

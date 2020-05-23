@@ -1,6 +1,6 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2015-2018  Laboratoire de Recherche et Développement
-# de l'Epita
+# Copyright (C) 2015-2018, 2020 Laboratoire de Recherche et Développement de
+# l'Epita
 #
 # This file is part of Spot, a model checking library.
 #
@@ -67,3 +67,29 @@ assert(a.prop_universal().is_maybe())
 assert(a.prop_unambiguous().is_maybe())
 assert(a.is_deterministic() == True)
 assert(a.is_unambiguous() == True)
+
+a = spot.automaton("""
+HOA: v1
+States: 3
+Start: 0
+AP: 2 "a" "b"
+acc-name: Buchi
+Acceptance: 5 Inf(0)&Fin(4) | Inf(2)&Inf(3) | Inf(1)
+--BODY--
+State: 0 {3}
+[t] 0
+[0] 1 {1}
+[!0] 2 {0 4}
+State: 1 {3}
+[1] 0
+[0&1] 1 {0}
+[!0&1] 2 {2 4}
+State: 2
+[!1] 0
+[0&!1] 1 {0}
+[!0&!1] 2 {0 4}
+--END--
+""")
+b = spot.remove_fin(a)
+size = (b.num_states(), b.num_edges())
+assert size == (5, 17);
