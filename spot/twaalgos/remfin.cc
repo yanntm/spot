@@ -667,6 +667,20 @@ namespace spot
           trace << "main_sets " << main_sets << "\nmain_add "
                 << main_add << '\n';
 
+          // If the SCC is rejecting, there is no need for clone.
+          // Pretend we don't interesect any Fin.
+          if (si.is_rejecting_scc(n))
+            intersects_fin = false;
+
+          // Edges that are already satisfying the acceptance of the
+          // main copy do not need to be duplicated in the clones, so
+          // we fill allacc_edge to remember those.  Of course this is
+          // only needed if the main copy can be accepting and if we
+          // will create clones.
+          std::vector<bool> allacc_edge(aut->edge_vector().size(), false);
+          auto main_acc = res->acc().restrict_to(main_sets | main_add);
+          bool check_main_acc = intersects_fin && !main_acc.is_f();
+
           // Create the main copy
           for (auto s: states)
             for (auto& t: aut->out(s))
@@ -675,11 +689,14 @@ namespace spot
                 if (sbacc || SPOT_LIKELY(si.scc_of(t.dst) == n))
                   a = (t.acc & main_sets) | main_add;
                 res->new_edge(s, t.dst, t.cond, a);
+                // remember edges that are completely accepting
+                if (check_main_acc && main_acc.accepting(a))
+                  allacc_edge[aut->edge_number(t)] = true;
               }
 
           // We do not need any other copy if the SCC is non-accepting,
           // of if it does not intersect any Fin.
-          if (!intersects_fin || si.is_rejecting_scc(n))
+          if (!intersects_fin)
             continue;
 
           // Create clones
@@ -698,7 +715,12 @@ namespace spot
                     auto ns = state_map[s];
                     for (auto& t: aut->out(s))
                       {
-                        if ((t.acc & r) || si.scc_of(t.dst) != n)
+                        if ((t.acc & r) || si.scc_of(t.dst) != n
+                            // edges that are already accepting in the
+                            // main copy need not be copied in the
+                            // clone, since cycles going through them
+                            // are already accepted.
+                            || allacc_edge[aut->edge_number(t)])
                           continue;
                         auto nd = state_map[t.dst];
                         res->new_edge(ns, nd, t.cond, (t.acc & k) | a);
