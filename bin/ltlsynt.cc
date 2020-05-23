@@ -99,6 +99,8 @@ static const argp_option options[] =
       "not output)", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Miscellaneous options:", -1 },
+    { "extra-options", 'x', "OPTS", 0,
+        "fine-tuning options (see spot-x (7))", 0 },
     { nullptr, 0, nullptr, 0, nullptr, 0 },
   };
 
@@ -125,6 +127,7 @@ static const char* opt_csv = nullptr;
 static bool opt_print_pg = false;
 static bool opt_real = false;
 static bool opt_print_aiger = false;
+static spot::option_map extra_options;
 
 static double trans_time = 0.0;
 static double split_time = 0.0;
@@ -643,6 +646,13 @@ parse_opt(int key, char* arg, struct argp_state*)
     case OPT_VERBOSE:
       verbose = true;
       break;
+    case 'x':
+      {
+        const char* opt = extra_options.parse_options(arg);
+        if (opt)
+          error(2, 0, "failed to parse --options near '%s'", opt);
+      }
+      break;
     }
   END_EXCEPTION_PROTECT;
   return 0;
@@ -661,8 +671,11 @@ main(int argc, char **argv)
       // Setup the dictionary now, so that BuDDy's initialization is
       // not measured in our timings.
       spot::bdd_dict_ptr dict = spot::make_bdd_dict();
-      spot::translator trans(dict);
+      spot::translator trans(dict, &extra_options);
       ltl_processor processor(trans, input_aps, output_aps);
+
+      // Diagnose unused -x options
+      extra_options.report_unused_options();
       return processor.run();
     });
 }
