@@ -156,36 +156,47 @@ namespace spot
     {
       setup();
       deadlock_state initial{sys_.initial(tid_)};
-      if (SPOT_LIKELY(push(initial)))
-      {
-        todo_.push_back({initial, sys_.succ(initial.st, tid_), transitions_});
-      }
-      while (!todo_.empty() && !stop_.load(std::memory_order_relaxed))
-      {
-        if (todo_.back().it->done())
+      auto it = sys_.succ(initial.st, tid_);
+      while (!it->done())
         {
-          pop();
-          if (deadlock_)
-            break;
+          std::cout << "LA\n";
+          delete it->state();
+          it-> next();
         }
-        else
-        {
-          ++transitions_;
-          State dst = todo_.back().it->state();
-          deadlock_state next{dst};
-
-          if (SPOT_LIKELY(push(next)))
-          {
-            todo_.back().it->next();
-            todo_.push_back({next, sys_.succ(dst, tid_), transitions_});
-          }
-          else
-          {
-            todo_.back().it->next();
-          }
-        }
-      }
+      delete it;
+      delete[] initial.st; // FIXME sys.dealloc(sys.st)
       finalize();
+
+      // if (SPOT_LIKELY(push(initial)))
+      // {
+      //  todo_.push_back({initial, sys_.succ(initial.st, tid_), transitions_});
+      // }
+      // while (!todo_.empty() && !stop_.load(std::memory_order_relaxed))
+      // {
+      //   if (todo_.back().it->done())
+      //   {
+      //     pop();
+      //     if (deadlock_)
+      //       break;
+      //   }
+      //   else
+      //   {
+      //     ++transitions_;
+      //     State dst = todo_.back().it->state();
+      //     deadlock_state next{dst};
+
+      //     if (SPOT_LIKELY(push(next)))
+      //     {
+      //       todo_.back().it->next();
+      //       todo_.push_back({next, sys_.succ(dst, tid_), transitions_});
+      //     }
+      //     else
+      //     {
+      //       todo_.back().it->next();
+      //     }
+      //   }
+      // }
+
     }
 
     bool has_deadlock()

@@ -165,8 +165,8 @@ namespace spot
   cspins_iterator::~cspins_iterator()
   {
     delete[] cond_;
-    for (auto& s : successors_)
-        delete[] s;
+    // for (auto& s : successors_)
+    //     delete[] s;
     successors_.clear();
   }
 
@@ -253,6 +253,7 @@ namespace spot
   cspins_state kripkecube<cspins_state, cspins_iterator>::initial(unsigned tid)
   {
     d_->get_initial_state(inner_[tid].uncompressed);
+    std::cout << "tid" << tid << std::endl;
     return manager_[tid].alloc_setup(inner_[tid].uncompressed,
                                      inner_[tid].compressed,
                                      manager_[tid].size() * 2);
