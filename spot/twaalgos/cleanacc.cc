@@ -622,9 +622,9 @@ namespace spot
         if (aut->acc().is_generalized_buchi())
           break;
         acc_cond::acc_code old = aut->get_acceptance();
+        aut->set_acceptance(aut->acc().unit_propagation());
         simplify_complementary_marks_here(aut);
         fuse_marks_here(aut);
-        aut->set_acceptance(aut->acc().unit_propagation());
         if (old == aut->get_acceptance())
           break;
       }
