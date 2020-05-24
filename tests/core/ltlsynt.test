@@ -321,3 +321,9 @@ diff out exp
 
 ltlsynt -f '!XXF(p0 & (p0 M Gp0))' > out
 diff out exp
+
+f='Fp0 U XX((p0 & F!p1) | (!p0 & Gp1))'
+ltlsynt --verbose --algo=ps --outs=p1 --ins=p0 -f "$f" 2>err
+grep 'DPA has 14 states' err
+ltlsynt --verbose -x wdba-minimize=1 --algo=ps --outs=p1 --ins=p0 -f "$f" 2>err
+grep 'DPA has 12 states' err
