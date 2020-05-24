@@ -74,10 +74,11 @@ static const argp_option options[] =
       " propositions", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
-    { "algo", OPT_ALGO, "ds|sd|lar|lar.old", 0,
+    { "algo", OPT_ALGO, "sd|ds|ps|lar|lar.old", 0,
       "choose the algorithm for synthesis:\n"
-      " - sd:   split then determinize with Safra (default)\n"
-      " - ds:   determinize (Safra) then split\n"
+      " - sd:   translate to tgba, split, then determinize (default)\n"
+      " - ds:   translate to tgba, determinize, then split\n"
+      " - ps:   translate to dpa, then split\n"
       " - lar:  translate to a deterministic automaton with arbitrary"
       " acceptance condition, then use LAR to turn to parity,"
       " then split\n"
@@ -136,6 +137,7 @@ enum solver
 {
   DET_SPLIT,
   SPLIT_DET,
+  DPA_SPLIT,
   LAR,
   LAR_OLD,
 };
@@ -144,6 +146,7 @@ static char const *const solver_names[] =
   {
    "ds",
    "sd",
+   "ps",
    "lar",
    "lar.old"
   };
@@ -152,6 +155,7 @@ static char const *const solver_args[] =
 {
   "detsplit", "ds",
   "splitdet", "sd",
+  "dpasplit", "ps",
   "lar",
   "lar.old",
   nullptr
@@ -160,6 +164,7 @@ static solver const solver_types[] =
 {
   DET_SPLIT, DET_SPLIT,
   SPLIT_DET, SPLIT_DET,
+  DPA_SPLIT, DPA_SPLIT,
   LAR,
   LAR_OLD,
 };
@@ -354,10 +359,21 @@ namespace
       spot::stopwatch sw;
       bool want_time = verbose || opt_csv;
 
-      if (opt_solver == LAR || opt_solver == LAR_OLD)
+      switch (opt_solver)
         {
+        case LAR:
+        case LAR_OLD:
           trans_.set_type(spot::postprocessor::Generic);
           trans_.set_pref(spot::postprocessor::Deterministic);
+          break;
+        case DPA_SPLIT:
+          trans_.set_type(spot::postprocessor::ParityMaxOdd);
+          trans_.set_pref(spot::postprocessor::Deterministic
+                          | spot::postprocessor::Colored);
+          break;
+        case DET_SPLIT:
+        case SPLIT_DET:
+          break;
         }
 
       if (want_time)
@@ -421,6 +437,29 @@ namespace
                 std::cerr << "split inputs and outputs done in " << split_time
                           << " seconds\nautomaton has "
                           << tmp->num_states() << " states\n";
+              break;
+            }
+          case DPA_SPLIT:
+            {
+              if (want_time)
+                sw.start();
+              aut->merge_states();
+              if (want_time)
+                paritize_time = sw.stop();
+              if (verbose)
+                std::cerr << "simplification done in " << paritize_time
+                          << " seconds\nDPA has " << aut->num_states()
+                          << " states\n";
+              if (want_time)
+                sw.start();
+              dpa = split_2step(aut, all_inputs);
+              spot::colorize_parity_here(dpa, true);
+              if (want_time)
+                split_time = sw.stop();
+              if (verbose)
+                std::cerr << "split inputs and outputs done in " << split_time
+                          << " seconds\nautomaton has "
+                          << dpa->num_states() << " states\n";
               break;
             }
           case SPLIT_DET:

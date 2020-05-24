@@ -120,6 +120,20 @@ diff outx exp
 
 cat >exp <<EOF
 translating formula done in X seconds
+automaton has 3 states and 4 colors
+simplification done in X seconds
+DPA has 3 states
+split inputs and outputs done in X seconds
+automaton has 9 states
+parity game built in X seconds
+parity game solved in X seconds
+EOF
+ltlsynt --ins=a --outs=b -f 'GFa <-> GFb' --verbose --algo=ps 2> out
+sed 's/ [0-9.e-]* seconds/ X seconds/g' out > outx
+diff outx exp
+
+cat >exp <<EOF
+translating formula done in X seconds
 automaton has 16 states and 2 colors
 split inputs and outputs done in X seconds
 automaton has 47 states
@@ -137,9 +151,10 @@ for r in '' '--real'; do
     opts="$r --ins=a --outs=b -f"
     ltlsynt --algo=ds $opts 'GFa <-> GFb' --csv=FILE || :
     ltlsynt --algo=sd $opts 'FGa <-> GF(b&XXb)' --csv='>>FILE' || :
+    ltlsynt --algo=ps $opts 'FGa <-> GF(b&XXb)' --csv='>>FILE' || :
     ltlsynt --algo=lar $opts 'FGc <-> GF(!b&XXb)' --csv='>>FILE' || :
     ltlsynt --algo=lar.old $opts 'FGa <-> GF(c&a)' --csv='>>FILE' || :
-    test 5 = `wc -l < FILE`
+    test 6 = `wc -l < FILE`
     # Make sure all lines in FILE have the same number of comas
     sed 's/[^,]//g' < FILE |
         ( read first
@@ -242,7 +257,7 @@ for i in 2 3 4 5 6 10; do
   ltl2tgba -f "!($F)" > negf_aut$i
 
   # test ltlsynt
-  for algo in sd ds lar lar.old; do
+  for algo in sd ds ps lar lar.old; do
     ltlsynt -f "$F" --ins="$IN" --outs="$OUT" --algo=$algo > out$i || true
     REAL=`head -1 out$i`
     test $REAL = $EXP
