@@ -588,11 +588,11 @@ namespace spot
             if (s.color_ != -1U)
               {
                 res->create_transition(src_num, s.cond(), {s.color_}, dst_num);
+                sets = std::max(s.color_ + 1, sets);
               }
             else
               {
                 res->create_transition(src_num, s.cond(), {} , dst_num);
-                sets = std::max(s.color_ + 1, sets);
               }
           }
       }
