@@ -21,6 +21,10 @@ New in spot 2.9.0.dev (not yet released)
   - ltlsynt learned --algo=ps to use the default conversion to
     deterministic parity automata (the same as ltl2tgba -DP'max odd').
 
+  - ltlsynt now has a -x option to fine-tune the translation.  See the
+    spot-x(7) man page for detail.  Unlike ltl2tgba, ltlsynt defaults
+    to simul=0,ba-simul=0,det-simul=0,tls-impl=1,wdba-minimize=2.
+
   Library:
 
   - product_xor() and product_xnor() are two new versions of the
