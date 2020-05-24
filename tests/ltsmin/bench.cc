@@ -124,6 +124,8 @@ checked_main()
             << "twacube_nb_edges,"
             << "twacube_nb_states_deterministic,"
             << "twacube_nb_edges_deterministic,"
+            << "twa_acc_sets,"
+            << "twacube_acc_sets,"
             << "walltime_twa,"
             << "walltime_twacube,"
             << "are_equivalent_cube_vs_twa,"
@@ -176,13 +178,30 @@ checked_main()
                     << cube_aut->num_edges() << ','
                     << cube_det_aut->num_states() << ','
                     << cube_det_aut->num_edges() << ','
+                    << det_aut->num_sets() << ','
+                    << cube_det_aut->num_sets() << ','
                     << duration_twa << ','
-                    << duration_twacube << ','
-                    << spot::are_equivalent(cube_aut, aut) << ','
-                    << spot::are_equivalent(cube_det_aut, aut) << ','
-                    << spot::are_equivalent(cube_aut, det_aut) << ','
-                    << spot::are_equivalent(cube_det_aut, det_aut)
-                    << std::endl;
+                    << duration_twacube << ',';
+
+          // are_equivalent might throw an exception when too many sets are used
+          try
+            {
+              bool equiv_cube_twa = spot::are_equivalent(cube_aut, aut);
+              bool equiv_cube_det_twa = spot::are_equivalent(cube_det_aut, aut);
+              bool equiv_cube_twa_det = spot::are_equivalent(cube_aut, det_aut);
+              bool equiv_cube_det_twa_det = spot::are_equivalent(cube_det_aut, det_aut);
+
+              std::cout  << equiv_cube_twa << ','
+                         << equiv_cube_det_twa << ','
+                         << equiv_cube_twa_det << ','
+                         << equiv_cube_det_twa_det;
+            }
+          catch (const std::runtime_error&)
+            {
+              std::cout << "-1,-1,-1,-1";
+            }
+
+          std::cout << std::endl;
 
           if (mc_options.wanted != 0 && count >= mc_options.wanted)
             return exit_code;
