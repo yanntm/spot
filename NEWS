@@ -18,6 +18,9 @@ New in spot 2.9.0.dev (not yet released)
     The default is 1 in "--high" mode, 2 in "--medium" mode or in
     "--deterministic --low" mode, and 0 in other "--low" modes.
 
+  - ltlsynt learned --algo=ps to use the default conversion to
+    deterministic parity automata (the same as ltl2tgba -DP'max odd').
+
   Library:
 
   - product_xor() and product_xnor() are two new versions of the
