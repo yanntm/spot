@@ -160,7 +160,7 @@ namespace spot
       while (!it->done())
         {
           std::cout << "LA\n";
-          delete it->state();
+          delete[] it->state();
           it-> next();
         }
       delete it;
