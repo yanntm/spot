@@ -929,16 +929,6 @@ namespace spot
   private:
     acc_cond acc_;
 
-    void set_num_sets_(unsigned num)
-    {
-      if (num < acc_.num_sets())
-        {
-          acc_.~acc_cond();
-          new (&acc_) acc_cond;
-        }
-      acc_.add_sets(num - acc_.num_sets());
-    }
-
   public:
     /// Number of acceptance sets used by the automaton.
     unsigned num_sets() const
@@ -958,8 +948,7 @@ namespace spot
     /// \param c the acceptance formula
     void set_acceptance(unsigned num, const acc_cond::acc_code& c)
     {
-      set_num_sets_(num);
-      acc_.set_acceptance(c);
+      acc_ = acc_cond(num, c);
     }
 
     /// \brief Set the acceptance condition of the automaton.
@@ -997,8 +986,7 @@ namespace spot
     /// property is automatically turned on.
     void set_generalized_buchi(unsigned num)
     {
-      set_num_sets_(num);
-      acc_.set_generalized_buchi();
+      acc_ = acc_cond(num, acc_cond::acc_code::generalized_buchi(num));
     }
 
     /// \brief Set generalized co-Büchi acceptance
@@ -1015,8 +1003,7 @@ namespace spot
     /// property is automatically turned on.
     void set_generalized_co_buchi(unsigned num)
     {
-      set_num_sets_(num);
-      acc_.set_generalized_co_buchi();
+      acc_ = acc_cond(num, acc_cond::acc_code::generalized_co_buchi(num));
     }
 
     /// \brief Set Büchi acceptance.
@@ -1036,8 +1023,8 @@ namespace spot
     /// \see prop_state_acc
     acc_cond::mark_t set_buchi()
     {
-      set_generalized_buchi(1);
-      return acc_.mark(0);
+      acc_ = acc_cond(1, acc_cond::acc_code::buchi());
+      return {0};
     }
 
     /// \brief Set co-Büchi acceptance.
@@ -1057,8 +1044,8 @@ namespace spot
     /// \see prop_state_acc
     acc_cond::mark_t set_co_buchi()
     {
-      set_generalized_co_buchi(1);
-      return acc_.mark(0);
+      acc_ = acc_cond(1, acc_cond::acc_code::cobuchi());
+      return {0};
     }
 
   private:
