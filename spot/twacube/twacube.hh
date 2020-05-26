@@ -163,7 +163,7 @@ namespace spot
     /// \brief Accessor the cube's manipulator.
     const cubeset& get_cubeset() const;
 
-    /// \brief Check if all the successors of a state are located contigously
+    /// \brief Check if all the successors of a state are located contiguously
     /// in memory. This is mandatory for swarming techniques.
     bool succ_contiguous() const;
 
