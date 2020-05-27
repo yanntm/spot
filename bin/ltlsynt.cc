@@ -39,6 +39,7 @@
 #include <spot/tl/formula.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
+#include <spot/twaalgos/blif.hh>
 #include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/parity.hh>
@@ -65,6 +66,7 @@ enum
   OPT_PRINT,
   OPT_PRINT_AIGER,
   OPT_PRINT_AIGER2,
+  OPT_PRINT_BLIF,
   OPT_REAL,
   OPT_VERBOSE,
   OPT_SMALL_LOW,
@@ -107,6 +109,8 @@ static const argp_option options[] =
       "prints the winning strategy as an AIGER circuit", 0},
     { "aiger2", OPT_PRINT_AIGER2, nullptr, 0,
       "prints the winning strategy as an AIGER circuit", 0},
+    { "blif", OPT_PRINT_BLIF, nullptr, 0,
+      "prints the winning strategy as a BLIF file", 0},
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "verbose mode", -1 },
     { "verify",        OPT_VERIFY,      nullptr,     0,
@@ -124,7 +128,7 @@ static const argp_option options[] =
 
 static const struct argp_child children[] =
     {
-        { &finput_argp_headless, 0, nullptr, 0 },
+        { &finput_argp_headless, 0, nullptr, 0   },
         { &aoutput_argp, 0, nullptr, 0 },
         //{ &aoutput_o_format_argp, 0, nullptr, 0 },
         { &misc_argp, 0, nullptr, 0 },
@@ -146,6 +150,7 @@ static bool opt_print_pg = false;
 static bool opt_real = false;
 static bool opt_print_aiger = false;
 static bool opt_print_aiger2 = false;
+static bool opt_print_blif = false;
 static bool opt_old = false;
 static bool opt_verify = false;
 static bool opt_small_low = false;
@@ -161,6 +166,7 @@ static double strat2aut_time = 0.0;
 static unsigned nb_states_dpa = 0;
 static unsigned nb_states_parity_game = 0;
 static double aut2aiger_time = 0.0;
+static int stratsize_[2];
 
 enum solver
 {
@@ -354,12 +360,14 @@ namespace
                 out << ",\"solve_time\"";
                 if (!opt_real)
                   out << ",\"strat2aut_time\"";
-                if (opt_print_aiger)
+                if (opt_print_aiger || opt_print_aiger2 || opt_print_blif)
                   out << ",\"aut2aiger_time\"";
                 out << ",\"realizable\"";
               }
-            out << ",\"dpa_num_states\",\"parity_game_num_states\""
-                << '\n';
+            out << ",\"dpa_num_states\",\"parity_game_num_states\"";
+            if (!opt_real)
+                out << "\"strat_num_states\",\"strat_num_edges\"";
+            out << '\n';
           }
         out << '\n';
       }
@@ -376,13 +384,15 @@ namespace
         out << ',' << solve_time;
         if (!opt_real)
           out << ',' << strat2aut_time;
-        if (opt_print_aiger)
+        if (opt_print_aiger || opt_print_aiger2 || opt_print_blif)
           out << ',' << aut2aiger_time;
         out << ',' << realizable;
       }
     out << ',' << nb_states_dpa
-        << ',' << nb_states_parity_game
-        << '\n';
+        << ',' << nb_states_parity_game;
+    if (!opt_real)
+      out << ',' << stratsize_[0] << ',' << stratsize_[1];
+    out   << '\n';
     outf.close(opt_csv);
   }
   
@@ -451,6 +461,9 @@ namespace
         if (v==-1)
         {
           std::cerr<<"prop "<<ap_i<<" does not appear in aut"<<std::endl;
+          std::cerr<<"Known props are"<< std::endl;
+          for (const auto& ap : aut->ap())
+            std::cerr << ap.ap_name() << std::endl;
           throw std::runtime_error("Unregistered input");
         }
         all_inputs &= bdd_ithvar(v);
@@ -462,6 +475,9 @@ namespace
         if (v==-1)
         {
           std::cerr<<"prop "<<ap_o<<" does not appear in aut"<<std::endl;
+          std::cerr<<"Known props are"<< std::endl;
+          for (const auto& ap : aut->ap())
+            std::cerr << ap.ap_name() << std::endl;
           throw std::runtime_error("Unregistered output");
         }
         all_outputs &= bdd_ithvar(v);
@@ -633,7 +649,7 @@ namespace
         // todo print as annotated hoa
         return 0;
       }
-      
+  
       bool is_realizable;
       spot::parity_game::strategy_old_t strategy[2];
       spot::parity_game::region_old_t winning_region[2];
@@ -652,7 +668,7 @@ namespace
       timer.stop();
       if (is_realizable)
       {
-        std::cout << "REALIZABLE\n";
+        std::cerr << "REALIZABLE\n";
         if (!opt_real)
         {
           if (want_time)
@@ -663,7 +679,11 @@ namespace
                strat_to_aut(dpa, strategy[1], all_outputs);
           else
             strat_aut =
-                spot::apply_strategy(dpa, all_outputs, true, true, false);
+                spot::apply_strategy(dpa, all_outputs, true, true, false,
+                                     !opt_print_aiger);
+          stratsize_[0] = strat_aut->num_states();
+          stratsize_[1] = strat_aut->num_edges();
+          
           if (want_time)
             strat2aut_time = sw.stop();
           
@@ -684,10 +704,16 @@ namespace
             spot::print_aiger(std::cout, strat_aut);
             if (want_time)
               aut2aiger_time = sw.stop();
-          }else if (opt_print_aiger2){
+          }else if (opt_print_aiger2) {
             if (want_time)
               sw.start();
-            spot::print_aiger(std::cout, strat_aut); // Prob when rebasing
+            spot::print_aiger2(std::cout, strat_aut);
+            if (want_time)
+              aut2aiger_time = sw.stop();
+          }else if (opt_print_blif){
+            if (want_time)
+              sw.start();
+            spot::print_blif(std::cout, strat_aut);
             if (want_time)
               aut2aiger_time = sw.stop();
           } else {
@@ -699,7 +725,7 @@ namespace
       }
       else
       {
-        std::cout << "UNREALIZABLE\n";
+        std::cerr << "UNREALIZABLE\n";
         return 1;
       }
     }
@@ -757,6 +783,9 @@ parse_opt(int key, char* arg, struct argp_state*)
           break;
         case OPT_PRINT_AIGER2:
           opt_print_aiger2 = true;
+          break;
+        case OPT_PRINT_BLIF:
+          opt_print_blif = true;
           break;
         case OPT_REAL:
           opt_real = true;

@@ -56,7 +56,7 @@ namespace{
     }
     
     // Get the condition restricted to input and support of a condition
-    const std::pair<bdd,bdd>& operator[](bdd econd) const
+    const std::pair<bdd,bdd>& operator[](const bdd& econd) const
     {
       return cond_hash_.at(econd);
     }
@@ -72,16 +72,16 @@ namespace{
           econd(e.cond),
           einsup(sm[e.cond]),
           acc(e.acc)
-      {
+    {
       pre_hash = (spot::wang32_hash(dst)
                  ^ std::hash<spot::acc_cond::mark_t>()(acc))
                  * spot::fnv<size_t>::prime;
-      }
+    }
     
     inline size_t hash() const
-      {
+    {
       return spot::wang32_hash(spot::bdd_hash()(econdout)) ^ pre_hash;
-      }
+    }
     
     unsigned dst;
     bdd econd, econdout;
@@ -94,43 +94,45 @@ namespace{
   // outgoing edges
   struct less_info_t {
     // Note: orders via econd
-    inline bool operator()(const e_info_t& lhs, const e_info_t& rhs)const{
-      if (lhs.dst < rhs.dst) {
+    inline bool operator()(const e_info_t& lhs, const e_info_t& rhs)const
+    {
+      if (lhs.dst < rhs.dst)
         return true;
-      } else if (lhs.dst > rhs.dst) {
+      else if (lhs.dst > rhs.dst)
         return false;
-      }
-      if (lhs.acc < rhs.acc) {
+      
+      if (lhs.acc < rhs.acc)
         return true;
-      } else if (lhs.acc > rhs.acc) {
+      else if (lhs.acc > rhs.acc)
         return false;
-      }
-      if (lhs.econd.id() < rhs.econd.id()) {
+      
+      if (lhs.econd.id() < rhs.econd.id())
         return true;
-      } else if (lhs.econd.id() > rhs.econd.id()) {
+      else if (lhs.econd.id() > rhs.econd.id())
         return false;
-      }
+      
       return false;
-      }
+    }
     // Note: orders via econdout
-    inline bool operator()(const e_info_t* lhs, const e_info_t* rhs)const{
-      if (lhs->dst < rhs->dst) {
+    inline bool operator()(const e_info_t* lhs, const e_info_t* rhs)const
+    {
+      if (lhs->dst < rhs->dst)
         return true;
-      } else if (lhs->dst > rhs->dst) {
+      else if (lhs->dst > rhs->dst)
         return false;
-      }
-      if (lhs->acc < rhs->acc) {
+      
+      if (lhs->acc < rhs->acc)
         return true;
-      } else if (lhs->acc > rhs->acc) {
+      else if (lhs->acc > rhs->acc)
         return false;
-      }
-      if (lhs->econdout.id() < rhs->econdout.id()) {
+      
+      if (lhs->econdout.id() < rhs->econdout.id())
         return true;
-      } else if (lhs->econdout.id() > rhs->econdout.id()) {
+      else if (lhs->econdout.id() > rhs->econdout.id())
         return false;
-      }
+      
       return false;
-      }
+    }
   };
 }
 
@@ -243,8 +245,6 @@ namespace spot
     std::unordered_multimap<size_t, unsigned> env_hash;
     env_hash.reserve((int) 1.5 * aut->num_states());
     std::map<unsigned, std::pair<unsigned,bdd>> env_edge_hash;
-//    std::unordered_map<unsigned, std::pair<unsigned,bdd>> env_edge_hash;
-//    env_edge_hash.reserve(10);
     
     small_cacher_t small_cacher;
     small_cacher.fill(aut, output_bdd);
@@ -262,7 +262,6 @@ namespace spot
     
     // If a complete automaton for environment is demanded
     // we might need a sink
-//    unsigned sink_con=0, sink_env=0;
     unsigned sink_con=0;
   
     // Loop over all states
@@ -285,12 +284,8 @@ namespace spot
       // Complete for env
       if (complete_env && (all_letters != bddtrue))
       {
-        if (sink_con == 0) {
+        if (sink_con == 0)
           sink_con = split->new_state();
-//          sink_env = split->new_state();
-//          split->new_edge(sink_env, sink_con, bddtrue);
-//          split->new_edge(sink_con, sink_env, bddtrue);
-        }
         bdd remaining = bddtrue - all_letters;
         split->new_edge(src, sink_con, remaining);
       }
@@ -313,7 +308,6 @@ namespace spot
                 bdd_appex(e_info.econd, one_letter, bddop_and, input_bdd);
             dests.push_back(&e_info);
             SPOT_ASSERT(e_info.econdout != bddfalse);
-//            e_info.einsup.first -= one_letter; // # 10 This sometimes helps
           }
         SPOT_ASSERT(!dests.empty());
         // # dests is almost sorted -> insertion sort
@@ -345,12 +339,10 @@ namespace spot
             to_add = false;
             auto it = env_edge_hash.find(i);
             if (it != env_edge_hash.end())
-            {
               it->second.second |= one_letter;
-            } else {
+            else
               env_edge_hash.emplace(i,
                   std::make_pair(split->new_edge(src, i, bddtrue), one_letter));
-            }
             break;
           }
         }
@@ -366,9 +358,8 @@ namespace spot
         }
       }
       // save locally stored condition
-      for (auto& elem : env_edge_hash){
+      for (auto& elem : env_edge_hash)
         split->edge_data(elem.second.first).cond = elem.second.second;
-      }
     }
     
     split->merge_edges();

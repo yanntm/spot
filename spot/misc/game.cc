@@ -22,6 +22,7 @@
 #include <cmath>
 #include <spot/misc/game.hh>
 #include <spot/misc/timer.hh>
+#include <spot/misc/bddlt.hh>
 
 #include <deque>
 
@@ -1131,7 +1132,7 @@ namespace spot
   
   twa_graph_ptr
   apply_strategy(const twa_graph_ptr& arena, bdd all_outputs,
-                 bool do_purge, bool unsplit, bool keep_acc)
+                 bool do_purge, bool unsplit, bool keep_acc, bool leave_choice)
   {
     SPOT_ASSERT(is_solved_arena(arena));
     namespace pg = spot::parity_game;
@@ -1143,10 +1144,10 @@ namespace spot
     
     // If we purge, unsplit but not keep_acc we store the distinct
     // parts of the condition as chances are we are using ltlsynt
-    bool store_e = do_purge && unsplit && !keep_acc;
-    std::vector<std::array<bdd,2>> e_conds;
-    if (store_e)
-      e_conds.push_back({bddfalse, bddfalse}); //Zero edge
+//    bool store_e = !do_purge && unsplit && !keep_acc;
+//    std::vector<std::array<bdd,2>> e_conds;
+//    if (store_e)
+//      e_conds.push_back({bddfalse, bddfalse}); //Zero edge
     
     auto aut = spot::make_twa_graph(arena->get_dict());
     aut->copy_ap_of(arena);
@@ -1155,14 +1156,14 @@ namespace spot
     }else{
       aut->set_acceptance(0, acc_cond::acc_code());
     }
-    
   
     const unsigned unseen_mark = std::numeric_limits<unsigned>::max();
     std::vector<unsigned> todo{arena->get_init_state_number()};
     std::vector<unsigned> pg2aut(arena->num_states(), unseen_mark);
     aut->set_init_state(aut->new_state());
     pg2aut[arena->get_init_state_number()] = aut->get_init_state_number();
-    
+  
+    std::unordered_set<bdd, bdd_hash> n_minterms;
     while (!todo.empty()) {
       unsigned v = todo.back();
       todo.pop_back();
@@ -1181,31 +1182,33 @@ namespace spot
         // as env edges have been colorized afterwards
         // todo leave choice to aiger in order to minimize and-gates
         auto &e2 = arena->edge_storage(s[e1.dst]);
-        bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
         if (pg2aut[e2.dst] == unseen_mark) {
           pg2aut[e2.dst] = aut->new_state();
           todo.push_back(e2.dst);
         }
-        unsigned e_idx =
-            aut->new_edge(unsplit ? pg2aut[v] : pg2aut[e1.dst],
-                          pg2aut[e2.dst],
-                          unsplit ? (e1.cond & out):out,
-                          keep_acc ? e2.acc : acc_cond::mark_t({}));
+        bdd out;
+        if (leave_choice)
+          // Leave the choice
+          out = e2.cond;
+        else
+          // Save only one letter
+          out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
+        n_minterms.insert(out);
         
-        if (store_e)
-        {
-          SPOT_ASSERT(e_idx == e_conds.size());
-          e_conds.push_back({e1.cond, out});
-        }
+        aut->new_edge(unsplit ? pg2aut[v] : pg2aut[e1.dst],
+                      pg2aut[e2.dst],
+                      unsplit ? (e1.cond & out):out,
+                      keep_acc ? e2.acc : acc_cond::mark_t({}));
       }
     }
+    // When doing the normal synthesis, do not purge states
+    // to keep the graph as is
+    // the translation to aiger will run a DFS to only acount
+    // for reachable states
     if (do_purge) {
       aut->purge_dead_states();
     }
     aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
-    aut->set_named_prop("synthesis-econds",
-                        new std::vector<std::array<bdd,2>>(std::move(e_conds)));
-    
     return aut;
   }
   

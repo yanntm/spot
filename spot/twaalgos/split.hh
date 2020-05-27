@@ -61,6 +61,8 @@ namespace spot
   /// (p,a) may be non-deterministic.
   /// This function is used to transform an automaton into a turn-based game in
   /// the context of LTL reactive synthesis.
+  /// complete_env is necessary to ensure correctness for split-det.
+  /// det-split does not need a comlete-arena
   SPOT_API twa_graph_ptr
   split_2step(const const_twa_graph_ptr& aut,
               bdd input_bdd, bdd output_bdd, bool complete_env);

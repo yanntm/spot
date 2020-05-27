@@ -70,5 +70,6 @@ namespace spot
   /// the restriction of the initial automaton to the strategy
   SPOT_API twa_graph_ptr
   apply_strategy(const twa_graph_ptr& arena, bdd all_outputs,
-                 bool do_purge=true, bool unsplit=true, bool keep_acc=false);
+                 bool do_purge=true, bool unsplit=true, bool keep_acc=false,
+                 bool leave_choice=false);
 }

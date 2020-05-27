@@ -33,6 +33,7 @@ twaalgos_HEADERS = \
   alternation.hh \
   are_isomorphic.hh \
   bfssteps.hh \
+  blif.hh \
   canonicalize.hh \
   cleanacc.hh \
   cobuchi.hh \
@@ -103,6 +104,7 @@ libtwaalgos_la_SOURCES = \
   alternation.cc \
   are_isomorphic.cc \
   bfssteps.cc \
+  blif.cc \
   canonicalize.cc \
   cleanacc.cc \
   cobuchi.cc \
