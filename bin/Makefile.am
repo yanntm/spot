@@ -22,6 +22,7 @@ SUBDIRS = . man
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS) \
               -I$(top_builddir)/lib -I$(top_srcdir)/lib
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
+AM_LDFLAGS = -pthread
 LDADD =						\
   libcommon.a					\
   $(top_builddir)/lib/libgnu.la			\

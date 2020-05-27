@@ -21,7 +21,9 @@
 
 #include <deque>
 #include <map>
+#include <mutex>
 #include <set>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -496,8 +498,122 @@ namespace spot
     }
   }
 
+  class determinize_thread
+  {
+  public:
+    determinize_thread(const twacube_ptr aut,
+                       twacube_ptr res,
+                       size_t id,
+                       std::unordered_map<safra_state, unsigned, hash_safra>& seen,
+                       std::deque<std::pair<safra_state, unsigned>>& todo,
+                       const std::vector<cube_support>& supports,
+                       unsigned& sets,
+                       std::mutex& seen_mut,
+                       std::mutex& todo_mut,
+                       std::mutex& res_mut)
+      : aut_(aut)
+      , res_(res)
+      , id_(id)
+      , seen_(seen)
+      , todo_(todo)
+      , supports_(supports)
+      , sets_(sets)
+      , seen_mut_(seen_mut)
+      , todo_mut_(todo_mut)
+      , res_mut_(res_mut)
+    {}
+
+    void run()
+    {
+      const cubeset& cs = aut_->get_cubeset();
+
+      // find association between safra state and res state, or create one
+      auto get_state = [this](const safra_state& s) -> unsigned
+      {
+        std::lock_guard<std::mutex> slock(seen_mut_);
+        auto it = seen_.find(s);
+        if (it == seen_.end())
+          {
+            unsigned dst_num;
+            {
+              std::lock_guard<std::mutex> rlock(res_mut_);
+              dst_num = res_->new_state();
+            }
+            it = seen_.emplace(s, dst_num).first;
+            {
+              std::lock_guard<std::mutex> tlock(todo_mut_);
+              todo_.emplace_back(*it);
+            }
+          }
+        return it->second;
+      };
+
+      compute_succs succs(aut_);
+
+      // core algorithm
+      //
+      // for every safra state,
+      //     for each possible safra successor,
+      //         compute successor emitted color
+      //         create transition in res automaton, with color
+      while (true)
+        {
+          safra_state curr;
+          unsigned src_num;
+          {
+            std::lock_guard<std::mutex> lock(todo_mut_);
+            if (todo_.empty())
+              break;
+            curr = todo_.front().first;
+            src_num = todo_.front().second;
+            todo_.pop_front();
+          }
+
+          const auto letters = get_letters(curr, supports_, cs);
+
+          succs.set(&curr, &letters);
+
+          // iterator over successors of curr
+          for (auto s = succs.begin(); s != succs.end(); ++s)
+            {
+              if (s->nodes_.empty())
+                continue;
+
+              unsigned dst_num = get_state(*s);
+              if (s.color_ != -1U)
+                {
+                  {
+                    std::lock_guard<std::mutex> lock(res_mut_);
+                    res_->create_transition(src_num, s.cond(), {s.color_}, dst_num);
+                  }
+                  sets_ = std::max(s.color_ + 1, sets_);
+                }
+              else
+                {
+                  {
+                    std::lock_guard<std::mutex> lock(res_mut_);
+                    res_->create_transition(src_num, s.cond(), {} , dst_num);
+                  }
+                }
+            }
+        }
+    }
+
+  private:
+    const twacube_ptr aut_;
+    twacube_ptr res_;
+    size_t id_;
+    std::unordered_map<safra_state, unsigned, hash_safra>& seen_;
+    std::deque<std::pair<safra_state, unsigned>>& todo_;
+    const std::vector<cube_support>& supports_;
+    unsigned& sets_;
+    std::mutex& seen_mut_;
+    std::mutex& todo_mut_;
+    std::mutex& res_mut_;
+  };
+
   twacube_ptr
-  twacube_determinize(const twacube_ptr aut)
+  twacube_determinize(const twacube_ptr aut, size_t nb_threads)
   {
     // TODO(am): check is_existential + is_universal before launching useless
     // computation
@@ -558,51 +674,39 @@ namespace spot
       unsigned res_init = get_state(init);
       res->set_initial(res_init);
     }
-    unsigned sets = 0;
 
-    compute_succs succs(aut);
-
-    // core algorithm
-    //
-    // for every safra state,
-    //     for each possible safra successor,
-    //         compute successor emitted color
-    //         create transition in res automaton, with color
-    while (!todo.empty())
+    std::vector<unsigned> sets(nb_threads);
+    std::vector<std::thread> threads;
+    std::vector<determinize_thread> det_threads;
+    det_threads.reserve(nb_threads);
+    std::mutex seen_mut;
+    std::mutex todo_mut;
+    std::mutex res_mut;
+    for (size_t i = 0; i < nb_threads; ++i)
       {
-        const safra_state curr = todo.front().first;
-        const unsigned src_num = todo.front().second;
-        todo.pop_front();
-
-        const auto letters = get_letters(curr, supports, cs);
-
-        succs.set(&curr, &letters);
-
-        // iterator over successors of curr
-        for (auto s = succs.begin(); s != succs.end(); ++s)
-          {
-            if (s->nodes_.empty())
-              continue;
-
-            unsigned dst_num = get_state(*s);
-            if (s.color_ != -1U)
-              {
-                res->create_transition(src_num, s.cond(), {s.color_}, dst_num);
-                sets = std::max(s.color_ + 1, sets);
-              }
-            else
-              {
-                res->create_transition(src_num, s.cond(), {} , dst_num);
-              }
-          }
+        det_threads.emplace_back(aut,
+                                 res,
+                                 i,
+                                 seen,
+                                 todo,
+                                 supports,
+                                 sets[i],
+                                 seen_mut,
+                                 todo_mut,
+                                 res_mut);
+        threads.push_back(std::thread(&determinize_thread::run, &det_threads[i]));
       }
+
+    for (auto& t : threads)
+      t.join();
 
     // Green and red colors work in pairs, so the number of parity conditions is
     // necessarily even.
-    sets += sets & 1;
+    unsigned sets_max = *std::max_element(sets.begin(), sets.end());
+    sets_max += sets_max & 1;
 
-    res->set_num_sets(sets);
-    res->acc().set_acceptance(acc_cond::acc_code::parity_min_odd(sets));
+    res->set_num_sets(sets_max);
+    res->acc().set_acceptance(acc_cond::acc_code::parity_min_odd(sets_max));
 
     // TODO: set these properties when twacube supports them
     // res->prop_universal(true);

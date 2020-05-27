@@ -2,6 +2,7 @@
 
 #include <argp.h>
 #include <cassert>
+#include <thread>
 
 #include "bin/common_setup.hh"
 #include "bin/common_conv.hh"
@@ -158,7 +159,7 @@ checked_main()
 
       tm.start("determinize twacube");
       {
-        cube_det_aut = twacube_determinize(cube_aut);
+        cube_det_aut = twacube_determinize(cube_aut,  std::thread::hardware_concurrency());
       }
       tm.stop("determinize twacube");
 
