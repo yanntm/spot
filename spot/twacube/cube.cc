@@ -36,10 +36,8 @@ namespace spot
 
   cube cubeset::alloc() const
   {
-    auto* res = new unsigned int[2*uint_size_];
-    for (unsigned int i = 0; i < 2*uint_size_; ++i)
-      res[i] = 0;
-    return res;
+    auto* res = std::calloc(2*uint_size_, sizeof(unsigned));
+    return static_cast<cube>(res);
   }
 
   void cubeset::set_true_var(cube c, unsigned int x) const
