@@ -209,6 +209,14 @@ ARGMATCH_VERIFY(solver_args, solver_types);
 static solver opt_solver = SPLIT_DET;
 static bool verbose = false;
 
+// Default options if unset by -x
+static const std::vector<std::pair<std::string, int>> lar_x_ = {
+    {"simul", 0},
+    {"ba-simul", 0},
+    {"det-simul", 0},
+    {"tls-impl", 1},
+    {"wdba-minimize", 2},
+};
 
 namespace
 {
@@ -353,22 +361,16 @@ namespace
                 "\"split_time\",\"todpa_time\",\"build_game_time\"");
         if (!opt_print_pg)
           {
-            out << ("\"formula\",\"algo\",\"trans_time\","
-                    "\"split_time\",\"todpa_time\",\"build_game_time\"");
-            if (!opt_print_pg)
-              {
-                out << ",\"solve_time\"";
-                if (!opt_real)
-                  out << ",\"strat2aut_time\"";
-                if (opt_print_aiger || opt_print_aiger2 || opt_print_blif)
-                  out << ",\"aut2aiger_time\"";
-                out << ",\"realizable\"";
-              }
-            out << ",\"dpa_num_states\",\"parity_game_num_states\"";
+            out << ",\"solve_time\"";
             if (!opt_real)
-                out << "\"strat_num_states\",\"strat_num_edges\"";
-            out << '\n';
+              out << ",\"strat2aut_time\"";
+            if (opt_print_aiger || opt_print_aiger2 || opt_print_blif)
+              out << ",\"aut2aiger_time\"";
+            out << ",\"realizable\"";
           }
+        out << ",\"dpa_num_states\",\"parity_game_num_states\"";
+        if (!opt_real)
+            out << ",\"strat_num_states\",\"strat_num_edges\"";
         out << '\n';
       }
     std::ostringstream os;
@@ -797,11 +799,11 @@ parse_opt(int key, char* arg, struct argp_state*)
           verbose = true;
           break;
         case 'x':
-        {
-          const char* opt = extra_options.parse_options(arg);
-          if (opt)
-            error(2, 0, "failed to parse --options near '%s'", opt);
-        }
+          {
+            const char* opt = extra_options.parse_options(arg);
+            if (opt)
+              error(2, 0, "failed to parse --options near '%s'", opt);
+          }
         break;
         case OPT_SMALL_LOW:
           opt_small_low = true;
@@ -821,11 +823,6 @@ int
 main(int argc, char **argv)
 {
   return protected_main(argv, [&] {
-      extra_options.set("simul", 0);
-      extra_options.set("ba-simul", 0);
-      extra_options.set("det-simul", 0);
-      extra_options.set("tls-impl", 1);
-      extra_options.set("wdba-minimize", 2);
       const argp ap = { options, parse_opt, nullptr,
                         argp_program_doc, children, nullptr, nullptr };
       if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
@@ -835,6 +832,13 @@ main(int argc, char **argv)
       // Setup the dictionary now, so that BuDDy's initialization is
       // not measured in our timings.
       spot::bdd_dict_ptr dict = spot::make_bdd_dict();
+      // Check if default options are wanted, only applies to
+      // lar/lar.old at the moment
+      if (opt_solver == LAR || opt_solver == LAR_OLD)
+        // Check if options are overwritten by -x
+        for (const auto& xop : lar_x_)
+          if (extra_options.get(xop.first.c_str(),9999)==9999)
+            extra_options.set(xop.first.c_str(), xop.second);
       spot::translator trans(dict, &extra_options);
       ltl_processor processor(trans, input_aps, output_aps);
 

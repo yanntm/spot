@@ -24,7 +24,6 @@
 #include <spot/misc/bddlt.hh>
 
 #include <algorithm>
-#include <chrono>
 
 namespace{
   // Computes and stores the restriction
