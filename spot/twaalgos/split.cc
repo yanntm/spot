@@ -45,11 +45,11 @@ namespace{
       for (const auto& e : aut->edges())
       {
         // Check if stored
-        if (cond_hash_.find(e.cond)!=cond_hash_.end())
+        if (cond_hash_.find(e.cond) != cond_hash_.end())
           continue;
   
         cond_hash_[e.cond] =
-            std::pair<bdd,bdd>(
+            std::pair<bdd, bdd>(
                 bdd_exist(e.cond, output_bdd),
                 bdd_exist(bdd_support(e.cond), output_bdd));
       }

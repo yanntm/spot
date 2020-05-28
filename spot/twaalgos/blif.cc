@@ -117,7 +117,7 @@ namespace spot
     // Add the latches
     const unsigned log2n = std::ceil(std::log2(ag->num_states()));
     const unsigned st0 =
-        aut->get_dict()->register_anonymous_variables(log2n,aut);
+        aut->get_dict()->register_anonymous_variables(log2n, aut);
     std::vector<int> latch_vars_(log2n);
     std::iota(latch_vars_.begin(), latch_vars_.end(), st0); // latch i high
     // Add latch outs
@@ -148,15 +148,15 @@ namespace spot
       for (unsigned i=0; i<log2n; ++i)
       {
         vec.push_back(s&1);
-        s>>=1;
+        s >>= 1;
       }
-      SPOT_ASSERT(s<=1);
+      SPOT_ASSERT(s <= 1);
     };
     
     auto state2bdd = [&](unsigned s)
     {
       static std::vector<bool> vec;
-      state2vec(s,vec);
+      state2vec(s, vec);
       bdd statebdd=bddtrue;
       for (unsigned i=0; i<log2n; i++)
         statebdd &= vec.at(i) ?
@@ -171,7 +171,7 @@ namespace spot
       {
         varvec.push_back(bdd_var(sup));
         sup = bdd_high(sup);
-      }while(sup!=bddtrue);
+      }while(sup != bddtrue);
     };
     
     std::vector<bdd> outs(outputs.size(), bddfalse);
@@ -207,19 +207,18 @@ namespace spot
     // Create the blif
     std::vector<int> support_vars;
     // Prepend ins and outs as comment
-    os << "#" << input_names.size()+output_names.size() << "\n";
+    os << '#' << input_names.size()+output_names.size() << '\n';
     for (unsigned i=0; i<input_names.size(); ++i)
-      os << "#i" << i << " " << input_names[i] << "\n";
-    
+      os << "#i" << i << ' ' << input_names[i] << '\n';
     for (unsigned i=0; i<output_names.size(); ++i)
-      os << "#o" << i << " " << output_names[i] << "\n";
+      os << "#o" << i << ' ' << output_names[i] << '\n';
     os << ".model synt\n.inputs";
     for (const auto& s : input_names)
-      os << " " << s;
+      os << ' ' << s;
     os << "\n.outputs";
     for (const auto& s : output_names)
-      os << " " << s;
-    os << "\n";
+      os << ' ' << s;
+    os << '\n';
     // Create the latches
     for (unsigned i=0; i<log2n; ++i)
       os << ".latch latchin" << i << " latchout" << i << " ah NIL 0\n";
@@ -227,35 +226,35 @@ namespace spot
     for (unsigned i=0; i<log2n; ++i)
     {
       // Special cases for FALSE and TRUE
-      if (latches[i]==bddfalse || latches[i]==bddtrue)
+      if (latches[i] == bddfalse || latches[i] == bddtrue)
       {
-        os << ".names latchin" << i << "\n";
-        os << (latches[i]==bddfalse ? "0\n" : "1\n");
+        os << ".names latchin" << i << '\n';
+        os << (latches[i] == bddfalse ? "0\n" : "1\n");
         continue;
       }
       support2varvec(bdd_support(latches[i]), support_vars);
       os << ".names";
       for (int var : support_vars)
-        os << " " << bddvar2name.at(var);
+        os << ' ' << bddvar2name.at(var);
       // output
-      os << " latchin" << i << "\n";
+      os << " latchin" << i << '\n';
       // Thruth table
       print_table(os, latches[i], support_vars);
     }
     for (unsigned i=0; i<outs.size(); ++i)
     {
-      if (outs[i]==bddfalse || outs[i]==bddtrue)
+      if (outs[i] == bddfalse || outs[i] == bddtrue)
       {
-        os << ".names " << output_names[i] << "\n";
-        os << (outs[i]==bddfalse ? "0\n" : "1\n");
+        os << ".names " << output_names[i] << '\n';
+        os << (outs[i] ==   bddfalse ? "0\n" : "1\n");
         continue;
       }
       support2varvec(bdd_support(outs.at(i)), support_vars);
       os << ".names";
       for (int var : support_vars)
-        os << " " << bddvar2name.at(var);
+        os << ' ' << bddvar2name.at(var);
       // output
-      os << " " << output_names[i] << "\n";
+      os << ' ' << output_names[i] << '\n';
       // Thruth table
       print_table(os, outs[i], support_vars);
     }

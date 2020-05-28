@@ -454,28 +454,30 @@ namespace
       auto aut = trans_.run(&f);
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
-      for (auto& ap_i : input_aps_) {
+      for (auto& ap_i : input_aps_)
+      {
         long long v =
             aut->get_dict()->has_registered_proposition(
                 spot::formula::ap(ap_i), aut);
-        if (v==-1)
+        if (v == -1)
         {
-          std::cerr<<"prop "<<ap_i<<" does not appear in aut"<<std::endl;
-          std::cerr<<"Known props are"<< std::endl;
+          std::cerr << "prop " << ap_i << " does not appear in aut\n";
+          std::cerr << "Known props are\n";
           for (const auto& ap : aut->ap())
             std::cerr << ap.ap_name() << std::endl;
           throw std::runtime_error("Unregistered input");
         }
         all_inputs &= bdd_ithvar(v);
       }
-      for (auto ap_o : output_aps_) {
+      for (auto ap_o : output_aps_)
+      {
         long long v =
             aut->get_dict()->has_registered_proposition(
                 spot::formula::ap(ap_o), aut);
-        if (v==-1)
+        if (v == -1)
         {
-          std::cerr<<"prop "<<ap_o<<" does not appear in aut"<<std::endl;
-          std::cerr<<"Known props are"<< std::endl;
+          std::cerr << "prop " << ap_o << " does not appear in aut\n";
+          std::cerr << "Known props are\n";
           for (const auto& ap : aut->ap())
             std::cerr << ap.ap_name() << std::endl;
           throw std::runtime_error("Unregistered output");
@@ -632,8 +634,6 @@ namespace
       std::vector<bool> owner;
       if (opt_old)
         owner = complete_env(dpa);
-//        automaton_printer printer2;
-//        printer2.print(dpa, timer);
       else
         make_arena(dpa);
       
@@ -646,7 +646,7 @@ namespace
       {
         timer.stop();
         //pg.print(std::cout);
-        // todo print as annotated hoa
+        // todo print as HOA
         return 0;
       }
   
@@ -688,17 +688,20 @@ namespace
             strat2aut_time = sw.stop();
           
           // Verification if demanded
-          if (opt_verify) {
+          if (opt_verify)
+          {
             auto aut_neg = trans_.run(spot::formula::Not(f));
             auto run_ptr = aut_neg->intersecting_run(strat_aut);
-            if ((run_ptr != nullptr) || (strat_aut->num_edges()==0)) {
+            if ((run_ptr != nullptr) || (strat_aut->num_edges()==0))
+            {
               run_ptr->replay(std::cerr, true);
               throw std::runtime_error("Synthesized strategy not safe");
             }
           }
           
           // output the winning strategy
-          if (opt_print_aiger) {
+          if (opt_print_aiger)
+          {
             if (want_time)
               sw.start();
             spot::print_aiger(std::cout, strat_aut);

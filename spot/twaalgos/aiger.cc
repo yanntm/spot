@@ -705,7 +705,7 @@ namespace spot
         // Count active gates
         unsigned n_gates=0;
         for (auto& g : and_gates_)
-          if((g.first!=0) && (g.second!=0))
+          if ((g.first != 0) && (g.second != 0))
             ++n_gates;
         os << "aag " << max_var_ / 2
            << ' ' << num_inputs_
@@ -719,7 +719,7 @@ namespace spot
         for (unsigned i = 0; i < outputs_.size(); ++i)
           os << outputs_[i] << '\n';
         for (unsigned i=0; i<and_gates_.size(); ++i)
-          if ((and_gates_[i].first!=0) && (and_gates_[i].second!=0))
+          if ((and_gates_[i].first != 0) && (and_gates_[i].second != 0))
             os << gate_var(i)
                << ' ' << and_gates_[i].first
                << ' ' << and_gates_[i].second << '\n';
