@@ -85,6 +85,10 @@ namespace spot
   std::ostream&
   print_blif(std::ostream& os, const const_twa_ptr& aut)
   {
+    if (!aut->get_named_prop<bdd>("synthesis-outputs"))
+      throw std::runtime_error("synthesis-outputs necessary for "
+                               "conversion to blif");
+  
     auto ag = down_cast<const_twa_graph_ptr>(aut);
     bdd all_outputs = *aut->get_named_prop<bdd>("synthesis-outputs");
     
