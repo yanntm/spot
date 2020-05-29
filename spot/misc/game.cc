@@ -37,9 +37,9 @@ namespace{
   
   bool is_arena(const twa_graph_ptr& arena)
   {
-    if (arena->get_named_prop<std::vector<bool>>("owner") == nullptr)
+    if (arena->get_named_prop<std::vector<bool>>("state-player") == nullptr)
       throw std::runtime_error("States have no owners!");
-    if ((arena->get_named_prop<std::vector<bool>>("winning_region") == nullptr)
+    if ((arena->get_named_prop<std::vector<bool>>("winning-region") == nullptr)
         || (arena->get_named_prop<std::vector<unsigned>>("strategy") ==
             nullptr))
       throw std::runtime_error("Arena must have winning region and strategy!");
@@ -50,9 +50,9 @@ namespace{
     is_arena(arena);
     unsigned n_states = arena->num_states();
     std::vector<bool>& owner =
-        *arena->get_named_prop<std::vector<bool>>("owner");
+        *arena->get_named_prop<std::vector<bool>>("state-player");
     std::vector<bool>& winner =
-        *arena->get_named_prop<std::vector<bool>>("winning_region");
+        *arena->get_named_prop<std::vector<bool>>("winning-region");
     std::vector<unsigned>& strategy =
         *arena->get_named_prop<std::vector<unsigned>>("strategy");
     if ((n_states!=owner.size())
@@ -70,7 +70,7 @@ namespace{
   {
     is_arena(arena);
     std::vector<bool>* owner_ptr =
-        arena->get_named_prop<std::vector<bool>>("owner");
+        arena->get_named_prop<std::vector<bool>>("state-player");
     if (owner_ptr->size() != arena->num_states())
       throw std::runtime_error("More or less owners than states");
     std::vector<bool> &owner = *owner_ptr;
@@ -353,6 +353,11 @@ namespace spot
       bool solve(const twa_graph_ptr& arena)
       {
         assert(check_arena(arena));
+        if (!arena->get_named_prop<region_t>("winning-region")
+            || !arena->get_named_prop<strategy_t>("strategy")
+            || !arena->get_named_prop<std::vector<bool>>("state-player"))
+          throw std::runtime_error("Arena missing winning-region, strategy "
+                                   "or state-player");
         // todo check if reordering states according to scc is worth it
         set_up(arena);
         // Start recursive zielonka on each scc
@@ -382,7 +387,7 @@ namespace spot
                                 [](unsigned e_idx){return e_idx>0;}));
         
         // Put the solution as name variable
-        region_t& w = *arena->get_named_prop<region_t>("winning_region");
+        region_t& w = *arena->get_named_prop<region_t>("winning-region");
         strategy_t& s = *arena->get_named_prop<strategy_t>("strategy");
         w.swap(w_.winner_);
         s.resize(s_.size());
@@ -400,8 +405,13 @@ namespace spot
     private:
       void set_up(const twa_graph_ptr& arena)
       {
+        if (!arena->get_named_prop<region_t>("winning-region")
+            || !arena->get_named_prop<strategy_t>("strategy")
+            || !arena->get_named_prop<std::vector<bool>>("state-player"))
+          throw std::runtime_error("Arena missing winning-region, strategy "
+                                   "or state-player");
         arena_ = arena;
-        owner_ptr_ = arena_->get_named_prop<std::vector<bool>>("owner");
+        owner_ptr_ = arena_->get_named_prop<std::vector<bool>>("state-player");
         
         unsigned n_states=arena_->num_states();
         // Alloc
@@ -1002,9 +1012,9 @@ namespace spot
       }
     }
     pgfile.close();
-    res.first->set_named_prop("owner",
+    res.first->set_named_prop("state-player",
                            new std::vector<bool>(std::move(owner)));
-    res.first->set_named_prop("winning_region",
+    res.first->set_named_prop("winning-region",
                           new std::vector<bool>());
     res.first->set_named_prop("strategy",
                           new std::vector<unsigned>());
@@ -1095,10 +1105,10 @@ namespace spot
     }
     owner.resize(arena->num_states());
     // set them in the aut
-    arena->set_named_prop("owner",
+    arena->set_named_prop("state-player",
                           new std::vector<bool>(std::move(owner)));
     // Set also the strategy and the winning region without filling them
-    arena->set_named_prop("winning_region",
+    arena->set_named_prop("winning-region",
                           new std::vector<bool>());
     arena->set_named_prop("strategy",
                           new std::vector<unsigned>());
@@ -1136,9 +1146,15 @@ namespace spot
   {
     assert(is_solved_arena(arena));
     namespace pg = spot::parity_game;
+  
+    if (!arena->get_named_prop<pg::region_t>("winning-region")
+        || !arena->get_named_prop<pg::strategy_t>("strategy")
+        || !arena->get_named_prop<std::vector<bool>>("state-player"))
+      throw std::runtime_error("Arena missing winning-region, strategy "
+                               "or state-player");
     
     pg::region_t& w =
-        *arena->get_named_prop<pg::region_t>("winning_region");
+        *arena->get_named_prop<pg::region_t>("winning-region");
     pg::strategy_t& s =
         *arena->get_named_prop<pg::strategy_t>("strategy");
     

@@ -52,7 +52,7 @@ namespace spot
   
   /// \brief Takes an automaton that is already(!) correctly split
   /// and computes the owner of each state. This information is stored
-  /// as the named property "owner"
+  /// as the named property "state-player"
   SPOT_API void
   make_arena(twa_graph_ptr& arena);
   

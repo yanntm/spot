@@ -1145,6 +1145,9 @@ Here is a list of named properties currently used inside Spot:
 | ~simulated-states~  | ~std::vector<unsigned>~        | map states of the original automaton to states if the current automaton in the result of simulation-based reductions                                  |
 | ~state-names~       | ~std::vector<std::string>~     | vector naming each state of the automaton, for display purpose                                                                                        |
 | ~synthesis-outputs~ | ~bdd~                          | conjunction of controllable atomic propositions (used by ~print_aiger()~ to determine which propositions should be encoded as outputs of the circuit) |
+| ~state-player~      | ~std::vector<bool>~            | vector indicating whether a state of a parity game / arena is controlled by the environment (f) or the player (t)                                     |
+| ~strategy~          | ~std::vector<unsigned>~        | vector representing the memoryless strategy of the players in a parity game. The value corrsponds to the edge number of the transition to take.       |
+| ~winning-region~    | ~std::vector<bool>~            | vector indicating whether a state belongs to the winning region of the environment (f) or the player (t)                                              |
 
 Objects referenced via named properties are automatically destroyed
 when the automaton is destroyed, but this can be altered by passing a
