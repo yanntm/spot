@@ -468,8 +468,8 @@ namespace spot
       
       inline void register_new(unsigned v, const bdd& b)
       {
-        SPOT_ASSERT(!var2bdd_.count(v) || var2bdd_.at(v)==b);
-        SPOT_ASSERT(!bdd2var_.count(b)
+        assert(!var2bdd_.count(v) || var2bdd_.at(v)==b);
+        assert(!bdd2var_.count(b)
                     ||bdd2var_.at(b)==v);
         var2bdd_[v] = b;
         bdd2var_[b] = v;
@@ -528,7 +528,7 @@ namespace spot
           var2bdd_[not_v] = !(var2bdd_.at(v));
           bdd2var_[var2bdd_[not_v]] = not_v;
         }
-        SPOT_ASSERT(var2bdd_.count(not_v)
+        assert(var2bdd_.count(not_v)
                     && bdd2var_.count(var2bdd_[not_v]));
         return not_v;
       }
@@ -692,8 +692,8 @@ namespace spot
         }
         unsigned isop_var = aig_and_ex(prod);
         // check
-        SPOT_ASSERT(var2bdd_.find(isop_var)!=var2bdd_.end());
-        SPOT_ASSERT(bdd2var_.find(isop)!=bdd2var_.end());
+        assert(var2bdd_.find(isop_var)!=var2bdd_.end());
+        assert(bdd2var_.find(isop)!=bdd2var_.end());
         // Done
         return isop_var;
       }
@@ -800,7 +800,7 @@ namespace spot
       for (const auto &e : aut->edges())
       {
         unsigned idx = aut->edge_number(e);
-        SPOT_ASSERT(e.cond!=bddfalse);
+        assert(e.cond!=bddfalse);
         bdd bout = bdd_exist(e.cond, all_inputs);
         unsigned n_high=-1u;
         while (bout != bddfalse)
@@ -814,7 +814,7 @@ namespace spot
             used_outc[idx] = nextsat;
           }
         }
-        SPOT_ASSERT(used_outc[idx]!=bddfalse);
+        assert(used_outc[idx]!=bddfalse);
       }
       //Done
     }
@@ -872,8 +872,8 @@ namespace spot
       
       unsigned num_outputs = output_names.size();
       unsigned init = aut->get_init_state_number();
-      SPOT_ASSERT((unsigned)bdd_nodecount(all_states) == log2n);
-      SPOT_ASSERT(num_outputs == (unsigned)bdd_nodecount(all_outputs));
+      assert((unsigned)bdd_nodecount(all_states) == log2n);
+      assert(num_outputs == (unsigned)bdd_nodecount(all_outputs));
       aig2 circuit(input_names, output_names, log2n);
       
       // Register
@@ -902,7 +902,7 @@ namespace spot
             prod_state.push_back(src2&1 ? v : circuit.aig_not(v));
             src2>>=1;
           }
-          SPOT_ASSERT(src2<=1);
+          assert(src2<=1);
         }
         unsigned state_var = circuit.aig_and_ex(prod_state);
         // Done state var
@@ -933,7 +933,7 @@ namespace spot
               all_isop_var.push_back(circuit.isop2var(isop,
                                                       bddvar_to_num));
             }
-            SPOT_ASSERT(!all_isop_var.empty());
+            assert(!all_isop_var.empty());
             // Compute their OR
             unsigned incond_var_ = circuit.aig_or_ex(all_isop_var);
             incond_map[incond] = incond_var_;

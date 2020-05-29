@@ -38,7 +38,7 @@ namespace spot
     {
       for (int v : support_vars_buffer)
       {
-        SPOT_ASSERT(v<size);
+        assert(v<size);
         os_buffer.put(varset[v] < 0 ? '-' : (char)('0' + varset[v]));
       }
       os_buffer.put(' ');
@@ -154,7 +154,7 @@ namespace spot
         vec.push_back(s&1);
         s >>= 1;
       }
-      SPOT_ASSERT(s <= 1);
+      assert(s <= 1);
     };
     
     auto state2bdd = [&](unsigned s)
@@ -192,7 +192,7 @@ namespace spot
         // Split to in and out
         bdd e_in = bdd_exist(e.cond, all_outputs);
         bdd e_out = bdd_existcomp(e.cond, all_outputs);
-        SPOT_ASSERT(e.cond == bdd_and(e_in, e_out));
+        assert(e.cond == bdd_and(e_in, e_out));
         // Get the satisfying one with the least highs
         std::vector<int> out_high = minimal_sat(e_out);
         // The condition to take this edges becomes src&e_in

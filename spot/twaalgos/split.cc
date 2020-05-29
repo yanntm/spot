@@ -306,9 +306,9 @@ namespace spot
             e_info.econdout =
                 bdd_appex(e_info.econd, one_letter, bddop_and, input_bdd);
             dests.push_back(&e_info);
-            SPOT_ASSERT(e_info.econdout != bddfalse);
+            assert(e_info.econdout != bddfalse);
           }
-        SPOT_ASSERT(!dests.empty());
+        assert(!dests.empty());
         // # dests is almost sorted -> insertion sort
         if (dests.size()>1)
           for (auto it = dests.begin(); it != dests.end(); ++it)

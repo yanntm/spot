@@ -126,7 +126,7 @@ namespace{
     
     inline bool winner(unsigned v)
     {
-      SPOT_ASSERT(has_winner_.at(v));
+      assert(has_winner_.at(v));
       return winner_[v];
     }
   }; // winner_t
@@ -352,7 +352,7 @@ namespace spot
       
       bool solve(const twa_graph_ptr& arena)
       {
-        SPOT_ASSERT(check_arena(arena));
+        assert(check_arena(arena));
         // todo check if reordering states according to scc is worth it
         set_up(arena);
         // Start recursive zielonka on each scc
@@ -376,9 +376,9 @@ namespace spot
         // All done -> restore graph, i.e. undone self-looping
         restore();
   
-        SPOT_ASSERT(std::all_of(w_.has_winner_.cbegin(), w_.has_winner_.cend(),
+        assert(std::all_of(w_.has_winner_.cbegin(), w_.has_winner_.cend(),
                                 [](bool b){return b;}));
-        SPOT_ASSERT(std::all_of(s_.cbegin(), s_.cend(),
+        assert(std::all_of(s_.cbegin(), s_.cend(),
                                 [](unsigned e_idx){return e_idx>0;}));
         
         // Put the solution as name variable
@@ -465,7 +465,7 @@ namespace spot
             }
           }
         } // v
-        SPOT_ASSERT(info.all_parities.size()
+        assert(info.all_parities.size()
                     || (!info.all_parities.size() && info.is_empty));
         info.is_one_parity = info.all_parities.size()==1;
         // Done
@@ -498,7 +498,7 @@ namespace spot
   
         for (unsigned v : c_scc_->states())
         {
-          SPOT_ASSERT(subgame_[v] == unseen_mark);
+          assert(subgame_[v] == unseen_mark);
           for (auto &e : arena_->out(v)) {
             // The outgoing edges are taken finitely often -> disregard parity
             if (subgame_[e.dst] != unseen_mark)
@@ -562,9 +562,9 @@ namespace spot
         // As proposed in Oink! / PGSolver
         // Needs the transposed graph however
     
-        SPOT_ASSERT((!acc_par) || (acc_par && (max_par&1)==p));
-        SPOT_ASSERT(!acc_par || (0<min_win_par));
-        SPOT_ASSERT((min_win_par<=max_par) && (max_par<=max_abs_par_));
+        assert((!acc_par) || (acc_par && (max_par&1)==p));
+        assert(!acc_par || (0<min_win_par));
+        assert((min_win_par<=max_par) && (max_par<=max_abs_par_));
     
         bool grown = false;
         // We could also directly mark states as owned,
@@ -576,7 +576,7 @@ namespace spot
         static std::vector<unsigned> to_add;
         // This function is called a lot, so keeping the vector around helps
     
-        SPOT_ASSERT(to_add.empty());
+        assert(to_add.empty());
     
         do
         {
@@ -590,7 +590,7 @@ namespace spot
               // Mark if demanded
               if (acc_par)
               {
-                SPOT_ASSERT(subgame_[v] == unseen_mark);
+                assert(subgame_[v] == unseen_mark);
                 subgame_[v] = rd;
               }
             }
@@ -619,7 +619,7 @@ namespace spot
                 // Check if winning
                 if (w_(e.dst, p) || (acc_par && (min_win_par <= this_par)))
                 {
-                  SPOT_ASSERT(!acc_par || (this_par < min_win_par) ||
+                  assert(!acc_par || (this_par < min_win_par) ||
                               (acc_par && (min_win_par <= this_par) &&
                                ((this_par & 1) == p)));
                   if (is_owned)
@@ -660,7 +660,7 @@ namespace spot
         }while(!to_add.empty());
         // done
     
-        SPOT_ASSERT(to_add.empty());
+        assert(to_add.empty());
         return grown;
       }
   
@@ -686,8 +686,8 @@ namespace spot
       
           // This is an accepting edge that is no longer admissible
           // or we seek a more desirable edge
-          SPOT_ASSERT(min_win_par <= e_s.acc.max_set() - 1);
-          SPOT_ASSERT(e_s.acc.max_set() - 1 <= max_par);
+          assert(min_win_par <= e_s.acc.max_set() - 1);
+          assert(e_s.acc.max_set() - 1 <= max_par);
       
           // Strategy heuristic : go to the oldest subgame
           unsigned min_subgame_idx = -1u;
@@ -699,7 +699,7 @@ namespace spot
             {
               unsigned this_par = e_fix.acc.max_set() - 1;
               // This edge must have less than max_par, otherwise it would have already been attracted
-              SPOT_ASSERT((this_par<=max_par) || ((this_par&1)!=(max_par&1)));
+              assert((this_par<=max_par) || ((this_par&1)!=(max_par&1)));
               // if it is accepting and leads to the winning region
               // -> valid fix
               if ((min_win_par<=this_par)
@@ -734,11 +734,11 @@ namespace spot
           {
             case(0):
             {
-              SPOT_ASSERT(this_work.rd==0);
-              SPOT_ASSERT(this_work.min_par==0);
+              assert(this_work.rd==0);
+              assert(this_work.min_par==0);
           
               unsigned rd;
-              SPOT_ASSERT(this_work.max_par <= max_abs_par_);
+              assert(this_work.max_par <= max_abs_par_);
               call_count_++;
           
               // Check if empty and get parities
@@ -763,13 +763,13 @@ namespace spot
               while ((min_win_par > 2)
                      && (!subgame_info.all_parities.count(min_win_par - 1)))
                 min_win_par -= 2;
-              SPOT_ASSERT(max_par > 0);
-              SPOT_ASSERT(!subgame_info.all_parities.empty());
-              SPOT_ASSERT(min_win_par > 0);
+              assert(max_par > 0);
+              assert(!subgame_info.all_parities.empty());
+              assert(min_win_par > 0);
           
               // Get the player
               bool p = min_win_par & 1;
-              SPOT_ASSERT((max_par & 1) == (min_win_par & 1));
+              assert((max_par & 1) == (min_win_par & 1));
               // Attraction to highest par
               // This increases rd_ and passes it to rd
               attr(rd, p, max_par, true, min_win_par);
@@ -787,7 +787,7 @@ namespace spot
               unsigned rd = this_work.rd;
               unsigned min_win_par = this_work.min_par;
               unsigned max_par = this_work.max_par;
-              SPOT_ASSERT((min_win_par&1)==(max_par&1));
+              assert((min_win_par&1)==(max_par&1));
               bool p = min_win_par&1;
               // Check if the attractor of w_[!p] is equal to w_[!p]
               // if so, player wins if there remain accepting transitions
@@ -862,7 +862,7 @@ namespace spot
       inline void one_par_subgame_solver(const subgame_info_t& info,
                                          unsigned max_par)
       {
-        SPOT_ASSERT(info.all_parities.size()==1);
+        assert(info.all_parities.size()==1);
         // The entire subgame is won by the player of the only parity
         // Any edge will do
         // todo optim for smaller circuit
@@ -873,7 +873,7 @@ namespace spot
         unsigned one_par = *info.all_parities.begin();
         bool winner = one_par&1;
 //        std::cout << one_par << ", " << max_par << std::endl;
-        SPOT_ASSERT(one_par<=max_par);
+        assert(one_par<=max_par);
   
         for (unsigned v : c_scc_->states())
         {
@@ -883,19 +883,19 @@ namespace spot
           subgame_[v] = rd;
           w_.set(v,winner);
           // Get the strategy
-          SPOT_ASSERT(s_[v] == -1);
+          assert(s_[v] == -1);
           for (const auto& e : arena_->out(v))
           {
             unsigned this_par = e.acc.max_set() - 1;
             if ((subgame_[e.dst] >= rd) && (this_par<=max_par))
             {
-              SPOT_ASSERT( this_par == one_par);
+              assert( this_par == one_par);
               // Ok for strat
               s_[v] = arena_->edge_number(e);
               break;
             }
           }
-          SPOT_ASSERT((0<s_[v]) && (s_[v]<unseen_mark));
+          assert((0<s_[v]) && (s_[v]<unseen_mark));
         }
         // Done
       }
@@ -1058,7 +1058,7 @@ namespace spot
 //                    << e.acc << " ; " << owner[e.src] << ","
 //                    << owner[e.dst] << " ; " << arena->num_states()
 //                    << std::endl;
-          SPOT_ASSERT((owner[e.dst] != owner[src])
+          assert((owner[e.dst] != owner[src])
                       && "Illformed arena!");
         }
       }
@@ -1117,7 +1117,7 @@ namespace spot
     unsigned max_parity = 0;
     for (const auto& e: arena->edges())
       max_parity = std::max(max_parity, e.acc.max_set());
-    SPOT_ASSERT(max_parity);
+    assert(max_parity);
     max_parity -= 1;
     
     pg::solve_rec_old(arena, owner, states, max_parity, w, s);
@@ -1134,7 +1134,7 @@ namespace spot
   apply_strategy(const twa_graph_ptr& arena, bdd all_outputs,
                  bool do_purge, bool unsplit, bool keep_acc, bool leave_choice)
   {
-    SPOT_ASSERT(is_solved_arena(arena));
+    assert(is_solved_arena(arena));
     namespace pg = spot::parity_game;
     
     pg::region_t& w =
@@ -1169,7 +1169,7 @@ namespace spot
       todo.pop_back();
       // Env edge -> keep all
       for (auto &e1: arena->out(v)) {
-        SPOT_ASSERT(w.at(e1.dst));
+        assert(w.at(e1.dst));
         if (!unsplit)
         {
           if(pg2aut[e1.dst]==unseen_mark)
