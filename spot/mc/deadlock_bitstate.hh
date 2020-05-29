@@ -49,6 +49,12 @@ namespace spot
         : st(initial)
       { }
 
+      ~deadlock_state()
+      {
+        //std::cout << "~deadlock" << st << '\n';
+        //        delete[] st;
+      }
+
       deadlock_state() = default;
 
       bool operator==(const deadlock_state& other) const
@@ -100,13 +106,24 @@ namespace spot
 
     bool push(deadlock_state& s)
     {
-      auto it = map_.insert(s.st, brick_state_hasher());
-      if (!it.isnew())
-        return false;
-      if (bloom_filter_.contains(state_hash_(s.st)))
-        return false;
-      ++states_;
-      return true;
+
+      // COMMENT Do not insert systematically. If a state
+      // A is in the bloom filter the state will nonetheless
+      // be inserted...
+      //    auto it =  map_.insert(s.st, brick_state_hasher());
+      // Check first if the state is already in either the map
+      // or the bloom filter.
+      auto it =  map_.find(s.st, brick_state_hasher());
+      if (!it.valid())
+        {
+          auto it =  map_.insert(s.st, brick_state_hasher());
+          ++states_;
+          return true;
+        }
+      // if (bloom_filter_.contains(state_hash_(s.st)))
+      //   return false;
+
+      return false;
     }
 
     void pop()
@@ -120,16 +137,74 @@ namespace spot
       //if (SPOT_UNLIKELY(deadlock_))
       //  return;
 
-      map_.erase(elem.st, brick_state_hasher());
+      std::cout << "ERASE\n";
+      auto st = elem.st.st;
+
+      // COMMENT: insert first in bloom_filter to avoid inconsistencies.
       bloom_filter_.insert(state_hash_(elem.st.st));
 
+
+      // bool b = map_.erase(elem.st, brick_state_hasher());
+      // std::cout << "Yuhu" << b << std::endl;
+
+
+      // COMMENT: invalid read comes from here (only in multithreaded
+      // computation) Why that?
+      // probably because
+      //     - thread 1 inserts A
+      //     - thread 2 check wether or not A is already inserted
+      //     - during this time thread 1 decide to delete A
+      // Even if brick hash_table support simultaneous  insert/delete operation
+      // these operation are OK only for elements in the hash table not for
+      // references handled by these element.
+      // delete[] st;  <---- invalid read.
+
+      // How to wait that the element is no longer accessed?
+
+
+      {
+        bool b = map_.erase(st, brick_state_hasher());
+        auto it2 =  map_.find(st, brick_state_hasher());
+        int nb = map_.count(st, brick_state_hasher());
+        std::cout << "Yuhu" << b <<  "  "
+                  << nb << " "
+                  << it2.valid()
+                  << it2.isnew()
+                  << std::endl;
+
+        // PROBLEM HERE
+        // Ugly how can we resolve that?
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        it2 =  map_.find(st, brick_state_hasher());
+        nb = map_.count(st, brick_state_hasher());
+        std::cout << "Yuhu" << b <<  "  "
+                  << nb << " "
+                  << it2.valid()
+                  << it2.isnew()
+                  << std::endl;
+
+        delete[] st;
+      }
+
+
       auto& it = elem.it;
+
+      // COMMENT: Here you have to reset the iterator, otherwise, and since
+      // you use it elsewhere, you may miss some state to delete.
+      it->reset();
+
       while (!it->done())
       {
-          delete[] it->state();
-          it->next();
+        delete[] it->state(); // Probably same problem as above
+        it->next();
       }
       delete it;
+
+
+
+
+
+
       todo_.pop_back();
     }
 
@@ -141,17 +216,17 @@ namespace spot
 
     void dealloc()
     {
-      while (!todo_.empty())
-      {
-        auto& it = todo_.back().it;
-        while (!it->done())
-        {
-          delete[] it->state();
-          it->next();
-        }
-        delete it;
-        todo_.pop_back();
-      }
+      // while (!todo_.empty())
+      // {
+      //   auto& it = todo_.back().it;
+      //   while (!it->done())
+      //   {
+      //     delete[] it->state();
+      //     it->next();
+      //   }
+      //   delete it;
+      //   todo_.pop_back();
+      // }
     }
 
     unsigned states()
@@ -171,31 +246,34 @@ namespace spot
       auto it = sys_.succ(initial.st, tid_);
       if (SPOT_LIKELY(push(initial)))
         todo_.push_back({initial, it, transitions_});
+      pop();
 
-      while (!todo_.empty() && !stop_.load(std::memory_order_relaxed))
-      {
-        if (todo_.back().it->done())
-        {
-          pop();
-          if (deadlock_)
-            break;
-        }
-        else
-        {
-          ++transitions_;
-          State dst = todo_.back().it->state();
-          deadlock_state next{dst};
 
-          if (SPOT_LIKELY(push(next)))
-            todo_.push_back({next, sys_.succ(dst, tid_), transitions_});
-          else
-            delete[] todo_.back().it->state();
+      // //      while (!todo_.empty() && !stop_.load(std::memory_order_relaxed))
+      // {
+      //   // if (todo_.back().it->done())
+      //   // {
+      //   //   pop();
+      //   //   // if (deadlock_)
+      //   //   //   break;
+      //   // }
+      //   // else
+      //   {
+      //     ++transitions_;
+      //     State dst = todo_.back().it->state();
+      //     deadlock_state next{dst};
 
-          todo_.back().it->next();
-        }
-      }
+      //     if (SPOT_LIKELY(push(next)))
+      //       todo_.push_back({next, sys_.succ(dst, tid_), transitions_});
+      //     // else
+      //     //   delete[] todo_.back().it->state();
 
-      delete[] initial.st;
+
+      //     // todo_.back().it->next();
+      //  }
+      //}
+
+      //delete[] initial.st;
       finalize();
     }
 

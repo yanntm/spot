@@ -151,6 +151,8 @@ namespace spot
     cspins_state state() const;
     cube condition() const;
 
+    void reset () { current_ = 0;}
+
   private:
     /// \brief Compute the real index in the successor vector
     unsigned compute_index() const;
