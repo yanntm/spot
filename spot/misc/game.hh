@@ -50,24 +50,57 @@ namespace spot
   SPOT_API std::pair<twa_graph_ptr, std::vector<bool>>
   parse_pg_file(const std::string& fname);
   
-  /// \brief Takes an automaton that is already(!) correctly split
+  /// \brief Preprocessing step for pg solving
+  ///
+  /// Takes an automaton that is already
+  // (!) correctly split
   /// and computes the owner of each state. This information is stored
   /// as the named property "state-player"
   SPOT_API void
   make_arena(twa_graph_ptr& arena);
   
+  /// \brief Solves the parity game
+  ///
+  /// Takes an arena given as an automaton
+  /// and  computes the winning-region for player and environment
+  /// as well as a (memoryless) winning-strategy for each player
+  /// \param arena correctly split automaton
+  /// \param owner vector indicating whether states are player or env owned
+  /// \param w winning region
+  /// \param s strategy
+  /// \return whether the player wins the initial state
   SPOT_API bool
   solve_parity_game_old(const twa_graph_ptr& arena,
                         const std::vector<bool>& owner,
                         parity_game::region_old_t (&w)[2],
                         parity_game::strategy_old_t (&s)[2]);
   
+  /// \brief
+  ///
+  /// Takes an arena given as an automaton
+  /// and  computes the winning-region for player and environment
+  /// as well as a (memoryless) winning-strategy for each player.
+  /// These attributes are stored in the named properties
+  /// winning-region and strategy
+  /// \param arena correctly split automaton
+  /// \return whether the player wins the initial state
   SPOT_API bool
   solve_parity_game(const twa_graph_ptr& arena);
   
-  /// \brief Takes a solved parity game (with winning region and
+  /// \brief  Reduces a solved parity to a strategy automaton
+  ///
+  /// Takes a solved parity game (with winning-region and
   /// strategy filled) and creates a new automaton that corresponds to
   /// the restriction of the initial automaton to the strategy
+  /// \param arena Solved arena to be transformed
+  /// \param all_outputs conjunction of all output aps
+  /// \param do_purge whether or not to purge the resulting strategy automaton
+  /// \param unsplit whether to merge intermediate state or keep the two player
+  ///                layout
+  /// \param keep_acc whether or not to keep acceptance conditions on the
+  ///                 automaton and the edges
+  /// \param leave_choice whether to select a minterm in the condition for
+  //                      outs or leave the original condition
   SPOT_API twa_graph_ptr
   apply_strategy(const twa_graph_ptr& arena, bdd all_outputs,
                  bool do_purge=true, bool unsplit=true, bool keep_acc=false,
