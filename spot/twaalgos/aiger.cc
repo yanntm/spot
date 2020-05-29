@@ -960,7 +960,7 @@ namespace spot
   }
   
   std::ostream&
-  print_aiger(std::ostream& os, const const_twa_ptr& aut)
+  print_aiger_old(std::ostream& os, const const_twa_ptr& aut)
   {
     auto a = down_cast<const_twa_graph_ptr>(aut);
     if (!a)
@@ -974,7 +974,7 @@ namespace spot
   }
   
   std::ostream&
-  print_aiger2(std::ostream& os, const const_twa_ptr& aut)
+  print_aiger(std::ostream& os, const const_twa_ptr& aut)
   {
     auto a = down_cast<const_twa_graph_ptr>(aut);
     if (!a)

@@ -63,14 +63,13 @@ enum
   OPT_CSV,
   OPT_INPUT,
   OPT_OUTPUT,
+  OPT_OLD_SOLVE,
   OPT_PRINT,
   OPT_PRINT_AIGER,
-  OPT_PRINT_AIGER2,
+  OPT_PRINT_AIGER_OLD,
   OPT_PRINT_BLIF,
   OPT_REAL,
   OPT_VERBOSE,
-  OPT_SMALL_LOW,
-  OPT_OLD_SOLVE,
   OPT_VERIFY
 };
 
@@ -95,25 +94,23 @@ static const argp_option options[] =
       " acceptance condition, then use LAR to turn to parity,"
       " then split\n"
       " - lar.old:  old version of LAR, for benchmarking.\n", 0 },
-    { "old-impl", OPT_OLD_SOLVE, nullptr, 0,
-      "Use old implementation of splitting and zielonka", -1 },
-    {"small-low",     OPT_SMALL_LOW,   nullptr,     0,
-      "Set translator options to small and low for ds/sd", -1},
+    { "old-pg", OPT_OLD_SOLVE, nullptr, OPTION_HIDDEN,
+      "Old implementation of splitting and Zielonka for benchmarking", -1 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
-      "print the parity game in the pgsolver format, do not solve it", 0},
+      "print the parity game as HOA, do not solve it", 0},
     { "realizability", OPT_REAL, nullptr, 0,
       "realizability only, do not compute a winning strategy", 0},
     { "aiger", OPT_PRINT_AIGER, nullptr, 0,
       "prints the winning strategy as an AIGER circuit", 0},
-    { "aiger2", OPT_PRINT_AIGER2, nullptr, 0,
-      "prints the winning strategy as an AIGER circuit", 0},
+    { "old-aiger", OPT_PRINT_AIGER_OLD, nullptr, OPTION_HIDDEN,
+      "Old implementation of strat to AIGER for benchmarking", 0},
     { "blif", OPT_PRINT_BLIF, nullptr, 0,
       "prints the winning strategy as a BLIF file", 0},
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "verbose mode", -1 },
-    { "verify",        OPT_VERIFY,      nullptr,     0,
+    { "verify",        OPT_VERIFY,      nullptr,     OPTION_HIDDEN,
       "verify the strategy automaton, raises exception if unsafe", -1},
     { "csv", OPT_CSV, "[>>]FILENAME", OPTION_ARG_OPTIONAL,
       "output statistics as CSV in FILENAME or on standard output "
@@ -149,12 +146,10 @@ static const char* opt_csv = nullptr;
 static bool opt_print_pg = false;
 static bool opt_real = false;
 static bool opt_print_aiger = false;
-static bool opt_print_aiger2 = false;
+static bool opt_print_aiger_old = false;
 static bool opt_print_blif = false;
-static bool opt_old = false;
+static bool opt_old_solve = false;
 static bool opt_verify = false;
-static bool opt_small_low = false;
-
 static spot::option_map extra_options;
 
 static double trans_time = 0.0;
@@ -208,15 +203,6 @@ ARGMATCH_VERIFY(solver_args, solver_types);
 
 static solver opt_solver = SPLIT_DET;
 static bool verbose = false;
-
-// Default options if unset by -x
-static const std::vector<std::pair<std::string, int>> lar_x_ = {
-    {"simul", 0},
-    {"ba-simul", 0},
-    {"det-simul", 0},
-    {"tls-impl", 1},
-    {"wdba-minimize", 2},
-};
 
 namespace
 {
@@ -278,8 +264,8 @@ namespace
 //    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
 //                                      false, true, true, false);
     auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
-                                      false, !opt_small_low,
-                                      !opt_small_low, !opt_small_low);
+                                      false, false,
+                                      false, false);
     dpa->merge_edges();
     if (opt_print_pg)
       dpa = spot::sbacc(dpa);
@@ -364,7 +350,7 @@ namespace
             out << ",\"solve_time\"";
             if (!opt_real)
               out << ",\"strat2aut_time\"";
-            if (opt_print_aiger || opt_print_aiger2 || opt_print_blif)
+            if (opt_print_aiger || opt_print_aiger_old || opt_print_blif)
               out << ",\"aut2aiger_time\"";
             out << ",\"realizable\"";
           }
@@ -386,7 +372,7 @@ namespace
         out << ',' << solve_time;
         if (!opt_real)
           out << ',' << strat2aut_time;
-        if (opt_print_aiger || opt_print_aiger2 || opt_print_blif)
+        if (opt_print_aiger || opt_print_aiger_old || opt_print_blif)
           out << ',' << aut2aiger_time;
         out << ',' << realizable;
       }
@@ -434,20 +420,7 @@ namespace
                           | spot::postprocessor::Colored);
           break;
         case DET_SPLIT:
-          if ( opt_small_low )
-            {
-              trans_.set_type(spot::postprocessor::TGBA);
-              trans_.set_pref(spot::postprocessor::Small);
-              trans_.set_level(spot::postprocessor::Low);
-            }
-          break;
         case SPLIT_DET:
-          if ( opt_small_low )
-            {
-              trans_.set_type(spot::postprocessor::TGBA);
-              trans_.set_pref(spot::postprocessor::Small);
-              trans_.set_level(spot::postprocessor::Low);
-            }
           break;
         }
         
@@ -456,34 +429,16 @@ namespace
       auto aut = trans_.run(&f);
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
+      // todo special treatement for
+      // aps not appearing in the automaton
       for (auto& ap_i : input_aps_)
       {
-        long long v =
-            aut->get_dict()->has_registered_proposition(
-                spot::formula::ap(ap_i), aut);
-        if (v == -1)
-        {
-          std::cerr << "prop " << ap_i << " does not appear in aut\n";
-          std::cerr << "Known props are\n";
-          for (const auto& ap : aut->ap())
-            std::cerr << ap.ap_name() << std::endl;
-          throw std::runtime_error("Unregistered input");
-        }
+        unsigned v = aut->register_ap(spot::formula::ap(ap_i));
         all_inputs &= bdd_ithvar(v);
       }
       for (auto ap_o : output_aps_)
       {
-        long long v =
-            aut->get_dict()->has_registered_proposition(
-                spot::formula::ap(ap_o), aut);
-        if (v == -1)
-        {
-          std::cerr << "prop " << ap_o << " does not appear in aut\n";
-          std::cerr << "Known props are\n";
-          for (const auto& ap : aut->ap())
-            std::cerr << ap.ap_name() << std::endl;
-          throw std::runtime_error("Unregistered output");
-        }
+        unsigned v = aut->register_ap(spot::formula::ap(ap_o));
         all_outputs &= bdd_ithvar(v);
       }
       if (want_time)
@@ -518,7 +473,7 @@ namespace
                          <<paritize_time<<" seconds\n";
               if (want_time)
                 sw.start();
-              if (opt_old)
+              if (opt_old_solve)
                 dpa = split_2step_old(tmp, all_inputs);
               else
                 dpa = split_2step(tmp, all_inputs, all_outputs, false);
@@ -544,7 +499,7 @@ namespace
                          <<" states\n";
               if (want_time)
                 sw.start();
-              if (opt_old)
+              if (opt_old_solve)
                 dpa = split_2step_old(aut, all_inputs);
               else
                 dpa = split_2step(aut, all_inputs, all_outputs, true);
@@ -562,7 +517,7 @@ namespace
               if (want_time)
                 sw.start();
               spot::twa_graph_ptr split;
-              if (opt_old)
+              if (opt_old_solve)
                 split = split_2step_old(aut, all_inputs);
               else
                 split = split_2step(aut, all_inputs, all_outputs, true);
@@ -594,7 +549,7 @@ namespace
             {
               if (want_time)
                 sw.start();
-              if (opt_old)
+              if (opt_old_solve)
                 dpa = split_2step_old(aut, all_inputs);
               else
                 dpa = split_2step(aut, all_inputs, all_outputs, true);
@@ -634,7 +589,7 @@ namespace
         sw.start();
       
       std::vector<bool> owner;
-      if (opt_old)
+      if (opt_old_solve)
         owner = complete_env(dpa);
       else
         make_arena(dpa);
@@ -647,8 +602,9 @@ namespace
       if (opt_print_pg)
       {
         timer.stop();
-        //pg.print(std::cout);
-        // todo print as HOA
+        automaton_printer printer;
+        printer.print(dpa, timer);
+        // todo print as extended HOA
         return 0;
       }
   
@@ -657,7 +613,7 @@ namespace
       spot::parity_game::region_old_t winning_region[2];
       if (want_time)
         sw.start();
-      if (opt_old)
+      if (opt_old_solve)
         is_realizable =
             spot::solve_parity_game_old(dpa, owner, winning_region, strategy);
       else
@@ -670,13 +626,13 @@ namespace
       timer.stop();
       if (is_realizable)
       {
-        std::cerr << "REALIZABLE\n";
+        std::cout << "REALIZABLE\n";
         if (!opt_real)
         {
           if (want_time)
             sw.start();
           spot::twa_graph_ptr strat_aut;
-          if (opt_old)
+          if (opt_old_solve)
             strat_aut =
                strat_to_aut(dpa, strategy[1], all_outputs);
           else
@@ -709,10 +665,10 @@ namespace
             spot::print_aiger(std::cout, strat_aut);
             if (want_time)
               aut2aiger_time = sw.stop();
-          }else if (opt_print_aiger2) {
+          }else if (opt_print_aiger_old) {
             if (want_time)
               sw.start();
-            spot::print_aiger2(std::cout, strat_aut);
+            spot::print_aiger_old(std::cout, strat_aut);
             if (want_time)
               aut2aiger_time = sw.stop();
           }else if (opt_print_blif){
@@ -730,7 +686,7 @@ namespace
       }
       else
       {
-        std::cerr << "UNREALIZABLE\n";
+        std::cout << "UNREALIZABLE\n";
         return 1;
       }
     }
@@ -786,8 +742,8 @@ parse_opt(int key, char* arg, struct argp_state*)
         case OPT_PRINT_AIGER:
           opt_print_aiger = true;
           break;
-        case OPT_PRINT_AIGER2:
-          opt_print_aiger2 = true;
+        case OPT_PRINT_AIGER_OLD:
+          opt_print_aiger_old = true;
           break;
         case OPT_PRINT_BLIF:
           opt_print_blif = true;
@@ -805,11 +761,8 @@ parse_opt(int key, char* arg, struct argp_state*)
               error(2, 0, "failed to parse --options near '%s'", opt);
           }
         break;
-        case OPT_SMALL_LOW:
-          opt_small_low = true;
-          break;
         case OPT_OLD_SOLVE:
-          opt_old = true;
+          opt_old_solve = true;
           break;
         case OPT_VERIFY:
           opt_verify = true;
@@ -823,6 +776,11 @@ int
 main(int argc, char **argv)
 {
   return protected_main(argv, [&] {
+      extra_options.set("simul", 0);
+      extra_options.set("ba-simul", 0);
+      extra_options.set("det-simul", 0);
+      extra_options.set("tls-impl", 1);
+      extra_options.set("wdba-minimize", 2);
       const argp ap = { options, parse_opt, nullptr,
                         argp_program_doc, children, nullptr, nullptr };
       if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
@@ -832,13 +790,6 @@ main(int argc, char **argv)
       // Setup the dictionary now, so that BuDDy's initialization is
       // not measured in our timings.
       spot::bdd_dict_ptr dict = spot::make_bdd_dict();
-      // Check if default options are wanted, only applies to
-      // lar/lar.old at the moment
-      if (opt_solver == LAR || opt_solver == LAR_OLD)
-        // Check if options are overwritten by -x
-        for (const auto& xop : lar_x_)
-          if (extra_options.get(xop.first.c_str(),9999)==9999)
-            extra_options.set(xop.first.c_str(), xop.second);
       spot::translator trans(dict, &extra_options);
       ltl_processor processor(trans, input_aps, output_aps);
 
