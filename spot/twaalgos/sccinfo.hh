@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2014-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -304,8 +304,9 @@ namespace spot
   /// \brief Options to alter the behavior of scc_info
   enum class scc_info_options
   {
-    /// Stop exploring when an accepting SCC is found, and do not track
-    /// the states of each SCC.
+    /// Explore all SCCs, but do not track the states of each SCC and
+    /// the successor SCC of each SCC.  This is enough to call the
+    /// scc_of() method.
     NONE = 0,
     /// Stop exploring after an accepting SCC has been found.
     /// Using this option forbids future uses of is_useful_scc() and
