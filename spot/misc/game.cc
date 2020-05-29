@@ -362,9 +362,7 @@ namespace spot
         set_up(arena);
         // Start recursive zielonka on each scc
         subgame_info_t subgame_info;
-        c_scc_idx_ = 0;
-        for (c_scc_ = info_->begin(); c_scc_ != info_->end();
-             c_scc_++, c_scc_idx_++)
+        for (c_scc_idx_=0; c_scc_idx_<info_->scc_count(); ++c_scc_idx_)
         {
           subgame_info = fix_scc();
           if (!subgame_info.is_empty) // If empty, the scc was trivially solved
@@ -393,16 +391,18 @@ namespace spot
         s.resize(s_.size());
         std::copy(s_.begin(), s_.end(), s.begin());
   
-        free(info_);
-  
-//        std::cerr << "callcount " << call_count_ << " direct solves " <<
-//        direct_solve_count_ << " one parities " << one_parity_count_ << "\n";
-        
         clean_up();
         return w[arena->get_init_state_number()];
       }
       
     private:
+      
+      inline const std::vector<unsigned> & c_states()
+      {
+        assert(info_);
+        return info_->states_of(c_scc_idx_);
+      }
+      
       void set_up(const twa_graph_ptr& arena)
       {
         if (!arena->get_named_prop<region_t>("winning-region")
@@ -426,16 +426,14 @@ namespace spot
         // Init
         rd_ = 0;
         max_abs_par_ = arena_->get_acceptance().used_sets().max_set()-1;
-        info_ = new scc_info(arena_);
+//        info_ = new scc_info(arena_);
+        info_ = std::make_unique<scc_info>(arena_);
         // Every edge leaving an scc needs to be "fixed"
         // at some point.
         // We store: number of edge fixed, original dst, original acc
         change_stash_.clear();
         change_stash_.reserve(info_->scc_count()*2);
     
-        call_count_=0;
-        direct_solve_count_=0;
-        one_parity_count_=0;
       }
   
       // Checks if an scc is empty and reports the occurring parities
@@ -447,7 +445,7 @@ namespace spot
         info.is_empty = true;
         info.is_one_player0 = true;
         info.is_one_player1 = true;
-        for (unsigned v : c_scc_->states())
+        for (unsigned v : c_states())
         {
           if (subgame_[v] != unseen_mark)
             continue;
@@ -506,7 +504,7 @@ namespace spot
         // Only necessary to pass tests
         max_abs_par_ = std::max(par_pair[0], par_pair[1]);
   
-        for (unsigned v : c_scc_->states())
+        for (unsigned v : c_states())
         {
           assert(subgame_[v] == unseen_mark);
           for (auto &e : arena_->out(v)) {
@@ -543,12 +541,11 @@ namespace spot
     
         if (added[0] || added[1])
           // Fix "negative" strategy
-          for (unsigned v : c_scc_->states())
+          for (unsigned v : c_states())
             if (subgame_[v]!=unseen_mark)
               s_[v] = std::abs(s_[v]);
     
         subgame_info_t info = inspect_scc(unseen_mark);
-        direct_solve_count_ += info.is_empty;
         return info;
       } // fix_scc
   
@@ -607,7 +604,7 @@ namespace spot
           }
           to_add.clear();
       
-          for (unsigned v : c_scc_->states())
+          for (unsigned v : c_states())
           {
             if ((subgame_[v]<rd) || (w_(v,p)))
               // Not in subgame or winning
@@ -679,7 +676,7 @@ namespace spot
       inline bool
       fix_strat_acc(unsigned rd, bool p, unsigned min_win_par, unsigned max_par)
       {
-        for (unsigned v : c_scc_->states()){
+        for (unsigned v : c_states()){
           // Only current attractor and owned and winning vertices are concerned
           if ((subgame_[v]!=rd) || !w_(v,p)
               || ((*owner_ptr_)[v]!=p) || (s_[v]>0))
@@ -749,8 +746,7 @@ namespace spot
           
               unsigned rd;
               assert(this_work.max_par <= max_abs_par_);
-              call_count_++;
-          
+              
               // Check if empty and get parities
               subgame_info_t subgame_info = inspect_scc(this_work.max_par);
           
@@ -819,7 +815,7 @@ namespace spot
               if (grown)
               {
                 // Reset current game without !p attractor
-                for (unsigned v : c_scc_->states())
+                for (unsigned v : c_states())
                   if (!w_(v, !p) && (subgame_[v] >= rd))
                   {
                     // delete ownership
@@ -859,6 +855,9 @@ namespace spot
       // Empty all internal variables
       inline void clean_up()
       {
+//        delete info_;
+//        free(info_);
+        info_ = nullptr;
         subgame_.clear();
         w_.has_winner_.clear();
         w_.winner_.clear();
@@ -876,16 +875,14 @@ namespace spot
         // The entire subgame is won by the player of the only parity
         // Any edge will do
         // todo optim for smaller circuit
-        one_parity_count_++;
         // This subgame gets its own counter
         ++rd_;
         unsigned rd = rd_;
         unsigned one_par = *info.all_parities.begin();
         bool winner = one_par&1;
-//        std::cout << one_par << ", " << max_par << std::endl;
         assert(one_par<=max_par);
   
-        for (unsigned v : c_scc_->states())
+        for (unsigned v : c_states())
         {
           if (subgame_[v] != unseen_mark)
             continue;
@@ -927,18 +924,16 @@ namespace spot
       std::vector<long long> s_;
       
       // Informations about sccs andthe current scc
-      scc_info* info_;
+      std::unique_ptr<scc_info> info_;
       unsigned max_abs_par_; // Max parity occuring in the current scc
       // Info on the current scc
-      std::vector<scc_info_node>::const_iterator c_scc_;
       unsigned c_scc_idx_;
       // Fixes made to the sccs that have to be undone
       // before returning
       std::vector<edge_stash_t> change_stash_;
-      size_t call_count_, direct_solve_count_, one_parity_count_;
       // Change recursive calls to stack
       std::vector<work_t> w_stack_;
-    } pg_solver;
+    };
     
   } // parity_game
   
@@ -1137,7 +1132,8 @@ namespace spot
   
   bool solve_parity_game(const twa_graph_ptr& arena)
   {
-    return pg::pg_solver.solve(arena);
+    pg::parity_game pg;
+    return pg.solve(arena);
   }
   
   twa_graph_ptr
