@@ -39,7 +39,9 @@ namespace{
   
     void fill(const spot::const_twa_graph_ptr& aut, bdd output_bdd)
     {
-      cond_hash_.reserve((size_t) .2*aut->num_edges()+1);
+      cond_hash_.reserve(aut->num_edges()/5+1);
+      // 20% is about lowest number of different edge conditions
+      // for benchmarks taken from syntcomp
       
       for (const auto& e : aut->edges())
       {
@@ -91,27 +93,31 @@ namespace{
   // We define a order between the edges to avoid creating multiple
   // states that in fact correspond to permutations of the order of the
   // outgoing edges
-  struct less_info_t {
+  struct less_info_t
+  {
     // Note: orders via econd
-    inline bool operator()(const e_info_t& lhs, const e_info_t& rhs)const
+    inline bool operator()(const e_info_t &lhs, const e_info_t &rhs) const
     {
-      if (lhs.dst < rhs.dst)
+      if (lhs.dst<rhs.dst)
         return true;
-      else if (lhs.dst > rhs.dst)
+      else if (lhs.dst>rhs.dst)
         return false;
-      
-      if (lhs.acc < rhs.acc)
+    
+      if (lhs.acc<rhs.acc)
         return true;
-      else if (lhs.acc > rhs.acc)
+      else if (lhs.acc>rhs.acc)
         return false;
-      
-      if (lhs.econd.id() < rhs.econd.id())
+    
+      if (lhs.econd.id()<rhs.econd.id())
         return true;
-      else if (lhs.econd.id() > rhs.econd.id())
+      else if (lhs.econd.id()>rhs.econd.id())
         return false;
-      
+    
       return false;
     }
+  }less_info;
+  struct less_info_ptr_t
+  {
     // Note: orders via econdout
     inline bool operator()(const e_info_t* lhs, const e_info_t* rhs)const
     {
@@ -132,7 +138,7 @@ namespace{
       
       return false;
     }
-  };
+  }less_info_ptr;
 }
 
 
@@ -248,9 +254,6 @@ namespace spot
     small_cacher_t small_cacher;
     small_cacher.fill(aut, output_bdd);
     
-    // A order for cached edges
-    less_info_t less_info;
-    
     // Cache vector for all outgoing edges of this states
     std::vector<e_info_t> e_cache;
     
@@ -312,7 +315,7 @@ namespace spot
         // # dests is almost sorted -> insertion sort
         if (dests.size()>1)
           for (auto it = dests.begin(); it != dests.end(); ++it)
-            std::rotate(std::upper_bound(dests.begin(), it, *it,less_info),
+            std::rotate(std::upper_bound(dests.begin(), it, *it,less_info_ptr),
                         it, it + 1);
         
         bool to_add = true;
