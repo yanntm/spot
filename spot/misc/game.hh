@@ -39,7 +39,8 @@ namespace spot
   /// twa.
   /// \note The twa has max odd acceptance and will be colorized
   /// \note pgsolver uses state-acceptance, however to be compatible with
-  /// parity_game and ltlsynt, this is transformed to transition based acceptance
+  /// parity_game and ltlsynt, this is
+  /// transformed to transition based acceptance
   SPOT_API std::pair<twa_graph_ptr, std::vector<bool>>
   parse_pg_file(const std::string& fname);
 
@@ -68,7 +69,7 @@ namespace spot
                         std::unordered_set<unsigned> (&w)[2],
                         std::unordered_map<unsigned, unsigned> (&s)[2]);
 
-  /// \brief
+  /// \brief Solves the parity game
   ///
   /// Takes an arena given as an automaton
   /// and  computes the winning-region for player and environment

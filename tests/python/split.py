@@ -32,7 +32,8 @@ def do_split_old(f, in_list):
     aut = spot.translate(f)
     inputs = spot.buddy.bddtrue
     for a in in_list:
-        inputs &= spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
+        inputs &= \
+            spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
     s = spot.split_2step_old(aut, inputs)
     return aut, s
 
@@ -40,10 +41,12 @@ def do_split(f, in_list, out_list):
     aut = spot.translate(f)
     inputs = spot.buddy.bddtrue
     for a in in_list:
-        inputs &= spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
+        inputs &= \
+            spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
     outputs = spot.buddy.bddtrue
     for a in out_list:
-        outputs &= spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
+        outputs &= \
+            spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
     s = spot.split_2step(aut, inputs, outputs, True)
     return aut, s
 
@@ -78,8 +81,8 @@ State: 2
 [1] 0 {1}
 --END--"""
 
-aut, s = do_split_old('! ((G (req -> (F ack))) && (G (go -> (F grant))))', ['go',
-                                                                        'req'])
+aut, s = do_split_old('! ((G (req -> (F ack))) && (G (go -> (F grant))))',
+                      ['go', 'req'])
 assert equiv(aut, spot.unsplit_2step(s))
 # FIXME s.to_str() is NOT the same on Debian stable and on Debian unstable
 #       we should investigate this

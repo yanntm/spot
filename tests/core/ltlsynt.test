@@ -207,8 +207,8 @@ for r in '' '--real'; do
     ltlsynt --algo=ds $opts 'GFa <-> GFb' --csv=FILE || :
     ltlsynt --algo=sd $opts 'FGa <-> GF(b&XXb)' --csv='>>FILE' || :
     ltlsynt --algo=ps $opts 'FGa <-> GF(b&XXb)' --csv='>>FILE' || :
-    ltlsynt --algo=lar $opts 'FGc <-> GF(!b&XXb)' --csv='>>FILE' || :
-    ltlsynt --algo=lar.old $opts 'FGa <-> GF(c&a)' --csv='>>FILE' || :
+    ltlsynt --algo=lar $opts 'FGa <-> GF(!b&XXb)' --csv='>>FILE' || :
+    ltlsynt --algo=lar.old $opts 'FGa <-> GF(b&a)' --csv='>>FILE' || :
     test 6 = `wc -l < FILE`
     # Make sure all lines in FILE have the same number of comas
     sed 's/[^,]//g' < FILE |
@@ -221,7 +221,7 @@ for a in sd ds lar lar.old; do
     test 1 = `grep -c ",.$a.," FILE` || exit 1
 done
 
-ltlsynt --algo=lar $opts 'FGa <-> GF(c&a)' --print-pg --csv >out
+ltlsynt --algo=lar $opts 'FGa <-> GF(b&a)' --print-pg --csv >out
 grep parity out
 grep 'FGa.*,"lar",' out
 grep formula out

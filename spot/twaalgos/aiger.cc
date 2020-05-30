@@ -262,7 +262,8 @@ namespace spot
 
     static std::vector<bool>
     output_to_vec(bdd b,
-                  const std::unordered_map<unsigned, unsigned>& bddvar_to_outputnum)
+                  const std::unordered_map<unsigned, unsigned>&
+                      bddvar_to_outputnum)
     {
       std::vector<bool> v(bddvar_to_outputnum.size());
       while (b != bddtrue && b != bddfalse)
@@ -450,8 +451,8 @@ namespace spot
       }
 
       aig2(unsigned num_inputs, unsigned num_latches, unsigned num_outputs)
-          : aig2(name_vector(num_inputs, "in"), name_vector(num_outputs, "out"),
-                 num_latches)
+          : aig2(name_vector(num_inputs, "in"),
+                 name_vector(num_outputs, "out"), num_latches)
       {
       }
 
@@ -954,7 +955,8 @@ namespace spot
 
     bdd* all_outputs = aut->get_named_prop<bdd>("synthesis-outputs");
 
-    aig circuit = aut_to_aiger(a, all_outputs ? *all_outputs : bdd(bddfalse));
+    aig circuit =
+        aut_to_aiger(a, all_outputs ? *all_outputs : bdd(bddfalse));
     circuit.print(os);
     return os;
   }
@@ -968,7 +970,8 @@ namespace spot
 
     bdd* all_outputs = aut->get_named_prop<bdd>("synthesis-outputs");
 
-    aig2 circuit = aut_to_aiger2(a, all_outputs ? *all_outputs : bdd(bddfalse));
+    aig2 circuit =
+        aut_to_aiger2(a, all_outputs ? *all_outputs : bdd(bddfalse));
     circuit.print(os);
     return os;
   }
