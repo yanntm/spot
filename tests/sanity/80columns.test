@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2012, 2016-2017, 2019 Laboratoire de Recherche et
+# Copyright (C) 2012, 2016-2017, 2019-2020 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 # Copyright (C) 2004, 2005 Laboratoire d'Informatique de Paris 6
 # (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -27,14 +27,14 @@ set -e
 
 rm -f failures.80
 
-LANG=en_US.UTF-8
-export LANG
+LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+export LANG LC_ALL
 
 if [ "`echo '{r₁|r₂|r₃}' | wc -m`" != 11 ]; then
-  LANG=C
-  export LANG
   # The current locale does not grok unicode.
   # We still run this test, but only on lines that are purely ascii.
+  LANG=C LC_ALL=C
+  export LANG LC_ALL
   x='[^	-~]' # This blank is a tab.
 else
   x='.'
