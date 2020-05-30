@@ -206,7 +206,7 @@ static bool verbose = false;
 
 namespace
 {
-  
+
   // Ensures that the game is complete for player 0.
   // Also computes the owner of each state (false for player 0, i.e. env).
   // Initial state belongs to Player 0 and the game is turn-based.
@@ -215,57 +215,50 @@ namespace
   {
     unsigned sink_env = arena->new_state();
     unsigned sink_con = arena->new_state();
-    
+
     auto um = arena->acc().unsat_mark();
     if (!um.first)
       throw std::runtime_error("game winning condition is a tautology");
     arena->new_edge(sink_con, sink_env, bddtrue, um.second);
     arena->new_edge(sink_env, sink_con, bddtrue, um.second);
-    
+
     std::vector<bool> seen(arena->num_states(), false);
     std::vector<unsigned> todo({arena->get_init_state_number()});
     std::vector<bool> owner(arena->num_states(), false);
     owner[arena->get_init_state_number()] = false;
     owner[sink_env] = true;
     while (!todo.empty())
-    {
-      unsigned src = todo.back();
-      todo.pop_back();
-      seen[src] = true;
-      bdd missing = bddtrue;
-      for (const auto& e: arena->out(src))
       {
-        if (!owner[src])
-          missing -= e.cond;
-        
-        if (!seen[e.dst])
-        {
-//          std::cout << "VISIT " << e.dst << std::endl;
-          owner[e.dst] = !owner[src];
-          todo.push_back(e.dst);
-        }
-//        else{
-//          if (!((owner[src]!=owner[e.dst]) || (src==e.dst)))
-//            std::cout << "FAILED " << e.src << ", " << e.dst << std::endl;
-//        }
+        unsigned src = todo.back();
+        todo.pop_back();
+        seen[src] = true;
+        bdd missing = bddtrue;
+        for (const auto& e: arena->out(src))
+          {
+            if (!owner[src])
+              missing -= e.cond;
+
+            if (!seen[e.dst])
+              {
+      //          std::cout << "VISIT " << e.dst << std::endl;
+                owner[e.dst] = !owner[src];
+                todo.push_back(e.dst);
+              }
+          }
+        if (!owner[src] && missing != bddfalse)
+          arena->new_edge(src, sink_con, missing, um.second);
       }
-      if (!owner[src] && missing != bddfalse)
-        arena->new_edge(src, sink_con, missing, um.second);
-    }
-    
+
     return owner;
   }
-  
+
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
     // if the input automaton is deterministic, degeneralize it to be sure to
     // end up with a parity automaton
-//    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
-//                                      false, true, true, false);
     auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
-                                      false, false,
-                                      false, false);
+                                      false, true, true, false);
     dpa->merge_edges();
     if (opt_print_pg)
       dpa = spot::sbacc(dpa);
@@ -282,13 +275,13 @@ namespace
     assert(spot::is_deterministic(dpa));
     return dpa;
   }
-  
+
   // Construct a smaller automaton, filtering out states that are not
   // accessible.  Also merge back pairs of p --(i)--> q --(o)--> r
   // transitions to p --(i&o)--> r.
   static spot::twa_graph_ptr
   strat_to_aut(const spot::twa_graph_ptr& dpa,
-               const spot::parity_game::strategy_old_t& strat,
+               const std::unordered_map<unsigned, unsigned>& strat,
                bdd all_outputs)
   {
     auto aut = spot::make_twa_graph(dpa->get_dict());
@@ -298,47 +291,47 @@ namespace
     aut->set_init_state(aut->new_state());
     pg2aut[dpa->get_init_state_number()] = aut->get_init_state_number();
     while (!todo.empty())
-    {
-      unsigned s = todo.back();
-      todo.pop_back();
-      for (auto& e1: dpa->out(s))
       {
-        unsigned i = 0;
-        for (auto& e2: dpa->out(e1.dst))
-        {
-          bool self_loop = false;
-          if (e1.dst == s || e2.dst == e1.dst)
-            self_loop = true;
-          if (self_loop || strat.at(e1.dst) == i)
+        unsigned s = todo.back();
+        todo.pop_back();
+        for (auto& e1: dpa->out(s))
           {
-            bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
-            if (pg2aut[e2.dst] == -1)
-            {
-              pg2aut[e2.dst] = aut->new_state();
-              todo.push_back(e2.dst);
-            }
-            aut->new_edge(pg2aut[s], pg2aut[e2.dst],
-                          (e1.cond & out), {});
-            break;
+            unsigned i = 0;
+            for (auto& e2: dpa->out(e1.dst))
+              {
+                bool self_loop = false;
+                if (e1.dst == s || e2.dst == e1.dst)
+                  self_loop = true;
+                if (self_loop || strat.at(e1.dst) == i)
+                  {
+                    bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
+                    if (pg2aut[e2.dst] == -1)
+                      {
+                        pg2aut[e2.dst] = aut->new_state();
+                        todo.push_back(e2.dst);
+                      }
+                    aut->new_edge(pg2aut[s], pg2aut[e2.dst],
+                                  (e1.cond & out), {});
+                    break;
+                  }
+                ++i;
+              }
           }
-          ++i;
-        }
       }
-    }
     aut->purge_dead_states();
     aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
     return aut;
   }
-  
+
   static void
   print_csv(spot::formula f, bool realizable)
   {
     if (verbose)
       std::cerr << "writing CSV to " << opt_csv << '\n';
-    
+
     output_file outf(opt_csv);
     std::ostream& out = outf.ostream();
-    
+
     // Do not output the header line if we append to a file.
     // (Even if that file was empty initially.)
     if (!outf.append())
@@ -383,23 +376,23 @@ namespace
     out   << '\n';
     outf.close(opt_csv);
   }
-  
+
   class ltl_processor final : public job_processor
   {
   private:
     spot::translator& trans_;
     std::vector<std::string> input_aps_;
     std::vector<std::string> output_aps_;
-  
+
   public:
-    
+
     ltl_processor(spot::translator& trans,
                   std::vector<std::string> input_aps_,
                   std::vector<std::string> output_aps_)
         : trans_(trans), input_aps_(input_aps_), output_aps_(output_aps_)
     {
     }
-    
+
     int solve_formula(spot::formula f)
     {
       spot::process_timer timer;
@@ -423,7 +416,7 @@ namespace
         case SPLIT_DET:
           break;
         }
-        
+
       if (want_time)
         sw.start();
       auto aut = trans_.run(&f);
@@ -562,15 +555,18 @@ namespace
                          <<dpa->num_states()<<" states\n";
               if (want_time)
                 sw.start();
-              if (opt_solver==LAR) {
-                dpa = spot::to_parity(dpa);
-                // reduce_parity is called by to_parity(),
-                // but with colorization turned off.
-                spot::colorize_parity_here(dpa, true);
-              } else {
-                dpa = spot::to_parity_old(dpa);
-                dpa = reduce_parity_here(dpa, true);
-              }
+              if (opt_solver==LAR)
+                {
+                  dpa = spot::to_parity(dpa);
+                  // reduce_parity is called by to_parity(),
+                  // but with colorization turned off.
+                  spot::colorize_parity_here(dpa, true);
+                }
+              else
+                {
+                  dpa = spot::to_parity_old(dpa);
+                  dpa = reduce_parity_here(dpa, true);
+                }
               spot::change_parity_here(dpa, spot::parity_kind_max,
                                        spot::parity_style_odd);
               if (want_time)
@@ -587,18 +583,18 @@ namespace
 
       if (want_time)
         sw.start();
-      
+
       std::vector<bool> owner;
       if (opt_old_solve)
         owner = complete_env(dpa);
       else
         make_arena(dpa);
-      
+
       if (want_time)
         bgame_time = sw.stop();
       if (verbose)
         std::cerr << "parity game built in " << bgame_time << " seconds\n";
-      
+
       if (opt_print_pg)
       {
         timer.stop();
@@ -607,10 +603,10 @@ namespace
         // todo print as extended HOA
         return 0;
       }
-  
+
       bool is_realizable;
-      spot::parity_game::strategy_old_t strategy[2];
-      spot::parity_game::region_old_t winning_region[2];
+      std::unordered_map<unsigned, unsigned> strategy[2];
+      std::unordered_set<unsigned> winning_region[2];
       if (want_time)
         sw.start();
       if (opt_old_solve)
@@ -625,72 +621,78 @@ namespace
       nb_states_parity_game = dpa->num_states();
       timer.stop();
       if (is_realizable)
-      {
-        std::cout << "REALIZABLE\n";
-        if (!opt_real)
         {
-          if (want_time)
-            sw.start();
-          spot::twa_graph_ptr strat_aut;
-          if (opt_old_solve)
-            strat_aut =
-               strat_to_aut(dpa, strategy[1], all_outputs);
-          else
-            strat_aut =
-                spot::apply_strategy(dpa, all_outputs, true, true, false,
-                                     !opt_print_aiger);
-          stratsize_[0] = strat_aut->num_states();
-          stratsize_[1] = strat_aut->num_edges();
-          
-          if (want_time)
-            strat2aut_time = sw.stop();
-          
-          // Verification if demanded
-          if (opt_verify)
-          {
-            auto aut_neg = trans_.run(spot::formula::Not(f));
-            auto run_ptr = aut_neg->intersecting_run(strat_aut);
-            if ((run_ptr != nullptr) || (strat_aut->num_edges()==0))
+          std::cout << "REALIZABLE\n";
+          if (!opt_real)
             {
-              run_ptr->replay(std::cerr, true);
-              throw std::runtime_error("Synthesized strategy not safe");
+              if (want_time)
+                sw.start();
+              spot::twa_graph_ptr strat_aut;
+              if (opt_old_solve)
+                strat_aut =
+                   strat_to_aut(dpa, strategy[1], all_outputs);
+              else
+                strat_aut =
+                    spot::apply_strategy(dpa, all_outputs, true, true, false,
+                                         !opt_print_aiger);
+              stratsize_[0] = strat_aut->num_states();
+              stratsize_[1] = strat_aut->num_edges();
+
+              if (want_time)
+                strat2aut_time = sw.stop();
+
+              // Verification if demanded
+              if (opt_verify)
+                {
+                  auto aut_neg = trans_.run(spot::formula::Not(f));
+                  auto run_ptr = aut_neg->intersecting_run(strat_aut);
+                  if ((run_ptr != nullptr) || (strat_aut->num_edges() == 0))
+                    {
+                      run_ptr->replay(std::cerr, true);
+                      throw std::runtime_error("Synthesized strategy not safe");
+                    }
+                }
+
+              // output the winning strategy
+              if (opt_print_aiger)
+                {
+                  if (want_time)
+                    sw.start();
+                  spot::print_aiger(std::cout, strat_aut);
+                  if (want_time)
+                    aut2aiger_time = sw.stop();
+                }
+              else if (opt_print_aiger_old)
+                {
+                  if (want_time)
+                    sw.start();
+                  spot::print_aiger_old(std::cout, strat_aut);
+                  if (want_time)
+                    aut2aiger_time = sw.stop();
+                }
+              else if (opt_print_blif)
+                {
+                  if (want_time)
+                    sw.start();
+                  spot::print_blif(std::cout, strat_aut);
+                  if (want_time)
+                    aut2aiger_time = sw.stop();
+                }
+              else
+                {
+                  automaton_printer printer;
+                  printer.print(strat_aut, timer);
+                }
             }
-          }
-          
-          // output the winning strategy
-          if (opt_print_aiger)
-          {
-            if (want_time)
-              sw.start();
-            spot::print_aiger(std::cout, strat_aut);
-            if (want_time)
-              aut2aiger_time = sw.stop();
-          }else if (opt_print_aiger_old) {
-            if (want_time)
-              sw.start();
-            spot::print_aiger_old(std::cout, strat_aut);
-            if (want_time)
-              aut2aiger_time = sw.stop();
-          }else if (opt_print_blif){
-            if (want_time)
-              sw.start();
-            spot::print_blif(std::cout, strat_aut);
-            if (want_time)
-              aut2aiger_time = sw.stop();
-          } else {
-            automaton_printer printer;
-            printer.print(strat_aut, timer);
-          }
+          return 0;
         }
-        return 0;
-      }
       else
-      {
-        std::cout << "UNREALIZABLE\n";
-        return 1;
-      }
+        {
+          std::cout << "UNREALIZABLE\n";
+          return 1;
+        }
     }
-    
+
     int process_formula(spot::formula f, const char*, int) override
     {
       unsigned res = solve_formula(f);
@@ -715,27 +717,27 @@ parse_opt(int key, char* arg, struct argp_state*)
           opt_csv = arg ? arg : "-";
           break;
         case OPT_INPUT:
-        {
-          std::istringstream aps(arg);
-          std::string ap;
-          while (std::getline(aps, ap, ','))
           {
-            ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            input_aps.push_back(str_tolower(ap));
+            std::istringstream aps(arg);
+            std::string ap;
+            while (std::getline(aps, ap, ','))
+              {
+                ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
+                input_aps.push_back(str_tolower(ap));
+              }
+            break;
           }
-          break;
-        }
         case OPT_OUTPUT:
-        {
-          std::istringstream aps(arg);
-          std::string ap;
-          while (std::getline(aps, ap, ','))
           {
-            ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            output_aps.push_back(str_tolower(ap));
+            std::istringstream aps(arg);
+            std::string ap;
+            while (std::getline(aps, ap, ','))
+              {
+                ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
+                output_aps.push_back(str_tolower(ap));
+              }
+            break;
           }
-          break;
-        }
         case OPT_PRINT:
           opt_print_pg = true;
           break;

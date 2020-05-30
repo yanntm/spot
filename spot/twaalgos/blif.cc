@@ -33,8 +33,8 @@ namespace spot
   namespace{
     std::stringstream os_buffer;
     std::vector<int> support_vars_buffer;
-    
-    void print_one(char* varset, int size)
+
+    void print_one(signed char* varset, int size)
     {
       for (int v : support_vars_buffer)
       {
@@ -45,15 +45,15 @@ namespace spot
       os_buffer.put('1');
       os_buffer.put('\n');
     }
-    
+
     void print_table(std::ostream& os, bdd b, std::vector<int>& support_vars)
     {
       support_vars_buffer = support_vars;
       bdd_allsat(b, print_one);
       os << os_buffer.rdbuf();
     }
-    
-    
+
+
     std::vector<int> minimal_sat(bdd b)
     {
       std::vector<int> best_highs, this_highs;
@@ -80,18 +80,18 @@ namespace spot
       return best_highs;
     }
   }
-  
-  
+
+
   std::ostream&
   print_blif(std::ostream& os, const const_twa_ptr& aut)
   {
     if (!aut->get_named_prop<bdd>("synthesis-outputs"))
       throw std::runtime_error("synthesis-outputs necessary for "
                                "conversion to blif");
-  
+
     auto ag = down_cast<const_twa_graph_ptr>(aut);
     bdd all_outputs = *aut->get_named_prop<bdd>("synthesis-outputs");
-    
+
     // Get input and output vars
     std::vector<int> inputs, outputs;
     std::vector<std::string> input_names, output_names;
@@ -117,7 +117,7 @@ namespace spot
         bddvar2name[bddvar] = ap.ap_name();
       }
     }
-    
+
     // Add the latches
     const unsigned log2n = std::ceil(std::log2(ag->num_states()));
     const unsigned st0 =
@@ -132,19 +132,19 @@ namespace spot
       ss << i;
       bddvar2name[st0+i] = ss.str();
     }
-    
+
     // Iterate over the edges
     // The edges are supposed to have the following form (as it results from
     // apply strategy) : (i_0 | i_1 | i_2) & (o_0 | o_1)
     // So no edges of the form (i_0 & o_0 | i_1 & o_0 | ... ) are allowed
-    
+
     // Get the initial state and make sure to encode it as 0
     unsigned init = ag->get_init_state_number();
     auto encode_0 = [&](unsigned src)
     {
       return src == init ? 0 : src == 0 ? init : src;
     };
-    
+
     auto state2vec = [&](unsigned s, std::vector<bool>& vec)
     {
       vec.clear();
@@ -156,7 +156,7 @@ namespace spot
       }
       assert(s <= 1);
     };
-    
+
     auto state2bdd = [&](unsigned s)
     {
       static std::vector<bool> vec;
@@ -167,7 +167,7 @@ namespace spot
                     bdd_ithvar(latch_vars_[i]) : bdd_nithvar(latch_vars_[i]);
       return statebdd;
     };
-    
+
     auto support2varvec = [&](bdd sup, std::vector<int>& varvec)
     {
       varvec.clear();
@@ -177,7 +177,7 @@ namespace spot
         sup = bdd_high(sup);
       }while(sup != bddtrue);
     };
-    
+
     std::vector<bdd> outs(outputs.size(), bddfalse);
     std::vector<bdd> latches(log2n, bddfalse);
     std::vector<bool> dst_vec(log2n);
@@ -197,7 +197,7 @@ namespace spot
         std::vector<int> out_high = minimal_sat(e_out);
         // The condition to take this edges becomes src&e_in
         bdd new_cond = bdd_and(e_in, srcbdd);
-        
+
         // we have to add this to the outs that are high
         // and the latches of dst
         for (unsigned i=0; i<log2n; ++i)
@@ -207,7 +207,7 @@ namespace spot
           outs[bddvar2num.at(o)] |= new_cond;
       }
     }
-    
+
     // Create the blif
     std::vector<int> support_vars;
     // Prepend ins and outs as comment

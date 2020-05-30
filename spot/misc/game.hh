@@ -33,14 +33,7 @@
 
 namespace spot
 {
-  
-  namespace parity_game
-  {
-    typedef std::unordered_set<unsigned> region_old_t;
-    // Map state number to index of the transition to take.
-    typedef std::unordered_map<unsigned, unsigned> strategy_old_t;
-  }
-  
+
   /// \brief Takes a file describing a parity game
   /// in the pgsolver format and returns the corresponding
   /// twa.
@@ -49,7 +42,7 @@ namespace spot
   /// parity_game and ltlsynt, this is transformed to transition based acceptance
   SPOT_API std::pair<twa_graph_ptr, std::vector<bool>>
   parse_pg_file(const std::string& fname);
-  
+
   /// \brief Preprocessing step for pg solving
   ///
   /// Takes an automaton that is already
@@ -58,7 +51,7 @@ namespace spot
   /// as the named property "state-player"
   SPOT_API void
   make_arena(twa_graph_ptr& arena);
-  
+
   /// \brief Solves the parity game
   ///
   /// Takes an arena given as an automaton
@@ -72,9 +65,9 @@ namespace spot
   SPOT_API bool
   solve_parity_game_old(const twa_graph_ptr& arena,
                         const std::vector<bool>& owner,
-                        parity_game::region_old_t (&w)[2],
-                        parity_game::strategy_old_t (&s)[2]);
-  
+                        std::unordered_set<unsigned> (&w)[2],
+                        std::unordered_map<unsigned, unsigned> (&s)[2]);
+
   /// \brief
   ///
   /// Takes an arena given as an automaton
@@ -86,7 +79,7 @@ namespace spot
   /// \return whether the player wins the initial state
   SPOT_API bool
   solve_parity_game(const twa_graph_ptr& arena);
-  
+
   /// \brief  Reduces a solved parity to a strategy automaton
   ///
   /// Takes a solved parity game (with winning-region and

@@ -43,7 +43,7 @@ namespace spot
   /// \param aut          The automaton to output.
   SPOT_API std::ostream&
   print_aiger_old(std::ostream& os, const const_twa_ptr& aut);
-  
+
   /// \ingroup twa_io
   /// \brief Encode and print an automaton as an AIGER circuit.
   ///
@@ -70,5 +70,5 @@ namespace spot
   /// \param aut          The automaton to output.
   SPOT_API std::ostream&
   print_aiger(std::ostream& os, const const_twa_ptr& aut);
-  
+
 }

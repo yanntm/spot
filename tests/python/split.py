@@ -28,19 +28,35 @@ def equiv(a, b):
     return incl(a, b) and incl(b, a)
 
 
-def do_split(f, in_list):
+def do_split_old(f, in_list):
     aut = spot.translate(f)
     inputs = spot.buddy.bddtrue
     for a in in_list:
         inputs &= spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
-    s = spot.split_2step(aut, inputs)
+    s = spot.split_2step_old(aut, inputs)
     return aut, s
 
+def do_split(f, in_list, out_list):
+    aut = spot.translate(f)
+    inputs = spot.buddy.bddtrue
+    for a in in_list:
+        inputs &= spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
+    outputs = spot.buddy.bddtrue
+    for a in out_list:
+        outputs &= spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
+    s = spot.split_2step(aut, inputs, outputs, True)
+    return aut, s
 
-aut, s = do_split('(FG !a) <-> (GF b)', ['a'])
+aut, s = do_split_old('(FG !a) <-> (GF b)', ['a'])
 assert equiv(aut, spot.unsplit_2step(s))
 
-aut, s = do_split('GFa && GFb', ['a'])
+aut, s = do_split('(FG !a) <-> (GF b)', ['a'], ['b'])
+assert equiv(aut, spot.unsplit_2step(s))
+
+aut, s = do_split('GFa && GFb', ['a'], ['b'])
+assert equiv(aut, spot.unsplit_2step(s))
+
+aut, s = do_split_old('GFa && GFb', ['a'])
 assert equiv(aut, spot.unsplit_2step(s))
 assert s.to_str() == """HOA: v1
 States: 3
@@ -62,7 +78,7 @@ State: 2
 [1] 0 {1}
 --END--"""
 
-aut, s = do_split('! ((G (req -> (F ack))) && (G (go -> (F grant))))', ['go',
+aut, s = do_split_old('! ((G (req -> (F ack))) && (G (go -> (F grant))))', ['go',
                                                                         'req'])
 assert equiv(aut, spot.unsplit_2step(s))
 # FIXME s.to_str() is NOT the same on Debian stable and on Debian unstable
@@ -102,6 +118,7 @@ assert equiv(aut, spot.unsplit_2step(s))
 # [!3] 2
 # --END--"""
 
-aut, s = do_split('((G (((! g_0) || (! g_1)) && ((r_0 && (X r_1)) -> (F (g_0 \
-    && g_1))))) && (G (r_0 -> F g_0))) && (G (r_1 -> F g_1))', ['r_0', 'r_1'])
+aut, s = do_split_old('((G (((! g_0) || (! g_1)) && ((r_0 && (X r_1)) -> \
+    (F (g_0 && g_1))))) && (G (r_0 -> F g_0))) && (G (r_1 -> F g_1))',
+    ['r_0', 'r_1'])
 assert equiv(aut, spot.unsplit_2step(s))

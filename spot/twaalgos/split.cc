@@ -36,33 +36,33 @@ namespace{
     //e to e_in
     std::unordered_map<bdd, std::pair<bdd, bdd>, spot::bdd_hash>
         cond_hash_;
-  
+
     void fill(const spot::const_twa_graph_ptr& aut, bdd output_bdd)
     {
       cond_hash_.reserve(aut->num_edges()/5+1);
       // 20% is about lowest number of different edge conditions
       // for benchmarks taken from syntcomp
-      
+
       for (const auto& e : aut->edges())
       {
         // Check if stored
         if (cond_hash_.find(e.cond) != cond_hash_.end())
           continue;
-  
+
         cond_hash_[e.cond] =
             std::pair<bdd, bdd>(
                 bdd_exist(e.cond, output_bdd),
                 bdd_exist(bdd_support(e.cond), output_bdd));
       }
     }
-    
+
     // Get the condition restricted to input and support of a condition
-    const std::pair<bdd,bdd>& operator[](const bdd& econd) const
+    const std::pair<bdd, bdd>& operator[](const bdd& econd) const
     {
       return cond_hash_.at(econd);
     }
   };
-  
+
   // Struct to locally store the informations of all outgoing edges
   // of the state.
   struct e_info_t
@@ -78,15 +78,15 @@ namespace{
                  ^ std::hash<spot::acc_cond::mark_t>()(acc))
                  * spot::fnv<size_t>::prime;
     }
-    
+
     inline size_t hash() const
     {
       return spot::wang32_hash(spot::bdd_hash()(econdout)) ^ pre_hash;
     }
-    
+
     unsigned dst;
     bdd econd, econdout;
-    std::pair<bdd,bdd> einsup;
+    std::pair<bdd, bdd> einsup;
     spot::acc_cond::mark_t acc;
     size_t pre_hash;
   };
@@ -102,17 +102,17 @@ namespace{
         return true;
       else if (lhs.dst>rhs.dst)
         return false;
-    
+
       if (lhs.acc<rhs.acc)
         return true;
       else if (lhs.acc>rhs.acc)
         return false;
-    
+
       if (lhs.econd.id()<rhs.econd.id())
         return true;
       else if (lhs.econd.id()>rhs.econd.id())
         return false;
-    
+
       return false;
     }
   }less_info;
@@ -125,17 +125,17 @@ namespace{
         return true;
       else if (lhs->dst > rhs->dst)
         return false;
-      
+
       if (lhs->acc < rhs->acc)
         return true;
       else if (lhs->acc > rhs->acc)
         return false;
-      
+
       if (lhs->econdout.id() < rhs->econdout.id())
         return true;
       else if (lhs->econdout.id() > rhs->econdout.id())
         return false;
-      
+
       return false;
     }
   }less_info_ptr;
@@ -153,23 +153,23 @@ namespace spot
     split->copy_acceptance_of(aut);
     split->new_states(aut->num_states());
     split->set_init_state(aut->get_init_state_number());
-    
+
     // a sort of hash-map
     std::map<size_t, std::set<unsigned>> env_hash;
-    
+
     struct trans_t
     {
       unsigned dst;
       bdd cond;
       acc_cond::mark_t acc;
-      
+
       size_t hash() const
       {
         return bdd_hash()(cond)
                ^ wang32_hash(dst) ^ std::hash<acc_cond::mark_t>()(acc);
       }
     };
-    
+
     std::vector<trans_t> dests;
     for (unsigned src = 0; src < aut->num_states(); ++src)
     {
@@ -177,13 +177,13 @@ namespace spot
       for (const auto& e : aut->out(src))
         support &= bdd_support(e.cond);
       support = bdd_existcomp(support, input_bdd);
-      
+
       bdd all_letters = bddtrue;
       while (all_letters != bddfalse)
       {
         bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
         all_letters -= one_letter;
-        
+
         dests.clear();
         for (const auto& e : aut->out(src))
         {
@@ -191,7 +191,7 @@ namespace spot
           if (cond != bddfalse)
             dests.emplace_back(trans_t{e.dst, cond, e.acc});
         }
-        
+
         bool to_add = true;
         size_t h = fnv<size_t>::init;
         for (const auto& t: dests)
@@ -199,7 +199,7 @@ namespace spot
           h ^= t.hash();
           h *= fnv<size_t>::prime;
         }
-        
+
         for (unsigned i: env_hash[h])
         {
           auto out = split->out(i);
@@ -218,7 +218,7 @@ namespace spot
             break;
           }
         }
-        
+
         if (to_add)
         {
           unsigned d = split->new_state();
@@ -229,13 +229,13 @@ namespace spot
         }
       }
     }
-    
+
     split->merge_edges();
-    
+
     split->prop_universal(spot::trival::maybe());
     return split;
   }
-  
+
   twa_graph_ptr
   split_2step(const const_twa_graph_ptr& aut, bdd input_bdd, bdd output_bdd,
               bool complete_env)
@@ -245,38 +245,38 @@ namespace spot
     split->copy_acceptance_of(aut);
     split->new_states(aut->num_states());
     split->set_init_state(aut->get_init_state_number());
-    
+
     // a sort of hash-map
     std::unordered_multimap<size_t, unsigned> env_hash;
     env_hash.reserve((int) 1.5 * aut->num_states());
-    std::map<unsigned, std::pair<unsigned,bdd>> env_edge_hash;
-    
+    std::map<unsigned, std::pair<unsigned, bdd>> env_edge_hash;
+
     small_cacher_t small_cacher;
     small_cacher.fill(aut, output_bdd);
-    
+
     // Cache vector for all outgoing edges of this states
     std::vector<e_info_t> e_cache;
-    
+
     // Vector of destinations actually reachable for a given
     // minterm in ins
     // Automatically "almost" sorted due to the sorting of e_cache
     std::vector<e_info_t*> dests;
-    
+
     // If a complete automaton for environment is demanded
     // we might need a sink
     unsigned sink_con=0;
-  
+
     // Loop over all states
     for (unsigned src = 0; src < aut->num_states(); ++src)
     {
       env_edge_hash.clear();
       e_cache.clear();
-      
+
       // Avoid looping over all minterms
       // we only loop over the minterms that actually exist
       bdd all_letters = bddfalse;
       bdd support = bddtrue;
-      
+
       for (const auto& e : aut->out(src))
       {
         e_cache.emplace_back(e, small_cacher);
@@ -291,16 +291,16 @@ namespace spot
         bdd remaining = bddtrue - all_letters;
         split->new_edge(src, sink_con, remaining);
       }
-      
+
       // Sort to avoid that permutations of the same edges
       // get different states
       std::sort(e_cache.begin(), e_cache.end(), less_info);
-      
+
       while (all_letters != bddfalse)
       {
         bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
         all_letters -= one_letter;
-        
+
         dests.clear();
         for (auto& e_info : e_cache)
           // implies is faster than and
@@ -315,14 +315,14 @@ namespace spot
         // # dests is almost sorted -> insertion sort
         if (dests.size()>1)
           for (auto it = dests.begin(); it != dests.end(); ++it)
-            std::rotate(std::upper_bound(dests.begin(), it, *it,less_info_ptr),
+            std::rotate(std::upper_bound(dests.begin(), it, *it, less_info_ptr),
                         it, it + 1);
-        
+
         bool to_add = true;
         size_t h = fnv<size_t>::init;
         for (const auto& t: dests)
           h ^= t->hash();
-        
+
         auto range_h = env_hash.equal_range(h);
         for (auto it_h = range_h.first; it_h != range_h.second; ++it_h)
         {
@@ -348,12 +348,12 @@ namespace spot
             break;
           }
         }
-        
+
         if (to_add)
         {
           unsigned d = split->new_state();
           unsigned n_e = split->new_edge(src, d, bddtrue);
-          env_hash.emplace(h,d);
+          env_hash.emplace(h, d);
           env_edge_hash.emplace(d, std::make_pair(n_e, one_letter));
           for (const auto &t: dests)
             split->new_edge(d, t->dst, t->econdout, t->acc);
@@ -363,12 +363,12 @@ namespace spot
       for (auto& elem : env_edge_hash)
         split->edge_data(elem.second.first).cond = elem.second.second;
     }
-    
+
     split->merge_edges();
     split->prop_universal(spot::trival::maybe());
     return split;
   }
-  
+
   twa_graph_ptr unsplit_2step(const const_twa_graph_ptr& aut)
   {
     twa_graph_ptr out = make_twa_graph(aut->get_dict());
@@ -376,7 +376,7 @@ namespace spot
     out->copy_ap_of(aut);
     out->new_states(aut->num_states());
     out->set_init_state(aut->get_init_state_number());
-    
+
     std::vector<bool> seen(aut->num_states(), false);
     std::deque<unsigned> todo;
     todo.push_back(aut->get_init_state_number());
@@ -386,7 +386,7 @@ namespace spot
       unsigned cur = todo.front();
       todo.pop_front();
       seen[cur] = true;
-      
+
       for (const auto& i : aut->out(cur))
         for (const auto& o : aut->out(i.dst))
         {
@@ -397,7 +397,7 @@ namespace spot
     }
     return out;
   }
-  
+
   twa_graph_ptr split_edges(const const_twa_graph_ptr& aut)
   {
     twa_graph_ptr out = make_twa_graph(aut->get_dict());
@@ -406,9 +406,9 @@ namespace spot
     out->prop_copy(aut, twa::prop_set::all());
     out->new_states(aut->num_states());
     out->set_init_state(aut->get_init_state_number());
-    
+
     internal::univ_dest_mapper<twa_graph::graph_t> uniq(out->get_graph());
-    
+
     bdd all = aut->ap_vars();
     for (auto& e: aut->edges())
     {

@@ -31,7 +31,7 @@ namespace spot
   /// propositions.  After this we can consider that each edge of the
   /// automate is a transition labeled by one letter.
   SPOT_API twa_graph_ptr split_edges(const const_twa_graph_ptr& aut);
-  
+
   /// \brief make each transition a 2-step transition
   ///
   /// Given a set of atomic propositions I, split each transition
@@ -47,7 +47,7 @@ namespace spot
   /// the context of LTL reactive synthesis.
   SPOT_API twa_graph_ptr
   split_2step_old(const const_twa_graph_ptr& aut, bdd input_bdd);
-  
+
   /// \brief make each transition a 2-step transition
   ///
   /// Given a set of atomic propositions I, split each transition
@@ -66,7 +66,7 @@ namespace spot
   SPOT_API twa_graph_ptr
   split_2step(const const_twa_graph_ptr& aut,
               bdd input_bdd, bdd output_bdd, bool complete_env);
-  
+
   /// \brief the reverse of split_2step
   SPOT_API twa_graph_ptr
   unsplit_2step(const const_twa_graph_ptr& aut);
