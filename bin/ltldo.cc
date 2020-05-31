@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -39,6 +39,7 @@
 #include "common_hoaread.hh"
 
 #include <spot/tl/relabel.hh>
+#include <spot/tl/print.hh>
 #include <spot/misc/bareword.hh>
 #include <spot/misc/timer.hh>
 #include <spot/twaalgos/lbtt.hh>
@@ -233,18 +234,13 @@ namespace
       problem = false;
       if (timed_out)
         {
-          // A timeout is considered benign
+          // A timeout is considered benign, unless --fail-on-timeout.
           if (fail_on_timeout)
-            {
-              std::cerr << "error:";
-              problem = true;
-            }
+            problem = true;
           else
-            {
-              std::cerr << "warning:";
-              ++timeout_count;
-            }
-          std::cerr << " timeout during execution of command \""
+            ++timeout_count;
+          std::cerr << program_name
+                    << ": timeout during execution of command \""
                     << cmd << "\"\n";
         }
       else if (WIFSIGNALED(es))
@@ -253,7 +249,7 @@ namespace
             {
               problem = true;
               es = WTERMSIG(es);
-              std::cerr << "error: execution of command \"" << cmd
+              std::cerr << program_name << ": execution of command \"" << cmd
                         << "\" terminated by signal " << es << ".\n";
             }
         }
@@ -263,7 +259,7 @@ namespace
             {
               problem = true;
               es = WEXITSTATUS(es);
-              std::cerr << "error: execution of command \"" << cmd
+              std::cerr << program_name << ": execution of command \"" << cmd
                         << "\" returned exit code " << es << ".\n";
             }
         }
@@ -275,14 +271,14 @@ namespace
           if (!aut->errors.empty() && errors_opt != errors_ignore)
             {
               problem = true;
-              std::cerr << "error: failed to parse the automaton "
+              std::cerr << program_name << ": failed to parse the automaton "
                 "produced by \"" << cmd << "\".\n";
               aut->format_errors(std::cerr);
             }
           else if (aut->aborted && errors_opt != errors_ignore)
             {
               problem = true;
-              std::cerr << "error: command \"" << cmd
+              std::cerr << program_name << ": command \"" << cmd
                         << "\" aborted its output.\n";
             }
           else
@@ -410,11 +406,14 @@ namespace
           auto aut = runner.translate(t, problem, timer);
           if (problem)
             {
-              if (errors_opt == errors_abort)
-                error_at_line(2, 0, filename, linenum, "aborting here");
-              else
-                error_at_line(0, 0, filename, linenum,
-                              "failed to translate this input");
+              // An error message already occurred about the problem,
+              // but this additional one will print filename &
+              // linenum, and possibly exit.
+              std::string sf = spot::str_psl(f);
+              error_at_line(errors_opt == errors_abort ? 2 : 0, 0,
+                            filename, linenum,
+                            "failed to run `%s' on `%s'",
+                            tools[t].name, sf.c_str());
             }
           if (aut)
             {

@@ -58,6 +58,9 @@ New in spot 2.9.0.dev (not yet released)
     every place where 0 occur, and then the acceptance would be
     renumbered to Fin(0)|Fin(1)|Fin(2).  This is now fixed.
 
+  - Improve ltldo diagnostics to fix spurious test-suite failure on
+    systems with antique GNU libc.
+
 New in spot 2.9 (2020-04-30)
 
   Command-line tools:
