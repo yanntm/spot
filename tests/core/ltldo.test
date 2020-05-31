@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015-2019 Laboratoire de Recherche et Développement de
+# Copyright (C) 2015-2020 Laboratoire de Recherche et Développement de
 # l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -43,21 +43,23 @@ genltl --or-g=1..2 |
 run 0 ltldo -t 'sleep 10; echo %f' -T1 -t 'sleep 10; echo %f' \
 	     >output 2>stderr
 test -z "`cat output`"
-test 4 = `grep -c warning: stderr`
+test 4 = `grep -c ltldo: stderr`
+grep -q 'failed to' stderr && exit 1
 
 genltl --or-g=1..2 |
 run 0 ltldo -t 'sleep 10; echo %f' -T1 -t 'sleep 10; echo %f' \
 	     --fail-on-timeout --error=warn >output 2>stderr
 test -z "`cat output`"
-test 4 = `grep -c error: stderr`
-grep -q 'aborting here' stderr && exit 1
+test 8 = `grep -c ltldo: stderr`
+test 4 = `grep -c ltldo:-: stderr`
+grep -q 'failed to' stderr
 
 genltl --or-g=1..2 |
 run 2 ltldo -t 'sleep 10; echo %f' -T1 -t 'sleep 10; echo %f' \
 	     --fail-on-timeout >output 2>stderr
 test -z "`cat output`"
-test 1 = `grep -c error: stderr`
-grep -q 'aborting here' stderr
+test 2 = `grep -c ltldo: stderr`
+grep -q 'failed to' stderr
 
 test "`echo 1,a,3,4 | ltldo -F-/2 ltl2tgba --stats='%<,%s,%>'`" = '1,2,3,4'
 
@@ -143,7 +145,7 @@ diff output expected
 ltldo ': %s; true>%O' -f GFa 2>stderr && exit 1
 test $? = 2
 grep ':.*empty input' stderr
-grep 'ltldo: aborting' stderr
+grep 'ltldo: failed to run' stderr
 
 ltldo ': %s; true>%O' --errors=ignore -f GFa 2>stderr
 test $? = 0
