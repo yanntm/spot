@@ -27,6 +27,8 @@ since the generated files they produce are distributed.)
   GNU Flex (the version seems to matters, we used 2.5.35)
   GNU Bison >= 3.0
   GNU Emacs (preferably >= 24 but it may work with older versions)
+    Note that if you use Macports you should consider to install the
+    swig-python package in addition to the swig package.
   org-mode >= 9.1 (the version that comes bundled with your emacs
     version is likely out-of-date; but distribution often have
     a separate and more recent org-mode package, or you can
