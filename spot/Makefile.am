@@ -1,6 +1,6 @@
 ## -*- coding: utf-8 -*-
-## Copyright (C) 2009, 2010, 2012, 2013, 2014, 2015, 2016, 2017 Laboratoire
-## de Recherche et Développement de l'Epita (LRDE).
+## Copyright (C) 2009, 2010, 2012, 2013, 2014, 2015, 2016, 2017, 2020
+## Laboratoire de Recherche et Développement de l'Epita (LRDE).
 ## Copyright (C) 2003, 2004 Laboratoire d'Informatique de Paris 6 (LIP6),
 ## département Systèmes Répartis Coopératifs (SRC), Université Pierre
 ## et Marie Curie.
@@ -22,7 +22,7 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-nobase_include_HEADERS= bricks/brick-assert bricks/brick-bitlevel \
+nobase_pkginclude_HEADERS = bricks/brick-assert bricks/brick-bitlevel \
 	bricks/brick-hash bricks/brick-hashset  bricks/brick-shmem \
 	bricks/brick-types
 

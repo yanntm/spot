@@ -103,8 +103,6 @@ C++ headers for the Spot library.
 %{_includedir}/fddx.h
 %dir %{_includedir}/spot
 %{_includedir}/spot/*
-%dir %{_includedir}/bricks
-%{_includedir}/bricks/*
 %license COPYING
 %doc AUTHORS COPYING NEWS README THANKS
 
