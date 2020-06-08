@@ -1120,7 +1120,8 @@ namespace spot
     template<typename T>
     void set_named_prop(std::string s, T* val)
     {
-      set_named_prop(s, val, [](void *p) { delete static_cast<T*>(p); });
+      set_named_prop(s, val,
+                     [](void *p) noexcept { delete static_cast<T*>(p); });
     }
 
     /// \brief Erase a named property
