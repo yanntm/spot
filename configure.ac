@@ -195,9 +195,10 @@ AC_CHECK_PROG([EMACS], [emacs], [emacs])
 AC_CHECK_PROGS([IPYTHON], [ipython3 ipython], [ipython])
 AC_CHECK_PROG([LBTT_TRANSLATE], [lbtt-translate], [lbtt-translate])
 AX_CHECK_VALGRIND
-# Debian has a binary for SWIG 3.0 named swig3.0 and they kept swig as
-# an alias for swig-2.0.  Let's use the former when available.
-AC_CHECK_PROGS([SWIG], [swig3.0 swig], [swig])
+# Debian used to reserve the name 'swig' for swig-2.0.  So prefer
+# swig4.0 (available in Debian bullseye) to swig3.0 (available in Debian buster)
+# ti swig.
+AC_CHECK_PROGS([SWIG], [swig4.0 swig3.0 swig], [swig])
 
 AC_SUBST([CROSS_COMPILING], [$cross_compiling])
 

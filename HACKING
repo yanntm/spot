@@ -32,7 +32,9 @@ since the generated files they produce are distributed.)
     a separate and more recent org-mode package, or you can
     simply upgrade from ELPA).
   Groff (a.k.a. GNU troff) >= 1.20
-  SWIG >= 3.0 (for its better C++11/C++14 support)
+  SWIG >= 3.0.2 (for its better C++11/C++14 support)
+    Note that if you use Macports you should consider to install the
+    swig-python package in addition to the swig package.
   Doxygen >= 1.4.0
   R   used by some examples in the documentation
   Perl, with its Gettext module (it might be called something like
