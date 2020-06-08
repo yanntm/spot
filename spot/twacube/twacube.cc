@@ -23,21 +23,12 @@
 
 namespace spot
 {
-  cstate::cstate(cstate&& s) noexcept: id_(std::move(s.id_))
-  {
-  }
-  cstate::cstate(unsigned id): id_(id)
-  {
-  }
-
-  unsigned cstate::label()
-  {
-    return id_;
-  }
+  cstate::cstate(cstate&&) noexcept
+  { }
 
   transition::transition(transition&& t) noexcept:
   cube_(std::move(t.cube_)), acc_(std::move(t.acc_))
-  {  }
+  { }
 
   transition::transition(const cube& cube,
                          acc_cond::mark_t acc):
@@ -46,19 +37,13 @@ namespace spot
 
   twacube::twacube(const std::vector<std::string> aps):
     init_(0U), aps_(aps), cubeset_(aps.size())
-  {
-  }
+  { }
 
   twacube::~twacube()
   {
     const spot::cubeset cs = get_cubeset();
     for (unsigned i = 1; i <= theg_.num_edges(); ++i)
       cs.release(theg_.edge_data(i).cube_);
-  }
-
-  const acc_cond& twacube::acc() const
-  {
-    return acc_;
   }
 
   acc_cond& twacube::acc()

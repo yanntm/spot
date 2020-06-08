@@ -36,12 +36,7 @@ namespace spot
     cstate() = default;
     cstate(const cstate& s) = delete;
     cstate(cstate&& s) noexcept;
-    cstate(unsigned id);
     ~cstate() = default;
-
-    unsigned label();
-  private:
-    unsigned id_;
   };
 
   /// \brief Class for representing a transition.
@@ -135,7 +130,6 @@ namespace spot
     virtual ~twacube();
 
     /// \brief Returns the acceptance condition associated to the automaton.
-    const acc_cond& acc() const;
     acc_cond& acc();
 
     /// \brief Returns the names of the atomic properties.
