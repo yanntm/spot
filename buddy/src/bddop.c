@@ -138,21 +138,21 @@ static bddallsathandler allsatHandler; /* Callback handler for bdd_allsat() */
 extern bddCacheStat bddcachestats;
 
    /* Internal prototypes */
-static BDD    not_rec(BDD);
-static BDD    apply_rec(BDD, BDD);
-static BDD    ite_rec(BDD, BDD, BDD);
+static BDD    not_rec(BDD);  /* non-recursive implementation */
+static BDD    apply_rec(BDD, BDD);  /* non-recursive implementation */
+static BDD    ite_rec(BDD, BDD, BDD);  /* non-recursive implementation */
 static int    simplify_rec(BDD, BDD);
-static int    quant_rec(int);
-static int    appquant_rec(int, int);
-static int    restrict_rec(int);
+static BDD    quant_rec(BDD);  /* non-recursive implementation */
+static BDD    appquant_rec(BDD, BDD);  /* non-recursive implementation */
+static BDD    restrict_rec(BDD);  /* non-recursive implementation */
 static BDD    constrain_rec(BDD, BDD);
 static BDD    replace_rec(BDD);
 static BDD    bdd_correctify(int, BDD, BDD);
-static BDD    compose_rec(BDD, BDD);
+static BDD    compose_rec(BDD, BDD);  /* non-recursive implementation */
 static BDD    veccompose_rec(BDD);
-static void   support_rec(int, int*);
-static BDD    satone_rec(BDD);
-static BDD    satoneset_rec(BDD, BDD);
+static void   support_rec(int, int*);  /* non-recursive implementation */
+static BDD    satone_rec(BDD);  /* non-recursive implementation */
+static BDD    satoneset_rec(BDD, BDD); /* non-recursive implementation */
 static int    fullsatone_rec(int);
 static BDD    satprefix_rec(BDD*);
 static void   allsat_rec(BDD r);
@@ -457,36 +457,69 @@ BDD bdd_not(BDD r)
 
 static BDD not_rec(BDD r)
 {
-   BddCacheData *entry;
-   BDD res;
+   LOCAL_REC_STACKS;
+   int index;
 
-   if (ISZERO(r))
-      return BDDONE;
-   if (ISONE(r))
-      return BDDZERO;
-
-   entry = BddCache_lookup(&applycache, NOTHASH(r));
-
-   if (entry->i.a == r  &&  entry->i.c == bddop_not)
-   {
+   goto work;
+   do
+     {
+       index = POPINT_();
+       if (index < 0)
+         {
+           r = POPINT_();
+         work:;
+           /* C: NULL --- */
+           /* I: r --- */
+           /* R: --- r */
+           if (ISCONST(r))
+             {
+               PUSHREF_(ISZERO(r) ? BDDONE : BDDZERO);
+             }
+           else
+             {
+               BddCacheData *entry2 =
+                 BddCache_index(&applycache, NOTHASH(r), index);
+               if (entry2->i.a == r && entry2->i.c == bddop_not)
+                 {
 #ifdef CACHESTATS
-      bddcachestats.opHit++;
+                   bddcachestats.opHit++;
 #endif
-      return entry->i.res;
-   }
+                   PUSHREF_(entry2->i.res);
+                 }
+               else
+                 {
 #ifdef CACHESTATS
-   bddcachestats.opMiss++;
+                   bddcachestats.opMiss++;
 #endif
+                   /* C: -1 r ---  (-1 lr) -1 rr index r */
+                   PUSH4INT_(r, index, HIGH(r), -1);
+                   r = LOW(r);
+                   goto work;
+                 }
+             }
+         }
+       else
+         {
+           /* C: -1 r --- */
+           /* R: rres lres --- res */
+           BDD rres = READREF_(1);
+           BDD lres = READREF_(2);
+           BDD r = POPINT_();
+           SYNC_REC_STACKS;
+           BDD res = bdd_makenode(LEVEL(r), lres, rres);
+           POPREF_(2);
+           PUSHREF_(res);
+           BddCacheData* entry = applycache.table + index;
+           entry->i.a = r;
+           entry->i.c = bddop_not;
+           entry->i.res = res;
+         }
+     }
+   while (NONEMPTY_REC_STACK);
 
-   PUSHREF( not_rec(LOW(r)) );
-   PUSHREF( not_rec(HIGH(r)) );
-   res = bdd_makenode(LEVEL(r), READREF(2), READREF(1));
-   POPREF(2);
-
-   entry->i.a = r;
-   entry->i.c = bddop_not;
-   entry->i.res = res;
-
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
    return res;
 }
 
@@ -576,167 +609,203 @@ BDD bdd_apply(BDD l, BDD r, int op)
    return res;
 }
 
-
-static BDD apply_rec(BDD l, BDD r)
-{
-   BddCacheData *entry;
-   BDD res;
-
-#define APPLY_SHORTCUTS(op, rec)                        \
-   switch (op)                                          \
-     {                                                  \
-     case bddop_and:                                    \
-       if (l == r)                                      \
-         return rec(l);                                 \
-       if (l > r)                                       \
-         {                                              \
-           BDD tmp = l;                                 \
-           l = r;                                       \
-           r = tmp;                                     \
-         }                                              \
-       if (ISZERO(l) /* ||  ISZERO(r) */)               \
-         return 0;                                      \
-       if (ISONE(l))                                    \
-         return rec(r);                                 \
-       break;                                           \
-     case bddop_or:                                     \
-       if (l == r)                                      \
-         return rec(l);                                 \
-       if (l > r)                                       \
-         {                                              \
-           BDD tmp = l;                                 \
-           l = r;                                       \
-           r = tmp;                                     \
-         }                                              \
-       if (ISONE(l)  ||  ISONE(r))                      \
-         return 1;                                      \
-       if (ISZERO(l))                                   \
-         return rec(r);                                 \
-       break;                                           \
-     case bddop_xor:                                    \
-       if (l == r)                                      \
-         return 0;                                      \
-       if (l > r)                                       \
-         {                                              \
-           BDD tmp = l;                                 \
-           l = r;                                       \
-           r = tmp;                                     \
-         }                                              \
-       if (ISZERO(l))                                   \
-         return rec(r);                                 \
-       break;                                           \
-     case bddop_nand:                                   \
-       if (l > r)                                       \
-         {                                              \
-           BDD tmp = l;                                 \
-           l = r;                                       \
-           r = tmp;                                     \
-         }                                              \
-       if (ISZERO(l))                                   \
-         return 1;                                      \
-       break;                                           \
-     case bddop_nor:                                    \
-       if (l > r)                                       \
-         {                                              \
-           BDD tmp = l;                                 \
-           l = r;                                       \
-           r = tmp;                                     \
-         }                                              \
-       if (ISONE(l)  ||  ISONE(r))                      \
-         return 0;                                      \
-       break;                                           \
-     case bddop_invimp: /* l << r = r >> l */           \
-       {                                                \
-         BDD tmp = l;                                   \
-         l = r;                                         \
-         r = tmp;                                       \
-         op = bddop_imp;                                \
-       }                                                \
-       BUDDY_FALLTHROUGH;                               \
-     case bddop_imp:                                    \
-       if (ISONE(r) || ISZERO(l))                       \
-         return 1;                                      \
-       if (ISONE(l))                                    \
-         return rec(r);                                 \
-       break;                                           \
-     case bddop_biimp:                                  \
-       if (l == r)                                      \
-         return 1;                                      \
-       if (l > r)                                       \
-         {                                              \
-           BDD tmp = l;                                 \
-           l = r;                                       \
-           r = tmp;                                     \
-         }                                              \
-       if (ISONE(l))                                    \
-         return rec(r);                                 \
-       break;                                           \
-     case bddop_less:  /* l < r = r - l */              \
-       {                                                \
-         BDD tmp = l;                                   \
-         l = r;                                         \
-         r = tmp;                                       \
-         op = bddop_diff;                               \
-       }                                                \
-       BUDDY_FALLTHROUGH;                               \
-     case bddop_diff:  /* l - r = l &! r */             \
-       if (l == r || ISONE(r))                          \
-         return 0;                                      \
-       if (ISZERO(r))                                   \
-         return rec(l);                                 \
-       break;                                           \
+#define RETURN(val) { PUSHREF_(val); continue; }
+#define APPLY_SHORTCUTS(op, rec)                \
+   switch (op)                                  \
+     {                                          \
+     case bddop_and:                            \
+       if (l == r)                              \
+         RETURN(rec(l));                        \
+       if (l > r)                               \
+         {                                      \
+           BDD tmp = l;                         \
+           l = r;                               \
+           r = tmp;                             \
+         }                                      \
+       if (ISCONST(l))                          \
+         RETURN(ISONE(l) ? rec(r) : 0);         \
+       break;                                   \
+     case bddop_or:                             \
+       if (l == r)                              \
+         RETURN(rec(l));                        \
+       if (l > r)                               \
+         {                                      \
+           BDD tmp = l;                         \
+           l = r;                               \
+           r = tmp;                             \
+         }                                      \
+       if (ISCONST(l))                          \
+         RETURN(ISZERO(l) ? rec(r) : 1);        \
+       break;                                   \
+     case bddop_xor:                            \
+       if (l == r)                              \
+         RETURN(0);                             \
+       if (l > r)                               \
+         {                                      \
+           BDD tmp = l;                         \
+           l = r;                               \
+           r = tmp;                             \
+         }                                      \
+       if (ISZERO(l))                           \
+         RETURN(rec(r));                        \
+       break;                                   \
+     case bddop_nand:                           \
+       if (l > r)                               \
+         {                                      \
+           BDD tmp = l;                         \
+           l = r;                               \
+           r = tmp;                             \
+         }                                      \
+       if (ISZERO(l))                           \
+         RETURN(1);                             \
+       break;                                   \
+     case bddop_nor:                            \
+       if (l > r)                               \
+         {                                      \
+           BDD tmp = l;                         \
+           l = r;                               \
+           r = tmp;                             \
+         }                                      \
+       if (ISONE(l) || ISONE(r))                \
+         RETURN(0);                             \
+       break;                                   \
+     case bddop_invimp: /* l << r = r >> l */   \
+       {                                        \
+         BDD tmp = l;                           \
+         l = r;                                 \
+         r = tmp;                               \
+         op = bddop_imp;                        \
+       }                                        \
+       BUDDY_FALLTHROUGH;                       \
+     case bddop_imp:                            \
+       if (ISONE(r) || ISZERO(l) || l == r)     \
+         RETURN(1);                             \
+       if (ISONE(l))                            \
+         RETURN(rec(r));                        \
+       break;                                   \
+     case bddop_biimp:                          \
+       if (l == r)                              \
+         RETURN(1);                             \
+       if (l > r)                               \
+         {                                      \
+           BDD tmp = l;                         \
+           l = r;                               \
+           r = tmp;                             \
+         }                                      \
+       if (ISONE(l))                            \
+         RETURN(rec(r));                        \
+       break;                                   \
+     case bddop_less:  /* l < r = r - l */      \
+       {                                        \
+         BDD tmp = l;                           \
+         l = r;                                 \
+         r = tmp;                               \
+         op = bddop_diff;                       \
+       }                                        \
+       BUDDY_FALLTHROUGH;                       \
+     case bddop_diff:  /* l - r = l &! r */     \
+       if (l == r || ISONE(r))                  \
+         RETURN(0);                             \
+       if (ISZERO(r))                           \
+         RETURN(rec(l));                        \
+       break;                                   \
      }
 
-   /* empty macro arguments are undefined in ISO C90 and ISO C++98, so
-      use + when we do not want to call any function.*/
-   APPLY_SHORTCUTS(applyop, +);
+//__attribute__((optimize("no-tree-vectorize")))
+static BDD apply_rec(BDD l, BDD r)
+{
+   LOCAL_REC_STACKS;
+   int index;
 
-   if (__unlikely(ISCONST(l)  &&  ISCONST(r)))
-      res = oprres[applyop][l<<1 | r];
-   else
-   {
-      entry = BddCache_lookup(&applycache, APPLYHASH(l,r,applyop));
+   goto work;
 
-      /* Check entry->c last, because not_rec() does not initialize it. */
-      if (entry->i.a == l  &&  entry->i.c == applyop  &&  entry->i.b == r)
-      {
+   do
+     {
+       index = POPINT_();
+       if (index < 0)
+         {
+           l = POPINT_();
+           r = POPINT_();
+         work:
+           /* empty macro arguments are undefined in ISO C90 and
+              ISO C++98, so use + when we do not want to call any
+              function.*/
+           APPLY_SHORTCUTS(applyop, +);
+
+           if (__unlikely(ISCONST(l) && ISCONST(r)))
+             /* C: -1 l r ---     */
+             /* R:        --- res */
+             RETURN(oprres[applyop][l<<1 | r]);
+
+           BddCacheData *entry2 =
+             BddCache_index(&applycache, APPLYHASH(l,r,applyop), index);
+           /* Check entry2->b last, because not_rec() does not
+              initialize it. */
+           if (entry2->i.a == l && entry2->i.c == applyop
+               && entry2->i.b == r)
+             {
 #ifdef CACHESTATS
-	 bddcachestats.opHit++;
+               bddcachestats.opHit++;
 #endif
-	 return entry->i.res;
-      }
+               /* C: -1 l r ---     */
+               /* R:        --- res */
+               RETURN(entry2->i.res);
+             }
 #ifdef CACHESTATS
-      bddcachestats.opMiss++;
+           bddcachestats.opMiss++;
 #endif
-
-      if (LEVEL(l) == LEVEL(r))
-      {
-	 PUSHREF( apply_rec(LOW(l), LOW(r)) );
-	 PUSHREF( apply_rec(HIGH(l), HIGH(r)) );
-	 res = bdd_makenode(LEVEL(l), READREF(2), READREF(1));
-      }
-      else
-      if (LEVEL(l) < LEVEL(r))
-      {
-	 PUSHREF( apply_rec(LOW(l), r) );
-	 PUSHREF( apply_rec(HIGH(l), r) );
-	 res = bdd_makenode(LEVEL(l), READREF(2), READREF(1));
-      }
-      else
-      {
-	 PUSHREF( apply_rec(l, LOW(r)) );
-	 PUSHREF( apply_rec(l, HIGH(r)) );
-	 res = bdd_makenode(LEVEL(r), READREF(2), READREF(1));
-      }
-
-      POPREF(2);
-
-      entry->i.a = l;
-      entry->i.c = applyop;
-      entry->i.b = r;
-      entry->i.res = res;
-   }
-
+           /* C: -1 l r --- (-1 ll rl) -1 lr rr index l r */
+           /* The element in parenthesis are not pushed, as they would
+              be popped right away.  We jump to "work" instead.*/
+           int lvl_l = LEVEL(l);
+           int lvl_r = LEVEL(r);
+           if (lvl_l == lvl_r)
+             {
+               PUSH4INT_(r, l, lvl_l, index);
+               PUSH3INT_(HIGH(r), HIGH(l), -1);
+               r = LOW(r);
+               l = LOW(l);
+             }
+           else if (lvl_l < lvl_r)
+             {
+               PUSH4INT_(r, l, lvl_l, index);
+               PUSH3INT_(r, HIGH(l), -1);
+               l = LOW(l);
+             }
+           else /* (lvl_l > lvl_r) */
+             {
+               PUSH4INT_(r, l, lvl_r, index);
+               PUSH3INT_(HIGH(r), l, -1);
+               r = LOW(r);
+             }
+           goto work;
+         }
+       else
+         {
+           /* C: index lvl l r ---     */
+           /* R: rres lres     --- res */
+           /* res=(lvl, lres, rres) is the result of applyop(l,r) */
+           /* and it should be stored in *entry.                     */
+           BDD rres = READREF_(1);
+           BDD lres = READREF_(2);
+           int lvl = POPINT_();
+           BDD l = POPINT_();
+           BDD r = POPINT_();
+           SYNC_REC_STACKS;
+           BDD res = bdd_makenode(lvl, lres, rres);
+           POPREF_(2);
+           PUSHREF_(res);
+           BddCacheData* entry = applycache.table + index;
+           entry->i.a = l;
+           entry->i.c = applyop;
+           entry->i.b = r;
+           entry->i.res = res;
+         }
+     }
+   while (NONEMPTY_REC_STACK);
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
    return res;
 }
 
@@ -1045,113 +1114,160 @@ BDD bdd_ite(BDD f, BDD g, BDD h)
    return res;
 }
 
-
 static BDD ite_rec(BDD f, BDD g, BDD h)
 {
-   BddCacheData *entry;
-   BDD res;
+   LOCAL_REC_STACKS;
+   int index;
 
-   if (ISONE(f))
-      return g;
-   if (ISZERO(f))
-      return h;
-   if (g == h)
-      return g;
-   if (ISONE(g) && ISZERO(h))
-      return f;
-   if (ISZERO(g) && ISONE(h))
-      return not_rec(f);
+   goto work;
+   do
+     {
+       index = POPINT_();
+       if (index < 0)
+         {
+           f = POPINT_();
+           g = POPINT_();
+           h = POPINT_();
+         work:
+           if (ISONE(f))
+             RETURN(g);
+           if (ISZERO(f))
+             RETURN(h);
+           if (g == h)
+             RETURN(g);
+           if (ISONE(g) && ISZERO(h))
+             RETURN(f);
+           if (ISZERO(g) && ISONE(h))
+             {
+               SYNC_REC_STACKS;
+               int res = not_rec(f);
+               RETURN(res);
+             }
 
-   entry = BddCache_lookup(&itecache, ITEHASH(f,g,h));
-   if (entry->i.a == f  &&  entry->i.c == h && entry->i.b == g)
-   {
+           BddCacheData *entry2 =
+             BddCache_index(&itecache, ITEHASH(f, g, h), index);
+           if (entry2->i.a == f && entry2->i.c == h && entry2->i.b == g)
+             {
 #ifdef CACHESTATS
-      bddcachestats.opHit++;
+               bddcachestats.opHit++;
 #endif
-      return entry->i.res;
-   }
+               /* C: -1 f g h  ---     */
+               /* R:           --- res */
+               RETURN(entry2->i.res);
+             }
 #ifdef CACHESTATS
-   bddcachestats.opMiss++;
+           bddcachestats.opMiss++;
 #endif
+           /* C: -1 f g h --- (-1 fl gl hl) -1 fr gr hr index lvl f g h */
+           int lvl_f = LEVEL(f);
+           int lvl_g = LEVEL(g);
+           int lvl_h = LEVEL(h);
+           if (lvl_f == lvl_g)
+             {
+               if (lvl_g == lvl_h)
+                 {
+                   PUSH4INT_(h, g, f, lvl_f);
+                   PUSHINT_(index);
+                   PUSH4INT_(HIGH(h), HIGH(g), HIGH(f), -1);
+                   h = LOW(h);
+                   g = LOW(g);
+                   f = LOW(f);
+                 }
+               else if (lvl_f < lvl_h)
+                 {
+                   PUSH4INT_(h, g, f, lvl_f);
+                   PUSHINT_(index);
+                   PUSH4INT_(h, HIGH(g), HIGH(f), -1);
+                   g = LOW(g);
+                   f = LOW(f);
+                 }
+               else /* lvl_f > lvl_h */
+                 {
+                   PUSH4INT_(h, g, f, lvl_h);
+                   PUSHINT_(index);
+                   PUSH4INT_(HIGH(h), g, f, -1);
+                   h = LOW(h);
+                 }
+             }
+           else if (lvl_f < lvl_g)
+             {
+               if (lvl_f == lvl_h)
+                 {
+                   PUSH4INT_(h, g, f, lvl_f);
+                   PUSHINT_(index);
+                   PUSH4INT_(HIGH(h), g, HIGH(f), -1);
+                   h = LOW(h);
+                   f = LOW(f);
+                 }
+               else if (lvl_f < lvl_h)
+                 {
+                   PUSH4INT_(h, g, f, lvl_f);
+                   PUSHINT_(index);
+                   PUSH4INT_(h, g, HIGH(f), -1);
+                   f = LOW(f);
+                 }
+               else /* lvl_f > lvl_h */
+                 {
+                   PUSH4INT_(h, g, f, lvl_h);
+                   PUSHINT_(index);
+                   PUSH4INT_(HIGH(h), g, f, -1);
+                   h = LOW(h);
+                 }
+             }
+           else /* lvl_f > lvl_g */
+             {
+               if (lvl_g == lvl_h)
+                 {
+                   PUSH4INT_(h, g, f, lvl_g);
+                   PUSHINT_(index);
+                   PUSH4INT_(HIGH(h), HIGH(g), f, -1);
+                   h = LOW(h);
+                   g = LOW(g);
+                 }
+               else if (lvl_g < lvl_h)
+                 {
+                   PUSH4INT_(h, g, f, lvl_g);
+                   PUSHINT_(index);
+                   PUSH4INT_(h, HIGH(g), f, -1);
+                   g = LOW(g);
+                 }
+               else /* lvl_g > lvl_h */
+                 {
+                   PUSH4INT_(h, g, f, lvl_h);
+                   PUSHINT_(index);
+                   PUSH4INT_(HIGH(h), g, f, -1);
+                   h = LOW(h);
+                 }
+             }
+           goto work;
+         }
+       else
+         {
+           /* C: index lvl f g h ---     */
+           /* R: rres lres       --- res */
+           /* res=(lvl, lres, rres) is the result of ite(f,g,h) */
+           /* and it should be stored in *entry.                   */
+           BDD rres = READREF_(1);
+           BDD lres = READREF_(2);
+           int lvl = POPINT_();
+           SYNC_REC_STACKS;
+           BDD res = bdd_makenode(lvl, lres, rres);
+           POPREF_(2);
+           PUSHREF_(res);
+           BddCacheData* entry = itecache.table + index;
+           entry->i.a = POPINT_(); // f
+           entry->i.b = POPINT_(); // g
+           entry->i.c = POPINT_(); // h
+           entry->i.res = res;
+         }
+     }
+   while (NONEMPTY_REC_STACK);
 
-   if (LEVEL(f) == LEVEL(g))
-   {
-      if (LEVEL(f) == LEVEL(h))
-      {
-	 PUSHREF( ite_rec(LOW(f), LOW(g), LOW(h)) );
-	 PUSHREF( ite_rec(HIGH(f), HIGH(g), HIGH(h)) );
-	 res = bdd_makenode(LEVEL(f), READREF(2), READREF(1));
-      }
-      else
-      if (LEVEL(f) < LEVEL(h))
-      {
-	 PUSHREF( ite_rec(LOW(f), LOW(g), h) );
-	 PUSHREF( ite_rec(HIGH(f), HIGH(g), h) );
-	 res = bdd_makenode(LEVEL(f), READREF(2), READREF(1));
-      }
-      else /* f > h */
-      {
-	 PUSHREF( ite_rec(f, g, LOW(h)) );
-	 PUSHREF( ite_rec(f, g, HIGH(h)) );
-	 res = bdd_makenode(LEVEL(h), READREF(2), READREF(1));
-      }
-   }
-   else
-   if (LEVEL(f) < LEVEL(g))
-   {
-      if (LEVEL(f) == LEVEL(h))
-      {
-	 PUSHREF( ite_rec(LOW(f), g, LOW(h)) );
-	 PUSHREF( ite_rec(HIGH(f), g, HIGH(h)) );
-	 res = bdd_makenode(LEVEL(f), READREF(2), READREF(1));
-      }
-      else
-      if (LEVEL(f) < LEVEL(h))
-      {
-	 PUSHREF( ite_rec(LOW(f), g, h) );
-	 PUSHREF( ite_rec(HIGH(f), g, h) );
-	 res = bdd_makenode(LEVEL(f), READREF(2), READREF(1));
-      }
-      else /* f > h */
-      {
-	 PUSHREF( ite_rec(f, g, LOW(h)) );
-	 PUSHREF( ite_rec(f, g, HIGH(h)) );
-	 res = bdd_makenode(LEVEL(h), READREF(2), READREF(1));
-      }
-   }
-   else /* f > g */
-   {
-      if (LEVEL(g) == LEVEL(h))
-      {
-	 PUSHREF( ite_rec(f, LOW(g), LOW(h)) );
-	 PUSHREF( ite_rec(f, HIGH(g), HIGH(h)) );
-	 res = bdd_makenode(LEVEL(g), READREF(2), READREF(1));
-      }
-      else
-      if (LEVEL(g) < LEVEL(h))
-      {
-	 PUSHREF( ite_rec(f, LOW(g), h) );
-	 PUSHREF( ite_rec(f, HIGH(g), h) );
-	 res = bdd_makenode(LEVEL(g), READREF(2), READREF(1));
-      }
-      else /* g > h */
-      {
-	 PUSHREF( ite_rec(f, g, LOW(h)) );
-	 PUSHREF( ite_rec(f, g, HIGH(h)) );
-	 res = bdd_makenode(LEVEL(h), READREF(2), READREF(1));
-      }
-   }
-
-   POPREF(2);
-
-   entry->i.a = f;
-   entry->i.c = h;
-   entry->i.b = g;
-   entry->i.res = res;
-
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
    return res;
 }
-
 
 /*=== RESTRICT =========================================================*/
 
@@ -1227,48 +1343,79 @@ BDD bdd_restrict(BDD r, BDD var)
 }
 
 
-static int restrict_rec(int r)
+static BDD restrict_rec(BDD r)
 {
-   BddCacheData *entry;
-   int res;
+   LOCAL_REC_STACKS;
+   int index;
 
-   if (ISCONST(r)  ||  LEVEL(r) > quantlast)
-      return r;
+   goto work;
+   do
+     {
+       index = POPINT_();
+       if (index < 0)
+         {
+           r = POPINT_();
+         work:
+           /* C: -1 r ---   */
+           /* R:      --- r */
+           if (ISCONST(r)  ||  LEVEL(r) > quantlast)
+             RETURN(r);
 
-   entry = BddCache_lookup(&misccache, RESTRHASH(r,miscid));
-   if (entry->i.a == r  &&  entry->i.c == miscid)
-   {
+           BddCacheData *entry2 =
+             BddCache_index(&misccache, RESTRHASH(r, miscid), index);
+           if (entry2->i.a == r && entry2->i.c == miscid)
+             {
 #ifdef CACHESTATS
-      bddcachestats.opHit++;
+               bddcachestats.opHit++;
 #endif
-      return entry->i.res;
-   }
+               /* C: -1 r --- */
+               /* R: --- res */
+               RETURN(entry2->i.res);
+             }
 #ifdef CACHESTATS
-   bddcachestats.opMiss++;
+           bddcachestats.opMiss++;
 #endif
+           if (INSVARSET(LEVEL(r)))
+             {
+               /* C: -1 r --- (-1 r') */
+               if (quantvarset[LEVEL(r)] > 0)
+                 r = HIGH(r);
+               else
+                 r = LOW(r);
+               goto work;
+             }
+           else
+             {
+               /* C: -1 r ---  (-1 lr) -1 rr index r */
+               PUSH4INT_(r, index, HIGH(r), -1);
+               r = LOW(r);
+             }
+           goto work;
+         }
+       else
+         {
+           /* C: index r   ---     */
+           /* R: rres lres --- res */
+           BDD rres = READREF_(1);
+           BDD lres = READREF_(2);
+           BDD r = POPINT_();
+           SYNC_REC_STACKS;
+           BDD res = bdd_makenode(LEVEL(r), lres, rres);
+           POPREF_(2);
+           BddCacheData* entry = misccache.table + index;
+           entry->i.a = r;
+           entry->i.c = quantid;
+           entry->i.res = res;
+           PUSHREF_(res);
+         }
+     }
+   while (NONEMPTY_REC_STACK);
 
-   if (INSVARSET(LEVEL(r)))
-   {
-      if (quantvarset[LEVEL(r)] > 0)
-	 res = restrict_rec(HIGH(r));
-      else
-	 res = restrict_rec(LOW(r));
-   }
-   else
-   {
-      PUSHREF( restrict_rec(LOW(r)) );
-      PUSHREF( restrict_rec(HIGH(r)) );
-      res = bdd_makenode(LEVEL(r), READREF(2), READREF(1));
-      POPREF(2);
-   }
-
-   entry->i.a = r;
-   entry->i.c = miscid;
-   entry->i.res = res;
-
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
    return res;
 }
-
 
 /*=== GENERALIZED COFACTOR =============================================*/
 
@@ -1584,61 +1731,103 @@ BDD bdd_compose(BDD f, BDD g, int var)
    return res;
 }
 
-
-static BDD compose_rec(BDD f, BDD g)
+static BDD compose_rec(BDD l, BDD r)
 {
-   BddCacheData *entry;
-   BDD res;
+   LOCAL_REC_STACKS;
+   int index;
 
-   if (LEVEL(f) > composelevel)
-      return f;
+   goto work;
+   do
+     {
+       index = POPINT_();
+       if (index < 0)
+         {
+           l = POPINT_();
+           r = POPINT_();
+         work:;
+           int lvl_l = LEVEL(l);
+           if (lvl_l > composelevel)
+             RETURN(l);
 
-   entry = BddCache_lookup(&replacecache, COMPOSEHASH(f,g));
-   if (entry->i.a == f  &&  entry->i.b == g  &&  entry->i.c == replaceid)
-   {
+           BddCacheData *entry2 =
+             BddCache_index(&replacecache, COMPOSEHASH(l, r), index);
+           if (entry2->i.a == l && entry2->i.b == r && entry2->i.c == replaceid)
+             {
 #ifdef CACHESTATS
-      bddcachestats.opHit++;
+               bddcachestats.opHit++;
 #endif
-      return entry->i.res;
-   }
+               /* C: -1 l r  --- */
+               /* R: --- res */
+               RETURN(entry2->i.res);
+             }
 #ifdef CACHESTATS
-   bddcachestats.opMiss++;
+           bddcachestats.opMiss++;
 #endif
+           if (lvl_l < composelevel)
+             {
+               /* C: -1 l r --- (-1 ll rl) -1 lr rr index lvl l r */
+               int lvl_r = LEVEL(r);
+               if (lvl_l == lvl_r)
+                 {
+                   PUSH4INT_(r, l, lvl_l, index);
+                   PUSH3INT_(HIGH(r), HIGH(l), -1);
+                   r = LOW(r);
+                   l = LOW(l);
+                 }
+               else if (lvl_l < lvl_r)
+                 {
+                   PUSH4INT_(r, l, lvl_l, index);
+                   PUSH3INT_(r, HIGH(l), -1);
+                   l = LOW(l);
+                 }
+               else /* (lvl_l > lvl_r) */
+                 {
+                   PUSH4INT_(r, l, lvl_r, index);
+                   PUSH3INT_(HIGH(r), l, -1);
+                   r = LOW(r);
+                 }
+               goto work;
+             }
+           else
+             {
+               /* C: -1 l r ---      */
+               /* R:        ---  res */
+               SYNC_REC_STACKS;
+               BDD res = ite_rec(r, HIGH(l), LOW(l));
+               PUSHREF_(res);
+               entry2->i.a = l;
+               entry2->i.c = replaceid;
+               entry2->i.b = r;
+               entry2->i.res = res;
+             }
+         }
+       else
+         {
+           /* C: index lvl l r ---     */
+           /* R: rres lres     --- res */
+           /* res=(lvl, lres, rres) is the result of applyop(l,r) */
+           /* and it should be stored in *entry.                     */
+           BDD rres = READREF_(1);
+           BDD lres = READREF_(2);
+           int lvl = POPINT_();
+           BDD l = POPINT_();
+           BDD r = POPINT_();
+           SYNC_REC_STACKS;
+           BDD res = bdd_makenode(lvl, lres, rres);
+           POPREF_(2);
+           BddCacheData* entry = replacecache.table + index;
+           entry->i.a = l;
+           entry->i.c = replaceid;
+           entry->i.b = r;
+           entry->i.res = res;
+           PUSHREF_(res);
+         }
+     }
+   while (NONEMPTY_REC_STACK);
 
-   if (LEVEL(f) < composelevel)
-   {
-      if (LEVEL(f) == LEVEL(g))
-      {
-	 PUSHREF( compose_rec(LOW(f), LOW(g)) );
-	 PUSHREF( compose_rec(HIGH(f), HIGH(g)) );
-	 res = bdd_makenode(LEVEL(f), READREF(2), READREF(1));
-      }
-      else
-      if (LEVEL(f) < LEVEL(g))
-      {
-	 PUSHREF( compose_rec(LOW(f), g) );
-	 PUSHREF( compose_rec(HIGH(f), g) );
-	 res = bdd_makenode(LEVEL(f), READREF(2), READREF(1));
-      }
-      else
-      {
-	 PUSHREF( compose_rec(f, LOW(g)) );
-	 PUSHREF( compose_rec(f, HIGH(g)) );
-	 res = bdd_makenode(LEVEL(g), READREF(2), READREF(1));
-      }
-      POPREF(2);
-   }
-   else
-      /*if (LEVEL(f) == composelevel) changed 2-nov-98 */
-   {
-      res = ite_rec(g, HIGH(f), LOW(f));
-   }
-
-   entry->i.a = f;
-   entry->i.c = replaceid;
-   entry->i.b = g;
-   entry->i.res = res;
-
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
    return res;
 }
 
@@ -2000,40 +2189,77 @@ BDD bdd_uniquecomp(BDD r, BDD var)
 }
 
 
-static int quant_rec(int r)
+static int quant_rec(BDD r)
 {
-   BddCacheData *entry;
-   int res;
+   LOCAL_REC_STACKS;
+   int index;
 
-   if (r < 2  ||  LEVEL(r) > quantlast)
-      return r;
-
-   entry = BddCache_lookup(&quantcache, QUANTHASH(r));
-   if (entry->i.a == r && entry->i.c == quantid)
-   {
+   goto work;
+   do
+     {
+       index = POPINT_();
+       if (index < 0)
+         {
+           r = POPINT_();
+         work:;
+           /* C: -1 r ---   */
+           /* R:      --- r */
+           if (ISCONST(r) || LEVEL(r) > quantlast)
+             {
+               PUSHREF_(r);
+             }
+           else
+             {
+               BddCacheData *entry2 =
+                 BddCache_index(&quantcache, QUANTHASH(r), index);
+               if (entry2->i.a == r && entry2->i.c == quantid)
+                 {
 #ifdef CACHESTATS
-      bddcachestats.opHit++;
+                   bddcachestats.opHit++;
 #endif
-      return entry->i.res;
-   }
+                   /* C: -1 r ---     */
+                   /* R:      --- res */
+                   PUSHREF_(entry2->i.res);
+                 }
+               else
+                 {
 #ifdef CACHESTATS
-   bddcachestats.opMiss++;
+                   bddcachestats.opMiss++;
 #endif
+                   /* C: -1 r --- (-1 lr) -1 rr index r */
+                   PUSH4INT_(r, index, HIGH(r), -1)
+                   r = LOW(r);
+                   goto work;
+                 }
+             }
+         }
+       else
+         {
+           /* C: index r ---     */
+           /* R: rres lres --- res */
+           BDD r = POPINT_();
+           BDD rres = READREF_(1);
+           BDD lres = READREF_(2);
+           BDD res;
+           int lvl = LEVEL(r);
+           SYNC_REC_STACKS;
+           if (INVARSET(lvl))
+             res = apply_rec(lres, rres);
+           else
+             res = bdd_makenode(lvl, lres, rres);
+           POPREF_(2);
+           PUSHREF_(res);
+           BddCacheData* entry = quantcache.table + index;
+           entry->i.a = r;
+           entry->i.c = quantid;
+           entry->i.res = res;
+         }
+     }
+   while (NONEMPTY_REC_STACK);
 
-   PUSHREF( quant_rec(LOW(r)) );
-   PUSHREF( quant_rec(HIGH(r)) );
-
-   if (INVARSET(LEVEL(r)))
-      res = apply_rec(READREF(2), READREF(1));
-   else
-      res = bdd_makenode(LEVEL(r), READREF(2), READREF(1));
-
-   POPREF(2);
-
-   entry->i.a = r;
-   entry->i.c = quantid;
-   entry->i.res = res;
-
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
    return res;
 }
 
@@ -2232,74 +2458,112 @@ BDD bdd_appunicomp(BDD l, BDD r, int opr, BDD var)
 }
 
 
-static int appquant_rec(int l, int r)
+static BDD appquant_rec(BDD l, BDD r)
 {
-   BddCacheData *entry;
-   int res;
+   LOCAL_REC_STACKS;
+   int index;
 
-   APPLY_SHORTCUTS(appexop, quant_rec);
+   goto work;
+   do
+     {
+       index = POPINT_();
+       if (index < 0)
+         {
+           l = POPINT_();
+           r = POPINT_();
+         work:
+           /* C: -1 l r ---    */
+           /* R:        --- res */
+           if (ISCONST(l) && ISCONST(r))
+             RETURN(oprres[appexop][l<<1 | r]);
 
-   if (ISCONST(l)  &&  ISCONST(r))
-      res = oprres[appexop][(l<<1) | r];
-   else
-   if (LEVEL(l) > quantlast  &&  LEVEL(r) > quantlast)
-   {
-      int oldop = applyop;
-      applyop = appexop;
-      res = apply_rec(l,r);
-      applyop = oldop;
-   }
-   else
-   {
-      entry = BddCache_lookup(&appexcache, APPEXHASH(l,r,appexop));
-      if (entry->i.a == l  && entry->i.c == appexid && entry->i.b == r)
-      {
+           if (LEVEL(l) > quantlast && LEVEL(r) > quantlast)
+             {
+               int oldop = applyop;
+               applyop = appexop;
+               SYNC_REC_STACKS;
+               int res = apply_rec(l,r);
+               PUSHREF_(res);
+               applyop = oldop;
+               continue;
+             }
+
+           /* empty macro arguments are undefined in ISO C90 and
+              ISO C++98, so use + when we do not want to call any
+              function. */
+           SYNC_REC_STACKS;
+           APPLY_SHORTCUTS(appexop, quant_rec);
+
+           BddCacheData *entry2 =
+             BddCache_index(&appexcache, APPEXHASH(l,r,appexop), index);
+           /* Check entry2->b last, because not_rec() does not
+              initialize it. */
+           if (entry2->i.a == l  && entry2->i.c == appexid
+               && entry2->i.b == r)
+             {
 #ifdef CACHESTATS
-	 bddcachestats.opHit++;
+               bddcachestats.opHit++;
 #endif
-	 return entry->i.res;
-      }
+               /* C: -1 l r ---     */
+               /* R:        --- res */
+               RETURN(entry2->i.res);
+             }
 #ifdef CACHESTATS
-      bddcachestats.opMiss++;
+           bddcachestats.opMiss++;
 #endif
+           /* C: -1 l r --- (-1 ll rl) -1 lr rr index lvl l r */
+           int lvl_l = LEVEL(l);
+           int lvl_r = LEVEL(r);
+           if (lvl_l == lvl_r)
+             {
+               PUSH4INT_(r, l, lvl_l, index);
+               PUSH3INT_(HIGH(r), HIGH(l), -1);
+               r = LOW(r);
+               l = LOW(l);
+             }
+           else if (lvl_l < lvl_r)
+             {
+               PUSH4INT_(r, l, lvl_l, index);
+               PUSH3INT_(r, HIGH(l), -1);
+               l = LOW(l);
+             }
+           else /* lvl_l > lvl_r */
+             {
+               PUSH4INT_(r, l, lvl_r, index);
+               PUSH3INT_(HIGH(r), l, -1);
+               r = LOW(r);
+             }
+           goto work;
+         }
+       else
+         {
+           /* C: index lvl l r ---     */
+           /* R: rres lres     --- res */
+           BDD rres = READREF_(1);
+           BDD lres = READREF_(2);
+           int lvl = POPINT_();
+           BDD l = POPINT_();
+           BDD r = POPINT_();
+           BDD res;
+           SYNC_REC_STACKS;
+           if (INVARSET(lvl))
+             res = apply_rec(lres, rres);
+           else
+             res = bdd_makenode(lvl, lres, rres);
+           POPREF_(2);
+           PUSHREF_(res);
+           BddCacheData* entry = appexcache.table + index;
+           entry->i.a = l;
+           entry->i.c = appexid;
+           entry->i.b = r;
+           entry->i.res = res;
+         }
+     }
+   while (NONEMPTY_REC_STACK);
 
-      if (LEVEL(l) == LEVEL(r))
-      {
-	 PUSHREF( appquant_rec(LOW(l), LOW(r)) );
-	 PUSHREF( appquant_rec(HIGH(l), HIGH(r)) );
-	 if (INVARSET(LEVEL(l)))
-	    res = apply_rec(READREF(2), READREF(1));
-	 else
-	    res = bdd_makenode(LEVEL(l), READREF(2), READREF(1));
-      }
-      else
-      if (LEVEL(l) < LEVEL(r))
-      {
-	 PUSHREF( appquant_rec(LOW(l), r) );
-	 PUSHREF( appquant_rec(HIGH(l), r) );
-	 if (INVARSET(LEVEL(l)))
-	    res = apply_rec(READREF(2), READREF(1));
-	 else
-	    res = bdd_makenode(LEVEL(l), READREF(2), READREF(1));
-      }
-      else
-      {
-	 PUSHREF( appquant_rec(l, LOW(r)) );
-	 PUSHREF( appquant_rec(l, HIGH(r)) );
-	 if (INVARSET(LEVEL(r)))
-	    res = apply_rec(READREF(2), READREF(1));
-	 else
-	    res = bdd_makenode(LEVEL(r), READREF(2), READREF(1));
-      }
-
-      POPREF(2);
-
-      entry->i.a = l;
-      entry->i.c = appexid;
-      entry->i.b = r;
-      entry->i.res = res;
-   }
-
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
    return res;
 }
 
@@ -2403,24 +2667,27 @@ BDD bdd_support(BDD r)
 
 static void support_rec(int r, int* support)
 {
-   BddNode *node;
-
-   if (r < 2)
-      return;
-
-   node = &bddnodes[r];
-   if (LEVELp(node) & MARKON  ||  LOWp(node) == -1)
-      return;
-
-   support[LEVELp(node)] = supportID;
-
-   if (LEVELp(node) > supportMax)
-     supportMax = LEVELp(node);
-
-   LEVELp(node) |= MARKON;
-
-   support_rec(LOWp(node), support);
-   support_rec(HIGHp(node), support);
+  // Reuse bddrefstack as temporary stack
+  int* bot = bddrefstacktop;
+  int* top = bot;
+  goto work;
+  while (top > bot)
+    {
+      r = *--top;
+    work:
+      if (r < 2)
+        continue;
+      BddNode *node = &bddnodes[r];
+      if (LEVELp(node) & MARKON || LOWp(node) == -1)
+        continue;
+      support[LEVELp(node)] = supportID;
+      if (LEVELp(node) > supportMax)
+        supportMax = LEVELp(node);
+      LEVELp(node) |= MARKON;
+      *top++ = LOWp(node);
+      r = HIGHp(node);
+      goto work;
+    }
 }
 
 
@@ -2459,19 +2726,45 @@ BDD bdd_satone(BDD r)
 
 static BDD satone_rec(BDD r)
 {
-   if (ISCONST(r))
-      return r;
+   LOCAL_REC_STACKS;
 
-   if (ISZERO(LOW(r)))
-   {
-      BDD res = satone_rec(HIGH(r));
-      return PUSHREF( bdd_makenode(LEVEL(r), BDDZERO, res) );
-   }
-   else
-   {
-      BDD res = satone_rec(LOW(r));
-      return PUSHREF( bdd_makenode(LEVEL(r), res, BDDZERO) );
-   }
+   while (ISNONCONST(r))
+     {
+       BDD low = LOW(r);
+       int iszero = ISZERO(low);
+       int lvl = LEVEL(r);
+       if (iszero)
+         {
+           PUSHINT_(lvl);
+           r = HIGH(r);
+         }
+       else
+         {
+           PUSHINT_(~lvl);
+           r = low;
+         }
+     }
+   PUSHREF_(r);
+   while (NONEMPTY_REC_STACK)
+     {
+       /* C: lvl --- */
+       /* R: r   --- res */
+       BDD r = READREF_(1);
+       int lvl = POPINT_();
+       BDD res;
+       SYNC_REC_STACKS;
+       if (lvl >= 0)
+         res = bdd_makenode(lvl, BDDZERO, r);
+       else
+         res = bdd_makenode(~lvl, r, BDDZERO);
+       POPREF_(1);
+       PUSHREF_(res);
+     }
+
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
+   return res;
 }
 
 
@@ -2570,47 +2863,58 @@ BDD bdd_satoneset(BDD r, BDD var, BDD pol)
    return res;
 }
 
-
 static BDD satoneset_rec(BDD r, BDD var)
 {
-   if (ISCONST(r)  &&  ISCONST(var))
-      return r;
+   LOCAL_REC_STACKS;
 
-   if (LEVEL(r) < LEVEL(var))
-   {
-      if (ISZERO(LOW(r)))
-      {
-	 BDD res = satoneset_rec(HIGH(r), var);
-	 return PUSHREF( bdd_makenode(LEVEL(r), BDDZERO, res) );
-      }
-      else
-      {
-	 BDD res = satoneset_rec(LOW(r), var);
-	 return PUSHREF( bdd_makenode(LEVEL(r), res, BDDZERO) );
-      }
-   }
-   else if (LEVEL(var) < LEVEL(r))
-   {
-      BDD res = satoneset_rec(r, HIGH(var));
-      if (satPolarity == BDDONE)
-	 return PUSHREF( bdd_makenode(LEVEL(var), BDDZERO, res) );
-      else
-	 return PUSHREF( bdd_makenode(LEVEL(var), res, BDDZERO) );
-   }
-   else /* LEVEL(r) == LEVEL(var) */
-   {
-      if (ISZERO(LOW(r)))
-      {
-	 BDD res = satoneset_rec(HIGH(r), HIGH(var));
-	 return PUSHREF( bdd_makenode(LEVEL(r), BDDZERO, res) );
-      }
-      else
-      {
-	 BDD res = satoneset_rec(LOW(r), HIGH(var));
-	 return PUSHREF( bdd_makenode(LEVEL(r), res, BDDZERO) );
-      }
-   }
+   while (!(ISCONST(r) && ISCONST(var)))
+     {
+       int lvl_r = LEVEL(r);
+       int lvl_v = LEVEL(var);
+       if (lvl_r <= lvl_v)
+         {
+           int low_r = LOW(r);
+           if (ISZERO(low_r))
+             {
+               PUSHINT_(lvl_r);
+               r = HIGH(r);
+             }
+           else
+             {
+               PUSHINT_(~lvl_r);
+               r = low_r;
+             }
+           if (lvl_r == lvl_v)
+             var = HIGH(var);
+         }
+       else /* lvl_v < lvl_r */
+         {
+           if (satPolarity == BDDONE)
+             PUSHINT_(lvl_v);
+           else
+             PUSHINT_(~lvl_v);
+           var = HIGH(var);
+         }
+     }
+   PUSHREF_(r);
+   while (NONEMPTY_REC_STACK)
+     {
+       BDD r = READREF_(1);
+       int lvl = POPINT_();
+       SYNC_REC_STACKS;
+       BDD res;
+       if (lvl >= 0)
+         res = bdd_makenode(lvl, BDDZERO, r);
+       else
+         res = bdd_makenode(~lvl, r, BDDZERO);
+       POPREF_(1);
+       PUSHREF_(res);
+     }
 
+   BDD res = READREF_(1);
+   POPREF_(1);
+   SYNC_REC_STACKS;
+   return res;
 }
 
 

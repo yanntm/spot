@@ -43,6 +43,7 @@
 #include <limits.h>
 #include <setjmp.h>
 #include "bddx.h"
+#include "cache.h"
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -133,6 +134,8 @@ extern int       bddreorderdisabled;
 extern int       bddresized;
 extern int       bddcachesize;
 extern bddCacheStat bddcachestats;
+extern int*      bddrecstack;
+extern int*      bddrecstacktop;
 
   /* from reorder.c */
 extern int bddreordermethod;
@@ -213,6 +216,28 @@ static inline int PUSHREF(int a)
 }
 #define READREF(a) *(bddrefstacktop-(a))
 #define POPREF(a)  bddrefstacktop -= (a)
+
+#define PUSHREF_(a) *(localbddrefstacktop++) = (a)
+#define READREF_(a) *(localbddrefstacktop-(a))
+#define POPREF_(a)  localbddrefstacktop -= (a)
+
+#define PUSHINT_(a) *(localbddrecstacktop++) = (a)
+#define PUSH2INT_(a, b) {PUSHINT_(a); PUSHINT_(b);}
+#define PUSH3INT_(a, b, c) {PUSHINT_(a); PUSHINT_(b); PUSHINT_(c);}
+#define PUSH4INT_(a, b, c, d) {PUSHINT_(a); PUSHINT_(b); PUSHINT_(c); PUSHINT_(d);}
+#define POPINT_() *(--localbddrecstacktop)
+
+#define LOCAL_REC_STACKS                                \
+  int* restrict localbddrefstacktop = bddrefstacktop;   \
+  int* restrict localbddrecstacktop = bddrecstacktop;   \
+  int* localbddrecstackbot = bddrecstacktop;
+
+#define NONEMPTY_REC_STACK (localbddrecstacktop > localbddrecstackbot)
+
+
+#define SYNC_REC_STACKS                         \
+  bddrefstacktop = localbddrefstacktop;         \
+  bddrecstacktop = localbddrecstacktop;
 
 #define BDDONE 1
 #define BDDZERO 0

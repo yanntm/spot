@@ -1,5 +1,5 @@
 /*========================================================================
-               Copyright (C) 1996-2002 by Jorn Lind-Nielsen
+               Copyright (C) 1996-2002, 2020 by Jorn Lind-Nielsen
                             All rights reserved
 
     Permission is hereby granted, without written agreement and without
@@ -67,7 +67,7 @@ extern int  BddCache_resize(BddCache *, int);
 extern void BddCache_reset(BddCache *);
 
 #define BddCache_lookup(cache, hash) (&(cache)->table[hash & ((cache)->tablesize - 1)])
-
+#define BddCache_index(cache, hash, index) (&(cache)->table[index = (hash & ((cache)->tablesize - 1))])
 
 #endif /* _CACHE_H */
 

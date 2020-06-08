@@ -45,7 +45,6 @@
 #include <assert.h>
 
 #include "kernel.h"
-#include "cache.h"
 #include "prime.h"
 
 /*************************************************************************
@@ -103,6 +102,8 @@ jmp_buf      bddexception;      /* Long-jump point for interrupting calc. */
 int          bddresized;        /* Flag indicating a resize of the nodetable */
 int          bddcachesize;      /* Size of the operator caches */
 int          bddhashsize;       /* Size of the BDD node hash */
+int*         bddrecstack;       /* Internal recursion stack */
+int*         bddrecstacktop;    /* Internal recursion stack top */
 
 bddCacheStat bddcachestats;
 
@@ -273,6 +274,7 @@ void bdd_done(void)
 
    free(bddnodes);
    free(bddrefstack);
+   free(bddrecstack);
    free(bddvarset);
    free(bddvar2level);
    free(bddlevel2var);
@@ -280,6 +282,7 @@ void bdd_done(void)
 
    bddnodes = NULL;
    bddrefstack = NULL;
+   bddrecstack = NULL;
    bddvarset = NULL;
 
    bdd_operator_done();
@@ -374,7 +377,11 @@ int bdd_setvarnum(int num)
 
    if (__likely(bddrefstack != NULL))
       free(bddrefstack);
-   bddrefstack = bddrefstacktop = (int*)malloc(sizeof(int)*(num*2+4));
+   bddrefstack = bddrefstacktop = (int*)malloc(sizeof(int)*((num+2)*2));
+
+   if (__likely(bddrecstack != NULL))
+      free(bddrecstack);
+   bddrecstack = bddrecstacktop = (int*)malloc(sizeof(int)*((num+1)*9));
 
    for(bdv=bddvarnum ; bddvarnum < num; bddvarnum++)
    {
