@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Développement
-// de l'Epita.
+// Copyright (C) 2015, 2016, 2018, 2020 Laboratoire de Recherche et
+// Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
 //
@@ -144,6 +144,7 @@ int main()
   std::cout << "cube : " << cs.dump(mc, aps) << '\n';
   std::cout << "valid : " << cs.is_valid(mc) << '\n';
   std::cout << "intersect(c,c) : " << cs.intersect(mc, mc) << '\n';
+  cs.display(mc);
 
   spot::cube mc1 = cs.alloc();
   cs.set_false_var(mc1, 0);
@@ -154,6 +155,7 @@ int main()
   std::cout << "intersect(c1,c1) : " << cs.intersect(mc1, mc1) << '\n';
   std::cout << "intersect(c,c1) : " << cs.intersect(mc, mc1) << '\n';
   std::cout << "intersect(c1,c) : " << cs.intersect(mc1, mc) << '\n';
+  cs.display(mc1);
 
   spot::cube mc2 = cs.alloc();
   cs.set_true_var(mc2, 1);
@@ -163,7 +165,19 @@ int main()
   std::cout << "valid : " << cs.is_valid(mc2) << '\n';
   std::cout << "intersect(c2,c1) : " << cs.intersect(mc1, mc2) << '\n';
   std::cout << "intersect(c2,c) : " << cs.intersect(mc, mc2) << '\n';
+  cs.display(mc2);
 
+  std::vector<std::string> apsx;
+  for (unsigned i = 0; i < 44; ++i)
+    apsx.push_back("a" + std::to_string(i));
+  spot::cubeset csx(apsx.size());
+  spot::cube mcx = csx.alloc();
+  csx.set_true_var(mcx, 0);
+  csx.set_false_var(mcx, 42);
+  std::cout << "cube : " << csx.dump(mcx, apsx) << '\n';
+  csx.display(mcx);
+
+  cs.release(mcx);
   cs.release(mc2);
   cs.release(mc1);
   cs.release(mc);
