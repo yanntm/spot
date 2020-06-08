@@ -360,7 +360,7 @@ namespace spot
       {
         int scc_root = ecs_->root.top().index;
         return T::h_count(ecs_->h,
-            [scc_root](int s) { return s >= scc_root; });
+            [scc_root](int s) noexcept { return s >= scc_root; });
       }
 
       twa_run_ptr
