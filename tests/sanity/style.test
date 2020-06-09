@@ -208,7 +208,8 @@ for dir in "$TOP/spot" "$TOP/bin" "$TOP/tests"; do
 
       # The 'r' allows operator&&
       # The '.' allows &&...
-      $GREP '[^	 r]&&[^	 .]' $tmp &&
+      # The ')' allows foo(bar&&)
+      $GREP '[^	 r]&&[^	 .)]' $tmp &&
 	diag 'Space around binary operators.'
 
       # The 'r' allows operator||
