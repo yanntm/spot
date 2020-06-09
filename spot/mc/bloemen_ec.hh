@@ -563,6 +563,7 @@ namespace spot
                       // cycle found in SCC and it contains acceptance condition
                       if (twa_->acc().accepting(scc_acc))
                         {
+                          sys_.recycle(it_kripke, tid_);
                           stop_ = true;
                           is_empty_ = false;
                           tm_.stop("DFS thread " + std::to_string(tid_));
