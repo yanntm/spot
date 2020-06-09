@@ -209,7 +209,7 @@ Then run the test suite (or any program you want to study).
 Executing programs using Spot will generate a lot of *.gc* files
 everywhere.  Collect these using lcov:
 
-  % lcov --capture --directory src --output spot.info
+  % lcov --capture --directory spot --output spot.info
 
 Finally generate a coverage report in HTML:
 
@@ -353,7 +353,7 @@ Exporting symbols
     Needless to say, no public header should include such a private
     header.
 
-  * The directory src/priv/ can be used to store files that are
+  * The directory spot/priv/ can be used to store files that are
     globaly private to the library, and that do not really belong to
     other directories.
 
@@ -539,7 +539,7 @@ Formating
       int *p, *q;
     The former declarations also allow you to comment each variable.
 
-  * The include guard for src/somedir/foo.hh is
+  * The include guard for spot/somedir/foo.hh is
     SPOT_SOMEDIR_FOO_HH
 
 Naming
