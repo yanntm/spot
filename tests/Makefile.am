@@ -22,7 +22,7 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) $(BUDDY_CPPFLAGS) \
-              -I$(top_srcdir)/spot/bricks -I$(top_builddir)/lib \
+              -I$(top_builddir)/lib \
 	      -I$(top_srcdir)/lib
 AM_CXXFLAGS = $(WARNING_CXXFLAGS)
 LDADD = $(top_builddir)/spot/libspot.la \
@@ -66,11 +66,11 @@ check_PROGRAMS = \
   core/acc \
   core/bdddict \
   core/bitvect \
+  core/bricks \
   core/checkpsl \
   core/checkta \
   core/consterm \
   core/cube \
-  core/bricks \
   core/emptchk \
   core/equals \
   core/graph \
@@ -109,6 +109,7 @@ check_PROGRAMS = \
 core_acc_SOURCES = core/acc.cc
 core_bdddict_SOURCES  = core/bdddict.cc
 core_bitvect_SOURCES  = core/bitvect.cc
+core_bricks_SOURCES = core/bricks.cc
 core_checkpsl_SOURCES = core/checkpsl.cc
 core_checkta_SOURCES = core/checkta.cc
 core_emptchk_SOURCES  = core/emptchk.cc
@@ -124,7 +125,6 @@ core_taatgba_SOURCES = core/taatgba.cc
 core_tgbagraph_SOURCES = core/twagraph.cc
 core_consterm_SOURCES = core/consterm.cc
 core_cube_SOURCES = core/cube.cc
-core_bricks_SOURCES = core/bricks.cc
 core_equals_SOURCES = core/equalsf.cc
 core_kind_SOURCES = core/kind.cc
 core_length_SOURCES = core/length.cc
@@ -160,7 +160,6 @@ core_twacube_SOURCES = core/twacube.cc
 
 TESTS_tl = \
   core/bare.test \
-  core/cube.test \
   core/parse.test \
   core/parseerr.test \
   core/utf8.test \
@@ -210,6 +209,7 @@ TESTS_kripke = \
 TESTS_misc = \
   core/bdd.test \
   core/bitvect.test \
+  core/bricks.test \
   core/intvcomp.test \
   core/minusx.test \
   core/full.test \
@@ -220,6 +220,7 @@ TESTS_twa = \
   core/acc.test \
   core/acc2.test \
   core/bdddict.test \
+  core/cube.test \
   core/alternating.test \
   core/ltlcross3.test \
   core/ltlcross5.test \
