@@ -534,27 +534,29 @@ static int checked_main()
                 << mc_options.algorithm << '\n';
 
 
+      std::cout << "\nSummary :\n";
+      auto rval = result.value[0];
+      std::for_each(result.value.rbegin(), result.value.rend(),
+                    [&](spot::mc_rvalue n) { rval = rval | n; });
+
+      if (rval == spot::mc_rvalue::NO_DEADLOCK ||
+          rval == spot::mc_rvalue::EMPTY ||
+          rval == spot::mc_rvalue::SUCCESS)
+        std::cout << "no accepting run / counterexample found\n";
+      else if (!mc_options.compute_counterexample)
+        {
+          std::cout << "an accepting run exists "
+                    << "(use -c to print it)" << std::endl;
+          exit_code = 1;
+        }
+      else
+        {
+          std::cout << "an accepting run exists\n" <<  result.trace << '\n';
+          exit_code = 1;
+        }
+
       if (mc_options.csv)
         {
-          std::cout << "\nSummary :\n";
-          auto rval = result.value[0];
-          std::for_each(result.value.rbegin(), result.value.rend(),
-                        [&](spot::mc_rvalue n) { rval = rval | n; });
-
-          if (rval == spot::mc_rvalue::NO_DEADLOCK ||
-              rval == spot::mc_rvalue::EMPTY ||
-              rval == spot::mc_rvalue::SUCCESS)
-            std::cout << "no accepting run / counterexample found\n";
-          else if (!mc_options.compute_counterexample)
-            {
-              std::cout << "an accepting run exists "
-                        << "(use -c to print it)" << std::endl;
-              exit_code = 1;
-            }
-          else
-            std::cout << "an accepting run exists\n" <<  result.trace << '\n';
-
-
           // Grab The informations to display into the CSV
           unsigned c_states = 0;
           unsigned c_trans = 0;
