@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015, 2016, 2018 Laboratoire de Recherche et Developpement de
-// l'Epita (LRDE).
+// Copyright (C) 2015, 2016, 2018, 2020 Laboratoire de Recherche et
+// Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -36,10 +36,7 @@ namespace spot
 
   cube cubeset::alloc() const
   {
-    auto* res = new unsigned int[2*uint_size_];
-    for (unsigned int i = 0; i < 2*uint_size_; ++i)
-      res[i] = 0;
-    return res;
+    return new unsigned int[2*uint_size_]();
   }
 
   void cubeset::set_true_var(cube c, unsigned int x) const
