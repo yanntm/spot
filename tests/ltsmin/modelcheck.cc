@@ -248,7 +248,7 @@ static int checked_main()
   spot::emptiness_check_instantiator_ptr echeck_inst = nullptr;
   int exit_code = 0;
   spot::postprocessor post;
-  spot::formula deadf = spot::formula::tt();
+  spot::formula deadf = spot::formula::ff();
   spot::formula f = nullptr;
   spot::timer_map tm;
 
