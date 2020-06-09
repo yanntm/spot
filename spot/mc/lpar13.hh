@@ -95,6 +95,11 @@ namespace spot
     virtual ~lpar13()
     {
       map.clear();
+      while (!todo.empty())
+        {
+          sys_.recycle(todo.back().it_kripke, tid_);
+          todo.pop_back();
+        }
     }
 
     bool run()
@@ -353,14 +358,19 @@ namespace spot
                           while (!bfs.empty())
                             {
                               auto* e = bfs.front();
+                              sys_.recycle(e->it_kripke, tid_);
                               bfs.pop();
                               delete e;
                             }
+                          sys_.recycle(front->it_kripke, tid_);
+                          delete front;
 
                           // update acceptance
                           acc |= mark;
                           if (twa_->acc().accepting(acc))
-                            return res;
+                            {
+                              return res;
+                            }
 
                           const product_state* q = &(it->first);
                           ctrx_element* root = new ctrx_element({
@@ -386,6 +396,8 @@ namespace spot
               front->it_prop->reset();
               front->it_kripke->next();
             }
+          sys_.recycle(front->it_kripke, tid_);
+          delete front;
         }
 
       // never reach here;
