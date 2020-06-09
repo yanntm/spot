@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2011, 2013, 2014, 2016 Laboratoire de Recherche et
+# Copyright (C) 2011, 2013, 2014, 2016, 2020 Laboratoire de Recherche et
 # Développement de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -56,6 +56,61 @@ run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
 
 run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
     --formula '!(G(dead -> ("P.a==2" | "P.b==3")))'
+
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(G(dead -> ("P.a==2" | "P.b==3")))' -c -p 1
+
+run 1 ../modelcheck --cndfs --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(G(dead -> ("P.a==2" | "P.b==3")))' -c -p 1
+
+run 1 ../modelcheck --swarming --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(G(dead -> ("P.a==2" | "P.b==3")))' -c -p 1
+
+# Test the various combination for atomic propositions
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '(F("P.b == P.a"))' -c -p 1
+
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '(F("P.b < P.a"))' -c -p 1
+
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '(F("P.b <= P.a"))' -c -p 1
+
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '(F("P.b > P.a"))' -c -p 1
+
+run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(F("P.b >= P.a"))' -c -p 1
+
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(F("P.a>4"))' -c -p 1
+
+run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '(F("5==P.a"))' -c -p 1
+
+run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '(F("5<=P.a"))' -c -p 1
+
+run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(F("5>P.a"))' -c -p 1
+
+run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(F("5>=P.a"))' -c -p 1
+
+run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(F("P.b>=P.a"))' -c -p 1
+
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(F("P.b>P.a"))' -c -p 1
+
+run 1 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(F("P.b<P.a"))' -c -p 1
+
+run 0 ../modelcheck --is-empty --selfloopize dead --model $srcdir/finite.dve \
+    --formula  '!(F("P.b<=P.a"))' -c -p 1
+
+run 1 ../modelcheck --model $srcdir/finite.dve \
+    --csv --has-deadlock -p 1 -c
 
 # This used to segfault because of a bug in a
 # function that do not exist anymore.
