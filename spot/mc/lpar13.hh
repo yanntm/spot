@@ -170,6 +170,7 @@ namespace spot
                 }
             }
         }
+      finalize();
       return false;
     }
 
