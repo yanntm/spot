@@ -292,7 +292,7 @@ static int checked_main()
         }
     }
 
-  if (mc_options.model != nullptr)
+  if (mc_options.model != nullptr && !mc_options.force_parallel)
     {
       tm.start("loading ltsmin model");
       try
@@ -326,6 +326,12 @@ static int checked_main()
           tm.stop("kripke output");
           goto safe_exit;
         }
+    }
+  else if (mc_options.force_parallel && mc_options.output)
+    {
+      std::cerr << "Cannot combine 'Ouput options' with parallelism.\n"
+                << "Consider removing -p.\n";
+      goto safe_exit;
     }
 
   if (mc_options.force_parallel == false &&
