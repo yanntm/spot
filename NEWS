@@ -25,6 +25,11 @@ New in spot 2.9.0.dev (not yet released)
     spot-x(7) man page for detail.  Unlike ltl2tgba, ltlsynt defaults
     to simul=0,ba-simul=0,det-simul=0,tls-impl=1,wdba-minimize=2.
 
+  - ltlsynt --aiger option now takes an optional argument indicating
+    how the bdd and states are to be encoded in the aiger.
+    Choices are "INF" for the if-then-else normalform or "ISOP" for
+    relying on irreducible sums of products.
+
   Library:
 
   - Historically, Spot labels automata by Boolean formulas over
