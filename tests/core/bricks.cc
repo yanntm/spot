@@ -18,8 +18,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config.h"
-#include <spot/bricks/brick-hashset>
+
+#include <spot/bricks/brick-assert>
+#include <spot/bricks/brick-bitlevel>
 #include <spot/bricks/brick-hash>
+#include <spot/bricks/brick-hashset>
+#include <spot/bricks/brick-shmem>
+#include <spot/bricks/brick-types>
+
 
 struct both
 {
@@ -74,9 +80,9 @@ static void test_brick_hashmap()
             std::cout << "  [HM -- Sequential] Testing basic\n";
             e.basic();
             std::cout << "  [HM -- Sequential] Testing stress\n";
-            e.basic();
+            e.stress();
             std::cout << "  [HM -- Sequential] Testing set\n";
-            e.basic();
+            e.set();
           }, t1, t2, t3, t4);
 
   brick::t_hashset::Parallel< brick::t_hashset::ConCS > t5;
