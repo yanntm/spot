@@ -150,9 +150,9 @@ on a binary, will be confused by the script.  Example:
 The proper way to run any command on these fake binaries is via
 libtool:
 
-  % ../../libtool --mode=execute file ltl2tgba
+  % ../libtool --mode=execute file ltl2tgba
   /home/adl/git/spot/bin/.libs/lt-ltl2tgba: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.18, not stripped
-  % ../../libtool --mode=execute gdb -q ltl2tgba
+  % ../libtool --mode=execute gdb -q ltl2tgba
   Reading symbols from /home/adl/git/spot/bin/.libs/lt-ltl2tgba...done.
   (gdb) quit
 
@@ -163,7 +163,7 @@ will be found.
 If you are building Spot from the GIT repository, the libtool script
 generated the root of the build tree should be the same as the libtool
 script that is installed on your system.  So you can simply run
-libtool instead of ../../libtool.
+libtool instead of ../libtool.
 
 There is an undocumented feature of libtool that allows you to
 shorthand "libtool --mode=execute" as "libtool execute" or even
@@ -175,6 +175,35 @@ For instance:
 
 (The trailing space makes it possible to follow this command by
 another aliased command.)
+
+If you are using MacOS, the installation of GDB can be hard, even when
+using packages manager like MacPorts or Homebrew. Indeed Apple promotes
+lldb over gdb.
+
+A consequence the following command lines work perfectly on
+pre El Capitan (OS X 10.11) versions
+
+   % ../libtool --mode=execute lldb --  bin/ltl2tgba
+   (lldb) r 'F a'
+
+Nonetheless for newer versions the same commands will (probably)
+raise:
+
+   dyld: Library not loaded: /usr/local/lib/libspot.0.dylib
+      Referenced from: /Users/etienne/src/spot/bin/.libs/ltl2tgba
+      Reason: image not found
+      Process 11024 stopped
+
+This is a side effect of "System Integrity Protection" introduced in El
+Capitan. From this version, calling tools from /usr/bin purges environment
+variables. Consequently the DYLD_LIBRARY_PATH is not exported. Two solutions
+can be envisaged:
+    - [not-recommended] disable "System Integrity Protection"
+    - [recommended]     use the XCode lldb, not located in /usr/bin.
+
+Then, to use lldb on MacOs, just run the following command:
+   % ../libtool --mode=execute /Applications/Xcode.app/Contents/Developer/usr/bin/lldb  --  bin/ltl2tgba
+   (lldb) r 'F a'
 
 
 Profiling with callgrind
