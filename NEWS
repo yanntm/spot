@@ -13,6 +13,11 @@ New in spot 2.9.4.dev  (not yet released)
   - ltlsynt learned --print-game-hoa to output its internal parity
     game in the HOA format (with an extension described below).
 
+  - ltlsynt --aiger option now takes an optional argument indicating
+    how the bdd and states are to be encoded in the aiger output.
+    Choices are "ITE" for the if-then-else normal form or "ISOP" for
+    relying on irreducible sums of products.
+
   Library:
 
   - Historically, Spot labels automata by Boolean formulas over

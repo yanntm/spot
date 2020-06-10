@@ -93,8 +93,10 @@ static const argp_option options[] =
       "print the parity game in the HOA format, do not solve it", 0},
     { "realizability", OPT_REAL, nullptr, 0,
       "realizability only, do not compute a winning strategy", 0},
-    { "aiger", OPT_PRINT_AIGER, nullptr, 0,
-      "prints the winning strategy as an AIGER circuit", 0},
+    { "aiger", OPT_PRINT_AIGER, "ITE|ISOP", OPTION_ARG_OPTIONAL,
+      "prints a winning strategy as an AIGER circuit.  With argument \"ISOP\""
+      " conditions are converted to DNF, while the default \"ITE\" uses the "
+      "if-the-else normal form.", 0},
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "verbose mode", -1 },
     { "csv", OPT_CSV, "[>>]FILENAME", OPTION_ARG_OPTIONAL,
@@ -132,7 +134,7 @@ static bool opt_print_pg = false;
 static bool opt_print_hoa = false;
 static const char* opt_print_hoa_args = nullptr;
 static bool opt_real = false;
-static bool opt_print_aiger = false;
+static const char* opt_print_aiger = nullptr;
 static spot::option_map extra_options;
 
 static double trans_time = 0.0;
@@ -542,7 +544,7 @@ namespace
 
               // output the winning strategy
               if (opt_print_aiger)
-                spot::print_aiger(std::cout, strat_aut);
+                spot::print_aiger(std::cout, strat_aut, opt_print_aiger);
               else
                 {
                   automaton_printer printer;
@@ -612,7 +614,7 @@ parse_opt(int key, char* arg, struct argp_state*)
       opt_print_hoa_args = arg;
       break;
     case OPT_PRINT_AIGER:
-      opt_print_aiger = true;
+      opt_print_aiger = arg ? arg : "INF";
       break;
     case OPT_REAL:
       opt_real = true;
