@@ -184,51 +184,6 @@ static bool verbose = false;
 
 namespace
 {
-
-  // Ensures that the game is complete for player 0.
-  // Also computes the owner of each state (false for player 0, i.e. env).
-  // Initial state belongs to Player 0 and the game is turn-based.
-  static std::vector<bool>
-  complete_env(spot::twa_graph_ptr& arena)
-  {
-    unsigned sink_env = arena->new_state();
-    unsigned sink_con = arena->new_state();
-
-    auto um = arena->acc().unsat_mark();
-    if (!um.first)
-      throw std::runtime_error("game winning condition is a tautology");
-    arena->new_edge(sink_con, sink_env, bddtrue, um.second);
-    arena->new_edge(sink_env, sink_con, bddtrue, um.second);
-
-    std::vector<bool> seen(arena->num_states(), false);
-    std::vector<unsigned> todo({arena->get_init_state_number()});
-    std::vector<bool> owner(arena->num_states(), false);
-    owner[arena->get_init_state_number()] = false;
-    owner[sink_env] = true;
-    while (!todo.empty())
-      {
-        unsigned src = todo.back();
-        todo.pop_back();
-        seen[src] = true;
-        bdd missing = bddtrue;
-        for (const auto& e: arena->out(src))
-          {
-            if (!owner[src])
-              missing -= e.cond;
-
-            if (!seen[e.dst])
-              {
-                owner[e.dst] = !owner[src];
-                todo.push_back(e.dst);
-              }
-          }
-        if (!owner[src] && missing != bddfalse)
-          arena->new_edge(src, sink_con, missing, um.second);
-      }
-
-    return owner;
-  }
-
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
@@ -237,8 +192,6 @@ namespace
     auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
                                       false, true, true, false);
     dpa->merge_edges();
-    if (opt_print_pg)
-      dpa = spot::sbacc(dpa);
     spot::reduce_parity_here(dpa, true);
     spot::change_parity_here(dpa, spot::parity_kind_max,
                              spot::parity_style_odd);
@@ -251,54 +204,6 @@ namespace
         }()));
     assert(spot::is_deterministic(dpa));
     return dpa;
-  }
-
-  // Construct a smaller automaton, filtering out states that are not
-  // accessible.  Also merge back pairs of p --(i)--> q --(o)--> r
-  // transitions to p --(i&o)--> r.
-  static spot::twa_graph_ptr
-  strat_to_aut(const spot::parity_game& pg,
-               const spot::parity_game::strategy_t& strat,
-               const spot::twa_graph_ptr& dpa,
-               bdd all_outputs)
-  {
-    auto aut = spot::make_twa_graph(dpa->get_dict());
-    aut->copy_ap_of(dpa);
-    std::vector<unsigned> todo{pg.get_init_state_number()};
-    std::vector<int> pg2aut(pg.num_states(), -1);
-    aut->set_init_state(aut->new_state());
-    pg2aut[pg.get_init_state_number()] = aut->get_init_state_number();
-    while (!todo.empty())
-      {
-        unsigned s = todo.back();
-        todo.pop_back();
-        for (auto& e1: dpa->out(s))
-          {
-            unsigned i = 0;
-            for (auto& e2: dpa->out(e1.dst))
-              {
-                bool self_loop = false;
-                if (e1.dst == s || e2.dst == e1.dst)
-                  self_loop = true;
-                if (self_loop || strat.at(e1.dst) == i)
-                  {
-                    bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
-                    if (pg2aut[e2.dst] == -1)
-                      {
-                        pg2aut[e2.dst] = aut->new_state();
-                        todo.push_back(e2.dst);
-                      }
-                    aut->new_edge(pg2aut[s], pg2aut[e2.dst],
-                                  (e1.cond & out), {});
-                    break;
-                  }
-                ++i;
-              }
-          }
-      }
-    aut->purge_dead_states();
-    aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
-    return aut;
   }
 
   static void
@@ -543,8 +448,7 @@ namespace
       nb_states_dpa = dpa->num_states();
       if (want_time)
         sw.start();
-      auto owner = complete_env(dpa);
-      auto pg = spot::parity_game(dpa, owner);
+      make_arena(dpa, all_outputs);
       if (want_time)
         bgame_time = sw.stop();
       if (verbose)
@@ -553,22 +457,20 @@ namespace
       if (opt_print_pg)
         {
           timer.stop();
-          pg.print(std::cout);
+          print_pg(std::cout, dpa);
           return 0;
         }
 
-      spot::parity_game::strategy_t strategy[2];
-      spot::parity_game::region_t winning_region[2];
       if (want_time)
         sw.start();
-      pg.solve(winning_region, strategy);
+      bool realizable = solve_parity_game(dpa);
       if (want_time)
         solve_time = sw.stop();
       if (verbose)
         std::cerr << "parity game solved in " << solve_time << " seconds\n";
-      nb_states_parity_game = pg.num_states();
+      nb_states_parity_game = dpa->num_states();
       timer.stop();
-      if (winning_region[1].count(pg.get_init_state_number()))
+      if (realizable)
         {
           std::cout << "REALIZABLE\n";
           if (!opt_real)
@@ -576,7 +478,7 @@ namespace
               if (want_time)
                 sw.start();
               auto strat_aut =
-                strat_to_aut(pg, strategy[1], dpa, all_outputs);
+                  apply_strategy(dpa, true, false, true);
               if (want_time)
                 strat2aut_time = sw.stop();
 

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -27,89 +27,60 @@
 
 #include <bddx.h>
 #include <spot/twa/twagraph.hh>
-#include <spot/twaalgos/parity.hh>
 
 namespace spot
 {
-
-class SPOT_API parity_game
-{
-private:
-  const const_twa_graph_ptr arena_;
-  const std::vector<bool> owner_;
-
-public:
-  /// \a parity_game provides an interface to manipulate a colorized parity
-  /// automaton as a parity game, including methods to solve the game.
-  /// The input automaton (arena) should be colorized and have a max-odd parity
-  /// acceptance condition.
+  /// \brief Preprocessing step for parity game solving
   ///
-  /// \param arena the underlying parity automaton
-  /// \param owner a vector of Booleans indicating the owner of each state:
-  ///   true stands for Player 1, false stands for Player 0.
-  parity_game(const twa_graph_ptr& arena, const std::vector<bool>& owner);
+  /// Takes an automaton that is already (!) correctly split
+  /// and computes the owner of each state. This information is stored
+  /// as the named property "state-player"
+  /// \param arena    automaton representing the arena
+  /// \param outs     conjuction of all output ap.
+  SPOT_API void
+  make_arena(twa_graph_ptr& arena, bdd outs);
 
-  unsigned num_states() const
-  {
-    return arena_->num_states();
-  }
+  /// \brief Solves the parity game
+  ///
+  /// Takes an arena given as an automaton
+  /// and  computes the winning-region for player and environment
+  /// as well as a (memoryless) winning-strategy for each player.
+  /// These attributes are stored in the named properties
+  /// "winning-region" and "strategy". To solve the game we use a variant of
+  /// Zielonka's algorithm \cite zielonka.98.tcs inspired by the implementation
+  /// \cite van2018oink
+  /// \param arena correctly split automaton
+  /// \return whether the player wins the initial state
+  SPOT_API bool
+  solve_parity_game(const twa_graph_ptr& arena);
 
-  unsigned get_init_state_number() const
-  {
-    return arena_->get_init_state_number();
-  }
+  /// \brief  Reduces a solved parity to a strategy automaton
+  ///
+  /// Takes a solved parity game (with the named properties winning-region and
+  /// strategy filled, "synthesis-outputs" must also be set) and creates a new
+  /// automaton that corresponds to the restriction of the initial
+  /// automaton to the strategy of the player
+  /// \param arena Solved arena to be transformed
+  /// \param unsplit whether to merge intermediate states or keep the two player
+  ///                layout
+  /// \param keep_acc whether or not to keep acceptance conditions on the
+  ///                 automaton and the edges
+  /// \param leave_choice whether to select a minterm in the condition for
+  ///                      outs or leave the original condition
+  SPOT_API twa_graph_ptr
+  apply_strategy(const twa_graph_ptr& arena,
+                 bool unsplit=true, bool keep_acc=false,
+                 bool leave_choice=false);
 
-  internal::state_out<const twa_graph::graph_t>
-  out(unsigned src) const
-  {
-    return arena_->out(src);
-  }
-
-  internal::state_out<const twa_graph::graph_t>
-  out(unsigned src)
-  {
-    return arena_->out(src);
-  }
-
-  bool owner(unsigned src) const
-  {
-    return owner_[src];
-  }
-
-  unsigned max_parity() const
-  {
-    unsigned max_parity = 0;
-      for (const auto& e: arena_->edges())
-        max_parity = std::max(max_parity, e.acc.max_set());
-    SPOT_ASSERT(max_parity);
-    return max_parity - 1;
-  }
-
-  /// Print the parity game in PGSolver's format.
-  void print(std::ostream& os);
-
-  typedef std::unordered_set<unsigned> region_t;
-  // Map state number to index of the transition to take.
-  typedef std::unordered_map<unsigned, unsigned> strategy_t;
-
-  /// Compute the winning strategy and winning region of this game for player
-  /// 1 using Zielonka's recursive algorithm. \cite zielonka.98.tcs
-  void solve(region_t (&w)[2], strategy_t (&s)[2]) const;
-
-private:
-  typedef twa_graph::graph_t::edge_storage_t edge_t;
-
-  // Compute (in place) a set of states from which player can force a visit
-  // through set, and a strategy to do it.
-  // if attr_max is true, states that can force a visit through an edge with
-  // max parity are also counted in.
-  strategy_t attractor(const region_t& subgame, region_t& set,
-                       unsigned max_parity, int odd,
-                       bool attr_max = false) const;
-
-  // Compute the winning strategy and winning region for both players.
-  void solve_rec(region_t& subgame, unsigned max_parity,
-                 region_t (&w)[2], strategy_t (&s)[2]) const;
-};
-
+  /// \ingroup twa_io
+  /// \brief Prints the arena in parity-game file format
+  ///
+  /// Takes an arena and outputs it as a parity game. Attention, parity-games
+  /// have state-based acceptance. To facilitate output,
+  /// this function does _NOT_ really on the named property "state-owner"
+  /// as all computations on arenas are done using transition-based acceptance.
+  /// \param os   The output stream to print on.
+  /// \param aut  arena to output
+  SPOT_API std::ostream&
+  print_pg(std::ostream& os, const twa_ptr& aut);
 }
