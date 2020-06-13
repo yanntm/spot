@@ -123,12 +123,12 @@ namespace spot
     {
       while (!todo_blue_.empty())
         {
-          sys_.recycle(todo_blue_.back().it_kripke, tid_);
+          sys_.recycle_iterator(todo_blue_.back().it_kripke, tid_);
           todo_blue_.pop_back();
         }
       while (!todo_red_.empty())
         {
-          sys_.recycle(todo_red_.back().it_kripke, tid_);
+          sys_.recycle_iterator(todo_red_.back().it_kripke, tid_);
           todo_red_.pop_back();
         }
     }
@@ -183,7 +183,7 @@ namespace spot
       dfs_ = todo_blue_.size()  > dfs_ ? todo_blue_.size() : dfs_;
 
       todo_blue_.back().st.colors->l[tid_].cyan = false;
-      sys_.recycle(todo_blue_.back().it_kripke, tid_);
+      sys_.recycle_iterator(todo_blue_.back().it_kripke, tid_);
       todo_blue_.pop_back();
       return true;
     }
@@ -220,7 +220,7 @@ namespace spot
         todo_blue_.size() + todo_red_.size() : dfs_;
 
 
-      sys_.recycle(todo_red_.back().it_kripke, tid_);
+      sys_.recycle_iterator(todo_red_.back().it_kripke, tid_);
       todo_red_.pop_back();
       return true;
     }

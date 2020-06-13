@@ -529,7 +529,7 @@ namespace spot
                       todo_.push_back(w.second);
                       Rp_.push_back(w.second);
                       ++states_;
-                      sys_.recycle(it_kripke, tid_);
+                      sys_.recycle_iterator(it_kripke, tid_);
                       goto bloemen_recursive_start;
                     }
                   else if (w.first == uf::claim_status::CLAIM_FOUND)
@@ -568,7 +568,7 @@ namespace spot
                   forward_iterators(it_kripke, it_prop, false);
                 }
               uf_.remove_from_list(v_prime);
-              sys_.recycle(it_kripke, tid_);
+              sys_.recycle_iterator(it_kripke, tid_);
             }
 
           if (todo_.back() == Rp_.back())
