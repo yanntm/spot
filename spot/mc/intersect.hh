@@ -120,7 +120,7 @@ namespace spot
                                              newtop,
                                              map[newtop])))
                 {
-                  sys_.recycle(todo.back().it_kripke, tid_);
+                  sys_.recycle_iterator(todo.back().it_kripke, tid_);
                   // FIXME a local storage for twacube iterator?
                   todo.pop_back();
                   if (SPOT_UNLIKELY(self().counterexample_found()))
