@@ -396,7 +396,7 @@ State: 2
 [!0] 2
 --END--
 EOF
-ltlsynt -x tls-impl=0 -f '!XXF(p0 & (p0 M Gp0))' > out
+ltlsynt --outs=p0 -x tls-impl=0 -f '!XXF(p0 & (p0 M Gp0))' > out
 diff out exp
 
 cat >exp <<EOF
@@ -413,10 +413,10 @@ State: 0
 [!0] 0
 --END--
 EOF
-ltlsynt -x tls-impl=1 -f '!XXF(p0 & (p0 M Gp0))' > out
+ltlsynt --outs=p0 -x tls-impl=1 -f '!XXF(p0 & (p0 M Gp0))' > out
 diff out exp
 
-ltlsynt -f '!XXF(p0 & (p0 M Gp0))' > out
+ltlsynt --outs=p0 -f '!XXF(p0 & (p0 M Gp0))' > out
 diff out exp
 
 f='Fp0 U XX((p0 & F!p1) | (!p0 & Gp1))'

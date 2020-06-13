@@ -184,6 +184,14 @@ static bool verbose = false;
 
 namespace
 {
+
+  auto str_tolower = [] (std::string s)
+    {
+      std::transform(s.begin(), s.end(), s.begin(),
+                     [](unsigned char c){ return std::tolower(c); });
+      return s;
+    };
+
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
@@ -297,20 +305,14 @@ namespace
       auto aut = trans_.run(&f);
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
-      for (unsigned i = 0; i < input_aps_.size(); ++i)
+      for (const auto& ap_i : input_aps_)
         {
-          std::ostringstream lowercase;
-          for (char c: input_aps_[i])
-            lowercase << (char)std::tolower(c);
-          unsigned v = aut->register_ap(spot::formula::ap(lowercase.str()));
+          unsigned v = aut->register_ap(spot::formula::ap(ap_i));
           all_inputs &= bdd_ithvar(v);
         }
-      for (unsigned i = 0; i < output_aps_.size(); ++i)
+      for (const auto& ap_i : output_aps_)
         {
-          std::ostringstream lowercase;
-          for (char c: output_aps_[i])
-            lowercase << (char)std::tolower(c);
-          unsigned v = aut->register_ap(spot::formula::ap(lowercase.str()));
+          unsigned v = aut->register_ap(spot::formula::ap(ap_i));
           all_outputs &= bdd_ithvar(v);
         }
       if (want_time)
@@ -345,7 +347,7 @@ namespace
                           << paritize_time << " seconds\n";
               if (want_time)
                 sw.start();
-              dpa = split_2step(tmp, all_inputs);
+              dpa = split_2step(tmp, all_inputs, all_outputs, false);
               spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
@@ -368,7 +370,7 @@ namespace
                           << " states\n";
               if (want_time)
                 sw.start();
-              dpa = split_2step(aut, all_inputs);
+              dpa = split_2step(aut, all_inputs, all_outputs, false);
               spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
@@ -382,7 +384,7 @@ namespace
             {
               if (want_time)
                 sw.start();
-              auto split = split_2step(aut, all_inputs);
+              auto split = split_2step(aut, all_inputs, all_outputs, true);
               if (want_time)
                 split_time = sw.stop();
               if (verbose)
@@ -411,7 +413,7 @@ namespace
             {
               if (want_time)
                 sw.start();
-              dpa = split_2step(aut, all_inputs);
+              dpa = split_2step(aut, all_inputs, all_outputs, false);
               dpa->merge_states();
               if (want_time)
                 split_time = sw.stop();
@@ -531,7 +533,7 @@ parse_opt(int key, char* arg, struct argp_state*)
         while (std::getline(aps, ap, ','))
           {
             ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            input_aps.push_back(ap);
+            input_aps.push_back(str_tolower(ap));
           }
         break;
       }
@@ -542,7 +544,7 @@ parse_opt(int key, char* arg, struct argp_state*)
         while (std::getline(aps, ap, ','))
           {
             ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            output_aps.push_back(ap);
+            output_aps.push_back(str_tolower(ap));
           }
         break;
       }

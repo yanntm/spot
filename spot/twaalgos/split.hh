@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017, 2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2017, 2018, 2020 Laboratoire de Recherche et Développement
 // de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -39,14 +39,20 @@ namespace spot
   /// into a set of transitions of the form
   ///     p -- {a} --> (p,a) -- o --> q
   /// for each a in cond \cap 2^2^I
-  /// and where o = (cond & a) \cap 2^2^(AP - I)
+  /// and where o = (cond & a) \cap 2^2^(O)
   ///
   /// By definition, the states p are deterministic, only the states of the form
   /// (p,a) may be non-deterministic.
   /// This function is used to transform an automaton into a turn-based game in
   /// the context of LTL reactive synthesis.
+  /// \param aut          automaton to be transformed
+  /// \param input_bdd    conjunction of all input AP
+  /// \param output_bdd   conjunction of all output AP
+  /// \param complete_env Whether the automaton should be complete for the
+  ///                     environment, i.e. the player of I
   SPOT_API twa_graph_ptr
-  split_2step(const const_twa_graph_ptr& aut, bdd input_bdd);
+  split_2step(const const_twa_graph_ptr& aut, const bdd& input_bdd,
+      const bdd& output_bdd, bool complete_env);
 
   /// \brief the reverse of split_2step
   SPOT_API twa_graph_ptr
