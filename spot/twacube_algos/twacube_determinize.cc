@@ -19,6 +19,8 @@
 
 #include "config.h"
 
+#include <atomic>
+#include <bitset>
 #include <deque>
 #include <map>
 #include <mutex>
@@ -35,6 +37,9 @@ namespace spot
 {
   namespace
   {
+    static std::bitset<32> active_states;
+    static std::atomic<bool> stop = false;
+
     // TODO: remove this when multithreaded
     const unsigned THREAD_ID = 0;
 
@@ -510,7 +515,9 @@ namespace spot
                        unsigned& sets,
                        std::mutex& seen_mut,
                        std::mutex& todo_mut,
-                       std::mutex& res_mut)
+                       std::mutex& res_mut,
+                       std::bitset<32>& active_threads,
+                       std::atomic<bool>& stop)
       : aut_(aut)
       , res_(res)
       , id_(id)
@@ -521,6 +528,8 @@ namespace spot
       , seen_mut_(seen_mut)
       , todo_mut_(todo_mut)
       , res_mut_(res_mut)
+      , active_threads_(active_threads)
+      , stop_(stop)
     {}
 
     void run()
@@ -556,17 +565,30 @@ namespace spot
       //     for each possible safra successor,
       //         compute successor emitted color
       //         create transition in res automaton, with color
-      while (true)
+      while (!stop_.load(std::memory_order_relaxed))
         {
           safra_state curr;
           unsigned src_num;
           {
             std::lock_guard<std::mutex> lock(todo_mut_);
             if (todo_.empty())
-              break;
-            curr = todo_.front().first;
-            src_num = todo_.front().second;
-            todo_.pop_front();
+              {
+                active_threads_[id_] = 0;
+                if (active_threads_.none())
+                  {
+                    stop_ = true;
+                    break;
+                  }
+
+                continue;
+              }
+            else
+              {
+                active_threads_[id_] = 1;
+                curr = todo_.front().first;
+                src_num = todo_.front().second;
+                todo_.pop_front();
+              }
           }
 
           const auto letters = get_letters(curr, supports_, cs);
@@ -610,6 +632,8 @@ namespace spot
     std::mutex& seen_mut_;
     std::mutex& todo_mut_;
     std::mutex& res_mut_;
+    std::bitset<32>& active_threads_;
+    std::atomic<bool>& stop_;
   };
 
   twacube_ptr
@@ -682,6 +706,8 @@ namespace spot
     std::mutex seen_mut;
     std::mutex todo_mut;
     std::mutex res_mut;
+    std::bitset<32> active_threads;
+    std::atomic<bool> stop = false;
     for (size_t i = 0; i < nb_threads; ++i)
       {
         det_threads.emplace_back(aut,
@@ -693,7 +719,9 @@ namespace spot
                                  sets[i],
                                  seen_mut,
                                  todo_mut,
-                                 res_mut);
+                                 res_mut,
+                                 active_threads,
+                                 stop);
         threads.push_back(std::thread(&determinize_thread::run, &det_threads[i]));
       }
 
