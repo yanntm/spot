@@ -143,6 +143,15 @@ namespace spot
       if (!b)
         p_.deallocate(ref);
 
+      // Rare case: no more threads is using the state
+      int cnt = sys_.unbox_bitstate_metadata(s)[0];
+      if (SPOT_UNLIKELY(cnt == 0))
+        return false;
+
+      // The state has already been explored and inserted in the filter
+      if (bloom_filter_.contains(state_hash_(s)))
+        return false;
+
       // The state has been mark dead by another thread
       for (unsigned i = 0; !b && i < nb_th_; ++i)
         if ((*it)->colors[i] == static_cast<int>(CLOSED))
@@ -177,10 +186,23 @@ namespace spot
       // Clear bitstate metadata
       State st = todo_.back().s;
       int* unbox_s = sys_.unbox_bitstate_metadata(st);
-      int tmp = unbox_s[0];
-      while (tmp & (1 << tid_))
+      int cnt = unbox_s[0];
+      while (cnt & (1 << tid_))
       {
-        tmp = __atomic_fetch_and(unbox_s, ~(1 << tid_), __ATOMIC_RELAXED);
+        cnt = __atomic_fetch_and(unbox_s, ~(1 << tid_), __ATOMIC_RELAXED);
+      }
+
+      // Insert the state into the filter
+      bloom_filter_.insert(state_hash_(st));
+
+      // Release memory if no thread is using the state
+      if (cnt == 0)
+      {
+        deadlock_pair* p = (deadlock_pair*) p_pair_.allocate();
+        p->st = st;
+        map_.erase(p, pair_hasher());
+        sys_.recycle_state(st);
+        p_pair_.deallocate(p);
       }
 
       // Don't avoid pop but modify the status of the state
