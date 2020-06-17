@@ -135,21 +135,33 @@ namespace spot
       deadlock_pair* v = (deadlock_pair*) p_pair_.allocate();
       v->st = s;
       v->colors = ref;
-      auto it = map_.insert(v, pair_hasher());
-      bool b = it.isnew();
 
-      // Insertion failed, delete element
+
+      auto it = map_.find(v, pair_hasher());
+
+      // State is not in table
+      if (!it.isnew() && !it.valid())
+        {
+          // But is in bloom ..
+          // EASY CHECK : removing this line desactivate fully the bitstate
+          if (bloom_filter_.contains(state_hash_(s)))
+            return false;
+
+          // otherwise we have to insert it in table
+          it = map_.insert(v, pair_hasher());
+          std::cout << "Insert\n";
+        }
+
+      bool b = it.isnew();
+      // Insertion or lookup failed, delete element
       // FIXME Should we add a local cache to avoid useless allocations?
       if (!b)
         p_.deallocate(ref);
 
+
       // Rare case: no more threads is using the state
       int cnt = sys_.unbox_bitstate_metadata(s)[0];
       if (SPOT_UNLIKELY(cnt == 0))
-        return false;
-
-      // The state has already been explored and inserted in the filter
-      if (bloom_filter_.contains(state_hash_(s)))
         return false;
 
       // The state has been mark dead by another thread
@@ -195,20 +207,22 @@ namespace spot
       // Insert the state into the filter
       bloom_filter_.insert(state_hash_(st));
 
-      // Release memory if no thread is using the state
-      if (cnt == 0)
-      {
-        deadlock_pair* p = (deadlock_pair*) p_pair_.allocate();
-        p->st = st;
-        map_.erase(p, pair_hasher());
-        sys_.recycle_state(st);
-        p_pair_.deallocate(p);
-      }
 
       // Don't avoid pop but modify the status of the state
       // during backtrack
       refs_.back()[tid_] = CLOSED;
       refs_.pop_back();
+
+
+      // Release memory if no thread is using the state
+      // if (cnt == 0)
+      // {
+      //   deadlock_pair* p = (deadlock_pair*) p_pair_.allocate();
+      //   p->st = st;
+      //   //map_.erase(p, pair_hasher());
+      //   //sys_.recycle_state(st);
+      //   p_pair_.deallocate(p);
+      // }
       return true;
     }
 
