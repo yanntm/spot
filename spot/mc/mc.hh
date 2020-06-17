@@ -30,6 +30,7 @@
 #include <spot/mc/bloemen_ec.hh>
 #include <spot/mc/cndfs.hh>
 #include <spot/mc/deadlock.hh>
+#include <spot/mc/deadlock_bitstate.hh>
 #include <spot/mc/ec.hh>
 #include <spot/misc/common.hh>
 #include <spot/misc/timer.hh>
@@ -88,16 +89,16 @@ namespace spot
   has_deadlock(kripke_ptr sys)
   {
     spot::timer_map tm;
-    using algo_name = spot::swarmed_deadlock<State, Iterator, Hash, Equal>;
+    using algo_name = spot::swarmed_deadlock_bitstate<State, Iterator, Hash, Equal>;
 
-    unsigned  nbth = sys->get_threads();
+    unsigned  nbth = 1;//sys->get_threads();
     typename algo_name::shared_map map;
     std::atomic<bool> stop(false);
 
     tm.start("Initialisation");
     std::vector<algo_name*> swarmed(nbth);
     for (unsigned i = 0; i < nbth; ++i)
-      swarmed[i] = new algo_name(*sys, map, i, stop);
+      swarmed[i] = new algo_name(*sys, map, 10000000, i, stop);
     tm.stop("Initialisation");
 
     std::mutex iomutex;
@@ -145,7 +146,7 @@ namespace spot
 
     std::vector<deadlock_stats> stats;
     bool has_deadlock = false;
-    for (unsigned i = 0; i < sys->get_threads(); ++i)
+    for (unsigned i = 0; i < nbth; ++i)
       {
         has_deadlock |= swarmed[i]->has_deadlock();
         stats.push_back(swarmed[i]->stats());
