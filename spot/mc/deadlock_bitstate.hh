@@ -121,7 +121,6 @@ namespace spot
 
     bool push(State s)
     {
-      // Track maximum dfs size
       // Prepare data for a newer allocation
       int* ref = (int*) p_.allocate();
       for (unsigned i = 0; i < nb_th_; ++i)
@@ -149,35 +148,32 @@ namespace spot
       if (!b)
         p_.deallocate(ref);
 
-
-      // Rare case: no more threads is using the state
-      // FIXME should be an atomic read.
-      int cnt = sys_.unbox_bitstate_metadata(s)[0];
-      if (SPOT_UNLIKELY(cnt == 0))
-        return false;
-
       // The state has been mark dead by another thread
       for (unsigned i = 0; !b && i < nb_th_; ++i)
-        if (((*it)).colors[i] == static_cast<int>(CLOSED))
+        if (it->colors[i] == static_cast<int>(CLOSED))
           return false;
 
       // The state has already been visited by the current thread
-      if ((*it).colors[tid_] == static_cast<int>(OPEN))
+      if (it->colors[tid_] == static_cast<int>(OPEN))
+        return false;
+
+      // Rare case: no more threads is using the state
+      int* unbox_s = sys_.unbox_bitstate_metadata(it->st);
+      int cnt = __atomic_load_n(&unbox_s[0], __ATOMIC_RELAXED);
+      if (SPOT_UNLIKELY(cnt == 0))
         return false;
 
       // Set bitstate metadata
-      int* unbox_s = sys_.unbox_bitstate_metadata((*it).st);
-      int tmp = unbox_s[0];
-      while (!(tmp & (1 << tid_)))
+      while (!(cnt & (1 << tid_)))
       {
-        tmp = __atomic_fetch_or(unbox_s, (1 << tid_), __ATOMIC_RELAXED);
+        cnt = __atomic_fetch_or(unbox_s, (1 << tid_), __ATOMIC_RELAXED);
       }
 
       // Keep a ptr over the array of colors
-      refs_.push_back((*it).colors);
+      refs_.push_back(it->colors);
 
       // Mark state as visited.
-      (*it).colors[tid_] = OPEN;
+      it->colors[tid_] = OPEN;
       ++states_;
       return true;
     }
@@ -190,7 +186,7 @@ namespace spot
       // Clear bitstate metadata
       State st = todo_.back().s;
       int* unbox_s = sys_.unbox_bitstate_metadata(st);
-      int cnt = unbox_s[0];
+      int cnt = __atomic_load_n(&unbox_s[0], __ATOMIC_RELAXED);
       while (cnt & (1 << tid_))
       {
         cnt = __atomic_fetch_and(unbox_s, ~(1 << tid_), __ATOMIC_RELAXED);
@@ -203,8 +199,6 @@ namespace spot
       // during backtrack
       refs_.back()[tid_] = CLOSED;
       refs_.pop_back();
-
-
 
       // Release memory if no thread is using the state
       if (cnt == 0)
