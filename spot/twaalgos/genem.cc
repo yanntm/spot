@@ -84,40 +84,35 @@ namespace spot
       acc_cond acc = autacc.restrict_to(sets);
       acc = acc.remove(si.common_sets_of(scc), false);
 
-      auto generic_recurse =
-        [&] (const acc_cond& subacc)
-        {
-          int fo = (SPOT_UNLIKELY(genem_version == spot28)
-                    ? acc.fin_one() : subacc.fin_one());
-          assert(fo >= 0);
-          // Try to accept when Fin(fo) == true
-          acc_cond::mark_t fo_m = {(unsigned) fo};
-          if (!scc_split_check
-              (si, scc, subacc.remove(fo_m, true), run, fo_m))
-            return false;
-          // Try to accept when Fin(fo) == false
-          if (!is_scc_empty(si, scc, subacc.force_inf(fo_m), run, tocut))
-            return false;
-          return true;
-        };
-
       if (SPOT_LIKELY(genem_version == spot29))
-        {
-          acc_cond::acc_code rest = acc_cond::acc_code::f();
-          for (const acc_cond& disjunct: acc.top_disjuncts())
-            if (acc_cond::mark_t fu = disjunct.fin_unit())
-              {
-                if (!scc_split_check
-                    (si, scc, disjunct.remove(fu, true), run, fu))
-                  return false;
-              }
-            else
-              {
-                rest |= disjunct.get_acceptance();
-              }
-          if (!rest.is_f() && !generic_recurse(acc_cond(acc.num_sets(), rest)))
-            return false;
-        }
+        do
+          {
+            acc_cond::acc_code rest = acc_cond::acc_code::f();
+            for (const acc_cond& disjunct: acc.top_disjuncts())
+              if (acc_cond::mark_t fu = disjunct.fin_unit())
+                {
+                  if (!scc_split_check
+                      (si, scc, disjunct.remove(fu, true), run, fu))
+                    return false;
+                }
+              else
+                {
+                  rest |= disjunct.get_acceptance();
+                }
+            if (rest.is_f())
+              break;
+            acc_cond subacc(acc.num_sets(), std::move(rest));
+            int fo = subacc.fin_one();
+            assert(fo >= 0);
+            // Try to accept when Fin(fo) == true
+            acc_cond::mark_t fo_m = {(unsigned) fo};
+            if (!scc_split_check
+                (si, scc, subacc.remove(fo_m, true), run, fo_m))
+              return false;
+            // Try to accept when Fin(fo) == false
+            acc = subacc.force_inf(fo_m);
+          }
+        while (!acc.is_f());
       else
         {
           for (const acc_cond& disjunct: acc.top_disjuncts())
@@ -129,7 +124,17 @@ namespace spot
               }
             else
               {
-                if (!generic_recurse(disjunct))
+                int fo = (SPOT_UNLIKELY(genem_version == spot28)
+                          ? acc.fin_one() : disjunct.fin_one());
+                assert(fo >= 0);
+                // Try to accept when Fin(fo) == true
+                acc_cond::mark_t fo_m = {(unsigned) fo};
+                if (!scc_split_check
+                    (si, scc, disjunct.remove(fo_m, true), run, fo_m))
+                  return false;
+                // Try to accept when Fin(fo) == false
+                if (!is_scc_empty(si, scc, disjunct.force_inf(fo_m),
+                                  run, tocut))
                   return false;
               }
         }
