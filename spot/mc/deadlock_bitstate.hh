@@ -231,10 +231,13 @@ namespace spot
     void run()
     {
       setup();
-      State initial = push(sys_.initial(tid_));
+      State tmp = sys_.initial(tid_);
+      State initial = push(tmp);
       if (SPOT_LIKELY(initial != nullptr))
         {
           todo_.push_back({initial, sys_.succ(initial, tid_), transitions_});
+          if (tmp != initial)
+            sys_.recycle_state(tmp);
         }
 
       while (!todo_.empty() && !stop_.load(std::memory_order_relaxed))
@@ -253,12 +256,15 @@ namespace spot
           else
             {
               ++transitions_;
-              State dst = push(todo_.back().it->state());
+              tmp = todo_.back().it->state();
+              State dst = push(tmp);
 
               if (SPOT_LIKELY(dst != nullptr))
                 {
                   todo_.back().it->next();
                   todo_.push_back({dst, sys_.succ(dst, tid_), transitions_});
+                  if (tmp != dst)
+                    sys_.recycle_state(tmp);
                 }
               else
                 {
