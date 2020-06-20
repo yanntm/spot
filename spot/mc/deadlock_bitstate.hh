@@ -206,8 +206,15 @@ namespace spot
       if (cnt == 0)
       {
         deadlock_pair p { st, nullptr };
-        map_.erase(p, pair_hasher());
-        sys_.recycle_state(st);
+        cnt = __atomic_fetch_or(unbox_s, (1 << tid_), __ATOMIC_SEQ_CST);
+        if (cnt == (1 << tid_))
+          {
+            map_.erase(p, pair_hasher());
+            sys_.recycle_state(st);
+          }
+
+        // FIXME Otherwise means that state will be foreve in thread pool
+        // We can try to coordinate threads to avoid this situation
       }
       return true;
     }
