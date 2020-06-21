@@ -159,7 +159,7 @@ checked_main()
 
       tm.start("determinize twacube");
       {
-        cube_det_aut = twacube_determinize(cube_aut,  std::thread::hardware_concurrency());
+        cube_det_aut = twacube_determinize(cube_aut, mc_options.nb_threads);
       }
       tm.stop("determinize twacube");
 
