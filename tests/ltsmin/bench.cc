@@ -13,6 +13,7 @@
 #include <spot/tl/apcollect.hh>
 #include <spot/tl/defaultenv.hh>
 #include <spot/tl/parse.hh>
+#include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/determinize2.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/powerset.hh>
@@ -27,6 +28,9 @@ struct mc_options_
 {
   char* file = nullptr;
   bool use_timer = false;
+  bool twa = false;
+  bool twa_opt = false;
+  bool twacube = false;
   unsigned nb_threads = 1;
   unsigned wanted = 0;
   unsigned min = 0;
@@ -39,6 +43,15 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
   // This switch is alphabetically-ordered.
   switch (key)
     {
+    case 'a':
+      mc_options.twa = true;
+      break;
+    case 'A':
+      mc_options.twa_opt = true;
+      break;
+    case 'c':
+      mc_options.twacube = true;
+      break;
     case 'f':
       mc_options.file = arg;
       break;
@@ -74,6 +87,9 @@ static const argp_option options[] =
     { "parallel", 'p', "INT", 0, "use INT threads (when possible)", 0 },
     { "timer", 't', nullptr, 0,
       "time the different phases of the execution", 0 },
+    { "twa", 'a', nullptr, 0, "determinize using twa algo", 0},
+    { "twa_opt", 'A', nullptr, 0, "determinize using twa optimized algo", 0},
+    { "twacube", 'c', nullptr, 0, "determinize using twacube algo", 0},
     // ------------------------------------------------------------
     { nullptr, 0, nullptr, 0, "Output options:", 3 },
     { "wanted", 'w', "INT", 0, "number of auts to bench", 0 },
@@ -117,22 +133,7 @@ checked_main()
   auto parser = spot::automaton_stream_parser("/dev/stdin");
 
   std::cout << "formula,"
-            << "twa_nb_states,"
-            << "twa_nb_edges,"
-            << "twa_nb_states_deterministic,"
-            << "twa_nb_edges_deterministic,"
-            << "twacube_nb_states,"
-            << "twacube_nb_edges,"
-            << "twacube_nb_states_deterministic,"
-            << "twacube_nb_edges_deterministic,"
-            << "twa_acc_sets,"
-            << "twacube_acc_sets,"
-            << "walltime_twa,"
-            << "walltime_twacube,"
-            << "are_equivalent_cube_vs_twa,"
-            << "are_equivalent_cube_det_vs_twa,"
-            << "are_equivalent_cube_vs_twa_det,"
-            << "are_equivalent_cube_det_vs_twa_det"
+            << "walltime"
             << std::endl;
 
   spot::parsed_aut_ptr res = nullptr;
@@ -141,68 +142,43 @@ checked_main()
       spot::const_twa_graph_ptr aut = res->aut;
       std::string formula = *aut->get_named_prop<std::string>("automaton-name");
 
-      SPOT_ASSERT(!res->aborted);
-      SPOT_ASSERT(res->errors.empty());
-      SPOT_ASSERT(!spot::is_deterministic(aut));
+      assert(!res->aborted);
+      assert(res->errors.empty());
 
       spot::timer_map tm;
 
       spot::twa_graph_ptr det_aut = nullptr;
-      tm.start("determinize twa");
-      {
-        det_aut = tgba_determinize2(aut);
-      }
-      tm.stop("determinize twa");
+      if (mc_options.twa)
+        {
+          tm.start("determinize");
+          det_aut = tgba_determinize2(aut);
+          tm.stop("determinize");
+        }
 
-      spot::twacube_ptr cube_aut = twa_to_twacube(aut);
+      if (mc_options.twa_opt)
+        {
+          tm.start("determinize");
+          det_aut = tgba_determinize(aut);
+          tm.stop("determinize");
+        }
+
       spot::twacube_ptr cube_det_aut = nullptr;
 
-      tm.start("determinize twacube");
-      {
-        cube_det_aut = twacube_determinize(cube_aut, mc_options.nb_threads);
-      }
-      tm.stop("determinize twacube");
+      if (mc_options.twacube)
+        {
+          spot::twacube_ptr cube_aut = twa_to_twacube(aut);
+          tm.start("determinize");
+          cube_det_aut = twacube_determinize(cube_aut, mc_options.nb_threads);
+          tm.stop("determinize");
+        }
 
-      auto duration_twa = tm.timer("determinize twa").walltime();
-      auto duration_twacube = tm.timer("determinize twacube").walltime();
+      auto duration = tm.timer("determinize").walltime();
 
-      if (duration_twacube >= mc_options.min * size_t(1000) && cube_det_aut != nullptr)
+      if (duration >= mc_options.min * size_t(1000))
         {
           count++;
 
-          std::cout << formula << ','
-                    << aut->num_states() << ','
-                    << aut->num_edges() << ','
-                    << det_aut->num_states() << ','
-                    << det_aut->num_edges() << ','
-                    << cube_aut->num_states() << ','
-                    << cube_aut->num_edges() << ','
-                    << cube_det_aut->num_states() << ','
-                    << cube_det_aut->num_edges() << ','
-                    << det_aut->num_sets() << ','
-                    << cube_det_aut->num_sets() << ','
-                    << duration_twa << ','
-                    << duration_twacube << ',';
-
-          // are_equivalent might throw an exception when too many sets are used
-          try
-            {
-              bool equiv_cube_twa = spot::are_equivalent(cube_aut, aut);
-              bool equiv_cube_det_twa = spot::are_equivalent(cube_det_aut, aut);
-              bool equiv_cube_twa_det = spot::are_equivalent(cube_aut, det_aut);
-              bool equiv_cube_det_twa_det = spot::are_equivalent(cube_det_aut, det_aut);
-
-              std::cout  << equiv_cube_twa << ','
-                         << equiv_cube_det_twa << ','
-                         << equiv_cube_twa_det << ','
-                         << equiv_cube_det_twa_det;
-            }
-          catch (const std::runtime_error&)
-            {
-              std::cout << "-1,-1,-1,-1";
-            }
-
-          std::cout << std::endl;
+          std::cout << formula << ',' << duration << std::endl;
 
           if (mc_options.wanted != 0 && count >= mc_options.wanted)
             return exit_code;
