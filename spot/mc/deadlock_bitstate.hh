@@ -31,6 +31,7 @@
 #include <spot/mc/deadlock.hh>
 #include <spot/misc/common.hh>
 #include <spot/misc/timer.hh>
+#include <cstdlib>
 
 namespace spot
 {
@@ -47,6 +48,8 @@ namespace spot
         UNKNOWN = 1,    // First time this state is discoverd by this thread
         OPEN = 2,       // The state is currently processed by this thread
         CLOSED = 4,     // All the successors of this state have been visited
+        ALIVE = 8,
+        DELETED = 16,
       };
 
     /// \brief Describes the structure of a shared state
@@ -55,36 +58,53 @@ namespace spot
       State st;                 ///< \brief the effective state
       int* colors;              ///< \brief the colors (one per thread)
 
+
       bool operator==(const deadlock_pair& other) const
       {
         StateEqual equal;
         return equal(st, other.st);
       }
-    };
 
-    /// \brief The hasher for the previous state.
-    struct pair_hasher : brq::hash_adaptor<deadlock_pair>
-    {
-      pair_hasher(const deadlock_pair&)
-      { }
-
-      pair_hasher() = default;
-
-      auto hash(const deadlock_pair& lhs) const
+      // required for count
+      auto hash() const
       {
         StateHash hash;
         // Not modulo 31 according to brick::hashset specifications.
-        unsigned u = hash(lhs.st) % (1<<30);
+        unsigned u = hash(st) % (1<<30);
         return u;
       }
 
-      bool equal(const deadlock_pair& lhs,
-                 const deadlock_pair& rhs) const
+      bool equal(const deadlock_pair& rhs) const
       {
         StateEqual equal;
-        return equal(lhs.st, rhs.st);
+        return equal(st, rhs.st);
       }
+
     };
+
+    // /// \brief The hasher for the previous state.
+    // struct pair_hasher : brq::hash_adaptor<deadlock_pair>
+    // {
+    //   pair_hasher(const deadlock_pair&)
+    //   { }
+
+    //   pair_hasher() = default;
+
+    //   auto hash(const deadlock_pair& lhs) const
+    //   {
+    //     StateHash hash;
+    //     // Not modulo 31 according to brick::hashset specifications.
+    //     unsigned u = hash(lhs.st) % (1<<30);
+    //     return u;
+    //   }
+
+    //   bool equal(const deadlock_pair& lhs,
+    //              const deadlock_pair& rhs) const
+    //   {
+    //     StateEqual equal;
+    //     return equal(lhs.st, rhs.st);
+    //   }
+    // };
 
   public:
 
@@ -97,7 +117,7 @@ namespace spot
       sys_(sys), tid_(tid), map_(map),
       bloom_filter_(mem_size),
       nb_th_(std::thread::hardware_concurrency()),
-      p_(sizeof(int)*std::thread::hardware_concurrency()),
+      p_(sizeof(int)*(std::thread::hardware_concurrency() + 2/*EXTRA_CELL*/)),
       stop_(stop)
     {
       static_assert(spot::is_a_kripkecube_ptr<decltype(&sys),
@@ -127,10 +147,14 @@ namespace spot
       for (unsigned i = 0; i < nb_th_; ++i)
         ref[i] = UNKNOWN;
 
+      // Fix extra cell
+      ref[nb_th_] = ALIVE;
+      ref[nb_th_+1] = ALIVE;
+
       // Try to insert the new state in the shared map.
       deadlock_pair v { s, ref };
 
-      auto it = map_.find(v, pair_hasher());
+      auto it = map_.find(v);
       // State is not in table
       // FIXME is there a method like end() in brick-hashset?
       if (!it.isnew() && !it.valid())
@@ -140,7 +164,7 @@ namespace spot
             return nullptr;
 
           // otherwise we have to insert it in table
-          it = map_.insert(v, pair_hasher());
+          it = map_.insert(v);
         }
 
       bool b = it.isnew();
@@ -158,17 +182,17 @@ namespace spot
       if (it->colors[tid_] == static_cast<int>(OPEN))
         return nullptr;
 
-      // Rare case: no more threads is using the state
-      int* unbox_s = sys_.unbox_bitstate_metadata(it->st);
-      int cnt = __atomic_load_n(&unbox_s[0], __ATOMIC_RELAXED);
-      if (SPOT_UNLIKELY(cnt == 0))
-        return nullptr;
+      // // // Rare case: no more threads is using the state
+      // int* unbox_s = sys_.unbox_bitstate_metadata(it->st);
+      // int cnt = __atomic_load_n(&unbox_s[0], __ATOMIC_RELAXED);
+      // if (SPOT_UNLIKELY(cnt == 0))
+      //   return nullptr;
 
-      // Set bitstate metadata
-      while (!(cnt & (1 << tid_)))
-      {
-        cnt = __atomic_fetch_or(unbox_s, (1 << tid_), __ATOMIC_RELAXED);
-      }
+      // // Set bitstate metadata
+      // while (cnt !=0 && !(cnt & (1 << tid_)))
+      // {
+      //   cnt = __atomic_fetch_or(unbox_s, (1 << tid_), __ATOMIC_RELAXED);
+      // }
 
       // Keep a ptr over the array of colors
       refs_.push_back(it->colors);
@@ -185,37 +209,114 @@ namespace spot
       // Track maximum dfs size
       dfs_ = todo_.size()  > dfs_ ? todo_.size() : dfs_;
 
-      // Clear bitstate metadata
-      State st = todo_.back().s;
-      int* unbox_s = sys_.unbox_bitstate_metadata(st);
-      int cnt = __atomic_load_n(&unbox_s[0], __ATOMIC_RELAXED);
-      while (cnt & (1 << tid_))
-      {
-        cnt = __atomic_fetch_and(unbox_s, ~(1 << tid_), __ATOMIC_RELAXED);
-      }
-
-      // Insert the state into the filter
-      bloom_filter_.insert(state_hash_(st));
-
-      // Don't avoid pop but modify the status of the state
-      // during backtrack
       refs_.back()[tid_] = CLOSED;
-      refs_.pop_back();
 
-      // Release memory if no thread is using the state
-      if (cnt == 0)
-      {
-        deadlock_pair p { st, nullptr };
-        cnt = __atomic_fetch_or(unbox_s, (1 << tid_), __ATOMIC_SEQ_CST);
-        if (cnt == (1 << tid_))
+      int expected = ALIVE;
+      bool b = __atomic_compare_exchange_n(&refs_.back()[nb_th_],
+                                           &expected,
+                                           DELETED, true, __ATOMIC_SEQ_CST,
+                                           __ATOMIC_SEQ_CST);
+
+      State st = todo_.back().s;
+      deadlock_pair p { st, nullptr };
+      if (b)
+        {
+          bloom_filter_.insert(state_hash_(st));
+          //std::cout << "#" << map_.count(p) << '\n';
+          map_.erase(p);
+        }
+
+
+      // The state has been mark dead by another thread
+      for (unsigned i = 0; !b && i < nb_th_; ++i)
+        if ( __atomic_load_n(&refs_.back()[i], __ATOMIC_RELAXED)
+             ==
+            refs_.back()[i] == static_cast<int>(OPEN))
           {
-            map_.erase(p, pair_hasher());
-            sys_.recycle_state(st);
+            refs_.pop_back();
+            return true;
           }
 
-        // FIXME Otherwise means that state will be foreve in thread pool
-        // We can try to coordinate threads to avoid this situation
+
+      {
+      int expected = ALIVE;
+      bool b = __atomic_compare_exchange_n(&refs_.back()[nb_th_+1],
+                                           &expected,
+                                           DELETED, true, __ATOMIC_SEQ_CST,
+                                           __ATOMIC_SEQ_CST);
+      if (b )
+        {
+          auto it = map_.find(p);
+          if (it.valid())
+            {
+              // WTF
+              refs_.pop_back();
+              return true;
+            }
+          sys_.recycle_state(st);
+        }
       }
+
+      refs_.pop_back();
+
+      // int* unbox_s = sys_.unbox_bitstate_metadata(st);
+      // int cnt = __atomic_load_n(unbox_s, __ATOMIC_SEQ_CST);
+      // while (cnt & (1 << tid_))
+      // {
+      //   cnt = __atomic_fetch_and(unbox_s, ~(1 << tid_), __ATOMIC_RELAXED);
+      // }
+
+
+
+
+
+
+      // // Clear bitstate metadata
+      // // Should be retreived only  once and not at every pop
+      // int st_tid = __atomic_load_n(unbox_s+1, __ATOMIC_SEQ_CST);
+
+
+      // // FIXME I modify field hash but we should probably have
+      // // a field dedicated for that? (or maybe not) but we shouldn't
+      // // suppose about the structure of the state.
+
+
+
+
+      // // Insert the state into the filter
+      // bloom_filter_.insert(state_hash_(st));
+
+      // // Don't avoid pop but modify the status of the state
+      // // during backtrack
+      // refs_.back()[tid_] = CLOSED;
+      // bool shouldbedeleted = true;
+
+      // if (shouldbedeleted)
+      //   refs_.back()[tid_] = DELETED;
+      // refs_.pop_back();
+
+
+      // // Release memory if no thread is using the state
+      // if (cnt == (1 << tid_) && shouldbedeleted)
+      // {
+
+
+      //   deadlock_pair p { st, nullptr };
+      //   map_.erase(p);
+
+
+
+      //   if (b && map_.count(p) == 0)
+      //     {
+
+      //   //std::cout << map_.count(p) << std::endl;
+      //       //std::cout << sys_.to_string(st) << std::endl;
+      //       sys_.recycle_state(st);
+      //     }
+      // }
+
+
+
       return true;
     }
 
@@ -242,7 +343,7 @@ namespace spot
       State initial = push(tmp);
       if (SPOT_LIKELY(initial != nullptr))
         {
-          todo_.push_back({initial, sys_.succ(initial, tid_), transitions_});
+          todo_.push_back({initial, sys_.succ(tmp, tid_), transitions_});
           if (tmp != initial)
             sys_.recycle_state(tmp);
         }
@@ -269,7 +370,7 @@ namespace spot
               if (SPOT_LIKELY(dst != nullptr))
                 {
                   todo_.back().it->next();
-                  todo_.push_back({dst, sys_.succ(dst, tid_), transitions_});
+                  todo_.push_back({dst, sys_.succ(tmp, tid_), transitions_});
                   if (tmp != dst)
                     sys_.recycle_state(tmp);
                 }

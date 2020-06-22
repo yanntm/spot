@@ -91,7 +91,7 @@ namespace spot
     spot::timer_map tm;
     using algo_name = spot::swarmed_deadlock_bitstate<State, Iterator, Hash, Equal>;
 
-    unsigned  nbth = 1;//sys->get_threads();
+    unsigned  nbth = sys->get_threads();
     typename algo_name::shared_map map;
     std::atomic<bool> stop(false);
 

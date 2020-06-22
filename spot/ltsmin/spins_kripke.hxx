@@ -310,24 +310,29 @@ namespace spot
   ::recycle_iterator(cspins_iterator* it, unsigned tid)
   {
     recycle_it_[tid].push_back(it);
+
+
+    // Only the thread tid can recycle states, calling recycle_iterator
+    // can serve as a pretex to also reclaim state memory
+    // FIXME Is there a best option ?
+    if (recycle_it_[tid].size() > 100)
+      {
+        std::lock_guard<std::mutex> lock(recycle_mutex_[tid]);
+
+        for (auto& s : recycle_st_[tid])
+          {
+            manager_[tid].dealloc(s);
+          }
+        recycle_st_[tid].clear();
+      }
   }
 
   void kripkecube<cspins_state, cspins_iterator>
   ::recycle_state(cspins_state st)
   {
     int tid = st[2];
+
     std::lock_guard<std::mutex> lock(recycle_mutex_[tid]);
-
-    if (recycle_st_[tid].size() == 10)
-    {
-      for (auto& s : recycle_st_[tid])
-      {
-        manager_[tid].dealloc(s);
-      }
-      recycle_st_[tid].clear();
-    }
-
-    // Prefer insertion after.
     recycle_st_[tid].push_back(st);
   }
 
