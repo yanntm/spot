@@ -315,7 +315,7 @@ namespace spot
     // Only the thread tid can recycle states, calling recycle_iterator
     // can serve as a pretex to also reclaim state memory
     // FIXME Is there a best option ?
-    if (recycle_it_[tid].size() > 100)
+    if (recycle_it_[tid].size() > 10000)
       {
         std::lock_guard<std::mutex> lock(recycle_mutex_[tid]);
 

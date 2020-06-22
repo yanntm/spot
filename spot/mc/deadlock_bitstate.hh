@@ -246,10 +246,9 @@ namespace spot
                                            __ATOMIC_SEQ_CST);
       if (b )
         {
-          auto it = map_.find(p);
-          if (it.valid())
+          //auto it = map_.find(p);
+          if (map_.count(p))
             {
-              // WTF
               refs_.pop_back();
               return true;
             }
