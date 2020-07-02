@@ -18,6 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config.h"
+#include <spot/twaalgos/genem.hh>
 #include <spot/twaalgos/remfin.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <iostream>
@@ -26,6 +27,9 @@
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/mask.hh>
 #include <spot/twaalgos/alternation.hh>
+
+#include <tuple>
+
 
 // #define TRACE
 #ifdef TRACE
@@ -861,4 +865,80 @@ namespace spot
     assert(!res->acc().is_f());
     return res;
   }
+
+  twa_graph_ptr
+  to_buchi_if_realizable(const const_twa_graph_ptr aut)
+  {
+    // We want to find all the transitions that don't occur in a rejecting
+    // run. So we complement the acceptance condition and we search
+    // all the transition on an accepting run.
+    auto comp = acc_cond(aut->acc().get_acceptance().complement());
+
+    // The transitions that are accepting in aut.
+    std::vector<bool> accepting_transitions(aut->edge_vector().size());
+    scc_info si(aut);
+    using filter_data_t = std::tuple<const_twa_graph_ptr,
+                          std::vector<bool>&,
+                          scc_info&>;
+
+    for (unsigned scc = 0; scc < si.scc_count(); ++scc)
+    {
+      // We search the accepting transitions with the complement of the
+      // acceptance condition.
+      accepting_transitions_scc(si, scc, comp, {}, accepting_transitions);
+      // We "remove" accepting edges from the original automaton…
+      auto filter_data = filter_data_t{aut, accepting_transitions, si};
+      scc_info::edge_filter filter =
+        [](const twa_graph::edge_storage_t& t, unsigned, void* data)
+          -> scc_info::edge_filter_choice
+        {
+          auto& d = *static_cast<filter_data_t*>(data);
+          const_twa_graph_ptr aut = std::get<0>(d);
+          std::vector<bool>& accepting_transitions = std::get<1>(d);
+          scc_info si = std::get<2>(d);
+          if (!accepting_transitions[aut->edge_number(t)])
+          {
+            if (si.scc_of(t.dst) == si.scc_of(t.src))
+              return scc_info::edge_filter_choice::cut;
+            else
+              return scc_info::edge_filter_choice::ignore;
+          }
+          else
+            return scc_info::edge_filter_choice::keep;
+        };
+
+      // … and for each sub-scc of scc, we try to find an accepting cycle.
+      auto states_of_scc = si.states_of(scc);
+      while (!states_of_scc.empty())
+      {
+        scc_info sub_si(aut, states_of_scc[0], filter, &filter_data);
+        for (unsigned sub_scc = 0; sub_scc < sub_si.scc_count(); ++sub_scc)
+        {
+          for (unsigned st : sub_si.states_of(sub_scc))
+            states_of_scc.erase(std::find(states_of_scc.begin(),
+                                           states_of_scc.end(), st));
+          // If there an accepting cycle in aut, then aut is not buchi
+          // realizable.
+          if (!generic_emptiness_check_for_scc(sub_si, sub_scc))
+            return nullptr;
+        }
+      }
+    }
+
+    auto res = make_twa_graph(aut, twa::prop_set::all());
+    auto m = res->set_buchi();
+
+    auto& ev = res->edge_vector();
+    unsigned edgecount = ev.size();
+    scc_info si1(aut, aut->get_init_state_number());
+    for (unsigned eidx = 1; eidx < edgecount; ++eidx)
+    {
+      auto& edge = ev[eidx];
+      bool use_mark = (si1.scc_of(edge.src) == si1.scc_of(edge.dst))
+                    && !accepting_transitions[eidx];
+      edge.acc = use_mark ? m : acc_cond::mark_t{};
+    }
+    return res;
+  }
+
 }

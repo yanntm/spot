@@ -93,3 +93,49 @@ State: 2
 b = spot.remove_fin(a)
 size = (b.num_states(), b.num_edges())
 assert size == (5, 17);
+
+c = spot.automaton("""
+HOA: v1
+States: 8
+Start: 0
+AP: 2 "p0" "p1"
+Acceptance: 5 Inf(4) | Inf(2) | (Fin(0)|Fin(3)) | Inf(1)
+properties: trans-labels explicit-labels trans-acc
+--BODY--
+State: 0
+[0&!1] 0 {2 3 4}
+[!0&1] 7 {0 3 4}
+[!0&1] 5 {0 2 3 4}
+[!0&1] 3 {0 1 3 4}
+State: 1
+[0&!1] 5 {0 1}
+[0&!1] 2 {1 2 3}
+State: 2
+[!0&!1] 4 {0 2 3 4}
+State: 3
+[0&1] 5 {4}
+[!0&!1] 0 {0 2}
+[!0&!1] 6 {0 1}
+[!0&!1] 4 {0 1 2 3}
+State: 4
+[!0&!1] 5 {2 4}
+[0&!1] 1 {2 3 4}
+State: 5
+[!0&1] 3
+[!0&!1] 4 {0 1 2 3}
+[!0&1] 2 {0 1}
+[0&!1] 1 {0 4}
+State: 6
+[0&!1] 4 {0 2 4}
+[!0&1] 3 {0 2 3 4}
+[!0&!1] 0 {0 1 3 4}
+State: 7
+[0&1] 7 {0 3}
+[0&1] 0
+[0&1] 3 {0 1 3 4}
+--END--
+""")
+
+d = spot.to_buchi_if_realizable(c)
+assert(d)
+assert(spot.are_equivalent(c, d))

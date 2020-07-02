@@ -83,4 +83,7 @@ namespace spot
   /// Just like "t" corresponds generalized Büchi with 0 sets.)
   SPOT_API twa_graph_ptr
   remove_fin(const const_twa_graph_ptr& aut);
+
+  SPOT_API twa_graph_ptr
+  to_buchi_if_realizable(const const_twa_graph_ptr aut);
 }
