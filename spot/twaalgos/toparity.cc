@@ -1180,7 +1180,7 @@ apply_lar(const twa_graph_ptr &sub_automaton,
         initial_perm_car(p0, colors);
         break;
     default:
-        assert(false);
+        SPOT_UNREACHABLE();
         break;
     }
 
@@ -1220,7 +1220,7 @@ apply_lar(const twa_graph_ptr &sub_automaton,
                 find_new_perm_car(new_perm, e.acc, seen_nb, h);
                 break;
             default:
-                assert(false);
+                SPOT_UNREACHABLE();
             }
 
             std::vector<unsigned> not_moved(new_perm.begin() + seen_nb,
@@ -1285,7 +1285,7 @@ apply_lar(const twa_graph_ptr &sub_automaton,
                 get_acceptance_car(sub_automaton->acc(), new_perm, h, acc);
                 break;
             default:
-                assert(false);
+                SPOT_UNREACHABLE();
             }
 
             unsigned acc_col = acc.min_set() - 1;
