@@ -96,6 +96,11 @@ New in spot 2.9.0.dev (not yet released)
   - Improve ltldo diagnostics to fix spurious test-suite failure on
     systems with antique GNU libc.
 
+  - twa_run::reduce() could reduce accepting runs incorrectly on
+    automata using Fin in their acceptance condition.  This caused
+    issues in intersecting_run(), exclusive_run(),
+    intersecting_word(), exclusive_word(), which all call reduce().
+
 New in spot 2.9 (2020-04-30)
 
   Command-line tools:

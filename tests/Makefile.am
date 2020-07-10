@@ -394,6 +394,7 @@ TESTS_python = \
   python/genem.py \
   python/implies.py \
   python/interdep.py \
+  python/intrun.py \
   python/kripke.py \
   python/ltl2tgba.test \
   python/ltlf.py \
