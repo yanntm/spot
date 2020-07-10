@@ -304,11 +304,7 @@ namespace spot
       {
         state_set::const_iterator i = seen.begin();
         while (i != seen.end())
-          {
-            const state* ptr = *i;
-            ++i;
-            ptr->destroy();
-          }
+          (*i++)->destroy();
       }
 
       void
@@ -353,16 +349,18 @@ namespace spot
   {
     ensure_non_empty_cycle("twa_run::reduce()");
     auto& a = aut;
+    auto& acc = a->acc();
     auto res = std::make_shared<twa_run>(a);
     state_set ss;
     shortest_path shpath(a);
     shpath.set_target(&ss);
 
     // We want to find a short segment of the original cycle that
-    // contains all acceptance conditions.
+    // satisfies the acceptance condition.
 
     const state* segment_start; // The initial state of the segment.
     const state* segment_next; // The state immediately after the segment.
+
 
     // Start from the end of the original cycle, and rewind until all
     // acceptance sets have been seen.
@@ -374,7 +372,7 @@ namespace spot
         --seg;
         seen_acc |= seg->acc;
       }
-    while (!a->acc().accepting(seen_acc));
+    while (!acc.accepting(seen_acc));
     segment_start = seg->s;
 
     // Now go forward and ends the segment as soon as we have seen all
@@ -390,7 +388,7 @@ namespace spot
 
         ++seg;
       }
-    while (!a->acc().accepting(seen_acc));
+    while (!acc.accepting(seen_acc));
     segment_next = seg == cycle.end() ? cycle.front().s : seg->s;
 
     // Close this cycle if needed, that is, compute a cycle going
@@ -402,6 +400,29 @@ namespace spot
         ss.clear();
         assert(s->compare(segment_start) == 0);
         (void)s;
+
+        // If the acceptance condition uses Fin, it's possible (and
+        // even quite likely) that the cycle we have constructed this
+        // way is now rejecting, because the closing steps might add
+        // unwanted colors.  If that is the case, throw the reduced
+        // cycle away and simply preserve the original one verbatim.
+        if (acc.uses_fin_acceptance())
+          {
+            acc_cond::mark_t seen = {};
+            for (auto& st: res->cycle)
+              seen |= st.acc;
+            if (!acc.accepting(seen))
+              {
+                for (auto& st: res->cycle)
+                  st.s->destroy();
+                res->cycle.clear();
+                for (auto& st: cycle)
+                  {
+                    twa_run::step st2 = { st.s->clone(), st.label, st.acc };
+                    res->cycle.emplace_back(st2);
+                  }
+              }
+          }
       }
 
     // Compute the prefix: it's the shortest path from the initial
