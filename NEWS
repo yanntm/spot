@@ -66,6 +66,11 @@ New in spot 2.9.0.dev (not yet released)
     issues in intersecting_run(), exclusive_run(),
     intersecting_word(), exclusive_word(), which all call reduce().
 
+  - ltlcross used to crash with "Too many acceptance sets used.  The
+    limit is 32." when complementing an automaton would require more
+    acceptance sets than supported by Spot.  This is now diagnosed
+    with --verbose, but does not prevent ltlcross from continuing.
+
 New in spot 2.9 (2020-04-30)
 
   Command-line tools:

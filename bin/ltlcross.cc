@@ -1336,25 +1336,37 @@ namespace
                           && !spot::is_universal(from[i]))
                         missing_complement = true;
                       else
-                        to[i] = spot::complement(from[i], aborter);
-                      if (verbose)
-                        {
-                          if (to[i])
-                            {
-                              std::cerr << "\t(";
-                              printsize(from[i]);
-                              std::cerr << ") -> (";
-                              printsize(to[i]);
-                              std::cerr << ")\tComp(" << prefix << i << ")\n";
-                            }
-                          else
-                            {
-                              std::cerr << "\tnot complemented";
-                              if (aborter)
-                                aborter->print_reason(std::cerr << " (") << ')';
-                              std::cerr << '\n';
-                            }
-                        }
+                        try
+                          {
+                            to[i] = spot::complement(from[i], aborter);
+                            if (verbose)
+                              {
+                                if (to[i])
+                                  {
+                                    std::cerr << "\t(";
+                                    printsize(from[i]);
+                                    std::cerr << ") -> (";
+                                    printsize(to[i]);
+                                    std::cerr << ")\tComp(" << prefix
+                                              << i << ")\n";
+                                  }
+                                else
+                                  {
+                                    std::cerr << "\tnot complemented";
+                                    if (aborter)
+                                      aborter->print_reason(std::cerr
+                                                            << " (") << ')';
+                                    std::cerr << '\n';
+                                  }
+                              }
+                          }
+                        catch (const std::runtime_error& re)
+                          {
+                            missing_complement = true;
+                            if (verbose)
+                              std::cerr << "\tnot complemented ("
+                                        << re.what() << ")\n";
+                          }
                     }
                 };
               missing_complement = false;
