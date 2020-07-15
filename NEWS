@@ -1,29 +1,4 @@
-New in spot 2.9.0.dev (not yet released)
-
-  Command-line tools:
-
-  - 'ltl2tgba -G -D' is now better at handling formulas that use
-    '<->' and 'xor' operators at the top level.   For instance
-         ltl2tgba -D -G '(Fa & Fb & Fc & Fd) <-> GFe'
-    now produces a 16-state automaton (instead of 31 in Spot 2.9).
-
-  - Option '-x wdba-minize=N' used to accept N=0 (off), or N=1 (on).
-    It can now take three values:
-      0: never attempt this optimization,
-      1: always try to determinize and minimize automata as WDBA,
-         and check (if needed) that the result is correct,
-      2: determinize and minimize automata as WDBA only if it is known
-         beforehand (by cheap syntactic means) that the result will be
-         correct (e.g., the input formula is a syntactic obligation).
-    The default is 1 in "--high" mode, 2 in "--medium" mode or in
-    "--deterministic --low" mode, and 0 in other "--low" modes.
-
-  - ltlsynt learned --algo=ps to use the default conversion to
-    deterministic parity automata (the same as ltl2tgba -DP'max odd').
-
-  - ltlsynt now has a -x option to fine-tune the translation.  See the
-    spot-x(7) man page for detail.  Unlike ltl2tgba, ltlsynt defaults
-    to simul=0,ba-simul=0,det-simul=0,tls-impl=1,wdba-minimize=2.
+New in spot 2.9.1.dev  (not yet released)
 
   Library:
 
@@ -62,8 +37,37 @@ New in spot 2.9.0.dev (not yet released)
     file. With this refactoring, we can retrieve both a kripke or a
     kripkecube from a PINS file.
 
+New in spot 2.9.1 (2020-07-15)
+
+  Command-line tools:
+
+  - 'ltl2tgba -G -D' is now better at handling formulas that use
+    '<->' and 'xor' operators at the top level.   For instance
+         ltl2tgba -D -G '(Fa & Fb & Fc & Fd) <-> GFe'
+    now produces a 16-state automaton (instead of 31 in Spot 2.9).
+
+  - Option '-x wdba-minize=N' used to accept N=0 (off), or N=1 (on).
+    It can now take three values:
+      0: never attempt this optimization,
+      1: always try to determinize and minimize automata as WDBA,
+         and check (if needed) that the result is correct,
+      2: determinize and minimize automata as WDBA only if it is known
+         beforehand (by cheap syntactic means) that the result will be
+         correct (e.g., the input formula is a syntactic obligation).
+    The default is 1 in "--high" mode, 2 in "--medium" mode or in
+    "--deterministic --low" mode, and 0 in other "--low" modes.
+
+  - ltlsynt learned --algo=ps to use the default conversion to
+    deterministic parity automata (the same as ltl2tgba -DP'max odd').
+
+  - ltlsynt now has a -x option to fine-tune the translation.  See the
+    spot-x(7) man page for detail.  Unlike ltl2tgba, ltlsynt defaults
+    to simul=0,ba-simul=0,det-simul=0,tls-impl=1,wdba-minimize=2.
+
+  Library:
+
   - product_xor() and product_xnor() are two new versions of the
-    synchronized product.  The only work with operands that are
+    synchronized product.  They only work with operands that are
     deterministic automata, and build automata whose language are
     respectively the symmetric difference of the operands, and the
     complement of that.
@@ -100,6 +104,14 @@ New in spot 2.9.0.dev (not yet released)
     automata using Fin in their acceptance condition.  This caused
     issues in intersecting_run(), exclusive_run(),
     intersecting_word(), exclusive_word(), which all call reduce().
+
+  - ltlcross used to crash with "Too many acceptance sets used.  The
+    limit is 32." when complementing an automaton would require more
+    acceptance sets than supported by Spot.  This is now diagnosed
+    with --verbose, but does not prevent ltlcross from continuing.
+
+  - scc_info::edges_of() and scc_info::inner_edges_of() now correctly
+    honor any filter passed to scc_info.
 
 New in spot 2.9 (2020-04-30)
 
