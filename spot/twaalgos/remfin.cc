@@ -38,22 +38,6 @@ namespace spot
 {
   namespace
   {
-    using EdgeMask = std::vector<bool>;
-
-    template< typename Edges, typename Apply >
-    void for_each_edge(const const_twa_graph_ptr& aut,
-                       const Edges& edges,
-                       const EdgeMask& mask,
-                       Apply apply)
-    {
-      for (const auto& e: edges)
-        {
-          unsigned edge_id = aut->edge_number(e);
-          if (mask[edge_id])
-            apply(edge_id);
-        }
-    }
-
     // Transforms automaton from transition based acceptance to state based
     // acceptance.
     void make_state_acc(twa_graph_ptr & aut)
@@ -87,7 +71,6 @@ namespace spot
     bool is_scc_tba_type(const_twa_graph_ptr aut,
                          const scc_info& si,
                          const unsigned scc,
-                         const std::vector<bool>& keep,
                          const rs_pairs_view& aut_pairs,
                          std::vector<bool>& final)
     {
@@ -101,10 +84,8 @@ namespace spot
       auto aut_fin_alone = aut_pairs.fins_alone();
       if ((scc_acc & aut_fin_alone) != aut_fin_alone)
         {
-          for_each_edge(aut, si.edges_of(scc), keep, [&](unsigned e)
-            {
-              final[e] = true;
-            });
+          for (auto& e: si.edges_of(scc))
+            final[aut->edge_number(e)] = true;
           return true;
         }
 
@@ -126,14 +107,14 @@ namespace spot
       // final. Otherwise we do not know: it is possible that there is
       // a non-accepting cycle in the SCC that does not visit Fᵢ.
       std::set<unsigned> unknown;
-      for_each_edge(aut, si.inner_edges_of(scc), keep, [&](unsigned e)
+      for (auto& ed: si.inner_edges_of(scc))
         {
-          const auto& ed = aut->edge_data(e);
+          unsigned e = aut->edge_number(ed);
           if (ed.acc & scc_infs_alone)
-              final[e] = true;
+            final[e] = true;
           else
-              unknown.insert(e);
-        });
+            unknown.insert(e);
+        }
 
       // Erase edges that cannot belong to a cycle, i.e., the edges
       // whose 'dst' is not 'src' of any unknown edges.
@@ -182,13 +163,11 @@ namespace spot
 
             for (unsigned uscc = 0; uscc < si.scc_count(); ++uscc)
               {
-                for_each_edge(aut, si.edges_of(uscc), keep, [&](unsigned e)
-                              {
-                                unknown.erase(e);
-                              });
+                for (auto& e: si.edges_of(uscc))
+                  unknown.erase(aut->edge_number(e));
                 if (si.is_rejecting_scc(uscc))
                   continue;
-                if (!is_scc_tba_type(aut, si, uscc, keep, aut_pairs, final))
+                if (!is_scc_tba_type(aut, si, uscc, aut_pairs, final))
                   return false;
               }
           }
@@ -229,10 +208,9 @@ namespace spot
       scc_info si(aut, scc_info_options::TRACK_STATES);
       std::vector<bool> scc_is_tba_type(si.scc_count(), false);
       std::vector<bool> final(aut->edge_vector().size(), false);
-      std::vector<bool> keep(aut->edge_vector().size(), true);
 
       for (unsigned scc = 0; scc < si.scc_count(); ++scc)
-        scc_is_tba_type[scc] = is_scc_tba_type(aut, si, scc, keep,
+        scc_is_tba_type[scc] = is_scc_tba_type(aut, si, scc,
                                                aut_pairs, final);
 
       auto res = make_twa_graph(aut->get_dict());
@@ -804,10 +782,9 @@ namespace spot
     // if is TBA type
     scc_info si(aut, scc_info_options::TRACK_STATES);
     std::vector<bool> final(aut->edge_vector().size(), false);
-    std::vector<bool> keep(aut->edge_vector().size(), true);
 
     for (unsigned scc = 0; scc < si.scc_count(); ++scc)
-      if (!is_scc_tba_type(aut, si, scc, keep, aut_pairs, final))
+      if (!is_scc_tba_type(aut, si, scc, aut_pairs, final))
         return false;
 
     return true;
@@ -827,10 +804,9 @@ namespace spot
 
     scc_info si(aut, scc_info_options::TRACK_STATES);
     std::vector<bool> final(aut->edge_vector().size(), false);
-    std::vector<bool> keep(aut->edge_vector().size(), true);
 
     for (unsigned scc = 0; scc < si.scc_count(); ++scc)
-      if (!is_scc_tba_type(aut, si, scc, keep, aut_pairs, final))
+      if (!is_scc_tba_type(aut, si, scc, aut_pairs, final))
         return nullptr;
 
     auto res = make_twa_graph(aut, twa::prop_set::all());
