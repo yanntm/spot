@@ -27,6 +27,38 @@ namespace spot
 {
   class scc_info;
 
+  /// @{
+  /// \ingroup twa_misc
+  /// \brief An edge_filter may be called on each edge to decide what
+  /// to do with it.
+  ///
+  /// The edge filter is called with an edge and a destination.  (In
+  /// existential automata the destination is already given by the
+  /// edge, but in alternating automata, one edge may have several
+  /// destinations, and in this case the filter will be called for
+  /// each destination.)  The filter should return a value from
+  /// edge_filter_choice.
+  ///
+  /// \c keep means to use the edge normally, as if no filter had
+  /// been given.  \c ignore means to pretend the edge does not
+  /// exist (if the destination is only reachable through this edge,
+  /// it will not be visited). \c cut also ignores the edge, but
+  /// it remembers to visit the destination state (as if it were an
+  /// initial state) in case it is not reachable otherwise.
+  ///
+  /// Note that successors between SCCs can only be maintained for
+  /// edges that are kept.  If some edges are ignored or cut, the
+  /// SCC graph that you can explore with scc_info::initial() and
+  /// scc_info::succ() will be restricted to the portion reachable
+  /// with "keep" edges.  Additionally SCCs might be created when
+  /// edges are cut, but those will not be reachable from
+  /// scc_info::initial()..
+  enum class edge_filter_choice { keep, ignore, cut };
+  typedef edge_filter_choice
+  (*edge_filter)(const twa_graph::edge_storage_t& e, unsigned dst,
+                 void* filter_data);
+  /// @}
+
   namespace internal
   {
     struct keep_all
@@ -100,6 +132,9 @@ namespace spot
       dv_t* dv_;
 
       Filter filt_;
+      edge_filter efilter_;
+      void* efilter_data_;
+
 
       void inc_state_maybe_()
       {
@@ -113,21 +148,49 @@ namespace spot
         inc_state_maybe_();
       }
 
+      // Do we ignore the current transition?
       bool ignore_current()
       {
         unsigned dst = (*this)->dst;
         if ((int)dst >= 0)
-          // Non-universal branching => a single destination.
-          return !filt_(&(*this)->dst, 1 + &(*this)->dst);
-        // Universal branching => multiple destinations.
-        const unsigned* d = dv_->data() + ~dst;
-        return !filt_(d + 1, d + *d + 1);
+          {
+            // Non-universal branching => a single destination.
+            if (!filt_(&(*this)->dst, 1 + &(*this)->dst))
+              return true;
+            if (efilter_)
+              return efilter_((*tv_)[t_], dst, efilter_data_)
+                != edge_filter_choice::keep;
+            return false;
+          }
+        else
+          {
+            // Universal branching => multiple destinations.
+            const unsigned* d = dv_->data() + ~dst;
+            if (!filt_(d + 1, d + *d + 1))
+              return true;
+            if (efilter_)
+              {
+                // Keep the transition if at least one destination
+                // is not filtered.
+                const unsigned* end = d + *d + 1;
+                for (const unsigned* i = d + 1; i != end; ++i)
+                  {
+                    if (efilter_((*tv_)[t_], *i, efilter_data_)
+                        == edge_filter_choice::keep)
+                      return false;
+                    return true;
+                  }
+              }
+            return false;
+          }
       }
 
     public:
       scc_edge_iterator(state_iterator begin, state_iterator end,
-                        tv_t* tv, sv_t* sv, dv_t* dv, Filter filt) noexcept
-        : pos_(begin), end_(end), t_(0), tv_(tv), sv_(sv), dv_(dv), filt_(filt)
+                        tv_t* tv, sv_t* sv, dv_t* dv, Filter filt,
+                        edge_filter efilter, void* efilter_data) noexcept
+        : pos_(begin), end_(end), t_(0), tv_(tv), sv_(sv), dv_(dv), filt_(filt),
+          efilter_(efilter), efilter_data_(efilter_data)
       {
         if (pos_ == end_)
           return;
@@ -191,22 +254,26 @@ namespace spot
       sv_t* sv_;
       dv_t* dv_;
       Filter filt_;
+      edge_filter efilter_;
+      void* efilter_data_;
     public:
 
       scc_edges(state_iterator begin, state_iterator end,
-                tv_t* tv, sv_t* sv, dv_t* dv, Filter filt) noexcept
-        : begin_(begin), end_(end), tv_(tv), sv_(sv), dv_(dv), filt_(filt)
+                tv_t* tv, sv_t* sv, dv_t* dv, Filter filt,
+                edge_filter efilter, void* efilter_data) noexcept
+        : begin_(begin), end_(end), tv_(tv), sv_(sv), dv_(dv), filt_(filt),
+          efilter_(efilter), efilter_data_(efilter_data)
       {
       }
 
       iter_t begin() const
       {
-        return {begin_, end_, tv_, sv_, dv_, filt_};
+        return {begin_, end_, tv_, sv_, dv_, filt_, efilter_, efilter_data_};
       }
 
       iter_t end() const
       {
-        return {end_, end_, nullptr, nullptr, nullptr, filt_};
+        return {end_, end_, nullptr, nullptr, nullptr, filt_, nullptr, nullptr};
       }
     };
   }
@@ -378,36 +445,10 @@ namespace spot
     // support that yet.
     typedef scc_info_node scc_node;
     typedef scc_info_node::scc_succs scc_succs;
-    /// @{
-    /// \brief An edge_filter may be called on each edge to decide what
-    /// to do with it.
-    ///
-    /// The edge filter is called with an edge and a destination.  (In
-    /// existential automata the destination is already given by the
-    /// edge, but in alternating automata, one edge may have several
-    /// destinations, and in this case the filter will be called for
-    /// each destination.)  The filter should return a value from
-    /// edge_filter_choice.
-    ///
-    /// \c keep means to use the edge normally, as if no filter had
-    /// been given.  \c ignore means to pretend the edge does not
-    /// exist (if the destination is only reachable through this edge,
-    /// it will not be visited). \c cut also ignores the edge, but
-    /// it remembers to visit the destination state (as if it were an
-    /// initial state) in case it is not reachable otherwise.
-    ///
-    /// Note that successors between SCCs can only be maintained for
-    /// edges that are kept.  If some edges are ignored or cut, the
-    /// SCC graph that you can explore with scc_info::initial() and
-    /// scc_info::succ() will be restricted to the portion reachable
-    /// with "keep" edges.  Additionally SCCs might be created when
-    /// edges are cut, but those will not be reachable from
-    /// scc_info::initial()..
-    enum class edge_filter_choice { keep, ignore, cut };
-    typedef edge_filter_choice
-      (*edge_filter)(const twa_graph::edge_storage_t& e, unsigned dst,
-                     void* filter_data);
-    /// @}
+
+    // These types used to be defined here in Spot up to 2.9.
+    typedef spot::edge_filter_choice edge_filter_choice;
+    typedef spot::edge_filter edge_filter;
 
   protected:
 
@@ -559,7 +600,7 @@ namespace spot
       return {states.begin(), states.end(),
               &aut_->edge_vector(), &aut_->states(),
               &aut_->get_graph().dests_vector(),
-              internal::keep_all()};
+              internal::keep_all(), filter_, const_cast<void*>(filter_data_)};
     }
 
     /// \brief A fake container to iterate over all edges between
@@ -576,7 +617,8 @@ namespace spot
       return {states.begin(), states.end(),
               &aut_->edge_vector(), &aut_->states(),
               &aut_->get_graph().dests_vector(),
-              internal::keep_inner_scc(sccof_, scc)};
+              internal::keep_inner_scc(sccof_, scc), filter_,
+              const_cast<void*>(filter_data_)};
     }
 
     unsigned one_state_of(unsigned scc) const

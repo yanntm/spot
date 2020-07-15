@@ -71,6 +71,9 @@ New in spot 2.9.0.dev (not yet released)
     acceptance sets than supported by Spot.  This is now diagnosed
     with --verbose, but does not prevent ltlcross from continuing.
 
+  - scc_info::edges_of() and scc_info::inner_edges_of() now correctly
+    honor any filter passed to scc_info.
+
 New in spot 2.9 (2020-04-30)
 
   Command-line tools:
