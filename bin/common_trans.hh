@@ -1,6 +1,6 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2018 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2015-2018, 2020 Laboratoire de Recherche et
+// Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
 //
@@ -21,6 +21,7 @@
 
 #include "common_sys.hh"
 #include <vector>
+#include <atomic>
 #include <argp.h>
 
 #include <spot/misc/formater.hh>
@@ -165,7 +166,7 @@ public:
 # define ENABLE_TIMEOUT 0
 #endif
 
-extern volatile bool timed_out;
+extern std::atomic<bool> timed_out;
 extern unsigned timeout_count;
 #if ENABLE_TIMEOUT
 void setup_sig_handler();
