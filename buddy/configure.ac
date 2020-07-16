@@ -18,11 +18,11 @@ AC_PROG_YACC
 
 AC_PROG_CXX
 
-# Option to activate C++17
-AC_ARG_ENABLE([c++17],
-              [AC_HELP_STRING([--enable-c++17],
-                              [Compile in C++17 mode.])],
-              [enable_17=yes], [enable_17=no])
+# Option to activate C++20
+AC_ARG_ENABLE([c++20],
+              [AC_HELP_STRING([--enable-c++20],
+                              [Compile in C++20 mode.])],
+              [enable_20=yes], [enable_20=no])
 
 LT_INIT([win32-dll])
 AX_BSYMBOLIC
@@ -50,9 +50,9 @@ if test x$enable_warnings = xyes; then
   CF_GCC_WARNINGS
 fi
 
-# Turn on C++14 support
+# Turn on C++17 support
 AC_LANG(C++)
-m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody],
+m4_define([_AX_CXX_COMPILE_STDCXX_17_testbody],
 [AC_LANG_SOURCE([#include <memory>
 #include <string>
 #include <chrono>  // used to fail in C++11 with some installation of clang
@@ -76,27 +76,30 @@ m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody],
     check_type&& cr = static_cast<check_type&&>(c);
 
     auto d = a;
+
+    int aa[[2]] = {1,2};
+    auto [[x,y]] = aa;
 ])])
 
-if test x"${enable_17}" = xyes; then
+if test x"${enable_20}" = xyes; then
+  for f in -std=c++20 '-std=c++20 -stdlib=libc++' -std=c++2a
+  do
+    AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
+                          [_AX_CXX_COMPILE_STDCXX_17_testbody])
+    ${stdpass-false} && break
+  done
+  if ! "${stdpass-false}"; then
+    AC_ERROR([unable to turn on C++20 mode with this compiler])
+  fi
+else
   for f in -std=c++17 '-std=c++17 -stdlib=libc++' -std=c++1z
   do
     AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
-                          [_AX_CXX_COMPILE_STDCXX_14_testbody])
+                          [_AX_CXX_COMPILE_STDCXX_17_testbody])
     ${stdpass-false} && break
   done
   if ! "${stdpass-false}"; then
     AC_ERROR([unable to turn on C++17 mode with this compiler])
-  fi
-else
-  for f in -std=c++14 '-std=c++14 -stdlib=libc++' -std=c++1y
-  do
-    AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
-                          [_AX_CXX_COMPILE_STDCXX_14_testbody])
-    ${stdpass-false} && break
-  done
-  if ! "${stdpass-false}"; then
-    AC_ERROR([unable to turn on C++14 mode with this compiler])
   fi
 fi
 
