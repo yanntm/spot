@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Compiling against Spot
-#+DESCRIPTION: How to compile C++14 programs using Spot
+#+DESCRIPTION: How to compile C++17 programs using Spot
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tut.html
 #+PROPERTY: header-args:C+++ :results verbatim :exports both
@@ -31,19 +31,19 @@ greetings and the Spot version:
 
 #+RESULTS: hello-word
 : Hello world!
-: This is Spot 2.7.2.dev.
+: This is Spot 2.9.1.dev.
 
 
 To successfully compile this example program, we need a C++ compiler,
 obvisously.  On this page, we are going to assume that you use =g++=
-(version 4.8 or later), but other compilers like =clang++= share the
+(version 7 or later), but other compilers like =clang++= share the
 same user interface.  To successfully build the =hello= program, we
 might need to tell the compiler several things:
 
-1. The language that we use is C++14 (or optionally C++17).  This
-   usually requires passing an option like =-std=c++14=.  Note that
-   with version 6 of =g++= the default is now to compile C++14, so
-   this option is not necessary.
+1. The language that we use is C++17 (or optionally C++20).  This
+   usually requires passing an option like =-std=c++17=.  Note that
+   with version 11 of =g++= the default will be to compile C++17, so
+   this option will not be necessary.
 2. The C++ preprocessor should be able to find =spot/misc/version.hh=.
    This might require appending another directory to the include
    search path with =-I location=.

@@ -1,5 +1,13 @@
 New in spot 2.9.1.dev  (not yet released)
 
+  Build:
+
+  - Spot is now built in C++17 mode, so you need at least GCC 7 or
+    clang 5 to compile it.  The current versions of all major linux
+    distributions ship with at least GCC 7.4, so this should not be a
+    problem.  There is also an --enable-c++20 option to configure in
+    case you want to force a build of Spot in C++20 mode.
+
   Library:
 
   - Historically, Spot labels automata by Boolean formulas over

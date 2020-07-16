@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2013, 2015, 2018 Laboratoire de Recherche et
+// Copyright (C) 2011-2013, 2015, 2018, 2020 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE).
 // Copyright (C) 2004  Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -36,7 +36,7 @@ namespace spot
   /// In CSV files, as defined by RFC4180, double-quoted string that
   /// contain double-quotes should simply duplicate those quotes.
   ///
-  /// Note that in C++14,
+  /// Note that since C++14,
   /// ```
   /// os << std::quoted(str, '"', '"');
   /// ```

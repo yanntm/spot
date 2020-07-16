@@ -47,11 +47,11 @@ adl_CHECK_BISON
 # Decrease verbosity when passing argument V=0
 AM_SILENT_RULES([no])
 
-# Option to activate C++17
-AC_ARG_ENABLE([c++17],
-              [AC_HELP_STRING([--enable-c++17],
-                              [Compile in C++17 mode.])],
-              [enable_17=$enableval], [enable_17=no])
+# Option to activate C++20
+AC_ARG_ENABLE([c++20],
+              [AC_HELP_STRING([--enable-c++20],
+                              [Compile in C++20 mode.])],
+              [enable_20=$enableval], [enable_20=no])
 
 AC_ARG_ENABLE([doxygen],
               [AC_HELP_STRING([--enable-doxygen]),
@@ -93,8 +93,8 @@ AX_CHECK_COMPILE_FLAG([-Werror -fvisibility=hidden],
     [CXXFLAGS="$CXXFLAGS -fvisibility-inlines-hidden"])])
 CXXFLAGS="$CXXFLAGS -DSPOT_BUILD"
 
-# Turn on C++14 support
-m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody],
+# Turn on C++17 support
+m4_define([_AX_CXX_COMPILE_STDCXX_17_testbody],
 [AC_LANG_SOURCE([#include <memory>
 #include <string>
 #include <chrono>  // used to fail in C++11 with some installation of clang
@@ -118,27 +118,30 @@ m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody],
     check_type&& cr = static_cast<check_type&&>(c);
 
     auto d = a;
+
+    int aa[[2]] = {1,2};
+    auto [[x,y]] = aa;
 ])])
 
-if test x"${enable_17}" = xyes; then
+if test x"${enable_20}" = xyes; then
+  for f in -std=c++20 '-std=c++20 -stdlib=libc++' -std=c++2a
+  do
+    AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
+                          [_AX_CXX_COMPILE_STDCXX_17_testbody])
+    ${stdpass-false} && break
+  done
+  if ! "${stdpass-false}"; then
+    AC_ERROR([unable to turn on C++20 mode with this compiler])
+  fi
+else
   for f in -std=c++17 '-std=c++17 -stdlib=libc++' -std=c++1z
   do
     AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
-                          [_AX_CXX_COMPILE_STDCXX_14_testbody])
+                          [_AX_CXX_COMPILE_STDCXX_17_testbody])
     ${stdpass-false} && break
   done
   if ! "${stdpass-false}"; then
     AC_ERROR([unable to turn on C++17 mode with this compiler])
-  fi
-else
-  for f in -std=c++14 '-std=c++14 -stdlib=libc++' -std=c++1y
-  do
-    AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
-                          [_AX_CXX_COMPILE_STDCXX_14_testbody])
-    ${stdpass-false} && break
-  done
-  if ! "${stdpass-false}"; then
-    AC_ERROR([unable to turn on C++14 mode with this compiler])
   fi
 fi
 

@@ -17,10 +17,10 @@ experience of updating a couple of projects that are using Spot.
 * Overview of the changes
 
   Let's begin by just trying to summarize what has changed between
-  Spot 1.2.6 and Spot 2.0, just to get an idea of what will need to be
+  Spot 1.2.6 and Spot 2.x, just to get an idea of what will need to be
   updated.
 
-  1. [[#cpp14][Spot now compiles using the C++14 standard]].  Compliant compiler
+  1. [[#cpp17][Spot now compiles using the C++17 standard]].  Compliant compilers
      are sufficiently widespread now that this should not be an issue.
 
   2. The layout of the source-tree and the layout of the installed
@@ -83,22 +83,20 @@ experience of updating a couple of projects that are using Spot.
      numbered.  Many algorithms have been rewritten on top of this
      =twa_graph= class, and this simplified them a lot.
 
-* Upgrading to C++14
+* Upgrading to C++17
   :PROPERTIES:
-  :CUSTOM_ID: cpp14
+  :CUSTOM_ID: cpp17
   :END:
 
-  Because Spot now relies on C++14 features, programs that use Spot
+  Because Spot now relies on C++17 features, programs that use Spot
   should at least be compiled using this version (or a later one) of
   the language.
 
-  Before the =g++= 6.0, the default C++ standard used was C++98, and
-  enabling C++14 is usually done by passing the option =-std=c++14=.
-  In =g++= 6.0 the default C++ standard used is C++14, so passing
-  =-std=c++14= is not necessary.
+  This is usually done by passing the option =-std=c++17= to =g++= or
+  =clang++=.
 
-  Upgrading from C++98, C++03 or C++11 to C++14 should be relatively
-  smooth as the language is /mostly/ backward compatible.
+  Upgrading from C++98, C++03, C++11, or C++14 to C++17 should be
+  relatively smooth as the language is /mostly/ backward compatible.
 
 * Upgrading =#include= directives
   :PROPERTIES:
