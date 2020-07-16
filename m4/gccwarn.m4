@@ -20,7 +20,21 @@ AC_DEFUN([CF_GXX_WARNINGS],
   [
   cat > conftest.$ac_ext <<EOF
 #line __oline__ "configure"
-int main(int argc, char *argv[[]]) { return argv[[argc-1]] == nullptr; }
+#include <string>
+int main(int argc, char *argv[[]])
+{
+  // This string comparison is here to detect superfluous
+  // zero-as-null-pointer-constant errors introduced with GCC 10.1's
+  // libstdc++, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95242
+  // This is fixed in g++ 10.2, but has the fix is in the compiler
+  // instead of the library, clang++ 10.0 also has trouble with it.
+  // If we hit a compiler with this issue, we simply do not use
+  // -Wzero-as-null-pointer-constant.
+  std::string a{"foo"}, b{"bar"};
+  if (b < a)
+    return 1;
+  return argv[[argc-1]] == nullptr;
+}
 EOF
   cf_save_CXXFLAGS="$CXXFLAGS"
   ac_cv_prog_gxx_warn_flags="-W -Wall"
