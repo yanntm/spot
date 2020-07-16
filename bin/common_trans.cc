@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2015-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2015-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -457,12 +457,12 @@ autproc_runner::round_automaton(spot::const_twa_graph_ptr aut, unsigned serial)
   filename_automaton.new_round(aut, serial);
 }
 
-volatile bool timed_out = false;
+std::atomic<bool> timed_out{false};
 unsigned timeout_count = 0;
 
 static unsigned timeout = 0;
 #if ENABLE_TIMEOUT
-static volatile int alarm_on = 0;
+static std::atomic<int> alarm_on{0};
 static int child_pid = -1;
 
 static void
