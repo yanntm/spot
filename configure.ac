@@ -148,7 +148,6 @@ fi
 AX_CHECK_BUDDY
 
 AC_CHECK_HEADERS([sys/times.h valgrind/memcheck.h spawn.h])
-AX_CHECK_DIVINE
 AC_CHECK_FUNCS([times kill alarm sigaction])
 
 LT_CONFIG_LTDL_DIR([ltdl])
