@@ -842,7 +842,7 @@ namespace spot
       return ptr_ != nullptr;
     }
 
-    operator bool() const noexcept
+    explicit operator bool() const noexcept
     {
       return ptr_ != nullptr;
     }
