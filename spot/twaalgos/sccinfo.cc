@@ -472,9 +472,15 @@ namespace spot
                   "does not support alternating automata");
             auto& node = node_[s];
             if (check_scc_emptiness(s))
-              node.rejecting_ = true;
+              {
+                node.rejecting_ = true;
+              }
             else
-              node.accepting_ = true;
+              {
+                node.accepting_ = true;
+                if (one_acc_scc_ < 0)
+                  one_acc_scc_ = s;
+              }
             changed = true;
           }
       }
