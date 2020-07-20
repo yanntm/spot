@@ -327,6 +327,11 @@ diff foo expected
 # This command used to crash.  Report from František Blahoudek.
 run 0 ltlcross --verbose --no-checks -f 'FGa' 'ltl2tgba'
 
+# In spot 2.9 and 2.9.1 the following command used to report a bug
+# that did not exist.  Issue #420.
+ltlcross --csv=/dev/null ltl2tgba 'ltl2tgba -D -G' --states=5 \
+         -f '(G(F(((a) & (X(X(a)))) | ((!(a)) & (X(X(!(a))))))))'
+
 # The CSV file should not talk about product if --products=0
 ltlcross --color --products=0 ltl2tgba -f GFa -f FGa --csv=out.csv
 grep product out.csv && exit 1

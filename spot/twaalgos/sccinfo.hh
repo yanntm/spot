@@ -535,7 +535,14 @@ namespace spot
       return node_.size();
     }
 
-    /// Return the number of one accepting SCC if any, -1 otherwise.
+    /// \brief Return the number of one accepting SCC if any, -1 otherwise.
+    ///
+    /// If an accepting SCC has been found, return its number.
+    /// Otherwise return -1.  Note that when the acceptance condition
+    /// contains Fin, -1 does not implies that all SCCs are rejecting:
+    /// it just means that no accepting SCC is known currently.  In
+    /// that case, you might want to call
+    /// determine_unknown_acceptance() first.
     int one_accepting_scc() const
     {
       return one_acc_scc_;
