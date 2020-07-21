@@ -45,6 +45,10 @@ New in spot 2.9.2.dev  (not yet released)
     file. With this refactoring, we can retrieve both a kripke or a
     kripkecube from a PINS file.
 
+  Bugs fixed:
+
+  - Completely fix the ltlcross issue mentionned in previous release.
+
 New in spot 2.9.2 (2020-07-21)
 
   Bugs fixed:
