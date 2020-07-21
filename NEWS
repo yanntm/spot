@@ -1,6 +1,8 @@
 New in spot 2.9.2.dev  (not yet released)
 
-  Nothing yet.
+  Bugs fixed:
+
+  - Completely fix the ltlcross issue mentionned in previous release.
 
 New in spot 2.9.2 (2020-07-21)
 

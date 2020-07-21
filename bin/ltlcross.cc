@@ -1531,6 +1531,7 @@ namespace
                                   << " ed.\n";
                       sm = new
                         spot::scc_info(p, spot::scc_info_options::TRACK_STATES);
+                      sm->determine_unknown_acceptance();
                     }
                   catch (const std::bad_alloc&)
                     {

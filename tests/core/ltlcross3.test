@@ -331,6 +331,9 @@ run 0 ltlcross --verbose --no-checks -f 'FGa' 'ltl2tgba'
 # that did not exist.  Issue #420.
 ltlcross --csv=/dev/null ltl2tgba 'ltl2tgba -D -G' --states=5 \
          -f '(G(F(((a) & (X(X(a)))) | ((!(a)) & (X(X(!(a))))))))'
+# And this related one even survived in 2.9.2...
+ltlcross --csv=/dev/null ltl2tgba 'ltl2tgba -P -D' --states=45 \
+         -f 'F(G((X(X(b))) | ((c) U (X(X(d))))))'
 
 # The CSV file should not talk about product if --products=0
 ltlcross --color --products=0 ltl2tgba -f GFa -f FGa --csv=out.csv
