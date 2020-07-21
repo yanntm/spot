@@ -457,12 +457,12 @@ autproc_runner::round_automaton(spot::const_twa_graph_ptr aut, unsigned serial)
   filename_automaton.new_round(aut, serial);
 }
 
-std::atomic<bool> timed_out = false;
+std::atomic<bool> timed_out{false};
 unsigned timeout_count = 0;
 
 static unsigned timeout = 0;
 #if ENABLE_TIMEOUT
-static std::atomic<int> alarm_on = 0;
+static std::atomic<int> alarm_on{0};
 static int child_pid = -1;
 
 static void

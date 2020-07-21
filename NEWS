@@ -1,4 +1,4 @@
-New in spot 2.9.1.dev  (not yet released)
+New in spot 2.9.2.dev  (not yet released)
 
   Build:
 
@@ -44,6 +44,8 @@ New in spot 2.9.1.dev  (not yet released)
     spins_interface which describes the functions exported by a PINS
     file. With this refactoring, we can retrieve both a kripke or a
     kripkecube from a PINS file.
+
+New in spot 2.9.2 (2020-07-21)
 
   Bugs fixed:
 
