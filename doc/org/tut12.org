@@ -240,7 +240,7 @@ perform some LTLf model checking, you should stop at step 3.  Keep the
 =alive= proposition in your property automaton, and also add it to the
 Kripke structure representing your system.
 
-Alternatively, if your Kripke structure is already equiped with some
+Alternatively, if your Kripke structure is already equipped with some
 =dead= property (as introduced by default in our [[https://spot.lrde.epita.fr/ipynb/ltsmin-dve.html][=ltsmin= interface]]),
 you could replace =alive= by =!dead= by using ~ltlfilt
 --from-ltl="!dead"~ (from the command-line), a running
@@ -255,3 +255,7 @@ operator:
 - The strong next: =X[!] a= is true if =a= hold in the next step *and*
   there must be a next step.  In particular =X[!]1= asserts that
   there is a successor.
+
+#  LocalWords:  utf LTLf html args ltlf src ltlfilt Fc tgba svg txt
+#  LocalWords:  ap De Giacomo Vardi IJCAI Dutta Memocode acc Buchi ba
+#  LocalWords:  postprocess aut det str NFA DFA ltsmin iff

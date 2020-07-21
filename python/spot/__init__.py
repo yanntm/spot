@@ -780,7 +780,7 @@ _add_formula('are_equivalent', 'equivalent_to')
 def postprocess(automaton, *args, formula=None, xargs=None):
     """Post process an automaton.
 
-    This applies a number of simlification algorithms, depending on
+    This applies a number of simplification algorithms, depending on
     the options supplied. Keep in mind that 'Deterministic' expresses
     just a preference that may not be satisfied if the input is
     not already 'Deterministic'.

@@ -185,7 +185,7 @@ static const argp_option options[] =
       "match automata with a number of declared, but unused atomic "
       "propositions in RANGE", 0 },
     { "acceptance-is", OPT_ACCEPTANCE_IS, "NAME|FORMULA", 0,
-      "match automata with given accetance condition", 0 },
+      "match automata with given acceptance condition", 0 },
     { "are-isomorphic", OPT_ARE_ISOMORPHIC, "FILENAME", 0,
       "keep automata that are isomorphic to the automaton in FILENAME", 0 },
     { "isomorphic", 0, nullptr, OPTION_ALIAS | OPTION_HIDDEN, nullptr, 0 },

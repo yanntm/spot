@@ -132,3 +132,5 @@ int main()
 
 #+RESULTS:
 : Equivalent
+
+#  LocalWords:  utf html args ltlfilt SRC eq lnot otimes ng iostream

@@ -174,3 +174,6 @@ State: 1
 #+BEGIN_SRC sh :results silent
 rm -f tut31.hoa
 #+END_SRC
+
+#  LocalWords:  utf html args SRC acc Buchi noweb EOF svg txt SCCs
+#  LocalWords:  TGBA tgba aut str

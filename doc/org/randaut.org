@@ -65,11 +65,12 @@ $txt
 
 * Acceptance condition
 
-The generation of the acceptance sets abn is controlled with the following four parameters:
+The generation of the acceptance condition and acceptance sets is
+controlled with the following four parameters:
 
- - =-A ACCEPTANCE= (or =--acceptance=ACCEPTANCE=) controls both the acceptance condition,
-   and the number of associated acceptance sets.  The =ACCEPTANCE= argument is documented
-   in =--help= as follows:
+ - =-A ACCEPTANCE= (or =--acceptance=ACCEPTANCE=) controls both the
+   acceptance condition, and the number of associated acceptance sets.
+   The =ACCEPTANCE= argument is documented in =--help= as follows:
 #+BEGIN_SRC sh :exports results
 randaut --help | sed -n '/^ \(ACCEPTANCE\|RANGE\)/,/^$/p'
 #+END_SRC
@@ -99,7 +100,7 @@ randaut --help | sed -n '/^ \(ACCEPTANCE\|RANGE\)/,/^$/p'
 
 #+end_example
 
- When a range of the form $i..j$ is used, the actual value is taken as randomly
+ When a range of the form $i..j$ is used, the actual value is taken randomly
  between $i$ and $j$ (included).
 
  - =-a= (or =--acc-probability=) controls the probability that any
@@ -136,30 +137,6 @@ $txt
 #+BEGIN_SRC sh
 randaut -Q3 -e0.4 -B -a0.7 2 --dot
 #+END_SRC
-
-#+RESULTS: randaut5
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [shape="circle"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label="0"]
-  0 -> 1 [label=<!p0 &amp; !p1>]
-  0 -> 2 [label=<!p0 &amp; !p1>]
-  1 [label="1", peripheries=2]
-  1 -> 1 [label=<!p0 &amp; !p1>]
-  1 -> 0 [label=<p0 &amp; p1>]
-  2 [label="2", peripheries=2]
-  2 -> 0 [label=<p0 &amp; p1>]
-  2 -> 2 [label=<p0 &amp; !p1>]
-  2 -> 1 [label=<!p0 &amp; !p1>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file randaut5.svg :var txt=randaut5 :exports results
 $txt
@@ -237,7 +214,7 @@ automatically implies =--ba=.
 
 Automata are send to standard output by default, by you can use =-o=
 to give a filename, or even a pattern for filenames.  For instance the
-following generates 20 automatas, but store them in different files
+following generates 20 automata, but store them in different files
 according to the acceptance condition.  The format =%g= represent the
 formula for the acceptance condition and would not make a nice
 filename, but =%[s]g= is a short name for that acceptance condition
@@ -300,3 +277,7 @@ $txt
 
 You should be able to find each of the expected type of SCCs in the above picture.
 The green rectangles mark the three SCCs that contain some accepting cycles.
+
+#  LocalWords:  utf randaut html args SRC svg txt randltl sed Buchi
+#  LocalWords:  acc ba rankdir hoaf lbtt Hl wc rautaut SCCs SCC sccs
+#  LocalWords:  A'parity

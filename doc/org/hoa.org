@@ -5,7 +5,7 @@
 #+PROPERTY: header-args:sh :results verbatim :exports both
 
 
-The [[http://adl.github.io/hoaf/][Hanoi Omega-Automa format]] is a textual representation of
+The [[http://adl.github.io/hoaf/][Hanoi Omega-Automata format]] is a textual representation of
 ω-automata labeled by Boolean formulas over a set of atomic
 propositions, and using an arbitrary acceptance condition. The
 typical acceptances conditions like Büchi, generalized-Büchi,
@@ -680,7 +680,7 @@ The above table is for version 1 of the format.  When version 1.1 is
 selected (using =-H1.1=), some negated properties may be output.  In
 particular, =stutter-sensitive= is replaced by =!stutter-invariant=.
 The logic of not cluttering the output with all of =!terminal=,
-=!weak=, and =!inhenrently-weak= is similar to the positive versions:
+=!weak=, and =!inherently-weak= is similar to the positive versions:
 =!inherently-weak= implies =!weak= which in turn implies =!terminal=,
 so only one of those is emitted unless =-Hv= is used.
 
@@ -998,30 +998,6 @@ EOF
 autfilt decorate.hoa -d'.#'
 #+END_SRC
 
-#+RESULTS: decorate
-#+begin_example
-digraph "" {
-  rankdir=LR
-  label=<t<br/>[all]>
-  labelloc="t"
-  node [shape="circle"]
-  node [style="filled", fillcolor="#ffffa0"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[fontsize=12] fontsize=12 stylesheet="spot.css" edge[arrowhead=vee, arrowsize=.7, fontsize=12]
-  I [label="", style=invis, width=0]
-  I -> 1
-  0 [label=<0>]
-  0 -> 0 [label=<1>, taillabel="#1", style=bold, color="#FF4DA0"]
-  1 [label=<1>, style="bold,filled", color="#1F78B4"]
-  1 -> 2 [label=<1>, taillabel="#2", style=bold, color="#FF7F00"]
-  2 [label=<2>, style="bold,filled", color="#6A3D9A"]
-  2 -> 0 [label=<b>, taillabel="#3"]
-  2 -> 2 [label=<a &amp; !b>, taillabel="#4"]
-}
-#+end_example
-
 #+BEGIN_SRC dot :file decorate.svg :var txt=decorate :exports results
   $txt
 #+END_SRC
@@ -1172,3 +1148,9 @@ State: 2 {0}
 #+BEGIN_SRC sh :results silent :exports results
 rm -f stvstracc.hoa sba.hoa stvstrlab.hoa decorate.hoa
 #+END_SRC
+
+#  LocalWords:  html args Büchi accsets BDD SRC stvstracc EOF sed sba
+#  LocalWords:  acc Buchi Hm tgba GFa Fb encodings parametered ary Hk
+#  LocalWords:  bitsets randaut stvstrlab aut Hv hw bigwedge mathsf
+#  LocalWords:  genltl gf GFp Fp parser's rankdir br labelloc ffffa
+#  LocalWords:  fillcolor fontname svg txt Xa

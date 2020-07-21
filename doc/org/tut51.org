@@ -593,5 +593,5 @@ class, used to build on-the-fly product.
 #  LocalWords:  nondeterministicaly kripke succ plantuml uml png iter
 #  LocalWords:  bdd ptr const init bool dst cond acc pos ithvar ap ss
 #  LocalWords:  xodd yodd str nullptr noweb cmdline Tpng cmd circo GF
-#  LocalWords:  txt LTL af preallocated deallocation destructor
-#  LocalWords:  unicity
+#  LocalWords:  txt LTL af preallocated deallocation destructor svg
+#  LocalWords:  unicity kA src cpp tooltip

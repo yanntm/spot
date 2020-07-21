@@ -339,9 +339,9 @@ sb-patterns=27,p0 | (p1 U p0)
 #+end_example
 
 Note that ~--sb-patterns=2 --sb-patterns=4 --sb-patterns=21..22~ also
-have their complement formula listed as ~--sb-patterns=3
+have their complement formulas listed as ~--sb-patterns=3
 --sb-patterns=8 --sb-patterns=23..24~.  So if you build the set of
-formula output by =genltl --sb-patterns= plus its negation, it will
+formulas output by =genltl --sb-patterns= plus their negations, it will
 contain only 46 formulas, not 54.
 
 #+BEGIN_SRC sh
@@ -356,3 +356,6 @@ genltl --sb --pos --neg | ltlfilt --uniq --count
 #  LocalWords:  ccj Xp XXp Xq XXq rv GFp lbt utf SETUPFILE html dac
 #  LocalWords:  Dwyer et al FMSP Etessami Holzmann sb Somenzi Bloem
 #  LocalWords:  CAV LaTeX Fq Fp pNN Gp XFp XF XGp FGp XG ltlfilt uniq
+#  LocalWords:  args fxg GFa GFan GFz xn gxf hkrss liberouter Holeček
+#  LocalWords:  kr DBA nlogn quasilinear kv Xb XXb XXXb FGa GFb beem
+#  LocalWords:  Pelánek sejk GFai GFbn FGb FGbn Sikert al's tv uu pos

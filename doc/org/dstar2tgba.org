@@ -183,7 +183,7 @@ The =dstar2tgba= tool implements a 4-step process:
 
   1. read the automaton
   2. convert it into TGBA
-  3. postprocess the resulting TGBA (simplifying the automaton, a degeneralizing it into a BA or Monitor if requested)
+  3. post-process the resulting TGBA (simplifying the automaton, degeneralizing it into a BA or Monitor if requested)
   4. output the resulting automaton
 
 BTW, the above scenario is also exactly what you get with [[file:autfilt.org][=autfilt=]] if
@@ -298,7 +298,7 @@ For instance here is a complex command that will
    - print it
    - then convert the formula into =ltl2dstar='s input format, process
      it with =ltl2dstar= (using =ltl2tgba= as the actual LTL->BA
-     transltor), and process the result with =dstar2tgba= to build a
+     translator), and process the result with =dstar2tgba= to build a
      Büchi automaton (=-B=), favoring determinism if we can (=-D=),
      and finally displaying some statistics about this conversion.
 
@@ -433,3 +433,10 @@ Sometimes, as in the [[#streett_to_tgba_example][example for =GFa & GFb=]] the o
 conversion happens to be deterministic.  This is pure luck: Spot does
 not implement any algorithm to preserve the determinism of Streett
 automata.
+
+#  LocalWords:  utf dstar tgba html args LBTT's dstar's Ds GFb DRA ba
+#  LocalWords:  fagfb ltlfilt SRC nba dsar DBA Acc Sig svg txt init
+#  LocalWords:  fi streett GFa gfafgb gfagfb degeneralizing sed sbacc
+#  LocalWords:  ouput lbtt GraphViz's SCCs hoaf neverclaim randltl wm
+#  LocalWords:  Sst sst det Fc Gc GFc Xc XXFc XFc Gb SCC CNF buchi et
+#  LocalWords:  Krishnan al vis Löding's cdot

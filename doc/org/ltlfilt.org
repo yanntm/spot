@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =ltlfilt=
-#+DESCRIPTION: Spot command-line tool for filtering, tranforming, and converting LTL formulas.
+#+DESCRIPTION: Spot command-line tool for filtering, transforming, and converting LTL formulas.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 #+PROPERTY: header-args:sh :results verbatim :exports both
@@ -159,7 +159,7 @@ ltlfilt -f '(a & !b) & GF(a & !b) & FG(!c & a)' --relabel-bool=pnn
 : p0 & GFp0 & FGp1
 : p0 & p1 & GF(p0 & p1) & FG(p0 & p2)
 
-In the first formula, the independent =a & !b= and =!c= subformulae
+In the first formula, the independent =a & !b= and =!c= subformulas
 were respectively renamed =p0= and =p1=.  In the second formula, =a &
 !b= and =!c & a= are dependent so they could not be renamed; instead
 =a=, =!b= and =c= were renamed as =p0=, =p1= and =p2=.
@@ -595,4 +595,8 @@ rm -f ltlex.def ltlex.never scheck.ltl
 #  LocalWords:  ltlfilt num toc LTL PSL syntaxes LBT's SRC GFp scheck
 #  LocalWords:  ltl EOF lbt Gp Fp Xp XFp XXp randltl ary nnf wm abc
 #  LocalWords:  pnn Xb Fc XFb XXd sed boolean bsize nox Gb Fb Xa XGb
-#  LocalWords:  XF XXa
+#  LocalWords:  XF XXa utf html args isop bool ap APs ltlf LTLf STR
+#  LocalWords:  subexpressions unabbreviate substring eFGiMRW eFGiMW
+#  LocalWords:  GF FG FGp hfe rdy req lup sr clk addr eq GFa XG Xc Xd
+#  LocalWords:  subexpression ba neverclaim ltlex init fi ltldo siPSL
+#  LocalWords:  subformula FXb FX CSV vw Pnueli LaTeX wc

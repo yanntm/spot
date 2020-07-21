@@ -26,7 +26,7 @@ memory.
 
 Our Kripke structure represent a model whose states consist of pairs
 of modulo-3 integers $(x,y)$. At any state the possible actions
-will be to increment any one of the two integer (nondeterministicaly).
+will be to increment any one of the two integers (nondeterministically).
 That increment is obviously done modulo 3.  For instance state $(1,2)$
 has two possible successors:
   - $(2,2)$ if =x= was incremented, or
@@ -303,3 +303,6 @@ read the C++ description for details.
 #+BEGIN_SRC text :noweb yes
 <<demo-2py()>>
 #+END_SRC
+
+#  LocalWords:  utf html kripke SRC bool bdd ithvar ap init noweb svg
+#  LocalWords:  GraphViz's cmd circo txt GF af py bdddict ns str

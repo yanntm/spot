@@ -25,7 +25,7 @@ constructors for each supported operator.
 The Boolean constants true and false are returned by =formula::tt()=
 and =formula:ff()=.  Atomic propositions can be built with
 =formula::ap("name")=.  Unary and binary operators use a
-straighforward syntax like =formula::F(arg)= or =formula::U(first,
+straightforward syntax like =formula::F(arg)= or =formula::U(first,
 second)=, while n-ary operators take an initializer list as argument
 as in =formula::And({arg1, arg2, arg3})=.
 
@@ -48,7 +48,7 @@ Here is the list of supported operators:
   formula::G(arg, min, max);     // G[min..max] arg
   formula::Closure(arg);
   formula::NegClosure(arg);
-  formula::first_match(arg);      // SVA's first match opetaror
+  formula::first_match(arg);      // SVA's first match operator
   // binary operators
   formula::Xor(left, right);
   formula::Implies(left, right);
@@ -485,3 +485,8 @@ Here is the =F= and =G= exchange:
 
 Like in C++, extra arguments to =map= and =traverse= are passed as
 additional to the function given in the first argument.
+
+#  LocalWords:  utf html args accessor Unary arg ary initializer SRC
+#  LocalWords:  unary SVA's tl pdf subformulas subformula memoization
+#  LocalWords:  iostream FGa GFb GFc fga gfb gfc kindstar kindstr DFS
+#  LocalWords:  enum subtrees gcount cpp GF Fb xchg fg GFa FGb countg

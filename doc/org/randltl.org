@@ -341,4 +341,5 @@ non-length-matching variant of the =and= operator.
 #  LocalWords:  Xc GFb Gc Xb Fb XFb Xa dups ltlfilt Fc XXc GX GFc XG
 #  LocalWords:  rewritings ltl ap GF ANDed GFa boolean EConcat eword
 #  LocalWords:  UConcat boolform andNLM concat Kleen eval setenv setq
-#  LocalWords:  getenv
+#  LocalWords:  getenv html args FGb nonnegative Fp FGp xargs LaTeX
+#  LocalWords:  FGc subformula GXb fstar

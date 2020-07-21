@@ -79,7 +79,7 @@ experience of updating a couple of projects that are using Spot.
      =tgba_explicit_string= used to encode a TGBA using a graph whose
      state was named using LTL formulas, integers, or strings) are
      replaced by a =twa_graph= class in which the representation is
-     more complact and efficient, but where states are necessarily
+     more compact and efficient, but where states are necessarily
      numbered.  Many algorithms have been rewritten on top of this
      =twa_graph= class, and this simplified them a lot.
 
@@ -360,7 +360,7 @@ removed, ~8200 lines added), and brings some nice benefits:
 - LTL/PSL formulas are now represented by lightweight formula
   objects (instead of pointers to children of an abstract
   formula class) that perform reference counting automatically.
-- There is no hierachy anymore: all operators are represented by
+- There is no hierarchy anymore: all operators are represented by
   a single type of node in the syntax tree, and an enumerator is
   used to distinguish between operators.
 - Visitors have been replaced by member functions such as =map()=
@@ -665,3 +665,14 @@ for (auto i: aut->succ(s))
 | ~tgba_succ_iterator::current_acceptance_conditions()~       | ~twa_succ_iterator::acc()~                  |                                                           |
 | ~tgba_succ_iterator::current_condition()~                   | ~twa_succ_iterator::cond()~                 |                                                           |
 | ~tgba_succ_iterator::current_state()~                       | ~twa_succ_iterator::dst()~                  |                                                           |
+
+#  LocalWords:  utf html cpp BuDDy ptr TGBA tgba twa tgba renamings
+#  LocalWords:  reimplemented cpp SRC bdd bddx BuDDy bvec bvecx fdd
+#  LocalWords:  fddx dstarparse eltlparse iface kripke adhoc ltlast
+#  LocalWords:  kripkeparse ltlenv ltlparse ltlvisit config sabaalgos
+#  LocalWords:  neverparse saba taalgos tgbaalgos dualize tgbaparse
+#  LocalWords:  libbdd libbddx lspot lbddx lbdd namespace ptr xargs
+#  LocalWords:  typedefs sed aut taa tgta acc buchi myalgorithm succ
+#  LocalWords:  iter num dst cond BDDs arg dstar dtgba dupexp bfs dfs
+#  LocalWords:  instantiator hoaf lbtt tl simplifier boolean psl str
+#  LocalWords:  lbt sclatex utg utf neverclaim scc

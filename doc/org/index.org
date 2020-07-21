@@ -77,3 +77,6 @@ in any question (in English) or bug report without subscribing.
 
 Our [[file:citing.org][citing page]] has a list of papers you could cite if you need to
 reference Spot in an academic publication.
+
+#  LocalWords:  utf psl acc LBTT DSTAR Pnueli DBA SCCs ltlcross GPL
+#  LocalWords:  autcross LASTRELEASE LASTDATE Doxygen Jupyter IPython

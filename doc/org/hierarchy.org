@@ -70,7 +70,7 @@ supported by Spot).  The combination of these allowed operators only
 makes it possible to express constraints on finite prefixes.
 
 /Obligations/ can be thought of as Boolean combinations of /safety/
-and /guarentee/ properties, while /reactivity/ properties are Boolean
+and /guarantee/ properties, while /reactivity/ properties are Boolean
 combinations of /recurrence/ and /persistence/ properties.  The
 negation of a /safety/ property is a /guarantee/ property (and
 vice-versa), and the same duality hold for /persistence/ and
@@ -182,7 +182,7 @@ The order given above actually starts with the easier checks first and
 keep the most complex tests at the end of the pipeline so they are
 applied to fewer formulas.  Testing whether a formula is an LTL
 formula is very cheap, testing if a formula is an obligation is harder
-(it may involves a translation to automata and a poweset
+(it may involves a translation to automata and a powerset
 construction), and testing whether a formula is a recurrence is the
 most costly procedure (it involves a translation as well, plus
 conversion to deterministic Rabin automata, and an attempt to convert
@@ -518,7 +518,7 @@ language larger than that of the property.
 automata.
 
 For the subclass of /obligation/ properties, using =-D= is a sure way
-to obain a deterministic automaton (and even a minimal one), but for
+to obtain a deterministic automaton (and even a minimal one), but for
 the /recurrence/ properties that are not /obligations/ the translator
 does not make /too much/ effort to produce deterministic automata,
 even with =-D= (this might change in the future).
@@ -666,7 +666,7 @@ The translator is aware of that, so when it detects that the input
 formula is a syntactic-persistence, it simplifies its translation
 slightly to ensure that the output will use at most one acceptance
 set.  (It is possible to define a persistence properties using an LTL
-formula that is not a syntactic-persistance, in that case this
+formula that is not a syntactic-persistence, in that case this
 optimization is simply not applied.)
 
 If the input is a weak property that is not syntactically weak, the
@@ -723,3 +723,10 @@ $txt
 [[file:hier-persistence-7.svg]]
 
 That is indeed, a weak non-deterministic automaton.
+
+#  LocalWords:  utf Pnueli html args PODC SCC subexpressions mathsf
+#  LocalWords:  SRC ltlfilt vw GOPRT randltl genltl ltlgrind Dwyers
+#  LocalWords:  et al FMSP dac uniq XFp psl Fb GF Gb FX GFb GXa wc tl
+#  LocalWords:  powerset pdf FGb Xa Xb FXa GFa Löding IPL Dax ATVA
+#  LocalWords:  tgba Löding's nondet hier oblig svg txt SCCs dstar
+#  LocalWords:  XFb ltldo streett DBA FGa varphi

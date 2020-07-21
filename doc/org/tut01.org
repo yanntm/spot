@@ -463,3 +463,8 @@ _formula_format(self, spec)
                formating function for strings.
 
 #+end_example
+
+#  LocalWords:  utf html args ltlfilt LBT lbt SRC GFp FGp LBT's str
+#  LocalWords:  parenth parsers stex iostream psl superset nullptr GF
+#  LocalWords:  subformulas simplifier simp sp lq CSV formatspec
+#  LocalWords:  LaTeX formating

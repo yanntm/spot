@@ -35,7 +35,7 @@ greetings and the Spot version:
 
 
 To successfully compile this example program, we need a C++ compiler,
-obvisously.  On this page, we are going to assume that you use =g++=
+obviously.  On this page, we are going to assume that you use =g++=
 (version 7 or later), but other compilers like =clang++= share the
 same user interface.  To successfully build the =hello= program, we
 might need to tell the compiler several things:
@@ -55,7 +55,7 @@ might need to tell the compiler several things:
 
 In the likely case linking was made against the shared library
 =libspot.so=, the dynamic loader will have to locate =libspot.so=
-everytime the =hello= program is started, so this too might require
+every time the =hello= program is started, so this too might require
 some fiddling, for instance using the environment variable
 =LD_LIBRARY_PATH= if the library has not been installed in a standard
 location.
@@ -146,7 +146,7 @@ it every time you want to run a binary that depends on Spot.
 
 * Case 4: You compiled Spot yourself, but did not install it
 
-We do not recommand this, but it is possible to compile programs
+We do not recommend this, but it is possible to compile programs
 that uses an uninstalled version of Spot.
 
 So you would just compile Spot in some directory (let's call it
@@ -178,7 +178,7 @@ There are at least two traps with this scenario:
    archive/ (some file with a =*.la= extension) that is an abstraction
    for a library (be it static, shared, or both), and its dependencies
    or options.  During =make install=, these /Libtool archives/ are
-   transformed into actuall shared or static libraries, installed and
+   transformed into actual shared or static libraries, installed and
    configured properly.  But since in this scenario =make install= is
    not run, you have to deal with the /Libtool archives/ directly.
 
@@ -205,7 +205,7 @@ the desired result.  See the [[http://www.gnu.org/software/libtool/manual/][GNU 
 * Other libraries
 
 If your program has to handle BDDs directly (for instance if you are
-[[file:tut22.org][creating an automaton]] explicitely), or if your system does not support
+[[file:tut22.org][creating an automaton]] explicitly), or if your system does not support
 one library requiring another, you will need to link with the =bddx=
 library.  This should be as simple as adding =-lbddx= after =-lspot=
 in the first three cases.
@@ -234,8 +234,8 @@ will turn on assertions, and debugging options, while
 #+END_SRC
 will disable assertions and enable more optimizations.
 
-If you are writing programs against Spot, we recommand to compile Spot
-with =--enable-devel= while your are developping your programs (the
+If you are writing programs against Spot, we recommend to compile Spot
+with =--enable-devel= while your are developing your programs (the
 assertions in Spot can be useful to diagnose problems in your program,
 or in Spot), and then use =--disable-devel= once you are confident and
 desire speed.
@@ -245,3 +245,7 @@ will default to =--disable-devel=.
 
 Development versions (i.e., versions ending with a letter) default to
 =--enable-devel=.
+
+#  LocalWords:  utf html args SRC nThis preprocessor libspot lspot LD
+#  LocalWords:  dev subdirectory sudo ldconfig ld usr Libtool libtool
+#  LocalWords:  portably gdb BDDs bddx lbddx libbddx Wextra Og devel

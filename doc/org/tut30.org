@@ -35,7 +35,7 @@ any acceptance to Büchi acceptance.
 We use =autfilt= with option =-B= to request Büchi acceptance and
 state-based output and =-D= to express a preference for deterministic
 output.  Using option =-D/--deterministic= (or =--small=) actually
-activates the "postprocessing" routines of Spot: the acceptance will
+activates the "post-processing" routines of Spot: the acceptance will
 not only be changed to Büchi, but simplification routines (useless
 SCCs removal, simulation-based reductions, acceptance sets
 simplifications, WDBA-minimization, ...) will also be applied.
@@ -84,7 +84,7 @@ $txt
 
 In the general case transforming an automaton with a complex
 acceptance condition into a Büchi automaton can make the output
-bigger.  However the postprocessing routines may manage to simplify
+bigger.  However the post-processing routines may manage to simplify
 the result further.
 
 
@@ -139,7 +139,7 @@ Help on function postprocess in module spot:
 postprocess(automaton, *args, formula=None, xargs=None)
     Post process an automaton.
 
-    This applies a number of simlification algorithms, depending on
+    This applies a number of simplification algorithms, depending on
     the options supplied. Keep in mind that 'Deterministic' expresses
     just a preference that may not be satisfied if the input is
     not already 'Deterministic'.
@@ -234,3 +234,7 @@ State: 4
 #+BEGIN_SRC sh :results silent
 rm -f tut30.hoa
 #+END_SRC
+
+#  LocalWords:  utf html args dstar SRC ltldo Xp XXp svg txt SCCs acc
+#  LocalWords:  WDBA Buchi postprocess aut str xargs TGBA coBuchi
+#  LocalWords:  StateBasedAcceptance SBAcc postprocessor

@@ -47,7 +47,7 @@ automata in Spot.
     // States are numbered from 0.
     aut->new_states(3);
     // The default initial state is 0, but it is always better to
-    // specify it explicitely.
+    // specify it explicitly.
     aut->set_init_state(0U);
 
     // new_edge() takes 3 mandatory parameters: source state,
@@ -109,7 +109,7 @@ State: 2
   # States are numbered from 0.
   aut.new_states(3)
   # The default initial state is 0, but it is always better to
-  # specify it explicitely.
+  # specify it explicitly.
   aut.set_init_state(0)
 
   # new_edge() takes 3 mandatory parameters: source state, destination state,
@@ -202,7 +202,7 @@ whenever possible".
     // States are numbered from 0.
     aut->new_states(3);
     // The default initial state is 0, but it is always better to
-    // specify it explicitely.
+    // specify it explicitly.
     aut->set_init_state(0U);
 
     // new_edge() takes 3 mandatory parameters: source state,
@@ -267,7 +267,7 @@ State: 2
   # States are numbered from 0.
   aut.new_states(3)
   # The default initial state is 0, but it is always better to
-  # specify it explicitely.
+  # specify it explicitly.
   aut.set_init_state(0)
 
   # new_edge() takes 3 mandatory parameters: source state, destination state,
@@ -405,3 +405,6 @@ State: 2
 [0 | 1] 1 {0 2}
 --END--
 #+end_SRC
+
+#  LocalWords:  utf html args SRC tgba TGBAs cpp bdd aut twa ap buchi
+#  LocalWords:  ithvar init acc bdict BuDDy str sba setacc cond
