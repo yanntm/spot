@@ -294,7 +294,7 @@ The following options can be used to fine-tune this procedure:
      where is the difference? They both start by encoding the research of the
      =N-1= step and then:
        - =2= uses PicoSAT assumptions. It adds =sat-incr-steps= assumptions
-         (each of them removing one more state) and then checks direclty the
+         (each of them removing one more state) and then checks directly the
          =N-1-(sat-incr-steps)= step. If such automaton is found, the process is
          restarted. Otherwise, a binary search begins between =N-1= and
          =N-1-sat-incr-steps=. If not provided, =sat-incr-steps= default value
@@ -307,7 +307,7 @@ The following options can be used to fine-tune this procedure:
 - =-x sat-minimize=4= :: enable SAT-based minimization. It tries to reduce the
      size of the automaton one state at a time. This option implies
      =-x tba-det=.
-- =-x sat-incr-steps=N= :: set the value of =sat-incr-steps= to N. It doest not
+- =-x sat-incr-steps=N= :: set the value of =sat-incr-steps= to N. It does not
      make sense to use it without =-x sat-minimize=2= or =-x sat-minimize=3=.
 - =-x sat-acc=$m$= :: attempt to build a minimal DTGBA with $m$ acceptance sets.
      This options implies =-x sat-minimize=.
@@ -497,7 +497,7 @@ The =--sat-minimize= option takes a comma separated list of arguments
 that can be any of the following:
 
 - =acc=DOUBLEQUOTEDSTRING= :: where the =DOUBLEQUOTEDSTRING= is an
-     acceptance formula in the [[http://adl.github.io/hoaf/#acceptance][HOA syntax]], or a parametrized acceptance
+     acceptance formula in the [[http://adl.github.io/hoaf/#acceptance][HOA syntax]], or a parameterized acceptance
      name (the different [[http://adl.github.io/hoaf/#acceptance-specifications][=acc-name:= options from HOA]]).
 - =max-states=N= :: where =N= is an upper-bound on the maximum
      number of states of the constructed automaton.
@@ -515,7 +515,7 @@ that can be any of the following:
      starting automaton. Now, where is the difference? They both start by
      encoding the research of the =N-1= step and then:
        - =1= uses PicoSAT assumptions. It adds =steps= assumptions (each of
-         them removing one more state) and then checks direclty the
+         them removing one more state) and then checks directly the
          =N-1-(sat-incr-steps)= step. If such automaton is found, the process is
          restarted. Otherwise, a binary search begins between =N-1= and
          =N-1-sat-incr-steps=. If not provided, =sat-incr-steps= defaults to 6.
@@ -645,3 +645,10 @@ rm -f output.hoa output2.hoa
 * Python interface
 
 See the [[https://spot.lrde.epita.fr/ipynb/satmin.html][=satmin.ipynb=]] notebook.
+
+#  LocalWords:  utf html args SRC tgba dstar DTBA DT PicoSAT LPAR GF
+#  LocalWords:  unminimized SATSOLVER det tba degeneralized gfaexxb
+#  LocalWords:  svg txt BD ltlfilt DRA wm nba acc arg ltldo DBA WDBA
+#  LocalWords:  SCC TCONG powerset incr DTGBA wdba FGa FGb autfiltsm
+#  LocalWords:  Buchi GFa GFb DOUBLEQUOTEDSTRING langmap SATLOG csv
+#  LocalWords:  src sed sys satmin ipynb

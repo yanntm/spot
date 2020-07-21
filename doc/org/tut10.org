@@ -215,3 +215,6 @@ translate(formula, *args, dict=<spot.impl.bdd_dict; proxy of <Swig Object of typ
     so check out the spot-x(7) man page for details.
 
 #+end_example
+
+#  LocalWords:  utf html args SRC tgba GFa GFb init fi str aut xargs
+#  LocalWords:  coBuchi StateBasedAcceptance SBAcc

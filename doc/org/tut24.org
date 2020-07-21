@@ -239,3 +239,8 @@ State 2:
 #+BEGIN_SRC sh :results silent :exports results
 rm -f tut24.hoa
 #+END_SRC
+
+#  LocalWords:  utf html args noweb SRC acc Buchi EOF svg txt aut num
+#  LocalWords:  nonalt init const src dst cond dest aut init dst SRC
+#  LocalWords:  dests nonalt num src cond acc noweb bdict ui str ud
+#  LocalWords:  bdd

@@ -213,7 +213,7 @@ can be specified if needed.
 There are actually different C++ interfaces to the automaton parser,
 depending on your use case.  For instance the parser is able to read a
 stream of automata stored in the same file, so that they could be
-processed in a loop.  For this, you would instanciate a
+processed in a loop.  For this, you would instantiate a
 =spot::automaton_stream_parser= object and call its =parse()= method
 in a loop.  Each call to this method will either return one
 =spot::parsed_aut_ptr=, or =nullptr= if there is no more automaton to
@@ -319,3 +319,6 @@ State: 1 {0}
 #+BEGIN_SRC sh :results silent :exports results
 rm -f tut20.never
 #+END_SRC
+
+#  LocalWords:  utf html args SRC init od LBTT's dstar's acc Buchi fi
+#  LocalWords:  str lbtt aut BDDs bdd ptr nullptr

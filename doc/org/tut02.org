@@ -155,3 +155,7 @@ ltlfilt -ps --relabel-bool=pnn --define -f 'a U (a & b)'
    This "Boolean sub-expression" relabeling is available in Python and
    C++ via the =relabel_bse= function.  The interface is identical to
    =relabel=.
+
+#  LocalWords:  utf html args renamings SRC ltlfilt ps pnn ba prepend
+#  LocalWords:  tmp defs init fi ltldo newname oldname str iostream
+#  LocalWords:  abc Abc bool bse

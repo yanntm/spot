@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #+TITLE: =autfilt=
-#+DESCRIPTION: Spot command-line tool for filtering, tranforming, and converting ω-automata.
+#+DESCRIPTION: Spot command-line tool for filtering, transforming, and converting ω-automata.
 #+INCLUDE: setup.org
 #+HTML_LINK_UP: tools.html
 #+PROPERTY: header-args:sh :results verbatim :exports both
@@ -9,10 +9,10 @@ The =autfilt= tool can filter, transform, and convert a stream of automata.
 
 The tool operates a loop over 5 phases:
 - input one automaton
-- optionally preprocess the automaton
+- optionally pre-process the automaton
 - optionally filter the automaton (i.e., decide whether to ignore the
   automaton or continue with it)
-- optionally postprocess the automaton (to simply it or change its acceptance)
+- optionally post-process the automaton (to simply it or change its acceptance)
 - output the automaton
 
 The simplest way to use the tool is simply to use it for input and
@@ -211,7 +211,7 @@ autfilt --help | sed -n '/Filtering options.*:/,/^$/p' | sed '1d;$d'
                              in RANGE
       --accept-word=WORD     keep automata that accept WORD
       --acceptance-is=NAME|FORMULA
-                             match automata with given accetance condition
+                             match automata with given acceptance condition
       --ap=RANGE             match automata with a number of (declared) atomic
                              propositions in RANGE
       --are-isomorphic=FILENAME   keep automata that are isomorphic to the
@@ -248,6 +248,8 @@ autfilt --help | sed -n '/Filtering options.*:/,/^$/p' | sed '1d;$d'
       --is-weak              keep only weak automata
       --nondet-states=RANGE  keep automata whose number of nondeterministic
                              states is in RANGE
+  -N, --nth=RANGE            assuming input automata are numbered from 1, keep
+                             only those in RANGE
       --rej-sccs=RANGE, --rejecting-sccs=RANGE
                              keep automata whose number of non-trivial
                              rejecting SCCs is in RANGE
@@ -809,7 +811,7 @@ randltl -n -1 a b | ltlfilt --simplify --remove-wm |
    :header-args:sh: :results verbatim :exports code
    :END:
 
-We know from a previous exemple that formula =a U b U c= accepts the
+We know from a previous example that formula =a U b U c= accepts the
 word =b; cycle{c}=.  We can actually highlight the corresponding
 run in the automaton:
 
@@ -868,3 +870,13 @@ ltl2tgba 'F((b R a) W Gb)' |
 #+BEGIN_SRC sh :results silent :exports results
 rm -f example.hoa aut-ex1.hoa
 #+END_SRC
+
+#  LocalWords:  utf html args pre LBTT's dstar lbtt SRC EOF DOTEXTRA
+#  LocalWords:  rankdir invis init fi randaut acc SCCs det tgba sed
+#  LocalWords:  CSV iw dges tates sccs ap SCC nondet rej triv ba Dax
+#  LocalWords:  cobuchi coBuchi superset sbacc determinized al ATVA
+#  LocalWords:  Safra Redziejowski cnf scc aN subautomaton destut dnf
+#  LocalWords:  dualize APs rabin gra streett gsa instut NUM incr aut
+#  LocalWords:  langmap preproc PicoSAT SATsolver SATSOLVER svg txt
+#  LocalWords:  randltl ltlfilt uniq Fb XF ltldo wm Gb GFa FG hlword
+#  LocalWords:  hlnondet

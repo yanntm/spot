@@ -126,7 +126,7 @@ Once the repository is set up, you can simply install Spot with:
 sudo dnf install spot python3-spot spot-devel spot-doc
 #+END_SRC
 or a subset of those packages.  The package =spot= contains the
-command-line tools, =python3-spot= contains the Python bindinges,
+command-line tools, =python3-spot= contains the Python bindings,
 =spot-devel= contains the C++ header files, and =spot-doc= the
 documentation that you can also find online.  Those packages depends
 on =libspot= that contains the shared libraries.
@@ -138,7 +138,7 @@ on =libspot= that contains the shared libraries.
 
 The =master= branch of the git repository contains the code for the
 latest released version, possibly with a few yet-to-be-released
-bugfixes.  The =next= branch is the main development branch, and contains
+bug fixes.  The =next= branch is the main development branch, and contains
 the (working) code that should be part of the next major release.
 
 To clone the git repository, use
@@ -151,3 +151,8 @@ This should put you on the =next= branch by default.  From there, read
 the [[https://gitlab.lrde.epita.fr/spot/spot/blob/next/HACKING][HACKING]] file that should be at the top of your cloned repository:
 it lists all the tools you should install before attempting to compile
 the source tree.
+
+#  LocalWords:  utf html LASTRELEASE LASTTARBALL LASTNEWS dev sudo
+#  LocalWords:  libpython usr SRC README amd wget libspot GPG CFD pdf
+#  LocalWords:  FECF ipython libbddx libspotltsmin dnf config repo
+#  LocalWords:  lrde devel

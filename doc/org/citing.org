@@ -19,7 +19,6 @@ use the following reference:
   of the library, [[file:tools.org][the tools]], the Python bindings), and provides many
   references detailing more specific aspects.
 
-
 * Other, more specific, references
 
 Alternatively, you may also like to reference these papers to
@@ -91,3 +90,11 @@ be more specific about a particular aspect of Spot.
 
   For a while, this used to be the only paper presenting Spot as a
   model-checking library.
+
+#  LocalWords:  utf html Alexandre Duret Lutz Lewkowicz Amaury Xu pdf
+#  LocalWords:  Fauchille Thibaud Michaud Etienne Proc ATVA LNCS TGBA
+#  LocalWords:  ltlfilt randltl ltlcross tgba Eddine Fabrice Kordon
+#  LocalWords:  Petri ToPNoC tgta Souheib Baarir LPAR Tomáš Babiak
+#  LocalWords:  František Blahoudek Joachim Křetínský Müller Strejček
+#  LocalWords:  CAV Maximilien Colange ltlsynt Christel Baier
+#  LocalWords:  Poitrenaud Volendam

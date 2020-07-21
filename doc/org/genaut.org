@@ -60,3 +60,6 @@ genaut --ks-nca=..5 --stats='%F=%L has %s states'
 : ks-nca=3 has 7 states
 : ks-nca=4 has 9 states
 : ks-nca=5 has 11 states
+
+#  LocalWords:  utf genaut html args scalable SRC sed nca dsa nba svg
+#  LocalWords:  kscobuchi txt

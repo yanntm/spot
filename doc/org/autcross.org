@@ -491,4 +491,13 @@ rm -f autcross.csv
 #  LocalWords:  bQiY IubpMs dfmYfX NXLr zSwXhW bDOq og mUp QVurtU ap
 #  LocalWords:  ok complementation Ai Aj gRqrd ubUpHb JxFi oQGbj SQT
 #  LocalWords:  kWt Eo Xsc WXgCB vLwKMQ tI SXF qqlE KXplk ZFTCz PNY
-#  LocalWords:  hUAK IjnFhD cWys ZqjdQh
+#  LocalWords:  hUAK IjnFhD cWys ZqjdQh args ltlcross CSV SRC sed HB
+#  LocalWords:  LBTT's LBTT lOYLT WGO UIX wx abng Eq WdZ CvfJ tYq dpa
+#  LocalWords:  YvkfS ahOMS HdynHB PcREk XcblC tgba csv YPfmR bT DpL
+#  LocalWords:  gpYcBB mxsGU fPCaeC hgYD xM YU Qu hwVVVD MLmVq edfVVE
+#  LocalWords:  ATTR acc scc nondetstates noweb EOF ttpQt elszrt isDr
+#  LocalWords:  rFJYtN BwKL KHA BSYDwC DjL hw PASD ltldo genltl Gp fP
+#  LocalWords:  VyvQVJ fVtUyh cNgs MWSMMU oVyBs XF XFp Tgzsu aOBmny
+#  LocalWords:  Sg al iPt iZ aA xyBCkm Ju FyS HU Xy rVG veUbt Rceyvf
+#  LocalWords:  YXtcP imCn LwA xF aUm xdVyk UpeRPV kI yARu IDzrh
+#  LocalWords:  parallelization xargs findutils moreutils

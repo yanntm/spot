@@ -37,7 +37,7 @@ automata agree on the BDD variables used to represent $a$ and $b$.
 The =spot::bdd_dict= object is in charge of allocating BDD variables,
 and ensuring that multiple users reuse the same variables for similar
 purpose.  When a =twa_graph= automaton is constructed, it takes a
-=bdd_dict= as argument.  Everytime an atomic proposition is
+=bdd_dict= as argument.  Every time an atomic proposition is
 registered through the =twa::register_ap()= method, the =bdd_dict=
 is queried.
 
@@ -445,3 +445,8 @@ variables *anonymous* because their meaning is unknown the the
 
 #+RESULTS:
 : [(0, 2), (0, 3), (1, 0), (1, 1), (2, 2), (2, 3), (3, 0), (3, 1)]
+
+#  LocalWords:  utf bdd html args BDDs DAGs twa  SRC aut ap bff src
+#  LocalWords:  unregisters unregister dest init dst str num cond GF
+#  LocalWords:  noweb XXa RuntimeError del v'i anonbase bddfalse isop
+#  LocalWords:  ithvar

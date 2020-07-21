@@ -61,7 +61,7 @@ edges (declared with =new_edge()=) and universal edges (declared with
     // States are numbered from 0.
     aut->new_states(3);
     // The default initial state is 0, but it is always better to
-    // specify it explicitely.
+    // specify it explicitly.
     aut->set_init_state(0U);
 
     // new_edge() takes 3 mandatory parameters: source state,
@@ -128,7 +128,7 @@ State: 2
   # States are numbered from 0.
   aut.new_states(3)
   # The default initial state is 0, but it is always better to
-  # specify it explicitely.
+  # specify it explicitly.
   aut.set_init_state(0);
 
   # new_edge() takes 3 mandatory parameters: source state, destination state,
@@ -181,3 +181,6 @@ alternating automaton.
 Once you have built an alternating automaton, you can [[file:tut31.org][remove the
 alternation]] to obtain a non-deterministic Büchi or generalized Büchi
 automaton.
+
+#  LocalWords:  utf html args GFa SRC txt cpp EOF aut svg bdd twa ap
+#  LocalWords:  ithvar init bddtrue acc Buchi bdict BuDDy str

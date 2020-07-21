@@ -90,7 +90,7 @@ Details about supported features of the HOA format can be found on a
 
 The [[http://adl.github.io/hoaf/][HOA]] output should be the preferred format to use if you want to
 pass automata between different tools.  Since Spot 1.99.7, it is the
-default output format, but you can explicitely request it using the
+default output format, but you can explicitly request it using the
 =-H= parameter and this allows passing additional options to the HOA
 printer.
 
@@ -453,12 +453,12 @@ of the default horizontal layout), =c= requests circle states, =s=
 causes strongly-connected components to be displayed, =n= causes the
 name (see below) of the automaton to be displayed, and =a= causes the
 acceptance condition to be shown as well.  Option =b= causes sets to
-be ouput as bullets (e.g., ⓿ instead of ={0}=); option =r= (for
+be output as bullets (e.g., ⓿ instead of ={0}=); option =r= (for
 rainbow) causes sets to be displayed in different colors, while option
 =R= also uses colors, but it chooses them depending on whether a set
 is used with Fin-acceptance, Inf-acceptance, or both.  Option
 =C(COLOR)= can be used to color all states using =COLOR=, and the
-option =f(FONT)= is used to select a fontname: it is often necessary
+option =f(FONT)= is used to select a font name: it is often necessary
 when =b= is used to ensure the characters ⓿, ❶, etc. are all selected
 from the same font.
 
@@ -623,7 +623,7 @@ Caveats:
   compute the size of each label before calling GraphViz to layout the
   graph.  This is because GraphViz cannot compute the correct size of
   mathematical formulas.  Unfortunately, the release of =dot2tex
-  2.9.0= contains a bug where sizes are intepreted as integers instead
+  2.9.0= contains a bug where sizes are interpreted as integers instead
   of floats.  This can cause labels or shapes to disappear.  This bug
   of =dot2tex= was fixed in 2014, but at the time of writing
   (summer 2017) no new release of =dot2tex= has been made.  To work around this,
@@ -649,7 +649,7 @@ Most tools support a common set of statistics about the output
 automaton (like =%s= for the number of states, =%t= for transitions,
 =%e= for edges, etc.).  Additional statistics might be available
 depending on what the tool does (for instance [[file:autfilt.org][=autfilt=]] also uses
-capitaized letters =%S=, =%T=, and =%E= to display the same statistics
+capitalized letters =%S=, =%T=, and =%E= to display the same statistics
 about the input automaton).  All the available statistics are
 displayed when a tool is run with =--help=.
 
@@ -760,7 +760,7 @@ genltl --or-gf=1..8 | ltl2tgba --high --stats='%f,%r,%R'
 : GF(p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8),0.480063,0.48
 
 Note that =%r= is implemented using the most precise clock available
-and usually has nano-second precision, while =%R= uses the =times()=
+and usually has nanosecond precision, while =%R= uses the =times()=
 system call (when available) and is usually only precise up to 1/100
 of a second.  However, as a wall-clock time, =%r= will also be
 affected by the load of the machine: if a machine is overloaded, or
@@ -950,4 +950,9 @@ rm -f out-det0.hoa out-det1.hoa
 #  LocalWords:  labelloc rankdir subgraph lp pos invis gv png cmdline
 #  LocalWords:  Tpng txt Hs Hm CSV Htl LBT dstar init goto fi Tpdf XF
 #  LocalWords:  oaut vcsn randaut nondeterministic filename csv hoa
-#  LocalWords:  varphi lnot GFb FG
+#  LocalWords:  varphi lnot GFb FG args SRC Büchi rEctangular svg GFa
+#  LocalWords:  FGa od DOTEXTRA DOTDEFAULT pdf Tsvg vcsna cas EOF xyz
+#  LocalWords:  vcsnA Brf Lato ffffa vee arrowsize tex neato circo mv
+#  LocalWords:  LaTeX TikZ PSTricks formater autosize nominsize tmp
+#  LocalWords:  latexmk sbarx cd sudo py iw dges tates Rscript genltl
+#  LocalWords:  gf GFp nano ltldo tba randltl det

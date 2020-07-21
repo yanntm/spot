@@ -32,7 +32,7 @@ Although =ltlcross= performs similar sanity checks as LBTT, it does
 not implement any of the interactive features of LBTT.  In our almost
 10-year usage of LBTT, we never had to use its interactive features to
 understand bugs in our translation.  Therefore =ltlcross= will report
-problems, maybe with a conterexample, but you will be on your own to
+problems, maybe with a counterexample, but you will be on your own to
 investigate and fix them (the =--grind= option may help you reduce the
 problem to a shorter formula).
 
@@ -659,7 +659,7 @@ showing two automata for =a U b=, the first automaton is deterministic
 a nondeterministic state (state A2 has two possible successors for the
 assignment $ab$) and is therefore not deterministic.
 
-If option =--aumbiguous= was passed to =ltlcross=, the column
+If option =--ambiguous= was passed to =ltlcross=, the column
 =ambiguous_aut= holds a Boolean indicating whether the automaton is
 ambiguous, i.e., if there exists a word that can be accepted by at
 least two different runs.  (This information is not yet available for
@@ -1420,7 +1420,7 @@ No problem detected.
     into a =Makefile= that calls =ltlcross= for each of them.
 
     For instance here is how to build a makefile called =ltlcross.mk=
-    testing ltl2tgbaand ltl3ba against all formulas produced by
+    testing =ltl2tgba= and =ltl3ba= against all formulas produced by
     =genltl --eh=, and gathering statistics from all runs in =all.csv=.
 
     #+NAME: ltlcross.mk
@@ -1470,4 +1470,31 @@ rm -f results.csv results.json ltlcross.csv bogus-grind bogus ltlcross.mk
 #  LocalWords:  CPs kXiZZS ILLzR wU CcMCaQ IOckzW tsT RZ TJXmT jb XRO
 #  LocalWords:  nxqfd hS vNItGg acc scc nondetstates nondeterministic
 #  LocalWords:  cvs LaTeX datacols len ith otimes ltlcheck eval setq
-#  LocalWords:  setenv concat getenv
+#  LocalWords:  setenv concat getenv utf html args SCCs nonaccepting
+#  LocalWords:  dstar's lcr hvzgTC iYh nzjV rqfB OUNHEn qzVvdx eUfHTG
+#  LocalWords:  infixed LBT's dstar parsers MWei nba streett mv dst
+#  LocalWords:  Rabinizer MWRei rabinizer dra tela COMMANDFMT delag
+#  LocalWords:  da dgra dpa ldba untrusted ne UWmAOs UALknk JlcYb Yqa
+#  LocalWords:  vcaV jwQ eDh rE kjYd yDowOn zxU yf Dj NcC xUjPQ fD yl
+#  LocalWords:  OCI kdqA ZsPBds IxFTSb hRJ OAV yTDisN CUj lF xWC fx
+#  LocalWords:  aHi ATTR nondet aut ok degeneralized lor nonacc noweb
+#  LocalWords:  EOF genltl gizrt os LiBWmP ztzWmc DCyLpz MeEivW oXCj
+#  LocalWords:  APddNG un njT YNmfBO bGzWb rlrmnz KobkRW DFKnk IIcXH
+#  LocalWords:  sYE ypOBqt rJtfR qK stderr dt str SRC datatable chr
+#  LocalWords:  ok num acc scc nondet aut attr dcast SRC dt sep str
+#  LocalWords:  chr ok num acc scc nondet aut selfref attr chr tgba
+#  LocalWords:  dt SRC ltlcross svg ggplot aes abline colour hjust ba
+#  LocalWords:  randltl eval lbtt ltlgrind OTHERFILENAME Fb modella
+#  LocalWords:  lcr Nc CDjvYF LVv Sl EmhjSb GzR mwR gEcuQH UoNQx Qn
+#  LocalWords:  IDRd VDFaS bkvvTT wMAQUJ qoYoWz ILwXXp avS MYCa vJss
+#  LocalWords:  ItCKaM TG leC UXhs KwJJli kbRvp dups otaRtY bRLcyO GH
+#  LocalWords:  DMJCE gHu gKcHMk UPD HUKX Dpno xyO fx vxmn wgw sd vt
+#  LocalWords:  eA qHT qrbNOJ ceD Vz upQ EStxbg nUoj DgrW ohXyzM Vd
+#  LocalWords:  bozRHC wYkQs TCxOYi uWKDhZ OkfrP aEdRAF vy Kv lcfpVl
+#  LocalWords:  Hig Fc AvSorS AZkvCI Hd LNy pM tygKaf YHFrm GL iyV WD
+#  LocalWords:  riOaKL RHWB iVlf Xli Ez Gy BLLY nQYO efo bF fFzkpv MQ
+#  LocalWords:  FGa ltzvEc dqnX wmIXr yJesT HHyVWR scKnIH Wloux Rin
+#  LocalWords:  SCCs bh PHg LvvYEm bcUDEs Pw REy parallelization src
+#  LocalWords:  parallelize xargs findutils ltlfilt pnn formules mk
+#  LocalWords:  moreutils's Makefile makefile fread externalptr Gp XF
+#  LocalWords:  XFp XGp FGp GFp

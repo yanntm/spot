@@ -112,4 +112,5 @@ Other Models of Concurrency (ToPNoC VI), LNCS 7400, p. 94--112, 2012.
 #  LocalWords:  Geldenhuys tgba SRC init invis nb Acc augb sed png fn
 #  LocalWords:  cmdline Tpng txt Büchi livelock gba gta GFa GFb TGTAs
 #  LocalWords:  gfagfb topnoc Eddine SALEM's ToPNoC LNCS eval setenv
-#  LocalWords:  concat getenv setq
+#  LocalWords:  concat getenv setq utf html args svg TGBAs Alexandre
+#  LocalWords:  Duret Lutz Fabrice Kordon Petri

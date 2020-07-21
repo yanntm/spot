@@ -284,3 +284,7 @@ If your application requires monitors and you plan to build them with
 Spot, it is very likely that you will want to convert the resulting
 automata to your own data structure.  See [[file:tut21.org][how to print an automaton in
 a custom format]] to learn all you need to iterate over Spot's automata.
+
+#  LocalWords:  utf html args SRC tgba Xyellow svg txt acc det str
+#  LocalWords:  aut monitorable ltlfilt d'Amorim Roşu CAV Tabakov DFA
+#  LocalWords:  Vardi SystemC SCCs determinize powerset

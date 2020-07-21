@@ -82,25 +82,6 @@ output by default)
 #+BEGIN_SRC sh :exports none
 ltl2tgba "Fa & GFb" -d
 #+END_SRC
-#+RESULTS: dotex
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [shape="circle"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 1
-  0 [label="0"]
-  0 -> 0 [label=<b<br/><font color="#5DA5DA">⓿</font>>]
-  0 -> 0 [label=<!b>]
-  1 [label="1"]
-  1 -> 0 [label=<a>]
-  1 -> 1 [label=<!a>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file dotex.svg :var txt=dotex :exports results
 $txt
@@ -248,40 +229,6 @@ as above, for comparison.
 #+BEGIN_SRC sh :exports code
 ltl2tgba -S 'GFa & GFb' -d
 #+END_SRC
-
-#+RESULTS: dotex2gba
-#+begin_example
-digraph G {
-  rankdir=LR
-  node [shape="circle"]
-  fontname="Lato"
-  node [fontname="Lato"]
-  edge [fontname="Lato"]
-  node[style=filled, fillcolor="#ffffa0"] edge[arrowhead=vee, arrowsize=.7]
-  I [label="", style=invis, width=0]
-  I -> 0
-  0 [label=<0<br/><font color="#5DA5DA">⓿</font><font color="#F17CB0">❶</font>>]
-  0 -> 0 [label=<a &amp; b>]
-  0 -> 1 [label=<!a &amp; !b>]
-  0 -> 2 [label=<!a &amp; b>]
-  0 -> 3 [label=<a &amp; !b>]
-  1 [label=<1>]
-  1 -> 0 [label=<a &amp; b>]
-  1 -> 1 [label=<!a &amp; !b>]
-  1 -> 2 [label=<!a &amp; b>]
-  1 -> 3 [label=<a &amp; !b>]
-  2 [label=<2<br/><font color="#F17CB0">❶</font>>]
-  2 -> 0 [label=<a &amp; b>]
-  2 -> 1 [label=<!a &amp; !b>]
-  2 -> 2 [label=<!a &amp; b>]
-  2 -> 3 [label=<a &amp; !b>]
-  3 [label=<3<br/><font color="#5DA5DA">⓿</font>>]
-  3 -> 0 [label=<a &amp; b>]
-  3 -> 1 [label=<!a &amp; !b>]
-  3 -> 2 [label=<!a &amp; b>]
-  3 -> 3 [label=<a &amp; !b>]
-}
-#+end_example
 
 #+BEGIN_SRC dot :file dotex2gba.svg :var txt=dotex2gba :exports results
 $txt
@@ -1060,7 +1007,7 @@ genltl --u-right=1..8 | ltl2tgba --stats '%s states and %e edges for "%f"'
 
 Note that because no formula have been passed as argument to
 =ltl2tgba=, it defaulted to reading them from standard input.  Such a
-behaviour can be requested explicitly with =-F -= if needed (e.g., to
+behavior can be requested explicitly with =-F -= if needed (e.g., to
 read from standard input in addition to processing other formula
 supplied with =-f=).
 
@@ -1152,7 +1099,7 @@ page showing how to build them in Python and C++]].
 
 Because Monitors accept every recognized run (in other words, they
 only reject words that are not recognized), it makes little sense to
-use option =-C= to request /complete/ monitors.  If uou combine =-C=
+use option =-C= to request /complete/ monitors.  If you combine =-C=
 with =-M=, the result will output as a Büchi automaton if (and only
 if) a sink state had to be added.  For instance, here is the
 "complete" version of the previous monitor.
@@ -1178,5 +1125,8 @@ $txt
 #  LocalWords:  GraphViz's LBTT's neverclaim SPOT's init goto fi Gb
 #  LocalWords:  controled Gc gagbgc disjunction pre rewritings SCC Xa
 #  LocalWords:  WDBA determinize degeneralization satisfiability SCCs
-#  LocalWords:  genltl nondeterministic eval setenv concat getenv
-#  LocalWords:  setq
+#  LocalWords:  genltl nondeterministic eval setenv concat getenv DG
+#  LocalWords:  setq html args acc Buchi rankdir fontname Lato svg br
+#  LocalWords:  fillcolor ffffa vee arrowsize gba hoaf processings dp
+#  LocalWords:  ambig FGa fga fbgc fbgcfga determinized nosplit xltl
+#  LocalWords:  det scc simul FGb xdet P'min p'min p'max CSV iw

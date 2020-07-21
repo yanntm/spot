@@ -49,7 +49,7 @@ The output is composed of two parts:
 - the first one is a single line REALIZABLE or UNREALIZABLE;
 - the second one is an automaton describing the controller (if the input
   specification is realizable). In this example, the controller has a single
-  state, with two loops labelled by =a & b & c= and =(!a | !b) & !c=.
+  state, with two loops labeled by =a & b & c= and =(!a | !b) & !c=.
 
 If a controller exists, then one with finite memory exists. Such controllers
 are easily represented as automata (or more specifically as I/O automata or
@@ -107,3 +107,8 @@ You can also ask =ltlsynt= to print to obtained parity game into
 [[https://github.com/tcsprojects/pgsolver][PGSolver]] format, with the flag
 =--print-pg=.  Note that this flag deactivates the resolution of the parity
 game, which is to be deferred to one of the solvers from PGSolver.
+
+#  LocalWords:  utf ltlsynt AIGER html args mapsto SRC acc aiger TLSF
+#  LocalWords:  UNREALIZABLE unrealizable SYNTCOMP realizability Proc
+#  LocalWords:  syfco ltlxba Zielonka's Thibaud Michaud Maximilien
+#  LocalWords:  Colange PGSolver

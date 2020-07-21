@@ -562,7 +562,7 @@ Here is the very same example, but written in Python:
           for t in aut.out(s):
               print("  edge({} -> {})".format(t.src, t.dst))
               # bdd_print_formula() is designed to print on a std::ostream, and
-              # is inconveniant to use in Python.  Instead we use
+              # is inconvenient to use in Python.  Instead we use
               # bdd_format_formula() as this simply returns a string.
               print("    label =", spot.bdd_format_formula(bdict, t.cond))
               print("    acc sets =", t.acc)
@@ -848,3 +848,7 @@ State 16:
 #+BEGIN_SRC sh :results silent :exports results
 rm -f tut21.hoa
 #+END_SRC
+
+#  LocalWords:  utf html args mathit src dst cond accsets tgba Fb Fc
+#  LocalWords:  acc Buchi BDDs bdd ap ithvar aut const num init bdict
+#  LocalWords:  varnum sep Templated
