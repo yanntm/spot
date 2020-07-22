@@ -178,13 +178,13 @@ b.copy_state_names_from(a)
 assert b.to_str() == """HOA: v1
 States: 1
 Start: 0
-AP: 2 "p1" "p0"
+AP: 2 "p0" "p1"
 acc-name: Buchi
 Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic stutter-invariant
 --BODY--
 State: 0 "[1,7]"
-[!0] 0 {0}
-[0] 0
+[!1] 0 {0}
+[1] 0
 --END--"""
