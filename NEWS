@@ -1,19 +1,22 @@
 New in spot 2.9.3.dev  (not yet released)
 
-  Nothing yet.
+  Bugs fixed:
+
+  - Handle xor and <-> in a more natural way when translating
+    LTL formulas to generic acceptancee conditions.
 
 New in spot 2.9.3 (2020-07-22)
 
   Bug fixed:
 
-  - Completely fix the ltlcross issue mentionned in previous release.
+  - Completely fix the ltlcross issue mentioned in previous release.
 
 New in spot 2.9.2 (2020-07-21)
 
   Bugs fixed:
 
   - ltlcross --csv=... --product=N with N>0 could output spurious
-    diagnosics claiming that words were rejected when evaluating
+    diagnostics claiming that words were rejected when evaluating
     the automaton on state-space.
 
   - spot::scc_info::determine_unknown_acceptance() now also update the

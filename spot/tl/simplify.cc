@@ -431,12 +431,12 @@ namespace spot
       if (equiv)
         {
           // Rewrite a<=>b as (a&b)|(!a&!b)
-          auto recurse_f1_true = rec(f1, true);
-          auto recurse_f2_true = rec(f2, true);
-          if (!deep && c->options.keep_top_xor)
-            return formula::Equiv(recurse_f1_true, recurse_f2_true);
           auto recurse_f1_false = rec(f1, false);
           auto recurse_f2_false = rec(f2, false);
+          if (!deep && c->options.keep_top_xor)
+            return formula::Equiv(recurse_f1_false, recurse_f2_false);
+          auto recurse_f1_true = rec(f1, true);
+          auto recurse_f2_true = rec(f2, true);
           auto left = formula::And({recurse_f1_false, recurse_f2_false});
           auto right = formula::And({recurse_f1_true, recurse_f2_true});
           return formula::Or({left, right});
@@ -444,12 +444,12 @@ namespace spot
       else
         {
           // Rewrite a^b as (a&!b)|(!a&b)
-          auto recurse_f1_true = rec(f1, true);
-          auto recurse_f2_true = rec(f2, true);
-          if (!deep && c->options.keep_top_xor)
-            return formula::Xor(recurse_f1_true, recurse_f2_true);
           auto recurse_f1_false = rec(f1, false);
           auto recurse_f2_false = rec(f2, false);
+          if (!deep && c->options.keep_top_xor)
+            return formula::Xor(recurse_f1_false, recurse_f2_false);
+          auto recurse_f1_true = rec(f1, true);
+          auto recurse_f2_true = rec(f2, true);
           auto left = formula::And({recurse_f1_false, recurse_f2_true});
           auto right = formula::And({recurse_f1_true, recurse_f2_false});
           return formula::Or({left, right});
