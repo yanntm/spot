@@ -45,6 +45,9 @@ New in spot 2.9.3.dev  (not yet released)
     file. With this refactoring, we can retrieve both a kripke or a
     kripkecube from a PINS file.
 
+  - Translations for formulas such as FGp1 & FGp2 &...& FGp32 which
+    used to take ages are now instantaneous.  (See issue #412.)
+
   Bugs fixed:
 
   - Handle xor and <-> in a more natural way when translating

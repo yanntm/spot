@@ -418,7 +418,7 @@ namespace spot
     if (simpl_owned_)
       {
         // Modify the options according to set_pref() and set_type().
-        // We do it for all translation, but really only the first one
+        // We do it for all translations, but really only the first one
         // matters.
         auto& opt = simpl_owned_->options();
         if (comp_susp_ > 0 || (ltl_split_ && type_ == Generic))
@@ -436,33 +436,61 @@ namespace spot
     // sub-formulas that are Boolean but do not have common terms.
     //
     // This rewriting is enabled only if the formula
-    //  1) has some Boolean subformula
-    //  2) has more than relabel_bool_ atomic propositions (the default
+    //  1) has more than relabel_bool_ atomic propositions (the default
     //     is 4, but this can be changed)
+    //  2) has some Boolean subformula
     //  3) relabel_bse() actually reduces the number of atomic
     //     propositions.
     relabeling_map m;
     formula to_work_on = *f;
     if (relabel_bool_ > 0)
       {
-        bool has_boolean_sub = false; // that is not atomic
         std::set<formula> aps;
-        to_work_on.traverse([&](const formula& f)
-                            {
-                              if (f.is(op::ap))
-                                aps.insert(f);
-                              else if (f.is_boolean())
-                                has_boolean_sub = true;
-                              return false;
-                            });
+        atomic_prop_collect(to_work_on, &aps);
         unsigned atomic_props = aps.size();
-        if (has_boolean_sub && (atomic_props >= (unsigned) relabel_bool_))
+
+        if (atomic_props >= (unsigned) relabel_bool_)
           {
-            formula relabeled = relabel_bse(to_work_on, Pnn, &m);
-            if (m.size() < atomic_props)
-              to_work_on = relabeled;
-            else
-              m.clear();
+            // Make a very quick simplification path before for
+            // Boolean subformulas, only only syntactic rules.  This
+            // is to help getting formulas of the form
+            //   FGp1 & FGp2 & ... & FGp32
+            // into the shape
+            //   FG(p1 & p2 & ... & p32)
+            // where relabeling will be much more efficient.
+            //
+            // We reuse all options of simpl_ (to preserve things
+            // like keep_top_xor or favor_event_univ).
+            tl_simplifier_options options = simpl_->options();
+            options.synt_impl = false;
+            options.containment_checks = false;
+            options.containment_checks_stronger = false;
+            options.nenoform_stop_on_boolean = true;
+            options.boolean_to_isop = false;
+            tl_simplifier simpl(options, simpl_->get_dict());
+            to_work_on = simpl.simplify(to_work_on);
+
+            // Do we have Boolean subformulas that are not atomic
+            // propositions?
+            bool has_boolean_sub = false;
+            to_work_on.traverse([&](const formula& f)
+                                {
+                                  if (f.is_boolean())
+                                    {
+                                      has_boolean_sub = true;
+                                      return true;
+                                    }
+                                  return false;
+                                });
+
+            if (has_boolean_sub)
+              {
+                formula relabeled = relabel_bse(to_work_on, Pnn, &m);
+                if (m.size() < atomic_props)
+                  to_work_on = relabeled;
+                else
+                  m.clear();
+              }
           }
       }
 

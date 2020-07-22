@@ -27,7 +27,7 @@
 # commonly use as benchmark change, we want to notice it.
 
 set -e
-genltl --dac --eh --sb --hkrss --p --format=%F,%L,%f >pos
+genltl --dac --eh --sb --hkrss --p --and-fg=32 --format=%F,%L,%f >pos
 (cat pos; ltlfilt --negate pos/3 --format='!%<,%f') |
     ltlfilt -u -F-/3 >formulas
 
@@ -201,6 +201,7 @@ p-patterns,16, 2,16, 2,16, 2,16, 2,16
 p-patterns,17, 3,20, 3,20, 3,20, 3,20
 p-patterns,18, 5,36, 5,36, 5,36, 5,36
 p-patterns,20, 1,8, 1,8, 3,24, 3,24
+and-fg,32, 2,4294967298, 2,4294967298, 2,4294967298, 2,4294967298
 !dac-patterns,1, 2,4, 2,4, 2,4, 2,4
 !dac-patterns,2, 3,10, 3,10, 3,10, 3,10
 !dac-patterns,3, 3,12, 3,12, 3,12, 3,12
@@ -357,6 +358,7 @@ p-patterns,20, 1,8, 1,8, 3,24, 3,24
 !p-patterns,17, 4,31, 4,31, 4,31, 4,31
 !p-patterns,18, 6,43, 6,43, 6,43, 6,43
 !p-patterns,20, 3,16, 3,16, 3,16, 3,16
+!and-fg,32, 1,4294967296, 1,4294967296, 2,8589934592, 2,8589934592
 EOF
 
 diff output expected

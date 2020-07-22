@@ -32,6 +32,7 @@ namespace spot
     std::set<int> newvars;
     vars.reserve(relmap->size());
     bool bool_subst = false;
+    auto aplist = aut->ap();
 
     for (auto& p: *relmap)
       {
@@ -41,6 +42,10 @@ namespace spot
         if (!p.second.is_boolean())
           throw std::runtime_error
             ("relabel_here: new labels should be Boolean formulas");
+
+        // Don't attempt to rename APs that are not used.
+        if (std::find(aplist.begin(), aplist.end(), p.first) == aplist.end())
+          continue;
 
         int oldv = aut->register_ap(p.first);
         vars.emplace_back(oldv);
