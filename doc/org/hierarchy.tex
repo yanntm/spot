@@ -1,16 +1,16 @@
 \documentclass{standalone}
 \usepackage{tikz}
-\usetikzlibrary{shadows}
 \def\F{\mathsf{F}} % in future
 \def\G{\mathsf{G}} % globally
-
-\begin{document}
-
 \def\mycyan{cyan!30}
 \def\mypink{magenta!30}
+\begin{document}
+\noindent
 \scalebox{1.2}{
- \begin{tikzpicture}[scale=.9]
-    \draw[drop shadow,fill=white] (0,0) rectangle (6,7);
+  \begin{tikzpicture}[scale=.9]
+    %Let's draw the shadow ourselves, so that it is included in the bounding box
+    \path[fill=black!50,opacity=.5,xshift=.5ex,yshift=-.5ex] (0,0) rectangle (6,7);
+    \draw[fill=white] (0,0) rectangle (6,7);
 
     \path[fill=\mycyan,fill opacity=.4] (0,6.5) -- (6,3) -- (6,0) -- (0,0);
     \path[fill=\mycyan,fill opacity=.5] (0,3) -- (4.5,0) -- (0,0);
@@ -37,7 +37,8 @@
     \node[above,red] at (saf.north) {\tt S};
     \node[above,red] at (gua.north) {\tt G};
     \node[above,red] at (3,0.3) {\tt B};
-  \end{tikzpicture}}
+  \end{tikzpicture}
+}
 \end{document}
 %%% Local Variables:
 %%% mode: latex
