@@ -49,7 +49,8 @@ New in spot 2.9.3.dev  (not yet released)
     used to take ages are now instantaneous.  (See issue #412.)
 
   - remove_fin() learned to remove more unnecessary edges by using
-    propagate_marks_vector().
+    propagate_marks_vector(), both in the general case and in the
+    Rabin-like case.
 
   Bugs fixed:
 

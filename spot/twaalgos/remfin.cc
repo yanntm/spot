@@ -210,9 +210,13 @@ namespace spot
       std::vector<bool> scc_is_tba_type(si.scc_count(), false);
       std::vector<bool> final(aut->edge_vector().size(), false);
 
+      bool tba_type = true;
       for (unsigned scc = 0; scc < si.scc_count(); ++scc)
-        scc_is_tba_type[scc] = is_scc_tba_type(aut, si, scc,
-                                               aut_pairs, final);
+        {
+          bool res = is_scc_tba_type(aut, si, scc, aut_pairs, final);
+          scc_is_tba_type[scc] = res;
+          tba_type &= res;
+        }
 
       auto res = make_twa_graph(aut->get_dict());
       res->copy_ap_of(aut);
@@ -222,6 +226,11 @@ namespace spot
       res->set_init_state(aut->get_init_state_number());
       trival deterministic = aut->prop_universal();
       trival complete = aut->prop_complete();
+
+      std::vector<bool> accedge(aut->edge_vector().size(), false);
+      std::vector<acc_cond::mark_t> propmarks;
+      if (!tba_type)
+        propmarks = propagate_marks_vector(aut, &si);
 
       std::vector<unsigned> state_map(aut->num_states());
       for (unsigned scc = 0; scc < si.scc_count(); ++scc)
@@ -250,6 +259,8 @@ namespace spot
                 {
                   bool acc = !!(e.acc & scc_infs_alone);
                   res->new_acc_edge(e.src, e.dst, e.cond, acc);
+                  if (acc)
+                    accedge[aut->edge_number(e)] = true;
                 }
 
               auto fins_alone = aut_pairs.fins_alone();
@@ -262,7 +273,7 @@ namespace spot
                       state_map[s] = base++;
                   for (const auto& e: si.inner_edges_of(scc))
                     {
-                      if (e.acc.has(r))
+                      if (e.acc.has(r) || accedge[aut->edge_number(e)])
                         continue;
                       auto src = state_map[e.src];
                       auto dst = state_map[e.dst];

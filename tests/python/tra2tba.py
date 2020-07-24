@@ -232,7 +232,7 @@ State: 0 "F(Gp3|GFp2)"
 """)
 
 exp = """HOA: v1
-States: 4
+States: 3
 Start: 0
 AP: 2 "p3" "p2"
 acc-name: Buchi
@@ -246,14 +246,8 @@ State: 0
 State: 1 {0}
 [!1] 0
 [1] 1
-[0&!1] 2
-[0&1] 3
 State: 2 {0}
 [0&!1] 2
-[0&1] 3
-State: 3 {0}
-[0&!1] 2
-[0&1] 3
 --END--"""
 
 res = spot.remove_fin(aut)
@@ -648,9 +642,8 @@ State: 0
 [!0] 0
 [0] 0 {0}
 [!0&!1] 1
-[0&!1] 1 {0}
 State: 1
-[!1] 1 {0}
+[!0&!1] 1 {0}
 --END--"""
 
 res = spot.remove_fin(aut)
