@@ -90,8 +90,9 @@ namespace spot
   /// \brief Take an automaton with any acceptance condition and return an
   /// equivalent parity automaton.
   ///
-  /// The parity condition of the returned automaton is either max even or
-  /// max odd.
+  /// If the input is already a parity automaton of any kind, it is
+  /// returned unchanged.  Otherwise a new parity automaton with max
+  /// odd or max even condition is created.
   ///
   /// This procedure combines many strategies in an attempt to produce
   /// the smallest possible parity automaton.  Some of the strategies
