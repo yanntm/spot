@@ -26,6 +26,7 @@
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/mask.hh>
 #include <spot/twaalgos/alternation.hh>
+#include <spot/twaalgos/degen.hh>
 
 // #define TRACE
 #ifdef TRACE
@@ -621,6 +622,17 @@ namespace spot
       bool sbacc = res->prop_state_acc().is_true();
       scc_info si(aut, scc_info_options::TRACK_STATES);
       unsigned nscc = si.scc_count();
+
+      // Help remove more useless transition by propagating marks.
+      auto propmarks = propagate_marks_vector(aut, &si);
+
+      // Edges that are already satisfying the acceptance of the
+      // main copy do not need to be duplicated in the clones, so
+      // we fill allacc_edge to remember those.  Of course this is
+      // only needed if the main copy can be accepting and if we
+      // will create clones.
+      std::vector<bool> allacc_edge(aut->edge_vector().size(), false);
+
       std::vector<unsigned> state_map(nst);
       for (unsigned n = 0; n < nscc; ++n)
         {
@@ -668,10 +680,11 @@ namespace spot
                   a = (t.acc & main_sets) | main_add;
                 res->new_edge(s, t.dst, t.cond, a);
                 // remember edges that are completely accepting
-                if (check_main_acc && main_acc.accepting(a))
-                  allacc_edge[aut->edge_number(t)] = true;
+                if (check_main_acc)
+                  if (unsigned en = aut->edge_number(t);
+                      main_acc.accepting(a | (propmarks[en] & main_sets)))
+                    allacc_edge[en] = true;
               }
-
           // We do not need any other copy if the SCC is non-accepting,
           // of if it does not intersect any Fin.
           if (!intersects_fin)
@@ -693,12 +706,16 @@ namespace spot
                     auto ns = state_map[s];
                     for (auto& t: aut->out(s))
                       {
-                        if ((t.acc & r) || si.scc_of(t.dst) != n
-                            // edges that are already accepting in the
-                            // main copy need not be copied in the
-                            // clone, since cycles going through them
-                            // are already accepted.
-                            || allacc_edge[aut->edge_number(t)])
+                        if (unsigned en = aut->edge_number(t);
+                            // Ignore edges have r, or that
+                            // necessarily go through r.
+                            ((t.acc | propmarks[en]) & r)
+                            // Ignore edges between SCCs.
+                            || si.scc_of(t.dst) != n
+                            // Ignore edges that are already accepting
+                            // in the main copy need not be copied in
+                            // the clone.
+                            || allacc_edge[en])
                           continue;
                         auto nd = state_map[t.dst];
                         res->new_edge(ns, nd, t.cond, (t.acc & k) | a);
