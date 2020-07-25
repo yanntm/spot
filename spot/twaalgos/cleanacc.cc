@@ -613,6 +613,100 @@ namespace spot
     }
   }
 
+  static
+  acc_cond::mark_t merge_marks(acc_cond::mark_t colors,
+                               std::vector<acc_cond::mark_t> inclusions)
+  {
+    bool changed;
+    do
+    {
+      changed = false;
+      for (unsigned c : colors.sets())
+      {
+        if ((inclusions[c] & colors) != acc_cond::mark_t {})
+        {
+          auto new_colors = (colors - inclusions[c]);
+          if (new_colors != colors)
+            changed = true;
+          colors = new_colors;
+          break;
+        }
+      }
+    } while (changed);
+    return colors;
+  }
+
+  static
+  acc_cond::acc_code merge_colors(acc_cond::acc_code code,
+                                  std::vector<acc_cond::mark_t> inclusions)
+  {
+    if (code.empty())
+      return {};
+    int pos = code.size() - 1;
+    acc_cond::acc_code result;
+    do
+    {
+      switch (code[pos].sub.op)
+      {
+        case acc_cond::acc_op::And:
+        {
+          result = acc_cond::acc_code::t();
+          --pos;
+          while (pos > 0)
+          {
+            result = merge_colors(acc_cond::acc_code(&code[pos]), inclusions)
+                     & result;
+            pos -= (code[pos].sub.size + 1);
+          }
+          return result;
+        }
+        case acc_cond::acc_op::Or:
+        {
+          result = acc_cond::acc_code::f();
+          --pos;
+          while (pos > 0)
+          {
+            result = merge_colors(acc_cond::acc_code(&code[pos]), inclusions)
+                     | result;
+            pos -= (code[pos].sub.size + 1);
+          }
+          return result;
+        }
+        case acc_cond::acc_op::Fin:
+        {
+          auto res =  acc_cond::acc_code::fin(merge_marks(code[pos - 1].mark,
+                                                          inclusions));
+
+          return res;
+        }
+        case acc_cond::acc_op::Inf:
+        {
+          auto res =  acc_cond::acc_code::inf(merge_marks(code[pos - 1].mark,
+                                                          inclusions));
+          return res;
+        }
+        default:
+          SPOT_UNREACHABLE();
+      }
+    } while (pos > 0);
+    SPOT_UNREACHABLE();
+  }
+
+  // Create a vector of marks such that for every color c, result[c] contains
+  // all the colors that are on every transitions that also contain c
+  // (c is excluded).
+  static std::vector<acc_cond::mark_t> included_marks(twa_graph_ptr aut)
+  {
+    std::vector<acc_cond::mark_t> result(SPOT_MAX_ACCSETS,
+                                         acc_cond::mark_t::all());
+    for (unsigned i = 0; i < SPOT_MAX_ACCSETS; ++i)
+      result[i]^= acc_cond::mark_t {i};
+    for (auto& e: aut->edges())
+      for (auto c : e.acc.sets())
+        result[c] &= e.acc;
+    return result;
+  }
+
   twa_graph_ptr simplify_acceptance_here(twa_graph_ptr aut)
   {
     for (;;)
@@ -621,7 +715,10 @@ namespace spot
         merge_identical_marks_here(aut);
         if (aut->acc().is_generalized_buchi())
           break;
-        acc_cond::acc_code old = aut->get_acceptance();
+        auto inc = included_marks(aut);
+        auto new_code = merge_colors(aut->get_acceptance(), inc);
+        aut->set_acceptance(acc_cond(aut->num_sets(), new_code));
+        acc_cond::acc_code old = new_code;
         aut->set_acceptance(aut->acc().unit_propagation());
         simplify_complementary_marks_here(aut);
         fuse_marks_here(aut);

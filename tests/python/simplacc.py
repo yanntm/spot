@@ -60,6 +60,11 @@ HOA: v1 States: 2 Start: 0 AP: 2 "p0" "p1" Acceptance: 5 Fin(0) &
 (((Fin(1)|Fin(2)|Fin(3))&Inf(4)|Fin(3))) properties: trans-labels
 explicit-labels trans-acc --BODY-- State: 0 [!0&!1] 0 {0 1 3} [0&1] 1
 {0 2} [0&!1] 0 {2} State: 1 [0&1] 0 {0 2} [0&1] 1 {1} [0&!1] 1 {4} --END--
+/* Issue #406 */
+HOA: v1 States: 2 Start: 0 AP: 2 "p0" "p1" Acceptance: 4
+(Fin(3) & (Inf(1) | Fin(0))) | (Inf(0)&Inf(2)&Inf(3)) properties: trans-labels
+explicit-labels trans-acc deterministic --BODY-- State: 0 [0&!1] 0 {2 3}
+[!0&!1] 1 {0 1} State: 1 [!0&!1] 0 {0 1} [0&1] 1 {1 2} --END--
 """))
 
 res = []
@@ -90,8 +95,10 @@ assert res == [
     '((Inf(1) & Fin(2)) | Fin(5)) & (Inf(0) | (Inf(1) & (Inf(3) | Fin(4))))',
     'Inf(0)',
     'Fin(0)',
-    'Fin(0)|Fin(1)|Fin(2)',
-    'Inf(0)&Inf(1)&Inf(2)',
-    '((Fin(0)|Fin(1)) & Inf(3)) | Fin(2)',
-    '((Inf(0)&Inf(1)) | Fin(3)) & Inf(2)',
+    'Fin(0)',
+    'Inf(0)',
+    '(Fin(0) & Inf(2)) | Fin(1)',
+    '(Inf(0) | Fin(2)) & Inf(1)',
+    '(Fin(2) & (Inf(1) | Fin(0))) | (Inf(0)&Inf(2))',
+    '(Inf(2) | (Fin(1) & Inf(0))) & (Fin(0)|Fin(2))',
     ]
