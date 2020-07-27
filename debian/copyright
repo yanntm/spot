@@ -165,7 +165,7 @@ License: GPL-3+
 
 Files: picosat/*
 Copyright: 2006 - 2015, Armin Biere, Johannes Kepler University.
-License: MIT style
+License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to
  deal in the Software without restriction, including without limitation the
@@ -186,7 +186,7 @@ License: MIT style
 
 Files: spot/priv/robin_hood.hh
 Copyright: 2018-2019 Martin Ankerl
-License: MIT
+License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
