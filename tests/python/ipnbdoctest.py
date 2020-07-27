@@ -180,6 +180,17 @@ def canonical_dict(dict, ignores):
     return dict
 
 
+def keep_dict(dict):
+    # pandas imports Matplotlib, which can display a message about building the
+    # the font cache if it does not exist, and if doing so takes more than 5
+    # seconds.   Just ignore those.
+    if ('name' in dict and dict['name'] == 'stderr' and
+        type(dict['text']) is str and
+        dict['text'].startswith("Matplotlib is building the font cache")):
+        return False
+    return True
+
+
 def compare_outputs(ref, test, ignores=[]):
     '''Check that two lists of outputs are equivalent and report the
     result.'''
@@ -187,8 +198,10 @@ def compare_outputs(ref, test, ignores=[]):
     # There can be several outputs.  For instance wnen the cell both
     # prints a result (goes to "stdout") and displays an automaton
     # (goes to "data").
-    exp = pprint.pformat([canonical_dict(d, ignores) for d in ref],  width=132)
-    eff = pprint.pformat([canonical_dict(d, ignores) for d in test], width=132)
+    exp = pprint.pformat([canonical_dict(d, ignores) for d in ref
+                          if keep_dict(d)], width=132)
+    eff = pprint.pformat([canonical_dict(d, ignores) for d in test
+                          if keep_dict(d)], width=132)
     if exp[:-1] != '\n':
         exp += '\n'
     if eff[:-1] != '\n':
