@@ -273,7 +273,8 @@ namespace spot
                       state_map[s] = base++;
                   for (const auto& e: si.inner_edges_of(scc))
                     {
-                      if (e.acc.has(r) || accedge[aut->edge_number(e)])
+                      unsigned en = aut->edge_number(e);
+                      if ((e.acc | propmarks[en]).has(r) || accedge[en])
                         continue;
                       auto src = state_map[e.src];
                       auto dst = state_map[e.dst];
