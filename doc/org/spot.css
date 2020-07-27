@@ -16,9 +16,12 @@ body a{color:#008181}
 .outline-2 h2{border-bottom-style:solid;border-color:#ffe35e}
 .outline-3 h3{position:relative;z-index:1}
 .outline-3 h3:before{content:"";position:absolute;z-index:-1;left:-.2em;bottom:-.05em;height:1.2em;width:1.2em;background-color:#ffe35e;border-radius:5px}
-pre.src{padding-top:8px;border-left-style:solid;border-color:#00adad;overflow:auto}
-pre.src-hoa{padding-top:8px;border-left-style:solid;border-color:#d70079;overflow:auto}
-pre.example{border-left-style:solid;border-color:#d70079}
+pre.src{padding-top:8px;border-left-style:solid;border-color:#00adad;overflow:auto;margin-top:0;margin-bottom:0}
+pre.src-hoa{border-color:#d70079}
+pre.example{border-left-style:solid;border-color:#d70079;margin-top:0;margin-bottom:0;position:relative;z-index:2}
+div.org-src-container+pre.example{border-top-width:1px;border-top-color:#ddd;border-top-style:dashed}
+div.org-src-container+div.org-src-container pre.src{border-top-width:1px;border-top-color:#ddd;border-top-style:dashed}
+div.org-src-container {margin-top:0;margin-bottom:0;position:relative;z-index:1}
 pre.src-text{border-left-style:solid;border-color:#d70079}
 pre.src:before{border:none;border-bottom-style:solid;border-color:#00adad;top:0px;}
 pre.src-python:before{content:'Python'}
@@ -40,6 +43,8 @@ table.csv-table th div span{text-align:left;writing-mode:vertical-lr;transform:r
 #table-of-contents{border:1px solid #ffd300}
 #org-div-home-and-up{visibility:hidden}
 #spotlogo{width:2cm;position:absolute;top:0px;left:0px;z-index:-1}
+pre.src{word-wrap:break-word;white-space:pre-wrap}
+pre.example{word-wrap:break-word;white-space:pre-wrap}
 }
 thead tr{background:#ffe35e}
 #content tbody:nth-child(odd) tr:nth-child(even){background:#fff0a6}
