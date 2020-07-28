@@ -76,87 +76,6 @@ namespace spot
 
   namespace
   {
-    twa_graph_ptr merge_identical_marks_here(twa_graph_ptr aut)
-    {
-      // /!\ This assumes that the acceptance condition has been
-      // cleaned up first.  If some mark appears in the acceptance
-      // condition but not in the automaton, the result is undefined.
-
-      auto& acc = aut->acc();
-      auto& c = acc.get_acceptance();
-      acc_cond::mark_t used_in_cond = c.used_sets();
-
-      if (!used_in_cond)
-        return aut;
-
-      unsigned num_sets = acc.num_sets();
-      std::vector<acc_cond::mark_t> always_together(num_sets);
-
-      for (unsigned i = 0; i < num_sets; ++i)
-        if (used_in_cond.has(i))
-          always_together[i] = used_in_cond;
-        else
-          always_together[i] = acc_cond::mark_t({i});
-
-      acc_cond::mark_t previous_a = {};
-      for (auto& t: aut->edges())
-        {
-          acc_cond::mark_t a = t.acc & used_in_cond;
-          if (a == previous_a)
-            continue;
-          previous_a = a;
-          for (unsigned m: a.sets())
-            {
-              acc_cond::mark_t at = always_together[m];
-              acc_cond::mark_t newm = at & a;
-
-              for (unsigned rem: (at - newm).sets())
-                always_together[rem] -= newm;
-
-              always_together[m] = newm;
-            }
-        }
-
-      acc_cond::mark_t to_remove = {};
-      for (unsigned i = 0; i < num_sets; ++i)
-        {
-          auto oldm = always_together[i];
-          if (oldm == acc_cond::mark_t({i}))
-            continue;
-
-          acc_cond::mark_t newm = oldm.lowest();
-          to_remove |= oldm - newm;
-          always_together[i] = newm;
-        }
-      for (auto& t: aut->edges())
-        t.acc -= to_remove;
-
-      // Replace the marks in the acceptance condition
-      auto pos = &c.back();
-      auto end = &c.front();
-      while (pos > end)
-        {
-          switch (pos->sub.op)
-            {
-            case acc_cond::acc_op::And:
-            case acc_cond::acc_op::Or:
-              --pos;
-              break;
-            case acc_cond::acc_op::Fin:
-            case acc_cond::acc_op::Inf:
-            case acc_cond::acc_op::FinNeg:
-            case acc_cond::acc_op::InfNeg:
-              acc_cond::mark_t replace = pos[-1].mark & to_remove;
-              pos[-1].mark -= replace;
-              for (unsigned m: replace.sets())
-                pos[-1].mark |= always_together[m];
-              pos -= 2;
-              break;
-            }
-        }
-      return aut;
-    }
-
     // Remove complementary marks from the acceptance condition.
     acc_cond::acc_code remove_compl_rec(const acc_cond::acc_word* pos,
                                         const std::vector<acc_cond::mark_t>&
@@ -611,114 +530,105 @@ namespace spot
       // Now rewrite the acceptance condition, removing all the "to_kill" terms.
       aut->set_acceptance(aut->num_sets(), acc_rewrite_rec(&acccopy.back()));
     }
-  }
 
-  static
-  acc_cond::mark_t merge_marks(acc_cond::mark_t colors,
-                               std::vector<acc_cond::mark_t> inclusions)
-  {
-    bool changed;
-    do
+    // If X always occurs when Y is present, Inf({X,Y}) can be
+    // replaced by Inf({Y}).
+    //
+    // If X and Y always occur together, then Inf({X}) and Inf({Y})
+    // can be used interchangeably, so we only keep the smallest one.
+    static twa_graph_ptr simplify_included_marks_here(twa_graph_ptr aut)
     {
-      changed = false;
-      for (unsigned c : colors.sets())
-      {
-        if ((inclusions[c] & colors) != acc_cond::mark_t {})
+      // Compute included_by[i], the set of colors always included
+      unsigned ns = aut->num_sets();
+      if (ns <= 1)
+        return aut;
+      auto& c = aut->acc().get_acceptance();
+      acc_cond::mark_t used_in_cond = c.used_sets();
+      if (!used_in_cond.has_many())
+        return aut;
+
+      std::vector<acc_cond::mark_t> always_with(ns, used_in_cond);
+      acc_cond::mark_t previous_a{};
+
+      for (auto& e: aut->edges())
         {
-          auto new_colors = (colors - inclusions[c]);
-          if (new_colors != colors)
-            changed = true;
-          colors = new_colors;
-          break;
+          // Just avoit the e.acc.sets() loops on marks that we have
+          // just seen.
+          if (e.acc == previous_a)
+            continue;
+          previous_a = e.acc;
+          for (auto c : e.acc.sets())
+            always_with[c] &= e.acc;
         }
-      }
-    } while (changed);
-    return colors;
+
+      // For each color n, find the smallest color m that is always used
+      // with n.  If m != n, record that n must be removed (and replaced
+      // by always_together[m]).
+      std::vector<acc_cond::mark_t> always_together(ns);
+      acc_cond::mark_t to_remove{};
+      for (unsigned n = ns - 1; n > 0; --n)
+        {
+          if (!used_in_cond.has(n))
+            continue;
+          always_together[n].set(n);
+          for (unsigned m = 0; m < n; ++m)
+            if (used_in_cond.has(m) && always_with[n] == always_with[m])
+              {
+                always_together[n] = {m};
+                to_remove.set(n);
+                break;
+              }
+        }
+      always_together[0].set(0);
+
+      for (unsigned n = 0; n < ns; ++n)
+        always_with[n].clear(n);
+
+      // Replace the marks in the acceptance condition
+      // We replace each color X in to_remove by always_together[X],
+      // and remove always_with[Y] for each Y in Inf or Fin.
+      auto pos = &c.back();
+      auto end = &c.front();
+      while (pos > end)
+        {
+          switch (pos->sub.op)
+            {
+            case acc_cond::acc_op::And:
+            case acc_cond::acc_op::Or:
+              --pos;
+              break;
+            case acc_cond::acc_op::Fin:
+            case acc_cond::acc_op::Inf:
+            case acc_cond::acc_op::FinNeg:
+            case acc_cond::acc_op::InfNeg:
+              {
+                acc_cond::mark_t colors = pos[-1].mark;
+                acc_cond::mark_t replace = colors & to_remove;
+                colors -= replace;
+                for (unsigned m: replace.sets())
+                  colors |= always_together[m];
+                for (unsigned m: colors.sets())
+                  colors -= always_with[m];
+                pos[-1].mark = colors;
+                pos -= 2;
+                break;
+              }
+            }
+        }
+      return aut;
+    }
   }
 
-  static
-  acc_cond::acc_code merge_colors(acc_cond::acc_code code,
-                                  std::vector<acc_cond::mark_t> inclusions)
-  {
-    if (code.empty())
-      return {};
-    int pos = code.size() - 1;
-    acc_cond::acc_code result;
-    do
-    {
-      switch (code[pos].sub.op)
-      {
-        case acc_cond::acc_op::And:
-        {
-          result = acc_cond::acc_code::t();
-          --pos;
-          while (pos > 0)
-          {
-            result = merge_colors(acc_cond::acc_code(&code[pos]), inclusions)
-                     & result;
-            pos -= (code[pos].sub.size + 1);
-          }
-          return result;
-        }
-        case acc_cond::acc_op::Or:
-        {
-          result = acc_cond::acc_code::f();
-          --pos;
-          while (pos > 0)
-          {
-            result = merge_colors(acc_cond::acc_code(&code[pos]), inclusions)
-                     | result;
-            pos -= (code[pos].sub.size + 1);
-          }
-          return result;
-        }
-        case acc_cond::acc_op::Fin:
-        {
-          auto res =  acc_cond::acc_code::fin(merge_marks(code[pos - 1].mark,
-                                                          inclusions));
-
-          return res;
-        }
-        case acc_cond::acc_op::Inf:
-        {
-          auto res =  acc_cond::acc_code::inf(merge_marks(code[pos - 1].mark,
-                                                          inclusions));
-          return res;
-        }
-        default:
-          SPOT_UNREACHABLE();
-      }
-    } while (pos > 0);
-    SPOT_UNREACHABLE();
-  }
-
-  // Create a vector of marks such that for every color c, result[c] contains
-  // all the colors that are on every transitions that also contain c
-  // (c is excluded).
-  static std::vector<acc_cond::mark_t> included_marks(twa_graph_ptr aut)
-  {
-    std::vector<acc_cond::mark_t> result(SPOT_MAX_ACCSETS,
-                                         acc_cond::mark_t::all());
-    for (unsigned i = 0; i < SPOT_MAX_ACCSETS; ++i)
-      result[i]^= acc_cond::mark_t {i};
-    for (auto& e: aut->edges())
-      for (auto c : e.acc.sets())
-        result[c] &= e.acc;
-    return result;
-  }
 
   twa_graph_ptr simplify_acceptance_here(twa_graph_ptr aut)
   {
     for (;;)
       {
         cleanup_acceptance_here(aut, false);
-        merge_identical_marks_here(aut);
+        simplify_included_marks_here(aut);
         if (aut->acc().is_generalized_buchi())
           break;
-        auto inc = included_marks(aut);
-        auto new_code = merge_colors(aut->get_acceptance(), inc);
-        aut->set_acceptance(acc_cond(aut->num_sets(), new_code));
-        acc_cond::acc_code old = new_code;
+        acc_cond::acc_code old = aut->get_acceptance();
         aut->set_acceptance(aut->acc().unit_propagation());
         simplify_complementary_marks_here(aut);
         fuse_marks_here(aut);

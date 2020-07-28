@@ -46,11 +46,15 @@ New in spot 2.9.3.dev  (not yet released)
     kripkecube from a PINS file.
 
   - Translations for formulas such as FGp1 & FGp2 &...& FGp32 which
-    used to take ages are now instantaneous.  (See issue #412.)
+    used to take ages are now instantaneous.  (Issue #412.)
 
   - remove_fin() learned to remove more unnecessary edges by using
     propagate_marks_vector(), both in the general case and in the
     Rabin-like case.
+
+  - simplify_acceptance() learned to simplify acceptence formulas of
+    the form Inf(x)&Inf(y) or Fin(x)|Fin(y) when the presence of x
+    always implies that of y.  (Issue #406.)
 
   Bugs fixed:
 
