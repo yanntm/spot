@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013, 2017, 2018 Laboratoire de Recherche et
+// Copyright (C) 2013, 2017-2018, 2020 Laboratoire de Recherche et
 // Développement de l'Epita.
 //
 // This file is part of Spot, a model checking library.
@@ -167,7 +167,7 @@ namespace spot
     PicoSAT* psat_;
 
     // The next 2 pointers will be initialized if SPOT_XCNF env var
-    // is set. This recquires SPOT_SATSOLVER to be set as well.
+    // is set. This requires SPOT_SATSOLVER to be set as well.
     std::ofstream* xcnf_tmp_;
     std::ofstream* xcnf_stream_;
     std::string path_;
