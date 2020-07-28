@@ -322,7 +322,7 @@ assert aut12c.num_states() == 9
 aut12d = spot.partial_degeneralize(aut12, [0,1,3])
 aut12e = spot.partial_degeneralize(aut12d, [0,1])
 assert aut12e.equivalent_to(aut12)
-assert aut12e.num_states() == 11
+assert aut12e.num_states() == 9
 
 aut12f = spot.partial_degeneralize(aut12)
 assert aut12f.equivalent_to(aut12)

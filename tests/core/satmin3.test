@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017, 2019 Laboratoire de Recherche et Développement
+# Copyright (C) 2017, 2019, 2020 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -24,37 +24,36 @@ set -e
 
 # Make sure the SPOT_SATSOLVER envar works.
 
-# DRA produced by ltl2dstar for GFp0 -> GFp1, but manually modified
-# so that simulation-based reduction do not reduce it to 1 state right away.
+# DRA for GFp0 -> GFp1 produced using the SAT-based synthesis (i.e.,
+# "minimization with fixed number of states").  We used to take the
+# output of ltl2dstar, unfortunately our preprocessing reduced that to
+# one state right away, even after some manual touches.
+
 cat >test.hoa <<EOF
 HOA: v1
 States: 4
-properties: implicit-labels trans-labels no-univ-branch deterministic complete
-acc-name: Rabin 2
-Acceptance: 4 (Fin(0)&Inf(1))|(Fin(2)&Inf(3))
 Start: 0
 AP: 2 "p0" "p1"
+acc-name: Rabin 2
+Acceptance: 4 (Fin(0) & Inf(1)) | (Fin(2) & Inf(3))
+properties: trans-labels explicit-labels state-acc complete
+properties: deterministic
 --BODY--
-State: 0 {0}
-1  {1}  /* manual addition */
-0
-3
-2
-State: 1 {1}
-1
-0
-3
-2
-State: 2 {0 3}
-1
-0
-3
-2
-State: 3 {1 3}
-1
-0
-3
-2
+State: 0 {1 2}
+[!0&!1] 1
+[!0&1] 2
+[0] 3
+State: 1 {0}
+[0&!1] 1
+[!0&!1] 2
+[1] 3
+State: 2 {1}
+[0&!1] 1
+[!0&!1] 2
+[1] 3
+State: 3 {0 3}
+[0 | 1] 2
+[!0&!1] 3
 --END--
 EOF
 
@@ -69,7 +68,7 @@ grep 'autfilt: SPOT_SATSOLVER should use %O' err
 
 SPOT_SATSOLVER='false %I %O' \
   autfilt --sat-minimize test.hoa --stats=%s >output
-test `cat output` = 4
+test `cat output` = 3
 
 SPOT_SATSOLVER='this-does-not-exist %I %O' \
               autfilt --sat-minimize test.hoa --stats=%s 2>err && exit

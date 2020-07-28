@@ -1330,6 +1330,20 @@ namespace spot
       /// \brief Return the set of sets appearing in the condition.
       acc_cond::mark_t used_sets() const;
 
+      /// \brief Find patterns of useless colors.
+      ///
+      /// If any subformula of the acceptance condition looks like
+      ///     (Inf(y₁)&Inf(y₂)&...&Inf(yₙ)) | f(x₁,...,xₙ)
+      /// or  (Fin(y₁)|Fin(y₂)|...|Fin(yₙ)) & f(x₁,...,xₙ)
+      /// then for each transition with all colors {y₁,y₂,...,yₙ} we
+      /// can add or remove all the xᵢ that are used only once in
+      /// the formula.
+      ///
+      /// This method returns a vector of pairs:
+      /// [({y₁,y₂,...,yₙ},{x₁,x₂,...,xₙ}),...]
+      std::vector<std::pair<acc_cond::mark_t, acc_cond::mark_t>>
+      useless_colors_patterns() const;
+
       /// \brief Return the sets that appears only once in the
       /// acceptance.
       ///

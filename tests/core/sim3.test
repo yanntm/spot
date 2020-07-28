@@ -1,6 +1,6 @@
 #! /bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2015, 2018, 2019 Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2018, 2019, 2020 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -52,7 +52,7 @@ test "`autfilt --small input --stats=%S,%s`" = 7,1
 autfilt -S --high --small input -H > out
 cat >expected <<EOF
 HOA: v1
-States: 5
+States: 4
 Start: 0
 AP: 2 "b" "a"
 acc-name: Streett 1
@@ -61,28 +61,19 @@ properties: trans-labels explicit-labels state-acc complete
 properties: deterministic
 --BODY--
 State: 0
-[!1] 1
-[1] 3
+[t] 1
 State: 1 {1}
-[0&!1] 1
+[0] 1
 [!0&!1] 2
-[0&1] 3
-[!0&1] 4
+[!0&1] 3
 State: 2
-[0&!1] 1
+[0] 1
 [!0&!1] 2
-[0&1] 3
-[!0&1] 4
-State: 3 {0 1}
-[0&!1] 1
+[!0&1] 3
+State: 3 {0}
+[0] 1
 [!0&!1] 2
-[0&1] 3
-[!0&1] 4
-State: 4 {0}
-[0&!1] 1
-[!0&!1] 2
-[0&1] 3
-[!0&1] 4
+[!0&1] 3
 --END--
 EOF
 diff out expected

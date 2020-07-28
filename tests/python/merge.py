@@ -36,28 +36,28 @@ State: 1
 State: 2
 [1] 0 {2 3}
 --END--""")
-spot.simplify_acceptance_here(aut)
-hoa = aut.to_str('hoa')
+out = spot.simplify_acceptance(aut)
+hoa = out.to_str('hoa')
 
 assert hoa == """HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
-acc-name: parity min even 2
-Acceptance: 2 Inf(0) | Fin(1)
+acc-name: Buchi
+Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels trans-acc
 --BODY--
 State: 0
 [0] 1 {0}
 State: 1
-[0] 1 {1}
-[1] 2 {0 1}
+[0] 1
+[1] 2 {0}
 State: 2
-[1] 0 {1}
+[1] 0
 --END--"""
+assert spot.are_equivalent(out, aut)
 
-aut = spot.automaton("""
-HOA: v1
+aut = spot.automaton("""HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
@@ -79,17 +79,17 @@ assert hoa == """HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
-acc-name: parity min even 2
-Acceptance: 2 Inf(0) | Fin(1)
+acc-name: Buchi
+Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels trans-acc
 --BODY--
 State: 0
 [0] 1 {0}
 State: 1
-[0] 1 {1}
-[1] 2 {0 1}
+[0] 1
+[1] 2 {0}
 State: 2
-[1] 0 {1}
+[1] 0
 --END--"""
 
 aut = spot.automaton("""
@@ -128,8 +128,7 @@ State: 2
 [1] 0
 --END--"""
 
-aut = spot.automaton("""
-HOA: v1
+aut = spot.automaton("""HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
@@ -158,10 +157,10 @@ properties: trans-labels explicit-labels trans-acc
 State: 0
 [0] 1
 State: 1
-[0] 1 {0 1}
+[0] 1 {0}
 [1] 2 {1}
 State: 2
-[1] 0 {0 1}
+[1] 0 {0}
 --END--"""
 
 aut = spot.automaton("""
@@ -355,7 +354,7 @@ State: 1
 [0&!1] 0
 [!0&1] 3
 [0&1] 2
-State: 2 {0 1}
+State: 2 {1}
 [!0&!1] 1
 [0&!1] 0
 [!0&1] 3
@@ -386,27 +385,29 @@ State: 2
 [0] 2 {0 1 2}
 [!0] 1 {0}
 --END--""")
-spot.simplify_acceptance_here(aut)
-hoa = aut.to_str('hoa')
+out = spot.simplify_acceptance(aut)
+hoa = out.to_str('hoa')
 
 assert hoa == """HOA: v1
 States: 3
 Start: 0
 AP: 2 "p0" "p1"
-Acceptance: 3 (Fin(0) | Inf(1)) & Fin(2)
+acc-name: co-Buchi
+Acceptance: 1 Fin(0)
 properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic
 --BODY--
 State: 0
 [0] 1
-[!0] 0 {2}
+[!0] 0 {0}
 State: 1
-[0] 1 {1 2}
+[0] 1 {0}
 [!0] 2
 State: 2
-[0] 2 {0 1 2}
+[0] 2 {0}
 [!0] 1 {0}
 --END--"""
+assert spot.are_equivalent(out, aut)
 
 aut = spot.automaton("""HOA: v1
 States: 4
@@ -448,14 +449,14 @@ State: 0
 [!0&!1] 0 {0}
 [0] 3
 State: 1
-[0] 0 {1 2 3}
+[0] 0 {1 3}
 [!0] 3 {0 2}
 State: 2
 [t] 1 {1 2}
 State: 3
 [0&1] 0 {1}
 [0&!1] 3 {1 2}
-[!0] 1 {2 3}
+[!0] 1 {3}
 --END--"""
 
 aut = spot.automaton("""HOA: v1
@@ -668,24 +669,26 @@ State: 2 {1 2 3}
 [t] 1
 --END--
 """)
-spot.simplify_acceptance_here(aut)
-hoa = aut.to_str('hoa')
+out = spot.simplify_acceptance(aut)
+hoa = out.to_str('hoa')
 
 assert hoa == """HOA: v1
 States: 3
 Start: 0
 AP: 2 "p0" "p1"
-Acceptance: 3 (Fin(0) | Inf(1)) & (Fin(1) | Inf(2))
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
 properties: trans-labels explicit-labels state-acc complete
 properties: deterministic
 --BODY--
-State: 0 {0 1}
+State: 0 {0}
 [t] 2
-State: 1 {0 2}
+State: 1 {1}
 [t] 2
-State: 2 {1 2}
+State: 2 {0 1}
 [t] 1
 --END--"""
+assert spot.are_equivalent(out, aut)
 
 aut = spot.automaton("""HOA: v1
 States: 2

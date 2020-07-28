@@ -92,4 +92,4 @@ State: 2
 """)
 b = spot.remove_fin(a)
 size = (b.num_states(), b.num_edges())
-assert size == (5, 15);
+assert size == (5, 13);

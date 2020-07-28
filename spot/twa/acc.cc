@@ -1326,6 +1326,81 @@ namespace spot
     return rescode;
   }
 
+  namespace
+  {
+    static acc_cond::mark_t
+    gather_used_colors(const acc_cond::acc_word* pos)
+    {
+      acc_cond::mark_t res{};
+      auto start = pos - pos->sub.size;
+      do
+        {
+          switch (pos->sub.op)
+            {
+            case acc_cond::acc_op::And:
+            case acc_cond::acc_op::Or:
+              --pos;
+              break;
+            case acc_cond::acc_op::Fin:
+            case acc_cond::acc_op::Inf:
+            case acc_cond::acc_op::FinNeg:
+            case acc_cond::acc_op::InfNeg:
+              res |= pos[-1].mark;
+              pos -= 2;
+              break;
+            }
+        }
+      while (pos > start);
+      return res;
+    }
+  }
+
+  std::vector<std::pair<acc_cond::mark_t, acc_cond::mark_t>>
+  acc_cond::acc_code::useless_colors_patterns() const
+  {
+    // [({y₁,y₂,...,yₙ},{x₁,x₂,...,xₙ}),...]
+    std::vector<std::pair<acc_cond::mark_t, acc_cond::mark_t>>
+      patterns;
+    acc_cond::mark_t used_once = used_once_sets();
+    if (!used_once)
+      return patterns;
+    auto pos = &back();
+    auto end = &front();
+    while (pos > end)
+      {
+        switch (pos->sub.op)
+          {
+          case acc_cond::acc_op::And:
+          case acc_cond::acc_op::Or:
+            {
+              auto expect = pos->sub.op == acc_cond::acc_op::Or ?
+                acc_cond::acc_op::Inf : acc_cond::acc_op::Fin;
+              for (auto p = pos - 1, pe = pos - pos->sub.size;
+                   p >= pe; p -= p->sub.size + 1)
+                if (p->sub.op == expect)
+                  {
+                    acc_cond::mark_t rem{};
+                    for (auto q = pos - 1; q >= pe; q -= q->sub.size + 1)
+                      if (p != q)
+                        rem |= gather_used_colors(q);
+                    rem &= used_once;
+                    if (rem)
+                      patterns.emplace_back(p[-1].mark, rem);
+                  }
+              --pos;
+              break;
+            }
+          case acc_cond::acc_op::Fin:
+          case acc_cond::acc_op::Inf:
+          case acc_cond::acc_op::FinNeg:
+          case acc_cond::acc_op::InfNeg:
+            pos -= 2;
+            break;
+          }
+      }
+    return patterns;
+  }
+
   bool
   acc_cond::acc_code::is_parity_max_equiv(std::vector<int>& permut,
                                           unsigned new_color,

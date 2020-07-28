@@ -578,11 +578,15 @@ properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic
 --BODY--
 State: 0
-[!1] 0 {0}
-[1] 1
+[0&1] 1 {0}
+[0&!1] 0 {0}
+[!0&1] 1
+[!0&!1] 0 {0}
 State: 1
-[!1] 0 {0}
-[1] 1 {0}
+[0&1] 1 {0}
+[0&!1] 0 {0}
+[!0&1] 1 {0}
+[!0&!1] 0 {0}
 --END--"""
 
 res = spot.remove_fin(aut)

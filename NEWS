@@ -56,6 +56,13 @@ New in spot 2.9.3.dev  (not yet released)
     the form Inf(x)&Inf(y) or Fin(x)|Fin(y) when the presence of x
     always implies that of y.  (Issue #406.)
 
+  - simplifiy_acceptance_here() and propagate_marks_here() learned to
+    use some patterns of the acceptance condition to remove or add
+    (depending on the function) colors on edges.  As an example, with
+    a condition such as Inf(0) | Fin(1), an edge labeled by {0,1} can
+    be simplied to {0}, but the oppose rewriting can be useful as
+    well.  (Issue #418.)
+
   Bugs fixed:
 
   - Handle xor and <-> in a more natural way when translating

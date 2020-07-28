@@ -471,4 +471,6 @@ test "4,1" = `ltl2tgba -D -x wdba-minimize=2 "$f" --stats=%s,%d`
 test "4,0" = `ltl2tgba -D -x wdba-minimize=0 "$f" --stats=%s,%d`
 test "4,1" = `ltl2tgba -D --med "$f" --stats=%s,%d`
 
-:
+# Issue #418.
+f='(G!a | G!b | G!c) & (FG!a2 | GFb2 | GFc2) & (GFc2 | FG!b2 | GFa2)'
+test 28 = `ltl2tgba -D -G -S --stats=%s "$f"`

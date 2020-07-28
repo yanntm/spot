@@ -200,7 +200,7 @@ State: 13
 [0&1] 5
 [!0&!1] 10 {0 1 3 5}
 [0&!1] 13 {1 3}
---END--"""), [35, 28, 23, 30, 29, 25, 22])
+--END--"""), [35, 30, 23, 32, 31, 28, 22])
 
 test(spot.automaton("""
 HOA: v1
@@ -259,7 +259,7 @@ State: 3
 [!0&1] 2 {1 4}
 [0&1] 3 {0}
 --END--
-"""), [80, 22, 80, 80, 80, 17, 10])
+"""), [80, 47, 104, 104, 102, 29, 6])
 
 test(spot.automaton("""
 HOA: v1
@@ -315,7 +315,7 @@ State: 1
 [0&!1] 1 {2 3}
 [0&1] 1 {1 2 4}
 --END--
-"""), [11, 6, 3, 7, 7, 4, 3])
+"""), [11, 3, 2, 3, 3, 3, 2])
 
 
 # Tests both the old and new version of to_parity
@@ -346,7 +346,7 @@ explicit-labels trans-acc --BODY-- State: 0 [0&1] 2 {4 5} [0&1] 4 {0 4}
 p = spot.to_parity_old(a, True)
 assert p.num_states() == 22
 assert spot.are_equivalent(a, p)
-test(a, [8, 7, 8, 8, 6, 7, 6])
+test(a, [8, 6, 6, 6, 6, 6, 6])
 
 # Force a few edges to false, to make sure to_parity() is OK with that.
 for e in a.out(2):
@@ -360,7 +360,7 @@ for e in a.out(3):
 p = spot.to_parity_old(a, True)
 assert p.num_states() == 22
 assert spot.are_equivalent(a, p)
-test(a, [7, 6, 7, 7, 6, 6, 6])
+test(a, [7, 6, 6, 6, 6, 6, 6])
 
 for f in spot.randltl(4, 400):
     d = spot.translate(f, "det", "G")

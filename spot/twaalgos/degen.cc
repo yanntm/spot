@@ -1108,13 +1108,23 @@ namespace spot
     else
       si = new scc_info(aut);
 
+
     unsigned ns = aut->num_states();
     acc_cond::mark_t allm = aut->acc().all_sets();
     unsigned es = aut->edge_vector().size();
+
+    auto patterns = aut->get_acceptance().useless_colors_patterns();
     std::vector<acc_cond::mark_t> marks(es, acc_cond::mark_t{});
     const auto& edges = aut->edge_vector();
     for (unsigned e = 1; e < es; ++e)
-      marks[e] = edges[e].acc;
+      {
+        acc_cond::mark_t m = edges[e].acc;
+        // Add as many useless colors as possible.
+        for (auto& p: patterns)
+          if (p.first.subset(m))
+            m |= p.second;
+        marks[e] = m;
+      }
 
     std::vector<acc_cond::mark_t> common_in(ns, allm);
     std::vector<acc_cond::mark_t> common_out(ns, allm);

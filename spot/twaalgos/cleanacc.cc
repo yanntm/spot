@@ -617,6 +617,33 @@ namespace spot
         }
       return aut;
     }
+
+
+    // If any subformula of the acceptance condition looks like
+    //   (Inf(y₁)&Inf(y₂)&...&Inf(yₙ)) | f(x₁,...,xₙ)
+    // then for each transition with all colors {y₁,y₂,...,yₙ} we
+    // can remove all the xᵢ that are used only once in the formula.
+    //
+    // See also issue #418.
+    static bool
+    remove_useless_colors_from_edges_here(twa_graph_ptr aut)
+    {
+      // [({y₁,y₂,...,yₙ},{x₁,x₂,...,xₙ}),...]
+      auto patterns = aut->get_acceptance().useless_colors_patterns();
+      if (patterns.empty())
+        return false;
+
+      bool changed = false;
+      for (auto& e: aut->edges())
+        for (auto& p: patterns)
+          if (p.first.subset(e.acc))
+            if (auto nacc = e.acc - p.second; nacc != e.acc)
+              {
+                e.acc = nacc;
+                changed = true;
+              }
+      return changed;
+    }
   }
 
 
@@ -632,7 +659,8 @@ namespace spot
         aut->set_acceptance(aut->acc().unit_propagation());
         simplify_complementary_marks_here(aut);
         fuse_marks_here(aut);
-        if (old == aut->get_acceptance())
+        bool changed = remove_useless_colors_from_edges_here(aut);
+        if (!changed && old == aut->get_acceptance())
           break;
       }
     cleanup_acceptance_here(aut, true);
