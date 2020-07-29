@@ -750,7 +750,8 @@ sub get_option_value
 }
 
 # Convert option dashes to \- to stop nroff from hyphenating 'em, and
-# embolden.  Option arguments get italicised.
+# embolden.  Option arguments get italicized. \: in front of | allow
+# linebreaks.
 sub convert_option
 {
     local $_ = '\fB' . shift;
@@ -758,7 +759,7 @@ sub convert_option
     s/-/\x83/g;
     if (s/\[=(.*)\]$/\\fR[=\\fI$1\\fR]/)
     {
-	s/\|/\\fR|\\fI/g;
+	s/\|/\\fR|\\:\\fI/g;
     }
     else
     {
