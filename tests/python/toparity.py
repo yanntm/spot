@@ -220,6 +220,21 @@ State: 1
 [!0&!1] 1 {0 3}
 --END--"""), [7, 5, 3, 6, 5, 5, 3])
 
+test(spot.automaton("""HOA: v1
+States: 2
+Start: 0
+AP: 2 "p0" "p1"
+Acceptance: 5 ((Fin(1)|Fin(3)|Fin(4)) | Inf(2) | Inf(0))
+               & (Inf(0) | Inf(1)) & (Inf(2) | Inf(1))
+properties: trans-labels explicit-labels trans-acc deterministic
+--BODY--
+State: 0
+[0&1] 0 {1 3}
+[!0&1] 1 {0}
+State: 1
+[0&1] 1 {2 3 4}
+[!0&!1] 0 {1 2}
+--END--"""), [9, 3, 2, 3, 3, 3, 2])
 
 for i,f in enumerate(spot.randltl(10, 400)):
     test(spot.translate(f, "det", "G"), full=(i<100))

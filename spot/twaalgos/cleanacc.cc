@@ -124,7 +124,7 @@ namespace spot
           while (rbegin > rend);
           if (rbegin <= rend)
             return res;
-          // Fin(i) & Inf(i) = f;
+          // Fin(i) & Inf(i) = f;             (also done by unit-fin)
           if (rbegin[-1].mark & seen_fin)
             return std::move(falsecode);
           for (auto m: seen_fin.sets())
@@ -192,6 +192,8 @@ namespace spot
         return aut;
 
       // complement[i] holds sets that appear when set #i does not.
+      // (This is not a strict complement, i.e., the sets in
+      // complement[i] are allowed to occur at the same time as i.)
       unsigned num_sets = acc.num_sets();
       std::vector<acc_cond::mark_t> complement(num_sets);
 
@@ -214,12 +216,8 @@ namespace spot
         {
           prev_acc = tacc;
           for (unsigned m: used_in_cond.sets())
-            {
-              if (tacc.has(m))
-                complement[m] -= tacc;
-              else
-                complement[m] &= tacc;
-            }
+            if (!tacc.has(m))
+              complement[m] &= tacc;
         };
       if (b != e)
         {
