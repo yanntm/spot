@@ -1583,7 +1583,8 @@ run()
         if (options.propagate_col)
         {
             propagate_marks_here(sub_automaton);
-            propagate_marks_here(deg);
+            if (deg != sub_automaton)
+              propagate_marks_here(deg);
         }
 
         std::map<unsigned, car_state> state2car_sub, state2car_deg;
