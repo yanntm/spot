@@ -49,7 +49,7 @@ namespace spot
     /// get a better result if we don't apply partial_degeneralize.
     bool force_degen = true;
     /// If \c scc_acc_clean is true, to_parity() will ignore colors
-    /// no occoring in an SCC while processing this SCC.
+    /// not occurring in an SCC while processing this SCC.
     bool acc_clean = true;
     /// If \c parity_equiv is true, to_parity() will check if there
     /// exists a permutations of colors such that the acceptance
