@@ -40,6 +40,11 @@ contains column headers).  We have [[file:csv.org][examples of reading or writin
 files on a separate page]].
 
 ** Default parser
+   :PROPERTIES:
+   :CUSTOM_ID: infix
+   :END:
+
+
 
 Spot's default LTL parser is able to parse the syntaxes of many tools,
 such as [[http://spinroot.com][Spin]], [[http://vlsi.colorado.edu/~rbloem/wring.html][Wring]], [[http://goal.im.ntu.edu.tw][Goal]], etc.  For instance here are the preferred ways
@@ -75,6 +80,9 @@ should not try to interpret.  For instance:
 : "a < b" U "process[2]@ok"
 
 ** Lenient mode
+   :PROPERTIES:
+   :CUSTOM_ID: lenient
+   :END:
 
 In version 6, Spin extended its syntax to support arbitrary atomic expression
 in LTL formulas. The previous formula would be written simply:
@@ -122,6 +130,9 @@ ltlfilt --lenient -f '(a U b U) U c'
 Here =a U b U= was taken as an atomic proposition.
 
 ** Prefix parser
+   :PROPERTIES:
+   :CUSTOM_ID: prefix
+   :END:
 
 The prefix syntax used by tools such as [[http://www.tcs.hut.fi/Software/maria/tools/lbt/][LBT]], [[http://www.tcs.hut.fi/Software/lbtt/][LBTT]], [[http://tcs.legacy.ics.tkk.fi/users/tlatvala/scheck/][scheck]] or [[http://www.ltl2dstar.de][ltl2dstar]]
 requires a different parser.  For these tools, the above example
@@ -130,9 +141,31 @@ propositions must start with =p= and be followed by a number).  Spot's
 =--lbt-input= option can be used to activate the parser for this
 syntax.
 
+The following operators are supported:
+
+| syntax | meaning        |
+|--------+----------------|
+|  <c>   | <l>            |
+|  =t=   | true           |
+|  =f=   | false          |
+|  =!=   | not            |
+|  =&=   | and            |
+| \vert  | or             |
+|  =^=   | xor            |
+|  =i=   | implies        |
+|  =e=   | equivalent     |
+|  =X=   | next           |
+|  =F=   | eventually     |
+|  =G=   | globally       |
+|  =U=   | strong until   |
+|  =V=   | weak release   |
+|  =M=   | strong release |
+|  =W=   | weak until     |
+|--------+----------------|
+
 As an extension to LBT's syntax, alphanumeric atomic propositions that
 follow the "=p= + number" rule will be accepted if they do not
-conflict with one of the operator (e.g., =i=, the implies operator,
+conflict with one of the operators (e.g., =i=, the /implies/ operator,
 cannot be used as an atomic proposition).  Also any atomic proposition
 may be double-quoted.  These extensions are compatible with the syntax
 used by [[http://www.ltl2dstar.de][ltl2dstar]].
@@ -141,11 +174,15 @@ used by [[http://www.ltl2dstar.de][ltl2dstar]].
 
 
 * Common output options
+   :PROPERTIES:
+   :CUSTOM_ID: output-options
+   :END:
 
 All tools that output LTL/PSL formulas implement the following options:
 
 #+BEGIN_SRC sh :exports results
-genltl --help | sed -n '/Output options:/,/^$/p' | sed '1d;$d'
+ltlfilt --help | sed -n '/Output options:/,/^$/p' |
+  sed '1d;$d;/--.*count/d;/--quiet/d'
 #+END_SRC
 #+RESULTS:
 #+begin_example
@@ -157,13 +194,9 @@ genltl --help | sed -n '/Output options:/,/^$/p' | sed '1d;$d'
                              "%f")
   -l, --lbt                  output in LBT's syntax
       --latex                output using LaTeX macros
-      --negative, --negated  output the negated versions of all formulas
   -o, --output=FORMAT        send output to a file named FORMAT instead of
                              standard output.  The first formula sent to a file
                              truncates it unless FORMAT starts with '>>'.
-      --positive             output the positive versions of all formulas (done
-                             by default, unless --negative is specified without
-                             --positive)
   -p, --full-parentheses     output fully-parenthesized formulas
   -s, --spin                 output in Spin's syntax
       --spot                 output in Spot's syntax (default)
@@ -220,7 +253,7 @@ the above =%=-sequences.
 For instance the following invocation of [[file:randltl.org][=randltl=]] will create 5
 random formulas, but in 5 different files:
 
-#+BEGIN_SRC sh
+#+BEGIN_SRC sh :epilogue "rm -f example-*.ltl"
 randltl -n5 a b -o example-%L.ltl
 wc -l example-*.ltl
 #+END_SRC
@@ -231,11 +264,6 @@ wc -l example-*.ltl
 :  1 example-4.ltl
 :  1 example-5.ltl
 :  5 total
-
-#+BEGIN_SRC sh :results silent :exports results
-rm -f example-*.ltl
-#+END_SRC
-#+RESULTS:
 
 Option =-0= is useful if the list of formulas is passed to =xargs=.
 =xargs= normally splits its input on white space (which are frequent
