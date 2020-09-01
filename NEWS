@@ -78,7 +78,7 @@ New in spot 2.9.1 (2020-07-15)
 
   - simplify_acceptance() missed some patterns it should have been
     able to simplify.  For instance Fin(0)&(Fin(1)|Fin(2)|Fin(4))
-    should simplify to Fin(1)|Fin(2)|Fin(4) adter adding {1,2,4} to
+    should simplify to Fin(1)|Fin(2)|Fin(4) after adding {1,2,4} to
     every place where 0 occur, and then the acceptance would be
     renumbered to Fin(0)|Fin(1)|Fin(2).  This is now fixed.
 

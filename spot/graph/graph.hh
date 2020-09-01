@@ -861,7 +861,7 @@ namespace spot
       return &ss - &states_.front();
     }
 
-    /// Conveart a storage reference into an edge number
+    /// Convert a storage reference into an edge number
     edge index_of_edge(const edge_storage_t& tt) const
     {
       SPOT_ASSERT(!edges_.empty());
