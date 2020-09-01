@@ -71,7 +71,7 @@ then
   AC_DEFINE_UNQUOTED([MAX_ACCSETS], [$enable_max_accsets],
     [The maximal number of acceptance sets supported (also known as acceptance marks)])
 else
-  AC_ERROR([The argument of --enable-max-accsets must be a multiple of $default_nb_acc])
+  AC_ERROR([The argument of --enable-max-accsets must be a multiple of $default_max_accsets])
 fi
 
 # Activate C11 for gnulib tests
