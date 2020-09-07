@@ -63,6 +63,10 @@ New in spot 2.9.4.dev  (not yet released)
     be simplied to {0}, but the oppose rewriting can be useful as
     well.  (Issue #418.)
 
+  - the parity_game class has been removed, now any twa_graph_ptr that
+    has a parity max odd acceptance and a "state-player" property is
+    considered to be a parity game.
+
 New in spot 2.9.4 (2020-09-07)
 
   Bugs fixed:

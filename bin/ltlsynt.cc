@@ -185,7 +185,7 @@ namespace
   // Ensures that the game is complete for player 0.
   // Also computes the owner of each state (false for player 0, i.e. env).
   // Initial state belongs to Player 0 and the game is turn-based.
-  static std::vector<bool>
+  static std::vector<bool>*
   complete_env(spot::twa_graph_ptr& arena)
   {
     unsigned sink_env = arena->new_state();
@@ -198,10 +198,11 @@ namespace
     arena->new_edge(sink_env, sink_con, bddtrue, um.second);
 
     std::vector<bool> seen(arena->num_states(), false);
-    std::vector<unsigned> todo({arena->get_init_state_number()});
-    std::vector<bool> owner(arena->num_states(), false);
-    owner[arena->get_init_state_number()] = false;
-    owner[sink_env] = true;
+    unsigned init = arena->get_init_state_number();
+    std::vector<unsigned> todo({init});
+    auto owner = new std::vector<bool>(arena->num_states(), false);
+    (*owner)[init] = false;
+    (*owner)[sink_env] = true;
     while (!todo.empty())
       {
         unsigned src = todo.back();
@@ -210,16 +211,16 @@ namespace
         bdd missing = bddtrue;
         for (const auto& e: arena->out(src))
           {
-            if (!owner[src])
+            if (!(*owner)[src])
               missing -= e.cond;
 
             if (!seen[e.dst])
               {
-                owner[e.dst] = !owner[src];
+                (*owner)[e.dst] = !(*owner)[src];
                 todo.push_back(e.dst);
               }
           }
-        if (!owner[src] && missing != bddfalse)
+        if (!(*owner)[src] && missing != bddfalse)
           arena->new_edge(src, sink_con, missing, um.second);
       }
 
@@ -254,17 +255,18 @@ namespace
   // accessible.  Also merge back pairs of p --(i)--> q --(o)--> r
   // transitions to p --(i&o)--> r.
   static spot::twa_graph_ptr
-  strat_to_aut(const spot::parity_game& pg,
-               const spot::parity_game::strategy_t& strat,
+  strat_to_aut(const spot::const_twa_graph_ptr& pg,
+               const spot::strategy_t& strat,
                const spot::twa_graph_ptr& dpa,
                bdd all_outputs)
   {
     auto aut = spot::make_twa_graph(dpa->get_dict());
     aut->copy_ap_of(dpa);
-    std::vector<unsigned> todo{pg.get_init_state_number()};
-    std::vector<int> pg2aut(pg.num_states(), -1);
+    unsigned pg_init = pg->get_init_state_number();
+    std::vector<unsigned> todo{pg_init};
+    std::vector<int> pg2aut(pg->num_states(), -1);
     aut->set_init_state(aut->new_state());
-    pg2aut[pg.get_init_state_number()] = aut->get_init_state_number();
+    pg2aut[pg_init] = aut->get_init_state_number();
     while (!todo.empty())
       {
         unsigned s = todo.back();
@@ -541,7 +543,7 @@ namespace
       if (want_time)
         sw.start();
       auto owner = complete_env(dpa);
-      auto pg = spot::parity_game(dpa, owner);
+      dpa->set_named_prop("state-player", owner);
       if (want_time)
         bgame_time = sw.stop();
       if (verbose)
@@ -550,22 +552,22 @@ namespace
       if (opt_print_pg)
         {
           timer.stop();
-          pg.print(std::cout);
+          pg_print(std::cout, dpa);
           return 0;
         }
 
-      spot::parity_game::strategy_t strategy[2];
-      spot::parity_game::region_t winning_region[2];
+      spot::strategy_t strategy[2];
+      spot::region_t winning_region[2];
       if (want_time)
         sw.start();
-      pg.solve(winning_region, strategy);
+      parity_game_solve(dpa, winning_region, strategy);
       if (want_time)
         solve_time = sw.stop();
       if (verbose)
         std::cerr << "parity game solved in " << solve_time << " seconds\n";
-      nb_states_parity_game = pg.num_states();
+      nb_states_parity_game = dpa->num_states();
       timer.stop();
-      if (winning_region[1].count(pg.get_init_state_number()))
+      if (winning_region[1].count(dpa->get_init_state_number()))
         {
           std::cout << "REALIZABLE\n";
           if (!opt_real)
@@ -573,7 +575,7 @@ namespace
               if (want_time)
                 sw.start();
               auto strat_aut =
-                strat_to_aut(pg, strategy[1], dpa, all_outputs);
+                strat_to_aut(dpa, strategy[1], dpa, all_outputs);
               if (want_time)
                 strat2aut_time = sw.stop();
 
