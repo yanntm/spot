@@ -1,9 +1,11 @@
-New in spot 2.9.3.dev  (not yet released)
+New in spot 2.9.4 (2020-09-07)
 
   Bugs fixed:
 
   - Handle xor and <-> in a more natural way when translating
-    LTL formulas to generic acceptancee conditions.
+    LTL formulas to generic acceptance conditions.
+
+  - Multiple typos in documentation, --help texts, or error messages.
 
 New in spot 2.9.3 (2020-07-22)
 
