@@ -32,6 +32,8 @@ cmp out out3 && exit 1
 autfilt out3 >out2
 diff out out2
 
+autfilt --dot out3 | grep diamond
+
 cat <<EOF >bug.hoa
 HOA: v1 States: 11 Start: 3 AP: 3 "a" "b" "c"
 acc-name: Streett 1 Acceptance: 2 Fin(0) | Inf(1) spot-state-player: 0

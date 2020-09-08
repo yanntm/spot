@@ -1220,3 +1220,17 @@ sed -n "s/^$h: \(.*\)\$/\\1/p" <<EOF  | tr -d '\n'
 $t
 EOF
 #+END_SRC
+
+When converted to dot, states from player 1 have a diamond shape:
+
+#+NAME: exgame.dot
+#+begin_src sh :exports code
+ltlsynt --ins=a --outs=b -f 'Ga <-> Gb' --print-game-hoa | autfilt --dot
+#+end_src
+
+#+BEGIN_SRC dot :file exgame.svg :var txt=exgame.dot :exports results
+$txt
+#+END_SRC
+
+#+RESULTS:
+[[file:exgame.svg]]

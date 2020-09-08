@@ -82,6 +82,7 @@ namespace spot
       std::string* graph_name_ = nullptr; // name for the digraph
       std::map<std::pair<int, int>, int> univ_done;
       std::vector<bool> true_states_;
+      std::vector<bool>* state_player_;
 
       acc_cond::mark_t inf_sets_ = {};
       acc_cond::mark_t fin_sets_ = {};
@@ -718,6 +719,8 @@ namespace spot
             if (dcircles_ && aut_->state_acc_sets(s))
               os_ << ", peripheries=2";
           }
+        if (state_player_ && state_player_->size() > s && (*state_player_)[s])
+          os_ << ", shape=\"diamond\"";
         if (highlight_states_)
           {
             auto iter = highlight_states_->find(s);
@@ -890,6 +893,8 @@ namespace spot
           }
         incomplete_ =
           aut->get_named_prop<std::set<unsigned>>("incomplete-states");
+        state_player_ =
+          aut_->get_named_prop<std::vector<bool>>("state-player");
         graph_name_ = aut_->get_named_prop<std::string>("automaton-name");
         if (opt_name_)
           name_ = graph_name_;

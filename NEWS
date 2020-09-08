@@ -76,6 +76,9 @@ New in spot 2.9.4.dev  (not yet released)
     back by the automaton parser, which means that games can be saved
     and loaded.
 
+  - print_dot() will display states from player 1 using a diamond
+    shape.
+
 New in spot 2.9.4 (2020-09-07)
 
   Bugs fixed:
