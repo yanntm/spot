@@ -23,7 +23,7 @@
 set -e
 
 cat >exp <<EOF
-parity 18;
+parity 16;
 0 1 0 1,2 "INIT";
 2 1 1 3;
 3 2 0 4,5;

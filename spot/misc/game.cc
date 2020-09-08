@@ -247,4 +247,61 @@ namespace spot
 
     solve_rec(arena, owner, states_, m.max_set(), w, s);
   }
+
+  void propagate_players(spot::twa_graph_ptr& arena,
+                         bool first_player, bool complete0)
+  {
+    auto um = arena->acc().unsat_mark();
+    if (!um.first)
+      throw std::runtime_error("game winning condition is a tautology");
+
+    unsigned sink_env = 0;
+    unsigned sink_con = 0;
+
+    std::vector<bool> seen(arena->num_states(), false);
+    unsigned init = arena->get_init_state_number();
+    std::vector<unsigned> todo({init});
+    auto owner = new std::vector<bool>(arena->num_states(), false);
+    (*owner)[init] = first_player;
+    while (!todo.empty())
+      {
+        unsigned src = todo.back();
+        todo.pop_back();
+        seen[src] = true;
+        bdd missing = bddtrue;
+        for (const auto& e: arena->out(src))
+          {
+            bool osrc = (*owner)[src];
+            if (complete0 && !osrc)
+              missing -= e.cond;
+
+            if (!seen[e.dst])
+              {
+                (*owner)[e.dst] = !osrc;
+                todo.push_back(e.dst);
+              }
+            else if ((*owner)[e.dst] == osrc)
+              {
+                delete owner;
+                throw
+                  std::runtime_error("propagate_players(): odd cycle detected");
+              }
+          }
+        if (complete0 && !(*owner)[src] && missing != bddfalse)
+          {
+            if (sink_env == 0)
+              {
+                sink_env = arena->new_state();
+                sink_con = arena->new_state();
+                owner->push_back(true);
+                owner->push_back(false);
+                arena->new_edge(sink_con, sink_env, bddtrue, um.second);
+                arena->new_edge(sink_env, sink_con, bddtrue, um.second);
+              }
+            arena->new_edge(src, sink_con, missing, um.second);
+          }
+      }
+
+    arena->set_named_prop("state-player", owner);
+  }
 }

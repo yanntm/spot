@@ -184,55 +184,8 @@ ARGMATCH_VERIFY(solver_args, solver_types);
 static solver opt_solver = SPLIT_DET;
 static bool verbose = false;
 
-
 namespace
 {
-
-  // Ensures that the game is complete for player 0.
-  // Also computes the owner of each state (false for player 0, i.e. env).
-  // Initial state belongs to Player 0 and the game is turn-based.
-  static std::vector<bool>*
-  complete_env(spot::twa_graph_ptr& arena)
-  {
-    unsigned sink_env = arena->new_state();
-    unsigned sink_con = arena->new_state();
-
-    auto um = arena->acc().unsat_mark();
-    if (!um.first)
-      throw std::runtime_error("game winning condition is a tautology");
-    arena->new_edge(sink_con, sink_env, bddtrue, um.second);
-    arena->new_edge(sink_env, sink_con, bddtrue, um.second);
-
-    std::vector<bool> seen(arena->num_states(), false);
-    unsigned init = arena->get_init_state_number();
-    std::vector<unsigned> todo({init});
-    auto owner = new std::vector<bool>(arena->num_states(), false);
-    (*owner)[init] = false;
-    (*owner)[sink_env] = true;
-    while (!todo.empty())
-      {
-        unsigned src = todo.back();
-        todo.pop_back();
-        seen[src] = true;
-        bdd missing = bddtrue;
-        for (const auto& e: arena->out(src))
-          {
-            if (!(*owner)[src])
-              missing -= e.cond;
-
-            if (!seen[e.dst])
-              {
-                (*owner)[e.dst] = !(*owner)[src];
-                todo.push_back(e.dst);
-              }
-          }
-        if (!(*owner)[src] && missing != bddfalse)
-          arena->new_edge(src, sink_con, missing, um.second);
-      }
-
-    return owner;
-  }
-
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
@@ -548,8 +501,7 @@ namespace
       nb_states_dpa = dpa->num_states();
       if (want_time)
         sw.start();
-      auto owner = complete_env(dpa);
-      dpa->set_named_prop("state-player", owner);
+      propagate_players(dpa, false, true);
       if (want_time)
         bgame_time = sw.stop();
       if (verbose)

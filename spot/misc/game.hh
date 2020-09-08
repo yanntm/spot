@@ -31,6 +31,22 @@
 
 namespace spot
 {
+
+  /// \brief Transform an automaton into a parity game by propagating
+  /// players
+  ///
+  /// This propagate state players, assuming the initial state belong
+  /// to \a first_player, and alternating players on each transitions.
+  /// If an odd cycle is detected, a runtime_exception is raised.
+  ///
+  /// If \a complete0 is set, ensure that states of player 0 are
+  /// complete.
+  SPOT_API
+  void propagate_players(spot::twa_graph_ptr& arena,
+                         bool first_player = false,
+                         bool complete0 = true);
+
+
   typedef std::unordered_set<unsigned> region_t;
   typedef std::unordered_map<unsigned, unsigned> strategy_t;
 
