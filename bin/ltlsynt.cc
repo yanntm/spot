@@ -49,6 +49,7 @@
 #include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/split.hh>
 #include <spot/twaalgos/toparity.hh>
+#include <spot/twaalgos/hoa.hh>
 
 enum
 {
@@ -58,6 +59,7 @@ enum
   OPT_OUTPUT,
   OPT_PRINT,
   OPT_PRINT_AIGER,
+  OPT_PRINT_HOA,
   OPT_REAL,
   OPT_VERBOSE
 };
@@ -87,6 +89,8 @@ static const argp_option options[] =
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
       "print the parity game in the pgsolver format, do not solve it", 0},
+    { "print-game-hoa", OPT_PRINT_HOA, "options", OPTION_ARG_OPTIONAL,
+      "print the parity game in the HOA format, do not solve it", 0},
     { "realizability", OPT_REAL, nullptr, 0,
       "realizability only, do not compute a winning strategy", 0},
     { "aiger", OPT_PRINT_AIGER, nullptr, 0,
@@ -125,6 +129,8 @@ static std::vector<std::string> output_aps;
 
 static const char* opt_csv = nullptr;
 static bool opt_print_pg = false;
+static bool opt_print_hoa = false;
+static const char* opt_print_hoa_args = nullptr;
 static bool opt_real = false;
 static bool opt_print_aiger = false;
 static spot::option_map extra_options;
@@ -315,7 +321,7 @@ namespace
       {
         out << ("\"formula\",\"algo\",\"trans_time\","
                 "\"split_time\",\"todpa_time\",\"build_game_time\"");
-        if (!opt_print_pg)
+        if (!opt_print_pg && !opt_print_hoa)
           {
             out << ",\"solve_time\"";
             if (!opt_real)
@@ -333,7 +339,7 @@ namespace
         << ',' << split_time
         << ',' << paritize_time
         << ',' << bgame_time;
-    if (!opt_print_pg)
+    if (!opt_print_pg && !opt_print_hoa)
       {
         out << ',' << solve_time;
         if (!opt_real)
@@ -555,6 +561,12 @@ namespace
           pg_print(std::cout, dpa);
           return 0;
         }
+      if (opt_print_hoa)
+        {
+          timer.stop();
+          spot::print_hoa(std::cout, dpa, opt_print_hoa_args) << '\n';
+          return 0;
+        }
 
       spot::strategy_t strategy[2];
       spot::region_t winning_region[2];
@@ -645,6 +657,10 @@ parse_opt(int key, char* arg, struct argp_state*)
       }
     case OPT_PRINT:
       opt_print_pg = true;
+      break;
+    case OPT_PRINT_HOA:
+      opt_print_hoa = true;
+      opt_print_hoa_args = arg;
       break;
     case OPT_PRINT_AIGER:
       opt_print_aiger = true;

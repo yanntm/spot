@@ -1,5 +1,5 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2014-2019 Laboratoire de Recherche et Développement
+** Copyright (C) 2014-2020 Laboratoire de Recherche et Développement
 ** de l'Epita (LRDE).
 **
 ** This file is part of Spot, a model checking library.
@@ -138,6 +138,8 @@ extern "C" int strverscmp(const char *s1, const char *s2);
       std::map<unsigned, unsigned>* highlight_edges = nullptr;
       std::map<unsigned, unsigned>* highlight_states = nullptr;
       std::map<unsigned, unsigned> states_map;
+      std::vector<bool>* state_player = nullptr;
+      spot::location state_player_loc;
       std::set<int> ap_set;
       unsigned cur_state;
       int states = -1;
@@ -238,6 +240,7 @@ extern "C" int strverscmp(const char *s1, const char *s2);
 %token STATE "State:";
 %token SPOT_HIGHLIGHT_EDGES "spot.highlight.edges:";
 %token SPOT_HIGHLIGHT_STATES "spot.highlight.states:";
+%token SPOT_STATE_PLAYER "spot.state-player:";
 %token <str> IDENTIFIER "identifier";  // also used by neverclaim
 %token <str> HEADERNAME "header name";
 %token <str> ANAME "alias name";
@@ -822,6 +825,15 @@ header-item: "States:" INT
 	   | "spot.highlight.states:"
 	     { res.highlight_states = new std::map<unsigned, unsigned>; }
              highlight-states
+	   | "spot.state-player:"
+	     { auto p = new std::vector<bool>;
+               if (res.states >= 0)
+                 p->reserve(res.states);
+               res.state_player = p;
+             } state-player
+             {
+               res.state_player_loc = @$;
+             }
            | HEADERNAME header-spec
 	     {
 	       char c = (*$1)[0];
@@ -916,6 +928,14 @@ highlight-states: %empty
                 | highlight-states INT INT
               {
 		res.highlight_states->emplace($2, $3);
+	      }
+
+state-player: %empty
+                | state-player INT
+              {
+                if ($2 != 0 && $2 != 1)
+                  error(@2, "player should be 0 or 1");
+                res.state_player->emplace_back($2);
 	      }
 
 header-spec: %empty
@@ -1195,6 +1215,16 @@ body: states
                     "this diagnostic\n      by defining the SPOT_HOA_TOLERANT "
                     "environment variable.");
               det_warned = true;
+            }
+        if (res.state_player)
+          if (unsigned spsz = res.state_player->size(); spsz != n)
+            {
+              error(res.state_player_loc,
+                    "ignoring state-player header because it has "s
+                    + std::to_string(spsz) + " entries while automaton has "
+                    + std::to_string(n) + " states");
+              delete res.state_player;
+              res.state_player = nullptr;
             }
       }
 state-num: INT
@@ -2621,6 +2651,8 @@ namespace spot
       r.aut_or_ks->set_named_prop("highlight-edges", r.highlight_edges);
     if (r.highlight_states)
       r.aut_or_ks->set_named_prop("highlight-states", r.highlight_states);
+    if (r.state_player)
+      r.aut_or_ks->set_named_prop("state-player", r.state_player);
     fix_acceptance(r);
     fix_initial_state(r);
     fix_properties(r);

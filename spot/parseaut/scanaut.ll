@@ -1,5 +1,5 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2014-2018 Laboratoire de Recherche et Développement
+** Copyright (C) 2014-2018, 2020 Laboratoire de Recherche et Développement
 ** de l'Epita (LRDE).
 **
 ** This file is part of Spot, a model checking library.
@@ -129,6 +129,7 @@ identifier  [[:alpha:]_][[:alnum:]_.-]*
   "properties:"         return token::PROPERTIES;
   "spot.highlight.states:" return token::SPOT_HIGHLIGHT_STATES;
   "spot.highlight.edges:"  return token::SPOT_HIGHLIGHT_EDGES;
+  "spot"[.-]"state-player:" return token::SPOT_STATE_PLAYER;
   "--BODY--"		return token::BODY;
   "--END--"		BEGIN(INITIAL); return token::END;
   "State:"		return token::STATE;

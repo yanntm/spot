@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2014-2019 Laboratoire de Recherche et
+// Copyright (C) 2014-2020 Laboratoire de Recherche et
 // Developpement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -608,6 +608,24 @@ namespace spot
       {
         os << (v1_1 ? "spot." : "spot-") << "rejected-word: \"";
         escape_str(os, *word) << '"' << nl;
+      }
+    if (auto player = aut->get_named_prop<std::vector<bool>>("state-player"))
+      {
+        os << (v1_1 ? "spot." : "spot-") << "state-player:";
+        if (player->size() != num_states)
+          throw std::runtime_error("print_hoa(): state-player property has"
+                                   " (" + std::to_string(player->size()) +
+                                   " states but automaton has " +
+                                   std::to_string(num_states));
+        unsigned n = 0;
+        while (n < num_states)
+          {
+            os << ' ' << (*player)[n];
+            ++n;
+            if (newline && n < num_states && (n % 30 == 0))
+              os << "\n                  ";
+          }
+        os << nl;
       }
 
     // If we want to output implicit labels, we have to

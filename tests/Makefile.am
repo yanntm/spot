@@ -222,6 +222,7 @@ TESTS_twa = \
   core/bdddict.test \
   core/cube.test \
   core/alternating.test \
+  core/gamehoa.test \
   core/ltlcross3.test \
   core/ltlcross5.test \
   core/taatgba.test \

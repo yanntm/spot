@@ -8,6 +8,11 @@ New in spot 2.9.4.dev  (not yet released)
     problem.  There is also an --enable-c++20 option to configure in
     case you want to force a build of Spot in C++20 mode.
 
+  Command-line tools:
+
+  - ltlsynt learned --print-game-hoa to output its internal parity
+    game in the HOA format (with an extension described below).
+
   Library:
 
   - Historically, Spot labels automata by Boolean formulas over
@@ -66,6 +71,10 @@ New in spot 2.9.4.dev  (not yet released)
   - the parity_game class has been removed, now any twa_graph_ptr that
     has a parity max odd acceptance and a "state-player" property is
     considered to be a parity game.
+
+  - the "state-player" property is output by the HOA printer, and read
+    back by the automaton parser, which means that games can be saved
+    and loaded.
 
 New in spot 2.9.4 (2020-09-07)
 
