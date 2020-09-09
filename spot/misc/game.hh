@@ -50,6 +50,24 @@ namespace spot
   typedef std::unordered_set<unsigned> region_t;
   typedef std::unordered_map<unsigned, unsigned> strategy_t;
 
+
+  struct SPOT_API solved_game
+  {
+    const_twa_graph_ptr arena;
+
+    region_t winning_region[2];
+    strategy_t winning_strategy[2];
+
+  /// \brief Highlight the edges of a strategy on the automaton.
+    twa_graph_ptr highlight_strategy(unsigned player, unsigned color);
+
+    bool player_winning_at(unsigned player, unsigned state)
+    {
+      auto& w = winning_region[player];
+      return w.find(state) != w.end();
+    }
+  };
+
   /// \brief solve a parity-game
   ///
   /// The arena is a deterministic max odd parity automaton with a
@@ -59,10 +77,16 @@ namespace spot
   /// game for player 1 using Zielonka's recursive algorithm.
   /// \cite zielonka.98.tcs
   SPOT_API
-  void parity_game_solve(const const_twa_graph_ptr& arena,
-                         region_t (&w)[2], strategy_t (&s)[2]);
+  solved_game parity_game_solve(const const_twa_graph_ptr& arena);
 
   /// \brief Print a max odd parity game using PG-solver syntax
   SPOT_API
   void pg_print(std::ostream& os, const const_twa_graph_ptr& arena);
+
+
+  /// \brief Highlight the edges of a strategy on an automaton.
+  SPOT_API
+  twa_graph_ptr highlight_strategy(twa_graph_ptr& arena,
+                                   const strategy_t& s,
+                                   unsigned color);
 }

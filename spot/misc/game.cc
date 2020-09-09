@@ -230,9 +230,11 @@ namespace spot
       }
   }
 
-  void parity_game_solve(const const_twa_graph_ptr& arena,
-                         region_t (&w)[2], strategy_t (&s)[2])
+  solved_game parity_game_solve(const const_twa_graph_ptr& arena)
   {
+    solved_game result;
+    result.arena = arena;
+
     const std::vector<bool>* owner =
       ensure_parity_game(arena, "parity_game_solve");
 
@@ -245,7 +247,10 @@ namespace spot
     for (const auto& e: arena->edges())
       m |= e.acc;
 
-    solve_rec(arena, owner, states_, m.max_set(), w, s);
+    solve_rec(arena, owner, states_, m.max_set(),
+              result.winning_region, result.winning_strategy);
+
+    return result;
   }
 
   void propagate_players(spot::twa_graph_ptr& arena,
@@ -303,5 +308,45 @@ namespace spot
       }
 
     arena->set_named_prop("state-player", owner);
+  }
+
+  twa_graph_ptr
+  highlight_strategy(twa_graph_ptr& aut, const strategy_t& s,
+                     unsigned color)
+  {
+    unsigned ns = aut->num_states();
+    auto* highlight = aut->get_or_set_named_prop<std::map<unsigned, unsigned>>
+      ("highlight-edges");
+
+    for (auto [src, n]: s)
+      {
+        if (src >= ns)
+          throw std::runtime_error
+            ("highlight_strategy(): strategy refers to unexisting states");
+        unsigned int i = 0;
+        for (auto& t: aut->out(src))
+          if (i++ == n)
+            {
+              (*highlight)[aut->edge_number(t)] = color;
+              break;
+            }
+      }
+
+    return aut;
+  }
+
+  twa_graph_ptr
+  solved_game::highlight_strategy(unsigned player, unsigned color)
+  {
+    auto aut = std::const_pointer_cast<twa_graph>(arena);
+
+    auto* highlight = aut->get_or_set_named_prop<std::map<unsigned, unsigned>>
+      ("highlight-states");
+    unsigned ns = aut->num_states();
+    for (unsigned i = 0; i < ns; ++i)
+      if (player_winning_at(player, i))
+        (*highlight)[i] = color;
+
+    return spot::highlight_strategy(aut, winning_strategy[!!player], color);
   }
 }

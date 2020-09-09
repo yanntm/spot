@@ -216,11 +216,10 @@ namespace
   static spot::twa_graph_ptr
   strat_to_aut(const spot::const_twa_graph_ptr& pg,
                const spot::strategy_t& strat,
-               const spot::twa_graph_ptr& dpa,
                bdd all_outputs)
   {
-    auto aut = spot::make_twa_graph(dpa->get_dict());
-    aut->copy_ap_of(dpa);
+    auto aut = spot::make_twa_graph(pg->get_dict());
+    aut->copy_ap_of(pg);
     unsigned pg_init = pg->get_init_state_number();
     std::vector<unsigned> todo{pg_init};
     std::vector<int> pg2aut(pg->num_states(), -1);
@@ -230,10 +229,10 @@ namespace
       {
         unsigned s = todo.back();
         todo.pop_back();
-        for (auto& e1: dpa->out(s))
+        for (auto& e1: pg->out(s))
           {
             unsigned i = 0;
-            for (auto& e2: dpa->out(e1.dst))
+            for (auto& e2: pg->out(e1.dst))
               {
                 bool self_loop = false;
                 if (e1.dst == s || e2.dst == e1.dst)
@@ -520,18 +519,16 @@ namespace
           return 0;
         }
 
-      spot::strategy_t strategy[2];
-      spot::region_t winning_region[2];
       if (want_time)
         sw.start();
-      parity_game_solve(dpa, winning_region, strategy);
+      auto solution = parity_game_solve(dpa);
       if (want_time)
         solve_time = sw.stop();
       if (verbose)
         std::cerr << "parity game solved in " << solve_time << " seconds\n";
       nb_states_parity_game = dpa->num_states();
       timer.stop();
-      if (winning_region[1].count(dpa->get_init_state_number()))
+      if (solution.player_winning_at(1, dpa->get_init_state_number()))
         {
           std::cout << "REALIZABLE\n";
           if (!opt_real)
@@ -539,7 +536,7 @@ namespace
               if (want_time)
                 sw.start();
               auto strat_aut =
-                strat_to_aut(dpa, strategy[1], dpa, all_outputs);
+                strat_to_aut(dpa, solution.winning_strategy[1], all_outputs);
               if (want_time)
                 strat2aut_time = sw.stop();
 

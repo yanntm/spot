@@ -362,6 +362,7 @@ TESTS_ipython = \
   python/ltsmin-dve.ipynb \
   python/ltsmin-pml.ipynb \
   python/parity.ipynb \
+  python/paritygame.ipynb \
   python/product.ipynb \
   python/randaut.ipynb \
   python/randltl.ipynb \

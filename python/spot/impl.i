@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2009-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 // Copyright (C) 2003-2006 Laboratoire d'Informatique de Paris 6
 // (LIP6), département Systèmes Répartis Coopératifs (SRC), Université
@@ -163,6 +163,8 @@
 #include <spot/twaalgos/toparity.hh>
 
 #include <spot/parseaut/public.hh>
+
+#include <spot/misc/game.hh>
 
 #include <spot/kripke/fairkripke.hh>
 #include <spot/kripke/kripke.hh>
@@ -689,6 +691,8 @@ def state_is_accepting(self, src) -> "bool":
 %}
 
 %include <spot/twaalgos/complement.hh>
+
+%include <spot/misc/game.hh>
 
 %include <spot/kripke/fairkripke.hh>
 %include <spot/kripke/kripke.hh>
