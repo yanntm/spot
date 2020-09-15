@@ -101,3 +101,51 @@ properties: deterministic
 State: 0
 [t] 0
 --END--"""
+
+a = spot.automaton("""HOA: v1
+States: 3
+Start: 0
+AP: 1 "a"
+acc-name: all
+Acceptance: 0 t
+properties: trans-labels explicit-labels state-acc deterministic
+--BODY--
+State: 0
+[0] 1
+State: 1
+[0] 2
+State: 2
+--END--""")
+
+try:
+	spot.get_state_players(a)
+except RuntimeError as e:
+  assert "not a game" in str(e)
+else:
+  report_missing_exception()
+
+spot.set_state_player(a, 1, 1)
+assert spot.get_state_players(a) == (False, True, False)
+assert spot.get_state_player(a, 0) == 0
+assert spot.get_state_player(a, 1) == 1
+
+try:
+	spot.set_state_players(a, [True, False, False, False])
+except RuntimeError as e:
+  assert "many owners as states" in str(e)
+else:
+  report_missing_exception()
+
+try:
+	spot.get_state_player(a, 4)
+except RuntimeError as e:
+  assert "invalid state number" in str(e)
+else:
+  report_missing_exception()
+
+try:
+	spot.set_state_player(a, 4, 1)
+except RuntimeError as e:
+  assert "invalid state number" in str(e)
+else:
+  report_missing_exception()

@@ -349,4 +349,60 @@ namespace spot
 
     return spot::highlight_strategy(aut, winning_strategy[!!player], color);
   }
+
+  void set_state_players(twa_graph_ptr arena, std::vector<bool> owners)
+  {
+    std::vector<bool>* owners_ptr = new std::vector<bool>(owners);
+    set_state_players(arena, owners_ptr);
+  }
+
+  void set_state_players(twa_graph_ptr arena, std::vector<bool>* owners)
+  {
+    if (owners->size() != arena->num_states())
+      throw std::runtime_error
+        ("set_state_players(): There must be as many owners as states");
+
+    arena->set_named_prop<std::vector<bool>>("state-player", owners);
+  }
+
+  void set_state_player(twa_graph_ptr arena, unsigned state, unsigned owner)
+  {
+    if (state >= arena->num_states())
+      throw std::runtime_error("set_state_player(): invalid state number");
+
+    std::vector<bool> *owners = arena->get_named_prop<std::vector<bool>>
+      ("state-player");
+    if (!owners)
+      {
+        owners = new std::vector<bool>(arena->num_states(), false);
+        arena->set_named_prop<std::vector<bool>>("state-player", owners);
+      }
+
+    (*owners)[state] = owner;
+  }
+
+  const std::vector<bool>& get_state_players(const_twa_graph_ptr arena)
+  {
+    std::vector<bool> *onwers = arena->get_named_prop<std::vector<bool>>
+      ("state-player");
+    if (!onwers)
+      throw std::runtime_error
+        ("get_state_players(): state-player property not defined, not a game");
+
+    return *onwers;
+  }
+
+  unsigned get_state_player(const_twa_graph_ptr arena, unsigned state)
+  {
+    if (state >= arena->num_states())
+      throw std::runtime_error("get_state_player(): invalid state number");
+
+    std::vector<bool>* onwers = arena->get_named_prop<std::vector<bool>>
+      ("state-player");
+    if (!onwers)
+      throw std::runtime_error
+        ("get_state_player(): state-player property not defined, not a game");
+
+    return (*onwers)[state] ? 1 : 0;
+  }
 }

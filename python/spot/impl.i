@@ -458,6 +458,7 @@ static void handle_any_exception()
 
 %implicitconv std::vector<spot::formula>;
 %implicitconv spot::formula;
+%implicitconv std::vector<bool>;
 
 %include <spot/tl/formula.hh>
 

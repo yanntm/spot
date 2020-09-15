@@ -89,4 +89,22 @@ namespace spot
   twa_graph_ptr highlight_strategy(twa_graph_ptr& arena,
                                    const strategy_t& s,
                                    unsigned color);
+
+  /// \brief Set the owner for all the states.
+  SPOT_API
+  void set_state_players(twa_graph_ptr arena, std::vector<bool> owners);
+  SPOT_API
+  void set_state_players(twa_graph_ptr arena, std::vector<bool>* owners);
+
+  /// \brief Set the owner of a state.
+  SPOT_API
+  void set_state_player(twa_graph_ptr arena, unsigned state, unsigned owner);
+
+  /// \brief Get the owner of all the state.
+  SPOT_API
+  const std::vector<bool>& get_state_players(const_twa_graph_ptr arena);
+
+  /// \brief Get the owner of a state.
+  SPOT_API
+  unsigned get_state_player(const_twa_graph_ptr arena, unsigned state);
 }
