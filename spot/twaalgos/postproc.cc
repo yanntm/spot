@@ -85,6 +85,8 @@ namespace spot
         state_based_ = opt->get("state-based", 0);
         wdba_minimize_ = opt->get("wdba-minimize", -1);
         gen_reduce_parity_ = opt->get("gen-reduce-parity", 1);
+        simul_max_ = opt->get("simul-max", 512);
+        wdba_det_max_ = opt->get("wdba-det-max", 4096);
 
         if (sat_acc_ && sat_minimize_ == 0)
           sat_minimize_ = 1;        // Dicho.
@@ -110,6 +112,11 @@ namespace spot
   twa_graph_ptr
   postprocessor::do_simul(const twa_graph_ptr& a, int opt) const
   {
+    if (simul_max_ > 0 && static_cast<unsigned>(simul_max_) < a->num_states())
+      return a;
+
+    // FIXME: simulation-based reduction how have work-arounds for
+    // non-separated sets, so we can probably try them.
     if (!has_separate_sets(a))
       return a;
     switch (opt)
@@ -130,6 +137,8 @@ namespace spot
   postprocessor::do_sba_simul(const twa_graph_ptr& a, int opt) const
   {
     if (ba_simul_ <= 0)
+      return a;
+    if (simul_max_ > 0 && static_cast<unsigned>(simul_max_) < a->num_states())
       return a;
     switch (opt)
       {
@@ -386,7 +395,16 @@ namespace spot
     if (wdba_minimize)
       {
         bool reject_bigger = (PREF_ == Small) && (level_ <= Medium);
-        dba = minimize_obligation(a, f, nullptr, reject_bigger, aborter);
+        output_aborter* ab = aborter;
+        output_aborter wdba_aborter(wdba_det_max_ > 0 ?
+                                    (static_cast<unsigned>(wdba_det_max_)
+                                     + a->num_states()) : -1U);
+        if (!ab && PREF_ != Deterministic)
+          ab = &wdba_aborter;
+        dba = minimize_obligation(a, f, nullptr, reject_bigger, ab);
+        if (!dba)
+          std::cerr << "DBA aborted\n";
+
         if (dba
             && dba->prop_inherently_weak().is_true()
             && dba->prop_universal().is_true())
@@ -502,8 +520,13 @@ namespace spot
 
     if ((PREF_ == Deterministic && (type_ == Generic || want_parity)) && !dba)
       {
-        dba = tgba_determinize(to_generalized_buchi(sim),
-                               false, det_scc_, det_simul_, det_stutter_,
+        bool det_simul = det_simul_;
+        auto tba = to_generalized_buchi(sim);
+        if (simul_max_ > 0
+            && static_cast<unsigned>(simul_max_) < tba->num_states())
+          det_simul = false;
+        dba = tgba_determinize(tba,
+                               false, det_scc_, det_simul, det_stutter_,
                                aborter);
         // Setting det-max-states or det-max-edges may cause tgba_determinize
         // to fail.

@@ -79,6 +79,31 @@ New in spot 2.9.4.dev  (not yet released)
   - print_dot() will display states from player 1 using a diamond
     shape.
 
+  - spot::postproc has two extra configuration variables that are meant
+    to speedup the processing of large automata.
+
+      simul-max      Number of states above which simulation-based
+                     reductions are skipped. Defaults to 512. Set to 0
+                     to disable.  This also applies to the
+                     simulation-based optimization of the
+                     determinization algorithm.
+      wdba-det-max   Maximum number of additional states allowed in
+                     intermediate steps of WDBA-minimization. If the
+                     number of additional states reached in the
+                     powerset construction or in the followup products
+                     exceeds this value, WDBA-minimization is aborted.
+                     Defaults to 4096. Set to 0 to disable. This limit
+                     is ignored when -D used or when det-max-states is
+                     set.
+
+    The reason for disabling simulation-based reduction above 512
+    states is that the current implementation uses one BDD variable
+    per state, and makes a number of BDD operations that is quadratic
+    in the number of states.  Similarly, WDBA-mininimization is used
+    with --small in the off chance that it might produce a smaller
+    automaton, but we should not waste too much space and time trying
+    that.
+
   Python:
 
   - Bindings for functions related to parity games.

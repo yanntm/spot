@@ -140,12 +140,16 @@ The default is 3, except when option --low is specified, in which case \
 the default is 1.") },
     { DOC("ba-simul", "Set to 0 to disable simulation-based reductions \
 on automata where state-based acceptance must be preserved (e.g., \
-after degeneralization has been performed).   The name suggests this applies \
+after degeneralization has been performed). The name suggests this applies \
 only to Büchi automata for historical reasons; it really applies to any \
 state-based acceptance nowadays. \
 Set to 1 to use only direct simulation.  Set to 2 to use only reverse \
 simulation.  Set to 3 to iterate both direct and reverse simulations.   \
 The default is 3 in --high mode, and 0 otherwise.") },
+    { DOC("simul-max", "Number of states above which simulation-based \
+reductions are skipped. Defaults to 512. Set to 0 to disable.  This also \
+applies to the simulation-based optimization of the determinization \
+algorithm.") },
     { DOC("relabel-bool", "If set to a positive integer N, a formula \
 with N atomic propositions or more will have its Boolean subformulas \
 abstracted as atomic propositions during the translation to automaton. \
@@ -156,6 +160,12 @@ this value to 0 will disable the rewriting.") },
 always try it, or 2 to attempt it only on syntactic obligations or on automata \
 that are weak and deterministic.  The default is 1 in --high mode, else 2 in \
 --medium or --deterministic modes, else 0 in --low mode.") },
+    { DOC("wdba-det-max", "Maximum number of additional states allowed \
+in intermediate steps of WDBA-minimization. If the number of additional \
+states reached in the powerset construction or in the followup products \
+exceeds this value, WDBA-minimization is aborted. \
+Defaults to 4096. Set to 0 to disable. This limit is ignored when -D used \
+or when det-max-states is set.") },
     { DOC("tba-det", "Set to 1 to attempt a powerset determinization \
 if the TGBA is not already deterministic.  Doing so will degeneralize \
 the automaton.  This is disabled by default, unless sat-minimize is set.") },
