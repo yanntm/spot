@@ -44,6 +44,9 @@ static const argp_option options[] =
 (2) additionally allows automata-based implication checks, (3) enables \
 more rules based on automata-based implication checks.  The default value \
 depends on the --low, --medium, or --high settings.") },
+    { DOC("tls-max-states",
+          "Maximum number of states of automata involved in automata-based \
+implication checks for formula simplifications.  Defaults to 64.") },
     { nullptr, 0, nullptr, 0, "Translation options:", 0 },
     { DOC("ltl-split", "Set to 0 to disable the translation of automata \
 as product or sum of subformulas.") },

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2017, 2019 Laboratoire de
+// Copyright (C) 2010-2015, 2017, 2019-2020 Laboratoire de
 // Recherche et Développement de l'Epita (LRDE).
 // Copyright (C) 2003, 2004, 2005, 2006 Laboratoire d'Informatique de
 // Paris 6 (LIP6), département Systèmes Répartis Coopératifs (SRC),
@@ -26,6 +26,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/tl/apcollect.hh>
 #include <spot/tl/simplify.hh>
+#include <spot/twaalgos/powerset.hh>
 
 namespace spot
 {
@@ -73,6 +74,10 @@ namespace spot
   /// \param unambiguous When true, unambigous TGBA will be produced
   /// using the trick described in \cite benedikt.13.tacas .
   ///
+  /// \param aborter When given, aborts the construction whenever the
+  /// constructed automaton would become larger than specified by the
+  /// output_aborter.
+  ///
   /// \return A spot::twa_graph that recognizes the language of \a f.
   SPOT_API twa_graph_ptr
   ltl_to_tgba_fm(formula f, const bdd_dict_ptr& dict,
@@ -81,5 +86,6 @@ namespace spot
                  bool fair_loop_approx = false,
                  const atomic_prop_set* unobs = nullptr,
                  tl_simplifier* simplifier = nullptr,
-                 bool unambiguous = false);
+                 bool unambiguous = false,
+                 const output_aborter* aborter = nullptr);
 }

@@ -70,7 +70,8 @@ namespace spot
 
     tl_simplifier_cache(const bdd_dict_ptr& d,
                          const tl_simplifier_options& opt)
-      : dict(d), options(opt), lcc(d, true, true, false, false)
+      : dict(d), options(opt),
+        lcc(d, true, true, false, false, opt.containment_max_states)
     {
       options.containment_checks |= options.containment_checks_stronger;
       options.event_univ |= options.favor_event_univ;

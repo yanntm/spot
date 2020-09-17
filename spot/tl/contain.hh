@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2011-2016, 2019 Laboratoire de Recherche
+// Copyright (C) 2011-2016, 2019, 2020 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2006 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -24,6 +24,7 @@
 
 #include <spot/tl/formula.hh>
 #include <spot/twa/bdddict.hh>
+#include <spot/twaalgos/powerset.hh>
 
 namespace spot
 {
@@ -41,7 +42,8 @@ namespace spot
                                  bool exprop = false,
                                  bool symb_merge = true,
                                  bool branching_postponement = false,
-                                 bool fair_loop_approx = false);
+                                 bool fair_loop_approx = false,
+                                 unsigned max_states = 0U);
 
     ~language_containment_checker();
 
@@ -72,5 +74,6 @@ namespace spot
     /* Translation Maps */
     trans_map_* translated_;
     tl_simplifier_cache* c_;
+    std::unique_ptr<const output_aborter> aborter_ = nullptr;
   };
 }

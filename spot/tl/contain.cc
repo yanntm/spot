@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2009-2012, 2014-2016, 2018, 2019 Laboratoire de Recherche
+// Copyright (C) 2009-2012, 2014-2016, 2018-2020 Laboratoire de Recherche
 // et Développement de l'Epita (LRDE).
 // Copyright (C) 2006, 2007 Laboratoire d'Informatique de Paris 6 (LIP6),
 // département Systèmes Répartis Coopératifs (SRC), Université Pierre
@@ -52,12 +52,15 @@ namespace spot
 
   language_containment_checker::language_containment_checker
   (bdd_dict_ptr dict, bool exprop, bool symb_merge,
-   bool branching_postponement, bool fair_loop_approx)
+   bool branching_postponement, bool fair_loop_approx,
+   unsigned max_states)
     : dict_(dict), exprop_(exprop), symb_merge_(symb_merge),
       branching_postponement_(branching_postponement),
       fair_loop_approx_(fair_loop_approx),
       translated_(new trans_map_)
   {
+    if (max_states)
+      aborter_ = std::make_unique<output_aborter>(max_states);
   }
 
   language_containment_checker::~language_containment_checker()
@@ -104,7 +107,11 @@ namespace spot
       return false;
     trim_common_Xs(l, g);
     record_* rl = register_formula_(l);
+    if (!rl->translation)
+      return false;
     record_* rg = register_formula_(g);
+    if (!rg->translation)
+      return false;
     return incompatible_(rl, rg);
   }
 
@@ -139,7 +146,11 @@ namespace spot
     if (l == g)
       return true;
     record_* rl = register_formula_(l);
+    if (!rl->translation)
+      return false;
     record_* rg = register_formula_(g);
+    if (!rg->translation)
+      return false;
     if (isomorphism_checker::are_isomorphic(rl->translation, rg->translation))
       return true;
     return contained(l, g) && contained(g, l);
@@ -153,7 +164,8 @@ namespace spot
       return &i->second;
 
     auto e = ltl_to_tgba_fm(f, dict_, exprop_, symb_merge_,
-                            branching_postponement_, fair_loop_approx_);
+                            branching_postponement_, fair_loop_approx_,
+                            nullptr, nullptr, false, aborter_.get());
     return &translated_->emplace(f, std::move(e)).first->second;
   }
 }

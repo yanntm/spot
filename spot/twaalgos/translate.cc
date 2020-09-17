@@ -60,11 +60,14 @@ namespace spot
         gf_guarantee_set_ = true;
       }
     ltl_split_ = opt->get("ltl-split", 1);
+    int tls_max_states = opt->get("tls-max-states", 64);
+    tls_max_states_ = std::max(0, tls_max_states);
   }
 
   void translator::build_simplifier(const bdd_dict_ptr& dict)
   {
     tl_simplifier_options options(false, false, false);
+    options.containment_max_states = tls_max_states_;
     switch (level_)
       {
       case High:

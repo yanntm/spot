@@ -1947,7 +1947,8 @@ namespace spot
   ltl_to_tgba_fm(formula f2, const bdd_dict_ptr& dict,
                  bool exprop, bool symb_merge, bool branching_postponement,
                  bool fair_loop_approx, const atomic_prop_set* unobs,
-                 tl_simplifier* simplifier, bool unambiguous)
+                 tl_simplifier* simplifier, bool unambiguous,
+                 const output_aborter* aborter)
   {
     tl_simplifier* s = simplifier;
 
@@ -2051,6 +2052,13 @@ namespace spot
     dest_map dests;
     while (!formulae_to_translate.empty())
       {
+        if (aborter && aborter->too_large(a))
+          {
+            if (!simplifier)
+              delete s;
+            return nullptr;
+          }
+
         // Pick one formula.
         formula now = *formulae_to_translate.begin();
         formulae_to_translate.erase(formulae_to_translate.begin());

@@ -104,6 +104,13 @@ New in spot 2.9.4.dev  (not yet released)
     automaton, but we should not waste too much space and time trying
     that.
 
+    spot::translator additionally honor the following new variable:
+
+     tls-max-states  Maximum number of states of automata involved in
+                     automata-based implication checks for formula
+                     simplifications.  Defaults to 64.
+
+
   Python:
 
   - Bindings for functions related to parity games.

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2018 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2018, 2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -154,6 +154,7 @@ namespace spot
     bool gf_guarantee_ = true;
     bool gf_guarantee_set_ = false;
     bool ltl_split_;
+    unsigned tls_max_states_ = 0;
     const option_map* opt_;
   };
   /// @}

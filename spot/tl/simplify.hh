@@ -93,6 +93,9 @@ namespace spot
     // &,|, and X operators.  Only rewrite Xor and Equiv under
     // temporal operators.
     bool keep_top_xor;
+    // If greater than 0, bound the number of states used by automata
+    // in containment checks.
+    unsigned containment_max_states = 0;
   };
 
   // fwd declaration to hide technical details.
