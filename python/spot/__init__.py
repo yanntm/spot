@@ -86,7 +86,7 @@ def setup(**kwargs):
     import os
 
     s = ('size="{}" edge[arrowhead=vee, arrowsize=.7]')
-    os.environ['SPOT_DOTEXTRA'] = s.format(kwargs.get('size', '10.2,5'))
+    os.environ['SPOT_DOTEXTRA'] = s.format(kwargs.get('size', '10.13,5'))
 
     bullets = 'B' if kwargs.get('bullets', True) else ''
     max_states = '<' + str(kwargs.get('max_states', 50))
