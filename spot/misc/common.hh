@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2013-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2013-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -31,23 +31,15 @@
 #define SPOT_UNLIKELY(expr) (expr)
 #endif
 
-#ifdef __has_cpp_attribute
-#  if __has_cpp_attribute(deprecated) && __cplusplus >= 201402L
-#    define SPOT_DEPRECATED(msg) [[deprecated(msg)]]
-#  elif __has_cpp_attribute(gnu::deprecated)
-#    define SPOT_DEPRECATED(msg) [[gnu::deprecated(msg)]]
-#  elif __has_cpp_attribute(clang::deprecated)
-#    define SPOT_DEPRECATED(msg) [[clang::deprecated(msg)]]
-#  endif
-#endif
-#ifndef SPOT_DEPRECATED
-#  ifdef __GNUC__
-#    define SPOT_DEPRECATED(msg) __attribute__ ((deprecated))
-#  elif defined(_MSC_VER)
-#    define SPOT_DEPRECATED(msg) __declspec(deprecated)
-#  else
-#    define SPOT_DEPRECATED(msg)
-#  endif
+#ifdef SWIG
+  #define SPOT_DEPRECATED(msg)
+  #define SPOT_FALLTHROUGH
+#else
+  #if __cplusplus < 201703L
+    #error C++17 compiler required
+  #endif
+  #define SPOT_DEPRECATED(msg) [[deprecated(msg)]]
+  #define SPOT_FALLTHROUGH [[fallthrough]]
 #endif
 
 #if defined _WIN32 || defined __CYGWIN__
@@ -141,30 +133,6 @@
 // Useful when forwarding methods such as:
 //   auto func(int param) SPOT_RETURN(implem_.func(param));
 #define SPOT_RETURN(code) -> decltype(code) { return code; }
-
-// We hope compilers that implement -Wimplicit-fallthrough also
-// support __has_cpp_attribute and some form of [[fallthrough]].  Do
-// not use [[fallthough]] if the code is compiled in a pre-C++17
-// standard since clang's -Wpedantic would complain that we are using
-// a feature from the future.
-#ifdef __has_cpp_attribute
-#  if __has_cpp_attribute(fallthrough) && __cplusplus > 201402L
-#    define SPOT_FALLTHROUGH [[fallthrough]]
-#  elif __has_cpp_attribute(clang::fallthrough)
-#    define SPOT_FALLTHROUGH [[clang::fallthrough]]
-#  elif __has_cpp_attribute(gnu::fallthrough)
-#    define SPOT_FALLTHROUGH [[gnu::fallthrough]]
-#  endif
-#endif
-#ifndef SPOT_FALLTHROUGH
-// Clang 3.5 does not support __has_cpp_attribute but has
-// [[clang::fallthrough]].
-#  if __clang__
-#    define SPOT_FALLTHROUGH [[clang::fallthrough]]
-#  else
-#    define SPOT_FALLTHROUGH while (0)
-#  endif
-#endif
 
 namespace spot
 {
