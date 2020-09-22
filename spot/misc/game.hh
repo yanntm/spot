@@ -47,26 +47,11 @@ namespace spot
                          bool complete0 = true);
 
 
-  typedef std::unordered_set<unsigned> region_t;
-  typedef std::unordered_map<unsigned, unsigned> strategy_t;
+  // false -> env, true -> player
+  typedef std::vector<bool> region_t;
+  // state idx -> global edge number
+  typedef std::vector<unsigned> strategy_t;
 
-
-  struct SPOT_API solved_game
-  {
-    const_twa_graph_ptr arena;
-
-    region_t winning_region[2];
-    strategy_t winning_strategy[2];
-
-  /// \brief Highlight the edges of a strategy on the automaton.
-    twa_graph_ptr highlight_strategy(unsigned player, unsigned color);
-
-    bool player_winning_at(unsigned player, unsigned state)
-    {
-      auto& w = winning_region[player];
-      return w.find(state) != w.end();
-    }
-  };
 
   /// \brief solve a parity-game
   ///
@@ -76,8 +61,11 @@ namespace spot
   /// This computes the winning strategy and winning region of this
   /// game for player 1 using Zielonka's recursive algorithm.
   /// \cite zielonka.98.tcs
+  ///
+  /// Return the player winning in the initial state, and set
+  /// the state-winner and strategy named properties.
   SPOT_API
-  solved_game parity_game_solve(const const_twa_graph_ptr& arena);
+  bool solve_parity_game(const twa_graph_ptr& arena);
 
   /// \brief Print a max odd parity game using PG-solver syntax
   SPOT_API
@@ -85,10 +73,12 @@ namespace spot
 
 
   /// \brief Highlight the edges of a strategy on an automaton.
+  ///
+  /// Pass a negative color to not display the corresponding strategy.
   SPOT_API
   twa_graph_ptr highlight_strategy(twa_graph_ptr& arena,
-                                   const strategy_t& s,
-                                   unsigned color);
+                                   int player0_color = 5,
+                                   int player1_color = 4);
 
   /// \brief Set the owner for all the states.
   SPOT_API

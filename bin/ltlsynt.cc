@@ -212,51 +212,101 @@ namespace
     return dpa;
   }
 
-  // Construct a smaller automaton, filtering out states that are not
-  // accessible.  Also merge back pairs of p --(i)--> q --(o)--> r
-  // transitions to p --(i&o)--> r.
-  static spot::twa_graph_ptr
-  strat_to_aut(const spot::const_twa_graph_ptr& pg,
-               const spot::strategy_t& strat,
-               bdd all_outputs)
+
+  spot::twa_graph_ptr
+  apply_strategy(const spot::twa_graph_ptr& arena,
+                 bdd all_outputs,
+                 bool unsplit, bool keep_acc, bool leave_choice)
   {
-    auto aut = spot::make_twa_graph(pg->get_dict());
-    aut->copy_ap_of(pg);
-    unsigned pg_init = pg->get_init_state_number();
-    std::vector<unsigned> todo{pg_init};
-    std::vector<int> pg2aut(pg->num_states(), -1);
+    spot::region_t* w_ptr =
+      arena->get_named_prop<spot::region_t>("state-winner");
+    spot::strategy_t* s_ptr =
+      arena->get_named_prop<spot::strategy_t>("strategy");
+    std::vector<bool>* sp_ptr =
+      arena->get_named_prop<std::vector<bool>>("state-player");
+
+    if (!w_ptr || !s_ptr || !sp_ptr)
+      throw std::runtime_error("Arena missing state-winner, strategy "
+                               "or state-player");
+
+    if (!(w_ptr->at(arena->get_init_state_number())))
+      throw std::runtime_error("Player does not win initial state, strategy "
+                               "is not applicable");
+
+    spot::region_t& w = *w_ptr;
+    spot::strategy_t& s = *s_ptr;
+
+    auto aut = spot::make_twa_graph(arena->get_dict());
+    aut->copy_ap_of(arena);
+    if (keep_acc)
+      aut->copy_acceptance_of(arena);
+
+    const unsigned unseen_mark = std::numeric_limits<unsigned>::max();
+    std::vector<unsigned> todo{arena->get_init_state_number()};
+    std::vector<unsigned> pg2aut(arena->num_states(), unseen_mark);
     aut->set_init_state(aut->new_state());
-    pg2aut[pg_init] = aut->get_init_state_number();
+    pg2aut[arena->get_init_state_number()] = aut->get_init_state_number();
+    bdd out;
     while (!todo.empty())
       {
-        unsigned s = todo.back();
+        unsigned v = todo.back();
         todo.pop_back();
-        for (auto& e1: pg->out(s))
+        // Env edge -> keep all
+        for (auto &e1: arena->out(v))
           {
-            unsigned i = 0;
-            for (auto& e2: pg->out(e1.dst))
+            assert(w.at(e1.dst));
+            if (!unsplit)
               {
-                bool self_loop = false;
-                if (e1.dst == s || e2.dst == e1.dst)
-                  self_loop = true;
-                if (self_loop || strat.at(e1.dst) == i)
-                  {
-                    bdd out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
-                    if (pg2aut[e2.dst] == -1)
-                      {
-                        pg2aut[e2.dst] = aut->new_state();
-                        todo.push_back(e2.dst);
-                      }
-                    aut->new_edge(pg2aut[s], pg2aut[e2.dst],
-                                  (e1.cond & out), {});
-                    break;
-                  }
-                ++i;
+                if (pg2aut[e1.dst] == unseen_mark)
+                  pg2aut[e1.dst] = aut->new_state();
+                aut->new_edge(pg2aut[v], pg2aut[e1.dst], e1.cond,
+                              keep_acc ? e1.acc : spot::acc_cond::mark_t({}));
               }
+            // Player strat
+            auto &e2 = arena->edge_storage(s[e1.dst]);
+            if (pg2aut[e2.dst] == unseen_mark)
+              {
+                pg2aut[e2.dst] = aut->new_state();
+                todo.push_back(e2.dst);
+              }
+            if (leave_choice)
+              // Leave the choice
+              out = e2.cond;
+            else
+              // Save only one letter
+              out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
+
+            aut->new_edge(unsplit ? pg2aut[v] : pg2aut[e1.dst],
+                          pg2aut[e2.dst],
+                          unsplit ? (e1.cond & out):out,
+                          keep_acc ? e2.acc : spot::acc_cond::mark_t({}));
           }
       }
-    aut->purge_dead_states();
+
     aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
+    // If no unsplitting is demanded, it remains a two-player arena
+    // We do not need to track winner as this is a
+    // strategy automaton
+    if (!unsplit)
+      {
+        std::vector<bool>& sp_pg = * sp_ptr;
+        std::vector<bool> sp_aut(aut->num_states());
+        spot::strategy_t str_aut(aut->num_states());
+        for (unsigned i = 0; i < arena->num_states(); ++i)
+          {
+            if (pg2aut[i] == unseen_mark)
+              // Does not appear in strategy
+              continue;
+            sp_aut[pg2aut[i]] = sp_pg[i];
+            str_aut[pg2aut[i]] = s[i];
+          }
+        aut->set_named_prop("state-player",
+                            new std::vector<bool>(std::move(sp_aut)));
+        aut->set_named_prop("state-winner",
+                            new spot::region_t(aut->num_states(), true));
+        aut->set_named_prop("strategy",
+                            new spot::strategy_t(std::move(str_aut)));
+      }
     return aut;
   }
 
@@ -523,22 +573,22 @@ namespace
 
       if (want_time)
         sw.start();
-      auto solution = parity_game_solve(dpa);
+      bool player1winning = solve_parity_game(dpa);
       if (want_time)
         solve_time = sw.stop();
       if (verbose)
         std::cerr << "parity game solved in " << solve_time << " seconds\n";
       nb_states_parity_game = dpa->num_states();
       timer.stop();
-      if (solution.player_winning_at(1, dpa->get_init_state_number()))
+      if (player1winning)
         {
           std::cout << "REALIZABLE\n";
           if (!opt_real)
             {
               if (want_time)
                 sw.start();
-              auto strat_aut =
-                strat_to_aut(dpa, solution.winning_strategy[1], all_outputs);
+              auto strat_aut = apply_strategy(dpa, all_outputs,
+                                              true, false, true);
               if (want_time)
                 strat2aut_time = sw.stop();
 
