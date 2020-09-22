@@ -37,8 +37,7 @@ namespace spot
 {
   namespace
   {
-    // TODO: remove this when multithreaded
-    const unsigned THREAD_ID = 0;
+    thread_local unsigned THREAD_ID;
 
     // forward declarations
     class compute_succs;
@@ -531,6 +530,8 @@ namespace spot
 
     void run()
     {
+      THREAD_ID = id_;
+
       const cubeset& cs = aut_->get_cubeset();
 
       // find association between safra state and res state, or create one
