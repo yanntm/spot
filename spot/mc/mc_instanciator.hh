@@ -30,6 +30,7 @@
 #include <spot/mc/cndfs.hh>
 #include <spot/mc/bloemen.hh>
 #include <spot/mc/bloemen_ec.hh>
+#include <spot/mc/feature_extraction.hh>
 #include <spot/misc/common.hh>
 #include <spot/misc/timer.hh>
 
@@ -233,6 +234,11 @@ namespace spot
       case mc_algorithm::DEADLOCK:
         return instanciate
          <spot::swarmed_deadlock<State, Iterator, Hash, Equal, std::true_type>,
+           kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
+
+      case mc_algorithm::FEATURE_EXTRACTION:
+        return instanciate
+         <spot::swarmed_feature_extraction<State, Iterator, Hash, Equal>,
            kripke_ptr, State, Iterator, Hash, Equal> (sys, prop, trace);
 
       case mc_algorithm::REACHABILITY:

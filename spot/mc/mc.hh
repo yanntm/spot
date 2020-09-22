@@ -36,6 +36,7 @@ namespace spot
      BLOEMEN_SCC,   ///< \brief Bloemen.16.ppopp SCC computation
      CNDFS,         ///< \brief Evangelista.12.atva emptiness check
      DEADLOCK,      ///< \brief Check wether there is a deadlock
+     FEATURE_EXTRACTION,  ///< \breif Automaton feature extraction
      REACHABILITY,  ///< \brief Only perform a reachability algorithm
      SWARMING,      ///< \brief Holzmann.11.ieee applied to renault.13.lpar
     };

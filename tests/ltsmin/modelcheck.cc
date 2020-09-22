@@ -152,6 +152,10 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
       mc_options.algorithm = spot::mc_algorithm::SWARMING;
       mc_options.force_parallel = true;
       break;
+    case 'x':
+      mc_options.algorithm = spot::mc_algorithm::FEATURE_EXTRACTION;
+      mc_options.force_parallel = true;
+      break;
     case 'z':
       mc_options.compress = to_unsigned(arg, "-z/--compress");
       break;
@@ -182,6 +186,9 @@ static const argp_option options[] =
       "if a counterexample is found.", 0 },
     { "counterexample", 'c', nullptr, 0,
       "compute an accepting counterexample (if it exists)", 0 },
+    { "feature-extration", 'x', nullptr, 0,
+      "run and log the emptiness-check of Bloemen et al.  (HVC'16). Return 1 "
+      "if a counterexample is found.", 0},
     { "has-deadlock", 'h', nullptr, 0,
       "check if the model has a deadlock. "
       "Return 1 if the model contains a deadlock."
