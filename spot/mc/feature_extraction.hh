@@ -58,6 +58,8 @@ namespace spot
       unsigned st_prop;
       /// \brief acceptance conditions of the union
       acc_cond::mark_t acc;
+      /// \brief in incidence of the element
+      unsigned inc_in = 1;
       /// \brief out incidence of the element
       unsigned inc_out;
       /// \brief values of ints of the element
@@ -452,6 +454,9 @@ namespace spot
     void log(unsigned nb_states)
     {
       std::cout << nb_states << " logging:" << std::endl;
+
+      unsigned total_in = 0;
+      unsigned total_out = 0;
       for (auto i = 0; i < map_.capacity(); i++)
         {
           if (map_.valid(i))
@@ -463,9 +468,14 @@ namespace spot
               std::cout << element->ints[0];
             for (unsigned ints_i = 1; ints_i < element->ints.size(); ints_i++)
                 std::cout << ',' << element->ints[ints_i];
-            std::cout << "], " << element->inc_out << std::endl;
+            std::cout << "], " << element->inc_in
+                      << ", " << element->inc_out << std::endl;
+            total_in += element->inc_in;
+            total_out += element->inc_out;
           }
         }
+      std::cout << "total in incidence : " << total_in << std::endl;
+      std::cout << "total out incidence : " << total_out << std::endl;
     }
 
   private:
@@ -598,6 +608,7 @@ namespace spot
 
                       {
                         auto root = uf_.find(w.second);
+                        w.second->inc_in += 1;
                         std::lock_guard<std::mutex> lock(w.second->acc_mutex_);
                         scc_acc = w.second->acc;
                       }
