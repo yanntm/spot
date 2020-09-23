@@ -40,9 +40,13 @@ namespace spot
     : init_(0U)
     , aps_(aps)
     , cubeset_(aps.size())
+    , transition_inserter_(64,
+        [&](const struct trans_storage& t)
+        {
+          theg_.new_edge(t.src, t.dst, t.trans_cube, t.mark);
+        }
+      )
   {
-    transition_buffer_ =
-      std::make_unique<struct trans_storage[]>(transition_buffer_size_);
   }
 
   twacube::~twacube()
@@ -89,34 +93,7 @@ namespace spot
   twacube::create_transition(unsigned src, const cube& cube,
                              const acc_cond::mark_t& mark, unsigned dst)
   {
-    // spinlock while idx isn't in buffer range
-    size_t idx;
-    while ((idx = transition_buffer_index_++) >= transition_buffer_size_)
-      continue;
-
-    // mark our entry in critical section
-    transition_workers_++;
-
-    transition_buffer_[idx] = { mark, cube, src, dst };
-    if (idx == (transition_buffer_size_ - 1))
-      {
-        while (transition_workers_ != 1)
-          continue;
-
-        // flush buffer
-        for (size_t i = 0; i < transition_buffer_size_; ++i)
-          {
-            struct trans_storage t = transition_buffer_[i];
-
-            theg_.new_edge(t.src, t.dst, t.trans_cube, t.mark);
-          }
-
-        transition_buffer_index_ = 0;
-      }
-
-    // exit critical section
-    transition_workers_--;
-
+    transition_inserter_({ mark, cube, src, dst });
   }
 
   const cubeset&
