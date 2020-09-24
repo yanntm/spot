@@ -62,7 +62,10 @@ namespace spot
   /// game for player 1 using Zielonka's recursive algorithm.
   /// \cite zielonka.98.tcs
   ///
-  /// Return the player winning in the initial state, and set
+  /// Also includes some inspiration from Oink.
+  /// \cite vandijk.18.tacas
+  ///
+  /// Returns the player winning in the initial state, and sets
   /// the state-winner and strategy named properties.
   SPOT_API
   bool solve_parity_game(const twa_graph_ptr& arena);
