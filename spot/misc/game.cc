@@ -806,13 +806,13 @@ namespace spot
       }
   }
 
-  void propagate_players(spot::twa_graph_ptr& arena,
+  void alternate_players(spot::twa_graph_ptr& arena,
                          bool first_player, bool complete0)
   {
     auto um = arena->acc().unsat_mark();
     if (!um.first)
       throw std::runtime_error
-        ("propagate_players(): game winning condition is a tautology");
+        ("alternate_players(): game winning condition is a tautology");
 
     unsigned sink_env = 0;
     unsigned sink_con = 0;
@@ -843,7 +843,7 @@ namespace spot
               {
                 delete owner;
                 throw
-                  std::runtime_error("propagate_players(): odd cycle detected");
+                  std::runtime_error("alternate_players(): odd cycle detected");
               }
           }
         if (complete0 && !(*owner)[src] && missing != bddfalse)

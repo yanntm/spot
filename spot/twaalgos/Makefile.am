@@ -89,6 +89,7 @@ twaalgos_HEADERS = \
   stripacc.hh \
   stutter.hh \
   sum.hh \
+  synthesis.hh \
   tau03.hh \
   tau03opt.hh \
   toparity.hh \
@@ -157,6 +158,7 @@ libtwaalgos_la_SOURCES = \
   stats.cc \
   stripacc.cc \
   stutter.cc \
+  synthesis.cc \
   sum.cc \
   tau03.cc \
   tau03opt.cc \

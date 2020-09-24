@@ -47,7 +47,7 @@
 #include <spot/twaalgos/translate.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/simulation.hh>
-#include <spot/twaalgos/split.hh>
+#include <spot/twaalgos/synthesis.hh>
 #include <spot/twaalgos/toparity.hh>
 #include <spot/twaalgos/hoa.hh>
 
@@ -140,7 +140,6 @@ static spot::option_map extra_options;
 static double trans_time = 0.0;
 static double split_time = 0.0;
 static double paritize_time = 0.0;
-static double bgame_time = 0.0;
 static double solve_time = 0.0;
 static double strat2aut_time = 0.0;
 static unsigned nb_states_dpa = 0;
@@ -188,6 +187,14 @@ static bool verbose = false;
 
 namespace
 {
+
+  auto str_tolower = [] (std::string s)
+    {
+      std::transform(s.begin(), s.end(), s.begin(),
+                     [](unsigned char c){ return std::tolower(c); });
+      return s;
+    };
+
   static spot::twa_graph_ptr
   to_dpa(const spot::twa_graph_ptr& split)
   {
@@ -212,104 +219,6 @@ namespace
     return dpa;
   }
 
-
-  spot::twa_graph_ptr
-  apply_strategy(const spot::twa_graph_ptr& arena,
-                 bdd all_outputs,
-                 bool unsplit, bool keep_acc, bool leave_choice)
-  {
-    spot::region_t* w_ptr =
-      arena->get_named_prop<spot::region_t>("state-winner");
-    spot::strategy_t* s_ptr =
-      arena->get_named_prop<spot::strategy_t>("strategy");
-    std::vector<bool>* sp_ptr =
-      arena->get_named_prop<std::vector<bool>>("state-player");
-
-    if (!w_ptr || !s_ptr || !sp_ptr)
-      throw std::runtime_error("Arena missing state-winner, strategy "
-                               "or state-player");
-
-    if (!(w_ptr->at(arena->get_init_state_number())))
-      throw std::runtime_error("Player does not win initial state, strategy "
-                               "is not applicable");
-
-    spot::region_t& w = *w_ptr;
-    spot::strategy_t& s = *s_ptr;
-
-    auto aut = spot::make_twa_graph(arena->get_dict());
-    aut->copy_ap_of(arena);
-    if (keep_acc)
-      aut->copy_acceptance_of(arena);
-
-    const unsigned unseen_mark = std::numeric_limits<unsigned>::max();
-    std::vector<unsigned> todo{arena->get_init_state_number()};
-    std::vector<unsigned> pg2aut(arena->num_states(), unseen_mark);
-    aut->set_init_state(aut->new_state());
-    pg2aut[arena->get_init_state_number()] = aut->get_init_state_number();
-    bdd out;
-    while (!todo.empty())
-      {
-        unsigned v = todo.back();
-        todo.pop_back();
-        // Env edge -> keep all
-        for (auto &e1: arena->out(v))
-          {
-            assert(w.at(e1.dst));
-            if (!unsplit)
-              {
-                if (pg2aut[e1.dst] == unseen_mark)
-                  pg2aut[e1.dst] = aut->new_state();
-                aut->new_edge(pg2aut[v], pg2aut[e1.dst], e1.cond,
-                              keep_acc ? e1.acc : spot::acc_cond::mark_t({}));
-              }
-            // Player strat
-            auto &e2 = arena->edge_storage(s[e1.dst]);
-            if (pg2aut[e2.dst] == unseen_mark)
-              {
-                pg2aut[e2.dst] = aut->new_state();
-                todo.push_back(e2.dst);
-              }
-            if (leave_choice)
-              // Leave the choice
-              out = e2.cond;
-            else
-              // Save only one letter
-              out = bdd_satoneset(e2.cond, all_outputs, bddfalse);
-
-            aut->new_edge(unsplit ? pg2aut[v] : pg2aut[e1.dst],
-                          pg2aut[e2.dst],
-                          unsplit ? (e1.cond & out):out,
-                          keep_acc ? e2.acc : spot::acc_cond::mark_t({}));
-          }
-      }
-
-    aut->set_named_prop("synthesis-outputs", new bdd(all_outputs));
-    // If no unsplitting is demanded, it remains a two-player arena
-    // We do not need to track winner as this is a
-    // strategy automaton
-    if (!unsplit)
-      {
-        std::vector<bool>& sp_pg = * sp_ptr;
-        std::vector<bool> sp_aut(aut->num_states());
-        spot::strategy_t str_aut(aut->num_states());
-        for (unsigned i = 0; i < arena->num_states(); ++i)
-          {
-            if (pg2aut[i] == unseen_mark)
-              // Does not appear in strategy
-              continue;
-            sp_aut[pg2aut[i]] = sp_pg[i];
-            str_aut[pg2aut[i]] = s[i];
-          }
-        aut->set_named_prop("state-player",
-                            new std::vector<bool>(std::move(sp_aut)));
-        aut->set_named_prop("state-winner",
-                            new spot::region_t(aut->num_states(), true));
-        aut->set_named_prop("strategy",
-                            new spot::strategy_t(std::move(str_aut)));
-      }
-    return aut;
-  }
-
   static void
   print_csv(spot::formula f, bool realizable)
   {
@@ -324,7 +233,7 @@ namespace
     if (!outf.append())
       {
         out << ("\"formula\",\"algo\",\"trans_time\","
-                "\"split_time\",\"todpa_time\",\"build_game_time\"");
+                "\"split_time\",\"todpa_time\"");
         if (!opt_print_pg && !opt_print_hoa)
           {
             out << ",\"solve_time\"";
@@ -341,8 +250,7 @@ namespace
     out << "\",\"" << solver_names[opt_solver]
         << "\"," << trans_time
         << ',' << split_time
-        << ',' << paritize_time
-        << ',' << bgame_time;
+        << ',' << paritize_time;
     if (!opt_print_pg && !opt_print_hoa)
       {
         out << ',' << solve_time;
@@ -401,20 +309,14 @@ namespace
       auto aut = trans_.run(&f);
       bdd all_inputs = bddtrue;
       bdd all_outputs = bddtrue;
-      for (unsigned i = 0; i < input_aps_.size(); ++i)
+      for (const auto& ap_i : input_aps_)
         {
-          std::ostringstream lowercase;
-          for (char c: input_aps_[i])
-            lowercase << (char)std::tolower(c);
-          unsigned v = aut->register_ap(spot::formula::ap(lowercase.str()));
+          unsigned v = aut->register_ap(spot::formula::ap(ap_i));
           all_inputs &= bdd_ithvar(v);
         }
-      for (unsigned i = 0; i < output_aps_.size(); ++i)
+      for (const auto& ap_i : output_aps_)
         {
-          std::ostringstream lowercase;
-          for (char c: output_aps_[i])
-            lowercase << (char)std::tolower(c);
-          unsigned v = aut->register_ap(spot::formula::ap(lowercase.str()));
+          unsigned v = aut->register_ap(spot::formula::ap(ap_i));
           all_outputs &= bdd_ithvar(v);
         }
       if (want_time)
@@ -449,7 +351,7 @@ namespace
                           << paritize_time << " seconds\n";
               if (want_time)
                 sw.start();
-              dpa = split_2step(tmp, all_inputs);
+              dpa = split_2step(tmp, all_inputs, all_outputs, true, true);
               spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
@@ -472,7 +374,7 @@ namespace
                           << " states\n";
               if (want_time)
                 sw.start();
-              dpa = split_2step(aut, all_inputs);
+              dpa = split_2step(aut, all_inputs, all_outputs, true, true);
               spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
@@ -486,7 +388,8 @@ namespace
             {
               if (want_time)
                 sw.start();
-              auto split = split_2step(aut, all_inputs);
+              auto split = split_2step(aut, all_inputs, all_outputs,
+                                       true, false);
               if (want_time)
                 split_time = sw.stop();
               if (verbose)
@@ -508,6 +411,9 @@ namespace
                           << paritize_time << " seconds\n";
               if (want_time)
                 paritize_time = sw.stop();
+              // The named property "state-player" is set in split_2step
+              // but not propagated by to_dpa
+              alternate_players(dpa);
               break;
             }
           case LAR:
@@ -515,26 +421,16 @@ namespace
             {
               if (want_time)
                 sw.start();
-              dpa = split_2step(aut, all_inputs);
-              dpa->merge_states();
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << dpa->num_states() << " states\n";
-              if (want_time)
-                sw.start();
               if (opt_solver == LAR)
                 {
-                  dpa = spot::to_parity(dpa);
+                  dpa = spot::to_parity(aut);
                   // reduce_parity is called by to_parity(),
                   // but with colorization turned off.
                   spot::colorize_parity_here(dpa, true);
                 }
               else
                 {
-                  dpa = spot::to_parity_old(dpa);
+                  dpa = spot::to_parity_old(aut);
                   dpa = reduce_parity_here(dpa, true);
                 }
               spot::change_parity_here(dpa, spot::parity_kind_max,
@@ -546,17 +442,21 @@ namespace
                           << " seconds\nDPA has "
                           << dpa->num_states() << " states, "
                           << dpa->num_sets() << " colors\n";
+
+              if (want_time)
+                sw.start();
+              dpa = split_2step(dpa, all_inputs, all_outputs, true, true);
+              spot::colorize_parity_here(dpa, true);
+              if (want_time)
+                split_time = sw.stop();
+              if (verbose)
+                std::cerr << "split inputs and outputs done in " << split_time
+                          << " seconds\nautomaton has "
+                          << dpa->num_states() << " states\n";
               break;
             }
         }
       nb_states_dpa = dpa->num_states();
-      if (want_time)
-        sw.start();
-      propagate_players(dpa, false, true);
-      if (want_time)
-        bgame_time = sw.stop();
-      if (verbose)
-        std::cerr << "parity game built in " << bgame_time << " seconds\n";
 
       if (opt_print_pg)
         {
@@ -588,7 +488,7 @@ namespace
               if (want_time)
                 sw.start();
               auto strat_aut = apply_strategy(dpa, all_outputs,
-                                              true, false, true);
+                                              true, false);
               if (want_time)
                 strat2aut_time = sw.stop();
 
@@ -641,7 +541,7 @@ parse_opt(int key, char* arg, struct argp_state*)
         while (std::getline(aps, ap, ','))
           {
             ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            input_aps.push_back(ap);
+            input_aps.push_back(str_tolower(ap));
           }
         break;
       }
@@ -652,7 +552,7 @@ parse_opt(int key, char* arg, struct argp_state*)
         while (std::getline(aps, ap, ','))
           {
             ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            output_aps.push_back(ap);
+            output_aps.push_back(str_tolower(ap));
           }
         break;
       }

@@ -42,7 +42,7 @@ namespace spot
   /// If \a complete0 is set, ensure that states of player 0 are
   /// complete.
   SPOT_API
-  void propagate_players(spot::twa_graph_ptr& arena,
+  void alternate_players(spot::twa_graph_ptr& arena,
                          bool first_player = false,
                          bool complete0 = true);
 

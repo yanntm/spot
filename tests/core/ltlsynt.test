@@ -62,12 +62,13 @@ parity 16;
 14 1 1 10,16;
 16 1 0 14,15;
 1 1 1 3,6;
-parity 4;
-3 2 0 1,4 "INIT";
-4 3 1 0,3;
-0 1 0 1,2;
-2 1 1 0,0;
-1 2 1 3,3;
+parity 5;
+1 1 0 4,5 "INIT";
+5 5 1 0,1;
+0 1 0 2,3;
+3 3 1 0,0;
+2 5 1 1;
+4 4 1 1,1;
 EOF
 
 : > out
@@ -214,7 +215,6 @@ DPA has 12 states, 4 colors
 simplification done
 DPA has 11 states
 determinization and simplification took X seconds
-parity game built in X seconds
 parity game solved in X seconds
 EOF
 ltlsynt --ins='a' --outs='b' -f 'GFa <-> GFb' --verbose --realizability 2> out
@@ -228,7 +228,6 @@ simplification done in X seconds
 DPA has 3 states
 split inputs and outputs done in X seconds
 automaton has 8 states
-parity game built in X seconds
 parity game solved in X seconds
 EOF
 ltlsynt --ins=a --outs=b -f 'GFa <-> GFb' --verbose --algo=ps 2> out
@@ -238,11 +237,10 @@ diff outx exp
 cat >exp <<EOF
 translating formula done in X seconds
 automaton has 16 states and 2 colors
+LAR construction done in X seconds
+DPA has 16 states, 4 colors
 split inputs and outputs done in X seconds
 automaton has 47 states
-LAR construction done in X seconds
-DPA has 47 states, 4 colors
-parity game built in X seconds
 parity game solved in X seconds
 EOF
 ltlsynt --ins='a,b,c,d' --outs='e' -f '(Fa & Fb & Fc & Fd) <-> GFe' \
@@ -390,7 +388,7 @@ State: 2
 [!0] 2
 --END--
 EOF
-ltlsynt -x tls-impl=0 -f '!XXF(p0 & (p0 M Gp0))' > out
+ltlsynt --outs=p0 -x tls-impl=0 -f '!XXF(p0 & (p0 M Gp0))' > out
 diff out exp
 
 cat >exp <<EOF
@@ -407,10 +405,10 @@ State: 0
 [!0] 0
 --END--
 EOF
-ltlsynt -x tls-impl=1 -f '!XXF(p0 & (p0 M Gp0))' > out
+ltlsynt --outs=p0 -x tls-impl=1 -f '!XXF(p0 & (p0 M Gp0))' > out
 diff out exp
 
-ltlsynt -f '!XXF(p0 & (p0 M Gp0))' > out
+ltlsynt --outs=p0 -f '!XXF(p0 & (p0 M Gp0))' > out
 diff out exp
 
 f='Fp0 U XX((p0 & F!p1) | (!p0 & Gp1))'

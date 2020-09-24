@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2018 Laboratoire de Recherche et
+# Copyright (C) 2018-2020 Laboratoire de Recherche et
 # Développement de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -28,21 +28,31 @@ def equiv(a, b):
     return incl(a, b) and incl(b, a)
 
 
-def do_split(f, in_list):
+def do_split(f, in_list, out_list):
     aut = spot.translate(f)
     inputs = spot.buddy.bddtrue
     for a in in_list:
         inputs &= spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
-    s = spot.split_2step(aut, inputs)
+    outputs = spot.buddy.bddtrue
+    for a in out_list:
+        outputs &= spot.buddy.bdd_ithvar(aut.get_dict().varnum(spot.formula(a)))
+    s = spot.split_2step(aut, inputs, outputs, False, False)
     return aut, s
 
+def str_diff(expect, obtained):
+    res = expect == obtained
+    if not res:
+        print("Expected:\n", expect, "\nbut obtained:\n", obtained)
+    return res
 
-aut, s = do_split('(FG !a) <-> (GF b)', ['a'])
+
+
+aut, s = do_split('(FG !a) <-> (GF b)', ['a'], ['b'])
 assert equiv(aut, spot.unsplit_2step(s))
 
-aut, s = do_split('GFa && GFb', ['a'])
+aut, s = do_split('GFa && GFb', ['a'], ['b'])
 assert equiv(aut, spot.unsplit_2step(s))
-assert s.to_str() == """HOA: v1
+assert str_diff("""HOA: v1
 States: 3
 Start: 0
 AP: 2 "a" "b"
@@ -50,6 +60,7 @@ acc-name: generalized-Buchi 2
 Acceptance: 2 Inf(0)&Inf(1)
 properties: trans-labels explicit-labels trans-acc complete
 properties: deterministic
+spot-state-player: 0 1 1
 --BODY--
 State: 0
 [0] 1
@@ -60,10 +71,10 @@ State: 1
 State: 2
 [!1] 0
 [1] 0 {1}
---END--"""
+--END--""", s.to_str() )
 
-aut, s = do_split('! ((G (req -> (F ack))) && (G (go -> (F grant))))', ['go',
-                                                                        'req'])
+aut, s = do_split('! ((G (req -> (F ack))) && (G (go -> (F grant))))',
+                  ['go', 'req'], ['ack'])
 assert equiv(aut, spot.unsplit_2step(s))
 # FIXME s.to_str() is NOT the same on Debian stable and on Debian unstable
 #       we should investigate this
@@ -103,5 +114,6 @@ assert equiv(aut, spot.unsplit_2step(s))
 # --END--"""
 
 aut, s = do_split('((G (((! g_0) || (! g_1)) && ((r_0 && (X r_1)) -> (F (g_0 \
-    && g_1))))) && (G (r_0 -> F g_0))) && (G (r_1 -> F g_1))', ['r_0', 'r_1'])
+    && g_1))))) && (G (r_0 -> F g_0))) && (G (r_1 -> F g_1))',
+                  ['r_0', 'r_1'], ['g_0', 'g_1'])
 assert equiv(aut, spot.unsplit_2step(s))
