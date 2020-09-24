@@ -28,6 +28,19 @@ namespace spot
 {
   namespace
   {
+    static const std::vector<bool>*
+    ensure_game(const const_twa_graph_ptr& arena, const char* fnname)
+    {
+      auto owner = arena->get_named_prop<std::vector<bool>>("state-player");
+      if (!owner)
+        throw std::runtime_error
+          (std::string(fnname) + ": automaton should define \"state-player\"");
+      if (owner->size() != arena->num_states())
+        throw std::runtime_error
+          (std::string(fnname) + ": \"state-player\" should have "
+           "as many states as the automaton");
+      return owner;
+    }
 
     static const std::vector<bool>*
     ensure_parity_game(const const_twa_graph_ptr& arena, const char* fnname)
@@ -38,25 +51,12 @@ namespace spot
         throw std::runtime_error
           (std::string(fnname) +
            ": arena must have max-odd acceptance condition");
-
       for (const auto& e : arena->edges())
         if (!e.acc)
           throw std::runtime_error
             (std::string(fnname) + ": arena must be colorized");
-
-      auto owner = arena->get_named_prop<std::vector<bool>>("state-player");
-      if (!owner)
-        throw std::runtime_error
-          (std::string(fnname) + ": automaton should define \"state-player\"");
-
-      if (owner->size() != arena->num_states())
-        throw
-          (std::string(fnname) + ": \"state-player\" should have "
-           "as many states as the automaton");
-
-      return owner;
+      return ensure_game(arena, fnname);
     }
-
 
     // Internal structs
     // winning regions for env and player
@@ -869,12 +869,16 @@ namespace spot
                      int player0_color,
                      int player1_color)
   {
-    auto owner = ensure_parity_game(aut, "highlight_strategy()");
+    auto owner = ensure_game(aut, "highlight_strategy()");
     region_t* w = aut->get_named_prop<region_t>("state-winner");
     strategy_t* s = aut->get_named_prop<strategy_t>("strategy");
-    if (!w || !s)
-      throw std::runtime_error("highlight_strategy(): "
-                               "strategy not available, solve the game first");
+    if (!w)
+      throw std::runtime_error
+        ("highlight_strategy(): "
+         "winning region unavailable, solve the game first");
+    if (!s)
+      throw std::runtime_error
+        ("highlight_strategy(): strategy unavailable, solve the game first");
 
     unsigned ns = aut->num_states();
     auto* hl_edges = aut->get_or_set_named_prop<std::map<unsigned, unsigned>>
