@@ -159,8 +159,6 @@ namespace spot
 
       bool solve(const twa_graph_ptr &arena)
       {
-        ensure_parity_game(arena, "solve_parity_game()");
-
         // todo check if reordering states according to scc is worth it
         set_up(arena);
         // Start recursive zielonka in a bottom-up fashion on each scc
@@ -171,7 +169,17 @@ namespace spot
             if (!info_->is_useful_scc(c_scc_idx_))
               {
                 for (unsigned v: c_states())
-                  w_.set(v, false);
+                  {
+                    w_.set(v, false);
+                    // The strategy for player 0 is to take the first
+                    // available edge.
+                    if ((*owner_ptr_)[v] == false)
+                      for (const auto &e : arena_->out(v))
+                        {
+                          s_[v] = arena_->edge_number(e);
+                          break;
+                        }
+                  }
                 continue;
               }
             // Convert transitions leaving edges to self-loops
@@ -194,14 +202,6 @@ namespace spot
           }
         // All done -> restore graph, i.e. undo self-looping
         restore();
-
-        if (!std::all_of(w_.has_winner_.cbegin(), w_.has_winner_.cend(),
-                           [](bool b)
-                           { return b; }))
-          {
-            for (unsigned n = 0; n < w_.has_winner_.size(); ++n)
-              std::cerr << "hw[" << n << "]=" << w_.has_winner_[n] << '\n';
-          }
 
         assert(std::all_of(w_.has_winner_.cbegin(), w_.has_winner_.cend(),
                            [](bool b)
@@ -234,7 +234,7 @@ namespace spot
 
       void set_up(const twa_graph_ptr &arena)
       {
-        owner_ptr_ = arena->get_named_prop<std::vector<bool>>("state-player");
+        owner_ptr_ = ensure_parity_game(arena, "solve_parity_game()");
         arena_ = arena;
         unsigned n_states = arena_->num_states();
         // Resize data structures
@@ -333,7 +333,7 @@ namespace spot
               {
                 // The outgoing edges are taken finitely often
                 // -> disregard parity
-                if (subgame_[e.dst] != unseen_mark)
+                if (info_->scc_of(e.dst) != c_scc_idx_)
                   {
                     // Edge leaving the scc
                     change_stash_.emplace_back(arena_->edge_number(e),

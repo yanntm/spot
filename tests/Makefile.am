@@ -393,6 +393,7 @@ TESTS_python = \
   python/dualize.py \
   python/ecfalse.py \
   python/except.py \
+  python/game.py \
   python/gen.py \
   python/genem.py \
   python/implies.py \
