@@ -573,7 +573,7 @@ namespace spot
                                         true, tid_);
                       while (!it_kripke_inc->done())
                         {
-                          inc_out++;
+                          ++inc_out;
                           forward_iterators(sys_, twa_, it_kripke_inc,
                                             it_prop_inc, false, tid_);
                         }
