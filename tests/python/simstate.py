@@ -188,3 +188,145 @@ State: 0 "[1,7]"
 [!1] 0 {0}
 [1] 0
 --END--"""
+
+# Basic check (no color, same cond)
+aut3 = spot.automaton("""HOA: v1
+States: 6
+Start: 0
+AP: 2 "a" "b"
+acc-name: all
+Acceptance: 0 t
+properties: trans-labels explicit-labels state-acc
+--BODY--
+State: 0
+[1] 1
+[1] 2
+State: 1
+[0] 1
+State: 2
+[0] 3
+State: 3
+[1] 3
+State: 4
+[1] 5
+State: 5
+[0] 5
+--END--""")
+
+g =  spot.direct_sim_game(aut3, 4, 0)
+assert spot.solve_reachability_game(g)
+g = spot.direct_sim_game(aut3, 0, 4)
+assert not spot.solve_reachability_game(g)
+
+# Test cond inf
+aut3 = spot.automaton("""HOA: v1
+States: 4
+Start: 0
+AP: 2 "a" "b"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc deterministic
+--BODY--
+State: 0
+[0] 1
+State: 1
+[1] 1
+State: 2
+[0] 3
+State: 3 {0}
+[1] 3
+--END--
+""")
+
+g = spot.direct_sim_game(aut3, 2, 0)
+assert spot.solve_reachability_game(g)
+g2 = spot.direct_sim_game(aut3, 0, 2)
+assert not spot.solve_reachability_game(g2)
+
+aut3 = spot.automaton("""HOA: v1
+States: 12
+Start: 0
+AP: 2 "a" "b"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels trans-acc deterministic
+--BODY--
+State: 0
+[!0&1] 1
+[0&!1] 0
+[0&1] 2
+State: 1
+[!0&1] 0
+[0&!1] 3 {0}
+[0&1] 4
+State: 2
+[!0&1] 2
+[0&!1] 4
+[0&1] 5
+State: 3
+[!0&1] 0
+[0&!1] 3
+[0&1] 6
+State: 4
+[!0&1] 7
+[0&!1] 4
+[0&1] 8
+State: 5
+[!0&1] 7
+[0&!1] 4
+[0&1] 8
+State: 6
+[!0&1] 2
+[0&!1] 6
+[0&1] 9
+State: 7
+[!0&1] 10
+[0&!1] 6 {0}
+[0&1] 9 {0}
+State: 8
+[!0&1] 2 {0}
+[0&!1] 6 {0}
+[0&1] 9 {0}
+State: 9
+[!0&1] 2
+[0&!1] 4
+[0&1] 5
+State: 10
+[!0&1] 7
+[0&!1] 4 {0}
+[0&1] 11
+State: 11
+[!0&1] 2 {0}
+[0&!1] 6 {0}
+[0&1] 9 {0}
+--END--""")
+
+expected = [(2,9),(4,5),(5,4),(8,6),(8,11),(9,2),(10,4),(10,5),(11,6),(11,8)]
+simstates = []
+for i in range(0,12):
+    for j in range(0,12):
+        g_tmp = spot.direct_sim_game(aut3, i, j)
+        if (spot.solve_reachability_game(g_tmp) and i != j):
+            simstates.append((i,j));
+assert simstates == expected
+
+aut4 = spot.automaton("""
+HOA: v1
+States: 2
+Start: 0
+AP: 2 "a" "b"
+acc-name: co-Buchi
+Acceptance: 1 Fin(0)
+properties: trans-labels explicit-labels state-acc deterministic
+
+--BODY--
+State: 0 {0}
+[0] 0
+State: 1
+[0] 1
+--END--""")
+
+g41 = spot.direct_sim_game(aut4, 0, 1)
+assert spot.solve_reachability_game(g41)
+g42 = spot.direct_sim_game(aut4, 1, 0)
+assert spot.solve_reachability_game(g42)

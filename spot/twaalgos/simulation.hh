@@ -122,4 +122,11 @@ namespace spot
   iterated_simulations_sba(const const_twa_graph_ptr& automaton);
   /// @}
 
+  /// \brief Create a game for computing direct simulation.
+  ///
+  /// Implement a construction similar to \cite etessami.05.simu but
+  /// transition-based
+  SPOT_API
+  twa_graph_ptr direct_sim_game(const_twa_graph_ptr arena,
+                                unsigned s1, unsigned s2);
 } // End namespace spot.

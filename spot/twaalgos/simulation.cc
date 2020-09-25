@@ -26,6 +26,7 @@
 #include <numeric>
 #include <spot/twaalgos/simulation.hh>
 #include <spot/misc/minato.hh>
+#include <spot/misc/game.hh>
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/sepsets.hh>
@@ -956,4 +957,95 @@ namespace spot
     return wrap_simul(iterated_simulations_<true>, t);
   }
 
+  twa_graph_ptr direct_sim_game(const_twa_graph_ptr aut,
+                                unsigned s1, unsigned s2)
+  {
+    if (s1 >= aut->num_states() || s2 >= aut->num_states())
+      throw std::runtime_error("direct_sim_game(): invalid state number");
+
+    auto game = std::make_shared<twa_graph>(aut->get_dict());
+    game->copy_ap_of(aut);
+
+    auto names = new std::vector<std::pair<unsigned, unsigned>>();
+    auto owners = new std::vector<bool>();
+    names->reserve(aut->num_states());
+    owners->reserve(aut->num_states());
+
+    std::map<std::pair<unsigned, unsigned>, unsigned> s_orig_states;
+    std::map<std::pair<unsigned, unsigned>, unsigned> d_orig_states;
+    std::vector<unsigned> todo;
+    todo.reserve(aut->num_states());
+    auto& g = aut->get_graph();
+
+    auto all_inf = aut->get_acceptance().used_inf_fin_sets().first;
+    auto all_fin = aut->get_acceptance().used_inf_fin_sets().second;
+
+    auto acc_implies = [&](acc_cond::mark_t acc1, acc_cond::mark_t acc2)
+    {
+      return (~(acc2 & all_inf)).subset(~(acc1 & all_inf))
+        && (acc2 & all_fin).subset(acc2 & all_fin);
+    };
+
+    auto new_state = [&](bool player, unsigned s1, unsigned s2)
+    {
+      unsigned s;
+      auto& m = player ? s_orig_states : d_orig_states;
+
+      auto it = std::find_if(m.begin(), m.end(), [s1, s2](auto elm)
+        { return s1 == elm.first.first && s2 == elm.first.second; });
+
+      if (it == m.end())
+      {
+        s = game->new_state();
+        names->emplace_back(s1, s2);
+        owners->push_back(player);
+        m.insert({{s1, s2}, s});
+
+        if (!player)
+          todo.push_back(s);
+      }
+      else
+        s = it->second;
+
+      return s;
+    };
+
+    new_state(false, s1, s2);
+
+    while (!todo.empty())
+    {
+      unsigned cur = todo.back();
+      unsigned s_src = (*names)[cur].first;
+      unsigned d_src = (*names)[cur].second;
+      todo.pop_back();
+
+      // Spoiler start by picking an edge from s_src. If it does not exist yet,
+      // we add a new edge in the game from (s_src,d_src) to (edge_idx,d_src).
+      for (const auto& s_edge : aut->out(s_src))
+      {
+        unsigned edge_idx = g.index_of_edge(s_edge);
+        unsigned cur2 = new_state(true, edge_idx, d_src);
+
+        game->new_edge(cur, cur2, s_edge.cond, s_edge.acc);
+
+        // Duplicator try to find an edge with the same condition from d_src.
+        // If it does not exist yet, it add a new edge from (s_edge.dst,d_src)
+        // to (s_edge.dst, d_edge.dst).
+        for (const auto& d_edge : aut->out(d_src))
+        {
+          if (bdd_implies(d_edge.cond, s_edge.cond)
+              && acc_implies(d_edge.acc, s_edge.acc))
+          {
+            unsigned cur3 = new_state(false, s_edge.dst, d_edge.dst);
+            game->new_edge(cur2, cur3, d_edge.cond, d_edge.acc);
+          }
+        }
+      }
+    }
+
+    game->set_named_prop("state-player", owners);
+    game->set_named_prop("product-states", names);
+
+    return game;
+  }
 } // End namespace spot.
