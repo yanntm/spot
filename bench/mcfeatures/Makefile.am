@@ -1,8 +1,5 @@
-## Copyright (C) 2008, 2009, 2010, 2012, 2013, 2014 Laboratoire de Recherche
-## et Développement de l'Epita (LRDE).
-## Copyright (C) 2005 Laboratoire d'Informatique de Paris 6 (LIP6),
-## département Systèmes Répartis Coopératifs (SRC), Université Pierre
-## et Marie Curie.
+## Copyright (C) 2020 Laboratoire de Recherche et DÃ©veloppement de
+## l'Epita (LRDE).
 ##
 ## This file is part of Spot, a model checking library.
 ##
@@ -19,5 +16,4 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = emptchk ltl2tgba ltlcounter ltlclasses wdba spin13 dtgbasat stutter\
-          mcfeatures
+EXTRA_DIST = extract.py
