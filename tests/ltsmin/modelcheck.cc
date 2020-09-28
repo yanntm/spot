@@ -535,6 +535,22 @@ static int checked_main()
       tm.stop("exploration");
       memused = spot::memusage() - memused;
 
+      if (mc_options.algorithm == spot::mc_algorithm::FEATURE_EXTRACTION)
+      {
+        std::cout << "terminal,weak,inherently_weak,very_weak,complete,"
+                  << "universal,unambiguous,semi_deterministic,"
+                  << "stutter_invariant" << std::endl;
+        std::cout << prop->prop_terminal() << ','
+                  << prop->prop_weak() << ','
+                  << prop->prop_inherently_weak() << ','
+                  << prop->prop_very_weak() << ','
+                  << prop->prop_complete() << ','
+                  << prop->prop_universal() << ','
+                  << prop->prop_unambiguous() << ','
+                  << prop->prop_semi_deterministic() << ','
+                  << prop->prop_stutter_invariant() << std::endl;
+      }
+
       if (!modelcube)
         {
           exit_code = 2;
@@ -545,6 +561,7 @@ static int checked_main()
       std::cout << result << '\n';
       std::cout << memused << " pages allocated for "
                 << mc_options.algorithm << '\n';
+
 
 
       std::cout << "\nSummary :\n";
