@@ -459,7 +459,7 @@ namespace spot
     }
 
 
-    void log()
+    void log(unsigned nb_repeated_trans)
     {
       unsigned total_in = 0;
       unsigned total_out = 0;
@@ -487,15 +487,19 @@ namespace spot
             total_in += element->incidence_in;
             total_out += element->incidence_out;
             // if not root
-            if (element->ints.size())
+            if (ratio < std::numeric_limits<double>::infinity())
                 total_ratio += ratio;
             ++nb_results;
           }
         }
-      std::cout << "total in incidence : " << total_in << std::endl;
-      std::cout << "total out incidence : " << total_out << std::endl;
-      std::cout << "average ratio : " << total_ratio / (nb_results - 1)
-                << std::endl;
+
+      char delimiter = ',';
+      std::cout << "feature extraction csv : " << std::endl;
+      std::cout << "in_incidence,out_incidence,average_incidence_ratio,"
+                << "repeated_transitions" << std::endl;
+      std::cout << total_in << delimiter << total_out << delimiter
+                << total_ratio / (nb_results - 1) << delimiter
+                << nb_repeated_trans << std::endl;
     }
 
   private:
@@ -557,8 +561,7 @@ namespace spot
       todo_.push_back(pair.second);
       Rp_.push_back(pair.second);
       ++states_;
-      unsigned claim_found = 0;
-      unsigned claim_new = 0;
+      unsigned nb_claim_found = 0;
       unsigned index = 0;
 
       while (!todo_.empty())
@@ -589,7 +592,6 @@ namespace spot
                   ++transitions_;
                   if (w.first == uf::claim_status::CLAIM_NEW)
                     {
-                      ++claim_new;
                       w.second->incidence_in = 1;
                       w.second->index = index;
                       ++index;
@@ -603,7 +605,7 @@ namespace spot
                     }
                   else if (w.first == uf::claim_status::CLAIM_FOUND)
                     {
-                      ++claim_found;
+                      ++nb_claim_found;
                       acc_cond::mark_t scc_acc = trans_acc;
 
                       // This operation is mandatory to update acceptance marks.
@@ -635,7 +637,7 @@ namespace spot
                           is_empty_ = false;
                           tm_.stop("DFS thread " + std::to_string(tid_));
                           log_calculate();
-                          uf_.log();
+                          uf_.log(nb_claim_found);
                           return;
                         }
                     }
@@ -651,9 +653,7 @@ namespace spot
           todo_.pop_back();
         }
       log_calculate();
-      uf_.log();
-      std::cout << "number of claim found : " << claim_found << std::endl;
-      std::cout << "number of claim new : " << claim_new << std::endl;
+      uf_.log(nb_claim_found);
       finalize();
     }
 
