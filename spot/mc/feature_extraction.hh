@@ -58,10 +58,12 @@ namespace spot
       unsigned st_prop;
       /// \brief acceptance conditions of the union
       acc_cond::mark_t acc;
+      /// \brief index of the node in apparition order
+      unsigned index;
       /// \brief in incidence of the element
-      unsigned inc_in = 1;
+      unsigned incidence_in;
       /// \brief out incidence of the element
-      unsigned inc_out;
+      unsigned incidence_out;
       /// \brief values of ints of the element
       std::vector<int> ints;
       /// \brief mutex for acceptance condition
@@ -451,31 +453,49 @@ namespace spot
       return inserted_;
     }
 
-    void log(unsigned nb_states)
+    shared_map map()
     {
-      std::cout << nb_states << " logging:" << std::endl;
+      return map_;
+    }
 
+
+    void log()
+    {
       unsigned total_in = 0;
       unsigned total_out = 0;
+      float total_ratio = 0;
+      unsigned nb_results = 0;
       for (auto i = 0; i < map_.capacity(); i++)
         {
           if (map_.valid(i))
           {
             auto element = map_.valueAt(i);
-            std::cout << "log " << i << " :" << std::endl;
-            std::cout << '[';
+            std::cout << nb_results << " : "
+                      << element->index << ", [";
             if (element->ints.size())
               std::cout << element->ints[0];
-            for (unsigned ints_i = 1; ints_i < element->ints.size(); ints_i++)
-                std::cout << ',' << element->ints[ints_i];
-            std::cout << "], " << element->inc_in
-                      << ", " << element->inc_out << std::endl;
-            total_in += element->inc_in;
-            total_out += element->inc_out;
+            int* state = element->st_kripke;
+            if (state[1])
+                std::cout << state[2];
+            for (unsigned i = 3; i < state[1]; i++)
+                std::cout << ',' << state[i];
+            std::cout << "], " << element->incidence_in
+                      << ", " << element->incidence_out;
+            float ratio = static_cast<float>(element->incidence_out)
+                          / element->incidence_in;
+            std::cout << ", " << ratio << std::endl;
+            total_in += element->incidence_in;
+            total_out += element->incidence_out;
+            // if not root
+            if (element->ints.size())
+                total_ratio += ratio;
+            ++nb_results;
           }
         }
       std::cout << "total in incidence : " << total_in << std::endl;
       std::cout << "total out incidence : " << total_out << std::endl;
+      std::cout << "average ratio : " << total_ratio / (nb_results - 1)
+                << std::endl;
     }
 
   private:
@@ -537,6 +557,9 @@ namespace spot
       todo_.push_back(pair.second);
       Rp_.push_back(pair.second);
       ++states_;
+      unsigned claim_found = 0;
+      unsigned claim_new = 0;
+      unsigned index = 0;
 
       while (!todo_.empty())
         {
@@ -566,21 +589,11 @@ namespace spot
                   ++transitions_;
                   if (w.first == uf::claim_status::CLAIM_NEW)
                     {
-                      auto it_kripke_inc = sys_.succ(v_prime->st_kripke, tid_);
-                      auto it_prop_inc = twa_->succ(v_prime->st_prop);
-                      unsigned inc_out = 1;
-                      forward_iterators(sys_, twa_, it_kripke_inc, it_prop_inc,
-                                        true, tid_);
-                      while (!it_kripke_inc->done())
-                        {
-                          ++inc_out;
-                          forward_iterators(sys_, twa_, it_kripke_inc,
-                                            it_prop_inc, false, tid_);
-                        }
-                      w.second->inc_out = inc_out;
-                      int* state = w.second->st_kripke;
-                      for (unsigned i = 2; i < state[1]; i++)
-                        w.second->ints.push_back(state[i]);
+                      ++claim_new;
+                      w.second->incidence_in = 1;
+                      w.second->index = index;
+                      ++index;
+
 
                       todo_.push_back(w.second);
                       Rp_.push_back(w.second);
@@ -590,6 +603,7 @@ namespace spot
                     }
                   else if (w.first == uf::claim_status::CLAIM_FOUND)
                     {
+                      ++claim_found;
                       acc_cond::mark_t scc_acc = trans_acc;
 
                       // This operation is mandatory to update acceptance marks.
@@ -608,7 +622,7 @@ namespace spot
 
                       {
                         auto root = uf_.find(w.second);
-                        w.second->inc_in += 1;
+                        //w.second->incidence_in += 1;
                         std::lock_guard<std::mutex> lock(w.second->acc_mutex_);
                         scc_acc = w.second->acc;
                       }
@@ -620,7 +634,8 @@ namespace spot
                           stop_ = true;
                           is_empty_ = false;
                           tm_.stop("DFS thread " + std::to_string(tid_));
-                          uf_.log(states_);
+                          log_calculate();
+                          uf_.log();
                           return;
                         }
                     }
@@ -635,8 +650,42 @@ namespace spot
             Rp_.pop_back();
           todo_.pop_back();
         }
-      uf_.log(states_);
+      log_calculate();
+      uf_.log();
+      std::cout << "number of claim found : " << claim_found << std::endl;
+      std::cout << "number of claim new : " << claim_new << std::endl;
       finalize();
+    }
+
+    void log_calculate()
+    {
+      auto map = uf_.map();
+      for (auto i = 0; i < map.capacity(); i++)
+        {
+          if (map.valid(i))
+            {
+              auto element = map.valueAt(i);
+
+              auto it_kripke = sys_.succ(element->st_kripke, tid_);
+              auto it_prop = twa_->succ(element->st_prop);
+              unsigned incidence_out = 1;
+              forward_iterators(sys_, twa_, it_kripke, it_prop,
+                                true, tid_);
+              while (!it_kripke->done())
+                {
+                  ++incidence_out;
+                  uf_element v;
+                  v.st_kripke = it_kripke->state();
+                  v.st_prop = twa_->trans_storage(it_prop, tid_).dst;
+                  auto it = map.find(&v);
+                  if (*it != *map.end())
+                    (*it)->incidence_in = (*it)->incidence_in + 1;
+                  forward_iterators(sys_, twa_, it_kripke,
+                                    it_prop, false, tid_);
+                }
+              element->incidence_out = incidence_out;
+            }
+        }
     }
 
     void setup()
@@ -657,6 +706,16 @@ namespace spot
     bool finisher()
     {
       return finisher_;
+    }
+
+    kripkecube<State, SuccIterator>& sys()
+    {
+        return sys_;
+    }
+
+    twacube_ptr twa()
+    {
+        return twa_;
     }
 
     unsigned states()
