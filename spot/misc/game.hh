@@ -50,6 +50,8 @@ namespace spot
   // false -> env, true -> player
   typedef std::vector<bool> region_t;
   // state idx -> global edge number
+  // a strategy value of 0 means that there is no
+  // strategy associated
   typedef std::vector<unsigned> strategy_t;
 
 
@@ -85,7 +87,7 @@ namespace spot
 
   /// \brief Set the owner for all the states.
   SPOT_API
-  void set_state_players(twa_graph_ptr arena, std::vector<bool> owners);
+  void set_state_players(twa_graph_ptr arena, const std::vector<bool>& owners);
   SPOT_API
   void set_state_players(twa_graph_ptr arena, std::vector<bool>* owners);
 

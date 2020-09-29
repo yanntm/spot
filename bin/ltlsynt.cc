@@ -206,15 +206,16 @@ namespace
     if (opt_print_pg)
       dpa = spot::sbacc(dpa);
     spot::reduce_parity_here(dpa, true);
-    spot::change_parity_here(dpa, spot::parity_kind_max,
-                             spot::parity_style_odd);
-    assert((
-      [&dpa]() -> bool
-        {
-          bool max, odd;
-          dpa->acc().is_parity(max, odd);
-          return max && odd;
-        }()));
+//    spot::change_parity_here(dpa, spot::parity_kind_max,
+//                             spot::parity_style_odd);
+//    assert((
+//      [&dpa]() -> bool
+//        {
+//          bool max, odd;
+//          dpa->acc().is_parity(max, odd);
+//          return max && odd;
+//        }()));
+    assert(dpa->acc().is_parity());
     assert(spot::is_deterministic(dpa));
     return dpa;
   }
@@ -352,7 +353,7 @@ namespace
               if (want_time)
                 sw.start();
               dpa = split_2step(tmp, all_inputs, all_outputs, true, true);
-              spot::colorize_parity_here(dpa, true);
+//              spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
               if (verbose)
@@ -375,7 +376,7 @@ namespace
               if (want_time)
                 sw.start();
               dpa = split_2step(aut, all_inputs, all_outputs, true, true);
-              spot::colorize_parity_here(dpa, true);
+//              spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
               if (verbose)
@@ -404,6 +405,7 @@ namespace
                           << dpa->num_states() << " states, "
                           << dpa->num_sets() << " colors\n";
               dpa->merge_states();
+//              spot::colorize_parity_here(dpa, true);
               if (verbose)
                 std::cerr << "simplification done\nDPA has "
                           << dpa->num_states() << " states\n"
@@ -426,15 +428,15 @@ namespace
                   dpa = spot::to_parity(aut);
                   // reduce_parity is called by to_parity(),
                   // but with colorization turned off.
-                  spot::colorize_parity_here(dpa, true);
+//                  spot::colorize_parity_here(dpa, true);
                 }
               else
                 {
                   dpa = spot::to_parity_old(aut);
                   dpa = reduce_parity_here(dpa, true);
                 }
-              spot::change_parity_here(dpa, spot::parity_kind_max,
-                                       spot::parity_style_odd);
+//              spot::change_parity_here(dpa, spot::parity_kind_max,
+//                                       spot::parity_style_odd);
               if (want_time)
                 paritize_time = sw.stop();
               if (verbose)
@@ -446,7 +448,7 @@ namespace
               if (want_time)
                 sw.start();
               dpa = split_2step(dpa, all_inputs, all_outputs, true, true);
-              spot::colorize_parity_here(dpa, true);
+//              spot::colorize_parity_here(dpa, true);
               if (want_time)
                 split_time = sw.stop();
               if (verbose)
@@ -460,6 +462,9 @@ namespace
 
       if (opt_print_pg)
         {
+          spot::change_parity_here(dpa, spot::parity_kind_max,
+                                   spot::parity_style_odd);
+          spot::colorize_parity_here(dpa, true);
           timer.stop();
           pg_print(std::cout, dpa);
           return 0;
