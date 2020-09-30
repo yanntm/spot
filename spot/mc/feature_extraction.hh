@@ -470,20 +470,9 @@ namespace spot
           if (map_.valid(i))
           {
             auto element = map_.valueAt(i);
-            std::cout << nb_results << " : "
-                      << element->index << ", [";
-            if (element->ints.size())
-              std::cout << element->ints[0];
             int* state = element->st_kripke;
-            if (state[1])
-                std::cout << state[2];
-            for (unsigned i = 3; i < state[1]; i++)
-                std::cout << ',' << state[i];
-            std::cout << "], " << element->incidence_in
-                      << ", " << element->incidence_out;
             float ratio = static_cast<float>(element->incidence_out)
                           / element->incidence_in;
-            std::cout << ", " << ratio << std::endl;
             total_in += element->incidence_in;
             total_out += element->incidence_out;
             // if not root
@@ -683,6 +672,7 @@ namespace spot
                   forward_iterators(sys_, twa_, it_kripke,
                                     it_prop, false, tid_);
                 }
+              sys_.recycle(it_kripke, tid_);
               element->incidence_out = incidence_out;
             }
         }
