@@ -38,7 +38,7 @@ def get_options():
                 help='maximum number of iterations per file')
     parser.add_option('-m', '--memory', action='store', dest='memory',
                 default=1024, type='int',
-                help='maximum memory allowed for a given run (in GB)')
+                help='maximum memory allowed for a given run (in MB)')
     parser.add_option('-t', '--time', action='store', dest='time',
                 default=20, type='int',
                 help='maximum time allowed to test each formula')
@@ -86,6 +86,7 @@ class Log:
               round(self.exe_time, 3), self.memory / (1024 * 1024),
               self.emptiness, self.states, self.transitions),
               file=out)
+        out.flush()
 
 def run_subprocess(file_name, formula):
     start_time = time.time()
