@@ -12,6 +12,7 @@ outfile = sys.argv[2]
 
 with open(outfile, 'w+') as f:
     f.write('model,formula,time,memory,emptiness,states,transitions,'
+            + 'bloemen_time,cndfs_time,'
             + 'incidence_in,incidence_out,average_incidence_ratio,'
             + 'repeated_transitions,terminal,weak,inherently_weak,'
             + 'very_weak,complete,universal,unambiguous,'
@@ -25,12 +26,40 @@ with open(infile, newline='') as csvfile:
         row[0] = os.path.basename(model)
         print(row[0])
 
+        csvline = ','.join(row)
+
+        # bloemen time
+        p = subprocess.Popen(['../../tests/ltsmin/modelcheck', '-B', '-t',
+                              '-m', model, '-f', formula],
+                              stdout=subprocess.PIPE)
+        p.wait()
+        output = p.stdout.readlines()
+        del p
+        for line in output:
+            line = line.decode()
+            if 'TOTAL' in line:
+                csvline += ',' + line.split()[-3]
+
+        # cndfs time
+        p = subprocess.Popen(['../../tests/ltsmin/modelcheck', '-C', '-t',
+                              '-m', model, '-f', formula],
+                              stdout=subprocess.PIPE)
+        p.wait()
+        output = p.stdout.readlines()
+        del p
+        for line in output:
+            line = line.decode()
+            if 'TOTAL' in line:
+                csvline += ',' + line.split()[-3]
+
+
+        # other features
         p = subprocess.Popen(['../../tests/ltsmin/modelcheck', '-x',
                               '-m', model, '-f', formula],
                               stdout=subprocess.PIPE)
         p.wait()
         output = p.stdout.readlines()
-        csvline = ','.join(row)
+        del p
         for i in range(len(output)):
             line = str(output[i])
             if 'incidence' in line:
@@ -38,5 +67,6 @@ with open(infile, newline='') as csvfile:
             if 'terminal' in line:
                 csvline = csvline + ',' + output[i + 1].decode()
                 break
+
         with open(outfile, 'a+') as f:
             f.write(csvline)
