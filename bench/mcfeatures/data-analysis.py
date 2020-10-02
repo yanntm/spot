@@ -6,7 +6,8 @@ import sys
 from matplotlib import pyplot as plt
 
 # begin GLOBALS
-intfeatures = ['memory', 'states', 'transitions', 'incidence_in',\
+intfeatures = ['bloemen_time', 'cndfs_time',\
+               'memory', 'states', 'transitions', 'sccs', 'incidence_in',\
                'incidence_out', 'repeated_transitions', 'terminal', 'weak',\
                'inherently_weak', 'very_weak', 'complete', 'universal',\
                'unambiguous', 'semi_deterministic', 'stutter_invariant',\
@@ -18,18 +19,14 @@ nb_features = nb_int + nb_float
 features = []
 for _ in range(nb_features):
     features.append([])
-bloemen_time = []
-cndfs_time = []
 time = None
 # end GLOBALS
 
 def read_csv():
-    global features, bloemen_time, cndfs_time, time
+    global features, time
     with open(sys.argv[1], newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            bloemen_time.append(int(row['bloemen_time']))
-            cndfs_time.append(int(row['cndfs_time']))
             for i in range(nb_int):
                 features[i].append(int(row[intfeatures[i]]))
             for i in range(nb_float):
@@ -38,26 +35,46 @@ def read_csv():
     for f in features:
         npfeatures.append(np.asarray(f))
     features = npfeatures
-    bloemen_time = np.asarray(bloemen_time)
-    cndfs_time = np.asarray(cndfs_time)
-    time = cndfs_time - bloemen_time
+    time = features[1] - features[0]
 
 def generate_time_scatter_plot():
+    # getting data
+    bloemen_time = features[0]
+    cndfs_time = features[1]
+    bloemen_time_empty = []
+    bloemen_time_nonempty = []
+    cndfs_time_empty = []
+    cndfs_time_nonempty = []
+    for i in range(bloemen_time.size):
+        if features[nb_int - 1][i]:
+            bloemen_time_empty.append(bloemen_time[i])
+            cndfs_time_empty.append(cndfs_time[i])
+        else:
+            bloemen_time_nonempty.append(bloemen_time[i])
+            cndfs_time_nonempty.append(cndfs_time[i])
+
+    # plotting
     plt.title('time difference CNDF/Bloemen')
-    plt.plot(cndfs_time, bloemen_time, 'ob')
     plt.xlabel('cndfs execution time')
     plt.ylabel('bloemen execution time')
     max_time = max(np.amax(cndfs_time), np.amax(bloemen_time))
     min_time = min(np.amin(cndfs_time), np.amin(bloemen_time))
-    plt.plot([min_time, max_time], [min_time, max_time], 'k-')
+    plt.plot([min_time, max_time], [min_time, max_time], 'k-',
+                            label='x = y axis')
+    plt.plot(cndfs_time_empty, bloemen_time_empty, 'ob',
+                       color='b', label='empty')
+    plt.plot(cndfs_time_nonempty, bloemen_time_nonempty, 'ob',
+                      color='r', label='non-empty')
 
     x, y = cndfs_time, bloemen_time
     b = (np.sum(x * y) - np.sum(x) * np.sum(y) / x.size)\
         / (np.sum(x * x) - ((np.sum(x) ** 2) / x.size))
 
     plt.plot([min_time, min(max_time, max_time / b)],
-             [min_time, min(max_time, b * max_time)], 'k-', linestyle='--')
+                            [min_time, min(max_time, b * max_time)],
+                            'k-', linestyle='--', label='linear regression')
 
+    plt.legend()
     plt.savefig('time_difference.png')
     plt.clf()
 

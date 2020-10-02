@@ -16,7 +16,7 @@ with open(outfile, 'w+') as f:
             + 'incidence_in,incidence_out,average_incidence_ratio,'
             + 'repeated_transitions,terminal,weak,inherently_weak,'
             + 'very_weak,complete,universal,unambiguous,'
-            + 'semi_deterministic,stutter_invariant\n')
+            + 'semi_deterministic,stutter_invariant,sccs\n')
 
 with open(infile, newline='') as csvfile:
     reader = csv.reader(csvfile)
@@ -65,8 +65,13 @@ with open(infile, newline='') as csvfile:
             if 'incidence' in line:
                 csvline = csvline + ',' + output[i + 1].decode()[:-1]
             if 'terminal' in line:
-                csvline = csvline + ',' + output[i + 1].decode()
+                csvline = csvline + ',' + output[i + 1].decode()[:-1]
+            if 'sccs' in line:
+                csvline = csvline + ',' + output[i + 1].decode().split(',')[-3]
                 break
 
+        csvline = csvline.replace('yes', '1').replace('no','-1')\
+                         .replace('maybe', '0').replace('EMPTY', '1')\
+                         .replace('NONEMPT', '0')
         with open(outfile, 'a+') as f:
-            f.write(csvline)
+            f.write(csvline + '\n')
