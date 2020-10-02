@@ -64,8 +64,6 @@ namespace spot
       unsigned incidence_in;
       /// \brief out incidence of the element
       unsigned incidence_out;
-      /// \brief values of ints of the element
-      std::vector<int> ints;
       /// \brief mutex for acceptance condition
       std::mutex acc_mutex_;
       /// \brief reference to the pointer
