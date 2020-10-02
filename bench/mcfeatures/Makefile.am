@@ -16,4 +16,4 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-EXTRA_DIST = extract.py extract-features.py data-analysis.py
+EXTRA_DIST = generate.py extract-features.py data-analysis.py
