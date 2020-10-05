@@ -21,27 +21,26 @@
 import csv
 import numpy as np
 import sys
+import os
 from matplotlib import pyplot as plt
 
-# begin GLOBALS
-intfeatures = ['bloemen_time', 'cndfs_time',\
-               'memory', 'states', 'transitions', 'sccs', 'incidence_in',\
-               'incidence_out', 'repeated_transitions', 'terminal', 'weak',\
-               'inherently_weak', 'very_weak', 'complete', 'universal',\
-               'unambiguous', 'semi_deterministic', 'stutter_invariant',\
-               'emptiness']
-floatfeatures = ['average_incidence_ratio']
-nb_int = len(intfeatures)
-nb_float = len(floatfeatures)
-nb_features = nb_int + nb_float
-features = []
-for _ in range(nb_features):
-    features.append([])
-time = None
-# end GLOBALS
+from plot import *
+from correlations import *
 
 def read_csv():
-    global features, time
+    intfeatures = ['bloemen_time', 'cndfs_time',\
+                   'memory', 'states', 'transitions', 'incidence_in',\
+                   'incidence_out', 'repeated_transitions', 'terminal', 'weak',\
+                   'inherently_weak', 'very_weak', 'complete', 'universal',\
+                   'unambiguous', 'semi_deterministic', 'stutter_invariant',\
+                   'emptiness']
+    floatfeatures = ['average_incidence_ratio']
+    nb_int = len(intfeatures)
+    nb_float = len(floatfeatures)
+    nb_features = nb_int + nb_float
+    features = []
+    for _ in range(nb_features):
+        features.append([])
     with open(sys.argv[1], newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -54,109 +53,63 @@ def read_csv():
         npfeatures.append(np.asarray(f))
     features = npfeatures
     time = features[1] - features[0]
+    features = np.concatenate(([time], features))
+    names = (['time difference'] + intfeatures + floatfeatures)
+    for i in range(len(names)):
+        names[i] = names[i].replace('_', ' ')
+    return features, names
 
-def generate_time_scatter_plot():
-    # getting data
-    bloemen_time = features[0]
-    cndfs_time = features[1]
-    bloemen_time_empty = []
-    bloemen_time_nonempty = []
-    cndfs_time_empty = []
-    cndfs_time_nonempty = []
-    for i in range(bloemen_time.size):
-        if features[nb_int - 1][i]:
-            bloemen_time_empty.append(bloemen_time[i])
-            cndfs_time_empty.append(cndfs_time[i])
-        else:
-            bloemen_time_nonempty.append(bloemen_time[i])
-            cndfs_time_nonempty.append(cndfs_time[i])
+def separate_by_value(features, position):
+    # segfaults
+    set_ = list(set(features[position]))
+    out = [[] * (len(features) - 1)] * len(set_)
 
-    # plotting
-    plt.title('time difference CNDF/Bloemen')
-    plt.xlabel('cndfs execution time')
-    plt.ylabel('bloemen execution time')
-    max_time = max(np.amax(cndfs_time), np.amax(bloemen_time))
-    min_time = min(np.amin(cndfs_time), np.amin(bloemen_time))
-    plt.plot([min_time, max_time], [min_time, max_time], 'k-',
-                            label='x = y axis')
-    plt.plot(cndfs_time_empty, bloemen_time_empty, 'ob',
-                       color='b', label='empty')
-    plt.plot(cndfs_time_nonempty, bloemen_time_nonempty, 'ob',
-                      color='r', label='non-empty')
+    for i in range(len(features)):
+        if i == position:
+            continue
+        for j in range (len(features[0])):
+            out[set_.index(features[position][j])][i].append(features[i][j])
+    return out
 
-    x, y = cndfs_time, bloemen_time
-    b = (np.sum(x * y) - np.sum(x) * np.sum(y) / x.size)\
-        / (np.sum(x * x) - ((np.sum(x) ** 2) / x.size))
-
-    plt.plot([min_time, min(max_time, max_time / b)],
-                            [min_time, min(max_time, b * max_time)],
-                            'k-', linestyle='--', label='linear regression')
-
-    plt.legend()
+def generate_time_scatter_plot(features):
+    bloemen_time = features[1]
+    cndfs_time = features[2]
+    scatter_plot(bloemen_time, cndfs_time, 'time difference',
+                 'bloemen time', 'cndfs time', True)
     plt.savefig('time_difference.png')
     plt.clf()
 
-def generate_plots(correlations):
-    def generate_plot(x, y, basename):
-        if np.unique(y).size < 4:
-            plt.plot(y, x, 'ob')
-            plt.xlabel(basename.replace('_', ' '))
-            plt.ylabel('time difference')
-        else:
-            plt.plot(x, y, 'ob')
-            plt.ylabel(basename.replace('_', ' '))
-            plt.xlabel('time difference')
-        plt.title('%s (%s)' % (basename.replace('_', ' '),
-                  correlations[basename]))
-        plt.savefig(basename + '.png')
-        plt.clf()
-
-    x = time
-    for i in range(nb_int):
-        y = features[i]
-        generate_plot(x, y, intfeatures[i])
-
-    for i in range(nb_float):
-        y = features[i + nb_int]
-        generate_plot(x, y, floatfeatures[i])
-    generate_time_scatter_plot()
-
-
-def get_correlations():
-    def average_index(arr, element):
-        return np.mean(np.where(arr == element))
-    def correlation(x, y):
-        sortedx = np.sort(x)
-        sortedy = np.sort(y)
-        sum_squares = 0
-        for i in range(x.size):
-            x_ = average_index(sortedx, x[i])
-            y_ = average_index(sortedy, y[i])
-            sum_squares += (x_ - y_) ** 2
-        return 1 - (6 * sum_squares / (x.size ** 3 - x.size))
-
-    x = time
-    correlations = {}
-    for i in range(nb_int):
-        corr = correlation(x, features[i])
-        correlations[intfeatures[i]] = corr
-    for i in range(nb_float):
-        corr = correlation(x, features[i + nb_int])
-        correlations[floatfeatures[i]] = corr
-    return correlations
+def pretty_print_table(table, names):
+    name_max_len = len(max(names, key=len))
+    for i in range(len(table)):
+        row = table[i]
+        print(names[i].rjust(name_max_len, ' '), end=' |')
+        for j in range(i + 1):
+            elt = row[j]
+            print(str(round(elt, 2)).ljust(4, '0'), end='|')
+        print()
+    for i in range(name_max_len):
+        print(' ' * (name_max_len + 1), end='')
+        for name in names:
+            if i < len(name):
+                print('  %s  ' % name[i], end='')
+            else:
+                print('     ', end='')
+        print()
+    print()
 
 if __name__ == '__main__':
-    read_csv()
-    correlations = get_correlations()
-    generate_plots(correlations)
-
-    for value, feature in sorted(((v,k) for k,v in correlations.items())):
-        print('%s : %s' % (feature.ljust(23), value))
-
-    average_time = 0
-    for t in time:
-        average_time += t
-    average_time /= time.size
-
-    print('\naverage time difference : %i (%i -> %i)'
-          % (average_time, np.amin(time), np.amax(time)))
+    features, names = read_csv()
+    generate_time_scatter_plot(features)
+    for i in range(len(names)):
+        for j in range(i + 1):
+            filename = 'scps/scp-%s-%s.png' % (names[i], names[j])
+            if os.path.isfile(filename):
+                continue
+            scatter_plot(features[j], features[i],
+                         'scatter plot of %s over %s' % (names[j], names[i]),
+                         names[j], names[i])
+            plt.savefig(filename)
+            plt.clf()
+    correlation = correlation_matrix(features)
+    gui_display_table(correlation, names)
