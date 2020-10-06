@@ -142,7 +142,7 @@ namespace spot
             r2 = r2[0];
             ++leading_x;
           }
-        if (type_ == Generic || type_ == TGBA)
+        if (type_ == Generic || type_ == GeneralizedBuchi)
           {
             // F(q|u|f) = q|F(u)|F(f)  only for generic acceptance
             // G(q&e&f) = q&G(e)&G(f)
@@ -174,7 +174,7 @@ namespace spot
             // with disjunction, but it seems to generate larger automata
             // in many cases and it needs to be further investigated.  Maybe
             // this could be relaxed in the case of deterministic output.
-            (!r2.is(op::And) && (type_ == TGBA || type_ == BA)))
+            (!r2.is(op::And) && (type_ == GeneralizedBuchi || type_ == Buchi)))
           goto nosplit;
 
         op topop = r2.kind();
@@ -182,7 +182,7 @@ namespace spot
         std::vector<formula> oblg;
         std::vector<formula> susp;
         std::vector<formula> rest;
-        bool want_g = type_ == TGBA || type_ == BA;
+        bool want_g = type_ == GeneralizedBuchi || type_ == Buchi;
         for (formula child: r2)
           {
             if (child.is_syntactic_obligation())
@@ -213,7 +213,8 @@ namespace spot
           {
             // The only cases where we accept susp and rest to be both
             // non-empty is when doing Generic acceptance or TGBA.
-            if (!rest.empty() && !(type_ == Generic || type_ == TGBA))
+            if (!rest.empty()
+                && !(type_ == Generic || type_ == GeneralizedBuchi))
               {
                 rest.insert(rest.end(), susp.begin(), susp.end());
                 susp.clear();
@@ -225,7 +226,7 @@ namespace spot
           }
         // For TGBA and BA, we only split if there is something to
         // suspend.
-        if (susp.empty() && (type_ == TGBA || type_ == BA))
+        if (susp.empty() && (type_ == GeneralizedBuchi || type_ == Buchi))
           goto nosplit;
 
         option_map om_wos;
@@ -375,17 +376,19 @@ namespace spot
             if (gf_guarantee_ && PREF_ != Any)
               {
                 bool det = unambiguous || (PREF_ == Deterministic);
-                bool sba = type_ == BA || (pref_ & SBAcc);
-                if ((type_ & (BA | Parity | Generic)) || type_ == TGBA)
+                if ((type_ & (Buchi | Parity))
+                     || type_ == Generic
+                     || type_ == GeneralizedBuchi)
                   aut2 = gf_guarantee_to_ba_maybe(r, simpl_->get_dict(),
-                                                  det, sba);
-                if (aut2 && ((type_ == BA) || (type_ & Parity))
+                                                  det, state_based_);
+                if (aut2 && (type_ & (Buchi | Parity))
                     && (pref_ & Deterministic))
                   return finalize(aut2);
                 if (!aut2 && (type_ == Generic
                               || type_ & (Parity | CoBuchi)))
                   {
-                    aut2 = fg_safety_to_dca_maybe(r, simpl_->get_dict(), sba);
+                    aut2 = fg_safety_to_dca_maybe(r, simpl_->get_dict(),
+                                                  state_based_);
                     if (aut2
                         && (type_ & (CoBuchi | Parity))
                         && (pref_ & Deterministic))
@@ -418,6 +421,16 @@ namespace spot
 
   twa_graph_ptr translator::run(formula* f)
   {
+    if (type_ == BA)
+      {
+        pref_ |= SBAcc;
+        type_ = Buchi;
+      }
+    if (pref_ & SBAcc)
+      state_based_ = true;
+    else if (state_based_)
+      pref_ |= SBAcc;
+
     if (simpl_owned_)
       {
         // Modify the options according to set_pref() and set_type().

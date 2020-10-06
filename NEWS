@@ -55,6 +55,32 @@ New in spot 2.9.4.dev  (not yet released)
     file. With this refactoring, we can retrieve both a kripke or a
     kripkecube from a PINS file.
 
+  - The postprocessor::set_type() method can now accept
+    options postprocessor::Buchi and postprocessor::GeneralizedBuchi.
+
+    These syntaxes is more homogeneous with the rest of the supported
+    types.  Note that postprocessor::BA and postprocessor::TGBA, while
+    still supported and not yet marked as deprecated, are best avoided
+    in new code.
+
+         postprocessor::set_type(postprocessor::TGBA)
+
+    can be replaced by
+
+         postprocessor::set_type(postprocessor::BA)
+
+    and
+
+         postprocessor::set_type(postprocessor::Buchi)
+         postprocessor::set_pref(postprocessor::Small
+                                 | postprocessor::SBAcc)
+
+    Note that the old postprocessor::BA option implied state-based
+    acceptance (and was unique in that way), but the new
+    postprocessor::Buchi specifies Büchi acceptance without requiring
+    state-based acceptance (something that postprocessor did not
+    permit before).
+
   - Translations for formulas such as FGp1 & FGp2 &...& FGp32 which
     used to take ages are now instantaneous.  (Issue #412.)
 

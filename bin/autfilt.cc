@@ -686,17 +686,17 @@ ensure_deterministic(const spot::twa_graph_ptr& aut, bool nonalt = false)
 static spot::twa_graph_ptr ensure_tba(spot::twa_graph_ptr aut)
 {
   spot::postprocessor p;
-  p.set_type(spot::postprocessor::TGBA);
+  p.set_type(spot::postprocessor::Buchi);
   p.set_pref(spot::postprocessor::Any);
   p.set_level(spot::postprocessor::Low);
-  return spot::degeneralize_tba(p.run(aut));
+  return p.run(aut);
 
 }
 
 static spot::twa_graph_ptr
 product(spot::twa_graph_ptr left, spot::twa_graph_ptr right)
 {
-  if ((type == spot::postprocessor::BA)
+  if ((type == spot::postprocessor::Buchi)
       && (left->num_sets() + right->num_sets() >
           spot::acc_cond::mark_t::max_accsets()))
     {
@@ -709,7 +709,7 @@ product(spot::twa_graph_ptr left, spot::twa_graph_ptr right)
 static spot::twa_graph_ptr
 product_or(spot::twa_graph_ptr left, spot::twa_graph_ptr right)
 {
-  if ((type == spot::postprocessor::BA)
+  if ((type == spot::postprocessor::Buchi)
       && (left->num_sets() + right->num_sets() >
           spot::acc_cond::mark_t::max_accsets()))
     {

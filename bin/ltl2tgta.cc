@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2019 Laboratoire de Recherche et Développement
+// Copyright (C) 2012-2020 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -126,15 +126,16 @@ parse_opt(int key, char* arg, struct argp_state*)
       break;
     case OPT_TGTA:
       ta_type = TGTA;
-      type = spot::postprocessor::TGBA;
+      type = spot::postprocessor::GeneralizedBuchi;
       break;
     case OPT_GTA:
       ta_type = GTA;
-      type = spot::postprocessor::TGBA;
+      type = spot::postprocessor::GeneralizedBuchi;
       break;
     case OPT_TA:
       ta_type = TA;
-      type = spot::postprocessor::BA;
+      type = spot::postprocessor::Buchi;
+      sbacc = spot::postprocessor::SBAcc;
       break;
     case OPT_INIT:
       opt_with_artificial_initial_state = false;
@@ -196,7 +197,7 @@ namespace
       if (ta_type != TGTA)
         {
           auto testing_automaton =
-            tgba_to_ta(aut, ap_set, type == spot::postprocessor::BA,
+            tgba_to_ta(aut, ap_set, type == spot::postprocessor::Buchi,
                        opt_with_artificial_initial_state,
                        opt_single_pass_emptiness_check,
                        opt_with_artificial_livelock);

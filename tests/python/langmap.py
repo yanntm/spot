@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016, 2017 Laboratoire de Recherche et Développement
+# Copyright (C) 2016, 2017, 2020 Laboratoire de Recherche et Développement
 # de l'Epita (LRDE)
 #
 # This file is part of Spot, a model checking library.
@@ -29,7 +29,7 @@ def hstates(txt):
 
 
 def test(f, opt, expected):
-    aut = spot.translate(f, opt, 'deterministic')
+    aut = spot.translate(f, *opt, 'deterministic')
     v = spot.language_map(aut)
     assert len(v) == aut.num_states()
     spot.highlight_languages(aut)
@@ -40,15 +40,15 @@ def test(f, opt, expected):
         exit(1)
 
 
-test('GF(a) & GFb & c', 'BA', '1 0 2 0 3 0')
-test('GF(a) & c & X!a', 'BA', '2 0 3 0')
-test('(a U b) & GF(c & Xd)', 'generic', '1 0 2 0')
-test('GF(a <-> Xb) & Fb', 'generic', '0 0 1 1 2 0 3 1 4 1')
-test('Xa', 'BA', '')
+test('GF(a) & GFb & c', ['Buchi', 'SBAcc'], '1 0 2 0 3 0')
+test('GF(a) & c & X!a', ['Buchi', 'SBAcc'], '2 0 3 0')
+test('(a U b) & GF(c & Xd)', ['generic'], '1 0 2 0')
+test('GF(a <-> Xb) & Fb', ['generic', 'low'], '1 0 2 0 3 0')
+test('Xa', ['Buchi', 'SBAcc'], '')
 
 # Non-deterministic automata are not supported
 try:
-    test('FGa', 'BA', '')
+    test('FGa', ['Buchi'], '')
 except RuntimeError as e:
     assert 'language_map only works with deterministic automata'in str(e)
 else:

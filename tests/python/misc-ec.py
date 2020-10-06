@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017 Laboratoire de Recherche et Développement de l'Epita
+# Copyright (C) 2017, 2020 Laboratoire de Recherche et Développement de l'Epita
 # (LRDE).
 #
 # This file is part of Spot, a model checking library.
@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import spot
-aut = spot.translate("G(p0 | (p0 R Xp0) | XF(!p0 & p1))", 'BA')
+aut = spot.translate("G(p0 | (p0 R Xp0) | XF(!p0 & p1))", 'Buchi', 'SBAcc')
 ec = spot.make_emptiness_check_instantiator('SE05')[0].instantiate(aut)
 n = 0
 while True:

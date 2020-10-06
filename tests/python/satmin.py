@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2015  Laboratoire de Recherche et Développement
+# Copyright (C) 2015, 2020  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -20,7 +20,7 @@
 import spot
 
 
-aut = spot.translate('GFa & GFb', 'BA')
+aut = spot.translate('GFa & GFb', 'Buchi', 'SBAcc')
 assert aut.num_sets() == 1
 assert aut.num_states() == 3
 assert aut.is_deterministic()

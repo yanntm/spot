@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2012-2016, 2018-2019 Laboratoire de Recherche et
+// Copyright (C) 2012-2016, 2018-2020 Laboratoire de Recherche et
 // Développement de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -24,7 +24,7 @@
 #include "error.h"
 #include "argmatch.h"
 
-spot::postprocessor::output_type type = spot::postprocessor::TGBA;
+spot::postprocessor::output_type type = spot::postprocessor::GeneralizedBuchi;
 spot::postprocessor::output_pref pref = spot::postprocessor::Small;
 spot::postprocessor::output_pref comp = spot::postprocessor::Any;
 spot::postprocessor::output_pref sbacc = spot::postprocessor::Any;
@@ -165,7 +165,7 @@ parse_opt_post(int key, char* arg, struct argp_state*)
       pref_set = true;
       break;
     case 'B':
-      type = spot::postprocessor::BA;
+      type = spot::postprocessor::Buchi;
       colored = spot::postprocessor::Any;
       sbacc = spot::postprocessor::SBAcc;
       break;
@@ -250,7 +250,7 @@ parse_opt_post(int key, char* arg, struct argp_state*)
     case OPT_TGBA:
       if (automaton_format == Spin)
         error(2, 0, "--spin and --tgba are incompatible");
-      type = spot::postprocessor::TGBA;
+      type = spot::postprocessor::GeneralizedBuchi;
       colored = spot::postprocessor::Any;
       break;
     default:

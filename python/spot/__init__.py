@@ -584,12 +584,17 @@ def _postproc_translate_options(obj, default_type, *args):
         if type_ is not None and type_name_ != val:
             raise ValueError("type cannot be both {} and {}"
                              .format(type_name_, val))
-        elif val == 'generic':
+        elif val == 'generic' or val == 'gen' or val == 'g':
             type_ = postprocessor.Generic
-        elif val == 'tgba':
-            type_ = postprocessor.TGBA
-        elif val == 'ba':
-            type_ = postprocessor.BA
+        elif val == 'tgba': # historical
+            type_ = postprocessor.GeneralizedBuchi
+        elif val == 'generalizedbuchi':
+            type_ = postprocessor.GeneralizedBuchi
+        elif val == 'ba': # historical
+            type_ = postprocessor.Buchi
+            sbac_ = postprocessor.SBAcc
+        elif val == 'buchi':
+            type_ = postprocessor.Buchi
         elif val == 'cobuchi' or val == 'nca':
             type_ = postprocessor.CoBuchi
         elif val == 'dca':
@@ -652,7 +657,8 @@ def _postproc_translate_options(obj, default_type, *args):
             colo_ = postprocessor.Colored
         elif val == 'complete':
             comp_ = postprocessor.Complete
-        elif val == 'sbacc' or val == 'state-based-acceptance':
+        elif (val == 'sbacc' or val == 'statebasedacceptance'
+              or val == 'state-based-acceptance'):
             sbac_ = postprocessor.SBAcc
         else:
             assert(val == 'unambiguous')
@@ -661,12 +667,16 @@ def _postproc_translate_options(obj, default_type, *args):
     options = {
         'any': pref_set,
         'ba': type_set,
+        'buchi': type_set,
         'cobuchi': type_set,
         'colored': misc_set,
         'complete': misc_set,
         'dca': type_set,
         'deterministic': pref_set,
+        'g': type_set,
+        'gen': type_set,
         'generic': type_set,
+        'generalizedbuchi': type_set,
         'high': optm_set,
         'low': optm_set,
         'medium': optm_set,
@@ -684,6 +694,7 @@ def _postproc_translate_options(obj, default_type, *args):
         'sbacc': misc_set,
         'small': pref_set,
         'statebasedacceptance': misc_set,
+        'state-based-acceptance': misc_set,
         'tgba': type_set,
         'unambiguous': misc_set,
     }
@@ -730,10 +741,10 @@ def translate(formula, *args, dict=_bdd_dict, xargs=None):
     may not be satisfied.
 
     The optional arguments should be strings among the following:
-    - at most one in 'TGBA', 'BA', or 'Monitor', 'generic',
-      'parity', 'parity min odd', 'parity min even',
-      'parity max odd', 'parity max even' (type of automaton to
-      build), 'coBuchi'
+    - at most one in 'GeneralizedBuchi', 'Buchi', or 'Monitor',
+      'generic', 'parity', 'parity min odd', 'parity min even',
+      'parity max odd', 'parity max even', 'coBuchi'
+      (type of acceptance condition to build)
     - at most one in 'Small', 'Deterministic', 'Any'
       (preferred characteristics of the produced automaton)
     - at most one in 'Low', 'Medium', 'High'
@@ -748,6 +759,7 @@ def translate(formula, *args, dict=_bdd_dict, xargs=None):
     string (that will be converted to `spot.option_map`), as the `xargs`
     argument.  This is similar to the `-x` option of command-line tools;
     so check out the spot-x(7) man page for details.
+
     """
     if type(xargs) is str:
         xargs = option_map(xargs)
@@ -786,10 +798,10 @@ def postprocess(automaton, *args, formula=None, xargs=None):
     not already 'Deterministic'.
 
     The optional arguments should be strings among the following:
-    - at most one in 'Generic', 'TGBA', 'BA', or 'Monitor',
-      'parity', 'parity min odd', 'parity min even',
-      'parity max odd', 'parity max even' (type of automaton to
-      build), 'coBuchi'
+    - at most one in 'Generic', 'GeneralizedBuchi', 'Buchi', or
+      'Monitor', 'parity', 'parity min odd', 'parity min even',
+      'parity max odd', 'parity max even', 'coBuchi'
+      (type of acceptance condition to build)
     - at most one in 'Small', 'Deterministic', 'Any'
       (preferred characteristics of the produced automaton)
     - at most one in 'Low', 'Medium', 'High'
@@ -808,7 +820,8 @@ def postprocess(automaton, *args, formula=None, xargs=None):
     string (that will be converted to `spot.option_map`), as the `xargs`
     argument.  This is similar to the `-x` option of command-line tools;
     so check out the spot-x(7) man page for details.
-"""
+
+    """
     if type(xargs) is str:
         xargs = option_map(xargs)
     p = postprocessor(xargs)

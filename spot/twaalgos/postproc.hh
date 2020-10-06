@@ -72,26 +72,29 @@ namespace spot
     /// options used for debugging or benchmarking.
     postprocessor(const option_map* opt = nullptr);
 
-    enum output_type { TGBA = 0, // should be renamed GeneralizedBuchi
-                       BA = 1, // should be renamed Buchi and not imply SBAcc
-                       Monitor = 2,
-                       Generic = 3,
-                       Parity = 4,
-                       ParityMin = Parity | 8,
-                       ParityMax = Parity | 16,
-                       ParityOdd = Parity | 32,
-                       ParityEven = Parity | 64,
-                       ParityMinOdd = ParityMin | ParityOdd,
-                       ParityMaxOdd = ParityMax | ParityOdd,
-                       ParityMinEven = ParityMin | ParityEven,
-                       ParityMaxEven = ParityMax | ParityEven,
-                       CoBuchi = 128,
+    enum output_type {
+      TGBA = 0, // Historical.  Use GeneralizedBuchi instead
+      GeneralizedBuchi = 0, // Introduced in Spot 2.10 to replace TGBA
+      BA = 1, // Historical.  Implies Buchi and SBAcc.
+      Monitor = 2,
+      Generic = 3,
+      Parity = 4,
+      ParityMin = Parity | 8,
+      ParityMax = Parity | 16,
+      ParityOdd = Parity | 32,
+      ParityEven = Parity | 64,
+      ParityMinOdd = ParityMin | ParityOdd,
+      ParityMaxOdd = ParityMax | ParityOdd,
+      ParityMinEven = ParityMin | ParityEven,
+      ParityMaxEven = ParityMax | ParityEven,
+      CoBuchi = 128,
+      Buchi = 256, // introduced in Spot 2.10, does not imply SBAcc
     };
 
     /// \brief Select the desired output type.
     ///
-    /// \c TGBA requires transition-based generalized Büchi acceptance
-    /// while \c BA requests state-based Büchi acceptance.  In both
+    /// \c GeneralizedBuchi requires generalized Büchi acceptance
+    /// while \c Buchi requests Büchi acceptance.  In both
     /// cases, automata with more complex acceptance conditions will
     /// be converted into these simpler acceptance.  For references
     /// about the algorithms used behind these options, see section 5
@@ -116,17 +119,22 @@ namespace spot
     /// not all TGBA can be degeneralized, using \c Generic will allow
     /// parity acceptance to be used instead).
     ///
-    /// \a Parity and its variants request the acceptance condition to
+    /// \c Parity and its variants request the acceptance condition to
     /// be of some parity type.  Note that the determinization
     /// algorithm used by Spot produces "parity min odd" acceptance,
     /// but other parity types can be obtained from there by minor
     /// adjustments.
     ///
-    /// \a CoBuchi requests a Co-Büchi automaton equivalent to
+    /// \c CoBuchi requests a Co-Büchi automaton equivalent to
     /// the input, when possible, or a Co-Büchi automaton that
     /// recognize a larger language otherwise.
     ///
-    /// If set_type() is not called, the default \c output_type is \c TGBA.
+    /// \c BA is a historical type that means Buchi and additionally
+    /// set state-based acceptance (this should normally be set
+    /// with `set_pref(SBAcc)`).
+    ///
+    /// If set_type() is not called, the default \c output_type is \c
+    /// GeneralizedBuchi.
     void
     set_type(output_type type)
     {
@@ -221,6 +229,7 @@ namespace spot
   protected:
     twa_graph_ptr do_simul(const twa_graph_ptr& input, int opt) const;
     twa_graph_ptr do_sba_simul(const twa_graph_ptr& input, int opt) const;
+    twa_graph_ptr choose_degen(const twa_graph_ptr& input) const;
     twa_graph_ptr do_degen(const twa_graph_ptr& input) const;
     twa_graph_ptr do_degen_tba(const twa_graph_ptr& input) const;
     twa_graph_ptr do_scc_filter(const twa_graph_ptr& a, bool arg) const;

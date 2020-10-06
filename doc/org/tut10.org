@@ -88,7 +88,7 @@ that takes a formula (possibly as a string) as first argument:
 
 #+BEGIN_SRC python
 import spot
-print(spot.translate('GFa -> GFb', 'BA').to_str('spin'))
+print(spot.translate('GFa -> GFb', 'buchi', 'sbacc').to_str('spin'))
 #+END_SRC
 
 #+RESULTS:
@@ -120,15 +120,16 @@ T0_S3:
 
 * C++
 
-All the translation pipeline (this include simplifying the formula,
+All the translation pipeline (this includes simplifying the formula,
 translating the simplified formula into an automaton, and simplifying
 the resulting automaton) is handled by the =spot::translator= class.
 An instance of this class can configured by calling =set_type()= to
 chose the type of automaton to output, =set_level()= to set the level
 of optimization (it's high by default), and =set_pref()= to set
 various preferences (like small or deterministic) or characteristic
-(complete, unambiguous) for the resulting automaton. Finally, the
-output as a never claim is done via the =print_never_claim= function.
+(complete, unambiguous, state-based acceptance) for the resulting
+automaton. Finally, the output as a never claim is done via the
+=print_never_claim= function.
 
 #+BEGIN_SRC C++
   #include <iostream>
@@ -138,11 +139,13 @@ output as a never claim is done via the =print_never_claim= function.
 
   int main()
   {
-    spot::parsed_formula pf = spot::parse_infix_psl("[]<>p0 || <>[]p1");
+    spot::parsed_formula pf = spot::parse_infix_psl("[]<>a || <>[]b");
     if (pf.format_errors(std::cerr))
       return 1;
     spot::translator trans;
-    trans.set_type(spot::postprocessor::BA);
+    trans.set_type(spot::postprocessor::Buchi);
+    trans.set_pref(spot::postprocessor::SBAcc
+                   | spot::postprocessor::Small);
     spot::twa_graph_ptr aut = trans.run(pf.f);
     print_never_claim(std::cout, aut) << '\n';
     return 0;
@@ -155,24 +158,25 @@ never {
 T0_init:
   if
   :: (true) -> goto T0_init
-  :: (p0) -> goto accept_S1
-  :: (p1) -> goto accept_S2
+  :: (a) -> goto accept_S1
+  :: (b) -> goto accept_S2
   fi;
 accept_S1:
   if
-  :: (p0) -> goto accept_S1
-  :: (!(p0)) -> goto T0_S3
+  :: (a) -> goto accept_S1
+  :: (!(a)) -> goto T0_S3
   fi;
 accept_S2:
   if
-  :: (p1) -> goto accept_S2
+  :: (b) -> goto accept_S2
   fi;
 T0_S3:
   if
-  :: (p0) -> goto accept_S1
-  :: (!(p0)) -> goto T0_S3
+  :: (a) -> goto accept_S1
+  :: (!(a)) -> goto T0_S3
   fi;
 }
+
 #+end_example
 
 * Additional comments
@@ -188,17 +192,17 @@ help(spot.translate)
 #+begin_example
 Help on function translate in module spot:
 
-translate(formula, *args, dict=<spot.impl.bdd_dict; proxy of <Swig Object of type 'std::shared_ptr< spot::bdd_dict > *' at 0x7f1f9541c090> >, xargs=None)
+translate(formula, *args, dict=<spot.impl.bdd_dict; proxy of <Swig Object of type 'std::shared_ptr< spot::bdd_dict > *' at 0x7f42f4cea030> >, xargs=None)
     Translate a formula into an automaton.
 
     Keep in mind that 'Deterministic' expresses just a preference that
     may not be satisfied.
 
     The optional arguments should be strings among the following:
-    - at most one in 'TGBA', 'BA', or 'Monitor', 'generic',
-      'parity', 'parity min odd', 'parity min even',
-      'parity max odd', 'parity max even' (type of automaton to
-      build), 'coBuchi'
+    - at most one in 'GeneralizedBuchi', 'Buchi', or 'Monitor',
+      'generic', 'parity', 'parity min odd', 'parity min even',
+      'parity max odd', 'parity max even', 'coBuchi'
+      (type of acceptance condition to build)
     - at most one in 'Small', 'Deterministic', 'Any'
       (preferred characteristics of the produced automaton)
     - at most one in 'Low', 'Medium', 'High'

@@ -121,7 +121,7 @@ more simplification opportunities.)
 #+begin_src python
 import spot
 # Translate LTLf to Büchi.
-aut = spot.from_ltlf('(a U b) & Fc').translate('ba')
+aut = spot.from_ltlf('(a U b) & Fc').translate('small', 'buchi', 'sbacc')
 # Remove "alive" atomic proposition
 rem = spot.remove_ap()
 rem.add_ap('alive')
@@ -141,7 +141,7 @@ AP: 3 "b" "a" "c"
 acc-name: Buchi
 Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels state-acc deterministic
-properties: very-weak
+properties: terminal
 --BODY--
 State: 0
 [!2] 0
@@ -171,36 +171,38 @@ wrappers around the =spot::translator= and =spot::postprocessor=
 objects that we need to use here.
 
 #+begin_src C++
-#include <iostream>
-#include <spot/tl/parse.hh>
-#include <spot/tl/ltlf.hh>
-#include <spot/twaalgos/translate.hh>
-#include <spot/twaalgos/hoa.hh>
-#include <spot/twaalgos/remprop.hh>
+  #include <iostream>
+  #include <spot/tl/parse.hh>
+  #include <spot/tl/ltlf.hh>
+  #include <spot/twaalgos/translate.hh>
+  #include <spot/twaalgos/hoa.hh>
+  #include <spot/twaalgos/remprop.hh>
 
-int main()
-{
-  spot::parsed_formula pf = spot::parse_infix_psl("(a U b) & Fc");
-  if (pf.format_errors(std::cerr))
-    return 1;
+  int main()
+  {
+    spot::parsed_formula pf = spot::parse_infix_psl("(a U b) & Fc");
+    if (pf.format_errors(std::cerr))
+      return 1;
 
-  spot::translator trans;
-  trans.set_type(spot::postprocessor::BA);
-  trans.set_pref(spot::postprocessor::Small);
-  spot::twa_graph_ptr aut = trans.run(spot::from_ltlf(pf.f));
+    spot::translator trans;
+    trans.set_type(spot::postprocessor::Buchi);
+    trans.set_pref(spot::postprocessor::SBAcc
+                   | spot::postprocessor::Small);
+    spot::twa_graph_ptr aut = trans.run(spot::from_ltlf(pf.f));
 
-  spot::remove_ap rem;
-  rem.add_ap("alive");
-  aut = rem.strip(aut);
+    spot::remove_ap rem;
+    rem.add_ap("alive");
+    aut = rem.strip(aut);
 
-  spot::postprocessor post;
-  post.set_type(spot::postprocessor::BA);
-  post.set_pref(spot::postprocessor::Small); // or ::Deterministic
-  aut = post.run(aut);
+    spot::postprocessor post;
+    post.set_type(spot::postprocessor::Buchi);
+    post.set_pref(spot::postprocessor::SBAcc
+                  | spot::postprocessor::Small); // or ::Deterministic
+    aut = post.run(aut);
 
-  print_hoa(std::cout, aut) << '\n';
-  return 0;
-}
+    print_hoa(std::cout, aut) << '\n';
+    return 0;
+  }
 #+end_src
 
 #+RESULTS:
@@ -212,7 +214,7 @@ AP: 3 "b" "a" "c"
 acc-name: Buchi
 Acceptance: 1 Inf(0)
 properties: trans-labels explicit-labels state-acc deterministic
-properties: very-weak
+properties: terminal
 --BODY--
 State: 0
 [!2] 0

@@ -340,7 +340,8 @@ int parse_opt_aoutput(int key, char* arg, struct argp_state*)
     case 's':
       automaton_format = Spin;
       if (type != spot::postprocessor::Monitor)
-        type = spot::postprocessor::BA;
+        type = spot::postprocessor::Buchi;
+      sbacc = spot::postprocessor::SBAcc;
       automaton_format_opt = arg;
       break;
     case OPT_CHECK:

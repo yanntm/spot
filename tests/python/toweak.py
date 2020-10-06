@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# Copyright (C) 2017, 2018  Laboratoire de Recherche et Développement
+# Copyright (C) 2017, 2018, 2020  Laboratoire de Recherche et Développement
 # de l'Epita
 #
 # This file is part of Spot, a model checking library.
@@ -31,7 +31,7 @@ b | (a & XF(b R a)) | (!a & XG(!b U !a))"""
 
 
 def test_phi(phi):
-    a = spot.translate(phi, 'TGBA', 'SBAcc')
+    a = spot.translate(phi, 'GeneralizedBuchi', 'SBAcc')
     res = spot.to_weak_alternating(spot.dualize(a))
     assert res.equivalent_to(spot.formula.Not(spot.formula(phi)))
 

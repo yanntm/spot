@@ -400,6 +400,7 @@ TESTS_python = \
   python/interdep.py \
   python/intrun.py \
   python/kripke.py \
+  python/langmap.py \
   python/ltl2tgba.test \
   python/ltlf.py \
   python/ltlparse.py \
