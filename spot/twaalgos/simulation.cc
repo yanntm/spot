@@ -957,9 +957,12 @@ namespace spot
     return wrap_simul(iterated_simulations_<true>, t);
   }
 
+
   twa_graph_ptr direct_sim_game(const_twa_graph_ptr aut,
                                 unsigned s1, unsigned s2)
   {
+    // TODO
+    // Detecter si S et D sont sur le meme etat et arreter: mettre une boucle ?
     if (s1 >= aut->num_states() || s2 >= aut->num_states())
       throw std::runtime_error("direct_sim_game(): invalid state number");
 
@@ -967,26 +970,44 @@ namespace spot
     game->copy_ap_of(aut);
 
     auto names = new std::vector<std::pair<unsigned, unsigned>>();
-    auto owners = new std::vector<bool>();
+    game->set_named_prop("product-states", names);
     names->reserve(aut->num_states());
+    auto owners = new std::vector<bool>();
+    game->set_named_prop("state-player", owners);
     owners->reserve(aut->num_states());
 
+    // Player 0 is the spoiler (s) and 1 is duplicator (d).
     std::map<std::pair<unsigned, unsigned>, unsigned> s_orig_states;
     std::map<std::pair<unsigned, unsigned>, unsigned> d_orig_states;
     std::vector<unsigned> todo;
     todo.reserve(aut->num_states());
     auto& g = aut->get_graph();
 
+    scc_info si(aut);
+
     auto all_inf = aut->get_acceptance().used_inf_fin_sets().first;
-    auto all_fin = aut->get_acceptance().used_inf_fin_sets().second;
-
-    auto acc_implies = [&](acc_cond::mark_t acc1, acc_cond::mark_t acc2)
+    // FIXME
+    auto edges_implies = [&](auto e1, auto e2) -> bool
     {
-      return (~(acc2 & all_inf)).subset(~(acc1 & all_inf))
-        && (acc2 & all_fin).subset(acc2 & all_fin);
-    };
+      if (e1.cond != e2.cond)
+        return false;
 
-    auto new_state = [&](bool player, unsigned s1, unsigned s2)
+      auto acc1 = e1.acc;
+      auto acc2 = e2.acc;
+
+      auto all_fin = aut->get_acceptance().used_inf_fin_sets().second;
+
+      if (si.scc_of(e1.src) != si.scc_of(e1.dst))
+        acc1 = all_fin;
+
+      if (si.scc_of(e2.src) != si.scc_of(e2.dst))
+        acc2 = all_inf;
+
+      return (acc2 ^ all_inf).subset(acc1 ^ all_inf);
+    };
+    
+
+    auto new_state = [&](bool player, unsigned s1, unsigned s2) -> unsigned
     {
       unsigned s;
       auto& m = player ? s_orig_states : d_orig_states;
@@ -1019,8 +1040,6 @@ namespace spot
       unsigned d_src = (*names)[cur].second;
       todo.pop_back();
 
-      // Spoiler start by picking an edge from s_src. If it does not exist yet,
-      // we add a new edge in the game from (s_src,d_src) to (edge_idx,d_src).
       for (const auto& s_edge : aut->out(s_src))
       {
         unsigned edge_idx = g.index_of_edge(s_edge);
@@ -1028,13 +1047,9 @@ namespace spot
 
         game->new_edge(cur, cur2, s_edge.cond, s_edge.acc);
 
-        // Duplicator try to find an edge with the same condition from d_src.
-        // If it does not exist yet, it add a new edge from (s_edge.dst,d_src)
-        // to (s_edge.dst, d_edge.dst).
         for (const auto& d_edge : aut->out(d_src))
         {
-          if (bdd_implies(d_edge.cond, s_edge.cond)
-              && acc_implies(d_edge.acc, s_edge.acc))
+          if (edges_implies(d_edge, s_edge))
           {
             unsigned cur3 = new_state(false, s_edge.dst, d_edge.dst);
             game->new_edge(cur2, cur3, d_edge.cond, d_edge.acc);
@@ -1043,9 +1058,206 @@ namespace spot
       }
     }
 
-    game->set_named_prop("state-player", owners);
-    game->set_named_prop("product-states", names);
 
     return game;
+  }
+
+
+  class direct_simu_res
+  {
+  public:
+    direct_simu_res(const_twa_graph_ptr aut)
+      : aut_(aut)
+      , res_(aut_->num_states() * aut_->num_states(), false)
+      , seen_(aut_->num_states() * aut_->num_states(), false)
+    {
+      for (unsigned i = 0; i < aut_->num_states();  ++i)
+      {
+        seen_[i * aut_->num_states() + i] = true;
+        res_[i * aut_->num_states() + i] = true;
+      }
+    }
+
+    bool is_simu(unsigned s1, unsigned s2)
+    {
+      if (!seen_[s1 * aut_->num_states() + s2])
+        update(s1, s2);
+
+      if (!seen_[s2 * aut_->num_states() + s1])
+        update(s2, s1);
+
+      return res_[s1 * aut_->num_states() + s2]
+        && !res_[s2 * aut_->num_states() + s1];
+    }
+
+    bool is_bisimu(unsigned s1, unsigned s2)
+    {
+      if (!seen_[s1 * aut_->num_states() + s2])
+        update(s1, s2);
+
+      if (!seen_[s2 * aut_->num_states() + s1])
+        update(s2, s1);
+
+      return res_[s1 * aut_->num_states() + s2]
+        && res_[s2 * aut_->num_states() + s1];
+    }
+
+  private:
+    const_twa_graph_ptr aut_;
+    std::vector<bool> res_;
+    std::vector<bool> seen_;
+
+    void update(unsigned i, unsigned j)
+    {
+      unsigned num_states = aut_->num_states();
+      seen_[i * num_states + j] = true;
+
+      auto g = direct_sim_game(aut_,  i, j);
+      if (!solve_reachability_game(g))
+        return;
+
+      auto& owners = get_state_players(g);
+      auto& winners = *g->get_named_prop<std::vector<bool>>("state-winner");
+      auto& ori_states = *g->get_named_prop<
+        std::vector<std::pair<unsigned, unsigned>>>("product-states");
+
+      for (unsigned s = 0; s < winners.size(); ++s)
+      {
+        if (winners[s] && !owners[s])
+        {
+          auto p = ori_states[s];
+          res_[p.first * num_states + p.second] = true;
+          seen_[p.first * num_states + p.second] = true;
+        }
+      }
+    }
+  };
+
+  const_twa_graph_ptr reduce_direct_sim(const_twa_graph_ptr aut)
+  {
+    // TODO:
+    //  Faster Dead end (initialisation during decsent and propagate during la 
+    //  remotada)
+    //  Add scc
+    //  Leaks when expect
+    //  Merge seen w equiv_states
+
+    direct_simu_res sim_states(aut);
+    unsigned num_states = aut->num_states();
+    
+    twa_graph_ptr res = std::make_shared<twa_graph>(aut->get_dict());
+    res->copy_ap_of(aut);
+    res->set_acceptance(aut->get_acceptance());
+
+    std::vector<unsigned> equiv_states(aut->num_states());
+    std::vector<bool> exist(num_states);
+    std::vector<bool> dead_end(num_states, false);
+    std::vector<bool> seen(num_states);
+    std::stack<unsigned> todo;
+    auto& gr = aut->get_graph();
+
+    auto all_inf = aut->get_acceptance().used_inf_fin_sets().first;
+
+    auto is_simple_sim = [&all_inf, &sim_states, num_states](auto e2)
+    {
+      return [&](auto e1) -> bool
+      {
+        return !(e1 == e2)
+          && sim_states.is_simu(e1.dst, e2.dst)
+          && !sim_states.is_simu(e2.dst, e1.dst)
+          && bdd_implies(e2.cond, e1.cond)
+          && (e1.acc ^ all_inf).subset(e2.acc ^ all_inf);
+      };
+    };
+
+    auto update_equiv = [&](unsigned s) -> void
+    {
+      equiv_states[s] = res->new_state();
+      exist[s] = true;
+
+      for (unsigned i = 0; i < num_states; ++i)
+      {
+        if (sim_states.is_bisimu(s, i))
+        {
+          exist[i] = true;
+          equiv_states[i] = equiv_states[s];
+        }
+      }
+    };
+
+    auto push_state = [&](unsigned state) -> void
+    {
+      seen[state] = true;
+      auto edges = aut->out(state);
+
+      auto it = edges.begin();
+      while (it != edges.end())
+      {
+        auto& e = *(it++);
+
+        if (!std::any_of(it, edges.end(), is_simple_sim(e)))
+          todo.push(gr.index_of_edge(e));
+      }
+    };
+
+    update_equiv(aut->get_init_state_number());
+    push_state(aut->get_init_state_number());
+
+    while (!todo.empty())
+    {
+      auto& e = gr.edge_storage(todo.top());
+
+      if (!seen[e.dst])
+        push_state(e.dst);
+      else
+      {
+        todo.pop();
+
+        if (!exist[e.dst])
+        {
+          // FIXME
+          auto edges = aut->out(e.dst);
+          dead_end[e.dst] = std::all_of(edges.begin(), edges.end(), [&](auto ee)
+              { return dead_end[ee.dst]; });
+
+          if (dead_end[e.dst])
+            continue;
+          
+          update_equiv(e.dst);
+        }
+
+        if (!exist[e.src])
+          update_equiv(e.src);
+
+        bool found = false;
+        for (auto& ee : res->out(equiv_states[e.src]))
+        {
+          if (equiv_states[e.dst] == ee.dst)
+          {
+            ee.cond |= e.cond;
+            ee.acc |= e.acc;
+            found = true;
+
+            break;
+          }
+        }
+
+        if (!found)
+          res->new_edge(equiv_states[e.src], equiv_states[e.dst], e.cond, e.acc);
+      }
+    }
+
+    return res;
+  }
+
+  void diff_aut(const_twa_graph_ptr aut1, const_twa_graph_ptr aut2)
+  {
+    for (const auto& e1 : aut1->edges())
+    {
+      auto it = std::find(aut2->edges().begin(), aut2->edges().end(), e1);
+
+      if (it == aut2->edges().end())
+          std::cerr << e1.src << " -> " << e1.dst << std::endl;
+    }
   }
 } // End namespace spot.

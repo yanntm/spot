@@ -127,6 +127,12 @@ namespace spot
   /// Implement a construction similar to \cite etessami.05.simu but
   /// transition-based
   SPOT_API
-  twa_graph_ptr direct_sim_game(const_twa_graph_ptr arena,
+  twa_graph_ptr direct_sim_game(const_twa_graph_ptr aut,
                                 unsigned s1, unsigned s2);
+
+  SPOT_API
+  const_twa_graph_ptr reduce_direct_sim(const_twa_graph_ptr aut);
+
+  SPOT_API
+  void diff_aut(const_twa_graph_ptr aut1, const_twa_graph_ptr aut2);
 } // End namespace spot.
