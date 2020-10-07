@@ -19,10 +19,8 @@
 
 #pragma once
 
-#include <atomic>
-#include <iosfwd>
-#include <memory>
 #include <vector>
+#include <iosfwd>
 #include <spot/graph/graph.hh>
 #include <spot/misc/hash.hh>
 #include <spot/twa/acc.hh>
@@ -228,23 +226,6 @@ namespace spot
     const std::vector<std::string> aps_; ///< The name of atomic propositions
     graph_t theg_;                       ///< The underlying graph
     cubeset cubeset_;                    ///< Ease the cube manipulation
-
-    struct trans_storage
-    {
-      acc_cond::mark_t  mark;
-      cube trans_cube;
-      unsigned src;
-      unsigned dst;
-    };
-
-    /// buffer storing transitions to be stored in theg_ later
-    std::unique_ptr<struct trans_storage[]> transition_buffer_;
-    /// number of threads accessing transition buffer
-    std::atomic<size_t> transition_workers_ = 0;
-    /// transition_buffer_ capacity
-    size_t transition_buffer_size_ = 64;
-    /// index of current value in transition_buffer_
-    std::atomic<size_t> transition_buffer_index_ = 0;
   };
 
   inline twacube_ptr make_twacube(const std::vector<std::string> aps)
