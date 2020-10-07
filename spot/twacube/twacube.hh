@@ -29,8 +29,6 @@
 #include <spot/twacube/cube.hh>
 #include <spot/twacube/fwd.hh>
 
-#include "buffer.hh"
-
 namespace spot
 {
   /// \brief Class for thread-safe states.
@@ -239,7 +237,14 @@ namespace spot
       unsigned dst;
     };
 
-    spot::buffered_inserter<struct trans_storage> transition_inserter_;
+    /// buffer storing transitions to be stored in theg_ later
+    std::unique_ptr<struct trans_storage[]> transition_buffer_;
+    /// number of threads accessing transition buffer
+    std::atomic<size_t> transition_workers_ = 0;
+    /// transition_buffer_ capacity
+    size_t transition_buffer_size_ = 64;
+    /// index of current value in transition_buffer_
+    std::atomic<size_t> transition_buffer_index_ = 0;
   };
 
   inline twacube_ptr make_twacube(const std::vector<std::string> aps)
