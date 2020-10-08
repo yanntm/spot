@@ -26,6 +26,7 @@ from matplotlib import pyplot as plt
 
 from plot import *
 from correlations import *
+from gui import *
 
 def read_csv():
     intfeatures = ['bloemen_time', 'cndfs_time',\
