@@ -111,4 +111,4 @@ if __name__ == '__main__':
             plt.savefig(filename)
             plt.clf()
     correlation = correlation_matrix(features, names)
-    gui_display_table(correlation, names, simplenames, cachefolder, threads)
+    gui_display(features, correlation, names, simplenames, cachefolder, threads)

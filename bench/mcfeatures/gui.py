@@ -18,42 +18,150 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy as np
 import PySimpleGUI as sg
+import numpy as np
+import os
 
-def gui_display_table(table, names):
-    sg.theme('DarkAmber')   # Add a touch of color
-    # All the stuff inside your window.
+from correlations import *
+from plot import *
 
+def make_layout(table, names, excluded, cachefolder, threads, windowsize):
     name_max_len = len(max(names, key=len))
-    layout = []
-    for i in range(len(table)):
+    layouttable = []
+    for i in range(len(names)):
+        if names[i] in excluded:
+            continue
         row = [sg.Text(names[i].rjust(name_max_len, ' '), size=(20, 1))]
         for j in range(i + 1):
+            if names[j] in excluded:
+                continue
             elt = table[i][j]
             name = '%s/%s' % (names[i], names[j])
-            row.append(sg.Button(str(round(elt, 2)).ljust(4, '0'), size=(1, 1),
-                                 tooltip=name, key=name))
-        layout.append(row)
-    layout.append([sg.Button('Time', size=(1, 1),
-                  tooltip='time difference between bloemen and cndfs execution',
-                  key='time')])
-
-    window_layout = [[sg.Column(layout),
-                      sg.Column([[sg.Image('time_difference.png', key='image')]])],
-                     [sg.Button('Exit')]]
+            row.append(sg.Button(str(round(elt, 2)).ljust(4, '0'),
+                                 size=(1, 1),
+                                 tooltip=name,
+                                 key=name))
+        layouttable.append(row)
 
 
+    timebuttons = []
+    for thr in threads:
+        timebuttons.append(sg.Button('Time' + thr,
+                            tooltip='time difference between bloemen and' +
+                            'cndfs execution', key='Time' + thr))
+    sortbuttons = [sg.Button('Filter') if not excluded else sg.Button('See all')]
+    for name in excluded:
+        sortbuttons.append(sg.Button('Sort ' + name))
 
-    window = sg.Window('Correlation Table', window_layout)
+    layoutwindow = [
+                     [
+                       sg.Column([
+                                   [sg.Column(layouttable, key='table')],
+                                   timebuttons
+                                 ],
+                                 key='left', expand_x=True,
+                                 size=(None,windowsize[1] - windowsize[1] // 8)),
+                       sg.Column([
+                                   [sg.Image(cachefolder +
+                                             'time_difference%s.png' % threads[0],
+                                             key='image')]
+                                 ])
+                     ],
+                     sortbuttons,
+                     [
+                       sg.Column([[sg.Button('a', key='sb0', visible=False)]],
+                                 pad=(0,0), key='sc0'),
+                       sg.Column([[sg.Button('b', key='sb1', visible=False)]],
+                                 pad=(0,0), key='sc1'),
+                       sg.Column([[sg.Button('c', key='sb2', visible=False)]],
+                                 pad=(0,0), key='sc2')
+                     ],
+                     [sg.Button('Exit')]
+                   ]
+    return layoutwindow
+
+def gui_display(features, table, names, simplenames, cachefolder, threads):
+    sg.theme('DarkAmber')
+    tmpwindow = sg.Window('get_size')
+    windowsize = tmpwindow.GetScreenDimensions()
+    windowsize = (windowsize[0] - windowsize[0] // 12,
+                  windowsize[1] - windowsize[1] // 12)
+    tmpwindow.close()
+    layout = make_layout(table, names, [], cachefolder, threads, windowsize)
+    window = sg.Window('Correlation Table', layout, size=windowsize,
+                       finalize=True)
+    seeall = True
+    sortby, feature1, features2 = '', '', ''
+    values, filter = None, None
     while True:
         event, _ = window.read()
 
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
-        elif event == 'time':
-            window['image'].update('time_difference.png')
+        elif event == 'Filter' or event == 'See all':
+            seeall = not seeall
+            sortby, feature1, features2 = '', '', ''
+            values, filter = None, None
+            excluded = [] if seeall else simplenames
+            newlayout = make_layout(table, names, excluded, cachefolder,
+                                    threads, windowsize)
+            window.close()
+            newwindow = sg.Window('Correlation Table', newlayout,
+                                  size=windowsize, finalize=True)
+            window = newwindow
+        elif 'Sort' in event:
+            sortby = event.split(' ')[-1]
+            values = np.unique(features[sortby])
+            window['sb2'].Update(visible=False)
+            window['sb1'].Update(visible=False)
+            window['sb0'].Update(text=values[0], visible=True)
+            if values.size > 1:
+                window['sb1'].Update(text=values[1], visible=True)
+                if values.size > 2:
+                    window['sb2'].Update(text=values[2], visible=True)
+        elif 'sb' in event and len(event) == 3:
+            filter = values[int(event[-1])]
+            ftable, f = filtered_correlation_matrix(features, names,
+                                            simplenames, sortby, filter)
+            newlayout = make_layout(ftable,
+                                    [x for x in names if x not in excluded],
+                                    excluded, cachefolder, threads, windowsize)
+            window.close()
+            newwindow = sg.Window('Correlation Table', newlayout,
+                                  size=windowsize, finalize=True)
+            window = newwindow
+            window['sb0'].Update(text=values[0], visible=True)
+            if values.size > 1:
+                window['sb1'].Update(text=values[1], visible=True)
+                if values.size > 2:
+                    window['sb2'].Update(text=values[2], visible=True)
+
+            for i in range(len(names)):
+                if names[i] in excluded:
+                    continue
+                for j in range(i + 1):
+                    if names[j] in excluded:
+                        continue
+                    filename = cachefolder + 'scps/scp%s%s-%s-%s.png' %\
+                                (sortby, str(filter), names[i], names[j])
+                    if os.path.isfile(filename):
+                        continue
+                    scatter_plot(f[names[j]], f[names[i]],
+                                 'scatter plot of %s over %s' %\
+                                 (names[j], names[i]), names[j], names[i])
+                    plt.savefig(filename)
+                    plt.clf()
+        elif 'Time' in  event:
+            if event == 'Time':
+                window['image'].update(cachefolder + 'time_difference.png')
+            else:
+                window['image'].update(cachefolder +
+                                       'time_difference%s.png' % event[-2:])
         else:
             feature1, feature2 = event.split('/')
-            window['image'].update('scps/scp-%s-%s.png' % (feature1, feature2))
+            window['image'].update(cachefolder +
+                                   'scps/scp%s%s-%s-%s.png' %
+                                   (sortby,
+                                    str(filter) if filter is not None else '',
+                                    feature1, feature2))
     window.close()

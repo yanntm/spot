@@ -18,6 +18,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import numpy as np
 import PySimpleGUI as sg
 
@@ -37,5 +38,17 @@ def correlation_matrix(features, names):
     table = np.zeros((len(features), len(features)))
     for x in range(len(features)):
         for y in range(len(features)):
-            table[x][y] = abs(correlation(features[names[x]], features[names[y]]))
+            table[x][y] = abs(correlation(features[names[x]],
+                              features[names[y]]))
     return table
+
+def filtered_correlation_matrix(features, names, excluded, filter, value):
+    f = copy.deepcopy(features)
+    excludedvalues = features[filter]
+    for e in excluded:
+        f.pop(e)
+    mask = (excludedvalues == value)
+    for feature in f:
+        f[feature] = f[feature][mask]
+    return correlation_matrix(f, [x for x in names if x not in excluded]), f
+
