@@ -463,7 +463,6 @@ EXTRA_DIST = \
 
 ############################## LTSMIN ##############################
 
-if USE_LTSMIN
 check_PROGRAMS += ltsmin/modelcheck
 check_PROGRAMS += ltsmin/testconvert
 ltsmin_modelcheck_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) \
@@ -507,7 +506,6 @@ EXTRA_DIST += ltsmin/beem-peterson.4.dve ltsmin/beem-peterson.4.gal \
   ltsmin/elevator2.1.pm ltsmin/finite.dve ltsmin/finite.pm ltsmin/finite.gal
 
 ltlsmin/kripke.log: core/kripkecat$(EXEEXT)
-endif
 
 ############################## SANITY ##############################
 
