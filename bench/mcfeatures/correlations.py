@@ -33,49 +33,9 @@ def correlation(x, y):
         sum_squares += (x_ - y_) ** 2
     return 1 - (6 * sum_squares / (x.size ** 3 - x.size))
 
-def correlation_matrix(features):
+def correlation_matrix(features, names):
     table = np.zeros((len(features), len(features)))
     for x in range(len(features)):
         for y in range(len(features)):
-            table[x][y] = abs(correlation(features[x], features[y]))
+            table[x][y] = abs(correlation(features[names[x]], features[names[y]]))
     return table
-
-def gui_display_table(table, names):
-    sg.theme('DarkAmber')   # Add a touch of color
-    # All the stuff inside your window.
-
-    name_max_len = len(max(names, key=len))
-    layout = []
-    for i in range(len(table)):
-        row = [sg.Text(names[i].rjust(name_max_len, ' '), size=(20, 1))]
-        for j in range(i + 1):
-            elt = table[i][j]
-            name = '%s/%s' % (names[i], names[j])
-            row.append(sg.Button(str(round(elt, 2)).ljust(4, '0'),
-                                 tooltip=name, key=name))
-        layout.append(row)
-    layout.append([sg.Button('Exit')])
-
-    window = sg.Window('Correlation Table', layout)
-    image_window = None
-    while True:
-        event, _ = window.read()
-
-        if event == sg.WIN_CLOSED or event == 'Exit':
-            break
-        else:
-            feature1, feature2 = event.split('/')
-            if image_window:
-                image_window.close()
-                image_window = None
-            image_window = sg.Window(event,
-                                    [[sg.Image('scps/scp-%s-%s.png'
-                                               % (feature1, feature2))],
-                                    [sg.Button('Close')]])
-        if image_window:
-            img_event, _ = image_window.read()
-            if img_event == sg.WIN_CLOSED or img_event == 'Close':
-                image_window.close()
-                image_window = None
-
-    window.close()
