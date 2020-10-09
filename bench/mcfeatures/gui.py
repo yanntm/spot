@@ -159,15 +159,22 @@ def gui_display(features, names, simplenames, cachefolder, threads):
             generate_images(f, complexnames, excluded,
                             '%sscps/scp%s%s-' % (cachefolder, sortby,
                                                  str(filter)))
+            window['image'].update(cachefolder +
+                                   'scps/scp%s%s-%s-%s.png' %
+                                   (sortby,
+                                    str(filter) if filter is not None else '',
+                                    feature1, feature2))
 
         elif 'Time' in  event:
             window['image'].update(cachefolder + 'time_difference%s.png' %\
                                    (event[-2:] if event != 'Time' else ''))
         else:
             feature1, feature2 = event.split('/')
-            window['image'].update(cachefolder +
-                                   'scps/scp%s%s-%s-%s.png' %
-                                   (sortby,
-                                    str(filter) if filter is not None else '',
-                                    feature1, feature2))
+            if filter is None:
+                window['image'].update(cachefolder + 'scps/scp-%s-%s.png' %\
+                                       (feature1, feature2))
+            else:
+                window['image'].update(cachefolder + 'scps/scp%s-%s-%s.png' %\
+                                       (sortby + str(filter),
+                                        feature1, feature2))
     window.close()
