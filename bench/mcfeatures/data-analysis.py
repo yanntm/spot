@@ -20,97 +20,95 @@
 
 import csv
 import numpy as np
-import sys
 import os
+import sys
 from matplotlib import pyplot as plt
 
-from plot import *
 from correlations import *
 from gui import *
+from plot import *
+
+def get_simple_features(features, names):
+    res = []
+    for name in names:
+        if np.unique(features[name]).size <= 3:
+            res.append(name)
+    return res
 
 def read_csv():
-    intfeatures = ['bloemen_time', 'cndfs_time',\
-                   'memory', 'states', 'transitions', 'incidence_in',\
-                   'incidence_out', 'repeated_transitions', 'terminal', 'weak',\
-                   'inherently_weak', 'very_weak', 'complete', 'universal',\
-                   'unambiguous', 'semi_deterministic', 'stutter_invariant',\
-                   'emptiness']
-    floatfeatures = ['average_incidence_ratio']
-    nb_int = len(intfeatures)
-    nb_float = len(floatfeatures)
-    nb_features = nb_int + nb_float
-    features = []
-    for _ in range(nb_features):
-        features.append([])
+    if len(sys.argv) != 2:
+        sys.exit(1)
+    blacklist = ['time', 'model', 'formula']
+    threads = []
     with open(sys.argv[1], newline='') as csvfile:
         reader = csv.DictReader(csvfile)
+        features = {}
+        simplenames = []
+        for name in reader.fieldnames:
+            if name not in blacklist:
+                features[name] = np.empty((0))
+                if 'bloemen' in name:
+                    split = name.split('_')
+                    if len(split) == 2:
+                        threads.append('')
+                    else:
+                        threads.append('_' + split[-1])
         for row in reader:
-            for i in range(nb_int):
-                features[i].append(int(row[intfeatures[i]]))
-            for i in range(nb_float):
-                features[i + nb_int].append(float(row[floatfeatures[i]]))
-    npfeatures = []
+            for feature in features:
+                try:
+                    features[feature] = np.append(features[feature],
+                                                  float(row[feature]))
+                except ValueError:
+                    features[feature] = np.append(features[feature],
+                                                  row[feature])
+                    simplenames.append(feature)
+    names = []
     for f in features:
-        npfeatures.append(np.asarray(f))
-    features = npfeatures
-    time = features[1] - features[0]
-    features = np.concatenate(([time], features))
-    names = (['time difference'] + intfeatures + floatfeatures)
-    for i in range(len(names)):
-        names[i] = names[i].replace('_', ' ')
-    return features, names
+        names.append(f)
+    simplenames += get_simple_features(features, names)
 
-def separate_by_value(features, position):
-    # segfaults
-    set_ = list(set(features[position]))
-    out = [[] * (len(features) - 1)] * len(set_)
+    return features, names, simplenames, threads
 
-    for i in range(len(features)):
-        if i == position:
-            continue
-        for j in range (len(features[0])):
-            out[set_.index(features[position][j])][i].append(features[i][j])
-    return out
+def separate_by_value(features, name):
+    values = np.unique(features[name])
+    datasets = {}
+    for v in values:
+        datasets[v] = {}
+    for f in features:
+        for i in range(len(features[f])):
+            datasets[features[name][i]][f].append(features[f][i])
+    return datasets
 
-def generate_time_scatter_plot(features):
-    bloemen_time = features[1]
-    cndfs_time = features[2]
-    scatter_plot(bloemen_time, cndfs_time, 'time difference',
-                 'bloemen time', 'cndfs time', True)
-    plt.savefig('time_difference.png')
-    plt.clf()
-
-def pretty_print_table(table, names):
-    name_max_len = len(max(names, key=len))
-    for i in range(len(table)):
-        row = table[i]
-        print(names[i].rjust(name_max_len, ' '), end=' |')
-        for j in range(i + 1):
-            elt = row[j]
-            print(str(round(elt, 2)).ljust(4, '0'), end='|')
-        print()
-    for i in range(name_max_len):
-        print(' ' * (name_max_len + 1), end='')
-        for name in names:
-            if i < len(name):
-                print('  %s  ' % name[i], end='')
-            else:
-                print('     ', end='')
-        print()
-    print()
+def generate_time_scatter_plot(features, names, foldername, threads):
+    for thr in threads:
+        filename = foldername + 'time_difference%s.png' % thr
+        if os.path.isfile(filename):
+            return
+        bloemen_time = features['bloemen_time' + thr]
+        cndfs_time = features['cndfs_time' + thr]
+        scatter_plot(bloemen_time, cndfs_time, 'time difference' + thr,
+                     'bloemen time', 'cndfs time', True)
+        plt.savefig(filename)
+        plt.clf()
 
 if __name__ == '__main__':
-    features, names = read_csv()
-    generate_time_scatter_plot(features)
+    features, names, simplenames, threads = read_csv()
+    cachefolder = '.cache_' + os.path.basename(sys.argv[1]) + '/'
+    if not os.path.exists(cachefolder):
+        os.mkdir(cachefolder)
+    if not os.path.exists(cachefolder + '/scps'):
+        os.mkdir(cachefolder + '/scps')
+
+    generate_time_scatter_plot(features, names, cachefolder, threads)
     for i in range(len(names)):
         for j in range(i + 1):
-            filename = 'scps/scp-%s-%s.png' % (names[i], names[j])
+            filename = cachefolder + 'scps/scp-%s-%s.png' % (names[i], names[j])
             if os.path.isfile(filename):
                 continue
-            scatter_plot(features[j], features[i],
+            scatter_plot(features[names[j]], features[names[i]],
                          'scatter plot of %s over %s' % (names[j], names[i]),
                          names[j], names[i])
             plt.savefig(filename)
             plt.clf()
-    correlation = correlation_matrix(features)
-    gui_display_table(correlation, names)
+    correlation = correlation_matrix(features, names)
+    gui_display_table(correlation, names, simplenames, cachefolder, threads)
