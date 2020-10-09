@@ -69,15 +69,15 @@ def read_csv():
 
     return features, names, simplenames, threads
 
-def separate_by_value(features, name):
-    values = np.unique(features[name])
-    datasets = {}
-    for v in values:
-        datasets[v] = {}
-    for f in features:
-        for i in range(len(features[f])):
-            datasets[features[name][i]][f].append(features[f][i])
-    return datasets
+def filter_features(features, names, excluded, filter, value):
+    f = copy.deepcopy(features)
+    excludedvalues = features[filter]
+    for e in excluded:
+        f.pop(e)
+    mask = (excludedvalues == value)
+    for feature in f:
+        f[feature] = f[feature][mask]
+    return f
 
 def generate_time_scatter_plot(features, names, foldername, threads):
     for thr in threads:
@@ -93,6 +93,7 @@ def generate_time_scatter_plot(features, names, foldername, threads):
 
 if __name__ == '__main__':
     features, names, simplenames, threads = read_csv()
+
     cachefolder = '.cache_' + os.path.basename(sys.argv[1]) + '/'
     if not os.path.exists(cachefolder):
         os.mkdir(cachefolder)
@@ -100,15 +101,4 @@ if __name__ == '__main__':
         os.mkdir(cachefolder + '/scps')
 
     generate_time_scatter_plot(features, names, cachefolder, threads)
-    for i in range(len(names)):
-        for j in range(i + 1):
-            filename = cachefolder + 'scps/scp-%s-%s.png' % (names[i], names[j])
-            if os.path.isfile(filename):
-                continue
-            scatter_plot(features[names[j]], features[names[i]],
-                         'scatter plot of %s over %s' % (names[j], names[i]),
-                         names[j], names[i])
-            plt.savefig(filename)
-            plt.clf()
-    correlation = correlation_matrix(features, names)
-    gui_display(features, correlation, names, simplenames, cachefolder, threads)
+    gui_display(features, names, simplenames, cachefolder, threads)

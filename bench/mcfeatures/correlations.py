@@ -41,14 +41,3 @@ def correlation_matrix(features, names):
             table[x][y] = abs(correlation(features[names[x]],
                               features[names[y]]))
     return table
-
-def filtered_correlation_matrix(features, names, excluded, filter, value):
-    f = copy.deepcopy(features)
-    excludedvalues = features[filter]
-    for e in excluded:
-        f.pop(e)
-    mask = (excludedvalues == value)
-    for feature in f:
-        f[feature] = f[feature][mask]
-    return correlation_matrix(f, [x for x in names if x not in excluded]), f
-

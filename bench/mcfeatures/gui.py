@@ -24,6 +24,7 @@ import os
 
 from correlations import *
 from plot import *
+from data_analysis import filter_features
 
 def make_layout(table, names, excluded, cachefolder, threads, windowsize):
     name_max_len = len(max(names, key=len))
@@ -49,7 +50,8 @@ def make_layout(table, names, excluded, cachefolder, threads, windowsize):
         timebuttons.append(sg.Button('Time' + thr,
                             tooltip='time difference between bloemen and' +
                             'cndfs execution', key='Time' + thr))
-    sortbuttons = [sg.Button('Filter') if not excluded else sg.Button('See all')]
+    sortbuttons = [sg.Button('Filter') if not excluded\
+                  else sg.Button('See all')]
     for name in excluded:
         sortbuttons.append(sg.Button('Sort ' + name))
 
@@ -60,10 +62,12 @@ def make_layout(table, names, excluded, cachefolder, threads, windowsize):
                                    timebuttons
                                  ],
                                  key='left', expand_x=True,
-                                 size=(None,windowsize[1] - windowsize[1] // 8)),
+                                 size=(None,
+                                       windowsize[1] - windowsize[1] // 8)),
                        sg.Column([
                                    [sg.Image(cachefolder +
-                                             'time_difference%s.png' % threads[0],
+                                             'time_difference%s.png' %\
+                                                                    threads[0],
                                              key='image')]
                                  ])
                      ],
@@ -80,29 +84,57 @@ def make_layout(table, names, excluded, cachefolder, threads, windowsize):
                    ]
     return layoutwindow
 
-def gui_display(features, table, names, simplenames, cachefolder, threads):
+def generate_images(features, names, excluded, basepath):
+    for i in range(len(names)):
+        if names[i] in excluded:
+            continue
+        for j in range(i + 1):
+            if names[j] in excluded:
+                continue
+            filename = basepath + '%s-%s.png' % (names[i], names[j])
+            if os.path.isfile(filename):
+                continue
+            scatter_plot(features[names[j]], features[names[i]],
+                         'scatter plot of %s over %s' %\
+                         (names[j], names[i]), names[j], names[i])
+            plt.savefig(filename)
+            plt.clf()
+
+def update_filter_buttons(window, values):
+    window['sb2'].Update(visible=False)
+    window['sb1'].Update(visible=False)
+    window['sb0'].Update(text=values[0], visible=True)
+    if values.size > 1:
+        window['sb1'].Update(text=values[1], visible=True)
+        if values.size > 2:
+            window['sb2'].Update(text=values[2], visible=True)
+
+def gui_display(features, names, simplenames, cachefolder, threads):
     sg.theme('DarkAmber')
     tmpwindow = sg.Window('get_size')
     windowsize = tmpwindow.GetScreenDimensions()
     windowsize = (windowsize[0] - windowsize[0] // 12,
                   windowsize[1] - windowsize[1] // 12)
     tmpwindow.close()
+
+    sortby, feature1, features2 = '', '', ''
+    values, filter = None, None
+    complexnames = [x for x in names if x not in simplenames]
+
+    table = correlation_matrix(features, names)
+    generate_images(features, names, [], cachefolder + 'scps/scp-')
     layout = make_layout(table, names, [], cachefolder, threads, windowsize)
     window = sg.Window('Correlation Table', layout, size=windowsize,
                        finalize=True)
-    seeall = True
-    sortby, feature1, features2 = '', '', ''
-    values, filter = None, None
     while True:
         event, _ = window.read()
 
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
         elif event == 'Filter' or event == 'See all':
-            seeall = not seeall
             sortby, feature1, features2 = '', '', ''
             values, filter = None, None
-            excluded = [] if seeall else simplenames
+            excluded = [] if event == 'See all' else simplenames
             newlayout = make_layout(table, names, excluded, cachefolder,
                                     threads, windowsize)
             window.close()
@@ -112,51 +144,25 @@ def gui_display(features, table, names, simplenames, cachefolder, threads):
         elif 'Sort' in event:
             sortby = event.split(' ')[-1]
             values = np.unique(features[sortby])
-            window['sb2'].Update(visible=False)
-            window['sb1'].Update(visible=False)
-            window['sb0'].Update(text=values[0], visible=True)
-            if values.size > 1:
-                window['sb1'].Update(text=values[1], visible=True)
-                if values.size > 2:
-                    window['sb2'].Update(text=values[2], visible=True)
+            update_filter_buttons(window, values)
         elif 'sb' in event and len(event) == 3:
             filter = values[int(event[-1])]
-            ftable, f = filtered_correlation_matrix(features, names,
-                                            simplenames, sortby, filter)
-            newlayout = make_layout(ftable,
-                                    [x for x in names if x not in excluded],
+            f = filter_features(features, names, simplenames, sortby, filter)
+            ftable = correlation_matrix(f, complexnames)
+            newlayout = make_layout(ftable, complexnames,
                                     excluded, cachefolder, threads, windowsize)
             window.close()
             newwindow = sg.Window('Correlation Table', newlayout,
                                   size=windowsize, finalize=True)
             window = newwindow
-            window['sb0'].Update(text=values[0], visible=True)
-            if values.size > 1:
-                window['sb1'].Update(text=values[1], visible=True)
-                if values.size > 2:
-                    window['sb2'].Update(text=values[2], visible=True)
+            update_filter_buttons(window, values)
+            generate_images(f, complexnames, excluded,
+                            '%sscps/scp%s%s-' % (cachefolder, sortby,
+                                                 str(filter)))
 
-            for i in range(len(names)):
-                if names[i] in excluded:
-                    continue
-                for j in range(i + 1):
-                    if names[j] in excluded:
-                        continue
-                    filename = cachefolder + 'scps/scp%s%s-%s-%s.png' %\
-                                (sortby, str(filter), names[i], names[j])
-                    if os.path.isfile(filename):
-                        continue
-                    scatter_plot(f[names[j]], f[names[i]],
-                                 'scatter plot of %s over %s' %\
-                                 (names[j], names[i]), names[j], names[i])
-                    plt.savefig(filename)
-                    plt.clf()
         elif 'Time' in  event:
-            if event == 'Time':
-                window['image'].update(cachefolder + 'time_difference.png')
-            else:
-                window['image'].update(cachefolder +
-                                       'time_difference%s.png' % event[-2:])
+            window['image'].update(cachefolder + 'time_difference%s.png' %\
+                                   (event[-2:] if event != 'Time' else ''))
         else:
             feature1, feature2 = event.split('/')
             window['image'].update(cachefolder +
