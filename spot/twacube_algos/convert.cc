@@ -61,7 +61,8 @@ namespace spot
     return result;
   }
 
-  spot::twacube_ptr twa_to_twacube(const spot::const_twa_graph_ptr aut)
+  spot::twacube_ptr
+  twa_to_twacube(const spot::const_twa_graph_ptr aut, edge_walking_strategy str)
   {
     if (aut == nullptr)
       return nullptr;
@@ -71,7 +72,7 @@ namespace spot
     std::vector<std::string>* aps = extract_aps(aut, ap_binder);
 
     // Declare the twa cube
-    auto tg =  spot::make_twacube(*aps);
+    auto tg =  spot::make_twacube(*aps, str);
 
     // Fix acceptance
     tg->acc() = aut->acc();

@@ -47,8 +47,10 @@ namespace spot
               std::unordered_map<int, int>& ap_binder);
 
   /// \brief Convert a twa into a twacube
+  /// Parameter \a str represent the exploration strategy to use
   SPOT_API twacube_ptr
-  twa_to_twacube(spot::const_twa_graph_ptr aut);
+  twa_to_twacube(spot::const_twa_graph_ptr aut,
+                 edge_walking_strategy str = edge_walking_strategy::Swarming);
 
   /// \brief Convert a twacube into a twa.
   /// When \d is specified, the BDD_dict in parameter is used rather than

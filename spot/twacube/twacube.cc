@@ -35,8 +35,9 @@ namespace spot
     cube_(cube),  acc_(acc)
   { }
 
-  twacube::twacube(const std::vector<std::string> aps):
-    init_(0U), aps_(aps), cubeset_(aps.size())
+  twacube::twacube(const std::vector<std::string> aps,
+                   edge_walking_strategy str):
+    init_(0U), aps_(aps), cubeset_(aps.size()), str_(str)
   { }
 
   twacube::~twacube()

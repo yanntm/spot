@@ -53,6 +53,10 @@ namespace spot
     acc_cond::mark_t acc_;
   };
 
+  /// \brief describe the the exploration strategy to use
+  /// when walking the successors of a state.
+  enum class SPOT_API edge_walking_strategy { Swarming, No_swarming };
+
   /// \brief Class for iterators over transitions
   class SPOT_API trans_index final:
     public std::enable_shared_from_this<trans_index>
@@ -62,8 +66,9 @@ namespace spot
     typedef graph_t::edge_storage_t edge_storage_t;
 
     trans_index(trans_index& ci) = delete;
-    trans_index(unsigned state, const graph_t& g):
-      st_(g.state_storage(state))
+    trans_index(unsigned state, const graph_t& g,
+                edge_walking_strategy str):
+      st_(g.state_storage(state)), str_(str)
     {
       reset();
     }
@@ -99,7 +104,7 @@ namespace spot
     {
       // no-swarming : since twacube are dedicated for parallelism, i.e.
       // swarming, we expect swarming is activated.
-      if (SPOT_UNLIKELY(!seed))
+      if (SPOT_UNLIKELY(!seed || str_ == edge_walking_strategy::No_swarming))
         return idx_;
       // Here swarming performs a technique called "primitive
       // root modulo n", i. e.  for i in [1..n]: i*seed (mod n). We
@@ -116,6 +121,7 @@ namespace spot
   private:
     unsigned idx_;                   ///< The current transition
     const graph_t::state_storage_t& st_; ///< The underlying states
+    edge_walking_strategy str_;      ///< The current strategy
   };
 
   /// \brief Class for representing a thread-safe twa.
@@ -124,8 +130,10 @@ namespace spot
   public:
     twacube() = delete;
 
-    /// \brief Build a new automaton from a list of atomic propositions.
-    twacube(const std::vector<std::string> aps);
+    /// \brief Build a new automaton from a list of atomic propositions
+    /// \a str represent the exploration strategy to use when calling succ.
+    twacube(const std::vector<std::string> aps,
+            edge_walking_strategy str = edge_walking_strategy::Swarming);
 
     virtual ~twacube();
 
@@ -198,21 +206,26 @@ namespace spot
     ///< \brief Returns the successor of state \a i.
     std::shared_ptr<trans_index> succ(unsigned i) const
     {
-      return std::make_shared<trans_index>(i, theg_);
+      return std::make_shared<trans_index>(i, theg_, str_);
     }
 
     friend SPOT_API std::ostream& operator<<(std::ostream& os,
                                              const twacube& twa);
   private:
-    unsigned init_;                  ///< The Id of the initial state
+    unsigned init_;                      ///< The Id of the initial state
     acc_cond acc_;                       ///< The acceptance contidion
     const std::vector<std::string> aps_; ///< The name of atomic propositions
     graph_t theg_;                       ///< The underlying graph
     cubeset cubeset_;                    ///< Ease the cube manipulation
+
+    // FIXME for now only one strategy for all threads, this could be adapted
+    // to handle a vector of strategies, one per thread
+    edge_walking_strategy str_;          ///< The walking strategy to use
   };
 
-  inline twacube_ptr make_twacube(const std::vector<std::string> aps)
+  inline twacube_ptr make_twacube(const std::vector<std::string> aps,
+                                   edge_walking_strategy str)
   {
-    return std::make_shared<twacube>(aps);
+    return std::make_shared<twacube>(aps, str);
   }
 }
