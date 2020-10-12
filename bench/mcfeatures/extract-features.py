@@ -130,6 +130,7 @@ def extract(options, filein, fields):
                                                            .split(',')[-3]
                             break
                 writer.writerow(rowdict)
+                csvout.flush()
 
 if __name__ == '__main__':
     options, filein = get_options()
