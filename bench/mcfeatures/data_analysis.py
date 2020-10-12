@@ -61,11 +61,14 @@ def read_csv():
                 except ValueError:
                     features[feature] = np.append(features[feature],
                                                   row[feature])
-                    simplenames.append(feature)
+                    if feature not in simplenames:
+                        simplenames.append(feature)
     names = []
     for f in features:
         names.append(f)
-    simplenames += get_simple_features(features, names)
+    for name in get_simple_features(features, names):
+        if name not in simplenames:
+            simplenames.append(feature)
 
     return features, names, simplenames, threads
 
