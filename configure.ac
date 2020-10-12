@@ -225,6 +225,7 @@ AC_CONFIG_FILES([
   bench/ltlclasses/Makefile
   bench/ltl2tgba/Makefile
   bench/ltl2tgba/defs
+  bench/mcfeatures/Makefile
   bench/spin13/Makefile
   bench/wdba/Makefile
   bench/stutter/Makefile
