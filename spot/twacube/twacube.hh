@@ -204,8 +204,9 @@ namespace spot
     }
 
     ///< \brief Returns the successor of state \a i.
-    std::shared_ptr<trans_index> succ(unsigned i) const
+    std::shared_ptr<trans_index> succ(unsigned i, unsigned tid = 0) const
     {
+      (void) tid; // useles for now
       return std::make_shared<trans_index>(i, theg_, str_);
     }
 

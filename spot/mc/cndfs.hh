@@ -181,7 +181,7 @@ namespace spot
       ++states_;
       todo_blue_.push_back({*it,
                             sys_.succ(((*it)).st_kripke, tid_),
-                            twa_->succ(((*it)).st_prop),
+                            twa_->succ(((*it)).st_prop, tid_),
                             from_accepting});
       return {true, *it};
     }
@@ -206,7 +206,7 @@ namespace spot
       ++states_;
       todo_red_.push_back({*it,
                            sys_.succ(((*it)).st_kripke, tid_),
-                           twa_->succ(((*it)).st_prop),
+                           twa_->succ(((*it)).st_prop, tid_),
                            false});
       return {true, *it};
     }

@@ -109,7 +109,7 @@ namespace spot
       if (SPOT_LIKELY(push_state(initial, dfs_number+1, {})))
         {
           todo.push_back({initial, sys_.succ(initial.st_kripke, tid_),
-                          twa_->succ(initial.st_prop)});
+              twa_->succ(initial.st_prop, tid_)});
 
           // Not going further! It's a product with a single state.
           if (todo.back().it_prop->done())
@@ -161,7 +161,7 @@ namespace spot
                     {
                       map[dst] = ++dfs_number;
                       todo.push_back({dst, sys_.succ(dst.st_kripke, tid_),
-                                      twa_->succ(dst.st_prop)});
+                          twa_->succ(dst.st_prop, tid_)});
                       forward_iterators(sys_, twa_, todo.back().it_kripke,
                                         todo.back().it_prop, true, 0);
                     }
@@ -305,7 +305,7 @@ namespace spot
 
       bfs.push(new ctrx_element({&todo.back().st, nullptr,
               sys_.succ(todo.back().st.st_kripke, tid_),
-              twa_->succ(todo.back().st.st_prop)}));
+              twa_->succ(todo.back().st.st_prop, tid_)}));
       while (true)
         {
         here:
@@ -376,7 +376,7 @@ namespace spot
                           ctrx_element* root = new ctrx_element({
                               q , nullptr,
                               sys_.succ(q->st_kripke, tid_),
-                              twa_->succ(q->st_prop)
+                              twa_->succ(q->st_prop, tid_)
                           });
                           bfs.push(root);
                           goto here;
@@ -387,7 +387,7 @@ namespace spot
                       ctrx_element* root = new ctrx_element({
                           q , nullptr,
                           sys_.succ(q->st_kripke, tid_),
-                          twa_->succ(q->st_prop)
+                          twa_->succ(q->st_prop, tid_)
                       });
                       bfs.push(root);
                     }

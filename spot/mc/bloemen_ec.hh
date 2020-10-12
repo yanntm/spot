@@ -519,7 +519,7 @@ namespace spot
                 }
 
               auto it_kripke = sys_.succ(v_prime->st_kripke, tid_);
-              auto it_prop = twa_->succ(v_prime->st_prop);
+              auto it_prop = twa_->succ(v_prime->st_prop, tid_);
               forward_iterators(sys_, twa_, it_kripke, it_prop, true, tid_);
               while (!it_kripke->done())
                 {
