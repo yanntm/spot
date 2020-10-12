@@ -117,7 +117,7 @@ def gui_display(features, names, simplenames, cachefolder, threads):
                   windowsize[1] - windowsize[1] // 12)
     tmpwindow.close()
 
-    sortby, feature1, features2 = '', '', ''
+    sortby, feature1, feature2 = '', '', ''
     values, filter = None, None
     complexnames = [x for x in names if x not in simplenames]
 
@@ -132,7 +132,7 @@ def gui_display(features, names, simplenames, cachefolder, threads):
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
         elif event == 'Filter' or event == 'See all':
-            sortby, feature1, features2 = '', '', ''
+            sortby, feature1, feature2 = '', '', ''
             values, filter = None, None
             excluded = [] if event == 'See all' else simplenames
             newlayout = make_layout(table, names, excluded, cachefolder,
@@ -159,11 +159,12 @@ def gui_display(features, names, simplenames, cachefolder, threads):
             generate_images(f, complexnames, excluded,
                             '%sscps/scp%s%s-' % (cachefolder, sortby,
                                                  str(filter)))
-            window['image'].update(cachefolder +
-                                   'scps/scp%s%s-%s-%s.png' %
-                                   (sortby,
-                                    str(filter) if filter is not None else '',
-                                    feature1, feature2))
+            if feature1:
+                window['image'].update(cachefolder +
+                                       'scps/scp%s%s-%s-%s.png' %
+                                       (sortby,
+                                        str(filter) if filter is not None else '',
+                                        feature1, feature2))
 
         elif 'Time' in  event:
             window['image'].update(cachefolder + 'time_difference%s.png' %\
