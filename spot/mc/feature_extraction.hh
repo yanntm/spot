@@ -469,23 +469,27 @@ namespace spot
           {
             auto element = map_.valueAt(i);
             int* state = element->st_kripke;
-            float ratio = static_cast<float>(element->incidence_out)
-                          / element->incidence_in;
-            total_in += element->incidence_in;
-            total_out += element->incidence_out;
-            // if not root
-            if (ratio < std::numeric_limits<double>::infinity())
-                total_ratio += ratio;
-            ++nb_results;
+            if (element->incidence_in)
+              {
+                float ratio = static_cast<float>(element->incidence_out)
+                              / element->incidence_in;
+                total_in += element->incidence_in;
+                total_out += element->incidence_out;
+                if (ratio < std::numeric_limits<double>::infinity())
+                    total_ratio += ratio;
+                ++nb_results;
+              }
           }
         }
+      if (!nb_results)
+          nb_results = 1;
 
       char delimiter = ',';
       std::cout << "feature extraction csv : " << std::endl;
       std::cout << "in_incidence,out_incidence,average_incidence_ratio,"
                 << "repeated_transitions" << std::endl;
       std::cout << total_in << delimiter << total_out << delimiter
-                << total_ratio / (nb_results - 1) << delimiter
+                << total_ratio / nb_results << delimiter
                 << nb_repeated_trans << std::endl;
     }
 
