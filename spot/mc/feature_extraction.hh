@@ -38,6 +38,23 @@
 
 namespace spot
 {
+  /// \breif Represents a maximal scc of the graph
+  struct scc_element
+  {
+    /// \breif the number of nodes in the scc
+    unsigned nb_nodes;
+    /// \breif the number of reachable nodes from within the scc
+    // always initialised to -1, indicating attribute is not computed
+    int nb_reachable;
+    /// \brief the in incidence of the scc
+    unsigned incidence_in;
+    /// \brief the out incidence of the scc
+    unsigned incidence_out;
+    /// \brief the list of sccs directly reachable from this element
+    std::vector<unsigned> children;
+  };
+
+
   template<typename State,
            typename StateHash,
            typename StateEqual>
@@ -60,6 +77,9 @@ namespace spot
       acc_cond::mark_t acc;
       /// \brief index of the node in apparition order
       unsigned index;
+      /// \brief index of the scc the node belongs to
+      // Set for root sccs at the end of the exploration
+      int scc_index;
       /// \brief in incidence of the element
       unsigned incidence_in;
       /// \brief out incidence of the element
@@ -456,43 +476,6 @@ namespace spot
       return map_;
     }
 
-
-    void log(unsigned nb_repeated_trans)
-    {
-      unsigned total_in = 0;
-      unsigned total_out = 0;
-      float total_ratio = 0;
-      unsigned nb_results = 0;
-      for (auto i = 0; i < map_.capacity(); i++)
-        {
-          if (map_.valid(i))
-          {
-            auto element = map_.valueAt(i);
-            int* state = element->st_kripke;
-            if (element->incidence_in)
-              {
-                float ratio = static_cast<float>(element->incidence_out)
-                              / element->incidence_in;
-                total_in += element->incidence_in;
-                total_out += element->incidence_out;
-                if (ratio < std::numeric_limits<double>::infinity())
-                    total_ratio += ratio;
-                ++nb_results;
-              }
-          }
-        }
-      if (!nb_results)
-          nb_results = 1;
-
-      char delimiter = ',';
-      std::cout << "feature extraction csv : " << std::endl;
-      std::cout << "in_incidence,out_incidence,average_incidence_ratio,"
-                << "repeated_transitions" << std::endl;
-      std::cout << total_in << delimiter << total_out << delimiter
-                << total_ratio / nb_results << delimiter
-                << nb_repeated_trans << std::endl;
-    }
-
   private:
     iterable_uf_fe() = default;
 
@@ -552,7 +535,6 @@ namespace spot
       todo_.push_back(pair.second);
       Rp_.push_back(pair.second);
       ++states_;
-      unsigned nb_claim_found = 0;
       unsigned index = 0;
 
       while (!todo_.empty())
@@ -565,11 +547,17 @@ namespace spot
               if (v_prime == nullptr)
                 {
                   // The SCC has been explored!
+                  if (sccfound)
+                    {
+                      // set the index of the scc root, it being the
+                      // representative of the scc
+                      uf_.find(todo_.back())->scc_index = sccs_;
+                      scc_vect_.push_back({0, -1, 0, 0});
+                    }
                   sccs_ += sccfound;
                   break;
                 }
 
-              // get out-incidence
               auto it_kripke = sys_.succ(v_prime->st_kripke, tid_);
               auto it_prop = twa_->succ(v_prime->st_prop);
               forward_iterators(sys_, twa_, it_kripke, it_prop, true, tid_);
@@ -586,7 +574,7 @@ namespace spot
                       w.second->incidence_in = 1;
                       w.second->index = index;
                       ++index;
-
+                      w.second->scc_index = 0;
 
                       todo_.push_back(w.second);
                       Rp_.push_back(w.second);
@@ -596,7 +584,7 @@ namespace spot
                     }
                   else if (w.first == uf::claim_status::CLAIM_FOUND)
                     {
-                      ++nb_claim_found;
+                      ++repeated_;
                       acc_cond::mark_t scc_acc = trans_acc;
 
                       // This operation is mandatory to update acceptance marks.
@@ -615,7 +603,6 @@ namespace spot
 
                       {
                         auto root = uf_.find(w.second);
-                        //w.second->incidence_in += 1;
                         std::lock_guard<std::mutex> lock(w.second->acc_mutex_);
                         scc_acc = w.second->acc;
                       }
@@ -627,8 +614,7 @@ namespace spot
                           stop_ = true;
                           is_empty_ = false;
                           tm_.stop("DFS thread " + std::to_string(tid_));
-                          log_calculate();
-                          uf_.log(nb_claim_found);
+                          log();
                           return;
                         }
                     }
@@ -643,9 +629,83 @@ namespace spot
             Rp_.pop_back();
           todo_.pop_back();
         }
-      log_calculate();
-      uf_.log(nb_claim_found);
+      log();
       finalize();
+    }
+
+    int sccs_get_reachable_at(unsigned index)
+    {
+      if (scc_vect_[index].nb_reachable == -1)
+        {
+          scc_vect_[index].nb_reachable = scc_vect_[index].nb_nodes;
+          for (auto child_index : scc_vect_[index].children)
+            scc_vect_[index].nb_reachable += sccs_get_reachable_at(child_index);
+        }
+      return scc_vect_[index].nb_reachable;
+    }
+
+    int sccs_get_reachable()
+    {
+      int count = 0;
+      for (unsigned i = 0; i < scc_vect_.size(); ++i)
+        count += sccs_get_reachable_at(i);
+      return count;
+    }
+
+    // Number of transition with multiple visits and
+    // list of sccs calculated on the fly, needed for unified logging.
+    void log()
+    {
+      log_calculate();
+      auto map = uf_.map();
+      unsigned total_in = 0;
+      unsigned total_out = 0;
+      float total_ratio = 0;
+      unsigned nb_results = 0;
+      for (auto i = 0; i < map.capacity(); i++)
+        {
+          if (map.valid(i))
+          {
+            auto element = map.valueAt(i);
+            int* state = element->st_kripke;
+            if (element->incidence_in)
+              {
+                float ratio = static_cast<float>(element->incidence_out)
+                              / element->incidence_in;
+                total_in += element->incidence_in;
+                total_out += element->incidence_out;
+                total_ratio += ratio;
+                ++nb_results;
+              }
+          }
+        }
+
+      float average_scc_incidence = 0;
+      float average_reachability = 0;
+      for (auto& scc : scc_vect_)
+        {
+          if (scc.incidence_in)
+            average_scc_incidence += static_cast<float>(scc.incidence_out)
+                                     / scc.incidence_in;
+          average_reachability += scc.nb_reachable;
+        }
+      average_scc_incidence /= scc_vect_.size();
+      average_reachability /= scc_vect_.size();
+      average_reachability /= nb_results;
+
+      if (!nb_results)
+          nb_results = 1;
+
+      char delimiter = ',';
+      std::cout << "feature extraction csv : " << std::endl;
+      std::cout << "in_incidence,out_incidence,average_incidence_ratio,"
+                << "repeated_transitions,average_scc_incidence_ratio,"
+                << "average_reachability" << std::endl;
+      std::cout << total_in << delimiter << total_out << delimiter
+                << total_ratio / nb_results << delimiter
+                << repeated_ << delimiter
+                << average_scc_incidence << delimiter
+                << average_reachability << std::endl;
     }
 
     void log_calculate()
@@ -670,14 +730,36 @@ namespace spot
                   v.st_prop = twa_->trans_storage(it_prop, tid_).dst;
                   auto it = map.find(&v);
                   if (*it != *map.end())
-                    (*it)->incidence_in = (*it)->incidence_in + 1;
-                  forward_iterators(sys_, twa_, it_kripke,
+                    {
+                      ++(*it)->incidence_in;
+
+                      // get scc of the head and tail of the current edge
+                      unsigned scc_from = uf_.find(element)->scc_index;
+                      unsigned scc_to = uf_.find((*it))->scc_index;
+                      ++scc_vect_[scc_from].nb_nodes;
+                      if (scc_from != scc_to)
+                        {
+                          // edge connects two different sccs
+                          ++scc_vect_[scc_to].nb_nodes;
+                          ++scc_vect_[scc_from].incidence_out;
+                          ++scc_vect_[scc_to].incidence_in;
+                          auto& from = scc_vect_[scc_from];
+                          if (std::find(from.children.begin(),
+                                        from.children.end(),
+                                        scc_to)
+                              == scc_vect_[scc_from].children.end())
+                            scc_vect_[scc_from].children.push_back(scc_to);
+                        }
+                    }
+
+                    forward_iterators(sys_, twa_, it_kripke,
                                     it_prop, false, tid_);
                 }
               sys_.recycle(it_kripke, tid_);
               element->incidence_out = incidence_out;
             }
         }
+      sccs_get_reachable();
     }
 
     void setup()
@@ -750,12 +832,14 @@ namespace spot
     twacube_ptr twa_;                        ///< \brief The formula to check
     std::vector<uf_element*> todo_;          ///< \brief The "recursive" stack
     std::vector<uf_element*> Rp_;            ///< \brief The DFS stack
+    std::vector<scc_element> scc_vect_;      ///< \brief Set of sccs information
     iterable_uf_fe<State, StateHash, StateEqual> uf_; ///< Copy!
     unsigned tid_;
     unsigned nb_th_;
     unsigned inserted_ = 0;           ///< \brief Number of states inserted
     unsigned states_  = 0;            ///< \brief Number of states visited
     unsigned transitions_ = 0;        ///< \brief Number of transitions visited
+    unsigned repeated_ = 0;           ///< \brief Number of repeated visits
     unsigned sccs_ = 0;               ///< \brief Number of SCC visited
     bool is_empty_ = true;
     spot::timer_map tm_;              ///< \brief Time execution
