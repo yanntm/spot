@@ -75,6 +75,10 @@ struct mc_options_
   bool csv = false;
   spot::mc_algorithm algorithm = spot::mc_algorithm::BLOEMEN_EC;
   bool force_parallel = false;
+  spot::trans_walking_strategy k_exp_strat =
+    spot::trans_walking_strategy::Swarming;
+  spot::edge_walking_strategy p_exp_strat =
+    spot::edge_walking_strategy::Swarming;
 } mc_options;
 
 
@@ -148,6 +152,24 @@ parse_opt_finput(int key, char* arg, struct argp_state*)
     case 't':
       mc_options.use_timer = true;
       break;
+    case 'x':
+      if (strcmp(arg, "swarming") == 0)
+        {
+          mc_options.k_exp_strat =  spot::trans_walking_strategy::Swarming;
+          mc_options.p_exp_strat = spot::edge_walking_strategy::Swarming;
+        }
+      else if (strcmp(arg, "no_swarming") == 0)
+        {
+          mc_options.k_exp_strat =  spot::trans_walking_strategy::No_swarming;
+          mc_options.p_exp_strat = spot::edge_walking_strategy::No_swarming;
+        }
+      else
+        {
+          std::cerr << "Unknown argument: '" << arg
+                    << "' for option --explore-strategy\n";
+          return ARGP_ERR_UNKNOWN;
+        }
+      break;
     case 'w':
       mc_options.algorithm = spot::mc_algorithm::SWARMING;
       mc_options.force_parallel = true;
@@ -197,6 +219,8 @@ static const argp_option options[] =
     { "selfloopize", 's', "STRING", 0,
       "use STRING as property for marking deadlock "
       "states (by default selfloopize is activated with STRING='true')", 0 },
+    { "explore-strategy", 'x', "[swarming|no_swarming]", 0,
+      "specify the exploration strategy to use", 0 },
     { "swarming", 'w', nullptr, 0,
       "run the technique of of Holzmann et al. (IEEE'11) with the emptiness-"
       "check of Renault et al. (LPAR'13). Returns 1 if a counterexample "
@@ -495,7 +519,7 @@ static int checked_main()
         }
 
       tm.start("twa to twacube");
-      auto propcube = spot::twa_to_twacube(prop_degen);
+      auto propcube = spot::twa_to_twacube(prop_degen, mc_options.p_exp_strat);
       tm.stop("twa to twacube");
 
       tm.start("load kripkecube");
@@ -507,7 +531,8 @@ static int checked_main()
             aps = propcube->ap();
 
           modelcube = spot::ltsmin_model::load(mc_options.model)
-            .kripkecube(aps, deadf, mc_options.compress, mc_options.nb_threads);
+            .kripkecube(aps, deadf, mc_options.compress, mc_options.nb_threads,
+                        mc_options.k_exp_strat);
         }
       catch (const std::runtime_error& e)
         {
