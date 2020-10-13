@@ -99,8 +99,7 @@ namespace spot
     :  current_(0), cond_(p.cond), tid_(p.tid)
   {
     successors_.reserve(10);
-    setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
-                   p.selfloopize, p.cubeset, p.dead_idx, p.str);
+    setup_iterator(p);
   }
 
   void cspins_iterator::recycle(cspins_iterator_param& p)
@@ -110,34 +109,24 @@ namespace spot
     current_ = 0;
     // Constant time since int* is is_trivially_destructible
     successors_.clear();
-    setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
-                   p.selfloopize, p.cubeset, p.dead_idx, p.str);
+    setup_iterator(p);
   }
 
-  void cspins_iterator::setup_iterator(cspins_state s,
-                                       const spot::spins_interface* d,
-                                       cspins_state_manager& manager,
-                                       inner_callback_parameters& inner,
-                                       cube& cond,
-                                       bool compress,
-                                       bool selfloopize,
-                                       cubeset& cubeset,
-                                       int dead_idx,
-                                       trans_walking_strategy str)
+  void cspins_iterator::setup_iterator(cspins_iterator_param& p)
   {
-    str_ = str;
-    inner.manager = &manager;
-    inner.succ = &successors_;
-    inner.compress = compress;
-    inner.selfloopize = selfloopize;
-    int* ref = s;
+    str_ = p.str;
+    p.inner.manager = &(p.manager);
+    p.inner.succ = &successors_;
+    p.inner.compress = p.compress;
+    p.inner.selfloopize = p.selfloopize;
+    int* ref = p.s;
 
-    if (compress)
+    if (p.compress)
       // already filled by compute_condition
-      ref = inner.uncompressed;
+      ref = p.inner.uncompressed;
 
-    int n = d->get_successors
-      (nullptr, manager.unbox_state(ref),
+    int n = p.d->get_successors
+      (nullptr, p.manager.unbox_state(ref),
        [](void* arg, transition_info_t*, int *dst){
         inner_callback_parameters* inner =
         static_cast<inner_callback_parameters*>(arg);
@@ -146,12 +135,12 @@ namespace spot
                                     inner->manager->size() * 2);
         inner->succ->push_back(s);
        },
-       &inner);
-    if (!n && selfloopize)
+       &(p.inner));
+    if (!n && p.selfloopize)
       {
-        successors_.push_back(s);
-        if (dead_idx != -1)
-          cubeset.set_true_var(cond, dead_idx);
+        successors_.push_back(p.s);
+        if (p.dead_idx != -1)
+          p.cubeset.set_true_var(p.cond, p.dead_idx);
       }
 
   }

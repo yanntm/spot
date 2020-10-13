@@ -157,16 +157,7 @@ namespace spot
     /// \brief Compute the real index in the successor vector
     unsigned compute_index() const;
 
-    inline void setup_iterator(cspins_state s,
-                               const spot::spins_interface* d,
-                               cspins_state_manager& manager,
-                               inner_callback_parameters& inner,
-                               cube& cond,
-                               bool compress,
-                               bool selfloopize,
-                               cubeset& cubeset,
-                               int dead_idx,
-                               trans_walking_strategy str);
+    inline void setup_iterator(cspins_iterator_param& p);
 
     std::vector<cspins_state> successors_;
     unsigned int current_;
