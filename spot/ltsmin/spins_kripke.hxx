@@ -100,7 +100,7 @@ namespace spot
   {
     successors_.reserve(10);
     setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
-                   p.selfloopize, p.cubeset, p.dead_idx);
+                   p.selfloopize, p.cubeset, p.dead_idx, p.str);
   }
 
   void cspins_iterator::recycle(cspins_iterator_param& p)
@@ -111,7 +111,7 @@ namespace spot
     // Constant time since int* is is_trivially_destructible
     successors_.clear();
     setup_iterator(p.s, p.d, p.manager, p.inner, p.cond, p.compress,
-                   p.selfloopize, p.cubeset, p.dead_idx);
+                   p.selfloopize, p.cubeset, p.dead_idx, p.str);
   }
 
   void cspins_iterator::setup_iterator(cspins_state s,
@@ -122,8 +122,10 @@ namespace spot
                                        bool compress,
                                        bool selfloopize,
                                        cubeset& cubeset,
-                                       int dead_idx)
+                                       int dead_idx,
+                                       trans_walking_strategy str)
   {
+    str_ = str;
     inner.manager = &manager;
     inner.succ = &successors_;
     inner.compress = compress;
@@ -172,7 +174,7 @@ namespace spot
 
   cspins_state cspins_iterator::state() const
   {
-    if (SPOT_UNLIKELY(!tid_))
+    if (SPOT_UNLIKELY(!tid_) || str_ == trans_walking_strategy::No_swarming)
       return successors_[current_];
     return   successors_[compute_index()];
   }
@@ -196,11 +198,12 @@ namespace spot
                 bool compress,
                 std::vector<std::string> visible_aps,
                 bool selfloopize, std::string dead_prop,
-                unsigned int nb_threads)
+                unsigned int nb_threads,
+                trans_walking_strategy str)
     : sip_(sip), d_(sip.get()),
       compress_(compress), cubeset_(visible_aps.size()),
       selfloopize_(selfloopize), aps_(visible_aps),
-      nb_threads_(nb_threads)
+      nb_threads_(nb_threads), str_(str)
   {
     manager_ = static_cast<cspins_state_manager*>
       (::operator new(sizeof(cspins_state_manager) * nb_threads));
@@ -276,7 +279,7 @@ namespace spot
       {
         s, d_, manager_[tid], inner_[tid],
         nullptr, compress_, selfloopize_,
-        cubeset_, dead_idx_, tid
+        cubeset_, dead_idx_, tid, str_,
       };
 
     if (SPOT_LIKELY(!recycle_[tid].empty()))

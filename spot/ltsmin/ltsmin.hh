@@ -76,10 +76,13 @@ namespace spot
     // \brief The same as above but returns a kripkecube, i.e. a kripke
     // that can be use in parallel. Moreover, it support more ellaborated
     // atomic propositions such as "P.a == P.c"
-    ltsmin_kripkecube_ptr kripkecube(std::vector<std::string> to_observe,
-                                     formula dead = formula::tt(),
-                                     int compress = 0,
-                                     unsigned int nb_threads = 1) const;
+    ltsmin_kripkecube_ptr
+    kripkecube(std::vector<std::string> to_observe,
+               formula dead = formula::tt(),
+               int compress = 0,
+               unsigned int nb_threads = 1,
+               trans_walking_strategy str = trans_walking_strategy::Swarming)
+    const;
 
     /// Number of variables in a state
     int state_size() const;

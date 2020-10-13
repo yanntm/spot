@@ -113,6 +113,10 @@ namespace spot
     bool selfloopize;                // Should the state be selfloopized
   };
 
+  /// \brief describe the the exploration strategy to use
+  /// when walking the successors of a kripke state.
+  enum class SPOT_API trans_walking_strategy { Swarming, No_swarming };
+
   /// \brief This class provides an iterator over the successors of a state.
   /// All successors are computed once when an iterator is recycled or
   /// created.
@@ -134,6 +138,7 @@ namespace spot
       spot::cubeset& cubeset;
       int dead_idx;
       unsigned tid;
+      trans_walking_strategy str;
     };
 
     cspins_iterator(const cspins_iterator&) = delete;
@@ -160,12 +165,14 @@ namespace spot
                                bool compress,
                                bool selfloopize,
                                cubeset& cubeset,
-                               int dead_idx);
+                               int dead_idx,
+                               trans_walking_strategy str);
 
     std::vector<cspins_state> successors_;
     unsigned int current_;
     cube cond_;
     unsigned tid_;
+    trans_walking_strategy str_;
   };
 
 
@@ -213,7 +220,8 @@ namespace spot
     kripkecube(spins_interface_ptr sip, bool compress,
                std::vector<std::string> visible_aps,
                bool selfloopize, std::string dead_prop,
-               unsigned int nb_threads);
+               unsigned int nb_threads,
+               trans_walking_strategy str);
     ~kripkecube();
     cspins_state initial(unsigned tid);
     std::string to_string(const cspins_state s, unsigned tid = 0) const;
@@ -249,6 +257,10 @@ namespace spot
     int dead_idx_;                     // If yes, index of the "dead ap"
     std::vector<std::string> aps_;     // All the atomic propositions
     unsigned int nb_threads_;          // The number of threads used
+
+    // FIXME for now only one strategy for all threads, this could be adapted
+    // to handle a vector of strategies, one per thread
+    trans_walking_strategy str_;       // The exploration strategy
   };
 
   /// \brief shortcut to manipulate the kripke below
