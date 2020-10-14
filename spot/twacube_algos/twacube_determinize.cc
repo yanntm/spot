@@ -541,11 +541,8 @@ namespace spot
         auto it = seen_.find(s);
         if (it == seen_.end())
           {
-            unsigned dst_num;
-            {
-              std::lock_guard<std::mutex> rlock(res_mut_);
-              dst_num = res_->new_state();
-            }
+            unsigned dst_num = res_->async_new_state();
+
             it = seen_.emplace(s, dst_num).first;
             {
               std::lock_guard<std::mutex> tlock(todo_mut_);
@@ -602,18 +599,13 @@ namespace spot
               unsigned dst_num = get_state(*s);
               if (s.color_ != -1U)
                 {
-                  {
-                    std::lock_guard<std::mutex> lock(res_mut_);
-                    res_->create_transition(src_num, s.cond(), {s.color_}, dst_num);
-                  }
+                  res_->async_create_transition({src_num, dst_num, s.cond(), {s.color_}}, id_);
+
                   sets_ = std::max(s.color_ + 1, sets_);
                 }
               else
                 {
-                  {
-                    std::lock_guard<std::mutex> lock(res_mut_);
-                    res_->create_transition(src_num, s.cond(), {} , dst_num);
-                  }
+                  res_->async_create_transition({src_num, dst_num, s.cond(), {}}, id_);
                 }
             }
         }
@@ -697,6 +689,8 @@ namespace spot
       res->set_initial(res_init);
     }
 
+    res->async_init(nb_threads);
+
     std::vector<unsigned> sets(nb_threads);
     std::vector<std::thread> threads;
     std::vector<determinize_thread> det_threads;
@@ -725,6 +719,8 @@ namespace spot
 
     for (auto& t : threads)
       t.join();
+
+    res->async_finalize();
 
     // Green and red colors work in pairs, so the number of parity conditions is
     // necessarily even.
