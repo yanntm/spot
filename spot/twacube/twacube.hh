@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <vector>
 #include <iosfwd>
 #include <spot/graph/graph.hh>
@@ -121,7 +122,17 @@ namespace spot
   /// \brief Class for representing a thread-safe twa.
   class SPOT_API twacube final: public std::enable_shared_from_this<twacube>
   {
+    struct trans_storage
+    {
+      unsigned src;
+      unsigned dst;
+      cube trans_cube;
+      acc_cond::mark_t  mark;
+    };
+
   public:
+    using edge_storage_buff_t = std::vector<trans_storage>;
+
     twacube() = delete;
 
     /// \brief Build a new automaton from a list of atomic propositions.
@@ -155,6 +166,11 @@ namespace spot
     /// \brief This method creates a new state.
     unsigned new_state();
 
+    /// \brief This method creates a new state, thread-safely.
+    ///
+    /// You need to call twacube::finalize() afterwards to commit the changes.
+    unsigned async_new_state();
+
     /// \brief Updates the initial state to \a init
     void set_initial(unsigned init);
 
@@ -170,6 +186,11 @@ namespace spot
                            const cube& cube,
                            const acc_cond::mark_t& mark,
                            unsigned dst);
+
+    /// \brief same as create_transition, but thread-safe.
+    ///
+    /// You need to call twacube::finalize() afterwards to commit the changes.
+    void async_create_transition(struct trans_storage&& t, unsigned tid);
 
     /// \brief Accessor the cube's manipulator.
     const cubeset& get_cubeset() const;
@@ -218,6 +239,18 @@ namespace spot
       return std::make_shared<trans_index>(i, theg_);
     }
 
+    /// \brief Initiate async construction mode
+    ///
+    /// After calling async_init(), information returned by other, synchronous
+    /// functions might no longer be accurate, until async_finalize() is called
+    void async_init(size_t threads);
+
+    /// \brief Complete construction after async operations
+    ///
+    /// Be careful, this must be called in one thread only, once transactions
+    /// are done.
+    void async_finalize();
+
     friend SPOT_API std::ostream& operator<<(std::ostream& os,
                                              const twacube& twa);
   private:
@@ -226,6 +259,11 @@ namespace spot
     const std::vector<std::string> aps_; ///< The name of atomic propositions
     graph_t theg_;                       ///< The underlying graph
     cubeset cubeset_;                    ///< Ease the cube manipulation
+
+    std::vector<edge_storage_buff_t> edge_buffers_;
+
+    std::atomic<unsigned> num_states_ = 0;
+    unsigned prev_num_states_ = 0;
   };
 
   inline twacube_ptr make_twacube(const std::vector<std::string> aps)

@@ -61,6 +61,11 @@ namespace spot
     return theg_.new_state();
   }
 
+  unsigned twacube::async_new_state()
+  {
+    return num_states_++;
+  }
+
   void twacube::set_initial(unsigned init)
   {
     init_ = init;
@@ -84,6 +89,12 @@ namespace spot
                              const acc_cond::mark_t& mark, unsigned dst)
   {
     theg_.new_edge(src, dst, cube, mark);
+  }
+
+  void
+  twacube::async_create_transition(struct trans_storage&& t, unsigned tid)
+  {
+    edge_buffers_[tid].push_back(t);
   }
 
   const cubeset&
@@ -118,6 +129,30 @@ namespace spot
         i = itmp;
       }
     return true;
+  }
+
+  void
+  twacube::async_init(size_t threads)
+  {
+    prev_num_states_ = this->num_states();
+    num_states_ = this->num_states();
+    edge_buffers_.resize(threads);
+  }
+
+  void
+  twacube::async_finalize()
+  {
+    theg_.new_states(num_states_ -  prev_num_states_);
+
+    for (const auto& thread_buff : edge_buffers_)
+      {
+        for (const auto& trans : thread_buff)
+          {
+            theg_.new_edge(trans.src, trans.dst, trans.trans_cube, trans.mark);
+          }
+      }
+
+    edge_buffers_.clear();
   }
 
   std::ostream&
