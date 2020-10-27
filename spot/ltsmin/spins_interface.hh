@@ -51,7 +51,6 @@ namespace spot
     // The various functions that can be called once the object
     // has been instanciated.
     void (*get_initial_state)(void *to);
-    int (*have_property)();
     int (*get_successors)(void* m, int *in, TransitionCB, void *arg);
     int (*get_state_size)();
     const char* (*get_state_variable_name)(int var);
@@ -60,7 +59,10 @@ namespace spot
     const char* (*get_type_name)(int type);
     int (*get_type_value_count)(int type);
     const char* (*get_type_value_name)(int type, int value);
-
+    // label based functions
+    int (*eval_state_label) (int label, const int* src) ;
+    int (*get_state_label_count) () ;
+    const char * (*get_state_label_name) (int label) ;
   private:
     // handle to the dynamic library. The variable is of type lt_dlhandle, but
     // we need this trick since we cannot put ltdl.h in public headers
